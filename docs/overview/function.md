@@ -3,7 +3,13 @@
 ## 资源定义
 
 mesos方案对于微服务的抽象主要定义了application，configmap，deployment等资源抽象。业务可以使用这些资源来达到描述服务的效果，资源文件的详细描述如下：
-[mesos资源说明文档](../templates/mesos-artifact)
+
+* [deployment](../templates/mesos-artifact/deployment.md)
+* [application](../templates/mesos-artifact/application.md)
+* [service](../templates/mesos-artifact/service.md)
+* [configmap](../templates/mesos-artifact/configmap.md)
+* [secret](../templates/mesos-artifact/secret.md)
+* [process](../templates/mesos-artifact/process.md)
 
 k8s方案使用了原生的k8s资源抽象，包括：ReplicaSet, Deployments, StatefulSets等。业务使用上述资源来实现抽象服务的效果，资源文件的详情请参考k8s官方文档。
 

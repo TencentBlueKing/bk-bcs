@@ -27,5 +27,5 @@ mesos集群层服务
 ## bcs-k8s
 
 k8s集群层服务
-* agent：集群代理，负责将集群向BCS API注册
-* datawatch： 负责将集群数据向BCS storage同步
+* bcs-kube-agent：集群代理，负责将集群向BCS API注册
+* bcs-k8s-watch： 负责将集群数据向BCS storage同步

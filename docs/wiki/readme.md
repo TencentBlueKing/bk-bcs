@@ -1,6 +1,6 @@
 # 蓝鲸容器管理平台，双引擎驱动的容器编排方案
 
-![head](./opensource.png)
+![head](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/opensource.png)
 
 ## 导读
 
@@ -9,11 +9,11 @@
 和管理，只需要调用简单的API或者client，便可对容器进行启动、停止等操作，查看集群、容器及服务的状态，以及使用各种组
 件服务。用户可以依据自身的需要选择集群模式和容器编排的方式，以满足业务的特定要求。
 
-![整体架构](./bcs-modules.jpg)
+![整体架构](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/bcs-modules.jpg)
 
 ## 功能特性
 
-![重要功能列表](./functions-list.png)
+![重要功能列表](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/functions-list.png)
 
 * 支持基于k8s和Mesos双引擎编排
 * 支持多集群管理
@@ -45,11 +45,11 @@
 BCS团队对容器管理平台进行开源，希望将我们的技术和沉淀反馈给社区，期望能帮助更多的人解决问题；同时也邀请容器技术
 爱好者一起参与建设，让产品变更更加强大和易用，构建生态活跃的技术社区。
 
-![体验指引](./guids.png)
+![体验指引](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/guids.png)
 
-![如何体验](./BCS-exp.png)
+![如何体验](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/BCS-exp.png)
 
-![版本参与](./workflows.png)
+![版本参与](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/workflows.png)
 
 ## 开源协议
 
@@ -59,6 +59,6 @@ BCS团队对容器管理平台进行开源，希望将我们的技术和沉淀�
 
 ## 欢迎交流
 
-![主页](./homelink.png)
+![主页](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/homelink.png)
 
-![交流渠道](./QR-Code.png)
+![交流渠道](https://github.com/Tencent/bk-bcs/blob/master/docs/wiki/QR-Code.png)
