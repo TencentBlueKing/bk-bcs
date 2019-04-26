@@ -1,0 +1,116 @@
+{
+  "data": [
+    {
+      "name": "etcd_debugging_mvcc_db_total_size_in_bytes",
+      "help": "Total size of the underlying database in bytes.",
+      "type": "GAUGE",
+      "metrics": [
+        {
+          "value": "1.0919936e+07"
+        }
+      ]
+    },
+    {
+      "name": "etcd_debugging_mvcc_put_total",
+      "help": "Total number of puts seen by this member.",
+      "type": "COUNTER",
+      "metrics": [
+        {
+          "value": "10530"
+        }
+      ]
+    },
+    {
+      "name": "etcd_debugging_snap_save_total_duration_seconds",
+      "help": "The total latency distributions of save called by snapshot.",
+      "type": "HISTOGRAM",
+      "metrics": [
+        {
+          "buckets": {
+            "+Inf": "0",
+            "0.001": "0",
+            "0.002": "0",
+            "0.004": "0",
+            "0.008": "0",
+            "0.016": "0",
+            "0.032": "0",
+            "0.064": "0",
+            "0.128": "0",
+            "0.256": "0",
+            "0.512": "0",
+            "1.024": "0",
+            "2.048": "0",
+            "4.096": "0",
+            "8.192": "0"
+          },
+          "count": "0",
+          "sum": "0"
+        }
+      ]
+    },
+    {
+      "name": "etcd_server_version",
+      "help": "Which version is running. 1 for 'server_version' label with current version.",
+      "type": "GAUGE",
+      "metrics": [
+        {
+          "labels": {
+            "server_version": "3.3.5"
+          },
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "go_gc_duration_seconds",
+      "help": "A summary of the GC invocation durations.",
+      "type": "SUMMARY",
+      "metrics": [
+        {
+          "quantiles": {
+            "0": "4.7536e-05",
+            "0.25": "6.3498e-05",
+            "0.5": "7.689e-05",
+            "0.75": "0.000109782",
+            "1": "0.000192138"
+          },
+          "count": "1289",
+          "sum": "0.1142868"
+        }
+      ]
+    },
+    {
+      "name": "grpc_server_msg_received_total",
+      "help": "Total number of RPC stream messages received on the server.",
+      "type": "COUNTER",
+      "metrics": [
+        {
+          "labels": {
+            "grpc_method": "Alarm",
+            "grpc_service": "etcdserverpb.Maintenance",
+            "grpc_type": "unary"
+          },
+          "value": "0"
+        },
+        {
+          "labels": {
+            "grpc_method": "AuthDisable",
+            "grpc_service": "etcdserverpb.Auth",
+            "grpc_type": "unary"
+          },
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "name": "etcd_debugging_mvcc_db_compaction_keys_total",
+      "help": "Total number of db keys compacted.",
+      "type": "COUNTER",
+      "metrics": [
+        {
+          "value": "0"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "cluster_zookeeper": "${mesosZkHost}",
+  "v": 3,
+  "cadvisor_port": ${cadvisorPort},
+  "bcs_zookeeper": "${bcsZkHost}",
+  "ca_file": "${caFile}",
+  "client_cert_file": "${clientCertFile}",
+  "client_key_file": "${clientKeyFile}",
+  "clusterid": "${clusterId}"
+}

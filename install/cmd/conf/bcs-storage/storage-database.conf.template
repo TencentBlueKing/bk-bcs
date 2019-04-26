@@ -1,0 +1,54 @@
+[mongodb/dynamic]
+Addr = ${mongodbHost}
+ConnectTimeout = 0
+Database = dynamic
+Username = ${mongodbUsername}
+Password = ${mongodbPassword}
+OpLogCollection = ${mongodbOplogCollection}
+IsListener = true
+ListenerName = commonWatcher
+
+[mongodb/event]
+Addr = ${mongodbHost}
+ConnectTimeout = 0
+Database = event
+Username = ${mongodbUsername}
+Password = ${mongodbPassword}
+ListenerName = commonWatcher
+
+[mongodb/alarm]
+Addr = ${mongodbHost}
+ConnectTimeout = 0
+Database = alarm
+Username = ${mongodbUsername}
+Password = ${mongodbPassword}
+ListenerName = commonWatcher
+
+[mongodb/metric]
+Addr = ${mongodbHost}
+ConnectTimeout = 0
+Database = metric
+Username = ${mongodbUsername}
+Password = ${mongodbPassword}
+ListenerName = commonWatcher
+
+[mongodb/host]
+Addr = ${mongodbHost}
+ConnectTimeout = 0
+Database = host
+Username = ${mongodbUsername}
+Password = ${mongodbPassword}
+
+[mongodb/clusterConfig]
+Addr = ${ConfigDbHost}
+ConnectTimeout = 0
+Database = clusterConfig
+Username = ${ConfigDbUsername}
+Password = ${ConfigDbPassword}
+
+[zk/watch]
+Addr = ${bcsZkHost}
+ConnectTimeout = 5
+Database = etc/cluster
+Username =
+Password =

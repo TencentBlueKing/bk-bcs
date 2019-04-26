@@ -1,0 +1,23 @@
+{
+  "address": "__LAN_IP__",
+  "port": __BCS_HEALTH_MASTER_PORT__,
+  "log_dir": "__INSTALL_PATH__/logs/bcs/",
+  "pid_dir": "/var/run/bcs/",
+  "metric_port": __BCS_HEALTH_MASTER_METRIC_PORT__,
+  "local_ip": "__LAN_IP__",
+  "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem",
+  "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem",
+  "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem",
+  "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem",
+  "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",
+  "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+  "enable_storage_alarm": true,
+  "etcd": {
+    "etcd_endpoints": "https://__ETCD_IP0__:__ETCD_CLIENT_PORT__",
+    "etcd_root_path": "/bcshealtch",
+    "etcd_ca_file": "__INSTALL_PATH__/cert/etcd/etcd-ca.pem",
+    "etcd_cert_file": "__INSTALL_PATH__/cert/etcd/etcd.pem",
+    "etcd_key_file": "__INSTALL_PATH__/cert/etcd/etcd-key.pem",
+    "etcd_key_password": "__ETCD_KEY_PASS__"
+  }
+}

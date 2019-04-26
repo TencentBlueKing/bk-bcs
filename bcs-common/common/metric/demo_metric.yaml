@@ -1,0 +1,132 @@
+# HELP etcd_debugging_mvcc_db_compaction_keys_total Total number of db keys compacted.
+# TYPE etcd_debugging_mvcc_db_compaction_keys_total counter
+etcd_debugging_mvcc_db_compaction_keys_total 0
+# HELP etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds Bucketed histogram of db compaction pause duration.
+# TYPE etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds histogram
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="1"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="2"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="4"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="8"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="16"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="32"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="64"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="128"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="256"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="512"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="1024"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="2048"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="4096"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="+Inf"} 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_sum 0
+etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_count 0
+# HELP etcd_debugging_mvcc_db_total_size_in_bytes Total size of the underlying database in bytes.
+# TYPE etcd_debugging_mvcc_db_total_size_in_bytes gauge
+etcd_debugging_mvcc_db_total_size_in_bytes 1.0919936e+07
+# HELP etcd_debugging_mvcc_delete_total Total number of deletes seen by this member.
+# TYPE etcd_debugging_mvcc_delete_total counter
+etcd_debugging_mvcc_delete_total 0
+# HELP etcd_debugging_mvcc_events_total Total number of events sent by this member.
+# TYPE etcd_debugging_mvcc_events_total counter
+etcd_debugging_mvcc_events_total 0
+# HELP etcd_debugging_mvcc_keys_total Total number of keys.
+# TYPE etcd_debugging_mvcc_keys_total gauge
+etcd_debugging_mvcc_keys_total 13
+# HELP etcd_debugging_mvcc_pending_events_total Total number of pending events to be sent.
+# TYPE etcd_debugging_mvcc_pending_events_total gauge
+etcd_debugging_mvcc_pending_events_total 0
+# HELP etcd_debugging_mvcc_put_total Total number of puts seen by this member.
+# TYPE etcd_debugging_mvcc_put_total counter
+etcd_debugging_mvcc_put_total 10530
+# HELP etcd_debugging_mvcc_range_total Total number of ranges seen by this member.
+# TYPE etcd_debugging_mvcc_range_total counter
+etcd_debugging_mvcc_range_total 6160
+# HELP etcd_debugging_mvcc_slow_watcher_total Total number of unsynced slow watchers.
+# TYPE etcd_debugging_mvcc_slow_watcher_total gauge
+etcd_debugging_mvcc_slow_watcher_total 0
+# HELP etcd_debugging_mvcc_txn_total Total number of txns seen by this member.
+# TYPE etcd_debugging_mvcc_txn_total counter
+etcd_debugging_mvcc_txn_total 0
+# HELP etcd_debugging_mvcc_watch_stream_total Total number of watch streams.
+# TYPE etcd_debugging_mvcc_watch_stream_total gauge
+etcd_debugging_mvcc_watch_stream_total 1
+# HELP etcd_debugging_mvcc_watcher_total Total number of watchers.
+# TYPE etcd_debugging_mvcc_watcher_total gauge
+etcd_debugging_mvcc_watcher_total 1
+# HELP etcd_debugging_server_lease_expired_total The total number of expired leases.
+# TYPE etcd_debugging_server_lease_expired_total counter
+etcd_debugging_server_lease_expired_total 0
+# HELP etcd_debugging_snap_save_total_duration_seconds The total latency distributions of save called by snapshot.
+# TYPE etcd_debugging_snap_save_total_duration_seconds histogram
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.001"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.002"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.004"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.008"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.016"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.032"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.064"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.128"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.256"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="0.512"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="1.024"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="2.048"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="4.096"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="8.192"} 0
+etcd_debugging_snap_save_total_duration_seconds_bucket{le="+Inf"} 0
+etcd_debugging_snap_save_total_duration_seconds_sum 0
+etcd_debugging_snap_save_total_duration_seconds_count 0
+# HELP etcd_grpc_proxy_cache_hits_total Total number of cache hits
+# TYPE etcd_grpc_proxy_cache_hits_total gauge
+etcd_grpc_proxy_cache_hits_total 0
+# HELP etcd_server_proposals_pending The current number of pending proposals to commit.
+# TYPE etcd_server_proposals_pending gauge
+etcd_server_proposals_pending 0
+# HELP etcd_server_version Which version is running. 1 for 'server_version' label with current version.
+# TYPE etcd_server_version gauge
+etcd_server_version{server_version="3.3.5"} 1
+# HELP go_gc_duration_seconds A summary of the GC invocation durations.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 4.7536e-05
+go_gc_duration_seconds{quantile="0.25"} 6.3498e-05
+go_gc_duration_seconds{quantile="0.5"} 7.689e-05
+go_gc_duration_seconds{quantile="0.75"} 0.000109782
+go_gc_duration_seconds{quantile="1"} 0.000192138
+go_gc_duration_seconds_sum 0.1142868
+go_gc_duration_seconds_count 1289
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 95
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.9.6"} 1
+go_memstats_heap_released_bytes 0
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 1.409024e+06
+# HELP go_memstats_sys_bytes Number of bytes obtained from system.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 2.3955704e+07
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 19
+# HELP grpc_server_msg_received_total Total number of RPC stream messages received on the server.
+# TYPE grpc_server_msg_received_total counter
+grpc_server_msg_received_total{grpc_method="Alarm",grpc_service="etcdserverpb.Maintenance",grpc_type="unary"} 0
+grpc_server_msg_received_total{grpc_method="AuthDisable",grpc_service="etcdserverpb.Auth",grpc_type="unary"} 0
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 494.49
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 204800
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 16
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 3.588096e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.52621640874e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.0780954624e+10
