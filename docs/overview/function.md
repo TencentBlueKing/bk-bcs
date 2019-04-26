@@ -13,7 +13,7 @@ mesos方案对于微服务的抽象主要定义了application，configmap，depl
 
 k8s方案使用了原生的k8s资源抽象，包括：ReplicaSet, Deployments, StatefulSets等。业务使用上述资源来实现抽象服务的效果，资源文件的详情请参考k8s官方文档。
 
-## 功能详情
+## 功能详情
 ### POD
 - k8s方案：POD
 - mesos方案：Taskgroup
