@@ -24,7 +24,7 @@ import (
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/ssl"
 
-	"bk-bcs/bcs-k8s/k8s-watch/app/options"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 )
 
 type HealthChecker struct {
