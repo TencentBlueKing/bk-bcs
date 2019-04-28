@@ -28,7 +28,6 @@ import (
 	"bk-bcs/bcs-services/bcs-client/cmd/get"
 	"bk-bcs/bcs-services/bcs-client/cmd/inspect"
 	"bk-bcs/bcs-services/bcs-client/cmd/list"
-	"bk-bcs/bcs-services/bcs-client/cmd/metric"
 	"bk-bcs/bcs-services/bcs-client/cmd/offer"
 	"bk-bcs/bcs-services/bcs-client/cmd/template"
 	"bk-bcs/bcs-services/bcs-client/cmd/update"
@@ -53,7 +52,7 @@ func main() {
 		list.NewListCommand(),
 		inspect.NewInspectCommand(),
 		get.NewGetCommand(),
-		metric.NewMetricCommand(),
+		//metric.NewMetricCommand(),
 		deployment.NewCancelCommand(),
 		deployment.NewPauseCommand(),
 		deployment.NewResumeCommand(),

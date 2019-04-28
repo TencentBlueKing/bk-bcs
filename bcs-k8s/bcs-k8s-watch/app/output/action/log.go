@@ -17,7 +17,7 @@ import (
 	"github.com/json-iterator/go"
 
 	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 )
 
 type LogAction struct {

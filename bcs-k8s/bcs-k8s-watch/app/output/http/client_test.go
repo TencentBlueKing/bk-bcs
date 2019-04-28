@@ -16,7 +16,7 @@ package http
 import (
 	"testing"
 
-	"bk-bcs/bcs-k8s/k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 )
 
 func TestGetURL(t *testing.T) {
