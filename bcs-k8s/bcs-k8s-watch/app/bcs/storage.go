@@ -23,7 +23,7 @@ import (
 	"bk-bcs/bcs-common/common/RegisterDiscover"
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-k8s/k8s-watch/app/options"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"strings"
 )
 
