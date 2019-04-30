@@ -16,7 +16,7 @@
   "local_ip": "__LAN_IP__",
   "bkiam_auth": {
     "auth": false,
-    "bkiam_auth_host": "__IAM_SERVER_HOST__",
+    "bkiam_auth_host": "http://__IAM_HOST__",
     "bkiam_auth_app_code": "__APP_CODE__",
     "bkiam_auth_app_secret": "__APP_TOKEN__"
   },

@@ -25,17 +25,17 @@ import (
 
 	"bk-bcs/bcs-common/common/types"
 	bcsVersion "bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-k8s/k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/k8s-watch/app/k8s"
-	"bk-bcs/bcs-k8s/k8s-watch/app/options"
-	"bk-bcs/bcs-k8s/k8s-watch/app/output"
-	"bk-bcs/bcs-k8s/k8s-watch/app/output/action"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 
 	global "bk-bcs/bcs-common/common"
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/metric"
-	disbcs "bk-bcs/bcs-k8s/k8s-watch/pkg/discovery/bcs"
-	disreg "bk-bcs/bcs-k8s/k8s-watch/pkg/discovery/register"
+	disbcs "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/bcs"
+	disreg "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
 )
 
 var globalStopChan = make(chan struct{})

@@ -33,9 +33,9 @@ import (
 	"k8s.io/client-go/rest"
 
 	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/k8s-watch/app/options"
-	"bk-bcs/bcs-k8s/k8s-watch/app/output"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
 )
 
 // =================== interface & struct ===================

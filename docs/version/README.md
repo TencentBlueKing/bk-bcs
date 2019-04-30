@@ -1,6 +1,58 @@
 # 发布版本信息
 
-## v1.11.11
+## 1.12.6
+
+>以下issue索引信息是并非来源github，为保证项目内外一致性，暂不清理
+
+- 发布日期：2019-04-30
+- 版本信息：1.12.6
+
+- **新增功能**
+  * bcs-container-executor支持CNI路径、网络镜像配置化
+  * bcs-health支持告警信息转存bcs-storage
+  * bcs-mesos支持AutoScaling特性[#10]
+  * bcs-scheduler针对IP插件支持独立tls证书
+  * bcs-scheduler支持healthcheck多次连续失败后进行重新调度[#31]
+  * bcs-scheduler对调度插件支持自定义目录[#50]
+  * bcs-scheduler新增Node节点资源排序功能，均衡节点容器分布[#80]
+  * bcs-loadbalance新增开源版本dockerfile[#65]
+  * bcs-client支持Get命令，获取资源定义文件[#73]
+  * bcs-client支持https方式链接bcs-api[#78]
+  * bcs-mesos-driver支持web-hook特性[#68]
+   
+- **功能优化**
+  * 进程启动参数增加--config_file，兼容--file参数[#52]
+  * LICENSE文件更新，修正复制glog代码中的copyright[#72]
+  * bcs-kube-agent链接bcs-api时支持insecureSkipVerify[#75]
+  * bcs-data-watch优化exportservice数据同步，提升数据同步效率[#79]
+  * bcs-api配置项json化[#52]
+  * bcs-scheduler、bcs-mesos-watch清理appsvc无用代码
+  * bcs-scheduler容器调度日志优化
+  * bcs-mesos-watch清理已注释代码
+  * bcs-scheduler代码清理
+  * bcs-loadbalance调整tls证书目录，并支持tls命令行参数
+  * bcs-loadbalance镜像中nginx用户调整为bcs[#61]
+  * bcs-mesos-driver清理v1http无用代码
+  * bcs-consoleproxy以及与bcs-webconsole代码重构
+  * k8s文档优化[#46]
+  * bcs-executor优化healthcheck上报数据[#30]
+  * bcs-scheduler优化滚动更新时healthcheck机制[#55]
+  * 文档完善，增加k8s和Mesos资源分类和功能[#63]
+  * bcs-client重构，并移除ippool命令[#66]
+  * 清理bcs-scheduler ingress数据定义文档[#86]
+  * bcs-api增加用户token类型校验，用于开源使用[#53]
+  * bcs-kube-agent目录调整[#2],[#4]
+  * 全项目代码复杂度优化
+  * 全项目重复代码优化
+  
+- **bug修复**
+  * 修复bcs-health中因zk acl错误而不断刷日志的问题[#83]
+  * 修复bcs-api zookeeper断链后无法发现后端集群的异常[#56]
+  * 修复bcs-api针对后端集群事件发生错误时导致的panic[#60]
+
+## 1.11.11
+
+>以下issue索引信息是并非来源github，为保证项目内外一致性，暂不清理
 
 - 发布日期：2019-02-21
 - 版本信息：1.11.11
