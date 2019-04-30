@@ -34,16 +34,17 @@ CONFPATH=./build/bcs.${VERSION}/conf
 COMMONPATH=./build/bcs.${VERSION}/common
 EXPORTPATH=./build/api_export
 
+# options
+default:api dns health client storage check executor driver mesos_watch scheduler loadbalance k8s_watch kube_agent api_export
+specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export hpacontroller
+
 # tag for different edition compiling
 inner:
-	$(MAKE) default bcs_edition=inner_edition
+	$(MAKE) specific bcs_edition=inner_edition
 ce:
-	$(MAKE) default bcs_edition=communication_edition
+	$(MAKE) specific bcs_edition=communication_edition
 ee:
-	$(MAKE) default bcs_edition=enterprise_edition
-
-# options
-default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export hpacontroller
+	$(MAKE) specific bcs_edition=enterprise_edition
 
 clean:
 	rm -rf ./build
@@ -125,8 +126,8 @@ hpacontroller:pre
 
 k8s_watch:pre
 	mkdir -p ${BINARYPATH}/bcs-k8s-watch
-	go build ${LDFLAG} -o ${BINARYPATH}/bcs-k8s-watch/bcs-k8s-watch ./bcs-k8s/k8s-watch/main.go
-	cp ./bcs-k8s/k8s-watch/Dockerfile_new ${BINARYPATH}/bcs-k8s-watch/Dockerfile
+	go build ${LDFLAG} -o ${BINARYPATH}/bcs-k8s-watch/bcs-k8s-watch ./bcs-k8s/bcs-k8s-watch/main.go
+	cp ./bcs-k8s/bcs-k8s-watch/Dockerfile_new ${BINARYPATH}/bcs-k8s-watch/Dockerfile
 
 api_export:pre
 	mkdir -p ${EXPORTPATH}

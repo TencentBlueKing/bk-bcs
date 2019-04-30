@@ -11,6 +11,11 @@ mkdir -p $GOPATH/src    #为GOPATH新建源代码存放路径
 ## 编译环境
 
 - golang >= 1.11.2
+- numactl-devel >= 2.0.9
+
+``` shell
+sudo yum install numactl-devel -y
+```
 
 ## 源码下载
 
@@ -39,5 +44,5 @@ source ./scripts/env.sh
 
 ### 编译
 ``` shell
-make
+make -j
 ```

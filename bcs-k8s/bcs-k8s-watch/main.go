@@ -19,8 +19,8 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"bk-bcs/bcs-k8s/k8s-watch/app"
-	"bk-bcs/bcs-k8s/k8s-watch/pkg/util/basic"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
