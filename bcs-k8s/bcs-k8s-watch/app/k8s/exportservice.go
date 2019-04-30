@@ -26,8 +26,8 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"bk-bcs/bcs-k8s/k8s-watch/app/output"
-	"bk-bcs/bcs-k8s/k8s-watch/app/output/action"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 
 	commtypes "bk-bcs/bcs-common/common/types"
 	lbtypes "bk-bcs/bcs-common/pkg/loadbalance/v2"

@@ -17,8 +17,8 @@ package action
 import (
 	glog "bk-bcs/bcs-common/common/blog"
 
-	"bk-bcs/bcs-k8s/k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/k8s-watch/app/output/http"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
 
 type StorageAction struct {

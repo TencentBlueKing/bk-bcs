@@ -19,8 +19,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/k8s-watch/app/output/action"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 )
 
 // writer queue -> handler queue -> action func

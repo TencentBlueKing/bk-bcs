@@ -21,9 +21,9 @@ import (
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/version"
 
-	"bk-bcs/bcs-k8s/k8s-watch/app/options"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 
-	//"bk-bcs/bcs-k8s/k8s-watch/app/output/action"
+	//"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 	"k8s.io/api/core/v1"
 )
 
