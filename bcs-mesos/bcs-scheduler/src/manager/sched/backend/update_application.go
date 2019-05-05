@@ -67,10 +67,12 @@ func (b *backend) UpdateApplication(runAs, appId string, args string, instances 
 		return err
 	}
 
+	//add taskgroup number check 
 	if len(updateOpdata.Taskgroups) == 0 {
 		blog.Error("list taskgroups(%s.%s) return empty", runAs, appId)
 		return errors.New("no taskgroups to update")
 	}
+	//check end 
 
 	blog.Info("taskgroups before sort:")
 
