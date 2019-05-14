@@ -49,10 +49,10 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 		return comm.BcsErrMesosSchedResourceExist, err
 	}
 	deployment := types.Deployment{
-		ObjectMeta: deploymentDef.ObjectMeta,
-		Selector:   deploymentDef.Selector,
-		Strategy:   deploymentDef.Strategy,
-		Status:     types.DEPLOYMENT_STATUS_DEPLOYING,
+		ObjectMeta:    deploymentDef.ObjectMeta,
+		Selector:      deploymentDef.Selector,
+		Strategy:      deploymentDef.Strategy,
+		Status:        types.DEPLOYMENT_STATUS_DEPLOYING,
 		RawJson:       deploymentDef.RawJson,
 		RawJsonBackup: nil,
 	}
@@ -127,7 +127,7 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 			deployment.Status = types.DEPLOYMENT_STATUS_RUNNING
 			if err := b.store.SaveDeployment(&deployment); err != nil {
 				blog.Error("request create deployment: save(%s.%s), err:%s", ns, name, err.Error())
-				return  comm.BcsErrCommCreateZkNodeFail, err
+				return comm.BcsErrCommCreateZkNodeFail, err
 			}
 		} else {
 			version := deploymentDef.Version
@@ -184,7 +184,7 @@ func (b *backend) createDeploymentApplication(version *types.Version) (int, erro
 
 	if version == nil {
 		err := errors.New("version data empty, cannot create application")
-		return  comm.BcsErrCommRequestDataErr, err
+		return comm.BcsErrCommRequestDataErr, err
 	}
 	blog.Info("do create deployment application(%s.%s)", version.RunAs, version.ID)
 	if version.Instances <= 0 {
@@ -214,7 +214,7 @@ func (b *backend) createDeploymentApplication(version *types.Version) (int, erro
 	app, err := b.store.FetchApplication(version.RunAs, version.ID)
 	if err != nil && err != zk.ErrNoNode {
 		blog.Error("create deployment application, fetch application(%s.%s) ret:%s", version.RunAs, version.ID, err.Error())
-		return  comm.BcsErrCommGetZkNodeFail, err
+		return comm.BcsErrCommGetZkNodeFail, err
 	}
 
 	if app != nil {
@@ -244,12 +244,12 @@ func (b *backend) createDeploymentApplication(version *types.Version) (int, erro
 	if err := b.SaveVersion(version.RunAs, version.ID, version); err != nil {
 		blog.Error("create deployment application: fail to SaveVersion(%s.%s), err:%s",
 			version.RunAs, version.ID, err.Error())
-		return  comm.BcsErrCommCreateZkNodeFail, err
+		return comm.BcsErrCommCreateZkNodeFail, err
 	}
 	if err := b.LaunchApplication(version); err != nil {
 		blog.Error("create deployment application: application(%s.%s) launch error: %s",
 			version.RunAs, version.ID, err.Error())
-		return  comm.BcsErrMesosSchedCommon, err
+		return comm.BcsErrMesosSchedCommon, err
 	}
 
 	return comm.BcsSuccess, nil
@@ -320,7 +320,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	if app.Status != types.APP_STATUS_RUNNING && app.Status != types.APP_STATUS_ABNORMAL {
 		err = errors.New("deployment bind application is not running, cannot update, please try later")
 		blog.Warn("update deployment(%s.%s): application under status(%s) can not update", ns, name, app.Status)
-		return  comm.BcsErrMesosSchedCommon, err
+		return comm.BcsErrMesosSchedCommon, err
 	}
 
 	for k, v := range currDeployment.Selector {
@@ -367,7 +367,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	}
 	if version.CheckConstraints() == false {
 		err := errors.New("constraints error")
-		return  comm.BcsErrCommRequestDataErr, err
+		return comm.BcsErrCommRequestDataErr, err
 	}
 	// lock extension application
 	b.store.LockApplication(ns + "." + version.ID)
@@ -376,7 +376,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	app, err = b.store.FetchApplication(version.RunAs, version.ID)
 	if err != nil && err != zk.ErrNoNode {
 		blog.Error("update deployment, fetch application(%s.%s) err:%s", version.RunAs, version.ID, err.Error())
-		return  comm.BcsErrCommGetZkNodeFail, err
+		return comm.BcsErrCommGetZkNodeFail, err
 	}
 	if app != nil {
 		err = errors.New("application already exist")
@@ -507,8 +507,8 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 			ns, name, deployment.ApplicationExt.ApplicationName)
 		deployment.ApplicationExt = nil
 	}
-	
-	if deployment.Application == nil{
+
+	if deployment.Application == nil {
 		blog.Warn("cancelupdate deployment(%s.%s), no bind application", ns, name)
 		return errors.New("no application to do recover")
 	}
@@ -580,7 +580,7 @@ func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, e
 			ns, name, deployment.Application.ApplicationName)
 		err = b.sched.InnerDeleteApplication(ns, deployment.Application.ApplicationName, enforce)
 		if err != nil {
-			blog.Errorf("delete app (%s:%s) error %s", ns, deployment.ApplicationExt.ApplicationName, err.Error())
+			blog.Errorf("delete app (%s:%s) error %s", ns, deployment.Application.ApplicationName, err.Error())
 		}
 		blog.Info("delete deployment(%s.%s), call delete bind application(%s) return",
 			ns, name, deployment.Application.ApplicationName)
@@ -660,7 +660,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 		}
 		return
 
-	} 
+	}
 	time.Sleep(3 * time.Second)
 	go b.CheckDeleteDeployment(ns, name)
 	return

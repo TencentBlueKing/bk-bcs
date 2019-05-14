@@ -122,6 +122,17 @@ const (
 	TASK_TEMPLATE_KEY_PIDFILE     = "pidFile"
 )
 
+const (
+	APP_TASK_TEMPLATE_KEY_FORMAT      = "${%s}"
+	APP_TASK_TEMPLATE_KEY_PORT_FORMAT = "bcs.ports.%s"
+	APP_TASK_TEMPLATE_KEY_APPNAME     = "bcs.appname"
+	APP_TASK_TEMPLATE_KEY_INSTANCEID  = "bcs.instanceid"
+	APP_TASK_TEMPLATE_KEY_HOSTIP      = "bcs.hostip"
+	APP_TASK_TEMPLATE_KEY_NAMESPACE   = "bcs.namespace"
+	APP_TASK_TEMPLATE_KEY_PODID       = "bcs.taskgroupid"
+	APP_TASK_TEMPLATE_KEY_PODNAME     = "bcs.taskgroupname"
+)
+
 //Version for api resources application or deployment
 type Version struct {
 	ID            string
@@ -399,26 +410,26 @@ type Task struct {
 	DataClass       *DataClass
 	HealthChecks    []*commtypes.HealthCheck
 	// health check status
-	HealthCheckStatus []*commtypes.BcsHealthCheckStatus
-	Healthy           bool
-	IsChecked               bool
-	ConsecutiveFailureTimes uint32
-	LocalMaxConsecutiveFailures  uint32
+	HealthCheckStatus           []*commtypes.BcsHealthCheckStatus
+	Healthy                     bool
+	IsChecked                   bool
+	ConsecutiveFailureTimes     uint32
+	LocalMaxConsecutiveFailures uint32
 
-	OfferId           string
-	AgentId           string
-	AgentHostname     string
-	AgentIPAddress    string
-	Status            string
-	LastStatus        string
-	UpdateTime        int64
-	StatusData        string
-	AppId             string
-	RunAs             string
-	KillPolicy        *commtypes.KillPolicy
-	Uris              []string
-	LastUpdateTime    int64
-	Message           string
+	OfferId        string
+	AgentId        string
+	AgentHostname  string
+	AgentIPAddress string
+	Status         string
+	LastStatus     string
+	UpdateTime     int64
+	StatusData     string
+	AppId          string
+	RunAs          string
+	KillPolicy     *commtypes.KillPolicy
+	Uris           []string
+	LastUpdateTime int64
+	Message        string
 	//network flow limit
 	NetLimit *commtypes.NetLimit
 }
