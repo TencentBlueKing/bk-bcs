@@ -22,8 +22,8 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"github.com/samuel/go-zookeeper/zk"
 	"encoding/json"
+	"github.com/samuel/go-zookeeper/zk"
 	"net/http"
 	//"sort"
 	"strings"
@@ -45,7 +45,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	s.store.LockApplication(runAs + "." + appId)
 	defer s.store.UnLockApplication(runAs + "." + appId)
 
-    // ack and check
+	// ack and check
 	if s.preCheckTaskStatusReport(status) == false {
 		return
 	}
@@ -61,7 +61,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	task, err := s.store.FetchTask(taskId)
 	if task == nil {
 		blog.Warn("status report: fetch task(%s) return nil", taskId)
-		return 
+		return
 	}
 
 	var alarmTimeval uint16 = 600
@@ -153,7 +153,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		taskUpdated = true
 	}
 
-	if  taskUpdated || task.LastUpdateTime <= updateTime {
+	if taskUpdated || task.LastUpdateTime <= updateTime {
 		blog.V(3).Infof("status report: Save Task %s, Status: %s, StatusData: %s, Healthy: %t",
 			taskId, task.Status, task.StatusData, task.Healthy)
 	} else {
@@ -342,7 +342,7 @@ func (s *Scheduler) preCheckTaskStatusReport(status *mesos.TaskStatus) bool {
 	task, err := s.store.FetchTask(taskId)
 	if err != nil && err != zk.ErrNoNode {
 		blog.Warn("status report: fetch task(%s) err(%s)", taskId, err.Error())
-		return false 
+		return false
 	}
 
 	if task == nil {
@@ -377,7 +377,6 @@ func (s *Scheduler) preCheckTaskStatusReport(status *mesos.TaskStatus) bool {
 
 	return true
 }
-
 
 func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentId *mesos.AgentID, executorId *mesos.ExecutorID) (bool, error) {
 	isUpdated := false
@@ -428,7 +427,7 @@ func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentId *mesos.A
 				runningNum++
 			case types.TASK_STATUS_FINISH:
 				finishedNum++
-			case types.TASK_STATUS_ERROR: 
+			case types.TASK_STATUS_ERROR:
 				errorNum++
 				errMessage = task.Message
 			case types.TASK_STATUS_FAIL:
@@ -522,7 +521,7 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 
 	for _, taskGroup := range taskGroups {
 		totalNum++
-		switch taskGroup.Status{
+		switch taskGroup.Status {
 		case types.TASKGROUP_STATUS_STAGING:
 			stagingNum++
 		case types.TASKGROUP_STATUS_STARTING:
@@ -659,7 +658,7 @@ func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originSta
 			blog.Warn("taskgroup(%s) already reschedule times(%d/%d), will not reschedule again",
 				taskGroup.ID, reschedTimes, maxTimes)
 			return
-		} 
+		}
 		delayTime := taskGroup.RestartPolicy.Interval
 		if reschedTimes > 0 {
 			delayTime = delayTime + reschedTimes*taskGroup.RestartPolicy.Backoff
@@ -667,7 +666,7 @@ func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originSta
 		if delayTime < 0 {
 			delayTime = 0
 		}
-		
+
 		if delayTime > TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD-TRANSACTION_DEFAULT_LIFEPERIOD {
 			delayTime = TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD - TRANSACTION_DEFAULT_LIFEPERIOD
 		}
@@ -685,6 +684,7 @@ func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originSta
 		rescheduleTrans.AppID = appID
 		rescheduleTrans.OpType = types.OPERATION_RESCHEDULE
 		rescheduleTrans.Status = types.OPERATION_STATUS_INIT
+		rescheduleTrans.LifePeriod = TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD
 
 		var rescheduleOpdata TransRescheduleOpData
 		rescheduleOpdata.TaskGroupID = taskGroupID
