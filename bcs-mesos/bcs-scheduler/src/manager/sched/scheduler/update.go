@@ -82,8 +82,8 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	case mesos.TaskState_TASK_FINISHED:
 		blog.Info("status report: Task(%s) Finished, message: %s", taskId, status.GetMessage())
 		reportStatus = types.TASK_STATUS_FINISH
-	case mesos.TaskState_TASK_FAILED:
-		blog.Info("status report: Task(%s) Failed, message: %s", taskId, status.GetMessage())
+	case mesos.TaskState_TASK_FAILED, mesos.TaskState_TASK_GONE:
+		blog.Info("status report: Task(%s) mesos status(%d) Failed, message: %s", taskId, state, status.GetMessage())
 		reportStatus = types.TASK_STATUS_FAIL
 		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
 		if taskGroup != nil {
@@ -95,8 +95,8 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	case mesos.TaskState_TASK_KILLED:
 		blog.Info("status report: Task(%s) Killed, message: %s", taskId, status.GetMessage())
 		reportStatus = types.TASK_STATUS_KILLED
-	case mesos.TaskState_TASK_LOST:
-		blog.Info("status report: Task(%s) Lost, message: %s", taskId, status.GetMessage())
+	case mesos.TaskState_TASK_LOST, mesos.TaskState_TASK_UNREACHABLE, mesos.TaskState_TASK_GONE_BY_OPERATOR:
+		blog.Info("status report: Task(%s) mesos status(%d) Lost, message: %s", taskId, state, status.GetMessage())
 		reportStatus = types.TASK_STATUS_LOST
 		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
 		if taskGroup != nil {
