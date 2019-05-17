@@ -521,8 +521,9 @@ func (docker *DockerContainer) InspectContainer(containerName string) (*BcsConta
 func (docker *DockerContainer) PullImage(image string) error {
 	repo, tag := dockerclient.ParseRepositoryTag(image)
 	pullOpt := dockerclient.PullImageOptions{
-		Repository: repo,
-		Tag:        tag,
+		Repository:        repo,
+		Tag:               tag,
+		InactivityTimeout: time.Minute * 3,
 	}
 	auth := dockerclient.AuthConfiguration{
 		Username: docker.user,

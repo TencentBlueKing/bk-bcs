@@ -344,7 +344,9 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 			driver.Stop()
 		}
 	}()
+	go executor.watchStartingTask()
 	logs.Infof("BcsExecutor init pod success.")
+
 	if setupErr := executor.netManager.SetUpPod(executor.podInst); setupErr != nil {
 		executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_FAILED, "Pod Setup failed: "+setupErr.Error())
 		executor.status = ExecutorStatus_SHUTDOWN
@@ -353,6 +355,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 		return
 	}
 	logs.Infof("BcsExecutor Setup pod network success.")
+
 	if startErr := executor.podInst.Start(); startErr != nil {
 		executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_FAILED, "Pod Start failed: "+startErr.Error())
 		executor.status = ExecutorStatus_SHUTDOWN
@@ -362,6 +365,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 		return
 	}
 	logs.Infof("BcsExecutor start pod success. update local container info, ready to watch Pod status")
+
 	executor.podStatus = container.PodStatus_STARTING
 	executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_STARTING, "Pod is starting")
 	//start success, Get container info and reply to scheduler
@@ -379,6 +383,29 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 	//watching all containers
 	go executor.monitorPod()
 	return
+}
+
+func (executor *BcsExecutor) watchStartingTask() {
+	for {
+		//time.Sleep(time.Minute)
+		if executor.podStatus != container.PodStatus_INIT &&
+			executor.podStatus != container.PodStatus_UNKNOWN {
+			logs.Infof("pod status %s, then return\n", executor.podStatus)
+			return
+		}
+
+		for _, task := range executor.podInst.GetContainerTasks() {
+
+			taskinfo := executor.tasks.TaskInfo[task.TaskId]
+			update := &mesos.TaskStatus{
+				TaskId:  taskinfo.GetTaskId(),
+				State:   mesos.TaskState_TASK_STARTING.Enum(),
+				Message: proto.String(fmt.Sprintf("task is starting")),
+				Source:  mesos.TaskStatus_SOURCE_EXECUTOR.Enum(),
+			}
+			executor.driver.SendStatusUpdate(update)
+		}
+	}
 }
 
 //KillTask kill task by taskId
