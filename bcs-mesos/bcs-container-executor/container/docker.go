@@ -58,6 +58,7 @@ import (
 
 const (
 	StopContainerGraceTime = 10
+	DefaultDockerCpuPeriod = 100000
 )
 
 //DockerContainer implement container interface
@@ -360,6 +361,15 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 			hostConfig.CPUSetMEMs = util.ListJoin(numaList)
 			fmt.Fprintf(os.Stdout, "DEBUG: CPU List info %v, numa: %v, post: %s, %s\n", cpuList, numaList, hostConfig.CPUSetCPUs, hostConfig.CPUSetMEMs)
 		}
+	}
+
+	if containerTask.LimitResource != nil && containerTask.LimitResource.Cpus > 0 {
+		hostConfig.CPUPeriod = DefaultDockerCpuPeriod
+		hostConfig.CPUQuota = int64(containerTask.LimitResource.Cpus * DefaultDockerCpuPeriod)
+	}
+	if containerTask.LimitResource != nil && containerTask.LimitResource.Mem >= 4 {
+		hostConfig.Memory = int64(containerTask.LimitResource.Mem * 1024 * 1024)
+		hostConfig.MemorySwap = int64(containerTask.LimitResource.Mem * 1024 * 1024)
 	}
 
 	//done(developerJim): setting portMapping
