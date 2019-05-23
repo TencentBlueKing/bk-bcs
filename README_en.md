@@ -1,4 +1,4 @@
-![蓝鲸容器管理平台.png](./docs/logo/bcs_en.png)
+![BCS.png](./docs/logo/logo_en.png)
 ---
 [![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.12.0-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases)[![Build Status](https://travis-ci.org/Tencent/bk-bcs.svg?branch=master)](https://travis-ci.org/Tencent/bk-bcs)[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)
 
