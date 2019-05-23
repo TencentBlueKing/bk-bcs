@@ -309,11 +309,12 @@ func (version *Version) AllResource() *Resource {
 
 //Container for Version
 type Container struct {
-	Type      string
-	Docker    *Docker
-	Volumes   []*Volume
-	Resources *Resource
-	DataClass *DataClass
+	Type          string
+	Docker        *Docker
+	Volumes       []*Volume
+	Resources     *Resource
+	LimitResoures *Resource
+	DataClass     *DataClass
 
 	ConfigMaps []commtypes.ConfigMap
 	Secrets    []commtypes.Secret
@@ -553,9 +554,10 @@ type ProcDef struct {
 }
 
 type DataClass struct {
-	Resources *Resource
-	Msgs      []*BcsMessage
-	NetLimit  *commtypes.NetLimit
+	Resources      *Resource
+	LimitResources *Resource
+	Msgs           []*BcsMessage
+	NetLimit       *commtypes.NetLimit
 	//add for proc 20180730
 	ProcInfo *ProcDef
 }
