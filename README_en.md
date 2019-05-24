@@ -3,7 +3,7 @@
 [![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.12.0-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases)[![Build Status](https://travis-ci.org/Tencent/bk-bcs.svg?branch=master)](https://travis-ci.org/Tencent/bk-bcs)[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)  
 
 
-BlueKing Container Service (BCS) is a container management and orchestration platform for the micro-services under the BlueKing echo system.
+BlueKing Container Service (BCS) is a container management and orchestration platform for the micro-services under the BlueKing ecosystem.
 
 BlueKing Container Service provides a two-engine-driven container orchestration scheme based on native Kubernetes and mesos bk-framework, and users can choose to either one of them to orchestrate their own applications. The Kubernetes method is mainly based on Kubernetes solution. In addition to providing native functional support, it also provide the seamless integration of native Kubernetes and BlueKing platform. Users can experience container technology with Kubernetes community edition in the BlueKing platform in a way that is indistinguishable and  convenient. The mesos+bk-framwork solution is a container orchestration program for BlueKing that capable for customization. If you need to create a highly personalized container platform for special application scenarios, the mesos bk-framework solution is a great choice.
 
