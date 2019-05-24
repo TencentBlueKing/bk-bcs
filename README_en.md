@@ -13,9 +13,9 @@ The open source version is consistent with the BlueKing Container Management Pla
 
 ## Overview
 
-* [Architecture Design] (./docs/overview/architecture.md)
-* [code structure] (./docs/overview/code_directory.md)
-* [Function Description] (./docs/overview/function.md)
+* [Architecture Design](./docs/overview/architecture.md)
+* [code structure](./docs/overview/code_directory.md)
+* [Function Description](./docs/overview/function.md)
 
 ## Features
 
@@ -29,34 +29,34 @@ The open source version is consistent with the BlueKing Container Management Pla
 * Support in-container IPC mechanism
 * Support multiple container network solutions (CNI)
 
-For a detailed description of the above features, please refer to the BlueKing Container Management Platform [white paper] (https://bk.tencent.com/docs/)
+For a detailed description of the above features, please refer to the BlueKing Container Management Platform [white paper](https://bk.tencent.com/docs/)
 
 ## Getting Started
 
-* [Download and Compile] (docs/install/source_compile.md)
-* [Installation Deployment] (docs/install/deploy-guide.md)
-* [API Usage Notes] (./docs/apidoc/api.md)
+* [Download and Compile](docs/install/source_compile.md)
+* [Installation Deployment](docs/install/deploy-guide.md)
+* [API Usage Notes](./docs/apidoc/api.md)
 
 ## Version Plan
 
-* [Version Details] (./docs/version/README.md)
+* [Version Details](./docs/version/README.md)
 
 ## Contributing
 
-Interested in the project, and want to contribute and improve the project together, please refer to [contributing] (./CONTRIBUTING.md).
-[Tencent Open Source Incentive Program] (https://opensource.tencent.com/contribution) Encourage developers to participate and contribute, and look forward to your joining us.
+Interested in the project, and want to contribute and improve the project together, please refer to [contributing](./CONTRIBUTING.md).
+[Tencent Open Source Incentive Program](https://opensource.tencent.com/contribution) Encourage developers to participate and contribute, and look forward to your joining us.
 
 ## Support
 
 * Refer to bk-bcs [installation documentation] (docs/install/deploy-guide.md)
-* Read [source code] (https://github.com/Tencent/bk-bcs)
-* Read [wiki] (https://github.com/Tencent/bk-bcs/wiki) or ask for help
+* Read [source code](https://github.com/Tencent/bk-bcs)
+* Read [wiki](https://github.com/Tencent/bk-bcs/wiki) or ask for help
 * Learn about the BlueKing Community: Wechat search 蓝鲸社区版交流群
 * Contact us, technical exchange via QQ group:
 
 ## FAQ
 
-[https://github.com/Tencent/bk-bcs/wiki/FAQ] (https://github.com/Tencent/bk-bcs/wiki/FAQ)
+[https://github.com/Tencent/bk-bcs/wiki/FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)
 
 ## License
 
