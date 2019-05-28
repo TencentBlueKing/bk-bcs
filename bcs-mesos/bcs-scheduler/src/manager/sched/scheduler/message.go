@@ -15,6 +15,7 @@ package scheduler
 
 import (
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
@@ -165,6 +166,9 @@ func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 		blog.Error("procss command message, but data empty")
 		return
 	}
+	runAs, appID := store.GetRunAsAndAppIDbyTaskID(bcsMsg.ResponseCommandTask.TaskId)
+	s.store.LockApplication(fmt.Sprintf("%s.%s", runAs, appID))
+	defer s.store.UnLockApplication(fmt.Sprintf("%s.%s", runAs, appID))
 
 	cmdId := bcsMsg.ResponseCommandTask.ID
 	taskId := bcsMsg.ResponseCommandTask.TaskId
@@ -177,13 +181,13 @@ func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 	}
 
 	exist := false
-	for _, taskGroup := range command.Status.Taskgroups {	
+	for _, taskGroup := range command.Status.Taskgroups {
 		for _, task := range taskGroup.Tasks {
 			if taskId == task.TaskId {
 				task.Status = bcsMsg.ResponseCommandTask.Status
-				task.Message =  bcsMsg.ResponseCommandTask.Message
+				task.Message = bcsMsg.ResponseCommandTask.Message
 				task.CommInspect = bcsMsg.ResponseCommandTask.CommInspect
-				blog.Info("update command(%s) task(%s:%s:%s)", cmdId, taskId, task.Status, task.Message)	
+				blog.Info("update command(%s) task(%s:%s:%s)", cmdId, taskId, task.Status, task.Message)
 				exist = true
 				break
 			}
