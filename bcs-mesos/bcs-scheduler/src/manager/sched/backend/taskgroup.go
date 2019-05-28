@@ -44,7 +44,7 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 		blog.Error("reschedule taskgroup(%s) fail, get application(%s.%s) return nil", taskgroupId, runAs, appID)
 		return errors.New("Application not found")
 	}
-	if app.Status == types.APP_STATUS_OPERATING {
+	/*if app.Status == types.APP_STATUS_OPERATING {
 		blog.Warn("reschedule taskgroup(%s) fail, application(%s.%s) status(%s) err", taskgroupId, runAs, appID, app.Status)
 		return errors.New("Operation Not Allowed")
 	}
@@ -52,7 +52,7 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 		blog.Error("reschedule taskgroup(%s) fail, application(%s.%s) status(%s:%s) err",
 			taskgroupId, runAs, appID, app.Status, app.SubStatus)
 		return errors.New("operation Not Allowed")
-	}
+	}*/
 
 	b.store.LockApplication(runAs + "." + appID)
 	defer b.store.UnLockApplication(runAs + "." + appID)
@@ -108,7 +108,7 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 	var rescheduleOpdata sched.TransRescheduleOpData
 
 	rescheduleOpdata.TaskGroupID = taskgroup.ID
-	rescheduleOpdata.Force = true 
+	rescheduleOpdata.Force = true
 	rescheduleOpdata.IsInner = false
 	rescheduleOpdata.HostRetainTime = hostRetainTime
 	if rescheduleOpdata.HostRetainTime > 0 {
