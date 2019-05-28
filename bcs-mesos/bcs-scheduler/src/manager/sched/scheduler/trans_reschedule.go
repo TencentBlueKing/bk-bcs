@@ -60,6 +60,7 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 		opData := transaction.OpData.(*TransRescheduleOpData)
 		version := opData.Version
 
+		//if inner rescheduler, then check app status
 		if opData.IsInner {
 			if app.Status == types.APP_STATUS_OPERATING {
 				blog.Infof("transaction %s pending: app(%s.%s) is in status(%s:%s), cannot do at now",
