@@ -180,12 +180,24 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		container := new(types.Container)
 		c := spec.PodSpec.Containers[i]
 
+		if c.Resources.Requests.Cpu == "" && c.Resources.Limits.Cpu != "" {
+			c.Resources.Requests.Cpu = c.Resources.Limits.Cpu
+			c.Resources.Requests.Mem = c.Resources.Limits.Mem
+			c.Resources.Requests.Storage = c.Resources.Limits.Storage
+		}
+
 		container.Type = c.Type
 		//Resources
 		container.Resources = new(types.Resource)
-		container.Resources.Cpus, _ = strconv.ParseFloat(c.Resources.Limits.Cpu, 64)
-		container.Resources.Mem, _ = strconv.ParseFloat(c.Resources.Limits.Mem, 64)
-		container.Resources.Disk, _ = strconv.ParseFloat(c.Resources.Limits.Storage, 64)
+		container.Resources.Cpus, _ = strconv.ParseFloat(c.Resources.Requests.Cpu, 64)
+		container.Resources.Mem, _ = strconv.ParseFloat(c.Resources.Requests.Mem, 64)
+		container.Resources.Disk, _ = strconv.ParseFloat(c.Resources.Requests.Storage, 64)
+
+		//limit resuroces
+		container.LimitResoures = new(types.Resource)
+		container.LimitResoures.Cpus, _ = strconv.ParseFloat(c.Resources.Limits.Cpu, 64)
+		container.LimitResoures.Mem, _ = strconv.ParseFloat(c.Resources.Limits.Mem, 64)
+		container.LimitResoures.Disk, _ = strconv.ParseFloat(c.Resources.Limits.Storage, 64)
 
 		container.DataClass = &types.DataClass{
 			Resources: new(types.Resource),
@@ -193,6 +205,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		}
 
 		container.DataClass.Resources = container.Resources
+		container.DataClass.LimitResources = container.LimitResoures
 
 		//set network flow limit parameters
 		container.NetLimit = spec.PodSpec.NetLimit

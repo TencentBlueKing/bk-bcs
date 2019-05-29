@@ -139,10 +139,20 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 						}
 					],
 					"type": "MESOS",
-					"env": [{
-						"name": "test_env",
-						"value": "test_env"
-					}],
+					"env": [
+                        {
+                            "name": "test_env",
+                            "value": "test_env"
+                        },
+                        {
+                            "name": "namespace",
+                            "value": "${bcs.namespace}"
+                        },
+                        {
+                            "name": "http-port",
+                            "value": "${bcs.ports.http_port}"
+                        }
+					],
 					"image": "docker.hub.com/nfsol/log:92763",
 					"imagePullUser": "userName",
 					"imagePullPasswd": "passwd",
@@ -157,7 +167,7 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 						{
 							"containerPort": 8080,
 							"hostPort": 8080,
-							"name": "test-http",
+							"name": "http-port",
 							"protocol": "http"
 						}
 					],
@@ -373,10 +383,12 @@ io.tencent.bcs.netsvc.requestip.[i]: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.
 * IfNotPresent：如果本地没有，则尝试拉取（默认值）
 * privileged：容器特权参数，默认为false
 * resources：容器使用资源
-* limits.cpu:字符串，可以填写小数，1为使用1核
-* limits.memory：内存使用，字符串，单位默认为M. 注意：当memory >= 4Mb, 使用memory的值限制内存；否则，不对memory做limits
+* request.cpu:字符串，可以填写小数，1为使用1核，cpu软限制，对应cpu_shares。调度分配的值，如果不填写默认为limit.cpu
+* request.memory：内存使用，字符串，单位默认为M，memory下限。调度分配的值，如果不填写默认为limit.memory。注意：当memory >= 4Mb, 使用memory的值限制内存；否则，不对memory做limits
+* request.storage：磁盘使用大小，默认单位M
+* limits.cpu:字符串，可以填写小数，1为使用1核，cpu硬限制，对应cpu_quota、cpu_period
+* limits.memory：内存使用，字符串，单位默认为M，memory上限。
 * limits.storage：磁盘使用大小，默认单位M
-* request 仅对k8s生效
 * networkMode：网络模式
 * HOST: docker原生网络模式，与宿主机共用一个Network Namespace，此模式下需要自行解决网络端口冲突问题
 * BRIDGE: docker原生网络模式，此模式会为每一个容器分配Network Namespace、设置IP等，并将一个主机上的Docker容器连接到一个虚拟网桥上，通过端口映射的方式对外提供服务
@@ -386,6 +398,30 @@ io.tencent.bcs.netsvc.requestip.[i]: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.
 * networkType：只有在networkMode为USER模式下，该字段才有效
 * cni(小写): 使用bcs提供的cni来构建网络，具体cni的类型是由配置决定
 * cnm：使用docker原生或用户自定义的方式来构建网络
+
+### 容器env环境变量支持bcs系统常量
+application容器中env环境变量的配置，支持几种bcs系统常量
+- ${bcs.namespace}  //namespace
+- ${bcs.appname}  //application name
+- ${bcs.instanceid}   //pod index，例如：0
+- ${bcs.hostip}  //pod所调度、部署的物理机ip
+- ${bcs.ports.port-name}  //bcs支持系统分配随机端口，端口范围在31000-32000，port-name表示ports端口的name。${ports.port-name}变量用于表示随机分配的端口号，业务可以通过启动脚本参数或环境变量的方式获取该端口号。例如：上述json文件中的${ports.http-port}变量表示系统随机分配的ports name为http-port的端口号，业务可以使用环境变量，启动参数等方式获取
+- ${bcs.taskgroupid}  //application taskgroup id
+- ${bcs.taskgroupname}  //application taskgroup name
+
+例如
+```json
+"env": [
+    {
+        "name": "namespace",
+        "value": "${bcs.namespace}"
+    },
+    {
+        "name": "http-port",
+        "value": "${bcs.ports.http_port}"
+    }
+]
+```
 
 ### **netLimit说明**
 
