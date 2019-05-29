@@ -58,6 +58,7 @@ import (
 
 const (
 	StopContainerGraceTime = 10
+	DefaultDockerCpuPeriod = 100000
 )
 
 //DockerContainer implement container interface
@@ -362,6 +363,15 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		}
 	}
 
+	if containerTask.LimitResource != nil && containerTask.LimitResource.Cpus > 0 {
+		hostConfig.CPUPeriod = DefaultDockerCpuPeriod
+		hostConfig.CPUQuota = int64(containerTask.LimitResource.Cpus * DefaultDockerCpuPeriod)
+	}
+	if containerTask.LimitResource != nil && containerTask.LimitResource.Mem >= 4 {
+		hostConfig.Memory = int64(containerTask.LimitResource.Mem * 1024 * 1024)
+		hostConfig.MemorySwap = int64(containerTask.LimitResource.Mem * 1024 * 1024)
+	}
+
 	//done(developerJim): setting portMapping
 	for key, value := range containerTask.PortBindings {
 		var tmp struct{}
@@ -521,8 +531,9 @@ func (docker *DockerContainer) InspectContainer(containerName string) (*BcsConta
 func (docker *DockerContainer) PullImage(image string) error {
 	repo, tag := dockerclient.ParseRepositoryTag(image)
 	pullOpt := dockerclient.PullImageOptions{
-		Repository: repo,
-		Tag:        tag,
+		Repository:        repo,
+		Tag:               tag,
+		InactivityTimeout: time.Minute * 3,
 	}
 	auth := dockerclient.AuthConfiguration{
 		Username: docker.user,
