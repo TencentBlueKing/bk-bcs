@@ -39,9 +39,8 @@ func main() {
 	defer blog.CloseLogs()
 
 	if err := common.SavePid(op.ProcessConfig); err != nil {
-		blog.Error("fail to save pid: error:%s", err.Error())
+		blog.Error("fail to save pid: err:%s", err.Error())
 	}
-	
 
 	config := schedutil.NewSchedulerCfg()
 
