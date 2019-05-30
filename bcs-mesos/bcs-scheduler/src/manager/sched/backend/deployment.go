@@ -580,7 +580,7 @@ func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, e
 			ns, name, deployment.Application.ApplicationName)
 		err = b.sched.InnerDeleteApplication(ns, deployment.Application.ApplicationName, enforce)
 		if err != nil {
-			blog.Errorf("delete app (%s:%s) error %s", ns, deployment.Application.ApplicationName, err.Error())
+			blog.Errorf("delete application(%s.%s) error %s", ns, deployment.Application.ApplicationName, err.Error())
 		}
 		blog.Info("delete deployment(%s.%s), call delete bind application(%s) return",
 			ns, name, deployment.Application.ApplicationName)
@@ -593,7 +593,7 @@ func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, e
 			ns, name, deployment.ApplicationExt.ApplicationName)
 		err = b.sched.InnerDeleteApplication(ns, deployment.ApplicationExt.ApplicationName, enforce)
 		if err != nil {
-			blog.Errorf("delete app (%s:%s) error %s", ns, deployment.ApplicationExt.ApplicationName, err.Error())
+			blog.Errorf("delete application(%s.%s) error %s", ns, deployment.ApplicationExt.ApplicationName, err.Error())
 		}
 		blog.Info("delete deployment(%s.%s), call delete binded extension application(%s) return",
 			ns, name, deployment.ApplicationExt.ApplicationName)
