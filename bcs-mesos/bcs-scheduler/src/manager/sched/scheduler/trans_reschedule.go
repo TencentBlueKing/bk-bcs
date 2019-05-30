@@ -16,13 +16,13 @@
 package scheduler
 
 import (
-	"net/http"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	alarm "bk-bcs/bcs-common/common/bcs-health/api"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"net/http"
 	"time"
 )
 
@@ -56,22 +56,25 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			transaction.Status = types.OPERATION_STATUS_FAIL
 			break
 		}
-		if app.Status == types.APP_STATUS_OPERATING {
-			blog.Infof("transaction %s pending: app(%s.%s) is in status(%s:%s), cannot do at now",
-				transaction.ID, runAs, appID, app.Status, app.SubStatus)
-			time.Sleep(3 * time.Second)
-			continue
-		}
-		if app.Status == types.APP_STATUS_ROLLINGUPDATE && app.SubStatus != types.APP_SUBSTATUS_ROLLINGUPDATE_UP {
-			blog.Infof("transaction %s pending: app(%s.%s) is in status(%s:%s), cannot do at now",
-				transaction.ID, runAs, appID, app.Status, app.SubStatus)
-			time.Sleep(3 * time.Second)
-			continue
-		}
-
 		//check doing
 		opData := transaction.OpData.(*TransRescheduleOpData)
 		version := opData.Version
+
+		//if inner rescheduler, then check app status
+		if opData.IsInner {
+			if app.Status == types.APP_STATUS_OPERATING {
+				blog.Infof("transaction %s pending: app(%s.%s) is in status(%s:%s), cannot do at now",
+					transaction.ID, runAs, appID, app.Status, app.SubStatus)
+				time.Sleep(3 * time.Second)
+				continue
+			}
+			if app.Status == types.APP_STATUS_ROLLINGUPDATE && app.SubStatus != types.APP_SUBSTATUS_ROLLINGUPDATE_UP {
+				blog.Infof("transaction %s pending: app(%s.%s) is in status(%s:%s), cannot do at now",
+					transaction.ID, runAs, appID, app.Status, app.SubStatus)
+				time.Sleep(3 * time.Second)
+				continue
+			}
+		}
 
 		hostRetain := false
 		if transaction.CreateTime+opData.HostRetainTime > time.Now().Unix() {
@@ -131,15 +134,21 @@ func (s *Scheduler) passRescheduleCheck(trans *Transaction, app *types.Applicati
 		trans.Status = types.OPERATION_STATUS_FAIL
 		return false
 	}
+
+	opData := trans.OpData.(*TransRescheduleOpData)
+	if !opData.IsInner {
+		return true
+	}
+
 	if app.Status == types.APP_STATUS_OPERATING {
 		blog.Warn("transaction %s pending: app(%s.%s) is in status(%s:%s), redo later",
 			trans.ID, app.RunAs, app.ID, app.Status, app.SubStatus)
-		return false 
+		return false
 	}
 	if app.Status == types.APP_STATUS_ROLLINGUPDATE && app.SubStatus != types.APP_SUBSTATUS_ROLLINGUPDATE_UP {
 		blog.Warn("transaction %s pending: app(%s.%s) is in status(%s:%s), redo later",
 			trans.ID, app.RunAs, app.ID, app.Status, app.SubStatus)
-		return false 
+		return false
 	}
 
 	return true
@@ -172,7 +181,7 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer)
 
 	if !s.passRescheduleCheck(trans, app) {
 		s.DeclineResource(offer.Id.Value)
-		return 
+		return
 	}
 
 	version, _ := s.store.GetVersion(runAs, appID)
@@ -194,7 +203,7 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer)
 
 	if rescheduleOpdata.IsInner && taskGroup.Status == types.TASKGROUP_STATUS_RUNNING {
 		blog.Info("transaction %s finish: lost taskGroup(%s) recover to running",
-				trans.ID, taskGroupID)
+			trans.ID, taskGroupID)
 		trans.Status = types.OPERATION_STATUS_FINISH
 		s.DeclineResource(offer.Id.Value)
 		var alarmTimeval uint16 = 600
@@ -205,18 +214,18 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer)
 	isEnd := task.CanTaskGroupReschedule(taskGroup)
 	if !isEnd && !rescheduleOpdata.Force {
 		blog.Info("transaction %s pending: old taskGroup(%s) not end at current",
-				trans.ID, taskGroup.ID)
+			trans.ID, taskGroup.ID)
 		if task.CanTaskGroupShutdown(taskGroup) {
-			blog.Info("transaction %s pending: kill old taskGroup(%s)",trans.ID, taskGroup.ID)
+			blog.Info("transaction %s pending: kill old taskGroup(%s)", trans.ID, taskGroup.ID)
 			s.KillTaskGroup(taskGroup)
 		}
 		s.DeclineResource(offer.Id.Value)
 		return
-	} 
-		
+	}
+
 	blog.Infof("kill taskgroup(%s) before do reschedule", taskGroup.ID)
 	s.KillTaskGroup(taskGroup)
-	
+
 	reschededTimes := taskGroup.ReschededTimes
 
 	// build new taskgroup
