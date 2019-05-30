@@ -555,6 +555,7 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 		})
 	}
 
+	renderAppTaskVarTemplate(task, offer)
 	varEnvs := make([]*mesos.Environment_Variable, 0)
 	for k, v := range task.Env {
 		varEnvs = append(varEnvs, &mesos.Environment_Variable{
@@ -569,7 +570,9 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 		labelsMap[k] = v
 	}
 	labelsMap["namespace"] = task.RunAs
-	labelsMap["pod_name"] = task.AppId
+	//task.ID = 1536138501685462613.0.0.app-name.namespace.clusterid
+	taskids := strings.Split(task.ID, ".")
+	labelsMap["pod_name"] = fmt.Sprintf("%s-%s", taskids[3], taskids[2])
 
 	labels := make([]*mesos.Label, 0)
 	for k, v := range labelsMap {
@@ -1047,7 +1050,7 @@ func createTaskInfoHealth(task *types.Task, taskInfo *mesos.TaskInfo) {
 		}
 	}
 
-	return 
+	return
 }
 
 // added  180807, render the var templates in *types.Task, it will effect taskgroup and the following copy
@@ -1114,6 +1117,54 @@ func renderProcessTaskVarTemplate(task *types.Task, offer *mesos.Offer) {
 			default:
 				continue
 			}
+		}
+	}
+}
+
+func renderAppTaskVarTemplate(task *types.Task, offer *mesos.Offer) {
+	//task.ID = 1536138501685462613.0.0.app-name.namespace.clusterid
+	taskids := strings.Split(task.ID, ".")
+	timestamp := taskids[0]
+	instanceid := taskids[2]
+	appname := taskids[3]
+	namespace := taskids[4]
+	clusterid := taskids[5]
+
+	m := make(map[string]string)
+
+	// set application name
+	m[types.APP_TASK_TEMPLATE_KEY_APPNAME] = task.AppId
+
+	// set namespace
+	m[types.APP_TASK_TEMPLATE_KEY_NAMESPACE] = task.RunAs
+
+	// set this taskgroup(which this task belong to) index in all instances of application
+	m[types.APP_TASK_TEMPLATE_KEY_INSTANCEID] = strings.Split(task.ID, ".")[2]
+
+	// set InnerIP
+	ip, ok := offerP.GetOfferIp(offer)
+	if ok {
+		m[types.APP_TASK_TEMPLATE_KEY_HOSTIP] = ip
+	}
+
+	//set taskgroup id
+	m[types.APP_TASK_TEMPLATE_KEY_PODID] = fmt.Sprintf("%s.%s.%s.%s.%s", instanceid, appname, namespace, clusterid, timestamp)
+	//set taskgroup name
+	m[types.APP_TASK_TEMPLATE_KEY_PODNAME] = fmt.Sprintf("%s-%s", appname, instanceid)
+
+	// set port by name
+	for _, port := range task.PortMappings {
+		key := fmt.Sprintf(types.APP_TASK_TEMPLATE_KEY_PORT_FORMAT, port.Name)
+		m[key] = fmt.Sprintf("%d", port.HostPort)
+	}
+
+	for k, v := range m {
+		// render all keys and values in Env
+		for envKey, envVal := range task.Env {
+			newKey := renderString(envKey, k, v)
+			newVal := renderString(envVal, k, v)
+			delete(task.Env, envKey)
+			task.Env[newKey] = newVal
 		}
 	}
 }

@@ -37,7 +37,7 @@ const TRANSACTION_DEPLOYMENT_INNERDELETE_LIFEPERIOD = 300
 
 // Max lifePeriod for inner taskgroup-reschedule, 3600 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
-const TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD = 3600
+const TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD = 86400
 
 // If taskgroup running than 1800 seconds, the restart times will be reset to 0
 const TRANSACTION_RESCHEDULE_RESET_INTERVAL = 1800

@@ -16,6 +16,7 @@ package main
 import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/blog/glog"
 	"bk-bcs/bcs-common/common/license"
 	"bk-bcs/bcs-common/common/metric"
 	commtype "bk-bcs/bcs-common/common/types"
@@ -24,9 +25,24 @@ import (
 	"bk-bcs/bcs-services/bcs-api/processor"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
+	"strings"
 )
+
+// GlogWriter serves as a bridge between the standard log package and the glog package.
+type GlogWriter struct{}
+
+// Write implements the io.Writer interface.
+func (writer GlogWriter) Write(data []byte) (n int, err error) {
+	// skip tls handshake error log for tencent tgw tcp check
+	if strings.HasPrefix(string(data), "http: TLS handshake error from") {
+		return len(data), nil
+	}
+	glog.Info(string(data))
+	return len(data), nil
+}
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -38,6 +54,8 @@ func main() {
 	}
 
 	blog.InitLogs(op.LogConfig)
+	// to adapt to tencent tgw，give a temporary method to skip tls handshake error log. see https://github.com/Tencent/bk-bcs/issues/32
+	log.SetOutput(GlogWriter{})
 	defer blog.CloseLogs()
 
 	blog.Info("init config success")
