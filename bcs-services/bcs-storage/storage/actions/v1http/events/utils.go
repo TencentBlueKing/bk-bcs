@@ -236,13 +236,55 @@ func (re *reqEvent) getExtra() (extra operator.M) {
 		return
 	}
 
-	lib.NewExtra(raw).Unmarshal(&extra)
+	err := lib.NewExtra(raw).Unmarshal(&extra)
+	blog.Errorf("err: %v", err)
+	return
+}
+
+func (re *reqEvent) getExtraContain() (extraContain operator.M) {
+	raw := re.req.QueryParameter(extraConTag)
+	if raw == "" {
+		return
+	}
+
+	_ = lib.NewExtra(raw).Unmarshal(&extraContain)
 	return
 }
 
 func (re *reqEvent) getFeat() *operator.Condition {
 	if re.condition == nil {
-		re.condition = re.getCommonFeat().And(re.getTimeFeat())
+		r := re.getCommonFeat().And(re.getTimeFeat())
+
+		// handle the extra field
+		extra := re.getExtra()
+		features := make(operator.M)
+		for k, v := range extra {
+			if _, ok := v.([]interface{}); !ok {
+				features[k] = []interface{}{v}
+				continue
+			}
+			features[k] = v
+		}
+
+		if len(features) > 0 {
+			r = r.And(operator.NewCondition(operator.In, features))
+		}
+
+		// handle the extra contain field
+		extraCon := re.getExtraContain()
+		featuresCon := make(operator.M)
+		for k, v := range extraCon {
+			if _, ok := v.(string); !ok {
+				continue
+			}
+			featuresCon[k] = v.(string)
+		}
+
+		if len(featuresCon) > 0 {
+			r = r.And(operator.NewCondition(operator.Con, featuresCon))
+		}
+
+		re.condition = r
 	}
 	return re.condition
 }
