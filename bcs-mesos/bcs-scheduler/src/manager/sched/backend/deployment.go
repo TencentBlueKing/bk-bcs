@@ -486,7 +486,7 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 	for {
 		if deployment.IsInRolling && deployment.CurrRollingOp == types.DEPLOYMENT_OPERATION_DELETE {
 			times++
-			if times > 15 {
+			if times > 8 {
 				blog.Error("request cancelupdate deployment(%s.%s): in deleting taskgroups", ns, name)
 				return errors.New("deployment is deleting taskgroups, cannot cancelupdate now, try later")
 			}
