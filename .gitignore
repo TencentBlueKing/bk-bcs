@@ -32,5 +32,3 @@ bcs-mesos/bcs-consoleproxy/
 bcs-mesos/bcs-hpacontroller/
 bcs-mesos/bcs-process-daemon/
 bcs-mesos/bcs-process-executor/
-bcs-services/bcs-metriccollector/
-bcs-services/bcs-metricservice/
