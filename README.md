@@ -49,8 +49,8 @@
 * 参考bk-bcs[安装文档](docs/install/deploy-guide.md)
 * 阅读 [源码](https://github.com/Tencent/bk-bcs)
 * 阅读 [wiki](https://github.com/Tencent/bk-bcs/wiki) 或者寻求帮助
-* 了解蓝鲸社区相关信息：蓝鲸社区版交流群
-* 联系我们，技术交流QQ群：
+* 了解蓝鲸社区相关信息：蓝鲸社区版交流QQ群 495299374
+* 直接反馈issue，我们会定期查看与答复
 
 ## FAQ
 
