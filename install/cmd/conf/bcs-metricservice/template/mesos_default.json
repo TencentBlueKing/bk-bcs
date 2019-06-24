@@ -33,7 +33,7 @@
                 "cpu": "1"
               }
             },
-            "image": "image-hub.com/bcs/public/bcs-metriccollector:v1.0.14",
+            "image": "image-hub.com/paas/public/bcs/bcs-metriccollector:v1.0.14",
             "imagePullPolicy": "Always"
           }
         ],
