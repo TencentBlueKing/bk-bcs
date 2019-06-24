@@ -34,7 +34,7 @@ const (
 	routeMesosDeleteApplication = routeMesosURLPrefix + "namespaces/%s/applications/%s?enforce=1"
 
 	routeK8SGetClusterID     = "/rest/clusters/bcs/query_by_cluster_id/?cluster_id=%s"
-	routeK8SURLPrefix        = "/tunnels/clusters/%s/apis/apps/v1/"
+	routeK8SURLPrefix        = "/tunnels/clusters/%s/apis/extensions/v1beta1/"
 	routeK8SCreateDeployment = routeK8SURLPrefix + "namespaces/%s/deployments"
 	routeK8SDeleteResource   = routeK8SURLPrefix + "namespaces/%s/%s/%s"
 )
