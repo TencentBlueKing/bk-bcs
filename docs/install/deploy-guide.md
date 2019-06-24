@@ -1,533 +1,499 @@
-# bcs项目单机部署流程(mesos)
-## 机器初始化
-- 重装系统，CENTOS 7
-
-## 部署步骤
-- 部署zookeeper
-- 部署bcs-api
-- 部署bcs-storage
-- 部署bcs-client
-- 部署bcs-health
-- 部署mesos-master
-- 部署mesos-slave
-- 部署bcs-container-executor
-- 部署bcs-scheduler
-- 部署bcs-mesos-driver
-- 部署bcs-mesos-watch
-- 部署bcs-check
-- 部署bcs-dns
-
-## 部署机器
-假设提供的机器：
-
-* hostname：$Hostname
-* ip: $IP
-
-## 部署目录
-创建 /data/bcs目录，将所有程序包都部署在/data/bcs目录下
-
-## bcs部署程序包
-bcs部署需要多个程序包:
-
-- docker.tar.gz
-- java.tar.gz
-- mesos-1.1.0.tar.gz
-- zookeeper.tar.gz
-- mongodb.tar.gz
-- bcs.xx.xx.xx.tar.gz   //bcs模块程序包，例如：bcs.17.11.24.tar.gz
-
-> NOTE: 上述程序包需要放到/data/bcs目录下面解压。
-
-bcs.xx.xx.xx.tar.gz 模块程序包结构如下：
-![img](img/package.png)
-
-其中：bin目录下是模块的二进制文件；certs目录下是模块的https证书；conf目录下是模块的配置文件、脚本文件。
-
-需要将上图中的结构转化为部署结构，如下面所示：
-
-```
-/data/bcs
-    - bcs-api
-         - bcs-api   // 上图 bcs/bin/bcs-api 文件
-         - cert      //上图 bcs/certs/bcs-api/*  文件
-         - *.template      //上图 bcs/conf/bcs-api/* 文件
-    - bcs-storage    
-         - bcs-storage // 上图 bcs/bin/bcs-storage 文件
-         - conf       //上图 bcs/certs/bcs-storage/* 文件
-         - *.template   //上图 bcs/conf/bcs-storage/* 文件
-```
-例如，生成bcs-api部署目录，其它模块类似
-
-```
-cd /data/bcs && mkdir bcs-api
-rsync bcs.17.11.24/bin/bcs-api bcs-api/
-rsync -a bcs.17.11.24/certs/bcs-api/* bcs-api/
-rsync -a bcs.17.11.24/conf/bcs-api/* bcs-api/
-```
-
-
-
-## 单机部署
-
-### zookeeper部署
-需要版本：zookeeper-3.4.6
-
-### bcs-api部署
-
-#### bcs-api配置
-
-config_files.json
-
-```
-service_config:
-  address: 0.0.0.0
-  port: 8082
-  insecure_address: 0.0.0.0
-  insecure_port: 8080
-metric_config:
-  metric_port: 8081
-zk_config:
-  bcs_zookeeper: $IP:2181
-cert_config:
-  ca_file: ./cert/bcs-inner-ca.crt
-  server_cert_file: ./cert/bcs-inner-server.crt
-  server_key_file: ./cert/bcs-inner-server.key
-  client_cert_file: ./cert/bcs-inner-client.crt
-  client_key_file: ./cert/bcs-inner-client.key
-license_server_config:
-  ls_address:
-  ls_ca_file:
-  ls_client_cert_file:
-  ls_client_key_file:
-log_config:
-  log_dir: ./logs
-  log_max_size: 500
-  log_max_num: 10
-  logtostderr: false
-  alsologtostderr: false
-  v: 0
-  stderrthreshold: 2
-  vmodule:
-  log_backtrace_at:
-process_config:
-  pid_dir: ./pid
-local_config:
-  local_ip: $IP
-bkiam_auth:
-  auth: false
-  apigw_rsa_file:
-  auth_token_sync_time:
-  bkiam_auth_host:
-  bkiam_auth_app_code:
-  bkiam_auth_app_secret:
-  bkiam_auth_system_id:
-  bkiam_auth_scope_id:
-  bkiam_auth_zookeeper:
-
-core_database:
-  dsn:
-
-component:
-    paas_auth_host:
-    paas_cc_host:
-    paas_cc_apigw_env:
-    paas_auth_subserver_host:
-
-# bootstrap_users defines some admin users, it can be useful for bootstraping a new bke environment where no
-# users exists in database
-bootstrap_users:
-  - name:
-    is_super_user: true
-    tokens:
-      -
-  - name:
-    is_super_user: false
-    tokens:
-      -
-
-# The credentials fixtures is a special type of cluster credentials, they are definded directly in config file and doesn't
-# rely on any other storages.
-#
-# IMPORTANT: please do not use this config in production environment, because a cluster defined in fixture config can be
-# accessed by any user without authorization.
-cluster_credentials_fixtures:
-  enabled: true
-  credentials:
-    - cluster_id: "localkube-fixed"
-      type: service_account
-      server: https://192.168.64.8:8443
-      ca_cert: CA_CERT_FROM_CLUSTER_SECRETS
-      token: TOKEN_FROM_CLUSTER_SECRETS
-
-# rbac data
-rbac:
-  # 是否从paas-auth订阅 rbac 数据，默认true
-  turn_on_auth: false
-  # 是否从配置文件读取 rbac 数据，默认false
-  turn_on_conf: false
-  data:
-  - username:
-    cluster_id:
-    roles:
-      -
-      -
-  - username:
-    cluster_id:
-    roles:
-      -
-      -
-```
-
-#### 启动bcs-api
-
-```
-./start.sh
-```
-
-
-
-### bcs-storage部署
-
-#### mongodb部署
-
-```
-mkdir -p /data/db
-cd /data/bcs/mongodb
-vim conf/mongodb.conf
-```
-
-修改配置为
-
-```
-dbpath=/data/db
-logpath=/data/bcs/mongodb/logs/mongodb.log
-fork=true
-logappend=true
-master=true
-auth=false
-```
-
-启动mongodb
-
-```
-./bin/mongod -f ./conf/mongodb.conf &
-```
-
-登入mongodb
-
-```
-./bin/mongo
-```
-
-添加用户
-
-```
-use admin
-db.createUser(
-  {
-    user: "storage",
-    pwd: "storage-pwd",
-    roles: [ { role: "root", db: "admin" } ]
-  }
-)
-```
-
-退出mongodb
-
-```
-exit
-```
-
-kill掉mongodb进程，并修改配置，启用auth
-
-```
-kill `ps -ef |grep mongodb |grep -v grep |awk '{print $2}'`
-
-vim conf/mongodb.conf
-```
-
-```
-dbpath=/data/db
-logpath=/data/bcs/mongodb/logs/mongodb.log
-fork=true
-logappend=true
-auth=true
-```
-
-启动mongodb
-
-```
-./bin/mongod -f ./conf/mongodb.conf &
-```
-
-尝试登入shell
-
-```
-./bin/mongo --port 27017 -u "storage" -p "storage-pwd" --authenticationDatabase "admin"
-```
-
-若成功登入则mongodb部署完成
-
-
-
-#### bcs-storage配置
-
-storage-database.conf
-
-```
-[mongodb/dynamic]
-Addr = $IP
-ConnectTimeout = 0
-Database = dynamic
-Username = storage
-Password = UjLz7evjZXpYkIYAZuGs7A==
-PoolWidth = 100
-
-[mongodb/event]
-Addr = $IP
-ConnectTimeout = 0
-Database = event
-Username = storage
-Password = UjLz7evjZXpYkIYAZuGs7A==
-
-[mongodb/alarm]
-Addr = $IP
-ConnectTimeout = 0
-Database = alarm
-Username = storage
-Password = UjLz7evjZXpYkIYAZuGs7A==
-
-[mongodb/metric]
-Addr = $IP
-ConnectTimeout = 0
-Database = metric
-Username = storage
-Password = UjLz7evjZXpYkIYAZuGs7A==
-
-[mongodb/host]
-Addr = $IP
-ConnectTimeout = 0
-Database = host
-Username = storage
-Password = UjLz7evjZXpYkIYAZuGs7A==
-
-[mongodb/clusterConfig]
-Addr = $IP
-ConnectTimeout = 0
-Database = clusterConfig
-Username = storage
-Password = UjLz7evjZXpYkIYAZuGs7A==
-
-[zk/watch]
-Addr = $IP
-ConnectTimeout = 5
-Database = etc/cluster
-Username = 
-Password =
-```
-
-config_file.json
-
-```
-{
-  "address": "$IP",
-  "port": 50040,
-  "metric_port": 50041,
-  "bcs_zookeeper": "$IP:2181",
-  "database_config_file": "./storage-database.conf",
-  "event_max_day": 1,
-  "event_max_cap": 10000,
-  "alarm_max_day": 1,
-  "alarm_max_cap": 10000,
-  "ca_file": "./cert/bcs-inner-ca.crt",
-  "server_cert_file": "./cert/bcs-inner-server.crt",
-  "server_key_file": "./cert/bcs-inner-server.key"
-}
-```
-#### 启动bcs-storage
-
+# BCS服务高可用安装
+
+>文档持续完善中~
+
+该文档说明如何针对BCS Service层进行部署，其他请参照：
+
+* [单机Mesos集群部署](./mesos-deploy-in-single-guide.md)
+* [Kubernetes高可用部署](./Deploy_BCS_in_K8S_HA_Cluster.md)
+* [Mesos集群高可用部署](./Deploy_BCS_in_Mesos_HA_Cluster.md)
+
+## 依赖
+
+- etcd 3.12
+- docker
+- zookeeper
+- MongoDB 3
+- Harbor
+
+## 概要说明
+
+容器管理平台(BCS) 后台包含以下组件
+
+- bcs-api
+- bcs-dns
+- bcs-storage
+- bcs-ops
+- bcs-health-master
+- bcs-health-slave
+- bcs-mesos-driver
+- bcs-mesos-watch
+- bcs-container-executor
+- bcs-check
+- bcs-scheduler
+- bcs-client
+
+## 安装部署
+
+### 本地部署
+
+#### Requirements:
+
+- 操作系统： CentOS 7+
+
+- 部署依赖服务：
+
+  - zookeeper，MongoDB，Docker,  Harbor，etcd 等略
+
+  > Note:
+  >
+  > 将已安装好的上述服务的相关信息准备好，以备用。如 IP,  域名，端口，账号密码等信息
+
+#### 准备证书文件
+
+- 为方便，这里使用cfssl，cfssljson两个小工具来生成证书。需要实现准备证书生成配置文件
+
+  - ca-csr.json， 文件样例
+
+    ```json
+    {
+        "CN": "bcs",
+        "key": {
+            "algo": "rsa",
+            "size": 2048
+        },
+        "names": [
+            {
+                "C": "CN",
+                "L": "SZ",
+                "O": "TX",
+                "ST": "GD",
+                "OU": "CA"
+            }
+        ]
+    }
+    ```
+
+    
+
+  - ca-config.json 文件样例：
+
+    ```json
+    {
+        "signing": {
+            "default": {
+                "expiry": "43800h"
+            },
+            "profiles": {
+                "server": {
+                    "expiry": "43800h",
+                    "usages": [
+                        "signing",
+                        "key encipherment",
+                        "server auth"
+                    ]
+                },
+                "client": {
+                    "expiry": "43800h",
+                    "usages": [
+                        "signing",
+                        "key encipherment",
+                        "client auth"
+                    ]
+                },
+                "peers": {
+                    "expiry": "43800h",
+                    "usages": [
+                        "signing",
+                        "key encipherment",
+                        "server auth",
+                        "client auth"
+                    ]
+                }
+            }
+        }
+    }
+    ```
+
+- 生成ca证书
+
+  - 创建证书目录
+  - 生成ca根证书
+
+`cfssl gencert --initca ca-csr.json | cfssljson -bare bcs-ca`
+
+生成 bcs-ca.pem，bcs-ca.key 两个文件。etcd-ca.key文件可以保管到秘密位置，注意不要泄露，etcd-ca.pem 文件后续步骤备用
+
+- 生成client及server证书
 
 ```bash
-./start.sh
+# bcs-client 证书
+cfssl gencert -ca=bcs-ca.pem \
+  -ca-key=bcs-ca-key.pem \
+  -config=ca-config.json \
+  -profile=client \
+  ca-csr.json | cfssljson -bare bcs-client
+  
+# bcs-server 证书
+cfssl gencert -ca=bcs-ca.pem \
+  -ca-key=bcs-ca-key.pem \
+  -config=ca-config.json \
+  -profile=server \
+  ca-csr.json | cfssljson -bare bcs-server
 ```
 
-使用启动脚本拉起即可
+> Note：
+>
+> 按照上述方式，生成 etcd 服务所需要的证书
 
-观察```logs/bcs-storage.INFO```日志开头的db连接信息，
+#### 准备配置文件
 
+> Note: 
+> 文档默认来源请参照编译文档。
+> Build 出来的产物中的配置文件模板与下述文件名不相同，默认为：config_file.template，为便于识别，以下配置文件名做了相应的调整。
+
+- bcs-api.json
+
+  ```JSON
+  {
+      "edition": "ee",  # 标注对外,不可更改
+      "address": "__LAN_IP__",   # 填写部署bcs-api的主机IP
+      "port": __BCS_API_HTTPS_PORT__, # 定义一个bcs-api使用的https端口，一般为443
+      "log_dir": "__INSTALL_PATH__/logs/bcs/", # 指定日志存放路径
+      "pid_dir": "/var/run/bcs/",
+      "insecure_address": "__LAN_IP__",  # 填写部署bcs-api的主机IP
+      "insecure_port": __BCS_API_HTTP_PORT__,  # http 端口，一般为80
+      "metric_port": __BCS_API_METRIC_PORT__,  # 指标数据端口
+      "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__", # 逗号分隔的zk地址，如127.0.0.1:2181,127.0.0.1:2181
+      "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem", # 证书 ca 文件路径，按需修改
+      "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem", # server证书
+      "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",# server 密钥
+      "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem", # client 证书
+      "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem", # client 密钥
+      "local_ip": "__LAN_IP__", # 本机IP，通常用内网IP
+      "bkiam_auth": {
+        "auth": false, # 是否启用权限中心(蓝鲸一级SaaS)，当前版本不需要修改，设置为false
+        "bkiam_auth_host": "http://__IAM_HOST__", # 蓝鲸权限中心域名
+        "bkiam_auth_app_code": "__APP_CODE__", # 权限中心app_code
+        "bkiam_auth_app_secret": "__APP_TOKEN__" # 权限中心app_token
+      },
+      "bke": {
+        "mysql_dsn":  "__MYSQL_BCS_USER__:__MYSQL_BCS_PASS__@tcp(__MYSQL_BCS_IP0__:__MYSQL_BCS_PORT__)/bke_core?charset=utf8mb4&parseTime=True&loc=Local", # MYSQL连接信息。
+        "bootstrap_users": [  # 调用k8s相关资源时需要使用的账号及凭证信息， 开源版本未使用到
+          {
+            "name": "__BKE_ADMIN_USER__", 
+            "is_super_user": true,
+            "tokens": [
+              "__BKE_ADMIN_ENCRYPT_TOKEN__"
+            ]
+          }
+        ],
+        "turn_on_rbac": false,  # 对接权限中心的开关，默认关闭
+        "turn_on_auth": false,	# 同上
+        "turn_on_conf": false		# 同上
+      }
+  }
+  ```
+
+- bcs-check.json 
+
+  ```json
+  {
+    "address": "__LAN_IP__",
+    "port": __BCS_CHECK_PORT__,
+    "metric_port": __BCS_CHECK_METRIC_PORT__,
+    "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem", # 证书 ca 文件路径，按需修改
+    "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem", # server证书
+    "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",# server 密钥
+    "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem", # client 证书
+    "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem", # client 密钥
+    "mesos_zookeeper": "__COMMA_SEP_LIST_ZK_MESOS_SERVER__",
+    "cluster": "__MESOS_CLUSTER_ID__" # 创建的mesos业务集群ID, 采用三段式,如：BCS-MESOS-10001，最后一截为数字
+  }
+  ```
+
+- bcs-storage.json
+
+  ```json
+  {
+    "address": "__LAN_IP__",
+    "port": __BCS_STORAGE_PORT__,
+    "log_dir": "__INSTALL_PATH__/logs/bcs/",
+    "pid_dir": "/var/run/bcs/",
+    "metric_port": __BCS_STORAGE_METRIC_PORT__,
+    "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "database_config_file": "__INSTALL_PATH__/etc/bcs/storage-database.conf",
+    "event_max_day": __BCS_EVENT_MAX_DAY__, # 事件数据保留天数
+    "event_max_cap": __BCS_EVENT_MAX_CAP__, # 事件数据保留天数(每个集群)
+    "alarm_max_day": __BCS_ALARM_MAX_DAY__, # 告警数据保留天数
+    "alarm_max_cap": __BCS_ALARM_MAX_CAP__, # 告警数据保留条数（每个集群）
+    "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem",
+    "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem",
+    "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem"
+  }
+  ```
+
+- bcs-health-master.json
+
+  ```json
+  {
+    "address": "__LAN_IP__",
+    "port": __BCS_HEALTH_MASTER_PORT__,
+    "log_dir": "__INSTALL_PATH__/logs/bcs/",
+    "pid_dir": "/var/run/bcs/",
+    "metric_port": __BCS_HEALTH_MASTER_METRIC_PORT__,
+    "local_ip": "__LAN_IP__",
+    "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem",
+    "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem",
+    "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem",
+    "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem",
+    "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",
+    "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "enable_storage_alarm": true,
+    "etcd": {
+      "etcd_endpoints": "https://__ETCD_IP__:__ETCD_CLIENT_PORT__", # etcd 客户端信息
+      "etcd_root_path": "/bcshealtch",
+      "etcd_ca_file": "__INSTALL_PATH__/cert/etcd/etcd-ca.pem",
+      "etcd_cert_file": "__INSTALL_PATH__/cert/etcd/etcd.pem",
+      "etcd_key_file": "__INSTALL_PATH__/cert/etcd/etcd-key.pem",
+      "etcd_key_password": "__ETCD_KEY_PASS__"
+    }
+  }
+  ```
+
+- bcs-health-slave.json
+
+  ```json
+  {
+    "cluster_name": "health-slave-default",
+    "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "log_dir": "__INSTALL_PATH__/logs/bcs/",
+    "pid_dir": "/var/run/bcs",
+    "local_ip": "__LAN_IP__",
+    "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem",
+    "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem",
+    "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem",
+    "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem",
+    "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",
+    "metric_port": __BCS_HEALTH_SLAVE_METRIC_PORT__,
+    "ls_address": "",
+    "ls_ca_file": "",
+    "ls_client_cert_file": "",
+    "ls_client_key_file": "",
+    "zones": []
+  }
+  ```
+
+- bcs-scheduler.json
+
+  ```json
+  {
+    "address": "__LAN_IP__",
+    "port": __BCS_SCHEDULER_PORT__,
+    "metric_port": __BCS_SCHEDULER_METRIC_PORT__,
+    "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem", # 证书 ca 文件路径，按需修改
+    "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem", # server证书
+    "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",# server 密钥
+    "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem", # client 证书
+    "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem", # client 密钥
+    "use_cache": false, # 默认false
+    "regdiscv": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",  # 用于服务发现的ZK， 格式：ip1:port，多个用逗号分隔
+    "mesos_regdiscv": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",  # 用于mesos服务发现的ZK，格式同上
+    "zkhost": "__COMMA_SEP_LIST_ZK_BCS_SERVER__", # 用于存储配置数据的ZK
+    "plugins": "", # 一般不需要制定，使用underley ip管理时。制定为ip-resource, 会在调度时把ip资源纳入考虑范围
+    "cluster": "__MESOS_CLUSTER_ID__"    # 创建的mesos业务集群ID, 采用三段式,如：BCS-MESOS-10001，最后一截为数字
+  }
+  ```
+
+- bcs-dns.conf
+
+  ```ini
+  .:53 {
+      log . "{remote} - {type} {class} {name} {proto} {size} {rcode} {rsize}" {
+          class all
+      }
+      loadbalance round_robin
+      cache 5
+      bcsscheduler bcs.com. {
+          cluster __MESOS_CLUSTER_ID_SUFFIX__   # MESOS_CLUSTER_ID 取值最后一截的数字
+          resyncperiod 30
+          endpoints __SPACE_SEP_LIST_ZK_BCS_SERVER__  # 空格分隔的ZK信息。(ip:port)
+          endpoints-path /blueking
+          fallthrough
+  
+          upstream __SERVICE_DNS_UPSTREAM__
+          registery __SPACE_SEP_LIST_ZK_BCS_SERVER__  # 空格分隔的ZK信息。(ip:port)
+          storage __SPACE_SEP_LIST_ETCD_SERVER__
+          storage-tls cert/etcd/etcd.pem cert/etcd/etcd-key.pem cert/etcd/ca.pem
+          storage-path /bluekingdns
+      }
+      proxy bcscustom.com. __SERVICE_DNS_UPSTREAM__ {
+          policy round_robin
+          fail_timeout 5s
+          max_fails 0
+          spray
+      }
+      proxy . __DNS_UPSTREAM__ {
+          policy round_robin
+          fail_timeout 5s
+          max_fails 0
+          spray
+      }
+  }
+  ```
+
+- bcs-mesos-driver.json
+
+  ```json
+  {
+    "address": "__LAN_IP__",
+    "port": __BCS_MESOS_DRIVER_PORT__,
+    "metric_port": __BCS_MESOS_DRIVER_METRIC_PORT__,
+    "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem", # 证书 ca 文件路径，按需修改
+    "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem", # server证书
+    "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",# server 密钥
+    "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem", # client 证书
+    "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem", # client 密钥
+    "sched_regdiscv": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "cluster": "__BCS_MESOS_CLUSTER_ID__"
+  }
+  ```
+
+- bcs-mesos-watch.json
+
+  ```json
+  {
+    "address": "${localIp}",
+    "port": ${bcsMesosWatchPort},
+    "metric_port": ${bcsMesosWatchMetricPort},
+    "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
+    "ca_file": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem", # 证书 ca 文件路径，按需修改
+    "server_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-server.pem", # server证书
+    "server_key_file": "__INSTALL_PATH__/cert/bcs/bcs-server-key.pem",# server 密钥
+    "client_cert_file": "__INSTALL_PATH__/cert/bcs/bcs-client.pem", # client 证书
+    "client_key_file": "__INSTALL_PATH__/cert/bcs/bcs-client-key.pem", # client 密钥
+    "clusterinfo": "__COMMA_SEP_LIST_ZK_BCS_SERVER__/blueking",
+    "cluster": "__BCS_MESOS_CLUSTER_ID__"
+  }
+  ```
+
+
+#### 启动服务
+
+bcs所有服务启动使用统一的方式：  `<程序> -f <配置文件>`
+
+如： `./bcs-api -f bcs-api.json`
+
+将上述配置文件中的变量替换成对应的服务后，启动进程即可。
+
+
+
+注意事项：
+
+1. 参考以下[服务分布表](#layers)表来进行服务的启动，后台层与集群层机器`建议`分别部署
+2. master节点主机数为奇数
+
+### 服务分布表{#layers}
+
+#### 后台层
+
+| 工程              | 社区版     | 开源版         |
+| ----------------- | ---------- | -------------- |
+| MongDB            | √    3.4.9 | √    建议3.4+  |
+| etcd              | √    3.1.8 | √    建议 3.1+ |
+| zookeeper         | √    3.4.6 | √    建议3.4+  |
+| bcs-dns           | √          | √              |
+| bcs-api           | √          | √              |
+| bcs-ops           | √          | √              |
+| bcs-storage       | √          | √              |
+| bcs-health-master | √          | √              |
+| bcs-health-slave  | √          | √              |
+
+#### Mesos 集群层 - Master 节点
+
+| 工程             | 社区版 | 开源版 |
+| ---------------- | ------ | ------ |
+| zookeeper        | √      | √      |
+| etcd             | √      | √      |
+| mesos-master     | √      | √      |
+| bcs-dns          | √      | √      |
+| bcs-scheduler    | √      | √      |
+| bcs-mesos-driver | √      | √      |
+| bcs-mesos-watch  | √      | √      |
+| bcs-health-slave | √      | √      |
+| bcs-check        | √      | √      |
+
+### Mesos 集群层 - Node节点
+
+| 工程                   | 社区版  | 开源版       |
+| ---------------------- | ------- | ------------ |
+| flannel                | 0.10.0  | 建议 0.10.0+ |
+| docker                 | ce 18.0 | 建议 18.0+   |
+| mesos-slave            | √       | √            |
+| bcs-container-executor | √       | √            |
+
+Mesos集群部署请参照[Mesos集群高可用部署](./Deploy_BCS_in_Mesos_HA_Cluster.md)
+
+#### K8S 集群
+
+K8S集群请参照[Kubernetes高可用部署](./Deploy_BCS_in_K8S_HA_Cluster.md)
+
+### 部署验证
+
+参考 docs/features/bcs-client/bcs-client_HANDBOOK.md，使用bcs-client进行集群创建操作
+
+## 接入蓝鲸社区版5.1+
+
+首先确认要接入的目标社区版为5.1以上，带有bcs内容的版本: `ls -l /data/src/bcs`
+
+### 1. 构建社区版规范化的目录结构
+
+​	打包二进制
+
+> 1. 接入社区版中，并不是所有的二进制都需要，这里仅列出社区版需要的工程文件
+> 2. 因为社区版已经带有各工程的配置文件，因此，不需要再自行准备配置文件。
+
+```text
+ bcs/server
+  ├── bin
+  │   ├── bcs-api
+  │   ├── bcs-dns
+  │   ├── bcs-health-master
+  │   ├── bcs-health-slave
+  │   ├── bcs-ops
+  │   ├── bcs-storage
+  └── VERSION
 ```
-Begin to parse databases.
-Complete parse mongodb config: mongodb/dynamic
-Complete parse mongodb config: mongodb/event
-Complete parse mongodb config: mongodb/alarm
-Complete parse mongodb config: mongodb/clusterConfig
-Complete parse zk config: zk/watch
-Databases parsing completed.
+
+将版本号(可以自定义)写入VERSION 文件， 如： github-1.1.0
+
+可以用以下命令快速处理(在build目录下执行)
+
+```bash
+mkdir bin
+cd build/bcs.295eb49-19.06.05/
+tar zcf bcs-server-github-1.1.0.tgz bin/bcs-{api,dns,ops,storage,health-slave,health-master}
 ```
 
-一般来说db配置都解析／连接成功，bcs-storage即可正常工作
+ 
 
+### 2. 替换社区版中的bcs 后台部分
 
+​	登陆社区版中控机，执行备份，替换，安装操作。命令序列如下：
 
-### bcs-client部署
+```bash
+cd /data/src
+rsync -a /data/src/bcs/server /data/backup/bcs/  # 备份
 
-解压安装包到制定安装目录
+tar xvf bcs-server-github-1.1.0.tgz -C /data/src/bcs/server/  # 替换掉社区版中对应的二进制
 
-```
-ln -s /data/bcs/bcs-client/bcs-client /usr/bin/bcs-client
-mkdir /var/bcs
-```
-配置bcs-client配置文件/var/bcs/bcs.conf, 配置bcs-api地址
-
-```
-{
-  "apiserver":"$IP:8080"
-}
-```
-执行简单命令，验证服务正常
-
-```
-bcs-client export --clusterid BCS-AWSTEST-10001
-bcs-client list -t app -ns test
-```
-输出如下，表示部署ok
-```
-Found no application.
+## 执行安装
+./bkcec sync bcs
+echo api ops dns storage health-master health-slave | xargs -n1 ./bkcec stop bcs
+echo api ops dns storage health-master health-slave | xargs -n1 ./bkcec install bcs
+echo api ops dns storage health-master health-slave | xargs -n1 ./bkcec start bcs
 ```
 
-
-
-### mesos-master部署
-
-版本：1.1.0
-
-目录：/data/bcs/mesos
-
-
-
-### bcs-scheduler部署
-
-#### bcs-scheduler配置
-
-config_file.json
-
-```
-{
-  "address": "$IP",
-  "port": 9999,
-  "metric_port": 10000,
-  "bcs_zookeeper": "$IP:2181",
-  "ca_file": "./cert/bcs-inner-ca.crt",
-  "client_cert_file": "./cert/bcs-inner-client.crt",
-  "client_key_file": "./cert/bcs-inner-client.key",
-  "use_cache": false,
-  "regdiscv": "$IP:2181",
-  "mesos_regdiscv": "$IP:2181",
-  "zkhost": "$IP:2181",
-  "v": 3,
-  "cluster": "BCS-TEST-10001"
-}
-```
-#### 启动bcs-scheduler
-
-```
-./start.sh
-```
-
-
-### bcs-mesos-driver部署
-
-#### bcs-mesos-driver配置
-
-config_file.json
-
-```
-{
-  "address": "$IP",
-  "port": 50020,
-  "metric_port": 50021,
-  "bcs_zookeeper": "$IP:2181",
-  "ca_file": "./cert/bcs-inner-ca.crt",
-  "client_cert_file": "./cert/bcs-inner-client.crt",
-  "client_key_file": "./cert/bcs-inner-client.key",
-  "sched_regdiscv": "$IP:2181",
-  "cluster": "BCS-TEST-10001",
-  "v": 3
-}
-```
-#### 启动bcs-mesos-driver
-```
-./start.sh
-```
-
-
-### bcs-mesos-watch部署
-
-config_file.json
-
-```
-{
-  "address": "$IP",
-  "port": 50030,
-  "metric_port": 50031,
-  "bcs_zookeeper": "$IP:2181",
-  "ca_file": "./cert/bcs-inner-ca.crt",
-  "client_cert_file": "./cert/bcs-inner-client.crt",
-  "client_key_file": "./cert/bcs-inner-client.key",
-  "server_cert_file": "./cert/bcs-inner-server.crt",
-  "server_key_file": "./cert/bcs-inner-server.key",
-  "clusterinfo": "$IP:2181/blueking",
-  "v": 3,
-  "cluster": "BCS-TEST-10001"
-}
-```
-#### 启动bcs-mesos-watch
-
-```
-./start.sh
-```
-
-
-### bcs-check部署
-#### bcs-check配置
-
-config_file.json
-
-```
-{
-  "address": "$IP",
-  "port": 43000,
-  "metric_port": 43001,
-  "bcs_zookeeper": "$IP:2181",
-  "ca_file": "./cert/bcs-inner-ca.crt",
-  "client_cert_file": "./cert/bcs-inner-client.crt",
-  "client_key_file": "./cert/bcs-inner-client.key",
-  "server_cert_file": "./cert/bcs-inner-server.crt",
-  "server_key_file": "./cert/bcs-inner-server.key",
-  "mesos_zookeeper": "$IP:2181"
-}
-```
-#### 启动bcs-check
-
-```
-./start.sh
-```
-
-
-### mesos-slave部署
-
-版本：1.1.0
-
-目录：/data/bcs/mesos
-
-
-
-### docker部署
-
-版本：18.09.0
-
-
-
-### bcs-container-executor部署
-将可执行文件bcs-container-executor拷贝到指定安装路径：/data/bcs/mesos/libexec/mesos
-bcs-container-executor文件在bcs模块程序包中的bin目录下
