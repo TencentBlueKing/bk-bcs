@@ -64,7 +64,8 @@ type BcsContainerTask struct {
 	PublishAllPorts bool                   //publish all ports in container
 	PortBindings    map[string]BcsPort     //port for container reflection, only useful for docker bridge
 	Labels          []BcsKV                //label for container
-	Resource        *bcstypes.Resource     //container resource limitation
+	Resource        *bcstypes.Resource     //container resource request
+	LimitResource   *bcstypes.Resource     // container resource limit
 	BcsMessages     []*bcstypes.BcsMessage //bcs define message
 	RuntimeConf     *BcsContainerInfo      //container runtime info
 	HealthCheck     healthcheck.Checker    //for health check

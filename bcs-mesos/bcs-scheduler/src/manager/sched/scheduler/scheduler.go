@@ -285,6 +285,11 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 		Hostname:        proto.String(config.Hostname),
 		FailoverTimeout: proto.Float64(60 * 60 * 24 * 7),
 		Checkpoint:      proto.Bool(true),
+		Capabilities: []*mesos.FrameworkInfo_Capability{
+			&mesos.FrameworkInfo_Capability{
+				Type: mesos.FrameworkInfo_Capability_PARTITION_AWARE.Enum(),
+			},
+		},
 	}
 
 	frameworkId, err := store.FetchFrameworkID()
@@ -1296,7 +1301,7 @@ func (s *Scheduler) GetClusterResource() (*commtype.BcsClusterResource, error) {
 
 // Get cluster current resource information from mesos master
 func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.BcsClusterResource, error) {
-	
+
 	if mesosClient == nil {
 		blog.Error("get cluster resource error: mesos Client is nil")
 		return nil, fmt.Errorf("system error: mesos client is nil")

@@ -28,6 +28,7 @@ const (
 	tableName     = "event"
 	dataTag       = "data"
 	extraTag      = "extra"
+	extraConTag   = "extra_contain"
 	fieldTag      = "field"
 	idTag         = "id"
 	envTag        = "env"

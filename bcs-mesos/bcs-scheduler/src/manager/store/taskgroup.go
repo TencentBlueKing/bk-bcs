@@ -45,6 +45,23 @@ func GetRunAsAndAppIDbyTaskGroupID(taskGroupId string) (string, string) {
 	return runAs, appID
 }
 
+func GetRunAsAndAppIDbyTaskID(taskId string) (string, string) {
+	appID := ""
+	runAs := ""
+
+	szSplit := strings.Split(taskId, ".")
+	//RunAs
+	if len(szSplit) >= 6 {
+		runAs = szSplit[4]
+	}
+
+	//appID
+	if len(szSplit) >= 6 {
+		appID = szSplit[3]
+	}
+
+	return runAs, appID
+}
 
 func createTaskGroupPath(taskGroupId string) (string, error) {
 	runAs, appID := GetRunAsAndAppIDbyTaskGroupID(taskGroupId)
