@@ -55,7 +55,8 @@ pre:
 	mkdir -p ${CONFPATH}
 	mkdir -p ${EXPORTPATH}
 	cp -R ./install/cmd/conf/* ${CONFPATH}/
-	cd ./vendor/github.com && ln -sf Sirupsen sirupsen && cd -
+	if [[ ! -d ./vendor/github.com/sirupsen ]]; then ln -sf ./vendor/github.com/Sirupsen ./vendor/github.com/sirupsen; fi
+	if [[ ! -d ./vendor/github.com/Sirupsen ]]; then ln -sf ./vendor/github.com/sirupsen ./vendor/github.com/Sirupsen; fi
 
 api:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-api ./bcs-services/bcs-api/main.go
