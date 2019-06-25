@@ -27,7 +27,7 @@
 * 支持容器内IPC机制
 * 支持多种容器网络方案
 
-如果想了解以上功能的详细说明，请参考蓝鲸容器管理平台[白皮书](https://bk.tencent.com/docs/)
+如果想了解以上功能的详细说明，请参考蓝鲸容器管理平台[白皮书](https://docs.bk.tencent.com/bcs/)
 
 ## Getting Started
 
@@ -49,6 +49,7 @@
 ## Contributing
 
 对于项目感兴趣，想一起贡献并完善项目请参阅[contributing](./CONTRIBUTING.md)。
+
 [腾讯开源激励计划](https://opensource.tencent.com/contribution) 鼓励开发者的参与和贡献，期待你的加入。
 
 ## Support
