@@ -10,7 +10,7 @@ Frontends和Backends是一一对应关系。具备相同的名字，方便索引
 ```json
 {
     "Backends": {
-        "tcp_mhs-hn1_mhs-http_8088": {
+        "backend-http_8088": {
             "ErrorCnt": "0",
             "CurQueue": "0",
             "ResponseDeny": "0",
@@ -19,7 +19,7 @@ Frontends和Backends是一一对应关系。具备相同的名字，方便索引
                     "ErrorCnt": "0",
                     "CurQueue": "0",
                     "ResponseDeny": "0",
-                    "Pxname": "tcp_mhs-hn1_mhs-http_8088",
+                    "Pxname": "backend-http_8088",
                     "CumSession": "0",
                     "QTime": "0",
                     "WRetry": "0",
@@ -28,7 +28,7 @@ Frontends和Backends是一一对应关系。具备相同的名字，方便索引
                     "Hrsp_5xx": "",
                     "Hrsp_2xx": "",
                     "LBTot": "0",
-                    "Name": "mhs-hn1_100_125_204_189_8088",
+                    "Name": "backend-127_0_0_1_8088",
                     "ChkDown": "0",
                     "Hrsp_1xx": "",
                     "CurQMax": "0",
@@ -37,7 +37,7 @@ Frontends和Backends是一一对应关系。具备相同的名字，方便索引
                     "Hrsp_3xx": "",
                     "Hrsp_4xx": "",
                     "RateMax": "0",
-                    "Addr": "100.125.204.189:8088",
+                    "Addr": "127.0.0.1:8088",
                     "Weight": "1",
                     "AgentDur": "",
                     "LastSess": "-1",
@@ -59,7 +59,7 @@ Frontends和Backends是一一对应关系。具备相同的名字，方便索引
         }
     },
     "Frontends": {
-        "tcp_mhs-hn1_mhs-http_8088": {
+        "frontend-http_8088": {
             "ResponseDeny": "0",
             "ConnRate": "0",
             "BytesOut": "0",
@@ -69,7 +69,7 @@ Frontends和Backends是一一对应关系。具备相同的名字，方便索引
             "CurSessRate": "0",
             "Rate": "0",
             "ConnTot": "0",
-            "Name": "tcp_mhs-hn1_mhs-http_8088",
+            "Name": "frontend-http_8088",
             "SessionLimit": "102400",
             "RequestError": "0",
             "Status": "OPEN",
