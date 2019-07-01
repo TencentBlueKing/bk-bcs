@@ -70,3 +70,29 @@ type SecretList []*SecretSet
 type ServiceList []*ServiceSet
 type EndpointList []*EndpointSet
 type DeploymentList []*DeploymentSet
+
+// sort by namespace
+func (l ApplicationList) Len() int           { return len(l) }
+func (l ApplicationList) Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l ApplicationList) Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l ProcessList)     Len() int           { return len(l) }
+func (l ProcessList)     Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l ProcessList)     Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l TaskGroupList)   Len() int           { return len(l) }
+func (l TaskGroupList)   Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l TaskGroupList)   Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l ConfigMapList)   Len() int           { return len(l) }
+func (l ConfigMapList)   Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l ConfigMapList)   Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l SecretList)      Len() int           { return len(l) }
+func (l SecretList)      Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l SecretList)      Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l ServiceList)     Len() int           { return len(l) }
+func (l ServiceList)     Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l ServiceList)     Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l EndpointList)    Len() int           { return len(l) }
+func (l EndpointList)    Less(i, j int) bool { return l[i].Data.NameSpace > l[j].Data.NameSpace }
+func (l EndpointList)    Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
+func (l DeploymentList)  Len() int           { return len(l) }
+func (l DeploymentList)  Less(i, j int) bool { return l[i].Data.ObjectMeta.NameSpace > l[j].Data.ObjectMeta.NameSpace }
+func (l DeploymentList)  Swap(i, j int)      { l[i], l[j] = l[j], l[i] }
