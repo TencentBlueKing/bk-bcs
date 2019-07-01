@@ -19,19 +19,19 @@ import (
 
 type ProcessFilter struct {
 	ClusterId           string `json:"clusterId" filter:"clusterId"`
-	Kind                string `json:"kind, omitempty" filter:"data.kind"`
-	Name                string `json:"name, omitempty" filter:"resourceName"`
-	Namespace           string `json:"namespace, omitempty" filter:"namespace"`
-	Instance            string `json:"instance, omitempty" filter:"data.instance,int"`
-	BuildedInstance     string `json:"buildedInstance, omitempty" filter:"data.buildedInstance,int"`
-	RunningInstance     string `json:"runningInstance, omitempty" filter:"data.runningInstance,int"`
-	Status              string `json:"status, omitempty" filter:"data.status"`
-	LastStatus          string `json:"lastStatus, omitempty" filter:"data.lastStatus"`
-	PodIp               string `json:"podIp, omitempty" filter:"data.podIP"`
-	CreateTimeBegin     string `json:"createTimeBegin, omitempty" filter:"data.createTime,timeL"`
-	CreateTimeEnd       string `json:"createTimeEnd, omitempty" filter:"data.createTime,timeR"`
-	LastUpdateTimeBegin string `json:"lastUpdateTimeBegin, omitempty" filter:"data.lastUpdateTime,timeL"`
-	LastUpdateTimeEnd   string `json:"lastUpdateTimeEnd, omitempty" filter:"data.lastUpdateTime,timeR"`
+	Kind                string `json:"kind,omitempty" filter:"data.kind"`
+	Name                string `json:"name,omitempty" filter:"resourceName"`
+	Namespace           string `json:"namespace,omitempty" filter:"namespace"`
+	Instance            string `json:"instance,omitempty" filter:"data.instance,int"`
+	BuildedInstance     string `json:"buildedInstance,omitempty" filter:"data.buildedInstance,int"`
+	RunningInstance     string `json:"runningInstance,omitempty" filter:"data.runningInstance,int"`
+	Status              string `json:"status,omitempty" filter:"data.status"`
+	LastStatus          string `json:"lastStatus,omitempty" filter:"data.lastStatus"`
+	PodIp               string `json:"podIp,omitempty" filter:"data.podIP"`
+	CreateTimeBegin     string `json:"createTimeBegin,omitempty" filter:"data.createTime,timeL"`
+	CreateTimeEnd       string `json:"createTimeEnd,omitempty" filter:"data.createTime,timeR"`
+	LastUpdateTimeBegin string `json:"lastUpdateTimeBegin,omitempty" filter:"data.lastUpdateTime,timeL"`
+	LastUpdateTimeEnd   string `json:"lastUpdateTimeEnd,omitempty" filter:"data.lastUpdateTime,timeR"`
 }
 
 const processNestedTimeLayout = nestedTimeLayout

@@ -418,14 +418,14 @@ func InitMetricStorage() (err error) {
 }
 
 func init() {
-	api.RegisterV1Action(api.Action{http.MethodPost, "/metric/clustertype/{clusterType}/metrics", nil, SetMetrics})
-	api.RegisterV1Action(api.Action{http.MethodDelete, "/metric/clustertype/{clusterType}/clusters/{clusterId}/namespaces/{namespace}/metrics", nil, DeleteMetrics})
-	api.RegisterV1Action(api.Action{http.MethodGet, "/metric/collector/{clusterType}/{clusterId}/{namespace}/{name}", nil, GetCollector})
-	api.RegisterV1Action(api.Action{http.MethodPost, "/metric/metrics", nil, GetMetrics})
-	api.RegisterV1Action(api.Action{http.MethodGet, "/metric/tasks/clusters/{clusterId}", nil, ListMetricTask})
-	api.RegisterV1Action(api.Action{http.MethodGet, "/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/{name}", nil, GetMetricTask})
-	api.RegisterV1Action(api.Action{http.MethodPut, "/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/{name}", nil, SetMetricTask})
-	api.RegisterV1Action(api.Action{http.MethodDelete, "/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/{name}", nil, DeleteMetricTask})
+	api.RegisterV1Action(api.Action{Verb: http.MethodPost, Path: "/metric/clustertype/{clusterType}/metrics", Params: nil, Handler: SetMetrics})
+	api.RegisterV1Action(api.Action{Verb: http.MethodDelete, Path: "/metric/clustertype/{clusterType}/clusters/{clusterId}/namespaces/{namespace}/metrics", Params: nil, Handler: DeleteMetrics})
+	api.RegisterV1Action(api.Action{Verb: http.MethodGet, Path: "/metric/collector/{clusterType}/{clusterId}/{namespace}/{name}", Params: nil, Handler: GetCollector})
+	api.RegisterV1Action(api.Action{Verb: http.MethodPost, Path: "/metric/metrics", Params: nil, Handler: GetMetrics})
+	api.RegisterV1Action(api.Action{Verb: http.MethodGet, Path: "/metric/tasks/clusters/{clusterId}", Params: nil, Handler: ListMetricTask})
+	api.RegisterV1Action(api.Action{Verb: http.MethodGet, Path: "/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/{name}", Params: nil, Handler: GetMetricTask})
+	api.RegisterV1Action(api.Action{Verb: http.MethodPut, Path: "/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/{name}", Params: nil, Handler: SetMetricTask})
+	api.RegisterV1Action(api.Action{Verb: http.MethodDelete, Path: "/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/{name}", Params: nil, Handler: DeleteMetricTask})
 
 	api.RegisterInitFunc(InitMetricStorage)
 }

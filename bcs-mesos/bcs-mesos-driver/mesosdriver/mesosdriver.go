@@ -167,7 +167,7 @@ func (m *MesosDriver) Filter(req *restful.Request, resp *restful.Response, filte
 	if clusterId != m.bcsClusterId {
 		msg := fmt.Sprintf("ClusterId %s is invalid", clusterId)
 		blog.Error(msg)
-		resp.WriteHeaderAndEntity(http.StatusBadRequest, commhttp.APIRespone{false, 1, msg, nil})
+		resp.WriteHeaderAndEntity(http.StatusBadRequest, commhttp.APIRespone{Result: false, Code: 1, Message: msg, Data: nil})
 		return
 	}
 

@@ -19,16 +19,16 @@ import (
 
 type DeploymentFilter struct {
 	ClusterId            string `json:"clusterId" filter:"clusterId"`
-	Name                 string `json:"name, omitempty" filter:"resourceName"`
-	Namespace            string `json:"namespace, omitempty" filter:"namespace"`
-	CheckTime            string `json:"checkTime, omitempty" filter:"data.check_time,int64"`
-	Status               string `json:"status, omitempty" filter:"data.status"`
-	ApplicationName      string `json:"applicationName, omitempty" filter:"data.application.name"`
-	ApplicationExtName   string `json:"applicationExtName, omitempty" filter:"data.application_ext.name"`
-	CurrRollingOp        string `json:"currRollingOperation, omitempty" filter:"data.curr_rolling_operation"`
-	IsInRolling          string `json:"isInRolling, omitempty" filter:"data.is_in_rolling,bool"`
-	LastRollingTimeBegin string `json:"lastRollingTimeBegin, omitempty" filter:"data.last_rolling_time,timeL"`
-	LastRollingTimeEnd   string `json:"lastRollingTimeEnd, omitempty" filter:"data.last_rolling_time,timeR"`
+	Name                 string `json:"name,omitempty" filter:"resourceName"`
+	Namespace            string `json:"namespace,omitempty" filter:"namespace"`
+	CheckTime            string `json:"checkTime,omitempty" filter:"data.check_time,int64"`
+	Status               string `json:"status,omitempty" filter:"data.status"`
+	ApplicationName      string `json:"applicationName,omitempty" filter:"data.application.name"`
+	ApplicationExtName   string `json:"applicationExtName,omitempty" filter:"data.application_ext.name"`
+	CurrRollingOp        string `json:"currRollingOperation,omitempty" filter:"data.curr_rolling_operation"`
+	IsInRolling          string `json:"isInRolling,omitempty" filter:"data.is_in_rolling,bool"`
+	LastRollingTimeBegin string `json:"lastRollingTimeBegin,omitempty" filter:"data.last_rolling_time,timeL"`
+	LastRollingTimeEnd   string `json:"lastRollingTimeEnd,omitempty" filter:"data.last_rolling_time,timeR"`
 }
 
 const deploymentNestedTimeLayout = nestedTimeLayout
