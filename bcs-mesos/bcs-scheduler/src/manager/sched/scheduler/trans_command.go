@@ -36,7 +36,7 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 			}
 			continue
 		}
-	
+
 		for _, task := range taskGroup.Tasks {
 			taskId := task.TaskId
 			taskInfo, err := s.store.FetchTask(taskId)
@@ -47,28 +47,28 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 				continue
 			}
 			if taskInfo.Status != types.TASK_STATUS_RUNNING {
-				blog.Warn("task(%s) not in runnning, cannot send command", taskId)				
+				blog.Warn("task(%s) not in runnning, cannot send command", taskId)
 				task.Status = commtypes.TaskCommandStatusFailed
 				task.Message = "task not in running status"
 				continue
 			}
-			
+
 			msg := &types.RequestCommandTask{
-				ID:    command.Id,
-				TaskId:    taskId,
-				Env:    command.Spec.Env,
-				Cmd:    command.Spec.Command,
-				User:    command.Spec.User,
-				WorkingDir:    command.Spec.WorkingDir,
-				Privileged:    command.Spec.Privileged,
+				ID:         command.Id,
+				TaskId:     taskId,
+				Env:        command.Spec.Env,
+				Cmd:        command.Spec.Command,
+				User:       command.Spec.User,
+				WorkingDir: command.Spec.WorkingDir,
+				Privileged: command.Spec.Privileged,
 			}
 			bcsMsg := &types.BcsMessage{
-				Type:  types.Msg_Req_COMMAND_TASK.Enum(),
+				Type:               types.Msg_Req_COMMAND_TASK.Enum(),
 				RequestCommandTask: msg,
 			}
 			_, err = s.SendBcsMessage(taskGroupInfo, bcsMsg)
 			if err != nil {
-				blog.Warn("send command to task(%s) err:%s", taskId, err.Error())	
+				blog.Warn("send command to task(%s) err:%s", taskId, err.Error())
 				task.Status = commtypes.TaskCommandStatusFailed
 				task.Message = err.Error()
 				continue
@@ -76,11 +76,11 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 
 			task.Status = commtypes.TaskCommandStatusRunning
 			task.Message = "command in running"
-			blog.Info("send command(%s) to task(%s)", command.Id, taskId)	
+			blog.Info("send command(%s) to task(%s)", command.Id, taskId)
 		}
 	}
 
 	s.store.SaveCommand(command)
-	blog.Info("finish send command(%s), wait for result", command.Id)	
+	blog.Info("finish send command(%s), wait for result", command.Id)
 	return
 }

@@ -257,4 +257,3 @@ func TestGetAllOffers(t *testing.T) {
 
 	assert.Equal(t, length, len(offers))
 }
-

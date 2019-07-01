@@ -16,7 +16,6 @@ package task
 import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-
 	//"bk-bcs/bcs-common/common/blog"
 	//"github.com/golang/protobuf/proto"
 )

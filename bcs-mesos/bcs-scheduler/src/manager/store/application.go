@@ -69,7 +69,6 @@ func getApplicationRootPath() string {
 	return "/" + bcsRootNode + "/" + applicationNode + "/"
 }
 
-
 //SaveApplication save application data into db.
 func (store *managerStore) SaveApplication(application *types.Application) error {
 
@@ -81,7 +80,6 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	path := getApplicationRootPath() + application.RunAs + "/" + application.ID
 	return store.Db.Insert(path, string(data))
 }
-
 
 func (store *managerStore) ListRunAs() ([]string, error) {
 

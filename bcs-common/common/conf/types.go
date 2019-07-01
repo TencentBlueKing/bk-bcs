@@ -32,7 +32,7 @@ import (
 
 // FileConfig Config file, if set it will cover all the flag value it contains
 type FileConfig struct {
-	ConfigFile  string `json:"file" short:"f" value:"" usage:"json file with configuration"`
+	ConfigFile string `json:"file" short:"f" value:"" usage:"json file with configuration"`
 }
 
 // LogConfig Log configuration
