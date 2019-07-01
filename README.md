@@ -22,7 +22,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 * [代码结构](./docs/overview/code_directory.md)
 * [功能说明](./docs/overview/function.md)
 
-如果想了解BCS更详细信息，请参考蓝鲸容器管理平台[白皮书](https://docs.bk.tencent.com/bcs/)
+了解BCS更详细功能，请参考蓝鲸容器管理平台[白皮书](https://docs.bk.tencent.com/bcs/)
 
 ## Features
 
@@ -44,6 +44,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 * [通过BCS解决研发环境的资源复用](./docs/experience/dev.md)
 * [通过BCS完成业务的滚动升级](./docs/experience/rolling.md)
 * [通过BCS完成业务的蓝绿发布](./docs/experience/bluegreen.md)
+* [通过蓝鲸自动化运维体系完成BCS的自动扩缩容]()
 
 ## Getting Started
 
