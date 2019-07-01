@@ -90,8 +90,8 @@ func CleanEventsOutCap() {
 
 func init() {
 	eventPath := urlPath("/events")
-	actions.RegisterV1Action(actions.Action{"PUT", eventPath, nil, lib.MarkProcess(PutEvent)})
-	actions.RegisterV1Action(actions.Action{"GET", eventPath, nil, lib.MarkProcess(ListEvent)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: eventPath, Params: nil, Handler: lib.MarkProcess(PutEvent)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
 
 	actions.RegisterDaemonFunc(CleanEventsOutDate)
 	actions.RegisterDaemonFunc(CleanEventsOutCap)

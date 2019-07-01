@@ -302,7 +302,7 @@ type RestartPolicy struct {
 	Interval       int               `json:"interval,omitempty"`        //only for mesos
 	Backoff        int               `json:"backoff,omitempty"`         //only for mesos
 	MaxTimes       int               `json:"maxtimes,omitempty"`        //only for mesos
-	HostRetainTime int64             `json:"hostRetainTime, omitempty"` //only for mesos
+	HostRetainTime int64             `json:"hostRetainTime,omitempty"` //only for mesos
 }
 
 //KillPolicy for container
