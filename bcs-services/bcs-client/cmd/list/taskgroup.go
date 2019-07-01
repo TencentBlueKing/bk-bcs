@@ -16,6 +16,7 @@ package list
 import (
 	"fmt"
 	"net/url"
+	"sort"
 
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
@@ -26,20 +27,30 @@ func listTaskGroup(c *utils.ClientContext) error {
 		return err
 	}
 
+	storage := v1.NewBcsStorage(utils.GetClientOption())
+
+	// get namespace
 	condition := url.Values{}
-	condition.Add("namespace", c.Namespace())
+	condition.Add(FilterNamespaceTag, c.Namespace())
+
+	if c.IsAllNamespace() {
+		var err error
+		if condition, err = getNamespaceFilter(storage, c.ClusterID()); err != nil {
+			return err
+		}
+	}
 
 	ip := c.String(utils.OptionIP)
 	if ip != "" {
 		condition.Add("hostIp", ip)
 	}
 
-	storage := v1.NewBcsStorage(utils.GetClientOption())
 	list, err := storage.ListTaskGroup(c.ClusterID(), condition)
 	if err != nil {
 		return fmt.Errorf("failed to list taskgroup: %v", err)
 	}
 
+	sort.Sort(list)
 	return printListTaskGroup(list)
 }
 
