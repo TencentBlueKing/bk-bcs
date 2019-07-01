@@ -34,11 +34,11 @@ const (
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{"POST", "/bcsapi/v4/scheduler/k8s/{uri:*}", nil, handlerPostActions})
-	actions.RegisterAction(actions.Action{"PUT", "/bcsapi/v4/scheduler/k8s/{uri:*}", nil, handlerPutActions})
-	actions.RegisterAction(actions.Action{"GET", "/bcsapi/v4/scheduler/k8s/{uri:*}", nil, handlerGetActions})
-	actions.RegisterAction(actions.Action{"DELETE", "/bcsapi/v4/scheduler/k8s/{uri:*}", nil, handlerDeleteActions})
-	actions.RegisterAction(actions.Action{"PATCH", "/bcsapi/v4/scheduler/k8s/{uri:*}", nil, handlerPatchActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerPostActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerPutActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerGetActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerDeleteActions})
+	actions.RegisterAction(actions.Action{Verb: "PATCH", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerPatchActions})
 }
 
 func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
