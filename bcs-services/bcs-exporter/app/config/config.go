@@ -44,11 +44,11 @@ type Config struct {
 	conf.ProcessConfig
 
 	OutputPlugins    []string `json:"output_plugins" value:"" usage:"the list of plugins path"`
-	OutputAddress    string `json:"output_address" value:"" usage:"the address where the output data sent to"`
-	OutputClientCA   string `json:"output_ca_file" value:"" usage:"Output CA file"`
-	OutputClientCert string `json:"output_client_cert_file" value:"" usage:"Output client public key file(*.crt)"`
-	OutputClientKey  string `json:"output_client_key_file" value:"" usage:"Output client private key file(*.key)"`
-	OutputClientPwd  string `json:"output_client_key_pwd" value:"" usage:"Output client private key password"`
+	OutputAddress    string   `json:"output_address" value:"" usage:"the address where the output data sent to"`
+	OutputClientCA   string   `json:"output_ca_file" value:"" usage:"Output CA file"`
+	OutputClientCert string   `json:"output_client_cert_file" value:"" usage:"Output client public key file(*.crt)"`
+	OutputClientKey  string   `json:"output_client_key_file" value:"" usage:"Output client private key file(*.key)"`
+	OutputClientPwd  string   `json:"output_client_key_pwd" value:"" usage:"Output client private key password"`
 
 	ListenIP        string
 	ListenPort      uint

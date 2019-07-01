@@ -75,4 +75,3 @@ func (a *PaaSAuth) VerifyAccessTokenForEe(accessToken string) (bool, map[string]
 
 	return true, result.Data.Identity, nil
 }
-

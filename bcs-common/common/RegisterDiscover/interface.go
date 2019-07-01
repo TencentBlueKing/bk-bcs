@@ -26,5 +26,5 @@ type RegDiscvServer interface {
 	// discover server from the registe-discover service platform
 	Discover(key string) (<-chan *DiscoverEvent, error)
 	//discover nodes from path
-	DiscoverNodes(path string)(*DiscoverEvent, error)
+	DiscoverNodes(path string) (*DiscoverEvent, error)
 }

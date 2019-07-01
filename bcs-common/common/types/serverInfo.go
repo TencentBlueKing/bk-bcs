@@ -44,8 +44,8 @@ const (
 	BCS_MODULE_IPSERVICE       = "ipservice"
 
 	//bcstest 2018.11.07
-	BCS_MODULE_K8SAPISERVER    = "kubernetedriver"
-	BCS_MODULE_MESOSAPISERVER  = "mesosdriver"
+	BCS_MODULE_K8SAPISERVER   = "kubernetedriver"
+	BCS_MODULE_MESOSAPISERVER = "mesosdriver"
 )
 
 var (
@@ -181,8 +181,8 @@ type BcsStorageInfo struct {
 
 type BcsK8sApiserverInfo struct {
 	ServerInfo
-	CaCertData string  //certificates
-	UserToken string   //user token
+	CaCertData string //certificates
+	UserToken  string //user token
 }
 
 type BcsMesosApiserverInfo struct {

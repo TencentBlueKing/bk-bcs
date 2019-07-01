@@ -15,23 +15,23 @@ package types
 
 //mesos address
 type ReschedMesosAddress struct {
-	Hostname	string 	`json:"hostname"`
-	IP          string  `json:"ip"`
-	Port        int  	`json:"port"`
+	Hostname string `json:"hostname"`
+	IP       string `json:"ip"`
+	Port     int    `json:"port"`
 }
 
 // mesos info
 type ReschedMesosInfo struct {
-	Address     ReschedMesosAddress  	`json:"address"`
-	Hostname	string 					`json:"hostname"`
-	Id          string 					`json:"id"`
-	IP			int 	 				`json:"ip"`
-	Pid         string 					`json:"pid"`
-	Port        int  					`json:"port"`
-	Version     string 					`json:"version"`
+	Address  ReschedMesosAddress `json:"address"`
+	Hostname string              `json:"hostname"`
+	Id       string              `json:"id"`
+	IP       int                 `json:"ip"`
+	Pid      string              `json:"pid"`
+	Port     int                 `json:"port"`
+	Version  string              `json:"version"`
 }
 
 // mesos framework info
 type Framework struct {
-	ID   	  string 				`json:"id"`
+	ID string `json:"id"`
 }

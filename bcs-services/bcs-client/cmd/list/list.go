@@ -40,7 +40,7 @@ func NewListCommand() cli.Command {
 				Value: "",
 			},
 			cli.BoolFlag{
-				Name: "all-namespaces, an",
+				Name:  "all-namespaces, an",
 				Usage: "list resources with all namespaces",
 			},
 			cli.StringFlag{

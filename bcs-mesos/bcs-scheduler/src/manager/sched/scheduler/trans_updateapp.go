@@ -133,8 +133,8 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer) {
 			blog.Error("transaction %s save application(%s.%s) err:%s", trans.ID, app.RunAs, app.ID, err.Error())
 			s.DeclineResource(offer.Id.Value)
 			return
-		} 
-		
+		}
+
 		blog.V(3).Infof("transaction %s save application(%s.%s) succ!", trans.ID, app.RunAs, app.ID)
 		trans.Status = types.OPERATION_STATUS_FINISH
 		s.DeclineResource(offer.Id.Value)
@@ -165,7 +165,7 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer) {
 			if task.CanTaskGroupShutdown(taskGroup) {
 				blog.Info("transaction %s pending: kill old taskGroup(%s)", trans.ID, taskGroup.ID)
 				s.KillTaskGroup(taskGroup)
-			} 
+			}
 			s.DeclineResource(offer.Id.Value)
 			return
 		}

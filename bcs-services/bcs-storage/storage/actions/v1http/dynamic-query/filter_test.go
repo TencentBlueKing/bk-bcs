@@ -14,30 +14,30 @@
 package dynamicQuery
 
 import (
-    "testing"
+	"testing"
 )
 
 func TestGetTime(t *testing.T) {
-    timeStr := "1516849200"
-    layout := timestampsLayout
+	timeStr := "1516849200"
+	layout := timestampsLayout
 
-    r, err := getTime(timeStr, layout)
-    if err != nil {
-        t.Errorf("getTime() failed! err: %v", err)
-        return
-    }
-    if unix, ok := r.(int64); !ok || unix != 1516849200 {
-        t.Errorf("getTime() failed! \nresult:\n%v\nexpect:\n1516849200\n", r)
-    }
+	r, err := getTime(timeStr, layout)
+	if err != nil {
+		t.Errorf("getTime() failed! err: %v", err)
+		return
+	}
+	if unix, ok := r.(int64); !ok || unix != 1516849200 {
+		t.Errorf("getTime() failed! \nresult:\n%v\nexpect:\n1516849200\n", r)
+	}
 
-    layout = "2006-01-02 15:04:05"
-    r, err = getTime(timeStr, layout)
-    if err != nil {
-        t.Errorf("getTime() failed! err: %v", err)
-        return
-    }
+	layout = "2006-01-02 15:04:05"
+	r, err = getTime(timeStr, layout)
+	if err != nil {
+		t.Errorf("getTime() failed! err: %v", err)
+		return
+	}
 
-    if unix, ok := r.(string); !ok || unix != "2018-01-25 11:00:00" {
-        t.Errorf("getTime() failed! \nresult:\n%v\nexpect:\n1516849200\n", r)
-    }
+	if unix, ok := r.(string); !ok || unix != "2018-01-25 11:00:00" {
+		t.Errorf("getTime() failed! \nresult:\n%v\nexpect:\n1516849200\n", r)
+	}
 }
