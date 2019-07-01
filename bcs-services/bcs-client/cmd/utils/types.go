@@ -16,6 +16,7 @@ package utils
 const (
 	OptionClusterID     = "clusterid"
 	OptionNamespace     = "namespace"
+	OptionAllNamespace  = "all-namespaces"
 	OptionName          = "name"
 	OptionTaskGroupName = "tgname"
 	OptionType          = "type"

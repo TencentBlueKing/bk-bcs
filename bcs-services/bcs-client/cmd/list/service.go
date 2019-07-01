@@ -16,6 +16,7 @@ package list
 import (
 	"fmt"
 	"net/url"
+	"sort"
 
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
@@ -26,15 +27,25 @@ func listService(c *utils.ClientContext) error {
 		return err
 	}
 
-	condition := url.Values{}
-	condition.Add("namespace", c.Namespace())
-
 	storage := v1.NewBcsStorage(utils.GetClientOption())
+
+	// get namespace
+	condition := url.Values{}
+	condition.Add(FilterNamespaceTag, c.Namespace())
+
+	if c.IsAllNamespace() {
+		var err error
+		if condition, err = getNamespaceFilter(storage, c.ClusterID()); err != nil {
+			return err
+		}
+	}
+
 	list, err := storage.ListService(c.ClusterID(), condition)
 	if err != nil {
 		return fmt.Errorf("failed to list service: %v", err)
 	}
 
+	sort.Sort(list)
 	return printListService(list)
 }
 
