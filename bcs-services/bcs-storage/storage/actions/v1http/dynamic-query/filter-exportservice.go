@@ -19,11 +19,11 @@ import (
 
 type ExportServiceFilter struct {
 	ClusterId   string `json:"clusterId" filter:"clusterId"`
-	Name        string `json:"name, omitempty" filter:"resourceName"`
-	Namespace   string `json:"namespace, omitempty" filter:"namespace"`
-	ServiceName string `json:"serviceName, omitempty" filter:"data.serviceName"`
-	SSLCert     string `json:"sslCert, omitempty" filter:"data.sslcert,bool"`
-	Balance     string `json:"balance, omitempty" filter:"data.balance"`
+	Name        string `json:"name,omitempty" filter:"resourceName"`
+	Namespace   string `json:"namespace,omitempty" filter:"namespace"`
+	ServiceName string `json:"serviceName,omitempty" filter:"data.serviceName"`
+	SSLCert     string `json:"sslCert,omitempty" filter:"data.sslcert,bool"`
+	Balance     string `json:"balance,omitempty" filter:"data.balance"`
 }
 
 const exportServiceNestedTimeLayout = nestedTimeLayout

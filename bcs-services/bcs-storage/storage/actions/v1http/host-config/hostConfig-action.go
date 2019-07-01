@@ -119,12 +119,12 @@ func PutClusterRelation(req *restful.Request, resp *restful.Response) {
 
 func init() {
 	hostPath := urlPath("/host/{ip}")
-	actions.RegisterV1Action(actions.Action{"GET", hostPath, nil, lib.MarkProcess(GetHost)})
-	actions.RegisterV1Action(actions.Action{"PUT", hostPath, nil, lib.MarkProcess(PutHost)})
-	actions.RegisterV1Action(actions.Action{"DELETE", hostPath, nil, lib.MarkProcess(DeleteHost)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: hostPath, Params: nil, Handler: lib.MarkProcess(GetHost)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: hostPath, Params: nil, Handler: lib.MarkProcess(PutHost)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: hostPath, Params: nil, Handler: lib.MarkProcess(DeleteHost)})
 
 	listMetricPath := urlPath("/host/clusters/{clusterId}")
-	actions.RegisterV1Action(actions.Action{"GET", listMetricPath, nil, lib.MarkProcess(ListHost)})
-	actions.RegisterV1Action(actions.Action{"PUT", listMetricPath, nil, lib.MarkProcess(PutClusterRelation)})
-	actions.RegisterV1Action(actions.Action{"POST", listMetricPath, nil, lib.MarkProcess(PostClusterRelation)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: listMetricPath, Params: nil, Handler: lib.MarkProcess(ListHost)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: listMetricPath, Params: nil, Handler: lib.MarkProcess(PutClusterRelation)})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: listMetricPath, Params: nil, Handler: lib.MarkProcess(PostClusterRelation)})
 }

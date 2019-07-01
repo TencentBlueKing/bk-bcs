@@ -19,12 +19,12 @@ import (
 
 type JobFilter struct {
 	ClusterId       string `json:"clusterId" filter:"clusterId"`
-	Name            string `json:"name, omitempty" filter:"resourceName"`
-	Namespace       string `json:"namespace, omitempty" filter:"namespace"`
-	CreateTimeBegin string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd   string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
-	ResourceVersion string `json:"resourceVersion, omitempty" filter:"data.metadata.resourceVersion"`
-	Uid             string `json:"uid, omitempty" filter:"data.metadata.uid"`
+	Name            string `json:"name,omitempty" filter:"resourceName"`
+	Namespace       string `json:"namespace,omitempty" filter:"namespace"`
+	CreateTimeBegin string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	ResourceVersion string `json:"resourceVersion,omitempty" filter:"data.metadata.resourceVersion"`
+	Uid             string `json:"uid,omitempty" filter:"data.metadata.uid"`
 }
 
 const jobNestedTimeLayout = nestedTimeLayout
