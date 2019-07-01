@@ -298,10 +298,10 @@ const (
 
 //RestartPolicy for pod
 type RestartPolicy struct {
-	Policy         RestartPolicyType `json:"policy"`                    //value: Nerver | Always | OnFailure
-	Interval       int               `json:"interval,omitempty"`        //only for mesos
-	Backoff        int               `json:"backoff,omitempty"`         //only for mesos
-	MaxTimes       int               `json:"maxtimes,omitempty"`        //only for mesos
+	Policy         RestartPolicyType `json:"policy"`                   //value: Nerver | Always | OnFailure
+	Interval       int               `json:"interval,omitempty"`       //only for mesos
+	Backoff        int               `json:"backoff,omitempty"`        //only for mesos
+	MaxTimes       int               `json:"maxtimes,omitempty"`       //only for mesos
 	HostRetainTime int64             `json:"hostRetainTime,omitempty"` //only for mesos
 }
 

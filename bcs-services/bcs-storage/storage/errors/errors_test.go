@@ -14,14 +14,14 @@
 package errors
 
 import (
-    "testing"
-    "fmt"
+	"fmt"
+	"testing"
 )
 
 func TestError(t *testing.T) {
-    msg := "hello"
-    err := &StorageError{Message: msg, Code: 100}
-    if fmt.Sprintf("%v", err) != msg {
-        t.Errorf("StorageError Error() failed! \nresult:\n%v\nexpect:\n%v\n", err, msg)
-    }
+	msg := "hello"
+	err := &StorageError{Message: msg, Code: 100}
+	if fmt.Sprintf("%v", err) != msg {
+		t.Errorf("StorageError Error() failed! \nresult:\n%v\nexpect:\n%v\n", err, msg)
+	}
 }

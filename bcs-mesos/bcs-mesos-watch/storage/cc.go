@@ -93,7 +93,7 @@ func (cc *CCStorage) init() error {
 	cc.handlers["Application"] = &ChannelProxy{
 		dataQueue: make(chan *types.BcsSyncData, 10240),
 		actionHandler: &AppHandler{
-			oper: cc,
+			oper:         cc,
 			dataType:     "application",
 			ClusterID:    cc.ClusterID,
 			DoCheckDirty: true,
@@ -105,7 +105,7 @@ func (cc *CCStorage) init() error {
 		cc.handlers[applicationChannel] = &ChannelProxy{
 			dataQueue: make(chan *types.BcsSyncData, 10240),
 			actionHandler: &AppHandler{
-				oper: cc,
+				oper:         cc,
 				dataType:     "application",
 				ClusterID:    cc.ClusterID,
 				DoCheckDirty: false,
@@ -142,7 +142,7 @@ func (cc *CCStorage) init() error {
 	cc.handlers["TaskGroup"] = &ChannelProxy{
 		dataQueue: make(chan *types.BcsSyncData, 10240),
 		actionHandler: &TaskGroupHandler{
-			oper: cc,
+			oper:         cc,
 			dataType:     "taskgroup",
 			ClusterID:    cc.ClusterID,
 			DoCheckDirty: true,
@@ -153,7 +153,7 @@ func (cc *CCStorage) init() error {
 	cc.handlers["ExportService"] = &ChannelProxy{
 		dataQueue: make(chan *types.BcsSyncData, 10240),
 		actionHandler: &ExpServiceHandler{
-			oper: cc,
+			oper:      cc,
 			dataType:  "exportservice",
 			ClusterID: cc.ClusterID,
 		},
@@ -400,4 +400,3 @@ func (cc *CCStorage) DeleteDCNodes(node string, value interface{}, action string
 	blog.Info("DC [%s %s] response: %s, req-data: %s", action, path, bodyStr, string(valueBytes))
 	return nil
 }
-

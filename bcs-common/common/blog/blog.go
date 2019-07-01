@@ -20,8 +20,8 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/conf"
 	"bk-bcs/bcs-common/common/blog/glog"
+	"bk-bcs/bcs-common/common/conf"
 )
 
 // GlogWriter serves as a bridge between the standard log package and the glog package.
