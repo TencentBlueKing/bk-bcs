@@ -344,7 +344,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 			driver.Stop()
 		}
 	}()
-	go executor.watchStartingTask()
+	//go executor.watchStartingTask()
 	logs.Infof("BcsExecutor init pod success.")
 
 	if setupErr := executor.netManager.SetUpPod(executor.podInst); setupErr != nil {
