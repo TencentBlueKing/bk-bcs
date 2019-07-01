@@ -146,7 +146,6 @@ type KuberneteDataWatchServInfo struct {
 //KuberneteDriverServInfo kubernetedriver server information
 type KuberneteDriverServInfo struct {
 	ServerInfo
-	Cluster string `json:"cluster"`
 }
 
 //SaDriverServInfo sa driver server information
