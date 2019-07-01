@@ -24,8 +24,8 @@ var (
 
 const (
 	InnerEdition         = "inner_edition"
-    CommunicationEdition = "communication_edition"
-    EnterpriseEdition    = "enterprise_edition"
+	CommunicationEdition = "communication_edition"
+	EnterpriseEdition    = "enterprise_edition"
 )
 
 func GetEdition() string {

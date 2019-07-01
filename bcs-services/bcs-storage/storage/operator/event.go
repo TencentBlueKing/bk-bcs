@@ -14,58 +14,58 @@
 package operator
 
 import (
-    "time"
-    "encoding/json"
+	"encoding/json"
+	"time"
 )
 
 type WatchOptions struct {
-    // Only watch the node itself, including children added, children removed and node value change.
-    // Will not receive existing children's event.
-    SelfOnly bool `json:"selfOnly"`
+	// Only watch the node itself, including children added, children removed and node value change.
+	// Will not receive existing children's event.
+	SelfOnly bool `json:"selfOnly"`
 
-    // Max time of events will received. Watch will be ended after the last event. 0 for infinity.
-    MaxEvents uint `json:"maxEvents"`
+	// Max time of events will received. Watch will be ended after the last event. 0 for infinity.
+	MaxEvents uint `json:"maxEvents"`
 
-    // The max waiting time of each event. Watch will be ended after timeout. 0 for no limit.
-    Timeout  time.Duration `json:"timeout"`
+	// The max waiting time of each event. Watch will be ended after timeout. 0 for no limit.
+	Timeout time.Duration `json:"timeout"`
 
-    // The value-change event will be checked if it's different from last status. If not then this event
-    // will be ignored. And it will not trigger timeout reset.
-    MustDiff string `json:"mustDiff"`
+	// The value-change event will be checked if it's different from last status. If not then this event
+	// will be ignored. And it will not trigger timeout reset.
+	MustDiff string `json:"mustDiff"`
 }
 
 type EventType int32
 
 const (
-    Nop  EventType = iota
-    Add
-    Del
-    Chg
-    SChg
-    Brk  EventType = -1
+	Nop EventType = iota
+	Add
+	Del
+	Chg
+	SChg
+	Brk EventType = -1
 )
 
 func (et EventType) String() string {
-    return eventTypeNames[et]
+	return eventTypeNames[et]
 }
 
 var (
-    eventTypeNames = map[EventType]string{
-        Nop:  "EventNop",
-        Add:  "EventAdd",
-        Del:  "EventDelete",
-        Chg:  "EventChange",
-        SChg: "EventSelfChange",
-        Brk:  "EventWatchBreak",
-    }
+	eventTypeNames = map[EventType]string{
+		Nop:  "EventNop",
+		Add:  "EventAdd",
+		Del:  "EventDelete",
+		Chg:  "EventChange",
+		SChg: "EventSelfChange",
+		Brk:  "EventWatchBreak",
+	}
 )
 
 type Event struct {
-    Type  EventType `json:"type"`
-    Value M         `json:"value"`
+	Type  EventType `json:"type"`
+	Value M         `json:"value"`
 }
 
 var (
-    EventWatchBreak = &Event{Type: Brk, Value: nil}
-    EventWatchBreakBytes, _ = json.Marshal(EventWatchBreak)
+	EventWatchBreak         = &Event{Type: Brk, Value: nil}
+	EventWatchBreakBytes, _ = json.Marshal(EventWatchBreak)
 )

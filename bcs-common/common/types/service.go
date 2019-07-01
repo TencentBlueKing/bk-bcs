@@ -15,7 +15,7 @@ package types
 
 //BcsService service definition
 type BcsService struct {
-	TypeMeta `json:",inline"`
+	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 	Spec       ServiceSpec `json:"spec"`
 }
@@ -32,9 +32,9 @@ type ServiceSpec struct {
 type ServicePort struct {
 	Name       string `json:"name"`
 	DomainName string `json:"domainName,omitempty"` //mesos only
-	Path	   string `json:"path"`
+	Path       string `json:"path"`
 	Protocol   string `json:"protocol"`
 	Port       int    `json:"servicePort"`
 	TargetPort int    `json:"targetPort,omitempty"` //k8s only
-	NodePort   int    `json:"nodePort,omitempty"`  //k8s only
+	NodePort   int    `json:"nodePort,omitempty"`   //k8s only
 }

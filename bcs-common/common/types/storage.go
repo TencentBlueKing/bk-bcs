@@ -10,7 +10,7 @@
  * limitations under the License.
  *
  */
- 
+
 package types
 
 import (
@@ -144,13 +144,13 @@ func (render *BcsStorageRenderIf) GetData() (dc *DeployConfig, err error) {
 
 // BcsStorageAlarmIf define storage alarm interface data interaction
 type BcsStorageAlarmIf struct {
-	ClusterId    string `json:"clusterId"`
-	Namespace    string `json:"namespace"`
-	Message      string `json:"message"`
-	Source       string `json:"source"`
-	Module       string `json:"module"`
-	Type         string `json:"type"`
-	ReceivedTime int64  `json:"receivedTime"`
+	ClusterId    string      `json:"clusterId"`
+	Namespace    string      `json:"namespace"`
+	Message      string      `json:"message"`
+	Source       string      `json:"source"`
+	Module       string      `json:"module"`
+	Type         string      `json:"type"`
+	ReceivedTime int64       `json:"receivedTime"`
 	Data         interface{} `json:"data"`
 }
 

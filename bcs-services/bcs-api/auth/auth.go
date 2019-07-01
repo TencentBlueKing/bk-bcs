@@ -14,10 +14,10 @@
 package auth
 
 import (
-	"time"
-	"math/rand"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 type BcsAuth interface {
@@ -28,17 +28,17 @@ type BcsAuth interface {
 type Action string
 
 const (
-	ActionManage  Action = "cluster-manager"
-	ActionRead    Action = "cluster-readonly"
+	ActionManage Action = "cluster-manager"
+	ActionRead   Action = "cluster-readonly"
 
 	TokenDefaultExpireTime = 2 * time.Hour
 	TokenRandomLength      = 10
 )
 
 type Token struct {
-	Token      string `json:"token"`
-	Username   string `json:"username"`
-	Message    string `json:"message"`
+	Token      string    `json:"token"`
+	Username   string    `json:"username"`
+	Message    string    `json:"message"`
 	ExpireTime time.Time `json:"expire_time"`
 
 	CreateTime time.Time `json:"create_time"`

@@ -33,7 +33,7 @@ type BcsClusterAgentInfo struct {
 	MemUsed   float64 `json:"memused"`
 	CpuUsed   float64 `json:"cpuused"`
 
-	Disabled       bool `json:"disabled"`
+	Disabled       bool                 `json:"disabled"`
 	HostAttributes []*BcsAgentAttribute `json:"host_attributes"`
 	Attributes     []*BcsAgentAttribute `json:"attributes"`
 
@@ -84,10 +84,10 @@ type BcsClusterAgentSettingUpdate struct {
 }
 
 type BcsAgentAttribute struct {
-	Name   string `json:"name,omitempty"`
-	Type   MesosValue_Type `json:"type,omitempty"`
-	Scalar *MesosValue_Scalar `json:"scalar,omitempty"`
+	Name   string               `json:"name,omitempty"`
+	Type   MesosValue_Type      `json:"type,omitempty"`
+	Scalar *MesosValue_Scalar   `json:"scalar,omitempty"`
 	Ranges []*MesosValue_Ranges `json:"ranges,omitempty"`
-	Set    *MesosValue_Set `json:"set,omitempty"`
-	Text   *MesosValue_Text `json:"text,omitempty"`
+	Set    *MesosValue_Set      `json:"set,omitempty"`
+	Text   *MesosValue_Text     `json:"text,omitempty"`
 }

@@ -79,7 +79,7 @@ func (s *Scheduler) DeploymentCheck(ns string, name string, recover bool) {
 			return
 		}
 		time.Sleep(3 * time.Second)
-	}	
+	}
 }
 
 func (s *Scheduler) deploymentCheckTick(ns string, name string, recover bool) bool {
@@ -244,9 +244,9 @@ func (s *Scheduler) checkCreateFirstRollingStart(deployment *types.Deployment) b
 		if app.Instances > uint64(deployment.Application.CurrentTargetInstances) {
 			deployment.CurrRollingOp = types.DEPLOYMENT_OPERATION_DELETE
 			s.innerScaleApplication(app.RunAs, app.ID, uint64(deployment.Application.CurrentTargetInstances))
-		} else { 
+		} else {
 			blog.Info("deployment(%s.%s) rolling update, application(%s) instances change to %d",
-					ns, name, app.ID, app.Instances)
+				ns, name, app.ID, app.Instances)
 			s.deploymentEndRolling(deployment)
 			if app.Instances <= 0 {
 				allDeleted = true
@@ -254,9 +254,9 @@ func (s *Scheduler) checkCreateFirstRollingStart(deployment *types.Deployment) b
 		}
 		s.store.SaveDeployment(deployment)
 	}
-	
+
 	if allDeleted == true && allStarted == true {
-		return  s.finishRollingUpdate(deployment)
+		return s.finishRollingUpdate(deployment)
 	}
 
 	return false
@@ -267,17 +267,17 @@ func (s *Scheduler) checkCreateFirstRollingDelete(deployment *types.Deployment) 
 	name := deployment.ObjectMeta.Name
 	allDeleted := false
 	allStarted := false
-	
+
 	app, err := s.store.FetchApplication(ns, deployment.Application.ApplicationName)
 	if err != nil {
 		blog.Warn("deployment(%s.%s) rolling update: fetch application(%s) err:%s",
 			ns, name, deployment.Application.ApplicationName, err.Error())
 		return false
 	}
-		
+
 	if app.Instances <= uint64(deployment.Application.CurrentTargetInstances) {
 		blog.Info("deployment(%s.%s) rolling update: application(%s) instances change to %d",
-				ns, name, app.ID, app.Instances)
+			ns, name, app.ID, app.Instances)
 		s.deploymentEndRolling(deployment)
 		if app.Instances <= 0 {
 			allDeleted = true
@@ -296,9 +296,9 @@ func (s *Scheduler) checkCreateFirstRollingDelete(deployment *types.Deployment) 
 			allStarted = true
 		}
 	}
-	
+
 	if allDeleted == true && allStarted == true {
-		return  s.finishRollingUpdate(deployment)
+		return s.finishRollingUpdate(deployment)
 	}
 	return false
 }
@@ -311,7 +311,6 @@ func (s *Scheduler) checkCreateFirstRolling(deployment *types.Deployment) bool {
 
 	return s.checkCreateFirstRollingDelete(deployment)
 }
-
 
 func (s *Scheduler) checkDeleteFirstRollingDelete(deployment *types.Deployment) bool {
 	ns := deployment.ObjectMeta.NameSpace
@@ -333,7 +332,7 @@ func (s *Scheduler) checkDeleteFirstRollingDelete(deployment *types.Deployment) 
 		appExt, err := s.store.FetchApplication(ns, deployment.ApplicationExt.ApplicationName)
 		if err != nil {
 			blog.Warn("deployment(%s.%s) rolling update: fetch ext application(%s) err:%s",
-					ns, name, deployment.ApplicationExt.ApplicationName, err.Error())
+				ns, name, deployment.ApplicationExt.ApplicationName, err.Error())
 			return false
 		}
 		// do start
@@ -350,9 +349,9 @@ func (s *Scheduler) checkDeleteFirstRollingDelete(deployment *types.Deployment) 
 		}
 		s.store.SaveDeployment(deployment)
 	}
-	
+
 	if allDeleted == true && allStarted == true {
-		return  s.finishRollingUpdate(deployment)
+		return s.finishRollingUpdate(deployment)
 	}
 	return false
 
@@ -364,14 +363,14 @@ func (s *Scheduler) checkDeleteFirstRollingStart(deployment *types.Deployment) b
 	allDeleted := false
 	allStarted := false
 	appExt, err := s.store.FetchApplication(ns, deployment.ApplicationExt.ApplicationName)
-	if err != nil{
+	if err != nil {
 		blog.Error("deployment(%s.%s) rolling update: fetch ext application(%s) err:%s",
 			ns, name, deployment.ApplicationExt.ApplicationName)
 		return false
 	}
 	if s.isRollingStartFinished(appExt, deployment.ApplicationExt.CurrentRollingInstances, deployment.ApplicationExt.CurrentTargetInstances) {
 		blog.Info("deployment(%s.%s) rolling update: applicationExt(%s) instances change to %d/%d",
-				ns, name, appExt.ID, appExt.Instances, appExt.DefineInstances)
+			ns, name, appExt.ID, appExt.Instances, appExt.DefineInstances)
 		s.deploymentEndRolling(deployment)
 		if appExt.Instances >= uint64(appExt.DefineInstances) {
 			allStarted = true
@@ -391,7 +390,7 @@ func (s *Scheduler) checkDeleteFirstRollingStart(deployment *types.Deployment) b
 	}
 
 	if allDeleted == true && allStarted == true {
-		return  s.finishRollingUpdate(deployment)
+		return s.finishRollingUpdate(deployment)
 	}
 	return false
 }
@@ -428,8 +427,8 @@ func (s *Scheduler) finishRollingUpdate(deployment *types.Deployment) bool {
 		app.Status = types.APP_STATUS_RUNNING
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
 		if err := s.store.SaveApplication(app); err != nil {
-			blog.Error("deployment(%s.%s) rolling update finish, save application err:%s", 
-					ns, deployment.ApplicationExt.ApplicationName, err.Error())
+			blog.Error("deployment(%s.%s) rolling update finish, save application err:%s",
+				ns, deployment.ApplicationExt.ApplicationName, err.Error())
 			return false
 		}
 	}
@@ -471,7 +470,7 @@ func (s *Scheduler) deploymentCheckRolling(deployment *types.Deployment) bool {
 	}
 
 	if deployment.Strategy.RollingUpdate.RollingOrder == commtypes.CreateFirstOrder {
-		return s.checkCreateFirstRolling(deployment) 
+		return s.checkCreateFirstRolling(deployment)
 	}
 
 	return s.checkDeleteFirstRolling(deployment)
@@ -503,7 +502,7 @@ func (s *Scheduler) isRollingStartFinished(app *types.Application, rollingNum in
 			continue
 		}
 
-		if taskGroup.Status != types.TASKGROUP_STATUS_RUNNING {			
+		if taskGroup.Status != types.TASKGROUP_STATUS_RUNNING {
 			blog.Info("taskgroup(%s) status(%s), rolling update not finish",
 				taskGroup.ID, taskGroup.Status)
 			return false
@@ -523,14 +522,14 @@ func (s *Scheduler) isRollingStartFinished(app *types.Application, rollingNum in
 			}
 			if hasLocalCheck == false {
 				continue
-			} 
+			}
 			if task.IsChecked == false {
 				blog.Info("task(%s) is running but not do healthcheck, rolling update not finish", task.ID)
 				return false
 			}
-			if task.Healthy == false{
+			if task.Healthy == false {
 				blog.Info("task(%s) is running but healthcheck not ok, rolling update not finish", task.ID)
-				return false 
+				return false
 			}
 		}
 	}

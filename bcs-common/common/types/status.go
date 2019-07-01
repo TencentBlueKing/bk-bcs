@@ -159,20 +159,20 @@ type BcsContainerStatus struct {
 	// ports
 	Ports []ContainerPort `json:"containerPort,omitempty"`
 	//command
-	Command         string               `json:"command,omitempty"`
+	Command string `json:"command,omitempty"`
 	// arguments
-	Args            []string             `json:"args,omitempty"`
+	Args []string `json:"args,omitempty"`
 	//volumes
-	Volumes         []Volume         `json:"volumes,omitempty"`
+	Volumes []Volume `json:"volumes,omitempty"`
 	// network
-	Network  string            `json:"networkMode,omitempty"`
+	Network string `json:"networkMode,omitempty"`
 	// labels
-	Labels      map[string]string `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 	// Resources
-	Resources       ResourceRequirements `json:"resources,omitempty"`
+	Resources ResourceRequirements `json:"resources,omitempty"`
 	//envs
 	Env map[string]string `json:"env,omitempty"`
- }
+}
 
 type BcsDeploymentStatus struct {
 	ObjectMeta `json:"metadata"`

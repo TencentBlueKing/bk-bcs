@@ -545,7 +545,6 @@ func (mgr *ServiceMgr) createServiceInfo(service *commtypes.BcsService) *exportS
 	esInfo.endpoint.TypeMeta = service.TypeMeta
 	mgr.syncEndpointInfo(esInfo)
 
-
 	blog.Info("ServiceMgr: service(%s) endpoint created, endpoint len(%d) ", key, len(esInfo.endpoint.Endpoints))
 
 	return esInfo
@@ -764,7 +763,7 @@ func (mgr *ServiceMgr) addEndPoint(bcsEndpoint *commtypes.BcsEndpoint, endpoint 
 				bcsEndpoint.Endpoints = append(bcsEndpoint.Endpoints, *endpoint)
 				return true
 			}
-		
+
 			blog.V(3).Infof("ServiceMgr: endpoint(%s %s) for %s.%s not changed, ignore it",
 				endpoint.Target.Namespace, endpoint.Target.ID, bcsEndpoint.ObjectMeta.NameSpace, bcsEndpoint.ObjectMeta.Name)
 			return false
@@ -789,11 +788,6 @@ func (mgr *ServiceMgr) deleteEndPoint(bcsEndpoint *commtypes.BcsEndpoint, endpoi
 
 	return false
 }
-
-
-
-
-
 
 func (mgr *ServiceMgr) addTaskGroup(tskgroup *types.TaskGroup) {
 	blog.Info("ServiceMgr receive taskgroup add event, %s: %s", tskgroup.ID, tskgroup.Status)
@@ -898,7 +892,6 @@ func (mgr *ServiceMgr) updateTaskGroup(tskgroup *types.TaskGroup) {
 			blog.Info("ServiceMgr update taskgroup: service(%s) endpoint len(%d)", key, len(esInfo.endpoint.Endpoints))
 			mgr.sched.store.SaveEndpoint(esInfo.endpoint)
 		}
-
 
 	}
 
