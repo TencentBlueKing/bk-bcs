@@ -36,5 +36,5 @@ type ServicePort struct {
 	Protocol   string `json:"protocol"`
 	Port       int    `json:"servicePort"`
 	TargetPort int    `json:"targetPort,omitempty"` //k8s only
-	NodePort   int    `json:"nodePort, omitempty"`  //k8s only
+	NodePort   int    `json:"nodePort,omitempty"`  //k8s only
 }
