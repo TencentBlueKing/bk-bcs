@@ -101,7 +101,7 @@ func (bcs *BcsScheduler) records(req recordRequest) ([]msg.Service, error) {
 
 func (bcs *BcsScheduler) svcRecords(req recordRequest) (*service, error) {
 	key := filepath.Join(req.namespace, req.serviceName)
-	epItem, ok, gerr := bcs.endpointCache.GetByKey(key)
+	epItem, ok, gerr := bcs.endpointCache.Store.GetByKey(key)
 	if !ok || gerr != nil {
 		log.Printf("[ERROR] DNSlookup Get no item with key %s in Cache", key)
 		return nil, errNoItems

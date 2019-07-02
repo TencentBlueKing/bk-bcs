@@ -66,13 +66,13 @@ func (svcd *SvcDecoder) Decode(data []byte) (interface{}, error) {
 
 //ServiceCache cache for bcs-scheduler service data
 type ServiceCache struct {
-	cache.Cache
+	Store cache.Store
 }
 
 //GetServiceByEndpoint get service info by Endpoint
 func (srv *ServiceCache) GetServiceByEndpoint(endpoint *bcstypes.BcsEndpoint) *bcstypes.BcsService {
 	key := endpoint.GetNamespace() + "/" + endpoint.GetName()
-	item, ok, _ := srv.GetByKey(key)
+	item, ok, _ := srv.Store.GetByKey(key)
 	if ok {
 		return item.(*bcstypes.BcsService)
 	}
@@ -82,7 +82,7 @@ func (srv *ServiceCache) GetServiceByEndpoint(endpoint *bcstypes.BcsEndpoint) *b
 //GetService get Service by name and namespace
 func (srv *ServiceCache) GetService(namespace, name string) *bcstypes.BcsService {
 	key := namespace + "/" + name
-	item, ok, _ := srv.GetByKey(key)
+	item, ok, _ := srv.Store.GetByKey(key)
 	if ok {
 		return item.(*bcstypes.BcsService)
 	}
@@ -108,13 +108,13 @@ func (epd *EndpointDecoder) Decode(data []byte) (interface{}, error) {
 
 //EndpointCache cache for bcs-scheduler endpoint data
 type EndpointCache struct {
-	cache.Cache
+	Store cache.Store //Store for detail
 }
 
 //GetEndpointByService get endpoint info from BcsService
 func (ep *EndpointCache) GetEndpointByService(svc *bcstypes.BcsService) *bcstypes.BcsEndpoint {
 	key := svc.GetNamespace() + "/" + svc.GetName()
-	item, ok, _ := ep.GetByKey(key)
+	item, ok, _ := ep.Store.GetByKey(key)
 	if ok {
 		return item.(*bcstypes.BcsEndpoint)
 	}
@@ -123,7 +123,7 @@ func (ep *EndpointCache) GetEndpointByService(svc *bcstypes.BcsService) *bcstype
 
 //ListEndpoints list all endpoints, change interface into *BcsEndpoint
 func (ep *EndpointCache) ListEndpoints() (epList []*bcstypes.BcsEndpoint) {
-	for _, item := range ep.Cache.List() {
+	for _, item := range ep.Store.List() {
 		epList = append(epList, item.(*bcstypes.BcsEndpoint))
 	}
 	return epList
