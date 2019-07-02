@@ -14,105 +14,105 @@
 package types
 
 import (
-    "fmt"
-    "crypto/tls"
-    "encoding/base64"
-    "encoding/pem"
-    "crypto/x509"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"fmt"
 )
 
 type TLSCollectorCfg struct {
-    IsTLS        bool   `json:"isTLS"`
-    CA           string `json:"ca"`
-    ClientCert   string `json:"clientCert"`
-    ClientKey    string `json:"clientKey"`
-    ClientKeyPwd string `json:"clientKeyPwd"`
+	IsTLS        bool   `json:"isTLS"`
+	CA           string `json:"ca"`
+	ClientCert   string `json:"clientCert"`
+	ClientKey    string `json:"clientKey"`
+	ClientKeyPwd string `json:"clientKeyPwd"`
 }
 
 func (tc TLSCollectorCfg) GetTLSConfig() (c *tls.Config, err error) {
-    if !tc.IsTLS {
-        return nil, nil
-    }
+	if !tc.IsTLS {
+		return nil, nil
+	}
 
-    var caPool *x509.CertPool
-    var certificate tls.Certificate
-    if caPool, err = tc.GetCAPool(); err != nil {
-        return
-    }
-    if certificate, err = tc.GetCertificate(); err != nil {
-        return
-    }
+	var caPool *x509.CertPool
+	var certificate tls.Certificate
+	if caPool, err = tc.GetCAPool(); err != nil {
+		return
+	}
+	if certificate, err = tc.GetCertificate(); err != nil {
+		return
+	}
 
-    c = &tls.Config{
-        RootCAs: caPool,
-        Certificates: []tls.Certificate{certificate},
-        InsecureSkipVerify: true,
-    }
-    return
+	c = &tls.Config{
+		RootCAs:            caPool,
+		Certificates:       []tls.Certificate{certificate},
+		InsecureSkipVerify: true,
+	}
+	return
 }
 
 func (tc TLSCollectorCfg) GetCAPool() (r *x509.CertPool, err error) {
-    var ca []byte
-    if ca, err = tc.GetCA(); err != nil {
-        return
-    }
+	var ca []byte
+	if ca, err = tc.GetCA(); err != nil {
+		return
+	}
 
-    r = x509.NewCertPool()
-    if ok := r.AppendCertsFromPEM(ca); !ok {
-        err = fmt.Errorf("append ca cert failed")
-        return
-    }
-    return
+	r = x509.NewCertPool()
+	if ok := r.AppendCertsFromPEM(ca); !ok {
+		err = fmt.Errorf("append ca cert failed")
+		return
+	}
+	return
 }
 
 func (tc TLSCollectorCfg) GetCA() ([]byte, error) {
-    return base64.StdEncoding.DecodeString(tc.CA)
+	return base64.StdEncoding.DecodeString(tc.CA)
 }
 
 func (tc TLSCollectorCfg) GetClientCert() ([]byte, error) {
-    return base64.StdEncoding.DecodeString(tc.ClientCert)
+	return base64.StdEncoding.DecodeString(tc.ClientCert)
 }
 
 func (tc TLSCollectorCfg) GetClientKey() (key []byte, err error) {
-    if key, err = base64.StdEncoding.DecodeString(tc.ClientKey); err != nil {
-        return
-    }
+	if key, err = base64.StdEncoding.DecodeString(tc.ClientKey); err != nil {
+		return
+	}
 
-    if len(key) == 0 {
-        return
-    }
+	if len(key) == 0 {
+		return
+	}
 
-    if tc.ClientKeyPwd != "" {
-        priPem, _ := pem.Decode(key)
-        if priPem == nil {
-            return nil, fmt.Errorf("decode private key failed")
-        }
+	if tc.ClientKeyPwd != "" {
+		priPem, _ := pem.Decode(key)
+		if priPem == nil {
+			return nil, fmt.Errorf("decode private key failed")
+		}
 
-        priDecryptPem, err := x509.DecryptPEMBlock(priPem, []byte(tc.ClientKeyPwd))
-        if err != nil {
-            return nil, err
-        }
+		priDecryptPem, err := x509.DecryptPEMBlock(priPem, []byte(tc.ClientKeyPwd))
+		if err != nil {
+			return nil, err
+		}
 
-        key = pem.EncodeToMemory(&pem.Block{
-            Type:  "RSA PRIVATE KEY",
-            Bytes: priDecryptPem,
-        })
-    }
-    return
+		key = pem.EncodeToMemory(&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: priDecryptPem,
+		})
+	}
+	return
 }
 
 func (tc TLSCollectorCfg) GetCertificate() (r tls.Certificate, err error) {
-    var cert, key []byte
-    if cert, err = tc.GetClientCert(); err != nil {
-        return
-    }
-    if key, err = tc.GetClientKey(); err != nil {
-        return
-    }
+	var cert, key []byte
+	if cert, err = tc.GetClientCert(); err != nil {
+		return
+	}
+	if key, err = tc.GetClientKey(); err != nil {
+		return
+	}
 
-    if len(cert) == 0 || len(key) == 0 {
-        return
-    }
+	if len(cert) == 0 || len(key) == 0 {
+		return
+	}
 
-    return tls.X509KeyPair(cert, key)
+	return tls.X509KeyPair(cert, key)
 }

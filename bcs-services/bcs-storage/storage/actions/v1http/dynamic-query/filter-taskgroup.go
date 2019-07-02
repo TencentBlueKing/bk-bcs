@@ -19,20 +19,20 @@ import (
 
 type TaskGroupFilter struct {
 	ClusterId           string `json:"clusterId" filter:"clusterId"`
-	Name                string `json:"name, omitempty" filter:"resourceName"`
-	Namespace           string `json:"namespace, omitempty" filter:"namespace"`
-	RcName              string `json:"rcName, omitempty" filter:"data.rcname"`
-	Status              string `json:"status, omitempty" filter:"data.status"`
-	LastStatus          string `json:"lastStatus, omitempty" filter:"data.lastStatus"`
-	HostIp              string `json:"hostIp, omitempty" filter:"data.hostIP"`
-	HostName            string `json:"hostName, omitempty" filter:"data.hostName"`
-	PodIp               string `json:"podIp, omitempty" filter:"data.podIP"`
-	CreateTimeBegin     string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd       string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
-	StartTimeBegin      string `json:"startTimeBegin, omitempty" filter:"data.startTime,timeL"`
-	StartTimeEnd        string `json:"startTimeEnd, omitempty" filter:"data.startTime,timeR"`
-	LastUpdateTimeBegin string `json:"lastUpdateTimeBegin, omitempty" filter:"data.lastUpdateTime,timeL"`
-	LastUpdateTimeEnd   string `json:"lastUpdateTimeEnd, omitempty" filter:"data.lastUpdateTime,timeR"`
+	Name                string `json:"name,omitempty" filter:"resourceName"`
+	Namespace           string `json:"namespace,omitempty" filter:"namespace"`
+	RcName              string `json:"rcName,omitempty" filter:"data.rcname"`
+	Status              string `json:"status,omitempty" filter:"data.status"`
+	LastStatus          string `json:"lastStatus,omitempty" filter:"data.lastStatus"`
+	HostIp              string `json:"hostIp,omitempty" filter:"data.hostIP"`
+	HostName            string `json:"hostName,omitempty" filter:"data.hostName"`
+	PodIp               string `json:"podIp,omitempty" filter:"data.podIP"`
+	CreateTimeBegin     string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd       string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	StartTimeBegin      string `json:"startTimeBegin,omitempty" filter:"data.startTime,timeL"`
+	StartTimeEnd        string `json:"startTimeEnd,omitempty" filter:"data.startTime,timeR"`
+	LastUpdateTimeBegin string `json:"lastUpdateTimeBegin,omitempty" filter:"data.lastUpdateTime,timeL"`
+	LastUpdateTimeEnd   string `json:"lastUpdateTimeEnd,omitempty" filter:"data.lastUpdateTime,timeR"`
 }
 
 const taskGroupNestedTimeLayout = nestedTimeLayout

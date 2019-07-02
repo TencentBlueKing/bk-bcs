@@ -37,5 +37,5 @@ func WatchDynamic(req *restful.Request, resp *restful.Response) {
 }
 
 func init() {
-	actions.RegisterV1Action(actions.Action{"POST", "/metric/watch/{clusterId}/{type}", nil, WatchDynamic})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: "/metric/watch/{clusterId}/{type}", Params: nil, Handler: WatchDynamic})
 }

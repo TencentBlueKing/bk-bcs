@@ -19,8 +19,8 @@ import (
 
 type EndpointsK8sFilter struct {
 	ClusterId string `json:"clusterId" filter:"clusterId"`
-	Name      string `json:"name, omitempty" filter:"resourceName"`
-	Namespace string `json:"namespace, omitempty" filter:"namespace"`
+	Name      string `json:"name,omitempty" filter:"resourceName"`
+	Namespace string `json:"namespace,omitempty" filter:"namespace"`
 }
 
 const endpointsK8sNestedTimeLayout = nestedTimeLayout

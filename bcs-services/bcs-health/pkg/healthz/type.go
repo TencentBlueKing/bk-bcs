@@ -47,7 +47,7 @@ type ClusterStatus struct {
 
 type HealthResult struct {
 	Status  HealthStatus `json:"status"`
-	Message MsgDetail    `json:"message, omitempty"`
+	Message MsgDetail    `json:"message,omitempty"`
 }
 
 type MsgDetail []string

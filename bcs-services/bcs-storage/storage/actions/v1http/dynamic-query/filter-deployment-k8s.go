@@ -19,16 +19,16 @@ import (
 
 type DeploymentK8sFilter struct {
 	ClusterId         string `json:"clusterId" filter:"clusterId"`
-	Name              string `json:"name, omitempty" filter:"resourceName"`
-	Namespace         string `json:"namespace, omitempty" filter:"namespace"`
-	Replicas          string `json:"replicas, omitempty" filter:"data.status.replicas,int"`
-	AvailableReplicas string `json:"availableReplicas, omitempty" filter:"data.status.availableReplicas,int"`
-	UpdatedReplicas   string `json:"updatedReplicas, omitempty" filter:"data.status.updatedReplicas,int"`
-	StrategyType      string `json:"strategyType, omitempty" filter:"data.spec.strategy.type"`
-	DnsPolicy         string `json:"dnsPolicy, omitempty" filter:"data.spec.template.spec.dnsPolicy"`
-	RestartPolicy     string `json:"restartPolicy, omitempty" filter:"data.spec.template.spec.restartPolicy"`
-	CreateTimeBegin   string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd     string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	Name              string `json:"name,omitempty" filter:"resourceName"`
+	Namespace         string `json:"namespace,omitempty" filter:"namespace"`
+	Replicas          string `json:"replicas,omitempty" filter:"data.status.replicas,int"`
+	AvailableReplicas string `json:"availableReplicas,omitempty" filter:"data.status.availableReplicas,int"`
+	UpdatedReplicas   string `json:"updatedReplicas,omitempty" filter:"data.status.updatedReplicas,int"`
+	StrategyType      string `json:"strategyType,omitempty" filter:"data.spec.strategy.type"`
+	DnsPolicy         string `json:"dnsPolicy,omitempty" filter:"data.spec.template.spec.dnsPolicy"`
+	RestartPolicy     string `json:"restartPolicy,omitempty" filter:"data.spec.template.spec.restartPolicy"`
+	CreateTimeBegin   string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd     string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
 const deploymentK8sNestedTimeLayout = nestedTimeLayout

@@ -23,7 +23,7 @@ import (
 
 //AppHandler handle for Application
 type AppHandler struct {
-	oper DataOperator
+	oper         DataOperator
 	dataType     string
 	ClusterID    string
 	DoCheckDirty bool

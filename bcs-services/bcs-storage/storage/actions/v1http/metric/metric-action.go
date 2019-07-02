@@ -122,13 +122,13 @@ func ListMetricTables(req *restful.Request, resp *restful.Response) {
 
 func init() {
 	metricPath := urlPath("/metric/clusters/{clusterId}/namespaces/{namespace}/{type}/{name}")
-	actions.RegisterV1Action(actions.Action{"GET", metricPath, nil, lib.MarkProcess(GetMetric)})
-	actions.RegisterV1Action(actions.Action{"PUT", metricPath, nil, lib.MarkProcess(PutMetric)})
-	actions.RegisterV1Action(actions.Action{"DELETE", metricPath, nil, lib.MarkProcess(DeleteMetric)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: metricPath, Params: nil, Handler: lib.MarkProcess(GetMetric)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: metricPath, Params: nil, Handler: lib.MarkProcess(PutMetric)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: metricPath, Params: nil, Handler: lib.MarkProcess(DeleteMetric)})
 
 	listMetricPath := urlPath("/metric/clusters/{clusterId}")
-	actions.RegisterV1Action(actions.Action{"GET", listMetricPath, nil, lib.MarkProcess(QueryMetric)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: listMetricPath, Params: nil, Handler: lib.MarkProcess(QueryMetric)})
 
 	listMetricTablePath := urlPath("/metric/clusters")
-	actions.RegisterV1Action(actions.Action{"GET", listMetricTablePath, nil, lib.MarkProcess(ListMetricTables)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: listMetricTablePath, Params: nil, Handler: lib.MarkProcess(ListMetricTables)})
 }

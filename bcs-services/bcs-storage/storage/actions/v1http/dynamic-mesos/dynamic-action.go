@@ -182,26 +182,26 @@ func DeleteBatchClusterResource(req *restful.Request, resp *restful.Response) {
 func init() {
 	// Namespace resources.
 	namespaceResourcesPath := urlPath("/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}")
-	actions.RegisterV1Action(actions.Action{"GET", namespaceResourcesPath, nil, lib.MarkProcess(GetNamespaceResources)})
-	actions.RegisterV1Action(actions.Action{"PUT", namespaceResourcesPath, nil, lib.MarkProcess(PutNamespaceResources)})
-	actions.RegisterV1Action(actions.Action{"DELETE", namespaceResourcesPath, nil, lib.MarkProcess(DeleteNamespaceResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: namespaceResourcesPath, Params: nil, Handler: lib.MarkProcess(GetNamespaceResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: namespaceResourcesPath, Params: nil, Handler: lib.MarkProcess(PutNamespaceResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: namespaceResourcesPath, Params: nil, Handler: lib.MarkProcess(DeleteNamespaceResources)})
 
 	listNamespaceResourcesPath := urlPath("/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}")
-	actions.RegisterV1Action(actions.Action{"GET", listNamespaceResourcesPath, nil, lib.MarkProcess(ListNamespaceResources)})
-	actions.RegisterV1Action(actions.Action{"DELETE", listNamespaceResourcesPath, nil, lib.MarkProcess(DeleteBatchNamespaceResource)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: listNamespaceResourcesPath, Params: nil, Handler: lib.MarkProcess(ListNamespaceResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: listNamespaceResourcesPath, Params: nil, Handler: lib.MarkProcess(DeleteBatchNamespaceResource)})
 
 	// Cluster resources.
 	clusterResourcesPath := urlPath("/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}/{resourceName}")
-	actions.RegisterV1Action(actions.Action{"GET", clusterResourcesPath, nil, lib.MarkProcess(GetClusterResources)})
-	actions.RegisterV1Action(actions.Action{"PUT", clusterResourcesPath, nil, lib.MarkProcess(PutClusterResources)})
-	actions.RegisterV1Action(actions.Action{"DELETE", clusterResourcesPath, nil, lib.MarkProcess(DeleteClusterResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: clusterResourcesPath, Params: nil, Handler: lib.MarkProcess(GetClusterResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: clusterResourcesPath, Params: nil, Handler: lib.MarkProcess(PutClusterResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: clusterResourcesPath, Params: nil, Handler: lib.MarkProcess(DeleteClusterResources)})
 
 	listClusterResourcesPath := urlPath("/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}")
-	actions.RegisterV1Action(actions.Action{"GET", listClusterResourcesPath, nil, lib.MarkProcess(ListClusterResources)})
-	actions.RegisterV1Action(actions.Action{"DELETE", listClusterResourcesPath, nil, lib.MarkProcess(DeleteBatchClusterResource)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: listClusterResourcesPath, Params: nil, Handler: lib.MarkProcess(ListClusterResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: listClusterResourcesPath, Params: nil, Handler: lib.MarkProcess(DeleteBatchClusterResource)})
 
 	// All Ops.
 	allResourcesPath := urlPath("/dynamic/all_resources/clusters/{clusterId}/{resourceType}")
-	actions.RegisterV1Action(actions.Action{"GET", allResourcesPath, nil, lib.MarkProcess(ListClusterResources)})
-	actions.RegisterV1Action(actions.Action{"DELETE", allResourcesPath, nil, lib.MarkProcess(DeleteBatchClusterResource)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: allResourcesPath, Params: nil, Handler: lib.MarkProcess(ListClusterResources)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: allResourcesPath, Params: nil, Handler: lib.MarkProcess(DeleteBatchClusterResource)})
 }

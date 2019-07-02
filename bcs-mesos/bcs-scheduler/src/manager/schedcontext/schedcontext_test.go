@@ -14,8 +14,8 @@
 package schedcontext
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestSchedContext(t *testing.T) {

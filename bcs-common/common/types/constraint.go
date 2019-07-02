@@ -52,13 +52,13 @@ const (
 )
 
 type ConstraintData struct {
-	Name    string `json:"name"`
-	Operate string `json:"operate"`
-	Type   ConstraintValue_Type     `json:"type"`
-	Scalar *ConstraintValue_Scalar  `json:"scalar"`
-	Ranges []*ConstraintValue_Range `json:"ranges"`
-	Text   *ConstraintValue_Text    `json:"text"`
-	Set    *ConstraintValue_Set     `json:"set"`
+	Name    string                   `json:"name"`
+	Operate string                   `json:"operate"`
+	Type    ConstraintValue_Type     `json:"type"`
+	Scalar  *ConstraintValue_Scalar  `json:"scalar"`
+	Ranges  []*ConstraintValue_Range `json:"ranges"`
+	Text    *ConstraintValue_Text    `json:"text"`
+	Set     *ConstraintValue_Set     `json:"set"`
 }
 
 type ConstraintDataItem struct {

@@ -14,11 +14,11 @@
 package mesos
 
 import (
+	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/pkg/cache"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context"
