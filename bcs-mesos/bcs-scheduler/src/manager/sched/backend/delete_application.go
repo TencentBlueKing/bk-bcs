@@ -49,7 +49,7 @@ func (b *backend) DeleteApplication(runAs, appId string, enforce bool, kind comm
 		currentKind = commonTypes.BcsDataType_APP
 	}
 	if currentKind != kind {
-		blog.Warnf("delete application(%s.%s) err, currentKind(%s) != kind(%s)",  runAs, appId, currentKind, kind)
+		blog.Warnf("delete application(%s.%s) err, currentKind(%s) != kind(%s)", runAs, appId, currentKind, kind)
 		return fmt.Errorf("target is not %s, can not be delete", kind)
 	}
 	if app.Status == types.APP_STATUS_OPERATING || app.Status == types.APP_STATUS_ROLLINGUPDATE {

@@ -34,10 +34,10 @@ const (
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{"POST", "/bcsapi/v4/scheduler/mesos/{uri:*}", nil, handlerPostActions})
-	actions.RegisterAction(actions.Action{"PUT", "/bcsapi/v4/scheduler/mesos/{uri:*}", nil, handlerPutActions})
-	actions.RegisterAction(actions.Action{"GET", "/bcsapi/v4/scheduler/mesos/{uri:*}", nil, handlerGetActions})
-	actions.RegisterAction(actions.Action{"DELETE", "/bcsapi/v4/scheduler/mesos/{uri:*}", nil, handlerDeleteActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerPostActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerPutActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerGetActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerDeleteActions})
 }
 
 func request2mesosapi(req *restful.Request, uri, method string) (string, error) {

@@ -14,9 +14,9 @@
 package backend
 
 import (
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"strconv"
 	"strings"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //TaskSorter bia name of []TaskGroup

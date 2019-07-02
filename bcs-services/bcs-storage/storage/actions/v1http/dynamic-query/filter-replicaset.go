@@ -19,13 +19,13 @@ import (
 
 type ReplicaSetFilter struct {
 	ClusterId         string `json:"clusterId" filter:"clusterId"`
-	Name              string `json:"name, omitempty" filter:"resourceName"`
-	Namespace         string `json:"namespace, omitempty" filter:"namespace"`
-	Replicas          string `json:"replicas, omitempty" filter:"data.status.replicas,int"`
-	AvailableReplicas string `json:"availableReplicas, omitempty" filter:"data.status.availableReplicas,int"`
-	ReadyReplicas     string `json:"readyReplicas, omitempty" filter:"data.status.readyReplicas,int"`
-	CreateTimeBegin   string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd     string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	Name              string `json:"name,omitempty" filter:"resourceName"`
+	Namespace         string `json:"namespace,omitempty" filter:"namespace"`
+	Replicas          string `json:"replicas,omitempty" filter:"data.status.replicas,int"`
+	AvailableReplicas string `json:"availableReplicas,omitempty" filter:"data.status.availableReplicas,int"`
+	ReadyReplicas     string `json:"readyReplicas,omitempty" filter:"data.status.readyReplicas,int"`
+	CreateTimeBegin   string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd     string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
 const rsNestedTimeLayout = nestedTimeLayout

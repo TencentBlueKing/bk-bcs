@@ -42,7 +42,7 @@ Deployment related functions
 The deployments' rollingupdate is implemented by using application transactions, refer to function DeploymentCheck
 
 DataChecker
-DataChecker is responsable for dirty or error data in ZK 
+DataChecker is responsable for dirty or error data in ZK
 refer to DataCheckManage
 
 Message

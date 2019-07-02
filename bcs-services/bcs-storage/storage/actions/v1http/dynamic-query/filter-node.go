@@ -19,10 +19,10 @@ import (
 
 type NodeFilter struct {
 	ClusterId       string `json:"clusterId" filter:"clusterId"`
-	Name            string `json:"name, omitempty" filter:"resourceName"`
-	ExternalID      string `json:"externalID, omitempty" filter:"data.spec.externalID"`
-	CreateTimeBegin string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd   string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	Name            string `json:"name,omitempty" filter:"resourceName"`
+	ExternalID      string `json:"externalID,omitempty" filter:"data.spec.externalID"`
+	CreateTimeBegin string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
 const nodeNestedTimeLayout = nestedTimeLayout

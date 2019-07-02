@@ -127,8 +127,8 @@ func request2metrics(req *restful.Request, uri string) (respBody []byte, err err
 }
 
 func init() {
-	actions.RegisterAction(actions.Action{"POST", "/bcsapi/v4/metric/{uri:*}", nil, handlerActions})
-	actions.RegisterAction(actions.Action{"PUT", "/bcsapi/v4/metric/{uri:*}", nil, handlerActions})
-	actions.RegisterAction(actions.Action{"GET", "/bcsapi/v4/metric/{uri:*}", nil, handlerActions})
-	actions.RegisterAction(actions.Action{"DELETE", "/bcsapi/v4/metric/{uri:*}", nil, handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/metric/{uri:*}", Params: nil, Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/metric/{uri:*}", Params: nil, Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/metric/{uri:*}", Params: nil, Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/metric/{uri:*}", Params: nil, Handler: handlerActions})
 }

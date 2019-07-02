@@ -168,7 +168,6 @@ const (
 	BcsComponentsSchemeKey = "io.tencent.bcs.metric.component.scheme"
 )
 
-
 var (
 	DeleteCollectorNotExist = fmt.Errorf("delete collector not exist")
 )

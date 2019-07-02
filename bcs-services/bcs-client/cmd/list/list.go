@@ -39,6 +39,10 @@ func NewListCommand() cli.Command {
 				Usage: "Namespace",
 				Value: "",
 			},
+			cli.BoolFlag{
+				Name:  "all-namespaces, an",
+				Usage: "list resources with all namespaces",
+			},
 			cli.StringFlag{
 				Name:  "ip",
 				Usage: "The ip of taskgroup. Split by ,",
@@ -85,3 +89,7 @@ func list(c *utils.ClientContext) error {
 		return fmt.Errorf("invalid type: %s", resourceType)
 	}
 }
+
+const (
+	FilterNamespaceTag = "namespace"
+)

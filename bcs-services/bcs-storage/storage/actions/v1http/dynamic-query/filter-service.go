@@ -19,9 +19,9 @@ import (
 
 type ServiceFilter struct {
 	ClusterId  string `json:"clusterId" filter:"clusterId"`
-	Name       string `json:"name, omitempty" filter:"resourceName"`
-	Namespace  string `json:"namespace, omitempty" filter:"namespace"`
-	APIVersion string `json:"apiVersion, omitempty" filter:"data.apiVersion"`
+	Name       string `json:"name,omitempty" filter:"resourceName"`
+	Namespace  string `json:"namespace,omitempty" filter:"namespace"`
+	APIVersion string `json:"apiVersion,omitempty" filter:"data.apiVersion"`
 }
 
 const serviceNestedTimeLayout = nestedTimeLayout

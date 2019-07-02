@@ -14,130 +14,130 @@
 package mongodb
 
 import (
-    "testing"
-    "reflect"
+	"reflect"
+	"testing"
 )
 
 func TestDotHandler_1(t *testing.T) {
-    before := map[string]interface{}{
-        "foo1": "bar1",
-        "foo.foo.foo2": "bar.bar.bar2",
-        "foo3": map[string]interface{}{
-            "foo.foo.foo4": "bar4",
-        },
-    }
-    after := map[string]interface{}{
-        "foo1": "bar1",
-        "foo\uff0efoo\uff0efoo2": "bar.bar.bar2",
-        "foo3": map[string]interface{}{
-            "foo\uff0efoo\uff0efoo4": "bar4",
-        },
-    }
+	before := map[string]interface{}{
+		"foo1":         "bar1",
+		"foo.foo.foo2": "bar.bar.bar2",
+		"foo3": map[string]interface{}{
+			"foo.foo.foo4": "bar4",
+		},
+	}
+	after := map[string]interface{}{
+		"foo1":                   "bar1",
+		"foo\uff0efoo\uff0efoo2": "bar.bar.bar2",
+		"foo3": map[string]interface{}{
+			"foo\uff0efoo\uff0efoo4": "bar4",
+		},
+	}
 
-    if !reflect.DeepEqual(dotHandler(before), after) {
-        t.Errorf("dotHandler do not work as expected! before:\n%v\nafter:\n%v", before, after)
-    }
+	if !reflect.DeepEqual(dotHandler(before), after) {
+		t.Errorf("dotHandler do not work as expected! before:\n%v\nafter:\n%v", before, after)
+	}
 }
 
 func TestDotHandler_2(t *testing.T) {
-    before := []interface{}{
-        map[string]interface{}{
-            "foo.foo.foo1": "bar1",
-            "foo.foo.foo2": []interface{}{
-                "foo.foo3",
-                123,
-                4.5,
-                map[string]interface{}{
-                    "foo.foo4": "bar.bar.bar4",
-                },
-            },
-        },
-        map[string]interface{}{
-            "foo.5": true,
-        },
-    }
-    after := []interface{}{
-        map[string]interface{}{
-            "foo\uff0efoo\uff0efoo1": "bar1",
-            "foo\uff0efoo\uff0efoo2": []interface{}{
-                "foo.foo3",
-                123,
-                4.5,
-                map[string]interface{}{
-                    "foo\uff0efoo4": "bar.bar.bar4",
-                },
-            },
-        },
-        map[string]interface{}{
-            "foo\uff0e5": true,
-        },
-    }
+	before := []interface{}{
+		map[string]interface{}{
+			"foo.foo.foo1": "bar1",
+			"foo.foo.foo2": []interface{}{
+				"foo.foo3",
+				123,
+				4.5,
+				map[string]interface{}{
+					"foo.foo4": "bar.bar.bar4",
+				},
+			},
+		},
+		map[string]interface{}{
+			"foo.5": true,
+		},
+	}
+	after := []interface{}{
+		map[string]interface{}{
+			"foo\uff0efoo\uff0efoo1": "bar1",
+			"foo\uff0efoo\uff0efoo2": []interface{}{
+				"foo.foo3",
+				123,
+				4.5,
+				map[string]interface{}{
+					"foo\uff0efoo4": "bar.bar.bar4",
+				},
+			},
+		},
+		map[string]interface{}{
+			"foo\uff0e5": true,
+		},
+	}
 
-    if !reflect.DeepEqual(dotHandler(before), after) {
-        t.Errorf("dotHandler do not work as expected! \nbefore:\n%v\nafter:\n%v", before, after)
-    }
+	if !reflect.DeepEqual(dotHandler(before), after) {
+		t.Errorf("dotHandler do not work as expected! \nbefore:\n%v\nafter:\n%v", before, after)
+	}
 }
 
 func TestDotRecover_1(t *testing.T) {
-    before := []interface{}{
-        map[string]interface{}{
-            "foo1": "bar1",
-            "foo\uff0efoo\uff0efoo2": "bar.bar.bar2",
-            "foo3": map[string]interface{}{
-                "foo\uff0efoo\uff0efoo4": "bar4",
-            },
-        },
-    }
-    after := []interface{}{
-        map[string]interface{}{
-            "foo1": "bar1",
-            "foo.foo.foo2": "bar.bar.bar2",
-            "foo3": map[string]interface{}{
-                "foo.foo.foo4": "bar4",
-            },
-        },
-    }
+	before := []interface{}{
+		map[string]interface{}{
+			"foo1":                   "bar1",
+			"foo\uff0efoo\uff0efoo2": "bar.bar.bar2",
+			"foo3": map[string]interface{}{
+				"foo\uff0efoo\uff0efoo4": "bar4",
+			},
+		},
+	}
+	after := []interface{}{
+		map[string]interface{}{
+			"foo1":         "bar1",
+			"foo.foo.foo2": "bar.bar.bar2",
+			"foo3": map[string]interface{}{
+				"foo.foo.foo4": "bar4",
+			},
+		},
+	}
 
-    if !reflect.DeepEqual(dotRecover(before), after) {
-        t.Errorf("dotRecover do not work as expected! \nbefore:\n%v\nafter:\n%v", before, after)
-    }
+	if !reflect.DeepEqual(dotRecover(before), after) {
+		t.Errorf("dotRecover do not work as expected! \nbefore:\n%v\nafter:\n%v", before, after)
+	}
 }
 
 func TestDotRecover_2(t *testing.T) {
-    before := []interface{}{
-        map[string]interface{}{
-            "foo\uff0efoo\uff0efoo1": "bar1",
-            "foo\uff0efoo\uff0efoo2": []interface{}{
-                "foo.foo3",
-                4.5,
-                123,
-                map[string]interface{}{
-                    "foo\uff0efoo4": "bar.bar.bar4",
-                },
-            },
-        },
-        map[string]interface{}{
-            "foo\uff0e5": true,
-        },
-    }
-    expect := []interface{}{
-        map[string]interface{}{
-            "foo.foo.foo1": "bar1",
-            "foo.foo.foo2": []interface{}{
-                "foo.foo3",
-                float64(4.5),
-                uint64(123),
-                map[string]interface{}{
-                    "foo.foo4": "bar.bar.bar4",
-                },
-            },
-        },
-        map[string]interface{}{
-            "foo.5": true,
-        },
-    }
+	before := []interface{}{
+		map[string]interface{}{
+			"foo\uff0efoo\uff0efoo1": "bar1",
+			"foo\uff0efoo\uff0efoo2": []interface{}{
+				"foo.foo3",
+				4.5,
+				123,
+				map[string]interface{}{
+					"foo\uff0efoo4": "bar.bar.bar4",
+				},
+			},
+		},
+		map[string]interface{}{
+			"foo\uff0e5": true,
+		},
+	}
+	expect := []interface{}{
+		map[string]interface{}{
+			"foo.foo.foo1": "bar1",
+			"foo.foo.foo2": []interface{}{
+				"foo.foo3",
+				float64(4.5),
+				uint64(123),
+				map[string]interface{}{
+					"foo.foo4": "bar.bar.bar4",
+				},
+			},
+		},
+		map[string]interface{}{
+			"foo.5": true,
+		},
+	}
 
-    if after := dotRecover(before); !reflect.DeepEqual(after, expect) {
-        t.Errorf("dotRecover do not work as expected! \nbefore:\n%v\nafter:\n%v\nexpect:\n%v\n", before, after, expect)
-    }
+	if after := dotRecover(before); !reflect.DeepEqual(after, expect) {
+		t.Errorf("dotRecover do not work as expected! \nbefore:\n%v\nafter:\n%v\nexpect:\n%v\n", before, after, expect)
+	}
 }

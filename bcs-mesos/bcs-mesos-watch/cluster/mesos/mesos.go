@@ -15,19 +15,19 @@ package mesos
 
 import (
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-common/common/zkclient"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"fmt"
+	"github.com/samuel/go-zookeeper/zk"
+	"golang.org/x/net/context"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/zkclient"
-	"github.com/samuel/go-zookeeper/zk"
-	"golang.org/x/net/context"
 	//"encoding/json"
 )
 

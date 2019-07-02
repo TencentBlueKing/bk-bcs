@@ -25,7 +25,7 @@ import (
 
 //TaskGroupHandler handle for taskgroup
 type TaskGroupHandler struct {
-	oper DataOperator
+	oper      DataOperator
 	dataType  string
 	ClusterID string
 

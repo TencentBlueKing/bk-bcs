@@ -14,9 +14,9 @@
 package backend
 
 import (
-	"fmt"
-	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
+	"fmt"
 )
 
 func (b *backend) GetCommand(ID string) (*commtypes.BcsCommandInfo, error) {
@@ -33,7 +33,7 @@ func (b *backend) DoCommand(command *commtypes.BcsCommandInfo) error {
 	name := command.Spec.CommandTargetRef.Name
 	ns := command.Spec.CommandTargetRef.Namespace
 
-	if len(command.Spec.Taskgroups) > 0  {
+	if len(command.Spec.Taskgroups) > 0 {
 		for _, taskgroupID := range command.Spec.Taskgroups {
 			taskGroup, err := b.store.FetchTaskGroup(taskgroupID)
 			if err != nil {
@@ -73,7 +73,7 @@ func (b *backend) DoCommand(command *commtypes.BcsCommandInfo) error {
 			command.Status.Taskgroups = append(command.Status.Taskgroups, &taskgroupCommand)
 		}
 	} else {
-		err := b.getDepoymentTaskgroup(command); 
+		err := b.getDepoymentTaskgroup(command)
 		if err != nil {
 			return err
 		}
@@ -85,7 +85,7 @@ func (b *backend) DoCommand(command *commtypes.BcsCommandInfo) error {
 	}
 	// go do
 	go b.sched.RunCommand(command)
-	
+
 	return nil
 }
 
@@ -95,12 +95,12 @@ func (b *backend) getDepoymentTaskgroup(command *commtypes.BcsCommandInfo) error
 	ns := command.Spec.CommandTargetRef.Namespace
 
 	deployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil{
-		blog.Error("send command to deployment(%s.%s), fetch deployment err:%s",ns, name, err.Error())
+	if err != nil {
+		blog.Error("send command to deployment(%s.%s), fetch deployment err:%s", ns, name, err.Error())
 		err = fmt.Errorf("fetch deployment(%s.%s) err: %s", ns, name, err.Error())
 		return err
 	}
-	
+
 	if deployment != nil && deployment.Application != nil {
 		appName := deployment.Application.ApplicationName
 		taskGroups, err := b.store.ListTaskGroups(ns, appName)

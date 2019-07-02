@@ -21,10 +21,10 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"errors"
+	"github.com/danwakefield/fnmatch"
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/danwakefield/fnmatch"
 )
 
 // Check whether an offer matches with the constraints for an application
@@ -41,7 +41,7 @@ func ConstraintsFit(version *types.Version, offer *mesos.Offer, store store.Stor
 	}
 
 	blog.V(3).Infof("to check constraints: version(%s.%s) have %d constraints", version.RunAs, version.ID, itemInsance)
-	
+
 	i := 0
 	if itemInsance > 0 {
 		for _, oneConstraint := range constraints.IntersectionItem {

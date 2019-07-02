@@ -21,7 +21,7 @@ import (
 
 func (store *managerStore) SaveFrameworkID(frameworkId string) error {
 
-	framework := &types.Framework{frameworkId}
+	framework := &types.Framework{ID: frameworkId}
 	data, err := json.Marshal(framework)
 	if err != nil {
 		blog.Error("fail to encode object framework by json. err:%s", err.Error())

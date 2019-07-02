@@ -42,7 +42,7 @@ type Storage interface {
 	Sync(data *types.BcsSyncData) error //sync data
 	Run(cxt context.Context) error      //start point for StorageWriter
 	Worker()                            //storage writer worker goroutine
-	SetDCAddress(address []string) //set storage server address
+	SetDCAddress(address []string)      //set storage server address
 	GetDCAddress() string
 }
 
