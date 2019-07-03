@@ -4,13 +4,14 @@
 
 [中文文档](./README.md)
 
-BlueKing Container Service (BCS) is a container management and orchestration platform for the micro-services under the BlueKing ecosystem.
+> **Important Note**: The `master` branch may be in an unstable or unavailable state during development*.
+> Please use [releases] (https://github.com/Tencent/bk-bcs/releases) instead of `master` to get stable binaries.
 
-BlueKing Container Service provides a two-engine-driven container orchestration scheme based on native Kubernetes and mesos `bk-framework`, and users can choose to either one of them to orchestrate their own applications. The Kubernetes method is mainly based on Kubernetes solution. In addition to providing native functional support, it also provides  seamless integration between the native Kubernetes cluster and the BlueKing platform. Users can experience container technology with Kubernetes community edition in the BlueKing platform in a way that is indistinguishable and convenient. The mesos `bk-framwork` solution is a container orchestration program for BlueKing that capable of customization. If you need to create a highly personalized container platform for special application scenarios, the mesos `bk-framework` solution is a great choice.
+BlueKing Container Service (BCS, same below) is a container management and orchestration platform for the micro-services under the BlueKing ecosystem.
 
-In addition to the orchestration program, the BlueKing Container Service also provides an abstract service management solution to provide services such as load balancing, service registration, service discovery, DNS, and traffic proxies.
+BCS has been running stably for more than three years in Tencent. After more than 30 of different architectures and different scales of service verification, the largest service consists of four independent clusters with more than 500 physical servers, nearly 6000 POD, and more than 30 namespaces for isolation.
 
-The open source version of the BlueKing Container Service is consistent with the BlueKing Community Edition and is updated synchronously. BlueKing Community Edition will have a built-in SaaS (Software As A Service) to communicate with BCS, this will provide users with interface to view container operations.
+BCS is part of the BlueKing ecosystem. Its overall structure is organized according to the BlueKIng PaaS system. This open source part is the BCS back-end, an atomic platform under the BlueKing, which mainly outputs service scheduling and service management capabilities. The web page of the BCS is partially presented by the BlueKing SaaS light weight application. The version of the SaaS can be obtained through the latest BlueKing Community Edition or Enterprise Edition; or through the [BlueKing Official Website] (https://bk.tencent.com/) to get open source information.
 
 ## Overview
 
@@ -18,21 +19,38 @@ The open source version of the BlueKing Container Service is consistent with the
 * [code structure](./docs/overview/code_directory.md)
 * [Function Description](./docs/overview/function.md)
 
+Please refer to the BlueKing Container Management Platform [white paper](https://docs.bk.tencent.com/bcs/)
+
 ## Features
 
-* Support for dual engine orchestration based on Kubernetes and Mesos
-* Support multi-cluster management
-* Support plug-in custom orchestration scheduling strategy
-* Support service upgrade, expansion and expansion, rolling upgrade, blue/green deploy strategy, etc.
-* Support configmap, secret, disk volume mount, shared disk mount, etc.
-* Support basic service management solutions such as service discovery, domain name resolution, and access agents, etc
-* Support for scalable resource quota definitions
-* Support in-container IPC mechanism
-* Support multiple container network solutions (CNI)
+* Support for dual engine orchestration based on k8s and Mesos
+     * [Understanding k8s program related information](./docs/features/k8s/info.md)
+     * [Understanding information about the mesos program](./docs/features/mesos/info.md)
+* Support heterogeneous service access
+     * [Understanding Stateful Business Solutions](./docs/features/stateful.md)
+     * [Learn about other non-container friendly features](./docs/features/nodocker.md)
+* Cross-cloud management container management
+     * [Cross Cloud Container Management Solution](./docs/features/crosscloud.md)
+     * [Support Windows container](./docs/features/windows.md)
+* Plug-in secondary development capabilities
+     * [Understanding Community CNI, CSI Standards](./docs/features/cxi.md)
+     * [Custom Orchestration Scheduling Policy](./docs/features/sced.md)
 
-For a detailed description of the above features, please refer to the BlueKing Container Management Platform [white paper](https://docs.bk.tencent.com/bcs/)
+## Experience
+
+* [Resource reuse of R&D environment through BCS](./docs/experience/dev.md)
+* [Rolling upgrade of business through BCS](./docs/experience/rolling.md)
+* [Blue-green release of business completed through BCS](./docs/experience/bluegreen.md)
+* [Complete the automatic expansion and contraction of BCS through the BlueKing automated operation and maintenance system] ()
 
 ## Getting Started
+
+> BCS is a product launched by BlueKing Smart Cloud Community Edition V5.1. The background service can be deployed and used independently. If you need SaaS support, you need to work with the BlueKing Community Edition software.
+
+> At present, the community version 5.1 is in the beta internal test. If you want to experience it, please fill in the questionnaire and leave the mailbox and other information. The BlueKing will deliver the software by email within 1-2 business days. Thank you for your support and understanding of the BlueKing.
+> Questionnaire link: [https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
+
+> Blue Whale Community Edition 5.1 is fully open for download at 2019-07-05
 
 * [Download and Compile](docs/install/source_compile.md)
 * [Installation Deployment](docs/install/deploy-guide.md)
@@ -53,11 +71,20 @@ If you are interested in this project and want to contribute and improve the pro
 * Read [source code](https://github.com/Tencent/bk-bcs)
 * Read [wiki](https://github.com/Tencent/bk-bcs/wiki) or ask for help
 * Learn about the BlueKing Community: QQ group 495299374
-* Issues, we will check and reply regularly
+* [Issue](https://github.com/Tencent/bk-bcs/issues) we will check and reply regularly
 
 ## FAQ
 
-[https://github.com/Tencent/bk-bcs/wiki/FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)
+[BCS FAQ](https://docs.bk.tencent.com/bcs/Container/FAQ/faq.html)
+[github wiki FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)
+
+
+## Blueking Community
+
+- [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
+- [CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
+- [PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
+- [SOPS](https://github.com/Tencent/bk-sops):Standard Operations (SOPS) is a system for task scheduling and execution through a visual graphical interface. It is a lightweight in the BlueKing system scheduling SaaS products.
 
 ## License
 
