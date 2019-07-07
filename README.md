@@ -26,24 +26,26 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## Features
 
 * 支持基于k8s和Mesos双引擎编排
-    * [了解k8s方案相关信息](./docs/features/k8s/info.md)
+    * [了解k8s方案相关信息](./docs/features/k8s/info.md)coming soon...
     * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的容器编排.md)
 * 支持异构业务接入
-    * [了解有状态业务解决方案](./docs/features/stateful.md)
+    * [了解有状态业务解决方案](./docs/features/stateful.md)coming soon...
     * [了解其他非容器友好特性的解决方案](./docs/features/mesos/基于mesos的服务编排.md)
 * 跨云跨OS管理容器
-    * [跨云容器管理方案](./docs/features/crosscloud.md)
-    * [支持windows容器](./docs/features/windows.md)
+    * [跨云容器管理方案](./docs/features/solutions/BCS跨云容器管理方案.md)
+    * [支持windows容器](./docs/features/solutions/windows.md)
 * 插件化的二次开发能力
-    * [了解社区CNI、CSI标准](./docs/features/cxi.md)
-    * [自定义编排调度策略](./docs/features/sced.md)
+    * [了解社区CNI标准](https://github.com/containernetworking/cni)
+    * [了解社区CSI标准](https://github.com/container-storage-interface/spec/blob/master/spec.md)
+    * [自定义编排调度策略](./docs/features/solutions/k8s-custom-scheduler.md)
 
 ## Experience
 
-* [通过BCS解决研发环境的资源复用](./docs/experience/dev.md)
-* [通过BCS完成业务的滚动升级](./docs/experience/rolling.md)
-* [通过BCS完成业务的蓝绿发布](./docs/experience/bluegreen.md)
-* [通过蓝鲸自动化运维体系完成BCS的自动扩缩容]()
+* [通过BCS解决研发环境的资源复用](./docs/features/practices/通过BCS解决研发环境的资源问题.md)
+* [通过BCS完成业务的滚动升级](./docs/features/practices/rolling.md)
+* [通过BCS完成业务的蓝绿发布](./docs/features/practices/bluegreen.md)
+* [通过蓝鲸自动化运维体系完成BCS的自动扩缩容](./docs/features/practices/saas-install.md)
+* [BCS集成istio](./docs/features/practices/istio.md)coming soon...
 
 ## Getting Started
 
@@ -52,7 +54,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 > 目前社区版5.1在灰度内测中，若想体验，请填写问卷留下邮箱等信息，蓝鲸将在1-2个工作日通过邮箱方式，交付软件。感谢对蓝鲸的支持与理解。
 > 问卷链接：[https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
-> 蓝鲸社区版5.1完全开放下载时间为2019-07-05
+> 蓝鲸社区版5.1完全开放下载时间为2019-07-25
 
 * [下载与编译](docs/install/source_compile.md)
 * [安装部署](docs/install/deploy-guide.md)
@@ -83,6 +85,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 
 ## Blueking Community
 
+- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
 - [BK-CI](https://github.com/Tencent/bk-ci)：蓝鲸持续集成平台是一个开源的持续集成和持续交付系统，可以轻松将你的研发流程呈现到你面前。
 - [CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
 - [PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
