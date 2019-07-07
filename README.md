@@ -11,7 +11,7 @@
 
 蓝鲸容器管理平台（Blueking Container Service，简称BCS，下同）是蓝鲸体系下，以容器技术为基础，为微服务业务提供编排管理和治理服务的基础服务平台。
 
-BCS在腾讯内部已经稳定运行三年以上，经过几十款不同架构、不同规模的业务验证，其中规模最大的业务包含四个独立的集群，共500多物理机资源，近6000 POD，使用30多个命名空间进行隔离。
+BCS在腾讯内部已经稳定运行三年以上，经过几十款不同架构、不同规模的业务验证，其中规模最大的业务包含五个独立的集群，共600+物理机资源（单机48核以上，128G以上内存），近7000 POD，使用30多个命名空间进行隔离。
 
 BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织，本次开源的部分为BCS后台部分，为蓝鲸PaaS体系下的原子平台，主要输出服务编排和服务治理的能力。BCS的操作页面部分通过蓝鲸SaaS轻应用的方式呈现，可以通过最新的蓝鲸社区版或者企业版获取该SaaS的版本；也可以通过[蓝鲸官方网站](https://bk.tencent.com/)获取该SaaS的后续开源信息。
 
@@ -80,12 +80,12 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 
 ## FAQ
 
-[蓝鲸容器FAQ](https://docs.bk.tencent.com/bcs/Container/FAQ/faq.html)
-[github wiki FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)持续建设中...
+* [蓝鲸容器FAQ](https://docs.bk.tencent.com/bcs/Container/FAQ/faq.html)
+* [github wiki FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)持续建设中...
 
 ## Blueking Community
 
-- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
+- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：**开源流程中**，蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
 - [BK-CI](https://github.com/Tencent/bk-ci)：蓝鲸持续集成平台是一个开源的持续集成和持续交付系统，可以轻松将你的研发流程呈现到你面前。
 - [CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
 - [PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
