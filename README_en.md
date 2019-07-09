@@ -24,24 +24,26 @@ Please refer to the BlueKing Container Management Platform [white paper](https:/
 ## Features
 
 * Support for dual engine orchestration based on k8s and Mesos
-     * [Understanding k8s program related information](./docs/features/k8s/info.md)
-     * [Understanding information about the mesos program](./docs/features/mesos/info.md)
+  * [Understanding k8s program related information](./docs/features/k8s/info.md) coming soon...
+  * [Understanding information about the mesos program](./docs/features/mesos/基于mesos的容器编排.md)
 * Support heterogeneous service access
-     * [Understanding Stateful Business Solutions](./docs/features/stateful.md)
-     * [Learn about other non-container friendly features](./docs/features/nodocker.md)
+  * [Understanding Stateful Business Solutions](./docs/features/stateful.md) coming soon...
+  * [Learn about other non-container friendly features](./docs/features/mesos/基于mesos的服务编排.md)
 * Cross-cloud management container management
-     * [Cross Cloud Container Management Solution](./docs/features/crosscloud.md)
-     * [Support Windows container](./docs/features/windows.md)
+  * [Cross Cloud Container Management Solution](./docs/features/solutions/BCS跨云容器管理方案.md)
+  * [Support Windows container](./docs/features/solutions/windows.md)
 * Plug-in secondary development capabilities
-     * [Understanding Community CNI, CSI Standards](./docs/features/cxi.md)
-     * [Custom Orchestration Scheduling Policy](./docs/features/sced.md)
+  * [Understanding Community CNI](https://github.com/containernetworking/cni)
+  * [Understanding CSI Standard](https://github.com/container-storage-interface/spec/blob/master/spec.md)
+  * [Custom Orchestration Scheduling Policy](./docs/features/solutions/k8s-custom-scheduler.md)
 
 ## Experience
 
-* [Resource reuse of R&D environment through BCS](./docs/experience/dev.md)
-* [Rolling upgrade of business through BCS](./docs/experience/rolling.md)
-* [Blue-green release of business completed through BCS](./docs/experience/bluegreen.md)
-* [Complete the automatic expansion and contraction of BCS through the BlueKing automated operation and maintenance system] ()
+* [Resource reuse of R&D environment through BCS](./docs/features/practices/通过BCS解决研发环境的资源问题.md)
+* [Rolling upgrade of business through BCS](./docs/features/practices/rolling.md)
+* [Blue-green release of business completed through BCS](./docs/features/practices/bluegreen.md)
+* [Complete the automatic expansion and contraction of BCS through the BlueKing automated operation and maintenance system]()
+* [istio integration](./docs/features/practices/istio.md) coming soon...
 
 ## Getting Started
 
@@ -50,7 +52,7 @@ Please refer to the BlueKing Container Management Platform [white paper](https:/
 > At present, the community version 5.1 is in the beta internal test. If you want to experience it, please fill in the questionnaire and leave the mailbox and other information. The BlueKing will deliver the software by email within 1-2 business days. Thank you for your support and understanding of the BlueKing.
 > Questionnaire link: [https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
-> Blue Whale Community Edition 5.1 is fully open for download at 2019-07-05
+> Blue Whale Community Edition 5.1 is fully open for download at 2019-07-19
 
 * [Download and Compile](docs/install/source_compile.md)
 * [Installation Deployment](docs/install/deploy-guide.md)

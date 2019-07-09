@@ -26,14 +26,14 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## Features
 
 * 支持基于k8s和Mesos双引擎编排
-    * [了解k8s方案相关信息](./docs/features/k8s/info.md)coming soon...
+    * [了解k8s方案相关信息](https://kubernetes.io/zh/)
     * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的容器编排.md)
 * 支持异构业务接入
-    * [了解有状态业务解决方案](./docs/features/stateful.md)coming soon...
+    * 了解有状态业务解决方案
     * [了解其他非容器友好特性的解决方案](./docs/features/mesos/基于mesos的服务编排.md)
 * 跨云跨OS管理容器
     * [跨云容器管理方案](./docs/features/solutions/BCS跨云容器管理方案.md)
-    * [支持windows容器](./docs/features/solutions/windows.md)
+    * 支持windows容器
 * 插件化的二次开发能力
     * [了解社区CNI标准](https://github.com/containernetworking/cni)
     * [了解社区CSI标准](https://github.com/container-storage-interface/spec/blob/master/spec.md)
@@ -45,7 +45,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 * [通过BCS完成业务的滚动升级](./docs/features/practices/rolling.md)
 * [通过BCS完成业务的蓝绿发布](./docs/features/practices/bluegreen.md)
 * [通过蓝鲸自动化运维体系完成BCS的自动扩缩容](./docs/features/practices/saas-install.md)
-* [BCS集成istio](./docs/features/practices/istio.md)coming soon...
+* [BCS集成istio](./docs/features/practices/istio.md) coming soon...
 
 ## Getting Started
 
@@ -54,7 +54,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 > 目前社区版5.1在灰度内测中，若想体验，请填写问卷留下邮箱等信息，蓝鲸将在1-2个工作日通过邮箱方式，交付软件。感谢对蓝鲸的支持与理解。
 > 问卷链接：[https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
-> 蓝鲸社区版5.1完全开放下载时间为2019-07-25
+> 蓝鲸社区版5.1完全开放下载时间为2019-07-19
 
 * [下载与编译](docs/install/source_compile.md)
 * [安装部署](docs/install/deploy-guide.md)
