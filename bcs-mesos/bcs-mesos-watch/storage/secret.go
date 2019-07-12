@@ -78,7 +78,7 @@ func (handler *SecretHandler) Delete(data interface{}) error {
 
 func (handler *SecretHandler) Update(data interface{}) error {
 	dataType := data.(*commtypes.BcsSecret)
-	
+
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {

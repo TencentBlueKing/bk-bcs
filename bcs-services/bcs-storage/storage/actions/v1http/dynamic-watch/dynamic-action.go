@@ -50,6 +50,6 @@ func WatchContainer(req *restful.Request, resp *restful.Response) {
 }
 
 func init() {
-	actions.RegisterV1Action(actions.Action{"POST", "/dynamic/watch/{clusterId}/{resourceType}", nil, WatchDynamic})
-	actions.RegisterV1Action(actions.Action{"POST", "/dynamic/watch/containers/{clusterId}", nil, WatchContainer})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: "/dynamic/watch/{clusterId}/{resourceType}", Params: nil, Handler: WatchDynamic})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: "/dynamic/watch/containers/{clusterId}", Params: nil, Handler: WatchContainer})
 }

@@ -328,16 +328,16 @@ func RefreshDCHost(cfg *types.CmdConfig, rfCxt context.Context, storage storage.
 	if regDiscv == nil {
 		blog.Error("NewRegDiscover(%s) return nil", cfg.RegDiscvSvr)
 		return
-	} 
+	}
 	blog.Info("NewRegDiscover(%s) succ", cfg.RegDiscvSvr)
 
 	err := regDiscv.Start()
 	if err != nil {
 		blog.Error("regDiscv start error(%s)", err.Error())
 		return
-	} 
+	}
 	blog.Info("RegDiscover start succ")
-	
+
 	defer regDiscv.Stop()
 
 	discvPath := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_STORAGE
@@ -388,4 +388,3 @@ func RefreshDCHost(cfg *types.CmdConfig, rfCxt context.Context, storage storage.
 		} // end select
 	} // end for
 }
-

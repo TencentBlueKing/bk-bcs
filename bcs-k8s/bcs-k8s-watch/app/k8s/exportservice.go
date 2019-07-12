@@ -109,7 +109,6 @@ func (esc *ExportServiceController) createExportServiceListWithAction(originEven
 			esAction = originEvent.Action
 		}
 
-
 	} else {
 		glog.Infof("got ingress related resource changed, have to update all ingress")
 		ings := esc.lister.Ingress.List()

@@ -14,26 +14,26 @@
 package mesosdriver
 
 import (
+	rd "bk-bcs/bcs-common/common/RegisterDiscover"
 	"bk-bcs/bcs-common/common/blog"
+	commhttp "bk-bcs/bcs-common/common/http"
 	"bk-bcs/bcs-common/common/http/httpserver"
+	"bk-bcs/bcs-common/common/metric"
+	commtype "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-common/common/version"
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend"
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/v4http"
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/filter"
-	"strings"
-	rd "bk-bcs/bcs-common/common/RegisterDiscover"
-	commhttp "bk-bcs/bcs-common/common/http"
-	commtype "bk-bcs/bcs-common/common/types"
 	"encoding/json"
+	"fmt"
+	"github.com/emicklei/go-restful"
 	"net/http"
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
-	"bk-bcs/bcs-common/common/version"
-	"fmt"
-	"bk-bcs/bcs-common/common/metric"
-	"github.com/emicklei/go-restful"
 )
 
 //MesosDriver is data struct of mesos driver
@@ -167,7 +167,7 @@ func (m *MesosDriver) Filter(req *restful.Request, resp *restful.Response, filte
 	if clusterId != m.bcsClusterId {
 		msg := fmt.Sprintf("ClusterId %s is invalid", clusterId)
 		blog.Error(msg)
-		resp.WriteHeaderAndEntity(http.StatusBadRequest, commhttp.APIRespone{false, 1, msg, nil})
+		resp.WriteHeaderAndEntity(http.StatusBadRequest, commhttp.APIRespone{Result: false, Code: 1, Message: msg, Data: nil})
 		return
 	}
 
@@ -193,9 +193,8 @@ func (m *MesosDriver) RegDiscover() {
 		time.Sleep(3 * time.Second)
 		go m.RegDiscover()
 		return
-	} 
+	}
 	blog.Info("NewRegDiscover(%s) succ", m.config.RegDiscvSvr)
-	
 
 	err := regDiscv.Start()
 	if err != nil {
@@ -205,7 +204,7 @@ func (m *MesosDriver) RegDiscover() {
 		return
 	}
 	blog.Info("RegDiscover start succ")
-	
+
 	defer regDiscv.Stop()
 
 	host, err := os.Hostname()
@@ -231,16 +230,16 @@ func (m *MesosDriver) RegDiscover() {
 	if err != nil {
 		blog.Error("json Marshal error(%s)", err.Error())
 		return
-	} 
+	}
 	err = regDiscv.RegisterService(key, []byte(data))
 	if err != nil {
 		blog.Error("RegisterService(%s) error(%s), redo after 3 second ...", key, err.Error())
 		time.Sleep(3 * time.Second)
 		go m.RegDiscover()
 		return
-	} 
+	}
 	blog.Info("RegisterService(%s:%s) succ", key, data)
-	
+
 	discvPath := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDRIVER + "/" + regInfo.Cluster
 	discvEvent, err := regDiscv.DiscoverService(discvPath)
 	if err != nil {

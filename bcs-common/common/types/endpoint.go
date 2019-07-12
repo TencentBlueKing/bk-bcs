@@ -15,7 +15,7 @@ package types
 
 //BcsEndpoint endpoint definition
 type BcsEndpoint struct {
-	TypeMeta `json:",inline"`
+	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 	Endpoints  []Endpoint `json:"eps"`
 }

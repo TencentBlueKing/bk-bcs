@@ -14,7 +14,7 @@
 package hostConfig
 
 type HostConfig struct {
-    Ip        string `json:"ip"`
-    ClusterId string `json:"clusterId"`
-    Data      string `json:"data"`
+	Ip        string `json:"ip"`
+	ClusterId string `json:"clusterId"`
+	Data      string `json:"data"`
 }

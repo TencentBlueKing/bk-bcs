@@ -86,8 +86,8 @@ func CleanAlarmsOutCap() {
 
 func init() {
 	alarmPath := urlPath("/alarms")
-	actions.RegisterV1Action(actions.Action{"POST", alarmPath, nil, lib.MarkProcess(PostAlarm)})
-	actions.RegisterV1Action(actions.Action{"GET", alarmPath, nil, lib.MarkProcess(ListAlarm)})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(PostAlarm)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(ListAlarm)})
 
 	actions.RegisterDaemonFunc(CleanAlarmsOutDate)
 	actions.RegisterDaemonFunc(CleanAlarmsOutCap)
