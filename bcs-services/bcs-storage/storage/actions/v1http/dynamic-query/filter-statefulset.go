@@ -19,16 +19,16 @@ import (
 
 type StatefulSetFilter struct {
 	ClusterId       string `json:"clusterId" filter:"clusterId"`
-	Name            string `json:"name, omitempty" filter:"resourceName"`
-	Namespace       string `json:"namespace, omitempty" filter:"namespace"`
-	CreateTimeBegin string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd   string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
-	ResourceVersion string `json:"resourceVersion, omitempty" filter:"data.metadata.resourceVersion"`
-	Uid             string `json:"uid, omitempty" filter:"data.metadata.uid"`
-	Generation      string `json:"generation, omitempty" filter:"data.metadata.generation,int"`
-	PodMPolicy      string `json:"podManagementPolicy, omitempty" filter:"data.spec.podManagementPolicy"`
-	StrategyType    string `json:"updateStrategyType, omitempty" filter:"data.spec.updateStrategy.type"`
-	ServiceName     string `json:"serviceName, omitempty" filter:"data.spec.serviceName"`
+	Name            string `json:"name,omitempty" filter:"resourceName"`
+	Namespace       string `json:"namespace,omitempty" filter:"namespace"`
+	CreateTimeBegin string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	ResourceVersion string `json:"resourceVersion,omitempty" filter:"data.metadata.resourceVersion"`
+	Uid             string `json:"uid,omitempty" filter:"data.metadata.uid"`
+	Generation      string `json:"generation,omitempty" filter:"data.metadata.generation,int"`
+	PodMPolicy      string `json:"podManagementPolicy,omitempty" filter:"data.spec.podManagementPolicy"`
+	StrategyType    string `json:"updateStrategyType,omitempty" filter:"data.spec.updateStrategy.type"`
+	ServiceName     string `json:"serviceName,omitempty" filter:"data.spec.serviceName"`
 }
 
 const statefulSetNestedTimeLayout = nestedTimeLayout

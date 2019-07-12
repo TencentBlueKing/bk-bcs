@@ -33,7 +33,7 @@ type BcsConfigMapItem struct {
 
 //BcsConfigMap definition
 type BcsConfigMap struct {
-	TypeMeta `json:",inline"`
+	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata"`
 	Data       map[string]BcsConfigMapItem `json:"datas"` //map key for index, map value is content
 }

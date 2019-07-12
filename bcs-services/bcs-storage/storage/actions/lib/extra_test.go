@@ -14,25 +14,25 @@
 package lib
 
 import (
-    "testing"
-    "reflect"
+	"reflect"
+	"testing"
 )
 
 func TestExtraField(t *testing.T) {
-    origin := "{\"foo\":\"bar\",\"hello\":\"world\"}"
-    code := "eyJmb28iOiJiYXIiLCJoZWxsbyI6IndvcmxkIn0="
-    extra := NewExtra(code)
-    if extra.raw != code {
-        t.Errorf("NewExtra() failed!")
-    }
+	origin := "{\"foo\":\"bar\",\"hello\":\"world\"}"
+	code := "eyJmb28iOiJiYXIiLCJoZWxsbyI6IndvcmxkIn0="
+	extra := NewExtra(code)
+	if extra.raw != code {
+		t.Errorf("NewExtra() failed!")
+	}
 
-    if s, err := extra.GetStr(); err != nil || s != origin {
-        t.Errorf("ExtraField GetStr failed! \nresult:\n%v\nexpect:\n%v\nerr:\n%v\n", s, origin, err)
-    }
+	if s, err := extra.GetStr(); err != nil || s != origin {
+		t.Errorf("ExtraField GetStr failed! \nresult:\n%v\nexpect:\n%v\nerr:\n%v\n", s, origin, err)
+	}
 
-    var r map[string]interface{}
-    expect := map[string]string{"foo":"bar","hello":"world"}
-    if err := extra.Unmarshal(&r); err != nil || reflect.DeepEqual(r, expect) {
-        t.Errorf("ExtraField Unmarshal failed! \nresult:\n%v\nexpect:\n%v\nerr:\n%v\n", r, expect, err)
-    }
+	var r map[string]interface{}
+	expect := map[string]string{"foo": "bar", "hello": "world"}
+	if err := extra.Unmarshal(&r); err != nil || reflect.DeepEqual(r, expect) {
+		t.Errorf("ExtraField Unmarshal failed! \nresult:\n%v\nexpect:\n%v\nerr:\n%v\n", r, expect, err)
+	}
 }

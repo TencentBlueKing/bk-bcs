@@ -17,6 +17,7 @@ import (
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	"fmt"
+	"net/url"
 )
 
 func listNamespace(c *utils.ClientContext) error {
@@ -44,4 +45,18 @@ func printListNamespace(list []string) error {
 		fmt.Printf("%-5d %-20s\n", i, ns)
 	}
 	return nil
+}
+
+func getNamespaceFilter(storage v1.Storage, clusterID string) (url.Values, error) {
+	ns, err := storage.ListNamespace(clusterID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all namespace: %v", err)
+	}
+
+	data := url.Values{}
+	for _, item := range ns {
+		data.Add(FilterNamespaceTag, item)
+	}
+
+	return data, nil
 }

@@ -34,8 +34,8 @@ func (b *backend) DisableAgent(IP string) error {
 	if agent != nil {
 		agent.Disabled = true
 		return b.store.SaveAgentSetting(agent)
-	} 
-	
+	}
+
 	agentNew := commtypes.BcsClusterAgentSetting{
 		InnerIP:  IP,
 		Disabled: true,
@@ -56,8 +56,8 @@ func (b *backend) EnableAgent(IP string) error {
 	if agent != nil {
 		agent.Disabled = false
 		return b.store.SaveAgentSetting(agent)
-	} 
-	
+	}
+
 	agentNew := commtypes.BcsClusterAgentSetting{
 		InnerIP:  IP,
 		Disabled: false,
@@ -89,7 +89,7 @@ func (b *backend) QueryAgentSettingList(IPs []string) ([]*commtypes.BcsClusterAg
 		agent, err := b.store.FetchAgentSetting(IP)
 		if err != nil && err != zk.ErrNoNode {
 			blog.Error("fetch agent setting(%s) from db fail:%s", IP, err.Error())
-			return nil,  comm.BcsErrCommGetZkNodeFail, err
+			return nil, comm.BcsErrCommGetZkNodeFail, err
 		}
 
 		blog.V(3).Infof("fetch agent setting(%s)[%+v] from zk", IP, agent)
@@ -142,7 +142,7 @@ func (b *backend) DisableAgentList(IPs []string) (int, error) {
 		agent, err := b.store.FetchAgentSetting(IP)
 		if err != nil {
 			blog.Error("fetch agent setting(%s) from db fail:%s", IP, err.Error())
-			return  comm.BcsErrCommGetZkNodeFail, err
+			return comm.BcsErrCommGetZkNodeFail, err
 		}
 
 		blog.Infof("disable agent(%s)", IP)
@@ -211,14 +211,14 @@ func (b *backend) UpdateAgentSettingList(update *commtypes.BcsClusterAgentSettin
 		return comm.BcsErrCommRequestDataErr, errors.New("no ips to update")
 	}
 	if update.SettingName == "" {
-		return  comm.BcsErrCommRequestDataErr, errors.New("no settingName to update")
+		return comm.BcsErrCommRequestDataErr, errors.New("no settingName to update")
 	}
 
 	if update.ValueType == commtypes.MesosValueType_Text {
 
 		if update.ValueText == nil {
 			blog.Error("update agentsetting, valueText is nil")
-			return  comm.BcsErrCommRequestDataErr, errors.New("text is nil")
+			return comm.BcsErrCommRequestDataErr, errors.New("text is nil")
 		}
 
 		for _, IP := range update.IPs {

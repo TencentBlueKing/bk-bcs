@@ -127,8 +127,8 @@ func request2netservice(req *restful.Request, uri string) (respBody []byte, err 
 }
 
 func init() {
-	actions.RegisterAction(actions.Action{"POST", "/bcsapi/v4/netservice/{uri:*}", nil, handlerActions})
-	actions.RegisterAction(actions.Action{"PUT", "/bcsapi/v4/netservice/{uri:*}", nil, handlerActions})
-	actions.RegisterAction(actions.Action{"GET", "/bcsapi/v4/netservice/{uri:*}", nil, handlerActions})
-	actions.RegisterAction(actions.Action{"DELETE", "/bcsapi/v4/netservice/{uri:*}", nil, handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/netservice/{uri:*}", Params: nil, Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/netservice/{uri:*}", Params: nil, Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/netservice/{uri:*}", Params: nil, Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/netservice/{uri:*}", Params: nil, Handler: handlerActions})
 }

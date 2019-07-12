@@ -14,28 +14,28 @@
 package operator
 
 import (
-    "container/list"
+	"container/list"
 )
 
 type ConditionType string
 
 const (
-    Tr  ConditionType = "tr"
+	Tr ConditionType = "tr"
 
-    Eq  ConditionType = "eq"
-    Ne  ConditionType = "ne"
-    Lt  ConditionType = "lt"
-    Lte ConditionType = "lte"
-    Gt  ConditionType = "gt"
-    Gte ConditionType = "gte"
-    In  ConditionType = "in"
-    Nin ConditionType = "nin"
-    Con ConditionType = "contain"
-    Ext ConditionType = "exists"
+	Eq  ConditionType = "eq"
+	Ne  ConditionType = "ne"
+	Lt  ConditionType = "lt"
+	Lte ConditionType = "lte"
+	Gt  ConditionType = "gt"
+	Gte ConditionType = "gte"
+	In  ConditionType = "in"
+	Nin ConditionType = "nin"
+	Con ConditionType = "contain"
+	Ext ConditionType = "exists"
 
-    Not ConditionType = "not"
-    And ConditionType = "and"
-    Or  ConditionType = "or"
+	Not ConditionType = "not"
+	And ConditionType = "and"
+	Or  ConditionType = "or"
 )
 
 // Condition describe the conditions of database operations
@@ -73,81 +73,81 @@ const (
 //
 // The condition making is just the process of tree building
 type Condition struct {
-    list *list.List
-    Type ConditionType
-    Value interface{}
+	list  *list.List
+	Type  ConditionType
+	Value interface{}
 }
 
 type ConditionPair struct {
-    First  *Condition
-    Second *Condition
+	First  *Condition
+	Second *Condition
 }
 
 var (
-    // BaseCondition is a True node of condition chain
-    // and can be called like: operator.BaseCondition.AddOp(cType, key, value)
-    // then the func will return a new Condition which contains a condition chain
-    // with a BaseCondition head.
-    //  BaseCondition -> Condition1 -> Condition2
-    //                -> Condition3
-    //                -> Condition4
-    // See the Condition.AddOp() for details
-    // ATTENTION: BaseCondition is out of condition tree, except the tree is empty(then will be always true).
-    BaseCondition = NewCondition(Tr, M(nil))
+	// BaseCondition is a True node of condition chain
+	// and can be called like: operator.BaseCondition.AddOp(cType, key, value)
+	// then the func will return a new Condition which contains a condition chain
+	// with a BaseCondition head.
+	//  BaseCondition -> Condition1 -> Condition2
+	//                -> Condition3
+	//                -> Condition4
+	// See the Condition.AddOp() for details
+	// ATTENTION: BaseCondition is out of condition tree, except the tree is empty(then will be always true).
+	BaseCondition = NewCondition(Tr, M(nil))
 )
 
 func NewCondition(t ConditionType, v interface{}) (r *Condition) {
-    r = &Condition{
-        list: list.New(),
-        Type: t,
-        Value: v,
-    }
-    r.list.PushBack(r)
-    return
+	r = &Condition{
+		list:  list.New(),
+		Type:  t,
+		Value: v,
+	}
+	r.list.PushBack(r)
+	return
 }
 
 // return a new Condition which is made up of two Condition with AND
 // if either of then is BaseCondition then return another
 func (c *Condition) And(s *Condition) *Condition {
-    if c == BaseCondition {
-        return s
-    }
-    if s == BaseCondition {
-        return c
-    }
-    return NewCondition(And, &ConditionPair{c, s})
+	if c == BaseCondition {
+		return s
+	}
+	if s == BaseCondition {
+		return c
+	}
+	return NewCondition(And, &ConditionPair{c, s})
 }
 
 // return a new Condition which is made up of two Condition with OR
 // if either of then is BaseCondition then return another
 func (c *Condition) Or(s *Condition) *Condition {
-    if c == BaseCondition {
-        return s
-    }
-    if s == BaseCondition {
-        return c
-    }
-    return NewCondition(Or, &ConditionPair{c, s})
+	if c == BaseCondition {
+		return s
+	}
+	if s == BaseCondition {
+		return c
+	}
+	return NewCondition(Or, &ConditionPair{c, s})
 }
 
 // return a new Condition which is made up of itself with NOT
 // if it is BaseCondition then return itself
 // Not(BaseCondition) -> BaseCondition
 func (c *Condition) Not() *Condition {
-    if c == BaseCondition {
-        return c
-    }
-    return NewCondition(Not, c)
+	if c == BaseCondition {
+		return c
+	}
+	return NewCondition(Not, c)
 }
 
 // return a new Condition linked to the old one, just like append the chain with a new node
 func (c *Condition) AddOp(t ConditionType, key string, value interface{}) (r *Condition) {
-    r = NewCondition(t, M{key: value})
-    if c == BaseCondition {
-        return
-    }
-    r.list.PushFrontList(c.list)
-    return
+	r = NewCondition(t, M{key: value})
+	if c == BaseCondition {
+		return
+	}
+	r.list.PushFrontList(c.list)
+	return
 }
 
 // Combine provide a common process that combine the Condition tree.
@@ -158,37 +158,37 @@ func (c *Condition) AddOp(t ConditionType, key string, value interface{}) (r *Co
 //
 // Combine should be called before doing any filter-need operation like query, update, remove. And it should be cached by
 // driver to prevent processing every time.
-func (c *Condition) Combine(leafFunc func(*Condition)(interface{}), combineFunc func(ConditionType, []interface{})(interface{})) interface{} {
-    if c.list == nil {
-        return nil
-    }
+func (c *Condition) Combine(leafFunc func(*Condition) interface{}, combineFunc func(ConditionType, []interface{}) interface{}) interface{} {
+	if c.list == nil {
+		return nil
+	}
 
-    tv := make([]interface{}, 0, c.list.Len())
-    for e := c.list.Front(); e != nil; e = e.Next() {
-        branch := e.Value.(*Condition)
+	tv := make([]interface{}, 0, c.list.Len())
+	for e := c.list.Front(); e != nil; e = e.Next() {
+		branch := e.Value.(*Condition)
 
-        var tmp interface{}
-        switch branch.Value.(type) {
+		var tmp interface{}
+		switch branch.Value.(type) {
 
-        // Leaf node condition combined with AddOp() or NewCondition()
-        case M:
-            tmp = leafFunc(branch)
+		// Leaf node condition combined with AddOp() or NewCondition()
+		case M:
+			tmp = leafFunc(branch)
 
-            // Single condition combined with Not()
-        case *Condition:
-            child := branch.Value.(*Condition)
-            tmpNot := child.Combine(leafFunc, combineFunc)
-            tmp = combineFunc(Not, []interface{}{tmpNot})
+			// Single condition combined with Not()
+		case *Condition:
+			child := branch.Value.(*Condition)
+			tmpNot := child.Combine(leafFunc, combineFunc)
+			tmp = combineFunc(Not, []interface{}{tmpNot})
 
-            // Condition pair that combined with And() or Or()
-        case *ConditionPair:
-            child := branch.Value.(*ConditionPair)
-            tmpFirst := child.First.Combine(leafFunc, combineFunc)
-            tmpSecond := child.Second.Combine(leafFunc, combineFunc)
-            tmp = combineFunc(branch.Type, []interface{}{tmpFirst, tmpSecond})
-        }
+			// Condition pair that combined with And() or Or()
+		case *ConditionPair:
+			child := branch.Value.(*ConditionPair)
+			tmpFirst := child.First.Combine(leafFunc, combineFunc)
+			tmpSecond := child.Second.Combine(leafFunc, combineFunc)
+			tmp = combineFunc(branch.Type, []interface{}{tmpFirst, tmpSecond})
+		}
 
-        tv = append(tv, tmp)
-    }
-    return combineFunc(And, tv)
+		tv = append(tv, tmp)
+	}
+	return combineFunc(And, tv)
 }

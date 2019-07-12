@@ -69,18 +69,18 @@ type Job struct {
 	// url of the checked point, ip:port
 	Url      string      `json:"url"`
 	// the result of this job.
-	Status  *JobStatus   `json:"status, omitempty"`
+	Status  *JobStatus   `json:"status,omitempty"`
 }
 
 type JobStatus struct {
 	// slave infos that do this job
-	SlaveInfo *Slave `json:"slaveInfo, omitempty"`
+	SlaveInfo *Slave `json:"slaveInfo,omitempty"`
 	// where the job is success or not.
-	Success   bool   `json:"success, omitempty"`
+	Success   bool   `json:"success,omitempty"`
 	// record the check result when failed.
-	Message   string `json:"message, omitempty"`
+	Message   string `json:"message,omitempty"`
 	// time of the job is done.
-	FinishedAt int64 `json:"finishedAt, omitempty"`
+	FinishedAt int64 `json:"finishedAt,omitempty"`
 }
 
 // health slave's meta info

@@ -74,7 +74,7 @@ type RollingUpdate struct {
 	// in second unit. By default, a value of 10s is used.
 	UpgradeDuration uint32 `json:"upgradeDuration"`
 
- 	// rolling update will do step by step manully or automatically, if manully, it will pause after every step.
+	// rolling update will do step by step manully or automatically, if manully, it will pause after every step.
 	// by default is false
 	RollingManually bool `json:"rollingManually"`
 

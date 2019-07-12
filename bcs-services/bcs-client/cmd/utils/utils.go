@@ -166,8 +166,9 @@ func DebugPrintf(format string, a ...interface{}) {
 type ClientContext struct {
 	*cli.Context
 
-	clusterID string
-	namespace string
+	clusterID    string
+	namespace    string
+	allNamespace bool
 }
 
 func NewClientContext(c *cli.Context) *ClientContext {
@@ -185,7 +186,7 @@ func (cc *ClientContext) MustSpecified(key ...string) error {
 			continue
 		}
 		if k == OptionNamespace {
-			if cc.namespace == "" {
+			if cc.namespace == "" && !cc.allNamespace {
 				return fmt.Errorf("namespace must be specified, options or env")
 			}
 			continue
@@ -209,6 +210,10 @@ func (cc *ClientContext) initEnv() {
 	if cc.IsSet(OptionNamespace) && cc.String(OptionNamespace) != "" {
 		cc.namespace = cc.String(OptionNamespace)
 	}
+
+	if cc.IsSet(OptionAllNamespace) {
+		cc.allNamespace = cc.Bool(OptionAllNamespace)
+	}
 }
 
 func (cc *ClientContext) ClusterID() string {
@@ -217,6 +222,10 @@ func (cc *ClientContext) ClusterID() string {
 
 func (cc *ClientContext) Namespace() string {
 	return cc.namespace
+}
+
+func (cc *ClientContext) IsAllNamespace() bool {
+	return cc.allNamespace
 }
 
 func (cc *ClientContext) FileData() ([]byte, error) {

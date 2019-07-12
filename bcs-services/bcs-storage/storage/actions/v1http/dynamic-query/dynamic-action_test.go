@@ -38,22 +38,22 @@ func (m mockFilter) getCondition() *operator.Condition {
 
 func TestDoQuery(t *testing.T) {
 	expect :=
-	operator.M{"and": []interface{}{
 		operator.M{"and": []interface{}{
 			operator.M{"and": []interface{}{
 				operator.M{"and": []interface{}{
 					operator.M{"and": []interface{}{
-						operator.M{"in": operator.M{"base.in.field": []string{"a", "b", "c"}}},
-						operator.M{"int.field": 1},
+						operator.M{"and": []interface{}{
+							operator.M{"in": operator.M{"base.in.field": []string{"a", "b", "c"}}},
+							operator.M{"int.field": 1},
+						}},
+						operator.M{"int64.field": int64(1234567890987654321)},
 					}},
-					operator.M{"int64.field": int64(1234567890987654321)},
+					operator.M{"gt": operator.M{"time.field": int64(1516849200)}},
 				}},
-				operator.M{"gt": operator.M{"time.field": int64(1516849200)}},
+				operator.M{"lt": operator.M{"time.field": int64(1516849201)}},
 			}},
-			operator.M{"lt": operator.M{"time.field": int64(1516849201)}},
-		}},
-		operator.M{"bool.field": false},
-	}}
+			operator.M{"bool.field": false},
+		}}
 	r, _ := http.NewRequest("GET", "/?baseInField=a,b,c&intField=1&int64Field=1234567890987654321&timeLField=1516849200&timeRField=1516849201&boolField=false", nil)
 	req := restful.NewRequest(r)
 

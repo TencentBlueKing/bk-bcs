@@ -154,7 +154,7 @@ type Version struct {
 	// added  20181011, add for differentiate process/application
 	Kind commtypes.BcsDataType
 	// add  20181122
-	RawJson *commtypes.ReplicaController `json:"raw_json, omitempty"`
+	RawJson *commtypes.ReplicaController `json:"raw_json,omitempty"`
 }
 
 //Resource discribe resources needed by a task
@@ -495,7 +495,7 @@ type Application struct {
 	Message string
 	Pods    []*commtypes.BcsPodIndex
 	// add  20181122
-	RawJson *commtypes.ReplicaController `json:"raw_json, omitempty"`
+	RawJson *commtypes.ReplicaController `json:"raw_json,omitempty"`
 }
 
 //Operation for application
@@ -568,7 +568,7 @@ type DeploymentDef struct {
 	Version    *Version                  `json:"version"`
 	Strategy   commtypes.UpgradeStrategy `json:"strategy"`
 	// add  20181122
-	RawJson *commtypes.BcsDeployment `json:"raw_json, omitempty"`
+	RawJson *commtypes.BcsDeployment `json:"raw_json,omitempty"`
 }
 
 const (
@@ -599,8 +599,8 @@ type Deployment struct {
 	CheckTime       int64                       `json:"check_time"`
 	Message         string                      `json:"message"`
 	// add  20181122
-	RawJson       *commtypes.BcsDeployment `json:"raw_json, omitempty"`
-	RawJsonBackup *commtypes.BcsDeployment `json:"raw_json_backup, omitempty"`
+	RawJson       *commtypes.BcsDeployment `json:"raw_json,omitempty"`
+	RawJsonBackup *commtypes.BcsDeployment `json:"raw_json_backup,omitempty"`
 }
 
 type DeploymentReferApplication struct {
