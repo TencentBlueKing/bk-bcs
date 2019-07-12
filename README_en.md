@@ -1,6 +1,6 @@
 ![BCS.png](./docs/logo/logo_en.png)
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.12.x-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)   
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.13.x-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)   
 
 [中文文档](./README.md)
 
@@ -24,24 +24,25 @@ Please refer to the BlueKing Container Management Platform [white paper](https:/
 ## Features
 
 * Support for dual engine orchestration based on k8s and Mesos
-     * [Understanding k8s program related information](./docs/features/k8s/info.md)
-     * [Understanding information about the mesos program](./docs/features/mesos/info.md)
+  * [Understanding k8s program related information](https://kubernetes.io/zh/)
+  * [Understanding information about the mesos program](./docs/features/mesos/基于mesos的容器编排.md)
 * Support heterogeneous service access
-     * [Understanding Stateful Business Solutions](./docs/features/stateful.md)
-     * [Learn about other non-container friendly features](./docs/features/nodocker.md)
+  * [Understanding Stateful Business Solutions]
+  * [Learn about other non-container friendly features](./docs/features/mesos/基于mesos的服务编排.md)
 * Cross-cloud management container management
-     * [Cross Cloud Container Management Solution](./docs/features/crosscloud.md)
-     * [Support Windows container](./docs/features/windows.md)
+  * [Cross Cloud Container Management Solution](./docs/features/solutions/BCS跨云容器管理方案.md)
+  * [Support Windows container]
 * Plug-in secondary development capabilities
-     * [Understanding Community CNI, CSI Standards](./docs/features/cxi.md)
-     * [Custom Orchestration Scheduling Policy](./docs/features/sced.md)
+  * [Understanding Community CNI](https://github.com/containernetworking/cni)
+  * [Understanding CSI Standard](https://github.com/container-storage-interface/spec/blob/master/spec.md)
+  * [Custom Orchestration Scheduling Policy](./docs/features/solutions/k8s-custom-scheduler.md)
 
 ## Experience
 
-* [Resource reuse of R&D environment through BCS](./docs/experience/dev.md)
-* [Rolling upgrade of business through BCS](./docs/experience/rolling.md)
-* [Blue-green release of business completed through BCS](./docs/experience/bluegreen.md)
-* [Complete the automatic expansion and contraction of BCS through the BlueKing automated operation and maintenance system] ()
+* [Resource reuse of R&D environment through BCS](./docs/features/practices/通过BCS解决研发环境的资源问题.md)
+* [Rolling upgrade of business through BCS](./docs/features/practices/rolling-update-howto.md)
+* [Blue-green release of business completed through BCS](./docs/features/practices/blue-green-deployment.md)
+* [istio integration](./docs/features/practices/istio.md) coming soon...
 
 ## Getting Started
 
@@ -50,7 +51,7 @@ Please refer to the BlueKing Container Management Platform [white paper](https:/
 > At present, the community version 5.1 is in the beta internal test. If you want to experience it, please fill in the questionnaire and leave the mailbox and other information. The BlueKing will deliver the software by email within 1-2 business days. Thank you for your support and understanding of the BlueKing.
 > Questionnaire link: [https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
-> Blue Whale Community Edition 5.1 is fully open for download at 2019-07-05
+> Blue Whale Community Edition 5.1 is fully open for download at 2019-07-30
 
 * [Download and Compile](docs/install/source_compile.md)
 * [Installation Deployment](docs/install/deploy-guide.md)
@@ -81,6 +82,7 @@ If you are interested in this project and want to contribute and improve the pro
 
 ## Blueking Community
 
+- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：**under open source workflow**, BlueKing container SAAS is UI facility for Blueking Container Service, providing convenient container handling.
 - [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
 - [CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
 - [PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.

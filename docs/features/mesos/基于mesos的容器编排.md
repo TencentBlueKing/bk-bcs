@@ -6,7 +6,7 @@ Mesos是Apache下的开源分布式资源管理框架，它被称为是分布式
 
 基于mesos的容器调度管理的系统结构及概要说明如下：
 
-![image.png](/resource/mesos-ar.png)
+![image.png](./resource/mesos-ar.png)
 
 * Mesos包括Mesos Master和Mesos Slave两大部分，其中Master为中心管理节点，负责集群资源调度管理和任务管理；Slave运行在业务主机上，负责宿主机资源和任务管理。
 * Mesos为二级调度机制，Mesos本身只负责资源的调度，业务进程的调度需要通过实现mesos framework（图中scheduler）来支持，同时需实现执行器executor（mesos也自带有executor可以直接使用）来负责容器的起停和状态检测上报等工作。
