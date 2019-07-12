@@ -256,9 +256,11 @@ func (plugin *CNIPlugin) addNetworkV2(runConf *libcni.RuntimeConf) (*current.Res
 	var r cnitypes.Result
 	if plugin.isCniList {
 		r, err = plugin.cniNet.AddNetworkList(plugin.netConfList, runConf)
-
 	} else {
 		r, err = plugin.cniNet.AddNetwork(plugin.netConf, runConf)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// Convert whatever the IPAM result was into the current Result type
