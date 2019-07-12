@@ -2,7 +2,7 @@
 
 
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.12.x-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)              
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.13.x-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)              
 
 [EnglishDocs](./README_en.md)
 
@@ -42,10 +42,9 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## Experience
 
 * [通过BCS解决研发环境的资源复用](./docs/features/practices/通过BCS解决研发环境的资源问题.md)
-* [通过BCS完成业务的滚动升级](./docs/features/practices/rolling.md)
-* [通过BCS完成业务的蓝绿发布](./docs/features/practices/bluegreen.md)
-* [通过蓝鲸自动化运维体系完成BCS的自动扩缩容](./docs/features/practices/saas-install.md)
-* [BCS集成istio](./docs/features/practices/istio.md) coming soon...
+* [通过BCS完成业务的滚动升级](./docs/features/practices/rolling-update-howto.md)
+* [通过BCS完成业务的蓝绿发布](./docs/features/practices/blue-green-deployment.md)
+* [BCS集成istio案例](./docs/features/practices/istio.md) coming soon...
 
 ## Getting Started
 
@@ -54,7 +53,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 > 目前社区版5.1在灰度内测中，若想体验，请填写问卷留下邮箱等信息，蓝鲸将在1-2个工作日通过邮箱方式，交付软件。感谢对蓝鲸的支持与理解。
 > 问卷链接：[https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
-> 蓝鲸社区版5.1完全开放下载时间为2019-07-19
+> 蓝鲸社区版5.1完全开放下载时间为2019-07-30
 
 * [下载与编译](docs/install/source_compile.md)
 * [安装部署](docs/install/deploy-guide.md)
