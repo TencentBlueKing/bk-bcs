@@ -67,7 +67,7 @@ const (
 )
 
 //CONNKEEPALIVE only for timeout for http connection, one year for timeout
-const CONNKEEPALIVE = 86400 * 365 * time.Second
+//const CONNKEEPALIVE = 86400 * 365 * time.Second
 
 //Connection maintain http connection with Mesos slave
 type Connection interface {
@@ -108,7 +108,7 @@ func NewConnection() Connection {
 	return &HTTPConnection{
 		transport: httpTransport,
 		client: &http.Client{
-			Timeout:   CONNKEEPALIVE,
+			//Timeout:   CONNKEEPALIVE,
 			Transport: httpTransport,
 		},
 		status:        NOTCONNECT,
@@ -158,7 +158,7 @@ func (httpConn *HTTPConnection) TLSConfig(config *tls.Config, handshakeTimeout t
 	//refresh http transport & client
 	httpConn.transport = httpsTransport
 	httpConn.client = &http.Client{
-		Timeout:   CONNKEEPALIVE,
+		//Timeout:   CONNKEEPALIVE,
 		Transport: httpsTransport,
 	}
 }
