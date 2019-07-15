@@ -90,5 +90,280 @@ Mesos是Apache下的开源分布式资源管理框架，它被称为是分布式
 * 与组合：多个约束条件必须同时满足，例如：应用必须部署在上海电信机房A类机器，并且每台主机最多部署一个实例，这个需要同时满足地区，机型和hostname三个属性的不同约束条件，我们通过与组合方式能很方便的表达出来。
 * 或组合：多个约束条件只需满足一个即可，这种情况相比与组合使用的要少，因为很多约束算法的参数中就能在某种成都上表达出这种情况。
 
-更多内容，请参考API文档和资源说明文档
+## 滚动升级
+上面介绍到，一个application为一组具有相同功能的taskgroup实例组成，而不同application中的taskgroup通常情况下没有直接的关系。
+很多业务存在运行过程中进行热更新的需求，这样，在某个阶段就会存在一个application的多个版本的实例共存的情况，他们既不是完全独立的application，也不能看成是完全相同的application，因此我们在application的基础上进一步封装了deployment的概念来实现这样的需求。
+一个deployment可以将多个具有一定关系（通常是不同版本）的多个application进行关联，以方便实现滚动升级等操作。
+deployment定义中自带有application的定义，创建一个deployment的时候会同时创建application，同时销毁deployment的时候也会同时销毁其下的application。
+我们也支持定义一个deployment关联到当前已经运行的application而不是创建新的application，方便对application进行滚动升级等操作。
+定义一个deployment之后，我们支持对其进行create（创建），delete（销毁），update（滚动升级），rollback（升级回滚），update-pause(暂停更新)，update-resume（继续更新）等操作。对deployment进行操作的目的本质上是对其关联的application进行操作。
+对于应用的滚动升级，通过deployment的操作，我们支持以下升级策略：
+* 新老实例的操作顺序，killFirst或者startFirst
+* 多次滚动的时间间隔，例如，每60秒执行一次滚动
+* 每次滚动操作的实例数，例如kill一个老的，start两个新的
+* 保持或者调整taskgroup实例数
+* 自动或者手动触发每次滚动，例如，每60秒自动执行一次滚动，也可以每执行一次滚动后即暂停，等用户输入指令后再执行下一次滚动
 
+deployment的操作过程，内部实现是通过对application的create，scale up， scale down， delete等几个操作来实现的，只是触发方式由用户触发改为了系统自动触发，这里不再做详细说明。
+
+## 有状态服务的部署方案
+对于有状态服务的容器化改造，可以基于application、service来实现。有状态服务一般会有如下特性：
+1. 实例有唯一身份标识
+对于有N个实例的应用，每一个实例在初识时会被赋予一个int类型的值，从0到N-1，在应用当中是唯一的、不变的。业务容器可以通过env环境变量的方式获取当前实例的index，规则如下：
+BCS_POD_ID={INDEX}.{appname}.{namespace}.{clusterid}.{timestamp}，其中{INDEX}则表示这个不变的身份标示id。
+2. 实例间需相互发现
+对于有状态的服务很多时候需要知道其它实例从而构成集群，例如：zk、consul等。针对这种情况每一个实例都会被分配一个不变的、唯一的域名用来相互之间服务发现，规则如下：
+{appname}-{INDEX}.{servicename}.{namespace}.svc
+**注意：如果需要使用次特性必须要首先创建service对象**
+3. 持久化存储数据
+对于有持久化存储需要的服务，可以使用挂载目录的方式实现，挂载到物理机本地或者分布式存储当中。如下所示：
+```
+"volumes": [{
+    "volume": {
+        "hostPath": "/data/host/path",
+        "mountPath": "/container/path",
+        "readOnly": false
+    },
+    "name": "test-vol"
+}],
+```
+此种方式可以将持久化存储的数据以挂载目录的方式存储到物理机相应目录下，容器重新调度数据依然存在。
+
+### 有状态服务consul部署示例
+service
+```
+{
+  "apiVersion": "v4",
+  "kind": "service",
+  "metadata": {
+   "name": "consul-svc",
+   "namespace": "test",
+   "labels": {
+     "BCSGROUP": "external",
+     "consul_svc": "consul_svc"
+   }
+  },
+  "spec": {
+   "selector": {
+    "podname": "consul"
+   },
+   "ports": [{
+    "name": "svc_port",
+    "protocol": "tcp",
+    "servicePort": 8300
+   }]
+  }
+}
+```
+
+application
+```
+{
+	"apiVersion": "v4",
+	"kind": "application",
+	"updatePolicy": {
+		"updateDelay": 10,
+		"MaxRetries": 10,
+		"maxFailovers": 10,
+		"action": ""
+	},
+	"restartPolicy": {
+		"policy": "OnFailure",
+		"interval": 5,
+		"backoff": 10
+	},
+	"killPolicy": {
+		"gracePeriod": 5
+	},
+	"constraint": {
+	},
+	"metadata": {
+		"labels": {
+			"podname": "consul"
+		},
+		"name": "consul",
+		"namespace": "test"
+	},
+	"spec": {
+		"instance": 3,
+		"template": {
+			"spec": {
+				"containers": [{
+					"command": "/bin/sh",
+					"args": [
+            "-c",
+            "mkdir /tls && sleep 3 && exec /bin/consul agent -data-dir=/consul/data -config-dir=/consul/config -server -join consul-0.consul-svc.test.svc -join consul-1.consul-svc.test.svc -join consul-2.consul-svc.test.svc -bootstrap-expect 3  -bind ${BCS_NODE_IP}"
+					],
+					"parameters": [],
+					"type": "MESOS",
+					"env": [],
+					"image": "consul:latest",
+					"imagePullPolicy": "IfNotPresent",
+					"privileged": false,
+					"ports": [{
+						"hostPort": 8300,
+						"name": "svc_port",
+						"protocol": "TCP"
+					}
+					],
+					"parameters": [],
+					"healthChecks": [],
+					"resources": {
+						"limits": {
+							"cpu": "2",
+							"memory": "1024"
+						}
+					},
+					"volumes": [
+            {
+              "volume": {
+                  "hostPath": "/data/consul/data",
+                  "mountPath": "/consul/data",
+                  "readOnly": false
+              },
+              "name": "consul-data"
+            },
+            {
+              "volume": {
+                  "hostPath": "/data/consul/config",
+                  "mountPath": "/consul/config",
+                  "readOnly": false
+              },
+              "name": "consul-config"
+            }
+
+          ],
+					"secrets": [
+					],
+					"configmaps": []
+				}],
+				"networkMode": "HOST",
+				"networkType": "CNM"
+			}
+		}
+	}
+}
+```
+上面是一个将有状态服务consul部署到容器当中的示例，需要创建application、service两部分资源描述文件，实例间的服务发现使用域名方式：consul-{INDEX}.consul-svc.test.svc；
+针对consul中需要持久化存储的数据使用挂载目录的方式存储到物理机目录/data/consul/data。
+
+## 非容器在BCS部署方案
+业务的容器化改造是一个先部分容器化，逐步转向全部容器化的过程，bcs支持进程&容器混合编排调度，进而降低了业务容器化改造的成本。
+针对非容器的部署方案可以使用process、service来描述业务服务。
+
+如下是使用进程的方式部署mongodb
+service
+```
+{
+  "apiVersion": "v4",
+  "kind": "service",
+  "metadata": {
+   "name": "service-mongodb",
+   "namespace": "test",
+   "labels": {
+     "BCSGROUP": "external",
+     "mongodb_svc": "mongodb_svc"
+   }
+  },
+  "spec": {
+   "selector": {
+    "mongodb": "mongodb"
+   },
+   "ports": [{
+    "name": "svc_port",
+    "protocol": "tcp",
+    "servicePort": 27017
+   }]
+  }
+}
+```
+
+process
+```
+{
+    "apiVersion": "v4",
+    "kind": "process",
+    "restartPolicy": {
+        "policy": "OnFailure",
+        "interval": 5,
+        "backoff": 10,
+        "maxtimes": 10
+    },
+    "killPolicy": {
+        "gracePeriod": 10
+    },
+    "metadata": {
+        "labels": {
+            "mongodb": "mongodb"
+        },
+        "name": "mongodb",
+        "namespace": "test"
+    },
+    "spec": {
+        "instance": 1,
+        "template": {
+            "spec": {
+                "processes": [{
+                    "procName": "mongod",
+                    "user": "root",
+                    "workPath": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb",
+                    "pidFile": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb/mongodb.pid",
+                    "ports": [
+                        {
+						"hostPort": 27017,
+						"name": "svc_port",
+						"protocol": "TCP"
+					}
+                    ],
+                    "uris": [{
+                        "value": "http://xxxxxx/mongodb-v1.tar.gz",
+                        "pullPolicy": "IfNotPresent",
+                        "outputDir": "${work_base_dir}/${namespace}.${processname}.${instanceid}"
+                    }],
+                    "startCmd": "./start.sh",
+                    "startGracePeriod": 2,
+                    "stopCmd": "./stop.sh",
+                    "healthChecks": [],
+                    "resources": {
+                        "limits": {
+                            "cpu": "2",
+                            "memory": "500"
+                        }
+                    },
+                    "env": [
+                        {
+                            "name": "hostip",
+                            "value": "${hostip}"
+                        },
+                        {
+                            "name": "work_dir",
+                            "value": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb"
+                        },
+                        {
+                            "name": "pid_file",
+                            "value": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb/mongodb.pid"
+                        },
+                        {
+                            "name": "namespace",
+                            "value": "${namespace}"
+                        },
+                        {
+                            "name": "processname",
+                            "value": "${processname}"
+                        },
+                        {
+                            "name": "instanceid",
+                            "value": "${instanceid}"
+                        }
+                    ],
+                    "secrets": [],
+                    "configmaps": []
+                }]
+            }
+        }
+    },
+    "constraint": {
+    }
+}
+```
+详情请参考：[process文档](../../templates/mesos-artifact/process.md)
