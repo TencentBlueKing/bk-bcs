@@ -175,8 +175,7 @@ application
 	"killPolicy": {
 		"gracePeriod": 5
 	},
-	"constraint": {
-	},
+	"constraint": {},
 	"metadata": {
 		"labels": {
 			"podname": "consul"
@@ -191,8 +190,8 @@ application
 				"containers": [{
 					"command": "/bin/sh",
 					"args": [
-            "-c",
-            "mkdir /tls && sleep 3 && exec /bin/consul agent -data-dir=/consul/data -config-dir=/consul/config -server -join consul-0.consul-svc.test.svc -join consul-1.consul-svc.test.svc -join consul-2.consul-svc.test.svc -bootstrap-expect 3  -bind ${BCS_NODE_IP}"
+						"-c",
+						"mkdir /tls && sleep 3 && exec /bin/consul agent -data-dir=/consul/data -config-dir=/consul/config -server -join consul-0.consul-svc.test.svc -join consul-1.consul-svc.test.svc -join consul-2.consul-svc.test.svc -bootstrap-expect 3  -bind ${BCS_NODE_IP}"
 					],
 					"parameters": [],
 					"type": "MESOS",
@@ -204,8 +203,7 @@ application
 						"hostPort": 8300,
 						"name": "svc_port",
 						"protocol": "TCP"
-					}
-					],
+					}],
 					"parameters": [],
 					"healthChecks": [],
 					"resources": {
@@ -214,27 +212,25 @@ application
 							"memory": "1024"
 						}
 					},
-					"volumes": [
-            {
-              "volume": {
-                  "hostPath": "/data/consul/data",
-                  "mountPath": "/consul/data",
-                  "readOnly": false
-              },
-              "name": "consul-data"
-            },
-            {
-              "volume": {
-                  "hostPath": "/data/consul/config",
-                  "mountPath": "/consul/config",
-                  "readOnly": false
-              },
-              "name": "consul-config"
-            }
+					"volumes": [{
+							"volume": {
+								"hostPath": "/data/consul/data",
+								"mountPath": "/consul/data",
+								"readOnly": false
+							},
+							"name": "consul-data"
+						},
+						{
+							"volume": {
+								"hostPath": "/data/consul/config",
+								"mountPath": "/consul/config",
+								"readOnly": false
+							},
+							"name": "consul-config"
+						}
 
-          ],
-					"secrets": [
 					],
+					"secrets": [],
 					"configmaps": []
 				}],
 				"networkMode": "HOST",
@@ -281,89 +277,85 @@ service
 process
 ```
 {
-    "apiVersion": "v4",
-    "kind": "process",
-    "restartPolicy": {
-        "policy": "OnFailure",
-        "interval": 5,
-        "backoff": 10,
-        "maxtimes": 10
-    },
-    "killPolicy": {
-        "gracePeriod": 10
-    },
-    "metadata": {
-        "labels": {
-            "mongodb": "mongodb"
-        },
-        "name": "mongodb",
-        "namespace": "test"
-    },
-    "spec": {
-        "instance": 1,
-        "template": {
-            "spec": {
-                "processes": [{
-                    "procName": "mongod",
-                    "user": "root",
-                    "workPath": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb",
-                    "pidFile": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb/mongodb.pid",
-                    "ports": [
-                        {
+	"apiVersion": "v4",
+	"kind": "process",
+	"restartPolicy": {
+		"policy": "OnFailure",
+		"interval": 5,
+		"backoff": 10,
+		"maxtimes": 10
+	},
+	"killPolicy": {
+		"gracePeriod": 10
+	},
+	"metadata": {
+		"labels": {
+			"mongodb": "mongodb"
+		},
+		"name": "mongodb",
+		"namespace": "test"
+	},
+	"spec": {
+		"instance": 1,
+		"template": {
+			"spec": {
+				"processes": [{
+					"procName": "mongod",
+					"user": "root",
+					"workPath": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb",
+					"pidFile": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb/mongodb.pid",
+					"ports": [{
 						"hostPort": 27017,
 						"name": "svc_port",
 						"protocol": "TCP"
-					}
-                    ],
-                    "uris": [{
-                        "value": "http://xxxxxx/mongodb-v1.tar.gz",
-                        "pullPolicy": "IfNotPresent",
-                        "outputDir": "${work_base_dir}/${namespace}.${processname}.${instanceid}"
-                    }],
-                    "startCmd": "./start.sh",
-                    "startGracePeriod": 2,
-                    "stopCmd": "./stop.sh",
-                    "healthChecks": [],
-                    "resources": {
-                        "limits": {
-                            "cpu": "2",
-                            "memory": "500"
-                        }
-                    },
-                    "env": [
-                        {
-                            "name": "hostip",
-                            "value": "${hostip}"
-                        },
-                        {
-                            "name": "work_dir",
-                            "value": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb"
-                        },
-                        {
-                            "name": "pid_file",
-                            "value": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb/mongodb.pid"
-                        },
-                        {
-                            "name": "namespace",
-                            "value": "${namespace}"
-                        },
-                        {
-                            "name": "processname",
-                            "value": "${processname}"
-                        },
-                        {
-                            "name": "instanceid",
-                            "value": "${instanceid}"
-                        }
-                    ],
-                    "secrets": [],
-                    "configmaps": []
-                }]
-            }
-        }
-    },
-    "constraint": {
-    }
+					}],
+					"uris": [{
+						"value": "http://xxxxxx/mongodb-v1.tar.gz",
+						"pullPolicy": "IfNotPresent",
+						"outputDir": "${work_base_dir}/${namespace}.${processname}.${instanceid}"
+					}],
+					"startCmd": "./start.sh",
+					"startGracePeriod": 2,
+					"stopCmd": "./stop.sh",
+					"healthChecks": [],
+					"resources": {
+						"limits": {
+							"cpu": "2",
+							"memory": "500"
+						}
+					},
+					"env": [{
+							"name": "hostip",
+							"value": "${hostip}"
+						},
+						{
+							"name": "work_dir",
+							"value": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb"
+						},
+						{
+							"name": "pid_file",
+							"value": "${work_base_dir}/${namespace}.${processname}.${instanceid}/mongodb/mongodb.pid"
+						},
+						{
+							"name": "namespace",
+							"value": "${namespace}"
+						},
+						{
+							"name": "processname",
+							"value": "${processname}"
+						},
+						{
+							"name": "instanceid",
+							"value": "${instanceid}"
+						}
+					],
+					"secrets": [],
+					"configmaps": []
+				}]
+			}
+		}
+	},
+	"constraint": {}
 }
 ```
 详情请参考：[process文档](../../templates/mesos-artifact/process.md)
