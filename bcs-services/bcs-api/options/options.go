@@ -39,6 +39,8 @@ type ServerOption struct {
 	Edition string `json:"edition" value:"ieod" usage:"api edition"`
 
 	MesosWebconsoleProxyPort uint `json:"mesos_webconsole_proxy_port" value:"8083" usage:"Port to connect to mesos webconsole proxy"`
+
+	TKE TKEOptions `json:"tke"`
 }
 
 type BKEOptions struct {
@@ -51,6 +53,13 @@ type BKEOptions struct {
 	TurnOnConf bool `json:"turn_on_conf" value:"false" usage:"turn on the conf"`
 
 	RbacDatas []RbacData `json:"rbac_data"`
+}
+
+type TKEOptions struct {
+	SecretId  string `json:"secret_id" value:"" usage:"tke user account secret id"`
+	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`
+	CcsHost   string `json:"ccs_host" value:"" usage:"tke ccs host domain"`
+	CcsPath   string `json:"ccs_path" value:"" usage:"tke ccs path"`
 }
 
 type RbacData struct {

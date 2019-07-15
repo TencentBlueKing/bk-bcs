@@ -11,39 +11,24 @@
  *
  */
 
-// Package sqlstore is main SQL database storage
-package sqlstore
+package common
 
 import (
-	"fmt"
-
-	"bk-bcs/bcs-services/bcs-api/config"
-	"github.com/jinzhu/gorm"
-	// import empty mysql package
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"time"
+	"encoding/json"
+	"testing"
 )
 
-var GCoreDB *gorm.DB
+func TestVersionAPIError(t *testing.T) {
+	responseRaw := []byte("{\"Response\":{\"Error\":{\"Code\":\"InternalError\",\"Message\":\"An internal error has occurred. Retry your request, but if the problem persists, contact us with details by posting a message on the Tencent cloud forums.\"},\"RequestId\":\"request-id-mock\"}}")
 
-// InitCoreDabase initialize the GLOBAL database object
-func InitCoreDatabase(conf *config.ApiServConfig) error {
-	if conf == nil {
-		return fmt.Errorf("core_database config not init")
-	}
+	versionErrorResponse := VersionAPIError{}
 
-	dsn := conf.BKE.DSN
-	if dsn == "" {
-		return fmt.Errorf("core_database dsn not configured")
-	}
-	db, err := gorm.Open("mysql", dsn)
+	err := json.Unmarshal(responseRaw, &versionErrorResponse)
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
 
-	GCoreDB = db
-	return nil
+	if (versionErrorResponse.Response.Error.Code != "") != true {
+		t.Fatal("unable to detect versioned api error.")
+	}
 }
