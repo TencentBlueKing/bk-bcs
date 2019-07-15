@@ -92,10 +92,9 @@ func CreatePlainCluster(request *restful.Request, response *restful.Response) {
 	clusterId := m.ClusterIdPrefixPlain + form.ID
 	user := filters.GetUser(request)
 	cluster := &m.Cluster{
-		ID:          clusterId,
-		Provider:    m.ClusterProviderPlain,
-		CreatorId:   user.ID,
-		TurnOnAdmin: false,
+		ID:        clusterId,
+		Provider:  m.ClusterProviderPlain,
+		CreatorId: user.ID,
 	}
 	cluster, err = createCluster(cluster)
 	// convert type name to screaming snake
@@ -118,8 +117,11 @@ func CreatePlainCluster(request *restful.Request, response *restful.Response) {
 
 // CreateBCSClusterForm
 type CreateBCSClusterForm struct {
-	ID        string `json:"id" validate:"required"`
-	ProjectID string `json:"project_id" validate:"required"`
+	ID               string `json:"id" validate:"required"`
+	ProjectID        string `json:"project_id" validate:"required"`
+	ClusterType      uint   `json:"cluster_type"`
+	TkeClusterID     string `json:"tke_cluster_id"`
+	TkeClusterRegion string `json:"tke_cluster_region"`
 }
 
 // CreateBCSCluster creates a "BCS" cluster for current user
@@ -153,15 +155,21 @@ func CreateBCSCluster(request *restful.Request, response *restful.Response) {
 	// "BCS-K8S-15007" -> "bcs-bcs-k8s-15007-FvBewMk3"
 	clusterId := fmt.Sprintf("%s%s-%s", m.ClusterIdPrefixBCS, strings.ToLower(form.ID), uniuri.NewLen(8))
 	cluster := &m.Cluster{
-		ID:          clusterId,
-		Provider:    m.ClusterProviderBCS,
-		CreatorId:   user.ID,
-		TurnOnAdmin: false,
+		ID:        clusterId,
+		Provider:  m.ClusterProviderBCS,
+		CreatorId: user.ID,
+	}
+
+	if form.ClusterType == 0 {
+		form.ClusterType = utils.BcsK8sCluster
 	}
 	externalClusterInfo = &m.BCSClusterInfo{
-		ClusterId:       clusterId,
-		SourceProjectId: form.ProjectID,
-		SourceClusterId: form.ID,
+		ClusterId:        clusterId,
+		SourceProjectId:  form.ProjectID,
+		SourceClusterId:  form.ID,
+		ClusterType:      form.ClusterType,
+		TkeClusterId:     form.TkeClusterID,
+		TkeClusterRegion: form.TkeClusterRegion,
 	}
 	createClusterWithExternalInfo(cluster, externalClusterInfo, response)
 }
