@@ -1,5 +1,37 @@
 # 发布版本信息
 
+## 1.13.3
+
+- 发布日期：2019-07-12
+- 版本信息：1.13.3
+
+- **新增功能**
+  * bcs-mesos支持系统常量注入[#19]
+  * bcs-mesos调度状态优化，调整LOST状态处理[#26]
+  * bcs-mesos支持资源强制限制特性[#27]
+  * bcs-mesos调度过程调整，允许更新状态下手动调度容器[#29]
+  * bcs-storage扩展自定义额外查询条件[#34]
+  * bcs-metricscollector迁移模块[#4]
+  * bcs-metricsserver迁移模块[#7]
+  * 工具scripts增加go vet支持[#65]
+  * bcs-client增加--all-namespace参数支持[#66] 
+
+- **功能优化**
+  * 首页产品文档优化[#83]
+  * BCS全量代码go vet调整[#70]
+  * bcs-mesos容器异常超时调度调整[#24]
+  * bcs-api日志调整[#32]
+
+- **bug修复**
+  * bcs-container-executor修复CNI异常调用错误显示问题[#88]
+  * Makefile修复非Linux环境编译错误问题[#57]
+  * bcs-container-executor修复启动阶段panic问题[#23]
+  * Makefile修复sirupsen依赖问题
+  * bcs-mesos修复容器LOST状态异常问题[#23]
+  * bcs-mesos修复并发状态容器自定义命令执行结果丢失问题[#30]
+  * bcs-mesos修复application调度异常问题与日志[#17] [#14]
+  * bcs-mesos修复取消滚动升级超时问题[#42]
+
 ## 1.12.6
 
 >以下issue索引信息是并非来源github，为保证项目内外一致性，暂不清理

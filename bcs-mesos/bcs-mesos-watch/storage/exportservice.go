@@ -20,7 +20,7 @@ import (
 
 //ExpServiceHandler handle for taskgroup
 type ExpServiceHandler struct {
-	oper DataOperator
+	oper      DataOperator
 	dataType  string
 	ClusterID string
 }

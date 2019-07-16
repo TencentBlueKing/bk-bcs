@@ -18,22 +18,22 @@ type InitPluginParameter struct {
 }
 
 type HostPluginParameter struct {
-	Ips []string `json:"ips"`
-	ClusterId string `json:"clusterId"`
+	Ips       []string `json:"ips"`
+	ClusterId string   `json:"clusterId"`
 }
 
 type HostAttributes struct {
-	Ip string `json:"ip"`
+	Ip         string       `json:"ip"`
 	Attributes []*Attribute `json:"attributes"`
 }
 
 type Attribute struct {
-	Name             string       `json:"name,omitempty"`
-	Type             Value_Type   `json:"type,omitempty"`
-	Scalar           Value_Scalar `json:"scalar,omitempty"`
-	Ranges           []Value_Ranges `json:"ranges,omitempty"`
-	Set              Value_Set    `json:"set,omitempty"`
-	Text             Value_Text   `json:"text,omitempty"`
+	Name   string         `json:"name,omitempty"`
+	Type   Value_Type     `json:"type,omitempty"`
+	Scalar Value_Scalar   `json:"scalar,omitempty"`
+	Ranges []Value_Ranges `json:"ranges,omitempty"`
+	Set    Value_Set      `json:"set,omitempty"`
+	Text   Value_Text     `json:"text,omitempty"`
 }
 
 type Value_Type uint8
@@ -41,8 +41,8 @@ type Value_Type uint8
 const (
 	ValueScalar Value_Type = 0
 	ValueRanges Value_Type = 1
-	ValueSet Value_Type = 2
-	ValueText Value_Type = 3
+	ValueSet    Value_Type = 2
+	ValueText   Value_Type = 3
 )
 
 type Value_Scalar struct {
@@ -51,7 +51,7 @@ type Value_Scalar struct {
 
 type Value_Ranges struct {
 	Begin int `json:"begin,omitempty"`
-	End int `json:"end,omitempty"`
+	End   int `json:"end,omitempty"`
 }
 
 type Value_Set struct {

@@ -31,7 +31,7 @@ type CollectorMetrics struct {
 
 type PromMetric struct {
 	Name   string            `json:"key"`
-	Labels map[string]string `json:"labels, omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 	Value  float64           `json:"value"`
 }
 

@@ -112,13 +112,13 @@ func PutStableVersion(req *restful.Request, resp *restful.Response) {
 
 func init() {
 	clusterUrl := urlPath("/clusters/{clusterId}/")
-	actions.RegisterV1Action(actions.Action{"GET", clusterUrl, nil, lib.MarkProcess(GetClusterConfig)})
-	actions.RegisterV1Action(actions.Action{"PUT", clusterUrl, nil, lib.MarkProcess(PutClusterConfig)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: clusterUrl, Params: nil, Handler: lib.MarkProcess(GetClusterConfig)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: clusterUrl, Params: nil, Handler: lib.MarkProcess(PutClusterConfig)})
 
 	serviceUrl := urlPath("/services/{service}")
-	actions.RegisterV1Action(actions.Action{"GET", serviceUrl, nil, lib.MarkProcess(GetServiceConfig)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: serviceUrl, Params: nil, Handler: lib.MarkProcess(GetServiceConfig)})
 
 	versionUrl := urlPath("/versions/{service}")
-	actions.RegisterV1Action(actions.Action{"GET", versionUrl, nil, lib.MarkProcess(GetStableVersion)})
-	actions.RegisterV1Action(actions.Action{"PUT", versionUrl, nil, lib.MarkProcess(PutStableVersion)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: versionUrl, Params: nil, Handler: lib.MarkProcess(GetStableVersion)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: versionUrl, Params: nil, Handler: lib.MarkProcess(PutStableVersion)})
 }

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"bk-bcs/bcs-common/common/codec"
 	"bk-bcs/bcs-services/bcs-client/pkg/types"
@@ -45,7 +46,7 @@ type Storage interface {
 }
 
 const (
-	BcsStorageListDynamicURI    = "%s/bcsapi/v4/storage/query/mesos/dynamic/clusters/%s/%s?%s"
+	BcsStorageListDynamicURI    = "%s/bcsapi/v4/storage/query/mesos/dynamic/clusters/%s/%s"
 	BcsStorageInspectDynamicURI = "%s/bcsapi/v4/storage/mesos/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s/%s"
 )
 
@@ -252,10 +253,26 @@ func (bs *bcsStorage) listResource(clusterID, resourceType string, condition url
 	if condition == nil {
 		condition = make(url.Values)
 	}
+
+	conditionMap := make(map[string]string)
+	for k, v := range condition {
+		conditionMap[k] = strings.Join(v, ",")
+	}
+
+	var data []byte
+	if err := codec.EncJson(conditionMap, &data); err != nil {
+		return nil, err
+	}
+
+	// namespace not need to post
+	method := http.MethodPost
+	if resourceType == BcsStorageDynamicTypeNamespace {
+		method = http.MethodGet
+	}
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsStorageListDynamicURI, bs.bcsApiAddress, clusterID, resourceType, condition.Encode()),
-		http.MethodGet,
-		nil,
+		fmt.Sprintf(BcsStorageListDynamicURI, bs.bcsApiAddress, clusterID, resourceType),
+		method,
+		data,
 	)
 
 	if err != nil {

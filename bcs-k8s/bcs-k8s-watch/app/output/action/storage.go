@@ -70,7 +70,7 @@ func (storageAction *StorageAction) request(method string, syncData *SyncData) {
 			resp, err = client.DELETE()
 		}
 		if err != nil {
-			glog.Errorf("%s %s FAIL %s retry: [%s/%s]", method, syncData.Kind, err.Error(),syncData.Namespace, syncData.Name)
+			glog.Errorf("%s %s FAIL %s retry: [%s/%s]", method, syncData.Kind, err.Error(), syncData.Namespace, syncData.Name)
 			continue
 		}
 		break

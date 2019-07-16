@@ -42,7 +42,7 @@ func NewStorageAlarm(c config.Config) (*StorageAlarm, error) {
 	}
 	a := &StorageAlarm{
 		silence: c.Silence,
-		client: client,
+		client:  client,
 	}
 	return a, nil
 }
@@ -53,7 +53,7 @@ type StorageAlarm struct {
 }
 
 type StorageResp struct {
-	Code    int `json:"code"`
+	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 

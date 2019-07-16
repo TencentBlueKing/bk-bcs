@@ -91,10 +91,10 @@ func ListWatchResource(req *restful.Request, resp *restful.Response) {
 
 func init() {
 	url := urlPath("/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}")
-	actions.RegisterV1Action(actions.Action{"GET", url, nil, lib.MarkProcess(GetWatchResource)})
-	actions.RegisterV1Action(actions.Action{"PUT", url, nil, lib.MarkProcess(PutWatchResource)})
-	actions.RegisterV1Action(actions.Action{"DELETE", url, nil, lib.MarkProcess(DeleteWatchResource)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: url, Params: nil, Handler: lib.MarkProcess(GetWatchResource)})
+	actions.RegisterV1Action(actions.Action{Verb: "PUT", Path: url, Params: nil, Handler: lib.MarkProcess(PutWatchResource)})
+	actions.RegisterV1Action(actions.Action{Verb: "DELETE", Path: url, Params: nil, Handler: lib.MarkProcess(DeleteWatchResource)})
 
 	listUrl := urlPath("/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}")
-	actions.RegisterV1Action(actions.Action{"GET", listUrl, nil, lib.MarkProcess(ListWatchResource)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: listUrl, Params: nil, Handler: lib.MarkProcess(ListWatchResource)})
 }
