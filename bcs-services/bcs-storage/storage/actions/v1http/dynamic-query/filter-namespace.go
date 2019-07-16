@@ -19,10 +19,10 @@ import (
 
 type NameSpaceFilter struct {
 	ClusterId       string `json:"clusterId" filter:"clusterId"`
-	Name            string `json:"name, omitempty" filter:"resourceName"`
-	Status          string `json:"status, omitempty" filter:"data.status.phase"`
-	CreateTimeBegin string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd   string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	Name            string `json:"name,omitempty" filter:"resourceName"`
+	Status          string `json:"status,omitempty" filter:"data.status.phase"`
+	CreateTimeBegin string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
 const nameSpaceNestedTimeLayout = nestedTimeLayout

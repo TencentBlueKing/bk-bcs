@@ -48,7 +48,7 @@ type BcsReplicaControllerStatus struct {
 	// LastStatus is the last status of ReplicaController
 	LastStatus ReplicaControllerStatus `json:"lastStatus,omitempty"`
 	// Message indicating details about why the ReplicaController is in this status
-	Message string `json:"message, omitempty"`
+	Message string `json:"message,omitempty"`
 	// Pods the index of the pod which is created by this ReplicaController
 	Pods []*BcsPodIndex `json:"pods"`
 	// added  20181011, add for differentiate process/application
@@ -76,33 +76,33 @@ type BcsPodIndex struct {
 type BcsPodStatus struct {
 	ObjectMeta `json:"metadata"`
 	// RcName the rc name who create this pod. if this pod is created by pod, RcName is empty
-	RcName string `json:"rcname, omitempty"`
+	RcName string `json:"rcname,omitempty"`
 	// Status is the status of this pod
-	Status PodStatus `json:"status, omitempty"`
+	Status PodStatus `json:"status,omitempty"`
 	// LastStatus is the last status of this pod
-	LastStatus PodStatus `json:"lastStatus, omitempty"`
+	LastStatus PodStatus `json:"lastStatus,omitempty"`
 	// HostIP is the ip address of the host where this pod run
-	HostIP string `json:"hostIP, omitempty"`
+	HostIP string `json:"hostIP,omitempty"`
 	// HostName is the hostname where this pod run
 	HostName string `json:"hostName"`
 	// PodIP is the pod address of this pod
-	PodIP string `json:"podIP, omitempty"`
+	PodIP string `json:"podIP,omitempty"`
 	// Message indicating details about why the pod is in this status
-	Message string `json:"message, omitempty"`
+	Message string `json:"message,omitempty"`
 	// StartTime is date and time when this pod start
-	StartTime time.Time `json:"startTime, omitempty"`
+	StartTime time.Time `json:"startTime,omitempty"`
 	// LastStatus is the last status of this pod
-	LastUpdateTime time.Time `json:"lastUpdateTime, omitempty"`
+	LastUpdateTime time.Time `json:"lastUpdateTime,omitempty"`
 	// ReportTime is the date and time when report pod status
-	ReportTime time.Time `json:"reportTime, omitempty"`
+	ReportTime time.Time `json:"reportTime,omitempty"`
 	// KillPolicy
-	KillPolicy *KillPolicy `json:"killPolicy, omitempty"`
+	KillPolicy *KillPolicy `json:"killPolicy,omitempty"`
 	// RestartPolicy
-	RestartPolicy *RestartPolicy `json:"restartPolicy, omitempty"`
+	RestartPolicy *RestartPolicy `json:"restartPolicy,omitempty"`
 	// ContainerStatus is the container status
-	ContainerStatuses []*BcsContainerStatus `json:"containerStatuses, omitempty"`
+	ContainerStatuses []*BcsContainerStatus `json:"containerStatuses,omitempty"`
 	//bcs message
-	BcsMessage string `json:"bcsMessage, omitempty"`
+	BcsMessage string `json:"bcsMessage,omitempty"`
 	// added  20181011, add for differentiate process/application
 	Kind BcsDataType `json:"kind"`
 }
@@ -114,7 +114,7 @@ type BcsHealthCheckStatus struct {
 	// the health check result, ture is ok, false is not good
 	Result bool `json:"result"`
 	// the health check message. e.g: if health is not good, the message record the reason
-	Message string `json:"message, omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type ContainerStatus string
@@ -137,17 +137,17 @@ type BcsContainerStatus struct {
 	Name string `json:"name"`
 	// container id
 	ContainerID  string `json:"containerID"`
-	RestartCount int32  `json:"restartCount, omitempty"`
+	RestartCount int32  `json:"restartCount,omitempty"`
 	// Status is the status of this container
-	Status ContainerStatus `json:"status, omitempty"`
+	Status ContainerStatus `json:"status,omitempty"`
 	// Status is the last status of this container``
-	LastStatus ContainerStatus `json:"lastStatus, omitempty"`
+	LastStatus ContainerStatus `json:"lastStatus,omitempty"`
 	// exit code
-	TerminateExitCode int `json:"exitcode, omitempty"`
+	TerminateExitCode int `json:"exitcode,omitempty"`
 	// Image is this container image
 	Image string `json:"image"`
 	// Message indicating details about why this container`` is in this status
-	Message string `json:"message, omitempty"`
+	Message string `json:"message,omitempty"`
 	// StartTime is date and time when this container start
 	StartTime time.Time `json:"startTime,omitempty"`
 	// LastStatus is the last status of Container
@@ -159,20 +159,20 @@ type BcsContainerStatus struct {
 	// ports
 	Ports []ContainerPort `json:"containerPort,omitempty"`
 	//command
-	Command         string               `json:"command,omitempty"`
+	Command string `json:"command,omitempty"`
 	// arguments
-	Args            []string             `json:"args,omitempty"`
+	Args []string `json:"args,omitempty"`
 	//volumes
-	Volumes         []Volume         `json:"volumes,omitempty"`
+	Volumes []Volume `json:"volumes,omitempty"`
 	// network
-	Network  string            `json:"networkMode,omitempty"`
+	Network string `json:"networkMode,omitempty"`
 	// labels
-	Labels      map[string]string `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 	// Resources
-	Resources       ResourceRequirements `json:"resources,omitempty"`
+	Resources ResourceRequirements `json:"resources,omitempty"`
 	//envs
 	Env map[string]string `json:"env,omitempty"`
- }
+}
 
 type BcsDeploymentStatus struct {
 	ObjectMeta `json:"metadata"`

@@ -39,7 +39,7 @@ func RegisterOutputPlugins(c *config.Config) error {
 			continue
 		}
 
-		initFunc, ok := initFuncRaw.(func(*config.Config)(output.PluginIf, error))
+		initFunc, ok := initFuncRaw.(func(*config.Config) (output.PluginIf, error))
 		if !ok {
 			blog.Errorf("try to assert the init function in plugin %s failed: %v", pluginPath, err)
 			continue

@@ -1,64 +1,95 @@
-![BCS.png](./docs/logo/logo_en.png)
+![蓝鲸容器管理平台.png](./docs/logo/bcs_zh.png)
+
+
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.12.x-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)   
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.13.x-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)              
 
-[中文文档](./README_cn.md)
+[EnglishDocs](./README_en.md)
 
-BlueKing Container Service (BCS) is a container management and orchestration platform for the micro-services under the BlueKing ecosystem.
+> **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
+> 请通过[releases](https://github.com/Tencent/bk-bcs/releases) 而非 `master` 去获取稳定的二进制文件。
 
-BlueKing Container Service provides a two-engine-driven container orchestration scheme based on native Kubernetes and mesos `bk-framework`, and users can choose to either one of them to orchestrate their own applications. The Kubernetes method is mainly based on Kubernetes solution. In addition to providing native functional support, it also provides  seamless integration between the native Kubernetes cluster and the BlueKing platform. Users can experience container technology with Kubernetes community edition in the BlueKing platform in a way that is indistinguishable and convenient. The mesos `bk-framwork` solution is a container orchestration program for BlueKing that capable of customization. If you need to create a highly personalized container platform for special application scenarios, the mesos `bk-framework` solution is a great choice.
+蓝鲸容器管理平台（Blueking Container Service，简称BCS，下同）是蓝鲸体系下，以容器技术为基础，为微服务业务提供编排管理和治理服务的基础服务平台。
 
-In addition to the orchestration program, the BlueKing Container Service also provides an abstract service management solution to provide services such as load balancing, service registration, service discovery, DNS, and traffic proxies.
+BCS在腾讯内部已经稳定运行三年以上，经过几十款不同架构、不同规模的业务验证，其中规模最大的业务包含五个独立的集群，共600+物理机资源（单机48核以上，128G以上内存），近7000 POD，使用30多个命名空间进行隔离。
 
-The open source version of the BlueKing Container Service is consistent with the BlueKing Community Edition and is updated synchronously. BlueKing Community Edition will have a built-in SaaS (Software As A Service) to communicate with BCS, this will provide users with interface to view container operations.
+BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织，本次开源的部分为BCS后台部分，为蓝鲸PaaS体系下的原子平台，主要输出服务编排和服务治理的能力。BCS的操作页面部分通过蓝鲸SaaS轻应用的方式呈现，可以通过最新的蓝鲸社区版或者企业版获取该SaaS的版本；也可以通过[蓝鲸官方网站](https://bk.tencent.com/)获取该SaaS的后续开源信息。
 
 ## Overview
 
-* [Architecture Design](./docs/overview/architecture.md)
-* [code structure](./docs/overview/code_directory.md)
-* [Function Description](./docs/overview/function.md)
+* [架构设计](./docs/overview/architecture.md)
+* [代码结构](./docs/overview/code_directory.md)
+* [功能说明](./docs/overview/function.md)
+
+了解BCS更详细功能，请参考蓝鲸容器管理平台[白皮书](https://docs.bk.tencent.com/bcs/)
 
 ## Features
 
-* Support for dual engine orchestration based on Kubernetes and Mesos
-* Support multi-cluster management
-* Support plug-in custom orchestration scheduling strategy
-* Support service upgrade, expansion and expansion, rolling upgrade, blue/green deploy strategy, etc.
-* Support configmap, secret, disk volume mount, shared disk mount, etc.
-* Support basic service management solutions such as service discovery, domain name resolution, and access agents, etc
-* Support for scalable resource quota definitions
-* Support in-container IPC mechanism
-* Support multiple container network solutions (CNI)
+* 支持基于k8s和Mesos双引擎编排
+    * [了解k8s方案相关信息](https://kubernetes.io/zh/)
+    * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的容器编排.md)
+* 支持异构业务接入
+    * 了解有状态业务解决方案
+    * [了解其他非容器友好特性的解决方案](./docs/features/mesos/基于mesos的服务编排.md)
+* 跨云跨OS管理容器
+    * [跨云容器管理方案](./docs/features/solutions/BCS跨云容器管理方案.md)
+    * 支持windows容器
+* 插件化的二次开发能力
+    * [了解社区CNI标准](https://github.com/containernetworking/cni)
+    * [了解社区CSI标准](https://github.com/container-storage-interface/spec/blob/master/spec.md)
+    * [自定义编排调度策略](./docs/features/solutions/k8s-custom-scheduler.md)
 
-For a detailed description of the above features, please refer to the BlueKing Container Management Platform [white paper](https://docs.bk.tencent.com/bcs/)
+## Experience
+
+* [通过BCS解决研发环境的资源复用](./docs/features/practices/通过BCS解决研发环境的资源问题.md)
+* [通过BCS完成业务的滚动升级](./docs/features/practices/rolling-update-howto.md)
+* [通过BCS完成业务的蓝绿发布](./docs/features/practices/blue-green-deployment.md)
+* [BCS集成istio案例](./docs/features/practices/istio.md) coming soon...
 
 ## Getting Started
 
-* [Download and Compile](docs/install/source_compile.md)
-* [Installation Deployment](docs/install/deploy-guide.md)
-* [API Usage Notes](./docs/apidoc/api.md)
+> 容器管理平台是蓝鲸智云社区版V5.1以上推出的产品，后台服务可以独立部署与使用。如果需要SaaS的支持，则需要与蓝鲸社区版软件配合使用。
+
+> 目前社区版5.1在灰度内测中，若想体验，请填写问卷留下邮箱等信息，蓝鲸将在1-2个工作日通过邮箱方式，交付软件。感谢对蓝鲸的支持与理解。
+> 问卷链接：[https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
+
+> 蓝鲸社区版5.1完全开放下载时间为2019-07-30
+
+* [下载与编译](docs/install/source_compile.md)
+* [安装部署](docs/install/deploy-guide.md)
+* [API使用说明](./docs/apidoc/api.md)
 
 ## Version Plan
 
-* [Version Details](./docs/version/README.md)
+* [版本详情](./docs/version/README.md)
 
 ## Contributing
 
-If you are interested in this project and want to contribute and improve the project together, please refer to [contributing](./CONTRIBUTING.md).
-[Tencent Open Source Incentive Program](https://opensource.tencent.com/contribution) We encourage developers to participate and contribute, and look forward to your joining us.
+对于项目感兴趣，想一起贡献并完善项目请参阅[contributing](./CONTRIBUTING.md)。
+
+[腾讯开源激励计划](https://opensource.tencent.com/contribution) 鼓励开发者的参与和贡献，期待你的加入。
 
 ## Support
 
-* Refer to `bk-bcs`[installation documentation](docs/install/deploy-guide.md)
-* Read [source code](https://github.com/Tencent/bk-bcs)
-* Read [wiki](https://github.com/Tencent/bk-bcs/wiki) or ask for help
-* Learn about the BlueKing Community: QQ group 495299374
-* Issues, we will check and reply regularly
+* 参考bk-bcs[安装文档](docs/install/deploy-guide.md)
+* 阅读 [源码](https://github.com/Tencent/bk-bcs)
+* 阅读 [wiki](https://github.com/Tencent/bk-bcs/wiki) 或者寻求帮助
+* 了解蓝鲸社区相关信息：蓝鲸社区版交流QQ群 495299374
+* 直接反馈[issue](https://github.com/Tencent/bk-bcs/issues)，我们会定期查看与答复
 
 ## FAQ
 
-[https://github.com/Tencent/bk-bcs/wiki/FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)
+* [蓝鲸容器FAQ](https://docs.bk.tencent.com/bcs/Container/FAQ/faq.html)
+* [github wiki FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)持续建设中...
+
+## Blueking Community
+
+- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：**开源流程中**，蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
+- [BK-CI](https://github.com/Tencent/bk-ci)：蓝鲸持续集成平台是一个开源的持续集成和持续交付系统，可以轻松将你的研发流程呈现到你面前。
+- [CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
+- [PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
+- [SOPS](https://github.com/Tencent/bk-sops)：标准运维（SOPS）是通过可视化的图形界面进行任务流程编排和执行的系统，是蓝鲸体系中一款轻量级的调度编排类SaaS产品。
 
 ## License
 
-Bk-bcs is based on the MIT protocol. Please refer to [LICENSE](./LICENSE.TXT) for details.
+bk-bcs是基于MIT协议， 详细请参考[LICENSE](./LICENSE.TXT)。

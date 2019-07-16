@@ -19,10 +19,10 @@ import (
 
 type SecretK8sFilter struct {
 	ClusterId       string `json:"clusterId" filter:"clusterId"`
-	Name            string `json:"name, omitempty" filter:"resourceName"`
-	Namespace       string `json:"namespace, omitempty" filter:"namespace"`
-	CreateTimeBegin string `json:"createTimeBegin, omitempty" filter:"data.metadata.creationTimestamp,timeL"`
-	CreateTimeEnd   string `json:"createTimeEnd, omitempty" filter:"data.metadata.creationTimestamp,timeR"`
+	Name            string `json:"name,omitempty" filter:"resourceName"`
+	Namespace       string `json:"namespace,omitempty" filter:"namespace"`
+	CreateTimeBegin string `json:"createTimeBegin,omitempty" filter:"data.metadata.creationTimestamp,timeL"`
+	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
 const secretK8sNestedTimeLayout = nestedTimeLayout

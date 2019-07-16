@@ -225,7 +225,7 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 	//create bcs-service controller
 	store := cache.CreateCache(DNSDataKeyFunc)
 	bcs.svcCache = &ServiceCache{
-		Cache: *store,
+		Store: store,
 	}
 	svc := filepath.Join(bcs.conf.EndpointPath, "service")
 	svcEvents := &EventFuncs{
@@ -234,7 +234,7 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 		DeleteFunc: bcs.svcOnDelete,
 	}
 	var svcErr error
-	bcs.svcController, svcErr = NewController(bcs.conf.Endpoints, svc, bcs.conf.ResyncPeriod, bcs.svcCache, &SvcDecoder{}, svcEvents)
+	bcs.svcController, svcErr = NewController(bcs.conf.Endpoints, svc, bcs.conf.ResyncPeriod, bcs.svcCache.Store, &SvcDecoder{}, svcEvents)
 	if svcErr != nil {
 		log.Printf("[ERROR] Scheduler create BcsService Controller failed, %s", svcErr.Error())
 		return svcErr
@@ -242,7 +242,7 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 	//create bcs endpoint controller
 	estore := cache.CreateCache(DNSDataKeyFunc)
 	bcs.endpointCache = &EndpointCache{
-		Cache: *estore,
+		Store: estore,
 	}
 	endpoint := filepath.Join(bcs.conf.EndpointPath, "endpoint")
 	endpointEvents := &EventFuncs{
@@ -251,7 +251,7 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 		DeleteFunc: bcs.endpointOnDelete,
 	}
 	var epErr error
-	bcs.endpointController, epErr = NewController(bcs.conf.Endpoints, endpoint, bcs.conf.ResyncPeriod, bcs.endpointCache, &EndpointDecoder{}, endpointEvents)
+	bcs.endpointController, epErr = NewController(bcs.conf.Endpoints, endpoint, bcs.conf.ResyncPeriod, bcs.endpointCache.Store, &EndpointDecoder{}, endpointEvents)
 	if epErr != nil {
 		log.Printf("[ERROR] Scheduler create BcsEndpoint Controller failed, %s", epErr.Error())
 		return epErr

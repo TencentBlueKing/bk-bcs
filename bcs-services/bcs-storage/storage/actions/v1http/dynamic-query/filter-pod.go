@@ -19,13 +19,13 @@ import (
 
 type PodFilter struct {
 	ClusterId      string `json:"clusterId" filter:"clusterId"`
-	Name           string `json:"name, omitempty" filter:"resourceName"`
-	Namespace      string `json:"namespace, omitempty" filter:"namespace"`
-	HostIp         string `json:"hostIp, omitempty" filter:"data.status.hostIP"`
-	PodIp          string `json:"podIp, omitempty" filter:"data.status.podIP"`
-	Status         string `json:"status, omitempty" filter:"data.status.phase"`
-	StartTimeBegin string `json:"startTimeBegin, omitempty" filter:"data.status.startTime,timeL"`
-	StartTimeEnd   string `json:"startTimeEnd, omitempty" filter:"data.status.startTime,timeR"`
+	Name           string `json:"name,omitempty" filter:"resourceName"`
+	Namespace      string `json:"namespace,omitempty" filter:"namespace"`
+	HostIp         string `json:"hostIp,omitempty" filter:"data.status.hostIP"`
+	PodIp          string `json:"podIp,omitempty" filter:"data.status.podIP"`
+	Status         string `json:"status,omitempty" filter:"data.status.phase"`
+	StartTimeBegin string `json:"startTimeBegin,omitempty" filter:"data.status.startTime,timeL"`
+	StartTimeEnd   string `json:"startTimeEnd,omitempty" filter:"data.status.startTime,timeR"`
 }
 
 const podNestedTimeLayout = nestedTimeLayout

@@ -172,13 +172,13 @@ func (mgr *DataCheckMgr) checkTaskgroup(runAs, appId string) {
 
 	blog.Info("data checker: to check taskgroups:%s.%s ", runAs, appId)
 	taskGroups, _ := mgr.store.ListTaskGroups(runAs, appId)
-	
+
 	lostnum := 0
 	for _, taskGroup := range taskGroups {
 		if taskGroup.LastUpdateTime == 0 ||
 			(taskGroup.Status != types.TASKGROUP_STATUS_RUNNING &&
-			taskGroup.Status != types.TASKGROUP_STATUS_STAGING &&
-			taskGroup.Status != types.TASKGROUP_STATUS_STARTING) {
+				taskGroup.Status != types.TASKGROUP_STATUS_STAGING &&
+				taskGroup.Status != types.TASKGROUP_STATUS_STARTING) {
 			continue
 		}
 
@@ -225,7 +225,7 @@ func (mgr *DataCheckMgr) checkTaskgroup(runAs, appId string) {
 	if lostnum <= 0 {
 		return
 	}
-	
+
 	//  get application data from ZK
 	app, err := mgr.sched.store.FetchApplication(runAs, appId)
 	if err != nil {
