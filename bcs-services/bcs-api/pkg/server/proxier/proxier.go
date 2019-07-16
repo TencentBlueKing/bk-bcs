@@ -24,12 +24,13 @@ import (
 	"sync"
 	"time"
 
+	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-api/pkg/auth"
 	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
+	resthdrs_utils "bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
+	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 	"bk-bcs/bcs-services/bcs-api/pkg/utils"
-
-	"bk-bcs/bcs-common/common/blog"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
@@ -100,6 +101,15 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		return
 	}
 	clusterId := cluster.ID
+	externalClusterInfo := sqlstore.QueryBCSClusterInfo(&m.BCSClusterInfo{
+		ClusterId: clusterId,
+	})
+	if externalClusterInfo == nil {
+		message := "no externalClusterInfo can be found using given cluster identifier"
+		status := utils.NewNotFound(utils.ClusterResource, clusterIdentifier, message)
+		utils.WriteKubeAPIError(rw, status)
+		return
+	}
 
 	// Authenticate user
 	var authenticater *auth.TokenAuthenticater
@@ -149,7 +159,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	// Use RWLock to fix race condition
 	f.handlerMutateLock.Lock()
 	if f.handlerStore[clusterId] == nil {
-		handlerServer, err := f.InitializeHandlerForCluster(clusterId, req)
+		handlerServer, err := f.InitializeHandlerForCluster(clusterId, externalClusterInfo, req)
 		if err != nil {
 			err = fmt.Errorf("error when creating proxy channel: %s", err.Error())
 			status := utils.NewInternalError(err)
@@ -188,7 +198,7 @@ func (f *ReverseProxyDispatcher) InitializeUpstreamServer(clusterId string, serv
 // InitializeHandlerForCluster was called when a cluster channel is requested for the first time. There are also
 // other cases when we may also need to re-establish the apiserver connection. This includes apiserver connection
 // failure or apiserver addresses's major changes.
-func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string, req *http.Request) (*ClusterHandlerInstance, error) {
+func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string, externalClusterInfo *m.BCSClusterInfo, req *http.Request) (*ClusterHandlerInstance, error) {
 	// Query for the cluster credentials
 	clusterCredentials := f.GetClusterCredentials(clusterId)
 	if clusterCredentials == nil || clusterCredentials.ServerAddresses == "" {
@@ -209,7 +219,7 @@ func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string, r
 		return nil, fmt.Errorf("error when turning credentials into restconfig: %s", err.Error())
 	}
 
-	handler, err := NewProxyHandlerFromConfig(restConfig)
+	handler, err := NewProxyHandlerFromConfig(restConfig, externalClusterInfo, clusterCredentials.ClusterDomain)
 	if err != nil {
 		blog.Errorf("NewProxyHandlerFromConfig failed: %s \n restConfig is: %+v", err.Error(), restConfig)
 		return nil, err
@@ -296,15 +306,23 @@ func (r *responder) Error(w http.ResponseWriter, req *http.Request, err error) {
 }
 
 // NewProxyHandler creates a new proxy handler to a single api server based on the given kube config object
-func NewProxyHandlerFromConfig(config *rest.Config) (*proxy.UpgradeAwareHandler, error) {
+func NewProxyHandlerFromConfig(config *rest.Config, externalClusterInfo *m.BCSClusterInfo, clusterDomain string) (*proxy.UpgradeAwareHandler, error) {
 	// Nowadays our k8s cluster certificates initiated only for initial master ip addresses and some domains such as "kubernetes". If a master
 	// is replaced when failover, the cluster will can't be accessed with the new master's ip address because of the certificate.
 	// to fix this issue, here use the domain "kubernetes" to access all bcs k8s clusters
-	host := k8sClusterDomainUrl
+	var host string
+	if externalClusterInfo.ClusterType == resthdrs_utils.BcsTkeCluster {
+		host = clusterDomain
+	} else {
+		host = k8sClusterDomainUrl
+	}
+
 	target, err := url.Parse(host)
 	if err != nil {
 		return nil, err
 	}
+
+	blog.Info("%v", target)
 
 	responder := &responder{}
 	apiTransport, err := rest.TransportFor(config)
@@ -344,6 +362,7 @@ func makeUpgradeTransport(config *rest.Config, keepalive time.Duration) (proxy.U
 	if err != nil {
 		return nil, err
 	}
+	blog.Info(ipAddress.Host)
 	rt := utilnet.SetOldTransportDefaults(&http.Transport{
 		TLSClientConfig: tlsConfig,
 		Dial: func(network, addr string) (net.Conn, error) {

@@ -23,7 +23,7 @@ import (
 	"bk-bcs/bcs-services/bcs-api/config"
 	"bk-bcs/bcs-services/bcs-api/options"
 	"bk-bcs/bcs-services/bcs-api/processor"
-	"bk-bcs/bcs-services/bcs-api/regdiscv"
+	//"bk-bcs/bcs-services/bcs-api/regdiscv"
 	"fmt"
 	"log"
 	"os"
@@ -74,7 +74,7 @@ func run(op *options.ServerOption) {
 	conf := parseConfig(op)
 
 	//run register and discover
-	regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
+	//regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
 
 	proc := processor.NewProcessor(conf)
 	//start processor, and http & websokect service
@@ -106,6 +106,7 @@ func parseConfig(op *options.ServerOption) *config.ApiServConfig {
 	apiServConfig.MetricPort = op.MetricPort
 	apiServConfig.BKIamAuth = op.BKIamAuth
 	apiServConfig.BKE = op.BKE
+	apiServConfig.TKE = op.TKE
 	apiServConfig.Edition = op.Edition
 	apiServConfig.MesosWebconsoleProxyPort = op.MesosWebconsoleProxyPort
 	config.Edition = apiServConfig.Edition
@@ -113,6 +114,7 @@ func parseConfig(op *options.ServerOption) *config.ApiServConfig {
 	config.TurnOnRBAC = apiServConfig.BKE.TurnOnRBAC
 	config.ClusterCredentialsFixtures = apiServConfig.BKE.ClusterCredentialsFixtures
 	config.MesosWebconsoleProxyPort = apiServConfig.MesosWebconsoleProxyPort
+	config.TkeConf = op.TKE
 
 	//server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {

@@ -55,6 +55,7 @@ type ApiServConfig struct {
 	ClientCert *CertConfig
 
 	BKE                      options.BKEOptions
+	TKE                      options.TKEOptions
 	Edition                  string
 	MesosWebconsoleProxyPort uint
 }
@@ -65,6 +66,7 @@ var (
 	BKIamAuth                  options.AuthOption
 	ClusterCredentialsFixtures options.CredentialsFixturesOptions
 	MesosWebconsoleProxyPort   uint
+	TkeConf                    options.TKEOptions
 )
 
 //NewApiServConfig create a config object

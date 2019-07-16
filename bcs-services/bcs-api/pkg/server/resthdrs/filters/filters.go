@@ -96,6 +96,7 @@ func AccessTokenAuthenticate(request *restful.Request, response *restful.Respons
 	}
 
 	accessToken := request.QueryParameter("access_token")
+	blog.Info("access_token: %s", accessToken)
 	if accessToken != "" {
 		user, err := auth.VerifyAccessTokenAndCreateUser(accessToken)
 		if err != nil {
