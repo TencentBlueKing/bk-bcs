@@ -84,7 +84,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 
 ## Blueking Community
 
-- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：**开源流程中**，蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
+- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
 - [BK-CI](https://github.com/Tencent/bk-ci)：蓝鲸持续集成平台是一个开源的持续集成和持续交付系统，可以轻松将你的研发流程呈现到你面前。
 - [CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
 - [PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
@@ -93,3 +93,15 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## License
 
 bk-bcs是基于MIT协议， 详细请参考[LICENSE](./LICENSE.TXT)。
+
+## 认证
+
+蓝鲸智云容器管理平台通过中国云计算开源产业联盟组织的可信云容器解决方案评估认证。蓝鲸智云容器管理平台在基本能力要求、应用场景技术指标、安全性等解决方案质量方面，以及产品周期、运维服务、权益保障等服务指标的完备性和规范性方面均达到可信云容器解决方案的评估标准。应用场景满足以下四个：
+
+* 开发测试场景
+* 持续集成
+* 持续交付
+* 运维自动化
+* 微服务
+
+![certificate](./docs/overview/certificate.jpg)
