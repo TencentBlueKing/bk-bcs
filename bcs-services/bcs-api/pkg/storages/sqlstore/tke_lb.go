@@ -11,39 +11,28 @@
  *
  */
 
-// Package sqlstore is main SQL database storage
 package sqlstore
 
 import (
-	"fmt"
-
-	"bk-bcs/bcs-services/bcs-api/config"
-	"github.com/jinzhu/gorm"
-	// import empty mysql package
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"time"
+	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 )
 
-var GCoreDB *gorm.DB
+func SaveTkeLbSubnet(clusterRegion, subnetId string) error {
+	var tkeLbSubnet m.TkeLbSubnet
+	dbScoped := GCoreDB.Where(m.TkeLbSubnet{ClusterRegion: clusterRegion}).Assign(
+		m.TkeLbSubnet{
+			SubnetId: subnetId,
+		},
+	).FirstOrCreate(&tkeLbSubnet)
 
-// InitCoreDabase initialize the GLOBAL database object
-func InitCoreDatabase(conf *config.ApiServConfig) error {
-	if conf == nil {
-		return fmt.Errorf("core_database config not init")
-	}
+	return dbScoped.Error
+}
 
-	dsn := conf.BKE.DSN
-	if dsn == "" {
-		return fmt.Errorf("core_database dsn not configured")
+func GetSubnetByClusterRegion(clusterRegion string) *m.TkeLbSubnet {
+	tkeLbSubnet := m.TkeLbSubnet{}
+	GCoreDB.Where(&m.TkeLbSubnet{ClusterRegion: clusterRegion}).First(&tkeLbSubnet)
+	if tkeLbSubnet.ID != 0 {
+		return &tkeLbSubnet
 	}
-	db, err := gorm.Open("mysql", dsn)
-	if err != nil {
-		return err
-	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
-
-	GCoreDB = db
 	return nil
 }
