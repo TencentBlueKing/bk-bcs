@@ -37,7 +37,8 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 * 插件化的二次开发能力
     * [了解社区CNI标准](https://github.com/containernetworking/cni)
     * [了解社区CSI标准](https://github.com/container-storage-interface/spec/blob/master/spec.md)
-    * [自定义编排调度策略](./docs/features/solutions/k8s-custom-scheduler.md)
+    * [K8S自定义编排调度策略](./docs/features/solutions/k8s-custom-scheduler.md)
+    * [Mesos自定义编排策略](./docs/features/mesos/自定义编排调度策略.md)
 
 ## Experience
 
