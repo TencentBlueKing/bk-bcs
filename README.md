@@ -26,17 +26,22 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## Features
 
 * 支持基于k8s和Mesos双引擎编排
-    * [了解k8s方案相关信息](https://kubernetes.io/zh/)
-    * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的服务编排.md)
+  * [了解k8s方案相关信息](https://kubernetes.io/zh/)
+  * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的服务编排.md)
 * 支持异构业务接入
-    * 了解有状态业务解决方案
-    * [了解其他非容器友好特性的解决方案](./docs/features/mesos/基于mesos的服务编排.md)
+  * [了解有状态业务解决方案](./docs/features/solutions/k8s有状态应用方案.md)
+  * [了解其他非容器友好特性的解决方案](./docs/features/mesos/基于mesos的服务编排.md)
 * 跨云跨OS管理容器
-    * [跨云容器管理方案](./docs/features/solutions/BCS跨云容器管理方案.md)
-    * 支持windows容器
+  * [跨云容器管理方案](./docs/features/solutions/BCS跨云容器管理方案.md)
+  * 支持windows容器
 * 插件化的二次开发能力
+  * 网络插件 
     * [了解社区CNI标准](https://github.com/containernetworking/cni)
+    * [CNI插件实战]() comming soon...
+  * 存储插件
     * [了解社区CSI标准](https://github.com/container-storage-interface/spec/blob/master/spec.md)
+    * [CSI插件实战案例]() comming soon...
+  * 编排调度
     * [K8S自定义编排调度策略](./docs/features/solutions/k8s-custom-scheduler.md)
     * [Mesos自定义编排策略](./docs/features/mesos/自定义编排调度策略.md)
 
