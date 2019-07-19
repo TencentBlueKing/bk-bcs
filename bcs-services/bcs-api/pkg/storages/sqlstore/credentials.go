@@ -28,7 +28,7 @@ func GetCredentials(clusterId string) *m.ClusterCredentials {
 }
 
 // SaveCredentials saves the current cluster credentials
-func SaveCredentials(clusterId, serverAddresses, caCertData, userToken string) error {
+func SaveCredentials(clusterId, serverAddresses, caCertData, userToken, clusterDomain string) error {
 	var credentials m.ClusterCredentials
 	// Create or update, source: https://github.com/jinzhu/gorm/issues/1307
 	dbScoped := GCoreDB.Where(m.ClusterCredentials{ClusterId: clusterId}).Assign(
@@ -36,6 +36,7 @@ func SaveCredentials(clusterId, serverAddresses, caCertData, userToken string) e
 			ServerAddresses: serverAddresses,
 			CaCertData:      caCertData,
 			UserToken:       userToken,
+			ClusterDomain:   clusterDomain,
 		},
 	).FirstOrCreate(&credentials)
 	return dbScoped.Error

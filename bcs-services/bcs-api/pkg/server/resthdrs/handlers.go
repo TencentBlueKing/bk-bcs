@@ -50,6 +50,10 @@ func CreateRestContainer(pathPrefix string) *restful.Container {
 	ws.Route(AddAuthF(ws.POST("/clusters/bcs")).To(CreateBCSCluster))
 	ws.Route(AddAuthF(ws.GET("/clusters/bcs/query_by_id/")).To(QueryBCSClusterByID))
 
+	// Handlers for tke cluster
+	ws.Route(AddAuthClusterF(ws.POST("/clusters/{cluster_id}/sync_credentials")).To(SyncTkeClusterCredentials))
+	ws.Route(AddAuthF(ws.POST("/tke/lb/subnet")).To(UpdateTkeLbSubnet))
+
 	// Basic handlers
 	ws.Route(AddAuthF(ws.POST("/clusters/")).To(CreatePlainCluster))
 	ws.Route(AddAuthClusterF(ws.GET("/clusters/{cluster_id}/client_credentials")).To(GetClientCredentials))

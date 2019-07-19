@@ -11,39 +11,19 @@
  *
  */
 
-// Package sqlstore is main SQL database storage
-package sqlstore
+package manager
 
 import (
-	"fmt"
-
-	"bk-bcs/bcs-services/bcs-api/config"
-	"github.com/jinzhu/gorm"
-	// import empty mysql package
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"time"
+	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
+	"net/http"
 )
 
-var GCoreDB *gorm.DB
+type Manager interface {
+	//start
+	Start() error
 
-// InitCoreDabase initialize the GLOBAL database object
-func InitCoreDatabase(conf *config.ApiServConfig) error {
-	if conf == nil {
-		return fmt.Errorf("core_database config not init")
-	}
-
-	dsn := conf.BKE.DSN
-	if dsn == "" {
-		return fmt.Errorf("core_database dsn not configured")
-	}
-	db, err := gorm.Open("mysql", dsn)
-	if err != nil {
-		return err
-	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
-
-	GCoreDB = db
-	return nil
+	//handler container web console
+	StartExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
+	CreateExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
+	ResizeExec(http.ResponseWriter, *http.Request, *types.WebSocketConfig)
 }
