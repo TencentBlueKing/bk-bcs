@@ -35,7 +35,8 @@ Please refer to the BlueKing Container Management Platform [white paper](https:/
 * Plug-in secondary development capabilities
   * [Understanding Community CNI](https://github.com/containernetworking/cni)
   * [Understanding CSI Standard](https://github.com/container-storage-interface/spec/blob/master/spec.md)
-  * [Custom Orchestration Scheduling Policy](./docs/features/solutions/k8s-custom-scheduler.md)
+  * [K8S Custom Orchestration Scheduling Policy](./docs/features/solutions/k8s-custom-scheduler.md)
+  * [Mesos Custom Scheduling Policy](./docs/features/mesos/自定义编排调度策略.md)
 
 ## Experience
 
@@ -82,7 +83,7 @@ If you are interested in this project and want to contribute and improve the pro
 
 ## Blueking Community
 
-- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：**under open source workflow**, BlueKing container SAAS is UI facility for Blueking Container Service, providing convenient container handling.
+- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas): BlueKing container SAAS is UI facility for Blueking Container Service, providing convenient container operation.
 - [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
 - [CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
 - [PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
