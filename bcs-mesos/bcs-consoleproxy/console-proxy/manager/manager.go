@@ -11,39 +11,36 @@
  *
  */
 
-// Package sqlstore is main SQL database storage
-package sqlstore
+package manager
 
 import (
-	"fmt"
-
-	"bk-bcs/bcs-services/bcs-api/config"
-	"github.com/jinzhu/gorm"
-	// import empty mysql package
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"time"
+	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
+	"github.com/fsouza/go-dockerclient"
+	"sync"
 )
 
-var GCoreDB *gorm.DB
+type manager struct {
+	sync.RWMutex
+	conf *config.ConsoleProxyConfig
 
-// InitCoreDabase initialize the GLOBAL database object
-func InitCoreDatabase(conf *config.ApiServConfig) error {
-	if conf == nil {
-		return fmt.Errorf("core_database config not init")
-	}
+	dockerClient *docker.Client
 
-	dsn := conf.BKE.DSN
-	if dsn == "" {
-		return fmt.Errorf("core_database dsn not configured")
+	containerid     string
+	websocketOrigin string
+}
+
+func NewManager(conf *config.ConsoleProxyConfig) Manager {
+	return &manager{
+		conf: conf,
 	}
-	db, err := gorm.Open("mysql", dsn)
+}
+
+func (m *manager) Start() error {
+	var err error
+	m.dockerClient, err = docker.NewClient(m.conf.DockerEndpoint)
 	if err != nil {
 		return err
 	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
 
-	GCoreDB = db
 	return nil
 }

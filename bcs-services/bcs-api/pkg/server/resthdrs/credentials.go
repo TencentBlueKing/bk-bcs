@@ -16,14 +16,18 @@ package resthdrs
 import (
 	"fmt"
 
+	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/proxier"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
+	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/types"
 	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
 	"github.com/emicklei/go-restful"
+	"time"
 )
 
 type UpdateCredentialsForm struct {
@@ -70,7 +74,7 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 		}
 	}
 
-	err = sqlstore.SaveCredentials(clusterId, form.ServerAddresses, form.CaCertData, form.UserToken)
+	err = sqlstore.SaveCredentials(clusterId, form.ServerAddresses, form.CaCertData, form.UserToken, "")
 	if err != nil {
 		message := fmt.Sprintf("errcode: %d, can not update credentials, error: %s", common.BcsErrApiInternalDbError, err.Error())
 		WriteClientError(response, "CANNOT_UPDATE_CREDENTIALS", message)
@@ -127,4 +131,61 @@ func GetClientCredentials(request *restful.Request, response *restful.Response) 
 		CaCertData:        credentials.CaCertData,
 	}
 	response.WriteEntity(clientCredential)
+}
+
+// SyncTkeClusterCredentials sync the tke cluster credentials from tke
+func SyncTkeClusterCredentials(request *restful.Request, response *restful.Response) {
+	cluster := filters.GetCluster(request)
+
+	externalClusterInfo := sqlstore.QueryBCSClusterInfo(&m.BCSClusterInfo{
+		ClusterId: cluster.ID,
+	})
+	if externalClusterInfo == nil {
+		message := fmt.Sprintf("errcode: %d, external cluster info not exists", common.BcsErrApiBadRequest)
+		WriteClientError(response, "EXTERNAL_CLUSTER_NOT_EXISTS", message)
+		return
+	}
+	if externalClusterInfo.ClusterType != utils.BcsTkeCluster {
+		message := fmt.Sprintf("errcode: %d, cluster %s is not tke cluster", common.BcsErrApiBadRequest, cluster.ID)
+		WriteClientError(response, "NOT_TKE_CLUSTER", message)
+		return
+	}
+
+	tkeCluster := tke.NewTkeCluster(cluster.ID, externalClusterInfo.TkeClusterId, externalClusterInfo.TkeClusterRegion)
+
+	err := tkeCluster.BindClusterLb()
+	if err != nil {
+		message := err.Error()
+		WriteServerError(response, "CANNOT_BIND_TKE_CLUSTER_LB", message)
+		return
+	}
+
+	var isBinded bool
+	// wait for BindMasterVipLoadBalancer to be successful
+	for i := 0; i < 6; i++ {
+		time.Sleep(15 * time.Second)
+		isBinded, err = tkeCluster.GetMasterVip()
+		if err != nil {
+			message := err.Error()
+			WriteServerError(response, "GET_TKE_MASTER_VIP_FAILED", message)
+			return
+		}
+		if isBinded {
+			break
+		}
+	}
+
+	if !isBinded {
+		message := fmt.Sprintf("failed to bind lb for tke cluster: %s", cluster.ID)
+		WriteServerError(response, "BIND_TKE_CLUSTER_LB_FAILED", message)
+		return
+	}
+
+	err = tkeCluster.SyncClusterCredentials()
+	if err != nil {
+		message := err.Error()
+		WriteServerError(response, "CANNOT_SYNC_TKE_CREDENTIALS", message)
+		return
+	}
+	response.WriteEntity(types.EmptyResponse{})
 }

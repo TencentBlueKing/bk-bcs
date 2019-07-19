@@ -11,39 +11,33 @@
  *
  */
 
-// Package sqlstore is main SQL database storage
-package sqlstore
+package main
 
 import (
-	"fmt"
+	"runtime"
 
-	"bk-bcs/bcs-services/bcs-api/config"
-	"github.com/jinzhu/gorm"
-	// import empty mysql package
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"time"
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-mesos/bcs-consoleproxy/app"
+	"bk-bcs/bcs-mesos/bcs-consoleproxy/app/options"
 )
 
-var GCoreDB *gorm.DB
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
-// InitCoreDabase initialize the GLOBAL database object
-func InitCoreDatabase(conf *config.ApiServConfig) error {
-	if conf == nil {
-		return fmt.Errorf("core_database config not init")
-	}
+	op := options.NewConsoleProxyOption()
+	conf.Parse(op)
 
-	dsn := conf.BKE.DSN
-	if dsn == "" {
-		return fmt.Errorf("core_database dsn not configured")
-	}
-	db, err := gorm.Open("mysql", dsn)
-	if err != nil {
-		return err
-	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
 
-	GCoreDB = db
-	return nil
+	blog.Info("init logs success")
+	blog.Info("init config success")
+
+	app := app.NewConsoleProxy(op)
+	app.Run()
+
+	blog.Infof("console proxy is running")
+	ch := make(chan bool)
+	<-ch
 }

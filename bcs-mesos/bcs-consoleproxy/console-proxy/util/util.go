@@ -11,39 +11,23 @@
  *
  */
 
-// Package sqlstore is main SQL database storage
-package sqlstore
+package util
 
 import (
+	"bk-bcs/bcs-common/common/blog"
+	bhttp "bk-bcs/bcs-common/common/http"
 	"fmt"
-
-	"bk-bcs/bcs-services/bcs-api/config"
-	"github.com/jinzhu/gorm"
-	// import empty mysql package
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"time"
 )
 
-var GCoreDB *gorm.DB
-
-// InitCoreDabase initialize the GLOBAL database object
-func InitCoreDatabase(conf *config.ApiServConfig) error {
-	if conf == nil {
-		return fmt.Errorf("core_database config not init")
-	}
-
-	dsn := conf.BKE.DSN
-	if dsn == "" {
-		return fmt.Errorf("core_database dsn not configured")
-	}
-	db, err := gorm.Open("mysql", dsn)
+func CreateResponeData(err error, code int, msg string, data interface{}) []byte {
+	var rpyErr error
 	if err != nil {
-		return err
+		rpyErr = bhttp.InternalError(code, msg)
+	} else {
+		rpyErr = fmt.Errorf(bhttp.GetRespone(0, "successful ", data))
 	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
 
-	GCoreDB = db
-	return nil
+	blog.V(3).Infof("createRespone: %s", rpyErr.Error())
+
+	return []byte(rpyErr.Error())
 }

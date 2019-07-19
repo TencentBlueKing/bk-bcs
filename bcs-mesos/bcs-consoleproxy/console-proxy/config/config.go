@@ -11,39 +11,42 @@
  *
  */
 
-// Package sqlstore is main SQL database storage
-package sqlstore
+package config
 
 import (
-	"fmt"
-
-	"bk-bcs/bcs-services/bcs-api/config"
-	"github.com/jinzhu/gorm"
-	// import empty mysql package
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"time"
+	"bk-bcs/bcs-common/common/static"
 )
 
-var GCoreDB *gorm.DB
+//CertConfig is configuration of Cert
+type CertConfig struct {
+	CAFile     string
+	CertFile   string
+	KeyFile    string
+	CertPasswd string
+	IsSSL      bool
+}
 
-// InitCoreDabase initialize the GLOBAL database object
-func InitCoreDatabase(conf *config.ApiServConfig) error {
-	if conf == nil {
-		return fmt.Errorf("core_database config not init")
-	}
+//containerware Config is a configuration
+type ConsoleProxyConfig struct {
+	Address string
+	Port    int
 
-	dsn := conf.BKE.DSN
-	if dsn == "" {
-		return fmt.Errorf("core_database dsn not configured")
-	}
-	db, err := gorm.Open("mysql", dsn)
-	if err != nil {
-		return err
-	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
+	ServCert *CertConfig
 
-	GCoreDB = db
-	return nil
+	DockerEndpoint string
+	Privilege      bool
+	Cmd            []string
+	Tty            bool
+	Ips            []string
+	IsAuth         bool
+}
+
+//NewContainerWareConfig create a config object
+func NewConsoleProxyConfig() ConsoleProxyConfig {
+	return ConsoleProxyConfig{
+		ServCert: &CertConfig{
+			CertPasswd: static.ServerCertPwd,
+			IsSSL:      false,
+		},
+	}
 }

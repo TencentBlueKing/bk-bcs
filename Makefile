@@ -138,3 +138,6 @@ api_export:pre
 	cp ./bcs-common/common/types/status.go ${EXPORTPATH}
 	cp ./bcs-common/common/types/secret.go ${EXPORTPATH}
 	cp ./bcs-common/common/types/configmap.go ${EXPORTPATH}
+
+consoleproxy:pre
+	go build ${LDFLAG} -o ${BINARYPATH}/bcs-consoleproxy ./bcs-mesos/bcs-consoleproxy/main.go
