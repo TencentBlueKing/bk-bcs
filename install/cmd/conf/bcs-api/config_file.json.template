@@ -14,7 +14,8 @@
   "client_key_file": "${clientKeyFile}",
   "local_ip": "${localIp}",
   "bkiam_auth": {
-    "auth": false
+    "auth": false,
+    "bkiam_auth_host": "${bkiamAuthHost}"
   },
   "bke": {
     "mysql_dsn": "${coreDatabaseDsn}",
