@@ -26,7 +26,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## Features
 
 * 支持基于k8s和Mesos双引擎编排
-  * [了解k8s方案相关信息](https://kubernetes.io/zh/)
+  * [了解k8s方案相关信息](./docs/features/k8s/基于k8s的容器编排.md)
   * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的服务编排.md)
 * 支持异构业务接入
   * 有状态业务解决方案
