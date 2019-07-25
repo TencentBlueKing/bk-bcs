@@ -146,6 +146,7 @@ func (c *threadSafeMap) Index(indexName string, obj interface{}) ([]interface{},
 	if err != nil {
 		return nil, err
 	}
+
 	index := c.indices[indexName]
 
 	// need to de-dupe the return list.  Since multiple keys are allowed, this can happen.
