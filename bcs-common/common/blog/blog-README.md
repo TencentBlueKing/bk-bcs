@@ -92,7 +92,7 @@ func main()  {
 ​	编译这个demo，使用`./main`启动时，输出的日志信息如下，从日志中可以看出默认情况下-v参数为0，不显示自定义的分级日志和Debug信息。
 
 ```shell
-[root@TENCENT64 /data/gopath4breeze/src]# ./main
+[root@host1 /data/gopath/src]# ./main
 I0504 11:10:05.200126   19086 main.go:13] Hi, you have received a message type:Info from breeze.
 I0504 11:10:05.200178   19086 main.go:14] Hi, you have received a message type:Infof from breeze.
 W0504 11:10:05.200188   19086 main.go:16] Hi, you have received a message type:Warn from breeze.
@@ -106,7 +106,7 @@ F0504 11:10:05.200219   19086 main.go:28] what? process exit.
 ​	指定启动参数`./main -v=3`, 再次执行，输出的日志内容如下，可以看到debug信息与自定义的分级日志均显示。
 
 ```shell
-[root@TENCENT64 /data/gopath4breeze/src]# ./main --v=3
+[root@host1 /data/gopath/src]# ./main --v=3
 I0504 11:50:24.779726   30944 main.go:13] Hi, you have received a message type:Info from breeze.
 I0504 11:50:24.779777   30944 main.go:14] Hi, you have received a message type:Infof from breeze.
 W0504 11:50:24.779785   30944 main.go:16] Hi, you have received a message type:Warn from breeze.
