@@ -17,7 +17,7 @@ package sched
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import mesos "bcs/bmsf-mesh/bmsf-mesos-adaptor/pkg/datatype/bcs/scheduler/mesosproto/mesos"
+import mesos "bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
