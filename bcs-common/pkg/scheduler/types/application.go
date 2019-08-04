@@ -475,6 +475,66 @@ type Application struct {
 	Pods    []*commtypes.BcsPodIndex
 }
 
+//GetName for ObjectMeta
+func (om *Application) GetName() string {
+	return om.Name
+}
+
+//SetName set object name
+func (om *Application) SetName(name string) {
+	om.Name = name
+}
+
+//GetNamespace for ObjectMeta
+func (om *Application) GetNamespace() string {
+	return om.ObjectMeta.NameSpace
+}
+
+//SetNamespace set object namespace
+func (om *Application) SetNamespace(ns string) {
+	om.ObjectMeta.NameSpace = ns
+}
+
+//GetCreationTimestamp get create timestamp
+func (om *Application) GetCreationTimestamp() time.Time {
+	return om.ObjectMeta.CreationTimestamp
+}
+
+//SetCreationTimestamp set creat timestamp
+func (om *Application) SetCreationTimestamp(timestamp time.Time) {
+	om.ObjectMeta.CreationTimestamp = timestamp
+}
+
+//GetLabels for ObjectMeta
+func (om *Application) GetLabels() map[string]string {
+	return om.ObjectMeta.Labels
+}
+
+//SetLabels set objec labels
+func (om *Application) SetLabels(labels map[string]string) {
+	om.ObjectMeta.Labels = labels
+}
+
+//GetAnnotations for ObjectMeta
+func (om *Application) GetAnnotations() map[string]string {
+	return om.ObjectMeta.Annotations
+}
+
+//SetAnnotations get annotation name
+func (om *Application) SetAnnotations(annotation map[string]string) {
+	om.ObjectMeta.Annotations = annotation
+}
+
+//GetClusterName get cluster name
+func (om *Application) GetClusterName() string {
+	return om.ObjectMeta.ClusterName
+}
+
+//SetClusterName set cluster name
+func (om *Application) SetClusterName(clusterName string) {
+	om.ObjectMeta.ClusterName = clusterName
+}
+
 //Operation for application
 type Operation struct {
 	ID             string
@@ -496,6 +556,82 @@ type Agent struct {
 	Key          string
 	LastSyncTime int64
 	AgentInfo    *mesos_master.Response_GetAgents_Agent
+}
+
+//GetName for ObjectMeta
+func (om *Agent) GetName() string {
+	return om.Key
+}
+
+//SetName set object name
+func (om *Agent) SetName(name string) {
+	om.Key = name
+}
+
+//GetNamespace for ObjectMeta
+func (om *Agent) GetNamespace() string {
+	return ""
+}
+
+//SetNamespace set object namespace
+func (om *Agent) SetNamespace(ns string) {
+	//
+}
+
+//GetCreationTimestamp get create timestamp
+func (om *Agent) GetCreationTimestamp() time.Time {
+	return time.Now()
+}
+
+//SetCreationTimestamp set creat timestamp
+func (om *Agent) SetCreationTimestamp(timestamp time.Time) {
+	//
+}
+
+//GetLabels for ObjectMeta
+func (om *Agent) GetLabels() map[string]string {
+	return nil
+}
+
+//SetLabels set objec labels
+func (om *Agent) SetLabels(labels map[string]string) {
+	//
+}
+
+//GetAnnotations for ObjectMeta
+func (om *Agent) GetAnnotations() map[string]string {
+	return nil
+}
+
+//SetAnnotations get annotation name
+func (om *Agent) SetAnnotations(annotation map[string]string) {
+	//
+}
+
+//GetClusterName get cluster name
+func (om *Agent) GetClusterName() string {
+	return ""
+}
+
+//SetClusterName set cluster name
+func (om *Agent) SetClusterName(clusterName string) {
+	//
+}
+
+func (om *Agent) GetAgentIP()string{
+	if om.AgentInfo==nil||om.AgentInfo.AgentInfo==nil {
+		return ""
+	}
+	if len(om.AgentInfo.AgentInfo.Attributes)==0 {
+		return ""
+	}
+	for _,attr :=range om.AgentInfo.AgentInfo.Attributes {
+		if attr.GetName()=="InnerIP" {
+			return attr.GetText().GetValue()
+		}
+	}
+
+	return ""
 }
 
 type Check struct {

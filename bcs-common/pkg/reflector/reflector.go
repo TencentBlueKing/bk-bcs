@@ -205,34 +205,3 @@ type EventInterface interface {
 	OnUpdate(old, cur interface{})
 	OnDelete(obj interface{})
 }
-
-//EventHandler reigster events call back for data change
-type EventHandler struct {
-	AddFn    func(obj interface{})
-	UpdateFn func(old, cur interface{})
-	DeleteFn func(obj interface{})
-}
-
-//OnAdd implements EventInterface
-func (h *EventHandler) OnAdd(obj interface{}) {
-	if h.AddFn == nil {
-		return
-	}
-	h.AddFn(obj)
-}
-
-//OnUpdate implements EventInterface
-func (h *EventHandler) OnUpdate(old, cur interface{}) {
-	if h.UpdateFn == nil {
-		return
-	}
-	h.UpdateFn(old, cur)
-}
-
-//OnDelete implements EventInterface
-func (h *EventHandler) OnDelete(obj interface{}) {
-	if h.DeleteFn == nil {
-		return
-	}
-	h.DeleteFn(obj)
-}
