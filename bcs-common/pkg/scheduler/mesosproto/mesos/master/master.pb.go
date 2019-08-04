@@ -18,9 +18,9 @@ package mesos_master
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import mesos "bcs/bmsf-mesh/bmsf-mesos-adaptor/pkg/datatype/bcs/scheduler/mesosproto/mesos"
-import mesos_maintenance "bcs/bmsf-mesh/bmsf-mesos-adaptor/pkg/datatype/bcs/scheduler/mesosproto/mesos/maintenance"
-import mesos_quota "bcs/bmsf-mesh/bmsf-mesos-adaptor/pkg/datatype/bcs/scheduler/mesosproto/mesos/quota"
+import mesos "bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+import mesos_maintenance "bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/maintenance"
+import mesos_quota "bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/quota"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
