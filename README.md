@@ -49,7 +49,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 
 ## Experience
 
-* [通过BCS解决研发环境的资源复用](./docs/fewatures/practices/通过BCS解决研发环境的资源复用.md)
+* [通过BCS解决研发环境的资源复用](./docs/features/practices/通过BCS解决研发环境的资源复用.md)
 * [通过BCS完成业务的滚动升级](./docs/features/practices/rolling-update-howto.md)
 * [通过BCS完成业务的蓝绿发布](./docs/features/practices/blue-green-deployment.md)
 * [BCS集成istio案例](./docs/features/practices/istio.md) coming soon...
