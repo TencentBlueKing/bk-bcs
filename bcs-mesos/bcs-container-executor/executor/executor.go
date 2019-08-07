@@ -693,7 +693,7 @@ func (driver *BcsExecutorDriver) isConnected() bool {
 //reconnectLoop create loop for reconnect to slave when long connection is down
 func (driver *BcsExecutorDriver) reconnectLoop() {
 	fmt.Fprintln(os.Stdout, "##################ExecutorDriver enter reconnecting loop, retry every 1 seconds#####################")
-	tick := time.NewTicker(time.Second * 15)
+	tick := time.NewTicker(time.Second * 1)
 	//todo(developerJim): add retry handler according MESOS_RECOVERY_TIMEOUT,
 	//a suitable backoff strategy must be implemented later
 	//now is only subscribe simply, actually, we need method reconnect

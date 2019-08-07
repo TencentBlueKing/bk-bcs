@@ -13,7 +13,7 @@
 
 BCS在腾讯内部已经稳定运行三年以上，经过几十款不同架构、不同规模的业务验证，其中规模最大的业务包含五个独立的集群，共600+物理机资源（单机48核以上，128G以上内存），近7000 POD，使用30多个命名空间进行隔离。
 
-BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织，本次开源的部分为BCS后台部分，为蓝鲸PaaS体系下的原子平台，主要输出服务编排和服务治理的能力。BCS的操作页面部分通过蓝鲸SaaS轻应用的方式呈现，可以通过最新的蓝鲸社区版或者企业版获取该SaaS的版本；也可以通过[蓝鲸官方网站](https://bk.tencent.com/)获取该SaaS的后续开源信息。
+BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织，本次开源的部分为BCS后台部分，为蓝鲸PaaS体系下的原子平台，主要输出服务编排和服务治理的能力。BCS的操作页面部分通过蓝鲸SaaS轻应用的方式呈现，可以通过最新的蓝鲸社区版或者企业版获取该SaaS的版本；或者直接获取[SaaS开源代码](https://github.com/Tencent/bk-bcs-saas)自行安装部署与集成。
 
 ## Overview
 
@@ -26,7 +26,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## Features
 
 * 支持基于k8s和Mesos双引擎编排
-  * [了解k8s方案相关信息](https://kubernetes.io/zh/)
+  * [了解k8s方案相关信息](./docs/features/k8s/基于k8s的容器编排.md)
   * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的服务编排.md)
 * 支持异构业务接入
   * 有状态业务解决方案
@@ -49,7 +49,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 
 ## Experience
 
-* [通过BCS解决研发环境的资源复用](./docs/features/practices/通过BCS解决研发环境的资源问题.md)
+* [通过BCS解决研发环境的资源复用](./docs/features/practices/通过BCS解决研发环境的资源复用.md)
 * [通过BCS完成业务的滚动升级](./docs/features/practices/rolling-update-howto.md)
 * [通过BCS完成业务的蓝绿发布](./docs/features/practices/blue-green-deployment.md)
 * [BCS集成istio案例](./docs/features/practices/istio.md) coming soon...
