@@ -563,9 +563,12 @@ func (executor *BcsExecutor) monitorPod() {
 				executor.exeLock.Unlock()
 				return
 			}
+
+			var changed bool
 			podNewStatus := executor.podInst.GetPodStatus()
 			if executor.podStatus != podNewStatus {
 				logs.Infof("Pod status change from %s to %s\n", executor.podStatus, podNewStatus)
+				changed = true
 				executor.podStatus = podNewStatus
 			}
 			switch executor.podStatus {
@@ -587,19 +590,19 @@ func (executor *BcsExecutor) monitorPod() {
 					delete(executor.messages, message.Id)
 				}
 
+				var healthyChanged bool
 				for _, task := range executor.podInst.GetContainerTasks() {
-					var changed bool
 					if task.HealthCheck != nil {
 						if task.RuntimeConf.Healthy != task.HealthCheck.IsHealthy() || task.RuntimeConf.IsChecked != task.HealthCheck.IsTicks() ||
 							task.RuntimeConf.ConsecutiveFailureTimes != task.HealthCheck.ConsecutiveFailure() {
-							changed = true
+							healthyChanged = true
 							task.RuntimeConf.Healthy = task.HealthCheck.IsHealthy()
 							task.RuntimeConf.IsChecked = task.HealthCheck.IsTicks()
 							task.RuntimeConf.ConsecutiveFailureTimes = task.HealthCheck.ConsecutiveFailure()
 						}
 					}
 
-					if reporting%30 == 0 || changed || message != nil {
+					if reporting%30 == 0 || changed || healthyChanged || message != nil {
 						//report data every 30 seconds or pod healthy status changed
 						executor.status = ExecutorStatus_RUNNING
 						logs.Infof("all task is Running, healthy: %t, isChecked: %t, ConsecutiveFailureTimes: %d"+
@@ -608,20 +611,36 @@ func (executor *BcsExecutor) monitorPod() {
 						///for _, info := range containers {
 						info := task.RuntimeConf
 						info.BcsMessage = message
-
 						localInfo := executor.tasks.GetContainer(info.Name)
 						localInfo.Update(info)
+						infoby, _ := json.Marshal(localInfo)
 						taskInfo := executor.tasks.GetTaskByContainerID(info.Name)
-						update := &mesos.TaskStatus{
-							TaskId:  taskInfo.GetTaskId(),
-							State:   mesos.TaskState_TASK_RUNNING.Enum(),
-							Message: proto.String(localInfo.Message),
-							Source:  mesos.TaskStatus_SOURCE_EXECUTOR.Enum(),
-							Healthy: proto.Bool(task.RuntimeConf.Healthy),
+
+						//if changed, send task status update
+						if changed {
+							update := &mesos.TaskStatus{
+								TaskId:  taskInfo.GetTaskId(),
+								State:   mesos.TaskState_TASK_RUNNING.Enum(),
+								Message: proto.String(localInfo.Message),
+								Source:  mesos.TaskStatus_SOURCE_EXECUTOR.Enum(),
+								Healthy: proto.Bool(task.RuntimeConf.Healthy),
+							}
+							update.Data = infoby
+							executor.driver.SendStatusUpdate(update)
+							//if running, send message for task status update
+						} else {
+							bcsMsg := &bcstype.BcsMessage{
+								Id:         time.Now().UnixNano(),
+								TaskID:     taskInfo.GetTaskId(),
+								Type:       bcstype.Msg_TASK_STATUS_UPDATE.Enum(),
+								TaskStatus: infoby,
+							}
+							by, _ := json.Marshal(bcsMsg)
+							_, err := executor.driver.SendFrameworkMessage(string(by))
+							if err != nil {
+								logs.Errorf("send framework message error %s", err.Error())
+							}
 						}
-						update.Data, _ = json.Marshal(localInfo)
-						executor.driver.SendStatusUpdate(update)
-						//}
 					}
 				}
 
