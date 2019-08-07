@@ -997,7 +997,7 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 			message := event.GetMessage()
 			blog.Info("receive message(%s)", message.String())
 			data := message.GetData()
-			var bcsMsg types.BcsMessage
+			var bcsMsg *types.BcsMessage
 			err := json.Unmarshal(data, &bcsMsg)
 			if err != nil {
 				blog.Error("unmarshal bcsmessage(%s) err:%s", data, err.Error())
@@ -1005,7 +1005,9 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 			}
 			switch *bcsMsg.Type {
 			case types.Msg_Res_COMMAND_TASK:
-				go s.ProcessCommandMessage(&bcsMsg)
+				go s.ProcessCommandMessage(bcsMsg)
+			case types.Msg_TASK_STATUS_UPDATE:
+				go s.UpdateTaskStatus(message.GetAgentId().GetValue(), message.GetExecutorId().GetValue(), bcsMsg)
 			default:
 				blog.Error("unknown message type(%s)", *bcsMsg.Type)
 			}
