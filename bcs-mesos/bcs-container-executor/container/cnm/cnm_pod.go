@@ -491,13 +491,6 @@ func (p *DockerPod) containersWatch(cxt context.Context) {
 		logs.Errorf("DockerPod status Error, request %s, but got %s, DockerPod Container watch exit\n", container.PodStatus_STARTING, p.status)
 		return
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Infof("CNMPod panic:\n\n%+v", err)
-			p.runningFailedStop(fmt.Errorf("CNMPod failed because panic"))
-			return
-		}
-	}()
 
 	tick := time.NewTicker(defaultPodWatchInterval * time.Second)
 	//total := defaultErrTolerate * len(p.runningContainer)
@@ -521,17 +514,16 @@ func (p *DockerPod) containerCheck() error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	//logs.Infof("start check container...")
-
 	for name := range p.runningContainer {
 		info, err := p.conClient.InspectContainer(name)
-		info.Healthy = true
 		if err != nil {
 			//todo(developerJim): inspect error, how to handle ?
 			tolerance++
 			logs.Errorf("DockerPod Inspect info from container runtime Err: %s, #########wait for next tick, tolerance: %d#########\n", err.Error(), tolerance)
 			continue
 		}
+
+		info.Healthy = true
 		//logs.Infof("DEBUG %+v\n", info)
 		if p.cnmIPAddr == "" && info.IPAddress != "" {
 			//setting cnm ip address again if get nothing in Init Stage

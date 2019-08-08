@@ -580,13 +580,6 @@ func (p *CNIPod) containersWatch(cxt context.Context) {
 		logs.Errorf("CNIPod status Error, request %s, but got %s, CNIPod Container watch exit\n", container.PodStatus_STARTING, p.status)
 		return
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Infof("CNIPod panic:\n\n%+v", err)
-			p.runningFailedStop(fmt.Errorf("Pod failed because panic"))
-			return
-		}
-	}()
 
 	tick := time.NewTicker(defaultPodWatchInterval * time.Second)
 	for {
@@ -608,16 +601,18 @@ func (p *CNIPod) containerCheck() error {
 	healthyCount := 0
 	p.lock.Lock()
 	defer p.lock.Unlock()
+
 	tolerance := 0
 	for name := range p.runningContainer {
 		info, err := p.conClient.InspectContainer(name)
-		info.Healthy = true
 		if err != nil {
 			//inspect error
 			tolerance++
 			logs.Errorf("CNIPod Inspect info from container runtime Err: %s, #########wait for next tick, tolerance: %d#########\n", err.Error(), tolerance)
 			continue
 		}
+
+		info.Healthy = true
 		task := p.conTasks[name]
 		if task.RuntimeConf.Status != info.Status {
 			//status changed

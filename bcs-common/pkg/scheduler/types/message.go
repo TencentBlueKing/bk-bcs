@@ -14,8 +14,8 @@
 package types
 
 import (
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	//commtypes "bcs/bmsf-mesh/pkg/datatype/bcs/common/types"
 )
 
 //Message discribe all msg from bcs scheduler to bcs executor
@@ -23,39 +23,29 @@ import (
 type Msg_Type int32
 
 const (
-	Msg_UNKNOWN            Msg_Type = 0
-	Msg_LOCALFILE          Msg_Type = 1
-	Msg_SIGNAL             Msg_Type = 2
-	Msg_ENV                Msg_Type = 3
-	Msg_REMOTE             Msg_Type = 4
-	Msg_SECRET             Msg_Type = 5
-	Msg_TASK_STATUS_QUERY  Msg_Type = 6
-	Msg_ENV_REMOTE         Msg_Type = 7
-	Msg_UPDATE_TASK        Msg_Type = 8
-	Msg_COMMIT_TASK        Msg_Type = 9
-	Msg_RELOAD_TASK        Msg_Type = 10
-	Msg_RESTART_TASK       Msg_Type = 11
-	Msg_Req_COMMAND_TASK   Msg_Type = 12
-	Msg_Res_COMMAND_TASK   Msg_Type = 13
-	Msg_TASK_STATUS_UPDATE Msg_Type = 14
+	Msg_UNKNOWN           Msg_Type = 0
+	Msg_LOCALFILE         Msg_Type = 1
+	Msg_SIGNAL            Msg_Type = 2
+	Msg_ENV               Msg_Type = 3
+	Msg_REMOTE            Msg_Type = 4
+	Msg_SECRET            Msg_Type = 5
+	Msg_TASK_STATUS_QUERY Msg_Type = 6
+	Msg_ENV_REMOTE        Msg_Type = 7
+	Msg_UPDATE_TASK       Msg_Type = 8
+	Msg_COMMIT_TASK       Msg_Type = 9
 )
 
 const (
-	Msg_UNKNOWN_STR            string = "unknown"
-	Msg_LOCALFILE_STR          string = "localfile"
-	Msg_SIGNAL_STR             string = "signal"
-	Msg_ENV_STR                string = "env"
-	Msg_REMOTE_STR             string = "remote"
-	Msg_SECRET_STR             string = "secret"
-	Msg_TASK_STATUS_QUERY_STR  string = "task_status_query"
-	Msg_ENV_REMOTE_STR         string = "env_remote"
-	Msg_UPDATE_TASK_STR        string = "update_task"
-	Msg_COMMIT_TASK_STR        string = "commit_task"
-	Msg_RELOAD_TASK_STR        string = "reload_task"
-	Msg_RESTART_TASK_STR       string = "restart_task"
-	Msg_Req_COMMAND_TASK_STR   string = "request_command_task"
-	Msg_Res_COMMAND_TASK_STR   string = "response_command_task"
-	Msg_TASK_STATUS_UPDATE_STR string = "task_status_update"
+	Msg_UNKNOWN_STR           string = "unknown"
+	Msg_LOCALFILE_STR         string = "localfile"
+	Msg_SIGNAL_STR            string = "signal"
+	Msg_ENV_STR               string = "env"
+	Msg_REMOTE_STR            string = "remote"
+	Msg_SECRET_STR            string = "secret"
+	Msg_TASK_STATUS_QUERY_STR string = "task_status_query"
+	Msg_ENV_REMOTE_STR        string = "env_remote"
+	Msg_UPDATE_TASK_STR       string = "update_task"
+	Msg_COMMIT_TASK_STR       string = "commit_task"
 )
 
 type Secret_Type int32
@@ -83,11 +73,6 @@ type BcsMessage struct {
 	TaskStatusQuery     *Msg_TaskStatusQuery     `json:",omitempty"`
 	UpdateTaskResources *Msg_UpdateTaskResources `json:",omitempty"`
 	CommitTask          *Msg_CommitTask          `json:",omitempty"`
-	ReloadTask          *Msg_ReloadTasks         `json:",omitempty"`
-	RestartTask         *Msg_RestartTasks        `json:",omitempty"`
-	RequestCommandTask  *RequestCommandTask      `json:",omitempty"`
-	ResponseCommandTask *ResponseCommandTask     `json:",omitempty"`
-	TaskStatus          []byte                   `json:",omitempty"`
 
 	Status MsgStatus_type
 	//if status=failed, then message is failed info
@@ -166,35 +151,9 @@ type Msg_CommitTask struct {
 	Tasks []*CommitTask
 }
 
-type Msg_ReloadTasks struct {
-}
-
-type Msg_RestartTasks struct {
-}
-
 type CommitTask struct {
 	TaskId *string
 	Image  *string
-}
-
-type RequestCommandTask struct {
-	ID          string   //id
-	TaskId      string   //application taskid
-	ContainerId string   //docker container id
-	Env         []string //env
-	Cmd         []string //command
-	User        string   //user
-	WorkingDir  string   //work dir
-	Privileged  bool
-}
-
-type ResponseCommandTask struct {
-	ID          string //id
-	TaskId      string //application taskid
-	ContainerId string //container id
-	Status      types.TaskCommandStatus
-	Message     string
-	CommInspect *types.CommandInspectInfo
 }
 
 func (x Msg_Type) Enum() *Msg_Type {
