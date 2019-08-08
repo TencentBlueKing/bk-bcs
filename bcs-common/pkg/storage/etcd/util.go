@@ -11,10 +11,6 @@
  *
  */
 
-package discovery
+package etcd
 
-//Mesh shoue
-type Mesh struct {
-	Source      string `json:"source"`      //definition request source
-	Destination string `json:"destination"` //definition request destination
-}
+//util is tools collection for etcd client
