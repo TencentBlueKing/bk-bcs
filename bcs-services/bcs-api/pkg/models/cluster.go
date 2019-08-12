@@ -69,9 +69,3 @@ type RegisterToken struct {
 	Token     string    `json:"token" gorm:"size:256"`
 	CreatedAt time.Time `json:"created_at"`
 }
-
-type TkeLbSubnet struct {
-	ID            uint   `gorm:"primary_key"`
-	ClusterRegion string `gorm:"unique;not null"`
-	SubnetId      string `gorm:"size:256;not null"`
-}
