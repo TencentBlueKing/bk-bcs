@@ -32,6 +32,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -112,8 +113,23 @@ func Run(cfg *types.CmdConfig) error {
 	}
 
 	ccStorage.Run(ccCxt)
-
 	rdCxt, _ := context.WithCancel(rootCxt)
+
+	go func() {
+		retry, rdErr := registerZkEndpoints(cfg, rdCxt)
+		for retry == true {
+			if rdErr != nil {
+				blog.Error("registerZkEndpoints err: %s", rdErr.Error())
+			}
+			time.Sleep(3 * time.Second)
+			blog.Info("retry registerZkEndpoints...")
+			retry, rdErr = registerZkEndpoints(cfg, rdCxt)
+		}
+		if rdErr != nil {
+			blog.Error("registerZkEndpoints err: %s, and exit", rdErr.Error())
+		}
+	}()
+
 	blog.Info("after storage created, to run server...")
 	retry, rdErr := runServer(cfg, rdCxt, ccStorage)
 	for retry == true {
@@ -385,6 +401,88 @@ func RefreshDCHost(cfg *types.CmdConfig, rfCxt context.Context, storage storage.
 				servermetric.SetDCStatus(false)
 			}
 
+		} // end select
+	} // end for
+}
+
+func registerZkEndpoints(cfg *types.CmdConfig, rdCxt context.Context) (bool, error) {
+	clusterinfo := strings.Split(cfg.ClusterInfo, "/")
+	regDiscv := rd.NewRegDiscoverEx(clusterinfo[0], time.Second*10)
+	if regDiscv == nil {
+		return false, fmt.Errorf("registerZkEndpoints(%s) return nil", clusterinfo[0])
+	}
+	blog.Info("registerZkEndpoints(%s) succ", clusterinfo[0])
+
+	err := regDiscv.Start()
+	if err != nil {
+		blog.Error("registerZkEndpoints regDisv start error(%s)", err.Error())
+		return false, err
+	}
+	blog.Info("registerZkEndpoints RegDiscover start succ")
+
+	host, err := os.Hostname()
+	if err != nil {
+		blog.Error("registerZkEndpoints mesoswatcher get hostname err: %s", err.Error())
+		host = "UNKOWN"
+	}
+	var regInfo commtype.MesosDataWatchServInfo
+	regInfo.ServerInfo.Cluster = cfg.ClusterID
+	regInfo.ServerInfo.IP = cfg.Address
+	regInfo.ServerInfo.Port = 0
+	regInfo.ServerInfo.MetricPort = cfg.MetricPort
+	regInfo.ServerInfo.HostName = host
+	regInfo.ServerInfo.Scheme = cfg.ServerSchem
+	regInfo.ServerInfo.Pid = os.Getpid()
+	regInfo.ServerInfo.Version = version.GetVersion()
+	data, err := json.Marshal(regInfo)
+	key := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDATAWATCH + "/" + cfg.Address
+	discvPath := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDATAWATCH
+
+	err = regDiscv.RegisterService(key, []byte(data))
+	if err != nil {
+		blog.Error("registerZkEndpoints RegisterService(%s) error(%s)", key, err.Error())
+		regDiscv.Stop()
+		return true, err
+	}
+	blog.Info("registerZkEndpoints RegisterService(%s:%s) succ", key, data)
+
+	discvEvent, err := regDiscv.DiscoverService(discvPath)
+	if err != nil {
+		blog.Error("registerZkEndpoints DiscoverService(%s) error(%s)", discvPath, err.Error())
+		regDiscv.Stop()
+		return true, err
+	}
+	blog.Info("registerZkEndpoints DiscoverService(%s) succ", discvPath)
+
+	for {
+		select {
+		case <-rdCxt.Done():
+			blog.V(3).Infof("registerZkEndpoints asked to exit")
+			regDiscv.Stop()
+			return false, nil
+		case event := <-discvEvent:
+			blog.Info("registerZkEndpoints get discover event")
+			if event.Err != nil {
+				blog.Error("registerZkEndpoints get discover event err:%s", event.Err.Error())
+				regDiscv.Stop()
+				return true, event.Err
+			}
+
+			registerd := false
+			for i, server := range event.Server {
+				blog.Info("registerZkEndpoints get discover event: server[%d]: %s %s", i, event.Key, server)
+				if server == string(data) {
+					blog.Infof("registerZkEndpoints get discover event, and myself is registered")
+					registerd = true
+					break
+				}
+			}
+
+			if !registerd {
+				blog.Infof("registerZkEndpoints get discover event, server list len(%d), but cannot find myself", len(event.Server))
+				regDiscv.Stop()
+				return true, fmt.Errorf("current server is nil")
+			}
 		} // end select
 	} // end for
 }
