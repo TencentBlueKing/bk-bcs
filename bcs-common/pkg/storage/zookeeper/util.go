@@ -201,7 +201,7 @@ func (n *Node) selfLoop() {
 		n.config.PushEventFunc(watch.EventUpdated, n.selfpath, rawBytes)
 	}
 	//wait for next event
-	forceTick := time.NewTicker(time.Second * 45)
+	forceTick := time.NewTicker(time.Second * 300)
 	for {
 		select {
 		case <-n.watchCxt.Done():

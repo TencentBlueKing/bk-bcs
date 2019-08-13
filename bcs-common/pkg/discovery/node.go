@@ -88,10 +88,10 @@ func NewNodeController(hosts []string, eventHandler reflector.EventInterface) (N
 	//create listwatcher
 	listwatcher := &reflector.ListWatch{
 		ListFn: func() ([]meta.Object, error) {
-			return nodeclient.List(context.Background(), "/agent", nil)
+			return nodeclient.List(context.Background(), "agent", nil)
 		},
 		WatchFn: func() (watch.Interface, error) {
-			return nodeclient.Watch(context.Background(), "/agent", "", nil)
+			return nodeclient.Watch(context.Background(), "agent", "", nil)
 		},
 	}
 	cxt, stopfn := context.WithCancel(context.Background())
