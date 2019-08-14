@@ -13,8 +13,6 @@
 
 package storage
 
-//http://daizuozhuo.github.io/etcd-service-discovery/
-
 //Event for callback register
 type Event interface {
 	AddEvent(key string, value []byte)

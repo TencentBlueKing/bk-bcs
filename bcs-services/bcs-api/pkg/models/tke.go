@@ -11,10 +11,22 @@
  *
  */
 
-package discovery
+package models
 
-//Mesh shoue
-type Mesh struct {
-	Source      string `json:"source"`      //definition request source
-	Destination string `json:"destination"` //definition request destination
+import "time"
+
+type TkeLbSubnet struct {
+	ID            uint   `gorm:"primary_key"`
+	ClusterRegion string `gorm:"unique;not null"`
+	SubnetId      string `gorm:"size:256;not null"`
+}
+
+type TkeCidr struct {
+	ID        uint   `gorm:"primary_key"`
+	Cidr      string `gorm:"unique;not null"`
+	IpNumber  uint   `gorm:"not null"`
+	Status    string `gorm:"not null"`
+	Cluster   *string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
