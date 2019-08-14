@@ -11,28 +11,22 @@
  *
  */
 
-package sqlstore
+package models
 
-import (
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-)
+import "time"
 
-func SaveTkeLbSubnet(clusterRegion, subnetId string) error {
-	var tkeLbSubnet m.TkeLbSubnet
-	dbScoped := GCoreDB.Where(m.TkeLbSubnet{ClusterRegion: clusterRegion}).Assign(
-		m.TkeLbSubnet{
-			SubnetId: subnetId,
-		},
-	).FirstOrCreate(&tkeLbSubnet)
-
-	return dbScoped.Error
+type TkeLbSubnet struct {
+	ID            uint   `gorm:"primary_key"`
+	ClusterRegion string `gorm:"unique;not null"`
+	SubnetId      string `gorm:"size:256;not null"`
 }
 
-func GetSubnetByClusterRegion(clusterRegion string) *m.TkeLbSubnet {
-	tkeLbSubnet := m.TkeLbSubnet{}
-	GCoreDB.Where(&m.TkeLbSubnet{ClusterRegion: clusterRegion}).First(&tkeLbSubnet)
-	if tkeLbSubnet.ID != 0 {
-		return &tkeLbSubnet
-	}
-	return nil
+type TkeCidr struct {
+	ID        uint   `gorm:"primary_key"`
+	Cidr      string `gorm:"unique;not null"`
+	IpNumber  uint   `gorm:"not null"`
+	Status    string `gorm:"not null"`
+	Cluster   *string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
