@@ -27,7 +27,6 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
 	"github.com/emicklei/go-restful"
-	"time"
 )
 
 type UpdateCredentialsForm struct {
@@ -153,38 +152,10 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 
 	tkeCluster := tke.NewTkeCluster(cluster.ID, externalClusterInfo.TkeClusterId, externalClusterInfo.TkeClusterRegion)
 
-	err := tkeCluster.BindClusterLb()
+	err := tkeCluster.SyncClusterCredentials()
 	if err != nil {
 		message := err.Error()
-		WriteServerError(response, "CANNOT_BIND_TKE_CLUSTER_LB", message)
-		return
-	}
-
-	var isBinded bool
-	// wait for BindMasterVipLoadBalancer to be successful
-	for i := 0; i < 6; i++ {
-		time.Sleep(15 * time.Second)
-		isBinded, err = tkeCluster.GetMasterVip()
-		if err != nil {
-			message := err.Error()
-			WriteServerError(response, "GET_TKE_MASTER_VIP_FAILED", message)
-			return
-		}
-		if isBinded {
-			break
-		}
-	}
-
-	if !isBinded {
-		message := fmt.Sprintf("failed to bind lb for tke cluster: %s", cluster.ID)
-		WriteServerError(response, "BIND_TKE_CLUSTER_LB_FAILED", message)
-		return
-	}
-
-	err = tkeCluster.SyncClusterCredentials()
-	if err != nil {
-		message := err.Error()
-		WriteServerError(response, "CANNOT_SYNC_TKE_CREDENTIALS", message)
+		WriteClientError(response, "CANNOT_SYNC_TKE_CREDENTIALS", message)
 		return
 	}
 	response.WriteEntity(types.EmptyResponse{})

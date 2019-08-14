@@ -119,7 +119,7 @@ func CreatePlainCluster(request *restful.Request, response *restful.Response) {
 type CreateBCSClusterForm struct {
 	ID               string `json:"id" validate:"required"`
 	ProjectID        string `json:"project_id" validate:"required"`
-	ClusterType      uint   `json:"cluster_type"`
+	ClusterType      string `json:"cluster_type"`
 	TkeClusterID     string `json:"tke_cluster_id"`
 	TkeClusterRegion string `json:"tke_cluster_region"`
 }
@@ -160,14 +160,23 @@ func CreateBCSCluster(request *restful.Request, response *restful.Response) {
 		CreatorId: user.ID,
 	}
 
-	if form.ClusterType == 0 {
-		form.ClusterType = utils.BcsK8sCluster
+	var clusterType uint
+	if form.ClusterType == "" || form.ClusterType == "k8s" {
+		clusterType = utils.BcsK8sCluster
+	} else if form.ClusterType == "mesos" {
+		clusterType = utils.BcsMesosCluster
+	} else if form.ClusterType == "tke" {
+		clusterType = utils.BcsTkeCluster
+	} else {
+		message := fmt.Sprintf("errcode: %d, create failed, cluster type invalid", common.BcsErrApiBadRequest)
+		WriteClientError(response, "CLUSTER_TYPE_INVALID", message)
+		return
 	}
 	externalClusterInfo = &m.BCSClusterInfo{
 		ClusterId:        clusterId,
 		SourceProjectId:  form.ProjectID,
 		SourceClusterId:  form.ID,
-		ClusterType:      form.ClusterType,
+		ClusterType:      clusterType,
 		TkeClusterId:     form.TkeClusterID,
 		TkeClusterRegion: form.TkeClusterRegion,
 	}
