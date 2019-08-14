@@ -34,11 +34,11 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 		reportMetrics("ipLean", stateLogicFailure, started)
 		return nil, fmt.Errorf("host %s do not exist", lease.Host)
 	}
-	hostData, err := srv.store.Get(hostpath)
-	if err != nil {
-		blog.Errorf("get host %s info for container %s failed, %v", lease.Host, lease.Container, err)
+	hostData, gerr := srv.store.Get(hostpath)
+	if gerr != nil {
+		blog.Errorf("get host %s info for container %s failed, %v", lease.Host, lease.Container, gerr)
 		reportMetrics("ipLean", stateStorageFailure, started)
-		return nil, err
+		return nil, gerr
 	}
 	host := &types.HostInfo{}
 	if err := json.Unmarshal(hostData, host); err != nil {
@@ -96,11 +96,11 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 		lastStatus = types.IPStatus_RESERVED
 	}
 	//get ip resource data, move node
-	ipData, err := srv.store.Get(ippath)
-	if err != nil {
-		blog.Errorf("get %s data err, %v", ippath, err)
+	ipData, ipErr := srv.store.Get(ippath)
+	if ipErr != nil {
+		blog.Errorf("get %s data err, %v", ippath, ipErr)
 		reportMetrics("ipLean", stateStorageFailure, started)
-		return nil, fmt.Errorf("get ip %s data failed, %s", ippath, err.Error())
+		return nil, fmt.Errorf("get ip %s data failed, %s", ippath, ipErr.Error())
 	}
 	ipInst := &types.IPInst{}
 	if err := json.Unmarshal(ipData, ipInst); err != nil {

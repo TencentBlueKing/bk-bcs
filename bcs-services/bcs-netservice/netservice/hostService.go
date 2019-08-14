@@ -107,62 +107,9 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 
 	//try to delete ips from pool
 	if len(ipsDel) != 0 {
-		poolKey := hostInfo.Cluster + "/" + hostInfo.Pool
-		poolInfo, err := srv.ListPoolByKey(poolKey)
-		var ipsDelReserved []string
-		var ipsDelAvailable []string
-		for _, ip := range ipsDel {
-			if err != nil {
-				blog.Errorf("get pool info error, err %s", err.Error())
-			}
-			foundFlag := false
-			for _, reservedIP := range poolInfo.Reserved {
-				if reservedIP == ip {
-					ipsDelReserved = append(ipsDelReserved, reservedIP)
-					foundFlag = true
-					break
-				}
-			}
-			for _, availableIP := range poolInfo.Available {
-				if availableIP == ip {
-					ipsDelAvailable = append(ipsDelAvailable, availableIP)
-					foundFlag = true
-					break
-				}
-			}
-			for _, activeIP := range poolInfo.Active {
-				if activeIP == ip {
-					blog.Errorf("ip %s is active, cannot be deleted", ip)
-					reportMetrics("deleteHost", stateLogicFailure, started)
-					return fmt.Errorf("ip %s is active, cannot be deleted", ip)
-				}
-			}
-			//dose not find in pool, error
-			//TODO: deal with delete failure
-			if !foundFlag {
-				blog.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
-				//if the ip is not found in reserved or available, just show error log, don't return
-				//So user can do a second chance when ip zk node deletion failed
-				//return fmt.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
-			}
-		}
-		for _, ip := range ipsDelReserved {
-			ipPath := filepath.Join(defaultPoolInfoPath, hostInfo.Cluster, hostInfo.Pool, "reserved", ip)
-			if _, err := srv.store.Delete(ipPath); err != nil {
-				blog.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
-				reportMetrics("deleteHost", stateStorageFailure, started)
-				return fmt.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
-			}
-			blog.Infof("delete path %s successfully", ipPath)
-		}
-		for _, ip := range ipsDelAvailable {
-			ipPath := filepath.Join(defaultPoolInfoPath, hostInfo.Cluster, hostInfo.Pool, "available", ip)
-			if _, err := srv.store.Delete(ipPath); err != nil {
-				blog.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
-				reportMetrics("deleteHost", stateStorageFailure, started)
-				return fmt.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
-			}
-			blog.Infof("delete path %s successfully", ipPath)
+		if err := srv.cleanIPAssignToHost(&hostInfo, ipsDel); err != nil {
+			reportMetrics("deleteHost", stateLogicFailure, started)
+			return err
 		}
 	}
 
@@ -207,6 +154,68 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		}
 	}*/
 	reportMetrics("deleteHost", stateSuccess, started)
+	return nil
+}
+
+// cleanIPAssignToHost some IP addresses are assigned to host, and can only use
+// in this host. when we delete this host from netservice, we need to clean these
+// IP addresses.
+func (srv *NetService) cleanIPAssignToHost(hostInfo *types.HostInfo, ips []string) error {
+	poolKey := hostInfo.Cluster + "/" + hostInfo.Pool
+	poolInfo, err := srv.ListPoolByKey(poolKey)
+	if err != nil {
+		blog.Errorf("get pool info error, err %s", err.Error())
+		return err
+	}
+	var ipsDelReserved []string
+	var ipsDelAvailable []string
+	for _, ip := range ips {
+		foundFlag := false
+		for _, reservedIP := range poolInfo.Reserved {
+			if reservedIP == ip {
+				ipsDelReserved = append(ipsDelReserved, reservedIP)
+				foundFlag = true
+				break
+			}
+		}
+		for _, availableIP := range poolInfo.Available {
+			if availableIP == ip {
+				ipsDelAvailable = append(ipsDelAvailable, availableIP)
+				foundFlag = true
+				break
+			}
+		}
+		for _, activeIP := range poolInfo.Active {
+			if activeIP == ip {
+				blog.Errorf("ip %s is active, cannot be deleted", ip)
+				return fmt.Errorf("ip %s is active, cannot be deleted", ip)
+			}
+		}
+		//dose not find in pool, error
+		//TODO: deal with delete failure
+		if !foundFlag {
+			blog.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
+			//if the ip is not found in reserved or available, just show error log, don't return
+			//So user can do a second chance when ip zk node deletion failed
+			//return fmt.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
+		}
+	}
+	for _, ip := range ipsDelReserved {
+		ipPath := filepath.Join(defaultPoolInfoPath, hostInfo.Cluster, hostInfo.Pool, "reserved", ip)
+		if _, err := srv.store.Delete(ipPath); err != nil {
+			blog.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
+			return fmt.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
+		}
+		blog.Infof("delete path %s successfully", ipPath)
+	}
+	for _, ip := range ipsDelAvailable {
+		ipPath := filepath.Join(defaultPoolInfoPath, hostInfo.Cluster, hostInfo.Pool, "available", ip)
+		if _, err := srv.store.Delete(ipPath); err != nil {
+			blog.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
+			return fmt.Errorf("failed delete path %s, err: %s", ipPath, err.Error())
+		}
+		blog.Infof("delete path %s successfully", ipPath)
+	}
 	return nil
 }
 
