@@ -34,11 +34,11 @@ func (srv *NetService) UpdateAvailableIPInstance(ipinst *types.IPInst) error {
 		return fmt.Errorf("lost available ip instance %s", ipinst.IPAddr)
 	}
 	//get ip instance data
-	data, err := srv.store.Get(instpath)
-	if err != nil {
-		blog.Errorf("Get no ip instance data from path %s failed, %s", instpath, err)
+	data, instErr := srv.store.Get(instpath)
+	if instErr != nil {
+		blog.Errorf("Get no ip instance data from path %s failed, %s", instpath, instErr)
 		reportMetrics("updateAvailableIPInstance", stateStorageFailure, started)
-		return fmt.Errorf("got instance data failed, %s", err)
+		return fmt.Errorf("got instance data failed, %s", instErr)
 	}
 	oldInst := &types.IPInst{}
 	if err := json.Unmarshal(data, oldInst); err != nil {
@@ -66,6 +66,7 @@ func (srv *NetService) UpdateAvailableIPInstance(ipinst *types.IPInst) error {
 	return nil
 }
 
+//TransferIPAttribute change IP status
 func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (int, error) {
 	started := time.Now()
 	//try to lock
@@ -93,13 +94,13 @@ func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (in
 		srcIPPath := filepath.Join(srcSubPath, IP)
 		destIPPath := filepath.Join(destSubPath, IP)
 		//delete old node
-		ipData, err := srv.store.Delete(srcIPPath)
-		if err != nil {
-			blog.Errorf("delete src ip %s failed:%s", srcIPPath, err.Error())
+		ipData, dErr := srv.store.Delete(srcIPPath)
+		if dErr != nil {
+			blog.Errorf("delete src ip %s failed:%s", srcIPPath, dErr.Error())
 			failedIPList := make([]string, len(tranInput.IPList)-i)
 			copy(failedIPList, tranInput.IPList[i:])
 			reportMetrics("transferIPAttribute", stateStorageFailure, started)
-			return failedCode, fmt.Errorf("delete src ip %s,failedIPList %v failed:%s", srcIPPath, failedIPList, err.Error())
+			return failedCode, fmt.Errorf("delete src ip %s,failedIPList %v failed:%s", srcIPPath, failedIPList, dErr.Error())
 		}
 		ipInst := &types.IPInst{}
 		if err := json.Unmarshal(ipData, ipInst); err != nil {
@@ -113,13 +114,13 @@ func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (in
 		ipInst.LastStatus = tranInput.SrcStatus
 		ipInst.Status = tranInput.DestStatus
 		ipInst.Update = time.Now().Format("2006-01-02 15:04:05")
-		destIPData, err := json.Marshal(ipInst)
-		if err != nil {
-			blog.Errorf("Marshal %v failed:%s", ipInst, err.Error())
+		destIPData, jsonErr := json.Marshal(ipInst)
+		if jsonErr != nil {
+			blog.Errorf("Marshal %v failed:%s", ipInst, jsonErr.Error())
 			failedIPList := make([]string, len(tranInput.IPList)-i)
 			copy(failedIPList, tranInput.IPList[i:])
 			reportMetrics("transferIPAttribute", stateJSONFailure, started)
-			return failedCode, fmt.Errorf("Marshal %v failed:%s,failedIPList %s", ipInst, err.Error(), failedIPList)
+			return failedCode, fmt.Errorf("Marshal %v failed:%s,failedIPList %s", ipInst, jsonErr.Error(), failedIPList)
 		}
 		//add dest node
 		if err := srv.store.Add(destIPPath, destIPData); err != nil {
