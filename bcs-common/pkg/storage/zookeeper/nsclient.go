@@ -437,7 +437,7 @@ func (e *nsWatch) WatchEvent() <-chan watch.Event {
 }
 
 //pushEventFunc callback event when object data trigger
-//warnning(jimwu): nsWatch do not support detail data node watch
+//warnning(DeveloperJim): nsWatch do not support detail data node watch
 func (e *nsWatch) pushEventFunc(eventType watch.EventType, nodepath string, rawBytes []byte) {
 	if e.isStop {
 		return
