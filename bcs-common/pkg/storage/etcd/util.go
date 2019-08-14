@@ -11,28 +11,6 @@
  *
  */
 
-package sqlstore
+package etcd
 
-import (
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-)
-
-func SaveTkeLbSubnet(clusterRegion, subnetId string) error {
-	var tkeLbSubnet m.TkeLbSubnet
-	dbScoped := GCoreDB.Where(m.TkeLbSubnet{ClusterRegion: clusterRegion}).Assign(
-		m.TkeLbSubnet{
-			SubnetId: subnetId,
-		},
-	).FirstOrCreate(&tkeLbSubnet)
-
-	return dbScoped.Error
-}
-
-func GetSubnetByClusterRegion(clusterRegion string) *m.TkeLbSubnet {
-	tkeLbSubnet := m.TkeLbSubnet{}
-	GCoreDB.Where(&m.TkeLbSubnet{ClusterRegion: clusterRegion}).First(&tkeLbSubnet)
-	if tkeLbSubnet.ID != 0 {
-		return &tkeLbSubnet
-	}
-	return nil
-}
+//util is tools collection for etcd client

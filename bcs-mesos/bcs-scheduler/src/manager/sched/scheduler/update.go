@@ -176,7 +176,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 
 	taskGroupStatus := taskGroup.Status
 	// update taskGroup Status according to tasks status
-	taskgroupUpdated, err := s.updateTaskgroup(taskGroup, agentID, executorID)
+	taskgroupUpdated, err := s.updateTaskgroup(taskGroup, agentID.GetValue(), executorID.GetValue())
 	if err != nil {
 		blog.Error("status report: updateTaskgroup %s failed", taskGroupID)
 		return
@@ -378,16 +378,16 @@ func (s *Scheduler) preCheckTaskStatusReport(status *mesos.TaskStatus) bool {
 	return true
 }
 
-func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentId *mesos.AgentID, executorId *mesos.ExecutorID) (bool, error) {
+func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentId, executorId string) (bool, error) {
 	isUpdated := false
 
-	if nil != agentId && taskGroup.AgentID != *(agentId.Value) {
-		taskGroup.AgentID = *(agentId.Value)
+	if "" != agentId && taskGroup.AgentID != agentId {
+		taskGroup.AgentID = agentId
 		isUpdated = true
 	}
 
-	if nil != executorId && taskGroup.ExecutorID != *(executorId.Value) {
-		taskGroup.ExecutorID = *(executorId.Value)
+	if "" != executorId && taskGroup.ExecutorID != executorId {
+		taskGroup.ExecutorID = executorId
 		isUpdated = true
 	}
 
@@ -739,4 +739,172 @@ func (s *Scheduler) applicationStatusUpdated(app *types.Application, originStatu
 	blog.Infof("application(%s.%s) status change from %s to %s", app.RunAs, app.ID, originStatus, app.Status)
 
 	return
+}
+
+//current only update task status running by mesos message, if task status changed by mesos status update
+func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.BcsMessage) {
+	taskId := bcsMsg.TaskID.GetValue()
+	taskGroupID := store.GetTaskGroupID(taskId)
+	if taskGroupID == "" {
+		blog.Error("message status report: can not get taskGroupId from taskID(%s)", taskId)
+		return
+	}
+	runAs, appId := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	s.store.LockApplication(runAs + "." + appId)
+	defer s.store.UnLockApplication(runAs + "." + appId)
+
+	// ack and check
+	if s.preCheckMessageTaskStatus(agentID, executorID, taskId) == false {
+		return
+	}
+
+	now := time.Now().Unix()
+	updateTime := now - MAX_DATA_UPDATE_INTERVAL
+	task, err := s.store.FetchTask(taskId)
+	if task == nil {
+		blog.Warn("message status report: fetch task(%s) return nil", taskId)
+		return
+	}
+
+	var taskInfo *containertypes.BcsContainerInfo
+	err = json.Unmarshal(bcsMsg.TaskStatus, &taskInfo)
+	if err != nil {
+		blog.Errorf("message Unmarshal data(%s) to types.BcsMessage error %s", string(bcsMsg.TaskStatus), err.Error())
+		return
+	}
+	oldStatus := task.Status
+	oldData := task.StatusData
+	reportStatus := ""
+	// update task status
+	switch strings.ToLower(taskInfo.Status) {
+	case "running":
+		blog.V(3).Infof("message status report: Task(%s) Running", taskId)
+		reportStatus = types.TASK_STATUS_RUNNING
+	default:
+		blog.Error("message status report: Unprocessed task status (%d), TaskID:%s", taskInfo, taskId)
+		return
+	}
+
+	task.Status = reportStatus
+	task.StatusData = string(bcsMsg.TaskStatus)
+
+	var msg *types.BcsMessage
+	if task.StatusData != oldData {
+		blog.Info("message status report: task %s, statusData change: %s --> %s", taskId, oldData, task.StatusData)
+		var containerInfo *containertypes.BcsContainerInfo
+		err = json.Unmarshal([]byte(task.StatusData), &containerInfo)
+		if err != nil {
+			blog.Errorf("message unmarshal task statusdata(%s) error: %s", task.StatusData, err.Error())
+		} else {
+			msg = containerInfo.BcsMessage
+			task.IsChecked = containerInfo.IsChecked
+			task.ConsecutiveFailureTimes = uint32(containerInfo.ConsecutiveFailureTimes)
+		}
+	}
+	if oldData != "" && task.StatusData == "" {
+		blog.Warn("message status report: Task %s, Status: %s, reported StatusData is empty, keep oldData(%s)", taskId, task.Status, oldData)
+		task.StatusData = oldData
+	}
+
+	healthyChg := s.checkTaskHealth(task, taskGroupID, taskInfo.Healthy)
+	taskUpdated := false
+	if task.Status != oldStatus || task.StatusData != oldData || healthyChg {
+		task.UpdateTime = now
+		taskUpdated = true
+	}
+
+	if taskUpdated || task.LastUpdateTime <= updateTime {
+		blog.V(3).Infof("message status report: Save Task %s, Status: %s, StatusData: %s, Healthy: %t",
+			taskId, task.Status, task.StatusData, task.Healthy)
+	} else {
+		blog.V(3).Infof("task %s status report, not change", taskId)
+		return
+	}
+	task.LastUpdateTime = now
+	if err = s.store.SaveTask(task); err != nil {
+		blog.Error("message status report: SaveTask %s err: %s", taskId, err.Error())
+		return
+	}
+
+	// NOTE: in function FetchTaskGroup, tasks` data will update to taskgroup, we must fetch taskgroup here again
+	taskGroup, err := s.store.FetchTaskGroup(taskGroupID)
+	if err != nil {
+		blog.Error("message status report: Fetch task group %s failed: %s", taskGroupID, err.Error())
+		return
+	}
+	blog.Info("message status report: task(%s) status(%s), taskgroup(%s)", taskId, task.Status, taskGroup.Status)
+
+	taskGroupStatus := taskGroup.Status
+	// update taskGroup Status according to tasks status
+	taskgroupUpdated, err := s.updateTaskgroup(taskGroup, agentID, executorID)
+	if err != nil {
+		blog.Error("status report: updateTaskgroup %s failed", taskGroupID)
+		return
+	}
+	if taskUpdated == true {
+		taskgroupUpdated = true
+	}
+	if taskgroupUpdated == true {
+		taskGroup.UpdateTime = now
+	}
+
+	// taskgroup info changed
+	if taskGroup.LastUpdateTime <= updateTime || taskgroupUpdated == true {
+		s.ServiceMgr.TaskgroupUpdate(taskGroup)
+		if taskGroup.Status != taskGroupStatus {
+			s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
+		}
+		if msg != nil {
+			taskGroup.BcsEventMsg = msg
+		}
+		taskGroup.LastUpdateTime = now
+		//save taskGroup into zk, in this function, task will alse be saved
+		if err = s.store.SaveTaskGroup(taskGroup); err != nil {
+			blog.Error("message status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
+			return
+		}
+	}
+
+	s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
+	return
+}
+
+func (s *Scheduler) preCheckMessageTaskStatus(agentID, executorID, taskId string) bool {
+
+	taskGroupID := store.GetTaskGroupID(taskId)
+	runAs, appId := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	task, err := s.store.FetchTask(taskId)
+	if err != nil && err != zk.ErrNoNode {
+		blog.Warn("message status report: fetch task(%s) err(%s)", taskId, err.Error())
+		return false
+	}
+	blog.V(3).Infof("message status report: get status report: task %s, executorID: %s, agentID: %s ",
+		taskId, executorID, agentID)
+
+	if task == nil {
+		blog.Warn("message status report: task(%s) not exist", taskId)
+		taskGroups, err1 := s.store.ListTaskGroups(runAs, appId)
+		if err1 != nil {
+			blog.Warn("message status report: list taskgroups(%s.%s) failed, err:%s", runAs, appId, err1.Error())
+			return false
+		}
+		for _, taskGroup := range taskGroups {
+			if taskGroup.ID == taskGroupID {
+				blog.Error("message status report: task(%s) not exist but taskgroup(%s) exist", taskId, taskGroupID)
+				return false
+			}
+		}
+
+		if agentID == "" || executorID == "" {
+			blog.Warn("message status report: task(%s) not exist and reported executor(%s) or agent(%s) error, do nothing",
+				taskId, executorID, agentID)
+			return false
+		}
+
+		blog.Warn("message status report: task(%s) not eixst, kill executor(%s) on agent(%s)", taskId, executorID, agentID)
+		s.KillExecutor(agentID, executorID)
+		return false
+	}
+
+	return true
 }

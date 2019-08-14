@@ -13,7 +13,7 @@
   "bcs_zookeeper": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
   "enable_storage_alarm": true,
   "etcd": {
-    "etcd_endpoints": "https://__ETCD_IP0__:__ETCD_CLIENT_PORT__",
+    "etcd_endpoints": "https://__ETCD_BCS_IP0__:__ETCD_CLIENT_PORT__",
     "etcd_root_path": "/bcshealtch",
     "etcd_ca_file": "__INSTALL_PATH__/cert/etcd/etcd-ca.pem",
     "etcd_cert_file": "__INSTALL_PATH__/cert/etcd/etcd.pem",
