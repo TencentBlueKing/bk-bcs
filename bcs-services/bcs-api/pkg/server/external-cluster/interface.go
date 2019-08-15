@@ -15,6 +15,6 @@ package external_cluster
 
 type ExternalCluster interface {
 	BindClusterLb() error
-	GetMasterVip() (bool, error)
+	GetMasterVip() (string, error)
 	SyncClusterCredentials() error
 }
