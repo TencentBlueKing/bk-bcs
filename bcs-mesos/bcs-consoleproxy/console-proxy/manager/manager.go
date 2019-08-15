@@ -21,15 +21,12 @@ import (
 
 type manager struct {
 	sync.RWMutex
-	conf *config.ConsoleProxyConfig
-
-	dockerClient *docker.Client
-
-	containerid         string
-	websocketOrigin     string
+	conf                *config.ConsoleProxyConfig
+	dockerClient        *docker.Client
 	connectedContainers map[string]bool
 }
 
+// NewManager create a Manager object
 func NewManager(conf *config.ConsoleProxyConfig) Manager {
 	return &manager{
 		conf:                conf,
@@ -37,12 +34,9 @@ func NewManager(conf *config.ConsoleProxyConfig) Manager {
 	}
 }
 
+// Start create docker client
 func (m *manager) Start() error {
 	var err error
 	m.dockerClient, err = docker.NewClient(m.conf.DockerEndpoint)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
