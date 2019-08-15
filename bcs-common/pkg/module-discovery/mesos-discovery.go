@@ -17,6 +17,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path"
 	"sync"
@@ -79,6 +80,26 @@ func (r *mesosDiscovery) GetModuleServers(moduleName string) ([]interface{}, err
 	}
 
 	return servs, nil
+}
+
+//input: types.BCS_MODULE_SCHEDULER...
+func (r *mesosDiscovery) GetRandModuleServer(moduleName string) (interface{}, error) {
+	r.RLock()
+	defer r.RUnlock()
+
+	servs, ok := r.servers[moduleName]
+	if !ok {
+		return nil, fmt.Errorf("Module %s is invalid", moduleName)
+	}
+
+	if len(servs) == 0 {
+		return nil, fmt.Errorf("Module %s have no servers endpoints", moduleName)
+	}
+
+	//rand
+	rand.Seed(int64(time.Now().Nanosecond()))
+	serv := servs[rand.Intn(len(servs))]
+	return serv, nil
 }
 
 func (r *mesosDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
