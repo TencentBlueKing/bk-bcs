@@ -25,6 +25,13 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var ConsoleCopywritingFailed []string = []string{
+	"#######################################################################\r\n",
+	"#                    Welcome To BKDevOps Console                      #\r\n",
+	"#                该环境已经处于调试状态,禁止同时连接多个会话          #\r\n",
+	"#######################################################################\r\n",
+}
+
 type errMsg struct {
 	Msg string `json:"msg,omitempty"`
 }
@@ -63,8 +70,8 @@ func ResponseJSON(w http.ResponseWriter, status int, v interface{}) error {
 }
 
 func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
-
 	blog.Debug(fmt.Sprintf("start exec for container exec_id %s", conf.ExecId))
+
 	upgrader := websocket.Upgrader{
 		EnableCompression: true,
 	}
@@ -84,12 +91,43 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	}
 	defer ws.Close()
 
+	if m.conf.IsOneSeesion {
+		m.Lock()
+		_, ok := m.connectedContainers[conf.ContainerId]
+		if ok {
+			blog.Errorf("container %s has established connection", conf.ContainerId)
+
+			for _, i := range ConsoleCopywritingFailed {
+				ws.WriteMessage(websocket.TextMessage, []byte(i))
+				if err != nil {
+					blog.Errorf("web socket container %s write message error %s", conf.ContainerId, err.Error())
+					ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
+					return
+				}
+
+			}
+			m.Unlock()
+			err = fmt.Errorf("container %s has established connection", conf.ContainerId)
+			ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+			return
+		}
+
+		m.connectedContainers[conf.ContainerId] = true
+		m.Unlock()
+
+		defer func() {
+			m.Lock()
+			delete(m.connectedContainers, conf.ContainerId)
+			m.Unlock()
+		}()
+	}
+
 	ws.SetCloseHandler(nil)
 	ws.SetPingHandler(nil)
 
 	err = m.startExec(&wsConn{ws}, conf)
 	if err != nil {
-		blog.Info(err.Error())
+		blog.Errorf("start exec failed for container %s: %s", conf.ContainerId, err.Error())
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return
 	}
@@ -137,7 +175,6 @@ func (m *manager) startExec(ws io.ReadWriter, conf *types.WebSocketConfig) error
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

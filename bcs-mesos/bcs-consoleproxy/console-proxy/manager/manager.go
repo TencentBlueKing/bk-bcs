@@ -25,13 +25,15 @@ type manager struct {
 
 	dockerClient *docker.Client
 
-	containerid     string
-	websocketOrigin string
+	containerid         string
+	websocketOrigin     string
+	connectedContainers map[string]bool
 }
 
 func NewManager(conf *config.ConsoleProxyConfig) Manager {
 	return &manager{
-		conf: conf,
+		conf:                conf,
+		connectedContainers: make(map[string]bool),
 	}
 }
 

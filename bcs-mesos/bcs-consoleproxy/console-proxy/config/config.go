@@ -39,6 +39,7 @@ type ConsoleProxyConfig struct {
 	Tty            bool
 	Ips            []string
 	IsAuth         bool
+	IsOneSeesion   bool
 }
 
 //NewContainerWareConfig create a config object
