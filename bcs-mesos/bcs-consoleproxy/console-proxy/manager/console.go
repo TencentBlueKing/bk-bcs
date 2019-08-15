@@ -94,7 +94,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	}
 	defer ws.Close()
 
-	/*if m.conf.IsOneSeesion {
+	if m.conf.IsOneSeesion {
 		m.Lock()
 		_, ok := m.connectedContainers[conf.ContainerID]
 		if ok {
@@ -123,7 +123,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 			delete(m.connectedContainers, conf.ContainerID)
 			m.Unlock()
 		}()
-	}*/
+	}
 
 	ws.SetCloseHandler(nil)
 	ws.SetPingHandler(nil)
