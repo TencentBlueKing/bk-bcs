@@ -21,12 +21,12 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	moduleDiscovery "bk-bcs/bcs-common/pkg/module-discovery"
-	"bk-bcs/bcs-mesos/bcs-mesos-prometheus/types"
+	"bk-bcs/bcs-services/bcs-service-prometheus/types"
 )
 
 const (
 	DefaultbcsDiscoveryKey      = "bcsDiscovery"
-	DefaultbcsDiscoveryFileName = "bcs_mesos_sd_config.json"
+	DefaultbcsDiscoveryFileName = "bcs_service_sd_config.json"
 
 	DefaultBcsModuleLabelKey = "bcs_module"
 )
@@ -47,7 +47,7 @@ func NewBcsDiscovery(zkAddr string, promFilePrefix string) (Discovery, error) {
 		key:        DefaultbcsDiscoveryKey,
 		sdFilePath: path.Join(promFilePrefix, DefaultbcsDiscoveryFileName),
 		modules: []string{
-			commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH, commtypes.BCS_MODULE_MESOSAPISERVER,
+			commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE,
 		},
 	}
 
@@ -56,7 +56,7 @@ func NewBcsDiscovery(zkAddr string, promFilePrefix string) (Discovery, error) {
 
 func (disc *bcsDiscovery) Start() error {
 	var err error
-	disc.moduleDiscovery, err = moduleDiscovery.NewMesosDiscovery(disc.zkAddr)
+	disc.moduleDiscovery, err = moduleDiscovery.NewServiceDiscovery(disc.zkAddr)
 	if err != nil {
 		return err
 	}
@@ -81,10 +81,10 @@ func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, 
 		for _, serv := range servs {
 			var conf *types.PrometheusSdConfig
 			switch module {
-			case commtypes.BCS_MODULE_SCHEDULER:
-				ser, ok := serv.(*commtypes.SchedulerServInfo)
+			case commtypes.BCS_MODULE_APISERVER:
+				ser, ok := serv.(*commtypes.APIServInfo)
 				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to SchedulerServInfo", disc.key, module)
+					blog.Errorf("discovery %s module %s failed convert to APIServInfo", disc.key, module)
 					break
 				}
 
@@ -95,10 +95,10 @@ func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, 
 					},
 				}
 
-			case commtypes.BCS_MODULE_MESOSAPISERVER:
-				ser, ok := serv.(*commtypes.BcsMesosApiserverInfo)
+			case commtypes.BCS_MODULE_STORAGE:
+				ser, ok := serv.(*commtypes.BcsStorageInfo)
 				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to MesosDriverServInfo", disc.key, module)
+					blog.Errorf("discovery %s module %s failed convert to BcsStorageInfo", disc.key, module)
 					break
 				}
 
@@ -109,10 +109,10 @@ func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, 
 					},
 				}
 
-			case commtypes.BCS_MODULE_MESOSDATAWATCH:
-				ser, ok := serv.(*commtypes.MesosDataWatchServInfo)
+			case commtypes.BCS_MODULE_NETSERVICE:
+				ser, ok := serv.(*commtypes.NetServiceInfo)
 				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to MesosDataWatchServInfo", disc.key, module)
+					blog.Errorf("discovery %s module %s failed convert to NetServiceInfo", disc.key, module)
 					break
 				}
 
