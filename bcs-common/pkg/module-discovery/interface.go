@@ -15,11 +15,17 @@ package module_discovery
 
 type ModuleDiscovery interface {
 	// module: types.BCS_MODULE_SCHEDULER...
+	// list all servers
+	//if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 	GetModuleServers(module string) ([]interface{}, error)
+
+	// get random one server
+	GetRandModuleServer(moduleName string) (interface{}, error)
 
 	// register event handle function
 	RegisterEventFunc(handleFunc EventHandleFunc)
 }
 
 // module: types.BCS_MODULE_SCHEDULER...
+// if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 type EventHandleFunc func(module string)
