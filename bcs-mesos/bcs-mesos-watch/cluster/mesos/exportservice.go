@@ -25,11 +25,18 @@ import (
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/net/context"
+)
+
+const (
+	networkHost    = "host"
+	networkBridge  = "bridge"
+	networkTypeCNM = "cnm"
 )
 
 //NewExportServiceWatch create export service watch
@@ -63,6 +70,7 @@ func esInfoKeyFunc(data interface{}) (string, error) {
 	return esInfo.bcsService.ObjectMeta.NameSpace + "." + esInfo.bcsService.ObjectMeta.Name, nil
 }
 
+//ExportServiceInfo wrapper for ServiceInfo
 type ExportServiceInfo struct {
 	bcsService    *commtypes.BcsService
 	exportService *lbtypes.ExportService
@@ -438,10 +446,10 @@ func (watch *ExportServiceWatch) addTaskGroup(tskgroup *schedtypes.TaskGroup) {
 								key, oneTask.ID, err.Error())
 							continue
 						}
-						if strings.ToLower(oneTask.Network) == "host" {
+						if strings.ToLower(oneTask.Network) == networkHost {
 							backend.TargetIP = bcsInfo.NodeAddress
 							backend.TargetPort = int(onePort.ContainerPort)
-						} else if strings.ToLower(oneTask.Network) == "bridge" {
+						} else if strings.ToLower(oneTask.Network) == networkBridge {
 							if onePort.HostPort > 0 {
 								backend.TargetIP = bcsInfo.NodeAddress
 								backend.TargetPort = int(onePort.HostPort)
@@ -449,7 +457,7 @@ func (watch *ExportServiceWatch) addTaskGroup(tskgroup *schedtypes.TaskGroup) {
 								backend.TargetIP = bcsInfo.IPAddress
 								backend.TargetPort = int(onePort.ContainerPort)
 							}
-						} else if strings.ToLower(oneTask.NetworkType) == "cnm" {
+						} else if strings.ToLower(oneTask.NetworkType) == networkTypeCNM {
 							if onePort.HostPort > 0 {
 								backend.TargetIP = bcsInfo.NodeAddress
 								backend.TargetPort = int(onePort.HostPort)
@@ -534,10 +542,10 @@ func (watch *ExportServiceWatch) updateTaskGroup(tskgroup *schedtypes.TaskGroup)
 								key, oneTask.ID, err.Error())
 							continue
 						}
-						if strings.ToLower(oneTask.Network) == "host" {
+						if strings.ToLower(oneTask.Network) == networkHost {
 							backend.TargetIP = bcsInfo.NodeAddress
 							backend.TargetPort = int(onePort.ContainerPort)
-						} else if strings.ToLower(oneTask.Network) == "bridge" {
+						} else if strings.ToLower(oneTask.Network) == networkBridge {
 							if onePort.HostPort > 0 {
 								backend.TargetIP = bcsInfo.NodeAddress
 								backend.TargetPort = int(onePort.HostPort)
@@ -545,7 +553,7 @@ func (watch *ExportServiceWatch) updateTaskGroup(tskgroup *schedtypes.TaskGroup)
 								backend.TargetIP = bcsInfo.IPAddress
 								backend.TargetPort = int(onePort.ContainerPort)
 							}
-						} else if strings.ToLower(oneTask.NetworkType) == "cnm" {
+						} else if strings.ToLower(oneTask.NetworkType) == networkTypeCNM {
 							if onePort.HostPort > 0 {
 								backend.TargetIP = bcsInfo.NodeAddress
 								backend.TargetPort = int(onePort.HostPort)
@@ -635,10 +643,10 @@ func (watch *ExportServiceWatch) deleteTaskGroup(tskgroup *schedtypes.TaskGroup)
 								key, oneTask.ID, err.Error())
 							continue
 						}
-						if strings.ToLower(oneTask.Network) == "host" {
+						if strings.ToLower(oneTask.Network) == networkHost {
 							backend.TargetIP = bcsInfo.NodeAddress
 							backend.TargetPort = int(onePort.ContainerPort)
-						} else if strings.ToLower(oneTask.Network) == "bridge" {
+						} else if strings.ToLower(oneTask.Network) == networkBridge {
 							if onePort.HostPort > 0 {
 								backend.TargetIP = bcsInfo.NodeAddress
 								backend.TargetPort = int(onePort.HostPort)
@@ -646,7 +654,7 @@ func (watch *ExportServiceWatch) deleteTaskGroup(tskgroup *schedtypes.TaskGroup)
 								backend.TargetIP = bcsInfo.IPAddress
 								backend.TargetPort = int(onePort.ContainerPort)
 							}
-						} else if strings.ToLower(oneTask.NetworkType) == "cnm" {
+						} else if strings.ToLower(oneTask.NetworkType) == networkTypeCNM {
 							if onePort.HostPort > 0 {
 								backend.TargetIP = bcsInfo.NodeAddress
 								backend.TargetPort = int(onePort.HostPort)
@@ -738,6 +746,7 @@ func (watch *ExportServiceWatch) UpdateEvent(obj interface{}) {
 	watch.report.ReportData(sync)
 }
 
+//GetExportserviceChannel get channel for dispatch
 func (watch *ExportServiceWatch) GetExportserviceChannel(exportservice *lbtypes.ExportService) string {
 
 	index := util.GetHashId(exportservice.ServiceName, ExportserviceThreadNum)
@@ -746,6 +755,7 @@ func (watch *ExportServiceWatch) GetExportserviceChannel(exportservice *lbtypes.
 
 }
 
+//SyncExportServiceBackends export service backend synchronization
 func (watch *ExportServiceWatch) SyncExportServiceBackends(esInfo *ExportServiceInfo) error {
 	basePath := fmt.Sprintf("%s/application/%s", watch.basePath, esInfo.exportService.Namespace)
 	blog.Info("sync all taskgroups under(%s)", basePath)
@@ -818,6 +828,7 @@ func (watch *ExportServiceWatch) SyncExportServiceBackends(esInfo *ExportService
 	return nil
 }
 
+//SyncEpTaskgroupBackend convert taskgroup to exportservice endpoint
 func (watch *ExportServiceWatch) SyncEpTaskgroupBackend(esInfo *ExportServiceInfo, taskgroup *schedtypes.TaskGroup) error {
 	if taskgroup.Status != schedtypes.TASKGROUP_STATUS_RUNNING && taskgroup.Status != schedtypes.TASKGROUP_STATUS_LOST {
 		blog.V(3).Infof("ExportServiceWatch receive taskgroup add event, TaskGroup %s status %s, do nothing ", taskgroup.ID, taskgroup.Status)
@@ -859,13 +870,13 @@ func (watch *ExportServiceWatch) SyncEpTaskgroupBackend(esInfo *ExportServiceInf
 					}
 
 					//container docker host network, docker run --net=host
-					if strings.ToLower(oneTask.Network) == "host" {
+					if strings.ToLower(oneTask.Network) == networkHost {
 						backend.TargetIP = bcsInfo.NodeAddress
 						backend.TargetPort = int(onePort.ContainerPort)
 						blog.V(3).Infof("ExportServiceWatch: service (%s %s) backend targetip %s targetport %d",
 							esInfo.exportService.Namespace, esInfo.exportService.ServiceName, backend.TargetIP, backend.TargetPort)
 						//container docker bridge network, docker run --net=bridge
-					} else if strings.ToLower(oneTask.Network) == "bridge" {
+					} else if strings.ToLower(oneTask.Network) == networkBridge {
 						if onePort.HostPort > 0 {
 							backend.TargetIP = bcsInfo.NodeAddress
 							backend.TargetPort = int(onePort.HostPort)
@@ -876,7 +887,7 @@ func (watch *ExportServiceWatch) SyncEpTaskgroupBackend(esInfo *ExportServiceInf
 						blog.V(3).Infof("ExportServiceWatch: service (%s %s) backend targetip %s targetport %d",
 							esInfo.exportService.Namespace, esInfo.exportService.ServiceName, backend.TargetIP, backend.TargetPort)
 						//container docker user defined network, docker run --net=mynetwork
-					} else if strings.ToLower(oneTask.NetworkType) == "cnm" {
+					} else if strings.ToLower(oneTask.NetworkType) == networkTypeCNM {
 						if onePort.HostPort > 0 {
 							backend.TargetIP = bcsInfo.NodeAddress
 							backend.TargetPort = int(onePort.HostPort)

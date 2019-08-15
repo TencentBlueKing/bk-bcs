@@ -22,12 +22,13 @@ import (
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
-	"golang.org/x/net/context"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/samuel/go-zookeeper/zk"
+	"golang.org/x/net/context"
 	//"encoding/json"
 )
 
@@ -57,8 +58,11 @@ type WatchInterface interface {
 }
 
 var (
-	ApplicationThreadNum   int
-	TaskgroupThreadNum     int
+	//ApplicationThreadNum goroutine number for Application channel
+	ApplicationThreadNum int
+	//TaskgroupThreadNum goroutine number for taskgroup channel
+	TaskgroupThreadNum int
+	//ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
 )
 
@@ -126,8 +130,8 @@ func (ms *MesosCluster) createZkConn() error {
 	return nil
 }
 
-// just for test
-func Generate_Randnum() int {
+// GenerateRandnum just for test
+func GenerateRandnum() int {
 	rand.Seed(time.Now().Unix())
 	rnd := rand.Intn(100)
 	return rnd
@@ -231,6 +235,7 @@ func (ms *MesosCluster) createDatTypeWatch() error {
 	return nil
 }
 
+//ProcessAppPathes handle all Application datas
 func (ms *MesosCluster) ProcessAppPathes() error {
 
 	appPath := ms.watchPath + "/application"
@@ -382,13 +387,13 @@ func (ms *MesosCluster) reportApplication(data *types.BcsSyncData) error {
 
 	path := ms.watchPath + "/application/" + app.RunAs + "/" + app.ID
 	//check acton for Add & Delete
-	if data.Action == "Add" {
+	if data.Action == types.ActionAdd {
 		blog.Info("app(%s.%s) added, so add taskgroup pathwatch(%s)", app.RunAs, app.ID, path)
 		ms.taskGroup.addWatch(path)
-	} else if data.Action == "Delete" {
+	} else if data.Action == types.ActionDelete {
 		blog.Info("app(%s.%s) deleted, so clean taskgroup pathwatch(%s)", app.RunAs, app.ID, path)
 		ms.taskGroup.cleanWatch(path)
-	} else if data.Action == "Update" {
+	} else if data.Action == types.ActionUpdate {
 		blog.V(3).Infof("app(%s.%s) updated, try to add taskgroup pathwatch(%s)", app.RunAs, app.ID, path)
 		ms.taskGroup.addWatch(path)
 	}
@@ -464,6 +469,7 @@ func (ms *MesosCluster) Stop() {
 	}
 }
 
+//GetClusterStatus get synchronization status
 func (ms *MesosCluster) GetClusterStatus() string {
 	return ms.Status
 }

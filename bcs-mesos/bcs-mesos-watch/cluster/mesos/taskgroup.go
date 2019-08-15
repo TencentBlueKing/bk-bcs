@@ -22,13 +22,14 @@ import (
 	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
-	"golang.org/x/net/context"
 	"path"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/samuel/go-zookeeper/zk"
+	"golang.org/x/net/context"
 )
 
 //TaskControlInfo store all app info under one namespace
@@ -365,12 +366,14 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 	task.report.ReportData(data)
 }
 
+//GetTaskGroupChannel get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannel(taskGroup *schedulertypes.TaskGroup) string {
 
 	return "TaskGroup_" + strconv.Itoa(int(taskGroup.InstanceID%100))
 
 }
 
+//GetTaskGroupChannelV2 get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannelV2(taskGroup *schedulertypes.TaskGroup) string {
 
 	index := util.GetHashId(taskGroup.ID, TaskgroupThreadNum)
