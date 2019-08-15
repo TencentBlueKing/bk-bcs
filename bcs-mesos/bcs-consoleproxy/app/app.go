@@ -70,6 +70,7 @@ func setConfig(op *options.ConsoleProxyOption) {
 	op.Conf.Cmd = op.Cmd
 	op.Conf.Ips = op.Ips
 	op.Conf.IsAuth = op.IsAuth
+	op.Conf.IsOneSeesion = op.IsOneSession
 
 	//server cert directoty
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&

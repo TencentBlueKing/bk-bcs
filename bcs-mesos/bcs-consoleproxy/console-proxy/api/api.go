@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/ssl"
@@ -26,6 +27,7 @@ import (
 )
 
 type Router struct {
+	sync.RWMutex
 	conf    *config.ConsoleProxyConfig
 	backend manager.Manager
 }
@@ -116,12 +118,15 @@ func (r *Router) createExec(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) startExec(w http.ResponseWriter, req *http.Request) {
+
 	req.ParseForm()
 	execId := req.FormValue("exec_id")
+	containerId := req.FormValue("container_id")
 
 	webconsole := &types.WebSocketConfig{
-		ExecId: execId,
-		Origin: req.Header.Get("Origin"),
+		ExecId:      execId,
+		ContainerId: containerId,
+		Origin:      req.Header.Get("Origin"),
 	}
 
 	// handler container web console
