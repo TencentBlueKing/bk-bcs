@@ -13,6 +13,7 @@
 
 package util
 
+//GetHashId get ID for dispatch channel
 func GetHashId(s string, maxInt int) int {
 	if maxInt <= 1 {
 		return 0

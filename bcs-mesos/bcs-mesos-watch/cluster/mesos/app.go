@@ -22,13 +22,14 @@ import (
 	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
-	"golang.org/x/net/context"
 	"path"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/samuel/go-zookeeper/zk"
+	"golang.org/x/net/context"
 )
 
 //NSControlInfo store all app info under one namespace
@@ -376,6 +377,7 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	app.report.ReportData(data)
 }
 
+//GetApplicationChannel get distribution channel for Application
 func (app *AppWatch) GetApplicationChannel(application *schedulertypes.Application) string {
 	index := util.GetHashId(application.ID, ApplicationThreadNum)
 
