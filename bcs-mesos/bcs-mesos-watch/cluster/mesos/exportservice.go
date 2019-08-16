@@ -108,22 +108,22 @@ func (watch *ExportServiceWatch) worker(cxt context.Context) {
 		case data := <-watch.queue:
 			if data.DataType == "Service" {
 				switch data.Action {
-				case "Add":
+				case types.ActionAdd:
 					watch.addService(data.Item.(*commtypes.BcsService))
-				case "Delete":
+				case types.ActionDelete:
 					watch.deleteService(data.Item.(*commtypes.BcsService))
-				case "Update":
+				case types.ActionUpdate:
 					watch.updateService(data.Item.(*commtypes.BcsService))
 				}
 			} else {
 				splitType := strings.Split(data.DataType, "_")
 				if splitType[0] == "TaskGroup" {
 					switch data.Action {
-					case "Add":
+					case types.ActionAdd:
 						watch.addTaskGroup(data.Item.(*schedtypes.TaskGroup))
-					case "Delete":
+					case types.ActionDelete:
 						watch.deleteTaskGroup(data.Item.(*schedtypes.TaskGroup))
-					case "Update":
+					case types.ActionUpdate:
 						watch.updateTaskGroup(data.Item.(*schedtypes.TaskGroup))
 					}
 				} else {
@@ -710,7 +710,11 @@ func (watch *ExportServiceWatch) AddEvent(obj interface{}) {
 		Action:   "Add",
 		Item:     tmpData,
 	}
-	watch.report.ReportData(sync)
+	if err := watch.report.ReportData(sync); err != nil {
+		syncTotal.WithLabelValues(dataTypeExpSVR, types.ActionAdd, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeExpSVR, types.ActionAdd, syncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -726,7 +730,11 @@ func (watch *ExportServiceWatch) DeleteEvent(obj interface{}) {
 		Action:   "Delete",
 		Item:     tmpData,
 	}
-	watch.report.ReportData(sync)
+	if err := watch.report.ReportData(sync); err != nil {
+		syncTotal.WithLabelValues(dataTypeExpSVR, types.ActionDelete, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeExpSVR, types.ActionDelete, syncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -743,7 +751,11 @@ func (watch *ExportServiceWatch) UpdateEvent(obj interface{}) {
 		Action:   "Update",
 		Item:     tmpData,
 	}
-	watch.report.ReportData(sync)
+	if err := watch.report.ReportData(sync); err != nil {
+		syncTotal.WithLabelValues(dataTypeExpSVR, types.ActionUpdate, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeExpSVR, types.ActionUpdate, syncSuccess).Inc()
+	}
 }
 
 //GetExportserviceChannel get channel for dispatch

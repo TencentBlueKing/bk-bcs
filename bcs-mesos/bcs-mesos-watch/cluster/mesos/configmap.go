@@ -231,10 +231,14 @@ func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
-		Action:   "Add",
+		Action:   types.ActionAdd,
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeCfg, types.ActionAdd, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeCfg, types.ActionAdd, syncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -248,10 +252,14 @@ func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 	//report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
-		Action:   "Delete",
+		Action:   types.ActionDelete,
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeCfg, types.ActionDelete, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeCfg, types.ActionDelete, syncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -271,8 +279,12 @@ func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 	//report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
-		Action:   "Update",
+		Action:   types.ActionUpdate,
 		Item:     cur,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeCfg, types.ActionUpdate, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeCfg, types.ActionUpdate, syncSuccess).Inc()
+	}
 }

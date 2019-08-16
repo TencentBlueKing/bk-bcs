@@ -234,7 +234,11 @@ func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 		Action:   "Add",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionAdd, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionAdd, syncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -251,7 +255,11 @@ func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 		Action:   "Delete",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionDelete, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionDelete, syncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -270,5 +278,9 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 		Action:   "Update",
 		Item:     cur,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionUpdate, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionUpdate, syncSuccess).Inc()
+	}
 }
