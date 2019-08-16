@@ -73,7 +73,9 @@ func NewServiceDiscovery(zkserv string) (ModuleDiscovery, error) {
 	return rd, nil
 }
 
-//input: types.BCS_MODULE_SCHEDULER...
+// module: types.BCS_MODULE_SCHEDULER...
+// list all servers
+//if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 func (r *serviceDiscovery) GetModuleServers(moduleName string) ([]interface{}, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -90,7 +92,7 @@ func (r *serviceDiscovery) GetModuleServers(moduleName string) ([]interface{}, e
 	return servs, nil
 }
 
-//input: types.BCS_MODULE_SCHEDULER...
+// get random one server
 func (r *serviceDiscovery) GetRandModuleServer(moduleName string) (interface{}, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -110,6 +112,7 @@ func (r *serviceDiscovery) GetRandModuleServer(moduleName string) (interface{}, 
 	return serv, nil
 }
 
+// register event handle function
 func (r *serviceDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	r.eventHandler = handleFunc
 }

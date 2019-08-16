@@ -20,8 +20,8 @@ import (
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-mesos-prometheus/config"
-	"bk-bcs/bcs-mesos/bcs-mesos-prometheus/discovery"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/config"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/discovery"
 )
 
 type PrometheusController struct {
@@ -34,6 +34,7 @@ type PrometheusController struct {
 	discoverys map[string]discovery.Discovery
 }
 
+// new prometheus controller
 func NewPrometheusController(conf *config.Config) *PrometheusController {
 	prom := &PrometheusController{
 		conf:           conf,
@@ -45,34 +46,55 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 	return prom
 }
 
+// start to work update prometheus sd config
 func (prom *PrometheusController) Start() error {
 	//init bcs mesos module discovery
-	bcsDiscovery, err := discovery.NewBcsDiscovery(prom.conf.ClusterZk, prom.promFilePrefix)
-	if err != nil {
-		blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
-		return err
+	if prom.conf.EnableMesos {
+		mesosDiscovery, err := discovery.NewBcsMesosDiscovery(prom.conf.ClusterZk, prom.promFilePrefix)
+		if err != nil {
+			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
+			return err
+		}
+		err = mesosDiscovery.Start()
+		if err != nil {
+			blog.Errorf("mesosDiscovery start failed: %s", err.Error())
+		}
+		//register event handle function
+		mesosDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
+		prom.discoverys[mesosDiscovery.GetDiscoveryKey()] = mesosDiscovery
 	}
-	err = bcsDiscovery.Start()
-	if err != nil {
-		blog.Errorf("nodeDiscovery start failed: %s", err.Error())
-	}
-	//register event handle function
-	bcsDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
-	prom.discoverys[bcsDiscovery.GetDiscoveryKey()] = bcsDiscovery
 
 	//init node discovery
-	zkAddr := strings.Split(prom.conf.ClusterZk, ",")
-	nodeDiscovery, err := discovery.NewNodeDiscovery(zkAddr, prom.promFilePrefix, prom.conf.CadvisorPort)
-	if err != nil {
-		blog.Errorf("NewNodeDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
-		return err
+	if prom.conf.EnableNode {
+		zkAddr := strings.Split(prom.conf.ClusterZk, ",")
+		nodeDiscovery, err := discovery.NewNodeDiscovery(zkAddr, prom.promFilePrefix, prom.conf.CadvisorPort)
+		if err != nil {
+			blog.Errorf("NewNodeDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
+			return err
+		}
+		//register event handle function
+		nodeDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
+		prom.discoverys[nodeDiscovery.GetDiscoveryKey()] = nodeDiscovery
+		err = nodeDiscovery.Start()
+		if err != nil {
+			blog.Errorf("nodeDiscovery start failed: %s", err.Error())
+		}
 	}
-	//register event handle function
-	nodeDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
-	prom.discoverys[nodeDiscovery.GetDiscoveryKey()] = nodeDiscovery
-	err = nodeDiscovery.Start()
-	if err != nil {
-		blog.Errorf("nodeDiscovery start failed: %s", err.Error())
+
+	//init bcs service module discovery
+	if prom.conf.EnableService {
+		serviceDiscovery, err := discovery.NewBcsServiceDiscovery(prom.conf.ServiceZk, prom.promFilePrefix)
+		if err != nil {
+			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
+			return err
+		}
+		err = serviceDiscovery.Start()
+		if err != nil {
+			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
+		}
+		//register event handle function
+		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
+		prom.discoverys[serviceDiscovery.GetDiscoveryKey()] = serviceDiscovery
 	}
 
 	return nil

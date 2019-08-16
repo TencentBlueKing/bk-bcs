@@ -17,7 +17,7 @@ import (
 	"bk-bcs/bcs-common/common/conf"
 )
 
-//HpaControllerOption is option in flags
+//PrometheusControllerOption is option in flags
 type PrometheusControllerOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -28,7 +28,13 @@ type PrometheusControllerOption struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
+	ClusterZk      string `json:"cluster_zookeeper" value:"" usage:"mesos cluster zookeeper"`
+	CadvisorPort   int    `json:"cadvisor_port" value:"" usage:"node cadvisor port"`
+	ClusterId      string `json:"clusterid" value:"" usage:"mesos clusterid"`
 	PromFilePrefix string `json:"prom_file_prefix" value:"" usage:"prometheus service discovery file prefix"`
+	EnableMesos    bool   `json:"enable_mesos" value:"true" usage:"enable mesos prometheus service discovery"`
+	EnableService  bool   `json:"enable_service" value:"true" usage:"enable service prometheus service discovery"`
+	EnableNode     bool   `json:"enable_node" value:"true" usage:"enable node prometheus service discovery"`
 }
 
 //NewPrometheusControllerOption create PrometheusControllerOption object

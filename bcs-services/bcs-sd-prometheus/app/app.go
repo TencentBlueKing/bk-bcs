@@ -16,12 +16,12 @@ package app
 import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-service-prometheus/app/options"
-	"bk-bcs/bcs-services/bcs-service-prometheus/config"
-	"bk-bcs/bcs-services/bcs-service-prometheus/controller"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/app/options"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/config"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/controller"
 )
 
-//Run the health check
+//Run the prometheus controller
 func Run(op *options.PrometheusControllerOption) error {
 
 	conf := &config.Config{}
@@ -42,6 +42,12 @@ func Run(op *options.PrometheusControllerOption) error {
 }
 
 func setConfig(conf *config.Config, op *options.PrometheusControllerOption) {
-	conf.ServiceZk = op.BCSZk
+	conf.ClusterZk = op.ClusterZk
 	conf.PromFilePrefix = op.PromFilePrefix
+	conf.ClusterId = op.ClusterId
+	conf.CadvisorPort = op.CadvisorPort
+	conf.ServiceZk = op.BCSZk
+	conf.EnableMesos = op.EnableMesos
+	conf.EnableNode = op.EnableNode
+	conf.EnableService = op.EnableService
 }

@@ -11,25 +11,16 @@
  *
  */
 
-package discovery
+package config
 
-import "bk-bcs/bcs-mesos/bcs-mesos-prometheus/types"
-
-type Discovery interface {
-	//start
-	Start() error
-
-	// GetDiscoveryKey
-	GetDiscoveryKey() string
-
-	// get prometheus service discovery config
-	GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error)
-
-	// get prometheus sd config file path
-	GetPromSdConfigFile() string
-
-	//register event handle function
-	RegisterEventFunc(handleFunc EventHandleFunc)
+// sd prometheus config
+type Config struct {
+	ClusterZk      string
+	CadvisorPort   int
+	ClusterId      string
+	PromFilePrefix string
+	ServiceZk      string
+	EnableMesos    bool
+	EnableService  bool
+	EnableNode     bool
 }
-
-type EventHandleFunc func(discoveryKey string)
