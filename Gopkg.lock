@@ -109,11 +109,12 @@
   revision = "004b46473808b3e7a4a3049c20e4376c91eb966d"
 
 [[projects]]
-  digest = "1:fe3f893dc4d7c53ee3bf3be59921ce540600dde90818c143f1b9a89f8667a547"
+  digest = "1:d8d8684ac16873cbf87fc33e2e2d812a5abe9f37d87e9c7ddb318d975a9fefd6"
   name = "github.com/containernetworking/cni"
   packages = [
     "libcni",
     "pkg/invoke",
+    "pkg/skel",
     "pkg/types",
     "pkg/types/020",
     "pkg/types/current",
@@ -822,6 +823,14 @@
   version = "v1.8.0"
 
 [[projects]]
+  digest = "1:79e87abf06b873987dee86598950f5b51732ac454d5a5cab6445a14330e6c9e3"
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b612a2feea6aa87c6d052d9086572551df06497e"
+  version = "v1.11.0"
+
+[[projects]]
   digest = "1:ff5ebae34cfbf047d505ee150de27e60570e8c394b3b8fdbb720ff6ac71985fc"
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
@@ -1251,6 +1260,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:52796c672f9529f506ac63c10bf44072c8156cb2c85c0784a8b8ccb164e94903"
+  name = "go4.org"
+  packages = ["lock"]
+  pruneopts = "UT"
+  revision = "94abd6928b1da39b1d757b60c93fb2419c409fa1"
+
+[[projects]]
+  branch = "master"
   digest = "1:cfd661f1a52594117f2a753bb640a86d4dbf3e0d778c2641bfbc750e6a1c8be7"
   name = "golang.org/x/crypto"
   packages = [
@@ -1642,8 +1659,10 @@
     "github.com/aws/aws-sdk-go",
     "github.com/bitly/go-simplejson",
     "github.com/containernetworking/cni/libcni",
+    "github.com/containernetworking/cni/pkg/skel",
     "github.com/containernetworking/cni/pkg/types",
     "github.com/containernetworking/cni/pkg/types/current",
+    "github.com/containernetworking/cni/pkg/version",
     "github.com/coredns/coredns/core/dnsserver",
     "github.com/coredns/coredns/plugin",
     "github.com/coredns/coredns/plugin/etcd",
@@ -1687,6 +1706,7 @@
     "github.com/jmespath/go-jmespath",
     "github.com/json-iterator/go",
     "github.com/kardianos/osext",
+    "github.com/mattn/go-sqlite3",
     "github.com/mesos/mesos-go/upid",
     "github.com/mholt/caddy",
     "github.com/miekg/dns",
@@ -1710,6 +1730,7 @@
     "github.com/stretchr/testify/assert",
     "github.com/ugorji/go/codec",
     "github.com/urfave/cli",
+    "go4.org/lock",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "gopkg.in/go-playground/validator.v9",
