@@ -212,7 +212,11 @@ func (watch *ServiceWatch) AddEvent(obj interface{}) {
 		Action:   "Add",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeSvr, types.ActionAdd, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeSvr, types.ActionAdd, syncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -229,7 +233,11 @@ func (watch *ServiceWatch) DeleteEvent(obj interface{}) {
 		Action:   "Delete",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeSvr, types.ActionDelete, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeSvr, types.ActionDelete, syncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -250,5 +258,9 @@ func (watch *ServiceWatch) UpdateEvent(old, cur interface{}) {
 		Action:   "Update",
 		Item:     cur,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeSvr, types.ActionUpdate, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeSvr, types.ActionUpdate, syncSuccess).Inc()
+	}
 }

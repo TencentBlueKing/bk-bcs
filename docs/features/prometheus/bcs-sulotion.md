@@ -68,11 +68,9 @@ bcs-api模块相关metrics指标
 
 ## bcs-mesos-datawatch
 
-* mesoswatch_sync_total: storage API请求总数，类型CounterVec，Labels区分不同同步数据类型
-* mesoswatch_sync_err_total: storage API请求错误数，类型CounterVec，Labels区分不同api类型
-* mesoswatch_sync_latency_milliseconds: storage API请求延迟统计，类型HistogramVec，Labels区分不同api类型
-* mesoswatch_storage_notify_total: zookeeper事件触发次数统计，CounterVec，Labels区分不同事件
-* mesoswatch_storage_operator_err_total: zookeeper操作错误，CounterVec，Labels区分不同操作方式，exist,read,watch等
+* bkbcs_datawatch_mesos_storage_total: storage API请求总数，类型CounterVec，Labels区分不同同步数据类型
+* bkbcs_datawatch_mesos_storage_latency_total: storage API请求延迟统计，类型HistogramVec，Labels区分不同api类型
+* bkbcs_datawatch_mesos_sync_total: zookeeper事件触发次数统计，CounterVec，Labels区分不同事件
 
 ## bcs-contaienr-executor
 

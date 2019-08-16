@@ -319,10 +319,14 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	data := &types.BcsSyncData{
 		//DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
-		Action:   "Add",
+		Action:   types.ActionAdd,
 		Item:     obj,
 	}
-	task.report.ReportData(data)
+	if err := task.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionAdd, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionAdd, syncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -338,10 +342,14 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	data := &types.BcsSyncData{
 		//DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
-		Action:   "Delete",
+		Action:   types.ActionDelete,
 		Item:     obj,
 	}
-	task.report.ReportData(data)
+	if err := task.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionDelete, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionDelete, syncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -360,10 +368,14 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 	data := &types.BcsSyncData{
 		//DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
-		Action:   "Update",
+		Action:   types.ActionUpdate,
 		Item:     cur,
 	}
-	task.report.ReportData(data)
+	if err := task.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionUpdate, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionUpdate, syncSuccess).Inc()
+	}
 }
 
 //GetTaskGroupChannel get taskgroup dispatch channel

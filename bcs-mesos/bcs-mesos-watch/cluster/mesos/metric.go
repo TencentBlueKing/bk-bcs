@@ -15,24 +15,33 @@ package mesos
 
 import "github.com/prometheus/client_golang/prometheus"
 
+const (
+	syncStorageErr = "ZOOKEEPERErr"
+	syncSuccess    = "SUCCESS"
+	syncFailure    = "FAILURE"
+
+	actionGetData = "GetData"
+	actionWatch   = "Watch"
+
+	dataTypeApp       = "Application"
+	dataTypeTaskGroup = "TaskGroup"
+	dataTypeCfg       = "Configmap"
+	dataTypeSecret    = "Secret"
+	dataTypeDeploy    = "Deployment"
+	dataTypeSvr       = "Service"
+	dataTypeExpSVR    = "ExportService"
+)
+
 var (
 	syncTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "datawatch",
+		Namespace: "bkbcs_datawatch",
 		Subsystem: "mesos",
 		Name:      "sync_total",
-		Help:      "The total number of data watch event.",
-	}, []string{"datatype", "action", "status"})
-	syncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "datawatch",
-		Subsystem: "mesos",
-		Name:      "sync_latency_seconds",
-		Help:      "mesos watch event latency statistic.",
-		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
+		Help:      "The total number of data sync event.",
 	}, []string{"datatype", "action", "status"})
 )
 
 func init() {
 	//add golang basic metrics
 	prometheus.MustRegister(syncTotal)
-	prometheus.MustRegister(syncLatency)
 }

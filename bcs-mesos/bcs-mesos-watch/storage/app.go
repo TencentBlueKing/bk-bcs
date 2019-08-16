@@ -29,10 +29,12 @@ type AppHandler struct {
 	DoCheckDirty bool
 }
 
+//GetType get handler type
 func (handler *AppHandler) GetType() string {
 	return handler.dataType
 }
 
+//CheckDirty clean remote dirty data
 func (handler *AppHandler) CheckDirty() error {
 	if handler.DoCheckDirty {
 		blog.Info("check dirty data for type: %s", handler.dataType)
@@ -58,6 +60,7 @@ func (handler *AppHandler) CheckDirty() error {
 
 //Add add event
 func (handler *AppHandler) Add(data interface{}) error {
+	started := time.Now()
 	dataType := data.(*schedtypes.Application)
 	blog.Info("App add event, AppID: %s.%s", dataType.RunAs, dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
@@ -66,8 +69,10 @@ func (handler *AppHandler) Add(data interface{}) error {
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("App add node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeApp, actionPut, statusFailure, started)
 		return err
 	}
+	reportStorageMetrics(dataTypeApp, actionPut, statusSuccess, started)
 	return nil
 }
 
@@ -75,19 +80,21 @@ func (handler *AppHandler) Add(data interface{}) error {
 func (handler *AppHandler) Delete(data interface{}) error {
 	dataType := data.(*schedtypes.Application)
 	blog.Info("App delete event, AppID: %s.%s", dataType.RunAs, dataType.ID)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Error("App delete node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeApp, actionDelete, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeApp, actionDelete, statusSuccess, started)
 	return err
 }
 
 //Update update in zookeeper
 func (handler *AppHandler) Update(data interface{}) error {
+	started := time.Now()
 	dataType := data.(*schedtypes.Application)
 	blog.V(3).Infof("App update event, AppID: %s.%s", dataType.RunAs, dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
@@ -96,12 +103,14 @@ func (handler *AppHandler) Update(data interface{}) error {
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("App update node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeApp, actionPut, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeApp, actionPut, statusSuccess, started)
 	return nil
 }
 
+//FormatConv convert format for status info
 func (handler *AppHandler) FormatConv(app *schedtypes.Application) (*commtypes.BcsReplicaControllerStatus, error) {
 	status := new(commtypes.BcsReplicaControllerStatus)
 	status.ObjectMeta = app.ObjectMeta

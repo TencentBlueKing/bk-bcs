@@ -39,6 +39,10 @@ type NSControlInfo struct {
 	cancel context.CancelFunc //for cancel sub goroutine
 }
 
+func reportAppMetrics(action, status string) {
+	syncTotal.WithLabelValues(dataTypeApp, action, status).Inc()
+}
+
 //NewAppWatch return a new application watch
 func NewAppWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter) *AppWatch {
 	keyFunc := func(data interface{}) (string, error) {
@@ -330,10 +334,14 @@ func (app *AppWatch) AddEvent(obj interface{}) {
 
 	data := &types.BcsSyncData{
 		DataType: app.GetApplicationChannel(appData),
-		Action:   "Add",
+		Action:   types.ActionAdd,
 		Item:     obj,
 	}
-	app.report.ReportData(data)
+	if err := app.report.ReportData(data); err != nil {
+		reportAppMetrics(types.ActionAdd, "FAILURE")
+	} else {
+		reportAppMetrics(types.ActionAdd, syncSuccess)
+	}
 }
 
 //DeleteEvent when delete
@@ -348,10 +356,14 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 	//report to cluster
 	data := &types.BcsSyncData{
 		DataType: app.GetApplicationChannel(appData),
-		Action:   "Delete",
+		Action:   types.ActionDelete,
 		Item:     obj,
 	}
-	app.report.ReportData(data)
+	if err := app.report.ReportData(data); err != nil {
+		reportAppMetrics(types.ActionDelete, "FAILURE")
+	} else {
+		reportAppMetrics(types.ActionDelete, syncSuccess)
+	}
 }
 
 //UpdateEvent when update
@@ -371,10 +383,14 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	//report to cluster
 	data := &types.BcsSyncData{
 		DataType: app.GetApplicationChannel(appData),
-		Action:   "Update",
+		Action:   types.ActionUpdate,
 		Item:     cur,
 	}
-	app.report.ReportData(data)
+	if err := app.report.ReportData(data); err != nil {
+		reportAppMetrics(types.ActionUpdate, "FAILURE")
+	} else {
+		reportAppMetrics(types.ActionUpdate, syncSuccess)
+	}
 }
 
 //GetApplicationChannel get distribution channel for Application

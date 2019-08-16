@@ -21,18 +21,21 @@ import (
 	"time"
 )
 
+//DeploymentHandler event handler for Deployment
 type DeploymentHandler struct {
 	oper      DataOperator
 	dataType  string
 	ClusterID string
 }
 
+//GetType implementation
 func (handler *DeploymentHandler) GetType() string {
 	return handler.dataType
 }
 
+//CheckDirty clean dirty data in remote bcs-storage
 func (handler *DeploymentHandler) CheckDirty() error {
-
+	started := time.Now()
 	blog.Info("check dirty data for type: %s", handler.dataType)
 
 	conditionData := &commtypes.BcsStorageDynamicBatchDeleteIf{
@@ -45,46 +48,56 @@ func (handler *DeploymentHandler) CheckDirty() error {
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeDeploy, actionDelete, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeDeploy, actionDelete, statusSuccess, started)
 	return nil
 }
 
+//Add data add event implementation
 func (handler *DeploymentHandler) Add(data interface{}) error {
 	dataType := data.(*schedulertypes.Deployment)
 	blog.Info("deployment add event, deployment: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("deployment add node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeDeploy, actionPut, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeDeploy, actionPut, statusSuccess, started)
 	return nil
 }
 
+//Delete data Delete event implementation
 func (handler *DeploymentHandler) Delete(data interface{}) error {
 	dataType := data.(*schedulertypes.Deployment)
 	blog.Info("deployment delete event, deployment: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.V(3).Infof("deployment delete node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeDeploy, actionDelete, statusFailure, started)
+		return err
 	}
+	reportStorageMetrics(dataTypeDeploy, actionDelete, statusSuccess, started)
 	return err
 }
 
+//Update handle data update event implementation
 func (handler *DeploymentHandler) Update(data interface{}) error {
 	dataType := data.(*schedulertypes.Deployment)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("deployment update node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeDeploy, actionPut, statusFailure, started)
+		return err
 	}
-
+	reportStorageMetrics(dataTypeDeploy, actionPut, statusSuccess, started)
 	return err
 }
