@@ -71,6 +71,9 @@ bcs-api模块相关metrics指标
 * bkbcs_datawatch_mesos_storage_total: storage API请求总数，类型CounterVec，Labels区分不同同步数据类型
 * bkbcs_datawatch_mesos_storage_latency_total: storage API请求延迟统计，类型HistogramVec，Labels区分不同api类型
 * bkbcs_datawatch_mesos_sync_total: zookeeper事件触发次数统计，CounterVec，Labels区分不同事件
+* bkbcs_datawatch_mesos_storage_state: bcs-storage服务发现状态，Gauge，正常为1，异常为0
+* bkbcs_datawatch_mesos_cluster_state：datawatch集群状态，正常为1，其他皆为异常
+* bkbcs_datawatch_mesos_role_state：datawatch角色状态，master为1，其余为slave
 
 ## bcs-contaienr-executor
 
