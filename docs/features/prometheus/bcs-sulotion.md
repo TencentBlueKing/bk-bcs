@@ -37,9 +37,9 @@ bcs-api模块相关metrics指标
 * dns_request_proxy_total: 转发给bcs service DNS次数，CounterVec，success/failure
 * dns_request_out_proxy_total: 转发给外部DNS次数，CounterVec，success/failure
 * dns_request_latency_milliseconds: dns查找延时，Histogram
-* dns_storage_notify_total: storage通知次数统计，CounterVec，Add/Update/Delete
-* dns_storage_operator_total: storage通知次数统计，CounterVec，增删改查区分
-* dns_storage_operator_latency_milliseconds: storage操作延时，HistogramVec，增删改查区分
+* dns_storage_notify_total: zookeeper通知次数统计，CounterVec，Add/Update/Delete
+* dns_storage_operator_total: 写入etcd操作统计，CounterVec，增删改查区分
+* dns_storage_operator_latency_milliseconds: 写入etcd操作延时，HistogramVec，增删改查区分
 
 ## bcs-health
 
