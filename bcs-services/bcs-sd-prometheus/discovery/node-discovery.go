@@ -20,7 +20,7 @@ import (
 
 	"bk-bcs/bcs-common/common/blog"
 	commDiscovery "bk-bcs/bcs-common/pkg/discovery"
-	"bk-bcs/bcs-mesos/bcs-mesos-prometheus/types"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/types"
 )
 
 const (
@@ -39,6 +39,7 @@ type nodeDiscovery struct {
 	initSuccess    bool
 }
 
+// new nodeDiscovery for discovery node cadvisor targets
 func NewNodeDiscovery(zkAddr []string, promFilePrefix string, cadvisorPort int) (Discovery, error) {
 	disc := &nodeDiscovery{
 		zkAddr:       zkAddr,
@@ -106,6 +107,7 @@ func (disc *nodeDiscovery) OnAdd(obj interface{}) {
 	disc.eventHandler(disc.key)
 }
 
+// if on update event, then don't need to update sd config
 func (disc *nodeDiscovery) OnUpdate(old, cur interface{}) {
 	if !disc.initSuccess {
 		return
@@ -117,6 +119,7 @@ func (disc *nodeDiscovery) OnDelete(obj interface{}) {
 		return
 	}
 
+	// call event handler
 	disc.eventHandler(disc.key)
 }
 

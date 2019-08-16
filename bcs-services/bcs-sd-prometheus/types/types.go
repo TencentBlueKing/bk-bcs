@@ -11,9 +11,11 @@
  *
  */
 
-package config
+package types
 
-type Config struct {
-	ServiceZk      string
-	PromFilePrefix string
+// prometheus file_sd_config content
+// target servers and labels
+type PrometheusSdConfig struct {
+	Targets []string
+	Labels  map[string]string
 }

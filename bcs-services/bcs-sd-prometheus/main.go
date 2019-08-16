@@ -11,9 +11,35 @@
  *
  */
 
-package types
+package main
 
-type PrometheusSdConfig struct {
-	Targets []string
-	Labels  map[string]string
+import (
+	"os"
+	"runtime"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-common/common/license"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/app"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/app/options"
+)
+
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	op := options.NewPrometheusControllerOption()
+	conf.Parse(op)
+
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
+	blog.Info("init logs success")
+	license.CheckLicense(op.LicenseServerConfig)
+
+	err := app.Run(op)
+	if err != nil {
+		blog.Errorf(err.Error())
+		os.Exit(1)
+	}
+
+	ch := make(chan bool)
+	<-ch
 }

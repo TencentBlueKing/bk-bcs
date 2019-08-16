@@ -53,6 +53,7 @@ func NewMesosDiscovery(zkserv string) (ModuleDiscovery, error) {
 			types.BCS_MODULE_MESOSAPISERVER: make([]interface{}, 0),
 			types.BCS_MODULE_SCHEDULER:      make([]interface{}, 0),
 			types.BCS_MODULE_MESOSDATAWATCH: make([]interface{}, 0),
+			types.BCS_MODULE_DNS:            make([]interface{}, 0),
 		},
 		events: make(chan *RegisterDiscover.DiscoverEvent, 1024),
 	}
@@ -65,7 +66,8 @@ func NewMesosDiscovery(zkserv string) (ModuleDiscovery, error) {
 	return rd, nil
 }
 
-//input: types.BCS_MODULE_SCHEDULER...
+// module: types.BCS_MODULE_SCHEDULER...
+// list all servers
 func (r *mesosDiscovery) GetModuleServers(moduleName string) ([]interface{}, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -83,6 +85,7 @@ func (r *mesosDiscovery) GetModuleServers(moduleName string) ([]interface{}, err
 }
 
 //input: types.BCS_MODULE_SCHEDULER...
+// get random one server
 func (r *mesosDiscovery) GetRandModuleServer(moduleName string) (interface{}, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -102,6 +105,7 @@ func (r *mesosDiscovery) GetRandModuleServer(moduleName string) (interface{}, er
 	return serv, nil
 }
 
+// register event handle function
 func (r *mesosDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	r.eventHandler = handleFunc
 }
@@ -155,6 +159,9 @@ func (r *mesosDiscovery) discoverModules(k string) {
 			// metric service
 			case types.BCS_MODULE_MESOSDATAWATCH:
 				r.discoverDatawatch(eve.Server)
+
+			case types.BCS_MODULE_DNS:
+				r.discoverDns(eve.Server)
 			}
 
 		case <-r.rootCxt.Done():
@@ -233,6 +240,28 @@ func (r *mesosDiscovery) discoverDatawatch(servInfos []string) error {
 	r.servers[types.BCS_MODULE_MESOSDATAWATCH] = watches
 	r.Unlock()
 	r.eventHandler(types.BCS_MODULE_MESOSDATAWATCH)
+
+	return nil
+}
+
+func (r *mesosDiscovery) discoverDns(servInfos []string) error {
+	blog.Info("discover dns(%v)", servInfos)
+
+	dnses := make([]interface{}, 0)
+	for _, serv := range servInfos {
+		dns := new(types.DNSInfo)
+		if err := json.Unmarshal([]byte(serv), &dns); err != nil {
+			blog.Warn("fail to do json unmarshal(%s), err:%s", serv, err.Error())
+			continue
+		}
+
+		dnses = append(dnses, dns)
+	}
+
+	r.Lock()
+	r.servers[types.BCS_MODULE_DNS] = dnses
+	r.Unlock()
+	r.eventHandler(types.BCS_MODULE_DNS)
 
 	return nil
 }

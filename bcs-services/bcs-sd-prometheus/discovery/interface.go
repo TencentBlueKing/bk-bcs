@@ -13,7 +13,11 @@
 
 package discovery
 
-import "bk-bcs/bcs-services/bcs-service-prometheus/types"
+import "bk-bcs/bcs-services/bcs-sd-prometheus/types"
+
+const (
+	DefaultBcsModuleLabelKey = "bcs_module"
+)
 
 type Discovery interface {
 	//start

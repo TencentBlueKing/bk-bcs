@@ -21,17 +21,15 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	moduleDiscovery "bk-bcs/bcs-common/pkg/module-discovery"
-	"bk-bcs/bcs-mesos/bcs-mesos-prometheus/types"
+	"bk-bcs/bcs-services/bcs-sd-prometheus/types"
 )
 
 const (
-	DefaultbcsDiscoveryKey      = "bcsDiscovery"
-	DefaultbcsDiscoveryFileName = "bcs_mesos_sd_config.json"
-
-	DefaultBcsModuleLabelKey = "bcs_module"
+	DefaultbcsServiceDiscoveryKey      = "bcsServiceDiscovery"
+	DefaultbcsServiceDiscoveryFileName = "bcs_service_sd_config.json"
 )
 
-type bcsDiscovery struct {
+type bcsServiceDiscovery struct {
 	zkAddr     string
 	key        string
 	sdFilePath string
@@ -41,22 +39,24 @@ type bcsDiscovery struct {
 	modules         []string
 }
 
-func NewBcsDiscovery(zkAddr string, promFilePrefix string) (Discovery, error) {
-	disc := &bcsDiscovery{
+// new bcs service module service discovery
+func NewBcsServiceDiscovery(zkAddr string, promFilePrefix string) (Discovery, error) {
+	disc := &bcsServiceDiscovery{
 		zkAddr:     zkAddr,
-		key:        DefaultbcsDiscoveryKey,
-		sdFilePath: path.Join(promFilePrefix, DefaultbcsDiscoveryFileName),
+		key:        DefaultbcsServiceDiscoveryKey,
+		sdFilePath: path.Join(promFilePrefix, DefaultbcsServiceDiscoveryFileName),
 		modules: []string{
-			commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH, commtypes.BCS_MODULE_MESOSAPISERVER,
+			commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE,
 		},
 	}
 
 	return disc, nil
 }
 
-func (disc *bcsDiscovery) Start() error {
+// start
+func (disc *bcsServiceDiscovery) Start() error {
 	var err error
-	disc.moduleDiscovery, err = moduleDiscovery.NewMesosDiscovery(disc.zkAddr)
+	disc.moduleDiscovery, err = moduleDiscovery.NewServiceDiscovery(disc.zkAddr)
 	if err != nil {
 		return err
 	}
@@ -65,11 +65,11 @@ func (disc *bcsDiscovery) Start() error {
 	return nil
 }
 
-func (disc *bcsDiscovery) GetDiscoveryKey() string {
+func (disc *bcsServiceDiscovery) GetDiscoveryKey() string {
 	return disc.key
 }
 
-func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error) {
+func (disc *bcsServiceDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error) {
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	for _, module := range disc.modules {
 		servs, err := disc.moduleDiscovery.GetModuleServers(module)
@@ -81,10 +81,10 @@ func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, 
 		for _, serv := range servs {
 			var conf *types.PrometheusSdConfig
 			switch module {
-			case commtypes.BCS_MODULE_SCHEDULER:
-				ser, ok := serv.(*commtypes.SchedulerServInfo)
+			case commtypes.BCS_MODULE_APISERVER:
+				ser, ok := serv.(*commtypes.APIServInfo)
 				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to SchedulerServInfo", disc.key, module)
+					blog.Errorf("discovery %s module %s failed convert to APIServInfo", disc.key, module)
 					break
 				}
 
@@ -95,10 +95,10 @@ func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, 
 					},
 				}
 
-			case commtypes.BCS_MODULE_MESOSAPISERVER:
-				ser, ok := serv.(*commtypes.BcsMesosApiserverInfo)
+			case commtypes.BCS_MODULE_STORAGE:
+				ser, ok := serv.(*commtypes.BcsStorageInfo)
 				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to MesosDriverServInfo", disc.key, module)
+					blog.Errorf("discovery %s module %s failed convert to BcsStorageInfo", disc.key, module)
 					break
 				}
 
@@ -109,10 +109,10 @@ func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, 
 					},
 				}
 
-			case commtypes.BCS_MODULE_MESOSDATAWATCH:
-				ser, ok := serv.(*commtypes.MesosDataWatchServInfo)
+			case commtypes.BCS_MODULE_NETSERVICE:
+				ser, ok := serv.(*commtypes.NetServiceInfo)
 				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to MesosDataWatchServInfo", disc.key, module)
+					blog.Errorf("discovery %s module %s failed convert to NetServiceInfo", disc.key, module)
 					break
 				}
 
@@ -137,20 +137,20 @@ func (disc *bcsDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, 
 	return promConfigs, nil
 }
 
-func (disc *bcsDiscovery) GetPromSdConfigFile() string {
+func (disc *bcsServiceDiscovery) GetPromSdConfigFile() string {
 	return disc.sdFilePath
 }
 
-func (disc *bcsDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
+func (disc *bcsServiceDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	disc.eventHandler = handleFunc
 }
 
-func (disc *bcsDiscovery) handleEventFunc(module string) {
+func (disc *bcsServiceDiscovery) handleEventFunc(module string) {
 	blog.Infof("discovery %s handle module %s event", disc.key, module)
 	disc.eventHandler(disc.GetDiscoveryKey())
 }
 
-func (disc *bcsDiscovery) syncTickerPromSdConfig() {
+func (disc *bcsServiceDiscovery) syncTickerPromSdConfig() {
 	ticker := time.NewTicker(time.Minute * 5)
 
 	select {
