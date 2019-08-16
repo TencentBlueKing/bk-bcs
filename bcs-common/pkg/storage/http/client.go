@@ -362,9 +362,9 @@ func (s *Client) List(cxt context.Context, key string, selector storage.Selector
 		return nil, err
 	}
 	standardResponse := &Response{}
-	if err := json.Unmarshal(rawData, standardResponse); err != nil {
-		blog.V(3).Infof("http storage decode %s response failed, %s", fullPath, err)
-		return nil, err
+	if jsonErr := json.Unmarshal(rawData, standardResponse); jsonErr != nil {
+		blog.V(3).Infof("http storage decode %s response failed, %s", fullPath, jsonErr)
+		return nil, jsonErr
 	}
 	if standardResponse.Code != 0 {
 		blog.V(3).Infof("http storage List %s failed, %s", fullPath, err)
@@ -452,7 +452,7 @@ func (e *Watch) eventProxy() {
 			return
 		}
 		if watchRes.Code != 0 {
-			//todo(jimwu): error code classification for recovery
+			//todo(DeveloperJim): error code classification for recovery
 			blog.V(3).Infof("http watch %s failed, code: %d, message: %s", e.url, watchRes.Code, watchRes.Message)
 			return
 		}
