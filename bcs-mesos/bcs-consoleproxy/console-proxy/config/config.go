@@ -17,7 +17,7 @@ import (
 	"bk-bcs/bcs-common/common/static"
 )
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile     string
 	CertFile   string
@@ -26,22 +26,21 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
-//containerware Config is a configuration
+// ConsoleProxyConfig Config is a configuration
 type ConsoleProxyConfig struct {
-	Address string
-	Port    int
-
-	ServCert *CertConfig
-
+	Address        string
+	Port           int
+	ServCert       *CertConfig
 	DockerEndpoint string
 	Privilege      bool
 	Cmd            []string
 	Tty            bool
 	Ips            []string
 	IsAuth         bool
+	IsOneSeesion   bool
 }
 
-//NewContainerWareConfig create a config object
+// NewConsoleProxyConfig create a config object
 func NewConsoleProxyConfig() ConsoleProxyConfig {
 	return ConsoleProxyConfig{
 		ServCert: &CertConfig{
