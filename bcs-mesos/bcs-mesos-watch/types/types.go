@@ -13,6 +13,15 @@
 
 package types
 
+const (
+	//ActionAdd add event
+	ActionAdd = "Add"
+	//ActionDelete delete event
+	ActionDelete = "Delete"
+	//ActionUpdate update event
+	ActionUpdate = "Update"
+)
+
 //BcsSyncData holder for sync data
 type BcsSyncData struct {
 	DataType string      //data type: reflect.TypeOf(Item).Name()
@@ -45,7 +54,10 @@ type CmdConfig struct {
 }
 
 const (
-	ApplicationChannelPrefix   = "Application_"
-	TaskgroupChannelPrefix     = "TaskGroup_"
+	//ApplicationChannelPrefix prefix for event post channel
+	ApplicationChannelPrefix = "Application_"
+	//TaskgroupChannelPrefix prefix for event post channel
+	TaskgroupChannelPrefix = "TaskGroup_"
+	//ExportserviceChannelPrefix prefix for event post channel
 	ExportserviceChannelPrefix = "Exportservice_"
 )

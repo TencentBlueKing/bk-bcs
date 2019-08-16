@@ -20,20 +20,23 @@ import (
 	"time"
 )
 
+//ServiceHandler service event handler
 type ServiceHandler struct {
 	oper      DataOperator
 	dataType  string
 	ClusterID string
 }
 
+//GetType implementation
 func (handler *ServiceHandler) GetType() string {
 	return handler.dataType
 }
 
+//CheckDirty implementation
 func (handler *ServiceHandler) CheckDirty() error {
 
 	blog.Info("check dirty data for type: %s", handler.dataType)
-
+	started := time.Now()
 	conditionData := &commtypes.BcsStorageDynamicBatchDeleteIf{
 		UpdateTimeBegin: 0,
 		UpdateTimeEnd:   time.Now().Unix() - 600,
@@ -44,47 +47,56 @@ func (handler *ServiceHandler) CheckDirty() error {
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeSvr, actionDelete, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeSvr, actionDelete, statusSuccess, started)
 	return nil
 }
 
+//Add event implementation
 func (handler *ServiceHandler) Add(data interface{}) error {
 	dataType := data.(*commtypes.BcsService)
 	blog.Info("service add event, service: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.Errorf("service add node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeSvr, actionPut, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeSvr, actionPut, statusSuccess, started)
 	return nil
 }
 
+//Delete event implementation
 func (handler *ServiceHandler) Delete(data interface{}) error {
 	dataType := data.(*commtypes.BcsService)
 	blog.Info("service delete event, service: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Errorf("service delete node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeSvr, actionDelete, statusFailure, started)
+		return err
 	}
-
-	return err
+	reportStorageMetrics(dataTypeSvr, actionDelete, statusSuccess, started)
+	return nil
 }
 
+//Update event implementation
 func (handler *ServiceHandler) Update(data interface{}) error {
 	dataType := data.(*commtypes.BcsService)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.Errorf("service update node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeSvr, actionPut, statusFailure, started)
+		return err
 	}
-
-	return err
+	reportStorageMetrics(dataTypeSvr, actionPut, statusSuccess, started)
+	return nil
 }

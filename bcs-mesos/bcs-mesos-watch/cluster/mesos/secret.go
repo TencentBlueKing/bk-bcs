@@ -21,18 +21,21 @@ import (
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
+//SecretInfo wrapper for BCSSecret
 type SecretInfo struct {
 	data       *commtypes.BcsSecret
 	syncTime   int64
 	reportTime int64
 }
 
+//NewSecretWatch create SecretWatch for data synchronization
 func NewSecretWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *SecretWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
@@ -52,6 +55,7 @@ func NewSecretWatch(cxt context.Context, client ZkClient, reporter cluster.Repor
 	}
 }
 
+//SecretWatch watch all secret data and store in local cache
 type SecretWatch struct {
 	eventLock sync.Mutex       //lock for event
 	report    cluster.Reporter //reporter
@@ -61,6 +65,7 @@ type SecretWatch struct {
 	watchPath string
 }
 
+//Work list all namespace secret periodically
 func (watch *SecretWatch) Work() {
 	watch.ProcessAllSecrets()
 	tick := time.NewTicker(10 * time.Second)
@@ -76,6 +81,7 @@ func (watch *SecretWatch) Work() {
 	}
 }
 
+//ProcessAllSecrets handle all namespaces data
 func (watch *SecretWatch) ProcessAllSecrets() error {
 
 	currTime := time.Now().Unix()
