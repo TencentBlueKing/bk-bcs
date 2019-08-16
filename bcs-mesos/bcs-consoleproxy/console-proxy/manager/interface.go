@@ -18,6 +18,7 @@ import (
 	"net/http"
 )
 
+// Manager is an interface
 type Manager interface {
 	//start
 	Start() error

@@ -17,7 +17,6 @@ import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	comconf "bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/http/httpserver"
 	"bk-bcs/bcs-mesos/bcs-consoleproxy/app/options"
 	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/api"
 	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
@@ -25,14 +24,14 @@ import (
 	"os"
 )
 
+// ConsoleProxy is an console proxy struct
 type ConsoleProxy struct {
 	backend manager.Manager
 	route   *api.Router
 	conf    *config.ConsoleProxyConfig
-
-	httpServ *httpserver.HttpServer
 }
 
+// NewConsoleProxy create an ConsoleProxy object
 func NewConsoleProxy(op *options.ConsoleProxyOption) *ConsoleProxy {
 	setConfig(op)
 
@@ -52,13 +51,12 @@ func NewConsoleProxy(op *options.ConsoleProxyOption) *ConsoleProxy {
 	return c
 }
 
+// Run create a pid
 func (c *ConsoleProxy) Run() {
 	//pid
 	if err := common.SavePid(comconf.ProcessConfig{}); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
-
-	return
 }
 
 func setConfig(op *options.ConsoleProxyOption) {
@@ -70,6 +68,7 @@ func setConfig(op *options.ConsoleProxyOption) {
 	op.Conf.Cmd = op.Cmd
 	op.Conf.Ips = op.Ips
 	op.Conf.IsAuth = op.IsAuth
+	op.Conf.IsOneSeesion = op.IsOneSession
 
 	//server cert directoty
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&

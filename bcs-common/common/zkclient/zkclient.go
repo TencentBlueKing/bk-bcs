@@ -39,6 +39,10 @@ var (
 	AUTH_PWD  = static.ZookeeperClientPwd
 )
 
+type Stat = zk.Stat
+type Event = zk.Event
+type State = zk.State
+
 type ZkLock struct {
 	zkHost []string
 	zkConn *zk.Conn
