@@ -37,9 +37,9 @@ bcs-api模块相关metrics指标
 * dns_request_proxy_total: 转发给bcs service DNS次数，CounterVec，success/failure
 * dns_request_out_proxy_total: 转发给外部DNS次数，CounterVec，success/failure
 * dns_request_latency_milliseconds: dns查找延时，Histogram
-* dns_storage_notify_total: storage通知次数统计，CounterVec，Add/Update/Delete
-* dns_storage_operator_total: storage通知次数统计，CounterVec，增删改查区分
-* dns_storage_operator_latency_milliseconds: storage操作延时，HistogramVec，增删改查区分
+* dns_storage_notify_total: zookeeper通知次数统计，CounterVec，Add/Update/Delete
+* dns_storage_operator_total: 写入etcd操作统计，CounterVec，增删改查区分
+* dns_storage_operator_latency_milliseconds: 写入etcd操作延时，HistogramVec，增删改查区分
 
 ## bcs-health
 
@@ -68,11 +68,12 @@ bcs-api模块相关metrics指标
 
 ## bcs-mesos-datawatch
 
-* mesoswatch_sync_total: storage API请求总数，类型CounterVec，Labels区分不同同步数据类型
-* mesoswatch_sync_err_total: storage API请求错误数，类型CounterVec，Labels区分不同api类型
-* mesoswatch_sync_latency_milliseconds: storage API请求延迟统计，类型HistogramVec，Labels区分不同api类型
-* mesoswatch_storage_notify_total: zookeeper事件触发次数统计，CounterVec，Labels区分不同事件
-* mesoswatch_storage_operator_err_total: zookeeper操作错误，CounterVec，Labels区分不同操作方式，exist,read,watch等
+* bkbcs_datawatch_mesos_storage_total: storage API请求总数，类型CounterVec，Labels区分不同同步数据类型
+* bkbcs_datawatch_mesos_storage_latency_total: storage API请求延迟统计，类型HistogramVec，Labels区分不同api类型
+* bkbcs_datawatch_mesos_sync_total: zookeeper事件触发次数统计，CounterVec，Labels区分不同事件
+* bkbcs_datawatch_mesos_storage_state: bcs-storage服务发现状态，Gauge，正常为1，异常为0
+* bkbcs_datawatch_mesos_cluster_state：datawatch集群状态，正常为1，其他皆为异常
+* bkbcs_datawatch_mesos_role_state：datawatch角色状态，master为1，其余为slave
 
 ## bcs-contaienr-executor
 

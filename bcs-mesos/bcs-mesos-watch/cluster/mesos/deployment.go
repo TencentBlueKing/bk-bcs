@@ -17,15 +17,17 @@ import (
 	"bk-bcs/bcs-common/pkg/cache"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+
 	//schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-common/common/blog"
 	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 //NSControlInfo store all app info under one namespace
@@ -35,12 +37,14 @@ import (
 //	cancel context.CancelFunc //for cancel sub goroutine
 //}
 
+//DeploymentInfo wrapper for BCS Deployment
 type DeploymentInfo struct {
 	data       *schedulertypes.Deployment
 	syncTime   int64
 	reportTime int64
 }
 
+//NewDeploymentWatch create deployment watch
 func NewDeploymentWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *DeploymentWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
@@ -70,6 +74,7 @@ func NewDeploymentWatch(cxt context.Context, client ZkClient, reporter cluster.R
 	}
 }
 
+//DeploymentWatch watch all deployment data and store to local cache
 type DeploymentWatch struct {
 	eventLock sync.Mutex       //lock for event
 	report    cluster.Reporter //reporter
@@ -80,6 +85,7 @@ type DeploymentWatch struct {
 	watchPath string
 }
 
+//Work to add path and node watch
 func (watch *DeploymentWatch) Work() {
 	watch.ProcessAllDeployments()
 	tick := time.NewTicker(10 * time.Second)
@@ -95,6 +101,7 @@ func (watch *DeploymentWatch) Work() {
 	}
 }
 
+//ProcessAllDeployments handle all namespace deployment data
 func (watch *DeploymentWatch) ProcessAllDeployments() error {
 
 	currTime := time.Now().Unix()
@@ -227,7 +234,11 @@ func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 		Action:   "Add",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionAdd, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionAdd, syncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -244,7 +255,11 @@ func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 		Action:   "Delete",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionDelete, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionDelete, syncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -263,5 +278,9 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 		Action:   "Update",
 		Item:     cur,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionUpdate, syncFailure).Inc()
+	} else {
+		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionUpdate, syncSuccess).Inc()
+	}
 }
