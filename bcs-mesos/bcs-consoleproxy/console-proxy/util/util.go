@@ -19,6 +19,7 @@ import (
 	"fmt"
 )
 
+// CreateResponeData create response data
 func CreateResponeData(err error, code int, msg string, data interface{}) []byte {
 	var rpyErr error
 	if err != nil {
