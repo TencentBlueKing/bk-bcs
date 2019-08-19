@@ -98,12 +98,12 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 		m.Lock()
 		_, ok := m.connectedContainers[conf.ContainerID]
 		if ok {
-			blog.Errorf("container %s has established connection", conf.ContainerID)
+			blog.Warnf("container %s has established connection", conf.ContainerID)
 
 			for _, i := range ConsoleCopywritingFailed {
-				ws.WriteMessage(websocket.TextMessage, []byte(i))
+				err := ws.WriteMessage(websocket.TextMessage, []byte(i))
 				if err != nil {
-					blog.Errorf("web socket container %s write message error %s", conf.ContainerID, err.Error())
+					m.Unlock()
 					ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
 					return
 				}
