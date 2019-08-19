@@ -62,7 +62,7 @@ func (handler *ConfigMapHandler) Add(data interface{}) error {
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("configmap add node %s, err %+v", dataNode, err)
-		reportStorageMetrics(dataTypeCfg, actionPut, statusSuccess, started)
+		reportStorageMetrics(dataTypeCfg, actionPut, statusFailure, started)
 		return err
 	}
 	reportStorageMetrics(dataTypeCfg, actionPut, statusSuccess, started)
