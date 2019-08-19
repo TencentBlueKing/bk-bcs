@@ -23,7 +23,7 @@ import (
 	"bk-bcs/bcs-services/bcs-api/config"
 	"bk-bcs/bcs-services/bcs-api/options"
 	"bk-bcs/bcs-services/bcs-api/processor"
-	//"bk-bcs/bcs-services/bcs-api/regdiscv"
+	"bk-bcs/bcs-services/bcs-api/regdiscv"
 	"fmt"
 	"log"
 	"os"
@@ -74,7 +74,7 @@ func run(op *options.ServerOption) {
 	conf := parseConfig(op)
 
 	//run register and discover
-	//regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
+	regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
 
 	proc := processor.NewProcessor(conf)
 	//start processor, and http & websokect service
