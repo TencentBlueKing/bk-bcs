@@ -1,0 +1,10 @@
+{
+  "address": "${localIp}",
+  "port": ${bcsNetServicePort},
+  "metric_port": ${bcsNetServiceMetricPort},
+  "pid_dir": "/var/run/bcs/",
+  "bcs_zookeeper": "${bcsZkHost}",
+  "ca_file": "${caFile}",
+  "server_cert_file": "${serverCertFile}",
+  "server_key_file": "${serverKeyFile}",
+}
