@@ -21,18 +21,21 @@ import (
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
+//EndpointInfo wrapper for BCSEndpoint
 type EndpointInfo struct {
 	data       *commtypes.BcsEndpoint
 	syncTime   int64
 	reportTime int64
 }
 
+//NewEndpointWatch create endpoint watch
 func NewEndpointWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *EndpointWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
@@ -52,6 +55,7 @@ func NewEndpointWatch(cxt context.Context, client ZkClient, reporter cluster.Rep
 	}
 }
 
+//EndpointWatch watch for Endpoint and store all datas to local cache
 type EndpointWatch struct {
 	eventLock sync.Mutex       //lock for event
 	report    cluster.Reporter //reporter
@@ -61,6 +65,7 @@ type EndpointWatch struct {
 	watchPath string
 }
 
+//Work handle all Endpoint datas periodically
 func (watch *EndpointWatch) Work() {
 	watch.ProcessAllEndpoints()
 	tick := time.NewTicker(10 * time.Second)
@@ -76,6 +81,7 @@ func (watch *EndpointWatch) Work() {
 	}
 }
 
+//ProcessAllEndpoints handle all namespace Endpoint data
 func (watch *EndpointWatch) ProcessAllEndpoints() error {
 
 	currTime := time.Now().Unix()

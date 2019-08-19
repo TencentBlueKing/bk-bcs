@@ -20,70 +20,82 @@ import (
 	"time"
 )
 
+//ConfigMapHandler handler for configmap synchronize to bcs-storage
 type ConfigMapHandler struct {
 	oper      DataOperator
 	dataType  string
 	ClusterID string
 }
 
+//GetType get datatype
 func (handler *ConfigMapHandler) GetType() string {
 	return handler.dataType
 }
 
+//CheckDirty clean remote storage dirty data
 func (handler *ConfigMapHandler) CheckDirty() error {
-
+	started := time.Now()
 	blog.Info("check dirty data for type: %s", handler.dataType)
 
 	conditionData := &commtypes.BcsStorageDynamicBatchDeleteIf{
 		UpdateTimeBegin: 0,
 		UpdateTimeEnd:   time.Now().Unix() - 600,
 	}
-
 	dataNode := fmt.Sprintf("/bcsstorage/v1/mesos/dynamic/all_resources/clusters/%s/%s",
 		handler.ClusterID, handler.dataType)
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeCfg, actionDelete, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeCfg, actionDelete, statusSuccess, started)
 	return nil
 }
 
+//Add add new configmap to bcs-storage
 func (handler *ConfigMapHandler) Add(data interface{}) error {
 	dataType := data.(*commtypes.BcsConfigMap)
 	blog.Info("configmap add event, configmap: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("configmap add node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeCfg, actionPut, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeCfg, actionPut, statusSuccess, started)
 	return nil
 }
 
+//Delete delete configmap in storage
 func (handler *ConfigMapHandler) Delete(data interface{}) error {
 	dataType := data.(*commtypes.BcsConfigMap)
 	blog.Info("configmap delete event, configmap: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.V(3).Infof("configmap delete node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeCfg, actionDelete, statusFailure, started)
+		return err
 	}
-	return err
+	reportStorageMetrics(dataTypeCfg, actionDelete, statusSuccess, started)
+	return nil
 }
 
+//Update update configmap in storage
 func (handler *ConfigMapHandler) Update(data interface{}) error {
 	dataType := data.(*commtypes.BcsConfigMap)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("configmap update node %s, err %+v", dataNode, err)
+		reportStorageMetrics(dataTypeCfg, actionPut, statusFailure, started)
+		return err
 	}
-
-	return err
+	reportStorageMetrics(dataTypeCfg, actionPut, statusSuccess, started)
+	return nil
 }

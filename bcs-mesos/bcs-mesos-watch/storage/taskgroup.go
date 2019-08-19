@@ -32,17 +32,19 @@ type TaskGroupHandler struct {
 	DoCheckDirty bool
 }
 
+//GetType implementation
 func (handler *TaskGroupHandler) GetType() string {
 	return handler.dataType
 }
 
+//CheckDirty implementation
 func (handler *TaskGroupHandler) CheckDirty() error {
 	if handler.DoCheckDirty {
 		blog.Info("check dirty data for type: %s", handler.dataType)
 	} else {
 		return nil
 	}
-
+	started := time.Now()
 	conditionData := &commtypes.BcsStorageDynamicBatchDeleteIf{
 		UpdateTimeBegin: 0,
 		UpdateTimeEnd:   time.Now().Unix() - 600,
@@ -53,14 +55,16 @@ func (handler *TaskGroupHandler) CheckDirty() error {
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusSuccess, started)
 	return nil
 }
 
 //Add handler to add
 func (handler *TaskGroupHandler) Add(data interface{}) error {
+	started := time.Now()
 	dataType := data.(*schedtypes.TaskGroup)
 	blog.Info("TaskGroup add event, ID: %s", dataType.ID)
 	reportType, _ := handler.FormatConv(dataType)
@@ -69,9 +73,10 @@ func (handler *TaskGroupHandler) Add(data interface{}) error {
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("TaskGroup add node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeTaskGroup, actionPut, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeTaskGroup, actionPut, statusSuccess, started)
 	return nil
 }
 
@@ -80,14 +85,15 @@ func (handler *TaskGroupHandler) Delete(data interface{}) error {
 	dataType := data.(*schedtypes.TaskGroup)
 
 	blog.Info("TaskGroup delete event, ID: %s", dataType.ID)
-
+	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Error("TaskGroup delete node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeTaskGroup, actionDelete, statusSuccess, started)
 	return nil
 }
 
@@ -95,19 +101,21 @@ func (handler *TaskGroupHandler) Delete(data interface{}) error {
 func (handler *TaskGroupHandler) Update(data interface{}) error {
 	dataType := data.(*schedtypes.TaskGroup)
 	blog.V(3).Infof("TaskGroup update event, ID: %s", dataType.ID)
-
+	started := time.Now()
 	reportType, _ := handler.FormatConv(dataType)
 
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.RunAs + "/" + handler.dataType + "/" + dataType.ID
 	err := handler.oper.CreateDCNode(dataNode, reportType, "PUT")
 	if err != nil {
 		blog.Error("TaskGroup update node(%s) failed: %+v", dataNode, err)
+		reportStorageMetrics(dataTypeTaskGroup, actionPut, statusFailure, started)
 		return err
 	}
-
+	reportStorageMetrics(dataTypeTaskGroup, actionPut, statusSuccess, started)
 	return nil
 }
 
+//FormatConv convert taskgroup to pod status for storage
 func (handler *TaskGroupHandler) FormatConv(taskgroup *schedtypes.TaskGroup) (*commtypes.BcsPodStatus, error) {
 	status := new(commtypes.BcsPodStatus)
 	status.ObjectMeta = taskgroup.ObjectMeta

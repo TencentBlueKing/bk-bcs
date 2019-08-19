@@ -35,8 +35,8 @@ COMMONPATH=./build/bcs.${VERSION}/common
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export
-specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export hpacontroller
+default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus
+specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice hpacontroller
 
 # tag for different edition compiling
 inner:
@@ -114,6 +114,10 @@ daemon:pre
 	gcc -o ${BINARYPATH}/bcs-daemon ./bcs-mesos/bcs-process-daemon/daemon.c -I${BINARYPATH} -L${BINARYPATH} -lprocess
 	rm -f ${BINARYPATH}/process.h
 
+netservice:pre
+	go build ${LDFLAG} -o ${BINARYPATH}/bcs-netservice ./bcs-services/bcs-netservice/main.go
+	go build ${LDFLAG} -o ${BINARYPATH}/bcs-ipam ./bcs-services/bcs-netservice/bcs-ipam/main.go
+
 driver:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-mesos-driver ./bcs-mesos/bcs-mesos-driver/main.go
 
@@ -126,6 +130,9 @@ scheduler:pre
 
 hpacontroller:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-hpacontroller ./bcs-mesos/bcs-hpacontroller
+
+sd_prometheus:pre
+	go build ${LDFLAG} -o ${BINARYPATH}/bcs-sd-prometheus ./bcs-services/bcs-sd-prometheus/main.go
 
 k8s_watch:pre
 	mkdir -p ${BINARYPATH}/bcs-k8s-watch

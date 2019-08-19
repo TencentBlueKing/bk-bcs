@@ -486,11 +486,6 @@ func (docker *DockerContainer) KillContainer(containerName string, signal int) e
 
 //InspectContainer inspect container by name
 func (docker *DockerContainer) InspectContainer(containerName string) (*BcsContainerInfo, error) {
-	if docker.client == nil {
-		err := fmt.Errorf("docker client is nil")
-		logs.Infof(err.Error())
-		return nil, err
-	}
 	container, err := docker.client.InspectContainer(containerName)
 	if err != nil {
 		return nil, err

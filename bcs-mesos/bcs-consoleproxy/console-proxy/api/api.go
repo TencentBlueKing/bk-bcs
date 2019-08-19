@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/ssl"
@@ -25,19 +26,23 @@ import (
 	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
 )
 
+// Router is api router
 type Router struct {
+	sync.RWMutex
 	conf    *config.ConsoleProxyConfig
 	backend manager.Manager
 }
 
+// CreateExecReq is createExec request struct
 type CreateExecReq struct {
 	ContainerID string   `json:"container_id,omitempty"`
 	Cmd         []string `json:"cmd,omitempty"`
 	User        string   `json:"user,omitempty"`
 }
 
+// ResizeExecReq is resizeExec request struct
 type ResizeExecReq struct {
-	ExecId string `json:"exec_id,omitempty"`
+	ExecID string `json:"exec_id,omitempty"`
 	Width  int    `json:"width,omitempty"`
 	Height int    `json:"height,omitempty"`
 }
@@ -107,7 +112,7 @@ func (r *Router) createExec(w http.ResponseWriter, req *http.Request) {
 		createExecReq.Cmd = r.conf.Cmd
 	}
 	webconsole := &types.WebSocketConfig{
-		ContainerId: createExecReq.ContainerID,
+		ContainerID: createExecReq.ContainerID,
 		User:        createExecReq.User,
 		Cmd:         createExecReq.Cmd,
 	}
@@ -116,12 +121,18 @@ func (r *Router) createExec(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) startExec(w http.ResponseWriter, req *http.Request) {
-	req.ParseForm()
-	execId := req.FormValue("exec_id")
+
+	err := req.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	execID := req.FormValue("exec_id")
+	containerID := req.FormValue("container_id")
 
 	webconsole := &types.WebSocketConfig{
-		ExecId: execId,
-		Origin: req.Header.Get("Origin"),
+		ExecID:      execID,
+		ContainerID: containerID,
+		Origin:      req.Header.Get("Origin"),
 	}
 
 	// handler container web console
@@ -137,13 +148,13 @@ func (r *Router) resizeExec(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	if resizeExecReq.ExecId == "" {
+	if resizeExecReq.ExecID == "" {
 		http.Error(w, "exec_id must be provided", http.StatusBadRequest)
 		return
 	}
 
 	webconsole := &types.WebSocketConfig{
-		ExecId: resizeExecReq.ExecId,
+		ExecID: resizeExecReq.ExecID,
 		Height: resizeExecReq.Height,
 		Width:  resizeExecReq.Width,
 	}

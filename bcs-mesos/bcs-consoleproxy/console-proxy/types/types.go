@@ -13,15 +13,16 @@
 
 package types
 
+// WebSocketConfig is config
 type WebSocketConfig struct {
 	Height      int
 	Width       int
 	Privilege   bool
 	Cmd         []string
 	Tty         bool
-	ContainerId string
+	ContainerID string
 	Token       string
 	Origin      string
 	User        string
-	ExecId      string
+	ExecID      string
 }

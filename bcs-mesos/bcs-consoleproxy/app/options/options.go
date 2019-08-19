@@ -33,6 +33,7 @@ type ConsoleProxyOption struct {
 	DockerEndpoint string   `json:"docker-endpoint" value:"" usage:"docker endpoint"`
 	Ips            []string `json:"ips" value:"" usage:"IP white list"`
 	IsAuth         bool     `json:"is-auth" value:"" usage:"is auth"`
+	IsOneSession   bool     `json:"is-one-session" value:"" usage:"support just one session for an container"`
 
 	Conf config.ConsoleProxyConfig
 }

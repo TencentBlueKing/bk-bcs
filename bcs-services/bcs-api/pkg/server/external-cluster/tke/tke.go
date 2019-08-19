@@ -152,10 +152,10 @@ func (t *tkeCluster) BindClusterLb() error {
 	return nil
 }
 
-func (t *tkeCluster) GetMasterVip() (bool, error) {
+func (t *tkeCluster) GetMasterVip() (string, error) {
 	tkeClient, err := NewClient(t.TkeClusterRegion, "GET")
 	if err != nil {
-		return false, fmt.Errorf("error when creating tke client: %s", err.Error())
+		return "", fmt.Errorf("error when creating tke client: %s", err.Error())
 	}
 
 	args := GetMasterVipArgs{
@@ -164,17 +164,13 @@ func (t *tkeCluster) GetMasterVip() (bool, error) {
 	response := &GetMasterVipResponse{}
 	err = tkeClient.Invoke(TkeSdkToGetMasterVip, &args, response)
 	if err != nil {
-		return false, fmt.Errorf("error when invoking tke api %s: %s", TkeSdkToGetMasterVip, err.Error())
+		return "", fmt.Errorf("error when invoking tke api %s: %s", TkeSdkToGetMasterVip, err.Error())
 	}
 	if response.Code != 0 {
-		return false, fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetMasterVip, t.TkeClusterId, response.CodeDesc, response.Message)
+		return "", fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetMasterVip, t.TkeClusterId, response.CodeDesc, response.Message)
 	}
 
-	if response.Data.Status != "success" {
-		return false, nil
-	}
-
-	return true, nil
+	return response.Data.Status, nil
 }
 
 func NewClient(tkeClusterRegion, method string) (*Client, error) {

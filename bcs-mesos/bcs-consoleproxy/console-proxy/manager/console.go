@@ -25,6 +25,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// ConsoleCopywritingFailed is a response string
+var ConsoleCopywritingFailed = []string{
+	"#######################################################################\r\n",
+	"#                    Welcome To BKDevOps Console                      #\r\n",
+	"#                该环境已经处于调试状态,禁止同时连接多个会话          #\r\n",
+	"#######################################################################\r\n",
+}
+
 type errMsg struct {
 	Msg string `json:"msg,omitempty"`
 }
@@ -50,6 +58,7 @@ func (c *wsConn) Write(p []byte) (n int, err error) {
 	return wc.Write(p)
 }
 
+// ResponseJSON response to client
 func ResponseJSON(w http.ResponseWriter, status int, v interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -62,9 +71,10 @@ func ResponseJSON(w http.ResponseWriter, status int, v interface{}) error {
 	return err
 }
 
+// StartExec start a websocket exec
 func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
+	blog.Debug(fmt.Sprintf("start exec for container exec_id %s", conf.ExecID))
 
-	blog.Debug(fmt.Sprintf("start exec for container exec_id %s", conf.ExecId))
 	upgrader := websocket.Upgrader{
 		EnableCompression: true,
 	}
@@ -84,22 +94,52 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	}
 	defer ws.Close()
 
+	if m.conf.IsOneSeesion {
+		m.Lock()
+		_, ok := m.connectedContainers[conf.ContainerID]
+		if ok {
+			blog.Errorf("container %s has established connection", conf.ContainerID)
+
+			for _, i := range ConsoleCopywritingFailed {
+				ws.WriteMessage(websocket.TextMessage, []byte(i))
+				if err != nil {
+					blog.Errorf("web socket container %s write message error %s", conf.ContainerID, err.Error())
+					ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
+					return
+				}
+
+			}
+			m.Unlock()
+			err = fmt.Errorf("container %s has established connection", conf.ContainerID)
+			ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
+			return
+		}
+
+		m.connectedContainers[conf.ContainerID] = true
+		m.Unlock()
+
+		defer func() {
+			m.Lock()
+			delete(m.connectedContainers, conf.ContainerID)
+			m.Unlock()
+		}()
+	}
+
 	ws.SetCloseHandler(nil)
 	ws.SetPingHandler(nil)
 
 	err = m.startExec(&wsConn{ws}, conf)
 	if err != nil {
-		blog.Info(err.Error())
+		blog.Errorf("start exec failed for container %s: %s", conf.ContainerID, err.Error())
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return
 	}
 
 	ResponseJSON(w, http.StatusSwitchingProtocols, nil)
-	return
 }
 
 func (m *manager) CreateExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
-	blog.Debug(fmt.Sprintf("start create exec for container %s", conf.ContainerId))
+	blog.Debug(fmt.Sprintf("start create exec for container %s", conf.ContainerID))
 	// 创建连接
 	exec, err := m.dockerClient.CreateExec(docker.CreateExecOptions{
 		AttachStdin:  true,
@@ -108,7 +148,7 @@ func (m *manager) CreateExec(w http.ResponseWriter, r *http.Request, conf *types
 		Tty:          m.conf.Tty,
 		Env:          nil,
 		Cmd:          conf.Cmd,
-		Container:    conf.ContainerId,
+		Container:    conf.ContainerID,
 		User:         conf.User,
 		Privileged:   m.conf.Privilege,
 	})
@@ -119,13 +159,12 @@ func (m *manager) CreateExec(w http.ResponseWriter, r *http.Request, conf *types
 	}
 
 	ResponseJSON(w, http.StatusOK, exec)
-	return
 }
 
 func (m *manager) startExec(ws io.ReadWriter, conf *types.WebSocketConfig) error {
 	fmt.Println("start exec")
 	// 执行连接
-	err := m.dockerClient.StartExec(conf.ExecId, docker.StartExecOptions{
+	err := m.dockerClient.StartExec(conf.ExecID, docker.StartExecOptions{
 		InputStream:  ws,
 		OutputStream: ws,
 		ErrorStream:  ws,
@@ -134,21 +173,16 @@ func (m *manager) startExec(ws io.ReadWriter, conf *types.WebSocketConfig) error
 		RawTerminal:  true,
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (m *manager) ResizeExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
-	blog.Debug(fmt.Sprintf("start resize for container exec_id %s", conf.ExecId))
-	err := m.dockerClient.ResizeExecTTY(conf.ExecId, conf.Height, conf.Width)
+	blog.Debug(fmt.Sprintf("start resize for container exec_id %s", conf.ExecID))
+	err := m.dockerClient.ResizeExecTTY(conf.ExecID, conf.Height, conf.Width)
 	if err != nil {
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})
 		return
 	}
 
 	ResponseJSON(w, http.StatusOK, nil)
-	return
 }

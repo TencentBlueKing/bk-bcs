@@ -22,10 +22,11 @@ import (
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"strconv"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 //CCResponse response struct from CC
@@ -207,7 +208,7 @@ func (cc *CCStorage) init() error {
 	return nil
 }
 
-// had better add rwlock
+//SetDCAddress had better add rwlock
 func (cc *CCStorage) SetDCAddress(address []string) {
 	blog.Info("CCStorage set DC address: %s", address)
 	cc.rwServers.Lock()
@@ -217,6 +218,7 @@ func (cc *CCStorage) SetDCAddress(address []string) {
 	return
 }
 
+//GetDCAddress get bcs-storage address
 func (cc *CCStorage) GetDCAddress() string {
 
 	address := ""
@@ -286,6 +288,7 @@ func (cc *CCStorage) Worker() {
 	}
 }
 
+//CreateDCNode bcs-storage create operation
 func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string) error {
 
 	if len(node) == 0 || value == nil {
@@ -332,6 +335,7 @@ func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string)
 	return nil
 }
 
+//DeleteDCNode storage delete operation
 func (cc *CCStorage) DeleteDCNode(node, action string) error {
 	if len(node) == 0 {
 		blog.Error("CCStorage Get empty node")
@@ -369,6 +373,7 @@ func (cc *CCStorage) DeleteDCNode(node, action string) error {
 	return nil
 }
 
+//DeleteDCNodes bcs-storage delete operation
 func (cc *CCStorage) DeleteDCNodes(node string, value interface{}, action string) error {
 
 	if len(node) == 0 || value == nil {
