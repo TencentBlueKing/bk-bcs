@@ -22,7 +22,7 @@ import (
 	"bk-bcs/bcs-common/common/codec"
 	"bk-bcs/bcs-services/bcs-storage/storage/operator"
 
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
 )
 
 // The ServerSide handler in a watch action.
@@ -36,6 +36,7 @@ type watchServer struct {
 }
 
 var (
+	//DefaultWriter default json writer
 	DefaultWriter = func(resp *restful.Response, event *operator.Event) bool {
 		if err := codec.EncJsonWriter(event, resp.ResponseWriter); err != nil {
 			blog.Errorf("defaultWriter error: %v", err)
@@ -45,6 +46,7 @@ var (
 	}
 )
 
+//NewWatchServer create default json formate watchServer
 func NewWatchServer(req *restful.Request, resp *restful.Response, tank operator.Tank) (*watchServer, error) {
 	opts := new(operator.WatchOptions)
 	if err := codec.DecJsonReader(req.Request.Body, opts); err != nil {
@@ -59,6 +61,7 @@ func NewWatchServer(req *restful.Request, resp *restful.Response, tank operator.
 	}, nil
 }
 
+//Go running watchServer
 func (ws *watchServer) Go(ctx context.Context) {
 	if ws.tank == nil || ws.req == nil || ws.resp == nil {
 		blog.Errorf(ws.sprint("Go() error, tank or req or resp can not be nil"))

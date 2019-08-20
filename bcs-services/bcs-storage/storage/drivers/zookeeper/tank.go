@@ -51,6 +51,7 @@ func (od *originDriver) copy() *zkclient.ZkClient {
 
 var driverPool map[string]*originDriver
 
+//RegisterZkTank register zookeeper operation unit
 func RegisterZkTank(name string, info *operator.DBInfo) (err error) {
 	if driverPool == nil {
 		driverPool = make(map[string]*originDriver, 10)
@@ -70,9 +71,10 @@ func RegisterZkTank(name string, info *operator.DBInfo) (err error) {
 	}
 	driver.pool = client
 	driverPool[name] = driver
-	return
+	return nil
 }
 
+//NewZkTank create zookeeper operation unit
 func NewZkTank(name string) operator.Tank {
 	tank := &zkTank{}
 	if tank.err = tank.init(name); tank.err != nil {
@@ -83,9 +85,9 @@ func NewZkTank(name string) operator.Tank {
 
 type zkTank struct {
 	isInit        bool
-	name          string
 	hasChild      bool
 	isTransaction bool
+	name          string
 
 	acl    []zk.ACL
 	driver *originDriver
@@ -208,6 +210,7 @@ func (zt *zkTank) Close() {
 	// zk use one client no need to close
 }
 
+// GetValue Tank implementation
 func (zt *zkTank) GetValue() []interface{} {
 	if zt.scope.value == nil {
 		zt.scope.value = []interface{}{}
@@ -215,10 +218,12 @@ func (zt *zkTank) GetValue() []interface{} {
 	return zt.scope.value
 }
 
+// GetLen Tank implementation
 func (zt *zkTank) GetLen() int {
 	return zt.scope.length
 }
 
+// GetError Tank implementation
 func (zt *zkTank) GetError() error {
 	if zt.err != nil {
 		return zt.err
@@ -226,101 +231,117 @@ func (zt *zkTank) GetError() error {
 	return zt.scope.err
 }
 
+// GetChangeInfo Tank implementation
 func (zt *zkTank) GetChangeInfo() *operator.ChangeInfo {
 	return zt.scope.changeInfo
 }
 
+// Databases Tank implementation
 func (zt *zkTank) Databases() operator.Tank {
 	return zt.clone().newScope(operator.Databases).tank
 }
 
+// Using Tank implementation
 func (zt *zkTank) Using(name string) operator.Tank {
 	return zt.clone().switchRoot(name)
 }
 
+// Tables Tank implementation
 func (zt *zkTank) Tables() operator.Tank {
 	return zt.clone().newScope(operator.Tables).tank
 }
 
+// SetTableV Tank implementation
 func (zt *zkTank) SetTableV(data interface{}) operator.Tank {
 	return zt.clone().setTableD(data).newScope(operator.SetTableV).tank
 }
 
+// GetTableV Tank implementation
 func (zt *zkTank) GetTableV() operator.Tank {
 	return zt.clone().newScope(operator.GetTableV).tank
 }
 
+// From Tank implementation
 func (zt *zkTank) From(name string) operator.Tank {
 	return zt.clone().switchTable(name)
 }
 
-// NOT INVOLVED
+// Distinct Tank implementation
 func (zt *zkTank) Distinct(key string) operator.Tank {
 	return zt.clone().search.setDistinct(key).tank
 }
 
-// NOT INVOLVED
+// OrderBy Tank implementation
 func (zt *zkTank) OrderBy(key ...string) operator.Tank {
 	return zt.clone().search.setOrder(key...).tank
 }
 
-// NOT INVOLVED
+// Select Tank implementation
 func (zt *zkTank) Select(key ...string) operator.Tank {
 	return zt.clone().search.setSelector(key...).tank
 }
 
-// NOT INVOLVED
+// Offset Tank implementation
 func (zt *zkTank) Offset(n int) operator.Tank {
 	return zt.clone().search.setOffset(n).tank
 }
 
-// NOT INVOLVED
+// Limit Tank implementation
 func (zt *zkTank) Limit(n int) operator.Tank {
 	return zt.clone().search.setLimit(n).tank
 }
 
-// NOT INVOLVED
+// Index Tank implementation
 func (zt *zkTank) Index(key ...string) operator.Tank {
 	return zt.clone()
 }
 
-// NOT INVOLVED
+// Filter Tank implementation
 func (zt *zkTank) Filter(cond *operator.Condition, args ...interface{}) operator.Tank {
 	return zt.clone().search.combineCondition(cond).tank
 }
 
+// Count Tank implementation
 func (zt *zkTank) Count() operator.Tank {
 	return zt.clone().newScope(operator.Count).tank
 }
 
+// Query Tank implementation
 func (zt *zkTank) Query(args ...interface{}) operator.Tank {
 	return zt.clone().newScope(operator.Query).tank
 }
 
+// Insert Tank implementation
 func (zt *zkTank) Insert(data ...operator.M) operator.Tank {
 	return zt.clone().setData(data...).newScope(operator.Insert).tank
 }
 
+// Upsert Tank implementation
 func (zt *zkTank) Upsert(data operator.M, args ...interface{}) operator.Tank {
 	return zt.clone().setData(data).newScope(operator.Upsert).tank
 }
 
+// Update Tank implementation
 func (zt *zkTank) Update(data operator.M, args ...interface{}) operator.Tank {
 	return zt.clone().setData(data).newScope(operator.Update).tank
 }
 
+// UpdateAll Tank implementation
 func (zt *zkTank) UpdateAll(data operator.M, args ...interface{}) operator.Tank {
 	return zt.clone().setData(data).newScope(operator.UpdateAll).tank
 }
 
+// Remove Tank implementation
 func (zt *zkTank) Remove(args ...interface{}) operator.Tank {
 	return zt.clone().newScope(operator.Remove).tank
 }
 
+// RemoveAll Tank implementation
 func (zt *zkTank) RemoveAll(args ...interface{}) operator.Tank {
 	return zt.clone().newScope(operator.RemoveAll).tank
 }
 
+// Watch Tank implementation
 func (zt *zkTank) Watch(opts *operator.WatchOptions) (chan *operator.Event, context.CancelFunc) {
 	return nil, nil
 }
