@@ -127,6 +127,7 @@ func (wh *watchHandler) watching(pCtx context.Context) {
 			wh.event <- operator.EventWatchBreak
 			listener.wr.unsubscribe(we)
 			blog.Infof("mongodb watching | end watch: %s", ns)
+			cancel()
 			return //nolint
 		case op = <-we.w:
 			eventsNumber++
@@ -456,6 +457,7 @@ var (
 	listenerPoolLock sync.RWMutex
 )
 
+// StartWatch start storage operator unit watch
 func StartWatch(tank operator.Tank, name string) {
 	t, ok := tank.(*mongoTank)
 	if !ok {

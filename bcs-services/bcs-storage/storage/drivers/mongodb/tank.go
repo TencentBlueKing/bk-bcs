@@ -21,7 +21,7 @@ import (
 	storageErr "bk-bcs/bcs-services/bcs-storage/storage/errors"
 	"bk-bcs/bcs-services/bcs-storage/storage/operator"
 
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 )
 
 type originDriver struct {
@@ -34,6 +34,7 @@ type originDriver struct {
 
 var driverPool map[string]*originDriver
 
+// RegisterMongodbTank register mongodb operation unit
 func RegisterMongodbTank(name string, info *operator.DBInfo) (err error) {
 	if driverPool == nil {
 		driverPool = make(map[string]*originDriver, 10)
@@ -68,6 +69,7 @@ func RegisterMongodbTank(name string, info *operator.DBInfo) (err error) {
 	return
 }
 
+// NewMongodbTank create mongodb operation unit
 func NewMongodbTank(name string) operator.Tank {
 	tank := &mongoTank{}
 	if tank.err = tank.init(name); tank.err != nil {
@@ -78,10 +80,10 @@ func NewMongodbTank(name string) operator.Tank {
 
 type mongoTank struct {
 	isInit        bool
-	name          string
-	listenerName  string
 	hasChild      bool
 	isTransaction bool
+	name          string
+	listenerName  string
 
 	driver     *originDriver
 	session    *mgo.Session
