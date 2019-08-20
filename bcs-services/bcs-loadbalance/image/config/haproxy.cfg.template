@@ -7,15 +7,15 @@ global
   nbthread 4
   spread-checks 5
   max-spread-checks 15000
-  maxconn 102400
+  maxconn 302400
   pidfile /var/run/haproxy.pid {{if ne .SSLCert ""}}
   ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
   ssl-default-bind-options no-tls-tickets{{end}}
 defaults
   log                  global
-  retries                   3
+  retries                   1
   backlog               10000
-  maxconn               102400
+  maxconn               202400
   timeout connect          3s
   timeout client          15s
   timeout server          15s
@@ -28,12 +28,15 @@ defaults
   option            http-server-close
   option            redispatch
   option            forwardfor
+  option            srvtcpka
+  option            clitcpka
+
 frontend secure
   bind *:8080
   mode http
   stats enable
   stats uri /bcsadm?token=bcsteam
-  stats auth bcsadmin:GseBcs1qaz@WSX
+  stats auth bcsadmin:Bcs1qaz2wsx
   stats hide-version
   stats admin if TRUE
   stats refresh 30s
