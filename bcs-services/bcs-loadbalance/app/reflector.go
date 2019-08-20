@@ -80,6 +80,7 @@ func GetName(node string) string {
 
 //NewReflector create new ServiceReflector
 func NewReflector(config *option.LBConfig, handler EventHandler) *ServiceReflector {
+	LoadbalanceZookeeperStateMetric.Set(1)
 	hosts := strings.Split(config.Zookeeper, ",")
 	return &ServiceReflector{
 		dataCache:    cache.NewCache(ExportServiceKeyFunc),
@@ -298,6 +299,7 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 func (reflector *ServiceReflector) Start() error {
 	//step1: zkInit, all zookeeper event setting
 	if err := reflector.zkInit(); err != nil {
+		LoadbalanceZookeeperStateMetric.Set(0)
 		blog.Errorf("zookeeper init failed: %s", err.Error())
 		return err
 	}
@@ -368,12 +370,14 @@ func (reflector *ServiceReflector) watchClusterPath() error {
 func (reflector *ServiceReflector) listChildrenNode(node string) []string {
 	children, _, err := reflector.zkConn.Children(reflector.watchPath)
 	if err != nil {
+		LoadbalanceZookeeperStateMetric.Set(0)
 		blog.Errorf("reflector get cluster path children error: %s", err.Error())
 		return nil
 	}
 	if len(children) == 0 {
 		blog.Infof("Get no service children node from cluster path: %s", reflector.watchPath)
 	}
+	LoadbalanceZookeeperStateMetric.Set(1)
 	return children
 }
 
@@ -599,6 +603,7 @@ func (reflector *ServiceReflector) run() {
 	for {
 		select {
 		case <-reflector.exit:
+			LoadbalanceZookeeperStateMetric.Set(0)
 			blog.Infof("Ticker receive exit event.")
 			return
 		case <-tick.C:

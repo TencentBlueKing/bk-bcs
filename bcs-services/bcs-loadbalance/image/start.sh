@@ -1,7 +1,14 @@
 #!/bin/bash
 
+# set kernel parameters
+sysctl -w net.ipv4.tcp_syncookies=1
+sysctl -w net.ipv4.tcp_tw_reuse=1
+sysctl -w net.ipv4.tcp_tw_recycle=1
+sysctl -w net.ipv4.tcp_fin_timeout=30
+
 proxy=$1
 lb_interface_name=${LB_NETWORKCARD-"eth1"}
+localIp=`ifconfig $lb_interface_name | /bin/grep 'inet 10\.\|inet 172\.\|inet 192\.\|inet 100\.\|inet 9\.' | awk '{print $2}'`
 
 #start proxy module and shift cli arg
 if [ $proxy == "haproxy" ]; then
@@ -60,7 +67,7 @@ do
   if [ $num == 0 ]; then
     #starting loadbalance watch configuration and reload haproxy
     cd /bcs-lb
-    /bcs-lb/bcs-loadbalance $@ --proxy $proxy  > ./logs/bcs-loadbalance.log 2>&1 &
+    /bcs-lb/bcs-loadbalance $@ --proxy $proxy --address $localIp > ./logs/bcs-loadbalance.log 2>&1 &
   fi
   currentHour=$(date +%H)
   currentMin=$(date +%M)
