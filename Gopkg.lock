@@ -29,9 +29,12 @@
   version = "v1.3.4"
 
 [[projects]]
-  digest = "1:f9ae348e1f793dcf9ed930ed47136a67343dbd6809c5c91391322267f4476892"
+  digest = "1:5d24344f711ecb9175a6fefcaac996b2040e34b73a27f61feb1896d50d055065"
   name = "github.com/Microsoft/go-winio"
-  packages = ["."]
+  packages = [
+    ".",
+    "archive/tar",
+  ]
   pruneopts = "UT"
   revision = "97e4973ce50b2ff5f09635a57e2b88a037aae829"
   version = "v0.4.11"
@@ -1649,11 +1652,21 @@
   revision = "1638f8970cefaa404ff3a62950f88b08292b2696"
   version = "v9.0.0"
 
+[[projects]]
+  digest = "1:4e808df2bd547926461775659337e640792bf0ce45a46213e5151a7d1a2551dd"
+  name = "k8s.io/kubernetes"
+  packages = ["staging/src/k8s.io/apimachinery/pkg/util/json"]
+  pruneopts = "UT"
+  revision = "2d3c76f9091b6bec110a5e63777c332469e0cba2"
+  version = "v1.15.3"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "cloud.google.com/go/compute/metadata",
+    "github.com/Microsoft/go-winio",
+    "github.com/Microsoft/go-winio/archive/tar",
     "github.com/andygrunwald/megos",
     "github.com/asaskevich/govalidator",
     "github.com/aws/aws-sdk-go",
@@ -1757,6 +1770,7 @@
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/transport",
+    "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
