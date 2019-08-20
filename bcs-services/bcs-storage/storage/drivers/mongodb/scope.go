@@ -83,9 +83,9 @@ func (s *scope) do() *scope {
 		s.err = storageErr.UnknownOperationType
 	}
 	if s.err != nil {
-		reportMongdbMetrics(s.operation, "FAILURE", started)
+		reportMongdbMetrics(string(s.operation), "FAILURE", started)
 	} else {
-		reportMongdbMetrics(s.operation, "SUCCESS", started)
+		reportMongdbMetrics(string(s.operation), "SUCCESS", started)
 	}
 	return s
 }
