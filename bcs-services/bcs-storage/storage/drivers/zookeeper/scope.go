@@ -16,6 +16,7 @@ package zookeeper
 import (
 	storageErr "bk-bcs/bcs-services/bcs-storage/storage/errors"
 	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"time"
 
 	"github.com/samuel/go-zookeeper/zk"
 )
@@ -60,6 +61,7 @@ func (s *scope) clone() *scope {
 
 // Do the actual operation to mongodb
 func (s *scope) do() *scope {
+	started := time.Now()
 	switch s.operation {
 	case operator.None:
 	case operator.Query:
@@ -88,6 +90,11 @@ func (s *scope) do() *scope {
 		s.doSetTableV()
 	default:
 		s.err = storageErr.UnknownOperationType
+	}
+	if s.err != nil {
+		reportZKMetrics(string(s.operation), "FAILURE", started)
+	} else {
+		reportZKMetrics(string(s.operation), "SUCCESS", started)
 	}
 	return s
 }
