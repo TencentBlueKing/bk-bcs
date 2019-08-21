@@ -16,20 +16,20 @@ package mesos
 import "github.com/prometheus/client_golang/prometheus"
 
 const (
-	syncStorageErr = "ZOOKEEPERErr"
-	syncSuccess    = "SUCCESS"
-	syncFailure    = "FAILURE"
+	//syncStorageErr = "ZOOKEEPERErr"
+	syncSuccess = "SUCCESS"
+	syncFailure = "FAILURE"
 
-	actionGetData = "GetData"
-	actionWatch   = "Watch"
+	//actionGetData = "GetData"
+	//actionWatch = "Watch"
 
 	dataTypeApp       = "Application"
 	dataTypeTaskGroup = "TaskGroup"
 	dataTypeCfg       = "Configmap"
-	dataTypeSecret    = "Secret"
-	dataTypeDeploy    = "Deployment"
-	dataTypeSvr       = "Service"
-	dataTypeExpSVR    = "ExportService"
+	//dataTypeSecret    = "Secret"
+	dataTypeDeploy = "Deployment"
+	dataTypeSvr    = "Service"
+	dataTypeExpSVR = "ExportService"
 )
 
 var (
