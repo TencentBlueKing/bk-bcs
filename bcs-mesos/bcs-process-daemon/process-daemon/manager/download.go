@@ -113,7 +113,7 @@ func (m *manager) downloadAndTarProcessPackages(processInfo *types.ProcessInfo) 
 		blog.Errorf("process %s package %s gzip.NewReader error %s", processInfo.Id, uriPack.PackagesFile, err.Error())
 		return err
 	}
-	gr.Close()
+	defer gr.Close()
 
 	r := tar.NewReader(gr)
 	for hdr, err := r.Next(); err != io.EOF; hdr, err = r.Next() {
