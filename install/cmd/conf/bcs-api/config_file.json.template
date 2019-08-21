@@ -31,5 +31,11 @@
     "turn_on_rbac": false,
     "turn_on_auth": false,
     "turn_on_conf": false
+  },
+  "tke": {
+        "secret_id": "${tkeSecretId}",
+        "secret_key": "${tkeSecretKey}",
+        "ccs_host": "${tkeCcsHost}",
+        "ccs_path": "${tkeCcsPath}"
   }
 }
