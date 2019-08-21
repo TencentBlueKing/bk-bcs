@@ -1,0 +1,95 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package main
+
+import (
+	"net"
+	"os"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-common/common/http/httpserver"
+	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/api"
+	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/config"
+	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/manager"
+)
+
+type Option struct {
+	conf.FileConfig
+	conf.ServiceConfig
+	conf.MetricConfig
+	conf.CertConfig
+	conf.LicenseServerConfig
+	conf.LogConfig
+	conf.ProcessConfig
+
+	DataDir      string `json:"data-dir" value:"" usage:"the process daemon data dir"`
+	UnixSocket   string `json:"unix-socket" value:"" usage:"the unix socket path"`
+	WorkspaceDir string `json:"workspace-dir" value:"" usage:"the process packages dir"`
+}
+
+func Init() {
+	op := &Option{}
+	conf.Parse(op)
+	op.LogConfig.ToStdErr = true
+	op.DataDir = "./data"
+	op.UnixSocket = "/var/run/process.sock"
+	op.WorkspaceDir = "/data/bcs/workspace"
+
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
+
+	_, err := os.Stat(op.DataDir)
+	if err != nil {
+		blog.Errorf("datadir %s don't exist")
+		return
+	}
+
+	config := &config.Config{
+		DataDir:      op.DataDir,
+		WorkspaceDir: op.WorkspaceDir,
+	}
+	manager := manager.NewManager(config)
+	err = manager.Init()
+	if err != nil {
+		blog.Errorf("manager init error %s", err.Error())
+		return
+	}
+	manager.Start()
+	route := api.NewRouter(manager)
+
+	os.Remove(op.UnixSocket)
+
+	unixaddr, err := net.ResolveUnixAddr("unix", op.UnixSocket)
+	if err != nil {
+		blog.Errorf("resolve unixaddr %s error %s", op.UnixSocket, err.Error())
+		return
+	}
+
+	l, err := net.ListenUnix("unix", unixaddr)
+	if err != nil {
+		blog.Errorf("listen unix addr %s error %s", op.UnixSocket, err.Error())
+		return
+	}
+
+	httpServ := httpserver.NewHttpServer(uint(0), "", "")
+	httpServ.RegisterWebServer("/bcsapi/v1/processdaemon", nil, route.GetActions())
+
+	err = httpServ.Serve(l)
+	return
+}
+
+func main() {
+	Init()
+}
