@@ -43,5 +43,5 @@ func init() {
 //reportAPIMetrics report all api action metrics
 func reportMongdbMetrics(method, status string, started time.Time) {
 	operatorTotal.WithLabelValues(method, status).Inc()
-	operatorLatency.WithLabelValues(method, status).Observe(time.Since(started).Seconds())
+	go operatorLatency.WithLabelValues(method, status).Observe(time.Since(started).Seconds())
 }
