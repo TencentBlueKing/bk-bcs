@@ -51,6 +51,13 @@ func (s *scope) clone() *scope {
 // Do the actual operation to mongodb
 func (s *scope) do() *scope {
 	started := time.Now()
+	defer func() {
+		if s.err != nil {
+			reportMongdbMetrics(string(s.operation), "FAILURE", started)
+		} else {
+			reportMongdbMetrics(string(s.operation), "SUCCESS", started)
+		}
+	}()
 	switch s.operation {
 	case operator.None:
 	case operator.Query:
@@ -81,11 +88,6 @@ func (s *scope) do() *scope {
 		s.err = storageErr.SetTableVNotSupported
 	default:
 		s.err = storageErr.UnknownOperationType
-	}
-	if s.err != nil {
-		reportMongdbMetrics(string(s.operation), "FAILURE", started)
-	} else {
-		reportMongdbMetrics(string(s.operation), "SUCCESS", started)
 	}
 	return s
 }

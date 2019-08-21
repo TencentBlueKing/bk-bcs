@@ -278,77 +278,77 @@ func (mt *mongoTank) Distinct(key string) operator.Tank {
 	return mt.clone().search.setDistinct(key).tank
 }
 
-// set order key, will no reach db until Query() called
+// OrderBy set order key, will no reach db until Query() called
 func (mt *mongoTank) OrderBy(key ...string) operator.Tank {
 	return mt.clone().search.setOrder(key...).tank
 }
 
-// set select key, will no reach db until Query() called
+// Select set select key, will no reach db until Query() called
 func (mt *mongoTank) Select(key ...string) operator.Tank {
 	return mt.clone().search.setSelector(key...).tank
 }
 
-// set offset value, will no reach db until Query() called
+// Offset set offset value, will no reach db until Query() called
 func (mt *mongoTank) Offset(n int) operator.Tank {
 	return mt.clone().search.setOffset(n).tank
 }
 
-// set limit value, will no reach db until Query() called
+// Limit set limit value, will no reach db until Query() called
 func (mt *mongoTank) Limit(n int) operator.Tank {
 	return mt.clone().search.setLimit(n).tank
 }
 
-// set unique index
+// Index set unique index
 func (mt *mongoTank) Index(key ...string) operator.Tank {
 	return mt.clone().setIndex(key...)
 }
 
-// add condition for filter, multi filter will be combine with AND
+// Filter add condition for filter, multi filter will be combine with AND
 func (mt *mongoTank) Filter(cond *operator.Condition, args ...interface{}) operator.Tank {
 	return mt.clone().search.combineCondition(cond).tank
 }
 
-// count the data length according to filters before
+// Count the data length according to filters before
 func (mt *mongoTank) Count() operator.Tank {
 	return mt.clone().newScope(operator.Count).tank
 }
 
-// query the value according to filters before
+// Query the value according to filters before
 func (mt *mongoTank) Query(args ...interface{}) operator.Tank {
 	return mt.clone().newScope(operator.Query).tank
 }
 
-// insert multi value
+// Insert multi value
 func (mt *mongoTank) Insert(data ...operator.M) operator.Tank {
 	return mt.clone().setData(data...).newScope(operator.Insert).tank
 }
 
-// upsert value according to filters before
+// Upsert value according to filters before
 func (mt *mongoTank) Upsert(data operator.M, args ...interface{}) operator.Tank {
 	return mt.clone().setData(data).newScope(operator.Upsert).tank
 }
 
-// update value to first match according to filters before
+// Update value to first match according to filters before
 func (mt *mongoTank) Update(data operator.M, args ...interface{}) operator.Tank {
 	return mt.clone().setData(data).newScope(operator.Update).tank
 }
 
-// update value to all matches according to filters before
+// UpdateAll value to all matches according to filters before
 func (mt *mongoTank) UpdateAll(data operator.M, args ...interface{}) operator.Tank {
 	return mt.clone().setData(data).newScope(operator.UpdateAll).tank
 }
 
-// remove first match according to filters before
+// Remove first match according to filters before
 func (mt *mongoTank) Remove(args ...interface{}) operator.Tank {
 	return mt.clone().newScope(operator.Remove).tank
 }
 
-// remove all matches according to filters before
+// Removeall matches according to filters before
 func (mt *mongoTank) RemoveAll(args ...interface{}) operator.Tank {
 	return mt.clone().newScope(operator.RemoveAll).tank
 }
 
-// make a watch to collections and its documents, then return a chan Event.
+// Watch make a watch to collections and its documents, then return a chan Event.
 func (mt *mongoTank) Watch(opts *operator.WatchOptions) (chan *operator.Event, context.CancelFunc) {
 	return newWatchHandler(opts, mt).watch()
 }

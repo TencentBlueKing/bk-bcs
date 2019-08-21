@@ -43,5 +43,5 @@ func init() {
 //reportAPIMetrics report all zookeeper operation metrics
 func reportZKMetrics(method, status string, started time.Time) {
 	operatorTotal.WithLabelValues(method, status).Inc()
-	operatorLatency.WithLabelValues(method, status).Observe(time.Since(started).Seconds())
+	go operatorLatency.WithLabelValues(method, status).Observe(time.Since(started).Seconds())
 }

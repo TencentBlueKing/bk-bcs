@@ -261,7 +261,7 @@ func (zt *zkTank) GetTableV() operator.Tank {
 	return zt.clone().newScope(operator.GetTableV).tank
 }
 
-// From Tank implementation
+// From Tank implementation NOT INVOLVED
 func (zt *zkTank) From(name string) operator.Tank {
 	return zt.clone().switchTable(name)
 }
