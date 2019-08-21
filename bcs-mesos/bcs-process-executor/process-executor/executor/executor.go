@@ -15,7 +15,7 @@ package executor
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/proc-daemon"
+	proc_daemon "bk-bcs/bcs-mesos/bcs-process-executor/process-executor/proc-daemon"
 	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
@@ -23,8 +23,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/pborman/uuid"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -32,6 +30,9 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/pborman/uuid"
 )
 
 const (
@@ -142,7 +143,7 @@ func (e *bcsExecutor) loopInspectTasks() {
 			return
 
 		case <-ticker.C:
-			inspectNum += 1
+			inspectNum++
 		}
 
 		for taskid, task := range e.tasks {
@@ -202,9 +203,8 @@ func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusT
 	case types.ProcessStatusStopped:
 		if e.isAskedShutdown {
 			return types.TaskStatusFinish, nil
-		} else {
-			return types.TaskStatusFailed, nil
 		}
+		return types.TaskStatusFailed, nil
 
 	default:
 		return "", fmt.Errorf("status %s is invalid", status)
@@ -250,14 +250,14 @@ func (e *bcsExecutor) innerShutdown() {
 				blog.Infof("stop process %s status %s", task.TaskId, task.Status)
 				err = e.procDaemon.StopProcess(taskid, task.ProcInfo.StopTimeout)
 				if err != nil {
-					blog.Errorf("stop process %s error %%s", taskid, err.Error())
+					blog.Errorf("stop process %s error %s", taskid, err.Error())
 				}
 			}
 
 			if task.Status == types.TaskStatusStaging || task.Status == types.TaskStatusFailed ||
 				task.Status == types.TaskStatusFinish {
 
-				downNum += 1
+				downNum++
 				//delete process info
 				err = e.procDaemon.DeleteProcess(taskid)
 				if err != nil {
@@ -563,7 +563,7 @@ func getBcsDataClass(taskInfo *mesos.TaskInfo) (*bcstype.DataClass, error) {
 	var dc *bcstype.DataClass
 	err = json.Unmarshal(by, &dc)
 	if err != nil {
-		blog.Errorf("task %s Unmarshal data %s to DataClass error", taskInfo.GetTaskId().GetValue(), string(by), err.Error())
+		blog.Errorf("task %s Unmarshal data %s to DataClass error: %s", taskInfo.GetTaskId().GetValue(), string(by), err.Error())
 		return nil, err
 	}
 

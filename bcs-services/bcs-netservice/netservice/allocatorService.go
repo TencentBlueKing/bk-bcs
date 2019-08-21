@@ -68,9 +68,7 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	}
 	blog.Info("lock pool %s success in ip lease for container %s in host %s", lockpath, lease.Container, lease.Host)
 	//construct ip address path
-	ippath := ""
-	destpath := ""
-	lastStatus := ""
+	var ippath, destpath, lastStatus string
 	if len(lease.IPAddr) == 0 {
 		//random select from available ip node
 		blog.Info("random select ip address for container %s in host %s", lease.Container, lease.Host)
