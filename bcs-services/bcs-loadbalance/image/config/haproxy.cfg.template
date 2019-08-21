@@ -64,7 +64,7 @@ backend http_{{$backend.UpstreamName}}
   mode http
   option  httplog
   balance {{$svc.Balance}} {{range $j, $bend := $backend.BackendList}}
-  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} cookie s{{$j}} check port {{$bend.Port}} inter 500 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
+  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} cookie s{{$j}} check port {{$bend.Port}} inter 2000 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
 {{end}}
 {{end}}
 #https section {{ if ne .SSLCert "" }}
@@ -80,7 +80,7 @@ frontend bcs_https_frontend
 {{range $j, $backend := $svc.Backends}}
 backend https_{{$backend.UpstreamName}}
   balance {{$svc.Balance}} {{range $j, $bend := $backend.BackendList}}
-  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} check port {{$bend.Port}} inter 500 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
+  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} check port {{$bend.Port}} inter 2000 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
 {{end}}
 {{end}}
 {{end}}
@@ -89,5 +89,5 @@ listen tcp_{{$svc.Name}}_{{$svc.ServicePort}}
   bind *:{{$svc.ServicePort}} 
   mode tcp 
   balance {{$svc.Balance}}{{range $j, $backend := $svc.Backends}} 
-  server {{$backend.Host}} {{$backend.IP}}:{{$backend.Port}} check inter 500 rise 2 fall 1 {{if ne $backend.Weight 0 }}weight {{$backend.Weight}}{{end}}{{end}}
+  server {{$backend.Host}} {{$backend.IP}}:{{$backend.Port}} check inter 2000 rise 2 fall 1 {{if ne $backend.Weight 0 }}weight {{$backend.Weight}}{{end}}{{end}}
 {{end}}

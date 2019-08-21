@@ -7,8 +7,7 @@ sysctl -w net.ipv4.tcp_tw_recycle=1
 sysctl -w net.ipv4.tcp_fin_timeout=30
 
 proxy=$1
-lb_interface_name=${LB_NETWORKCARD-"eth1"}
-localIp=`ifconfig $lb_interface_name | /bin/grep 'inet 10\.\|inet 172\.\|inet 192\.\|inet 100\.\|inet 9\.' | awk '{print $2}'`
+localIp=`hostname -I`
 
 #start proxy module and shift cli arg
 if [ $proxy == "haproxy" ]; then
@@ -27,16 +26,6 @@ if [ $proxy == "nginx" ]; then
   fi
 fi
 shift 1
-
-echo "wait network interface $lb_interface_name" >> result.txt
-while true; do
-  grep -q '^1$' "/sys/class/net/$lb_interface_name/carrier" && break
-  ip link ls dev "$lb_interface_name" && break
-  sleep 1
-done > /dev/null 2>&1
-
-#wait for NIC ready
-sleep 10
 
 #set haproxy && nginx template http timeout time from env
 echo $LB_SESSION_TIMEOUT >> result.txt
