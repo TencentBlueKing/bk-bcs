@@ -14,40 +14,32 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-services/bcs-loadbalance/rdiscover"
-	"strings"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
-func (lp *LBEventProcessor) metricRegister() error {
-	runMode := metric.Master_Master_Mode
-	if strings.ToLower(lp.config.Proxy) == "awselb" || strings.ToLower(lp.config.Proxy) == "qcloudclb" {
-		runMode = metric.Master_Slave_Mode
-	}
+var (
+	// LoadbalanceZookeeperStateMetric loadbalance metric for zookeeper connection
+	LoadbalanceZookeeperStateMetric = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "state",
+			Help:      "the state for zookeeper connection, 0 for abnormal, 1 for normal",
+		},
+	)
+	// LoadbalanceZookeeperEventMetric loadbalance metric for zookeeper event
+	LoadbalanceZookeeperEventMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "export_service_event",
+			Help:      "event of exported service record in zookeeper",
+		},
+		[]string{"kind", "name", "namespace"},
+	)
+)
 
-	c := metric.Config{
-		ModuleName: "bcs-loadbalance",
-		MetricPort: lp.config.MetricPort,
-		IP:         rdiscover.GetAvailableIP(),
-		ClusterID:  lp.config.ClusterID,
-		RunMode:    runMode,
-	}
-
-	statData := metric.MetricContructor{
-		GetMeta:   lp.cfgManager.GetMetricMeta,
-		GetResult: lp.cfgManager.GetMetricResult,
-	}
-
-	if err := metric.NewMetricController(
-		c,
-		lp.cfgManager.GetHealthInfo,
-		&statData,
-	); err != nil {
-		blog.Errorf("metric server error: %v", err)
-		return err
-	}
-	blog.Infof("start metric server successfully, IP %s, metric port %d",
-		rdiscover.GetAvailableIP(), lp.config.MetricPort)
-	return nil
+func init() {
+	prometheus.Register(LoadbalanceZookeeperStateMetric)
+	prometheus.Register(LoadbalanceZookeeperEventMetric)
 }

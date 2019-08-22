@@ -78,7 +78,6 @@ func (m *Manager) Start() error {
 	if err != nil {
 		blog.Warnf("mkdir %s failed, err %s", m.tmpDir, err.Error())
 	}
-	m.SetHealthInfo(conf.HealthStatusOK, conf.HealthStatusOKMsg)
 	return nil
 }
 
@@ -158,7 +157,6 @@ func (m *Manager) Validate(newFile string) bool {
 	output, ok := util.ExeCommand(command)
 	if !ok {
 		blog.Errorf("Validate with command [%s] failed", command)
-		m.SetHealthInfo(conf.HealthStatusNotOK, output)
 		return false
 	}
 	blog.Infof("Validate with command %s, output: %s", command, output)
@@ -176,47 +174,45 @@ func (m *Manager) Reload(cfgFile string) error {
 	output, ok := util.ExeCommand(command)
 	if !ok {
 		blog.Errorf("Reload with command [%s] failed: %s", command, output)
-		m.SetHealthInfo(conf.HealthStatusNotOK, output)
 		return fmt.Errorf("Reload config err")
 	}
 	blog.Infof("Reload with command %s, output: %s", command, output)
-	m.SetHealthInfo(conf.HealthStatusOK, conf.HealthStatusOKMsg)
 	return nil
 }
 
 //GetHealthInfo get nginx health information
-func (m *Manager) GetHealthInfo() metric.HealthMeta {
-	m.healthLock.Lock()
-	defer m.healthLock.Unlock()
+// func (m *Manager) GetHealthInfo() metric.HealthMeta {
+// 	m.healthLock.Lock()
+// 	defer m.healthLock.Unlock()
 
-	return m.healthInfo
-}
+// 	return m.healthInfo
+// }
 
-//SetHealthInfo set nginx health information
-func (m *Manager) SetHealthInfo(isHealth bool, msg string) {
-	m.healthLock.Lock()
-	defer m.healthLock.Unlock()
-	m.healthInfo.IsHealthy = isHealth
-	m.healthInfo.Message = msg
-	m.healthInfo.CurrentRole = metric.MasterRole
-}
+// //SetHealthInfo set nginx health information
+// func (m *Manager) SetHealthInfo(isHealth bool, msg string) {
+// 	m.healthLock.Lock()
+// 	defer m.healthLock.Unlock()
+// 	m.healthInfo.IsHealthy = isHealth
+// 	m.healthInfo.Message = msg
+// 	m.healthInfo.CurrentRole = metric.MasterRole
+// }
 
-//GetMetricMeta Get metric meta
-func (m *Manager) GetMetricMeta() *metric.MetricMeta {
-	return &metric.MetricMeta{
-		Name: "nginx_manager",
-		Help: "not implement yet",
-	}
-}
+// //GetMetricMeta Get metric meta
+// func (m *Manager) GetMetricMeta() *metric.MetricMeta {
+// 	return &metric.MetricMeta{
+// 		Name: "nginx_manager",
+// 		Help: "not implement yet",
+// 	}
+// }
 
-//GetMetricResult Get metric result
-func (m *Manager) GetMetricResult() (*metric.MetricResult, error) {
-	val, err := metric.FormFloatOrString("not implement yet")
-	if err != nil {
-		return nil, err
-	}
+// //GetMetricResult Get metric result
+// func (m *Manager) GetMetricResult() (*metric.MetricResult, error) {
+// 	val, err := metric.FormFloatOrString("not implement yet")
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return &metric.MetricResult{
-		Value: val,
-	}, nil
-}
+// 	return &metric.MetricResult{
+// 		Value: val,
+// 	}, nil
+// }
