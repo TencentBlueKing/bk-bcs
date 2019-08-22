@@ -75,15 +75,16 @@ func NewScheduler(config *ConfigItem) *BcsScheduler {
 	} else {
 		hostname, _ := os.Hostname()
 		node := &bcstypes.ServerInfo{
-			IP:       util.GetIPAddress()[0],
-			Port:     uint(53),
-			Pid:      os.Getpid(),
-			HostName: hostname,
-			Scheme:   "dns",
-			Version:  version.BcsVersion,
+			IP:         util.GetIPAddress()[0],
+			Port:       uint(53),
+			Pid:        os.Getpid(),
+			HostName:   hostname,
+			Scheme:     "dns",
+			Version:    version.BcsVersion,
+			MetricPort: config.MetricPort,
 		}
-		clusterpath := defaultDNSPath + "/" + config.Cluster
-		scheduler.registery, err = master.NewZookeeperMaster(config.Register, clusterpath, node)
+		path := defaultDNSPath
+		scheduler.registery, err = master.NewZookeeperMaster(config.Register, path, node)
 		if err != nil {
 			log.Printf("[ERROR] scheduler create Register failed, %s", err.Error())
 			return nil
