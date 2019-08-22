@@ -35,7 +35,7 @@ COMMONPATH=./build/bcs.${VERSION}/common
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus
+default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus process_executor process_daemon
 specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice hpacontroller
 
 # tag for different edition compiling
@@ -105,14 +105,11 @@ check:pre
 executor:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-container-executor ./bcs-mesos/bcs-container-executor/main.go
 
-processexecutor:pre
+process_executor:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-process-executor ./bcs-mesos/bcs-process-executor/main.go
 
-daemon:pre
-	go build ${LDFLAG} -o ${BINARYPATH}/process.so -buildmode=c-shared ./bcs-mesos/bcs-process-daemon/app.go
-	mv ${BINARYPATH}/process.so ${BINARYPATH}/libprocess.so
-	gcc -o ${BINARYPATH}/bcs-daemon ./bcs-mesos/bcs-process-daemon/daemon.c -I${BINARYPATH} -L${BINARYPATH} -lprocess
-	rm -f ${BINARYPATH}/process.h
+process_daemon:pre
+	go build ${LDFLAG} -o ${BINARYPATH}/bcs-process-daemon ./bcs-mesos/bcs-process-daemon/main.go
 
 netservice:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-netservice ./bcs-services/bcs-netservice/main.go

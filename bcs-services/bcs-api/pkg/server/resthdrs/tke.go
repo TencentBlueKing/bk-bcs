@@ -80,8 +80,9 @@ func BindLb(request *restful.Request, response *restful.Response) {
 	tkeCluster := tke.NewTkeCluster(cluster.ID, externalClusterInfo.TkeClusterId, externalClusterInfo.TkeClusterRegion)
 	err := tkeCluster.BindClusterLb()
 	if err != nil {
+		blog.Errorf("failed to bind cluster lb, cluster: %s, err: %s", cluster.ID, err.Error())
 		message := err.Error()
-		WriteServerError(response, "CANNOT_BIND_TKE_CLUSTER_LB", message)
+		WriteClientError(response, "CANNOT_BIND_TKE_CLUSTER_LB", message)
 		return
 	}
 
@@ -108,8 +109,9 @@ func GetLbStatus(request *restful.Request, response *restful.Response) {
 	tkeCluster := tke.NewTkeCluster(cluster.ID, externalClusterInfo.TkeClusterId, externalClusterInfo.TkeClusterRegion)
 	status, err := tkeCluster.GetMasterVip()
 	if err != nil {
+		blog.Errorf("failed to get lb status, cluster: %s, err: %s", cluster.ID, err.Error())
 		message := err.Error()
-		WriteServerError(response, "GET_TKE_MASTER_VIP_FAILED", message)
+		WriteClientError(response, "GET_TKE_MASTER_VIP_FAILED", message)
 		return
 	}
 

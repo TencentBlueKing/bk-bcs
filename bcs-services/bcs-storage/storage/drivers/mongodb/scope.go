@@ -16,8 +16,9 @@ package mongodb
 import (
 	storageErr "bk-bcs/bcs-services/bcs-storage/storage/errors"
 	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"time"
 
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -49,6 +50,14 @@ func (s *scope) clone() *scope {
 
 // Do the actual operation to mongodb
 func (s *scope) do() *scope {
+	started := time.Now()
+	defer func() {
+		if s.err != nil {
+			reportMongdbMetrics(string(s.operation), "FAILURE", started)
+		} else {
+			reportMongdbMetrics(string(s.operation), "SUCCESS", started)
+		}
+	}()
 	switch s.operation {
 	case operator.None:
 	case operator.Query:

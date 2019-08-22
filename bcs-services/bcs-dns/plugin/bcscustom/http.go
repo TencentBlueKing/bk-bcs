@@ -114,6 +114,7 @@ func (h httpServer) CreateDomain(req *restful.Request, resp *restful.Response) {
 		}
 	}
 
+	DnsTotal.Inc()
 	h.writeResponse(resp, bresp.APIRespone{Result: true, Code: 0, Message: "create success"})
 	log.Printf("create domain[%s] success.", dns.DomainName)
 }
@@ -309,6 +310,7 @@ func (h httpServer) deleteDomain(req *restful.Request, resp *restful.Response, d
 		return
 	}
 
+	DnsTotal.Dec()
 	h.writeResponse(resp, bresp.APIRespone{Result: true, Code: 0, Message: "delete success"})
 	log.Printf("[INFO] delete domain[%s] success.", domain)
 }
