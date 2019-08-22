@@ -7,15 +7,15 @@ global
   nbthread 4
   spread-checks 5
   max-spread-checks 15000
-  maxconn 102400
+  maxconn 302400
   pidfile /var/run/haproxy.pid {{if ne .SSLCert ""}}
   ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
   ssl-default-bind-options no-tls-tickets{{end}}
 defaults
   log                  global
-  retries                   3
+  retries                   1
   backlog               10000
-  maxconn               102400
+  maxconn               202400
   timeout connect          3s
   timeout client          15s
   timeout server          15s
@@ -28,12 +28,15 @@ defaults
   option            http-server-close
   option            redispatch
   option            forwardfor
+  option            srvtcpka
+  option            clitcpka
+
 frontend secure
   bind *:8080
   mode http
   stats enable
   stats uri /bcsadm?token=bcsteam
-  stats auth bcsadmin:GseBcs1qaz@WSX
+  stats auth bcsadmin:Bcs1qaz2wsx
   stats hide-version
   stats admin if TRUE
   stats refresh 30s
@@ -61,7 +64,7 @@ backend http_{{$backend.UpstreamName}}
   mode http
   option  httplog
   balance {{$svc.Balance}} {{range $j, $bend := $backend.BackendList}}
-  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} cookie s{{$j}} check port {{$bend.Port}} inter 500 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
+  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} cookie s{{$j}} check port {{$bend.Port}} inter 2000 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
 {{end}}
 {{end}}
 #https section {{ if ne .SSLCert "" }}
@@ -77,7 +80,7 @@ frontend bcs_https_frontend
 {{range $j, $backend := $svc.Backends}}
 backend https_{{$backend.UpstreamName}}
   balance {{$svc.Balance}} {{range $j, $bend := $backend.BackendList}}
-  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} check port {{$bend.Port}} inter 500 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
+  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} check port {{$bend.Port}} inter 2000 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
 {{end}}
 {{end}}
 {{end}}
@@ -86,5 +89,5 @@ listen tcp_{{$svc.Name}}_{{$svc.ServicePort}}
   bind *:{{$svc.ServicePort}} 
   mode tcp 
   balance {{$svc.Balance}}{{range $j, $backend := $svc.Backends}} 
-  server {{$backend.Host}} {{$backend.IP}}:{{$backend.Port}} check inter 500 rise 2 fall 1 {{if ne $backend.Weight 0 }}weight {{$backend.Weight}}{{end}}{{end}}
+  server {{$backend.Host}} {{$backend.IP}}:{{$backend.Port}} check inter 2000 rise 2 fall 1 {{if ne $backend.Weight 0 }}weight {{$backend.Weight}}{{end}}{{end}}
 {{end}}

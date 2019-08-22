@@ -31,6 +31,7 @@ import (
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/etcd"
+	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/plugin/pkg/fall"
 	mwtls "github.com/coredns/coredns/plugin/pkg/tls"
 	"github.com/coredns/coredns/plugin/pkg/upstream"
@@ -59,6 +60,7 @@ func setup(c *caddy.Controller) error {
 		return plugin.Error("bcsscheduler", err)
 	}
 
+	metrics.MustRegister(c, RequestCount, RequestLatency, DnsTotal)
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
 		e.Next = next
 		return e
