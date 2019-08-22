@@ -178,7 +178,7 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 	state := request.Request{W: w, Req: r}
 	if state.QClass() != dns.ClassINET {
 		RequestCount.WithLabelValues(Failure).Inc()
-		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 		return dns.RcodeServerFailure, plugin.Error(bcs.Name(), errors.New("can only deal with ClassINET"))
 	}
 
@@ -209,7 +209,7 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 			if e := bcs.validateRequest(state); e != nil {
 				log.Printf("[ERROR] validate request[%s] failed, err: %v", state.Name(), e)
 				RequestCount.WithLabelValues(Failure).Inc()
-				RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+				RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 				return plugin.BackendError(bcs, zone, dns.RcodeNameError, state, e, plugin.Options{})
 			}
 			var records, extra []dns.RR
@@ -224,7 +224,7 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 					// do response with these records
 					writeBackMsg(records, extra)
 					RequestCount.WithLabelValues(Success).Inc()
-					RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds() * 1000)
+					RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds())
 					return dns.RcodeSuccess, nil
 				}
 			}
@@ -232,7 +232,7 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 			if err != nil {
 				log.Printf("[ERROR] scheduler get current request failed err: %s", err.Error())
 				RequestCount.WithLabelValues(Failure).Inc()
-				RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+				RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 				return dns.RcodeServerFailure, err
 			}
 
@@ -241,13 +241,13 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 					log.Printf("[ERROR] scheduler get no endpoint for %s, type: %s", state.Name(), state.Type())
 				}
 				RequestCount.WithLabelValues(Failure).Inc()
-				RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+				RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 				return plugin.BackendError(bcs, zone, dns.RcodeServerFailure, state, fmt.Errorf("got no endpoints"), plugin.Options{})
 			}
 
 			writeBackMsg(records, extra)
 			RequestCount.WithLabelValues(Success).Inc()
-			RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds() * 1000)
+			RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds())
 			return dns.RcodeSuccess, nil
 
 		}
@@ -256,12 +256,12 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 		if err != nil {
 			log.Printf("[ERROR] request %s post to bcs upper cluster failed, err: %s", state.Name(), err.Error())
 			RequestOutProxyCount.WithLabelValues(Failure).Inc()
-			RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+			RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 			return dns.RcodeServerFailure, err
 		}
 		writeBackMsg(msg.Answer, msg.Extra)
 		RequestOutProxyCount.WithLabelValues(Success).Inc()
-		RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds() * 1000)
+		RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds())
 		return dns.RcodeSuccess, nil
 	}
 	// this request is not belong to bcs zone.
