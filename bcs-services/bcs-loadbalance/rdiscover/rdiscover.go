@@ -44,6 +44,7 @@ type RDiscover struct {
 	rd         *RegisterDiscover.RegDiscover
 	clusterid  string
 	proxy      string
+	address    string
 	metricPort uint
 	rootCxt    context.Context
 	cancel     context.CancelFunc
@@ -53,12 +54,13 @@ type RDiscover struct {
 }
 
 //NewRDiscover new a register discover object to register zookeeper
-func NewRDiscover(zkserv, subPath, clusterid, proxy string, metricPort uint) *RDiscover {
+func NewRDiscover(zkserv, subPath, clusterid, proxy, address string, metricPort uint) *RDiscover {
 	return &RDiscover{
 		zkSubPath:  subPath,
 		rd:         RegisterDiscover.NewRegDiscoverEx(zkserv, 10*time.Second),
 		clusterid:  clusterid,
 		proxy:      proxy,
+		address:    address,
 		metricPort: metricPort,
 	}
 }
@@ -115,51 +117,12 @@ func (r *RDiscover) Stop() error {
 	return nil
 }
 
-//GetAvailableIP get local host ip address
-func GetAvailableIP() string {
-
-	ifName := os.Getenv("LB_NETWORKCARD")
-	if len(ifName) == 0 {
-		ifName = "eth1"
-	}
-	netIf, err := net.InterfaceByName(ifName)
-	if err != nil {
-		return ""
-	}
-	addrs, err := netIf.Addrs()
-	if err != nil {
-		return ""
-	}
-
-	for _, addr := range addrs {
-		if ip, ok := addr.(*net.IPNet); ok && !ip.IP.IsLoopback() && ip.IP.To4() != nil {
-			if classA.Contains(ip.IP) {
-				return ip.IP.String()
-			}
-			if classA2.Contains(ip.IP) {
-				return ip.IP.String()
-			}
-			if classAa.Contains(ip.IP) {
-				return ip.IP.String()
-			}
-			if classB.Contains(ip.IP) {
-				return ip.IP.String()
-			}
-			if classC.Contains(ip.IP) {
-				return ip.IP.String()
-			}
-		}
-	}
-
-	return ""
-}
-
 //CheckMasterStatus timer to check master status
 func (r *RDiscover) CheckMasterStatus() {
 	for {
 		r.bcsLBLock.Lock()
 		if len(r.bcsLBServs) > 0 {
-			if r.bcsLBServs[0].IP == GetAvailableIP() {
+			if r.bcsLBServs[0].IP == r.address {
 				if !r.isMaster {
 					blog.Infof("#######Status chanaged, Self node become Master#############")
 				}
@@ -212,7 +175,7 @@ func (r *RDiscover) discoverBCSLBServ(servInfos []string) error {
 func (r *RDiscover) registerLoadBalance() error {
 	lbInfo := new(types.LoadBalanceInfo)
 	//need to judge getInnerIP() succeed or not, because must go ahead
-	lbInfo.IP = GetAvailableIP()
+	lbInfo.IP = r.address
 	//metric port, let healthz check
 	lbInfo.Port = r.metricPort
 	lbInfo.MetricPort = r.metricPort
