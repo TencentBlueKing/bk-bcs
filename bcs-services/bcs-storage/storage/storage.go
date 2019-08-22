@@ -16,6 +16,7 @@ package bcsstorage
 import (
 	"net/http"
 	"net/http/pprof"
+	"strconv"
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/http/httpserver"
@@ -26,7 +27,8 @@ import (
 	"bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"bk-bcs/bcs-services/bcs-storage/storage/rdiscover"
 
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // StorageServer is a data struct of bcs storage server
@@ -103,7 +105,7 @@ func (s *StorageServer) Start() error {
 		chErr <- err
 	}()
 
-	metricHandler(s.conf)
+	runPrometheusMetrics(s.conf)
 
 	// startDaemon
 	actions.StartActionDaemon()
@@ -113,6 +115,13 @@ func (s *StorageServer) Start() error {
 		blog.Errorf("exit! err:%s", err.Error())
 		return err
 	}
+}
+
+//runPrometheusMetrics starting prometheus metrics handler
+func runPrometheusMetrics(op *options.StorageOptions) {
+	http.Handle("/metrics", promhttp.Handler())
+	addr := op.Address + ":" + strconv.Itoa(int(op.MetricPort))
+	go http.ListenAndServe(addr, nil)
 }
 
 func metricHandler(op *options.StorageOptions) {

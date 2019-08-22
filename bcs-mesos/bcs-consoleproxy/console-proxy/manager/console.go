@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 // ConsoleCopywritingFailed is a response string
@@ -32,6 +33,12 @@ var ConsoleCopywritingFailed = []string{
 	"#                该环境已经处于调试状态,禁止同时连接多个会话          #\r\n",
 	"#######################################################################\r\n",
 }
+
+const (
+	writeWait  = 10 * time.Second
+	pongWait   = 60 * time.Second
+	pingPeriod = (pongWait * 9) / 10
+)
 
 type errMsg struct {
 	Msg string `json:"msg,omitempty"`
@@ -117,7 +124,6 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 
 		m.connectedContainers[conf.ContainerID] = true
 		m.Unlock()
-
 		defer func() {
 			m.Lock()
 			delete(m.connectedContainers, conf.ContainerID)
@@ -127,6 +133,23 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 
 	ws.SetCloseHandler(nil)
 	ws.SetPingHandler(nil)
+	//ws.SetReadDeadline(time.Now().Add(pongWait))
+	//ws.SetPongHandler(func(string) error {
+	//	ws.SetReadDeadline(time.Now().Add(pongWait))
+	//	return nil
+	//})
+
+	ticker := time.NewTicker(pingPeriod)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					return
+				}
+			}
+		}
+	}()
 
 	err = m.startExec(&wsConn{ws}, conf)
 	if err != nil {

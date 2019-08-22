@@ -23,6 +23,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+//RestResponse wrapper for restful Response
 type RestResponse struct {
 	Resp     *restful.Response
 	HTTPCode int
@@ -35,6 +36,7 @@ type RestResponse struct {
 	WrapFunc func([]byte) []byte
 }
 
+//ReturnRest common restfult response
 func ReturnRest(resp *RestResponse) {
 	if resp.HTTPCode == 0 {
 		resp.HTTPCode = http.StatusOK
