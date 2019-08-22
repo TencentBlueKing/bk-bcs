@@ -386,10 +386,13 @@ func (ctrl *Controller) dataWatch(cxt context.Context, ns string, path string) {
 			ctrl.storage.Update(cur)
 			ctrl.funcs.UpdateFunc(old, cur)
 			log.Printf("[INFO] %s update content", path)
+			ZkNotifyTotal.WithLabelValues(UpdateOperation).Inc()
 		} else {
 			ctrl.storage.Add(cur)
 			ctrl.funcs.AddFunc(cur)
 			log.Printf("[INFO] %s add new data object", path)
+			DnsTotal.Inc()
+			ZkNotifyTotal.WithLabelValues(AddOperation).Inc()
 		}
 	}
 	//wait for watch event
@@ -428,6 +431,8 @@ func (ctrl *Controller) dataClean(ns, node string) {
 		ctrl.storage.Delete(old)
 		ctrl.funcs.DeleteFunc(old)
 		log.Printf("[WARN] controller delete %s under %s in cache", key, ctrl.watchpath)
+		DnsTotal.Dec()
+		ZkNotifyTotal.WithLabelValues(DeleteOperation).Inc()
 	} else {
 		log.Printf("[ERROR] controller lost %s in cache, somewhere go wrong", key)
 	}
@@ -488,6 +493,7 @@ func (ctrl *Controller) dataResync() {
 					log.Printf("[WARN] RESYNC found ###%s### lost in cache", nodepath)
 					ctrl.storage.Add(cur)
 					ctrl.funcs.AddFunc(cur)
+					DnsTotal.Inc()
 				}
 			}
 		}
