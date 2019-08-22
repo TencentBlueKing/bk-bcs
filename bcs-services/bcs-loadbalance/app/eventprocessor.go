@@ -63,6 +63,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	}
 	zkSubRegPath := config.ClusterID + "/" + config.Group
 	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+	processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	processor.reflector = NewReflector(config, processor)
 	// new Alarming interface
 	blog.Infof("new bcs health with ca %s, cert %s, key %s", config.CAFile, config.ClientCertFile, config.ClientKeyFile)
@@ -112,6 +113,7 @@ type LBEventProcessor struct {
 	reflector    DataReflector        //data cache holder
 	cfgManager   template.Manager     //template manager
 	rd           *rdiscover.RDiscover //bcs zookeeper register
+	clusterRd    *rdiscover.RDiscover //cluster zookeeper register
 	clearManager *clear.Manager       //timer to clear template file
 	monitor      *monitor.Monitor     // monitor to support metric and status api
 }
@@ -136,6 +138,13 @@ func (lp *LBEventProcessor) Start() error {
 		}
 	}()
 	blog.Infof("start register success")
+
+	go func() {
+		if err := lp.clusterRd.Start(); err != nil {
+			blog.Errorf("start register cluster zookeeper error: %s", err.Error())
+		}
+	}()
+	blog.Infof("start cluster register success")
 
 	if err := lp.reflector.Start(); err != nil {
 		blog.Errorf("start Reflector error: %s", err.Error())
@@ -249,6 +258,9 @@ func (lp *LBEventProcessor) Stop() {
 	lp.cfgManager.Stop()
 	if err := lp.rd.Stop(); err != nil {
 		blog.Warnf("register stop failed, err %s", err.Error())
+	}
+	if err := lp.clusterRd.Stop(); err != nil {
+		blog.Warnf("cluster zk register stop failed, err %s", err.Error())
 	}
 	lp.clearManager.Stop()
 	close(lp.exit)
