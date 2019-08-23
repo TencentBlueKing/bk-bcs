@@ -63,7 +63,10 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	}
 	zkSubRegPath := config.ClusterID + "/" + config.Group
 	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
-	processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+	if len(config.ClusterZk) != 0 {
+		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+	}
+
 	processor.reflector = NewReflector(config, processor)
 	// new Alarming interface
 	blog.Infof("new bcs health with ca %s, cert %s, key %s", config.CAFile, config.ClientCertFile, config.ClientKeyFile)
@@ -139,12 +142,14 @@ func (lp *LBEventProcessor) Start() error {
 	}()
 	blog.Infof("start register success")
 
-	go func() {
-		if err := lp.clusterRd.Start(); err != nil {
-			blog.Errorf("start register cluster zookeeper error: %s", err.Error())
-		}
-	}()
-	blog.Infof("start cluster register success")
+	if len(lp.config.ClusterZk) != 0 {
+		go func() {
+			if err := lp.clusterRd.Start(); err != nil {
+				blog.Errorf("start register cluster zookeeper error: %s", err.Error())
+			}
+		}()
+		blog.Infof("start cluster register success")
+	}
 
 	if err := lp.reflector.Start(); err != nil {
 		blog.Errorf("start Reflector error: %s", err.Error())
