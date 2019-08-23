@@ -264,8 +264,10 @@ func (lp *LBEventProcessor) Stop() {
 	if err := lp.rd.Stop(); err != nil {
 		blog.Warnf("register stop failed, err %s", err.Error())
 	}
-	if err := lp.clusterRd.Stop(); err != nil {
-		blog.Warnf("cluster zk register stop failed, err %s", err.Error())
+	if len(lp.config.ClusterZk) != 0 {
+		if err := lp.clusterRd.Stop(); err != nil {
+			blog.Warnf("cluster zk register stop failed, err %s", err.Error())
+		}
 	}
 	lp.clearManager.Stop()
 	close(lp.exit)
