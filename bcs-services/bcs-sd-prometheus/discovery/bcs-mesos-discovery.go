@@ -47,7 +47,7 @@ func NewBcsMesosDiscovery(zkAddr string, promFilePrefix string) (Discovery, erro
 		sdFilePath: path.Join(promFilePrefix, DefaultbcsMesosDiscoveryFileName),
 		modules: []string{
 			commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH, commtypes.BCS_MODULE_MESOSAPISERVER,
-			commtypes.BCS_MODULE_DNS,
+			commtypes.BCS_MODULE_DNS, commtypes.BCS_MODULE_LOADBALANCE,
 		},
 	}
 
@@ -128,6 +128,20 @@ func (disc *bcsMesosDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdCon
 
 			case commtypes.BCS_MODULE_DNS:
 				ser, ok := serv.(*commtypes.DNSInfo)
+				if !ok {
+					blog.Errorf("discovery %s module %s failed convert to DNSInfo", disc.key, module)
+					break
+				}
+
+				conf = &types.PrometheusSdConfig{
+					Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
+					Labels: map[string]string{
+						DefaultBcsModuleLabelKey: module,
+					},
+				}
+
+			case commtypes.BCS_MODULE_LOADBALANCE:
+				ser, ok := serv.(*commtypes.LoadBalanceInfo)
 				if !ok {
 					blog.Errorf("discovery %s module %s failed convert to DNSInfo", disc.key, module)
 					break
