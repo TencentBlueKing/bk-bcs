@@ -191,3 +191,23 @@ func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
 	}
 	return nil
 }
+
+func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {
+	nodes, err := store.ListAgentNodes()
+	if err != nil {
+		return nil, err
+	}
+
+	var agents []*types.Agent
+	for _, node := range nodes {
+		agent, err := store.FetchAgent(node)
+		if err != nil {
+			blog.Errorf("fetch agent %s error %s", node, err.Error())
+			continue
+		}
+
+		agents = append(agents, agent)
+	}
+
+	return agents, nil
+}

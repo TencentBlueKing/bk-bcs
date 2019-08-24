@@ -63,3 +63,53 @@ func (store *managerStore) DeleteService(ns, name string) error {
 
 	return nil
 }
+
+func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, error) {
+
+	path := getServiceRootPath() + runAs //defaultRunAs
+
+	IDs, err := store.Db.List(path)
+	if err != nil {
+		blog.Error("fail to list service ids, err:%s", err.Error())
+		return nil, err
+	}
+
+	if nil == IDs {
+		blog.Error("no service in (%s)", runAs)
+		return nil, nil
+	}
+
+	var objs []*commtypes.BcsService
+
+	for _, ID := range IDs {
+		obj, err := store.FetchService(runAs, ID)
+		if err != nil {
+			blog.Error("fail to fetch service by ID(%s)", ID)
+			continue
+		}
+
+		objs = append(objs, obj)
+	}
+
+	return objs, nil
+}
+
+func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
+	nss, err := store.ListObjectNamespaces(serviceNode)
+	if err != nil {
+		return nil, err
+	}
+
+	var objs []*commtypes.BcsService
+	for _, ns := range nss {
+		obj, err := store.ListServices(ns)
+		if err != nil {
+			blog.Error("fail to fetch service by ns(%s)", ns)
+			continue
+		}
+
+		objs = append(objs, obj...)
+	}
+
+	return objs, nil
+}

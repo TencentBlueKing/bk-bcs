@@ -35,6 +35,8 @@ func (s *Scheduler) RunUpdateApplication(transaction *Transaction) {
 
 	blog.Infof("transaction %s update(%s.%s) run begin", transaction.ID, runAs, appID)
 	//var offerIdx int64 = 0
+	startedTaskgroup := time.Now()
+	startedApp := time.Now()
 	for {
 		blog.Infof("transaction %s update(%s.%s) run check", transaction.ID, runAs, appID)
 
@@ -65,10 +67,14 @@ func (s *Scheduler) RunUpdateApplication(transaction *Transaction) {
 				blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 				if s.UseOffer(curOffer) == true {
 					blog.Infof("transaction %s update(%s.%s) use offer(%d) %s||%s", transaction.ID, runAs, appID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-					s.doUpdateTrans(transaction, curOffer)
+					launchedNum := opData.LaunchedNum
+					s.doUpdateTrans(transaction, curOffer, startedTaskgroup)
 					if transaction.Status == types.OPERATION_STATUS_FINISH || transaction.Status == types.OPERATION_STATUS_FAIL {
 						blog.Infof("transaction %s update(%s.%s) finish", transaction.ID, runAs, appID)
 						goto run_end
+					}
+					if launchedNum < opData.LaunchedNum {
+						startedTaskgroup = time.Now()
 					}
 				} else {
 					blog.Infof("transaction %s use offer(%d) %s||%s fail", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
@@ -88,11 +94,12 @@ func (s *Scheduler) RunUpdateApplication(transaction *Transaction) {
 
 run_end:
 	s.FinishTransaction(transaction)
+	reportOperateAppMetrics(transaction.RunAs, transaction.AppID, UpdateApplicationType, startedApp)
 	blog.Infof("transaction %s update(%s.%s) run end, result(%s)", transaction.ID, runAs, appID, transaction.Status)
 
 }
 
-func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer) {
+func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, started time.Time) {
 
 	offer := outOffer.Offer
 
@@ -144,9 +151,11 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer) {
 	var taskGroupInfos []*mesos.TaskGroupInfo
 	var oldTaskGroups []*types.TaskGroup
 
+	var taskGroupID string
+	var taskgroupName string
 	//if opData.LaunchedNum < opData.Instances && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
 	if opData.LaunchedNum < opData.Instances && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) {
-		taskGroupID := opData.Taskgroups[opData.LaunchedNum].ID
+		taskGroupID = opData.Taskgroups[opData.LaunchedNum].ID
 		blog.Info("transaction %s get taskgroup(%s) to do update", trans.ID, taskGroupID)
 		var taskGroup *types.TaskGroup
 		taskGroup, err = s.store.FetchTaskGroup(taskGroupID)
@@ -156,6 +165,8 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer) {
 			s.DeclineResource(offer.Id.Value)
 			return
 		}
+		taskgroupName = taskGroup.Name
+
 		opData.Taskgroups[opData.LaunchedNum] = taskGroup
 
 		// check old taskGroup end
@@ -233,6 +244,7 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer) {
 		}
 	}
 
+	reportScheduleTaskgroupMetrics(app.RunAs, app.Name, taskgroupName, UpdateTaskgroupType, started)
 	if opData.LaunchedNum == opData.Instances {
 		blog.Info("transaction %s update application(%s.%s), all taskgroup already done", trans.ID, app.RunAs, app.ID)
 		app.LastStatus = app.Status

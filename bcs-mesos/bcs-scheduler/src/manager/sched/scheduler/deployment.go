@@ -54,7 +54,6 @@ func (s *Scheduler) startCheckDeployments() {
 func (s *Scheduler) DeploymentCheck(ns string, name string, recover bool) {
 
 	blog.Info("deployment(%s.%s) check begin", ns, name)
-
 	if recover == true {
 		if s.Role != "master" {
 			blog.Warn("deployment(%s.%s) check exit, because scheduler is not master now", ns, name)
