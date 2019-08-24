@@ -56,15 +56,21 @@ bcs-api模块相关metrics指标
 
 ## bcs-scheduler
 
-* scheduler_resource_total: 容器各类资源总数，类型GaugeVec，labels区分service,deployment,application,configmap等
-* scheduler_pod_total: 容器运行Pod状态统计，类型GaugeVec，labels使用容器运行状态区分
-* scheduler_scheule_total: 容器调度次数，类型GaugeVec，labels区分succ，failed
-* scheduler_reschedule_latency_milliseconds: 容器重新调度耗时，类型Histogram
-* scheduler_cpu_resource_total: 集群CPU资源，Gauge
-* scheduler_mem_resource_total: 集群Mem资源，Gauge
-* scheduler_storage_operator_total: scheduler操作存储次数，CounterVec，增删改查使用labels区分
-* scheduler_storage_operator_latency_milliseconds: scheudler操作存储耗时，HistogramVec，增删改查作为labels区分
-* scheduler_taskgroup_report_total: 接收taskgroup上报次数，CounterVec，区分taskgroup状态
+* bkbcs_scheduler_schedule_taskgroup_total: 容器调度次数，CounterVec，labels区分namespace、application、taskgroup、type(launch、reschedule、scale、update)
+* bkbcs_scheduler_schedule_taskgroup_latency_ms: 容器调度耗时，类型Histogram，labels区分namespace、application、taskgroup、type(launch、reschedule、scale、update)
+* bkbcs_scheduler_operate_application_total：操作应用次数，类型CounterVec，labels区分namespace、application、type(launch、delete、scale、update、rollingupdate)
+* bkbcs_scheduler_operate_application_latency_second: 操作应用耗时，类型Histogram，labels区分namespace、application、type(launch、delete、scale、update、rollingupdate)
+* bkbcs_scheduler_object_resource_info: 容器各类资源信息，类型GaugeVec，labels区分resource(service,deployment,application,configmap,secret)、namespace、name，
+如果resource=application value表示application状态，0表示Staging、Deploying、Operating、RollingUpdate; 1表示Running；2表示Finish；3表示Abnormal,Error
+* bkbcs_scheduler_taskgroup_info：容器taskgroup资源信息，类型GaugeVec，labels区分namespace、application、taskgroup，
+value表示taskgroup状态，0表示Staging、Starting;1表示Running;2表示Finish、Killing、Killed;3表示Error、Failed;4表示Lost
+* bkbcs_scheduler_agent_cpu_resource_total: slave机器cpu总数，类型GaugeVec，labels区分InnerIP
+* bkbcs_scheduler_agent_cpu_resource_remain：slave机器cpu剩余数量，类型GaugeVec，labels区分InnerIP
+* bkbcs_scheduler_agent_memory_resource_total: slave机器memory总数，类型GaugeVec，labels区分InnerIP，单位：MB
+* bkbcs_scheduler_agent_memory_resource_remain：slave机器memory剩余数量，类型GaugeVec，labels区分InnerIP，单位：MB
+* bkbcs_scheduler_storage_operator_total: scheduler操作存储次数，CounterVec，labels区分operator(create、delete、update、fetch)
+* bkbcs_scheduler_storage_operator_latency_ms: scheudler操作存储耗时，HistogramVec，labels区分operator(create、delete、update、fetch)
+* bkbcs_scheduler_taskgroup_report_total: 接收taskgroup上报次数，CounterVec，labels区分namespace、application、taskgroup、status(Staging、Starting、Running、Finish、Error、Killing、Killed、Failed、Lost)
 
 ## bcs-mesos-datawatch
 
