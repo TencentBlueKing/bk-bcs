@@ -24,12 +24,14 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	"bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 
 	"github.com/emicklei/go-restful"
 	"github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
+	"time"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -42,10 +44,12 @@ type APIResponse struct {
 }
 
 func handlerActions(req *restful.Request, resp *restful.Response) {
-	uri := req.PathParameter("uri")
+	start := time.Now()
 
+	uri := req.PathParameter("uri")
 	data, err := request2clusterkeeper(req, uri)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("cluster_keeper", req.Request.Method).Inc()
 		blog.Error("get clusterkeeper server failed! err: ", err.Error())
 		resp.WriteHeaderAndEntity(
 			http.StatusBadRequest,
@@ -57,10 +61,13 @@ func handlerActions(req *restful.Request, resp *restful.Response) {
 			})
 		return
 	}
+	metric.RequestCount.WithLabelValues("cluster_keeper", req.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("cluster_keeper", req.Request.Method).Observe(time.Since(start).Seconds())
 	resp.Write(data)
 }
 
 func request2clusterkeeper(req *restful.Request, uri string) (respBody []byte, err error) {
+
 	body, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil {
 		blog.Error("handler url %s read request body failed, error: %s", uri, err.Error())

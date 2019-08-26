@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/pkg/auth"
 	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
@@ -33,6 +34,7 @@ import (
 	"bk-bcs/bcs-services/bcs-api/pkg/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/rest"
@@ -82,10 +84,14 @@ func (f *ReverseProxyDispatcher) Initialize() {
 }
 
 func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+
+	start := time.Now()
+
 	vars := mux.Vars(req)
 	// Get current cluster object
 	clusterIdentifier := vars[f.ClusterVarName]
 	if clusterIdentifier == "" {
+		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
 		err := fmt.Errorf("cluster_id is required in path parameters")
 		status := utils.NewInvalid(utils.ClusterGroupKind, "cluster", f.ClusterVarName, err)
 		utils.WriteKubeAPIError(rw, status)
@@ -95,6 +101,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	// Try to get the clusterId by given clusterIdentifier
 	cluster := f.GetCluster(clusterIdentifier)
 	if cluster == nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
 		message := "no cluster can be found using given cluster identifier"
 		status := utils.NewNotFound(utils.ClusterResource, clusterIdentifier, message)
 		utils.WriteKubeAPIError(rw, status)
@@ -105,6 +112,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		ClusterId: clusterId,
 	})
 	if externalClusterInfo == nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
 		message := "no externalClusterInfo can be found using given cluster identifier"
 		status := utils.NewNotFound(utils.ClusterResource, clusterIdentifier, message)
 		utils.WriteKubeAPIError(rw, status)
@@ -119,11 +127,13 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 
 	user, hasExpired := authenticater.GetUser()
 	if user == nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
 		status := utils.NewUnauthorized("anonymous requests is forbidden")
 		utils.WriteKubeAPIError(rw, status)
 		return
 	}
 	if hasExpired {
+		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
 		reason := fmt.Sprintf("this token has expired for user: %s", user.Name)
 		status := utils.NewUnauthorized(reason)
 		utils.WriteKubeAPIError(rw, status)
@@ -152,7 +162,15 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	existedHander := f.handlerStore[clusterId]
 	f.handlerMutateLock.RUnlock()
 	if existedHander != nil {
+		if websocket.IsWebSocketUpgrade(req) {
+			metric.RequestCount.WithLabelValues("k8s_native", "websocket").Inc()
+			metric.RequestLatency.WithLabelValues("k8s_native", "websocket").Observe(time.Since(start).Seconds())
+		}
 		existedHander.Handler.ServeHTTP(rw, req)
+		if !websocket.IsWebSocketUpgrade(req) {
+			metric.RequestCount.WithLabelValues("k8s_native", req.Method).Inc()
+			metric.RequestLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
+		}
 		return
 	}
 
@@ -173,7 +191,15 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	f.handlerMutateLock.Unlock()
 
 	proxyHandler := f.handlerStore[clusterId]
+	if websocket.IsWebSocketUpgrade(req) {
+		metric.RequestCount.WithLabelValues("k8s_native", "websocket").Inc()
+		metric.RequestLatency.WithLabelValues("k8s_native", "websocket").Observe(time.Since(start).Seconds())
+	}
 	proxyHandler.Handler.ServeHTTP(rw, req)
+	if !websocket.IsWebSocketUpgrade(req) {
+		metric.RequestCount.WithLabelValues("k8s_native", req.Method).Inc()
+		metric.RequestLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
+	}
 	return
 }
 

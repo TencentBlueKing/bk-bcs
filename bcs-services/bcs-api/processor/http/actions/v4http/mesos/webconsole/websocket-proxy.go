@@ -25,7 +25,9 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/ssl"
 	"bk-bcs/bcs-services/bcs-api/config"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 var (
@@ -87,8 +89,9 @@ func NewWebsocketProxy(certConfig *config.CertConfig, backendUrl *url.URL) *Webs
 
 // ServeHTTP implements the http.Handler that proxies WebSocket connections.
 func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	backendURL := w.BackendUrl
+	start := time.Now()
 
+	backendURL := w.BackendUrl
 	// Pass headers from the incoming request to the dialer to forward them to
 	// the final destinations.
 	requestHeader := http.Header{}
@@ -123,6 +126,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	connBackend, resp, err := w.Dialer.Dial(backendURL.String(), requestHeader)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("mesos_webconsole", "websocket").Inc()
 		blog.Errorf("websocketproxy: couldn't dial to remote backend url %s", err)
 		message := fmt.Sprintf("errcode: %d, couldn't dial to remote backend url %s", common.BcsErrApiWebConsoleFailedCode, err.Error())
 		if resp != nil {
@@ -153,6 +157,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// Also pass the header that we gathered from the Dial handshake.
 	connPub, err := w.Upgrader.Upgrade(rw, req, upgradeHeader)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("mesos_webconsole", "websocket").Inc()
 		blog.Errorf("websocketproxy: couldn't upgrade %s", err)
 		return
 	}
@@ -163,6 +168,9 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	go replicateWebsocketConn(connPub, connBackend, errClient)
 	go replicateWebsocketConn(connBackend, connPub, errBackend)
+
+	metric.RequestCount.WithLabelValues("mesos_webconsole", "websocket").Inc()
+	metric.RequestLatency.WithLabelValues("mesos_webconsole", "websocket").Observe(time.Since(start).Seconds())
 
 	var message string
 	select {
