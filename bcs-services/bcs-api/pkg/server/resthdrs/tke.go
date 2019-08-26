@@ -231,6 +231,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	}
 
 	mutex.Lock()
+	defer mutex.Unlock()
 	tkeCidr := sqlstore.QueryTkeCidr(&m.TkeCidr{
 		IpNumber: form.IpNumber,
 		Status:   sqlstore.CidrStatusAvailable,
@@ -254,7 +255,6 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 		WriteClientError(response, "APPLY_TKE_CIDR_FAILED", message)
 		return
 	}
-	mutex.Unlock()
 
 	blog.Info("assign an cidr successful, cidr: %s, ipNumber: %d", tkeCidr.Cidr, tkeCidr.IpNumber)
 	cidr := &TkeCidr{
@@ -283,6 +283,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	}
 
 	mutex.Lock()
+	defer mutex.Unlock()
 	tkeCidr := sqlstore.QueryTkeCidr(&m.TkeCidr{
 		Cidr:    form.Cidr,
 		Cluster: &form.Cluster,
@@ -307,7 +308,6 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 		WriteClientError(response, "RELEASE_TKE_CIDR_FAILED", message)
 		return
 	}
-	mutex.Unlock()
 
 	blog.Info("release cidr successful, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Cluster)
 	response.WriteEntity(types.EmptyResponse{})
