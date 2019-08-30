@@ -24,12 +24,14 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	"bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 
 	"github.com/emicklei/go-restful"
 	"github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
+	"time"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -42,10 +44,13 @@ type APIResponse struct {
 }
 
 func handlerActions(req *restful.Request, resp *restful.Response) {
-	uri := req.PathParameter("uri")
+	start := time.Now()
 
+	uri := req.PathParameter("uri")
 	data, err := request2netservice(req, uri)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("net_service", req.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("net_service", req.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Error("get netservice server failed! err: ", err.Error())
 		resp.WriteHeaderAndEntity(
 			http.StatusBadRequest,
@@ -57,6 +62,10 @@ func handlerActions(req *restful.Request, resp *restful.Response) {
 			})
 		return
 	}
+
+	metric.RequestCount.WithLabelValues("net_service", req.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("net_service", req.Request.Method).Observe(time.Since(start).Seconds())
+
 	resp.Write(data)
 }
 
