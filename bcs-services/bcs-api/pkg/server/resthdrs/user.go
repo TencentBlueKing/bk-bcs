@@ -48,6 +48,7 @@ func CreateUser(request *restful.Request, response *restful.Response) {
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Debug(fmt.Sprintf("CreateBCSUser form validate failed, %s", err))
 		response.WriteEntity(FormatValidationError(err))
 		return
@@ -61,6 +62,7 @@ func CreateUser(request *restful.Request, response *restful.Response) {
 	userInDb := sqlstore.GetUserByCondition(&m.User{Name: user.Name})
 	if userInDb != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, create failed, user with this username already exists", common.BcsErrApiBadRequest)
 		WriteClientError(response, "USER_ALREADY_EXISTS", message)
 		return
@@ -70,6 +72,7 @@ func CreateUser(request *restful.Request, response *restful.Response) {
 	errorCode := strcase.ToScreamingSnake(fmt.Sprint(reflect.TypeOf(user)))
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, can not create user, error: %s", common.BcsErrApiInternalDbError, err)
 		WriteServerError(response, errorCode, message)
 		return
@@ -91,6 +94,7 @@ func QueryBCSUserByName(request *restful.Request, response *restful.Response) {
 	user := sqlstore.GetUserByCondition(&m.User{Name: fmt.Sprintf("%s:%s", PlainBCSUserType, userName)})
 	if user == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
 		blog.Warnf(message)
 		WriteNotFoundError(response, "USER_NOT_FOUND", message)
@@ -111,6 +115,7 @@ func CreateUserToken(request *restful.Request, response *restful.Response) {
 	idStr, err := strconv.Atoi(userID)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, error parsing user_id to uint: %s", common.BcsErrApiBadRequest, err.Error())
 		blog.Warnf(message)
 		WriteClientError(response, "USER_ID_INVALID", message)
@@ -120,6 +125,7 @@ func CreateUserToken(request *restful.Request, response *restful.Response) {
 	user := sqlstore.GetUserByCondition(&m.User{ID: uint(idStr)})
 	if user == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, user with user_id=%d not found", common.BcsErrApiBadRequest, idStr)
 		blog.Warnf(message)
 		WriteNotFoundError(response, "USER_NOT_FOUND", message)
@@ -130,6 +136,7 @@ func CreateUserToken(request *restful.Request, response *restful.Response) {
 	userToken, err := sqlstore.GetOrCreateUserToken(user, m.UserTokenTypeKubeConfigPlain, "")
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Warnf("Unable to create user token of type UserTokenTypeKubeConfigPlain for user %s: %s", user.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, can not create user token: %s", common.BcsErrApiInternalDbError, err.Error())
 		WriteServerError(response, "CANNOT_CREATE_USER_RTOKEN", message)

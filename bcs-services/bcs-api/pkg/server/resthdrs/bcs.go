@@ -46,6 +46,7 @@ func QueryBCSClusterByID(request *restful.Request, response *restful.Response) {
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Debug(fmt.Sprintf("QueryBCSClusterByID form validate failed, %s", err))
 		response.WriteEntity(FormatValidationError(err))
 		return
@@ -55,6 +56,7 @@ func QueryBCSClusterByID(request *restful.Request, response *restful.Response) {
 	cluster := sqlstore.GetClusterByBCSInfo(form.ProjectID, form.ClusterID)
 	if cluster == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, cluster with project_id=%s cluster_id=%s not found", common.BcsErrApiBadRequest, form.ProjectID, form.ClusterID)
 		blog.Warnf(message)
 		WriteNotFoundError(response, "CLUSTER_NOT_FOUND", message)
@@ -95,6 +97,7 @@ func QueryBCSClusterByClusterID(request *restful.Request, response *restful.Resp
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Debug(fmt.Sprintf("QueryBCSClusterByClusterID form validate failed, %s", err))
 		response.WriteEntity(FormatValidationError(err))
 		return
@@ -104,6 +107,7 @@ func QueryBCSClusterByClusterID(request *restful.Request, response *restful.Resp
 	cluster := sqlstore.GetClusterByBCSInfo("", form.ClusterID)
 	if cluster == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("cluster with cluster_id=%s not found", form.ClusterID)
 		blog.Warnf(message)
 		WriteNotFoundError(response, "CLUSTER_NOT_FOUND", message)

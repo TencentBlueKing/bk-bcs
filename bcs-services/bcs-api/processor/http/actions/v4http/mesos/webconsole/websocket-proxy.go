@@ -127,6 +127,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	connBackend, resp, err := w.Dialer.Dial(backendURL.String(), requestHeader)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("mesos_webconsole", "websocket").Inc()
+		metric.RequestErrorLatency.WithLabelValues("mesos_webconsole", "websocket").Observe(time.Since(start).Seconds())
 		blog.Errorf("websocketproxy: couldn't dial to remote backend url %s", err)
 		message := fmt.Sprintf("errcode: %d, couldn't dial to remote backend url %s", common.BcsErrApiWebConsoleFailedCode, err.Error())
 		if resp != nil {
@@ -158,6 +159,7 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	connPub, err := w.Upgrader.Upgrade(rw, req, upgradeHeader)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("mesos_webconsole", "websocket").Inc()
+		metric.RequestErrorLatency.WithLabelValues("mesos_webconsole", "websocket").Observe(time.Since(start).Seconds())
 		blog.Errorf("websocketproxy: couldn't upgrade %s", err)
 		return
 	}

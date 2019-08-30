@@ -50,6 +50,7 @@ func handlerActions(req *restful.Request, resp *restful.Response) {
 	data, err := request2metrics(req, uri)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("metrics", req.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("metrics", req.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Error("get metric server failed! err: %s", err.Error())
 		resp.WriteHeaderAndEntity(
 			http.StatusBadRequest,

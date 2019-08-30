@@ -50,6 +50,7 @@ func handlerActions(req *restful.Request, resp *restful.Response) {
 	data, err := request2clusterkeeper(req, uri)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("cluster_keeper", req.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("cluster_keeper", req.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Error("get clusterkeeper server failed! err: ", err.Error())
 		resp.WriteHeaderAndEntity(
 			http.StatusBadRequest,

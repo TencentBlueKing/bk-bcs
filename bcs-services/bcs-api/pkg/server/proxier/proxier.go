@@ -92,6 +92,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	clusterIdentifier := vars[f.ClusterVarName]
 	if clusterIdentifier == "" {
 		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
 		err := fmt.Errorf("cluster_id is required in path parameters")
 		status := utils.NewInvalid(utils.ClusterGroupKind, "cluster", f.ClusterVarName, err)
 		utils.WriteKubeAPIError(rw, status)
@@ -102,6 +103,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	cluster := f.GetCluster(clusterIdentifier)
 	if cluster == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
 		message := "no cluster can be found using given cluster identifier"
 		status := utils.NewNotFound(utils.ClusterResource, clusterIdentifier, message)
 		utils.WriteKubeAPIError(rw, status)
@@ -113,6 +115,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	})
 	if externalClusterInfo == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
 		message := "no externalClusterInfo can be found using given cluster identifier"
 		status := utils.NewNotFound(utils.ClusterResource, clusterIdentifier, message)
 		utils.WriteKubeAPIError(rw, status)
@@ -128,12 +131,14 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	user, hasExpired := authenticater.GetUser()
 	if user == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
 		status := utils.NewUnauthorized("anonymous requests is forbidden")
 		utils.WriteKubeAPIError(rw, status)
 		return
 	}
 	if hasExpired {
 		metric.RequestErrorCount.WithLabelValues("k8s_native", req.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
 		reason := fmt.Sprintf("this token has expired for user: %s", user.Name)
 		status := utils.NewUnauthorized(reason)
 		utils.WriteKubeAPIError(rw, status)

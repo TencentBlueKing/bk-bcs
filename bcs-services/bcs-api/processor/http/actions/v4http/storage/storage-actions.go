@@ -48,6 +48,7 @@ func request2storage(req *restful.Request, uri, method string) (string, error) {
 	data, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
 		blog.Error("handler url %s read request body failed, error: %s", uri, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrCommHttpReadBodyFail, common.BcsErrCommHttpReadBodyFailStr)
 		return err1.Error(), nil
@@ -56,6 +57,7 @@ func request2storage(req *restful.Request, uri, method string) (string, error) {
 	rd, err := regdiscv.GetRDiscover()
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
 		blog.Error("hander url %s get RDiscover error %s", uri, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrApiInternalFail, common.BcsErrApiInternalFailStr)
 		return err1.Error(), nil
@@ -64,6 +66,7 @@ func request2storage(req *restful.Request, uri, method string) (string, error) {
 	serv, err := rd.GetModuleServers(types.BCS_MODULE_STORAGE)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
 		blog.Error("get servers %s error %s", types.BCS_MODULE_STORAGE, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrApiGetStorageFail, common.BcsErrApiGetStorageFailStr)
 		return err1.Error(), nil
@@ -72,6 +75,7 @@ func request2storage(req *restful.Request, uri, method string) (string, error) {
 	ser, ok := serv.(*types.BcsStorageInfo)
 	if !ok {
 		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
 		blog.Errorf("servers convert to BcsStorageInfo")
 		err1 := bhttp.InternalError(common.BcsErrApiGetStorageFail, common.BcsErrApiGetStorageFailStr)
 		return err1.Error(), nil
@@ -95,6 +99,7 @@ func request2storage(req *restful.Request, uri, method string) (string, error) {
 	reply, err := httpcli.Request(url, method, req.Request.Header, data)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
 		blog.Error("request url %s error %s", url, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrApiRequestMesosApiFail, common.BcsErrApiRequestMesosApiFailStr)
 		return err1.Error(), nil
