@@ -28,7 +28,7 @@ import (
 func (s *Scheduler) RunDeleteApplication(transaction *Transaction) {
 
 	blog.Infof("transaction %s delete application(%s.%s) run begin", transaction.ID, transaction.RunAs, transaction.AppID)
-
+	started := time.Now()
 	for {
 
 		if transaction.CreateTime+transaction.DelayTime > time.Now().Unix() {
@@ -58,6 +58,7 @@ func (s *Scheduler) RunDeleteApplication(transaction *Transaction) {
 	}
 
 	s.FinishTransaction(transaction)
+	reportOperateAppMetrics(transaction.RunAs, transaction.AppID, DeleteApplicationType, started)
 	blog.Infof("transaction %s delete application(%s.%s) run end, result(%s)",
 		transaction.ID, transaction.RunAs, transaction.AppID, transaction.Status)
 }
