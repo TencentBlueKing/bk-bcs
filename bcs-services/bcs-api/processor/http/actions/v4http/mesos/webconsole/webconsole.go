@@ -77,6 +77,7 @@ func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	httpProxy, err := NewHttpReverseProxy(backendURL, w.CertConfig)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("mesos_webconsole", req.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("mesos_webconsole", req.Method).Observe(time.Since(start).Seconds())
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
 	httpProxy.ServeHTTP(rw, req)

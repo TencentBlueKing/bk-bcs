@@ -50,6 +50,7 @@ func handlerActions(req *restful.Request, resp *restful.Response) {
 	data, err := request2netservice(req, uri)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("net_service", req.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("net_service", req.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Error("get netservice server failed! err: ", err.Error())
 		resp.WriteHeaderAndEntity(
 			http.StatusBadRequest,

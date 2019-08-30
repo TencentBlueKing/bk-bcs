@@ -46,6 +46,13 @@ var (
 		Buckets:   timeBuckets,
 		Help:      "Histogram of the time (in seconds) each request took.",
 	}, []string{"type", "method"})
+
+	RequestErrorLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "bcs_api",
+		Name:      "request_error_latency_seconds",
+		Buckets:   timeBuckets,
+		Help:      "Histogram of the time (in seconds) each error request took.",
+	}, []string{"type", "method"})
 )
 
 func RunMetric(conf *config.ApiServConfig, err error) {
@@ -54,6 +61,7 @@ func RunMetric(conf *config.ApiServConfig, err error) {
 	prometheus.MustRegister(RequestCount)
 	prometheus.MustRegister(RequestErrorCount)
 	prometheus.MustRegister(RequestLatency)
+	prometheus.MustRegister(RequestErrorLatency)
 	http.Handle("/metrics", promhttp.Handler())
 	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
 	go http.ListenAndServe(addr, nil)
