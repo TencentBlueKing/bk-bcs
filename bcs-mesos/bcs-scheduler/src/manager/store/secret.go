@@ -63,3 +63,53 @@ func (store *managerStore) DeleteSecret(ns, name string) error {
 
 	return nil
 }
+
+func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, error) {
+
+	path := getSecretRootPath() + runAs //defaultRunAs
+
+	IDs, err := store.Db.List(path)
+	if err != nil {
+		blog.Error("fail to list secret ids, err:%s", err.Error())
+		return nil, err
+	}
+
+	if nil == IDs {
+		blog.Error("no secret in (%s)", runAs)
+		return nil, nil
+	}
+
+	var objs []*commtypes.BcsSecret
+
+	for _, ID := range IDs {
+		obj, err := store.FetchSecret(runAs, ID)
+		if err != nil {
+			blog.Error("fail to fetch secret by ID(%s)", ID)
+			continue
+		}
+
+		objs = append(objs, obj)
+	}
+
+	return objs, nil
+}
+
+func (store *managerStore) ListAllSecrets() ([]*commtypes.BcsSecret, error) {
+	nss, err := store.ListObjectNamespaces(secretNode)
+	if err != nil {
+		return nil, err
+	}
+
+	var objs []*commtypes.BcsSecret
+	for _, ns := range nss {
+		obj, err := store.ListSecrets(ns)
+		if err != nil {
+			blog.Error("fail to fetch secret by ns(%s)", ns)
+			continue
+		}
+
+		objs = append(objs, obj...)
+	}
+
+	return objs, nil
+}

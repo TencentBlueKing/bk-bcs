@@ -25,7 +25,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	sched "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"github.com/andygrunwald/megos"
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"net/url"
 	"os"
@@ -165,6 +166,13 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 	return s
 }
 
+func (s *Scheduler) runPrometheusMetrics() {
+	http.Handle("/metrics", promhttp.Handler())
+	addr := s.IP + ":" + strconv.Itoa(int(s.config.MetricPort))
+	blog.Infof("scheduler listen metrics %s", addr)
+	go http.ListenAndServe(addr, nil)
+}
+
 func (s *Scheduler) runMetric() {
 
 	blog.Infof("run metric: port(%d)", s.config.MetricPort)
@@ -258,7 +266,8 @@ func (s *Scheduler) Start() error {
 	s.Port = port
 	blog.Info("scheduler run address(%s:%d)", s.IP, s.Port)
 
-	s.runMetric()
+	s.runPrometheusMetrics()
+	//s.runMetric()
 
 	s.Role = "unknown"
 	s.currMesosMaster = ""

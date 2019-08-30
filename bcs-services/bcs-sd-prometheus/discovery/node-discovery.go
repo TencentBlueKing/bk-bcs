@@ -26,13 +26,17 @@ import (
 const (
 	DefaultNodeDiscoveryKey      = "NodeDiscovery"
 	DefaultNodeDiscoveryFileName = "node_sd_config.json"
+
+	CadvisorModule   = "cadvisor"
+	NodeExportModule = "node_exporter"
 )
 
 type nodeDiscovery struct {
-	zkAddr       []string
-	key          string
-	sdFilePath   string
-	cadvisorPort int
+	zkAddr         []string
+	key            string
+	sdFilePath     string
+	cadvisorPort   int
+	nodeExportPort int
 
 	eventHandler   EventHandleFunc
 	nodeController commDiscovery.NodeController
@@ -40,12 +44,13 @@ type nodeDiscovery struct {
 }
 
 // new nodeDiscovery for discovery node cadvisor targets
-func NewNodeDiscovery(zkAddr []string, promFilePrefix string, cadvisorPort int) (Discovery, error) {
+func NewNodeDiscovery(zkAddr []string, promFilePrefix string, cadvisorPort, nodeExportPort int) (Discovery, error) {
 	disc := &nodeDiscovery{
-		zkAddr:       zkAddr,
-		key:          DefaultNodeDiscoveryKey,
-		sdFilePath:   path.Join(promFilePrefix, DefaultNodeDiscoveryFileName),
-		cadvisorPort: cadvisorPort,
+		zkAddr:         zkAddr,
+		key:            DefaultNodeDiscoveryKey,
+		sdFilePath:     path.Join(promFilePrefix, DefaultNodeDiscoveryFileName),
+		cadvisorPort:   cadvisorPort,
+		nodeExportPort: nodeExportPort,
 	}
 
 	return disc, nil
@@ -82,10 +87,27 @@ func (disc *nodeDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig,
 			continue
 		}
 
-		conf := &types.PrometheusSdConfig{
-			Targets: []string{fmt.Sprintf("%s:%d", ip, disc.cadvisorPort)},
+		if disc.cadvisorPort != 0 {
+			conf := &types.PrometheusSdConfig{
+				Targets: []string{fmt.Sprintf("%s:%d", ip, disc.cadvisorPort)},
+				Labels: map[string]string{
+					DefaultBcsModuleLabelKey: CadvisorModule,
+				},
+			}
+
+			promConfigs = append(promConfigs, conf)
 		}
-		promConfigs = append(promConfigs, conf)
+
+		if disc.nodeExportPort != 0 {
+			conf := &types.PrometheusSdConfig{
+				Targets: []string{fmt.Sprintf("%s:%d", ip, disc.nodeExportPort)},
+				Labels: map[string]string{
+					DefaultBcsModuleLabelKey: NodeExportModule,
+				},
+			}
+
+			promConfigs = append(promConfigs, conf)
+		}
 	}
 
 	return promConfigs, nil
