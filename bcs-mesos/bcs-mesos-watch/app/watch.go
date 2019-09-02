@@ -417,7 +417,12 @@ func RefreshDCHost(rfCxt context.Context, cfg *types.CmdConfig, storage storage.
 					blog.Errorf("fail to unmarshal DCHost(%s), err:%s", string(server), err.Error())
 					continue
 				}
-				DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+				if !cfg.IsExternal {
+					DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+				} else {
+					DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.ExternalIp + ":" + strconv.Itoa(int(serverInfo.ServerInfo.ExternalPort))
+				}
+
 				blog.Infof("get DCHost(%s)", DCHost)
 				DCHosts = append(DCHosts, DCHost)
 			}

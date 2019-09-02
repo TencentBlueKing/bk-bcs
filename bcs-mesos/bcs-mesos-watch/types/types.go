@@ -33,6 +33,7 @@ type BcsSyncData struct {
 type CmdConfig struct {
 	ClusterID   string
 	ClusterInfo string
+	IsExternal  bool
 	CAFile      string
 	CertFile    string
 	KeyFile     string
