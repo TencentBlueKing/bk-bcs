@@ -11,17 +11,12 @@
  *
  */
 
-package config
+package types
 
-// sd prometheus config
-type Config struct {
-	ClusterZk      string
-	CadvisorPort   int
-	NodeExportPort int
-	ClusterId      string
-	PromFilePrefix string
-	ServiceZk      string
-	EnableMesos    bool
-	EnableService  bool
-	EnableNode     bool
-}
+const (
+	//namespace
+	MetricsNamespaceScheduler = "bkbcs"
+
+	//subsystem
+	MetricsSubsystemScheduler = "scheduler"
+)

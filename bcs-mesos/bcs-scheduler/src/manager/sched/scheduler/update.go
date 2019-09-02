@@ -188,6 +188,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		taskGroup.UpdateTime = now
 	}
 
+	reportTaskgroupReportMetrics(taskGroup.RunAs, taskGroup.AppID, taskGroup.Name, taskGroup.Status)
 	// taskgroup info changed
 	if taskGroup.LastUpdateTime <= updateTime || taskgroupUpdated == true {
 		s.ServiceMgr.TaskgroupUpdate(taskGroup)
@@ -848,6 +849,7 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 		taskGroup.UpdateTime = now
 	}
 
+	reportTaskgroupReportMetrics(taskGroup.RunAs, taskGroup.AppID, taskGroup.Name, taskGroup.Status)
 	// taskgroup info changed
 	if taskGroup.LastUpdateTime <= updateTime || taskgroupUpdated == true {
 		s.ServiceMgr.TaskgroupUpdate(taskGroup)

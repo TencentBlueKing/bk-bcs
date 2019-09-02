@@ -45,9 +45,9 @@ var (
 	RequestLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: plugin.Namespace,
 		Subsystem: "bcsscheduler",
-		Name:      "request_latency_milliseconds",
+		Name:      "request_latency_seconds",
 		Buckets:   plugin.TimeBuckets,
-		Help:      "Histogram of the time (in milliseconds) each request took.",
+		Help:      "Histogram of the time (in seconds) each request took.",
 	}, []string{"status"})
 
 	DnsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -74,8 +74,8 @@ var (
 	StorageOperatorLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: plugin.Namespace,
 		Subsystem: "bcsscheduler",
-		Name:      "storage_operator_latency_milliseconds",
+		Name:      "storage_operator_latency_seconds",
 		Buckets:   plugin.TimeBuckets,
-		Help:      "Histogram of the time (in milliseconds) each storage operator.",
+		Help:      "Histogram of the time (in seconds) each storage operator.",
 	}, []string{"status"})
 )

@@ -14,15 +14,17 @@
 package webconsole
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-api/config"
-	"fmt"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/gorilla/websocket"
 )
 
@@ -60,6 +62,8 @@ func NewWebconsoleProxy(certConfig *config.CertConfig) *WebconsoleProxy {
 }
 
 func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	start := time.Now()
+
 	backendURL, err := w.Backend(req)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
@@ -72,8 +76,12 @@ func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	httpProxy, err := NewHttpReverseProxy(backendURL, w.CertConfig)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("mesos_webconsole", req.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("mesos_webconsole", req.Method).Observe(time.Since(start).Seconds())
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
 	httpProxy.ServeHTTP(rw, req)
+	metric.RequestCount.WithLabelValues("mesos_webconsole", req.Method).Inc()
+	metric.RequestLatency.WithLabelValues("mesos_webconsole", req.Method).Observe(time.Since(start).Seconds())
 	return
 }

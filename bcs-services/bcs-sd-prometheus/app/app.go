@@ -46,6 +46,7 @@ func setConfig(conf *config.Config, op *options.PrometheusControllerOption) {
 	conf.PromFilePrefix = op.PromFilePrefix
 	conf.ClusterId = op.ClusterId
 	conf.CadvisorPort = op.CadvisorPort
+	conf.NodeExportPort = op.NodeExporterPort
 	conf.ServiceZk = op.BCSZk
 	conf.EnableMesos = op.EnableMesos
 	conf.EnableNode = op.EnableNode

@@ -178,6 +178,26 @@ func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	return nil
 }
 
+func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
+	nss, err := store.ListObjectNamespaces(applicationNode)
+	if err != nil {
+		return nil, err
+	}
+
+	var objs []*types.Application
+	for _, ns := range nss {
+		obj, err := store.ListApplications(ns)
+		if err != nil {
+			blog.Error("fail to fetch application by ns(%s)", ns)
+			continue
+		}
+
+		objs = append(objs, obj...)
+	}
+
+	return objs, nil
+}
+
 /*
 func (store *managerStore) CleanApplication(runAs, appId string) error {
 

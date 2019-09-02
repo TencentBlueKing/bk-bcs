@@ -35,6 +35,8 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 
 	blog.Infof("transaction %s scale(%s.%s) run begin", transaction.ID, runAs, appID)
 
+	startedTaskgroup := time.Now()
+	startedApp := time.Now()
 	for {
 		blog.Infof("transaction %s scale(%s.%s) run check", transaction.ID, runAs, appID)
 
@@ -68,11 +70,16 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 					blog.V(3).Infof("transaction %s fit offer %s||%s ", transaction.ID, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {
 						blog.Info("transaction %s scale(%s.%s) use offer %s||%s", transaction.ID, runAs, appID, offer.GetHostname(), *(offer.Id.Value))
-						s.doScaleUpAppTrans(transaction, curOffer, false)
+						launchedNum := opData.LaunchedNum
+						s.doScaleUpAppTrans(transaction, curOffer, false, startedTaskgroup)
 						if transaction.Status == types.OPERATION_STATUS_FINISH || transaction.Status == types.OPERATION_STATUS_FAIL {
 							blog.Infof("transaction %s scaleup(%s.%s) finish", transaction.ID, runAs, appID)
 							goto run_end
 						}
+						if launchedNum < opData.LaunchedNum {
+							startedTaskgroup = time.Now()
+						}
+
 					} else {
 						blog.Info("transaction %s use offer %s||%s fail", transaction.ID, offer.GetHostname(), *(offer.Id.Value))
 					}
@@ -93,6 +100,7 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 
 run_end:
 	s.FinishTransaction(transaction)
+	reportOperateAppMetrics(transaction.RunAs, transaction.AppID, ScaleApplicationType, startedApp)
 	blog.Infof("transaction %s scale(%s.%s) run end, result(%s)", transaction.ID, runAs, appID, transaction.Status)
 }
 
@@ -105,6 +113,7 @@ func (s *Scheduler) RunInnerScaleApplication(transaction *Transaction) {
 
 	blog.Infof("transaction %s innerscale(%s.%s) run begin", transaction.ID, runAs, appID)
 	//var offerIdx int64 = 0
+	started := time.Now()
 	for {
 		blog.Infof("transaction %s innerscale(%s.%s) run check", transaction.ID, runAs, appID)
 
@@ -142,10 +151,14 @@ func (s *Scheduler) RunInnerScaleApplication(transaction *Transaction) {
 					blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {
 						blog.Info("transaction %s innerscale(%s.%s) use offer(%d) %s||%s", transaction.ID, runAs, appID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-						s.doScaleUpAppTrans(transaction, curOffer, true)
+						launchedNum := opData.LaunchedNum
+						s.doScaleUpAppTrans(transaction, curOffer, true, started)
 						if transaction.Status == types.OPERATION_STATUS_FINISH || transaction.Status == types.OPERATION_STATUS_FAIL {
 							blog.Infof("transaction %s innerscaleup(%s.%s) end", transaction.ID, runAs, appID)
 							goto run_end
+						}
+						if launchedNum < opData.LaunchedNum {
+							started = time.Now()
 						}
 					} else {
 						blog.Info("transaction %s use offer(%d) %s||%s fail", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
@@ -170,7 +183,7 @@ run_end:
 	blog.Infof("transaction %s innerscale(%s.%s) run end, result(%s)", transaction.ID, runAs, appID, transaction.Status)
 }
 
-func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer, isInner bool) {
+func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer, isInner bool, started time.Time) {
 
 	runAs := trans.RunAs
 	appID := trans.AppID
@@ -211,6 +224,7 @@ func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer,
 	resources := task.BuildResources(version.AllResource())
 	taskGroupInfos := make([]*mesos.TaskGroupInfo, 0)
 
+	var taskgroupName string
 	//if app.Instances < opData.Instances && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
 	if app.Instances < opData.Instances && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) {
 		taskGroup, err := s.BuildTaskGroup(version, app, "", "scale application")
@@ -220,6 +234,7 @@ func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer,
 			s.DeclineResource(offer.Id.Value)
 			return
 		}
+		taskgroupName = taskGroup.Name
 
 		taskGroupInfo := task.CreateTaskGroupInfo(offer, version, resources, taskGroup)
 		if taskGroupInfo == nil {
@@ -237,7 +252,7 @@ func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer,
 			s.DeclineResource(offer.Id.Value)
 			return
 		}
-
+		opData.LaunchedNum++
 		taskGroupInfos = append(taskGroupInfos, taskGroupInfo)
 	}
 
@@ -259,6 +274,7 @@ func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer,
 		s.DeclineResource(offer.Id.Value)
 	}
 
+	reportScheduleTaskgroupMetrics(app.RunAs, app.Name, taskgroupName, ScaleTaskgroupType, started)
 	if app.Instances >= opData.Instances {
 		if isInner == false {
 			app.LastStatus = app.Status

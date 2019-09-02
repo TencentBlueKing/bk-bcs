@@ -86,6 +86,8 @@ type TransAPIScaleOpdata struct {
 	Instances uint64
 	// scale down or up
 	IsDown bool
+	// already launched taskgroups number
+	LaunchedNum int
 }
 
 // Update application transaction data
