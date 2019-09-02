@@ -145,3 +145,6 @@ api_export:pre
 
 consoleproxy:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-consoleproxy ./bcs-mesos/bcs-consoleproxy/main.go
+
+bmsf-mesos-adapter:pre
+	go build ${LBFLAG} -o ${BINARYPATH}/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
