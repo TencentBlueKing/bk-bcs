@@ -24,7 +24,7 @@ func testDatakey(obj interface{}) (string, error) {
 	return fmt.Sprintf("%s.%s", d.namespace, d.name), nil
 }
 
-var testCache *Cache
+var testCache Store
 
 func init() {
 	testCache = NewCache(testDatakey)
@@ -38,7 +38,7 @@ func init() {
 }
 
 func TestCacheKeyFunc(t *testing.T) {
-	errData = &errData{name: "jim", age: 100}
+	errData := &errData{name: "jim", age: 100}
 	err := testCache.Add(errData)
 	if err != nil {
 		t.Logf("KeyFunc testing success")
@@ -49,12 +49,12 @@ func TestCacheAdd(t *testing.T) {
 	tdata := &data{namespace: "team", name: "jack"}
 	count := testCache.Num()
 	//test no data
-	_, exist, err := testCache.Get(tdata)
+	_, exist, _ := testCache.Get(tdata)
 	if exist {
 		t.Error("Cache Get failed in cacheAdd")
 	}
 	testCache.Add(tdata)
-	item, ok, err := testCache.Get(tdata)
+	_, ok, _ := testCache.Get(tdata)
 	if !ok {
 		t.Error("Cache Add failed! Lost adding data")
 	}
@@ -65,7 +65,7 @@ func TestCacheAdd(t *testing.T) {
 }
 
 func TestCacheList(t *testing.T) {
-	all = testCache.List()
+	all := testCache.List()
 	if len(all) != testCache.Num() {
 		t.Error("List Num != Num()")
 	}
@@ -73,7 +73,7 @@ func TestCacheList(t *testing.T) {
 
 func TestCacheGet(t *testing.T) {
 	tdata := &data{namespace: "team", name: "jim"}
-	old, exist, err := testCache.Get(tdata)
+	_, exist, _ := testCache.Get(tdata)
 	if !exist {
 		t.Error("Get object from cache failed")
 	}
@@ -96,7 +96,7 @@ func TestCacheClear(t *testing.T) {
 	}
 	data5 := &data{namespace: "team", name: "jim"}
 	testCache.Add(data5)
-	data, exist, err := testCache.Get(data5)
+	_, exist, _ := testCache.Get(data5)
 	if !exist {
 		t.Error("Add Error after clear all")
 	}
