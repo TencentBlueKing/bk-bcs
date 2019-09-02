@@ -31,10 +31,13 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
+// RunType collector running mode
 type RunType string
 
 const (
-	ContainerType   RunType = "container"
+	//ContainerType for Container mode
+	ContainerType RunType = "container"
+	//TraditionalType for process mode
 	TraditionalType RunType = "traditional"
 )
 
@@ -47,7 +50,7 @@ type Config struct {
 	conf.ProcessConfig
 	conf.ZkConfig
 	conf.LocalConfig
-	RunMode               RunType              `json:"run_mode" value:"container" usage:"should be one of container or traditional. container for containerized app in mesos/k8s, traditional for traditional app."`
+	RunMode               RunType              `json:"run_mode" value:"container" usage:"should be one of container or traditional. container for containerized app in mesos/k8s, traditional for traditional app."` //no lint
 	ExporterType          int                  `json:"exporter_type" value:"3" usage:"the type of exporter"`
 	ZKServerAddress       string               // discovery
 	MetricClientCertDir   string               // client cert directory of the metric service client
