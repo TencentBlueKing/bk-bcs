@@ -91,14 +91,16 @@ const (
 
 //ServerInfo base server information
 type ServerInfo struct {
-	IP         string `json:"ip"`
-	Port       uint   `json:"port"`
-	MetricPort uint   `json:"metric_port"`
-	HostName   string `json:"hostname"`
-	Scheme     string `json:"scheme"` //http, https
-	Version    string `json:"version"`
-	Cluster    string `json:"cluster"`
-	Pid        int    `json:"pid"`
+	IP           string `json:"ip"`
+	Port         uint   `json:"port"`
+	MetricPort   uint   `json:"metric_port"`
+	HostName     string `json:"hostname"`
+	Scheme       string `json:"scheme"` //http, https
+	Version      string `json:"version"`
+	Cluster      string `json:"cluster"`
+	Pid          int    `json:"pid"`
+	ExternalIp   string `json:"external_ip"`
+	ExternalPort uint   `json:"external_port"`
 }
 
 //APIServInfo apiserver information
