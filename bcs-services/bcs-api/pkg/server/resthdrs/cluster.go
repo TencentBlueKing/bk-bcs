@@ -20,6 +20,7 @@ import (
 
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
@@ -27,6 +28,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/emicklei/go-restful"
 	"github.com/iancoleman/strcase"
+	"time"
 )
 
 func initCluster(cluster *m.Cluster) error {
@@ -56,6 +58,7 @@ func createClusterWithExternalInfo(cluster *m.Cluster, externalClusterInfo *m.BC
 	// convert type name to screaming snake
 	errorCode := strcase.ToScreamingSnake(fmt.Sprint(reflect.TypeOf(cluster)))
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", "POST").Inc()
 		message := fmt.Sprintf("errcode: %d, can not create cluster, error: %s", common.BcsErrApiInternalDbError, err)
 		WriteClientError(response, errorCode, message)
 		return
@@ -63,6 +66,7 @@ func createClusterWithExternalInfo(cluster *m.Cluster, externalClusterInfo *m.BC
 
 	err = sqlstore.CreateBCSClusterInfo(externalClusterInfo)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", "POST").Inc()
 		message := fmt.Sprintf("errcode: %d, can not create external cluster info, error: %s", common.BcsErrApiInternalDbError, err)
 		WriteServerError(response, "CANNOT_CREATE_EXTERNAL_CLUSTER_INFO", message)
 		return
@@ -126,12 +130,16 @@ type CreateBCSClusterForm struct {
 
 // CreateBCSCluster creates a "BCS" cluster for current user
 func CreateBCSCluster(request *restful.Request, response *restful.Response) {
+
+	start := time.Now()
+
 	blog.Debug(fmt.Sprintf("CreateBCSCluster begin"))
 	form := CreateBCSClusterForm{}
 	request.ReadEntity(&form)
 
 	err := validate.Struct(&form)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		blog.Debug(fmt.Sprintf("CreateBCSCluster form validate failed, %s", err))
 		response.WriteEntity(FormatValidationError(err))
 		return
@@ -146,6 +154,8 @@ func CreateBCSCluster(request *restful.Request, response *restful.Response) {
 		SourceClusterId: form.ID,
 	})
 	if externalClusterInfo != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, create failed, cluster with this id already exists", common.BcsErrApiBadRequest)
 		WriteClientError(response, "CLUSTER_ALREADY_EXISTS", message)
 		return
@@ -168,6 +178,8 @@ func CreateBCSCluster(request *restful.Request, response *restful.Response) {
 	} else if form.ClusterType == "tke" {
 		clusterType = utils.BcsTkeCluster
 	} else {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, create failed, cluster type invalid", common.BcsErrApiBadRequest)
 		WriteClientError(response, "CLUSTER_TYPE_INVALID", message)
 		return
@@ -181,4 +193,6 @@ func CreateBCSCluster(request *restful.Request, response *restful.Response) {
 		TkeClusterRegion: form.TkeClusterRegion,
 	}
 	createClusterWithExternalInfo(cluster, externalClusterInfo, response)
+	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }

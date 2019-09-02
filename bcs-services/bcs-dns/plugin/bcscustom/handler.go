@@ -45,7 +45,7 @@ func (bc *BcsCustom) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 	if code, err := bc.EtcdPlugin.ServeDNS(ctx, interceptor, m); err != nil {
 		log.Printf("[ERROR] get request[%s] from etcd plugin failed, err:%v", state.Name(), err)
 		RequestCount.WithLabelValues(Failure).Inc()
-		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 		return plugin.BackendError(bc, zone, code, state, err, opt)
 	}
 	m.SetReply(r)
@@ -58,7 +58,7 @@ func (bc *BcsCustom) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 		if err != nil {
 			log.Printf("[ERROR] get request[%s] from *upstream* failed, err:%v", state.Name(), err)
 			RequestCount.WithLabelValues(Failure).Inc()
-			RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+			RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 			return plugin.BackendError(bc, zone, dns.RcodeNameError, state, err, opt)
 		}
 		m.Answer = append(m.Answer, result.Answer...)
@@ -72,11 +72,11 @@ func (bc *BcsCustom) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 	if err := w.WriteMsg(m); err != nil {
 		log.Printf("[ERROR] response to client failed, %s", err.Error())
 		RequestCount.WithLabelValues(Failure).Inc()
-		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds() * 1000)
+		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 		return dns.RcodeServerFailure, err
 	}
 	RequestCount.WithLabelValues(Success).Inc()
-	RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds() * 1000)
+	RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds())
 	return dns.RcodeSuccess, nil
 }
 

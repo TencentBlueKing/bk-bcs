@@ -15,6 +15,7 @@ package store
 
 import (
 	"bk-bcs/bcs-common/common/zkclient"
+	"time"
 )
 
 //dbZk is a struct of the zookeeper client
@@ -42,41 +43,72 @@ func (zk *dbZk) Close() {
 }
 
 func (zk *dbZk) Insert(path string, value string) error {
+	var failed bool
+	started := time.Now()
 
-	//path := "/registry/" + obj.object + "/" + obj.namespace + "/" + obj.id
+	err := zk.ZkCli.Update(path, value)
+	if err != nil {
+		failed = true
+	}
 
-	return zk.ZkCli.Update(path, value)
+	reportStorageOperatorMetrics(StoreOperatorCreate, started, failed)
+	return err
 }
 
 func (zk *dbZk) Fetch(path string) ([]byte, error) {
-
-	//path := "/registry/" + obj.object + "/" + obj.namespace + "/" + obj.id
+	var failed bool
+	started := time.Now()
 
 	data, err := zk.ZkCli.Get(path)
+	if err != nil {
+		failed = true
+	}
 
+	reportStorageOperatorMetrics(StoreOperatorFetch, started, failed)
 	return []byte(data), err
 }
 
 func (zk *dbZk) Update(path string, value string) error {
+	var failed bool
+	started := time.Now()
 
-	//path := "/registry/" + obj.object + "/" + obj.namespace + "/" + obj.id
+	err := zk.ZkCli.Update(path, value)
+	if err != nil {
+		failed = true
+	}
 
-	return zk.ZkCli.Update(path, value)
+	reportStorageOperatorMetrics(StoreOperatorUpdate, started, failed)
+	return err
+
 }
 
 func (zk *dbZk) Delete(path string) error {
+	var failed bool
+	started := time.Now()
 
-	//path := "/registry/" + obj.object + "/" + obj.namespace + "/" + obj.id
+	err := zk.ZkCli.Del(path, -1)
+	if err != nil {
+		failed = true
+	}
 
-	return zk.ZkCli.Del(path, -1)
+	reportStorageOperatorMetrics(StoreOperatorDelete, started, failed)
+	return err
 }
 
 func (zk *dbZk) List(path string) ([]string, error) {
-	//path := "/registry/" + obj.object + "/" + obj.namespace
 	b, _ := zk.ZkCli.Exist(path)
 	if !b {
 		return nil, nil
 	}
 
-	return zk.ZkCli.GetChildren(path)
+	var failed bool
+	started := time.Now()
+
+	childs, err := zk.ZkCli.GetChildren(path)
+	if err != nil {
+		failed = true
+	}
+
+	reportStorageOperatorMetrics(StoreOperatorFetch, started, failed)
+	return childs, err
 }

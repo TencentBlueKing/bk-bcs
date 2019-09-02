@@ -15,9 +15,10 @@ package types
 
 import (
 	"strconv"
+	"strings"
 
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	mesos_master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
 
 	commtypes "bk-bcs/bcs-common/common/types"
 	//"fmt"
@@ -519,6 +520,121 @@ type Agent struct {
 	Key          string
 	LastSyncTime int64
 	AgentInfo    *mesos_master.Response_GetAgents_Agent
+}
+
+func (om *Agent) GetAgentInfo() *commtypes.BcsClusterAgentInfo {
+	agent := new(commtypes.BcsClusterAgentInfo)
+	//blog.V(3).Infof("get agents: ===>agent[%d]: %+v", index, om.AgentInfo)
+	agent.HostName = om.AgentInfo.GetAgentInfo().GetHostname()
+
+	szSplit := strings.Split(om.AgentInfo.GetPid(), "@")
+	if len(szSplit) == 2 {
+		agent.IP = szSplit[1]
+	} else {
+		agent.IP = om.AgentInfo.GetPid()
+	}
+	if strings.Contains(agent.IP, ":") {
+		agent.IP = strings.Split(agent.IP, ":")[0]
+	}
+
+	totalRes := om.AgentInfo.GetTotalResources()
+	for _, resource := range totalRes {
+		if resource.GetName() == "cpus" {
+			agent.CpuTotal = resource.GetScalar().GetValue()
+		}
+		if resource.GetName() == "mem" {
+			agent.MemTotal = resource.GetScalar().GetValue()
+		}
+		if resource.GetName() == "disk" {
+			agent.DiskTotal = resource.GetScalar().GetValue()
+		}
+	}
+
+	usedRes := om.AgentInfo.GetAllocatedResources()
+	for _, resource := range usedRes {
+		if resource.GetName() == "cpus" {
+			agent.CpuUsed = resource.GetScalar().GetValue()
+		}
+		if resource.GetName() == "mem" {
+			agent.MemUsed = resource.GetScalar().GetValue()
+		}
+		if resource.GetName() == "disk" {
+			agent.DiskUsed = resource.GetScalar().GetValue()
+		}
+	}
+
+	agent.HostAttributes = mesosAttribute2commonAttribute(om.AgentInfo.AgentInfo.Attributes)
+	agent.Attributes = agent.HostAttributes
+
+	if om.AgentInfo.RegisteredTime != nil && om.AgentInfo.RegisteredTime.Nanoseconds != nil {
+		agent.RegisteredTime = *om.AgentInfo.RegisteredTime.Nanoseconds
+	}
+	if om.AgentInfo.ReregisteredTime != nil && om.AgentInfo.ReregisteredTime.Nanoseconds != nil {
+		agent.ReRegisteredTime = *om.AgentInfo.ReregisteredTime.Nanoseconds
+	}
+
+	return agent
+}
+
+func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*commtypes.BcsAgentAttribute {
+	if oldAttributeList == nil {
+		return nil
+	}
+
+	attributeList := make([]*commtypes.BcsAgentAttribute, 0)
+
+	for _, oldAttribute := range oldAttributeList {
+		if oldAttribute == nil {
+			continue
+		}
+
+		attribute := new(commtypes.BcsAgentAttribute)
+		if oldAttribute.Name != nil {
+			attribute.Name = *oldAttribute.Name
+		}
+		if oldAttribute.Type != nil {
+			switch *oldAttribute.Type {
+			case mesos.Value_SCALAR:
+				attribute.Type = commtypes.MesosValueType_Scalar
+				if oldAttribute.Scalar != nil && oldAttribute.Scalar.Value != nil {
+					attribute.Scalar = &commtypes.MesosValue_Scalar{
+						Value: *oldAttribute.Scalar.Value,
+					}
+				}
+			case mesos.Value_RANGES:
+				attribute.Type = commtypes.MesosValueType_Ranges
+				if oldAttribute.Ranges != nil {
+					rangeList := make([]*commtypes.MesosValue_Ranges, 0)
+					for _, oldRange := range oldAttribute.Ranges.Range {
+						newRange := &commtypes.MesosValue_Ranges{}
+						if oldRange.Begin != nil {
+							newRange.Begin = *oldRange.Begin
+						}
+						if oldRange.End != nil {
+							newRange.End = *oldRange.End
+						}
+						rangeList = append(rangeList, newRange)
+					}
+				}
+			case mesos.Value_SET:
+				attribute.Type = commtypes.MesosValueType_Set
+				if oldAttribute.Set != nil {
+					attribute.Set = &commtypes.MesosValue_Set{
+						Item: oldAttribute.Set.Item,
+					}
+				}
+			case mesos.Value_TEXT:
+				attribute.Type = commtypes.MesosValueType_Text
+				if oldAttribute.Text != nil && oldAttribute.Text.Value != nil {
+					attribute.Text = &commtypes.MesosValue_Text{
+						Value: *oldAttribute.Text.Value,
+					}
+				}
+			}
+		}
+		attributeList = append(attributeList, attribute)
+	}
+	return attributeList
 }
 
 type Check struct {
