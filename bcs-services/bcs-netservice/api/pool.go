@@ -166,7 +166,13 @@ func (pool *PoolHandler) Update(request *restful.Request, response *restful.Resp
 	if !netReq.Pool.IsValid() {
 		netRes.Code = 1
 		netRes.Message = "Request Pool data lost"
-		blog.Errorf("PoolHandler check pool data err, data lost, Cluster: %s, Net: %s, Mask: %d, Gateway: %s", netReq.Pool.Cluster, netReq.Pool.Net, netReq.Pool.Mask, netReq.Pool.Gateway)
+		blog.Errorf(
+			"PoolHandler check pool data err, data lost, Cluster: %s, Net: %s, Mask: %d, Gateway: %s",
+			netReq.Pool.Cluster,
+			netReq.Pool.Net,
+			netReq.Pool.Mask,
+			netReq.Pool.Gateway,
+		)
 		response.WriteEntity(netRes)
 		reportMetrics("updateIPPool", "4xx", started)
 		return

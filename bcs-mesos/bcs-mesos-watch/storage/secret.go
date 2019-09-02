@@ -59,7 +59,7 @@ func (handler *SecretHandler) Add(data interface{}) error {
 	dataType := data.(*commtypes.BcsSecret)
 	blog.Info("secret add event, secret: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
 	started := time.Now()
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.Errorf("secret add node %s, err %+v", dataNode, err)
@@ -75,7 +75,7 @@ func (handler *SecretHandler) Delete(data interface{}) error {
 	dataType := data.(*commtypes.BcsSecret)
 	blog.Info("secret delete event, secret: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
 	started := time.Now()
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Errorf("secret delete node %s, err %+v", dataNode, err)
@@ -90,7 +90,7 @@ func (handler *SecretHandler) Delete(data interface{}) error {
 func (handler *SecretHandler) Update(data interface{}) error {
 	dataType := data.(*commtypes.BcsSecret)
 	started := time.Now()
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("secret update node %s, err %+v", dataNode, err)
