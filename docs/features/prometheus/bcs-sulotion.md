@@ -83,10 +83,9 @@ value表示taskgroup状态，0表示Staging、Starting;1表示Running;2表示Fin
 
 ## bcs-contaienr-executor
 
-* executor_health: 容器健康状态，Gauge，0:不健康，1健康
-* executor_slave_connection: 与slave链接数，0无连接，1有链接，Gauge
-* executor_taskgroup_report_total: taskgroup上报次数，CounterVec，区分taskgroup状态
-* executor_taskgroup_ack_total: mesos-slave确认taskgroup数据，CounterVec，区分taskgroup状态
+* bkbcs_executor_slave_connection: 与slave链接数，0无连接，1有链接，Gauge
+* bkbcs_executor_taskgroup_status_report_total: taskgroup上报次数，CounterVec，labels区分taskgroup
+* bkbcs_executor_taskgroup_status_ack_total: scheduler确认taskgroup数据，CounterVec，labels区分taskgroup
 
 ## bcs-netservice
 
