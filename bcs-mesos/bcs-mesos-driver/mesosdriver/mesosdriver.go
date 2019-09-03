@@ -217,6 +217,8 @@ func (m *MesosDriver) RegDiscover() {
 	regInfo.ServerInfo.Cluster = m.config.Cluster
 	regInfo.ServerInfo.IP = m.config.Address
 	regInfo.ServerInfo.Port = m.config.Port
+	regInfo.ServerInfo.ExternalIp = m.config.ExternalIp
+	regInfo.ServerInfo.ExternalPort = m.config.ExternalPort
 	regInfo.ServerInfo.MetricPort = m.config.MetricPort
 	regInfo.ServerInfo.HostName = host
 	regInfo.ServerInfo.Scheme = "http"
