@@ -55,8 +55,7 @@ func Run(config *Config) error {
 	adapterDiscover, discoverEvent := rdiscover.NewAdapterDiscover(
 		config.BCSZk, config.Address, config.Cluster, config.MetricPort)
 	go adapterDiscover.Start()
-	go handleEvent(config, discoverEvent)
-
+	handleEvent(config, discoverEvent)
 	// //ready to run
 	// s.HandleSignal()
 	return nil
