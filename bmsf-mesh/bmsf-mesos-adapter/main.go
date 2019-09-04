@@ -23,9 +23,9 @@ SOFTWARE.
 package main
 
 import (
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/app"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/app"
 	"fmt"
 	"os"
 )
@@ -33,6 +33,10 @@ import (
 func main() {
 	cfg := &app.Config{}
 	conf.Parse(cfg)
+	if err := cfg.Validate(); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
 	blog.InitLogs(cfg.LogConfig)
 	defer blog.CloseLogs()
 	if err := app.Run(cfg); err != nil {
