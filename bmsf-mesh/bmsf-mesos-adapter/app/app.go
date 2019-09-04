@@ -23,13 +23,14 @@ SOFTWARE.
 package app
 
 import (
+	pidfile "bk-bcs/bcs-common/common"
+	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery/bcs"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/queue"
+	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/rdiscover"
 	"bk-bcs/bmsf-mesh/pkg/apis"
-	"bk-bcs/bcs-common/common/blog"
-	pidfile "bk-bcs/bcs-common/common"
 	"fmt"
 	"os"
 	"os/signal"
@@ -48,25 +49,63 @@ func Run(config *Config) error {
 	if pidErr := pidfile.SavePid(config.ProcessConfig); pidErr != nil {
 		blog.Errorf("bmsf-mesos-adaptor save pid file failed, %s", pidErr)
 	}
-	s := &Server{
-		config:    config,
-		mgrStop:   make(chan struct{}),
-		svcQueue:  queue.NewQueue(),
-		nodeQueue: queue.NewQueue(),
+
+	// create AdapterDiscover
+	config.BCSZk = strings.ReplaceAll(config.BCSZk, ";", ",")
+	adapterDiscover, discoverEvent := rdiscover.NewAdapterDiscover(
+		config.BCSZk, config.Address, config.Cluster, config.MetricPort)
+	go adapterDiscover.Start()
+	go handleEvent(config, discoverEvent)
+
+	// //ready to run
+	// s.HandleSignal()
+	return nil
+}
+
+func handleEvent(config *Config, event <-chan rdiscover.RoleEvent) {
+	var s *Server
+	signalChan := make(chan os.Signal, 5)
+	signal.Notify(signalChan, syscall.SIGTRAP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	for {
+		select {
+		case curEvent := <-event:
+			if curEvent == rdiscover.MasterToSlave {
+				if s != nil {
+					s.Stop()
+				}
+			} else if curEvent == rdiscover.SlaveToMaster {
+				s := &Server{
+					config:    config,
+					mgrStop:   make(chan struct{}),
+					svcQueue:  queue.NewQueue(),
+					nodeQueue: queue.NewQueue(),
+				}
+				//todo: init event messge Queue for Reconciler & bk-bcs cluster
+				s.mgr = settingManager(config.KubeConfig, int(config.MetricPort), s.svcQueue, s.nodeQueue)
+				//create cluster plugin
+				bcsZkHosts := strings.Split(config.BCSZk, ",")
+				bkBcsCluster, err := bcs.NewCluster(config.Cluster, bcsZkHosts)
+				if err != nil {
+					blog.Errorf("init bk-bcs cluster failed, %s", err)
+					fmt.Printf("init bk-bcs cluster failed, %s", err.Error())
+					os.Exit(-1)
+				}
+				s.cluster = bkBcsCluster
+				err = s.Run()
+				if err != nil {
+					fmt.Println(err.Error())
+					os.Exit(-1)
+				}
+			} else {
+				blog.Errorf("invalid event %s", curEvent)
+			}
+		case sig := <-signalChan:
+			blog.Warnf("bmsf-mesos-adaptor was killed, signal info: %s", sig.String())
+			if s != nil {
+				s.Stop()
+			}
+		}
 	}
-	//todo: init event messge Queue for Reconciler & bk-bcs cluster
-	s.mgr = settingManager(config.KubeConfig, int(config.MetricPort), s.svcQueue, s.nodeQueue)
-	//create cluster plugin
-	zkHosts := strings.Split(config.BCSZk, ",")
-	bkBcsCluster, err := bcs.NewCluster(config.Cluster, zkHosts)
-	if err != nil {
-		blog.Errorf("init bk-bcs cluster failed, %s", err)
-		return err
-	}
-	s.cluster = bkBcsCluster
-	//ready to run
-	s.HandleSignal()
-	return s.Run()
 }
 
 func settingManager(kubeconfig string, port int, svc queue.Queue, node queue.Queue) manager.Manager {
@@ -141,15 +180,12 @@ func (s *Server) Stop() {
 	close(s.mgrStop)
 }
 
-//HandleSignal handle system exit signals
-func (s *Server) HandleSignal() {
-	signalChan := make(chan os.Signal, 5)
-	signal.Notify(signalChan, syscall.SIGTRAP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
-	go func() {
-		select {
-		case sig := <-signalChan:
-			blog.Warnf("bmsf-mesos-adaptor was killed, signal info: %s", sig.String())
-			s.Stop()
-		}
-	}()
-}
+// //HandleSignal handle system exit signals
+// func (s *Server) HandleSignal() {
+// 	signalChan := make(chan os.Signal, 5)
+// 	signal.Notify(signalChan, syscall.SIGTRAP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+// 	go func() {
+// 		select {
+
+// 	}()
+// }
