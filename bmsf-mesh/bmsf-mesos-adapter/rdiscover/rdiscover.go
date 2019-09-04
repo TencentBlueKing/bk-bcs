@@ -63,6 +63,7 @@ func NewAdapterDiscover(zkAddr, ip, clusterID string, metricPort uint) (*Adapter
 		rd:         rd.NewRegDiscoverEx(zkAddr, 20*time.Second),
 		zkAddr:     zkAddr,
 		ip:         ip,
+		clusterID:  clusterID,
 		metricPort: metricPort,
 		eventQueue: eventQueue,
 	}, eventQueue
