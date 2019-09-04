@@ -103,6 +103,7 @@ func handleEvent(config *Config, event <-chan rdiscover.RoleEvent) {
 			if s != nil {
 				s.Stop()
 			}
+			return
 		}
 	}
 }
