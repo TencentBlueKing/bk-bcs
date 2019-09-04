@@ -31,11 +31,12 @@ type Config struct {
 	conf.FileConfig
 	conf.ServiceConfig
 	conf.MetricConfig
+	conf.CertConfig
 	conf.ZkConfig
-	conf.ClientOnlyCertConfig
-	conf.LicenseServerConfig
 	conf.LogConfig
 	conf.ProcessConfig
+	Scheme     string `json:"metric_scheme" value:"http" usage:"scheme for metric api"`
+	Zookeeper  string `json:"zookeeper" value:"127.0.0.1:3181" usage:"data source for taskgroups and services"`
 	Cluster    string `json:"cluster" value:"bmsf-system" usage:"cluster id or name"`
-	KubeConfig string `json:"kubeconfig" value:"./config/kube.yaml" usage:"configuration file for kube-apiserver"`
+	KubeConfig string `json:"kubeconfig" value:".kube.yaml" usage:"configuration file for kube-apiserver"`
 }
