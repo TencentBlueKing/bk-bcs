@@ -14,11 +14,9 @@
 package option
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
-	"path/filepath"
-
-	"github.com/kardianos/osext"
+	"fmt"
+	"strings"
 )
 
 const (
@@ -33,48 +31,71 @@ const (
 //LBConfig hold load balance all config
 type LBConfig struct {
 	conf.CertConfig
-	Zookeeper      string //zk links
-	WatchPath      string //zk watch path
-	Group          string //group to serve
-	Proxy          string //proxy implenmentation, nginx or haproxy
-	BcsZkAddr      string //bcs zookeeper address
-	ClusterID      string //cluster id to register path
-	WorkDir        string //bcs_loadbalance workspace, this is one parameter
-	LogDir         string //bcs_loadbalance log directory
-	CfgBackupDir   string //haproxy cfg backup directory
-	GeneratingDir  string //haproxy cfg generation directory
-	TemplateDir    string //template file used to generate haproxy.cfg
-	BinPath        string //haproxy bin path
-	CfgPath        string //haproxy configuration file path
-	SyncPeriod     int    //time period for syncing data
-	CfgCheckPeriod int    //period check cache update
-	MetricPort     uint   //metric check port
-	CAFile         string //tls ca file
-	ClientCertFile string //tls cert file
-	ClientKeyFile  string //tls key file
+	conf.LogConfig
+	conf.FileConfig
+	conf.ServiceConfig
+	MetricPort     int    `json:"metric_port" value:"59090" usage:"port for query metric info, version info and status info" mapstructure:"metric_port"`
+	Zookeeper      string `json:"zk" value:"127.0.0.1:2381" usage:"zookeeper links for data source" mapstructure:"zk"`           //zk links
+	WatchPath      string `json:"zkpath" value:"" usage:"service info path for watch, [required]" mapstructure:"zkpath"`         //zk watch path
+	Group          string `json:"group" value:"external" usage:"bcs loadbalance label for service join in" mapstructure:"group"` //group to serve
+	Proxy          string `json:"proxy" value:"haproxy" usage:"proxy model, nginx or haproxy" mapstructure:"proxy"`              //proxy implenmentation, nginx or haproxy
+	BcsZkAddr      string `json:"bcszkaddr" value:"127.0.0.1:2181" usage:"bcs zookeeper address" mapstructure:"bcszkaddr"`       //bcs zookeeper address
+	ClusterZk      string `json:"clusterzk" value:"127.0.0.1:2183" usage:"cluster zookeeper address" mapstructure:"clusterzk"`
+	ClusterID      string `json:"clusterid" value:"" usage:"loadbalance server mesos cluster id" mapstructure:"clusterid"`                     //cluster id to register path
+	CfgBackupDir   string `json:"cfg_backup_dir" value:"" usage:"backup dir for loadbalance config file" mapstructure:"cfg_backup_dir"`        //haproxy cfg backup directory
+	GeneratingDir  string `json:"generate_dir" value:"" usage:"dir for generated loadbalance config file" mapstructure:"generate_dir"`         //haproxy cfg generation directory
+	TemplateDir    string `json:"template_dir" value:"" usage:"dir for template of loadbalance config file" mapstructure:"template_dir"`       //template file used to generate haproxy.cfg
+	BinPath        string `json:"bin_path" value:"" usage:"bin path for proxy binary" mapstructure:"bin_path"`                                 //haproxy bin path
+	CfgPath        string `json:"config_path" value:"" usage:"config path for proxy config" mapstructure:"config_path"`                        //haproxy configuration file path
+	SyncPeriod     int    `json:"sync_period" value:"20" usage:"time period for syncing data" mapstructure:"sync_period"`                      //time period for syncing data
+	CfgCheckPeriod int    `json:"config_check_period" value:"5" usage:"time period for check cache update" mapstructure:"config_check_period"` //period check cache update
 }
 
-//NewDefaultConfig create default config item
-func NewDefaultConfig() *LBConfig {
-	config := new(LBConfig)
-	basepath, err := osext.Executable()
-	if err != nil {
-		blog.Warnf("osext.Executable err %s", err.Error())
+// NewConfig new a config
+func NewConfig() *LBConfig {
+	return &LBConfig{}
+}
+
+// Parse parse config
+func (c *LBConfig) Parse() error {
+	conf.Parse(c)
+	if len(c.WatchPath) == 0 {
+		return fmt.Errorf("watch path cannot be empty")
 	}
-	config.WorkDir = filepath.Dir(basepath)
-	config.LogDir = filepath.Join(config.WorkDir, "logs")
-	config.CfgBackupDir = filepath.Join(config.WorkDir, "backup")
-	config.GeneratingDir = filepath.Join(config.WorkDir, "generate")
-	config.TemplateDir = filepath.Join(config.WorkDir, "template")
-	config.CAFile = ""
-	config.ClientCertFile = ""
-	config.ClientKeyFile = ""
-	config.Proxy = ProxyHaproxy
-	config.Group = "external"
-	config.BinPath = ProxyHaproxyDefaultBinPath
-	config.CfgPath = ProxyHaproxyDefaultCfgPath
-	config.SyncPeriod = 30
-	config.CfgCheckPeriod = 4
-	config.MetricPort = 59090
-	return config
+	if len(c.CfgBackupDir) == 0 {
+		c.CfgBackupDir = "./backup"
+	}
+	if len(c.GeneratingDir) == 0 {
+		c.GeneratingDir = "./generate"
+	}
+	if len(c.TemplateDir) == 0 {
+		c.TemplateDir = "./template"
+	}
+	if c.Proxy == ProxyHaproxy {
+		if len(c.BinPath) == 0 {
+			c.BinPath = ProxyHaproxyDefaultBinPath
+		}
+		if len(c.CfgPath) == 0 {
+			c.CfgPath = ProxyHaproxyDefaultCfgPath
+		}
+	} else if c.Proxy == ProxyNginx {
+		if len(c.BinPath) == 0 {
+			c.BinPath = ProxyNginxDefaultBinPath
+		}
+		if len(c.CfgPath) == 0 {
+			c.CfgPath = ProxyNginxDefaultCfgPath
+		}
+	} else {
+		return fmt.Errorf("invalid proxy %s", c.Proxy)
+	}
+	if c.SyncPeriod < 5 || c.SyncPeriod > 300 {
+		return fmt.Errorf("sync_period must be [5, 300]")
+	}
+	if c.CfgCheckPeriod < 0 {
+		return fmt.Errorf("config_check_period must be > 0")
+	}
+	c.Zookeeper = strings.Replace(c.Zookeeper, ";", ",", -1)
+	c.BcsZkAddr = strings.Replace(c.BcsZkAddr, ";", ",", -1)
+	c.ClusterZk = strings.Replace(c.ClusterZk, ";", ",", -1)
+	return nil
 }

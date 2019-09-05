@@ -22,10 +22,13 @@ import (
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
 	"golang.org/x/net/context"
+	"time"
 )
 
 // ServeDNS implements the plugin.Handler interface.
 func (bc *BcsCustom) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+	start := time.Now()
+
 	opt := plugin.Options{}
 	state := request.Request{W: w, Req: r, Context: ctx}
 	zone := plugin.Zones(bc.Zones).Matches(state.Name())
@@ -41,6 +44,8 @@ func (bc *BcsCustom) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 	m.SetQuestion(state.Name(), state.QType())
 	if code, err := bc.EtcdPlugin.ServeDNS(ctx, interceptor, m); err != nil {
 		log.Printf("[ERROR] get request[%s] from etcd plugin failed, err:%v", state.Name(), err)
+		RequestCount.WithLabelValues(Failure).Inc()
+		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 		return plugin.BackendError(bc, zone, code, state, err, opt)
 	}
 	m.SetReply(r)
@@ -52,6 +57,8 @@ func (bc *BcsCustom) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 		result, err := bc.Lookup(state, state.Name(), state.QType())
 		if err != nil {
 			log.Printf("[ERROR] get request[%s] from *upstream* failed, err:%v", state.Name(), err)
+			RequestCount.WithLabelValues(Failure).Inc()
+			RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 			return plugin.BackendError(bc, zone, dns.RcodeNameError, state, err, opt)
 		}
 		m.Answer = append(m.Answer, result.Answer...)
@@ -64,8 +71,12 @@ func (bc *BcsCustom) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 	m = state.Scrub(m)
 	if err := w.WriteMsg(m); err != nil {
 		log.Printf("[ERROR] response to client failed, %s", err.Error())
+		RequestCount.WithLabelValues(Failure).Inc()
+		RequestLatency.WithLabelValues(Failure).Observe(time.Since(start).Seconds())
 		return dns.RcodeServerFailure, err
 	}
+	RequestCount.WithLabelValues(Success).Inc()
+	RequestLatency.WithLabelValues(Success).Observe(time.Since(start).Seconds())
 	return dns.RcodeSuccess, nil
 }
 

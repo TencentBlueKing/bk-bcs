@@ -15,9 +15,7 @@ package haproxy
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
 	"bk-bcs/bcs-common/common/metric"
-	metricHelper "bk-bcs/bcs-services/bcs-loadbalance/metrichelper"
 	conf "bk-bcs/bcs-services/bcs-loadbalance/template"
 	"bk-bcs/bcs-services/bcs-loadbalance/types"
 	"bk-bcs/bcs-services/bcs-loadbalance/util"
@@ -43,7 +41,6 @@ func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string)
 			Message:     conf.HealthStatusOKMsg,
 			CurrentRole: metric.SlaveRole,
 		},
-		statData: metricHelper.NewStringCollector("haproxy_stat_data", "haproxy lua plugin statistics data"),
 	}
 }
 
@@ -57,7 +54,6 @@ type Manager struct {
 	templateFile string            //template file
 	healthInfo   metric.HealthMeta //Health information
 	healthLock   sync.RWMutex
-	statData     *metricHelper.StringCollector
 }
 
 //Start point, do not block
@@ -90,8 +86,11 @@ func (m *Manager) Stop() {
 
 //Create config file with tmpData,
 func (m *Manager) Create(tmpData *types.TemplateData) (string, error) {
+	var err error
+	var t *template.Template
+	var writer *os.File
 	//loading template file
-	t, err := template.ParseFiles(m.templateFile)
+	t, err = template.ParseFiles(m.templateFile)
 	if err != nil {
 		blog.Errorf("Parse template file %s failed: %s", m.templateFile, err.Error())
 		return "", err
@@ -99,15 +98,15 @@ func (m *Manager) Create(tmpData *types.TemplateData) (string, error) {
 	//create new config file
 	fileName := "haproxy." + strconv.Itoa(rand.Int()) + ".cfg"
 	absName := filepath.Join(m.tmpDir, fileName)
-	writer, wErr := os.Create(absName)
-	if wErr != nil {
-		blog.Errorf("Create tempory new config file %s failed: %s", absName, wErr.Error())
-		return "", wErr
+	writer, err = os.Create(absName)
+	if err != nil {
+		blog.Errorf("Create tempory new config file %s failed: %s", absName, err.Error())
+		return "", err
 	}
-	exErr := t.Execute(writer, tmpData)
-	if exErr != nil {
-		blog.Errorf("Template Execute Err: %s", exErr.Error())
-		return "", exErr
+	err = t.Execute(writer, tmpData)
+	if err != nil {
+		blog.Errorf("Template Execute Err: %s", err.Error())
+		return "", err
 	}
 	blog.Infof("Create new haproxy.cfg %s success", absName)
 	return absName, nil
@@ -149,7 +148,6 @@ func (m *Manager) Validate(newFile string) bool {
 	output, ok := util.ExeCommand(command)
 	if !ok {
 		blog.Errorf("Validate with command [%s] failed", command)
-		m.SetHealthInfo(conf.HealthStatusNotOK, output)
 		return false
 	}
 	blog.Infof("Validate with command %s, output: %s", command, output)
@@ -167,55 +165,8 @@ func (m *Manager) Reload(cfgFile string) error {
 	output, ok := util.ExeCommand(command)
 	if !ok {
 		blog.Errorf("Reload with command [%s] failed: %s", command, output)
-		m.SetHealthInfo(conf.HealthStatusNotOK, output)
 		return fmt.Errorf("Reload config err")
 	}
-	m.SetHealthInfo(conf.HealthStatusOK, conf.HealthStatusOKMsg)
 	blog.Infof("Reload with command %s, output: %s", command, output)
 	return nil
-}
-
-//GetHealthInfo get haproxy health information
-func (m *Manager) GetHealthInfo() metric.HealthMeta {
-	m.healthLock.Lock()
-	defer m.healthLock.Unlock()
-
-	return m.healthInfo
-}
-
-//SetHealthInfo set haproxy health information
-func (m *Manager) SetHealthInfo(isHealth bool, msg string) {
-	m.healthLock.Lock()
-	defer m.healthLock.Unlock()
-	m.healthInfo.IsHealthy = isHealth
-	m.healthInfo.Message = msg
-	m.healthInfo.CurrentRole = metric.MasterRole
-}
-
-//GetMetricMeta Get metric meta
-func (m *Manager) GetMetricMeta() *metric.MetricMeta {
-	return m.statData.GetMeta()
-}
-
-//GetMetricResult Get metric result
-func (m *Manager) GetMetricResult() (*metric.MetricResult, error) {
-	httpcli := httpclient.NewHttpClient()
-	targetPort := 8080
-	monitorPort := os.Getenv("LB_HAPROXYMONITORPORT")
-	if monitorPort != "" {
-		port, err := strconv.Atoi(monitorPort)
-		if err != nil {
-			blog.Errorf("LB_HAPROXYMONITORPORT invalid:%s", err.Error())
-		} else {
-			targetPort = port
-		}
-	}
-	host := "http://127.0.0.1:" + strconv.Itoa(targetPort) + "/stats"
-	data, err := httpcli.GET(host, nil, nil)
-	if err != nil {
-		blog.Errorf("GET stat data info %s failed:%s", host, err.Error())
-		return nil, err
-	}
-	m.statData.Reset(string(data))
-	return m.statData.GetResult()
 }

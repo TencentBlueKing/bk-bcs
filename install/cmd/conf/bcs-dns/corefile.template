@@ -1,4 +1,5 @@
 .:53 {
+    prometheus ${localIp}:${bcsdnsMetricPort}
     log . "{remote} - {type} {class} {name} {proto} {size} {rcode} {rsize}" {
         class all
     }
@@ -16,6 +17,7 @@
         storage ${etcdEndpointsSpace}
         storage-tls cert/etcd/etcd.pem cert/etcd/etcd-key.pem cert/etcd/ca.pem
         storage-path /bluekingdns
+        metric-port ${bcsdnsMetricPort}
     }
     proxy bcscustom.com. ${serviceDnsUpStream} {
         policy round_robin

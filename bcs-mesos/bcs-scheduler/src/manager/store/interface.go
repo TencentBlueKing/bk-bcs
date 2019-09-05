@@ -46,6 +46,8 @@ type Store interface {
 	UnLockApplication(appID string)
 	// init lock pool
 	InitLockPool()
+	// list all applications
+	ListAllApplications() ([]*types.Application, error)
 
 	// save task to db
 	SaveTask(*types.Task) error
@@ -91,6 +93,8 @@ type Store interface {
 	ListAgentNodes() ([]string, error)
 	// delete agent
 	DeleteAgent(key string) error
+	// list all agent
+	ListAllAgents() ([]*types.Agent, error)
 
 	// save agentsetting
 	SaveAgentSetting(*commtypes.BcsClusterAgentSetting) error
@@ -114,6 +118,10 @@ type Store interface {
 	FetchConfigMap(ns, name string) (*commtypes.BcsConfigMap, error)
 	// delete configmap
 	DeleteConfigMap(ns, name string) error
+	// list ns configmap
+	ListConfigmaps(runAs string) ([]*commtypes.BcsConfigMap, error)
+	// list all configmap
+	ListAllConfigmaps() ([]*commtypes.BcsConfigMap, error)
 
 	// save secret
 	SaveSecret(secret *commtypes.BcsSecret) error
@@ -121,6 +129,10 @@ type Store interface {
 	FetchSecret(ns, name string) (*commtypes.BcsSecret, error)
 	// delete secret
 	DeleteSecret(ns, name string) error
+	// list ns secret
+	ListSecrets(runAs string) ([]*commtypes.BcsSecret, error)
+	// list all secret
+	ListAllSecrets() ([]*commtypes.BcsSecret, error)
 
 	// save service
 	SaveService(service *commtypes.BcsService) error
@@ -128,6 +140,10 @@ type Store interface {
 	FetchService(ns, name string) (*commtypes.BcsService, error)
 	// delete service
 	DeleteService(ns, name string) error
+	// list service by namespace
+	ListServices(runAs string) ([]*commtypes.BcsService, error)
+	// list all services
+	ListAllServices() ([]*commtypes.BcsService, error)
 
 	// save endpoint
 	SaveEndpoint(endpoint *commtypes.BcsEndpoint) error
@@ -144,6 +160,8 @@ type Store interface {
 	ListDeployments(ns string) ([]*types.Deployment, error)
 	// delete deployment
 	DeleteDeployment(ns, name string) error
+	// list all deployment
+	ListAllDeployments() ([]*types.Deployment, error)
 
 	// init deployments lock pool
 	InitDeploymentLockPool()
@@ -203,6 +221,9 @@ type Store interface {
 	DeleteAdmissionWebhook(ns, name string) error
 	FetchAllAdmissionWebhooks() ([]*commtypes.AdmissionWebhookConfiguration, error)
 	/*=========AdmissionWebhook==========*/
+
+	//list object namespaces, object = applicationNode、versionNode...
+	ListObjectNamespaces(objectNode string) ([]string, error)
 }
 
 // The interface for db operations

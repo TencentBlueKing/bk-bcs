@@ -161,3 +161,23 @@ func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
 
 	return IDs, nil
 }
+
+func (store *managerStore) ListAllDeployments() ([]*types.Deployment, error) {
+	nss, err := store.ListObjectNamespaces(deploymentNode)
+	if err != nil {
+		return nil, err
+	}
+
+	var objs []*types.Deployment
+	for _, ns := range nss {
+		obj, err := store.ListDeployments(ns)
+		if err != nil {
+			blog.Error("fail to fetch deployment by ns(%s)", ns)
+			continue
+		}
+
+		objs = append(objs, obj...)
+	}
+
+	return objs, nil
+}

@@ -43,6 +43,8 @@ type mesosDiscovery struct {
 	servers      map[string][]interface{} //key=BCS_MODULE_K8SAPISERVER...; value=[]*types.BcsK8sApiserverInfo...
 	events       chan *RegisterDiscover.DiscoverEvent
 	eventHandler EventHandleFunc
+
+	loadbalanceGroupNodes map[string]struct{}
 }
 
 //NewmesosDiscovery create a object of mesosDiscovery
@@ -54,8 +56,10 @@ func NewMesosDiscovery(zkserv string) (ModuleDiscovery, error) {
 			types.BCS_MODULE_SCHEDULER:      make([]interface{}, 0),
 			types.BCS_MODULE_MESOSDATAWATCH: make([]interface{}, 0),
 			types.BCS_MODULE_DNS:            make([]interface{}, 0),
+			types.BCS_MODULE_LOADBALANCE:    make([]interface{}, 0),
 		},
-		events: make(chan *RegisterDiscover.DiscoverEvent, 1024),
+		events:                make(chan *RegisterDiscover.DiscoverEvent, 1024),
+		loadbalanceGroupNodes: make(map[string]struct{}),
 	}
 
 	err := rd.start()
@@ -162,6 +166,9 @@ func (r *mesosDiscovery) discoverModules(k string) {
 
 			case types.BCS_MODULE_DNS:
 				r.discoverDns(eve.Server)
+
+			case types.BCS_MODULE_LOADBALANCE:
+				r.discoverLoadbalance(eve.Nodes)
 			}
 
 		case <-r.rootCxt.Done():
@@ -264,4 +271,67 @@ func (r *mesosDiscovery) discoverDns(servInfos []string) error {
 	r.eventHandler(types.BCS_MODULE_DNS)
 
 	return nil
+}
+
+func (r *mesosDiscovery) discoverLoadbalance(nodes []string) error {
+
+	for _, node := range nodes {
+		_, ok := r.loadbalanceGroupNodes[node]
+		if ok {
+			continue
+		}
+
+		r.loadbalanceGroupNodes[node] = struct{}{}
+		blog.Infof("start discover group %s loabalance", node)
+		key := fmt.Sprintf("%s/%s/%s", types.BCS_SERV_BASEPATH, types.BCS_MODULE_LOADBALANCE, node)
+
+		go r.discoverGroupLoadbalance(key)
+	}
+
+	return nil
+}
+
+func (r *mesosDiscovery) discoverGroupLoadbalance(key string) {
+	event, err := r.rd.DiscoverService(key)
+	if err != nil {
+		blog.Error("fail to discover service %s err:%s", key, err.Error())
+		time.Sleep(time.Second)
+		go r.discoverGroupLoadbalance(key)
+		return
+	}
+
+	for {
+		select {
+		case eve := <-event:
+			if eve.Err != nil {
+				blog.Errorf("discover zk key %s error %s", key, err.Error())
+				time.Sleep(time.Second)
+				go r.discoverGroupLoadbalance(key)
+				return
+			}
+
+			lbs := make([]interface{}, 0)
+			for _, serv := range eve.Server {
+				blog.Infof("discover key %s mesos apiserver %s", key, serv)
+
+				lb := new(types.LoadBalanceInfo)
+				if err := json.Unmarshal([]byte(serv), lb); err != nil {
+					blog.Warn("fail to do json unmarshal(%s), err:%s", serv, err.Error())
+					continue
+				}
+
+				lbs = append(lbs, lb)
+			}
+
+			r.Lock()
+			r.servers[types.BCS_MODULE_LOADBALANCE] = lbs
+			r.Unlock()
+			if r.eventHandler != nil {
+				r.eventHandler(types.BCS_MODULE_LOADBALANCE)
+			}
+		case <-r.rootCxt.Done():
+			blog.Warn("zk register path %s and discover done", key)
+			return
+		}
+	}
 }

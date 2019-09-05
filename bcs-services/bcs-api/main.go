@@ -18,12 +18,13 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/blog/glog"
 	"bk-bcs/bcs-common/common/license"
-	"bk-bcs/bcs-common/common/metric"
+	common_metric "bk-bcs/bcs-common/common/metric"
 	commtype "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-services/bcs-api/config"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/options"
 	"bk-bcs/bcs-services/bcs-api/processor"
-	//"bk-bcs/bcs-services/bcs-api/regdiscv"
+	"bk-bcs/bcs-services/bcs-api/regdiscv"
 	"fmt"
 	"log"
 	"os"
@@ -74,7 +75,7 @@ func run(op *options.ServerOption) {
 	conf := parseConfig(op)
 
 	//run register and discover
-	//regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
+	regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
 
 	proc := processor.NewProcessor(conf)
 	//start processor, and http & websokect service
@@ -89,7 +90,7 @@ func run(op *options.ServerOption) {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	runMetric(conf, nil)
+	metric.RunMetric(conf, nil)
 
 	return
 }
@@ -157,8 +158,8 @@ func runMetric(conf *config.ApiServConfig, err error) {
 
 	blog.Infof("run metric: port(%d)", conf.MetricPort)
 
-	metricConf := metric.Config{
-		RunMode:     metric.Master_Master_Mode,
+	metricConf := common_metric.Config{
+		RunMode:     common_metric.Master_Master_Mode,
 		ModuleName:  commtype.BCS_MODULE_APISERVER,
 		MetricPort:  conf.MetricPort,
 		IP:          conf.LocalIp,
@@ -168,7 +169,7 @@ func runMetric(conf *config.ApiServConfig, err error) {
 		SvrKeyPwd:   conf.ServCert.CertPasswd,
 	}
 
-	healthFunc := func() metric.HealthMeta {
+	healthFunc := func() common_metric.HealthMeta {
 		var isHealthy bool
 		var msg string
 		if err == nil {
@@ -177,14 +178,14 @@ func runMetric(conf *config.ApiServConfig, err error) {
 			msg = err.Error()
 		}
 
-		return metric.HealthMeta{
-			CurrentRole: metric.MasterRole,
+		return common_metric.HealthMeta{
+			CurrentRole: common_metric.MasterRole,
 			IsHealthy:   isHealthy,
 			Message:     msg,
 		}
 	}
 
-	if err := metric.NewMetricController(
+	if err := common_metric.NewMetricController(
 		metricConf,
 		healthFunc); nil != err {
 		blog.Errorf("run metric fail: %s", err.Error())
