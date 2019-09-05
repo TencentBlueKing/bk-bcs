@@ -50,10 +50,25 @@ func Run(config *Config) error {
 		blog.Errorf("bmsf-mesos-adaptor save pid file failed, %s", pidErr)
 	}
 
-	// create AdapterDiscover
+	// register to bcs service layer, just for health check
+	// no need to process discover event
 	config.BCSZk = strings.ReplaceAll(config.BCSZk, ";", ",")
-	adapterDiscover, discoverEvent := rdiscover.NewAdapterDiscover(
+	bcsDiscover, bcsDiscoverEvent := rdiscover.NewAdapterDiscover(
 		config.BCSZk, config.Address, config.Cluster, config.MetricPort)
+	go bcsDiscover.Start()
+	go func() {
+		for {
+			select {
+			case curEvent := <-bcsDiscoverEvent:
+				blog.Infof("found bcs service discover event %s", curEvent)
+			}
+		}
+	}()
+
+	// create AdapterDiscover
+	config.Zookeeper = strings.ReplaceAll(config.Zookeeper, ";", ",")
+	adapterDiscover, discoverEvent := rdiscover.NewAdapterDiscover(
+		config.Zookeeper, config.Address, config.Cluster, config.MetricPort)
 	go adapterDiscover.Start()
 	handleEvent(config, discoverEvent)
 	return nil
