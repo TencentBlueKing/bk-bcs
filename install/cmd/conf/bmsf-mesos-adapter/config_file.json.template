@@ -2,5 +2,8 @@
   "address": "${localIp}",
   "metric_port": ${bmsfMesosAdapterMetricPort},
   "bcs_zookeeper": "${bcsZkHost}",
-  "zookeeper": "${mesosZkHost}"
+  "cluster": "${clusterId}",
+  "zookeeper": "${mesosZkHost}",
+  "kubeconfig": "${bmsfMesosAdapterKubeconfig}",
+  "v": 3
 }

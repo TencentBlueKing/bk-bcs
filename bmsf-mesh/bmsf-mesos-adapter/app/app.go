@@ -77,7 +77,7 @@ func Run(config *Config) error {
 func handleEvent(config *Config, event <-chan rdiscover.RoleEvent) {
 	var s *Server
 	signalChan := make(chan os.Signal, 5)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTRAP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	signal.Notify(signalChan, syscall.SIGTRAP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 	for {
 		select {
 		case curEvent := <-event:
