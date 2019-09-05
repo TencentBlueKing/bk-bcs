@@ -56,8 +56,6 @@ func Run(config *Config) error {
 		config.BCSZk, config.Address, config.Cluster, config.MetricPort)
 	go adapterDiscover.Start()
 	handleEvent(config, discoverEvent)
-	// //ready to run
-	// s.HandleSignal()
 	return nil
 }
 
@@ -179,13 +177,3 @@ func (s *Server) Stop() {
 	time.Sleep(time.Second * 3)
 	close(s.mgrStop)
 }
-
-// //HandleSignal handle system exit signals
-// func (s *Server) HandleSignal() {
-// 	signalChan := make(chan os.Signal, 5)
-// 	signal.Notify(signalChan, syscall.SIGTRAP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
-// 	go func() {
-// 		select {
-
-// 	}()
-// }
