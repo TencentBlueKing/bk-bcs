@@ -1,0 +1,6 @@
+{
+  "address": "${localIp}",
+  "metric_port": ${bmsfMesosAdapterMetricPort},
+  "bcs_zookeeper": "${bcsZkHost}",
+  "zookeeper": "${mesosZkHost}"
+}
