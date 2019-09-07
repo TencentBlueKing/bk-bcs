@@ -115,13 +115,21 @@ func Run(cfg *types.CmdConfig) error {
 	ccCxt, _ := context.WithCancel(rootCxt)
 	go RefreshDCHost(ccCxt, cfg, ccStorage)
 	time.Sleep(2 * time.Second)
+
+	retryNum := 0
 	for {
+		if retryNum == 10 {
+			blog.Errorf("storage address is empty, datawatcher exited")
+			os.Exit(1)
+		}
+
 		if ccStorage.GetDCAddress() == "" {
 			blog.Warn("storage address is empty, mesos datawatcher cannot run")
 			time.Sleep(2 * time.Second)
 		} else {
 			break
 		}
+		retryNum++
 	}
 
 	ccStorage.Run(ccCxt)
