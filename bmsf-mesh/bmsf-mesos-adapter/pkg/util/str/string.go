@@ -17,25 +17,25 @@ import "strings"
 
 // ReplaceSpecialCharForLabelKey replace special char to "-" for label key
 func ReplaceSpecialCharForLabelKey(str string) string {
-	str = strings.ReplaceAll(str, "@", "-")
-	str = strings.ReplaceAll(str, "\"", "-")
-	str = strings.ReplaceAll(str, "'", "-")
-	str = strings.ReplaceAll(str, " ", "")
-	str = strings.ReplaceAll(str, "{", "")
-	str = strings.ReplaceAll(str, "}", "")
+	str = strings.Replace(str, "@", "-", -1)
+	str = strings.Replace(str, "\"", "-", -1)
+	str = strings.Replace(str, "'", "-", -1)
+	str = strings.Replace(str, " ", "", -1)
+	str = strings.Replace(str, "{", "", -1)
+	str = strings.Replace(str, "}", "", -1)
 	return str
 }
 
 // ReplaceSpecialCharForLabelValue replace special char to "-" for label value
 func ReplaceSpecialCharForLabelValue(str string) string {
-	str = strings.ReplaceAll(str, "@", "-")
-	str = strings.ReplaceAll(str, "/", "-")
-	str = strings.ReplaceAll(str, "\"", "-")
-	str = strings.ReplaceAll(str, "\\", "-")
-	str = strings.ReplaceAll(str, "'", "-")
-	str = strings.ReplaceAll(str, " ", "")
-	str = strings.ReplaceAll(str, "{", "")
-	str = strings.ReplaceAll(str, "}", "")
+	str = strings.Replace(str, "@", "-", -1)
+	str = strings.Replace(str, "/", "-", -1)
+	str = strings.Replace(str, "\"", "-", -1)
+	str = strings.Replace(str, "\\", "-", -1)
+	str = strings.Replace(str, "'", "-", -1)
+	str = strings.Replace(str, " ", "", -1)
+	str = strings.Replace(str, "{", "", -1)
+	str = strings.Replace(str, "}", "", -1)
 	return str
 }
 
