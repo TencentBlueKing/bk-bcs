@@ -86,8 +86,8 @@ func handleEvent(config *Config, event <-chan rdiscover.RoleEvent) {
 				//todo: init event messge Queue for Reconciler & bk-bcs cluster
 				s.mgr = settingManager(config.KubeConfig, int(config.MetricPort), s.svcQueue, s.nodeQueue)
 				//create cluster plugin
-				bcsZkHosts := strings.Split(config.BCSZk, ",")
-				bkBcsCluster, err := bcs.NewCluster(config.Cluster, bcsZkHosts)
+				clusterZkHosts := strings.Split(config.Zookeeper, ",")
+				bkBcsCluster, err := bcs.NewCluster(config.Cluster, clusterZkHosts)
 				if err != nil {
 					blog.Errorf("init bk-bcs cluster failed, %s", err)
 					fmt.Printf("init bk-bcs cluster failed, %s", err.Error())
