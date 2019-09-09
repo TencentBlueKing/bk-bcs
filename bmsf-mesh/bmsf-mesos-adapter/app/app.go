@@ -43,7 +43,7 @@ func Run(config *Config) error {
 
 	// register to bcs service layer, just for health check
 	// no need to process discover event
-	config.BCSZk = strings.ReplaceAll(config.BCSZk, ";", ",")
+	config.BCSZk = strings.Replace(config.BCSZk, ";", ",", -1)
 	bcsDiscover, bcsDiscoverEvent := rdiscover.NewAdapterDiscover(
 		config.BCSZk, config.Address, config.Cluster, config.MetricPort)
 	go bcsDiscover.Start()
@@ -57,7 +57,7 @@ func Run(config *Config) error {
 	}()
 
 	// create AdapterDiscover
-	config.Zookeeper = strings.ReplaceAll(config.Zookeeper, ";", ",")
+	config.Zookeeper = strings.Replace(config.Zookeeper, ";", ",", -1)
 	adapterDiscover, discoverEvent := rdiscover.NewAdapterDiscover(
 		config.Zookeeper, config.Address, config.Cluster, config.MetricPort)
 	go adapterDiscover.Start()
