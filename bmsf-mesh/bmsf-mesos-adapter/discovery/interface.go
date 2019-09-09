@@ -14,7 +14,7 @@
 package discovery
 
 import (
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/queue"
+	"bk-bcs/bcs-common/pkg/queue"
 	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 
 	"k8s.io/apimachinery/pkg/labels"

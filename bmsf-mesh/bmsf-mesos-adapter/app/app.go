@@ -16,10 +16,10 @@ package app
 import (
 	pidfile "bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/pkg/queue"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery/bcs"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/queue"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/rdiscover"
 	"bk-bcs/bmsf-mesh/pkg/apis"
 	"fmt"

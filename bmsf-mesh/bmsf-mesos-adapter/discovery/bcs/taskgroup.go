@@ -16,24 +16,24 @@ package bcs
 import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/pkg/meta"
+	"bk-bcs/bcs-common/pkg/queue"
+	"bk-bcs/bcs-common/pkg/reflector"
 	"bk-bcs/bcs-common/pkg/storage"
 	"bk-bcs/bcs-common/pkg/storage/zookeeper"
 	"bk-bcs/bcs-common/pkg/watch"
 	schetypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/cache"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/queue"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
 	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	k8scache "k8s.io/client-go/tools/cache"
 	"path"
 	"reflect"
 	"strings"
 	"time"
-
-	"golang.org/x/net/context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 //TaskGroup adaptor for bcs-scheduler TaskGroup to object data
@@ -106,8 +106,8 @@ type taskGroupController struct {
 	cxt          context.Context
 	stopFn       context.CancelFunc
 	eventStorage storage.Storage      //remote event storage
-	localCache   cache.Store          //local cache
-	reflector    *cache.Reflector     //reflector list/watch all datas to local memory cache
+	localCache   k8scache.Store       //local cache
+	reflector    *reflector.Reflector //reflector list/watch all datas to local memory cache
 	eventCh      chan *taskGroupEvent //event for service==>AppSvc
 	eventQueue   queue.Queue          //queue for event message
 }
@@ -139,7 +139,7 @@ func (s *taskGroupController) RegisterAppNodeQueue(handler queue.Queue) {
 	go s.handleTaskGroup()
 }
 
-func (s *taskGroupController) taskOnAdd(obj interface{}) {
+func (s *taskGroupController) OnAdd(obj interface{}) {
 	if obj == nil {
 		return
 	}
@@ -160,7 +160,7 @@ func (s *taskGroupController) taskOnAdd(obj interface{}) {
 	s.eventCh <- e
 }
 
-func (s *taskGroupController) taskOnUpdate(old, cur interface{}) {
+func (s *taskGroupController) OnUpdate(old, cur interface{}) {
 	if old == nil || cur == nil {
 		return
 	}
@@ -188,7 +188,7 @@ func (s *taskGroupController) taskOnUpdate(old, cur interface{}) {
 	s.eventCh <- e
 }
 
-func (s *taskGroupController) taskOnDelete(obj interface{}) {
+func (s *taskGroupController) OnDelete(obj interface{}) {
 	if obj == nil {
 		return
 	}
@@ -319,7 +319,7 @@ func (s *taskGroupController) convertPortMapping(ports []*schetypes.PortMapping)
 }
 
 func newTaskGroupCache(hosts []string) (*taskGroupController, error) {
-	ts := cache.NewCache(TaskGroupObjectKeyFn)
+	ts := k8scache.NewIndexer(TaskGroupObjectKeyFn, k8scache.Indexers{})
 	//create namespace client for zookeeper
 	zkConfig := &zookeeper.ZkConfig{
 		Hosts:         hosts,
@@ -334,7 +334,7 @@ func newTaskGroupCache(hosts []string) (*taskGroupController, error) {
 		return nil, err
 	}
 	//create listwatcher
-	listwatcher := &cache.ListWatch{
+	listwatcher := &reflector.ListWatch{
 		ListFn: func() ([]meta.Object, error) {
 			return podclient.List(context.Background(), "", nil)
 		},
@@ -350,13 +350,8 @@ func newTaskGroupCache(hosts []string) (*taskGroupController, error) {
 		localCache:   ts,
 		eventCh:      make(chan *taskGroupEvent, 1024),
 	}
-	handler := &cache.EventHandler{
-		AddFn:    ctl.taskOnAdd,
-		UpdateFn: ctl.taskOnUpdate,
-		DeleteFn: ctl.taskOnDelete,
-	}
 	//create reflector
-	ctl.reflector = cache.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ts, listwatcher, time.Second*600, handler)
+	ctl.reflector = reflector.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ts, listwatcher, time.Second*600, ctl)
 	return ctl, nil
 }
 
