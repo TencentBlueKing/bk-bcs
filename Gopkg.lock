@@ -767,14 +767,6 @@
   version = "v1.1.5"
 
 [[projects]]
-  branch = "master"
-  digest = "1:caf6db28595425c0e0f2301a00257d11712f65c1878e12cffc42f6b9a9cf3f23"
-  name = "github.com/kardianos/osext"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
-
-[[projects]]
   digest = "1:26c3d66616e9d7c21fca41358591af1e35a91378c2c888958a3720c0dc1c1afb"
   name = "github.com/klauspost/compress"
   packages = [
@@ -1653,9 +1645,13 @@
   version = "v9.0.0"
 
 [[projects]]
-  digest = "1:4e808df2bd547926461775659337e640792bf0ce45a46213e5151a7d1a2551dd"
+  digest = "1:7fa77436497b6b562b7df324627861bfbc1fdd548d57a4ae96a44abbeb58f59a"
   name = "k8s.io/kubernetes"
-  packages = ["staging/src/k8s.io/apimachinery/pkg/util/json"]
+  packages = [
+    "pkg/apis/core",
+    "pkg/scheduler/api",
+    "staging/src/k8s.io/apimachinery/pkg/util/json",
+  ]
   pruneopts = "UT"
   revision = "2d3c76f9091b6bec110a5e63777c332469e0cba2"
   version = "v1.15.3"
@@ -1665,7 +1661,6 @@
   analyzer-version = 1
   input-imports = [
     "cloud.google.com/go/compute/metadata",
-    "github.com/Microsoft/go-winio",
     "github.com/Microsoft/go-winio/archive/tar",
     "github.com/andygrunwald/megos",
     "github.com/asaskevich/govalidator",
@@ -1680,6 +1675,7 @@
     "github.com/coredns/coredns/plugin",
     "github.com/coredns/coredns/plugin/etcd",
     "github.com/coredns/coredns/plugin/etcd/msg",
+    "github.com/coredns/coredns/plugin/metrics",
     "github.com/coredns/coredns/plugin/metrics/vars",
     "github.com/coredns/coredns/plugin/pkg/dnstest",
     "github.com/coredns/coredns/plugin/pkg/dnsutil",
@@ -1718,7 +1714,6 @@
     "github.com/jinzhu/gorm/dialects/mysql",
     "github.com/jmespath/go-jmespath",
     "github.com/json-iterator/go",
-    "github.com/kardianos/osext",
     "github.com/mattn/go-sqlite3",
     "github.com/mesos/mesos-go/upid",
     "github.com/mholt/caddy",
@@ -1770,6 +1765,7 @@
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/transport",
+    "k8s.io/kubernetes/pkg/scheduler/api",
     "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json",
   ]
   solver-name = "gps-cdcl"

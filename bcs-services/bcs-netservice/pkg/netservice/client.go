@@ -45,6 +45,7 @@ type Client interface {
 	GetPool(cluster, net string) ([]*types.NetPool, error) //Get pool info from netservice
 	DeletePool(cluster, net string) error
 	ListAllPool() ([]*types.NetPool, error)
+	ListAllPoolWithCluster(cluster string) ([]*types.NetPool, error)
 	RegisterHost(host *types.HostInfo) error //register host info attaching to ip pool in netservice
 	DeleteHost(host string, ips []string) error
 	GetHostInfo(host string, timeout int) (*types.HostInfo, error)                   //Get host info by host ip address
@@ -291,6 +292,47 @@ func (c *client) ListAllPool() ([]*types.NetPool, error) {
 	seq := c.random.Perm(len(c.netsvrs))
 	httpClient, prefix := c.getHTTPClient(3)
 	uri := prefix + c.netsvrs[seq[0]] + "/v1/pool"
+	request, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create http request failed, %s", err.Error())
+	}
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("Content-Type", "application/json")
+	response, err := httpClient.Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("http client send request failed, %s", err.Error())
+	}
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http response %s from %s", response.Status, c.netsvrs[seq[0]])
+	}
+	defer response.Body.Close()
+	datas, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read netservice response failed, %s", err.Error())
+	}
+	netRes := &types.NetResponse{}
+	if err := json.Unmarshal(datas, netRes); err != nil {
+		return nil, fmt.Errorf("decode netservice response failed, %s", err.Error())
+	}
+	if netRes.Type != types.ResponseType_POOL {
+		return nil, fmt.Errorf("response data type expect %d, but got %d", types.ResponseType_HOST, netRes.Type)
+	}
+	if !netRes.IsSucc() {
+		return nil, fmt.Errorf("pool request fialed: %s", netRes.Message)
+	}
+	if len(netRes.Pool) == 0 {
+		return nil, nil
+	}
+	return netRes.Pool, nil
+}
+
+func (c *client) ListAllPoolWithCluster(cluster string) ([]*types.NetPool, error) {
+	if len(c.netsvrs) == 0 {
+		return nil, fmt.Errorf("no available bcs-netservice")
+	}
+	seq := c.random.Perm(len(c.netsvrs))
+	httpClient, prefix := c.getHTTPClient(3)
+	uri := prefix + c.netsvrs[seq[0]] + "/v1/pool/" + cluster + "?info=detail"
 	request, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create http request failed, %s", err.Error())
