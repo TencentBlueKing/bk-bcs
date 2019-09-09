@@ -17,11 +17,11 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bcstypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/pkg/meta"
+	"bk-bcs/bcs-common/pkg/queue"
+	"bk-bcs/bcs-common/pkg/reflector"
 	"bk-bcs/bcs-common/pkg/storage"
 	"bk-bcs/bcs-common/pkg/storage/zookeeper"
 	"bk-bcs/bcs-common/pkg/watch"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/cache"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/queue"
 	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
 	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 	"fmt"
@@ -33,17 +33,18 @@ import (
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	k8scache "k8s.io/client-go/tools/cache"
 )
 
 //svcController for dataType resource
 type svcController struct {
 	cxt          context.Context
 	stopFn       context.CancelFunc
-	eventStorage storage.Storage  //remote event storage
-	svcCache     cache.Store      //local cache
-	reflector    *cache.Reflector //reflector list/watch all datas to local memory cache
-	svcCh        chan *svcEvent   //event for service==>AppSvc
-	svcQueue     queue.Queue      //queue for event message
+	eventStorage storage.Storage      //remote event storage
+	svcCache     k8scache.Store       //local cache
+	reflector    *reflector.Reflector //reflector list/watch all datas to local memory cache
+	svcCh        chan *svcEvent       //event for service==>AppSvc
+	svcQueue     queue.Queue          //queue for event message
 }
 
 func (s *svcController) run() {
@@ -73,7 +74,7 @@ func (s *svcController) RegisterAppSvcQueue(handler queue.Queue) {
 	go s.handleService()
 }
 
-func (s *svcController) servicesOnAdd(obj interface{}) {
+func (s *svcController) OnAdd(obj interface{}) {
 	if obj == nil {
 		return
 	}
@@ -93,7 +94,7 @@ func (s *svcController) servicesOnAdd(obj interface{}) {
 	s.svcCh <- e
 }
 
-func (s *svcController) servicesOnUpdate(old, cur interface{}) {
+func (s *svcController) OnUpdate(old, cur interface{}) {
 	if cur == nil || old == nil {
 		return
 	}
@@ -119,7 +120,7 @@ func (s *svcController) servicesOnUpdate(old, cur interface{}) {
 	s.svcCh <- e
 }
 
-func (s *svcController) servicesOnDelete(obj interface{}) {
+func (s *svcController) OnDelete(obj interface{}) {
 	if obj == nil {
 		return
 	}
@@ -216,7 +217,7 @@ func (s *svcController) convertBkServicePort(ports []bcstypes.ServicePort) []v1.
 }
 
 func newServiceCache(hosts []string) (*svcController, error) {
-	ss := cache.NewCache(ServiceObjectKeyFn)
+	ss := k8scache.NewIndexer(ServiceObjectKeyFn, k8scache.Indexers{})
 	//create namespace client for zookeeper
 	zkConfig := &zookeeper.ZkConfig{
 		Hosts:         hosts,
@@ -231,7 +232,7 @@ func newServiceCache(hosts []string) (*svcController, error) {
 		return nil, err
 	}
 	//create listwatcher
-	listwatcher := &cache.ListWatch{
+	listwatcher := &reflector.ListWatch{
 		ListFn: func() ([]meta.Object, error) {
 			return nsclient.List(context.Background(), "", nil)
 		},
@@ -247,13 +248,8 @@ func newServiceCache(hosts []string) (*svcController, error) {
 		svcCache:     ss,
 		svcCh:        make(chan *svcEvent, 1024),
 	}
-	eventHandler := &cache.EventHandler{
-		AddFn:    ctl.servicesOnAdd,
-		UpdateFn: ctl.servicesOnUpdate,
-		DeleteFn: ctl.servicesOnDelete,
-	}
 	//create reflector
-	ctl.reflector = cache.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ss, listwatcher, time.Second*600, eventHandler)
+	ctl.reflector = reflector.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ss, listwatcher, time.Second*600, ctl)
 	return ctl, nil
 }
 
