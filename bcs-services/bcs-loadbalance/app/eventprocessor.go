@@ -92,7 +92,9 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 			config.CfgPath,
 			config.GeneratingDir,
 			config.CfgBackupDir,
-			config.TemplateDir)
+			config.TemplateDir,
+			config.StatusFetchPeriod,
+		)
 	} else {
 		blog.Infof("use nginx transmit")
 		processor.cfgManager = nginx.NewManager(
