@@ -15,6 +15,7 @@ package v1
 
 import (
 	"testing"
+	"time"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
@@ -28,10 +29,29 @@ func TestStorageAppSvc(t *testing.T) {
 		Namespace: "default",
 	}
 	created := &AppSvc{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "appsvc",
+			APIVersion: "v1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "default",
-		}}
+		},
+		Spec: AppSvcSpec{
+			Selector: make(map[string]string),
+			ServicePorts: []ServicePort{
+				ServicePort{
+					Name:        "port",
+					Protocol:    "http",
+					ServicePort: 8080,
+					ProxyPort:   8080,
+				},
+			},
+		},
+		Status: AppSvcStatus{
+			LastUpdateTime: metav1.NewTime(time.Now()),
+		},
+	}
 	g := gomega.NewGomegaWithT(t)
 
 	// Test Create
