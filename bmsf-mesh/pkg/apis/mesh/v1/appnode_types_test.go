@@ -15,6 +15,7 @@ package v1
 
 import (
 	"testing"
+	"time"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
@@ -28,10 +29,31 @@ func TestStorageAppNode(t *testing.T) {
 		Namespace: "default",
 	}
 	created := &AppNode{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "appnode",
+			APIVersion: SchemeGroupVersion.Version,
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "default",
-		}}
+		},
+		Spec: AppNodeSpec{
+			Index:   "node-0",
+			Version: "v1",
+			NodeIP:  "127.0.0.1",
+			Ports: []NodePort{
+				NodePort{
+					Name:      "port1",
+					Protocol:  "http",
+					NodePort:  80,
+					ProxyPort: 80,
+				},
+			},
+		},
+		Status: AppNodeStatus{
+			LastUpdateTime: metav1.NewTime(time.Now()),
+		},
+	}
 	g := gomega.NewGomegaWithT(t)
 
 	// Test Create
