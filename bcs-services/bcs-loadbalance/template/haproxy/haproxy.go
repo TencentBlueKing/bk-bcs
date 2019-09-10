@@ -82,6 +82,8 @@ func (m *Manager) Start() error {
 	if err != nil {
 		blog.Warnf("mkdir %s failed, err %s", m.tmpDir, err.Error())
 	}
+	// run haproxy status fetcher
+	go m.runStatusFetch()
 	return nil
 }
 
