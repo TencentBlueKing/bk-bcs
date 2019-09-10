@@ -61,6 +61,10 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 		config:       config,
 		clearManager: clear.NewClearManager(),
 	}
+
+	// register both service zookeeper and cluster zookeeper
+	// service zookeeper for health check, service register
+	// cluster zookeeper for prometheus metrics collector
 	zkSubRegPath := config.ClusterID + "/" + config.Group
 	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	if len(config.ClusterZk) != 0 {
