@@ -106,7 +106,10 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 			config.CfgBackupDir,
 			config.TemplateDir)
 	}
+
+	// add manager to promethes
 	prometheus.MustRegister(processor.cfgManager)
+
 	newStatusResource := status.NewStatus(processor.cfgManager.GetStatusFunction())
 	lbMonitor.RegisterResource(newMetricResource)
 	lbMonitor.RegisterResource(newStatusResource)
