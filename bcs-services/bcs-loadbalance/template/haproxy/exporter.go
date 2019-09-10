@@ -156,28 +156,28 @@ var (
 		9:  "ResponseDeny",
 		10: "RequestError",
 		11: "ConnectError",
-		13: "ResponseError",
-		14: "ConnectRetry",
-		15: "ConnectRedispatch",
-		16: "Status",
-		17: "Weight",
-		18: "Active",
-		19: "Backup",
-		20: "CheckFail",
-		21: "CheckDown",
-		22: "DownTime",
-		23: "DownTimeTotal",
-		24: "QueueMaxLimit",
-		25: "CurrentSessionRate",
-		26: "MaxSessionRate",
-		27: "SessionRateLimit",
-		28: "CheckStatus",
-		29: "RequestRate",
-		30: "RequestMaxRate",
-		31: "RequestTotal",
-		32: "LastSessionSecond",
-		33: "ConnectRate",
-		34: "ConnectMaxRate",
+		12: "ResponseError",
+		13: "ConnectRetry",
+		14: "ConnectRedispatch",
+		15: "Status",
+		16: "Weight",
+		17: "Active",
+		18: "Backup",
+		19: "CheckFail",
+		20: "CheckDown",
+		21: "DownTime",
+		22: "DownTimeTotal",
+		23: "QueueMaxLimit",
+		24: "CurrentSessionRate",
+		25: "MaxSessionRate",
+		26: "SessionRateLimit",
+		27: "CheckStatus",
+		28: "RequestRate",
+		29: "RequestMaxRate",
+		30: "RequestTotal",
+		31: "LastSessionSecond",
+		32: "ConnectRate",
+		33: "ConnectMaxRate",
 	}
 )
 
@@ -281,32 +281,32 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 
 	for _, service := range status.Services {
 		frontend := service.Frontend
-		for i := 0; i <= 34; i++ {
-			if i == 16 {
-				ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[16], prometheus.GaugeValue, convertStatus(frontend.Status), frontend.Name)
-			} else if i == 28 {
-				ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[28], prometheus.GaugeValue, convertCheckStatus(frontend.CheckStatus), frontend.Name)
+		for i := 0; i <= 33; i++ {
+			if i == 15 {
+				ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i], prometheus.GaugeValue, convertStatus(frontend.Status), frontend.Name)
+			} else if i == 27 {
+				ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(frontend.CheckStatus), frontend.Name)
 			} else {
 				ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i], prometheus.GaugeValue, getValue(frontend, keysArray[i]), frontend.Name)
 			}
 		}
 		backend := service.Backend
-		for i := 0; i <= 34; i++ {
-			if i == 16 {
-				ch <- prometheus.MustNewConstMetric(backendMetricDescArray[16], prometheus.GaugeValue, convertStatus(backend.Status), backend.Name)
-			} else if i == 28 {
-				ch <- prometheus.MustNewConstMetric(backendMetricDescArray[28], prometheus.GaugeValue, convertCheckStatus(backend.CheckStatus), backend.Name)
+		for i := 0; i <= 33; i++ {
+			if i == 15 {
+				ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i], prometheus.GaugeValue, convertStatus(backend.Status), backend.Name)
+			} else if i == 27 {
+				ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(backend.CheckStatus), backend.Name)
 			} else {
 				ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i], prometheus.GaugeValue, getValue(backend, keysArray[i]), backend.Name)
 			}
 		}
 		servers := service.Servers
 		for _, server := range servers {
-			for i := 0; i <= 34; i++ {
-				if i == 16 {
-					ch <- prometheus.MustNewConstMetric(serverMetricDescArray[16], prometheus.GaugeValue, convertStatus(server.Status), server.Name, backend.Name)
-				} else if i == 28 {
-					ch <- prometheus.MustNewConstMetric(serverMetricDescArray[28], prometheus.GaugeValue, convertCheckStatus(server.CheckStatus), server.Name, backend.Name)
+			for i := 0; i <= 33; i++ {
+				if i == 15 {
+					ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertStatus(server.Status), server.Name, backend.Name)
+				} else if i == 27 {
+					ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(server.CheckStatus), server.Name, backend.Name)
 				} else {
 					ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, getValue(server, keysArray[i]), server.Name, backend.Name)
 				}
