@@ -35,14 +35,9 @@ func NewManagerStore(dbDriver Dbdrvier) Store {
 	s := &managerStore{
 		Db: dbDriver,
 	}
-	//s.handleMetrics()
 
 	return s
 }
-
-/*func (s *managerStore) handleMetrics() {
-	go s.handleStoreObjectMetrics()
-}*/
 
 func (s *managerStore) StopStoreMetrics() {
 	if s.cancel == nil {
