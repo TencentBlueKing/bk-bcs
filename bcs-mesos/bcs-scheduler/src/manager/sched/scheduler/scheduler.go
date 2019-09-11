@@ -812,13 +812,14 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 			s.dataChecker.SendMsg(&msg)
 			blog.Info("after close data check goroutine")
 		}
-
+		s.store.StopStoreMetrics()
 		s.store.UnInitCacheMgr()
 
 		return nil
 	}
 
 	s.store.InitCacheMgr(s.config.UseCache)
+	s.store.StartStoreObjectMetrics()
 
 	go s.startCheckDeployments()
 
