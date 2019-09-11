@@ -224,6 +224,11 @@ type Store interface {
 
 	//list object namespaces, object = applicationNode、versionNode...
 	ListObjectNamespaces(objectNode string) ([]string, error)
+
+	//start metrics
+	StartStoreObjectMetrics()
+	//stop metrics
+	StopStoreMetrics()
 }
 
 // The interface for db operations
