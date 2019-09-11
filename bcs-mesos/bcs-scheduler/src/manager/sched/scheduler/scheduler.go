@@ -819,7 +819,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 
 	s.store.InitCacheMgr(s.config.UseCache)
-	s.store.StartStoreObjectMetrics()
+	go s.store.StartStoreObjectMetrics()
 
 	go s.startCheckDeployments()
 
