@@ -269,6 +269,9 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 	status = m.stats
 	m.statsMutex.Unlock()
 
+	if status == nil {
+		return
+	}
 	ch <- prometheus.MustNewConstMetric(haproxyPidMetricDesc, prometheus.GaugeValue, float64(status.HaproxyPid), []string{}...)
 	ch <- prometheus.MustNewConstMetric(haproxyUpTimeSecondMetricDesc, prometheus.GaugeValue, float64(status.UpTimeSecond), []string{}...)
 	ch <- prometheus.MustNewConstMetric(haproxyULimitMetricDesc, prometheus.GaugeValue, float64(status.ULimitN), []string{}...)
