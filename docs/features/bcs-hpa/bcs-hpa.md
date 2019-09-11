@@ -103,6 +103,9 @@ mesos方案默认提供容器cpu，memory的metrics采集，为了增加自动�
 - window：metric采集的窗口期，单位second，采集的窗口为[timestamp, timestamp+window]
 - value: metric的value值
 
+### 实践
+
+
 ## k8s方案
 k8s方案是使用原生的hpa方案实现的，Horizontal-Pod-Autoscaler模块通过scale up/down RC/Deployment实现应用的自动伸缩功能，架构图如下：
 ![k8s-hpacontroller.png](./img/k8s-hpacontroller.png)
