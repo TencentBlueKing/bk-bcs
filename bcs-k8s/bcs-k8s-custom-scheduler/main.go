@@ -21,7 +21,6 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/app"
 	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/options"
-	//"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
 	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
 )
 

@@ -13,6 +13,7 @@ type CustomScheduler struct {
 	httpServ *httpserver.HttpServer
 }
 
+// NewCustomScheduler creates an CustomScheduler object
 func NewCustomScheduler(conf *config.IpschedulerConfig) *CustomScheduler {
 	customSched := &CustomScheduler{
 		config:   conf,

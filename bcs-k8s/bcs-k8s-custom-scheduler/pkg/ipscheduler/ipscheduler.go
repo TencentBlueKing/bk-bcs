@@ -88,13 +88,21 @@ func HandleIpschedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	canSchedule := make([]v1.Node, 0, len(extenderArgs.Nodes.Items))
 	canNotSchedule := make(map[string]string)
 
-	for _, node := range extenderArgs.Nodes.Items {
-		result, err := DefaultIpScheduler.checkSchedulable(node)
-		if err != nil || !result {
-			canNotSchedule[node.Name] = err.Error()
-		} else {
-			if result {
-				canSchedule = append(canSchedule, node)
+	if extenderArgs.Pod.Spec.HostNetwork == true {
+		blog.Infof("hostNetwork pod %s, skip to interact with netService", extenderArgs.Pod.Name)
+		for _, node := range extenderArgs.Nodes.Items {
+			canSchedule = append(canSchedule, node)
+		}
+	} else {
+		blog.Infof("starting to predicate for pod %s", extenderArgs.Pod.Name)
+		for _, node := range extenderArgs.Nodes.Items {
+			result, err := DefaultIpScheduler.checkSchedulable(node)
+			if err != nil || !result {
+				canNotSchedule[node.Name] = err.Error()
+			} else {
+				if result {
+					canSchedule = append(canSchedule, node)
+				}
 			}
 		}
 	}
@@ -113,21 +121,31 @@ func HandleIpschedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 
 func HandleIpschedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingArgs) error {
 
-	strArray := strings.Split(extenderBindingArgs.Node, "-")
-	ipArray := strArray[1:5]
-	ipAddress := strings.Join(ipArray, ".")
+	pod, err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Get(extenderBindingArgs.PodName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("error when getting pod from cluster: %s", err.Error())
+	}
+	if pod.Spec.HostNetwork != true {
+		blog.Infof("starting to bind pod %s, update netService data in cache", extenderBindingArgs.PodName)
 
-	for i, netPool := range DefaultIpScheduler.NetPools {
-		if netPool.Cluster == DefaultIpScheduler.Cluster && netPool.Net == ipAddress {
-			length := len(netPool.Available)
-			blog.Info(netPool.Net)
-			blog.Info("%d", length)
-			if length > 0 {
-				DefaultIpScheduler.NetPools[i].Available = netPool.Available[:length-1]
+		strArray := strings.Split(extenderBindingArgs.Node, "-")
+		ipArray := strArray[1:5]
+		ipAddress := strings.Join(ipArray, ".")
+
+		for i, netPool := range DefaultIpScheduler.NetPools {
+			if netPool.Cluster == DefaultIpScheduler.Cluster && netPool.Net == ipAddress {
+				length := len(netPool.Available)
+				blog.Info(netPool.Net)
+				blog.Info("%d", length)
+				if length > 0 {
+					DefaultIpScheduler.NetPools[i].Available = netPool.Available[:length-1]
+				}
+				blog.Info("%d", len(DefaultIpScheduler.NetPools[i].Available))
+				break
 			}
-			blog.Info("%d", len(DefaultIpScheduler.NetPools[i].Available))
-			break
 		}
+	} else {
+		blog.Infof("starting to bind pod %s, skip to update netService data in cache", extenderBindingArgs.PodName)
 	}
 
 	bind := &v1.Binding{
@@ -138,7 +156,7 @@ func HandleIpschedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 		},
 	}
 
-	err := DefaultIpScheduler.KubeClient.CoreV1().Pods(bind.Namespace).Bind(bind)
+	err = DefaultIpScheduler.KubeClient.CoreV1().Pods(bind.Namespace).Bind(bind)
 	if err != nil {
 		return fmt.Errorf("error when binding pod to node: %s", err.Error())
 	}

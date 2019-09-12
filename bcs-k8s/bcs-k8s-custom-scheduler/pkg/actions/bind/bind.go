@@ -31,8 +31,6 @@ func init() {
 
 func handleIpschedulerBind(req *restful.Request, resp *restful.Response) {
 
-	blog.Info("starting to bind")
-
 	var extenderBindingArgs schedulerapi.ExtenderBindingArgs
 	var extenderBindingResult *schedulerapi.ExtenderBindingResult
 

@@ -32,8 +32,6 @@ func init() {
 
 func handleIpschedulerPredicate(req *restful.Request, resp *restful.Response) {
 
-	blog.Info("starting to schdule")
-
 	var extenderArgs schedulerapi.ExtenderArgs
 	var extenderFilterResult *schedulerapi.ExtenderFilterResult
 	err := req.ReadEntity(&extenderArgs)
