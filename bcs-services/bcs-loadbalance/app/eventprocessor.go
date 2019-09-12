@@ -70,7 +70,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	zkSubRegPath := config.ClusterID + "/" + config.Group
 	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	if len(config.ClusterZk) != 0 {
-		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, config.Group, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	}
 
 	processor.reflector = NewReflector(config, processor)
