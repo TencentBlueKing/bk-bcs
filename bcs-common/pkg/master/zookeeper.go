@@ -299,14 +299,27 @@ func (zk *ZookeeperMaster) sortNodes(nodes []string) []string {
 	var sortPart []int
 	mapSortNode := make(map[int]string)
 	for _, chNode := range nodes {
-		p, _ := strconv.Atoi(chNode[len(chNode)-10 : len(chNode)])
+		if len(chNode) <= 10 {
+			fmt.Printf("node(%s) is less then 10, there is not the seq number\n", chNode)
+			continue
+		}
+
+		p, err := strconv.Atoi(chNode[len(chNode)-10 : len(chNode)])
+		if err != nil {
+			fmt.Printf("fail to conv string to seq number for node(%s), err:%s\n", chNode, err.Error())
+			continue
+		}
+
 		sortPart = append(sortPart, p)
 		mapSortNode[p] = chNode
 	}
+
 	sort.Ints(sortPart)
-	var sorted []string
+
+	var children []string
 	for _, part := range sortPart {
-		sorted = append(sorted, mapSortNode[part])
+		children = append(children, mapSortNode[part])
 	}
-	return sorted
+
+	return children
 }

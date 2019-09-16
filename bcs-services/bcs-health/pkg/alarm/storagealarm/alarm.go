@@ -158,6 +158,8 @@ func (sa StorageAlarm) Convert(op *utils.AlarmOptions) *AlarmEvent {
 			AtTime:        op.AtTime,
 			Affiliation:   op.Affiliation,
 			AppAlarmLevel: op.AppAlarmLevel,
+			ResourceType:  op.ResourceType,
+			ResourceName:  op.ResourceName,
 		},
 		Extensions: EventExtension{
 			Labels:  op.Labels,
