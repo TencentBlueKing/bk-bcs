@@ -316,6 +316,7 @@ func (ol *opLogListener) listen() {
 		}
 		if err := iter.Err(); err != nil {
 			blog.Errorf(ol.sprint("get mongodb tail Next() failed: %v"), err)
+			_ = iter.Close()
 			time.Sleep(opLogRetryGap)
 		}
 		iter = tank.Copy().Filter(operator.BaseCondition.AddOp(operator.Gt, opLogTimestampKey, ol.getLastTimestamp()).AddOp(operator.Ne, "op", opNopValue)).(*mongoTank).Tail()
