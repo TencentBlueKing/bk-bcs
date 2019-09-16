@@ -205,7 +205,7 @@ func newStatusMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 func newFrontendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "frontend_"+metricName),
-		metricDoc, []string{types.MetricLabelBackend, types.MetricLabelLoadbalance, types.MetricLabelFrontent},
+		metricDoc, []string{types.MetricLabelFrontent},
 		prometheus.Labels{
 			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
 		},
@@ -215,7 +215,7 @@ func newFrontendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 func newBackendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "backend_"+metricName),
-		metricDoc, []string{"backend"},
+		metricDoc, []string{types.MetricLabelBackend},
 		prometheus.Labels{
 			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
 		},
@@ -225,7 +225,7 @@ func newBackendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 func newServerMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "server_"+metricName),
-		metricDoc, []string{"server", "backend"},
+		metricDoc, []string{types.MetricLabelServer, types.MetricLabelBackend},
 		prometheus.Labels{
 			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
 		},
