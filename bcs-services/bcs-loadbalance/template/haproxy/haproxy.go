@@ -49,6 +49,8 @@ func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string,
 //Manager implements TemplateManager interface, control
 //haproxy config file generating, validation, backup and reloading
 type Manager struct {
+	Cluster           string            // cluster id
+	LoadbalanceName   string            // loadbalance instance id
 	haproxyBin        string            //absolute path for haproxy executable binary
 	cfgFile           string            //absolute path for haproxy cfg file
 	backupDir         string            //absolute path for cfg file backup storage

@@ -109,6 +109,12 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 
 	// add manager to promethes
 	prometheus.MustRegister(processor.cfgManager)
+	// register metric
+	prometheus.Register(LoadbalanceZookeeperStateMetric)
+	prometheus.Register(LoadbalanceZookeeperEventAddMetric)
+	prometheus.Register(LoadbalanceZookeeperEventUpdateMetric)
+	prometheus.Register(LoadbalanceZookeeperEventDeleteMetric)
+	LoadbalanceZookeeperStateMetric.WithLabelValues(config.Name).Set(1)
 
 	newStatusResource := status.NewStatus(processor.cfgManager.GetStatusFunction())
 	lbMonitor.RegisterResource(newMetricResource)
@@ -308,7 +314,7 @@ func (lp *LBEventProcessor) OnAdd(obj interface{}) {
 		return
 	}
 	blog.Infof("Service %s added, ready to refresh", svr.ServiceName)
-	LoadbalanceZookeeperEventMetric.WithLabelValues("add", svr.ServiceName, svr.Namespace).Inc()
+	LoadbalanceZookeeperEventAddMetric.WithLabelValues(lp.config.Name, svr.ServiceName, svr.Namespace).Inc()
 	lp.update = true
 }
 
@@ -320,7 +326,7 @@ func (lp *LBEventProcessor) OnDelete(obj interface{}) {
 		return
 	}
 	blog.Infof("Service %s deleted, ready to refresh", svr.ServiceName)
-	LoadbalanceZookeeperEventMetric.WithLabelValues("delete", svr.ServiceName, svr.Namespace).Inc()
+	LoadbalanceZookeeperEventDeleteMetric.WithLabelValues(lp.config.Name, svr.ServiceName, svr.Namespace).Inc()
 	lp.update = true
 }
 
@@ -340,6 +346,6 @@ func (lp *LBEventProcessor) OnUpdate(oldObj, newObj interface{}) {
 		return
 	}
 	blog.Infof("Service %s update, ready to refresh", newSvr.ServiceName)
-	LoadbalanceZookeeperEventMetric.WithLabelValues("update", newSvr.ServiceName, newSvr.Namespace).Inc()
+	LoadbalanceZookeeperEventUpdateMetric.WithLabelValues(lp.config.Name, newSvr.ServiceName, newSvr.Namespace).Inc()
 	lp.update = true
 }
