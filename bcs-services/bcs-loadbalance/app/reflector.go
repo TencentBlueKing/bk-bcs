@@ -80,7 +80,6 @@ func GetName(node string) string {
 
 //NewReflector create new ServiceReflector
 func NewReflector(config *option.LBConfig, handler EventHandler) *ServiceReflector {
-	LoadbalanceZookeeperStateMetric.Set(1)
 	hosts := strings.Split(config.Zookeeper, ",")
 	return &ServiceReflector{
 		dataCache:    cache.NewCache(ExportServiceKeyFunc),
