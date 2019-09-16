@@ -29,23 +29,27 @@ import (
 
 // RegDiscover register and discover
 type RegDiscover struct {
-	ip         string
-	port       uint
-	metricPort uint
-	isSSL      bool
-	rd         *RegisterDiscover.RegDiscover
-	rootCtx    context.Context
-	cancel     context.CancelFunc
+	ip           string
+	port         uint
+	externalIp   string
+	externalPort uint
+	metricPort   uint
+	isSSL        bool
+	rd           *RegisterDiscover.RegDiscover
+	rootCtx      context.Context
+	cancel       context.CancelFunc
 }
 
 // NewRegDiscover create a RegDiscover object
 func NewRegDiscover(conf *options.StorageOptions) *RegDiscover {
 	return &RegDiscover{
-		ip:         conf.Address,
-		port:       conf.Port,
-		isSSL:      conf.ServerCert.IsSSL,
-		metricPort: conf.MetricPort,
-		rd:         RegisterDiscover.NewRegDiscoverEx(conf.BCSZk, 10*time.Second),
+		ip:           conf.Address,
+		port:         conf.Port,
+		externalIp:   conf.ExternalIp,
+		externalPort: conf.ExternalPort,
+		isSSL:        conf.ServerCert.IsSSL,
+		metricPort:   conf.MetricPort,
+		rd:           RegisterDiscover.NewRegDiscoverEx(conf.BCSZk, 10*time.Second),
 	}
 }
 
@@ -91,6 +95,8 @@ func (r *RegDiscover) registerStorage() error {
 
 	storageServerInfo.IP = r.ip
 	storageServerInfo.Port = r.port
+	storageServerInfo.ExternalIp = r.externalIp
+	storageServerInfo.ExternalPort = r.externalPort
 	storageServerInfo.Scheme = "http"
 	storageServerInfo.MetricPort = r.metricPort
 	if r.isSSL {

@@ -29,13 +29,15 @@ import (
 )
 
 //NewManager create haproxy config file manager
-func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string) conf.Manager {
+func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string, statusFetchPeriod int) conf.Manager {
 	return &Manager{
-		haproxyBin:   binPath,
-		cfgFile:      cfgPath,
-		tmpDir:       generatePath,
-		backupDir:    backupPath,
-		templateFile: filepath.Join(templatePath, "haproxy.cfg.template"),
+		haproxyBin:        binPath,
+		cfgFile:           cfgPath,
+		tmpDir:            generatePath,
+		backupDir:         backupPath,
+		templateFile:      filepath.Join(templatePath, "haproxy.cfg.template"),
+		statusFetchPeriod: statusFetchPeriod,
+		stopCh:            make(chan struct{}),
 		healthInfo: metric.HealthMeta{
 			IsHealthy:   conf.HealthStatusOK,
 			Message:     conf.HealthStatusOKMsg,
@@ -47,13 +49,17 @@ func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string)
 //Manager implements TemplateManager interface, control
 //haproxy config file generating, validation, backup and reloading
 type Manager struct {
-	haproxyBin   string            //absolute path for haproxy executable binary
-	cfgFile      string            //absolute path for haproxy cfg file
-	backupDir    string            //absolute path for cfg file backup storage
-	tmpDir       string            //temperary file for create new file
-	templateFile string            //template file
-	healthInfo   metric.HealthMeta //Health information
-	healthLock   sync.RWMutex
+	haproxyBin        string            //absolute path for haproxy executable binary
+	cfgFile           string            //absolute path for haproxy cfg file
+	backupDir         string            //absolute path for cfg file backup storage
+	tmpDir            string            //temporary file for create new file
+	templateFile      string            //template file
+	statusFetchPeriod int               // period for fetch haproxy stats data
+	stopCh            chan struct{}     // chan for stop fetching haproxy stats data
+	stats             *Status           //stats for haproxy
+	statsMutex        sync.Mutex        // lock for stats haproxy
+	healthInfo        metric.HealthMeta //Health information
+	healthLock        sync.RWMutex
 }
 
 //Start point, do not block
@@ -76,12 +82,14 @@ func (m *Manager) Start() error {
 	if err != nil {
 		blog.Warnf("mkdir %s failed, err %s", m.tmpDir, err.Error())
 	}
+	// run haproxy status fetcher
+	go m.runStatusFetch()
 	return nil
 }
 
 //Stop stop
 func (m *Manager) Stop() {
-
+	close(m.stopCh)
 }
 
 //Create config file with tmpData,
