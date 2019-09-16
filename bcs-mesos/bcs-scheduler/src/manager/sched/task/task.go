@@ -1337,11 +1337,11 @@ func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {
 	return &ID
 }
 
-// Whether an taskgroup is in ending statuses
+// IsTaskGroupEnd Whether an taskgroup is in ending statuses
 func IsTaskGroupEnd(taskGroup *types.TaskGroup) bool {
 	for _, task := range taskGroup.Taskgroup {
 		status := task.Status
-		if status == types.TASK_STATUS_LOST || status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING || status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING {
+		if status == types.TASK_STATUS_LOST || status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING || status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING { //nolint
 			blog.Info("task %s status(%s), not end status", task.ID, status)
 			return false
 		}
@@ -1350,7 +1350,7 @@ func IsTaskGroupEnd(taskGroup *types.TaskGroup) bool {
 	return true
 }
 
-// Whether an taskgroup can be shutdown currently
+// CanTaskGroupShutdown Whether an taskgroup can be shutdown currently
 func CanTaskGroupShutdown(taskGroup *types.TaskGroup) bool {
 	for _, task := range taskGroup.Taskgroup {
 		status := task.Status

@@ -34,21 +34,22 @@ type LBConfig struct {
 	conf.LogConfig
 	conf.FileConfig
 	conf.ServiceConfig
-	MetricPort     int    `json:"metric_port" value:"59090" usage:"port for query metric info, version info and status info" mapstructure:"metric_port"`
-	Zookeeper      string `json:"zk" value:"127.0.0.1:2381" usage:"zookeeper links for data source" mapstructure:"zk"`           //zk links
-	WatchPath      string `json:"zkpath" value:"" usage:"service info path for watch, [required]" mapstructure:"zkpath"`         //zk watch path
-	Group          string `json:"group" value:"external" usage:"bcs loadbalance label for service join in" mapstructure:"group"` //group to serve
-	Proxy          string `json:"proxy" value:"haproxy" usage:"proxy model, nginx or haproxy" mapstructure:"proxy"`              //proxy implenmentation, nginx or haproxy
-	BcsZkAddr      string `json:"bcszkaddr" value:"127.0.0.1:2181" usage:"bcs zookeeper address" mapstructure:"bcszkaddr"`       //bcs zookeeper address
-	ClusterZk      string `json:"clusterzk" value:"127.0.0.1:2183" usage:"cluster zookeeper address" mapstructure:"clusterzk"`
-	ClusterID      string `json:"clusterid" value:"" usage:"loadbalance server mesos cluster id" mapstructure:"clusterid"`                     //cluster id to register path
-	CfgBackupDir   string `json:"cfg_backup_dir" value:"" usage:"backup dir for loadbalance config file" mapstructure:"cfg_backup_dir"`        //haproxy cfg backup directory
-	GeneratingDir  string `json:"generate_dir" value:"" usage:"dir for generated loadbalance config file" mapstructure:"generate_dir"`         //haproxy cfg generation directory
-	TemplateDir    string `json:"template_dir" value:"" usage:"dir for template of loadbalance config file" mapstructure:"template_dir"`       //template file used to generate haproxy.cfg
-	BinPath        string `json:"bin_path" value:"" usage:"bin path for proxy binary" mapstructure:"bin_path"`                                 //haproxy bin path
-	CfgPath        string `json:"config_path" value:"" usage:"config path for proxy config" mapstructure:"config_path"`                        //haproxy configuration file path
-	SyncPeriod     int    `json:"sync_period" value:"20" usage:"time period for syncing data" mapstructure:"sync_period"`                      //time period for syncing data
-	CfgCheckPeriod int    `json:"config_check_period" value:"5" usage:"time period for check cache update" mapstructure:"config_check_period"` //period check cache update
+	MetricPort        int    `json:"metric_port" value:"59090" usage:"port for query metric info, version info and status info" mapstructure:"metric_port"`
+	Zookeeper         string `json:"zk" value:"127.0.0.1:2381" usage:"zookeeper links for data source" mapstructure:"zk"`           //zk links
+	WatchPath         string `json:"zkpath" value:"" usage:"service info path for watch, [required]" mapstructure:"zkpath"`         //zk watch path
+	Group             string `json:"group" value:"external" usage:"bcs loadbalance label for service join in" mapstructure:"group"` //group to serve
+	Proxy             string `json:"proxy" value:"haproxy" usage:"proxy model, nginx or haproxy" mapstructure:"proxy"`              //proxy implenmentation, nginx or haproxy
+	BcsZkAddr         string `json:"bcszkaddr" value:"127.0.0.1:2181" usage:"bcs zookeeper address" mapstructure:"bcszkaddr"`       //bcs zookeeper address
+	ClusterZk         string `json:"clusterzk" value:"127.0.0.1:2183" usage:"cluster zookeeper address" mapstructure:"clusterzk"`
+	ClusterID         string `json:"clusterid" value:"" usage:"loadbalance server mesos cluster id" mapstructure:"clusterid"`                     //cluster id to register path
+	CfgBackupDir      string `json:"cfg_backup_dir" value:"" usage:"backup dir for loadbalance config file" mapstructure:"cfg_backup_dir"`        //haproxy cfg backup directory
+	GeneratingDir     string `json:"generate_dir" value:"" usage:"dir for generated loadbalance config file" mapstructure:"generate_dir"`         //haproxy cfg generation directory
+	TemplateDir       string `json:"template_dir" value:"" usage:"dir for template of loadbalance config file" mapstructure:"template_dir"`       //template file used to generate haproxy.cfg
+	BinPath           string `json:"bin_path" value:"" usage:"bin path for proxy binary" mapstructure:"bin_path"`                                 //haproxy bin path
+	CfgPath           string `json:"config_path" value:"" usage:"config path for proxy config" mapstructure:"config_path"`                        //haproxy configuration file path
+	SyncPeriod        int    `json:"sync_period" value:"20" usage:"time period for syncing data" mapstructure:"sync_period"`                      //time period for syncing data
+	CfgCheckPeriod    int    `json:"config_check_period" value:"5" usage:"time period for check cache update" mapstructure:"config_check_period"` //period check cache update
+	StatusFetchPeriod int    `json:"stats_fetch_period" value:"5" usage:"time period for fetch proxy stats" mapstructure:"stats_fetch_period"`
 }
 
 // NewConfig new a config

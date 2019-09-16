@@ -37,7 +37,16 @@ var once sync.Once
 
 // InitLogs initializes logs the way we want for blog.
 func InitLogs(logConfig conf.LogConfig) {
-	glog.InitLogs(logConfig.ToStdErr, logConfig.AlsoToStdErr, logConfig.Verbosity, logConfig.StdErrThreshold, logConfig.VModule, logConfig.TraceLocation, logConfig.LogDir, logConfig.LogMaxSize, logConfig.LogMaxNum)
+	glog.InitLogs(logConfig.ToStdErr,
+		logConfig.AlsoToStdErr,
+		logConfig.Verbosity,
+		logConfig.StdErrThreshold,
+		logConfig.VModule,
+		logConfig.TraceLocation,
+		logConfig.LogDir,
+		logConfig.LogMaxSize,
+		logConfig.LogMaxNum,
+	)
 	once.Do(func() {
 		log.SetOutput(GlogWriter{})
 		log.SetFlags(0)
@@ -112,35 +121,41 @@ type Wrapper struct {
 	verbose glog.Verbose
 }
 
+// Info implementation
 func (w *Wrapper) Info(format string, args ...interface{}) {
 	if w.verbose {
 		Info(w.Handler(format, args...))
 	}
 }
 
+// Warn implementation
 func (w *Wrapper) Warn(format string, args ...interface{}) {
 	if w.verbose {
 		Warn(w.Handler(format, args...))
 	}
 }
 
+// Error implementation
 func (w *Wrapper) Error(format string, args ...interface{}) {
 	if w.verbose {
 		Error(w.Handler(format, args...))
 	}
 }
 
+// Fatal implementation
 func (w *Wrapper) Fatal(format string, args ...interface{}) {
 	if w.verbose {
 		Fatal(w.Handler(format, args...))
 	}
 }
 
+// V implementation
 func (w *Wrapper) V(level glog.Level) *Wrapper {
 	w.verbose = V(level)
 	return w
 }
 
+// Wrap Wrapper function
 func Wrap(handler WrapFunc) *Wrapper {
 	if handler == nil {
 		handler = defaultHandler

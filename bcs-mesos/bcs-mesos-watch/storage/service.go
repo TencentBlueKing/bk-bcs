@@ -59,7 +59,7 @@ func (handler *ServiceHandler) Add(data interface{}) error {
 	dataType := data.(*commtypes.BcsService)
 	blog.Info("service add event, service: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
 	started := time.Now()
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.Errorf("service add node %s, err %+v", dataNode, err)
@@ -75,7 +75,7 @@ func (handler *ServiceHandler) Delete(data interface{}) error {
 	dataType := data.(*commtypes.BcsService)
 	blog.Info("service delete event, service: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
 	started := time.Now()
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.Errorf("service delete node %s, err %+v", dataNode, err)
@@ -90,7 +90,7 @@ func (handler *ServiceHandler) Delete(data interface{}) error {
 func (handler *ServiceHandler) Update(data interface{}) error {
 	dataType := data.(*commtypes.BcsService)
 	started := time.Now()
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.Errorf("service update node %s, err %+v", dataNode, err)
