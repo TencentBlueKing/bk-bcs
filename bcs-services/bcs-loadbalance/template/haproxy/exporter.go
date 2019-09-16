@@ -16,6 +16,7 @@ package haproxy
 import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-loadbalance/types"
+	"os"
 	"reflect"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -197,7 +198,7 @@ func newStatusMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 		prometheus.BuildFQName("loadbalance", "haproxy", metricName),
 		metricDoc, nil,
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
 		},
 	)
 }
@@ -207,7 +208,7 @@ func newFrontendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 		prometheus.BuildFQName("loadbalance", "haproxy", "frontend_"+metricName),
 		metricDoc, []string{types.MetricLabelFrontent},
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
 		},
 	)
 }
@@ -217,7 +218,7 @@ func newBackendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 		prometheus.BuildFQName("loadbalance", "haproxy", "backend_"+metricName),
 		metricDoc, []string{types.MetricLabelBackend},
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
 		},
 	)
 }
@@ -227,7 +228,7 @@ func newServerMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 		prometheus.BuildFQName("loadbalance", "haproxy", "server_"+metricName),
 		metricDoc, []string{types.MetricLabelServer, types.MetricLabelBackend},
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
 		},
 	)
 }

@@ -15,6 +15,7 @@ package option
 
 import (
 	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-services/bcs-loadbalance/types"
 	"fmt"
 	"os"
 	"strings"
@@ -109,7 +110,7 @@ func (c *LBConfig) Parse() error {
 			return fmt.Errorf("either option \"name\" or env BCS_POD_ID is needed")
 		}
 	}
-	err := os.Setenv("BCS_LOADBALANCE_NAME", c.Name)
+	err := os.Setenv(types.EnvBcsLoadbalanceName, c.Name)
 	if err != nil {
 		return err
 	}
