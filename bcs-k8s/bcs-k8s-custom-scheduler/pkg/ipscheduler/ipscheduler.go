@@ -139,8 +139,16 @@ func HandleIpschedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 				blog.Info("%d", length)
 				if length > 0 {
 					DefaultIpScheduler.NetPools[i].Available = netPool.Available[:length-1]
+					blog.Info("%d", len(DefaultIpScheduler.NetPools[i].Available))
+				} else {
+					blog.Warnf("no available ip in node %s for pod %s, delete it and reschedule... ", netPool.Net, extenderBindingArgs.PodName)
+					err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Delete(extenderBindingArgs.PodName, &metav1.DeleteOptions{})
+					if err != nil {
+						return fmt.Errorf("error when deleting pod %s, failed to reschedule: %s", extenderBindingArgs.PodName, err.Error())
+					}
+					return nil
 				}
-				blog.Info("%d", len(DefaultIpScheduler.NetPools[i].Available))
+
 				break
 			}
 		}

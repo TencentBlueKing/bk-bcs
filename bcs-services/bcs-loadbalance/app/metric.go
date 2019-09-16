@@ -42,4 +42,5 @@ var (
 func init() {
 	prometheus.Register(LoadbalanceZookeeperStateMetric)
 	prometheus.Register(LoadbalanceZookeeperEventMetric)
+	LoadbalanceZookeeperStateMetric.Set(1)
 }

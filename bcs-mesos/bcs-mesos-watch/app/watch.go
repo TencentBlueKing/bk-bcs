@@ -115,13 +115,21 @@ func Run(cfg *types.CmdConfig) error {
 	ccCxt, _ := context.WithCancel(rootCxt)
 	go RefreshDCHost(ccCxt, cfg, ccStorage)
 	time.Sleep(2 * time.Second)
+
+	retryNum := 0
 	for {
+		if retryNum == 10 {
+			blog.Errorf("storage address is empty, datawatcher exited")
+			os.Exit(1)
+		}
+
 		if ccStorage.GetDCAddress() == "" {
 			blog.Warn("storage address is empty, mesos datawatcher cannot run")
 			time.Sleep(2 * time.Second)
 		} else {
 			break
 		}
+		retryNum++
 	}
 
 	ccStorage.Run(ccCxt)
@@ -417,7 +425,12 @@ func RefreshDCHost(rfCxt context.Context, cfg *types.CmdConfig, storage storage.
 					blog.Errorf("fail to unmarshal DCHost(%s), err:%s", string(server), err.Error())
 					continue
 				}
-				DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+				if !cfg.IsExternal {
+					DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+				} else {
+					DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.ExternalIp + ":" + strconv.Itoa(int(serverInfo.ServerInfo.ExternalPort))
+				}
+
 				blog.Infof("get DCHost(%s)", DCHost)
 				DCHosts = append(DCHosts, DCHost)
 			}
