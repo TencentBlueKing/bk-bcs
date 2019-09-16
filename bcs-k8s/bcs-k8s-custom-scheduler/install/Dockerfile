@@ -1,0 +1,5 @@
+FROM gcr.io/google_containers/ubuntu-slim:0.14
+
+ADD ./bcs-k8s-custom-scheduler /bcs-k8s-custom-scheduler
+
+ENTRYPOINT ["/bcs-k8s-custom-scheduler"]
