@@ -189,6 +189,9 @@ type Store interface {
 	//fetch custom resource register list
 	ListCustomResourceRegister() ([]*commtypes.Crr, error)
 
+	//list all crds
+	ListAllCrds(kind string) ([]*commtypes.Crd, error)
+
 	//save custom resource definition
 	SaveCustomResourceDefinition(*commtypes.Crd) error
 
