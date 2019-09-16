@@ -109,6 +109,11 @@ func (c *LBConfig) Parse() error {
 		if len(c.Name) == 0 {
 			return fmt.Errorf("either option \"name\" or env BCS_POD_ID is needed")
 		}
+		pos := strings.LastIndex(c.Name, ".")
+		if pos < 1 {
+			return fmt.Errorf("invalid env BCS_POD_ID %s", c.Name)
+		}
+		c.Name = c.Name[:pos]
 	}
 	err := os.Setenv(types.EnvBcsLoadbalanceName, c.Name)
 	if err != nil {
