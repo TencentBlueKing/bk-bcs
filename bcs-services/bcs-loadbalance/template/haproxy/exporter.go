@@ -15,6 +15,7 @@ package haproxy
 
 import (
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-services/bcs-loadbalance/types"
 	"reflect"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -194,28 +195,40 @@ func getValue(s *Server, key string) float64 {
 func newStatusMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", metricName),
-		metricDoc, nil, nil,
+		metricDoc, nil,
+		prometheus.Labels{
+			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+		},
 	)
 }
 
 func newFrontendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "frontend_"+metricName),
-		metricDoc, []string{"frontend"}, nil,
+		metricDoc, []string{types.MetricLabelBackend, types.MetricLabelLoadbalance, types.MetricLabelFrontent},
+		prometheus.Labels{
+			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+		},
 	)
 }
 
 func newBackendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "backend_"+metricName),
-		metricDoc, []string{"backend"}, nil,
+		metricDoc, []string{"backend"},
+		prometheus.Labels{
+			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+		},
 	)
 }
 
 func newServerMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "server_"+metricName),
-		metricDoc, []string{"server", "backend"}, nil,
+		metricDoc, []string{"server", "backend"},
+		prometheus.Labels{
+			types.MetricLabelLoadbalance: types.EnvBcsLoadbalanceName,
+		},
 	)
 }
 

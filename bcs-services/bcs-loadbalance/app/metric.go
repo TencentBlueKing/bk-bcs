@@ -14,33 +14,50 @@
 package app
 
 import (
+	"bk-bcs/bcs-services/bcs-loadbalance/types"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
 	// LoadbalanceZookeeperStateMetric loadbalance metric for zookeeper connection
-	LoadbalanceZookeeperStateMetric = prometheus.NewGauge(
+	LoadbalanceZookeeperStateMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "loadbalance",
 			Subsystem: "zookeeper",
 			Name:      "state",
 			Help:      "the state for zookeeper connection, 0 for abnormal, 1 for normal",
 		},
+		[]string{types.MetricLabelLoadbalance},
 	)
-	// LoadbalanceZookeeperEventMetric loadbalance metric for zookeeper event
-	LoadbalanceZookeeperEventMetric = prometheus.NewCounterVec(
+	// LoadbalanceZookeeperEventAddMetric loadbalance metric for zookeeper event add
+	LoadbalanceZookeeperEventAddMetric = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "loadbalance",
 			Subsystem: "zookeeper",
-			Name:      "export_service_event",
-			Help:      "event of exported service record in zookeeper",
+			Name:      "export_service_event_add",
+			Help:      "add event of exported service record in zookeeper",
 		},
-		[]string{"kind", "name", "namespace"},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+	)
+	// LoadbalanceZookeeperEventUpdateMetric loadbalance metric for zookeeper event update
+	LoadbalanceZookeeperEventUpdateMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "export_service_event_update",
+			Help:      "update event of exported service record in zookeeper",
+		},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+	)
+	// LoadbalanceZookeeperEventDeleteMetric loadbalance metric for zookeeper event delete
+	LoadbalanceZookeeperEventDeleteMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "export_service_event_delete",
+			Help:      "delete event of exported service record in zookeeper",
+		},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
 	)
 )
-
-func init() {
-	prometheus.Register(LoadbalanceZookeeperStateMetric)
-	prometheus.Register(LoadbalanceZookeeperEventMetric)
-	LoadbalanceZookeeperStateMetric.Set(1)
-}
