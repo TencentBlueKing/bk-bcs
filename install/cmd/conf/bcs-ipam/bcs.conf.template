@@ -1,0 +1,8 @@
+{
+    "zkHost": "${bcsZkHostSemicolon}",
+    "tls": {
+        "key": "/data/bcs/bcs-cni/bin/conf/etc/bcs-inner-client.key",
+        "pubkey": "/data/bcs/bcs-cni/bin/conf/etc/bcs-inner-client.crt",
+        "cacert": "/data/bcs/bcs-cni/bin/conf/etc/bcs-inner-ca.crt"
+    }
+}

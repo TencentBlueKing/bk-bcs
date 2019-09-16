@@ -94,4 +94,8 @@ type Manager interface {
 	// GetMetricResult() (*metric.MetricResult, error)
 	// GetStatusFunction get status function
 	GetStatusFunction() restful.RouteFunction
+	// Describe implements prometheus collector interface
+	Describe(ch chan<- *prometheus.Desc)
+	// Collect implements prometheus collector interface
+	Collect(ch chan<- prometheus.Metric)
 }
