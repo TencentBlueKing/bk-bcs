@@ -29,8 +29,9 @@ import (
 )
 
 //NewManager create haproxy config file manager
-func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string, statusFetchPeriod int) conf.Manager {
-	return &Manager{
+func NewManager(lbName, binPath, cfgPath, generatePath, backupPath, templatePath string, statusFetchPeriod int) conf.Manager {
+	manager := &Manager{
+		LoadbalanceName:   lbName,
 		haproxyBin:        binPath,
 		cfgFile:           cfgPath,
 		tmpDir:            generatePath,
@@ -44,6 +45,8 @@ func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string,
 			CurrentRole: metric.SlaveRole,
 		},
 	}
+	manager.initMetric()
+	return manager
 }
 
 //Manager implements TemplateManager interface, control

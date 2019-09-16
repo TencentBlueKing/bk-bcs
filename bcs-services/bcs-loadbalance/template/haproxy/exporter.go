@@ -16,136 +16,26 @@ package haproxy
 import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-loadbalance/types"
-	"os"
 	"reflect"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
-	haproxyPidMetricDesc          = newStatusMetricDesc("haproxy_pid", "pid of haproxy")
-	haproxyUpTimeSecondMetricDesc = newStatusMetricDesc("up_time_second", "second from up time to now")
-	haproxyULimitMetricDesc       = newStatusMetricDesc("ulimit_n", "ulimit n of haproxy")
-	haproxyMaxSock                = newStatusMetricDesc("max_sock", "max sockets of haproxy")
-	haproxyMaxConn                = newStatusMetricDesc("max_conn", "max connection of haproxy")
-	haproxyMaxPipes               = newStatusMetricDesc("max_pipe", "max pipes of haproxy")
-	haproxyCurrentConn            = newStatusMetricDesc("current_conn", "current connection of haproxy")
-	haproxyCurrentPipes           = newStatusMetricDesc("current_pipe", "current pipes of haproxy")
-	haproxyCurrentConnRate        = newStatusMetricDesc("current_conn_rate", "current connection rate of haproxy")
-	haproxyMaxConnRate            = newStatusMetricDesc("max_conn_rate", "max connection rate")
-
-	frontendMetricDescArray = []*prometheus.Desc{
-		newFrontendMetricDesc("current_queue", "current queue for frontend"),
-		newFrontendMetricDesc("max_queue", "max queue for frontend"),
-		newFrontendMetricDesc("current_session", "current session for frontend"),
-		newFrontendMetricDesc("max_session", "max session for frontend"),
-		newFrontendMetricDesc("session_limit", "session limit for frontend"),
-		newFrontendMetricDesc("session_total", "session total for frontend"),
-		newFrontendMetricDesc("bytes_in", "bytes_in for frontend"),
-		newFrontendMetricDesc("bytes_out", "bytes_out for frontend"),
-		newFrontendMetricDesc("request_deny", "request_deny for frontend"),
-		newFrontendMetricDesc("response_deny", "response_deny for frontend"),
-		newFrontendMetricDesc("request_error", "request_error for frontend"),
-		newFrontendMetricDesc("connect_error", "connect_error for frontend"),
-		newFrontendMetricDesc("response_error", "response_error for frontend"),
-		newFrontendMetricDesc("connect_retry", "connect_retry for frontend"),
-		newFrontendMetricDesc("connect_redispatch", "connect_redispatch for frontend"),
-		newFrontendMetricDesc("status", "status for frontend"),
-		newFrontendMetricDesc("weight", "weight for frontend"),
-		newFrontendMetricDesc("active_server_num", "active server num for frontend"),
-		newFrontendMetricDesc("backup_server_num", "backup server num for frontend"),
-		newFrontendMetricDesc("check_fail_num", "check fail num for frontend"),
-		newFrontendMetricDesc("check_down_num", "check down num for frontend"),
-		newFrontendMetricDesc("down_time_second", "down time second for frontend"),
-		newFrontendMetricDesc("down_time_total", "down time total for frontend"),
-		newFrontendMetricDesc("queue_limit", "queue limit for frontend"),
-		newFrontendMetricDesc("current_session_rate", "current session_rate for frontend"),
-		newFrontendMetricDesc("max_session_rate", "max session rate for frontend"),
-		newFrontendMetricDesc("session_rate_limit", "session rate limit for frontend"),
-		newFrontendMetricDesc("check_status", "check status for frontend"),
-		newFrontendMetricDesc("request_rate", "request rate for frontend"),
-		newFrontendMetricDesc("request_max_rate", "request max rate for frontend"),
-		newFrontendMetricDesc("request_total", "request total for frontend"),
-		newFrontendMetricDesc("last_session_second", "last session second for frontend"),
-		newFrontendMetricDesc("connect_rate", "connect rate for frontend"),
-		newFrontendMetricDesc("connect_max_rate", "connect max rate for frontend"),
-	}
-
-	backendMetricDescArray = []*prometheus.Desc{
-		newBackendMetricDesc("current_queue", "current queue for backend"),
-		newBackendMetricDesc("max_queue", "max queue for backend"),
-		newBackendMetricDesc("current_session", "current session for backend"),
-		newBackendMetricDesc("max_session", "max session for backend"),
-		newBackendMetricDesc("session_limit", "session limit for backend"),
-		newBackendMetricDesc("session_total", "session total for backend"),
-		newBackendMetricDesc("bytes_in", "bytes_in for backend"),
-		newBackendMetricDesc("bytes_out", "bytes_out for backend"),
-		newBackendMetricDesc("request_deny", "request_deny for backend"),
-		newBackendMetricDesc("response_deny", "response_deny for backend"),
-		newBackendMetricDesc("request_error", "request_error for backend"),
-		newBackendMetricDesc("connect_error", "connect_error for backend"),
-		newBackendMetricDesc("response_error", "response_error for backend"),
-		newBackendMetricDesc("connect_retry", "connect_retry for backend"),
-		newBackendMetricDesc("connect_redispatch", "connect_redispatch for backend"),
-		newBackendMetricDesc("status", "status for backend"),
-		newBackendMetricDesc("weight", "weight for backend"),
-		newBackendMetricDesc("active_server_num", "active server num for backend"),
-		newBackendMetricDesc("backup_server_num", "backup server num for backend"),
-		newBackendMetricDesc("check_fail_num", "check fail num for backend"),
-		newBackendMetricDesc("check_down_num", "check down num for backend"),
-		newBackendMetricDesc("down_time_second", "down time second for backend"),
-		newBackendMetricDesc("down_time_total", "down time total for backend"),
-		newBackendMetricDesc("queue_limit", "queue limit for backend"),
-		newBackendMetricDesc("current_session_rate", "current session_rate for backend"),
-		newBackendMetricDesc("max_session_rate", "max session rate for backend"),
-		newBackendMetricDesc("session_rate_limit", "session rate limit for backend"),
-		newBackendMetricDesc("check_status", "check status for backend"),
-		newBackendMetricDesc("request_rate", "request rate for backend"),
-		newBackendMetricDesc("request_max_rate", "request max rate for backend"),
-		newBackendMetricDesc("request_total", "request total for backend"),
-		newBackendMetricDesc("last_session_second", "last session second for backend"),
-		newBackendMetricDesc("connect_rate", "connect rate for backend"),
-		newBackendMetricDesc("connect_max_rate", "connect max rate for backend"),
-	}
-
-	serverMetricDescArray = []*prometheus.Desc{
-		newServerMetricDesc("current_queue", "current queue for server"),
-		newServerMetricDesc("max_queue", "max queue for server"),
-		newServerMetricDesc("current_session", "current session for server"),
-		newServerMetricDesc("max_session", "max session for server"),
-		newServerMetricDesc("session_limit", "session limit for server"),
-		newServerMetricDesc("session_total", "session total for server"),
-		newServerMetricDesc("bytes_in", "bytes_in for server"),
-		newServerMetricDesc("bytes_out", "bytes_out for server"),
-		newServerMetricDesc("request_deny", "request_deny for server"),
-		newServerMetricDesc("response_deny", "response_deny for server"),
-		newServerMetricDesc("request_error", "request_error for server"),
-		newServerMetricDesc("connect_error", "connect_error for server"),
-		newServerMetricDesc("response_error", "response_error for server"),
-		newServerMetricDesc("connect_retry", "connect_retry for server"),
-		newServerMetricDesc("connect_redispatch", "connect_redispatch for server"),
-		newServerMetricDesc("status", "status for server"),
-		newServerMetricDesc("weight", "weight for server"),
-		newServerMetricDesc("active_server_num", "active server num for server"),
-		newServerMetricDesc("backup_server_num", "backup server num for server"),
-		newServerMetricDesc("check_fail_num", "check fail num for server"),
-		newServerMetricDesc("check_down_num", "check down num for server"),
-		newServerMetricDesc("down_time_second", "down time second for server"),
-		newServerMetricDesc("down_time_total", "down time total for server"),
-		newServerMetricDesc("queue_limit", "queue limit for server"),
-		newServerMetricDesc("current_session_rate", "current session_rate for server"),
-		newServerMetricDesc("max_session_rate", "max session rate for server"),
-		newServerMetricDesc("session_rate_limit", "session rate limit for server"),
-		newServerMetricDesc("check_status", "check status for server"),
-		newServerMetricDesc("request_rate", "request rate for server"),
-		newServerMetricDesc("request_max_rate", "request max rate for server"),
-		newServerMetricDesc("request_total", "request total for server"),
-		newServerMetricDesc("last_session_second", "last session second for server"),
-		newServerMetricDesc("connect_rate", "connect rate for server"),
-		newServerMetricDesc("connect_max_rate", "connect max rate for server"),
-	}
-
-	keysArray = map[int]string{
+	haproxyPidMetricDesc          *prometheus.Desc
+	haproxyUpTimeSecondMetricDesc *prometheus.Desc
+	haproxyULimitMetricDesc       *prometheus.Desc
+	haproxyMaxSock                *prometheus.Desc
+	haproxyMaxConn                *prometheus.Desc
+	haproxyMaxPipes               *prometheus.Desc
+	haproxyCurrentConn            *prometheus.Desc
+	haproxyCurrentPipes           *prometheus.Desc
+	haproxyCurrentConnRate        *prometheus.Desc
+	haproxyMaxConnRate            *prometheus.Desc
+	frontendMetricDescArray       []*prometheus.Desc
+	backendMetricDescArray        []*prometheus.Desc
+	serverMetricDescArray         []*prometheus.Desc
+	keysArray                     = map[int]string{
 		0:  "CurrentQueue",
 		1:  "MaxQueue",
 		2:  "CurrentSession",
@@ -183,6 +73,130 @@ var (
 	}
 )
 
+func (m *Manager) initMetric() {
+	haproxyPidMetricDesc = m.newStatusMetricDesc("haproxy_pid", "pid of haproxy")
+	haproxyUpTimeSecondMetricDesc = m.newStatusMetricDesc("up_time_second", "second from up time to now")
+	haproxyULimitMetricDesc = m.newStatusMetricDesc("ulimit_n", "ulimit n of haproxy")
+	haproxyMaxSock = m.newStatusMetricDesc("max_sock", "max sockets of haproxy")
+	haproxyMaxConn = m.newStatusMetricDesc("max_conn", "max connection of haproxy")
+	haproxyMaxPipes = m.newStatusMetricDesc("max_pipe", "max pipes of haproxy")
+	haproxyCurrentConn = m.newStatusMetricDesc("current_conn", "current connection of haproxy")
+	haproxyCurrentPipes = m.newStatusMetricDesc("current_pipe", "current pipes of haproxy")
+	haproxyCurrentConnRate = m.newStatusMetricDesc("current_conn_rate", "current connection rate of haproxy")
+	haproxyMaxConnRate = m.newStatusMetricDesc("max_conn_rate", "max connection rate")
+
+	frontendMetricDescArray = []*prometheus.Desc{
+		m.newFrontendMetricDesc("current_queue", "current queue for frontend"),
+		m.newFrontendMetricDesc("max_queue", "max queue for frontend"),
+		m.newFrontendMetricDesc("current_session", "current session for frontend"),
+		m.newFrontendMetricDesc("max_session", "max session for frontend"),
+		m.newFrontendMetricDesc("session_limit", "session limit for frontend"),
+		m.newFrontendMetricDesc("session_total", "session total for frontend"),
+		m.newFrontendMetricDesc("bytes_in", "bytes_in for frontend"),
+		m.newFrontendMetricDesc("bytes_out", "bytes_out for frontend"),
+		m.newFrontendMetricDesc("request_deny", "request_deny for frontend"),
+		m.newFrontendMetricDesc("response_deny", "response_deny for frontend"),
+		m.newFrontendMetricDesc("request_error", "request_error for frontend"),
+		m.newFrontendMetricDesc("connect_error", "connect_error for frontend"),
+		m.newFrontendMetricDesc("response_error", "response_error for frontend"),
+		m.newFrontendMetricDesc("connect_retry", "connect_retry for frontend"),
+		m.newFrontendMetricDesc("connect_redispatch", "connect_redispatch for frontend"),
+		m.newFrontendMetricDesc("status", "status for frontend"),
+		m.newFrontendMetricDesc("weight", "weight for frontend"),
+		m.newFrontendMetricDesc("active_server_num", "active server num for frontend"),
+		m.newFrontendMetricDesc("backup_server_num", "backup server num for frontend"),
+		m.newFrontendMetricDesc("check_fail_num", "check fail num for frontend"),
+		m.newFrontendMetricDesc("check_down_num", "check down num for frontend"),
+		m.newFrontendMetricDesc("down_time_second", "down time second for frontend"),
+		m.newFrontendMetricDesc("down_time_total", "down time total for frontend"),
+		m.newFrontendMetricDesc("queue_limit", "queue limit for frontend"),
+		m.newFrontendMetricDesc("current_session_rate", "current session_rate for frontend"),
+		m.newFrontendMetricDesc("max_session_rate", "max session rate for frontend"),
+		m.newFrontendMetricDesc("session_rate_limit", "session rate limit for frontend"),
+		m.newFrontendMetricDesc("check_status", "check status for frontend"),
+		m.newFrontendMetricDesc("request_rate", "request rate for frontend"),
+		m.newFrontendMetricDesc("request_max_rate", "request max rate for frontend"),
+		m.newFrontendMetricDesc("request_total", "request total for frontend"),
+		m.newFrontendMetricDesc("last_session_second", "last session second for frontend"),
+		m.newFrontendMetricDesc("connect_rate", "connect rate for frontend"),
+		m.newFrontendMetricDesc("connect_max_rate", "connect max rate for frontend"),
+	}
+
+	backendMetricDescArray = []*prometheus.Desc{
+		m.newBackendMetricDesc("current_queue", "current queue for backend"),
+		m.newBackendMetricDesc("max_queue", "max queue for backend"),
+		m.newBackendMetricDesc("current_session", "current session for backend"),
+		m.newBackendMetricDesc("max_session", "max session for backend"),
+		m.newBackendMetricDesc("session_limit", "session limit for backend"),
+		m.newBackendMetricDesc("session_total", "session total for backend"),
+		m.newBackendMetricDesc("bytes_in", "bytes_in for backend"),
+		m.newBackendMetricDesc("bytes_out", "bytes_out for backend"),
+		m.newBackendMetricDesc("request_deny", "request_deny for backend"),
+		m.newBackendMetricDesc("response_deny", "response_deny for backend"),
+		m.newBackendMetricDesc("request_error", "request_error for backend"),
+		m.newBackendMetricDesc("connect_error", "connect_error for backend"),
+		m.newBackendMetricDesc("response_error", "response_error for backend"),
+		m.newBackendMetricDesc("connect_retry", "connect_retry for backend"),
+		m.newBackendMetricDesc("connect_redispatch", "connect_redispatch for backend"),
+		m.newBackendMetricDesc("status", "status for backend"),
+		m.newBackendMetricDesc("weight", "weight for backend"),
+		m.newBackendMetricDesc("active_server_num", "active server num for backend"),
+		m.newBackendMetricDesc("backup_server_num", "backup server num for backend"),
+		m.newBackendMetricDesc("check_fail_num", "check fail num for backend"),
+		m.newBackendMetricDesc("check_down_num", "check down num for backend"),
+		m.newBackendMetricDesc("down_time_second", "down time second for backend"),
+		m.newBackendMetricDesc("down_time_total", "down time total for backend"),
+		m.newBackendMetricDesc("queue_limit", "queue limit for backend"),
+		m.newBackendMetricDesc("current_session_rate", "current session_rate for backend"),
+		m.newBackendMetricDesc("max_session_rate", "max session rate for backend"),
+		m.newBackendMetricDesc("session_rate_limit", "session rate limit for backend"),
+		m.newBackendMetricDesc("check_status", "check status for backend"),
+		m.newBackendMetricDesc("request_rate", "request rate for backend"),
+		m.newBackendMetricDesc("request_max_rate", "request max rate for backend"),
+		m.newBackendMetricDesc("request_total", "request total for backend"),
+		m.newBackendMetricDesc("last_session_second", "last session second for backend"),
+		m.newBackendMetricDesc("connect_rate", "connect rate for backend"),
+		m.newBackendMetricDesc("connect_max_rate", "connect max rate for backend"),
+	}
+
+	serverMetricDescArray = []*prometheus.Desc{
+		m.newServerMetricDesc("current_queue", "current queue for server"),
+		m.newServerMetricDesc("max_queue", "max queue for server"),
+		m.newServerMetricDesc("current_session", "current session for server"),
+		m.newServerMetricDesc("max_session", "max session for server"),
+		m.newServerMetricDesc("session_limit", "session limit for server"),
+		m.newServerMetricDesc("session_total", "session total for server"),
+		m.newServerMetricDesc("bytes_in", "bytes_in for server"),
+		m.newServerMetricDesc("bytes_out", "bytes_out for server"),
+		m.newServerMetricDesc("request_deny", "request_deny for server"),
+		m.newServerMetricDesc("response_deny", "response_deny for server"),
+		m.newServerMetricDesc("request_error", "request_error for server"),
+		m.newServerMetricDesc("connect_error", "connect_error for server"),
+		m.newServerMetricDesc("response_error", "response_error for server"),
+		m.newServerMetricDesc("connect_retry", "connect_retry for server"),
+		m.newServerMetricDesc("connect_redispatch", "connect_redispatch for server"),
+		m.newServerMetricDesc("status", "status for server"),
+		m.newServerMetricDesc("weight", "weight for server"),
+		m.newServerMetricDesc("active_server_num", "active server num for server"),
+		m.newServerMetricDesc("backup_server_num", "backup server num for server"),
+		m.newServerMetricDesc("check_fail_num", "check fail num for server"),
+		m.newServerMetricDesc("check_down_num", "check down num for server"),
+		m.newServerMetricDesc("down_time_second", "down time second for server"),
+		m.newServerMetricDesc("down_time_total", "down time total for server"),
+		m.newServerMetricDesc("queue_limit", "queue limit for server"),
+		m.newServerMetricDesc("current_session_rate", "current session_rate for server"),
+		m.newServerMetricDesc("max_session_rate", "max session rate for server"),
+		m.newServerMetricDesc("session_rate_limit", "session rate limit for server"),
+		m.newServerMetricDesc("check_status", "check status for server"),
+		m.newServerMetricDesc("request_rate", "request rate for server"),
+		m.newServerMetricDesc("request_max_rate", "request max rate for server"),
+		m.newServerMetricDesc("request_total", "request total for server"),
+		m.newServerMetricDesc("last_session_second", "last session second for server"),
+		m.newServerMetricDesc("connect_rate", "connect rate for server"),
+		m.newServerMetricDesc("connect_max_rate", "connect max rate for server"),
+	}
+}
+
 func getValue(s *Server, key string) float64 {
 	r := reflect.ValueOf(s)
 	f := reflect.Indirect(r).FieldByName(key)
@@ -193,42 +207,42 @@ func getValue(s *Server, key string) float64 {
 	return float64(f.Int())
 }
 
-func newStatusMetricDesc(metricName, metricDoc string) *prometheus.Desc {
+func (m *Manager) newStatusMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", metricName),
 		metricDoc, nil,
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
+			types.MetricLabelLoadbalance: m.LoadbalanceName,
 		},
 	)
 }
 
-func newFrontendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
+func (m *Manager) newFrontendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "frontend_"+metricName),
 		metricDoc, []string{types.MetricLabelFrontent},
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
+			types.MetricLabelLoadbalance: m.LoadbalanceName,
 		},
 	)
 }
 
-func newBackendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
+func (m *Manager) newBackendMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "backend_"+metricName),
 		metricDoc, []string{types.MetricLabelBackend},
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
+			types.MetricLabelLoadbalance: m.LoadbalanceName,
 		},
 	)
 }
 
-func newServerMetricDesc(metricName, metricDoc string) *prometheus.Desc {
+func (m *Manager) newServerMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "server_"+metricName),
 		metricDoc, []string{types.MetricLabelServer, types.MetricLabelBackend},
 		prometheus.Labels{
-			types.MetricLabelLoadbalance: os.Getenv(types.EnvBcsLoadbalanceName),
+			types.MetricLabelLoadbalance: m.LoadbalanceName,
 		},
 	)
 }

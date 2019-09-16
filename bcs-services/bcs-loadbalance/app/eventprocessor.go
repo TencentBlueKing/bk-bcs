@@ -90,6 +90,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	if config.Proxy == option.ProxyHaproxy {
 		blog.Infof("use haproxy transmit")
 		processor.cfgManager = haproxy.NewManager(
+			config.Name,
 			config.BinPath,
 			config.CfgPath,
 			config.GeneratingDir,
