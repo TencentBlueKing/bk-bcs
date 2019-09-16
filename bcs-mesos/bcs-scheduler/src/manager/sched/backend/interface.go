@@ -263,6 +263,9 @@ type Backend interface {
 	//para2: namespace
 	ListCustomResourceDefinition(kind, ns string) ([]*commtypes.Crd, error)
 
+	// list all crds
+	ListAllCrds(kind string) ([]*commtypes.Crd, error)
+
 	//fetch custom resource definition
 	//para1: crd.kind
 	//para2: namespace

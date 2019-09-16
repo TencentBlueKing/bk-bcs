@@ -140,6 +140,7 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.deleteCustomResource))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}", nil, r.listCustomResource))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.getCustomResource))
+	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/{kind}", nil, r.listAllCustomResource))
 	/*-------------- custom resource -----------------*/
 
 	/*-------------- image -----------------*/
