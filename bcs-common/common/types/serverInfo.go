@@ -42,6 +42,7 @@ const (
 	BCS_MODULE_QCLOUDCLB       = "qcloudclb"
 	BCS_MODULE_MESOSSLAVE      = "mesosslave"
 	BCS_MODULE_IPSERVICE       = "ipservice"
+	BCS_MODULE_MESOSADAPTER    = "mesosadapter"
 
 	//bcstest 2018.11.07
 	BCS_MODULE_K8SAPISERVER   = "kubernetedriver"
@@ -77,6 +78,7 @@ var (
 		BCS_MODULE_QCLOUDCLB,
 		BCS_MODULE_MESOSSLAVE,
 		BCS_MODULE_IPSERVICE,
+		BCS_MODULE_MESOSADAPTER,
 	}
 )
 
@@ -91,14 +93,16 @@ const (
 
 //ServerInfo base server information
 type ServerInfo struct {
-	IP         string `json:"ip"`
-	Port       uint   `json:"port"`
-	MetricPort uint   `json:"metric_port"`
-	HostName   string `json:"hostname"`
-	Scheme     string `json:"scheme"` //http, https
-	Version    string `json:"version"`
-	Cluster    string `json:"cluster"`
-	Pid        int    `json:"pid"`
+	IP           string `json:"ip"`
+	Port         uint   `json:"port"`
+	MetricPort   uint   `json:"metric_port"`
+	HostName     string `json:"hostname"`
+	Scheme       string `json:"scheme"` //http, https
+	Version      string `json:"version"`
+	Cluster      string `json:"cluster"`
+	Pid          int    `json:"pid"`
+	ExternalIp   string `json:"external_ip"`
+	ExternalPort uint   `json:"external_port"`
 }
 
 //APIServInfo apiserver information
