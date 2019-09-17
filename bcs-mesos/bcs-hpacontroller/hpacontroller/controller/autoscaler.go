@@ -14,6 +14,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -123,9 +124,13 @@ func (auto *Autoscaler) tickerSyncAutoscalerQueue() {
 			}
 
 			// init scaler status
-			if scaler.Status == nil {
+			if scaler.Status == nil || len(scaler.Status.CurrentMetrics) == 0 {
+				blog.Infof("init autoscaler(%s:%s)", scaler.NameSpace, scaler.Name)
 				scaler.InitAutoscalerStatus()
 			}
+
+			by, _ := json.Marshal(scaler)
+			blog.Infof("store scaler %s", string(by))
 
 			//store scaler in zk
 			err = auto.store.StoreAutoscaler(scaler)

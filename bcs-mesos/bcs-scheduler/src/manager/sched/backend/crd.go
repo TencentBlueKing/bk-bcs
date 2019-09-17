@@ -16,6 +16,7 @@ package backend
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
 	"fmt"
+	"time"
 )
 
 //custom resource register
@@ -53,6 +54,7 @@ func (b *backend) CreateCustomResource(crd *commtypes.Crd) error {
 		}
 	}
 
+	crd.CreationTimestamp = time.Now()
 	if !kindOk {
 		return fmt.Errorf("custom resource kind %s is invalid", crd.Kind)
 	}
@@ -73,6 +75,7 @@ func (b *backend) UpdateCustomResource(crd *commtypes.Crd) error {
 		}
 	}
 
+	crd.CreationTimestamp = time.Now()
 	if !kindOk {
 		return fmt.Errorf("custom resource kind %s is invalid", crd.Kind)
 	}

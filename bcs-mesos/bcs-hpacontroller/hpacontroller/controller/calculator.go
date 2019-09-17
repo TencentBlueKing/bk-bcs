@@ -102,7 +102,7 @@ func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutosc
 
 		var tolerance float32
 		valueIsOk := true
-		switch target.Target.Kind {
+		switch target.Target.Type {
 		case commtypes.AutoscalerMetricAverageUtilization:
 			if current.Current.AverageUtilization == 0 {
 				blog.Errorf("scaler %s metrics %s current value is zero", scaler.GetUuid(), current.Name)
@@ -155,7 +155,7 @@ func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutosc
 				current.Name, current.Current.Value, target.Target.Value, tolerance)
 
 		default:
-			blog.Errorf("scaler %s metric %s type %s is invalid", scaler.GetUuid(), target.Name, target.Target.Kind)
+			blog.Errorf("scaler %s metric %s type %s is invalid", scaler.GetUuid(), target.Name, target.Target.Type)
 			valueIsOk = false
 		}
 
