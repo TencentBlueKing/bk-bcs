@@ -135,6 +135,29 @@ func (s *Scheduler) ListCustomResource(ns, kind string) (string, error) {
 	return string(reply), nil
 }
 
+func (s *Scheduler) ListAllCustomResource(kind string) (string, error) {
+
+	blog.Info("List all custom resource(%s)", kind)
+
+	if s.GetHost() == "" {
+		blog.Error("no scheduler is connected by driver")
+		err := bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
+		return err.Error(), err
+	}
+
+	url := fmt.Sprintf("%s/v1/crd/%s", s.GetHost(), kind)
+	blog.Info("post a request to url(%s), request:%s", url)
+
+	reply, err := s.client.GET(url, nil, nil)
+	if err != nil {
+		blog.Error("post request to url(%s) failed! err(%s)", url, err.Error())
+		err = bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+err.Error())
+		return err.Error(), err
+	}
+
+	return string(reply), nil
+}
+
 func (s *Scheduler) GetCustomResource(ns, kind, name string) (string, error) {
 
 	blog.Info("Get custom resource(%s %s %s)", ns, kind, name)
