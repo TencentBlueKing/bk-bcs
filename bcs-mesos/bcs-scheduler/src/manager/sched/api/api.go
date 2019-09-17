@@ -2001,6 +2001,28 @@ func (r *Router) listCustomResource(req *restful.Request, resp *restful.Response
 	return
 }
 
+func (r *Router) listAllCustomResource(req *restful.Request, resp *restful.Response) {
+	if r.backend.GetRole() != "master" {
+		blog.Warn("scheduler is not master, can not process cmd")
+		return
+	}
+	kind := req.PathParameter("kind")
+	blog.V(3).Infof("receive list all custom resource request kind %s", kind)
+
+	crds, err := r.backend.ListAllCrds(kind)
+	if err != nil {
+		blog.Error("request list custom resource(%s) err(%s)", kind, err.Error())
+		data := createResponeData(err, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+
+	data := createResponeData(nil, "success", crds)
+	resp.Write([]byte(data))
+	blog.V(3).Infof("request list custom resource(%s)end", kind)
+	return
+}
+
 func (r *Router) getCustomResource(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != "master" {
 		blog.Warn("scheduler is not master, can not process cmd")
