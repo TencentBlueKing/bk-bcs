@@ -22,12 +22,18 @@ import (
 )
 
 const (
-	ProxyHaproxy               = "haproxy"
+	// ProxyHaproxy proxy haproxy mode
+	ProxyHaproxy = "haproxy"
+	// ProxyHaproxyDefaultBinPath haproxy proxy default bin path
 	ProxyHaproxyDefaultBinPath = "/usr/sbin/haproxy"
+	// ProxyHaproxyDefaultCfgPath haproxy proxy default cfg path
 	ProxyHaproxyDefaultCfgPath = "/etc/haproxy/haproxy.cfg"
-	ProxyNginx                 = "nginx"
-	ProxyNginxDefaultBinPath   = "/usr/local/nginx/sbin/nginx"
-	ProxyNginxDefaultCfgPath   = "/usr/local/nginx/conf/nginx.conf"
+	// ProxyNginx proxy nginx mode
+	ProxyNginx = "nginx"
+	// ProxyNginxDefaultBinPath proxy nginx default bin path
+	ProxyNginxDefaultBinPath = "/usr/local/nginx/sbin/nginx"
+	// ProxyNginxDefaultCfgPath proxy nginx default cfg path
+	ProxyNginxDefaultCfgPath = "/usr/local/nginx/conf/nginx.conf"
 )
 
 //LBConfig hold load balance all config
