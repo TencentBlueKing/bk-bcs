@@ -22,13 +22,13 @@ import (
 )
 
 const (
-	// ProxyHaproxy proxy haproxy mode
+	// ProxyHaproxy proxy haproxy
 	ProxyHaproxy = "haproxy"
 	// ProxyHaproxyDefaultBinPath haproxy proxy default bin path
 	ProxyHaproxyDefaultBinPath = "/usr/sbin/haproxy"
 	// ProxyHaproxyDefaultCfgPath haproxy proxy default cfg path
 	ProxyHaproxyDefaultCfgPath = "/etc/haproxy/haproxy.cfg"
-	// ProxyNginx proxy nginx mode
+	// ProxyNginx proxy nginx
 	ProxyNginx = "nginx"
 	// ProxyNginxDefaultBinPath proxy nginx default bin path
 	ProxyNginxDefaultBinPath = "/usr/local/nginx/sbin/nginx"
