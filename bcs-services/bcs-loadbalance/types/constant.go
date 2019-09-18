@@ -14,7 +14,7 @@
 package types
 
 const (
-	// MetricLabelLoadbalance metric label name: loadbalance
+	// MetricLabelLoadbalance metric label name loadbalance
 	MetricLabelLoadbalance = "loadbalance"
 	// MetricLabelBackend metric label name for loadbalance backend
 	MetricLabelBackend = "backend"
