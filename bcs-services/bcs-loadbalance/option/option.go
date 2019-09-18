@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	// ProxyHaproxy proxy haproxy
+	// ProxyHaproxy proxy haproxy 
 	ProxyHaproxy = "haproxy"
 	// ProxyHaproxyDefaultBinPath haproxy proxy default bin path
 	ProxyHaproxyDefaultBinPath = "/usr/sbin/haproxy"
