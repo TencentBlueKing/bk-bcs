@@ -42,7 +42,7 @@ type Config struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	TempDir           string   `json:"temp_dir" value:"./templates" usage:"the collector application templates directory"` // the collector application template directory
+	TempDir           string   `json:"temp_dir" value:"./templates" usage:"the collector application templates directory"`                                                                                            // the collector application template directory
 	EndpointWatchPath []string `json:"endpoint_watch_path" value:"" usage:"this tells endpoint watch path on bcs_zookeeper like: \"storage:/endpoints/storage\" or \"check:/endpoints/check/*\", * means all nodes."` //no lint
 	ApiToken          string   `json:"api_token" value:"" usage:"api token for authority check"`
 
