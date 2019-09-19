@@ -79,6 +79,9 @@ type Event struct {
 	// when did this event occurred, which is
 	// a unix time in seconds.
 	AtTime int64 `json:"at_time"`
+
+	ResourceType string `json:"resource_type"`
+	ResourceName string `json:"resource_name"`
 }
 
 type EventExtension struct {

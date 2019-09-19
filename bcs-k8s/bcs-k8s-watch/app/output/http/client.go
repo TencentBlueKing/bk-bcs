@@ -20,11 +20,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 
 	//"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/ssl"
@@ -203,7 +203,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 		EndStruct(&storageResp)
 
 	if !storageResp.Result {
-		glog.Debug(fmt.Sprintf("method=DELETE url=%s, resp=%v", url, storageResp))
+		glog.Debug(fmt.Sprintf("method=DELETE, url is %s, all response: %v", url, storageResp))
 	}
 
 	if errs != nil {

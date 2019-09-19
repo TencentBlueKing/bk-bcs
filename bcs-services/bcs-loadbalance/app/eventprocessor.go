@@ -19,7 +19,7 @@ import (
 	loadbalance "bk-bcs/bcs-common/pkg/loadbalance/v2"
 	"bk-bcs/bcs-services/bcs-loadbalance/clear"
 	"bk-bcs/bcs-services/bcs-loadbalance/monitor"
-	"bk-bcs/bcs-services/bcs-loadbalance/monitor/prometheus"
+	bcsprometheus "bk-bcs/bcs-services/bcs-loadbalance/monitor/prometheus"
 	"bk-bcs/bcs-services/bcs-loadbalance/monitor/status"
 	"bk-bcs/bcs-services/bcs-loadbalance/option"
 	"bk-bcs/bcs-services/bcs-loadbalance/rdiscover"
@@ -31,6 +31,8 @@ import (
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // EventHandler is event interface when
@@ -61,10 +63,14 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 		config:       config,
 		clearManager: clear.NewClearManager(),
 	}
+
+	// register both service zookeeper and cluster zookeeper
+	// service zookeeper for health check, service register
+	// cluster zookeeper for prometheus metrics collector
 	zkSubRegPath := config.ClusterID + "/" + config.Group
 	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	if len(config.ClusterZk) != 0 {
-		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, config.Group, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	}
 
 	processor.reflector = NewReflector(config, processor)
@@ -80,7 +86,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	}
 
 	lbMonitor := monitor.NewMonitor(config.Address, int(config.MetricPort))
-	newMetricResource := prometheus.NewPromMetric()
+	newMetricResource := bcsprometheus.NewPromMetric()
 	if config.Proxy == option.ProxyHaproxy {
 		blog.Infof("use haproxy transmit")
 		processor.cfgManager = haproxy.NewManager(
@@ -88,7 +94,9 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 			config.CfgPath,
 			config.GeneratingDir,
 			config.CfgBackupDir,
-			config.TemplateDir)
+			config.TemplateDir,
+			config.StatusFetchPeriod,
+		)
 	} else {
 		blog.Infof("use nginx transmit")
 		processor.cfgManager = nginx.NewManager(
@@ -98,6 +106,10 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 			config.CfgBackupDir,
 			config.TemplateDir)
 	}
+
+	// add manager to promethes
+	prometheus.MustRegister(processor.cfgManager)
+
 	newStatusResource := status.NewStatus(processor.cfgManager.GetStatusFunction())
 	lbMonitor.RegisterResource(newMetricResource)
 	lbMonitor.RegisterResource(newStatusResource)

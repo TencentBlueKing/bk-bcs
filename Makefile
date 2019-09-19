@@ -35,8 +35,8 @@ COMMONPATH=./build/bcs.${VERSION}/common
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus process_executor process_daemon hpacontroller
-specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice hpacontroller
+default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus process_executor process_daemon hpacontroller bmsf-mesos-adapter
+specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice hpacontroller bmsf-mesos-adapter
 
 # tag for different edition compiling
 inner:
@@ -145,3 +145,6 @@ api_export:pre
 
 consoleproxy:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bcs-consoleproxy ./bcs-mesos/bcs-consoleproxy/main.go
+
+bmsf-mesos-adapter:pre
+	go build ${LDFLAG} -o ${BINARYPATH}/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go

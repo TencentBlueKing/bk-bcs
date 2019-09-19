@@ -104,7 +104,7 @@ func (driver *SQLiteDriver) ReleaseIPAddr(host string, containerID string, ipInf
 	}
 	num, _ := res.RowsAffected()
 	if num < 1 {
-		return fmt.Errorf("Release %s failed, IP status Not Affected.", containerID)
+		return fmt.Errorf("Release %s failed, IP status Not Affected", containerID)
 	}
 	return nil
 }
