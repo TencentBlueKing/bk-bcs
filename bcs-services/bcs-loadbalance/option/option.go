@@ -30,7 +30,7 @@ const (
 	ProxyHaproxyDefaultCfgPath = "/etc/haproxy/haproxy.cfg"
 	// ProxyNginx proxy nginx
 	ProxyNginx = "nginx"
-	// ProxyNginxDefaultBinPath proxy nginx default bin path
+	// ProxyNginxDefaultBinPath proxy nginx default bin path 
 	ProxyNginxDefaultBinPath = "/usr/local/nginx/sbin/nginx"
 	// ProxyNginxDefaultCfgPath proxy nginx default cfg path
 	ProxyNginxDefaultCfgPath = "/usr/local/nginx/conf/nginx.conf"
