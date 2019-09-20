@@ -115,7 +115,7 @@ func AppendItem2DbData(newData, srcData *DBDataItem) (dbData *DBDataItem) {
 		"bcs-clusterkeeper",
 		"zookeeper"
 	],
-	"type":"mesos", #用于查询时候的过滤条件
+	"type":"mesos",  #用于查询时候的过滤条件
 	"clusterinfo":[
 		{
 			"clusterid":"BCS-MESOSSELFTEST-10000",
