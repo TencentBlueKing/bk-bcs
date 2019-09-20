@@ -119,7 +119,7 @@ func AppendItem2DbData(newData, srcData *DBDataItem) (dbData *DBDataItem) {
 	"clusterinfo":[
 		{
 			"clusterid":"BCS-MESOSSELFTEST-10000",
-			"type":"kebenutes",   #用于创建时表明集群的类型
+			"type":"kebenutes",  #用于创建时表明集群的类型
 			"modules":[
 				{
 					"ips":[
