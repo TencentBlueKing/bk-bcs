@@ -72,7 +72,7 @@ func (bcs *BcsScheduler) endpointOnAdd(obj interface{}) {
 	}
 	log.Printf("[WARN] scheduler ADD domain %s in sotrage success.", domain)
 	StorageOperatorTotal.WithLabelValues(AddOperation).Inc()
-	StorageOperatorLatency.WithLabelValues(AddOperation).Observe(time.Since(start).Seconds() * 1000)
+	StorageOperatorLatency.WithLabelValues(AddOperation).Observe(time.Since(start).Seconds())
 }
 
 func (bcs *BcsScheduler) endpointOnUpdate(old, cur interface{}) {
@@ -107,7 +107,7 @@ func (bcs *BcsScheduler) endpointOnUpdate(old, cur interface{}) {
 	log.Printf("[WARN] scheduler update %s to storage success.", domain)
 
 	StorageOperatorTotal.WithLabelValues(UpdateOperation).Inc()
-	StorageOperatorLatency.WithLabelValues(UpdateOperation).Observe(time.Since(start).Seconds() * 1000)
+	StorageOperatorLatency.WithLabelValues(UpdateOperation).Observe(time.Since(start).Seconds())
 }
 
 func (bcs *BcsScheduler) endpointOnDelete(obj interface{}) {
@@ -131,7 +131,7 @@ func (bcs *BcsScheduler) endpointOnDelete(obj interface{}) {
 	}
 	log.Printf("[WARN] scheduler delete domain %s in sotrage success.", domain)
 	StorageOperatorTotal.WithLabelValues(DeleteOperation).Inc()
-	StorageOperatorLatency.WithLabelValues(DeleteOperation).Observe(time.Since(start).Seconds() * 1000)
+	StorageOperatorLatency.WithLabelValues(DeleteOperation).Observe(time.Since(start).Seconds())
 }
 
 //endpoint2Message create etcd message with BcsEndpoint

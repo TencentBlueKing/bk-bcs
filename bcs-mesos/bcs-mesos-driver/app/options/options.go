@@ -47,6 +47,8 @@ func NewMesosDriverOption(opOut *MesosDriverOptionsOut) *MesosDriverOption {
 			MetricPort:       opOut.MetricPort,
 			Address:          opOut.Address,
 			Port:             opOut.Port,
+			ExternalPort:     opOut.ExternalPort,
+			ExternalIp:       opOut.ExternalIp,
 			Cluster:          opOut.Cluster,
 			RegDiscvSvr:      opOut.BCSZk,
 			SchedDiscvSvr:    opOut.SchedDiscvSvr,

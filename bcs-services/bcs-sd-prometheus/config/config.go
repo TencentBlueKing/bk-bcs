@@ -17,6 +17,7 @@ package config
 type Config struct {
 	ClusterZk      string
 	CadvisorPort   int
+	NodeExportPort int
 	ClusterId      string
 	PromFilePrefix string
 	ServiceZk      string

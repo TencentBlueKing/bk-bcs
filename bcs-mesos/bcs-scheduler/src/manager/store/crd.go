@@ -14,6 +14,7 @@
 package store
 
 import (
+	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
@@ -89,6 +90,31 @@ func (store *managerStore) DeleteCustomResourceDefinition(kind, ns, name string)
 	key := fmt.Sprintf("%s/%s/%s/%s", getCrdRootPath(), kind, ns, name)
 
 	return store.Db.Delete(key)
+}
+
+func (store *managerStore) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
+	rootPath := fmt.Sprintf("/%s/crd/%s", bcsRootNode, kind)
+	runAses, err := store.Db.List(rootPath)
+	if err != nil {
+		return nil, err
+	}
+	if nil == runAses {
+		blog.Error("no runAs in (%s)", rootPath)
+		return nil, nil
+	}
+
+	var crds []*commtypes.Crd
+	for _, runAs := range runAses {
+		crd, err := store.ListCustomResourceDefinition(kind, runAs)
+		if err != nil {
+			blog.Errorf("list crd(%s:%s) error %s", kind, runAs, err.Error())
+			continue
+		}
+
+		crds = append(crds, crd...)
+	}
+
+	return crds, nil
 }
 
 func (store *managerStore) ListCustomResourceDefinition(kind, ns string) ([]*commtypes.Crd, error) {

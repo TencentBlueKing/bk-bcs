@@ -58,8 +58,10 @@ type ProcessConfig struct {
 type ServiceConfig struct {
 	Address         string `json:"address" short:"a" value:"127.0.0.1" usage:"IP address to listen on for this service" mapstructure:"address"`
 	Port            uint   `json:"port" short:"p" value:"8080" usage:"Port to listen on for this service" mapstructure:"port"`
-	InsecureAddress string `json:"insecure_address" value:"127.0.0.1" usage:"insecure IP address to listen on for this service" mapstructure:"insecure_address"`
-	InsecurePort    uint   `json:"insecure_port" value:"8443" usage:"insecure port to listen on for this service" mapstructure:"insecure_port"`
+	InsecureAddress string `json:"insecure_address" value:"" usage:"insecure IP address to listen on for this service" mapstructure:"insecure_address"`
+	InsecurePort    uint   `json:"insecure_port" value:"" usage:"insecure port to listen on for this service" mapstructure:"insecure_port"`
+	ExternalIp      string `json:"external_ip" value:"" usage:"external IP address to listen on for this service" mapstructure:"external_ip"`
+	ExternalPort    uint   `json:"external_port" value:"" usage:"external port to listen on for this service" mapstructure:"external_port"`
 }
 
 // LocalConfig Local info

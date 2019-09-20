@@ -67,7 +67,7 @@ func (prom *PrometheusController) Start() error {
 	//init node discovery
 	if prom.conf.EnableNode {
 		zkAddr := strings.Split(prom.conf.ClusterZk, ",")
-		nodeDiscovery, err := discovery.NewNodeDiscovery(zkAddr, prom.promFilePrefix, prom.conf.CadvisorPort)
+		nodeDiscovery, err := discovery.NewNodeDiscovery(zkAddr, prom.promFilePrefix, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
 		if err != nil {
 			blog.Errorf("NewNodeDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
 			return err

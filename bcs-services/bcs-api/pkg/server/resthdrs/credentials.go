@@ -16,6 +16,7 @@ package resthdrs
 import (
 	"fmt"
 
+	"bk-bcs/bcs-services/bcs-api/metric"
 	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/proxier"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
@@ -27,6 +28,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
 	"github.com/emicklei/go-restful"
+	"time"
 )
 
 type UpdateCredentialsForm struct {
@@ -84,15 +86,23 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 
 // GetCredentials lists the credentials for current user
 func GetCredentials(request *restful.Request, response *restful.Response) {
+
+	start := time.Now()
+
 	cluster := filters.GetCluster(request)
 
 	credentials := sqlstore.GetCredentials(cluster.ID)
 	if credentials == nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, no credentials found", common.BcsErrApiBadRequest)
 		WriteClientError(response, "CREDENTIALS_NOT_FOUND", message)
 		return
 	}
 	response.WriteEntity(credentials)
+
+	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
 // ClientCredentials 包含 kubectl 等客户端访问一个集群的必要信息
@@ -105,12 +115,17 @@ type ClientCredentials struct {
 
 // GetClientCredentials list the credentials, clients like kubectl can use this credentials to connect to cluster
 func GetClientCredentials(request *restful.Request, response *restful.Response) {
+
+	start := time.Now()
+
 	user := filters.GetUser(request)
 	cluster := filters.GetCluster(request)
 	userTokenType := filters.GetUserTokenType(request)
 
 	credentials := sqlstore.GetCredentials(cluster.ID)
 	if credentials == nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, no credentials found", common.BcsErrApiBadRequest)
 		WriteClientError(response, "CREDENTIALS_NOT_FOUND", message)
 		return
@@ -118,6 +133,8 @@ func GetClientCredentials(request *restful.Request, response *restful.Response) 
 	// Create a user token if not exists
 	userToken, err := sqlstore.GetOrCreateUserToken(user, uint(userTokenType), "")
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		blog.Warnf("Unable to create user token of type UserTokenTypeKubeConfig for user %s: %s", user.Name, err.Error())
 		message := fmt.Sprintf("errcode: %d, can not create user token: %s", common.BcsErrApiInternalDbError, err.Error())
 		WriteServerError(response, "CANNOT_CREATE_USER_RTOKEN", message)
@@ -130,21 +147,31 @@ func GetClientCredentials(request *restful.Request, response *restful.Response) 
 		CaCertData:        credentials.CaCertData,
 	}
 	response.WriteEntity(clientCredential)
+
+	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
 // SyncTkeClusterCredentials sync the tke cluster credentials from tke
 func SyncTkeClusterCredentials(request *restful.Request, response *restful.Response) {
+
+	start := time.Now()
+
 	cluster := filters.GetCluster(request)
 
 	externalClusterInfo := sqlstore.QueryBCSClusterInfo(&m.BCSClusterInfo{
 		ClusterId: cluster.ID,
 	})
 	if externalClusterInfo == nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, external cluster info not exists", common.BcsErrApiBadRequest)
 		WriteClientError(response, "EXTERNAL_CLUSTER_NOT_EXISTS", message)
 		return
 	}
 	if externalClusterInfo.ClusterType != utils.BcsTkeCluster {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := fmt.Sprintf("errcode: %d, cluster %s is not tke cluster", common.BcsErrApiBadRequest, cluster.ID)
 		WriteClientError(response, "NOT_TKE_CLUSTER", message)
 		return
@@ -154,9 +181,14 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 
 	err := tkeCluster.SyncClusterCredentials()
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 		message := err.Error()
 		WriteClientError(response, "CANNOT_SYNC_TKE_CREDENTIALS", message)
 		return
 	}
 	response.WriteEntity(types.EmptyResponse{})
+
+	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }

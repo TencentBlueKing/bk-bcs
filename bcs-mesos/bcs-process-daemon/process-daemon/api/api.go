@@ -22,11 +22,12 @@ import (
 	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 	"encoding/json"
 	"fmt"
-	"github.com/emicklei/go-restful"
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	restful "github.com/emicklei/go-restful"
 )
 
 type Router struct {
@@ -151,7 +152,7 @@ func (r *Router) stopProcess(req *restful.Request, resp *restful.Response) {
 
 	time, err := strconv.Atoi(timeout)
 	if err != nil {
-		blog.Errorf("Router process %s timeout %s is invalid", processId, timeout, err.Error())
+		blog.Errorf("Router process %s timeout %s, err: %s", processId, timeout, err.Error())
 		data := createResponeData(err, common.BcsErrDaemonStopProcessFailed,
 			err.Error(), nil)
 		resp.Write(data)

@@ -63,3 +63,53 @@ func (store *managerStore) DeleteConfigMap(ns, name string) error {
 
 	return nil
 }
+
+func (store *managerStore) ListConfigmaps(runAs string) ([]*commtypes.BcsConfigMap, error) {
+
+	path := getConfigMapRootPath() + runAs //defaultRunAs
+
+	IDs, err := store.Db.List(path)
+	if err != nil {
+		blog.Error("fail to list configmap ids, err:%s", err.Error())
+		return nil, err
+	}
+
+	if nil == IDs {
+		blog.Error("no configmap in (%s)", runAs)
+		return nil, nil
+	}
+
+	var objs []*commtypes.BcsConfigMap
+
+	for _, ID := range IDs {
+		obj, err := store.FetchConfigMap(runAs, ID)
+		if err != nil {
+			blog.Error("fail to fetch configmap by ID(%s)", ID)
+			continue
+		}
+
+		objs = append(objs, obj)
+	}
+
+	return objs, nil
+}
+
+func (store *managerStore) ListAllConfigmaps() ([]*commtypes.BcsConfigMap, error) {
+	nss, err := store.ListObjectNamespaces(configMapNode)
+	if err != nil {
+		return nil, err
+	}
+
+	var objs []*commtypes.BcsConfigMap
+	for _, ns := range nss {
+		obj, err := store.ListConfigmaps(ns)
+		if err != nil {
+			blog.Error("fail to fetch configmap by ns(%s)", ns)
+			continue
+		}
+
+		objs = append(objs, obj...)
+	}
+
+	return objs, nil
+}
