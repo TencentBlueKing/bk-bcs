@@ -88,6 +88,10 @@ func (b *backend) ListCustomResourceDefinition(kind, ns string) ([]*commtypes.Cr
 	return b.store.ListCustomResourceDefinition(kind, ns)
 }
 
+func (b *backend) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
+	return b.store.ListAllCrds(kind)
+}
+
 func (b *backend) FetchCustomResourceDefinition(kind, ns, name string) (*commtypes.Crd, error) {
 	return b.store.FetchCustomResourceDefinition(kind, ns, name)
 }

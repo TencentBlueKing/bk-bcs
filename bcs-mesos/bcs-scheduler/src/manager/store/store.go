@@ -13,18 +13,147 @@
 
 package store
 
-import ()
+import (
+	"context"
+	"sync"
+	"time"
+
+	"bk-bcs/bcs-common/common/blog"
+)
 
 // Store Manager
 type managerStore struct {
 	Db Dbdrvier
+
+	wg     sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // Create a store manager by a db driver
 func NewManagerStore(dbDriver Dbdrvier) Store {
-	return &managerStore{
+	s := &managerStore{
 		Db: dbDriver,
 	}
+
+	return s
+}
+
+func (s *managerStore) StopStoreMetrics() {
+	if s.cancel == nil {
+		return
+	}
+	s.cancel()
+
+	time.Sleep(time.Second)
+	s.wg.Wait()
+}
+
+func (s *managerStore) StartStoreObjectMetrics() {
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+
+	for {
+		time.Sleep(time.Minute)
+
+		select {
+		case <-s.ctx.Done():
+			blog.Infof("stop scheduler store metrics")
+			return
+
+		default:
+			s.wg.Add(1)
+			ObjectResourceInfo.Reset()
+		}
+
+		// handle service metrics
+		services, err := s.ListAllServices()
+		if err != nil {
+			blog.Errorf("list all services error %s", err.Error())
+		}
+		for _, service := range services {
+			reportObjectResourceInfoMetrics(ObjectResourceService, service.NameSpace, service.Name, "")
+		}
+
+		// handle application metrics
+		apps, err := s.ListAllApplications()
+		if err != nil {
+			blog.Errorf("list all applications error %s", err.Error())
+		}
+		for _, app := range apps {
+			reportObjectResourceInfoMetrics(ObjectResourceApplication, app.RunAs, app.Name, app.Status)
+
+			// handle taskgroup metrics
+			taskgroups, err := s.ListTaskGroups(app.RunAs, app.Name)
+			if err != nil {
+				blog.Errorf("list all services error %s", err.Error())
+			}
+			for _, taskgroup := range taskgroups {
+				reportTaskgroupInfoMetrics(taskgroup.RunAs, taskgroup.AppID, taskgroup.ID, taskgroup.Status)
+			}
+		}
+
+		// handle deployment metrics
+		deployments, err := s.ListAllDeployments()
+		if err != nil {
+			blog.Errorf("list all deployment error %s", err.Error())
+		}
+		for _, deployment := range deployments {
+			reportObjectResourceInfoMetrics(ObjectResourceDeployment, deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name, "")
+		}
+
+		// handle configmap metrics
+		configmaps, err := s.ListAllConfigmaps()
+		if err != nil {
+			blog.Errorf("list all configmap error %s", err.Error())
+		}
+		for _, configmap := range configmaps {
+			reportObjectResourceInfoMetrics(ObjectResourceConfigmap, configmap.NameSpace, configmap.Name, "")
+		}
+
+		// handle secrets metrics
+		secrets, err := s.ListAllConfigmaps()
+		if err != nil {
+			blog.Errorf("list all secret error %s", err.Error())
+		}
+		for _, secret := range secrets {
+			reportObjectResourceInfoMetrics(ObjectResourceSecret, secret.NameSpace, secret.Name, "")
+		}
+
+		// handle agents metrics
+		agents, err := s.ListAllAgents()
+		if err != nil {
+			blog.Errorf("list all agent error %s", err.Error())
+		}
+		for _, agent := range agents {
+			info := agent.GetAgentInfo()
+			if info.IP == "" {
+				blog.Errorf("agent %s don't have InnerIP attribute", agent.Key)
+				continue
+			}
+
+			reportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
+				info.MemTotal, info.MemTotal-info.MemUsed)
+		}
+
+		s.wg.Done()
+	}
+}
+
+func (store *managerStore) ListObjectNamespaces(objectNode string) ([]string, error) {
+
+	rootPath := "/" + bcsRootNode + "/" + objectNode
+
+	runAses, err := store.Db.List(rootPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if nil == runAses {
+		blog.Error("no runAs in (%s)", rootPath)
+		return nil, nil
+	}
+
+	return runAses, nil
 }
 
 const (

@@ -1855,9 +1855,13 @@
   revision = "743ec37842bffe49dd4221d9026f30fb1d5adbc4"
 
 [[projects]]
-  digest = "1:4e808df2bd547926461775659337e640792bf0ce45a46213e5151a7d1a2551dd"
+  digest = "1:7fa77436497b6b562b7df324627861bfbc1fdd548d57a4ae96a44abbeb58f59a"
   name = "k8s.io/kubernetes"
-  packages = ["staging/src/k8s.io/apimachinery/pkg/util/json"]
+  packages = [
+    "pkg/apis/core",
+    "pkg/scheduler/api",
+    "staging/src/k8s.io/apimachinery/pkg/util/json",
+  ]
   pruneopts = "UT"
   revision = "2d3c76f9091b6bec110a5e63777c332469e0cba2"
   version = "v1.15.3"
@@ -2052,6 +2056,7 @@
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/transport",
+    "k8s.io/kubernetes/pkg/scheduler/api",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json",

@@ -161,7 +161,15 @@ func caculateBackendWeight(portInfo loadbalance.ExportPort, svr *loadbalance.Exp
 				backendCounts[backend.Label[0]] = value
 			}
 		} else {
-			blog.Warnf("Backend %s/%d in Service %s/%s with protocol %s/%d lost label info", backend.TargetIP, backend.TargetPort, svr.Namespace, svr.ServiceName, portInfo.Protocol, portInfo.ServicePort)
+			blog.Warnf(
+				"Backend %s/%d in Service %s/%s with protocol %s/%d lost label info",
+				backend.TargetIP,
+				backend.TargetPort,
+				svr.Namespace,
+				svr.ServiceName,
+				portInfo.Protocol,
+				portInfo.ServicePort,
+			)
 		}
 	}
 	//all backend weights

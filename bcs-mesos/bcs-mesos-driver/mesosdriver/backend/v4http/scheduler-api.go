@@ -172,6 +172,7 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("DELETE", "/crd/namespaces/{ns}/{kind}/{name}", nil, s.deleteCustomResourceHander),
 		httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}/{name}", nil, s.getCustomResourceHander),
 		httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}", nil, s.listCustomResourceHander),
+		httpserver.NewAction("GET", "/crd/{kind}", nil, s.listAllCustomResourceHander),
 		/*-------------- custom resource -----------------*/
 
 		/*-------------- image -----------------*/
@@ -1424,6 +1425,19 @@ func (s *Scheduler) listCustomResourceHander(req *restful.Request, resp *restful
 	kind := req.PathParameter("kind")
 
 	reply, err := s.ListCustomResource(ns, kind)
+	if err != nil {
+		blog.Error("fail to list custom resource. reply(%s), err(%s)", reply, err.Error())
+		resp.Write([]byte(err.Error()))
+		return
+	}
+
+	resp.Write([]byte(reply))
+}
+
+func (s *Scheduler) listAllCustomResourceHander(req *restful.Request, resp *restful.Response) {
+	kind := req.PathParameter("kind")
+
+	reply, err := s.ListAllCustomResource(kind)
 	if err != nil {
 		blog.Error("fail to list custom resource. reply(%s), err(%s)", reply, err.Error())
 		resp.Write([]byte(err.Error()))

@@ -14,22 +14,30 @@
 package executor
 
 import (
-	conn "bk-bcs/bcs-mesos/bcs-container-executor/connection"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	exec "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/common/blog"
 	"encoding/base64"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/expfmt"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	conn "bk-bcs/bcs-mesos/bcs-container-executor/connection"
+	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	exec "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/upid"
 	"github.com/pborman/uuid"
 	"golang.org/x/net/context"
 	//"github.com/gogo/protobuf/test/fuzztests"
+)
+
+const (
+	DefaultMetricsTextFile = "/data/bcs/export_data"
 )
 
 //DriverEnv The following environment variables are set by the agent that can be
@@ -194,6 +202,7 @@ func (driver *BcsExecutorDriver) Start() (mesos.Status, error) {
 		//handlerLock.Lock()
 		//defer handlerLock.Unlock()
 		driver.subscribed(from, subs)
+		executorSlaveConnection.Set(1)
 	})
 	//launch
 	driver.connection.Install(exec.Event_LAUNCH, func(from *upid.UPID, event *exec.Event) {
@@ -253,6 +262,7 @@ func (driver *BcsExecutorDriver) Start() (mesos.Status, error) {
 		driver.stateReConnected = true
 		//create goroutine reconnect
 		go driver.reconnectLoop()
+		executorSlaveConnection.Set(0)
 		//subscribe success, setting state in reConnected
 
 	})
@@ -277,7 +287,46 @@ func (driver *BcsExecutorDriver) Start() (mesos.Status, error) {
 	//sending subscribe message success, wait launch or launchGroup
 	driver.status = mesos.Status_DRIVER_RUNNING
 	fmt.Fprintf(os.Stdout, "BcsExecutorDriver starting with ExecutorID: %s\n", driver.executorID.GetValue())
+	//handle prometheus metrics to text file
+	go driver.metricsToText()
+
 	return driver.status, nil
+}
+
+func (driver *BcsExecutorDriver) metricsToText() {
+	err := os.MkdirAll(DefaultMetricsTextFile, 0755)
+	if err != nil {
+		blog.Errorf("mkdir dir %s error %s", DefaultMetricsTextFile, err.Error())
+	}
+
+	for {
+		time.Sleep(time.Minute)
+
+		mfs, err := prometheus.DefaultGatherer.Gather()
+		if err != nil {
+			blog.Errorf("prometheus gather %s", err.Error())
+			continue
+		}
+
+		fPath := fmt.Sprintf("%s/%s.prom", DefaultMetricsTextFile, driver.executorID.GetValue())
+		f, err := os.OpenFile(fPath, os.O_CREATE|os.O_RDWR, 0664)
+		if err != nil {
+			blog.Errorf("openfile %s error %s", fPath, err.Error())
+			continue
+		}
+		f.Truncate(0)
+
+		for _, mf := range mfs {
+			_, err = expfmt.MetricFamilyToText(f, mf)
+			if err != nil {
+				blog.Errorf("file %s MetricFamilyToText error %s", fPath, err.Error())
+			}
+		}
+
+		//close file
+		f.Close()
+	}
+
 }
 
 //Stop the executor driver.
@@ -408,13 +457,15 @@ func (driver *BcsExecutorDriver) SendStatusUpdate(taskStatus *mesos.TaskStatus) 
 
 	/*driver.lock.Lock()
 	driver.updates = callUpdate
-
 	driver.lock.Unlock()*/
 	//send message to slave
 	if err := driver.connection.Send(call, false); err != nil {
 		logs.Errorf("ExecutorDriver send Call_Update failed: %s\n", err.Error())
 		return driver.status, err
 	}
+	//executorID = taskgroupid
+	taskgroupReportTotal.WithLabelValues(driver.executorID.GetValue()).Inc()
+
 	return driver.status, nil
 }
 
@@ -600,6 +651,8 @@ func (driver *BcsExecutorDriver) acknowledgementMessage(from *upid.UPID, pbMsg *
 	driver.lock.Unlock()
 
 	fmt.Fprintf(os.Stdout, "ExecutorDriver get acknowledgement from slave, taskId %s, uuid %s\n", taskID.GetValue(), updateUuID.String())
+	taskgroupAckTotal.WithLabelValues(driver.executorID.GetValue()).Inc()
+
 	//clean local Unacknowledged info with taskId & uuid
 	//todo(developerJim): how to handle if missing TaskInfo & uuid in local map
 	/*driver.lock.Lock()
