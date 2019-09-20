@@ -26,13 +26,13 @@ const (
 	ProxyHaproxy = "haproxy"
 	// ProxyHaproxyDefaultBinPath haproxy proxy default bin path
 	ProxyHaproxyDefaultBinPath = "/usr/sbin/haproxy"
-	// ProxyHaproxyDefaultCfgPath haproxy proxy default cfg path
+	// ProxyHaproxyDefaultCfgPath haproxy proxy default config path
 	ProxyHaproxyDefaultCfgPath = "/etc/haproxy/haproxy.cfg"
 	// ProxyNginx proxy nginx
 	ProxyNginx = "nginx"
 	// ProxyNginxDefaultBinPath proxy nginx default bin path
 	ProxyNginxDefaultBinPath = "/usr/local/nginx/sbin/nginx"
-	// ProxyNginxDefaultCfgPath proxy nginx default cfg path
+	// ProxyNginxDefaultCfgPath proxy nginx default config path
 	ProxyNginxDefaultCfgPath = "/usr/local/nginx/conf/nginx.conf"
 )
 
