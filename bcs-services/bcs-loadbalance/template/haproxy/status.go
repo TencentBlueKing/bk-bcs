@@ -21,9 +21,28 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/emicklei/go-restful"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	// LoadbalanceHaproxyStatsFetchStateMetric loadbalance metric for zookeeper connection
+	LoadbalanceHaproxyStatsFetchStateMetric = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: "loadbalance",
+			Subsystem: "haproxy",
+			Name:      "fetchstats_state",
+			Help:      "the state for haproxy stats fetching state, 0 for abnormal, 1 for normal",
+		},
+	)
+)
+
+func init() {
+	prometheus.Register(LoadbalanceHaproxyStatsFetchStateMetric)
+	LoadbalanceHaproxyStatsFetchStateMetric.Set(1)
+}
 
 // https://cbonte.github.io/haproxy-dconv/1.7/management.html#9.1
 const (
@@ -356,42 +375,67 @@ func sendCommandToHaproxy(sockAddr, command string) (string, error) {
 			return "", fmt.Errorf("write to buffer failed, err %s", err.Error())
 		}
 		if bytesWriteToBuffer != bytesRead {
-			blog.Errorf("write bytes %d to buffer, but %d bytes succeed")
+			blog.Errorf("write bytes %d to buffer, but %d bytes succeed", bytesWriteToBuffer, bytesRead)
 			return "", fmt.Errorf("write bytes %d to buffer, but %d bytes succeed", bytesWriteToBuffer, bytesRead)
 		}
 	}
 	return bytesBuffer.String(), nil
 }
 
-func (m *Manager) status(req *restful.Request, resp *restful.Response) {
+func (m *Manager) fetch() error {
 	sockAddr := "/var/run/haproxy.sock"
 	showInfoCommand := "show info\nquit\n"
 	showStatCommand := "show stat\nquit\n"
 	infoStr, err := sendCommandToHaproxy(sockAddr, showInfoCommand)
 	if err != nil {
 		blog.Errorf("send command %s to haproxy failed, err %s", showInfoCommand, err.Error())
-		resp.WriteEntity(&StatusResponse{Code: 1, Message: err.Error()})
-		return
+		return err
 	}
 	status, err := m.convertInfo(infoStr)
 	if err != nil {
 		blog.Errorf("convert str %s to haproxy info failed, err %s", infoStr, err.Error())
-		resp.WriteEntity(&StatusResponse{Code: 1, Message: err.Error()})
-		return
+		return err
 	}
 	str, err := sendCommandToHaproxy(sockAddr, showStatCommand)
 	if err != nil {
 		blog.Errorf("send command %s to haproxy failed, err %s", showStatCommand, err.Error())
-		resp.WriteEntity(&StatusResponse{Code: 1, Message: err.Error()})
-		return
+		return err
 	}
 	svcs, err := m.convertStat(str)
 	if err != nil {
 		blog.Errorf("convert str %s to haproxy service array failed, err %s", str, err.Error())
-		resp.WriteEntity(&StatusResponse{Code: 1, Message: err.Error()})
+		return err
 	}
 	status.Services = svcs
+	m.statsMutex.Lock()
+	m.stats = status
+	m.statsMutex.Unlock()
+	return nil
+}
+
+func (m *Manager) status(req *restful.Request, resp *restful.Response) {
+	var status *Status
+	m.statsMutex.Lock()
+	status = m.stats
+	m.statsMutex.Unlock()
 	resp.WriteEntity(&StatusResponse{Code: 0, Message: "success", Data: status})
+}
+
+func (m *Manager) runStatusFetch() {
+	tick := time.NewTicker(time.Second * time.Duration(m.statusFetchPeriod))
+	for {
+		select {
+		case <-tick.C:
+			err := m.fetch()
+			if err != nil {
+				LoadbalanceHaproxyStatsFetchStateMetric.Set(0)
+			} else {
+				LoadbalanceHaproxyStatsFetchStateMetric.Set(1)
+			}
+		case <-m.stopCh:
+			return
+		}
+	}
 }
 
 // GetStatusFunction get status function

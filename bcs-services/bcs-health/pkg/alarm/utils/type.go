@@ -47,6 +47,8 @@ type AlarmOptions struct {
 	Namespace          string    `json:"namespace"`
 	VoiceReadMsg       string    `json:"voiceReadMsg"`
 	SmsMsg             string    `json:"smsMsg"`
+	ResourceType       string    `json:"resource_type"`
+	ResourceName       string    `json:"resource_name"`
 
 	// new added field.
 	// the user defined detailed info about this event alarm

@@ -42,6 +42,7 @@ const (
 	BCS_MODULE_QCLOUDCLB       = "qcloudclb"
 	BCS_MODULE_MESOSSLAVE      = "mesosslave"
 	BCS_MODULE_IPSERVICE       = "ipservice"
+	BCS_MODULE_MESOSADAPTER    = "mesosadapter"
 
 	//bcstest 2018.11.07
 	BCS_MODULE_K8SAPISERVER   = "kubernetedriver"
@@ -77,6 +78,7 @@ var (
 		BCS_MODULE_QCLOUDCLB,
 		BCS_MODULE_MESOSSLAVE,
 		BCS_MODULE_IPSERVICE,
+		BCS_MODULE_MESOSADAPTER,
 	}
 )
 

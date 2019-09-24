@@ -83,6 +83,8 @@ func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 		//AlarmID:            string(event.InvolvedObject.UID),
 		AlarmID:            syncData.OwnerUID,
 		ConvergenceSeconds: &seconds,
+		ResourceType:       event.InvolvedObject.Kind,
+		ResourceName:       event.InvolvedObject.Name,
 	}
 	return healthInfo
 
