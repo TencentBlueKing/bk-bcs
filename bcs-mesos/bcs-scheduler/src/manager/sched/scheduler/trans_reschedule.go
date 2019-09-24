@@ -111,6 +111,16 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			blog.Infof("transaction %s reschedule(%s) finish", transaction.ID, taskGroupID)
 			break
 		}
+
+		//don't have fit enough resources
+		rescheduleOpdata := transaction.OpData.(*TransRescheduleOpData)
+		taskGroupID := rescheduleOpdata.TaskGroupID
+		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
+		if taskGroup != nil {
+			taskGroup.Message = "don't have fit resources to reschedule this taskgroup"
+			s.store.SaveTaskGroup(taskGroup)
+		}
+
 		//check timeout
 		if (transaction.CreateTime + transaction.LifePeriod) < time.Now().Unix() {
 			blog.Warn("transaction %s reschedule(%s) timeout", transaction.ID, taskGroupID)
