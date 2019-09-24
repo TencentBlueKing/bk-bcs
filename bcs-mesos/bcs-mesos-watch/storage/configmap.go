@@ -58,7 +58,7 @@ func (handler *ConfigMapHandler) Add(data interface{}) error {
 	dataType := data.(*commtypes.BcsConfigMap)
 	blog.Info("configmap add event, configmap: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
 	started := time.Now()
-	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("configmap add node %s, err %+v", dataNode, err)

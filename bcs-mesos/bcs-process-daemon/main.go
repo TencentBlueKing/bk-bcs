@@ -25,6 +25,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/manager"
 )
 
+//Option daemon process Option
 type Option struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -39,6 +40,7 @@ type Option struct {
 	WorkspaceDir string `json:"workspace-dir" value:"" usage:"the process packages dir"`
 }
 
+// Init process init
 func Init() {
 	op := &Option{}
 	conf.Parse(op)
@@ -52,7 +54,7 @@ func Init() {
 
 	_, err := os.Stat(op.DataDir)
 	if err != nil {
-		blog.Errorf("datadir %s don't exist")
+		blog.Errorf("datadir %s don't exist", err.Error())
 		return
 	}
 
@@ -86,8 +88,7 @@ func Init() {
 	httpServ := httpserver.NewHttpServer(uint(0), "", "")
 	httpServ.RegisterWebServer("/bcsapi/v1/processdaemon", nil, route.GetActions())
 
-	err = httpServ.Serve(l)
-	return
+	httpServ.Serve(l)
 }
 
 func main() {
