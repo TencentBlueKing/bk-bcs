@@ -29,8 +29,9 @@ import (
 )
 
 //NewManager create haproxy config file manager
-func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string, statusFetchPeriod int) conf.Manager {
-	return &Manager{
+func NewManager(lbName, binPath, cfgPath, generatePath, backupPath, templatePath string, statusFetchPeriod int) conf.Manager {
+	manager := &Manager{
+		LoadbalanceName:   lbName,
 		haproxyBin:        binPath,
 		cfgFile:           cfgPath,
 		tmpDir:            generatePath,
@@ -44,11 +45,15 @@ func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string,
 			CurrentRole: metric.SlaveRole,
 		},
 	}
+	manager.initMetric()
+	return manager
 }
 
 //Manager implements TemplateManager interface, control
 //haproxy config file generating, validation, backup and reloading
 type Manager struct {
+	Cluster           string            // cluster id
+	LoadbalanceName   string            // loadbalance instance id
 	haproxyBin        string            //absolute path for haproxy executable binary
 	cfgFile           string            //absolute path for haproxy cfg file
 	backupDir         string            //absolute path for cfg file backup storage

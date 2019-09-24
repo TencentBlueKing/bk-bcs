@@ -15,17 +15,25 @@ package option
 
 import (
 	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-services/bcs-loadbalance/types"
 	"fmt"
+	"os"
 	"strings"
 )
 
 const (
-	ProxyHaproxy               = "haproxy"
+	// ProxyHaproxy proxy haproxy
+	ProxyHaproxy = "haproxy"
+	// ProxyHaproxyDefaultBinPath haproxy proxy default bin path
 	ProxyHaproxyDefaultBinPath = "/usr/sbin/haproxy"
+	// ProxyHaproxyDefaultCfgPath haproxy proxy default config path
 	ProxyHaproxyDefaultCfgPath = "/etc/haproxy/haproxy.cfg"
-	ProxyNginx                 = "nginx"
-	ProxyNginxDefaultBinPath   = "/usr/local/nginx/sbin/nginx"
-	ProxyNginxDefaultCfgPath   = "/usr/local/nginx/conf/nginx.conf"
+	// ProxyNginx proxy nginx
+	ProxyNginx = "nginx"
+	// ProxyNginxDefaultBinPath proxy nginx default bin path
+	ProxyNginxDefaultBinPath = "/usr/local/nginx/sbin/nginx"
+	// ProxyNginxDefaultCfgPath proxy nginx default config path
+	ProxyNginxDefaultCfgPath = "/usr/local/nginx/conf/nginx.conf"
 )
 
 //LBConfig hold load balance all config
@@ -34,13 +42,15 @@ type LBConfig struct {
 	conf.LogConfig
 	conf.FileConfig
 	conf.ServiceConfig
-	MetricPort        int    `json:"metric_port" value:"59090" usage:"port for query metric info, version info and status info" mapstructure:"metric_port"`
-	Zookeeper         string `json:"zk" value:"127.0.0.1:2381" usage:"zookeeper links for data source" mapstructure:"zk"`           //zk links
-	WatchPath         string `json:"zkpath" value:"" usage:"service info path for watch, [required]" mapstructure:"zkpath"`         //zk watch path
+	MetricPort int    `json:"metric_port" value:"59090" usage:"port for query metric info, version info and status info" mapstructure:"metric_port"`
+	Zookeeper  string `json:"zk" value:"127.0.0.1:2381" usage:"zookeeper links for data source" mapstructure:"zk"`   //zk links
+	WatchPath  string `json:"zkpath" value:"" usage:"service info path for watch, [required]" mapstructure:"zkpath"` //zk watch path
+	// Name will be used in metric
+	Name              string `json:"name" value:"" usage:"loadbalance instance name" mapstructure:"name"`
 	Group             string `json:"group" value:"external" usage:"bcs loadbalance label for service join in" mapstructure:"group"` //group to serve
 	Proxy             string `json:"proxy" value:"haproxy" usage:"proxy model, nginx or haproxy" mapstructure:"proxy"`              //proxy implenmentation, nginx or haproxy
 	BcsZkAddr         string `json:"bcszkaddr" value:"127.0.0.1:2181" usage:"bcs zookeeper address" mapstructure:"bcszkaddr"`       //bcs zookeeper address
-	ClusterZk         string `json:"clusterzk" value:"127.0.0.1:2183" usage:"cluster zookeeper address" mapstructure:"clusterzk"`
+	ClusterZk         string `json:"clusterzk" value:"" usage:"cluster zookeeper address" mapstructure:"clusterzk"`
 	ClusterID         string `json:"clusterid" value:"" usage:"loadbalance server mesos cluster id" mapstructure:"clusterid"`                     //cluster id to register path
 	CfgBackupDir      string `json:"cfg_backup_dir" value:"" usage:"backup dir for loadbalance config file" mapstructure:"cfg_backup_dir"`        //haproxy cfg backup directory
 	GeneratingDir     string `json:"generate_dir" value:"" usage:"dir for generated loadbalance config file" mapstructure:"generate_dir"`         //haproxy cfg generation directory
@@ -98,5 +108,22 @@ func (c *LBConfig) Parse() error {
 	c.Zookeeper = strings.Replace(c.Zookeeper, ";", ",", -1)
 	c.BcsZkAddr = strings.Replace(c.BcsZkAddr, ";", ",", -1)
 	c.ClusterZk = strings.Replace(c.ClusterZk, ";", ",", -1)
+
+	// if name length is zero, read name from env "BCS_POD_ID"
+	if len(c.Name) == 0 {
+		c.Name = os.Getenv("BCS_POD_ID")
+		if len(c.Name) == 0 {
+			return fmt.Errorf("either option \"name\" or env BCS_POD_ID is needed")
+		}
+		pos := strings.LastIndex(c.Name, ".")
+		if pos < 1 {
+			return fmt.Errorf("invalid env BCS_POD_ID %s", c.Name)
+		}
+		c.Name = c.Name[:pos]
+	}
+	err := os.Setenv(types.EnvBcsLoadbalanceName, c.Name)
+	if err != nil {
+		return err
+	}
 	return nil
 }
