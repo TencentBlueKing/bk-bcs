@@ -14,6 +14,7 @@
 package lib
 
 import (
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -42,6 +43,13 @@ func init() {
 
 //reportAPIMetrics report all api action metrics
 func reportAPIMetrics(handler, method, status string, started time.Time) {
-	requestsTotal.WithLabelValues(handler, method, status).Inc()
-	requestLatency.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
+	pathList := strings.Split(handler, "/")
+	shortPath := handler
+	//a large amount of URL due to due to multiple cluster , namespace , resource
+	//reduce URL numbers for metrics collection
+	if len(pathList) > 4 {
+		shortPath = strings.Join(pathList[0:5], "/")
+	}
+	requestsTotal.WithLabelValues(shortPath, method, status).Inc()
+	requestLatency.WithLabelValues(shortPath, method, status).Observe(time.Since(started).Seconds())
 }
