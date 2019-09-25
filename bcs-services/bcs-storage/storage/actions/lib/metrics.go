@@ -45,6 +45,8 @@ func init() {
 func reportAPIMetrics(handler, method, status string, started time.Time) {
 	pathList := strings.Split(handler, "/")
 	shortPath := handler
+	//a large amount of URL due to due to multiple cluster , namespace , resource
+	//reduce URL numbers for metrics collection
 	if len(pathList) > 4 {
 		shortPath = strings.Join(pathList[0:5], "/")
 	}
