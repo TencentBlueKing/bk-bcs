@@ -28,4 +28,3 @@ vendor/github.com/prometheus/client_model/
 vendor/github.com/prometheus/common/
 vendor/github.com/spf13/afero/
 bcs-k8s/bcs-external-dns/
-bcs-mesos/bcs-hpacontroller/

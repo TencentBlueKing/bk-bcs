@@ -30,7 +30,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/upid"
+	"github.com/mesos/mesos-go/api/v0/upid"
 	"github.com/pborman/uuid"
 	"golang.org/x/net/context"
 	//"github.com/gogo/protobuf/test/fuzztests"

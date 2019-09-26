@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/upid"
+	"github.com/mesos/mesos-go/api/v0/upid"
 	"net/http"
 	"os"
 	"strconv"
