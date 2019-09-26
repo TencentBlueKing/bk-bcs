@@ -23,7 +23,8 @@ type TkeLbSubnet struct {
 
 type TkeCidr struct {
 	ID        uint   `gorm:"primary_key"`
-	Cidr      string `gorm:"unique;not null"`
+	Vpc       string `gorm:"not null"`
+	Cidr      string `gorm:"not null"`
 	IpNumber  uint   `gorm:"not null"`
 	Status    string `gorm:"not null"`
 	Cluster   *string
