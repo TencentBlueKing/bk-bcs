@@ -78,10 +78,10 @@ func TestCleanEniRtTable(t *testing.T) {
 `,
 		},
 	}
-	for _, test := range tests {
+	for index, test := range tests {
 		tmpAfter := cleanEniRtTable(test.before)
 		if tmpAfter != test.after {
-			t.Errorf("failed, expect %s, but get %s", test.after, tmpAfter)
+			t.Errorf("[test %d]: failed, expect %s, but get %s", index, test.after, tmpAfter)
 		}
 	}
 
