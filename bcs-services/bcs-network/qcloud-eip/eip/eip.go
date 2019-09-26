@@ -75,7 +75,7 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 	vpcClient := newVPCClient(netConf, *instance.VirtualPrivateCloud.VpcId)
 	subnet, err := vpcClient.querySubnet(netConf.SubnetID)
 	if err != nil {
-		blog.Errorf("query subnet with subnetid %s failed, err %s", netConf.SubnetID, err.Error())
+		blog.Errorf("query subnet with subnet id %s failed, err %s", netConf.SubnetID, err.Error())
 		os.Exit(1)
 	}
 

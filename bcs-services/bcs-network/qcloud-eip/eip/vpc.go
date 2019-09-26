@@ -322,7 +322,7 @@ func (vc *vpcClient) doWaitForStatus(eniID string, checkNum, checkInterval int, 
 				case ENIStatusAvailable:
 					switch finalStatus {
 					case ENIStatusAttached:
-						if eni.Attachment.InstanceId != nil {
+						if eni.Attachment != nil && eni.Attachment.InstanceId != nil {
 							blog.Infof("eni %s is attached", eniID)
 							return nil
 						}
