@@ -53,8 +53,9 @@ func QueryTkeCidr(tkeCidr *m.TkeCidr) *m.TkeCidr {
 
 }
 
-func SaveTkeCidr(cidr string, ipNumber uint, status, cluster string) error {
+func SaveTkeCidr(vpc, cidr string, ipNumber uint, status, cluster string) error {
 	tkeCidr := &m.TkeCidr{
+		Vpc:      vpc,
 		Cidr:     cidr,
 		IpNumber: ipNumber,
 		Status:   status,
