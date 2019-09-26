@@ -59,7 +59,9 @@ func cleanEniRtTable(content string) string {
 		if strings.Contains(str, "eni") {
 			continue
 		}
-		ret = ret + str + "\n"
+		if ret != "\n" {
+			ret = ret + str + "\n"
+		}
 	}
 	return ret
 }
