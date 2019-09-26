@@ -42,7 +42,7 @@ type BcsAutoscalerSpec struct {
 	//max instance
 	MaxInstance uint
 	//autoscale target metric infos
-	MetricsTarget []*AutoscalerMetricTarget
+	MetricsTarget []*AutoscalerMetricTarget `json:"metrics"`
 }
 
 type AutoscalerMetricTarget struct {
@@ -80,7 +80,7 @@ const (
 )
 
 type AutoscalerMetricValue struct {
-	Kind AutoscalerMetricKind
+	Type AutoscalerMetricKind
 
 	//kind = AutoscalerMetricAverageUtilization
 	AverageUtilization float32 `json:"averageUtilization,omitempty"`
@@ -163,11 +163,7 @@ func (scaler *BcsAutoscaler) GetUuid() string {
 }
 
 func (scaler *BcsAutoscaler) InitAutoscalerStatus() {
-	if scaler.Status != nil {
-		return
-	}
-
-	scaler.CreationTimestamp = time.Now()
+	//scaler.CreationTimestamp = time.Now()
 	scaler.Spec.ScaleTargetRef.Namespace = scaler.ObjectMeta.NameSpace
 	currents := make([]*AutoscalerMetricCurrent, 0)
 	for _, target := range scaler.Spec.MetricsTarget {
@@ -176,7 +172,7 @@ func (scaler *BcsAutoscaler) InitAutoscalerStatus() {
 			Name:        target.Name,
 			Description: target.Description,
 			Current: &AutoscalerMetricValue{
-				Kind: target.Target.Kind,
+				Type: target.Target.Type,
 			},
 		}
 
