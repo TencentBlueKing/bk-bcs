@@ -148,3 +148,6 @@ consoleproxy:pre
 
 bmsf-mesos-adapter:pre
 	go build ${LDFLAG} -o ${BINARYPATH}/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
+
+network:
+	go build ${LDFLAG} -o ${BINARYPATH}/qcloud-eip ./bcs-services/bcs-network/qcloud-eip/main.go
