@@ -78,7 +78,7 @@ func delRouteTables() bool {
 	}
 	err = ioutil.WriteFile("/etc/iproute2/rt_tables", []byte(retStr), 0644)
 	if err != nil {
-		blog.Errorf("failed to clean /etcd/iproute2/rt_tables")
+		blog.Errorf("failed to clean /etc/iproute2/rt_tables")
 		return false
 	}
 	return true
@@ -131,8 +131,8 @@ func setupNetworkInterface(ip, cidrBlock, eniName, eniMac string) error {
 				return fmt.Errorf("parse cidr block %s to IPNet failed, err %s", cidrBlock, err.Error())
 			}
 			if err := netlink.LinkSetName(link, eniName); err != nil {
-				blog.Infof("set %s to name %s failed, err %s", ifname, eniName)
-				return fmt.Errorf("set %s to name %s failed, err %s", ifname, eniName)
+				blog.Infof("set %s to name %s failed, err %s", ifname, eniName, err.Error())
+				return fmt.Errorf("set %s to name %s failed, err %s", ifname, eniName, err.Error())
 			}
 			if err := netlink.LinkSetUp(link); err != nil {
 				blog.Infof("set up ifname %s with mac %s failed, err %s", ifname, mac, err.Error())

@@ -66,7 +66,7 @@ func (c *instanceClient) describeInstanceByIP(ip string) (*cvm.Instance, error) 
 	}
 	blog.V(3).Infof("receive response %s", response.ToJsonString())
 	if *response.Response.TotalCount == 0 {
-		return nil, fmt.Errorf("cannot found cvm by ip %s, please check if the cvm is in the region of your account ")
+		return nil, fmt.Errorf("cannot found cvm by ip %s, please check if the cvm is in the region of your account", ip)
 	}
 	return response.Response.InstanceSet[0], nil
 }

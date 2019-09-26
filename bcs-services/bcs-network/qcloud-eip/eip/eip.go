@@ -878,8 +878,8 @@ func (eip *EIP) CNIDel(args *skel.CmdArgs) error {
 		}
 		veth, ok := link.(*netlink.Veth)
 		if !ok {
-			blog.Errorf("link %s is not veth peer, failed")
-			return fmt.Errorf("link %s is not veth peer, failed")
+			blog.Errorf("link %s is not veth peer, failed", veth.Name)
+			return fmt.Errorf("link %s is not veth peer, failed", veth.Name)
 		}
 		hostVethIndex, err = netlink.VethPeerIndex(veth)
 		if err != nil {
