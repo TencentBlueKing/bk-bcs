@@ -34,7 +34,7 @@ func TestCleanEniRtTable(t *testing.T) {
 #1	inr.ruhep
 100 eni0
 101 eni1
-			`,
+`,
 			after: `
 #
 # reserved values
@@ -47,7 +47,7 @@ func TestCleanEniRtTable(t *testing.T) {
 # local
 #
 #1	inr.ruhep
-			`,
+`,
 		},
 		{
 			before: `
@@ -62,9 +62,7 @@ func TestCleanEniRtTable(t *testing.T) {
 # local
 #
 #1	inr.ruhep
-100 eni0
-101 eni1
-			`,
+`,
 			after: `
 #
 # reserved values
@@ -77,7 +75,7 @@ func TestCleanEniRtTable(t *testing.T) {
 # local
 #
 #1	inr.ruhep
-			`,
+`,
 		},
 	}
 	for _, test := range tests {
