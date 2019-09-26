@@ -54,14 +54,15 @@ func cleanEniRtTable(content string) string {
 		return content
 	}
 	strs := strings.Split(content, "\n")
+	if len(strs) > 1 && strs[len(strs)-1] == "" {
+		strs = strs[0 : len(strs)-1]
+	}
 	ret := ""
 	for _, str := range strs {
 		if strings.Contains(str, "eni") {
 			continue
 		}
-		if str != "\n" {
-			ret = ret + str + "\n"
-		}
+		ret = ret + str + "\n"
 	}
 	return ret
 }
