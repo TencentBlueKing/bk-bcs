@@ -39,6 +39,7 @@ func setCfg(op *MesosWatchOptions) {
 	cfg.KeyFile = op.ClientKeyFile
 	cfg.RegDiscvSvr = op.BCSZk
 	cfg.Address = op.Address
+	cfg.IsExternal = op.IsExternal
 
 	cfg.MetricPort = op.MetricPort
 
@@ -95,4 +96,5 @@ type MesosWatchOptions struct {
 	TaskgroupThreadNum     uint   `json:"taskgroup_threads" value:"100" usage:"taskgroup thread num"`
 	ExportserviceThreadNum uint   `json:"exportservice_threads" value:"100" usage:"exportservice thread num"`
 	Cluster                string `json:"cluster" value:"" usage:"the cluster ID under bcs"`
+	IsExternal             bool   `json:"is_external" value:"false" usage:"the cluster whether external deployment"`
 }

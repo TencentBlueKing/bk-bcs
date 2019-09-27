@@ -19,7 +19,7 @@ import (
 	loadbalance "bk-bcs/bcs-common/pkg/loadbalance/v2"
 	"bk-bcs/bcs-services/bcs-loadbalance/clear"
 	"bk-bcs/bcs-services/bcs-loadbalance/monitor"
-	"bk-bcs/bcs-services/bcs-loadbalance/monitor/prometheus"
+	bcsprometheus "bk-bcs/bcs-services/bcs-loadbalance/monitor/prometheus"
 	"bk-bcs/bcs-services/bcs-loadbalance/monitor/status"
 	"bk-bcs/bcs-services/bcs-loadbalance/option"
 	"bk-bcs/bcs-services/bcs-loadbalance/rdiscover"
@@ -31,6 +31,8 @@ import (
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // EventHandler is event interface when
@@ -61,10 +63,14 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 		config:       config,
 		clearManager: clear.NewClearManager(),
 	}
+
+	// register both service zookeeper and cluster zookeeper
+	// service zookeeper for health check, service register
+	// cluster zookeeper for prometheus metrics collector
 	zkSubRegPath := config.ClusterID + "/" + config.Group
 	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	if len(config.ClusterZk) != 0 {
-		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, config.Group, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
 	}
 
 	processor.reflector = NewReflector(config, processor)
@@ -80,15 +86,18 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	}
 
 	lbMonitor := monitor.NewMonitor(config.Address, int(config.MetricPort))
-	newMetricResource := prometheus.NewPromMetric()
+	newMetricResource := bcsprometheus.NewPromMetric()
 	if config.Proxy == option.ProxyHaproxy {
 		blog.Infof("use haproxy transmit")
 		processor.cfgManager = haproxy.NewManager(
+			config.Name,
 			config.BinPath,
 			config.CfgPath,
 			config.GeneratingDir,
 			config.CfgBackupDir,
-			config.TemplateDir)
+			config.TemplateDir,
+			config.StatusFetchPeriod,
+		)
 	} else {
 		blog.Infof("use nginx transmit")
 		processor.cfgManager = nginx.NewManager(
@@ -98,6 +107,16 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 			config.CfgBackupDir,
 			config.TemplateDir)
 	}
+
+	// add manager to promethes
+	prometheus.MustRegister(processor.cfgManager)
+	// register metric
+	prometheus.Register(LoadbalanceZookeeperStateMetric)
+	prometheus.Register(LoadbalanceZookeeperEventAddMetric)
+	prometheus.Register(LoadbalanceZookeeperEventUpdateMetric)
+	prometheus.Register(LoadbalanceZookeeperEventDeleteMetric)
+	LoadbalanceZookeeperStateMetric.WithLabelValues(config.Name).Set(1)
+
 	newStatusResource := status.NewStatus(processor.cfgManager.GetStatusFunction())
 	lbMonitor.RegisterResource(newMetricResource)
 	lbMonitor.RegisterResource(newStatusResource)
@@ -296,7 +315,7 @@ func (lp *LBEventProcessor) OnAdd(obj interface{}) {
 		return
 	}
 	blog.Infof("Service %s added, ready to refresh", svr.ServiceName)
-	LoadbalanceZookeeperEventMetric.WithLabelValues("add", svr.ServiceName, svr.Namespace).Inc()
+	LoadbalanceZookeeperEventAddMetric.WithLabelValues(lp.config.Name, svr.ServiceName, svr.Namespace).Inc()
 	lp.update = true
 }
 
@@ -308,7 +327,7 @@ func (lp *LBEventProcessor) OnDelete(obj interface{}) {
 		return
 	}
 	blog.Infof("Service %s deleted, ready to refresh", svr.ServiceName)
-	LoadbalanceZookeeperEventMetric.WithLabelValues("delete", svr.ServiceName, svr.Namespace).Inc()
+	LoadbalanceZookeeperEventDeleteMetric.WithLabelValues(lp.config.Name, svr.ServiceName, svr.Namespace).Inc()
 	lp.update = true
 }
 
@@ -328,6 +347,6 @@ func (lp *LBEventProcessor) OnUpdate(oldObj, newObj interface{}) {
 		return
 	}
 	blog.Infof("Service %s update, ready to refresh", newSvr.ServiceName)
-	LoadbalanceZookeeperEventMetric.WithLabelValues("update", newSvr.ServiceName, newSvr.Namespace).Inc()
+	LoadbalanceZookeeperEventUpdateMetric.WithLabelValues(lp.config.Name, newSvr.ServiceName, newSvr.Namespace).Inc()
 	lp.update = true
 }

@@ -91,7 +91,12 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 	}
 
 	//host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
-	host := fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
+	var host string
+	if ser.ExternalIp != "" && ser.ExternalPort != 0 {
+		host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.ExternalIp, ser.ExternalPort)
+	} else {
+		host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
+	}
 	//url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
 	url := fmt.Sprintf("%s/mesosdriver/v4/%s", host, uri)
 	blog.V(3).Infof("do request to url(%s), method(%s)", url, method)

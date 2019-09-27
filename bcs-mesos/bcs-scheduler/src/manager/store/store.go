@@ -14,13 +14,20 @@
 package store
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"context"
+	"sync"
 	"time"
+
+	"bk-bcs/bcs-common/common/blog"
 )
 
 // Store Manager
 type managerStore struct {
 	Db Dbdrvier
+
+	wg     sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // Create a store manager by a db driver
@@ -28,20 +35,36 @@ func NewManagerStore(dbDriver Dbdrvier) Store {
 	s := &managerStore{
 		Db: dbDriver,
 	}
-	s.handleMetrics()
 
 	return s
 }
 
-func (s *managerStore) handleMetrics() {
-	go s.handleStoreObjectMetrics()
+func (s *managerStore) StopStoreMetrics() {
+	if s.cancel == nil {
+		return
+	}
+	s.cancel()
+
+	time.Sleep(time.Second)
+	s.wg.Wait()
 }
 
-func (s *managerStore) handleStoreObjectMetrics() {
-	time.Sleep(time.Minute)
+func (s *managerStore) StartStoreObjectMetrics() {
+	s.ctx, s.cancel = context.WithCancel(context.Background())
 
 	for {
-		ObjectResourceInfo.Reset()
+		time.Sleep(time.Minute)
+
+		select {
+		case <-s.ctx.Done():
+			blog.Infof("stop scheduler store metrics")
+			return
+
+		default:
+			s.wg.Add(1)
+			ObjectResourceInfo.Reset()
+		}
+
 		// handle service metrics
 		services, err := s.ListAllServices()
 		if err != nil {
@@ -112,7 +135,7 @@ func (s *managerStore) handleStoreObjectMetrics() {
 				info.MemTotal, info.MemTotal-info.MemUsed)
 		}
 
-		time.Sleep(time.Minute)
+		s.wg.Done()
 	}
 }
 
