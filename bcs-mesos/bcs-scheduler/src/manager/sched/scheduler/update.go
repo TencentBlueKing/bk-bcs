@@ -446,7 +446,10 @@ func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentId, executo
 			}
 		}
 
-		blog.V(3).Infof("Tasks status for taskGroup %s : totalNum(%d) restartNum(%d) stagingNum(%d) startingNum(%d) runningNum(%d) finishedNum(%d) errorNum(%d) failedNum(%d) killingNum(%d) killedNum(%d) lostNum(%d) unknowNum(%d)", taskGroup.ID, totalNum, restartingNum, stagingNum, startingNum, runningNum, finishedNum, errorNum, failedNum, killingNum, killedNum, lostNum, unknowNum)
+		blog.V(3).Infof("Tasks status for taskGroup %s : totalNum(%d) restartNum(%d) stagingNum(%d) " +
+			"startingNum(%d) runningNum(%d) finishedNum(%d) errorNum(%d) failedNum(%d) killingNum(%d) killedNum(%d) " +
+			"lostNum(%d) unknowNum(%d)", taskGroup.ID, totalNum, restartingNum, stagingNum, startingNum, runningNum,
+			finishedNum, errorNum, failedNum, killingNum, killedNum, lostNum, unknowNum)
 
 		if failedNum > 0 {
 			status = types.TASKGROUP_STATUS_FAIL
@@ -479,7 +482,10 @@ func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentId, executo
 			status = types.TASKGROUP_STATUS_RUNNING
 			taskGroup.Message = "pod is running"
 		} else {
-			blog.Error("Unknow status for taskGroup %s, tasks: totalNum(%d) stagingNum(%d) startingNum(%d) runningNum(%d) finishedNum(%d) errorNum(%d) failedNum(%d) killingNum(%d) killedNum(%d) lostNum(%d) unknowNum(%d)", taskGroup.ID, totalNum, stagingNum, startingNum, runningNum, finishedNum, errorNum, failedNum, killingNum, killedNum, lostNum, unknowNum)
+			blog.Error("Unknow status for taskGroup %s, tasks: totalNum(%d) stagingNum(%d) startingNum(%d) " +
+				"runningNum(%d) finishedNum(%d) errorNum(%d) failedNum(%d) killingNum(%d) killedNum(%d) lostNum(%d) " +
+				"unknowNum(%d)", taskGroup.ID, totalNum, stagingNum, startingNum, runningNum, finishedNum, errorNum,
+				failedNum, killingNum, killedNum, lostNum, unknowNum)
 		}
 
 		if currStatus != status {
@@ -549,7 +555,10 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 		}
 	}
 
-	blog.V(3).Infof("TaskGroups status for application(%s.%s): totalNum(%d) stagingNum(%d) startingNum(%d) runningNum(%d) finishedNum(%d) errorNum(%d) failedNum(%d) killingNum(%d) killedNum(%d) lostNum(%d) unknowNum(%d)", runAs, appId, totalNum, stagingNum, startingNum, runningNum, finishedNum, errorNum, failedNum, killingNum, killedNum, lostNum, unknowNum)
+	blog.V(3).Infof("TaskGroups status for application(%s.%s): totalNum(%d) stagingNum(%d) startingNum(%d) " +
+		"runningNum(%d) finishedNum(%d) errorNum(%d) failedNum(%d) killingNum(%d) killedNum(%d) lostNum(%d) unknowNum(%d)",
+		runAs, appId, totalNum, stagingNum, startingNum, runningNum, finishedNum, errorNum, failedNum, killingNum,
+		killedNum, lostNum, unknowNum)
 
 	if totalNum != int(app.Instances) {
 		blog.Error("applicaiton(%s.%s) Instances(%d), but only find %d", runAs, appId, app.Instances, totalNum)
