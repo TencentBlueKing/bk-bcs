@@ -28,7 +28,7 @@ import (
 	exe "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/upid"
+	"github.com/mesos/mesos-go/api/v0/upid"
 )
 
 // Message defines the type that passes in the ExecutorDriver.

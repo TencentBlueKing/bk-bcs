@@ -38,20 +38,30 @@ type UpdateTkeLbForm struct {
 }
 
 type AddTkeCidrForm struct {
+	Vpc      string    `json:"vpc" validate:"required"`
 	TkeCidrs []TkeCidr `json:"tke_cidrs" validate:"required"`
 }
 
 type ApplyTkeCidrForm struct {
+	Vpc      string `json:"vpc" validate:"required"`
 	Cluster  string `json:"cluster" validate:"required"`
 	IpNumber uint   `json:"ip_number" validate:"required"`
 }
 
 type ReleaseTkeCidrForm struct {
+	Vpc     string `json:"vpc" validate:"required"`
 	Cidr    string `json:"cidr" validate:"required"`
 	Cluster string `json:"cluster" validate:"required"`
 }
 
 type TkeCidr struct {
+	Cidr     string `json:"cidr" validate:"required"`
+	IpNumber uint   `json:"ip_number" validate:"required"`
+	Status   string `json:"status"`
+}
+
+type ApplyTkeCidrResult struct {
+	Vpc      string `json:"vpc" validate:"required"`
 	Cidr     string `json:"cidr" validate:"required"`
 	IpNumber uint   `json:"ip_number" validate:"required"`
 	Status   string `json:"status"`
@@ -198,17 +208,18 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 
 	for _, tkeCidr := range form.TkeCidrs {
 		cidr := sqlstore.QueryTkeCidr(&m.TkeCidr{
+			Vpc:      form.Vpc,
 			Cidr:     tkeCidr.Cidr,
 			IpNumber: tkeCidr.IpNumber,
 		})
 		if cidr != nil {
-			blog.Warnf("Add Cidr failed, Cidr %s IpNumber %d already exists", tkeCidr.Cidr, tkeCidr.IpNumber)
+			blog.Warnf("Add Cidr failed, Cidr %s IpNumber %d in vpc %s already exists", tkeCidr.Cidr, tkeCidr.IpNumber, form.Vpc)
 			continue
 		}
 		if tkeCidr.Status == "" {
 			tkeCidr.Status = sqlstore.CidrStatusAvailable
 		}
-		err = sqlstore.SaveTkeCidr(tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Status, "")
+		err = sqlstore.SaveTkeCidr(form.Vpc, tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Status, "")
 		if err != nil {
 			metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 			metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -244,13 +255,14 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	tkeCidr := sqlstore.QueryTkeCidr(&m.TkeCidr{
+		Vpc:      form.Vpc,
 		IpNumber: form.IpNumber,
 		Status:   sqlstore.CidrStatusAvailable,
 	})
 	if tkeCidr == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Warnf("Apply cidr ipNumber %d for cluster %s failed, no available cidr any more", form.IpNumber, form.Cluster)
+		blog.Warnf("Apply cidr ipNumber %d for cluster %s in vpc %s failed, no available cidr any more", form.IpNumber, form.Cluster, form.Vpc)
 		message := fmt.Sprintf("errcode: %d, apply cidr failed, no available cidr any more", common.BcsErrApiInternalDbError)
 		WriteClientError(response, "NO_AVAILABLE_CIDR", message)
 		return
@@ -269,8 +281,9 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	blog.Info("assign an cidr successful, cidr: %s, ipNumber: %d", tkeCidr.Cidr, tkeCidr.IpNumber)
-	cidr := &TkeCidr{
+	blog.Info("assign an cidr successful, cidr: %s, ipNumber: %d， vpc: %s", tkeCidr.Cidr, tkeCidr.IpNumber, form.Vpc)
+	cidr := &ApplyTkeCidrResult{
+		Vpc:      tkeCidr.Vpc,
 		Cidr:     tkeCidr.Cidr,
 		IpNumber: tkeCidr.IpNumber,
 		Status:   sqlstore.CidrStatusUsed,
@@ -298,13 +311,14 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	tkeCidr := sqlstore.QueryTkeCidr(&m.TkeCidr{
+		Vpc:     form.Vpc,
 		Cidr:    form.Cidr,
 		Cluster: &form.Cluster,
 	})
 	if tkeCidr == nil || tkeCidr.Status == sqlstore.CidrStatusAvailable {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Warnf("Release cidr %s failed, no such cidr to be released", form.Cidr)
+		blog.Warnf("Release cidr %s in vpc %s failed, no such cidr to be released", form.Cidr, form.Vpc)
 		message := fmt.Sprintf("errcode: %d, no such cidr to be released", common.BcsErrApiBadRequest)
 		WriteClientError(response, "NO_SUCH_CIDR", message)
 		return
@@ -318,13 +332,13 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Errorf("release tkeCidr failed, cidr %s, error: %s", tkeCidr.Cidr, err.Error())
+		blog.Errorf("release tkeCidr failed, cidr %s vpc %s, error: %s", tkeCidr.Cidr, tkeCidr.Vpc, err.Error())
 		message := fmt.Sprintf("errcode: %d, release tkeCidr failed: %s", common.BcsErrApiInternalDbError, err.Error())
 		WriteClientError(response, "RELEASE_TKE_CIDR_FAILED", message)
 		return
 	}
 
-	blog.Info("release cidr successful, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Cluster)
+	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Cluster)
 	response.WriteEntity(types.EmptyResponse{})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()

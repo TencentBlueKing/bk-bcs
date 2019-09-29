@@ -51,6 +51,9 @@ func handleIpschedulerBind(req *restful.Request, resp *restful.Response) {
 		extenderBindingResult = &schedulerapi.ExtenderBindingResult{
 			Error: err.Error(),
 		}
+
+		resp.WriteEntity(extenderBindingResult)
+		return
 	}
 
 	extenderBindingResult = &schedulerapi.ExtenderBindingResult{
@@ -59,4 +62,5 @@ func handleIpschedulerBind(req *restful.Request, resp *restful.Response) {
 
 	blog.Info("binding finished")
 	resp.WriteEntity(extenderBindingResult)
+	return
 }
