@@ -148,4 +148,4 @@ consoleproxy:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-consoleproxy/bcs-consoleproxy ./bcs-mesos/bcs-consoleproxy/main.go
 
 bmsf-mesos-adapter:pre
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bmsf-mesos-adaptor/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
