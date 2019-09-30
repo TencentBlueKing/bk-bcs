@@ -52,10 +52,11 @@ var (
 )
 
 const (
-	stateSuccess        = "SUCCESS"
-	stateJSONFailure    = "JSONFailure"
-	stateLogicFailure   = "LOGICFailure"
-	stateStorageFailure = "STORAGEFailure"
+	stateSuccess         = "SUCCESS"
+	stateNonExistFailure = "NONEXISTFailure"
+	stateJSONFailure     = "JSONFailure"
+	stateLogicFailure    = "LOGICFailure"
+	stateStorageFailure  = "STORAGEFailure"
 )
 
 // init all prometheus metrics initialization
