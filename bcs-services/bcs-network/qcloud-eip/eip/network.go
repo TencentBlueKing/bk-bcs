@@ -41,7 +41,7 @@ func addRouteTables(ids []int) bool {
 	for index, id := range ids {
 		err = appnedFile("/etc/iproute2/rt_tables", fmt.Sprintf("%d eni%d\n", id, index))
 		if err != nil {
-			blog.Errorf("error to add '%d eni%d' into /etc/iproute2/rt_tables", id, index, err.Error())
+			blog.Errorf("error to add '%d eni%d' into /etc/iproute2/rt_tables, err %s", id, index, err.Error())
 			return false
 		}
 		blog.Infof("add '%d eni%d' successfully", id, index)

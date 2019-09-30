@@ -38,7 +38,7 @@ const (
 type Option struct {
 	conf.LogConfig
 	conf.FileConfig
-	WorkMode string `json:"work-mode" value:"cni" usage:"working mode: init-'init qcloud-eip cni network' recover-'recover eni from reboot', cni-'call cni function', release-'release qcloud cni network', clean-'clean cvm network, return original status'"`
+	WorkMode string `json:"work-mode" value:"cni" usage:"working mode: init, recover, cni, release, clean"`
 	EniNum   int    `json:"eni-num" value:"1" usage:"eni num: applied eni num when init cvm"`
 	IPNum    int    `json:"ip-num" value:"0" usage:"ip num: applied ip num for each eni, default 0(means getting max ips for eni)"`
 }

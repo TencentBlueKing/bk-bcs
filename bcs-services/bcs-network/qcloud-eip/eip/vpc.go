@@ -10,12 +10,11 @@
  * limitations under the License.
  */
 
-
 package eip
 
 import (
-	"bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 	"fmt"
 	"time"
 
@@ -25,13 +24,22 @@ import (
 )
 
 const (
-	ENIStatusPending   = "PENDING"
+	// ENIStatusPending eni pending status
+	ENIStatusPending = "PENDING"
+	// ENIStatusAvailable eni available status
 	ENIStatusAvailable = "AVAILABLE"
+	// ENIStatusAttaching eni attaching status
 	ENIStatusAttaching = "ATTACHING"
+	// ENIStatusDetaching eni detaching status
 	ENIStatusDetaching = "DETACHING"
-	ENIStatusDeleting  = "DELETING"
+	// ENIStatusDeleting eni deleting status
+	ENIStatusDeleting = "DELETING"
+
 	// status determined by eni Attachment field
+
+	// ENIStatusDetached eni detached status
 	ENIStatusDetached = "DETACHED"
+	// ENIStatusAttached eni attached status
 	ENIStatusAttached = "ATTACHED"
 )
 
@@ -59,12 +67,19 @@ func newVPCClient(conf *conf.NetConf, vpcID string) *vpcClient {
 	}
 }
 
+// TakeOverENI take over network interface if the interface with name ifname is existed
+// create a new network interface if the interface with name ifname is not existed
 func (vc *vpcClient) TakeOverENI(instanceID string, privateIPNum uint64, ifname string) (*vpc.NetworkInterface, error) {
 	enis, err := vc.queryENI("", "", ifname)
 	if err != nil {
 		blog.Warnf("query eni by interface-name %s failed, err %s", ifname, err.Error())
 	}
 	if len(enis) == 0 {
+		// create, attach new eni
+		// 1. create
+		// 2. wait for available
+		// 3. attach
+		// 4. wait for attached
 		blog.Infof("get no eni named %s", ifname)
 		eniInterface, err := vc.createENI(instanceID, privateIPNum, ifname)
 		if err != nil {
@@ -154,7 +169,7 @@ func (vc *vpcClient) applyIPForENI(eniID string, ipNum int) ([]*vpc.PrivateIpAdd
 	return response.Response.PrivateIpAddressSet, nil
 }
 
-// createENI
+// createENI create eni with certain name
 func (vc *vpcClient) createENI(instanceID string, privateIPNum uint64, ifname string) (*vpc.NetworkInterface, error) {
 	request := vpc.NewCreateNetworkInterfaceRequest()
 	request.VpcId = common.StringPtr(vc.vpcID)
@@ -172,7 +187,9 @@ func (vc *vpcClient) createENI(instanceID string, privateIPNum uint64, ifname st
 	return response.Response.NetworkInterface, nil
 }
 
-// queryENI
+// queryENI query eni, support query by eniID and eniName
+// match eniID if eniID is not empty
+// match eniName if eniName is not empty
 func (vc *vpcClient) queryENI(eniID string, instanceID string, eniName string) ([]*vpc.NetworkInterface, error) {
 	request := vpc.NewDescribeNetworkInterfacesRequest()
 	request.Filters = make([]*vpc.Filter, 0)
@@ -215,7 +232,7 @@ func (vc *vpcClient) queryENI(eniID string, instanceID string, eniName string) (
 	return response.Response.NetworkInterfaceSet, nil
 }
 
-// queryENI
+// attachENI attach eni to cvm
 func (vc *vpcClient) attachENI(eniID string, instanceID string) error {
 	request := vpc.NewAttachNetworkInterfaceRequest()
 	request.NetworkInterfaceId = common.StringPtr(eniID)
@@ -267,7 +284,7 @@ func (vc *vpcClient) queryENIbyIP(eniIP string, instanceID string) (*vpc.Network
 	return nil, fmt.Errorf("get no eni with ip %s and instanceid %s", eniIP, instanceID)
 }
 
-// detachENI
+// detachENI delete eni by eniID
 func (vc *vpcClient) detachENI(eniID string, instanceID string) error {
 	request := vpc.NewDetachNetworkInterfaceRequest()
 	request.NetworkInterfaceId = common.StringPtr(eniID)
