@@ -21,7 +21,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
@@ -42,31 +41,37 @@ type EIP struct{}
 
 // Init implements eip interface
 func (eip *EIP) Init(file string, eniNum int, ipNum int) {
+	// load config file
 	blog.Infof("load config %s ......", file)
 	netConf, err := conf.LoadConfFromFile(file)
 	if err != nil {
 		blog.Errorf("load net config from file %s failed, err %s", file, err.Error())
 		os.Exit(1)
 	}
+	// get the master interface address in conf file
+	// use this address as cvm address
 	hostIPAddr, _, _ := getIPAddrByName(netConf.Master)
 	if len(hostIPAddr) == 0 {
 		blog.Errorf("get cvm ip addr by name %s failed", netConf.Master)
 		os.Exit(1)
 	}
 
+	// describe local cvm info
 	blog.Infof("describe local cvm info ......")
 	instanceClient := newInstanceClient(netConf)
 	if instanceClient == nil {
 		blog.Errorf("create cvm instance client failed, err %s", err.Error())
 		os.Exit(1)
 	}
+	// get cvm instance info by master network interface address
 	instance, err := instanceClient.describeInstanceByIP(hostIPAddr)
 	if err != nil {
 		blog.Errorf("describe instance by ip %s failed, err %s", hostIPAddr, err.Error())
 		os.Exit(1)
 	}
 
-	//describe subnet info
+	// describe subnet info
+	// use cvm subnet id if there is no subnet id in config
 	blog.Infof("describe eni subnet %s info ......", netConf.SubnetID)
 	if len(netConf.SubnetID) == 0 {
 		blog.Infof("miss subnetID in config, use cvm subnetID %s", *instance.VirtualPrivateCloud.SubnetId)
@@ -79,22 +84,30 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 		os.Exit(1)
 	}
 
+	// validate network interface num
 	blog.Infof("going to create enis, total %d ......", eniNum)
+	// calculate the network interface per cvm according to tencent cloud api doc
 	eniLimit := getMaxENINumPerCVM(int(*instance.CPU), int(*instance.Memory))
 	if eniNum < 1 {
 		blog.Errorf("eni num can not less than 1")
 		os.Exit(1)
 	}
+	// the number of network interface to be applied should be less than max limit - 1
+	// because master network interface is involved when talking about network interface limitation
 	if eniNum > eniLimit-1 {
 		blog.Errorf("eni num %d bigger than max eni num %d for %d cpu %d mem", eniNum, eniLimit, int(*instance.CPU), int(*instance.Memory))
 		os.Exit(1)
 	}
+
+	// if there is already some network interface name starting with netConf.ENIPrefix,
+	// it means someone has already initialized the network of this cvm,
+	// so stop the init action
 	for i := 0; i < eniNum; i++ {
 		eniName := fmt.Sprintf("%s%d", netConf.ENIPrefix, i)
 		blog.Infof("check eni %s......", eniName)
 		eniIPAddr, _, _ := getIPAddrByName(eniName)
 		if len(eniIPAddr) != 0 {
-			blog.Errorf("%s is existed, no need to init")
+			blog.Errorf("%s is existed, no need to init", eniName)
 			os.Exit(1)
 		}
 	}
@@ -103,7 +116,11 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 	var routeTableIDs []int
 	// record all available ips
 	secondaryIPMap := make(map[string][]string)
+	// according to the demanded network interface number and ip address number,
+	// apply certain ip addresses for each newly applied network interface
 	for i := 0; i < eniNum; i++ {
+		// for each newly applied network interface, create a route table in later steps,
+		// here we just calculate the route table id and record it in an array
 		tableID := startENIRouteTableID + i
 		routeTableIDs = append(routeTableIDs, tableID)
 		// for each eni, there is a IP num limitation
@@ -117,6 +134,7 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 			blog.Errorf("get ip num %d, set ip num to %d", ipNum, ipLimit-1)
 			ipNum = ipLimit - 1
 		}
+		// generate new network interface name according to its index
 		newENIName := fmt.Sprintf("eni-%s-%d", *instance.InstanceId, i)
 		blog.Infof("take over %s ", newENIName)
 		newENI, err := vpcClient.TakeOverENI(*instance.InstanceId, uint64(ipNum), newENIName)
@@ -125,9 +143,10 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 			os.Exit(1)
 		}
 		blog.Infof("take over done")
-
+		// generate new network interface local name according to its index
 		eniLocalInterfaceName := fmt.Sprintf("%s%d", netConf.ENIPrefix, i)
-		// set up eni
+		// set up eni with primary private ip address
+		// record other applied ip addresses
 		blog.Infof("set up eni %s ......", eniLocalInterfaceName)
 		var secondaryIPs []string
 		for _, privateIPObj := range newENI.PrivateIpAddressSet {
@@ -145,15 +164,14 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 		}
 		secondaryIPMap[strings.ToLower(*newENI.MacAddress)] = secondaryIPs
 	}
-	if err != nil {
-		blog.Warnf("routeMap save to file failed, err %s", err.Error())
-	}
 
 	// init network environment
+	// enable system parameter ipv4.ip_forward
 	blog.Infof("enable system ipv4.ip_forward ......")
 	if ok := setIPForward(true); !ok {
 		blog.Warnf("enable system ipv4.ip_forward failed")
 	}
+	// disable system parameter rp_filter for all network interface
 	blog.Infof("disable system ip rp_filter ......")
 	if ok := setRpFilter("all", false); !ok {
 		blog.Warnf("set rp_filter %s to %s failed", "all", "0")
@@ -177,7 +195,15 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 	}
 	blog.Infof("write route table IDs successfully")
 
-	// add default route into route tables
+	// get the subnet cidr of applied ip address,
+	// and get gateway according to subnet cidr
+	cidrIP, _, err := net.ParseCIDR(*subnet.CidrBlock)
+	if err != nil {
+		blog.Errorf("parse cidr %s failed, err %s", *subnet.CidrBlock, err.Error())
+		os.Exit(1)
+	}
+	gw := ip.NextIP(cidrIP)
+	// add default route into each route tables
 	for index, id := range routeTableIDs {
 		linkName := fmt.Sprintf("%s%d", netConf.ENIPrefix, index)
 		link, err := netlink.LinkByName(linkName)
@@ -185,12 +211,6 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 			blog.Errorf("get link by name %s failed, err %s", linkName, err.Error())
 			os.Exit(1)
 		}
-		cidrIP, _, err := net.ParseCIDR(*subnet.CidrBlock)
-		if err != nil {
-			blog.Errorf("parse cidr %s failed, err %s", *subnet.CidrBlock, err.Error())
-			os.Exit(1)
-		}
-		gw := ip.NextIP(cidrIP)
 		defaultRouteRule := &netlink.Route{
 			LinkIndex: link.Attrs().Index,
 			Dst:       &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)},
@@ -207,6 +227,7 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 	}
 
 	// register ip pool for eni
+	// use address of master network interface defined in config file as host index in netservice
 	blog.Infof("register ip pool to netservice ......")
 	hostAddr, _, _ := getIPAddrByName(netConf.Master)
 	if hostAddr == "" {
@@ -227,11 +248,12 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 	for _, ips := range secondaryIPMap {
 		pool.Available = append(pool.Available, ips...)
 	}
-
+	// TODO: move this validation to the head of init action
 	if netConf.NetService == nil {
 		blog.Errorf("no netservice conf")
 		os.Exit(1)
 	}
+	// create netservice client
 	netSvcClient, err := NewNetSvcClient(netConf.NetService)
 	if err != nil {
 		blog.Errorf(
@@ -240,6 +262,7 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 			netConf.NetService.PubKey, netConf.NetService.Ca, err.Error())
 		os.Exit(1)
 	}
+	// create ip pool in netservice
 	err = netSvcClient.CreateOrUpdatePool(pool)
 	if err != nil {
 		blog.Errorf("create netservice pool failed, err %s", err.Error())
@@ -247,6 +270,7 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 	}
 	blog.Infof("register ip pool to netservice done")
 
+	// add newly ip addresses into ip pool in netservice
 	blog.Infof("update ip instances to netservice")
 	for mac, ips := range secondaryIPMap {
 		for _, ip := range ips {
@@ -269,7 +293,9 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 	blog.Infof("congratulations, node init successfully!")
 }
 
-// Recover from reboot
+// Recover recover applied network interface from reboot
+// after cvm reboot, all the setted route table and route rule disappear,
+// and all the applied network interface are down, we should take this action after reboot cvm
 func (eip *EIP) Recover(file string, eniNum int) {
 	blog.Infof("do recover after reboot....")
 	netConf, err := conf.LoadConfFromFile(file)
@@ -283,6 +309,7 @@ func (eip *EIP) Recover(file string, eniNum int) {
 		os.Exit(1)
 	}
 
+	//describe subnet info
 	blog.Infof("describe local cvm info ......")
 	instanceClient := newInstanceClient(netConf)
 	if instanceClient == nil {
@@ -294,8 +321,6 @@ func (eip *EIP) Recover(file string, eniNum int) {
 		blog.Errorf("describe instance by ip %s failed, err %s", hostIPAddr, err.Error())
 		os.Exit(1)
 	}
-
-	//describe subnet info
 	blog.Infof("describe eni subnet %s info ......", netConf.SubnetID)
 	if len(netConf.SubnetID) == 0 {
 		blog.Infof("miss subnetID in config, use cvm subnetID %s", *instance.VirtualPrivateCloud.SubnetId)
@@ -310,16 +335,17 @@ func (eip *EIP) Recover(file string, eniNum int) {
 
 	// record route tables ids
 	var routeTableIDs []int
-
+	// eniNum from command line.
+	// query each applied network interface by rule "eni-%s-%d", get primary ip address,
+	// and set up network interface by (address, mac) in query result.
 	for i := 0; i < eniNum; i++ {
 		tableID := startENIRouteTableID + i
 		routeTableIDs = append(routeTableIDs, tableID)
-
 		resENIName := fmt.Sprintf("eni-%s-%d", *instance.InstanceId, i)
 		blog.Infof("recover eni with name %s", resENIName)
 		resENIs, err := vpcClient.queryENI("", *instance.InstanceId, resENIName)
 		if err != nil {
-			blog.Errorf("query eni %s for instance %s failed, err %s", resENIName, *instance.InstanceId)
+			blog.Errorf("query eni %s for instance %s failed, err %s", resENIName, *instance.InstanceId, err.Error())
 			os.Exit(1)
 		}
 		if len(resENIs) != 1 {
@@ -393,9 +419,11 @@ func (eip *EIP) Recover(file string, eniNum int) {
 
 // Check implements eip interface
 func (eip *EIP) Check() {
+	//TODO: check dirty routes and network interfaces
 	blog.Infof("UNIMPLEMENTED METHOD")
 }
 
+// doDeregister deregister from netservice
 func (eip *EIP) doDeregister(netConf *conf.NetConf) error {
 	hostAddr, _, _ := getIPAddrByName(netConf.Master)
 	if hostAddr == "" {
@@ -439,7 +467,9 @@ func (eip *EIP) Deregister(file string) {
 }
 
 // Clean implements eip interface
-// **To clean old qcloud plugin environment**
+// **Only to clean old qcloud plugin environment**
+// 1. deregister from netservice
+// 2. detach and delete each applied network interface
 func (eip *EIP) Clean(file string) {
 	blog.Infof("load config %s......", file)
 	netConf, err := conf.LoadConfFromFile(file)
@@ -506,6 +536,9 @@ func (eip *EIP) Clean(file string) {
 }
 
 // Release implements eip interface
+// 1. deregister from netservice
+// 2. set down, detach and delete each applied network interface
+// 3. delete route tables
 func (eip *EIP) Release(file string) {
 	blog.Infof("load config %s ......", file)
 	netConf, err := conf.LoadConfFromFile(file)
@@ -602,6 +635,7 @@ func (eip *EIP) Release(file string) {
 	blog.Infof("delete eni successfully")
 }
 
+// createVethPair create veth pair, return with cni format
 func createVethPair(netns string, containerIfName string, mtu int) (*current.Interface, *current.Interface, error) {
 	containerIface := &current.Interface{}
 	hostIface := &current.Interface{}
@@ -629,13 +663,7 @@ func createVethPair(netns string, containerIfName string, mtu int) (*current.Int
 	return hostIface, containerIface, nil
 }
 
-func containsNoSuchRule(err error) bool {
-	if errno, ok := err.(syscall.Errno); ok {
-		return errno == syscall.ENOENT
-	}
-	return false
-}
-
+// configureHostNS configure host namespace
 func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) error {
 
 	// add to taskgroup route
@@ -643,6 +671,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	if err != nil {
 		return fmt.Errorf("failed to look up %s in host ns, err %s", hostIfName, err.Error())
 	}
+	// add route in certain route table
 	route := &netlink.Route{
 		LinkIndex: hostVeth.Attrs().Index,
 		Scope:     netlink.SCOPE_LINK,
@@ -684,13 +713,16 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	return nil
 }
 
+// configureContainerNS configure container namespace
+// 1. set address for veth in container namespace
+// 2. add routes
+// 3. set static arp
 func configureContainerNS(hostMac, netns, containerIfName string, ipNet *net.IPNet, gw net.IP) error {
 	if err := ns.WithNetNSPath(netns, func(hostNS ns.NetNS) error {
 		containerVeth, err := netlink.LinkByName(containerIfName)
 		if err != nil {
 			return fmt.Errorf("failed to look up %s in ns %s, err %s", containerIfName, netns, err.Error())
 		}
-
 		netlink.AddrAdd(containerVeth, &netlink.Addr{IPNet: ipNet})
 
 		gwNet := &net.IPNet{IP: gw, Mask: net.CIDRMask(32, 32)}
@@ -736,6 +768,7 @@ func configureContainerNS(hostMac, netns, containerIfName string, ipNet *net.IPN
 	return nil
 }
 
+// getRouteTableIDByMac get route table id by mac address and eni prefix
 func getRouteTableIDByMac(mac, eniPrefix string) (int, error) {
 	links, err := netlink.LinkList()
 	if err != nil {
@@ -762,25 +795,26 @@ func getRouteTableIDByMac(mac, eniPrefix string) (int, error) {
 
 // CNIAdd implements cni interface
 func (eip *EIP) CNIAdd(args *skel.CmdArgs) error {
+	// load config from both stdin and environments variables
 	netConf, cniVersion, err := conf.LoadConf(args.StdinData, args.Args)
 	if err != nil {
 		blog.Errorf("load config stdindata %s, args %s failed, err %s", string(args.StdinData), string(args.Args), err.Error())
 		return fmt.Errorf("load config stdindata %s, args %s failed, err %s", string(args.StdinData), string(args.Args), err.Error())
 	}
-
+	// get container namespace
 	netns, err := ns.GetNS(args.Netns)
 	if err != nil {
 		blog.Errorf("failed to get netns %q: %s", netns, err.Error())
 		return fmt.Errorf("failed to get netns %q: %s", netns, err.Error())
 	}
 	defer netns.Close()
-
+	// get ip address from ipam plugin
 	resultFromIPAM, err := ipam.ExecAdd(netConf.IPAM.Type, args.StdinData)
 	if err != nil {
 		return err
 	}
 	blog.Infof("get add result from ipam %s", resultFromIPAM.String())
-
+	// if do CNIAdd failed, delete ip address
 	defer func() {
 		if err != nil {
 			errDel := ipam.ExecDel(netConf.IPAM.Type, args.StdinData)
@@ -789,7 +823,7 @@ func (eip *EIP) CNIAdd(args *skel.CmdArgs) error {
 			}
 		}
 	}()
-
+	// parse result, get first ip
 	result, err := current.NewResultFromResult(resultFromIPAM)
 	if err != nil {
 		return err
@@ -814,7 +848,7 @@ func (eip *EIP) CNIAdd(args *skel.CmdArgs) error {
 		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, netConf.ENIPrefix, err.Error())
 		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, netConf.ENIPrefix, err.Error())
 	}
-
+	
 	hostVethInfo, containerVethInfo, err := createVethPair(netns.Path(), args.IfName, 1500)
 	if err != nil {
 		blog.Errorf("create veth pair failed, err %s", err.Error())
@@ -893,7 +927,7 @@ func (eip *EIP) CNIDel(args *skel.CmdArgs) error {
 		}
 		if len(addrs) == 0 {
 			blog.Errorf("get link %s zero addresses in ns %s", args.IfName, args.Netns)
-			fmt.Errorf("get link %s zero addresses in ns %s", args.IfName, args.Netns)
+			return fmt.Errorf("get link %s zero addresses in ns %s", args.IfName, args.Netns)
 		}
 		addrsToRelease = addrs
 
