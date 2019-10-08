@@ -164,6 +164,7 @@ func (watcher *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	//    if newTgwIngress.ResourceVersion == oldTgwIngress.ResourceVersion {
 	//        return
 	//}
+
 	if reflect.DeepEqual(oldObj, d) {
 		dMeta := d.(metav1.Object)
 		namespace := dMeta.GetNamespace()
@@ -171,6 +172,30 @@ func (watcher *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		// -v >=2 then log.info will show detail
 		glog.V(2).Infof("Got same %s: %s/%s", watcher.resourceType, namespace, name)
 		return
+	}
+
+	// skip unnecessary node update event, to avoid writer queue stuck
+	if watcher.resourceType == "Node" {
+		oldNode := oldObj.(*v1.Node)
+		newNode := newObj.(*v1.Node)
+
+		var tempLastTimes = make([]metav1.Time, 5)
+		tempVersion := newNode.ResourceVersion
+		newNode.ResourceVersion = oldNode.ResourceVersion
+		for i := range newNode.Status.Conditions {
+			tempLastTimes[i] = newNode.Status.Conditions[i].LastHeartbeatTime
+			newNode.Status.Conditions[i].LastHeartbeatTime = oldNode.Status.Conditions[i].LastHeartbeatTime
+		}
+
+		if reflect.DeepEqual(oldNode, newNode) {
+			glog.V(2).Infof("skip unnecessary node update event")
+			return
+		}
+
+		newNode.ResourceVersion = tempVersion
+		for i := range newNode.Status.Conditions {
+			newNode.Status.Conditions[i].LastHeartbeatTime = tempLastTimes[i]
+		}
 	}
 
 	syncData := watcher.genSyncData(newObj, "Update")
