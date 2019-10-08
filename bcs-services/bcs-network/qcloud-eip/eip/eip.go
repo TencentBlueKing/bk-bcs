@@ -886,6 +886,8 @@ func (eip *EIP) CNIAdd(args *skel.CmdArgs) error {
 }
 
 // CNIDel implements cni interface
+// 1. release ip address
+// 2. clean container namespace
 func (eip *EIP) CNIDel(args *skel.CmdArgs) error {
 
 	blog.Infof("received cni del command: containerid %s, netns %s, ifname %s, args %s, path %s argsStdinData %s",
