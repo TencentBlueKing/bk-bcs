@@ -47,6 +47,8 @@ type Interface interface {
 	Crrs() CrrInformer
 	// Deployments returns a DeploymentInformer.
 	Deployments() DeploymentInformer
+	// Frameworks returns a FrameworkInformer.
+	Frameworks() FrameworkInformer
 	// Tasks returns a TaskInformer.
 	Tasks() TaskInformer
 	// TaskGroups returns a TaskGroupInformer.
@@ -129,6 +131,11 @@ func (v *version) Crrs() CrrInformer {
 // Deployments returns a DeploymentInformer.
 func (v *version) Deployments() DeploymentInformer {
 	return &deploymentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Frameworks returns a FrameworkInformer.
+func (v *version) Frameworks() FrameworkInformer {
+	return &frameworkInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Tasks returns a TaskInformer.

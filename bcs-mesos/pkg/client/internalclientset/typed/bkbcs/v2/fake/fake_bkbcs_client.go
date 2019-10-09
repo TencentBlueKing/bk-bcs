@@ -78,6 +78,10 @@ func (c *FakeBkbcsV2) Deployments(namespace string) v2.DeploymentInterface {
 	return &FakeDeployments{c, namespace}
 }
 
+func (c *FakeBkbcsV2) Frameworks(namespace string) v2.FrameworkInterface {
+	return &FakeFrameworks{c, namespace}
+}
+
 func (c *FakeBkbcsV2) Tasks(namespace string) v2.TaskInterface {
 	return &FakeTasks{c, namespace}
 }

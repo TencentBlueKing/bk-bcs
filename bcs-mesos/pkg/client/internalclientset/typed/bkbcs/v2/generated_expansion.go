@@ -41,6 +41,8 @@ type CrrExpansion interface{}
 
 type DeploymentExpansion interface{}
 
+type FrameworkExpansion interface{}
+
 type TaskExpansion interface{}
 
 type TaskGroupExpansion interface{}

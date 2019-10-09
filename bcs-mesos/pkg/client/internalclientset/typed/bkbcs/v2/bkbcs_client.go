@@ -38,6 +38,7 @@ type BkbcsV2Interface interface {
 	CrdsGetter
 	CrrsGetter
 	DeploymentsGetter
+	FrameworksGetter
 	TasksGetter
 	TaskGroupsGetter
 	VersionsGetter
@@ -98,6 +99,10 @@ func (c *BkbcsV2Client) Crrs(namespace string) CrrInterface {
 
 func (c *BkbcsV2Client) Deployments(namespace string) DeploymentInterface {
 	return newDeployments(c, namespace)
+}
+
+func (c *BkbcsV2Client) Frameworks(namespace string) FrameworkInterface {
+	return newFrameworks(c, namespace)
 }
 
 func (c *BkbcsV2Client) Tasks(namespace string) TaskInterface {

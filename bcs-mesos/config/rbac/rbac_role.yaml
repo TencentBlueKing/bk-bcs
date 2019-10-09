@@ -547,6 +547,46 @@ rules:
 - apiGroups:
   - bkbcs.bkbcs.tencent.com
   resources:
+  - frameworks
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - bkbcs.bkbcs.tencent.com
+  resources:
+  - frameworks/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - bkbcs.bkbcs.tencent.com
+  resources:
   - tasks
   verbs:
   - get

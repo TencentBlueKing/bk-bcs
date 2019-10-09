@@ -76,6 +76,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().Crrs().Informer()}, nil
 	case v2.SchemeGroupVersion.WithResource("deployments"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().Deployments().Informer()}, nil
+	case v2.SchemeGroupVersion.WithResource("frameworks"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().Frameworks().Informer()}, nil
 	case v2.SchemeGroupVersion.WithResource("tasks"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().Tasks().Informer()}, nil
 	case v2.SchemeGroupVersion.WithResource("taskgroups"):

@@ -119,6 +119,14 @@ type DeploymentListerExpansion interface{}
 // DeploymentNamespaceLister.
 type DeploymentNamespaceListerExpansion interface{}
 
+// FrameworkListerExpansion allows custom methods to be added to
+// FrameworkLister.
+type FrameworkListerExpansion interface{}
+
+// FrameworkNamespaceListerExpansion allows custom methods to be added to
+// FrameworkNamespaceLister.
+type FrameworkNamespaceListerExpansion interface{}
+
 // TaskListerExpansion allows custom methods to be added to
 // TaskLister.
 type TaskListerExpansion interface{}
