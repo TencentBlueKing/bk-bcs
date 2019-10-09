@@ -25,6 +25,11 @@ const (
 	ObjectResourceApplication = "application"
 	ObjectResourceConfigmap   = "configmap"
 	ObjectResourceSecret      = "secret"
+
+	ResourceStatusRunning   = "running"
+	ResourceStatusFailed    = "failed"
+	ResourceStatusFinish    = "finish"
+	ResourceStatusOperating = "operating"
 )
 
 const (
@@ -44,7 +49,7 @@ var (
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "object_resource_info",
 		Help:      "Object resource info",
-	}, []string{"resource", "namespace", "name"})
+	}, []string{"resource", "namespace", "name", "status"})
 
 	//metric value is taskgroup status
 	//0 show Staging、Starting; 1 show Running; 2 show Finish、Killing、Killed; 3 show Error、Failed; 4 show Lost
@@ -111,21 +116,21 @@ func init() {
 }
 
 func reportObjectResourceInfoMetrics(resource, ns, name, status string) {
-	var val float64
+	var str string
 	switch status {
 	case types.APP_STATUS_STAGING, types.APP_STATUS_DEPLOYING, types.APP_STATUS_OPERATING, types.APP_STATUS_ROLLINGUPDATE:
-		val = 0
+		str = ResourceStatusOperating
 	case types.APP_STATUS_RUNNING:
-		val = 1
+		str = ResourceStatusRunning
 	case types.APP_STATUS_FINISH:
-		val = 2
+		str = ResourceStatusFinish
 	case types.APP_STATUS_ERROR, types.APP_STATUS_ABNORMAL:
-		val = 3
+		str = ResourceStatusFailed
 	default:
-		val = 0
+		str = ResourceStatusRunning
 	}
 
-	ObjectResourceInfo.WithLabelValues(resource, ns, name).Set(val)
+	ObjectResourceInfo.WithLabelValues(resource, ns, name, str).Set(1)
 }
 
 func reportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {

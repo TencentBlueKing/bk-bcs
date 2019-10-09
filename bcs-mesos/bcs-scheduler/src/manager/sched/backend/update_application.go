@@ -120,7 +120,7 @@ func (b *backend) UpdateApplication(runAs, appId string, args string, instances 
 		go b.sched.RunUpdateApplication(updateTrans)
 	}
 
-	app.RawJson = version.RawJson
+	//app.RawJson = version.RawJson
 	app.LastStatus = app.Status
 	app.Status = types.APP_STATUS_OPERATING
 	app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
