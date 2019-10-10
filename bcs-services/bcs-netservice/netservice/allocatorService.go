@@ -31,7 +31,7 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	//check pool node
 	if exist, _ := srv.store.Exist(hostpath); !exist {
 		blog.Errorf("host %s do not exist, no ip can be asigned for container %s", hostpath, lease.Container)
-		reportMetrics("ipLean", stateLogicFailure, started)
+		reportMetrics("ipLean", stateNonExistFailure, started)
 		return nil, fmt.Errorf("host %s do not exist", lease.Host)
 	}
 	hostData, gerr := srv.store.Get(hostpath)
@@ -49,7 +49,7 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	poolpath := filepath.Join(defaultPoolInfoPath, host.Cluster, host.Pool)
 	if exist, _ := srv.store.Exist(poolpath); !exist {
 		blog.Errorf("get no ip resource in host %s for container %s, pool %s/%s is lost", lease.Host, lease.Container, host.Cluster, host.Pool)
-		reportMetrics("ipLean", stateLogicFailure, started)
+		reportMetrics("ipLean", stateNonExistFailure, started)
 		return nil, fmt.Errorf("pool resource %s for host %s lost", host.Pool, lease.Host)
 	}
 	//try to lock
@@ -155,7 +155,7 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 	containerpath := filepath.Join(defaultHostInfoPath, release.Host, release.Container)
 	if exist, _ := srv.store.Exist(containerpath); !exist {
 		blog.Errorf("No ip release for container %s in host %s", release.Container, release.Host)
-		reportMetrics("ipRelease", stateLogicFailure, started)
+		reportMetrics("ipRelease", stateNonExistFailure, started)
 		return fmt.Errorf("container %s do not exist in host %s", release.Container, release.Host)
 	}
 	ipInst := &types.IPInst{}
@@ -170,7 +170,7 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 	ippath := filepath.Join(defaultPoolInfoPath, ipInst.Cluster, ipInst.Pool, "active", ipInst.IPAddr)
 	if exist, _ := srv.store.Exist(ippath); !exist {
 		blog.Errorf("ip resource %s lost for container %s in host %s", ipInst.IPAddr, release.Container, release.Host)
-		reportMetrics("ipRelease", stateLogicFailure, started)
+		reportMetrics("ipRelease", stateNonExistFailure, started)
 		return fmt.Errorf("ip resource %s lost for container %s", ipInst.IPAddr, release.Container)
 	}
 	destpath := filepath.Join(defaultPoolInfoPath, ipInst.Cluster, ipInst.Pool, ipInst.LastStatus, ipInst.IPAddr)
@@ -207,7 +207,7 @@ func (srv *NetService) HostVIPRelease(hostIP string) error {
 	hostPath := filepath.Join(defaultHostInfoPath, hostIP)
 	if exist, _ := srv.store.Exist(hostPath); !exist {
 		blog.Errorf("No host node %s zookeeper", hostIP)
-		reportMetrics("hostResourceRelease", stateLogicFailure, started)
+		reportMetrics("hostResourceRelease", stateNonExistFailure, started)
 		return fmt.Errorf("No host node %s zookeeper", hostIP)
 	}
 	containerIDs, err := srv.store.List(hostPath)
