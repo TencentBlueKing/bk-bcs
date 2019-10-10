@@ -1490,6 +1490,7 @@ func (s *Scheduler) GetCurrentOffers() []*mesos.Offer {
 	return inOffers
 }
 
+//convert mesos.Attribute to commtype.BcsAgentAttribute
 func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*commtype.BcsAgentAttribute {
 	if oldAttributeList == nil {
 		return nil
