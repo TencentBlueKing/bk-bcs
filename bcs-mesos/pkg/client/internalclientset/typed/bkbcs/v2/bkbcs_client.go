@@ -44,7 +44,7 @@ type BkbcsV2Interface interface {
 	VersionsGetter
 }
 
-// BkbcsV2Client is used to interact with features provided by the bkbcs.bkbcs.tencent.com group.
+// BkbcsV2Client is used to interact with features provided by the bkbcs.tencent.com group.
 type BkbcsV2Client struct {
 	restClient rest.Interface
 }

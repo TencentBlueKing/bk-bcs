@@ -32,9 +32,9 @@ type FakeDeployments struct {
 	ns   string
 }
 
-var deploymentsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "deployments"}
+var deploymentsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "deployments"}
 
-var deploymentsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "Deployment"}
+var deploymentsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "Deployment"}
 
 // Get takes name of the deployment, and returns the corresponding deployment object, and an error if there is any.
 func (c *FakeDeployments) Get(name string, options v1.GetOptions) (result *v2.Deployment, err error) {

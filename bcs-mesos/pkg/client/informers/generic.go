@@ -49,7 +49,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=bkbcs.bkbcs.tencent.com, Version=v2
+	// Group=bkbcs.tencent.com, Version=v2
 	case v2.SchemeGroupVersion.WithResource("admissionwebhookconfigurations"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().AdmissionWebhookConfigurations().Informer()}, nil
 	case v2.SchemeGroupVersion.WithResource("agents"):

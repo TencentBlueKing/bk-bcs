@@ -1,4 +1,4 @@
-apiVersion: bkbcs.bkbcs.tencent.com/v2
+apiVersion: bkbcs.tencent.com/v2
 kind: TaskGroup
 metadata:
   labels:

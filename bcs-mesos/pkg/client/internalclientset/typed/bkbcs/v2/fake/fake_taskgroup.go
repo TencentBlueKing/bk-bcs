@@ -32,9 +32,9 @@ type FakeTaskGroups struct {
 	ns   string
 }
 
-var taskgroupsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "taskgroups"}
+var taskgroupsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "taskgroups"}
 
-var taskgroupsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "TaskGroup"}
+var taskgroupsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "TaskGroup"}
 
 // Get takes name of the taskGroup, and returns the corresponding taskGroup object, and an error if there is any.
 func (c *FakeTaskGroups) Get(name string, options v1.GetOptions) (result *v2.TaskGroup, err error) {

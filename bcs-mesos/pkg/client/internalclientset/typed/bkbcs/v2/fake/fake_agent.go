@@ -32,9 +32,9 @@ type FakeAgents struct {
 	ns   string
 }
 
-var agentsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "agents"}
+var agentsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "agents"}
 
-var agentsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "Agent"}
+var agentsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "Agent"}
 
 // Get takes name of the agent, and returns the corresponding agent object, and an error if there is any.
 func (c *FakeAgents) Get(name string, options v1.GetOptions) (result *v2.Agent, err error) {

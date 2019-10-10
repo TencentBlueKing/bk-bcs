@@ -32,9 +32,9 @@ type FakeVersions struct {
 	ns   string
 }
 
-var versionsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "versions"}
+var versionsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "versions"}
 
-var versionsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "Version"}
+var versionsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "Version"}
 
 // Get takes name of the version, and returns the corresponding version object, and an error if there is any.
 func (c *FakeVersions) Get(name string, options v1.GetOptions) (result *v2.Version, err error) {

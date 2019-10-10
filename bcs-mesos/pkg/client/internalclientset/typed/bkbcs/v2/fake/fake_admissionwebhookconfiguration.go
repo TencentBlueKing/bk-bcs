@@ -32,9 +32,9 @@ type FakeAdmissionWebhookConfigurations struct {
 	ns   string
 }
 
-var admissionwebhookconfigurationsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "admissionwebhookconfigurations"}
+var admissionwebhookconfigurationsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "admissionwebhookconfigurations"}
 
-var admissionwebhookconfigurationsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "AdmissionWebhookConfiguration"}
+var admissionwebhookconfigurationsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "AdmissionWebhookConfiguration"}
 
 // Get takes name of the admissionWebhookConfiguration, and returns the corresponding admissionWebhookConfiguration object, and an error if there is any.
 func (c *FakeAdmissionWebhookConfigurations) Get(name string, options v1.GetOptions) (result *v2.AdmissionWebhookConfiguration, err error) {

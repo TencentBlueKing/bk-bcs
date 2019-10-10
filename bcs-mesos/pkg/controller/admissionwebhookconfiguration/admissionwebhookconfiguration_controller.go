@@ -95,8 +95,8 @@ type ReconcileAdmissionWebhookConfiguration struct {
 // Automatically generate RBAC rules to allow the Controller to read and write Deployments
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=bkbcs.bkbcs.tencent.com,resources=admissionwebhookconfigurations,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=bkbcs.bkbcs.tencent.com,resources=admissionwebhookconfigurations/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=bkbcs.tencent.com,resources=admissionwebhookconfigurations,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=bkbcs.tencent.com,resources=admissionwebhookconfigurations/status,verbs=get;update;patch
 func (r *ReconcileAdmissionWebhookConfiguration) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the AdmissionWebhookConfiguration instance
 	instance := &bkbcsv2.AdmissionWebhookConfiguration{}

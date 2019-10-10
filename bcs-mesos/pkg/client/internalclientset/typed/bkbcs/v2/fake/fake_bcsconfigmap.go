@@ -32,9 +32,9 @@ type FakeBcsConfigMaps struct {
 	ns   string
 }
 
-var bcsconfigmapsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "bcsconfigmaps"}
+var bcsconfigmapsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "bcsconfigmaps"}
 
-var bcsconfigmapsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "BcsConfigMap"}
+var bcsconfigmapsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "BcsConfigMap"}
 
 // Get takes name of the bcsConfigMap, and returns the corresponding bcsConfigMap object, and an error if there is any.
 func (c *FakeBcsConfigMaps) Get(name string, options v1.GetOptions) (result *v2.BcsConfigMap, err error) {

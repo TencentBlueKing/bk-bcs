@@ -4,9 +4,9 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: bcsservices.bkbcs.bkbcs.tencent.com
+  name: bcsservices.bkbcs.tencent.com
 spec:
-  group: bkbcs.bkbcs.tencent.com
+  group: bkbcs.tencent.com
   names:
     kind: BcsService
     plural: bcsservices

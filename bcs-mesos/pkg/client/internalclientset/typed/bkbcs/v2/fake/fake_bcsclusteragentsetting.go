@@ -32,9 +32,9 @@ type FakeBcsClusterAgentSettings struct {
 	ns   string
 }
 
-var bcsclusteragentsettingsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "bcsclusteragentsettings"}
+var bcsclusteragentsettingsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "bcsclusteragentsettings"}
 
-var bcsclusteragentsettingsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "BcsClusterAgentSetting"}
+var bcsclusteragentsettingsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "BcsClusterAgentSetting"}
 
 // Get takes name of the bcsClusterAgentSetting, and returns the corresponding bcsClusterAgentSetting object, and an error if there is any.
 func (c *FakeBcsClusterAgentSettings) Get(name string, options v1.GetOptions) (result *v2.BcsClusterAgentSetting, err error) {

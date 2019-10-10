@@ -25,7 +25,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - admissionwebhookconfigurations
   verbs:
@@ -37,7 +37,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - admissionwebhookconfigurations/status
   verbs:
@@ -65,7 +65,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - agents
   verbs:
@@ -77,7 +77,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - agents/status
   verbs:
@@ -105,7 +105,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - agentschedinfos
   verbs:
@@ -117,7 +117,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - agentschedinfos/status
   verbs:
@@ -145,7 +145,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - applications
   verbs:
@@ -157,7 +157,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - applications/status
   verbs:
@@ -185,7 +185,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsclusteragentsettings
   verbs:
@@ -197,7 +197,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsclusteragentsettings/status
   verbs:
@@ -225,7 +225,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcscommandinfos
   verbs:
@@ -237,7 +237,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcscommandinfos/status
   verbs:
@@ -265,7 +265,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsconfigmaps
   verbs:
@@ -277,7 +277,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsconfigmaps/status
   verbs:
@@ -305,7 +305,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsendpoints
   verbs:
@@ -317,7 +317,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsendpoints/status
   verbs:
@@ -345,7 +345,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcssecrets
   verbs:
@@ -357,7 +357,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcssecrets/status
   verbs:
@@ -385,7 +385,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsservices
   verbs:
@@ -397,7 +397,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - bcsservices/status
   verbs:
@@ -425,7 +425,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - crds
   verbs:
@@ -437,7 +437,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - crds/status
   verbs:
@@ -465,7 +465,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - crrs
   verbs:
@@ -477,7 +477,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - crrs/status
   verbs:
@@ -505,7 +505,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - deployments
   verbs:
@@ -517,7 +517,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - deployments/status
   verbs:
@@ -545,7 +545,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - frameworks
   verbs:
@@ -557,7 +557,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - frameworks/status
   verbs:
@@ -585,7 +585,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - tasks
   verbs:
@@ -597,7 +597,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - tasks/status
   verbs:
@@ -625,7 +625,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - taskgroups
   verbs:
@@ -637,7 +637,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - taskgroups/status
   verbs:
@@ -665,7 +665,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - versions
   verbs:
@@ -677,7 +677,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - bkbcs.bkbcs.tencent.com
+  - bkbcs.tencent.com
   resources:
   - versions/status
   verbs:

@@ -4,9 +4,9 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: deployments.bkbcs.bkbcs.tencent.com
+  name: deployments.bkbcs.tencent.com
 spec:
-  group: bkbcs.bkbcs.tencent.com
+  group: bkbcs.tencent.com
   names:
     kind: Deployment
     plural: deployments

@@ -4,9 +4,9 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: agents.bkbcs.bkbcs.tencent.com
+  name: agents.bkbcs.tencent.com
 spec:
-  group: bkbcs.bkbcs.tencent.com
+  group: bkbcs.tencent.com
   names:
     kind: Agent
     plural: agents

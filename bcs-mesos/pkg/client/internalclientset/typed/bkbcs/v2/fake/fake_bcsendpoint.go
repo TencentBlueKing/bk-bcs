@@ -32,9 +32,9 @@ type FakeBcsEndpoints struct {
 	ns   string
 }
 
-var bcsendpointsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "bcsendpoints"}
+var bcsendpointsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "bcsendpoints"}
 
-var bcsendpointsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "BcsEndpoint"}
+var bcsendpointsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "BcsEndpoint"}
 
 // Get takes name of the bcsEndpoint, and returns the corresponding bcsEndpoint object, and an error if there is any.
 func (c *FakeBcsEndpoints) Get(name string, options v1.GetOptions) (result *v2.BcsEndpoint, err error) {

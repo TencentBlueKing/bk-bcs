@@ -32,9 +32,9 @@ type FakeCrds struct {
 	ns   string
 }
 
-var crdsResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "crds"}
+var crdsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "crds"}
 
-var crdsKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "Crd"}
+var crdsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "Crd"}
 
 // Get takes name of the crd, and returns the corresponding crd object, and an error if there is any.
 func (c *FakeCrds) Get(name string, options v1.GetOptions) (result *v2.Crd, err error) {

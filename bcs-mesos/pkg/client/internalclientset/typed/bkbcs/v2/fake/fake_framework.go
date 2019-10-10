@@ -32,9 +32,9 @@ type FakeFrameworks struct {
 	ns   string
 }
 
-var frameworksResource = schema.GroupVersionResource{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Resource: "frameworks"}
+var frameworksResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "frameworks"}
 
-var frameworksKind = schema.GroupVersionKind{Group: "bkbcs.bkbcs.tencent.com", Version: "v2", Kind: "Framework"}
+var frameworksKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "Framework"}
 
 // Get takes name of the framework, and returns the corresponding framework object, and an error if there is any.
 func (c *FakeFrameworks) Get(name string, options v1.GetOptions) (result *v2.Framework, err error) {
