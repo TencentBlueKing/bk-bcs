@@ -47,6 +47,7 @@ required = [
   "sigs.k8s.io/controller-runtime/pkg/source",
   "sigs.k8s.io/testing_frameworks/integration", # for integration testing
   "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
+  "github.com/google/cadvisor",
 ]
 
 [[override]]
@@ -72,6 +73,10 @@ required = [
 [[constraint]]
   name = "github.com/containernetworking/cni"
   version = "0.6.0"
+
+[[constraint]]
+  name = "github.com/containernetworking/plugins"
+  version = "v0.6.0"
 
 [[override]]
   name = "github.com/coredns/coredns"
@@ -167,7 +172,7 @@ required = [
 
 [[constraint]]
   name = "github.com/mesos/mesos-go"
-  version = "0.0.2"
+  version = "0.0.10"
 
 [[constraint]]
   name = "github.com/mholt/caddy"
@@ -290,7 +295,7 @@ required = [
   name = "github.com/gophercloud/gophercloud"
 
 [[constraint]]
-  version = "0.2.2"
+  revision = "c2b33e84"
   name = "github.com/jmespath/go-jmespath"
 
 [[constraint]]
@@ -339,7 +344,12 @@ required = [
   name = "golang.org/x/oauth2"
   go-tests = false
   unused-packages = false
+
 [[constraint]]
   name = "github.com/google/cadvisor"
   version = "0.32.0"
+
+[[constraint]]
+  name = "github.com/tencentcloud/tencentcloud-sdk-go"
+  version = "v3.0.88"
 

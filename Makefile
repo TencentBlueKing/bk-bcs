@@ -33,7 +33,7 @@ PACKAGEPATH=./build/bcs.${VERSION}/
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus process_executor process_daemon bmsf-mesos-adapter
+default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus process_executor process_daemon bmsf-mesos-adapter hpacontroller
 specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice hpacontroller bmsf-mesos-adapter
 
 # tag for different edition compiling
@@ -149,3 +149,6 @@ consoleproxy:pre
 
 bmsf-mesos-adapter:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
+
+network:
+	go build ${LDFLAG} -o ${PACKAGEPATH}/qcloud-eip/qcloud-eip ./bcs-services/bcs-network/qcloud-eip/main.go
