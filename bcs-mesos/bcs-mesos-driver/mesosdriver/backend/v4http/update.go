@@ -40,7 +40,7 @@ func (s *Scheduler) UpdateApplication(body []byte, instances, args string) (stri
 		return err.Error(), err
 	}
 
-	version.RawJson = &param
+	//version.RawJson = &param
 
 	// post version to bcs-mesos-scheduler, /v1/apps
 	data, err := json.Marshal(version)

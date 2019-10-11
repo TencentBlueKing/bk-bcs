@@ -1,0 +1,9 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: BcsService
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: bcsservice-sample
+spec:
+  # Add fields here
+  foo: bar

@@ -312,10 +312,10 @@ func (r *Router) createDeployment(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request create deployment(%s.%s)",
 		deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	if deploymentDef.RawJson == nil {
+	/*if deploymentDef.RawJson == nil {
 		blog.Warn("request create deployment(%s.%s) without raw json, please check driver version",
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	}
+	}*/
 
 	if errcode, err := r.backend.CreateDeployment(&deploymentDef); err != nil {
 		blog.Error("fail to create deployment(%s.%s), err:%s",
@@ -351,10 +351,10 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request update deployment(%s.%s)",
 		deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	if deploymentDef.RawJson == nil {
+	/*if deploymentDef.RawJson == nil {
 		blog.Warn("request update deployment(%s.%s) without raw json, please check driver version",
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	}
+	}*/
 
 	if errCode, err := r.backend.UpdateDeployment(&deploymentDef); err != nil {
 		blog.Error("fail to update deployment(%s.%s), err:%s",
@@ -867,9 +867,9 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	if version.RawJson == nil {
+	/*if version.RawJson == nil {
 		blog.Error("request create application(%s.%s) without raw json", version.RunAs, version.ID)
-	}
+	}*/
 
 	if version.Instances <= 0 {
 		blog.Error("request build application(%s.%s) Instances(%d) err", version.RunAs, version.ID, version.Instances)
@@ -1017,7 +1017,7 @@ func (r *Router) fetchApplication(req *restful.Request, resp *restful.Response) 
 	return
 }
 
-func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response) {
+/*func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response) {
 
 	if r.backend.GetRole() != "master" {
 		blog.Warn("scheduler is not master, can not process cmd")
@@ -1051,9 +1051,9 @@ func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response)
 	blog.Info("request get definition of application(%s::%s) end", runAs, appId)
 	return
 
-}
+}*/
 
-func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) {
+/*func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) {
 
 	if r.backend.GetRole() != "master" {
 		blog.Warn("scheduler is not master, can not process cmd")
@@ -1086,7 +1086,7 @@ func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request get definition of deployment(%s::%s) end", runAs, deploymentId)
 	return
-}
+}*/
 
 // DeleteApplication is used to delete a application from mesos and consul via application id.
 func (r *Router) deleteApplication(req *restful.Request, resp *restful.Response) {

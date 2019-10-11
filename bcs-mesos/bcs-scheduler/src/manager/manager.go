@@ -25,6 +25,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
 	"bk-bcs/bcs-common/common/blog"
@@ -43,10 +44,10 @@ func New(config util.SchedConfig) (*Manager, error) {
 		config: config,
 	}
 
-	dbzk := store.NewDbZk(strings.Split(config.ZkHost, ","))
+	dbzk := zk.NewDbZk(strings.Split(config.ZkHost, ","))
 	dbzk.Connect()
 
-	zkStore := store.NewManagerStore(dbzk)
+	zkStore := zk.NewManagerStore(dbzk)
 
 	manager.schedContext = &schedcontext.SchedContext{
 		Config: config,

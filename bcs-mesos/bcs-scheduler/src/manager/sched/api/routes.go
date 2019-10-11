@@ -148,8 +148,8 @@ func (r *Router) initRoutes() {
 	/*-------------- image -----------------*/
 
 	/*------------- definition --------------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/application/{ns}/{name}", nil, r.getApplicationDef))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/deployment/{ns}/{name}", nil, r.getDeploymentDef))
+	//r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/application/{ns}/{name}", nil, r.getApplicationDef))
+	//r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/deployment/{ns}/{name}", nil, r.getDeploymentDef))
 	/*------------- definition --------------------*/
 
 	/*------------- command ---------------------*/
