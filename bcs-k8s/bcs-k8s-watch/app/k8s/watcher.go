@@ -179,6 +179,7 @@ func (watcher *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		oldNode := oldObj.(*v1.Node)
 		newNode := newObj.(*v1.Node)
 
+		// a best way is to use deepcopy function
 		var tempLastTimes = make([]metav1.Time, 5)
 		tempVersion := newNode.ResourceVersion
 		newNode.ResourceVersion = oldNode.ResourceVersion
