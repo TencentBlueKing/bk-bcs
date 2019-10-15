@@ -350,6 +350,9 @@ required = [
   version = "0.32.0"
 
 [[constraint]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.12.3"
+
+[[constraint]]
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
   version = "v3.0.88"
-

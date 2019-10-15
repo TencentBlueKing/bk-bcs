@@ -23,7 +23,6 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
-	"github.com/samuel/go-zookeeper/zk"
 	"net/http"
 	//"sort"
 	"strings"
@@ -341,7 +340,7 @@ func (s *Scheduler) preCheckTaskStatusReport(status *mesos.TaskStatus) bool {
 	taskGroupID := store.GetTaskGroupID(taskId)
 	runAs, appId := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	task, err := s.store.FetchTask(taskId)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Warn("status report: fetch task(%s) err(%s)", taskId, err.Error())
 		return false
 	}
@@ -885,7 +884,7 @@ func (s *Scheduler) preCheckMessageTaskStatus(agentID, executorID, taskId string
 	taskGroupID := store.GetTaskGroupID(taskId)
 	runAs, appId := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	task, err := s.store.FetchTask(taskId)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Warn("message status report: fetch task(%s) err(%s)", taskId, err.Error())
 		return false
 	}

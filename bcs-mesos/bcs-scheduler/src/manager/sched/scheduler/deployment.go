@@ -16,10 +16,10 @@ package scheduler
 import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"errors"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
 	"net/http"
 	"sort"
 	"time"
@@ -87,7 +87,7 @@ func (s *Scheduler) deploymentCheckTick(ns string, name string, recover bool) bo
 	defer s.store.UnLockDeployment(name)
 
 	deployment, err := s.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Warn("deployment(%s.%s) rolling update, fetch deployment err:%s",
 			ns, name, err.Error())
 		return false
@@ -139,7 +139,7 @@ func (s *Scheduler) deploymentBeginRolling(deployment *types.Deployment) bool {
 	ns := deployment.ObjectMeta.NameSpace
 	name := deployment.ObjectMeta.Name
 	app, err := s.store.FetchApplication(ns, deployment.Application.ApplicationName)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Warn("deployment(%s.%s) rolling update: fetch application(%s.%s) err:%s",
 			ns, name, ns, deployment.Application.ApplicationName, err.Error())
 		return false
@@ -157,7 +157,7 @@ func (s *Scheduler) deploymentBeginRolling(deployment *types.Deployment) bool {
 	deployment.Application.CurrentRollingInstances = int(app.Instances) - deployment.Application.CurrentTargetInstances
 
 	appExt, err := s.store.FetchApplication(ns, deployment.ApplicationExt.ApplicationName)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Warn("deployment(%s.%s) rolling update: fetch ext application(%s.%s) err:%s",
 			ns, name, ns, deployment.ApplicationExt.ApplicationName, err.Error())
 		return false
@@ -416,7 +416,7 @@ func (s *Scheduler) finishRollingUpdate(deployment *types.Deployment) bool {
 	s.store.LockApplication(ns + "." + deployment.ApplicationExt.ApplicationName)
 	defer s.store.UnLockApplication(ns + "." + deployment.ApplicationExt.ApplicationName)
 	app, err := s.store.FetchApplication(ns, deployment.ApplicationExt.ApplicationName)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Warn("deployment(%s.%s) rolling update finish,  get application(%s.%s) err %s",
 			ns, deployment.ApplicationExt.ApplicationName, err.Error())
 		return false

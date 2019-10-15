@@ -50,7 +50,6 @@ import (
 	"reflect"
 
 	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
-	"github.com/samuel/go-zookeeper/zk"
 )
 
 // Interval for update task, taskgroup, application in ZK
@@ -241,11 +240,12 @@ func (s *Scheduler) Start() error {
 		return err
 	}
 
-	s.ServiceMgr = NewServiceMgr(s.config.ZK, "/blueking", s)
+	//TODO bergzhao
+	/*s.ServiceMgr = NewServiceMgr(s.config.ZK, "/blueking", s)
 	if s.ServiceMgr == nil {
 		return fmt.Errorf("new serviceMgr(%s:/blueking) error", s.config.ZK)
 	}
-	go s.ServiceMgr.Worker()
+	go s.ServiceMgr.Worker()*/
 
 	//blog.Info("to create transaction manager")
 	//s.TransMgr, _ = CreateTransactionMgr(s)
@@ -303,7 +303,7 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 
 	frameworkId, err := store.FetchFrameworkID()
 	if err != nil {
-		if strings.ToLower(err.Error()) != "zk: node does not exist" {
+		if strings.ToLower(err.Error()) != "zk: node does not exist" && !strings.Contains(err.Error(), "not found") {
 			blog.Error("Fetch framework id failed: %s", err.Error())
 			return nil, err
 		}
@@ -1427,7 +1427,7 @@ func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.Bc
 		agent.HostAttributes = mesosAttribute2commonAttribute(oneAgent.AgentInfo.Attributes)
 		agent.Attributes = agent.HostAttributes
 		settings, err := s.FetchAgentSetting(agent.IP)
-		if err != nil && err != zk.ErrNoNode {
+		if err != nil && err != store.ErrNoFound {
 			blog.Errorf("get cluster resource: query ageng settings failed IP(%s): %v", agent.IP, err)
 			return nil, err
 		}

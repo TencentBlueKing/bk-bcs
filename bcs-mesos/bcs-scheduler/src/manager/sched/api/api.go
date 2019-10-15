@@ -19,11 +19,11 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"errors"
 	"github.com/emicklei/go-restful"
-	"github.com/samuel/go-zookeeper/zk"
 	"strconv"
 	"strings"
 	"time"
@@ -905,7 +905,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	}
 
 	app, err := r.backend.FetchApplication(version.RunAs, version.ID)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("request build: fail to fetch application, err:%s", err.Error())
 		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))

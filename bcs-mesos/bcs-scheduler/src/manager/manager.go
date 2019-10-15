@@ -14,6 +14,7 @@
 package manager
 
 import (
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/etcd"
 	"fmt"
 	"strconv"
 	"strings"
@@ -25,7 +26,6 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
 	"bk-bcs/bcs-common/common/blog"
@@ -44,14 +44,18 @@ func New(config util.SchedConfig) (*Manager, error) {
 		config: config,
 	}
 
-	dbzk := zk.NewDbZk(strings.Split(config.ZkHost, ","))
+	/*dbzk := zk.NewDbZk(strings.Split(config.ZkHost, ","))
 	dbzk.Connect()
-
-	zkStore := zk.NewManagerStore(dbzk)
+	zkStore := zk.NewManagerStore(dbzk)*/
+	etcdStore, err := etcd.NewEtcdStore("/data/bcs/bcs-scheduler/kubeconfig")
+	if err != nil {
+		blog.Errorf("new etcd store failed: %s", err.Error())
+		return nil, err
+	}
 
 	manager.schedContext = &schedcontext.SchedContext{
 		Config: config,
-		Store:  zkStore,
+		Store:  etcdStore,
 	}
 
 	listener := &manager.config.HttpListener
