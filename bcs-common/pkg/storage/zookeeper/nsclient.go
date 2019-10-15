@@ -465,6 +465,9 @@ func (e *nsWatch) pushEventFunc(eventType watch.EventType, nodepath string, rawB
 		target := e.config.ObjectNewFunc()
 		target.SetNamespace(nodes[len(nodes)-2])
 		target.SetName(nodes[len(nodes)-1])
+		zkFlag := make(map[string]string)
+		zkFlag["bk-bcs-inner-storage"] = "bkbcs-zookeeper"
+		target.SetAnnotations(zkFlag)
 		event.Data = target
 	}
 	if e.selector != nil {

@@ -35,14 +35,14 @@ func (srv *NetService) AddHost(info *types.HostInfo) error {
 	hostpath := filepath.Join(defaultHostInfoPath, info.IPAddr)
 	if exist, _ := srv.store.Exist(hostpath); exist {
 		blog.Errorf("Host %s is already exist, skip ADD", info.IPAddr)
-		reportMetrics("addHost", stateLogicFailure, started)
+		reportMetrics("addHost", stateNonExistFailure, started)
 		return fmt.Errorf("host %s is already exist", info.IPAddr)
 	}
 	//check pool path first
 	poolpath := filepath.Join(defaultPoolInfoPath, info.Cluster, info.Pool)
 	if exist, _ := srv.store.Exist(poolpath); !exist {
 		blog.Errorf("Host %s creat relation to pool %s failed, pool lost", info.IPAddr, info.Pool)
-		reportMetrics("addHost", stateLogicFailure, started)
+		reportMetrics("addHost", stateNonExistFailure, started)
 		return fmt.Errorf("pool %s lost", info.Pool)
 	}
 	if err := srv.store.Add(hostpath, data); err != nil {
@@ -68,7 +68,7 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 	hostpath := filepath.Join(defaultHostInfoPath, hostIP)
 	if exist, _ := srv.store.Exist(hostpath); !exist {
 		blog.Errorf("Host %s do not exist in deletion", hostIP)
-		reportMetrics("deleteHost", stateLogicFailure, started)
+		reportMetrics("deleteHost", stateNonExistFailure, started)
 		return fmt.Errorf("host %s do not exist", hostIP)
 	}
 	//get host info
@@ -311,7 +311,7 @@ func (srv *NetService) GetHostInfo(ip string) (*types.HostInfo, error) {
 	}
 	if !exist {
 		blog.Warnf("Host %s do not exist", ip)
-		reportMetrics("getHostInfo", stateLogicFailure, started)
+		reportMetrics("getHostInfo", stateNonExistFailure, started)
 		return nil, nil
 	}
 	hostData, getErr := srv.store.Get(hostpath)
