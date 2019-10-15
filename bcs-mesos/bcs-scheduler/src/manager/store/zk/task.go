@@ -16,9 +16,11 @@ package zk
 import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
+	"github.com/samuel/go-zookeeper/zk"
 	"strings"
 )
 
@@ -145,7 +147,7 @@ func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 
 	cacheTask, cacheErr := fetchCacheTask(taskId)
 	if cacheErr == nil && cacheTask != nil {
-		return cacheTask, cacheErr
+		return cacheTask, nil
 	}
 
 	path, err := createTaskPath(taskId)
@@ -156,6 +158,9 @@ func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 
 	data, err := store.Db.Fetch(path)
 	if err != nil {
+		if err == zk.ErrNoNode {
+			return nil, schStore.ErrNoFound
+		}
 		return nil, err
 	}
 

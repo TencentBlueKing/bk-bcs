@@ -11,17 +11,18 @@
  *
  */
 
-package zk
+package etcd
 
 import (
-	"encoding/json"
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/samuel/go-zookeeper/zk"
+	"k8s.io/apimachinery/pkg/api/errors"
 )
 
 var deploymentLocks map[string]*sync.Mutex
@@ -68,123 +69,105 @@ func (store *managerStore) UnLockDeployment(deploymentName string) {
 	myLock.Unlock()
 }
 
-func getDeploymentRootPath() string {
-	return "/" + bcsRootNode + "/" + deploymentNode + "/"
+func (store *managerStore) CheckDeploymentExist(deployment *types.Deployment) (string, bool) {
+	client := store.BkbcsClient.Deployments(deployment.ObjectMeta.NameSpace)
+	v2Dep, _ := client.Get(deployment.ObjectMeta.Name, metav1.GetOptions{})
+	if v2Dep != nil {
+		return v2Dep.ResourceVersion, true
+	}
+
+	return "", false
 }
 
 func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
-
-	data, err := json.Marshal(deployment)
+	err := store.checkNamespace(deployment.ObjectMeta.NameSpace)
 	if err != nil {
 		return err
 	}
 
-	path := getDeploymentRootPath() + deployment.ObjectMeta.NameSpace + "/" + deployment.ObjectMeta.Name
-	return store.Db.Insert(path, string(data))
+	client := store.BkbcsClient.Deployments(deployment.ObjectMeta.NameSpace)
+	v2Dep := &v2.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       CrdDeployment,
+			APIVersion: ApiversionV2,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deployment.ObjectMeta.Name,
+			Namespace: deployment.ObjectMeta.NameSpace,
+		},
+		Spec: v2.DeploymentSpec{
+			Deployment: *deployment,
+		},
+	}
+
+	rv, exist := store.CheckDeploymentExist(deployment)
+	if exist {
+		v2Dep.ResourceVersion = rv
+		_, err = client.Update(v2Dep)
+	} else {
+		_, err = client.Create(v2Dep)
+	}
+	return err
 }
 
 func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, error) {
-	path := getDeploymentRootPath() + ns + "/" + name
-	data, err := store.Db.Fetch(path)
+	client := store.BkbcsClient.Deployments(ns)
+	v2Dep, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
-		if err == zk.ErrNoNode {
+		if errors.IsNotFound(err) {
 			return nil, schStore.ErrNoFound
 		}
 		return nil, err
 	}
-	deployment := &types.Deployment{}
-	if err := json.Unmarshal(data, deployment); err != nil {
-		blog.Error("fail to unmarshal deployment(%s). err:%s", string(data), err.Error())
-		return nil, err
-	}
 
-	return deployment, nil
+	return &v2Dep.Spec.Deployment, nil
 }
 
 func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, error) {
-	path := getDeploymentRootPath() + ns
-	deploymentNodes, err := store.Db.List(path)
+	client := store.BkbcsClient.Deployments(ns)
+	v2Deps, err := client.List(metav1.ListOptions{})
 	if err != nil {
-		blog.Error("fail to list deploymentNodes path(%s), err:%s", path, err.Error())
 		return nil, err
 	}
 
-	if nil == deploymentNodes {
-		blog.Error("no deployments in (%s)", path)
-		return nil, nil
-	}
-
-	var deployments []*types.Deployment
-	for _, deploymentNode := range deploymentNodes {
-		deployment, err := store.FetchDeployment(ns, deploymentNode)
-		if err != nil {
-			blog.Error("fail to fetch deployment(%s.%s)", ns, deploymentNode)
-			continue
-		}
-
-		deployments = append(deployments, deployment)
+	deployments := make([]*types.Deployment, 0, len(v2Deps.Items))
+	for _, dep := range v2Deps.Items {
+		deployments = append(deployments, &dep.Spec.Deployment)
 	}
 
 	return deployments, nil
 }
 
 func (store *managerStore) DeleteDeployment(ns, name string) error {
-
-	path := getDeploymentRootPath() + ns + "/" + name
-	blog.V(3).Infof("will delete deployment,path(%s)", path)
-	if err := store.Db.Delete(path); err != nil {
-		blog.Error("fail to delete deployment(%s.%s), err:%s", ns, name, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
-
-	rootPath := "/" + bcsRootNode + "/" + deploymentNode
-	runAses, err := store.Db.List(rootPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if nil == runAses {
-		blog.Error("no runAs in (%s)", rootPath)
-		return nil, nil
-	}
-
-	return runAses, nil
+	client := store.BkbcsClient.Deployments(ns)
+	err := client.Delete(name, &metav1.DeleteOptions{})
+	return err
 }
 
 func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
-
-	path := getDeploymentRootPath() + runAs
-
-	IDs, err := store.Db.List(path)
+	deployments, err := store.ListDeployments(runAs)
 	if err != nil {
-		blog.Error("fail to list path:%s, err:%s", path, err.Error())
 		return nil, err
 	}
 
-	return IDs, nil
+	nodes := make([]string, 0, len(deployments))
+	for _, dep := range deployments {
+		nodes = append(nodes, dep.ObjectMeta.Name)
+	}
+	return nodes, nil
 }
 
 func (store *managerStore) ListAllDeployments() ([]*types.Deployment, error) {
-	nss, err := store.ListObjectNamespaces(deploymentNode)
+	client := store.BkbcsClient.Deployments("")
+	v2Deps, err := client.List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	var objs []*types.Deployment
-	for _, ns := range nss {
-		obj, err := store.ListDeployments(ns)
-		if err != nil {
-			blog.Error("fail to fetch deployment by ns(%s)", ns)
-			continue
-		}
-
-		objs = append(objs, obj...)
+	deployments := make([]*types.Deployment, 0, len(v2Deps.Items))
+	for _, dep := range v2Deps.Items {
+		deployments = append(deployments, &dep.Spec.Deployment)
 	}
 
-	return objs, nil
+	return deployments, nil
 }

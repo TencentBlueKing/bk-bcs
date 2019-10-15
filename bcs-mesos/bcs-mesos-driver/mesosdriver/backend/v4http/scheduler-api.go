@@ -198,7 +198,7 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("PUT", "/namespaces/{ns}/admissionwebhook", nil, s.UpdateAdmissionwebhookHandler),
 		httpserver.NewAction("DELETE", "/namespaces/{ns}/admissionwebhook/{name}", nil, s.DeleteAdmissionwebhookHandler),
 		httpserver.NewAction("GET", "/namespaces/{ns}/admissionwebhook/{name}", nil, s.FetchAdmissionwebhookHandler),
-		httpserver.NewAction("DELETE", "/admissionwebhooks", nil, s.FetchAllAdmissionwebhooksHandler),
+		httpserver.NewAction("GET", "/admissionwebhooks", nil, s.FetchAllAdmissionwebhooksHandler),
 		/*================= admissionwebhook ====================*/
 	}
 }

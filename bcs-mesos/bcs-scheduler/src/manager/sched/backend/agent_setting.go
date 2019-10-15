@@ -18,8 +18,6 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"errors"
-
-	"github.com/samuel/go-zookeeper/zk"
 )
 
 // DisableAgent setting agent unschedulable
@@ -92,7 +90,7 @@ func (b *backend) QueryAgentSettingList(IPs []string) ([]*commtypes.BcsClusterAg
 
 	for _, IP := range IPList {
 		agent, err := b.store.FetchAgentSetting(IP)
-		if err != nil && err != zk.ErrNoNode {
+		if err != nil {
 			blog.Error("fetch agent setting(%s) from db fail:%s", IP, err.Error())
 			return nil, comm.BcsErrCommGetZkNodeFail, err
 		}
@@ -117,7 +115,7 @@ func (b *backend) DeleteAgentSettingList(IPs []string) (int, error) {
 		blog.Infof("delete agent setting(%s) from zk", IP)
 
 		err := b.store.DeleteAgentSetting(IP)
-		if err != nil && err != zk.ErrNoNode {
+		if err != nil {
 			blog.Error("delete agent setting(%s) from zk err: %s", IP, err.Error())
 			return comm.BcsErrCommDeleteZkNodeFail, err
 		}
@@ -232,7 +230,7 @@ func (b *backend) UpdateAgentSettingList(update *commtypes.BcsClusterAgentSettin
 
 		for _, IP := range update.IPs {
 			agent, err := b.store.FetchAgentSetting(IP)
-			if err != nil && err != zk.ErrNoNode {
+			if err != nil {
 				blog.Error("fetch agent setting(%s) from db fail:%s", IP, err.Error())
 				return comm.BcsErrCommGetZkNodeFail, err
 			}
@@ -268,7 +266,7 @@ func (b *backend) UpdateAgentSettingList(update *commtypes.BcsClusterAgentSettin
 
 		for _, IP := range update.IPs {
 			agent, err := b.store.FetchAgentSetting(IP)
-			if err != nil && err != zk.ErrNoNode {
+			if err != nil {
 				blog.Error("fetch agent setting(%s) from db fail:%s", IP, err.Error())
 				return comm.BcsErrCommGetZkNodeFail, err
 			}

@@ -16,6 +16,7 @@ package zk
 import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"github.com/samuel/go-zookeeper/zk"
@@ -51,6 +52,9 @@ func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 
 	data, err := store.Db.Fetch(path)
 	if err != nil {
+		if err == zk.ErrNoNode {
+			return nil, schStore.ErrNoFound
+		}
 		return nil, err
 	}
 
@@ -127,6 +131,9 @@ func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 
 	path := getAgentSettingRootPath() + "/" + InnerIP
 	if err := store.Db.Delete(path); err != nil {
+		if err == zk.ErrNoNode {
+			return nil
+		}
 		blog.Error("fail to delete agentSetting(%s) err:%s", path, err.Error())
 		return err
 	}

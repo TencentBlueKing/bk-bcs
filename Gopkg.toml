@@ -345,3 +345,7 @@ required = [
   name = "github.com/google/cadvisor"
   version = "0.32.0"
 
+
+[[constraint]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.12.3"

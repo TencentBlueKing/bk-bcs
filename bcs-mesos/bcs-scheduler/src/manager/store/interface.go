@@ -82,7 +82,7 @@ type Store interface {
 	DeleteTaskGroup(string) error
 	// delete taskgroup by appID
 	//DeleteApplicationTaskGroups(string, string) error
-	FetchTaskgroupByIndex(string, string, int) (*types.TaskGroup, error)
+	//FetchTaskgroupByIndex(string, string, int) (*types.TaskGroup, error)
 	//GetApplicationRootPath() string
 
 	// save agent
@@ -226,7 +226,7 @@ type Store interface {
 	/*=========AdmissionWebhook==========*/
 
 	//list object namespaces, object = applicationNode、versionNode...
-	ListObjectNamespaces(objectNode string) ([]string, error)
+	//ListObjectNamespaces(objectNode string) ([]string, error)
 
 	//start metrics
 	StartStoreObjectMetrics()
