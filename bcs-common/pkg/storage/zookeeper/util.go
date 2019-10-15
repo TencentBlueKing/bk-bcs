@@ -166,8 +166,10 @@ func (n *Node) selfLoop() {
 	exist, err := n.client.Exist(n.selfpath)
 	if err != nil {
 		blog.Errorf("zk node %s Exist failed, %s", n.selfpath, err)
-		n.Stop()
 		if n.parent != nil {
+			//this Node is parent, we can not Stop
+			//and must recovery from next tick
+			n.Stop()
 			blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 			n.parent.DeleteNextWatch(n)
 		}
@@ -176,8 +178,10 @@ func (n *Node) selfLoop() {
 	}
 	if !exist {
 		blog.V(3).Infof("zk node %s do not exist", n.selfpath)
-		n.Stop()
 		if n.parent != nil {
+			//this Node is parent, we can not Stop
+			//and must recovery from next tick
+			n.Stop()
 			blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 			n.parent.DeleteNextWatch(n)
 		}
@@ -188,8 +192,10 @@ func (n *Node) selfLoop() {
 	rawBytes, _, eventCh, err := n.client.GetW(n.selfpath)
 	if err != nil {
 		blog.V(3).Infof("zk client node watch %s failed, %s.", n.selfpath, err)
-		n.Stop()
 		if n.parent != nil {
+			//this Node is parent, we can not Stop
+			//and must recovery from next tick
+			n.Stop()
 			blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 			n.parent.DeleteNextWatch(n)
 		}
@@ -241,8 +247,10 @@ func (n *Node) selfLoop() {
 			}
 			if !exist {
 				blog.V(3).Infof("zk node %s force synchronization found no data, clean watch", n.selfpath)
-				n.Stop()
 				if n.parent != nil {
+					//this Node is parent, we can not Stop
+					//and must recovery from next tick
+					n.Stop()
 					blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 					n.parent.DeleteNextWatch(n)
 				}
@@ -270,8 +278,8 @@ func (n *Node) childrenLoop() {
 	children, evCh, err := n.client.WatchChildren(n.selfpath)
 	if err != nil {
 		blog.Errorf("zk node %s childrenLoop failed, %s", n.selfpath, err)
-		n.Stop()
 		if n.parent != nil {
+			n.Stop()
 			n.parent.DeleteNextWatch(n)
 		}
 		n.underChildrenloop = false
