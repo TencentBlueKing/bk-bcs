@@ -325,7 +325,7 @@ func (z *ZkClient) CreateNode(path string, data []byte) error {
 
 	if !bExist {
 		err := z.Create(path, data)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "node already exists") {
 			return err
 		}
 	}
