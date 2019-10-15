@@ -88,20 +88,32 @@ type BootStrapUser struct {
 }
 
 type AuthOption struct {
-	Auth bool `json:"auth" value:"false" usage:"use auth mode or not" mapstructure:"auth"`
+	Auth          bool `json:"auth" value:"false" usage:"use auth mode or not" mapstructure:"auth"`
+	RemoteCheck   bool `json:"remote_check" value:"false" usage:"check auth in remote host or not" mapstructure:"remote_check"`
+	SkipNoneToken bool `json:"skip_none_token" value:"false" usage:"skip auth check when token no specified" mapstructure:"skip_none_token"`
 
 	ApiGwRsaFile string `json:"apigw_rsa_file" value:"" usage:"apigw rsa public key file" mapstructure:"apigw_rsa_file"`
 
 	AuthTokenSyncTime int `json:"auth_token_sync_time" value:"10" usage:"time ticker for syncing token in cache, seconds" mapstructure:"auth_token_sync_time"`
 
-	BKIamAuthHost       string   `json:"bkiam_auth_host" value:"" usage:"bkiam auth server host" mapstructure:"bkiam_auth_host"`
-	BKIamAuthAppCode    string   `json:"bkiam_auth_app_code" value:"" usage:"app code for communicating with auth" mapstructure:"bkiam_auth_app_code"`
-	BKIamAuthAppSecret  string   `json:"bkiam_auth_app_secret" value:"" usage:"app secret for communicating with auth" mapstructure:"bkiam_auth_app_secret"`
-	BKIamAuthSystemID   string   `json:"bkiam_auth_system_id" value:"" usage:"system id in auth service" mapstructure:"bkiam_auth_system_id"`
-	BKIamAuthScopeID    string   `json:"bkiam_auth_scope_id" value:"" usage:"scope id in auth service" mapstructure:"bkiam_auth_scope_id"`
-	BKIamZookeeper      string   `json:"bkiam_auth_zookeeper" value:"" usage:"zookeeper for auth token storage" mapstructure:"bkiam_auth_zookeeper"`
-	BKIamTokenWhiteList []string `json:"bkiam_auth_token_whitelist" value:"" usage:"token whitelist for bkiam"`
-	BKIamAuthSubServer  string   `json:"bkiam_auth_sub_server" value:"" usage:"bkiam auth subserver" mapstructure:"bkiam_auth_sub_server"`
+	BKIamAuthHost       string          `json:"bkiam_auth_host" value:"" usage:"bkiam auth server host" mapstructure:"bkiam_auth_host"`
+	BKIamAuthAppCode    string          `json:"bkiam_auth_app_code" value:"" usage:"app code for communicating with auth" mapstructure:"bkiam_auth_app_code"`
+	BKIamAuthAppSecret  string          `json:"bkiam_auth_app_secret" value:"" usage:"app secret for communicating with auth" mapstructure:"bkiam_auth_app_secret"`
+	BKIamAuthSystemID   string          `json:"bkiam_auth_system_id" value:"" usage:"system id in auth service" mapstructure:"bkiam_auth_system_id"`
+	BKIamAuthScopeID    string          `json:"bkiam_auth_scope_id" value:"" usage:"scope id in auth service" mapstructure:"bkiam_auth_scope_id"`
+	BKIamZookeeper      string          `json:"bkiam_auth_zookeeper" value:"" usage:"zookeeper for auth token storage" mapstructure:"bkiam_auth_zookeeper"`
+	BKIamTokenWhiteList []AuthWhitelist `json:"bkiam_auth_token_whitelist" value:"" usage:"token whitelist for bkiam"`
+	BKIamAuthSubServer  string          `json:"bkiam_auth_sub_server" value:"" usage:"bkiam auth subserver" mapstructure:"bkiam_auth_sub_server"`
+}
+
+type AuthWhitelist struct {
+	Token string          `json:"token"`
+	Scope []AuthWLCluster `json:"scope"`
+}
+
+type AuthWLCluster struct {
+	ClusterID string   `json:"cluster_id"`
+	Namespace []string `json:"namespace"`
 }
 
 //NewServerOption create a ServerOption object

@@ -14,6 +14,7 @@
 package bkiam
 
 import (
+	"bk-bcs/bcs-services/bcs-api/options"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -41,6 +42,28 @@ func NewAuth(conf *config.ApiServConfig) (auth.BcsAuth, error) {
 		return &Auth{disabled: true}, nil
 	}
 
+	whitelist := make(map[string][]options.AuthWLCluster)
+	for _, wl := range conf.BKIamAuth.BKIamTokenWhiteList {
+		token, err := encrypt.DesDecryptFromBase([]byte(wl.Token))
+		if err != nil {
+			blog.Errorf("decode from token whitelist(%s) failed: %v", wl.Token, err)
+			continue
+		}
+
+		blog.Info("success to load token(%s): %+v", string(token), wl.Scope)
+		whitelist[string(token)] = wl.Scope
+	}
+
+	if !conf.BKIamAuth.RemoteCheck {
+		return &Auth{
+			cache:         nil,
+			client:        nil,
+			cert:          nil,
+			whitelist:     whitelist,
+			skipNoneToken: conf.BKIamAuth.SkipNoneToken,
+		}, nil
+	}
+
 	cache, err := NewTokenCache(conf)
 	if err != nil {
 		blog.Errorf("NewAuth get new token cache failed: %v", err)
@@ -59,35 +82,28 @@ func NewAuth(conf *config.ApiServConfig) (auth.BcsAuth, error) {
 		return nil, err
 	}
 
-	whitelist := make(map[string]bool)
-	for _, raw := range conf.BKIamAuth.BKIamTokenWhiteList {
-		wl, err := encrypt.DesDecryptFromBase([]byte(raw))
-		if err != nil {
-			blog.Errorf("decode from token whitelist(%s) failed: %v", raw, err)
-			continue
-		}
-
-		whitelist[string(wl)] = true
-	}
-
 	return &Auth{
-		cache:     cache,
-		client:    client,
-		cert:      rsaCert,
-		whitelist: whitelist,
+		remoteCheck:   true,
+		cache:         cache,
+		client:        client,
+		cert:          rsaCert,
+		whitelist:     whitelist,
+		skipNoneToken: conf.BKIamAuth.SkipNoneToken,
 	}, nil
 }
 
 // Auth manage the authority check with bk-iam,
 type Auth struct {
-	disabled bool
+	disabled      bool
+	remoteCheck   bool
+	skipNoneToken bool
 
 	cert *rsa.PublicKey
 
 	client *Client
 	cache  *TokenCache
 
-	whitelist map[string]bool
+	whitelist map[string][]options.AuthWLCluster
 }
 
 func (a *Auth) GetToken(header http.Header) (*auth.Token, error) {
@@ -103,6 +119,12 @@ func (a *Auth) GetToken(header http.Header) (*auth.Token, error) {
 			return &auth.Token{Token: userToken}, nil
 		}
 
+		// if token no in whitelist and remote check disabled, just return error
+		if !a.remoteCheck {
+			blog.Errorf("GetToken failed: token no in whitelist and remote check is banned, userToken: %s", userToken)
+			return nil, fmt.Errorf("GetToken failed: no in whitelist and remote check is banned, userToken: %s", userToken)
+		}
+
 		token, err := a.cache.Get(userToken)
 		if err != nil {
 			blog.Errorf("GetToken get from cache failed: %v, userToken: %s", err, userToken)
@@ -110,6 +132,17 @@ func (a *Auth) GetToken(header http.Header) (*auth.Token, error) {
 		}
 
 		return token, nil
+	}
+
+	// if token no specified and skip_none_token is true, just return an empty token
+	if a.skipNoneToken {
+		return &auth.Token{}, nil
+	}
+
+	// if token no specified and remote check disabled, just return error
+	if !a.remoteCheck {
+		blog.Errorf("GetToken failed: no token provided and remote check is banned")
+		return nil, fmt.Errorf("GetToken failed: no token provided and remote check is banned")
 	}
 
 	// username in jwt from api gateway
@@ -134,9 +167,18 @@ func (a *Auth) Allow(token *auth.Token, action auth.Action, resource auth.Resour
 		return true, nil
 	}
 
-	// whitelist for token
-	if _, ok := a.whitelist[token.Token]; ok {
+	if token.Token == "" && a.skipNoneToken {
 		return true, nil
+	}
+
+	// whitelist for token
+	if a.checkWhitelistAuth(token, resource) {
+		return true, nil
+	}
+
+	if !a.remoteCheck {
+		blog.Errorf("auth allow: token not in whitelist and remote check disabled")
+		return false, fmt.Errorf("auth allow: token not in whitelist and remote check disabled")
 	}
 
 	if token.Username == "" {
@@ -153,6 +195,39 @@ func (a *Auth) Allow(token *auth.Token, action auth.Action, resource auth.Resour
 		return false, err
 	}
 	return ok, nil
+}
+
+func (a *Auth) checkWhitelistAuth(token *auth.Token, resource auth.Resource) bool {
+	whitelist, ok := a.whitelist[token.Token]
+	if !ok {
+		return false
+	}
+
+	// 1. no clusters specified means it can access to all clusters
+	// 2. the target resource do not require cluster permission
+	if len(whitelist) == 0 || resource.ClusterID == "" {
+		return true
+	}
+
+	for _, wl := range whitelist {
+		if wl.ClusterID == resource.ClusterID {
+			// the target resource do not require namespace permission
+			if resource.Namespace == "" {
+				return true
+			}
+
+			for _, ns := range wl.Namespace {
+				// match namespace
+				if ns == resource.Namespace {
+					return true
+				}
+			}
+
+			// do not have the permission to the required namespace in this cluster
+			return false
+		}
+	}
+	return false
 }
 
 func parseJWT(myToken string, myKey *rsa.PublicKey) (*ApiGwData, error) {
