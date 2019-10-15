@@ -15,8 +15,10 @@ package zk
 
 import (
 	"bk-bcs/bcs-common/common/blog"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
+	"github.com/samuel/go-zookeeper/zk"
 	"sync"
 )
 
@@ -119,6 +121,9 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 
 	data, err := store.Db.Fetch(path)
 	if err != nil {
+		if err == zk.ErrNoNode {
+			return nil, schStore.ErrNoFound
+		}
 		return nil, err
 	}
 

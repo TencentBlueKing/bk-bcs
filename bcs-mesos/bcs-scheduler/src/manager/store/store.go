@@ -14,9 +14,15 @@
 package store
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"errors"
 	"fmt"
 	"strings"
+
+	"bk-bcs/bcs-common/common/blog"
+)
+
+var (
+	ErrNoFound = errors.New("store: Not Found")
 )
 
 func GetRunAsAndAppIDbyTaskGroupID(taskGroupId string) (string, string) {

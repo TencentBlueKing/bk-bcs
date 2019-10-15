@@ -17,10 +17,10 @@ import (
 	comm "bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"errors"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
 	"strconv"
 	"time"
 )
@@ -38,7 +38,7 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 	defer b.store.UnLockDeployment(name)
 
 	currDeployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("request create deployment(%s.%s), fetch deployment err:%s",
 			ns, name, err.Error())
 		return comm.BcsErrMesosSchedCommon, err
@@ -212,7 +212,7 @@ func (b *backend) createDeploymentApplication(version *types.Version) (int, erro
 		return comm.BcsErrCommRequestDataErr, err
 	}
 	app, err := b.store.FetchApplication(version.RunAs, version.ID)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("create deployment application, fetch application(%s.%s) ret:%s", version.RunAs, version.ID, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
@@ -280,7 +280,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	defer b.store.UnLockDeployment(name)
 
 	currDeployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("update deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
@@ -307,7 +307,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	defer b.store.UnLockApplication(ns + "." + currDeployment.Application.ApplicationName)
 
 	app, err := b.store.FetchApplication(ns, currDeployment.Application.ApplicationName)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Info("update deployment(%s.%s), fetch application(%s) err:%s",
 			ns, name, currDeployment.Application.ApplicationName, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
@@ -374,7 +374,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	defer b.store.UnLockApplication(ns + "." + version.ID)
 
 	app, err = b.store.FetchApplication(version.RunAs, version.ID)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("update deployment, fetch application(%s.%s) err:%s", version.RunAs, version.ID, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
@@ -563,7 +563,7 @@ func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, e
 	defer b.store.UnLockDeployment(name)
 
 	deployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("delete deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
@@ -632,7 +632,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 	if deployment.Application != nil {
 		_, err := b.store.FetchApplication(ns, deployment.Application.ApplicationName)
-		if err == zk.ErrNoNode {
+		if err == store.ErrNoFound {
 			deployment.Application = nil
 		} else {
 			blog.V(3).Infof("check delete deployment(%s.%s), application(%s) not deleted",
@@ -643,7 +643,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 	if deployment.ApplicationExt != nil {
 		_, err := b.store.FetchApplication(ns, deployment.ApplicationExt.ApplicationName)
-		if err == zk.ErrNoNode {
+		if err == store.ErrNoFound {
 			deployment.ApplicationExt = nil
 		} else {
 			blog.V(3).Infof("check delete deployment(%s.%s), application(%s) not deleted",
@@ -672,7 +672,7 @@ func (b *backend) PauseUpdateDeployment(ns string, name string) error {
 	defer b.store.UnLockDeployment(name)
 
 	deployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("pauseupdate deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return err
 	}
@@ -705,7 +705,7 @@ func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 	defer b.store.UnLockDeployment(name)
 
 	deployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("resumeupdate deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return err
 	}
@@ -739,7 +739,7 @@ func (b *backend) ScaleDeployment(runAs, name string, instances uint64) error {
 	defer b.store.UnLockDeployment(name)
 
 	deployment, err := b.store.FetchDeployment(runAs, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("scale deployment(%s.%s) fetch deployment err: %s", runAs, name, err.Error())
 		return err
 	}
