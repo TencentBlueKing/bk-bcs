@@ -77,7 +77,7 @@ func handleEvent(config *Config, event <-chan rdiscover.RoleEvent) {
 					s.Stop()
 				}
 			} else if curEvent == rdiscover.SlaveToMaster {
-				s := &Server{
+				s = &Server{
 					config:    config,
 					mgrStop:   make(chan struct{}),
 					svcQueue:  queue.NewQueue(),
