@@ -291,20 +291,31 @@ func (z *ZkClient) Update(path, data string) error {
 }
 
 func (z *ZkClient) CreateDeepNode(path string, data []byte) error {
-	nodes := strings.Split(path, "/")
-	tmpPath := ""
-	ctx := []byte("")
-	for index, nd := range nodes {
+	originNodes := strings.Split(path, "/")
+	nodes := make([]string, 0)
+	for _, nd := range originNodes {
 		if nd == "" {
 			continue
 		}
 
+		nodes = append(nodes, nd)
+	}
+
+	tmpPath := ""
+	ctx := []byte("")
+	for index, nd := range nodes {
 		if index+1 == len(nodes) {
 			ctx = data
 		}
 
 		tmpPath += "/" + nd
 		err := z.CreateNode(tmpPath, ctx)
+
+		// ignore "node already exists" error in branch node, but return error in leaf node.
+		if err != nil && index+1 < len(nodes) && strings.Contains(err.Error(), "node already exists") {
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf("fail to create node(%s), err(%s)", tmpPath, err.Error())
 		}
@@ -325,7 +336,7 @@ func (z *ZkClient) CreateNode(path string, data []byte) error {
 
 	if !bExist {
 		err := z.Create(path, data)
-		if err != nil && !strings.Contains(err.Error(), "node already exists") {
+		if err != nil {
 			return err
 		}
 	}
