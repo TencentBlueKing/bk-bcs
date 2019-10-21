@@ -384,6 +384,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		return comm.BcsErrMesosSchedCommon, err
 	}
 	application := types.Application{
+		Kind:             version.Kind,
 		ID:               version.ID,
 		Name:             version.ID,
 		DefineInstances:  uint64(version.Instances),
