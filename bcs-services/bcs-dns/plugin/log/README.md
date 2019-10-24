@@ -103,7 +103,7 @@ Only log denials for example.org (and below to a file)
 . {
     log example.org {
         class denial
-        dir /var/logs/
+        log_dir /var/logs/
     }
 }
 ~~~
