@@ -14,6 +14,7 @@
 package log
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -45,7 +46,7 @@ func setup(c *caddy.Controller) error {
 	c.OnStartup(func() error {
 		for i := 0; i < len(rules); i++ {
 			var writer io.Writer
-
+			fmt.Printf("######output file: %s#########\n", rules[i].OutputFile)
 			if rules[i].OutputFile == "stdout" {
 				writer = os.Stdout
 			} else if rules[i].OutputFile == "stderr" {
