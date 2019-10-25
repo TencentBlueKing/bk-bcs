@@ -30,6 +30,17 @@ import (
 )
 
 func init() {
+	blog.InitLogs(conf.LogConfig{
+		ToStdErr:        false,
+		AlsoToStdErr:    false,
+		Verbosity:       3,
+		StdErrThreshold: "2",
+		VModule:         "",
+		TraceLocation:   "",
+		LogDir:          "/data/bcs/bcs-dns/testdir",
+		LogMaxSize:      500,
+		LogMaxNum:       10,
+	})
 	caddy.RegisterPlugin("log", caddy.Plugin{
 		ServerType: "dns",
 		Action:     setup,
@@ -46,29 +57,29 @@ func setup(c *caddy.Controller) error {
 	c.OnStartup(func() error {
 		for i := 0; i < len(rules); i++ {
 			var writer io.Writer
-			fmt.Printf("######output file: %s#########\n", rules[i].OutputFile)
+			fmt.Printf("##output file: %s#########\n", rules[i].OutputFile)
 			if rules[i].OutputFile == "stdout" {
 				writer = os.Stdout
 			} else if rules[i].OutputFile == "stderr" {
 				writer = os.Stderr
 			} else {
-				blog.InitLogs(conf.LogConfig{
-					ToStdErr:        false,
-					AlsoToStdErr:    false,
-					Verbosity:       3,
-					StdErrThreshold: "2",
-					VModule:         "",
-					TraceLocation:   "",
-					LogDir:          rules[i].OutputFile,
-					LogMaxSize:      500,
-					LogMaxNum:       10,
-				})
 				writer = &blog.GlogWriter{}
 			}
-
 			rules[i].Log = log.New(writer, "", 0)
 		}
-
+		/*
+			blog.InitLogs(conf.LogConfig{
+				ToStdErr:        false,
+				AlsoToStdErr:    false,
+				Verbosity:       3,
+				StdErrThreshold: "2",
+				VModule:         "",
+				TraceLocation:   "",
+				LogDir:          "/data/bcs/bcs-dns/testdir",
+				LogMaxSize:      500,
+				LogMaxNum:       10,
+			})
+		*/
 		return nil
 
 	})
