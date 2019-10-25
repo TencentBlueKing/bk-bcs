@@ -29,21 +29,6 @@ import (
 )
 
 func init() {
-	// logDir := DefaultLogFilename
-	// if v := os.Getenv("BKBCS_DNSLOGDIR"); len(v) != 0 {
-	// 	logDir = v
-	// }
-	// blog.InitLogs(conf.LogConfig{
-	// 	ToStdErr:        false,
-	// 	AlsoToStdErr:    false,
-	// 	Verbosity:       3,
-	// 	StdErrThreshold: "2",
-	// 	VModule:         "",
-	// 	TraceLocation:   "",
-	// 	LogDir:          logDir,
-	// 	LogMaxSize:      500,
-	// 	LogMaxNum:       10,
-	// })
 	caddy.RegisterPlugin("log", caddy.Plugin{
 		ServerType: "dns",
 		Action:     setup,
@@ -81,19 +66,6 @@ func setup(c *caddy.Controller) error {
 			}
 			rules[i].Log = log.New(writer, "", 0)
 		}
-		/*
-			blog.InitLogs(conf.LogConfig{
-				ToStdErr:        false,
-				AlsoToStdErr:    false,
-				Verbosity:       3,
-				StdErrThreshold: "2",
-				VModule:         "",
-				TraceLocation:   "",
-				LogDir:          "/data/bcs/bcs-dns/testdir",
-				LogMaxSize:      500,
-				LogMaxNum:       10,
-			})
-		*/
 		return nil
 
 	})
