@@ -19,8 +19,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/coredns/coredns/plugin/etcd/msg"
 	"time"
+
+	"github.com/coredns/coredns/plugin/etcd/msg"
 )
 
 /*

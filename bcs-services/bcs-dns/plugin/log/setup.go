@@ -19,7 +19,7 @@ import (
 	"os"
 
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/blog/glog"
+	"bk-bcs/bcs-common/common/conf"
 
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
@@ -29,8 +29,6 @@ import (
 )
 
 func init() {
-	blog.SetV(3)
-
 	caddy.RegisterPlugin("log", caddy.Plugin{
 		ServerType: "dns",
 		Action:     setup,
@@ -43,23 +41,31 @@ func setup(c *caddy.Controller) error {
 		return plugin.Error("log", err)
 	}
 
+	blog.InitLogs(conf.LogConfig{
+		ToStdErr:        false,
+		AlsoToStdErr:    false,
+		Verbosity:       3,
+		StdErrThreshold: "2",
+		VModule:         "",
+		TraceLocation:   "",
+		LogDir:          rules[0].OutputFile,
+		LogMaxSize:      500,
+		LogMaxNum:       10,
+	})
+
 	// Open the log files for writing when the server starts
 	c.OnStartup(func() error {
 		for i := 0; i < len(rules); i++ {
 			var writer io.Writer
-
 			if rules[i].OutputFile == "stdout" {
 				writer = os.Stdout
 			} else if rules[i].OutputFile == "stderr" {
 				writer = os.Stderr
 			} else {
-				glog.InitLogs(false, false, 3, "2", "", "", rules[i].OutputFile, 500, 10)
 				writer = &blog.GlogWriter{}
 			}
-
 			rules[i].Log = log.New(writer, "", 0)
 		}
-
 		return nil
 
 	})
