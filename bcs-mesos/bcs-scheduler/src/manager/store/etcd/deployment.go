@@ -71,8 +71,8 @@ func (store *managerStore) UnLockDeployment(deploymentName string) {
 
 func (store *managerStore) CheckDeploymentExist(deployment *types.Deployment) (string, bool) {
 	client := store.BkbcsClient.Deployments(deployment.ObjectMeta.NameSpace)
-	v2Dep, _ := client.Get(deployment.ObjectMeta.Name, metav1.GetOptions{})
-	if v2Dep != nil {
+	v2Dep, err := client.Get(deployment.ObjectMeta.Name, metav1.GetOptions{})
+	if err == nil {
 		return v2Dep.ResourceVersion, true
 	}
 

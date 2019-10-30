@@ -214,6 +214,19 @@
   version = "v0.6.0"
 
 [[projects]]
+  digest = "1:04e3375f732d1b06b92d051bed299904ac520b46f5c42359341b670e0112e53d"
+  name = "github.com/containernetworking/plugins"
+  packages = [
+    "pkg/ip",
+    "pkg/ipam",
+    "pkg/ns",
+    "pkg/utils/hwaddr",
+  ]
+  pruneopts = "UT"
+  revision = "7480240de9749f9a0a5c8614b17f1f03e0c06ab9"
+  version = "v0.6.0"
+
+[[projects]]
   digest = "1:029bead268da563f523a8b2a199df6a712f4d61e4044c61574cac70f41ff2700"
   name = "github.com/coredns/coredns"
   packages = [
@@ -275,6 +288,14 @@
   pruneopts = "UT"
   revision = "27fc7e2296f506182f58ce846e48f36b34fe6842"
   version = "v3.3.10"
+
+[[projects]]
+  digest = "1:28b08a595e8175642973ad80d5ff1f2410e4a3c205095ed150993dbc2cde7b17"
+  name = "github.com/coreos/go-iptables"
+  packages = ["iptables"]
+  pruneopts = "UT"
+  revision = "af017ce15ce0adc4beab89d270abfeeb4d262cf1"
+  version = "v0.4.3"
 
 [[projects]]
   digest = "1:0ef770954bca104ee99b3b6b7f9b240605ac03517d9f98cbc1893daa03f3c038"
@@ -1687,6 +1708,21 @@
   revision = "d98352740cb2c55f81556b63d4a1ec64c5a319c2"
 
 [[projects]]
+  digest = "1:102f9819a6f5047bb48b177a0fd67011fa7a3c8eccf6cba88e1e5e9621bef30b"
+  name = "github.com/tencentcloud/tencentcloud-sdk-go"
+  packages = [
+    "tencentcloud/common",
+    "tencentcloud/common/errors",
+    "tencentcloud/common/http",
+    "tencentcloud/common/profile",
+    "tencentcloud/cvm/v20170312",
+    "tencentcloud/vpc/v20170312",
+  ]
+  pruneopts = "UT"
+  revision = "cf7a17a053dc05eaf79ebabb7a5c98ecebfb5956"
+  version = "v3.0.93"
+
+[[projects]]
   digest = "1:03aa6e485e528acb119fb32901cf99582c380225fc7d5a02758e08b180cb56c3"
   name = "github.com/ugorji/go"
   packages = ["codec"]
@@ -2426,6 +2462,9 @@
     "github.com/containernetworking/cni/pkg/types",
     "github.com/containernetworking/cni/pkg/types/current",
     "github.com/containernetworking/cni/pkg/version",
+    "github.com/containernetworking/plugins/pkg/ip",
+    "github.com/containernetworking/plugins/pkg/ipam",
+    "github.com/containernetworking/plugins/pkg/ns",
     "github.com/coredns/coredns/core/dnsserver",
     "github.com/coredns/coredns/plugin",
     "github.com/coredns/coredns/plugin/etcd",
@@ -2494,8 +2533,14 @@
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
+    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common",
+    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors",
+    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile",
+    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312",
+    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312",
     "github.com/ugorji/go/codec",
     "github.com/urfave/cli",
+    "github.com/vishvananda/netlink",
     "go4.org/lock",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
@@ -2508,6 +2553,7 @@
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
     "k8s.io/api/rbac/v1",
+    "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/internalclientset",
     "k8s.io/apimachinery/pkg/api/errors",

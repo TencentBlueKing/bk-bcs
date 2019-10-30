@@ -24,8 +24,8 @@ import (
 
 func (store *managerStore) CheckCustomResourceRegisterExist(crr *commtypes.Crr) (string, bool) {
 	client := store.BkbcsClient.Crrs(DefaultNamespace)
-	obj, _ := client.Get(crr.Spec.Names.Kind, metav1.GetOptions{})
-	if obj != nil {
+	obj, err := client.Get(crr.Spec.Names.Kind, metav1.GetOptions{})
+	if err == nil {
 		return obj.ResourceVersion, true
 	}
 
@@ -88,8 +88,8 @@ func getCrdNamespace(kind, ns string) string {
 
 func (store *managerStore) CheckCustomResourceDefinitionExist(crd *commtypes.Crd) (string, bool) {
 	client := store.BkbcsClient.Crds(getCrdNamespace(string(crd.Kind), crd.NameSpace))
-	v2Crd, _ := client.Get(crd.Name, metav1.GetOptions{})
-	if v2Crd != nil {
+	v2Crd, err := client.Get(crd.Name, metav1.GetOptions{})
+	if err == nil {
 		return v2Crd.ResourceVersion, true
 	}
 

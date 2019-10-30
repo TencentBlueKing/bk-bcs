@@ -22,8 +22,8 @@ import (
 
 func (store *managerStore) CheckEndpointExist(endpoint *commtypes.BcsEndpoint) (string, bool) {
 	client := store.BkbcsClient.BcsEndpoints(endpoint.NameSpace)
-	v2End, _ := client.Get(endpoint.Name, metav1.GetOptions{})
-	if v2End != nil {
+	v2End, err := client.Get(endpoint.Name, metav1.GetOptions{})
+	if err == nil {
 		return v2End.ResourceVersion, true
 	}
 

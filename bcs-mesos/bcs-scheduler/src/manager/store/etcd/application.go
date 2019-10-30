@@ -72,8 +72,8 @@ func (store *managerStore) UnLockApplication(appID string) {
 
 func (store *managerStore) CheckApplicationExist(application *types.Application) (string, bool) {
 	client := store.BkbcsClient.Applications(application.RunAs)
-	v2App, _ := client.Get(application.ID, metav1.GetOptions{})
-	if v2App != nil {
+	v2App, err := client.Get(application.ID, metav1.GetOptions{})
+	if err == nil {
 		return v2App.ResourceVersion, true
 	}
 

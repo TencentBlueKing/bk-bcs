@@ -14,16 +14,65 @@
 package etcd
 
 import (
+	"encoding/json"
+	"sync"
+
+	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var cmdLocks map[string]*sync.Mutex
+var cmdRWlock sync.RWMutex
+
+func (store *managerStore) InitCmdLockPool() {
+	if cmdLocks == nil {
+		blog.Info("init command lock pool")
+		cmdLocks = make(map[string]*sync.Mutex)
+	}
+}
+
+func (store *managerStore) LockCommand(cmdId string) {
+
+	cmdRWlock.RLock()
+	myLock, ok := cmdLocks[cmdId]
+	cmdRWlock.RUnlock()
+	if ok {
+		myLock.Lock()
+		return
+	}
+
+	cmdRWlock.Lock()
+	myLock, ok = cmdLocks[cmdId]
+	if !ok {
+		blog.Info("create command lock(%s), current locknum(%d)", cmdId, len(cmdLocks))
+		cmdLocks[cmdId] = new(sync.Mutex)
+		myLock, _ = cmdLocks[cmdId]
+	}
+	cmdRWlock.Unlock()
+
+	myLock.Lock()
+	return
+}
+
+func (store *managerStore) UnLockCommand(cmdId string) {
+	cmdRWlock.RLock()
+	myLock, ok := cmdLocks[cmdId]
+	cmdRWlock.RUnlock()
+
+	if !ok {
+		blog.Error("command lock(%s) not exist when do unlock", cmdId)
+		return
+	}
+	myLock.Unlock()
+}
+
 func (store *managerStore) CheckCommandExist(command *commtypes.BcsCommandInfo) (string, bool) {
 	client := store.BkbcsClient.BcsCommandInfos(DefaultNamespace)
-	v2Cmd, _ := client.Get(command.Id, metav1.GetOptions{})
-	if v2Cmd != nil {
+	v2Cmd, err := client.Get(command.Id, metav1.GetOptions{})
+	if err == nil {
 		return v2Cmd.ResourceVersion, true
 	}
 
@@ -46,6 +95,8 @@ func (store *managerStore) SaveCommand(command *commtypes.BcsCommandInfo) error 
 		},
 	}
 
+	by, _ := json.Marshal(v2Cmd)
+	blog.Infof("BcsCommandInfo %s", string(by))
 	var err error
 	rv, exist := store.CheckCommandExist(command)
 	if exist {

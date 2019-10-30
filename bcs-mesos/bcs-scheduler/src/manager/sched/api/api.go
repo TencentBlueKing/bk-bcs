@@ -1594,7 +1594,7 @@ func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Respo
 		return
 	}
 
-	commandID := kind + "-" + ns + "-" + name + "-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	commandID := strings.ToLower(kind + "-" + ns + "-" + name + "-" + strconv.FormatInt(time.Now().UnixNano(), 10))
 	blog.Info("send command(%s) to %s:%s.%s", commandID, kind, ns, name)
 	commandInfo := commtypes.BcsCommandInfo{
 		Id:         commandID,
@@ -2251,7 +2251,7 @@ func (r *Router) fetchAllAdmissionwebhooks(req *restful.Request, resp *restful.R
 	data = createResponeData(nil, "success", admissions)
 	resp.Write([]byte(data))
 
-	blog.Info("request list all admissions end")
+	blog.V(3).Info("request list all admissions end")
 	return
 }
 
@@ -2276,6 +2276,6 @@ func (r *Router) fetchAdmissionwebhook(req *restful.Request, resp *restful.Respo
 	data = createResponeData(nil, "success", admission)
 	resp.Write([]byte(data))
 
-	blog.Info("request list all admissions end")
+	blog.V(3).Info("request fetch admissions end")
 	return
 }

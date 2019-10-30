@@ -144,6 +144,7 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 
 	s.store.InitLockPool()
 	s.store.InitDeploymentLockPool()
+	s.store.InitCmdLockPool()
 
 	// TODO, the follow statements are only used for passing test,
 	// should resovled to make sure test pass

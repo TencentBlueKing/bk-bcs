@@ -14,6 +14,7 @@
 package etcd
 
 import (
+	"bk-bcs/bcs-common/common/blog"
 	"fmt"
 	"strings"
 
@@ -95,6 +96,7 @@ func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error)
 
 	tasks := make([]*types.Task, 0, len(v2Tasks.Items))
 	for _, task := range v2Tasks.Items {
+		task.Spec.Task.ResourceVersion = task.ResourceVersion
 		tasks = append(tasks, &task.Spec.Task)
 	}
 	return tasks, nil
@@ -114,6 +116,7 @@ func (store *managerStore) DeleteTask(taskId string) error {
 }
 
 func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
+	blog.Infof("fetch task %s", taskId)
 
 	cacheTask, cacheErr := fetchCacheTask(taskId)
 	if cacheErr == nil && cacheTask != nil {
@@ -124,6 +127,8 @@ func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 }
 
 func (store *managerStore) FetchDBTask(taskId string) (*types.Task, error) {
+	blog.Infof("fetch task %s in db", taskId)
+
 	ns := getNamespacebyTaskID(taskId)
 	client := store.BkbcsClient.Tasks(ns)
 	v2Task, err := client.Get(taskId, metav1.GetOptions{})

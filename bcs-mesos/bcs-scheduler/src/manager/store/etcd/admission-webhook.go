@@ -22,8 +22,8 @@ import (
 
 func (store *managerStore) CheckAdmissionWebhookExist(admission *commtypes.AdmissionWebhookConfiguration) (string, bool) {
 	client := store.BkbcsClient.AdmissionWebhookConfigurations(admission.NameSpace)
-	obj, _ := client.Get(admission.Name, metav1.GetOptions{})
-	if obj != nil {
+	obj, err := client.Get(admission.Name, metav1.GetOptions{})
+	if err == nil {
 		return obj.ResourceVersion, true
 	}
 

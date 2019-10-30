@@ -38,6 +38,7 @@ type CmdConfig struct {
 	CertFile    string
 	KeyFile     string
 	PassWord    string
+	KubeConfig  string
 
 	RegDiscvSvr            string
 	Address                string

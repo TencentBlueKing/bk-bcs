@@ -22,8 +22,8 @@ import (
 
 func (store *managerStore) CheckServiceExist(service *commtypes.BcsService) (string, bool) {
 	client := store.BkbcsClient.BcsServices(service.NameSpace)
-	v2Svc, _ := client.Get(service.Name, metav1.GetOptions{})
-	if v2Svc != nil {
+	v2Svc, err := client.Get(service.Name, metav1.GetOptions{})
+	if err == nil {
 		return v2Svc.ResourceVersion, true
 	}
 

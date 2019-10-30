@@ -232,11 +232,14 @@ func (mgr *ServiceMgr) ServiceDelete(service *commtypes.BcsService) {
 	return
 }
 func (mgr *ServiceMgr) postData(data *ServiceSyncData) {
-	if data == nil {
+	//TODO bergzhao
+	return
+
+	/*if data == nil {
 		return
 	}
 	blog.V(3).Infof("post data(type:%s, action:%s) to ServiceMgr", data.DataType, data.Action)
-	mgr.queue <- data
+	mgr.queue <- data*/
 }
 
 // The goroutine function for service monitoring

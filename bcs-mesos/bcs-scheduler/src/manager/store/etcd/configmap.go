@@ -22,8 +22,8 @@ import (
 
 func (store *managerStore) CheckConfigMapExist(configmap *commtypes.BcsConfigMap) (string, bool) {
 	client := store.BkbcsClient.BcsConfigMaps(configmap.NameSpace)
-	v2Cfg, _ := client.Get(configmap.Name, metav1.GetOptions{})
-	if v2Cfg != nil {
+	v2Cfg, err := client.Get(configmap.Name, metav1.GetOptions{})
+	if err == nil {
 		return v2Cfg.ResourceVersion, true
 	}
 

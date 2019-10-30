@@ -42,7 +42,7 @@ const (
 const (
 	CrdAdmissionWebhookConfiguration = "AdmissionWebhookConfiguration"
 	CrdAgent                         = "Agent"
-	CrdAgentSetting                  = "AgentSetting"
+	CrdAgentSetting                  = "BcsClusterAgentSetting"
 	CrdAgentSchedInfo                = "AgentSchedInfo"
 	CrdApplication                   = "Application"
 	CrdBcsCommandInfo                = "BcsCommandInfo"
@@ -312,23 +312,14 @@ func (store *managerStore) ListRunAs() ([]string, error) {
 
 	runAses := make([]string, 0, len(nss.Items))
 	for _, ns := range nss.Items {
-		runAses = append(runAses, ns.ObjectMeta.Namespace)
+		blog.Infof("namespace %s", ns.Name)
+		runAses = append(runAses, ns.Name)
 	}
 
 	return runAses, nil
 }
 
 func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
-	client := store.k8sClient.CoreV1().Namespaces()
-	nss, err := client.List(metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
 
-	runAses := make([]string, 0, len(nss.Items))
-	for _, ns := range nss.Items {
-		runAses = append(runAses, ns.ObjectMeta.Namespace)
-	}
-
-	return runAses, nil
+	return store.ListRunAs()
 }

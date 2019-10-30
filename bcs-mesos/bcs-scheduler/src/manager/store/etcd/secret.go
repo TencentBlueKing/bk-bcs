@@ -22,8 +22,8 @@ import (
 
 func (store *managerStore) CheckSecretExist(secret *commtypes.BcsSecret) (string, bool) {
 	client := store.BkbcsClient.BcsSecrets(secret.NameSpace)
-	v2Sec, _ := client.Get(secret.Name, metav1.GetOptions{})
-	if v2Sec != nil {
+	v2Sec, err := client.Get(secret.Name, metav1.GetOptions{})
+	if err == nil {
 		return v2Sec.ResourceVersion, true
 	}
 

@@ -97,6 +97,7 @@ func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGro
 
 	taskgroups := make([]*types.TaskGroup, 0, len(v2Taskgroups.Items))
 	for _, taskgroup := range v2Taskgroups.Items {
+		taskgroup.Spec.TaskGroup.ResourceVersion = taskgroup.ResourceVersion
 		taskgroups = append(taskgroups, &taskgroup.Spec.TaskGroup)
 	}
 
@@ -139,6 +140,7 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 
 //FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
+	blog.Infof("fetch taskgroup %s", taskGroupID)
 
 	cacheTaskgroup, cacheErr := fetchCacheTaskGroup(taskGroupID)
 	if cacheErr == nil && cacheTaskgroup != nil {
@@ -150,6 +152,7 @@ func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup,
 
 //FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
+	blog.Infof("fetch taskgroup %s in db", taskGroupID)
 
 	ns := getNamespaceByTaskgroupId(taskGroupID)
 	client := store.BkbcsClient.TaskGroups(ns)
@@ -164,7 +167,7 @@ func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGrou
 		taskIds = append(taskIds, task.ID)
 	}
 
-	taskGroup.Taskgroup = make([]*types.Task, 0, len(taskIds))
+	taskGroup.Taskgroup = make([]*types.Task, len(taskIds))
 	for index, taskID := range taskIds {
 		task, err := store.FetchDBTask(taskID)
 		if err != nil {
