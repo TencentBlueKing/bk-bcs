@@ -239,6 +239,12 @@ func (s *taskGroupController) handleTaskGroup() {
 			if node == nil {
 				continue
 			}
+			// no need to check data of delete event, the deleted taskgroup may has not node ip
+			if e.Type == watch.EventAdded || e.Type == watch.EventDeleted {
+				if !s.validateAppNode(node) {
+					continue
+				}
+			}
 			node.Status.LastUpdateTime = metav1.Now()
 			if node != nil {
 				e.Data = node
@@ -246,6 +252,14 @@ func (s *taskGroupController) handleTaskGroup() {
 			}
 		}
 	}
+}
+
+func (s *taskGroupController) validateAppNode(node *v1.AppNode) bool {
+	if len(node.Spec.NodeIP) == 0 {
+		blog.Errorf("AppNode %s/%s is invalid, lost node ip address", node.GetName(), node.GetNamespace())
+		return false
+	}
+	return true
 }
 
 func (s *taskGroupController) convertTaskGroupToAppNode(taskGroup *TaskGroup) *v1.AppNode {
@@ -296,10 +310,6 @@ func (s *taskGroupController) convertTaskGroupToAppNode(taskGroup *TaskGroup) *v
 			node.Spec.NodeIP = info.NodeAddress
 			node.Spec.ProxyIP = info.NodeAddress
 		}
-	}
-	if len(node.Spec.NodeIP) == 0 {
-		blog.Errorf("bk-bcs convert TaskGroup %s/%s to AppNode finnally failed. lost node ip address, detail: %s", taskGroup.GetNamespace(), taskGroup.GetName(), taskGroup.ID)
-		return nil
 	}
 	blog.Infof("bk-bcs convert TaskGroup %s/%s to AppNode successfluly", taskGroup.GetNamespace(), taskGroup.GetName())
 	return node
