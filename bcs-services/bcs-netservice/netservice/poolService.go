@@ -595,7 +595,7 @@ func (srv *NetService) ListPoolByCluster(cluster string) ([]*types.NetPool, erro
 	}
 	var pools []*types.NetPool
 	if len(nets) == 0 {
-		blog.Infof("No netpool under cluster now", cluster)
+		blog.Infof("No netpool under cluster %s now", cluster)
 		reportMetrics("listPoolByCluster", stateSuccess, started)
 		return pools, nil
 	}

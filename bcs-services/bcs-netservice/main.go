@@ -30,10 +30,10 @@ func main() {
 	//loading configuration file
 	cfg := app.NewConfig()
 	conf.Parse(cfg)
-	license.CheckLicense(cfg.LicenseServerConfig)
 	//init logs
 	blog.InitLogs(cfg.LogConfig)
 	defer blog.CloseLogs()
+	license.CheckLicense(cfg.LicenseServerConfig)
 	//running netservice application
 	if err := app.Run(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "bcs-netservice running failed: %s\n", err.Error())
