@@ -236,11 +236,8 @@ func (s *taskGroupController) handleTaskGroup() {
 				Type: event.EventType,
 			}
 			node := s.convertTaskGroupToAppNode(event.Cur)
-			if node == nil {
-				continue
-			}
 			// no need to check data of delete event, the deleted taskgroup may has not node ip
-			if e.Type == watch.EventAdded || e.Type == watch.EventDeleted {
+			if e.Type != watch.EventDeleted {
 				if !s.validateAppNode(node) {
 					continue
 				}
