@@ -11,33 +11,40 @@
  *
  */
 
-package main
+package custom
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
-	"bk-bcs/bcs-services/bcs-netservice/app"
+	"bk-bcs/bcs-common/common/types"
 	"fmt"
-	"os"
-	"runtime"
-	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+// ServiceNode is node info for bcs services.
+type ServiceNode types.ServerInfo
 
-	//loading configuration file
-	cfg := app.NewConfig()
-	conf.Parse(cfg)
-	//init logs
-	blog.InitLogs(cfg.LogConfig)
-	defer blog.CloseLogs()
-	license.CheckLicense(cfg.LicenseServerConfig)
-	//running netservice application
-	if err := app.Run(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "bcs-netservice running failed: %s\n", err.Error())
-		time.Sleep(5 * time.Second)
-		return
+func NewServiceNode(info types.ServerInfo) ServiceNode {
+	return ServiceNode{
+		IP:         info.IP,
+		Port:       info.Port,
+		MetricPort: info.MetricPort,
+		HostName:   info.HostName,
+		Scheme:     info.Scheme,
+		Version:    info.Version,
+		Cluster:    info.Cluster,
+		Pid:        info.Pid,
 	}
+}
+
+func (n *ServiceNode) PrimaryKey() string {
+	return fmt.Sprintf("%s", uuid.NewV4())
+}
+
+func (n *ServiceNode) Payload() []byte {
+	result, _ := json.Marshal(n)
+	return result
+}
+
+func (n *ServiceNode) OwnsPayload(payload []byte) bool {
+	return true
 }

@@ -1,0 +1,14 @@
+{
+    "kind" : "Policy",
+    "apiVersion" : "v1",
+    "extenders" : [{
+      "urlPrefix": "http://127.0.0.1:8081/bcs/custom/scheduler/k8s/",
+      "filterVerb": "ipscheduler/predicate",
+      "bindVerb": "ipscheduler/bind",
+      "weight": 1,
+      "enableHttps": false,
+      "nodeCacheCapable": false,
+      "httpTimeout": 10000000000
+    }],
+    "hardPodAffinitySymmetricWeight" : 10
+}

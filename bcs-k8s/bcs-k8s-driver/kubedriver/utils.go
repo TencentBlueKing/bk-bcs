@@ -11,33 +11,16 @@
  *
  */
 
-package main
+package kubedriver
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
-	"bk-bcs/bcs-services/bcs-netservice/app"
-	"fmt"
-	"os"
-	"runtime"
-	"time"
+	"reflect"
+
+	restful "github.com/emicklei/go-restful"
 )
 
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	//loading configuration file
-	cfg := app.NewConfig()
-	conf.Parse(cfg)
-	//init logs
-	blog.InitLogs(cfg.LogConfig)
-	defer blog.CloseLogs()
-	license.CheckLicense(cfg.LicenseServerConfig)
-	//running netservice application
-	if err := app.Run(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "bcs-netservice running failed: %s\n", err.Error())
-		time.Sleep(5 * time.Second)
-		return
-	}
+// RouteByMethodName accepts a dynamic method name, this function uses reflect module
+func RouteByMethodName(w *restful.WebService, methodName string, subPath string) *restful.RouteBuilder {
+	methodValue := reflect.ValueOf(w).MethodByName(methodName).Call([]reflect.Value{reflect.ValueOf(subPath)})
+	return methodValue[0].Interface().(*restful.RouteBuilder)
 }
