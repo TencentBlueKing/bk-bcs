@@ -49,6 +49,7 @@ func NewDriver() (resource.IPDriver, error) {
 		netClient: client,
 	}
 	//client get bcs-netservice info
+	conf.ZkHost = strings.ReplaceAll(conf.ZkHost, ",", ";")
 	hosts := strings.Split(conf.ZkHost, ";")
 	if err := client.GetNetService(hosts); err != nil {
 		return nil, fmt.Errorf("get netservice failed, %s", err.Error())
