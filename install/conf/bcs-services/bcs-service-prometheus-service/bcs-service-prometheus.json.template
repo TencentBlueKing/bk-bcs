@@ -1,0 +1,8 @@
+{
+  "bcs_zookeeper": "${bcsZkHost}",
+  "v": 3,
+  "prom_file_prefix": "${promBCSConfigDir}",
+  "enable_service": true,
+  "enable_mesos": false,
+  "enable_node": false
+}

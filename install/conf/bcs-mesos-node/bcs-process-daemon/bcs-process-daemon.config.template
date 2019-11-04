@@ -1,0 +1,5 @@
+{
+  "data_dir": "/data/bcs/bcs-process-daemon/data",
+  "workspace_dir": "/data/bcs/workspace",
+  "unix_socket": "/var/run/process.sock"
+}

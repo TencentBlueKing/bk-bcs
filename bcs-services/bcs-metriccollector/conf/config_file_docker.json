@@ -1,6 +1,0 @@
-{
-  "exporter_type": 1,
-  "ca_file": "/data/bcs/cert/bcs-inner-ca.crt",
-  "client_cert_file": "/data/bcs/cert/bcs-inner-client.crt",
-  "client_key_file": "/data/bcs/cert/bcs-inner-client.key"
-}
