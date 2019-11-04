@@ -1,0 +1,19 @@
+{
+  "address": "${localIp}",
+  "port": ${bcsSchedulerPort},
+  "metric_port": ${bcsSchedulerMetricPort},
+  "bcs_zookeeper": "${bcsZkHost}",
+  "ca_file": "${caFile}",
+  "log_dir": "${log_dir}",
+  "pid_dir": "${pid_dir}",
+  "client_cert_file": "${clientCertFile}",
+  "client_key_file": "${clientKeyFile}",
+  "server_cert_file": "${serverCertFile}",
+  "server_key_file": "${serverKeyFile}",
+  "use_cache": ${useCache},
+  "regdiscv": "${mesosZkHost}",
+  "mesos_regdiscv": "${mesosZkHost}",
+  "zkhost": "${mesosZkHost}",
+  "plugins": "${schedulerPlugins}",
+  "cluster": "${clusterId}"
+}
