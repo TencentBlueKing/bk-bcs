@@ -67,12 +67,14 @@ type ServiceWatch struct {
 
 //Work list all Service data periodically
 func (watch *ServiceWatch) Work() {
+	blog.Infof("ServiceWatch start work")
+
 	watch.ProcessAllServices()
 	tick := time.NewTicker(8 * time.Second)
 	for {
 		select {
 		case <-watch.cancelCxt.Done():
-			blog.V(3).Infof("ServiceWatch asked to exit")
+			blog.Infof("ServiceWatch asked to exit")
 			return
 		case <-tick.C:
 			blog.V(3).Infof("ServiceWatch is running")

@@ -86,7 +86,8 @@ func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, er
 
 	secrets := make([]*commtypes.BcsSecret, 0, len(v2Secs.Items))
 	for _, sec := range v2Secs.Items {
-		secrets = append(secrets, &sec.Spec.BcsSecret)
+		obj := sec.Spec.BcsSecret
+		secrets = append(secrets, &obj)
 	}
 
 	return secrets, nil
@@ -101,7 +102,8 @@ func (store *managerStore) ListAllSecrets() ([]*commtypes.BcsSecret, error) {
 
 	secrets := make([]*commtypes.BcsSecret, 0, len(v2Secs.Items))
 	for _, sec := range v2Secs.Items {
-		secrets = append(secrets, &sec.Spec.BcsSecret)
+		obj := sec.Spec.BcsSecret
+		secrets = append(secrets, &obj)
 	}
 
 	return secrets, nil

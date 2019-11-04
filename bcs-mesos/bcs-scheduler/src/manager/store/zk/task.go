@@ -14,21 +14,21 @@
 package zk
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
+
+	"bk-bcs/bcs-common/common/blog"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
 	"github.com/samuel/go-zookeeper/zk"
-	"strings"
 )
 
 func getTaskRootPath() string {
 	return "/" + bcsRootNode + "/" + applicationNode + "/"
 }
 
-func getRunAsAndAppIDbyTaskID(taskID string) (string, string) {
+/*func getRunAsAndAppIDbyTaskID(taskID string) (string, string) {
 	appID := ""
 	runAs := ""
 
@@ -43,10 +43,10 @@ func getRunAsAndAppIDbyTaskID(taskID string) (string, string) {
 	}
 
 	return appID, runAs
-}
+}*/
 
 func createTaskPath(taskID string) (string, error) {
-	appID, runAs := getRunAsAndAppIDbyTaskID(taskID)
+	appID, runAs := types.GetRunAsAndAppIDbyTaskID(taskID)
 	if "" == appID {
 		err := fmt.Errorf("fail to get appid from taskID(%s)", taskID)
 		return "", err
@@ -57,7 +57,7 @@ func createTaskPath(taskID string) (string, error) {
 		return "", err
 	}
 
-	taskGroupID := store.GetTaskGroupID(taskID)
+	taskGroupID := types.GetTaskGroupID(taskID)
 	if "" == taskGroupID {
 		err := fmt.Errorf("fail to get taskgroup id from taskID(%s)", taskID)
 		return "", err

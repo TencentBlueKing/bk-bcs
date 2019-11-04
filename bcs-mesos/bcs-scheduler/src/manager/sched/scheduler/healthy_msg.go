@@ -17,7 +17,6 @@ import (
 	alarm "bk-bcs/bcs-common/common/bcs-health/api"
 	"bk-bcs/bcs-common/common/blog"
 	bcstype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
@@ -32,7 +31,7 @@ func (s *Scheduler) HealthyReport(healthyResult *bcstype.HealthCheckResult) {
 
 	blog.Info("healthy report: task(%s) healthy(%t) message(%s)", taskId, healthy, message)
 
-	taskGroupID := store.GetTaskGroupID(taskId)
+	taskGroupID := types.GetTaskGroupID(taskId)
 	if taskGroupID == "" {
 		blog.Error("healthy report: can not get taskGroupId from taskID %s", taskId)
 		return
@@ -42,7 +41,7 @@ func (s *Scheduler) HealthyReport(healthyResult *bcstype.HealthCheckResult) {
 		blog.Error("healthy report: Fetch taskgroup %s failed: %s", taskGroupID, err.Error())
 		return
 	}
-	runAs, appId := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	s.store.LockApplication(runAs + "." + appId)
 	defer s.store.UnLockApplication(runAs + "." + appId)
 

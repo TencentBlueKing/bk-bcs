@@ -73,7 +73,7 @@ type Store interface {
 
 	// save taskgroup to db
 	SaveTaskGroup(*types.TaskGroup) error
-	// list all taskgroup
+	// list taskgroups under namespace,appid
 	ListTaskGroups(string, string) ([]*types.TaskGroup, error)
 	// fetch taskgroup
 	FetchTaskGroup(string) (*types.TaskGroup, error)

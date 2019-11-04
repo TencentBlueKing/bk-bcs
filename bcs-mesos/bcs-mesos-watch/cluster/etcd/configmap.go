@@ -68,12 +68,14 @@ type ConfigMapWatch struct {
 
 //Work to add path and node watch
 func (watch *ConfigMapWatch) Work() {
+	blog.Infof("ConfigMapWatch start work")
+
 	watch.ProcessAllConfigmaps()
 	tick := time.NewTicker(12 * time.Second)
 	for {
 		select {
 		case <-watch.cancelCxt.Done():
-			blog.V(3).Infof("ConfigMapWatch asked to exit")
+			blog.Infof("ConfigMapWatch asked to exit")
 			return
 		case <-tick.C:
 			blog.V(3).Infof("ConfigMapWatch is running")

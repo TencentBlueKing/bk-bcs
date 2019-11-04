@@ -86,7 +86,8 @@ func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, 
 
 	svcs := make([]*commtypes.BcsService, 0, len(v2Svcs.Items))
 	for _, svc := range v2Svcs.Items {
-		svcs = append(svcs, &svc.Spec.BcsService)
+		obj := svc.Spec.BcsService
+		svcs = append(svcs, &obj)
 	}
 	return svcs, nil
 }
@@ -100,7 +101,8 @@ func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
 
 	svcs := make([]*commtypes.BcsService, 0, len(v2Svcs.Items))
 	for _, svc := range v2Svcs.Items {
-		svcs = append(svcs, &svc.Spec.BcsService)
+		obj := svc.Spec.BcsService
+		svcs = append(svcs, &obj)
 	}
 	return svcs, nil
 }

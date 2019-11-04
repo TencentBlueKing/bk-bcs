@@ -75,7 +75,8 @@ func (store *managerStore) ListCustomResourceRegister() ([]*commtypes.Crr, error
 
 	crrs := make([]*commtypes.Crr, 0, len(v2Crrs.Items))
 	for _, crr := range v2Crrs.Items {
-		crrs = append(crrs, &crr.Spec.Crr)
+		obj := crr.Spec.Crr
+		crrs = append(crrs, &obj)
 	}
 
 	return crrs, nil
@@ -145,7 +146,8 @@ func (store *managerStore) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
 	crds := make([]*commtypes.Crd, 0, len(v2Crds.Items))
 	for _, crd := range v2Crds.Items {
 		if strings.Contains(crd.Namespace, kind) {
-			crds = append(crds, &crd.Spec.Crd)
+			obj := crd.Spec.Crd
+			crds = append(crds, &obj)
 		}
 	}
 
@@ -161,7 +163,8 @@ func (store *managerStore) ListCustomResourceDefinition(kind, ns string) ([]*com
 
 	crds := make([]*commtypes.Crd, 0, len(v2Crds.Items))
 	for _, crd := range v2Crds.Items {
-		crds = append(crds, &crd.Spec.Crd)
+		obj := crd.Spec.Crd
+		crds = append(crds, &obj)
 	}
 
 	return crds, nil

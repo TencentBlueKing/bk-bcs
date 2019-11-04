@@ -241,18 +241,11 @@ func (s *Scheduler) Start() error {
 		return err
 	}
 
-	//TODO bergzhao
-	/*s.ServiceMgr = NewServiceMgr(s.config.ZK, "/blueking", s)
+	s.ServiceMgr = NewServiceMgr(s)
 	if s.ServiceMgr == nil {
 		return fmt.Errorf("new serviceMgr(%s:/blueking) error", s.config.ZK)
 	}
-	go s.ServiceMgr.Worker()*/
-
-	//blog.Info("to create transaction manager")
-	//s.TransMgr, _ = CreateTransactionMgr(s)
-	//blog.Info("to create transaction manage goroutine")
-	//go TransManage(s.TransMgr)
-	//blog.Info("after creating transaction manage goroutine")
+	go s.ServiceMgr.Worker()
 
 	// get Host and Port
 	splitID := strings.Split(s.config.Address, ":")
@@ -1004,9 +997,8 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 			}()
 
 		case sched.Event_MESSAGE:
-			blog.Info("mesos report message event")
 			message := event.GetMessage()
-			blog.Info("receive message(%s)", message.String())
+			blog.V(3).Infof("receive message(%s)", message.String())
 			data := message.GetData()
 			var bcsMsg *types.BcsMessage
 			err := json.Unmarshal(data, &bcsMsg)

@@ -62,9 +62,10 @@ type AppWatch struct {
 	informer  bkbcsv2.ApplicationInformer
 }
 
-func (app *AppWatch) worker() {
-	hasSynced := app.informer.Informer().HasSynced()
+func (app *AppWatch) Work() {
+	blog.Infof("AppWatch start work")
 
+	hasSynced := app.informer.Informer().HasSynced()
 	for {
 		if hasSynced {
 			blog.Infof("AppWatch application informer HasSynced")

@@ -85,6 +85,8 @@ func (check *HTTPChecker) Start() {
 	check.Started = true
 	check.StartPoint = time.Now()
 	time.Sleep(time.Duration(int64(check.mechanism.GracePeriodSeconds)) * time.Second)
+	check.check()
+
 	tick := time.NewTicker(time.Duration(int64(check.mechanism.IntervalSeconds)) * time.Second)
 	for {
 		select {
@@ -95,23 +97,27 @@ func (check *HTTPChecker) Start() {
 			if check.isPause {
 				continue
 			}
-			check.Ticks++
-			healthy := check.ReCheck()
-			//notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
-			//if !healthy && notGrace {
-			if !healthy {
-				check.LastFailure = check.LastCheck
-				check.ConsecutiveFailures++
-				check.Healthy = false
-				logs.Infof("HTTPChecker %s://%s:%d%s become **Unhealthy**", check.schema, check.ipaddr, check.port, check.path)
-				if check.notify != nil {
-					check.notify(check)
-				}
-			} else {
-				check.Healthy = true
-				check.ConsecutiveFailures = 0
-			}
+			check.check()
 		}
+	}
+}
+
+func (check *HTTPChecker) check(){
+	check.Ticks++
+	healthy := check.ReCheck()
+	//notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
+	//if !healthy && notGrace {
+	if !healthy {
+		check.LastFailure = check.LastCheck
+		check.ConsecutiveFailures++
+		check.Healthy = false
+		logs.Infof("HTTPChecker %s://%s:%d%s become **Unhealthy**", check.schema, check.ipaddr, check.port, check.path)
+		if check.notify != nil {
+			check.notify(check)
+		}
+	} else {
+		check.Healthy = true
+		check.ConsecutiveFailures = 0
 	}
 }
 

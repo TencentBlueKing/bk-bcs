@@ -15,7 +15,6 @@ package zk
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
@@ -29,7 +28,7 @@ func getTaskGroupRootPath() string {
 }
 
 func createTaskGroupPath(taskGroupId string) (string, error) {
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupId)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupId)
 	if "" == runAs {
 		err := fmt.Errorf("fail to get runAs from taskgroupID(%s)", taskGroupId)
 		return "", err

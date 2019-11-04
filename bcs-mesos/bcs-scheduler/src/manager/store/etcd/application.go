@@ -151,7 +151,8 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 
 	apps := make([]*types.Application, 0, len(v2Apps.Items))
 	for _, app := range v2Apps.Items {
-		apps = append(apps, &app.Spec.Application)
+		obj := app.Spec.Application
+		apps = append(apps, &obj)
 	}
 	return apps, nil
 }
@@ -172,7 +173,8 @@ func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
 
 	apps := make([]*types.Application, 0, len(v2Apps.Items))
 	for _, app := range v2Apps.Items {
-		apps = append(apps, &app.Spec.Application)
+		obj := app.Spec.Application
+		apps = append(apps, &obj)
 	}
 	return apps, nil
 }

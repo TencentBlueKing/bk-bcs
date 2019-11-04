@@ -53,6 +53,9 @@ type CmdConfig struct {
 	ServerKeyFile  string
 	ServerPassWord string
 	ServerSchem    string
+
+	Kubeconfig        string
+	StoreDriver       string
 }
 
 const (

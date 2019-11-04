@@ -28,7 +28,6 @@ import (
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/client/informers"
 	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
-
 	"golang.org/x/net/context"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -44,8 +43,7 @@ var (
 
 //NewEtcdCluster create mesos cluster
 func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
-	cfg.KubeConfig = "/data/bcs/bcs-mesos-watch/kubeconfig"
-	blog.Info("mesos cluster(%s) will be created ...", cfg.ClusterID)
+	blog.Info("etcd cluster(%s) will be created ...", cfg.ClusterID)
 
 	ApplicationThreadNum = cfg.ApplicationThreadNum
 	TaskgroupThreadNum = cfg.TaskgroupThreadNum
@@ -60,7 +58,7 @@ func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
 	}
 	//mesos watch initialize
 	if err := mesos.initialize(); err != nil {
-		blog.Error("mesos cluster initialize failed, %s", err.Error())
+		blog.Error("etcd cluster initialize failed, %s", err.Error())
 		return nil
 	}
 	return mesos
@@ -84,6 +82,7 @@ type EtcdCluster struct {
 	secret         *SecretWatch
 	service        *ServiceWatch
 	deployment     *DeploymentWatch
+	stopCh         chan struct{}
 }
 
 // GenerateRandnum just for test
@@ -135,10 +134,12 @@ func (ms *EtcdCluster) createDatTypeWatch() error {
 	blog.Info("mesos cluster create taskgroup watcher...")
 	taskCxt, _ := context.WithCancel(ms.connCxt)
 	ms.taskGroup = NewTaskGroupWatch(taskCxt, ms.factory.Bkbcs().V2().TaskGroups(), ms)
+	go ms.taskGroup.Work()
 
 	blog.Info("mesos cluster create app watcher...")
 	appCxt, _ := context.WithCancel(ms.connCxt)
 	ms.app = NewAppWatch(appCxt, ms.factory.Bkbcs().V2().Applications(), ms)
+	go ms.app.Work()
 
 	configmapCxt, _ := context.WithCancel(ms.connCxt)
 	ms.configmap = NewConfigMapWatch(configmapCxt, ms.factory.Bkbcs().V2().BcsConfigMaps(), ms)
@@ -176,13 +177,21 @@ func (ms *EtcdCluster) initialize() error {
 		return err
 	}
 
-	stopCh := make(chan struct{})
+	ms.stopCh = make(chan struct{})
 	factory := informers.NewSharedInformerFactory(bkbcsClientset, 0)
 	ms.factory = factory
+	//init factory informers
+	ms.factory.Bkbcs().V2().BcsConfigMaps().Lister()
+	ms.factory.Bkbcs().V2().Applications().Lister()
+	ms.factory.Bkbcs().V2().Deployments().Lister()
+	ms.factory.Bkbcs().V2().BcsSecrets().Lister()
+	ms.factory.Bkbcs().V2().BcsServices().Lister()
+	ms.factory.Bkbcs().V2().TaskGroups().Lister()
+
 	blog.Infof("EtcdCluster SharedInformerFactory start...")
-	ms.factory.Start(stopCh)
+	ms.factory.Start(ms.stopCh)
 	// Wait for all caches to sync.
-	ms.factory.WaitForCacheSync(stopCh)
+	ms.factory.WaitForCacheSync(ms.stopCh)
 	blog.Infof("EtcdCluster SharedInformerFactory sync data to cache done")
 
 	//register ReporterHandler
@@ -318,18 +327,25 @@ func (ms *EtcdCluster) reportExportService(data *types.BcsSyncData) error {
 
 //Run running cluster watch
 func (ms *EtcdCluster) Run(cxt context.Context) {
-	blog.Info("mesos cluster run ...")
+	blog.Info("etcd cluster run ...")
 }
 
 //Sync ask cluster to sync data to local cache
 func (ms *EtcdCluster) Sync(tp string) error {
-	blog.Info("mesos cluster sync ...")
+	blog.Info("etcd cluster sync ...")
 	return nil
 }
 
 //Stop ask cluster stopped
 func (ms *EtcdCluster) Stop() {
-	blog.Info("mesos cluster stop ...")
+	blog.Info("etcd cluster stop ...")
+	blog.Info("EtcdCluster stop exportsvr watcher...")
+	ms.exportSvr.stop()
+	if ms.cancel != nil {
+		ms.cancel()
+	}
+	close(ms.stopCh)
+	time.Sleep(2 * time.Second)
 }
 
 //GetClusterStatus get synchronization status

@@ -86,7 +86,8 @@ func (store *managerStore) ListConfigmaps(runAs string) ([]*commtypes.BcsConfigM
 
 	cfgs := make([]*commtypes.BcsConfigMap, 0, len(v2Cfg.Items))
 	for _, cfg := range v2Cfg.Items {
-		cfgs = append(cfgs, &cfg.Spec.BcsConfigMap)
+		obj := cfg.Spec.BcsConfigMap
+		cfgs = append(cfgs, &obj)
 	}
 	return cfgs, nil
 }
@@ -100,7 +101,8 @@ func (store *managerStore) ListAllConfigmaps() ([]*commtypes.BcsConfigMap, error
 
 	cfgs := make([]*commtypes.BcsConfigMap, 0, len(v2Cfg.Items))
 	for _, cfg := range v2Cfg.Items {
-		cfgs = append(cfgs, &cfg.Spec.BcsConfigMap)
+		obj := cfg.Spec.BcsConfigMap
+		cfgs = append(cfgs, &obj)
 	}
 	return cfgs, nil
 }

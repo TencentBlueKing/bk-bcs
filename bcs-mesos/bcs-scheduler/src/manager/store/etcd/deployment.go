@@ -132,7 +132,8 @@ func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, erro
 
 	deployments := make([]*types.Deployment, 0, len(v2Deps.Items))
 	for _, dep := range v2Deps.Items {
-		deployments = append(deployments, &dep.Spec.Deployment)
+		obj := dep.Spec.Deployment
+		deployments = append(deployments, &obj)
 	}
 
 	return deployments, nil
@@ -166,7 +167,8 @@ func (store *managerStore) ListAllDeployments() ([]*types.Deployment, error) {
 
 	deployments := make([]*types.Deployment, 0, len(v2Deps.Items))
 	for _, dep := range v2Deps.Items {
-		deployments = append(deployments, &dep.Spec.Deployment)
+		obj := dep.Spec.Deployment
+		deployments = append(deployments, &obj)
 	}
 
 	return deployments, nil

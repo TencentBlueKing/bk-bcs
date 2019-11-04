@@ -464,22 +464,12 @@ func (p *DockerPod) runningFailedStop(err error) {
 			p.conClient.RemoveContainer(name, true)
 		}
 		task.RuntimeConf.Status = container.ContainerStatus_EXITED
-
-		if p.exitCode == 0 {
-			task.RuntimeConf.Message = fmt.Sprintf("container exit because other container finished in pod")
-		} else {
-			task.RuntimeConf.Message = fmt.Sprintf("container exit because other container exited in pod")
-		}
+		task.RuntimeConf.Message = fmt.Sprintf("container exit because other container exited in pod")
 
 		delete(p.runningContainer, name)
 	}
 
-	if p.exitCode == 0 {
-		p.status = container.PodStatus_FINISH
-	} else {
-		p.status = container.PodStatus_FAILED
-	}
-
+	p.status = container.PodStatus_FAILED
 	p.message = err.Error()
 	logs.Infoln("DockerPod runningFailed stop end.")
 }
@@ -564,12 +554,7 @@ func (p *DockerPod) containerCheck() error {
 				delete(p.runningContainer, name)
 
 				p.exitCode = task.RuntimeConf.ExitCode
-
-				if task.RuntimeConf.ExitCode == 0 {
-					task.RuntimeConf.Message = "container is finished"
-				} else {
-					task.RuntimeConf.Message = "container is down"
-				}
+				task.RuntimeConf.Message = "container is down"
 
 				//stop running container
 				p.runningFailedStop(fmt.Errorf("Pod failed because %s", task.RuntimeConf.Message))

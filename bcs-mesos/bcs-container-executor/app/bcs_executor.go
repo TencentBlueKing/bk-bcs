@@ -333,6 +333,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 		driver.Stop()
 		return
 	}
+
 	//create recovery for release ip address
 	defer func() {
 		if err := recover(); err != nil && executor.podInst != nil {
@@ -344,10 +345,27 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 			driver.Stop()
 		}
 	}()
+
+	stopCh := make(chan struct{})
+	go func() {
+		for {
+			ticker := time.NewTicker(time.Minute)
+			select {
+			case <-stopCh:
+				logs.Infof("stop send task status starting")
+				return
+
+			case <-ticker.C:
+				executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_STARTING, "taskgroup is starting")
+			}
+		}
+	}()
+
 	//go executor.watchStartingTask()
 	logs.Infof("BcsExecutor init pod success.")
 
 	if setupErr := executor.netManager.SetUpPod(executor.podInst); setupErr != nil {
+		close(stopCh)
 		executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_FAILED, "Pod Setup failed: "+setupErr.Error())
 		executor.status = ExecutorStatus_SHUTDOWN
 		executor.podInst.Finit()
@@ -357,6 +375,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 	logs.Infof("BcsExecutor Setup pod network success.")
 
 	if startErr := executor.podInst.Start(); startErr != nil {
+		close(stopCh)
 		executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_FAILED, "Pod Start failed: "+startErr.Error())
 		executor.status = ExecutorStatus_SHUTDOWN
 		executor.netManager.TearDownPod(executor.podInst)
@@ -364,6 +383,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 		driver.Stop()
 		return
 	}
+	close(stopCh)
 	logs.Infof("BcsExecutor start pod success. update local container info, ready to watch Pod status")
 
 	executor.podStatus = container.PodStatus_STARTING
@@ -590,8 +610,8 @@ func (executor *BcsExecutor) monitorPod() {
 					delete(executor.messages, message.Id)
 				}
 
-				var healthyChanged bool
 				for _, task := range executor.podInst.GetContainerTasks() {
+					var healthyChanged bool
 					if task.HealthCheck != nil {
 						if task.RuntimeConf.Healthy != task.HealthCheck.IsHealthy() || task.RuntimeConf.IsChecked != task.HealthCheck.IsTicks() ||
 							task.RuntimeConf.ConsecutiveFailureTimes != task.HealthCheck.ConsecutiveFailure() {

@@ -14,20 +14,12 @@
 package etcd
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func getNamespaceByTaskgroupId(taskGroupId string) string {
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupId)
-	return fmt.Sprintf("%s-%s", runAs, appID)
-}
 
 func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) bool {
 	_, err := store.FetchTaskGroup(taskGroup.ID)
@@ -40,9 +32,7 @@ func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) bool 
 
 //SaveTaskGroup save task group to store
 func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
-	ns := getNamespaceByTaskgroupId(taskGroup.ID)
-
-	client := store.BkbcsClient.TaskGroups(ns)
+	client := store.BkbcsClient.TaskGroups(taskGroup.RunAs)
 	v2Taskgroup := &v2.TaskGroup{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       CrdTaskGroup,
@@ -50,7 +40,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      taskGroup.ID,
-			Namespace: ns,
+			Namespace: taskGroup.RunAs,
 		},
 		Spec: v2.TaskGroupSpec{
 			TaskGroup: *taskGroup,
@@ -88,8 +78,7 @@ func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGro
 		return cacheList, cacheErr
 	}
 
-	ns := fmt.Sprintf("%s-%s", runAs, appID)
-	client := store.BkbcsClient.TaskGroups(ns)
+	client := store.BkbcsClient.TaskGroups(runAs)
 	v2Taskgroups, err := client.List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -97,8 +86,11 @@ func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGro
 
 	taskgroups := make([]*types.TaskGroup, 0, len(v2Taskgroups.Items))
 	for _, taskgroup := range v2Taskgroups.Items {
-		taskgroup.Spec.TaskGroup.ResourceVersion = taskgroup.ResourceVersion
-		taskgroups = append(taskgroups, &taskgroup.Spec.TaskGroup)
+		if taskgroup.Spec.AppID == appID {
+			taskgroup.Spec.TaskGroup.ResourceVersion = taskgroup.ResourceVersion
+			obj := taskgroup.Spec.TaskGroup
+			taskgroups = append(taskgroups, &obj)
+		}
 	}
 
 	syncAppCacheNode(runAs, appID, taskgroups)
@@ -126,8 +118,8 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 		}
 	}
 
-	ns := getNamespaceByTaskgroupId(taskGroupID)
-	client := store.BkbcsClient.TaskGroups(ns)
+	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	client := store.BkbcsClient.TaskGroups(runAs)
 	err = client.Delete(taskGroupID, &metav1.DeleteOptions{})
 	if err != nil {
 		return err
@@ -154,8 +146,8 @@ func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup,
 func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	blog.Infof("fetch taskgroup %s in db", taskGroupID)
 
-	ns := getNamespaceByTaskgroupId(taskGroupID)
-	client := store.BkbcsClient.TaskGroups(ns)
+	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	client := store.BkbcsClient.TaskGroups(runAs)
 	v2Taskgroup, err := client.Get(taskGroupID, metav1.GetOptions{})
 	if err != nil {
 		return nil, err

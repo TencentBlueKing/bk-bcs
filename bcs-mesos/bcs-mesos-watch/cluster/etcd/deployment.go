@@ -70,12 +70,14 @@ type DeploymentWatch struct {
 
 //Work to add path and node watch
 func (watch *DeploymentWatch) Work() {
+	blog.Infof("DeploymentWatch start work")
+
 	watch.ProcessAllDeployments()
 	tick := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case <-watch.cancelCxt.Done():
-			blog.V(3).Infof("DeploymentWatch asked to exit")
+			blog.Infof("DeploymentWatch asked to exit")
 			return
 		case <-tick.C:
 			blog.V(3).Infof("DeploymentWatch is running")

@@ -87,7 +87,8 @@ func (store *managerStore) FetchAllAdmissionWebhooks() ([]*commtypes.AdmissionWe
 
 	admissions := make([]*commtypes.AdmissionWebhookConfiguration, 0, len(v2Admissions.Items))
 	for _, v2 := range v2Admissions.Items {
-		admissions = append(admissions, &v2.Spec.AdmissionWebhookConfiguration)
+		obj := v2.Spec.AdmissionWebhookConfiguration
+		admissions = append(admissions, &obj)
 	}
 	return admissions, nil
 }

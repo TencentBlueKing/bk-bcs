@@ -68,12 +68,14 @@ type SecretWatch struct {
 
 //Work list all namespace secret periodically
 func (watch *SecretWatch) Work() {
+	blog.Infof("SecretWatch start work")
+
 	watch.ProcessAllSecrets()
 	tick := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case <-watch.cancelCxt.Done():
-			blog.V(3).Infof("SecretWatch asked to exit")
+			blog.Infof("SecretWatch asked to exit")
 			return
 		case <-tick.C:
 			blog.V(3).Infof("SecretWatch is running")

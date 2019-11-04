@@ -98,11 +98,13 @@ func (watch *ExportServiceWatch) postData(data *types.BcsSyncData) {
 }
 
 func (watch *ExportServiceWatch) worker(cxt context.Context) {
+	blog.Infof("ExportServiceWatch start work")
+
 	tick := time.NewTicker(120 * time.Second)
 	for {
 		select {
 		case <-cxt.Done():
-			blog.V(3).Infof("ExportServiceWatch asked to exit")
+			blog.Infof("ExportServiceWatch asked to exit")
 			return
 		case <-tick.C:
 			blog.V(3).Infof("ExportServiceWatch is running, managed service num: %d", watch.esInfoCache.Num())
@@ -789,8 +791,7 @@ func (watch *ExportServiceWatch) SyncExportServiceBackends(esInfo *ExportService
 		blog.V(3).Infof("ExportServiceWatch: exportservice (%s %s) match application label(%s:%s) ",
 			esInfo.exportService.Namespace, esInfo.exportService.ServiceName, application.ID, label)
 
-		tgNs := schedtypes.GetEtcdNamespaceByRunAsappID(application.RunAs, application.Name)
-		tgLister := watch.factory.Bkbcs().V2().TaskGroups().Lister().TaskGroups(tgNs)
+		tgLister := watch.factory.Bkbcs().V2().TaskGroups().Lister().TaskGroups(application.RunAs)
 		for _, tgKey := range application.Pods {
 			v2Tg, err := tgLister.Get(tgKey.Name)
 			if err != nil {

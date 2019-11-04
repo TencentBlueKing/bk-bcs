@@ -53,12 +53,12 @@ type TaskGroupWatch struct {
 	eventLock    sync.Mutex       //lock for event
 	cancelCxt    context.Context  //context for cancel
 	report       cluster.Reporter //reporter to cluster
-	tasksCache   cache.Store      //taskgroup info cache
-	controlCache cache.Store      //task cache info
 	informer     bkbcsv2.TaskGroupInformer
 }
 
-func (task *TaskGroupWatch) worker() {
+func (task *TaskGroupWatch) Work() {
+	blog.Infof("TaskGroupWatch start work")
+
 	hasSynced := task.informer.Informer().HasSynced()
 
 	for {

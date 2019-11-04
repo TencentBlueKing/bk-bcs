@@ -15,7 +15,6 @@ package etcd
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"errors"
@@ -207,7 +206,7 @@ func saveCacheTaskGroup(taskGroup *types.TaskGroup) error {
 
 func fetchCacheTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	app := getCacheAppNode(runAs, appID)
 	if app == nil {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
@@ -229,7 +228,7 @@ func fetchCacheTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 
 func deleteCacheTaskGroup(taskGroupID string) error {
 
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	app := getCacheAppNode(runAs, appID)
 	if app == nil {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
@@ -252,11 +251,11 @@ func saveCacheTask(task *types.Task) error {
 		return nil
 	}
 
-	taskGroupID := store.GetTaskGroupID(task.ID)
+	taskGroupID := types.GetTaskGroupID(task.ID)
 	if taskGroupID == "" {
 		return errors.New("task id error")
 	}
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	app := getCacheAppNode(runAs, appID)
 	if app == nil {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
@@ -293,11 +292,11 @@ func deleteCacheTask(taskId string) error {
 		return nil
 	}
 
-	taskGroupID := store.GetTaskGroupID(taskId)
+	taskGroupID := types.GetTaskGroupID(taskId)
 	if taskGroupID == "" {
 		return errors.New("task id error")
 	}
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	app := getCacheAppNode(runAs, appID)
 	if app == nil {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
@@ -324,11 +323,11 @@ func fetchCacheTask(taskId string) (*types.Task, error) {
 		return nil, nil
 	}
 
-	taskGroupID := store.GetTaskGroupID(taskId)
+	taskGroupID := types.GetTaskGroupID(taskId)
 	if taskGroupID == "" {
 		return nil, errors.New("task id error")
 	}
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	app := getCacheAppNode(runAs, appID)
 	if app == nil {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
