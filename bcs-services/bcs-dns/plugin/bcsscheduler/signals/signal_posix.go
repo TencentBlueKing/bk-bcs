@@ -11,9 +11,9 @@
  *
  */
 
-package signals
-
 // +build !windows
+
+package signals
 
 import (
 	"os"
