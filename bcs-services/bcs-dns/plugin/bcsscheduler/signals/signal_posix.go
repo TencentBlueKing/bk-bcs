@@ -11,8 +11,6 @@
  *
  */
 
-// +build !windows
-
 package signals
 
 import (
