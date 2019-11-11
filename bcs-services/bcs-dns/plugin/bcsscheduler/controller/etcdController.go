@@ -36,6 +36,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+const (
+	watchTypeService  = "service"
+	watchTypeEndpoint = "endpoint"
+)
+
 type EtcdController struct {
 	conCxt         context.Context              //context for exit signal
 	conCancel      context.CancelFunc           //stop all goroutine
@@ -90,7 +95,7 @@ func NewEtcdController(kconfig, wType string, period int, cache cache.Store, eve
 //RunController running controller, create goroutine watch kube-api data
 func (ctrl *EtcdController) RunController(stopCh <-chan struct{}) error {
 
-	if ctrl.watchType == "service" {
+	if ctrl.watchType == watchTypeService {
 		factory := informers.NewSharedInformerFactory(ctrl.bkbcsClientSet, time.Second*60)
 		serviceInformer := factory.Bkbcs().V2().BcsServices()
 		serviceLister := serviceInformer.Lister()
@@ -110,7 +115,7 @@ func (ctrl *EtcdController) RunController(stopCh <-chan struct{}) error {
 			return fmt.Errorf("failed to wait for services caches to sync")
 		}
 
-	} else if ctrl.watchType == "endpoint" {
+	} else if ctrl.watchType == watchTypeEndpoint {
 		factory := informers.NewSharedInformerFactory(ctrl.bkbcsClientSet, time.Second*60)
 		endpointInformer := factory.Bkbcs().V2().BcsEndpoints()
 		endpointLister := endpointInformer.Lister()
@@ -184,13 +189,13 @@ func convertToEndpoint(obj interface{}) (interface{}, bool, string) {
 }
 
 func (ctrl *EtcdController) AddEvent(obj interface{}) {
-	if ctrl.watchType == "service" {
+	if ctrl.watchType == watchTypeService {
 		srv, ok, key := convertToService(obj)
 		if !ok {
 			return
 		}
 		ctrl.updateStorageData(srv, key)
-	} else if ctrl.watchType == "endpoint" {
+	} else if ctrl.watchType == watchTypeEndpoint {
 		ep, ok, key := convertToEndpoint(obj)
 		if !ok {
 			return
@@ -208,13 +213,13 @@ func (ctrl *EtcdController) UpdateEvent(oldObj, newObj interface{}) {
 		return
 	}*/
 
-	if ctrl.watchType == "service" {
+	if ctrl.watchType == watchTypeService {
 		newSrv, ok, key := convertToService(newObj)
 		if !ok {
 			return
 		}
 		ctrl.updateStorageData(newSrv, key)
-	} else if ctrl.watchType == "endpoint" {
+	} else if ctrl.watchType == watchTypeEndpoint {
 		newEp, ok, key := convertToEndpoint(newObj)
 		if !ok {
 			return
@@ -224,13 +229,13 @@ func (ctrl *EtcdController) UpdateEvent(oldObj, newObj interface{}) {
 }
 
 func (ctrl *EtcdController) DeleteEvent(obj interface{}) {
-	if ctrl.watchType == "service" {
+	if ctrl.watchType == watchTypeService {
 		_, ok, key := convertToService(obj)
 		if !ok {
 			return
 		}
 		ctrl.deleteStorageData(key)
-	} else if ctrl.watchType == "endpoint" {
+	} else if ctrl.watchType == watchTypeEndpoint {
 		_, ok, key := convertToEndpoint(obj)
 		if !ok {
 			return
@@ -281,9 +286,9 @@ func (ctrl *EtcdController) Resynced() bool {
 
 //dataResync resync all data from kube-apiserver
 func (ctrl *EtcdController) dataResync() {
-	if ctrl.watchType == "service" {
+	if ctrl.watchType == watchTypeService {
 		ctrl.serviceResync()
-	} else if ctrl.watchType == "endpoint" {
+	} else if ctrl.watchType == watchTypeEndpoint {
 		ctrl.endpointResync()
 	}
 }
