@@ -27,11 +27,14 @@ type CertConfig struct {
 }
 
 type Config struct {
-	//bcs mesos cluster zk, list/watch application info, to discovery bcs-driver
+	//bcs mesos cluster zk, list/watch application info
 	//example: 127.0.0.1:2181,127.0.0.2:2181,127.0.0.3:2181
 	ClusterZkAddr string
 
-	//bcs service zk, to discovery bcs-storage
+	//kubeconfig to connect to bcs mesos kube-api, list/watch application info
+	KubeConfig string
+
+	//bcs service zk, to discovery bcs-driver and bcs-storage
 	//example: 127.0.0.1:2181,127.0.0.2:2181,127.0.0.3:2181
 	BcsZkAddr string
 
