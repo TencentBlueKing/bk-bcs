@@ -20,6 +20,7 @@ import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/conf"
 
+	bsMetrics "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
@@ -57,7 +58,7 @@ func setup(c *caddy.Controller) error {
 	}
 	//start & stop register
 	c.OnStartup(func() error {
-		metrics.MustRegister(c, RequestCount, RequestLatency, RequestOutProxyCount, DnsTotal, StorageOperatorTotal, StorageOperatorLatency, ZkNotifyTotal)
+		metrics.MustRegister(c, bsMetrics.RequestCount, bsMetrics.RequestLatency, bsMetrics.RequestOutProxyCount, bsMetrics.DnsTotal, bsMetrics.StorageOperatorTotal, bsMetrics.StorageOperatorLatency, bsMetrics.ZkNotifyTotal)
 		return scheduler.Start()
 	})
 	c.OnShutdown(func() error {
@@ -79,6 +80,7 @@ type ConfigItem struct {
 	ResyncPeriod int         //resync all data from scheduler zookeeper
 	Endpoints    []string    //scheduler event storage endpoints
 	EndpointPath string      //path for original datas
+	KubeConfig   string      //path of kubeconfig for kube-apiserver
 	EndpointCA   string      //ca for endpoints
 	EndpointKey  string      //key for endpoint
 	EndpointCert string      //cert for endpoint
@@ -211,6 +213,13 @@ func schedulerParse(c *caddy.Controller) (*ConfigItem, error) {
 							return nil, c.ArgErr()
 						}
 						config.MetricPort = uint(metricPort)
+						continue
+					}
+					return nil, c.ArgErr()
+				case "kubeconfig":
+					args := c.RemainingArgs()
+					if len(args) == 1 {
+						config.KubeConfig = args[0]
 						continue
 					}
 					return nil, c.ArgErr()

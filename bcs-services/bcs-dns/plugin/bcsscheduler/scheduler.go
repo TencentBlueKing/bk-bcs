@@ -27,6 +27,9 @@ import (
 	"bk-bcs/bcs-common/common/version"
 	"bk-bcs/bcs-common/pkg/cache"
 	"bk-bcs/bcs-common/pkg/master"
+	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/controller"
+	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/signals"
+	bcsSchedulerUtil "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/util"
 	"bk-bcs/bcs-services/bcs-dns/storage"
 	etcdstorage "bk-bcs/bcs-services/bcs-dns/storage/etcd"
 
@@ -110,14 +113,14 @@ func (r recordRequest) IsPodDNS() bool {
 
 //BcsScheduler plugin for reading service/endpoints info from bcs-scheduler
 type BcsScheduler struct {
-	conf               *ConfigItem     //all config item from configuration file
-	svcController      *Controller     //service controller for cache
-	svcCache           *ServiceCache   //service cache
-	endpointController *Controller     //endpoint controller for cache
-	endpointCache      *EndpointCache  //endpoint cache
-	storage            storage.Storage //remote etcd storage for all cluster
-	registery          master.Master   //Master interface
-	Next               plugin.Handler  //next plugin
+	conf               *ConfigItem                     //all config item from configuration file
+	svcController      controller.Controller           //service controller for cache
+	svcCache           *bcsSchedulerUtil.ServiceCache  //service cache
+	endpointController controller.Controller           //endpoint controller for cache
+	endpointCache      *bcsSchedulerUtil.EndpointCache //endpoint cache
+	storage            storage.Storage                 //remote etcd storage for all cluster
+	registery          master.Master                   //Master interface
+	Next               plugin.Handler                  //next plugin
 }
 
 // Services communicates with the backend to retrieve the service definition. if func Services is called,
@@ -224,39 +227,59 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 		return err
 	}
 	//create bcs-service controller
-	store := cache.CreateCache(DNSDataKeyFunc)
-	bcs.svcCache = &ServiceCache{
+	store := cache.CreateCache(bcsSchedulerUtil.DNSDataKeyFunc)
+	bcs.svcCache = &bcsSchedulerUtil.ServiceCache{
 		Store: store,
 	}
 	svc := filepath.Join(bcs.conf.EndpointPath, "service")
-	svcEvents := &EventFuncs{
+	svcEvents := &bcsSchedulerUtil.EventFuncs{
 		AddFunc:    bcs.svcOnAdd,
 		UpdateFunc: bcs.svcOnUpdate,
 		DeleteFunc: bcs.svcOnDelete,
 	}
-	var svcErr error
-	bcs.svcController, svcErr = NewController(bcs.conf.Endpoints, svc, bcs.conf.ResyncPeriod, bcs.svcCache.Store, &SvcDecoder{}, svcEvents)
-	if svcErr != nil {
-		log.Printf("[ERROR] Scheduler create BcsService Controller failed, %s", svcErr.Error())
-		return svcErr
-	}
+
 	//create bcs endpoint controller
-	estore := cache.CreateCache(DNSDataKeyFunc)
-	bcs.endpointCache = &EndpointCache{
+	estore := cache.CreateCache(bcsSchedulerUtil.DNSDataKeyFunc)
+	bcs.endpointCache = &bcsSchedulerUtil.EndpointCache{
 		Store: estore,
 	}
 	endpoint := filepath.Join(bcs.conf.EndpointPath, "endpoint")
-	endpointEvents := &EventFuncs{
+	endpointEvents := &bcsSchedulerUtil.EventFuncs{
 		AddFunc:    bcs.endpointOnAdd,
 		UpdateFunc: bcs.endpointOnUpdate,
 		DeleteFunc: bcs.endpointOnDelete,
 	}
+
+	var svcErr error
 	var epErr error
-	bcs.endpointController, epErr = NewController(bcs.conf.Endpoints, endpoint, bcs.conf.ResyncPeriod, bcs.endpointCache.Store, &EndpointDecoder{}, endpointEvents)
-	if epErr != nil {
-		log.Printf("[ERROR] Scheduler create BcsEndpoint Controller failed, %s", epErr.Error())
-		return epErr
+	if len(bcs.conf.Endpoints) != 0 {
+		bcs.svcController, svcErr = controller.NewZkController(bcs.conf.Endpoints, svc, bcs.conf.ResyncPeriod, bcs.svcCache.Store, &bcsSchedulerUtil.SvcDecoder{}, svcEvents)
+		if svcErr != nil {
+			log.Printf("[ERROR] Scheduler create BcsService Controller failed, %s", svcErr.Error())
+			return svcErr
+		}
+
+		bcs.endpointController, epErr = controller.NewZkController(bcs.conf.Endpoints, endpoint, bcs.conf.ResyncPeriod, bcs.endpointCache.Store, &bcsSchedulerUtil.EndpointDecoder{}, endpointEvents)
+		if epErr != nil {
+			log.Printf("[ERROR] Scheduler create BcsEndpoint Controller failed, %s", epErr.Error())
+			return epErr
+		}
+	} else if bcs.conf.KubeConfig != "" {
+		bcs.svcController, svcErr = controller.NewEtcdController(bcs.conf.KubeConfig, "service", bcs.conf.ResyncPeriod, bcs.svcCache.Store, svcEvents)
+		if svcErr != nil {
+			log.Printf("[ERROR] Scheduler create BcsService Controller failed, %s", svcErr.Error())
+			return svcErr
+		}
+
+		bcs.endpointController, svcErr = controller.NewEtcdController(bcs.conf.KubeConfig, "endpoint", bcs.conf.ResyncPeriod, bcs.endpointCache.Store, endpointEvents)
+		if epErr != nil {
+			log.Printf("[ERROR] Scheduler create BcsEndpoint Controller failed, %s", epErr.Error())
+			return epErr
+		}
+	} else {
+		return fmt.Errorf("scheduler create controller failed, no endpoints and kubeconfig provided")
 	}
+
 	//todo(developer): create etcdStorage for data persistence
 
 	return nil
@@ -266,8 +289,10 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 func (bcs *BcsScheduler) Start() error {
 	log.Printf("%s", version.GetVersion())
 	time.Sleep(time.Second * 1)
-	go bcs.svcController.Run()
-	go bcs.endpointController.Run()
+	// set up signals so we handle the first shutdown signal gracefully
+	stopCh := signals.SetupSignalHandler()
+	go bcs.svcController.RunController(stopCh)
+	go bcs.endpointController.RunController(stopCh)
 	//todo(developer): starting etcdStorage event goroutine
 	return nil
 }
@@ -276,8 +301,8 @@ func (bcs *BcsScheduler) Start() error {
 func (bcs *BcsScheduler) Stop() error {
 	bcs.registery.Clean()
 	bcs.registery.Finit()
-	bcs.svcController.Stop()
-	bcs.endpointController.Stop()
+	bcs.svcController.StopController()
+	bcs.endpointController.StopController()
 	time.Sleep(time.Second * 5)
 	return nil
 }

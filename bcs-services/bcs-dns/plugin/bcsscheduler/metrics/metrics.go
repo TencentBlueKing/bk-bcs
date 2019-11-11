@@ -11,7 +11,7 @@
  *
  */
 
-package bcsscheduler
+package metrics
 
 import (
 	"github.com/coredns/coredns/plugin"

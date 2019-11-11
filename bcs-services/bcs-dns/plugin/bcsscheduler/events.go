@@ -14,19 +14,15 @@
 package bcsscheduler
 
 import (
-	bcstypes "bk-bcs/bcs-common/common/types"
 	"log"
 	"reflect"
 	"strings"
-
 	"time"
 
+	bcstypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
 	"github.com/coredns/coredns/plugin/etcd/msg"
 )
-
-/*
- * EventFuncs for BcsService event funcs
- */
 
 func (bcs *BcsScheduler) svcOnAdd(obj interface{}) {
 	if bcs.storage == nil || !bcs.registery.IsMaster() {
@@ -72,8 +68,8 @@ func (bcs *BcsScheduler) endpointOnAdd(obj interface{}) {
 		return
 	}
 	log.Printf("[WARN] scheduler ADD domain %s in sotrage success.", domain)
-	StorageOperatorTotal.WithLabelValues(AddOperation).Inc()
-	StorageOperatorLatency.WithLabelValues(AddOperation).Observe(time.Since(start).Seconds())
+	metrics.StorageOperatorTotal.WithLabelValues(metrics.AddOperation).Inc()
+	metrics.StorageOperatorLatency.WithLabelValues(metrics.AddOperation).Observe(time.Since(start).Seconds())
 }
 
 func (bcs *BcsScheduler) endpointOnUpdate(old, cur interface{}) {
@@ -107,8 +103,8 @@ func (bcs *BcsScheduler) endpointOnUpdate(old, cur interface{}) {
 	}
 	log.Printf("[WARN] scheduler update %s to storage success.", domain)
 
-	StorageOperatorTotal.WithLabelValues(UpdateOperation).Inc()
-	StorageOperatorLatency.WithLabelValues(UpdateOperation).Observe(time.Since(start).Seconds())
+	metrics.StorageOperatorTotal.WithLabelValues(metrics.UpdateOperation).Inc()
+	metrics.StorageOperatorLatency.WithLabelValues(metrics.UpdateOperation).Observe(time.Since(start).Seconds())
 }
 
 func (bcs *BcsScheduler) endpointOnDelete(obj interface{}) {
@@ -131,8 +127,8 @@ func (bcs *BcsScheduler) endpointOnDelete(obj interface{}) {
 		return
 	}
 	log.Printf("[WARN] scheduler delete domain %s in sotrage success.", domain)
-	StorageOperatorTotal.WithLabelValues(DeleteOperation).Inc()
-	StorageOperatorLatency.WithLabelValues(DeleteOperation).Observe(time.Since(start).Seconds())
+	metrics.StorageOperatorTotal.WithLabelValues(metrics.DeleteOperation).Inc()
+	metrics.StorageOperatorLatency.WithLabelValues(metrics.DeleteOperation).Observe(time.Since(start).Seconds())
 }
 
 //endpoint2Message create etcd message with BcsEndpoint
