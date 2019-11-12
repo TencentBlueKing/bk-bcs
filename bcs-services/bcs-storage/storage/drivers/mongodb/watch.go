@@ -111,13 +111,13 @@ func (wh *watchHandler) watching(pCtx context.Context) {
 	var op *opLog
 	var eventsNumber uint
 
-	for {
-		if wh.opts.Timeout > 0 {
-			ctx, cancel = context.WithTimeout(pCtx, wh.opts.Timeout)
-		} else {
-			ctx, cancel = context.WithCancel(pCtx) //nolint
-		}
+	if wh.opts.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(pCtx, wh.opts.Timeout)
+	} else {
+		ctx, cancel = context.WithCancel(pCtx) //nolint
+	}
 
+	for {
 		if (wh.opts.MaxEvents > 0) && (eventsNumber >= wh.opts.MaxEvents) {
 			cancel()
 		}
