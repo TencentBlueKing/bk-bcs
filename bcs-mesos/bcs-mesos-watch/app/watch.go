@@ -345,9 +345,9 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 				if appRole == "master" {
 					blog.Info("become to master: to new and run cluster...")
 					var cluster cluster.Cluster
-					if cfg.StoreDriver=="etcd" {
+					if cfg.StoreDriver == "etcd" {
 						cluster = etcd.NewEtcdCluster(cfg, storage)
-					}else {
+					} else {
 						cluster = mesos.NewMesosCluster(cfg, storage)
 					}
 

@@ -260,15 +260,15 @@ func (mgr *ServiceMgr) doCheck() {
 
 func (mgr *ServiceMgr) processAllServices() error {
 	currTime := time.Now().Unix()
-	blog.Info("sync all services, currTime(%d)",currTime)
+	blog.Info("sync all services, currTime(%d)", currTime)
 
-	services,err := mgr.sched.store.ListAllServices()
-	if err!=nil {
-		blog.Infof("ServiceMgr ListAllServices error %s",err.Error())
+	services, err := mgr.sched.store.ListAllServices()
+	if err != nil {
+		blog.Infof("ServiceMgr ListAllServices error %s", err.Error())
 		return err
 	}
 
-	for _,data :=range services {
+	for _, data := range services {
 		key := data.ObjectMeta.NameSpace + "." + data.ObjectMeta.Name
 		cacheData, exist, err := mgr.esInfoCache.GetByKey(key)
 		if err != nil {
@@ -442,28 +442,28 @@ func (mgr *ServiceMgr) createServiceInfo(service *commtypes.BcsService) *exportS
 
 func (mgr *ServiceMgr) syncEndpointInfo(esInfo *exportServiceInfo) {
 	key := esInfo.bcsService.ObjectMeta.NameSpace + "." + esInfo.bcsService.ObjectMeta.Name
-	apps,err := mgr.sched.store.ListApplications(esInfo.bcsService.ObjectMeta.NameSpace)
-	if err!=nil {
-		blog.Errorf("ServiceMgr list application(%s) error %s",esInfo.bcsService.ObjectMeta.NameSpace,err.Error())
+	apps, err := mgr.sched.store.ListApplications(esInfo.bcsService.ObjectMeta.NameSpace)
+	if err != nil {
+		blog.Errorf("ServiceMgr list application(%s) error %s", esInfo.bcsService.ObjectMeta.NameSpace, err.Error())
 		return
 	}
 
 	esInfo.endpoint.Endpoints = nil
-	for _,application := range apps {
+	for _, application := range apps {
 		label := mgr.getApplicationServiceLabel(esInfo.bcsService, application)
 		if label == "" {
-			blog.V(3).Infof("application(%s:%s) not match service: %s",application.RunAs,application.ID, key)
+			blog.V(3).Infof("application(%s:%s) not match service: %s", application.RunAs, application.ID, key)
 			continue
 		}
 
-		blog.Infof("sync all taskgroups under application(%s:%s) for service(%s)", application.RunAs,application.ID, key)
-		taskgroups,err := mgr.sched.store.ListTaskGroups(application.RunAs,application.ID)
-		if err!=nil {
-			blog.Errorf("ServiceMgr List TaskGroups(%s:%s) error %s",application.RunAs,application.ID,err.Error())
+		blog.Infof("sync all taskgroups under application(%s:%s) for service(%s)", application.RunAs, application.ID, key)
+		taskgroups, err := mgr.sched.store.ListTaskGroups(application.RunAs, application.ID)
+		if err != nil {
+			blog.Errorf("ServiceMgr List TaskGroups(%s:%s) error %s", application.RunAs, application.ID, err.Error())
 			continue
 		}
 
-		for _,tskgroup := range taskgroups {
+		for _, tskgroup := range taskgroups {
 			if tskgroup.Taskgroup == nil || len(tskgroup.Taskgroup) == 0 {
 				blog.Error("taskgroup(%s) has no Task Info", tskgroup.ID)
 				continue

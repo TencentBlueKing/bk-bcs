@@ -19,24 +19,24 @@ import (
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 // at present, we just
 type applicationCacheNode struct {
-	Taskgroups []*types.TaskGroup
+	Taskgroups  []*types.TaskGroup
 	Application *types.Application
-	Versions []*types.Version
+	Versions    []*types.Version
 }
 
 // Cache Manager
 type cacheManager struct {
 	// Current cached application
 	Applications map[string]*applicationCacheNode
-	Namespaces map[string]struct{}
-	Configmaps map[string]*commtypes.BcsConfigMap
-	Secrets map[string]*commtypes.BcsSecret
+	Namespaces   map[string]struct{}
+	Configmaps   map[string]*commtypes.BcsConfigMap
+	Secrets      map[string]*commtypes.BcsSecret
 	// Manager currently is OK
 	isOK    bool
 	mapLock *sync.RWMutex
@@ -64,22 +64,22 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	if isUsed {
 		// init namespace in cache
 		err := store.initCacheNamespaces()
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 		//init application in cache
 		err = store.initCacheApplications()
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 		//init configmap in cache
 		err = store.initCacheConfigmaps()
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 		//init secret in cache
 		err = store.initCacheSecrets()
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -112,84 +112,84 @@ func (store *managerStore) UnInitCacheMgr() error {
 	return nil
 }
 
-func (store *managerStore) initCacheNamespaces()error{
-	nss,err := store.ListRunAs()
-	if err!=nil {
-		blog.Errorf("cacheManager init namespace failed: %s",err.Error())
+func (store *managerStore) initCacheNamespaces() error {
+	nss, err := store.ListRunAs()
+	if err != nil {
+		blog.Errorf("cacheManager init namespace failed: %s", err.Error())
 		return err
 	}
 
-	for _,ns :=range nss {
+	for _, ns := range nss {
 		cacheMgr.Namespaces[ns] = struct{}{}
-		blog.V(3).Infof("cacheManager sync namespace %s in cache",ns)
+		blog.V(3).Infof("cacheManager sync namespace %s in cache", ns)
 	}
 	blog.Infof("cacheMgr init cache namespaces done")
 	return nil
 }
 
-func (store *managerStore) initCacheConfigmaps()error{
-	cfgs,err := store.ListAllConfigmaps()
-	if err!=nil {
-		blog.Errorf("cacheManager init configmaps failed: %s",err.Error())
+func (store *managerStore) initCacheConfigmaps() error {
+	cfgs, err := store.ListAllConfigmaps()
+	if err != nil {
+		blog.Errorf("cacheManager init configmaps failed: %s", err.Error())
 		return err
 	}
 
-	for _,cfg :=range cfgs {
-		key := fmt.Sprintf("%s.%s",cfg.NameSpace,cfg.Name)
+	for _, cfg := range cfgs {
+		key := fmt.Sprintf("%s.%s", cfg.NameSpace, cfg.Name)
 		cacheMgr.Configmaps[key] = cfg.DeepCopy()
-		blog.V(3).Infof("cacheManager sync configmap %s in cache",key)
+		blog.V(3).Infof("cacheManager sync configmap %s in cache", key)
 	}
 	blog.Infof("cacheMgr init cache configmaps done")
 	return nil
 }
 
-func (store *managerStore) initCacheSecrets()error{
-	secs,err := store.ListAllSecrets()
-	if err!=nil {
-		blog.Errorf("cacheManager init secrets failed: %s",err.Error())
+func (store *managerStore) initCacheSecrets() error {
+	secs, err := store.ListAllSecrets()
+	if err != nil {
+		blog.Errorf("cacheManager init secrets failed: %s", err.Error())
 		return err
 	}
 
-	for _,sec :=range secs {
-		key := fmt.Sprintf("%s.%s",sec.NameSpace,sec.Name)
+	for _, sec := range secs {
+		key := fmt.Sprintf("%s.%s", sec.NameSpace, sec.Name)
 		cacheMgr.Secrets[key] = sec.DeepCopy()
-		blog.V(3).Infof("cacheManager sync secret %s in cache",key)
+		blog.V(3).Infof("cacheManager sync secret %s in cache", key)
 	}
 	blog.Infof("cacheMgr init cache secrets done")
 	return nil
 }
 
-func (store *managerStore) initCacheApplications()error{
-	apps,err := store.ListAllApplications()
-	if err!=nil {
-		blog.Errorf("cacheManager init application failed: %s",err.Error())
+func (store *managerStore) initCacheApplications() error {
+	apps, err := store.ListAllApplications()
+	if err != nil {
+		blog.Errorf("cacheManager init application failed: %s", err.Error())
 		return err
 	}
 
-	for _,app :=range apps {
+	for _, app := range apps {
 		appNode := new(applicationCacheNode)
 		//cache application
 		appNode.Application = app.DeepCopy()
-		blog.V(3).Infof("cacheManager app(%s:%s) sync Application in cache", app.RunAs,app.ID)
+		blog.V(3).Infof("cacheManager app(%s:%s) sync Application in cache", app.RunAs, app.ID)
 
 		//cache versions
-		versions,err := store.listVersions(app.RunAs,app.ID)
-		if err!=nil {
+		versions, err := store.listVersions(app.RunAs, app.ID)
+		if err != nil {
 			return err
 		}
-		for _,version :=range versions {
-			blog.V(3).Infof("cacheManager app(%s:%s) sync version(%s) in cache", app.RunAs,app.ID,version.Name)
+		for _, version := range versions {
+			blog.V(3).Infof("cacheManager app(%s:%s) sync version(%s) in cache", app.RunAs, app.ID, version.Name)
 			tmpData := version.DeepCopy()
-			appNode.Versions = append(appNode.Versions,tmpData)
+			appNode.Versions = append(appNode.Versions, tmpData)
 		}
 
 		//cache taskgroups
-		taskGroups,err := store.listTaskgroupsInDB(app.RunAs,app.ID)
-		if err!=nil {
+		taskGroups, err := store.listTaskgroupsInDB(app.RunAs, app.ID)
+		if err != nil {
 			return err
 		}
 		for _, taskGroup := range taskGroups {
-			blog.V(3).Infof("cacheManager app(%s:%s) sync taskgroup(%s) in cache", app.RunAs,app.ID, taskGroup.ID)
+			blog.V(3).Infof("cacheManager app(%s:%s) sync taskgroup(%s) in cache", app.RunAs, app.ID, taskGroup.ID)
 			tmpData := taskGroup.DeepCopy()
 			appNode.Taskgroups = append(appNode.Taskgroups, tmpData)
 		}
@@ -201,18 +201,18 @@ func (store *managerStore) initCacheApplications()error{
 	return nil
 }
 
-func checkCacheNamespaceExist(ns string)bool{
+func checkCacheNamespaceExist(ns string) bool {
 	if !cacheMgr.isOK {
 		return false
 	}
 
 	cacheMgr.mapLock.RLock()
-	_,ok := cacheMgr.Namespaces[ns]
+	_, ok := cacheMgr.Namespaces[ns]
 	cacheMgr.mapLock.RUnlock()
 	return ok
 }
 
-func syncCacheNamespace(ns string){
+func syncCacheNamespace(ns string) {
 	if !cacheMgr.isOK {
 		return
 	}
@@ -238,12 +238,12 @@ func deleteAppCacheNode(runAs, appID string) error {
 	return nil
 }
 
-func saveCacheConfigmap(obj *commtypes.BcsConfigMap)error{
+func saveCacheConfigmap(obj *commtypes.BcsConfigMap) error {
 	if !cacheMgr.isOK {
 		return nil
 	}
 
-	key := fmt.Sprintf("%s.%s",obj.NameSpace,obj.Name)
+	key := fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
 	cacheMgr.Configmaps[key] = tmpData
@@ -251,10 +251,10 @@ func saveCacheConfigmap(obj *commtypes.BcsConfigMap)error{
 	return nil
 }
 
-func getCacheConfigmap(ns,name string)*commtypes.BcsConfigMap{
-	key := fmt.Sprintf("%s.%s",ns,name)
+func getCacheConfigmap(ns, name string) *commtypes.BcsConfigMap {
+	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.RLock()
-	obj,ok := cacheMgr.Configmaps[key]
+	obj, ok := cacheMgr.Configmaps[key]
 	cacheMgr.mapLock.RUnlock()
 	if !ok {
 		return nil
@@ -263,24 +263,24 @@ func getCacheConfigmap(ns,name string)*commtypes.BcsConfigMap{
 	return obj.DeepCopy()
 }
 
-func deleteCacheConfigmap(ns,name string)error{
+func deleteCacheConfigmap(ns, name string) error {
 	if !cacheMgr.isOK {
 		return nil
 	}
 
-	key := fmt.Sprintf("%s.%s",ns,name)
+	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
-	delete(cacheMgr.Configmaps,key)
+	delete(cacheMgr.Configmaps, key)
 	cacheMgr.mapLock.Unlock()
 	return nil
 }
 
-func saveCacheSecret(obj *commtypes.BcsSecret)error{
+func saveCacheSecret(obj *commtypes.BcsSecret) error {
 	if !cacheMgr.isOK {
 		return nil
 	}
 
-	key := fmt.Sprintf("%s.%s",obj.NameSpace,obj.Name)
+	key := fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
 	cacheMgr.Secrets[key] = tmpData
@@ -288,10 +288,10 @@ func saveCacheSecret(obj *commtypes.BcsSecret)error{
 	return nil
 }
 
-func getCacheSecret(ns,name string)*commtypes.BcsSecret{
-	key := fmt.Sprintf("%s.%s",ns,name)
+func getCacheSecret(ns, name string) *commtypes.BcsSecret {
+	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.RLock()
-	obj,ok := cacheMgr.Secrets[key]
+	obj, ok := cacheMgr.Secrets[key]
 	cacheMgr.mapLock.RUnlock()
 	if !ok {
 		return nil
@@ -300,19 +300,19 @@ func getCacheSecret(ns,name string)*commtypes.BcsSecret{
 	return obj.DeepCopy()
 }
 
-func deleteCacheSecret(ns,name string)error{
+func deleteCacheSecret(ns, name string) error {
 	if !cacheMgr.isOK {
 		return nil
 	}
 
-	key := fmt.Sprintf("%s.%s",ns,name)
+	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
-	delete(cacheMgr.Secrets,key)
+	delete(cacheMgr.Secrets, key)
 	cacheMgr.mapLock.Unlock()
 	return nil
 }
 
-func saveCacheVersion(runAs, appID string, obj *types.Version)error{
+func saveCacheVersion(runAs, appID string, obj *types.Version) error {
 	if !cacheMgr.isOK {
 		return nil
 	}
@@ -324,27 +324,27 @@ func saveCacheVersion(runAs, appID string, obj *types.Version)error{
 	}
 
 	tmpData := obj.DeepCopy()
-	app.Versions = append(app.Versions,tmpData)
+	app.Versions = append(app.Versions, tmpData)
 	return nil
 }
 
-func getCacheVersion(runAs, versionId, versionNo string)(*types.Version,error){
+func getCacheVersion(runAs, versionId, versionNo string) (*types.Version, error) {
 	app := getCacheAppNode(runAs, versionId)
 	if app == nil {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, versionId)
 		return nil, nil
 	}
 
-	for _,version :=range app.Versions {
-		if version.Name==versionNo {
-			return version.DeepCopy(),nil
+	for _, version := range app.Versions {
+		if version.Name == versionNo {
+			return version.DeepCopy(), nil
 		}
 	}
 
-	return nil,nil
+	return nil, nil
 }
 
-func listCacheVersions(runAs, versionId string)([]*types.Version,error){
+func listCacheVersions(runAs, versionId string) ([]*types.Version, error) {
 	app := getCacheAppNode(runAs, versionId)
 	if app == nil {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, versionId)
@@ -352,15 +352,15 @@ func listCacheVersions(runAs, versionId string)([]*types.Version,error){
 	}
 
 	var versions []*types.Version
-	for _,version :=range app.Versions {
+	for _, version := range app.Versions {
 		tmpData := version.DeepCopy()
-		versions = append(versions,tmpData)
+		versions = append(versions, tmpData)
 	}
 
-	return versions,nil
+	return versions, nil
 }
 
-func saveCacheApplication(runAs, appID string, obj *types.Application)error{
+func saveCacheApplication(runAs, appID string, obj *types.Application) error {
 	if !cacheMgr.isOK {
 		return nil
 	}
@@ -394,7 +394,7 @@ func getCacheApplication(runAs, appID string) (*types.Application, error) {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 		return nil, nil
 	}
-	if app.Application==nil {
+	if app.Application == nil {
 		blog.V(3).Infof("app(%s.%s) Application not in cache", runAs, appID)
 		return nil, nil
 	}
@@ -460,7 +460,7 @@ func listCacheTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 		return nil, nil
 	}
-	if app.Taskgroups==nil {
+	if app.Taskgroups == nil {
 		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
 		return nil, nil
 	}
@@ -487,7 +487,7 @@ func saveCacheTaskGroup(taskGroup *types.TaskGroup) error {
 	}
 
 	tmpData := taskGroup.DeepCopy()
-	if app.Taskgroups==nil {
+	if app.Taskgroups == nil {
 		blog.V(3).Infof("insert taskgroup(%s) in cache", tmpData.ID)
 		app.Taskgroups = append(app.Taskgroups, tmpData)
 		return nil
@@ -518,11 +518,10 @@ func fetchCacheTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 		return nil, nil
 	}
-	if app.Taskgroups==nil {
+	if app.Taskgroups == nil {
 		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
 		return nil, nil
 	}
-
 
 	for _, taskGroup := range app.Taskgroups {
 		if taskGroup.ID == taskGroupID {
@@ -547,7 +546,7 @@ func deleteCacheTaskGroup(taskGroupID string) error {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 		return nil
 	}
-	if app.Taskgroups==nil {
+	if app.Taskgroups == nil {
 		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
 		return nil
 	}
@@ -578,7 +577,7 @@ func saveCacheTask(task *types.Task) error {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 		return nil
 	}
-	if app.Taskgroups==nil {
+	if app.Taskgroups == nil {
 		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
 		return nil
 	}
@@ -622,7 +621,7 @@ func deleteCacheTask(taskId string) error {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 		return nil
 	}
-	if app.Taskgroups==nil {
+	if app.Taskgroups == nil {
 		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
 		return nil
 	}
@@ -657,7 +656,7 @@ func fetchCacheTask(taskId string) (*types.Task, error) {
 		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 		return nil, nil
 	}
-	if app.Taskgroups==nil {
+	if app.Taskgroups == nil {
 		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
 		return nil, nil
 	}

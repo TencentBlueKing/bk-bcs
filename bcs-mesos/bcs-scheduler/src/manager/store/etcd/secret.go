@@ -15,14 +15,14 @@ package etcd
 
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (store *managerStore) CheckSecretExist(secret *commtypes.BcsSecret) (string, bool) {
-	v2Sec, err := store.FetchSecret(secret.NameSpace,secret.Name)
+	v2Sec, err := store.FetchSecret(secret.NameSpace, secret.Name)
 	if err == nil {
 		return v2Sec.ResourceVersion, true
 	}
@@ -43,9 +43,9 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      secret.Name,
-			Namespace: secret.NameSpace,
-			Labels: secret.Labels,
+			Name:        secret.Name,
+			Namespace:   secret.NameSpace,
+			Labels:      secret.Labels,
 			Annotations: secret.Annotations,
 		},
 		Spec: v2.BcsSecretSpec{
@@ -60,7 +60,7 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 	} else {
 		v2Sec, err = client.Create(v2Sec)
 	}
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -71,11 +71,11 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 
 func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, error) {
 	if cacheMgr.isOK {
-		secret := getCacheSecret(ns,name)
-		if secret==nil {
-			return nil,schStore.ErrNoFound
+		secret := getCacheSecret(ns, name)
+		if secret == nil {
+			return nil, schStore.ErrNoFound
 		}
-		return secret,nil
+		return secret, nil
 	}
 
 	client := store.BkbcsClient.BcsSecrets(ns)
@@ -92,11 +92,11 @@ func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, e
 func (store *managerStore) DeleteSecret(ns, name string) error {
 	client := store.BkbcsClient.BcsSecrets(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
-	deleteCacheSecret(ns,name)
+	deleteCacheSecret(ns, name)
 	return nil
 }
 

@@ -49,10 +49,10 @@ func NewTaskGroupWatch(cxt context.Context, informer bkbcsv2.TaskGroupInformer, 
 
 //TaskGroupWatch watch for taskGroup
 type TaskGroupWatch struct {
-	eventLock    sync.Mutex       //lock for event
-	cancelCxt    context.Context  //context for cancel
-	report       cluster.Reporter //reporter to cluster
-	informer     bkbcsv2.TaskGroupInformer
+	eventLock sync.Mutex       //lock for event
+	cancelCxt context.Context  //context for cancel
+	report    cluster.Reporter //reporter to cluster
+	informer  bkbcsv2.TaskGroupInformer
 }
 
 func (task *TaskGroupWatch) Work() {

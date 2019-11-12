@@ -34,8 +34,8 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 	name := deploymentDef.ObjectMeta.Name
 	blog.Info("request create deployment(%s.%s) begin", ns, name)
 
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	currDeployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {
@@ -276,8 +276,8 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		deployment.Strategy.RollingUpdate.MaxSurge = 1
 	}
 
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	currDeployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {
@@ -475,8 +475,8 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 
 func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 	blog.Info("request cancelupdate deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil {
@@ -568,8 +568,8 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 
 func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, error) {
 	blog.Info("request delete deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {
@@ -625,8 +625,8 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 	blog.V(3).Infof("check delete deployment(%s.%s)", ns, name)
 
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil {
@@ -677,8 +677,8 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 func (b *backend) PauseUpdateDeployment(ns string, name string) error {
 	blog.Info("request pauseupdate deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {
@@ -710,8 +710,8 @@ func (b *backend) PauseUpdateDeployment(ns string, name string) error {
 
 func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 	blog.Info("request resumeupdate deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {
@@ -744,8 +744,8 @@ func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 
 func (b *backend) ScaleDeployment(runAs, name string, instances uint64) error {
 	blog.Info("request scale deployment(%s.%s) to instances %d", runAs, name, instances)
-	b.store.LockDeployment(fmt.Sprintf("%s.%s",runAs,name))
-	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s",runAs,name))
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", runAs, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", runAs, name))
 
 	deployment, err := b.store.FetchDeployment(runAs, name)
 	if err != nil && err != store.ErrNoFound {

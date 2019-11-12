@@ -15,14 +15,14 @@ package etcd
 
 import (
 	"bk-bcs/bcs-common/common/blog"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) (string,bool) {
+func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) (string, bool) {
 	obj, err := store.FetchTaskGroup(taskGroup.ID)
 	if err == nil {
 		return obj.ResourceVersion, true
@@ -40,10 +40,10 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      taskGroup.ID,
-			Namespace: taskGroup.RunAs,
-			Labels: taskGroup.ObjectMeta.Labels,
-			Annotations:  taskGroup.ObjectMeta.Annotations,
+			Name:        taskGroup.ID,
+			Namespace:   taskGroup.RunAs,
+			Labels:      taskGroup.ObjectMeta.Labels,
+			Annotations: taskGroup.ObjectMeta.Annotations,
 		},
 		Spec: v2.TaskGroupSpec{
 			TaskGroup: *taskGroup,
@@ -51,7 +51,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	}
 
 	var err error
-	rv,exist := store.CheckTaskGroupExist(taskGroup)
+	rv, exist := store.CheckTaskGroupExist(taskGroup)
 	if exist {
 		v2Taskgroup.ResourceVersion = rv
 		v2Taskgroup, err = client.Update(v2Taskgroup)
@@ -68,7 +68,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	if taskGroup.Taskgroup != nil {
 		for _, task := range taskGroup.Taskgroup {
 			err := store.SaveTask(task)
-			if err!=nil {
+			if err != nil {
 				return err
 			}
 		}
@@ -77,7 +77,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	return nil
 }
 
-func (store *managerStore) listTaskgroupsInDB(runAs, appID string)([]*types.TaskGroup, error){
+func (store *managerStore) listTaskgroupsInDB(runAs, appID string) ([]*types.TaskGroup, error) {
 	client := store.BkbcsClient.TaskGroups(runAs)
 	v2Taskgroups, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -109,7 +109,7 @@ func (store *managerStore) listTaskgroupsInDB(runAs, appID string)([]*types.Task
 		}
 	}
 
-	return taskgroups,nil
+	return taskgroups, nil
 }
 
 //ListTaskGroups show us all the task group on line
@@ -119,7 +119,7 @@ func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGro
 		return cacheList, nil
 	}
 
-	return store.listTaskgroupsInDB(runAs,appID)
+	return store.listTaskgroupsInDB(runAs, appID)
 }
 
 //DeleteTaskGroup delete a task group with executor id is taskGroupID
@@ -158,7 +158,7 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	if cacheMgr.isOK {
 		cacheTaskgroup, _ := fetchCacheTaskGroup(taskGroupID)
-		if cacheTaskgroup==nil {
+		if cacheTaskgroup == nil {
 			return nil, schStore.ErrNoFound
 		}
 		return cacheTaskgroup, nil

@@ -129,7 +129,7 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 
 	app := &types.Application{}
 	if err := json.Unmarshal(data, app); err != nil {
-		blog.Error("fail to unmarshal application(%s:%s) data(%s) err:%s", runAs,appID,string(data), err.Error())
+		blog.Error("fail to unmarshal application(%s:%s) data(%s) err:%s", runAs, appID, string(data), err.Error())
 		return nil, err
 	}
 
@@ -157,7 +157,7 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 	for _, appID := range appIDs {
 		app, err := store.FetchApplication(runAs, appID)
 		if err != nil {
-			blog.Error("fail to fetch application by appID(%s:%s)", runAs,appID)
+			blog.Error("fail to fetch application by appID(%s:%s)", runAs, appID)
 			continue
 		}
 

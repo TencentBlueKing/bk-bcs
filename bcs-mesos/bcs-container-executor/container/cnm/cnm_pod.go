@@ -535,7 +535,12 @@ func (p *DockerPod) containerCheck() error {
 				if task.HealthCheck != nil && !task.HealthCheck.IsStarting() {
 					//health check starting when Status become RUNNING
 					logs.Infof("container [%s] is running, healthy status unkown, starting HealthyChecker, ip: %s\n", task.RuntimeConf.Name, p.cnmIPAddr)
-					task.HealthCheck.SetHost(p.cnmIPAddr)
+					if task.HealthCheck.Name() == "COMMAND" {
+						task.HealthCheck.SetHost(p.GetContainerID())
+					} else {
+						task.HealthCheck.SetHost(p.cnmIPAddr)
+					}
+
 					go task.HealthCheck.Start()
 				}
 				running++

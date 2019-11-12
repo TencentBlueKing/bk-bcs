@@ -82,8 +82,8 @@ type Scheduler struct {
 	CniDir            string
 	NetImage          string
 
-	Kubeconfig        string
-	StoreDriver       string
+	Kubeconfig  string
+	StoreDriver string
 }
 
 type HttpListener struct {

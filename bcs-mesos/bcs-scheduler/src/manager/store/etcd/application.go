@@ -71,9 +71,9 @@ func (store *managerStore) UnLockApplication(appID string) {
 }
 
 func (store *managerStore) CheckApplicationExist(application *types.Application) (string, bool) {
-	app,err := store.FetchApplication(application.RunAs,application.ID)
-	if err==nil {
-		return app.ResourceVersion,true
+	app, err := store.FetchApplication(application.RunAs, application.ID)
+	if err == nil {
+		return app.ResourceVersion, true
 	}
 
 	return "", false
@@ -93,9 +93,9 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      application.ID,
-			Namespace: application.RunAs,
-			Labels: application.ObjectMeta.Labels,
+			Name:        application.ID,
+			Namespace:   application.RunAs,
+			Labels:      application.ObjectMeta.Labels,
 			Annotations: application.ObjectMeta.Annotations,
 		},
 		Spec: v2.ApplicationSpec{
@@ -112,7 +112,7 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	}
 
 	application.ResourceVersion = v2Application.ResourceVersion
-	saveCacheApplication(application.RunAs,application.ID,application)
+	saveCacheApplication(application.RunAs, application.ID, application)
 	return err
 }
 
@@ -135,7 +135,7 @@ func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) 
 func (store *managerStore) FetchApplication(runAs, appID string) (*types.Application, error) {
 	if cacheMgr.isOK {
 		cacheApp, _ := getCacheApplication(runAs, appID)
-		if cacheApp==nil {
+		if cacheApp == nil {
 			return nil, schStore.ErrNoFound
 		}
 
@@ -178,7 +178,7 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	client := store.BkbcsClient.Applications(runAs)
 	err := client.Delete(appID, &metav1.DeleteOptions{})
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 

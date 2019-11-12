@@ -340,7 +340,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 				}
 				blog.Info("transaction %s scaledown taskgroup(%s) not in end status at current",
 					trans.ID, taskGroup.ID)
-			}else {
+			} else {
 				blog.Info("transaction %s scaledown taskgroup(%s) in end status current", trans.ID, taskGroup.ID)
 			}
 		}
@@ -356,7 +356,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 			app.Instances--
 			if err = s.DeleteTaskGroup(app, taskGroup, "scale down application"); err != nil {
 				blog.Error("transaction %s delete taskgroup(%s) failed: %s", trans.ID, taskGroup.ID, err.Error())
-			}else {
+			} else {
 				blog.Infof("transaction %s delete taskgroup(%s) success", trans.ID, taskGroup.ID)
 			}
 		}

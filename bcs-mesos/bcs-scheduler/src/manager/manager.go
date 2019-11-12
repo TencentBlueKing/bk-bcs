@@ -46,7 +46,7 @@ func New(config util.SchedConfig) (*Manager, error) {
 
 	var s store.Store
 	var err error
-	if config.Scheduler.StoreDriver=="etcd" {
+	if config.Scheduler.StoreDriver == "etcd" {
 		s, err = etcd.NewEtcdStore(config.Scheduler.Kubeconfig)
 		if err != nil {
 			blog.Errorf("new etcd store failed: %s", err.Error())

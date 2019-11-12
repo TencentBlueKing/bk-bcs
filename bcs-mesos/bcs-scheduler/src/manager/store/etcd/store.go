@@ -110,9 +110,9 @@ func (s *managerStore) initKubeCrd() error {
 			Spec: apiextensions.CustomResourceDefinitionSpec{
 				Group: "bkbcs.tencent.com",
 				Names: apiextensions.CustomResourceDefinitionNames{
-					Kind:   crd,
-					Plural: strings.ToLower(fmt.Sprintf("%ss", crd)),
-					ListKind: fmt.Sprintf("%sList",crd),
+					Kind:     crd,
+					Plural:   strings.ToLower(fmt.Sprintf("%ss", crd)),
+					ListKind: fmt.Sprintf("%sList", crd),
 				},
 				Scope: apiextensions.NamespaceScoped,
 				Versions: []apiextensions.CustomResourceDefinitionVersion{
@@ -284,10 +284,10 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 }
 
 func (store *managerStore) checkNamespace(ns string) error {
-	if cacheMgr!=nil&&cacheMgr.isOK {
+	if cacheMgr != nil && cacheMgr.isOK {
 		exist := checkCacheNamespaceExist(ns)
 		if exist {
-			blog.V(3).Infof("check namespace %s exist",ns)
+			blog.V(3).Infof("check namespace %s exist", ns)
 			return nil
 		}
 	}
@@ -306,7 +306,7 @@ func (store *managerStore) checkNamespace(ns string) error {
 			},
 		}
 		_, err = client.Create(ns)
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 

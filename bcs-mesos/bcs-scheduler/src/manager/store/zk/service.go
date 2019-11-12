@@ -101,7 +101,7 @@ func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
 
 	var objs []*commtypes.BcsService
 	for _, ns := range nss {
-		blog.Infof("list all services ns %s",ns)
+		blog.Infof("list all services ns %s", ns)
 		obj, err := store.ListServices(ns)
 		if err != nil {
 			blog.Error("fail to fetch service by ns(%s)", ns)

@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -59,10 +59,10 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 		},
 	}
 	_, err = client.Create(v2Version)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
-	saveCacheVersion(version.RunAs,version.ID,version)
+	saveCacheVersion(version.RunAs, version.ID, version)
 
 	return err
 }
@@ -71,12 +71,12 @@ func (store *managerStore) ListVersions(runAs, versionID string) ([]string, erro
 	var versions []*types.Version
 	var err error
 	if cacheMgr.isOK {
-		versions,_ = listCacheVersions(runAs,versionID)
+		versions, _ = listCacheVersions(runAs, versionID)
 	} else {
-		versions,err = store.listVersions(runAs,versionID)
+		versions, err = store.listVersions(runAs, versionID)
 	}
-	if err!=nil {
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
 
 	nodes := make([]string, 0, len(versions))
@@ -104,8 +104,8 @@ func (store *managerStore) listVersions(runAs, versionID string) ([]*types.Versi
 
 func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*types.Version, error) {
 	if cacheMgr.isOK {
-		version,_ := getCacheVersion(runAs, versionId, versionNo)
-		if version==nil {
+		version, _ := getCacheVersion(runAs, versionId, versionNo)
+		if version == nil {
 			return nil, schStore.ErrNoFound
 		}
 		return version, nil

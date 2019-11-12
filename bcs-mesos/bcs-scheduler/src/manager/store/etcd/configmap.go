@@ -15,8 +15,8 @@ package etcd
 
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -43,9 +43,9 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      configmap.Name,
-			Namespace: configmap.NameSpace,
-			Labels: configmap.Labels,
+			Name:        configmap.Name,
+			Namespace:   configmap.NameSpace,
+			Labels:      configmap.Labels,
 			Annotations: configmap.Annotations,
 		},
 		Spec: v2.BcsConfigMapSpec{
@@ -68,9 +68,9 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 
 func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfigMap, error) {
 	if cacheMgr.isOK {
-		cfg := getCacheConfigmap(ns,name)
-		if cfg==nil {
-			return nil,schStore.ErrNoFound
+		cfg := getCacheConfigmap(ns, name)
+		if cfg == nil {
+			return nil, schStore.ErrNoFound
 		}
 		return cfg, nil
 	}
@@ -88,11 +88,11 @@ func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfig
 func (store *managerStore) DeleteConfigMap(ns, name string) error {
 	client := store.BkbcsClient.BcsConfigMaps(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
-	deleteCacheConfigmap(ns,name)
+	deleteCacheConfigmap(ns, name)
 	return nil
 }
 

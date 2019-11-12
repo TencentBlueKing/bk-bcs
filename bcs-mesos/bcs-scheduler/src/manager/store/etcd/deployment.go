@@ -93,9 +93,9 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deployment.ObjectMeta.Name,
-			Namespace: deployment.ObjectMeta.NameSpace,
-			Labels: deployment.ObjectMeta.Labels,
+			Name:        deployment.ObjectMeta.Name,
+			Namespace:   deployment.ObjectMeta.NameSpace,
+			Labels:      deployment.ObjectMeta.Labels,
 			Annotations: deployment.ObjectMeta.Annotations,
 		},
 		Spec: v2.DeploymentSpec{
@@ -123,8 +123,8 @@ func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, 
 		return nil, err
 	}
 
-	by,_ := json.Marshal(v2Dep)
-	blog.Infof("deployment %s",string(by))
+	by, _ := json.Marshal(v2Dep)
+	blog.Infof("deployment %s", string(by))
 
 	return &v2Dep.Spec.Deployment, nil
 }

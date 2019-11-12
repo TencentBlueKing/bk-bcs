@@ -93,7 +93,7 @@ func (check *TCPChecker) Start() {
 	}
 }
 
-func (check *TCPChecker) check(){
+func (check *TCPChecker) check() {
 	check.Ticks++
 	healthy := check.ReCheck()
 	/*notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
@@ -142,7 +142,7 @@ func (check *TCPChecker) Resume() error {
 
 //Name get check name
 func (check *TCPChecker) Name() string {
-	return "tcp://" + check.ipaddr + ":" + strconv.Itoa(check.port)
+	return "TCP"
 }
 
 //Relation checker relative to container

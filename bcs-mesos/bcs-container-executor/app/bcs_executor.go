@@ -1030,6 +1030,9 @@ func (executor *BcsExecutor) healthcheckSetting(containerTask *container.BcsCont
 		case mesos.HealthCheck_TCP:
 			tcpChecker := health.GetTcp()
 			checker, checkErr = healthcheck.NewTCPChecker(containerTask.Name, int(tcpChecker.GetPort()), tm, nil)
+		case mesos.HealthCheck_COMMAND:
+			cmdChcker := health.GetCommand()
+			checker, checkErr = healthcheck.NewCommandChecker(cmdChcker.GetValue(), executor.flag.DockerSocket, tm)
 		default:
 			checkErr = fmt.Errorf("Get Unsupported health check type %d", health.GetType())
 		}

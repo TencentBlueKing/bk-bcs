@@ -102,7 +102,7 @@ func (check *HTTPChecker) Start() {
 	}
 }
 
-func (check *HTTPChecker) check(){
+func (check *HTTPChecker) check() {
 	check.Ticks++
 	healthy := check.ReCheck()
 	//notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
@@ -157,7 +157,7 @@ func (check *HTTPChecker) Resume() error {
 
 //Name get check name
 func (check *HTTPChecker) Name() string {
-	return check.schema + "://" + check.ipaddr + ":" + strconv.Itoa(check.port) + check.path
+	return "HTTP"
 }
 
 //Relation checker relative to container

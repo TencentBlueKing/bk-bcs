@@ -38,7 +38,7 @@ type EndpointInfo struct {
 }
 
 //NewEndpointWatch create endpoint watch
-func NewEndpointWatch(cxt context.Context, informer  bkbcsv2.BcsEndpointInformer, reporter cluster.Reporter) *EndpointWatch {
+func NewEndpointWatch(cxt context.Context, informer bkbcsv2.BcsEndpointInformer, reporter cluster.Reporter) *EndpointWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
 		dataType, ok := data.(*EndpointInfo)
@@ -87,14 +87,14 @@ func (watch *EndpointWatch) ProcessAllEndpoints() error {
 	currTime := time.Now().Unix()
 	blog.V(3).Infof("sync all endpoints, currTime(%d)", currTime)
 
-	v2Endpoints,err := watch.informer.Lister().List(labels.Everything())
-	if err!=nil {
-		blog.Errorf("list bcsendpoints error %s",err.Error())
+	v2Endpoints, err := watch.informer.Lister().List(labels.Everything())
+	if err != nil {
+		blog.Errorf("list bcsendpoints error %s", err.Error())
 		return err
 	}
 
 	var numNode, numDel int
-	for _,end :=range v2Endpoints {
+	for _, end := range v2Endpoints {
 		numNode++
 		data := &end.Spec.BcsEndpoint
 		key := data.ObjectMeta.NameSpace + "." + data.ObjectMeta.Name

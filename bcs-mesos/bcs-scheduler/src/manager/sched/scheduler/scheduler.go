@@ -812,8 +812,8 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 
 	err := s.store.InitCacheMgr(s.config.UseCache)
-	if err!=nil {
-		blog.Errorf("InitCacheMgr failed: %s, and exit",err.Error())
+	if err != nil {
+		blog.Errorf("InitCacheMgr failed: %s, and exit", err.Error())
 		os.Exit(1)
 	}
 	s.Role = currRole
