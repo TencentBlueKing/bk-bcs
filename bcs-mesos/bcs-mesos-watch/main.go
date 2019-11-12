@@ -55,7 +55,7 @@ func setCfg(op *MesosWatchOptions) {
 		cfg.ServerSchem = "http"
 	}
 
-	cfg.Kubeconfig = op.Kubeconfig
+	cfg.KubeConfig = op.Kubeconfig
 	cfg.StoreDriver = op.StoreDriver
 }
 

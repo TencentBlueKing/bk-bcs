@@ -11,29 +11,29 @@
  *
  */
 
-package mesos
+package cluster
 
 import "github.com/prometheus/client_golang/prometheus"
 
 const (
 	//syncStorageErr = "ZOOKEEPERErr"
-	syncSuccess = "SUCCESS"
-	syncFailure = "FAILURE"
+	SyncSuccess = "SUCCESS"
+	SyncFailure = "FAILURE"
 
 	//actionGetData = "GetData"
 	//actionWatch = "Watch"
 
-	dataTypeApp       = "Application"
-	dataTypeTaskGroup = "TaskGroup"
-	dataTypeCfg       = "Configmap"
-	//dataTypeSecret    = "Secret"
-	dataTypeDeploy = "Deployment"
-	dataTypeSvr    = "Service"
-	dataTypeExpSVR = "ExportService"
+	DataTypeApp       = "Application"
+	DataTypeTaskGroup = "TaskGroup"
+	DataTypeCfg       = "Configmap"
+	//DataTypeSecret    = "Secret"
+	DataTypeDeploy = "Deployment"
+	DataTypeSvr    = "Service"
+	DataTypeExpSVR = "ExportService"
 )
 
 var (
-	syncTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+	SyncTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "bkbcs_datawatch",
 		Subsystem: "mesos",
 		Name:      "sync_total",
@@ -43,5 +43,5 @@ var (
 
 func init() {
 	//add golang basic metrics
-	prometheus.MustRegister(syncTotal)
+	prometheus.MustRegister(SyncTotal)
 }

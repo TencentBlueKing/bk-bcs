@@ -83,8 +83,8 @@ func (s *Scheduler) DeploymentCheck(ns string, name string, recover bool) {
 
 func (s *Scheduler) deploymentCheckTick(ns string, name string, recover bool) bool {
 	blog.V(3).Infof("check rollingupdate for deployment(%s.%s)", ns, name)
-	s.store.LockDeployment(name)
-	defer s.store.UnLockDeployment(name)
+	s.store.LockDeployment(fmt.Sprintf("%s.%s",ns,name))
+	defer s.store.UnLockDeployment(fmt.Sprintf("%s.%s",ns,name))
 
 	deployment, err := s.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {

@@ -778,8 +778,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 
 	blog.Info("scheduler role change: %s --> %s", s.Role, currRole)
-	s.Role = currRole
-	if s.Role != "master" {
+	if currRole != "master" {
 		if s.currMesosResp != nil {
 			blog.Info("close current http ...")
 			s.currMesosResp.Body.Close()
@@ -812,11 +811,15 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		return nil
 	}
 
-	s.store.InitCacheMgr(s.config.UseCache)
+	err := s.store.InitCacheMgr(s.config.UseCache)
+	if err!=nil {
+		blog.Errorf("InitCacheMgr failed: %s, and exit",err.Error())
+		os.Exit(1)
+	}
+	s.Role = currRole
+
 	go s.store.StartStoreObjectMetrics()
-
 	go s.startCheckDeployments()
-
 	if s.ServiceMgr != nil {
 		var msgOpen ServiceMgrMsg
 		msgOpen.MsgType = "open"

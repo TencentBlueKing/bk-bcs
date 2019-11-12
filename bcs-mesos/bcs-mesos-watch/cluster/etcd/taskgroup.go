@@ -15,7 +15,6 @@ package etcd
 
 import (
 	"os"
-	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -146,9 +145,9 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionAdd, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionAdd, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -169,9 +168,9 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionDelete, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionDelete, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -182,10 +181,10 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 		blog.Error("can not convert object to TaskGroup in UpdateEvent, object %v", cur)
 		return
 	}
-	if !force && reflect.DeepEqual(old, cur) {
+	/*if !force && reflect.DeepEqual(old, cur) {
 		blog.V(3).Infof("TaskGroup %s data do not changed", taskData.ID)
 		return
-	}
+	}*/
 	blog.V(3).Infof("EVENT:: Update Event for TaskGroup %s", taskData.ID)
 	//report to cluster
 	data := &types.BcsSyncData{
@@ -195,9 +194,9 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 		Item:     cur,
 	}
 	if err := task.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionUpdate, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeTaskGroup, types.ActionUpdate, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncSuccess).Inc()
 	}
 }
 

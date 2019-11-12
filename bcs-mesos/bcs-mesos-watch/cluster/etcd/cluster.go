@@ -28,6 +28,7 @@ import (
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/client/informers"
 	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
+
 	"golang.org/x/net/context"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -56,6 +57,7 @@ func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
 		reportCallback: make(map[string]cluster.ReportFunc),
 		existCallback:  make(map[string]cluster.DataExister),
 	}
+
 	//mesos watch initialize
 	if err := mesos.initialize(); err != nil {
 		blog.Error("etcd cluster initialize failed, %s", err.Error())
@@ -82,6 +84,7 @@ type EtcdCluster struct {
 	secret         *SecretWatch
 	service        *ServiceWatch
 	deployment     *DeploymentWatch
+	endpoint       *EndpointWatch
 	stopCh         chan struct{}
 }
 
@@ -157,6 +160,10 @@ func (ms *EtcdCluster) createDatTypeWatch() error {
 	ms.deployment = NewDeploymentWatch(deploymentCxt, ms.factory.Bkbcs().V2().Deployments(), ms)
 	go ms.deployment.Work()
 
+	endpointCxt, _ := context.WithCancel(ms.connCxt)
+	ms.endpoint = NewEndpointWatch(endpointCxt, ms.factory.Bkbcs().V2().BcsEndpoints(), ms)
+	go ms.endpoint.Work()
+
 	return nil
 }
 
@@ -178,15 +185,16 @@ func (ms *EtcdCluster) initialize() error {
 	}
 
 	ms.stopCh = make(chan struct{})
-	factory := informers.NewSharedInformerFactory(bkbcsClientset, 0)
+	factory := informers.NewSharedInformerFactory(bkbcsClientset, time.Minute*5)
 	ms.factory = factory
 	//init factory informers
-	ms.factory.Bkbcs().V2().BcsConfigMaps().Lister()
-	ms.factory.Bkbcs().V2().Applications().Lister()
-	ms.factory.Bkbcs().V2().Deployments().Lister()
-	ms.factory.Bkbcs().V2().BcsSecrets().Lister()
-	ms.factory.Bkbcs().V2().BcsServices().Lister()
-	ms.factory.Bkbcs().V2().TaskGroups().Lister()
+	ms.factory.Bkbcs().V2().BcsConfigMaps().Informer()
+	ms.factory.Bkbcs().V2().Applications().Informer()
+	ms.factory.Bkbcs().V2().Deployments().Informer()
+	ms.factory.Bkbcs().V2().BcsSecrets().Informer()
+	ms.factory.Bkbcs().V2().BcsServices().Informer()
+	ms.factory.Bkbcs().V2().TaskGroups().Informer()
+	ms.factory.Bkbcs().V2().BcsEndpoints().Informer()
 
 	blog.Infof("EtcdCluster SharedInformerFactory start...")
 	ms.factory.Start(ms.stopCh)

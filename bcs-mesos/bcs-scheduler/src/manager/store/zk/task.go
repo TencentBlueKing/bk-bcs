@@ -46,7 +46,7 @@ func getTaskRootPath() string {
 }*/
 
 func createTaskPath(taskID string) (string, error) {
-	appID, runAs := types.GetRunAsAndAppIDbyTaskID(taskID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskID(taskID)
 	if "" == appID {
 		err := fmt.Errorf("fail to get appid from taskID(%s)", taskID)
 		return "", err

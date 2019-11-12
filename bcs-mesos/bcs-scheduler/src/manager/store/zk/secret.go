@@ -66,7 +66,7 @@ func (store *managerStore) DeleteSecret(ns, name string) error {
 
 func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, error) {
 
-	path := getSecretRootPath() + runAs //defaultRunAs
+	path := getSecretRootPath() + "/" + runAs //defaultRunAs
 
 	IDs, err := store.Db.List(path)
 	if err != nil {

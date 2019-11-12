@@ -191,9 +191,9 @@ func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionAdd, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionAdd, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -212,9 +212,9 @@ func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionDelete, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionDelete, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -235,8 +235,8 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 		Item:     cur,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionUpdate, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeDeploy, types.ActionUpdate, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncSuccess).Inc()
 	}
 }

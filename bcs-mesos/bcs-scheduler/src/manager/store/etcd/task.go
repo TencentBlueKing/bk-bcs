@@ -22,13 +22,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (store *managerStore) CheckTaskExist(task *types.Task) bool {
-	_, err := store.FetchTask(task.ID)
+func (store *managerStore) CheckTaskExist(task *types.Task) (string,bool) {
+	obj, err := store.FetchTask(task.ID)
 	if err == nil {
-		return true
+		return obj.ResourceVersion,true
 	}
 
-	return false
+	return "",false
 }
 
 func (store *managerStore) SaveTask(task *types.Task) error {
@@ -49,8 +49,9 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 	}
 
 	var err error
-	if store.CheckTaskExist(task) {
-		v2Task.ResourceVersion = task.ResourceVersion
+	rv,exist := store.CheckTaskExist(task)
+	if exist&&rv!="" {
+		v2Task.ResourceVersion = rv
 		v2Task, err = client.Update(v2Task)
 	} else {
 		v2Task, err = client.Create(v2Task)
@@ -98,8 +99,11 @@ func (store *managerStore) DeleteTask(taskId string) error {
 }
 
 func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
-	cacheTask, cacheErr := fetchCacheTask(taskId)
-	if cacheErr == nil && cacheTask != nil {
+	if cacheMgr.isOK {
+		cacheTask, _ := fetchCacheTask(taskId)
+		if cacheTask==nil {
+			return nil, mstore.ErrNoFound
+		}
 		return cacheTask, nil
 	}
 

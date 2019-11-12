@@ -45,6 +45,8 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      service.Name,
 			Namespace: service.NameSpace,
+			Labels: service.Labels,
+			Annotations: service.Annotations,
 		},
 		Spec: v2.BcsServiceSpec{
 			BcsService: *service,

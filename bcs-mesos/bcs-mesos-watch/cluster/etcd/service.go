@@ -186,9 +186,9 @@ func (watch *ServiceWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeSvr, types.ActionAdd, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionAdd, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeSvr, types.ActionAdd, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionAdd, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -207,9 +207,9 @@ func (watch *ServiceWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeSvr, types.ActionDelete, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionDelete, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeSvr, types.ActionDelete, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionDelete, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -232,8 +232,8 @@ func (watch *ServiceWatch) UpdateEvent(old, cur interface{}) {
 		Item:     cur,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeSvr, types.ActionUpdate, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeSvr, types.ActionUpdate, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncSuccess).Inc()
 	}
 }

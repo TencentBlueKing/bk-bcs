@@ -189,9 +189,9 @@ func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeCfg, types.ActionAdd, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionAdd, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeCfg, types.ActionAdd, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionAdd, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -210,9 +210,9 @@ func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeCfg, types.ActionDelete, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionDelete, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeCfg, types.ActionDelete, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionDelete, cluster.SyncSuccess).Inc()
 	}
 }
 
@@ -237,8 +237,8 @@ func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 		Item:     cur,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		syncTotal.WithLabelValues(dataTypeCfg, types.ActionUpdate, syncFailure).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncFailure).Inc()
 	} else {
-		syncTotal.WithLabelValues(dataTypeCfg, types.ActionUpdate, syncSuccess).Inc()
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncSuccess).Inc()
 	}
 }

@@ -22,6 +22,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -35,6 +36,7 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 	runAs := version.RunAs
 	if "" == runAs {
 		runAs = defaultRunAs
+		version.RunAs = defaultRunAs
 	}
 	ns := getNamespaceByVersion(runAs, version.ID)
 	err := store.checkNamespace(ns)
@@ -56,12 +58,35 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 			Version: *version,
 		},
 	}
-
 	_, err = client.Create(v2Version)
+	if err!=nil {
+		return err
+	}
+	saveCacheVersion(version.RunAs,version.ID,version)
+
 	return err
 }
 
 func (store *managerStore) ListVersions(runAs, versionID string) ([]string, error) {
+	var versions []*types.Version
+	var err error
+	if cacheMgr.isOK {
+		versions,_ = listCacheVersions(runAs,versionID)
+	} else {
+		versions,err = store.listVersions(runAs,versionID)
+	}
+	if err!=nil {
+		return nil,err
+	}
+
+	nodes := make([]string, 0, len(versions))
+	for _, version := range versions {
+		nodes = append(nodes, version.Name)
+	}
+	return nodes, nil
+}
+
+func (store *managerStore) listVersions(runAs, versionID string) ([]*types.Version, error) {
 	ns := getNamespaceByVersion(runAs, versionID)
 	client := store.BkbcsClient.Versions(ns)
 	v2Versions, err := client.List(metav1.ListOptions{})
@@ -69,14 +94,23 @@ func (store *managerStore) ListVersions(runAs, versionID string) ([]string, erro
 		return nil, err
 	}
 
-	nodes := make([]string, 0, len(v2Versions.Items))
+	nodes := make([]*types.Version, 0, len(v2Versions.Items))
 	for _, version := range v2Versions.Items {
-		nodes = append(nodes, version.Name)
+		obj := version.Spec.Version
+		nodes = append(nodes, &obj)
 	}
 	return nodes, nil
 }
 
 func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*types.Version, error) {
+	if cacheMgr.isOK {
+		version,_ := getCacheVersion(runAs, versionId, versionNo)
+		if version==nil {
+			return nil, schStore.ErrNoFound
+		}
+		return version, nil
+	}
+
 	ns := getNamespaceByVersion(runAs, versionId)
 	client := store.BkbcsClient.Versions(ns)
 	v2Version, err := client.Get(versionNo, metav1.GetOptions{})

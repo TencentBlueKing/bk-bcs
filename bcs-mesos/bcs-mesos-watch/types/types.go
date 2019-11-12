@@ -38,7 +38,6 @@ type CmdConfig struct {
 	CertFile    string
 	KeyFile     string
 	PassWord    string
-	KubeConfig  string
 
 	RegDiscvSvr            string
 	Address                string
@@ -54,7 +53,7 @@ type CmdConfig struct {
 	ServerPassWord string
 	ServerSchem    string
 
-	Kubeconfig        string
+	KubeConfig        string
 	StoreDriver       string
 }
 

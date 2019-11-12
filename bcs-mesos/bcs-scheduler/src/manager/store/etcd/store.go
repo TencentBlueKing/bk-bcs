@@ -112,6 +112,7 @@ func (s *managerStore) initKubeCrd() error {
 				Names: apiextensions.CustomResourceDefinitionNames{
 					Kind:   crd,
 					Plural: strings.ToLower(fmt.Sprintf("%ss", crd)),
+					ListKind: fmt.Sprintf("%sList",crd),
 				},
 				Scope: apiextensions.NamespaceScoped,
 				Versions: []apiextensions.CustomResourceDefinitionVersion{
@@ -157,7 +158,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 
 		default:
 			s.wg.Add(1)
-			ObjectResourceInfo.Reset()
+			store.ObjectResourceInfo.Reset()
 		}
 
 		// handle service metrics
@@ -166,7 +167,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all services error %s", err.Error())
 		}
 		for _, service := range services {
-			reportObjectResourceInfoMetrics(ObjectResourceService, service.NameSpace, service.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceService, service.NameSpace, service.Name, "")
 		}
 
 		// handle application metrics
@@ -175,7 +176,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all applications error %s", err.Error())
 		}
 		for _, app := range apps {
-			reportObjectResourceInfoMetrics(ObjectResourceApplication, app.RunAs, app.Name, app.Status)
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceApplication, app.RunAs, app.Name, app.Status)
 
 			// handle taskgroup metrics
 			taskgroups, err := s.ListTaskGroups(app.RunAs, app.Name)
@@ -183,7 +184,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				blog.Errorf("list all services error %s", err.Error())
 			}
 			for _, taskgroup := range taskgroups {
-				reportTaskgroupInfoMetrics(taskgroup.RunAs, taskgroup.AppID, taskgroup.ID, taskgroup.Status)
+				store.ReportTaskgroupInfoMetrics(taskgroup.RunAs, taskgroup.AppID, taskgroup.ID, taskgroup.Status)
 			}
 		}
 
@@ -193,7 +194,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all deployment error %s", err.Error())
 		}
 		for _, deployment := range deployments {
-			reportObjectResourceInfoMetrics(ObjectResourceDeployment, deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceDeployment, deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name, "")
 		}
 
 		// handle configmap metrics
@@ -202,7 +203,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all configmap error %s", err.Error())
 		}
 		for _, configmap := range configmaps {
-			reportObjectResourceInfoMetrics(ObjectResourceConfigmap, configmap.NameSpace, configmap.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceConfigmap, configmap.NameSpace, configmap.Name, "")
 		}
 
 		// handle secrets metrics
@@ -211,7 +212,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all secret error %s", err.Error())
 		}
 		for _, secret := range secrets {
-			reportObjectResourceInfoMetrics(ObjectResourceSecret, secret.NameSpace, secret.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceSecret, secret.NameSpace, secret.Name, "")
 		}
 
 		// handle agents metrics
@@ -227,7 +228,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				continue
 			}
 
-			reportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
+			store.ReportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
 				info.MemTotal, info.MemTotal-info.MemUsed)
 		}
 
@@ -283,6 +284,14 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 }
 
 func (store *managerStore) checkNamespace(ns string) error {
+	if cacheMgr!=nil&&cacheMgr.isOK {
+		exist := checkCacheNamespaceExist(ns)
+		if exist {
+			blog.V(3).Infof("check namespace %s exist",ns)
+			return nil
+		}
+	}
+
 	client := store.k8sClient.CoreV1().Namespaces()
 	_, err := client.Get(ns, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
@@ -297,7 +306,12 @@ func (store *managerStore) checkNamespace(ns string) error {
 			},
 		}
 		_, err = client.Create(ns)
-		return err
+		if err!=nil {
+			return err
+		}
+
+		syncCacheNamespace(ns.Name)
+		return nil
 	}
 
 	return nil
@@ -312,7 +326,6 @@ func (store *managerStore) ListRunAs() ([]string, error) {
 
 	runAses := make([]string, 0, len(nss.Items))
 	for _, ns := range nss.Items {
-		blog.Infof("namespace %s", ns.Name)
 		runAses = append(runAses, ns.Name)
 	}
 

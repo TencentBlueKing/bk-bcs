@@ -15,7 +15,6 @@ package etcd
 
 import (
 	"os"
-	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -41,7 +40,7 @@ type NSControlInfo struct {
 }
 
 func reportAppMetrics(action, status string) {
-	syncTotal.WithLabelValues(dataTypeApp, action, status).Inc()
+	cluster.SyncTotal.WithLabelValues(cluster.DataTypeApp, action, status).Inc()
 }
 
 //NewAppWatch return a new application watch
@@ -94,7 +93,6 @@ func (app *AppWatch) addNodeToCache(obj interface{}) {
 		blog.Errorf("cannot convert to *v2.Application: %v", obj)
 		return
 	}
-
 	app.AddEvent(&application.Spec.Application)
 }
 
@@ -109,7 +107,6 @@ func (app *AppWatch) updateNodeInCache(oldObj, newObj interface{}) {
 		blog.Errorf("cannot convert newObj to *v2.Application: %v", newObj)
 		return
 	}
-
 	app.UpdateEvent(&oldApp.Spec.Application, &newApp.Spec.Application, false)
 }
 
@@ -119,7 +116,6 @@ func (app *AppWatch) deleteNodeFromCache(obj interface{}) {
 		blog.Errorf("cannot convert to *v2.Application: %v", obj)
 		return
 	}
-
 	app.DeleteEvent(&application.Spec.Application)
 }
 
@@ -152,7 +148,7 @@ func (app *AppWatch) AddEvent(obj interface{}) {
 	if err := app.report.ReportData(data); err != nil {
 		reportAppMetrics(types.ActionAdd, "FAILURE")
 	} else {
-		reportAppMetrics(types.ActionAdd, syncSuccess)
+		reportAppMetrics(types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -174,7 +170,7 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 	if err := app.report.ReportData(data); err != nil {
 		reportAppMetrics(types.ActionDelete, "FAILURE")
 	} else {
-		reportAppMetrics(types.ActionDelete, syncSuccess)
+		reportAppMetrics(types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -186,10 +182,10 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 		return
 	}
 
-	if !force && reflect.DeepEqual(old, cur) {
+	/*if !force && reflect.DeepEqual(old, cur) {
 		blog.V(3).Infof("App %s data do not changed", appData.ID)
 		return
-	}
+	}*/
 	blog.V(3).Infof("EVENT:: Update Event for Application %s/%s", appData.RunAs, appData.ID)
 
 	//report to cluster
@@ -201,7 +197,7 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	if err := app.report.ReportData(data); err != nil {
 		reportAppMetrics(types.ActionUpdate, "FAILURE")
 	} else {
-		reportAppMetrics(types.ActionUpdate, syncSuccess)
+		reportAppMetrics(types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 

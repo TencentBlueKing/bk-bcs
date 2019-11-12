@@ -45,6 +45,8 @@ func (store *managerStore) SaveAdmissionWebhook(admission *commtypes.AdmissionWe
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      admission.Name,
 			Namespace: admission.NameSpace,
+			Labels: admission.Labels,
+			Annotations: admission.Annotations,
 		},
 		Spec: v2.AdmissionWebhookConfigurationSpec{
 			AdmissionWebhookConfiguration: *admission,
