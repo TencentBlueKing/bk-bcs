@@ -11,7 +11,7 @@
  *
  */
 
-package bcsscheduler
+package controller
 
 import (
 	"fmt"
@@ -23,6 +23,9 @@ import (
 
 	"bk-bcs/bcs-common/common/zkclient"
 	"bk-bcs/bcs-common/pkg/cache"
+	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
+	bcsSchedulerUtil "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/util"
+	clientGoCache "k8s.io/client-go/tools/cache"
 
 	"github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"
@@ -73,15 +76,23 @@ func (wrapper *wrapperClient) ExistsW(path string) (bool, *zk.Stat, <-chan zk.Ev
 	return wrapper.client.ExistW(path)
 }
 
-//EventFuncs func for data processing
-type EventFuncs struct {
-	AddFunc    func(obj interface{})
-	UpdateFunc func(oldObj, newObj interface{})
-	DeleteFunc func(obj interface{})
+type ZkController struct {
+	conCxt       context.Context                          //context for exit signal
+	conCancel    context.CancelFunc                       //stop all goroutine
+	resyncperiod int                                      //resync all data period
+	resynced     bool                                     //status resynced
+	zkHost       []string                                 //zk host iplist
+	watchpath    string                                   //zookeeper watch path
+	client       ZkClient                                 //zookeeper client
+	storage      cache.Store                              //cache storage
+	nsStorage    map[string]context.CancelFunc            //storage for all namespace watcher
+	nsLock       sync.Mutex                               //lock for nsStorage
+	decoder      bcsSchedulerUtil.Decoder                 //decoder for storage
+	funcs        *clientGoCache.ResourceEventHandlerFuncs //funcs for callback
 }
 
-//NewController create controller according Store, Decoder end EventFuncs
-func NewController(zkHost []string, path string, period int, cache cache.Store, decoder Decoder, eventFunc *EventFuncs) (*Controller, error) {
+//NewZkController create controller according Store, Decoder end EventFuncs
+func NewZkController(zkHost []string, path string, period int, cache cache.Store, decoder bcsSchedulerUtil.Decoder, eventFunc *clientGoCache.ResourceEventHandlerFuncs) (*ZkController, error) {
 	if len(zkHost) == 0 {
 		return nil, fmt.Errorf("create Controller failed, empty zookeeper host list")
 	}
@@ -89,7 +100,7 @@ func NewController(zkHost []string, path string, period int, cache cache.Store, 
 		return nil, fmt.Errorf("create Controller failed, empty watch path")
 	}
 	cxt, cancel := context.WithCancel(context.Background())
-	controller := &Controller{
+	controller := &ZkController{
 		conCxt:       cxt,
 		conCancel:    cancel,
 		resyncperiod: period,
@@ -111,24 +122,8 @@ func NewController(zkHost []string, path string, period int, cache cache.Store, 
 	return controller, nil
 }
 
-//Controller define event interface for data storage
-type Controller struct {
-	conCxt       context.Context               //context for exit signal
-	conCancel    context.CancelFunc            //stop all goroutine
-	resyncperiod int                           //resync all data period
-	resynced     bool                          //status resynced
-	zkHost       []string                      //zk host iplist
-	watchpath    string                        //zookeeper watch path
-	client       ZkClient                      //zookeeper client
-	storage      cache.Store                   //cache storage
-	nsStorage    map[string]context.CancelFunc //storage for all namespace watcher
-	nsLock       sync.Mutex                    //lock for nsStorage
-	decoder      Decoder                       //decoder for storage
-	funcs        *EventFuncs                   //funcs for callback
-}
-
-//Run running controller, create goroutine watch zookeeper data
-func (ctrl *Controller) Run() error {
+//RunController running controller, create goroutine watch zookeeper data
+func (ctrl *ZkController) RunController(stopCh <-chan struct{}) error {
 	//check path exist
 	if err := ctrl.existWatch(ctrl.watchpath); err != nil {
 		return err
@@ -160,15 +155,15 @@ func (ctrl *Controller) Run() error {
 	}
 }
 
-//Resynced check controller is under resynced
-func (ctrl *Controller) Resynced() bool {
-	return ctrl.resynced
-}
-
-//Stop stop controller event, clean all data
-func (ctrl *Controller) Stop() {
+//StopController stop controller event, clean all data
+func (ctrl *ZkController) StopController() {
 	log.Printf("[INFO] controller %s stop", ctrl.watchpath)
 	ctrl.conCancel()
+}
+
+//Resynced check controller is under resynced
+func (ctrl *ZkController) Resynced() bool {
+	return ctrl.resynced
 }
 
 /**
@@ -176,7 +171,7 @@ func (ctrl *Controller) Stop() {
  */
 
 //existWatch check path is exist, block until path exist
-func (ctrl *Controller) existWatch(path string) error {
+func (ctrl *ZkController) existWatch(path string) error {
 	if len(path) == 0 {
 		return fmt.Errorf("controller err, get empty path")
 	}
@@ -206,7 +201,7 @@ func (ctrl *Controller) existWatch(path string) error {
 
 //typeWatch watch data type node from zookeeper.
 //data type comes from bcs-scheduler
-func (ctrl *Controller) dataTypeWatch(path string) error {
+func (ctrl *ZkController) dataTypeWatch(path string) error {
 	log.Printf("[INFO] controller create watch for %s", path)
 	namespaces, stat, events, err := ctrl.client.ChildrenW(path)
 	if err != nil {
@@ -247,7 +242,7 @@ func (ctrl *Controller) dataTypeWatch(path string) error {
 }
 
 //listNamespace list all namespace node
-func (ctrl *Controller) listChildrenNode(path string) ([]string, error) {
+func (ctrl *ZkController) listChildrenNode(path string) ([]string, error) {
 	children, stat, err := ctrl.client.Children(path)
 	if err != nil {
 		log.Printf("[ERROR] Get Node %s children failed, %s", path, err.Error())
@@ -260,7 +255,7 @@ func (ctrl *Controller) listChildrenNode(path string) ([]string, error) {
 }
 
 //namespaces check namespace is under watch
-func (ctrl *Controller) namespaceCheck(ns []string) {
+func (ctrl *ZkController) namespaceCheck(ns []string) {
 	if len(ns) == 0 {
 		return
 	}
@@ -284,7 +279,7 @@ func (ctrl *Controller) namespaceCheck(ns []string) {
 }
 
 //namespaceClean clean name with name
-func (ctrl *Controller) namespaceClean(ns string) {
+func (ctrl *ZkController) namespaceClean(ns string) {
 	if len(ns) == 0 {
 		return
 	}
@@ -300,7 +295,7 @@ func (ctrl *Controller) namespaceClean(ns string) {
 }
 
 //namespaceWatch watch data node under namespace
-func (ctrl *Controller) namespaceWatch(cxt context.Context, path string) error {
+func (ctrl *ZkController) namespaceWatch(cxt context.Context, path string) error {
 	log.Printf("[INFO] controller prepare to watch namespace %s children", path)
 	ns := filepath.Base(path)
 	dataNodes, stat, events, err := ctrl.client.ChildrenW(path)
@@ -348,7 +343,7 @@ func (ctrl *Controller) namespaceWatch(cxt context.Context, path string) error {
 	return nil
 }
 
-func (ctrl *Controller) dataNodeCheck(cxt context.Context, ns string, nodeName []string) {
+func (ctrl *ZkController) dataNodeCheck(cxt context.Context, ns string, nodeName []string) {
 	if len(nodeName) == 0 {
 		log.Printf("[WARN] controller get no data under %s/%s", ctrl.watchpath, ns)
 		return
@@ -368,7 +363,7 @@ func (ctrl *Controller) dataNodeCheck(cxt context.Context, ns string, nodeName [
 }
 
 //dataContentWatch watch detail data content node
-func (ctrl *Controller) dataWatch(cxt context.Context, ns string, path string) {
+func (ctrl *ZkController) dataWatch(cxt context.Context, ns string, path string) {
 	data, stat, events, err := ctrl.client.GetW(path)
 	if err != nil {
 		log.Printf("[ERROR] controller get node data %s failed: %s, watch stop", path, err.Error())
@@ -386,13 +381,13 @@ func (ctrl *Controller) dataWatch(cxt context.Context, ns string, path string) {
 			ctrl.storage.Update(cur)
 			ctrl.funcs.UpdateFunc(old, cur)
 			log.Printf("[INFO] %s update content", path)
-			ZkNotifyTotal.WithLabelValues(UpdateOperation).Inc()
+			metrics.ZkNotifyTotal.WithLabelValues(metrics.UpdateOperation).Inc()
 		} else {
 			ctrl.storage.Add(cur)
 			ctrl.funcs.AddFunc(cur)
 			log.Printf("[INFO] %s add new data object", path)
-			DnsTotal.Inc()
-			ZkNotifyTotal.WithLabelValues(AddOperation).Inc()
+			metrics.DnsTotal.Inc()
+			metrics.ZkNotifyTotal.WithLabelValues(metrics.AddOperation).Inc()
 		}
 	}
 	//wait for watch event
@@ -420,7 +415,7 @@ func (ctrl *Controller) dataWatch(cxt context.Context, ns string, path string) {
 }
 
 //dataClean clean data object by key
-func (ctrl *Controller) dataClean(ns, node string) {
+func (ctrl *ZkController) dataClean(ns, node string) {
 	if len(node) == 0 {
 		return
 	}
@@ -431,15 +426,15 @@ func (ctrl *Controller) dataClean(ns, node string) {
 		ctrl.storage.Delete(old)
 		ctrl.funcs.DeleteFunc(old)
 		log.Printf("[WARN] controller delete %s under %s in cache", key, ctrl.watchpath)
-		DnsTotal.Dec()
-		ZkNotifyTotal.WithLabelValues(DeleteOperation).Inc()
+		metrics.DnsTotal.Dec()
+		metrics.ZkNotifyTotal.WithLabelValues(metrics.DeleteOperation).Inc()
 	} else {
 		log.Printf("[ERROR] controller lost %s in cache, somewhere go wrong", key)
 	}
 }
 
 //dataResync resync all data from zookeeper
-func (ctrl *Controller) dataResync() {
+func (ctrl *ZkController) dataResync() {
 	//list all namespace node
 	namespaces, _, err := ctrl.client.Children(ctrl.watchpath)
 	if err != nil {
@@ -493,7 +488,7 @@ func (ctrl *Controller) dataResync() {
 					log.Printf("[WARN] RESYNC found ###%s### lost in cache", nodepath)
 					ctrl.storage.Add(cur)
 					ctrl.funcs.AddFunc(cur)
-					DnsTotal.Inc()
+					metrics.DnsTotal.Inc()
 				}
 			}
 		}

@@ -11,7 +11,7 @@
  *
  */
 
-package bcsscheduler
+package util
 
 import (
 	bcstypes "bk-bcs/bcs-common/common/types"
