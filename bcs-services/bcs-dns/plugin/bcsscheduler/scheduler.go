@@ -22,16 +22,17 @@ import (
 	"strings"
 	"time"
 
+	"bk-bcs/bcs-common/common/signals"
 	bcstypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/util"
 	"bk-bcs/bcs-common/common/version"
 	"bk-bcs/bcs-common/pkg/cache"
 	"bk-bcs/bcs-common/pkg/master"
 	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/controller"
-	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/signals"
 	bcsSchedulerUtil "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/util"
 	"bk-bcs/bcs-services/bcs-dns/storage"
 	etcdstorage "bk-bcs/bcs-services/bcs-dns/storage/etcd"
+	clientGoCache "k8s.io/client-go/tools/cache"
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/etcd/msg"
@@ -232,7 +233,7 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 		Store: store,
 	}
 	svc := filepath.Join(bcs.conf.EndpointPath, "service")
-	svcEvents := &bcsSchedulerUtil.EventFuncs{
+	svcEvents := &clientGoCache.ResourceEventHandlerFuncs{
 		AddFunc:    bcs.svcOnAdd,
 		UpdateFunc: bcs.svcOnUpdate,
 		DeleteFunc: bcs.svcOnDelete,
@@ -244,7 +245,7 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 		Store: estore,
 	}
 	endpoint := filepath.Join(bcs.conf.EndpointPath, "endpoint")
-	endpointEvents := &bcsSchedulerUtil.EventFuncs{
+	endpointEvents := &clientGoCache.ResourceEventHandlerFuncs{
 		AddFunc:    bcs.endpointOnAdd,
 		UpdateFunc: bcs.endpointOnUpdate,
 		DeleteFunc: bcs.endpointOnDelete,

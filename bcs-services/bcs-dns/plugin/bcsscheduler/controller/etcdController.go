@@ -31,7 +31,6 @@ import (
 	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	//"k8s.io/apimachinery/pkg/util/runtime"
-	bcsSchedulerUtil "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/util"
 	clientGoCache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -50,15 +49,15 @@ type EtcdController struct {
 	bkbcsClientSet *internalclientset.Clientset //kube bkbcs clientset
 	serviceLister  listers.BcsServiceLister
 	endpointLister listers.BcsEndpointLister
-	watchType      string                        //resource type to watch
-	storage        cache.Store                   //cache storage
-	nsStorage      map[string]context.CancelFunc //storage for all namespace watcher
-	nsLock         sync.Mutex                    //lock for nsStorage
-	funcs          *bcsSchedulerUtil.EventFuncs  //funcs for callback
+	watchType      string                                   //resource type to watch
+	storage        cache.Store                              //cache storage
+	nsStorage      map[string]context.CancelFunc            //storage for all namespace watcher
+	nsLock         sync.Mutex                               //lock for nsStorage
+	funcs          *clientGoCache.ResourceEventHandlerFuncs //funcs for callback
 }
 
 //NewEtcdController create controller according Store, Decoder end EventFuncs
-func NewEtcdController(kconfig, wType string, period int, cache cache.Store, eventFunc *bcsSchedulerUtil.EventFuncs) (*EtcdController, error) {
+func NewEtcdController(kconfig, wType string, period int, cache cache.Store, eventFunc *clientGoCache.ResourceEventHandlerFuncs) (*EtcdController, error) {
 	if kconfig == "" {
 		return nil, fmt.Errorf("create Controller failed, no kubeconfig provided")
 	}

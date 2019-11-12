@@ -19,9 +19,9 @@ import (
 	"strings"
 
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/signals"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/config"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/reflector/signals"
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	"bk-bcs/bcs-mesos/pkg/client/informers"

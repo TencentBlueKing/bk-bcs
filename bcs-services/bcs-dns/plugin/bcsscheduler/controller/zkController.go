@@ -25,6 +25,7 @@ import (
 	"bk-bcs/bcs-common/pkg/cache"
 	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
 	bcsSchedulerUtil "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/util"
+	clientGoCache "k8s.io/client-go/tools/cache"
 
 	"github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"
@@ -76,22 +77,22 @@ func (wrapper *wrapperClient) ExistsW(path string) (bool, *zk.Stat, <-chan zk.Ev
 }
 
 type ZkController struct {
-	conCxt       context.Context               //context for exit signal
-	conCancel    context.CancelFunc            //stop all goroutine
-	resyncperiod int                           //resync all data period
-	resynced     bool                          //status resynced
-	zkHost       []string                      //zk host iplist
-	watchpath    string                        //zookeeper watch path
-	client       ZkClient                      //zookeeper client
-	storage      cache.Store                   //cache storage
-	nsStorage    map[string]context.CancelFunc //storage for all namespace watcher
-	nsLock       sync.Mutex                    //lock for nsStorage
-	decoder      bcsSchedulerUtil.Decoder      //decoder for storage
-	funcs        *bcsSchedulerUtil.EventFuncs  //funcs for callback
+	conCxt       context.Context                          //context for exit signal
+	conCancel    context.CancelFunc                       //stop all goroutine
+	resyncperiod int                                      //resync all data period
+	resynced     bool                                     //status resynced
+	zkHost       []string                                 //zk host iplist
+	watchpath    string                                   //zookeeper watch path
+	client       ZkClient                                 //zookeeper client
+	storage      cache.Store                              //cache storage
+	nsStorage    map[string]context.CancelFunc            //storage for all namespace watcher
+	nsLock       sync.Mutex                               //lock for nsStorage
+	decoder      bcsSchedulerUtil.Decoder                 //decoder for storage
+	funcs        *clientGoCache.ResourceEventHandlerFuncs //funcs for callback
 }
 
 //NewZkController create controller according Store, Decoder end EventFuncs
-func NewZkController(zkHost []string, path string, period int, cache cache.Store, decoder bcsSchedulerUtil.Decoder, eventFunc *bcsSchedulerUtil.EventFuncs) (*ZkController, error) {
+func NewZkController(zkHost []string, path string, period int, cache cache.Store, decoder bcsSchedulerUtil.Decoder, eventFunc *clientGoCache.ResourceEventHandlerFuncs) (*ZkController, error) {
 	if len(zkHost) == 0 {
 		return nil, fmt.Errorf("create Controller failed, empty zookeeper host list")
 	}
