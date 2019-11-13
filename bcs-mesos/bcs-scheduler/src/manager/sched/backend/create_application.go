@@ -101,7 +101,7 @@ func (b *backend) RecoverApplication(version *types.Version) error {
 		app.Status = types.APP_STATUS_RUNNING
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
 		app.UpdateTime = time.Now().Unix()
-		app.Message = "application is running"
+		app.Message = types.APP_STATUS_RUNNING_STR
 		if err := b.store.SaveApplication(app); err != nil {
 			blog.Error("save application(%s.%s) status(%s) into db err:%s, recover fail",
 				runAs, appId, app.Status, err.Error())

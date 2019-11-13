@@ -584,10 +584,10 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 		message = "some pods in staing or starting"
 	} else if runningNum == int(app.DefineInstances) {
 		status = types.APP_STATUS_RUNNING
-		message = "application is running"
+		message = types.APP_STATUS_RUNNING_STR
 	} else {
 		status = types.APP_STATUS_ABNORMAL
-		message = "application is abnormal"
+		message = types.APP_STATUS_ABNORMAL_STR
 	}
 
 	if app.Status == types.APP_STATUS_OPERATING || app.Status == types.APP_STATUS_ROLLINGUPDATE {

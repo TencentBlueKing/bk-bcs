@@ -73,6 +73,12 @@ const (
 	APP_STATUS_ABNORMAL      = "Abnormal"
 )
 
+//app status
+const (
+	APP_STATUS_RUNNING_STR  = "application is running"
+	APP_STATUS_ABNORMAL_STR = "application is abnormal"
+)
+
 //app substatus
 const (
 	APP_SUBSTATUS_UNKNOWN            = "Unknown"

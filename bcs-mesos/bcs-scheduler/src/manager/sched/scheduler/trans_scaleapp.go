@@ -366,7 +366,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 		app.LastStatus = app.Status
 		app.Status = types.APP_STATUS_RUNNING
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
-		app.Message = "application is running"
+		app.Message = types.APP_STATUS_RUNNING_STR
 		app.UpdateTime = time.Now().Unix()
 	}
 	trans.Status = types.OPERATION_STATUS_FINISH

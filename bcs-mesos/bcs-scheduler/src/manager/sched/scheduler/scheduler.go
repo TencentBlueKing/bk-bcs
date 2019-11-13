@@ -63,6 +63,11 @@ const MESOS_HEARTBEAT_TIMEOUT = 120
 
 const MAX_STAGING_UPDATE_INTERVAL = 120
 
+const (
+	SchedulerRoleMaster = "master"
+	SchedulerRoleSlave  = "slave"
+)
+
 // Scheduler represents a Mesos scheduler
 type Scheduler struct {
 	master    string
@@ -359,7 +364,7 @@ func (s *Scheduler) discvMesos() {
 		case <-tick.C:
 			blog.Info("mesos discove(%s:%s), curr mesos master:%s", MesosDiscv, discvPath, s.currMesosMaster)
 			// add mesos heartbeat check
-			if s.Role == "master" {
+			if s.Role == SchedulerRoleMaster {
 				s.lockService()
 				heartbeat := s.mesosHeartBeatTime
 				now := time.Now().Unix()
@@ -449,7 +454,7 @@ func (s *Scheduler) checkMesosChange(currMaster, MasterID string) error {
 	s.mesosMasterID = MasterID
 	servermetric.SetMesosMaster(s.currMesosMaster)
 
-	if s.Role != "master" {
+	if s.Role != SchedulerRoleMaster {
 		blog.Info("mesos master leader changed to %s, but scheduler's role is %s, do nothing", currMaster, s.Role)
 		return nil
 	}
@@ -641,10 +646,10 @@ func (s *Scheduler) regDiscove() {
 				return
 			}
 			if isMaster {
-				err = s.checkRoleChange("master")
+				err = s.checkRoleChange(SchedulerRoleMaster)
 				servermetric.SetRole(metric.MasterRole)
 			} else {
-				err = s.checkRoleChange("slave")
+				err = s.checkRoleChange(SchedulerRoleSlave)
 				servermetric.SetRole(metric.SlaveRole)
 			}
 			if err != nil {
@@ -778,7 +783,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 
 	blog.Info("scheduler role change: %s --> %s", s.Role, currRole)
-	if currRole != "master" {
+	if currRole != SchedulerRoleMaster {
 		if s.currMesosResp != nil {
 			blog.Info("close current http ...")
 			s.currMesosResp.Body.Close()

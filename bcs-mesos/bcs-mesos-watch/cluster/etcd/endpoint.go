@@ -52,6 +52,7 @@ func NewEndpointWatch(cxt context.Context, informer bkbcsv2.BcsEndpointInformer,
 		report:    reporter,
 		cancelCxt: cxt,
 		dataCache: cache.NewCache(keyFunc),
+		informer:  informer,
 	}
 }
 
