@@ -15,7 +15,6 @@ package scheduler
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
@@ -166,9 +165,8 @@ func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 		blog.Error("procss command message, but data empty")
 		return
 	}
-	runAs, appID := store.GetRunAsAndAppIDbyTaskID(bcsMsg.ResponseCommandTask.TaskId)
-	s.store.LockApplication(fmt.Sprintf("%s.%s", runAs, appID))
-	defer s.store.UnLockApplication(fmt.Sprintf("%s.%s", runAs, appID))
+	s.store.LockCommand(bcsMsg.ResponseCommandTask.ID)
+	defer s.store.UnLockCommand(bcsMsg.ResponseCommandTask.ID)
 
 	cmdId := bcsMsg.ResponseCommandTask.ID
 	taskId := bcsMsg.ResponseCommandTask.TaskId
@@ -199,8 +197,13 @@ func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 	}
 
 	if exist {
-		s.store.SaveCommand(command)
-		blog.Error("process command message: command(%s), task(%s) updated", cmdId, taskId)
+		err := s.store.SaveCommand(command)
+		if err != nil {
+			blog.Error("process command message: command(%s), task(%s) update failed %s", cmdId, taskId, err.Error())
+		} else {
+			blog.Error("process command message: command(%s), task(%s) updated", cmdId, taskId)
+		}
+
 	} else {
 		blog.Error("process command message: command(%s), task(%s) not exist", cmdId, taskId)
 	}

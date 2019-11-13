@@ -40,7 +40,7 @@ type NSControlInfo struct {
 }
 
 func reportAppMetrics(action, status string) {
-	syncTotal.WithLabelValues(dataTypeApp, action, status).Inc()
+	cluster.SyncTotal.WithLabelValues(cluster.DataTypeApp, action, status).Inc()
 }
 
 //NewAppWatch return a new application watch
@@ -340,7 +340,7 @@ func (app *AppWatch) AddEvent(obj interface{}) {
 	if err := app.report.ReportData(data); err != nil {
 		reportAppMetrics(types.ActionAdd, "FAILURE")
 	} else {
-		reportAppMetrics(types.ActionAdd, syncSuccess)
+		reportAppMetrics(types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -362,7 +362,7 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 	if err := app.report.ReportData(data); err != nil {
 		reportAppMetrics(types.ActionDelete, "FAILURE")
 	} else {
-		reportAppMetrics(types.ActionDelete, syncSuccess)
+		reportAppMetrics(types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -389,7 +389,7 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	if err := app.report.ReportData(data); err != nil {
 		reportAppMetrics(types.ActionUpdate, "FAILURE")
 	} else {
-		reportAppMetrics(types.ActionUpdate, syncSuccess)
+		reportAppMetrics(types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 

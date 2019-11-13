@@ -96,4 +96,4 @@ Server:
 私钥文件 server.key
 数字证书 server.crt
 
-其中server用于webhook做https监听，ca.key base64编码后用于admissionwebhook的caBundle字段，进行webhook的合法性验证。
+其中server用于webhook做https监听，ca.crt base64编码后用于admissionwebhook的caBundle字段，进行webhook的合法性验证。

@@ -15,17 +15,13 @@ package store
 
 import (
 	"errors"
-	"fmt"
-	"strings"
-
-	"bk-bcs/bcs-common/common/blog"
 )
 
 var (
 	ErrNoFound = errors.New("store: Not Found")
 )
 
-func GetRunAsAndAppIDbyTaskGroupID(taskGroupId string) (string, string) {
+/*func GetRunAsAndAppIDbyTaskGroupID(taskGroupId string) (string, string) {
 	appID := ""
 	runAs := ""
 
@@ -72,4 +68,4 @@ func GetTaskGroupID(taskID string) string {
 	taskGroupID := fmt.Sprintf("%s.%s.%s.%s.%s", splitID[2], splitID[3], splitID[4], splitID[5], splitID[0])
 
 	return taskGroupID
-}
+}*/

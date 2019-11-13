@@ -44,6 +44,8 @@ type SchedulerOptions struct {
 	ProcessExecutor   string `json:"process_executor" value:"" usage:"the process executor path"`
 	CniDir            string `json:"cni_dir" value:"" usage:"the cni directory"`
 	NetImage          string `json:"net_image" value:"" usage:"the network image"`
+	Kubeconfig        string `json:"kubeconfig" value:"" usage:"kubeconfig, when store_driver is etcd"`
+	StoreDriver       string `json:"store_driver" value:"zookeeper" usage:"the store driver, enum: zookeeper, etcd"`
 }
 
 type SchedConfig struct {
@@ -79,6 +81,9 @@ type Scheduler struct {
 	ProcessExecutor   string
 	CniDir            string
 	NetImage          string
+
+	Kubeconfig  string
+	StoreDriver string
 }
 
 type HttpListener struct {
@@ -162,6 +167,9 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 		config.HttpListener.IsSSL = true
 		config.Scheduler.Scheme = "https"
 	}
+
+	config.Scheduler.Kubeconfig = op.Kubeconfig
+	config.Scheduler.StoreDriver = op.StoreDriver
 }
 
 func hostname() string {

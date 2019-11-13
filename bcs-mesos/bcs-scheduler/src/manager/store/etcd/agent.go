@@ -25,8 +25,8 @@ import (
 
 func (store *managerStore) CheckAgentExist(agent *types.Agent) (string, bool) {
 	client := store.BkbcsClient.Agents(DefaultNamespace)
-	obj, _ := client.Get(agent.Key, metav1.GetOptions{})
-	if obj != nil {
+	obj, err := client.Get(agent.Key, metav1.GetOptions{})
+	if err == nil {
 		return obj.ResourceVersion, true
 	}
 
@@ -83,7 +83,8 @@ func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {
 
 	agents := make([]*types.Agent, 0, len(v2Agents.Items))
 	for _, v2 := range v2Agents.Items {
-		agents = append(agents, &v2.Spec.Agent)
+		obj := v2.Spec.Agent
+		agents = append(agents, &obj)
 	}
 	return agents, nil
 }
@@ -109,8 +110,8 @@ func (store *managerStore) DeleteAgent(key string) error {
 
 func (store *managerStore) CheckAgentSettingExist(agent *commtypes.BcsClusterAgentSetting) (string, bool) {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
-	obj, _ := client.Get(agent.InnerIP, metav1.GetOptions{})
-	if obj != nil {
+	obj, err := client.Get(agent.InnerIP, metav1.GetOptions{})
+	if err == nil {
 		return obj.ResourceVersion, true
 	}
 
@@ -183,8 +184,8 @@ func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
 
 func (store *managerStore) CheckAgentSchedInfoExist(agent *types.AgentSchedInfo) (string, bool) {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
-	obj, _ := client.Get(agent.HostName, metav1.GetOptions{})
-	if obj != nil {
+	obj, err := client.Get(agent.HostName, metav1.GetOptions{})
+	if err == nil {
 		return obj.ResourceVersion, true
 	}
 

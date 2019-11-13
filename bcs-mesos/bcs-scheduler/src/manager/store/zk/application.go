@@ -129,7 +129,7 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 
 	app := &types.Application{}
 	if err := json.Unmarshal(data, app); err != nil {
-		blog.Error("fail to unmarshal application(%s). err:%s", string(data), err.Error())
+		blog.Error("fail to unmarshal application(%s:%s) data(%s) err:%s", runAs, appID, string(data), err.Error())
 		return nil, err
 	}
 
@@ -148,7 +148,7 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 	}
 
 	if nil == appIDs {
-		blog.Error("no application in (%s)", runAs)
+		blog.V(3).Infof("no application in (%s)", runAs)
 		return nil, nil
 	}
 
@@ -157,7 +157,7 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 	for _, appID := range appIDs {
 		app, err := store.FetchApplication(runAs, appID)
 		if err != nil {
-			blog.Error("fail to fetch application by appID(%s)", appID)
+			blog.Error("fail to fetch application by appID(%s:%s)", runAs, appID)
 			continue
 		}
 
@@ -173,12 +173,11 @@ func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	path := getApplicationRootPath() + runAs + "/" + appID
 	blog.V(3).Infof("will delete applcation,path(%s)", path)
 
-	deleteAppCacheNode(runAs, appID)
-
 	if err := store.Db.Delete(path); err != nil {
 		blog.Error("fail to delete application, application id(%s), err:%s", appID, err.Error())
 		return err
 	}
+	deleteAppCacheNode(runAs, appID)
 
 	return nil
 }

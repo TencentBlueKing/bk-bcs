@@ -172,7 +172,7 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 						}
 					],
 					"healthChecks": [{
-						"type": "HTTP|TCP|REMOTE_HTTP|REMOTE_TCP",
+						"type": "HTTP|TCP|COMMAND|REMOTE_HTTP|REMOTE_TCP",
 						"intervalSeconds": 30,
 						"timeoutSeconds": 5,
 						"consecutiveFailures": 3,
@@ -186,7 +186,10 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 						"tcp": {
 							"port": 8090,
 							"portName": "test-tcp"
-						}
+						},
+						"command": {
+                            "value": "ls /"
+                        }
 					}],
 					"resources": {
 						"limits": {
@@ -535,12 +538,12 @@ ports字段说明：
 
 #### **healthChecks 字段说明**
 
-* type: 检测方式，目前支持HTTP,TCP,REMOTE_TCP和REMOTE_HTTP四种
+* type: 检测方式，目前支持HTTP,TCP,COMMAND,REMOTE_TCP和REMOTE_HTTP五种
 * intervalSeconds：前后两次执行健康监测的时间间隔.
 * timeoutSeconds: 健康监测可允许的等待超时时间。在该段时间之后，不管收到什么样的响应，都被认为健康监测是失败的，**timeoutSeconds需要小于intervalSeconds**
 * consecutiveFailures: 当该参数配置大于0时，在健康检查连续失败次数大于该配置时，scheduler将task设置为Failed状态并下发kill指令（设置为Failed状态后会出发重新调度检测，如果配置了Failed状态下重新调度，则scheduler会重新调度对应的taskgroup）。目前该配置项只在executor本地check有效。如果不需要此功能，请配置为0。
 * gracePeriodSeconds：启动之后在该时段内不进行健康检查
-* command: type为COMMAND时有效(目前不支持)
+* command: type为COMMAND时有效
   * value: 需要执行的命令,value中支持环境变量.mesos协议中区分是否shell,这里不做区分,如果为shell命令,需要包括"/bin/bash ‐c",系统不会自动添加(参考marathon)
   * 后续可能需要补充其他参数如USER
 * http: type为HTTP和REMOTE_HTTP时有效

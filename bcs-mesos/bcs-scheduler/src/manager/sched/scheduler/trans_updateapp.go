@@ -89,7 +89,7 @@ func (s *Scheduler) RunUpdateApplication(transaction *Transaction) {
 			goto run_end
 		}
 
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Second)
 	}
 
 run_end:
@@ -134,7 +134,7 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 		app.Status = types.APP_STATUS_RUNNING
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
 		app.UpdateTime = time.Now().Unix()
-		app.Message = "application is running"
+		app.Message = types.APP_STATUS_RUNNING_STR
 		err = s.store.SaveApplication(app)
 		if err != nil {
 			blog.Error("transaction %s save application(%s.%s) err:%s", trans.ID, app.RunAs, app.ID, err.Error())
@@ -251,7 +251,7 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 		app.Status = types.APP_STATUS_RUNNING
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
 		app.UpdateTime = time.Now().Unix()
-		app.Message = "application is running"
+		app.Message = types.APP_STATUS_RUNNING_STR
 		trans.Status = types.OPERATION_STATUS_FINISH
 	}
 	err = s.store.SaveApplication(app)

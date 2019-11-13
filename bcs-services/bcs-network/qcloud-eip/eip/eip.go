@@ -848,7 +848,7 @@ func (eip *EIP) CNIAdd(args *skel.CmdArgs) error {
 		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, netConf.ENIPrefix, err.Error())
 		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, netConf.ENIPrefix, err.Error())
 	}
-	
+
 	hostVethInfo, containerVethInfo, err := createVethPair(netns.Path(), args.IfName, 1500)
 	if err != nil {
 		blog.Errorf("create veth pair failed, err %s", err.Error())

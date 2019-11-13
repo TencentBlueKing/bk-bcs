@@ -63,7 +63,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 
 		default:
 			s.wg.Add(1)
-			ObjectResourceInfo.Reset()
+			store.ObjectResourceInfo.Reset()
 		}
 
 		// handle service metrics
@@ -72,7 +72,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all services error %s", err.Error())
 		}
 		for _, service := range services {
-			reportObjectResourceInfoMetrics(ObjectResourceService, service.NameSpace, service.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceService, service.NameSpace, service.Name, "")
 		}
 
 		// handle application metrics
@@ -81,7 +81,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all applications error %s", err.Error())
 		}
 		for _, app := range apps {
-			reportObjectResourceInfoMetrics(ObjectResourceApplication, app.RunAs, app.Name, app.Status)
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceApplication, app.RunAs, app.Name, app.Status)
 
 			// handle taskgroup metrics
 			taskgroups, err := s.ListTaskGroups(app.RunAs, app.Name)
@@ -89,7 +89,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				blog.Errorf("list all services error %s", err.Error())
 			}
 			for _, taskgroup := range taskgroups {
-				reportTaskgroupInfoMetrics(taskgroup.RunAs, taskgroup.AppID, taskgroup.ID, taskgroup.Status)
+				store.ReportTaskgroupInfoMetrics(taskgroup.RunAs, taskgroup.AppID, taskgroup.ID, taskgroup.Status)
 			}
 		}
 
@@ -99,7 +99,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all deployment error %s", err.Error())
 		}
 		for _, deployment := range deployments {
-			reportObjectResourceInfoMetrics(ObjectResourceDeployment, deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceDeployment, deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name, "")
 		}
 
 		// handle configmap metrics
@@ -108,16 +108,16 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all configmap error %s", err.Error())
 		}
 		for _, configmap := range configmaps {
-			reportObjectResourceInfoMetrics(ObjectResourceConfigmap, configmap.NameSpace, configmap.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceConfigmap, configmap.NameSpace, configmap.Name, "")
 		}
 
 		// handle secrets metrics
-		secrets, err := s.ListAllConfigmaps()
+		secrets, err := s.ListAllSecrets()
 		if err != nil {
 			blog.Errorf("list all secret error %s", err.Error())
 		}
 		for _, secret := range secrets {
-			reportObjectResourceInfoMetrics(ObjectResourceSecret, secret.NameSpace, secret.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceSecret, secret.NameSpace, secret.Name, "")
 		}
 
 		// handle agents metrics
@@ -132,7 +132,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				continue
 			}
 
-			reportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
+			store.ReportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
 				info.MemTotal, info.MemTotal-info.MemUsed)
 		}
 

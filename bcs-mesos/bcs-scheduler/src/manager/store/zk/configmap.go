@@ -66,7 +66,7 @@ func (store *managerStore) DeleteConfigMap(ns, name string) error {
 
 func (store *managerStore) ListConfigmaps(runAs string) ([]*commtypes.BcsConfigMap, error) {
 
-	path := getConfigMapRootPath() + runAs //defaultRunAs
+	path := getConfigMapRootPath() + "/" + runAs //defaultRunAs
 
 	IDs, err := store.Db.List(path)
 	if err != nil {
@@ -75,7 +75,7 @@ func (store *managerStore) ListConfigmaps(runAs string) ([]*commtypes.BcsConfigM
 	}
 
 	if nil == IDs {
-		blog.Error("no configmap in (%s)", runAs)
+		blog.V(3).Infof("no configmap in (%s)", runAs)
 		return nil, nil
 	}
 

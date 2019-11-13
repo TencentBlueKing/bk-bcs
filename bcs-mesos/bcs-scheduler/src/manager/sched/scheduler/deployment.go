@@ -55,7 +55,7 @@ func (s *Scheduler) DeploymentCheck(ns string, name string, recover bool) {
 
 	blog.Info("deployment(%s.%s) check begin", ns, name)
 	if recover == true {
-		if s.Role != "master" {
+		if s.Role != SchedulerRoleMaster {
 			blog.Warn("deployment(%s.%s) check exit, because scheduler is not master now", ns, name)
 			return
 		}
@@ -64,11 +64,11 @@ func (s *Scheduler) DeploymentCheck(ns string, name string, recover bool) {
 			blog.Info("deployment(%s.%s) check finish", ns, name)
 			return
 		}
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 
 	for {
-		if s.Role != "master" {
+		if s.Role != SchedulerRoleMaster {
 			blog.Warn("deployment(%s.%s) check exit, because scheduler is not master now", ns, name)
 			return
 		}
@@ -77,14 +77,14 @@ func (s *Scheduler) DeploymentCheck(ns string, name string, recover bool) {
 			blog.Info("deployment(%s.%s) check finish", ns, name)
 			return
 		}
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 
 func (s *Scheduler) deploymentCheckTick(ns string, name string, recover bool) bool {
 	blog.V(3).Infof("check rollingupdate for deployment(%s.%s)", ns, name)
-	s.store.LockDeployment(name)
-	defer s.store.UnLockDeployment(name)
+	s.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer s.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := s.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {
@@ -491,6 +491,7 @@ func (s *Scheduler) isRollingStartFinished(app *types.Application, rollingNum in
 		return false
 	}
 
+	hasHealthCheck := false
 	for _, taskGroup := range taskGroups {
 
 		Idx := taskGroup.InstanceID
@@ -513,10 +514,13 @@ func (s *Scheduler) isRollingStartFinished(app *types.Application, rollingNum in
 				switch healthStatus.Type {
 				case commtypes.BcsHealthCheckType_COMMAND:
 					hasLocalCheck = true
+					hasHealthCheck = true
 				case commtypes.BcsHealthCheckType_TCP:
 					hasLocalCheck = true
+					hasHealthCheck = true
 				case commtypes.BcsHealthCheckType_HTTP:
 					hasLocalCheck = true
+					hasHealthCheck = true
 				}
 			}
 			if hasLocalCheck == false {
@@ -531,6 +535,14 @@ func (s *Scheduler) isRollingStartFinished(app *types.Application, rollingNum in
 				return false
 			}
 		}
+	}
+
+	if hasHealthCheck {
+		blog.Infof("application(%s:%s) taskgroup(%d) HealthCheck is ok, rolling update finish",
+			app.RunAs, app.ID, app.Instances)
+	} else {
+		blog.Infof("application(%s:%s) taskgroup(%d) don't have HealthCheck, rolling update finish",
+			app.RunAs, app.ID, app.Instances)
 	}
 
 	return true

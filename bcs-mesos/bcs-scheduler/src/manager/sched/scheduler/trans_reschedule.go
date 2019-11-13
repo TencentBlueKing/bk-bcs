@@ -16,14 +16,14 @@
 package scheduler
 
 import (
+	"net/http"
+	"time"
+
 	alarm "bk-bcs/bcs-common/common/bcs-health/api"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"net/http"
-	"time"
 )
 
 // The goroutine function for reschedule taskgroup transaction
@@ -50,7 +50,7 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 		}
 
 		//precheck application status, add 20180620
-		runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+		runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 		app, _ := s.store.FetchApplication(runAs, appID)
 		if app == nil {
 			blog.Infof("transaction %s fail: fetch application(%s.%s) return nil", transaction.ID, runAs, appID)
@@ -173,7 +173,7 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer,
 
 	rescheduleOpdata := trans.OpData.(*TransRescheduleOpData)
 	taskGroupID := rescheduleOpdata.TaskGroupID
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 
 	cpus, mem, disk := s.OfferedResources(offer)
 	blog.Info("transaction %s reschedule taskgroup(%s), offer:%s||%s, cpu:%f, mem:%f, disk:%f",
