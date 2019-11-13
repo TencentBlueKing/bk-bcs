@@ -95,7 +95,7 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 			break
 		}
 
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Second)
 	}
 
 run_end:
@@ -175,7 +175,7 @@ func (s *Scheduler) RunInnerScaleApplication(transaction *Transaction) {
 			break
 		}
 
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Second)
 	}
 
 run_end:
@@ -340,6 +340,8 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 				}
 				blog.Info("transaction %s scaledown taskgroup(%s) not in end status at current",
 					trans.ID, taskGroup.ID)
+			} else {
+				blog.Info("transaction %s scaledown taskgroup(%s) in end status current", trans.ID, taskGroup.ID)
 			}
 		}
 	}
@@ -354,6 +356,8 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 			app.Instances--
 			if err = s.DeleteTaskGroup(app, taskGroup, "scale down application"); err != nil {
 				blog.Error("transaction %s delete taskgroup(%s) failed: %s", trans.ID, taskGroup.ID, err.Error())
+			} else {
+				blog.Infof("transaction %s delete taskgroup(%s) success", trans.ID, taskGroup.ID)
 			}
 		}
 	}
@@ -362,7 +366,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 		app.LastStatus = app.Status
 		app.Status = types.APP_STATUS_RUNNING
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
-		app.Message = "application is running"
+		app.Message = types.APP_STATUS_RUNNING_STR
 		app.UpdateTime = time.Now().Unix()
 	}
 	trans.Status = types.OPERATION_STATUS_FINISH

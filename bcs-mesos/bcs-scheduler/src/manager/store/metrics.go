@@ -11,7 +11,7 @@
  *
  */
 
-package etcd
+package store
 
 import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
@@ -115,7 +115,7 @@ func init() {
 		StorageOperatorTotal, StorageOperatorLatencyMs, StorageOperatorFailedTotal, AgentCpuResourceRemain, AgentMemoryResourceRemain)
 }
 
-func reportObjectResourceInfoMetrics(resource, ns, name, status string) {
+func ReportObjectResourceInfoMetrics(resource, ns, name, status string) {
 	var str string
 	switch status {
 	case types.APP_STATUS_STAGING, types.APP_STATUS_DEPLOYING, types.APP_STATUS_OPERATING, types.APP_STATUS_ROLLINGUPDATE:
@@ -133,7 +133,7 @@ func reportObjectResourceInfoMetrics(resource, ns, name, status string) {
 	ObjectResourceInfo.WithLabelValues(resource, ns, name, str).Set(1)
 }
 
-func reportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
+func ReportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
 	var val float64
 	switch status {
 	case types.TASKGROUP_STATUS_STAGING, types.TASKGROUP_STATUS_STARTING:
@@ -153,14 +153,14 @@ func reportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
 	TaskgroupInfo.WithLabelValues(ns, name, taskgroupId).Set(val)
 }
 
-func reportAgentInfoMetrics(ip string, totalCpu, remainCpu, totalMem, remainMem float64) {
+func ReportAgentInfoMetrics(ip string, totalCpu, remainCpu, totalMem, remainMem float64) {
 	AgentCpuResourceTotal.WithLabelValues(ip).Set(totalCpu)
 	AgentCpuResourceRemain.WithLabelValues(ip).Set(remainCpu)
 	AgentMemoryResourceTotal.WithLabelValues(ip).Set(totalMem)
 	AgentMemoryResourceRemain.WithLabelValues(ip).Set(remainMem)
 }
 
-func reportStorageOperatorMetrics(operator string, started time.Time, failed bool) {
+func ReportStorageOperatorMetrics(operator string, started time.Time, failed bool) {
 	StorageOperatorTotal.WithLabelValues(operator).Inc()
 	d := time.Duration(time.Since(started).Nanoseconds())
 	sec := d / time.Millisecond

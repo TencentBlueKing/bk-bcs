@@ -18,6 +18,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	bcstype "bk-bcs/bcs-common/common/types"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	//"github.com/golang/protobuf/proto"
@@ -148,6 +149,14 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		blog.Warn("containers and Processes can not coexist.")
 		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+"containers and processes cannot coexist")
 		return nil, replyErr
+	}
+
+	if NumContainer > 0 {
+		version.Kind = commtypes.BcsDataType_APP
+	}
+
+	if NumProcess > 0 {
+		version.Kind = commtypes.BcsDataType_PROCESS
 	}
 
 	version.PodObjectMeta = spec.ObjectMeta

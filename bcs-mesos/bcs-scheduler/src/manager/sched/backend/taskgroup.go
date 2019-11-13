@@ -14,14 +14,13 @@
 package backend
 
 import (
+	"errors"
+	"net/http"
+
 	"bk-bcs/bcs-common/common/blog"
 	commonTypes "bk-bcs/bcs-common/common/types"
 	sched "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"errors"
-	"net/http"
-	//"sort"
 )
 
 const (
@@ -32,7 +31,7 @@ const (
 func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) error {
 	blog.V(3).Infof("reschedule taskgroup(%s)", taskgroupId)
 
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
 
 	app, err := b.store.FetchApplication(runAs, appID)
 	if err != nil {
@@ -132,7 +131,7 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 // RestartTaskGroup is used to restart process taskGroup. If the taskGroup type is container, then return error.
 func (b *backend) RestartTaskGroup(taskGroupID string) (*types.BcsMessage, error) {
 	blog.V(3).Infof("to restart taskgroup(%s)", taskGroupID)
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 
 	b.store.LockApplication(runAs + "." + appID)
 	defer b.store.UnLockApplication(runAs + "." + appID)
@@ -175,7 +174,7 @@ func (b *backend) RestartTaskGroup(taskGroupID string) (*types.BcsMessage, error
 // ReloadTaskGroup is used to reload process taskGroup. If the taskGroup type is container, then return error.
 func (b *backend) ReloadTaskGroup(taskGroupID string) (*types.BcsMessage, error) {
 	blog.V(3).Infof("to reload taskgroup(%s)", taskGroupID)
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 
 	b.store.LockApplication(runAs + "." + appID)
 	defer b.store.UnLockApplication(runAs + "." + appID)

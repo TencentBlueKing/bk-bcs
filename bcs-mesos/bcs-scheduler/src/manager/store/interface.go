@@ -73,7 +73,7 @@ type Store interface {
 
 	// save taskgroup to db
 	SaveTaskGroup(*types.TaskGroup) error
-	// list all taskgroup
+	// list taskgroups under namespace,appid
 	ListTaskGroups(string, string) ([]*types.TaskGroup, error)
 	// fetch taskgroup
 	FetchTaskGroup(string) (*types.TaskGroup, error)
@@ -201,6 +201,12 @@ type Store interface {
 	//para3: name
 	DeleteCustomResourceDefinition(string, string, string) error
 
+	// init command lock
+	InitCmdLockPool()
+	//lock command by command_id
+	LockCommand(cmdId string)
+	//unlock command by command_id
+	UnLockCommand(cmdId string)
 	// save command
 	SaveCommand(command *commtypes.BcsCommandInfo) error
 	// fetch command

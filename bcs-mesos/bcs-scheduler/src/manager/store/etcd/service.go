@@ -22,8 +22,8 @@ import (
 
 func (store *managerStore) CheckServiceExist(service *commtypes.BcsService) (string, bool) {
 	client := store.BkbcsClient.BcsServices(service.NameSpace)
-	v2Svc, _ := client.Get(service.Name, metav1.GetOptions{})
-	if v2Svc != nil {
+	v2Svc, err := client.Get(service.Name, metav1.GetOptions{})
+	if err == nil {
 		return v2Svc.ResourceVersion, true
 	}
 
@@ -43,8 +43,10 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      service.Name,
-			Namespace: service.NameSpace,
+			Name:        service.Name,
+			Namespace:   service.NameSpace,
+			Labels:      service.Labels,
+			Annotations: service.Annotations,
 		},
 		Spec: v2.BcsServiceSpec{
 			BcsService: *service,
@@ -86,7 +88,8 @@ func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, 
 
 	svcs := make([]*commtypes.BcsService, 0, len(v2Svcs.Items))
 	for _, svc := range v2Svcs.Items {
-		svcs = append(svcs, &svc.Spec.BcsService)
+		obj := svc.Spec.BcsService
+		svcs = append(svcs, &obj)
 	}
 	return svcs, nil
 }
@@ -100,7 +103,8 @@ func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
 
 	svcs := make([]*commtypes.BcsService, 0, len(v2Svcs.Items))
 	for _, svc := range v2Svcs.Items {
-		svcs = append(svcs, &svc.Spec.BcsService)
+		obj := svc.Spec.BcsService
+		svcs = append(svcs, &obj)
 	}
 	return svcs, nil
 }

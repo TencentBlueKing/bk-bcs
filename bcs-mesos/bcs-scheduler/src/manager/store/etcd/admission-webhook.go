@@ -22,8 +22,8 @@ import (
 
 func (store *managerStore) CheckAdmissionWebhookExist(admission *commtypes.AdmissionWebhookConfiguration) (string, bool) {
 	client := store.BkbcsClient.AdmissionWebhookConfigurations(admission.NameSpace)
-	obj, _ := client.Get(admission.Name, metav1.GetOptions{})
-	if obj != nil {
+	obj, err := client.Get(admission.Name, metav1.GetOptions{})
+	if err == nil {
 		return obj.ResourceVersion, true
 	}
 
@@ -43,8 +43,10 @@ func (store *managerStore) SaveAdmissionWebhook(admission *commtypes.AdmissionWe
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      admission.Name,
-			Namespace: admission.NameSpace,
+			Name:        admission.Name,
+			Namespace:   admission.NameSpace,
+			Labels:      admission.Labels,
+			Annotations: admission.Annotations,
 		},
 		Spec: v2.AdmissionWebhookConfigurationSpec{
 			AdmissionWebhookConfiguration: *admission,
@@ -87,7 +89,8 @@ func (store *managerStore) FetchAllAdmissionWebhooks() ([]*commtypes.AdmissionWe
 
 	admissions := make([]*commtypes.AdmissionWebhookConfiguration, 0, len(v2Admissions.Items))
 	for _, v2 := range v2Admissions.Items {
-		admissions = append(admissions, &v2.Spec.AdmissionWebhookConfiguration)
+		obj := v2.Spec.AdmissionWebhookConfiguration
+		admissions = append(admissions, &obj)
 	}
 	return admissions, nil
 }
