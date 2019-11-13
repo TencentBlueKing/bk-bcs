@@ -1,0 +1,10 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: clb-controller
+  namespace: kube-system
+spec:
+  ports:
+    - name: http-metric
+      port: {{CLB_CTRL_METRIC_PORT}}
+      targetPort: {{CLB_CTRL_METRIC_PORT}}

@@ -1,0 +1,18 @@
+clbName: ddzzq-qa-clb
+
+ingresses:
+  http: []
+  https: []
+  tcp: []
+  udp: []
+  statefulset:
+    tcp:
+    - startPort: 30000
+      startIndex: 0
+      endIndex: 1
+      serviceName: tcp-test
+      namespace: clb
+      sessionTime: 50
+      healthCheck:
+        enabled: true
+
