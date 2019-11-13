@@ -15,6 +15,7 @@ package cnm
 
 import (
 	"bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"bk-bcs/bcs-mesos/bcs-container-executor/util"
 	"fmt"
@@ -535,7 +536,7 @@ func (p *DockerPod) containerCheck() error {
 				if task.HealthCheck != nil && !task.HealthCheck.IsStarting() {
 					//health check starting when Status become RUNNING
 					logs.Infof("container [%s] is running, healthy status unkown, starting HealthyChecker, ip: %s\n", task.RuntimeConf.Name, p.cnmIPAddr)
-					if task.HealthCheck.Name() == "COMMAND" {
+					if task.HealthCheck.Name() == healthcheck.CommandHealthcheck {
 						task.HealthCheck.SetHost(p.GetContainerID())
 					} else {
 						task.HealthCheck.SetHost(p.cnmIPAddr)

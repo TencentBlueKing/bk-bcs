@@ -346,10 +346,13 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 		}
 	}()
 
+	// When the start time of the container is too long (for example: pull images is too long),
+	// continuously send the starting status to ensure the normal start of the container
 	stopCh := make(chan struct{})
 	go func() {
+		ticker := time.NewTicker(time.Minute)
+
 		for {
-			ticker := time.NewTicker(time.Minute)
 			select {
 			case <-stopCh:
 				logs.Infof("stop send task status starting")

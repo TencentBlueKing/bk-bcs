@@ -182,7 +182,7 @@ func (check *CommandChecker) Resume() error {
 
 //Name get check name
 func (check *CommandChecker) Name() string {
-	return "COMMAND"
+	return CommandHealthcheck
 }
 
 //Relation checker relative to container

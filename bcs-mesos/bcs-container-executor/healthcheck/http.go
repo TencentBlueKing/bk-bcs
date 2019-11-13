@@ -157,7 +157,7 @@ func (check *HTTPChecker) Resume() error {
 
 //Name get check name
 func (check *HTTPChecker) Name() string {
-	return "HTTP"
+	return HttpHealthcheck
 }
 
 //Relation checker relative to container

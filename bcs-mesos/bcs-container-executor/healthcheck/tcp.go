@@ -142,7 +142,7 @@ func (check *TCPChecker) Resume() error {
 
 //Name get check name
 func (check *TCPChecker) Name() string {
-	return "TCP"
+	return TcpHealthcheck
 }
 
 //Relation checker relative to container
