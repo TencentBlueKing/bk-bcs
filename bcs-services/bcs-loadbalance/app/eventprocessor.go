@@ -14,7 +14,6 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/bcs-health/api"
 	"bk-bcs/bcs-common/common/blog"
 	loadbalance "bk-bcs/bcs-common/pkg/loadbalance/v2"
 	"bk-bcs/bcs-services/bcs-loadbalance/clear"
@@ -75,17 +74,6 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	}
 
 	processor.reflector = NewReflector(config, processor)
-	// new Alarming interface
-	blog.Infof("new bcs health with ca %s, cert %s, key %s", config.CAFile, config.ClientCertFile, config.ClientKeyFile)
-	tls := api.TLSConfig{
-		CaFile:   config.CAFile,
-		CertFile: config.ClientCertFile,
-		KeyFile:  config.ClientKeyFile,
-	}
-	if err = api.NewBcsHealth(config.BcsZkAddr, tls); nil != err {
-		blog.Errorf("new bcs health instance failed. err: %s", err.Error())
-	}
-
 	lbMonitor := monitor.NewMonitor(config.Address, int(config.MetricPort))
 	newMetricResource := bcsprometheus.NewPromMetric()
 	if config.Proxy == option.ProxyHaproxy {

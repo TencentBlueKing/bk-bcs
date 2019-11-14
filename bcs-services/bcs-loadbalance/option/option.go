@@ -38,7 +38,7 @@ const (
 
 //LBConfig hold load balance all config
 type LBConfig struct {
-	conf.CertConfig
+	conf.ClientOnlyCertConfig
 	conf.LogConfig
 	conf.FileConfig
 	conf.ServiceConfig
