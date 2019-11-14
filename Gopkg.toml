@@ -358,7 +358,7 @@ required = [
 
 [[constraint]]
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
-  version = "v3.0.88"
+  version = "v3.0.94"
 
 [[constraint]]
   name = "github.com/haproxytech/models"
