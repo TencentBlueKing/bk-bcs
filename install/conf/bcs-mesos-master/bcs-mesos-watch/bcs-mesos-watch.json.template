@@ -11,5 +11,7 @@
   "server_cert_file": "${serverCertFile}",
   "server_key_file": "${serverKeyFile}",
   "clusterinfo": "${mesosZkHost}/blueking",
+  "kubeconfig": "${schedulerKubeConfig}",
+  "store_driver": "${schedulerStorage}",
   "cluster": "${clusterId}"
 }
