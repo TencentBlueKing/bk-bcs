@@ -107,3 +107,6 @@ logbeat日志采集配置
 - io.tencent.bcs.app.cluster //集群id
 - io.tencent.bcs.app.namespace //namespcae
 
+注意：
+1. 针对k8s集群基于Admission Webhook特性实现，详情请查看官方文档：https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/
+2. 针对mesos集群基于mesos driver的webhokk特性实现，详情请参考文档：[mesosdriver webhook](../bcs-mesos-driver/driver-implement.md)
