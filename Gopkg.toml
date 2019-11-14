@@ -50,7 +50,6 @@ required = [
   "github.com/google/cadvisor",
   "github.com/haproxytech/models",
   "github.com/haproxytech/client-native/runtime",
-  "github.com/tencentcloud/tencentcloud-sdk-go",
 ]
 
 [[override]]
