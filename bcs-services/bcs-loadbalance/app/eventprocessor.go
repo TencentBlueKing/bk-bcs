@@ -54,6 +54,7 @@ func CloseLogger() {
 
 //NewEventProcessor create EventProcessor with LBConfig
 func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
+	var err error
 	processor := &LBEventProcessor{
 		update:       false,
 		generate:     false,
@@ -81,7 +82,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 		CertFile: config.ClientCertFile,
 		KeyFile:  config.ClientKeyFile,
 	}
-	if err := api.NewBcsHealth(config.BcsZkAddr, tls); nil != err {
+	if err = api.NewBcsHealth(config.BcsZkAddr, tls); nil != err {
 		blog.Errorf("new bcs health instance failed. err: %s", err.Error())
 	}
 
@@ -89,7 +90,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	newMetricResource := bcsprometheus.NewPromMetric()
 	if config.Proxy == option.ProxyHaproxy {
 		blog.Infof("use haproxy transmit")
-		processor.cfgManager = haproxy.NewManager(
+		processor.cfgManager, err = haproxy.NewManager(
 			config.Name,
 			config.BinPath,
 			config.CfgPath,
@@ -98,6 +99,9 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 			config.TemplateDir,
 			config.StatusFetchPeriod,
 		)
+		if err != nil {
+			blog.Infof("failed to create haproxy manager wiith config %v, err %s", config, err.Error())
+		}
 	} else {
 		blog.Infof("use nginx transmit")
 		processor.cfgManager = nginx.NewManager(
@@ -239,6 +243,13 @@ func (lp *LBEventProcessor) configHandle() {
 
 //doReload reset HAproy configuration
 func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
+
+	// do config check and try update without reload
+	if !lp.cfgManager.TryUpdateWithoutReload(data) {
+		blog.Infof("try update successfully, no need reload")
+		return true
+	}
+
 	//create configuration
 	newFile, creatErr := lp.cfgManager.Create(data)
 	if creatErr != nil {
@@ -250,6 +261,7 @@ func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 		blog.Warnf("No difference in new configuration file")
 		return true
 	}
+
 	//use check command validate correct of configuration
 	if !lp.cfgManager.Validate(newFile) {
 		template.LoadbalanceConfigRenderTotal.WithLabelValues("fail").Inc()
