@@ -1,8 +1,0 @@
-{
-  "local_ip": "${localIp}",
-  "bcs_zookeeper": "${bcsZkHost}",
-  "metric_port": ${bcsMetricCollectorMetricPort},
-  "ca_file": "${caFile}",
-  "client_cert_file": "${clientCertFile}",
-  "client_key_file": "${clientKeyFile}"
-}

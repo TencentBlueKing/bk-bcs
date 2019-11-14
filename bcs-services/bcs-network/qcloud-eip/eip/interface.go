@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-
 package eip
 
 import "github.com/containernetworking/cni/pkg/skel"

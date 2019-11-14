@@ -71,10 +71,9 @@ func (store *managerStore) UnLockApplication(appID string) {
 }
 
 func (store *managerStore) CheckApplicationExist(application *types.Application) (string, bool) {
-	client := store.BkbcsClient.Applications(application.RunAs)
-	v2App, _ := client.Get(application.ID, metav1.GetOptions{})
-	if v2App != nil {
-		return v2App.ResourceVersion, true
+	app, err := store.FetchApplication(application.RunAs, application.ID)
+	if err == nil {
+		return app.ResourceVersion, true
 	}
 
 	return "", false
@@ -94,8 +93,10 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      application.ID,
-			Namespace: application.RunAs,
+			Name:        application.ID,
+			Namespace:   application.RunAs,
+			Labels:      application.ObjectMeta.Labels,
+			Annotations: application.ObjectMeta.Annotations,
 		},
 		Spec: v2.ApplicationSpec{
 			Application: *application,
@@ -105,10 +106,13 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	rv, exist := store.CheckApplicationExist(application)
 	if exist {
 		v2Application.ResourceVersion = rv
-		_, err = client.Update(v2Application)
+		v2Application, err = client.Update(v2Application)
 	} else {
-		_, err = client.Create(v2Application)
+		v2Application, err = client.Create(v2Application)
 	}
+
+	application.ResourceVersion = v2Application.ResourceVersion
+	saveCacheApplication(application.RunAs, application.ID, application)
 	return err
 }
 
@@ -129,6 +133,15 @@ func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) 
 
 //FetchApplication is used to fetch application by appID
 func (store *managerStore) FetchApplication(runAs, appID string) (*types.Application, error) {
+	if cacheMgr.isOK {
+		cacheApp, _ := getCacheApplication(runAs, appID)
+		if cacheApp == nil {
+			return nil, schStore.ErrNoFound
+		}
+
+		return cacheApp, nil
+	}
+
 	client := store.BkbcsClient.Applications(runAs)
 	v2App, err := client.Get(appID, metav1.GetOptions{})
 	if err != nil {
@@ -138,7 +151,10 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 		return nil, err
 	}
 
-	return &v2App.Spec.Application, nil
+	app := &v2App.Spec.Application
+	app.ResourceVersion = v2App.ResourceVersion
+	saveCacheApplication(runAs, appID, app)
+	return app, nil
 }
 
 //ListApplications is used to get all applications
@@ -151,7 +167,9 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 
 	apps := make([]*types.Application, 0, len(v2Apps.Items))
 	for _, app := range v2Apps.Items {
-		apps = append(apps, &app.Spec.Application)
+		obj := app.Spec.Application
+		obj.ResourceVersion = app.ResourceVersion
+		apps = append(apps, &obj)
 	}
 	return apps, nil
 }
@@ -160,6 +178,11 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	client := store.BkbcsClient.Applications(runAs)
 	err := client.Delete(appID, &metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+
+	deleteAppCacheNode(runAs, appID)
 	return err
 }
 
@@ -172,7 +195,9 @@ func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
 
 	apps := make([]*types.Application, 0, len(v2Apps.Items))
 	for _, app := range v2Apps.Items {
-		apps = append(apps, &app.Spec.Application)
+		obj := app.Spec.Application
+		obj.ResourceVersion = app.ResourceVersion
+		apps = append(apps, &obj)
 	}
 	return apps, nil
 }

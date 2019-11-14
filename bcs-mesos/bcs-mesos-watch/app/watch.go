@@ -19,6 +19,7 @@ import (
 	commtype "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/version"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/etcd"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/mesos"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
@@ -343,7 +344,13 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 				appRole = currRole
 				if appRole == "master" {
 					blog.Info("become to master: to new and run cluster...")
-					cluster := mesos.NewMesosCluster(cfg, storage)
+					var cluster cluster.Cluster
+					if cfg.StoreDriver == "etcd" {
+						cluster = etcd.NewEtcdCluster(cfg, storage)
+					} else {
+						cluster = mesos.NewMesosCluster(cfg, storage)
+					}
+
 					if cluster == nil {
 						blog.Error("Create Cluster Error.")
 						regDiscv.Stop()
@@ -356,7 +363,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 					clusterCancel = cancel
 					go cluster.Run(clusterCxt)
 				} else {
-					blog.V(3).Infof("become to slave: to cancel cluster...")
+					blog.Infof("become to slave: to cancel cluster...")
 					if currCluster != nil {
 						currCluster.Stop()
 						currCluster = nil

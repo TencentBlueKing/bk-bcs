@@ -63,6 +63,11 @@ const MESOS_HEARTBEAT_TIMEOUT = 120
 
 const MAX_STAGING_UPDATE_INTERVAL = 120
 
+const (
+	SchedulerRoleMaster = "master"
+	SchedulerRoleSlave  = "slave"
+)
+
 // Scheduler represents a Mesos scheduler
 type Scheduler struct {
 	master    string
@@ -144,6 +149,7 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 
 	s.store.InitLockPool()
 	s.store.InitDeploymentLockPool()
+	s.store.InitCmdLockPool()
 
 	// TODO, the follow statements are only used for passing test,
 	// should resovled to make sure test pass
@@ -240,18 +246,11 @@ func (s *Scheduler) Start() error {
 		return err
 	}
 
-	//TODO bergzhao
-	/*s.ServiceMgr = NewServiceMgr(s.config.ZK, "/blueking", s)
+	s.ServiceMgr = NewServiceMgr(s)
 	if s.ServiceMgr == nil {
 		return fmt.Errorf("new serviceMgr(%s:/blueking) error", s.config.ZK)
 	}
-	go s.ServiceMgr.Worker()*/
-
-	//blog.Info("to create transaction manager")
-	//s.TransMgr, _ = CreateTransactionMgr(s)
-	//blog.Info("to create transaction manage goroutine")
-	//go TransManage(s.TransMgr)
-	//blog.Info("after creating transaction manage goroutine")
+	go s.ServiceMgr.Worker()
 
 	// get Host and Port
 	splitID := strings.Split(s.config.Address, ":")
@@ -365,7 +364,7 @@ func (s *Scheduler) discvMesos() {
 		case <-tick.C:
 			blog.Info("mesos discove(%s:%s), curr mesos master:%s", MesosDiscv, discvPath, s.currMesosMaster)
 			// add mesos heartbeat check
-			if s.Role == "master" {
+			if s.Role == SchedulerRoleMaster {
 				s.lockService()
 				heartbeat := s.mesosHeartBeatTime
 				now := time.Now().Unix()
@@ -455,7 +454,7 @@ func (s *Scheduler) checkMesosChange(currMaster, MasterID string) error {
 	s.mesosMasterID = MasterID
 	servermetric.SetMesosMaster(s.currMesosMaster)
 
-	if s.Role != "master" {
+	if s.Role != SchedulerRoleMaster {
 		blog.Info("mesos master leader changed to %s, but scheduler's role is %s, do nothing", currMaster, s.Role)
 		return nil
 	}
@@ -647,10 +646,10 @@ func (s *Scheduler) regDiscove() {
 				return
 			}
 			if isMaster {
-				err = s.checkRoleChange("master")
+				err = s.checkRoleChange(SchedulerRoleMaster)
 				servermetric.SetRole(metric.MasterRole)
 			} else {
-				err = s.checkRoleChange("slave")
+				err = s.checkRoleChange(SchedulerRoleSlave)
 				servermetric.SetRole(metric.SlaveRole)
 			}
 			if err != nil {
@@ -784,8 +783,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 
 	blog.Info("scheduler role change: %s --> %s", s.Role, currRole)
-	s.Role = currRole
-	if s.Role != "master" {
+	if currRole != SchedulerRoleMaster {
 		if s.currMesosResp != nil {
 			blog.Info("close current http ...")
 			s.currMesosResp.Body.Close()
@@ -818,11 +816,15 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		return nil
 	}
 
-	s.store.InitCacheMgr(s.config.UseCache)
+	err := s.store.InitCacheMgr(s.config.UseCache)
+	if err != nil {
+		blog.Errorf("InitCacheMgr failed: %s, and exit", err.Error())
+		os.Exit(1)
+	}
+	s.Role = currRole
+
 	go s.store.StartStoreObjectMetrics()
-
 	go s.startCheckDeployments()
-
 	if s.ServiceMgr != nil {
 		var msgOpen ServiceMgrMsg
 		msgOpen.MsgType = "open"
@@ -1003,9 +1005,8 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 			}()
 
 		case sched.Event_MESSAGE:
-			blog.Info("mesos report message event")
 			message := event.GetMessage()
-			blog.Info("receive message(%s)", message.String())
+			blog.V(3).Infof("receive message(%s)", message.String())
 			data := message.GetData()
 			var bcsMsg *types.BcsMessage
 			err := json.Unmarshal(data, &bcsMsg)

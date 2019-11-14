@@ -17,7 +17,53 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"encoding/json"
+	"sync"
 )
+
+var cmdLocks map[string]*sync.Mutex
+var cmdRWlock sync.RWMutex
+
+func (store *managerStore) InitCmdLockPool() {
+	if cmdLocks == nil {
+		blog.Info("init command lock pool")
+		cmdLocks = make(map[string]*sync.Mutex)
+	}
+}
+
+func (store *managerStore) LockCommand(cmdId string) {
+
+	cmdRWlock.RLock()
+	myLock, ok := cmdLocks[cmdId]
+	cmdRWlock.RUnlock()
+	if ok {
+		myLock.Lock()
+		return
+	}
+
+	cmdRWlock.Lock()
+	myLock, ok = cmdLocks[cmdId]
+	if !ok {
+		blog.Info("create command lock(%s), current locknum(%d)", cmdId, len(cmdLocks))
+		cmdLocks[cmdId] = new(sync.Mutex)
+		myLock, _ = cmdLocks[cmdId]
+	}
+	cmdRWlock.Unlock()
+
+	myLock.Lock()
+	return
+}
+
+func (store *managerStore) UnLockCommand(cmdId string) {
+	cmdRWlock.RLock()
+	myLock, ok := cmdLocks[cmdId]
+	cmdRWlock.RUnlock()
+
+	if !ok {
+		blog.Error("command lock(%s) not exist when do unlock", cmdId)
+		return
+	}
+	myLock.Unlock()
+}
 
 func getCommandRootPath() string {
 	return "/" + bcsRootNode + "/" + commandNode

@@ -14,10 +14,7 @@
 package etcd
 
 import (
-	"fmt"
-	"strings"
-
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	mstore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
@@ -25,34 +22,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func getNamespacebyTaskID(taskID string) string {
-	appID := ""
-	runAs := ""
-
-	szSplit := strings.Split(taskID, ".")
-	//runAs
-	if len(szSplit) >= 5 {
-		runAs = szSplit[4]
-	}
-	//appid
-	if len(szSplit) >= 4 {
-		appID = szSplit[3]
-	}
-
-	return fmt.Sprintf("%s-%s", runAs, appID)
-}
-
-func (store *managerStore) CheckTaskExist(task *types.Task) bool {
-	_, err := store.FetchTask(task.ID)
+func (store *managerStore) CheckTaskExist(task *types.Task) (string, bool) {
+	obj, err := store.FetchTask(task.ID)
 	if err == nil {
-		return true
+		return obj.ResourceVersion, true
 	}
 
-	return false
+	return "", false
 }
 
 func (store *managerStore) SaveTask(task *types.Task) error {
-	ns := getNamespacebyTaskID(task.ID)
+	ns, _ := types.GetRunAsAndAppIDbyTaskID(task.ID)
 	client := store.BkbcsClient.Tasks(ns)
 	v2Task := &v2.Task{
 		TypeMeta: metav1.TypeMeta{
@@ -69,8 +49,9 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 	}
 
 	var err error
-	if store.CheckTaskExist(task) {
-		v2Task.ResourceVersion = task.ResourceVersion
+	rv, exist := store.CheckTaskExist(task)
+	if exist && rv != "" {
+		v2Task.ResourceVersion = rv
 		v2Task, err = client.Update(v2Task)
 	} else {
 		v2Task, err = client.Create(v2Task)
@@ -86,8 +67,7 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 }
 
 func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error) {
-	ns := fmt.Sprintf("%s-%s", runAs, appID)
-	client := store.BkbcsClient.Tasks(ns)
+	client := store.BkbcsClient.Tasks(runAs)
 	v2Tasks, err := client.List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -95,13 +75,18 @@ func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error)
 
 	tasks := make([]*types.Task, 0, len(v2Tasks.Items))
 	for _, task := range v2Tasks.Items {
-		tasks = append(tasks, &task.Spec.Task)
+		_, appid := types.GetRunAsAndAppIDbyTaskID(task.Spec.ID)
+		if appID == appid {
+			task.Spec.Task.ResourceVersion = task.ResourceVersion
+			obj := task.Spec.Task
+			tasks = append(tasks, &obj)
+		}
 	}
 	return tasks, nil
 }
 
 func (store *managerStore) DeleteTask(taskId string) error {
-	ns := getNamespacebyTaskID(taskId)
+	ns, _ := types.GetRunAsAndAppIDbyTaskID(taskId)
 	client := store.BkbcsClient.Tasks(ns)
 	err := client.Delete(taskId, &metav1.DeleteOptions{})
 	if err != nil {
@@ -114,9 +99,11 @@ func (store *managerStore) DeleteTask(taskId string) error {
 }
 
 func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
-
-	cacheTask, cacheErr := fetchCacheTask(taskId)
-	if cacheErr == nil && cacheTask != nil {
+	if cacheMgr.isOK {
+		cacheTask, _ := fetchCacheTask(taskId)
+		if cacheTask == nil {
+			return nil, mstore.ErrNoFound
+		}
 		return cacheTask, nil
 	}
 
@@ -124,12 +111,12 @@ func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
 }
 
 func (store *managerStore) FetchDBTask(taskId string) (*types.Task, error) {
-	ns := getNamespacebyTaskID(taskId)
+	ns, _ := types.GetRunAsAndAppIDbyTaskID(taskId)
 	client := store.BkbcsClient.Tasks(ns)
 	v2Task, err := client.Get(taskId, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return nil, schStore.ErrNoFound
+			return nil, mstore.ErrNoFound
 		}
 		return nil, err
 	}

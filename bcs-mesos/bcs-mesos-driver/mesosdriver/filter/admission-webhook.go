@@ -170,6 +170,10 @@ func (hook *AdmissionWebhookFilter) requestAdmissionWebhook(webhook *commtypes.A
 		return nil, err
 	}
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(by))
+	}
+
 	return by, nil
 }
 

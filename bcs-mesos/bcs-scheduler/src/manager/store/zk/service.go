@@ -66,8 +66,7 @@ func (store *managerStore) DeleteService(ns, name string) error {
 
 func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, error) {
 
-	path := getServiceRootPath() + runAs //defaultRunAs
-
+	path := getServiceRootPath() + "/" + runAs //defaultRunAs
 	IDs, err := store.Db.List(path)
 	if err != nil {
 		blog.Error("fail to list service ids, err:%s", err.Error())
@@ -75,7 +74,7 @@ func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, 
 	}
 
 	if nil == IDs {
-		blog.Error("no service in (%s)", runAs)
+		blog.V(3).Infof("no service in (%s)", runAs)
 		return nil, nil
 	}
 
@@ -102,6 +101,7 @@ func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
 
 	var objs []*commtypes.BcsService
 	for _, ns := range nss {
+		blog.Infof("list all services ns %s", ns)
 		obj, err := store.ListServices(ns)
 		if err != nil {
 			blog.Error("fail to fetch service by ns(%s)", ns)

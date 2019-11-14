@@ -199,6 +199,7 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 	//if deltaCPU != 0 || deltaMem != 0 || deltaDisk != 0 {
 	//	blog.Warnf("delete taskgroup(%s) on host(%s), release delta resources(%f | %f | %f)",
 	//				taskGroup.ID,  taskGroup.HostName, deltaCPU, deltaMem, deltaDisk)
+	blog.Infof("delete taskgroup %s hostname %s", taskGroup.ID, taskGroup.HostName)
 	s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
 	//}
 

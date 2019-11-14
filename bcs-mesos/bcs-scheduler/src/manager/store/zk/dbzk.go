@@ -52,7 +52,7 @@ func (zk *dbZk) Insert(path string, value string) error {
 		failed = true
 	}
 
-	reportStorageOperatorMetrics(StoreOperatorCreate, started, failed)
+	store.ReportStorageOperatorMetrics(store.StoreOperatorCreate, started, failed)
 	return err
 }
 
@@ -65,7 +65,7 @@ func (zk *dbZk) Fetch(path string) ([]byte, error) {
 		failed = true
 	}
 
-	reportStorageOperatorMetrics(StoreOperatorFetch, started, failed)
+	store.ReportStorageOperatorMetrics(store.StoreOperatorFetch, started, failed)
 	return []byte(data), err
 }
 
@@ -78,7 +78,7 @@ func (zk *dbZk) Update(path string, value string) error {
 		failed = true
 	}
 
-	reportStorageOperatorMetrics(StoreOperatorUpdate, started, failed)
+	store.ReportStorageOperatorMetrics(store.StoreOperatorUpdate, started, failed)
 	return err
 
 }
@@ -92,7 +92,7 @@ func (zk *dbZk) Delete(path string) error {
 		failed = true
 	}
 
-	reportStorageOperatorMetrics(StoreOperatorDelete, started, failed)
+	store.ReportStorageOperatorMetrics(store.StoreOperatorDelete, started, failed)
 	return err
 }
 
@@ -110,6 +110,6 @@ func (zk *dbZk) List(path string) ([]string, error) {
 		failed = true
 	}
 
-	reportStorageOperatorMetrics(StoreOperatorFetch, started, failed)
+	store.ReportStorageOperatorMetrics(store.StoreOperatorFetch, started, failed)
 	return childs, err
 }

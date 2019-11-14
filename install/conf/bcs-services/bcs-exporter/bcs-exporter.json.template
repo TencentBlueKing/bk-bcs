@@ -1,0 +1,13 @@
+{
+  "address": "${localIp}",
+  "port": ${bcsExporterPort},
+  "metric_port": ${bcsExporterMetricPort},
+  "output_address": "${output_address}",
+  "bcs_zookeeper": "${bcsZkHost}",
+  "log_dir": "${log_dir}",
+  "pid_dir": "${pid_dir}",
+  "ca_file": "${caFile}",
+  "server_cert_file": "${serverCertFile}",
+  "server_key_file": "${serverKeyFile}",
+  "output_plugins": ["./plugins/bkdata_exporter.so"]
+}

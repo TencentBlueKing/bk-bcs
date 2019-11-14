@@ -1843,7 +1843,7 @@
   revision = "d98352740cb2c55f81556b63d4a1ec64c5a319c2"
 
 [[projects]]
-  digest = "1:414aef4b8762949c92eaa5ffb371872bc758b783237bd94f700da712c6baf10a"
+  digest = "1:102f9819a6f5047bb48b177a0fd67011fa7a3c8eccf6cba88e1e5e9621bef30b"
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
   packages = [
     "tencentcloud/common",
@@ -1854,8 +1854,8 @@
     "tencentcloud/vpc/v20170312",
   ]
   pruneopts = "UT"
-  revision = "d6fa243ca52014fcde0cbf23efaa9459115581a5"
-  version = "v3.0.97"
+  revision = "cf7a17a053dc05eaf79ebabb7a5c98ecebfb5956"
+  version = "v3.0.93"
 
 [[projects]]
   digest = "1:03aa6e485e528acb119fb32901cf99582c380225fc7d5a02758e08b180cb56c3"
@@ -2709,6 +2709,7 @@
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/internalclientset",
     "k8s.io/apimachinery/pkg/api/errors",
+    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/fields",
     "k8s.io/apimachinery/pkg/labels",
@@ -2717,6 +2718,7 @@
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
+    "k8s.io/apimachinery/pkg/util/json",
     "k8s.io/apimachinery/pkg/util/net",
     "k8s.io/apimachinery/pkg/util/proxy",
     "k8s.io/apimachinery/pkg/util/validation/field",

@@ -1,5 +1,61 @@
 # 发布版本信息
 
+## 1.14.5
+
+- 发布日期：2019-10-30
+- **新增功能**
+  * bcs-process-executor模块开源[#9]
+  * bcs-process-daemon模块开源[#10]
+  * bcs-dns增加prometheus metrics支持[#156]
+  * bcs-loadbalance支持prometheus metrics[#161]
+  * bcs-storage支持prometheus metrics，代码风格调整[#159]
+  * bcs-api支持腾讯云TEK容器集群管理功能[#96]
+  * bcs-scheduler支持prometheus metrics[#168]
+  * bcs-sd-promethues支持bcs-loadbalance服务发现[#169]
+  * bcs服务发现SDK支持bcs-loadbalance服务发现[#170]
+  * bcs-api支持prometheus metrics[#172]
+  * bcs mesos部分增加容器数据操作SDK[#115]
+  * bcs-api支持管理腾讯云TKE容器集群[#96]
+  * bcs-api增加网段分配存储用于统一云化资源管理[#134]
+  * bcs-container-executor容器上报状态通道调整为自定义消息上报[#129]
+  * bcs-mesos-datawatch、bcs-mesos-driver调整服务发现注册至集群层zookeeper[#136]
+  * 新增bcs-services层、bcs集群层服务发现sdk[#137]
+  * bcs-sd-prometheus模块开源：对接prometheus服务发现采集BCS信息[#138]
+  * bcs-consoleproxy支持独立会话保持特性[#141]
+  * bcs-netservice模块开源，并支持prometheus采集方案[#86]
+  * bcs-mesos-datawatch下线自定义healthcheck机制，支持prometheus采集方案[#145]
+  * bcs-mesos-datawatch支持跨云部署[#175]
+  * bcs-api针对Mesos集群支持跨云请求转发[#175]
+  * bcs-storage支持跨云服务发现[#175]
+  * bcs-mesos-driver支持跨云服务注册[#175]
+  * bmsf-mesh-adaptor模块开源[#177]
+  * bcs-mesos-executor支持prometheus text collector[#178]
+  * bcs-k8s-ip-scheduler模块开源[#184]
+  * bcs-loadbalance支持prometheus metrics[#161]
+  * bcs-scheduler增加全量CRD数据读取接口[#198]
+  * bcs-api增加对TKE容器网段管理功能[#202]
+  * bcs-hpacontroller模块开源[#181]
+- **功能优化**
+  * bcs-loadbalance haproxy metrics重构prometheus metrics采集方式[#162]
+  * bcs-loadbalance镜像调整，优化启动脚本[#162]
+  * bcs-loadbalance服务注册同时支持集群层与服务层zookeeper[#164]
+  * 更新bcs-mesos prometheus方案文档
+  * bcs-mesos-datawatch代码复杂度优化[#71]、[#72]
+  * bcs-api代码复杂度、注释优化[#144]
+  * metrics采集方案文档更新
+  * bcs-mesos-datawatch优化zookeeper服务发现策略[#183]
+  * bcs-k8s-datawatch优化容器监控告警细则[#192]
+  * bcs-scheduler优化taskgroup因资源不足无法调度提示语[#103]
+  * bcs-storage优化metrics数据量[#185]
+- **bug修复**
+  * 修复bcs-api CIDR分配时锁泄露问题[#134]
+  * 修复bcs-container-executor部分情况下dockerd异常退出panic的情况[#130]
+  * 修复bcs-scheduler启动metrics时panic的问题[#189]
+  * 修复bcs-storage读写mongodb cursor泄露问题[#193]
+  * 修复bcs-netservice日志输出无法自定义问题[#236]
+  * 修复bcs-dns日志输出无法自定义问题[#236]
+  * 修复bcs-mesos-adapter节点删除事件丢失问题[#237]
+
 ## 1.13.4
 
 - 发布日期：2019-07-26

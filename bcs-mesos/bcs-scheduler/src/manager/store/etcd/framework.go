@@ -25,8 +25,8 @@ const (
 
 func (store *managerStore) CheckFrameworkIDExist() (string, bool) {
 	client := store.BkbcsClient.Frameworks(DefaultNamespace)
-	v2Fw, _ := client.Get(FrameworkNode, metav1.GetOptions{})
-	if v2Fw != nil {
+	v2Fw, err := client.Get(FrameworkNode, metav1.GetOptions{})
+	if err == nil {
 		return v2Fw.ResourceVersion, true
 	}
 
