@@ -108,24 +108,25 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 		appSvcHandler:       handler,
 		stopCh:              make(chan struct{}),
 	}
+	blog.Infof("MesosManager start running informer....")
+	factory.Start(manager.stopCh)
+	results := factory.WaitForCacheSync(manager.stopCh)
+	for key, value := range results {
+		blog.Infof("MesosManager Wait For Cache %s Sync, result: %v", key, value)
+	}
 	blog.Infof("MesosManager wait for cache sync successfully...")
 	svcInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    manager.OnBcsServiceAdd,
 		UpdateFunc: manager.OnBcsServiceUpdate,
 		DeleteFunc: manager.OnBcsServiceDelete,
 	})
-	blog.Infof("MesosManager add BcsEndpoint handler to informer")
+	blog.Infof("MesosManager add BcsService handler to informer")
 	bcsEndpointInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    manager.OnBcsEndpointAdd,
 		UpdateFunc: manager.OnBcsEndpointUpdate,
 		DeleteFunc: manager.OnBcsEndpointDelete,
 	})
-	blog.Infof("MesosManager start running informer....")
-	factory.Start(manager.stopCh)
-	results := factory.WaitForCacheSync(manager.stopCh)
-	for key, value := range results {
-		blog.Infof("MesosManager Wait For Cache %s Sync, result: %s", key, value)
-	}
+	blog.Infof("MesosManager add BcsEndpoint handler to informer")
 	return manager, nil
 }
 

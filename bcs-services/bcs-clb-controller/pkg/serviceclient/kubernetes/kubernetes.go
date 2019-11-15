@@ -355,13 +355,10 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 	}
 
 	// start sync data to local cache
-	go svcsInformer.Informer().Run(kube.stopCh)
-	go epsInformer.Informer().Run(kube.stopCh)
-	go podsInformer.Informer().Run(kube.stopCh)
-	go statefulSetInformer.Informer().Run(kube.stopCh)
-
-	if !cache.WaitForCacheSync(kube.stopCh, svcsInformer.Informer().HasSynced, epsInformer.Informer().HasSynced, podsInformer.Informer().HasSynced) {
-		return nil, fmt.Errorf("wait for cache sync failed")
+	factory.Start(kube.stopCh)
+	results := factory.WaitForCacheSync(kube.stopCh)
+	for key, value := range results {
+		blog.Infof("MesosManager Wait For Cache %s Sync, result: %v", key, value)
 	}
 	blog.Infof("wait for cache sync successfully")
 
