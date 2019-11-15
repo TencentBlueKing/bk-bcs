@@ -1,0 +1,85 @@
+kind: DaemonSet
+apiVersion: apps/v1beta2
+metadata:
+  name: csi-tencentcloud
+spec:
+  selector:
+    matchLabels:
+      app: csi-tencentcloud
+  template:
+    metadata:
+      labels:
+        app: csi-tencentcloud
+    spec:
+      serviceAccount: csi-tencentcloud
+      #hostNetwork: true
+      hostIPC: true
+      dnsPolicy: Default
+      containers:
+        - name: driver-registrar
+          image: ${csiRegistrarImage}
+          args:
+            - "--v=5"
+            - "--csi-address=$(ADDRESS)"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi/
+        - name: csi-tencentcloud
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          image: ${csiCbsImage}
+          command:
+          - "/bin/bcs-k8s-csi-tencentcloud"
+          args:
+          - "--v=5"
+          - "--logtostderr=true"
+          - "--endpoint=unix:///csi/csi.sock"
+          env:
+            - name: TENCENTCLOUD_CBS_API_SECRET_ID
+              valueFrom:
+                secretKeyRef:
+                  name: csi-tencentcloud
+                  key: TENCENTCLOUD_CBS_API_SECRET_ID
+            - name: TENCENTCLOUD_CBS_API_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: csi-tencentcloud
+                  key: TENCENTCLOUD_CBS_API_SECRET_KEY
+          imagePullPolicy: "Always"
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi/
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: "Bidirectional"
+            - name: global-mount-dir
+              mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi
+              mountPropagation: "Bidirectional"
+            - mountPath: /dev
+              name: device-dir
+      volumes:
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/com.tencent.cloud.csi.cbs
+            type: DirectoryOrCreate
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
+        - name: global-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/kubernetes.io/csi
+            type: Directory
+        - name: device-dir
+          hostPath:
+            path: /dev

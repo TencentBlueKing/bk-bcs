@@ -356,3 +356,7 @@ required = [
 [[constraint]]
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
   version = "v3.0.88"
+
+[[constraint]]
+  name = "github.com/container-storage-interface/spec"
+  version = "v0.3.0"
