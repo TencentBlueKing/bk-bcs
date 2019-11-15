@@ -40,6 +40,7 @@ var (
 	// cbs disk tags
 	DiskTagsAttr = "diskTags"
 
+	// tencentcloud cbs types, now support CLOUD_BASIC, CLOUD_PREMIUM, CLOUD_SSD
 	DiskTypeCloudBasic   = "CLOUD_BASIC"
 	DiskTypeCloudPremium = "CLOUD_PREMIUM"
 	DiskTypeCloudSsd     = "CLOUD_SSD"
@@ -126,6 +127,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		}
 	}
 
+	// get volume type from storageclass parameters
 	volumeType, ok := req.Parameters[DiskTypeAttr]
 	if !ok {
 		volumeType = DiskTypeDefault
@@ -143,7 +145,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		volumeTags = ""
 	}
 
-	// validate volume tags 
+	// validate volume tags
 	var cbsTags []*cbs.Tag
 	if volumeTags != "" {
 		volumeTagArray := strings.Split(volumeTags, ",")
@@ -159,6 +161,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		}
 	}
 
+	// validate disk type, now only support 3 disk types
 	if volumeType != DiskTypeCloudBasic && volumeType != DiskTypeCloudPremium && volumeType != DiskTypeCloudSsd {
 		return nil, status.Error(codes.InvalidArgument, "cbs type not supported")
 	}
@@ -200,7 +203,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		if !ok {
 			volumeChargePrepaidRenewFlag = DiskChargePrepaidRenewFlagDefault
 		}
-		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd {  // no lint
+		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd {  // nolint
 			return nil, status.Error(codes.InvalidArgument, "invalid renew flag")
 		}
 
@@ -215,16 +218,20 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		return nil, status.Error(codes.InvalidArgument, "volume encrypt not valid")
 	}
 
+	// build tencentcloud csi api request
 	createCbsReq := cbs.NewCreateDisksRequest()
 
 	createCbsReq.ClientToken = &volumeIdempotencyName
 	createCbsReq.DiskType = &volumeType
 	createCbsReq.DiskChargeType = &volumeChargeType
 
+	// set volume name to request
 	if volumeName != "" {
 		glog.Infof("set volume name %s", volumeName)
 		createCbsReq.DiskName = &volumeName
 	}
+
+	// set volume tags to request
 	if len(cbsTags) > 0 {
 		for _, cbsTagForLog := range cbsTags {
 			glog.Infof("set volume tags for volume %s, key: %s, value: %s", volumeName, *cbsTagForLog.Key, *cbsTagForLog.Value)
