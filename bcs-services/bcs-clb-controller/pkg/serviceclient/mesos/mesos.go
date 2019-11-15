@@ -16,14 +16,12 @@ package mesos
 import (
 	"bk-bcs/bcs-common/common/blog"
 	bcstypes "bk-bcs/bcs-common/common/types"
-	schetypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	v2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	mesosinformers "bk-bcs/bcs-mesos/pkg/client/informers"
 	informerv2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
 	mesosclientset "bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	listerv2 "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
 	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -45,9 +43,9 @@ var (
 	eventGet    = "get"
 	eventList   = "list"
 	// type for mesos service client
-	typeBcsService = "bcsservice"
-	typeTaskGroup  = "taskgroup"
-	typeAppService = "appservice"
+	typeBcsService  = "bcsservice"
+	typeBcsEndpoint = "bcsendpoint"
+	typeAppService  = "appservice"
 	//state for event
 	statusSuccess   = "success"
 	statusFailure   = "failure"
@@ -96,23 +94,23 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 	factory := mesosinformers.NewSharedInformerFactory(cliset, syncPeriod)
 	svcInformer := factory.Bkbcs().V2().BcsServices()
 	svcLister := svcInformer.Lister()
-	taskGroupInformer := factory.Bkbcs().V2().TaskGroups()
-	taskGroupLister := taskGroupInformer.Lister()
+	bcsEndpointInformer := factory.Bkbcs().V2().BcsEndpoints()
+	bcsEndpointLister := bcsEndpointInformer.Lister()
 	blog.Infof("MesosManager create AppService cache....")
 	store := cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)
 	manager := &Manager{
-		factory:           factory,
-		svcInformer:       svcInformer,
-		svcLister:         svcLister,
-		taskGroupInformer: taskGroupInformer,
-		taskGroupLister:   taskGroupLister,
-		appSvcCache:       store,
-		appSvcHandler:     handler,
-		stopCh:            make(chan struct{}),
+		factory:             factory,
+		svcInformer:         svcInformer,
+		svcLister:           svcLister,
+		bcsEndpointInformer: bcsEndpointInformer,
+		bcsEndpointLister:   bcsEndpointLister,
+		appSvcCache:         store,
+		appSvcHandler:       handler,
+		stopCh:              make(chan struct{}),
 	}
 	blog.Infof("MesosManager start running informer....")
 	go svcInformer.Informer().Run(manager.stopCh)
-	go taskGroupInformer.Informer().Run(manager.stopCh)
+	go bcsEndpointInformer.Informer().Run(manager.stopCh)
 	results := factory.WaitForCacheSync(manager.stopCh)
 	for key, value := range results {
 		blog.Infof("MesosManager Wait For Cache %s Sync, result: %s", key, value)
@@ -123,11 +121,11 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 		UpdateFunc: manager.OnBcsServiceUpdate,
 		DeleteFunc: manager.OnBcsServiceDelete,
 	})
-	blog.Infof("MesosManager add TaskGroup handler to informer")
-	taskGroupInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    manager.OnTaskGroupAdd,
-		UpdateFunc: manager.OnTaskGroupUpdate,
-		DeleteFunc: manager.OnTaskGroupDelete,
+	blog.Infof("MesosManager add BcsEndpoint handler to informer")
+	bcsEndpointInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    manager.OnBcsEndpointAdd,
+		UpdateFunc: manager.OnBcsEndpointUpdate,
+		DeleteFunc: manager.OnBcsEndpointDelete,
 	})
 	return manager, nil
 }
@@ -135,14 +133,14 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 // Manager implement svcclient for mesos container meta data convertion
 // all mesos data structures reference to bk-bcs/bcs-mesos/pkg/apis
 type Manager struct {
-	factory           mesosinformers.SharedInformerFactory
-	svcInformer       informerv2.BcsServiceInformer
-	svcLister         listerv2.BcsServiceLister
-	taskGroupInformer informerv2.TaskGroupInformer
-	taskGroupLister   listerv2.TaskGroupLister
-	appSvcCache       cache.Store
-	appSvcHandler     cache.ResourceEventHandler
-	stopCh            chan struct{}
+	factory             mesosinformers.SharedInformerFactory
+	svcInformer         informerv2.BcsServiceInformer
+	svcLister           listerv2.BcsServiceLister
+	bcsEndpointInformer informerv2.BcsEndpointInformer
+	bcsEndpointLister   listerv2.BcsEndpointLister
+	appSvcCache         cache.Store
+	appSvcHandler       cache.ResourceEventHandler
+	stopCh              chan struct{}
 }
 
 // GetAppService get service by specified namespace & name
@@ -191,42 +189,6 @@ func (mm *Manager) ListAppService(label map[string]string) ([]*svcclient.AppServ
 	}
 	mesosEvent.WithLabelValues(typeAppService, eventList, statusSuccess).Inc()
 	return svcList, nil
-
-	//logic below is converting AppService from BcsService every time.
-	//below is reserved for backup
-
-	// //getting all specified datas from local cache with ListOptions
-	// svcs, err := mm.svcLister.List(selector)
-	// if err != nil {
-	// 	blog.Errorf("MesosManager list BcsService by Selector %s in local cache failed, %s", selector.String(), err.Error())
-	// 	return nil, err
-	// }
-	// if len(svcs) == 0 {
-	// 	blog.Warnf("MesosManager list No BcsService in local cache with specified selector %s", selector.String())
-	// 	return nil, nil
-	// }
-	// var internalAppSvcs []*svcclient.AppService
-	// for _, svc := range svcs {
-	// 	if len(svc.Spec.Spec.Selector) == 0 {
-	// 		blog.Warnf("MesosManager get empty Selector for BcsService %s/%s", svc.GetNamespace(), svc.GetName())
-	// 		continue
-	// 	}
-	// 	taskGroups, err := mm.getTaskGroupByService(svc)
-	// 	if err != nil {
-	// 		blog.Errorf("[Critical]MesosManager get TaskGroup by BcsService %s/%s failed, %s. skip", svc.GetNamespace(), svc.GetName(), err.Error())
-	// 		continue
-	// 	}
-	// 	//when converting, we need to filter taskgroups that don't Running/Lost
-	// 	//but there is siuation: user define service, but no Running containers.
-	// 	//AppService will lack of pods information.
-	// 	internalSvc, err := mm.mesosConvertToAppService(svc, taskGroups)
-	// 	if err != nil {
-	// 		blog.Errorf("[Critical]MesosManager convert BcsService %s/%s to local AppService failed, %s", svc.GetNamespace(), svc.GetName(), err.Error())
-	// 		continue
-	// 	}
-	// 	internalAppSvcs = append(internalAppSvcs, internalSvc)
-	// }
-	// return internalAppSvcs, nil
 }
 
 // ListAppServiceFromStatefulSet list app services, for each stateful node, generate a AppService object
@@ -241,7 +203,7 @@ func (mm *Manager) Close() {
 
 // convert internal function for Discovery data conversion
 // todo: not finished
-func (mm *Manager) mesosConvertToAppService(svc *v2.BcsService, taskGroups []*v2.TaskGroup) (*svcclient.AppService, error) {
+func (mm *Manager) mesosConvertToAppService(svc *v2.BcsService, bcsEndpoint *v2.BcsEndpoint) (*svcclient.AppService, error) {
 	if len(svc.Spec.Spec.Ports) == 0 {
 		return nil, fmt.Errorf("BcsService lost ports info")
 	}
@@ -252,17 +214,7 @@ func (mm *Manager) mesosConvertToAppService(svc *v2.BcsService, taskGroups []*v2
 		Frontend:   svc.Spec.Spec.ClusterIP,
 	}
 	internalSvc.ServicePorts = servicePortConvert(svc.Spec.Spec.Ports)
-	if len(taskGroups) == 0 {
-		blog.Warnf("BcsService %s/%s select no TaskGroups.", svc.GetNamespace(), svc.GetName())
-	}
-	for _, taskgroup := range taskGroups {
-		if !mm.isTaskGroupValid(taskgroup) {
-			blog.Warnf("MesosManager check TaskGroup %s/%s not ready when converting AppService.", taskgroup.GetNamespace(), taskgroup.GetName())
-			continue
-		}
-		internalNode := mm.taskgroupConvertAppNode(taskgroup)
-		internalSvc.Nodes = append(internalSvc.Nodes, *internalNode)
-	}
+	internalSvc.Nodes = mm.bcsendpointConvertAppNode(bcsEndpoint)
 	blog.V(5).Infof("MesosManager convert AppService successfully: %v", internalSvc)
 	return internalSvc, nil
 }
@@ -283,9 +235,9 @@ func servicePortConvert(ports []bcstypes.ServicePort) []svcclient.ServicePort {
 	return svcPorts
 }
 
-func convertPortMapping(taskports []*schetypes.PortMapping) []svcclient.NodePort {
+func convertContainerPortMapping(ports []bcstypes.ContainerPort) []svcclient.NodePort {
 	var nodeports []svcclient.NodePort
-	for _, port := range taskports {
+	for _, port := range ports {
 		nport := svcclient.NodePort{
 			Name:      port.Name,
 			Protocol:  strings.ToLower(port.Protocol),
@@ -297,78 +249,38 @@ func convertPortMapping(taskports []*schetypes.PortMapping) []svcclient.NodePort
 	return nodeports
 }
 
-//statusData holder for task raw json data
-type statusData struct {
-	IPAddress   string `json:"IPAddress"`
-	NodeAddress string `json:"NodeAddress"`
-}
-
-//taskgroupConvertAppNode convert taskgroup to AppNode for container service discovery
-// only convert
-func (mm *Manager) taskgroupConvertAppNode(taskgroup *v2.TaskGroup) *svcclient.AppNode {
-	node := &svcclient.AppNode{
-		TypeMeta: taskgroup.TypeMeta,
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        taskgroup.Spec.Name,
-			Namespace:   taskgroup.GetNamespace(),
-			Labels:      taskgroup.GetLabels(),
-			Annotations: taskgroup.GetAnnotations(),
-		},
-		Index: taskgroup.Spec.Name,
-	}
-	for index, task := range taskgroup.Spec.Taskgroup {
-		if task.PortMappings != nil {
-			ports := convertPortMapping(task.PortMappings)
-			node.Ports = append(node.Ports, ports...)
+//bcsendpointConvertAppNode convert bcsendpoint to AppNode for
+// container service discovery only convert
+func (mm *Manager) bcsendpointConvertAppNode(bcsEndpoint *v2.BcsEndpoint) []svcclient.AppNode {
+	var nodes []svcclient.AppNode
+	for _, endpoint := range bcsEndpoint.Spec.Endpoints {
+		node := svcclient.AppNode{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      endpoint.Target.Name,
+				Namespace: bcsEndpoint.GetNamespace(),
+			},
+			Index:   endpoint.Target.Name,
+			NodeIP:  endpoint.ContainerIP,
+			ProxyIP: endpoint.NodeIP,
 		}
-		if node.Network != "" {
-			node.Network = task.Network
-		}
-		if len(node.NodeIP) != 0 {
-			//here means NodeIP & ProxyIP already setting
-			//only for iterating all PortMappings
-			continue
-		}
-		if len(task.StatusData) == 0 {
-			blog.Warnf("MesosManaget check TaskGroup %s/%s index %d task lost StatusData. try next one", taskgroup.GetNamespace(), taskgroup.GetName(), index)
-			continue
-		}
-		info := new(statusData)
-		if err := json.Unmarshal([]byte(task.StatusData), info); err != nil {
-			mesosCritical.WithLabelValues(typeTaskGroup, eventGet).Inc()
-			blog.Errorf("[Critical] MesosManager %s/%s decode Task Container %s Status data failed, %s", taskgroup.GetNamespace(), taskgroup.GetName(), task.ID, err)
-			continue
-		}
-		if len(info.IPAddress) != 0 {
-			node.NodeIP = info.IPAddress
-			node.ProxyIP = info.NodeAddress
-			// for iterating all PortMappings
-			continue
-		}
-		if len(info.IPAddress) == 0 && len(info.NodeAddress) != 0 {
-			//use for simple bridge mode
-			node.NodeIP = info.NodeAddress
-			node.ProxyIP = info.NodeAddress
+		nodes = append(nodes, node)
+		if len(endpoint.Ports) != 0 {
+			node.Ports = convertContainerPortMapping(endpoint.Ports)
+		} else {
+			blog.Warnf("BcsEndpoints %s/%s Endpoint %s lost Port Information.", bcsEndpoint.GetNamespace(), bcsEndpoint.GetName(), endpoint.Target.Name)
 		}
 	}
-	return node
+	return nodes
 
 }
 
 //updateAppService update internal AppService by BcsService, including Add
-func (mm *Manager) updateAppService(svc *v2.BcsService) {
-	taskGroups, err := mm.getTaskGroupByService(svc)
+func (mm *Manager) updateAppService(svc *v2.BcsService, bcsEndpoint *v2.BcsEndpoint) {
+	newAppService, err := mm.mesosConvertToAppService(svc, bcsEndpoint)
 	if err != nil {
 		mesosCritical.WithLabelValues(typeAppService, eventUpdate).Inc()
 		mesosEvent.WithLabelValues(typeAppService, eventUpdate, statusFailure).Inc()
-		blog.Errorf("[Critical]MesosManager get taskgroup by BcsService %s/%s failed, err %s", svc.GetName(), svc.GetNamespace(), err.Error())
-		return
-	}
-	newAppService, err := mm.mesosConvertToAppService(svc, taskGroups)
-	if err != nil {
-		mesosCritical.WithLabelValues(typeAppService, eventUpdate).Inc()
-		mesosEvent.WithLabelValues(typeAppService, eventUpdate, statusFailure).Inc()
-		blog.Errorf("[Critical]MesosManager convert %v with its taskgroup %v to AppService failed, err %s", svc, taskGroups, err.Error())
+		blog.Errorf("[Critical]MesosManager convert %v with its bcsendpoint %v to AppService failed, err %s", svc, bcsEndpoint, err.Error())
 		return
 	}
 	//broken here, continue later
@@ -402,8 +314,7 @@ func (mm *Manager) updateAppService(svc *v2.BcsService) {
 }
 
 //deleteAppService delete internal AppService by BcsService
-func (mm *Manager) deleteAppService(svc *v2.BcsService) {
-	key := fmt.Sprintf("%s/%s", svc.GetNamespace(), svc.GetName())
+func (mm *Manager) deleteAppService(key string) {
 	oldAppService, isExisted, err := mm.appSvcCache.GetByKey(key)
 	if err != nil {
 		mesosCritical.WithLabelValues(typeAppService, eventDelete).Inc()
@@ -413,24 +324,18 @@ func (mm *Manager) deleteAppService(svc *v2.BcsService) {
 	}
 	if !isExisted {
 		mesosEvent.WithLabelValues(typeAppService, eventDelete, statusNotFinish).Inc()
-		blog.Warnf("MesosManager has no old AppService %s/%s in cache, no need to delete", svc.GetNamespace(), svc.GetName())
+		blog.Warnf("MesosManager has no old AppService %s in cache, no need to delete", key)
 		return
 	}
 	if err := mm.appSvcCache.Delete(oldAppService); err != nil {
 		mesosCritical.WithLabelValues(typeAppService, eventDelete).Inc()
 		mesosEvent.WithLabelValues(typeAppService, eventDelete, statusFailure).Inc()
-		blog.Errorf("[Critical]MesosManager delete AppService %s/%s in AppService cache failed, %s", svc.GetNamespace(), svc.GetName(), err.Error())
+		blog.Errorf("[Critical]MesosManager delete AppService %s in AppService cache failed, %s", key, err.Error())
 		return
 	}
 	mm.appSvcHandler.OnDelete(oldAppService)
 	mesosEvent.WithLabelValues(typeAppService, eventDelete, statusSuccess).Inc()
 	blog.Infof("MesosManager delete %s from AppService cache successfully", key)
-}
-
-//getTaskGroupByService get taskgroup BcsService Selector
-func (mm *Manager) getTaskGroupByService(svc *v2.BcsService) ([]*v2.TaskGroup, error) {
-	selector := labels.Set(svc.Spec.Spec.Selector).AsSelector()
-	return mm.taskGroupLister.TaskGroups(svc.GetNamespace()).List(selector)
 }
 
 //Cache EventHandler implementation for BcsService
@@ -443,9 +348,11 @@ func (mm *Manager) OnBcsServiceAdd(obj interface{}) {
 		blog.Errorf("[Critical]BcsService event handler get unknown type obj %v OnAdd", obj)
 		return
 	}
-	blog.Infof("BcsService %s/%s add, ready to refresh", svc.GetNamespace(), svc.GetName())
+	blog.Infof("BcsService %s/%s add, event +1", svc.GetNamespace(), svc.GetName())
 	mesosEvent.WithLabelValues(typeBcsService, eventAdd, statusSuccess).Inc()
-	mm.updateAppService(svc)
+	//BcsEndpoint event will come with all IP address information later
+	//we don't need to handle service add event
+	//mm.updateAppService
 }
 
 //OnBcsServiceUpdate update event implementation
@@ -467,11 +374,22 @@ func (mm *Manager) OnBcsServiceUpdate(oldObj, newObj interface{}) {
 		mesosEvent.WithLabelValues(typeBcsService, eventUpdate, statusNotFinish).Inc()
 		return
 	}
-	//todo(DeveloperJim): for metrics
-	//customEvent.With(prometheus.Labels{"type": typeAppSvc, "event": eventUpdate})
 	blog.Infof("BcsService %s/%s update, ready to refresh", newSvc.GetNamespace(), newSvc.GetName())
+	bcsEndpoint, err := mm.bcsEndpointLister.BcsEndpoints(newSvc.GetNamespace()).Get(newSvc.GetName())
+	if err != nil {
+		mesosCritical.WithLabelValues(typeBcsService, eventUpdate).Inc()
+		mesosEvent.WithLabelValues(typeBcsService, eventUpdate, statusFailure).Inc()
+		blog.Errorf("[Critical] MesosManager get BcsEndpoint %s/%s failed when BcsService updating, %s", newSvc.GetNamespace(), newSvc.GetName(), err.Error())
+		return
+	}
+	if bcsEndpoint == nil {
+		mesosCritical.WithLabelValues(typeBcsService, eventUpdate).Inc()
+		mesosEvent.WithLabelValues(typeBcsService, eventUpdate, statusFailure).Inc()
+		blog.Errorf("[Critical] BcsService %s/%s get no relative BcsEndpoint when updating.", newSvc.GetNamespace(), newSvc.GetName())
+		return
+	}
 	mesosEvent.WithLabelValues(typeBcsService, eventUpdate, statusSuccess).Inc()
-	mm.updateAppService(newSvc)
+	mm.updateAppService(newSvc, bcsEndpoint)
 }
 
 //OnBcsServiceDelete delete event implementation
@@ -482,162 +400,81 @@ func (mm *Manager) OnBcsServiceDelete(obj interface{}) {
 		blog.Errorf("[Criticail]MesosManager BcsService event handler get unknown type obj %v OnDelete", obj)
 		return
 	}
-	//todo(DeveloperJim): for metrics
-	//customEvent.With(prometheus.Labels{"type": typeAppSvc, "event": eventDelete})
-	blog.Infof("AppSvc %s/%s delete, ready to refresh", svc.GetNamespace(), svc.GetName())
+	key := fmt.Sprintf("%s/%s", svc.GetNamespace(), svc.GetName())
+	blog.Infof("BcsService %s delete, ready to refresh", key)
 	mesosEvent.WithLabelValues(typeBcsService, eventDelete, statusSuccess).Inc()
-	mm.deleteAppService(svc)
+	mm.deleteAppService(key)
 }
 
-//OnTaskGroupAdd add event implementation
-func (mm *Manager) OnTaskGroupAdd(obj interface{}) {
-	taskgroup, ok := obj.(*v2.TaskGroup)
+//OnBcsEndpointAdd add event implementation
+func (mm *Manager) OnBcsEndpointAdd(obj interface{}) {
+	bcsendpoint, ok := obj.(*v2.BcsEndpoint)
 	if !ok {
-		mesosCritical.WithLabelValues(typeTaskGroup, eventAdd).Inc()
-		blog.Errorf("[Critical]MesosManager event handler get unknown type obj %v OnTaskGroupAdd", obj)
+		mesosCritical.WithLabelValues(typeBcsEndpoint, eventAdd).Inc()
+		blog.Errorf("[Critical]MesosManager event handler get unknown type obj %v OnBcsEndpointAdd", obj)
 		return
 	}
-	//todo(DeveloperJim): for metrics
-	//customEvent.With(prometheus.Labels{"type": typeAppSvc, "event": eventAdd})
-	blog.Infof("TaskGroup %s/%s add, ready to refresh", taskgroup.GetNamespace(), taskgroup.GetName())
-	if !mm.isTaskGroupValid(taskgroup) {
-		mesosEvent.WithLabelValues(typeTaskGroup, eventAdd, statusNotFinish).Inc()
-		return
-	}
-	//maybe multiple services select same taskgroup
-	//so we need to search all service under same namespace
-	svcLister := mm.svcLister.BcsServices(taskgroup.GetNamespace())
-	svcs, err := svcLister.List(labels.Everything())
+	blog.Infof("BcsEndpoint %s/%s add, ready to refresh", bcsendpoint.GetNamespace(), bcsendpoint.GetName())
+	svcLister := mm.svcLister.BcsServices(bcsendpoint.GetNamespace())
+	svc, err := svcLister.Get(bcsendpoint.GetName())
 	if err != nil {
-		mesosCritical.WithLabelValues(typeTaskGroup, eventAdd).Inc()
-		blog.Errorf("[Critical]MesosManager Get BcsService by taskgroup Namespace failed, %s", taskgroup.GetNamespace(), err.Error())
+		mesosCritical.WithLabelValues(typeBcsEndpoint, eventAdd).Inc()
+		mesosEvent.WithLabelValues(typeBcsEndpoint, eventAdd, statusFailure).Inc()
+		blog.Errorf("[Critical]MesosManager Get BcsService by bcsendpoint Namespace/Name %s/%s failed, %s", bcsendpoint.GetNamespace(), bcsendpoint.GetName(), err.Error())
 		return
 	}
-	if len(svcs) == 0 {
-		mesosEvent.WithLabelValues(typeTaskGroup, eventAdd, statusNotFinish).Inc()
-		blog.Warnf("TaskGroup %s/%s get no relative BcsService in Cache.", taskgroup.GetNamespace(), taskgroup.GetName())
-		return
-	}
-	for index, svc := range svcs {
-		if isSelected(svc, taskgroup) {
-			blog.Infof(
-				"TaskGroup %s/%s add, relative BcsService [%d] %s/%s updated",
-				taskgroup.GetNamespace(), taskgroup.GetName(), index,
-				svc.GetNamespace(), svc.GetName(),
-			)
-			mm.updateAppService(svc)
-		}
-	}
-	mesosEvent.WithLabelValues(typeTaskGroup, eventAdd, statusSuccess).Inc()
+	mesosEvent.WithLabelValues(typeBcsEndpoint, eventAdd, statusSuccess).Inc()
+	mm.updateAppService(svc, bcsendpoint)
 }
 
-//OnTaskGroupUpdate upadte event implementation
-func (mm *Manager) OnTaskGroupUpdate(oldObj, newObj interface{}) {
-	oldTaskgroup, okOld := oldObj.(*v2.TaskGroup)
+//OnBcsEndpointUpdate upadte event implementation
+func (mm *Manager) OnBcsEndpointUpdate(oldObj, newObj interface{}) {
+	oldBcsendpoint, okOld := oldObj.(*v2.BcsEndpoint)
 	if !okOld {
-		mesosCritical.WithLabelValues(typeTaskGroup, eventUpdate).Inc()
-		blog.Errorf("[Critical]MesosManager event handler get unknown type oldObj %v OnTaskGroupUpdate", oldObj)
+		mesosCritical.WithLabelValues(typeBcsEndpoint, eventUpdate).Inc()
+		blog.Errorf("[Critical]MesosManager event handler get unknown type oldObj %v OnBcsEndpointUpdate", oldObj)
 		return
 	}
-	newTaskgroup, okNew := newObj.(*v2.TaskGroup)
+	newBcsendpoint, okNew := newObj.(*v2.BcsEndpoint)
 	if !okNew {
-		mesosCritical.WithLabelValues(typeTaskGroup, eventUpdate).Inc()
-		blog.Errorf("[Critical]MesosManager event handler get unknown type newObj %v OnTaskGroupUpdate", newObj)
+		mesosCritical.WithLabelValues(typeBcsEndpoint, eventUpdate).Inc()
+		blog.Errorf("[Critical]MesosManager event handler get unknown type newObj %v OnBcsEndpointUpdate", newObj)
 		return
 	}
-	if reflect.DeepEqual(oldTaskgroup.Spec, newTaskgroup.Spec) {
-		mesosEvent.WithLabelValues(typeTaskGroup, eventUpdate, statusNotFinish).Inc()
-		blog.Warnf("MesosManager TaskGroup %s/%s No changed, skip update event", newTaskgroup.GetNamespace(), newTaskgroup.GetName())
+	if reflect.DeepEqual(oldBcsendpoint.Spec.Endpoints, newBcsendpoint.Spec.Endpoints) {
+		mesosEvent.WithLabelValues(typeBcsEndpoint, eventUpdate, statusNotFinish).Inc()
+		blog.Warnf("MesosManager BcsEndpoint %s/%s No changed, skip update event", newBcsendpoint.GetNamespace(), newBcsendpoint.GetName())
 		return
 	}
-	//todo(DeveloperJim): for metrics
-	//customEvent.With(prometheus.Labels{"type": typeAppSvc, "event": eventUpdate})
-	blog.Infof("TaskGroup %s/%s update, ready to refresh", newTaskgroup.GetNamespace(), newTaskgroup.GetName())
-	if !mm.isTaskGroupValid(newTaskgroup) {
-		mesosEvent.WithLabelValues(typeTaskGroup, eventUpdate, statusNotFinish).Inc()
-		return
-	}
-	svcLister := mm.svcLister.BcsServices(newTaskgroup.GetNamespace())
-	svcs, err := svcLister.List(labels.Everything())
+	blog.Infof("BcsEndpoint %s/%s update, ready to refresh", newBcsendpoint.GetNamespace(), newBcsendpoint.GetName())
+	svcLister := mm.svcLister.BcsServices(newBcsendpoint.GetNamespace())
+	svc, err := svcLister.Get(newBcsendpoint.GetName())
 	if err != nil {
-		mesosCritical.WithLabelValues(typeTaskGroup, eventUpdate).Inc()
-		blog.Errorf("[Critical]MesosManager Get BcsService by taskgroup Namespace %s failed, %s", newTaskgroup.GetNamespace(), err.Error())
+		mesosCritical.WithLabelValues(typeBcsEndpoint, eventUpdate).Inc()
+		mesosEvent.WithLabelValues(typeBcsEndpoint, eventUpdate, statusFailure).Inc()
+		blog.Errorf("[Critical]MesosManager Get BcsService by bcsendpoint Namespace %s failed, %s", newBcsendpoint.GetNamespace(), err.Error())
 		return
 	}
-	if len(svcs) == 0 {
-		mesosEvent.WithLabelValues(typeTaskGroup, eventUpdate, statusNotFinish).Inc()
-		blog.Warnf("TaskGroup %s/%s get no relative BcsService in Cache when updating", newTaskgroup.GetNamespace(), newTaskgroup.GetName())
+	if svc == nil {
+		mesosCritical.WithLabelValues(typeBcsEndpoint, eventUpdate).Inc()
+		mesosEvent.WithLabelValues(typeBcsEndpoint, eventUpdate, statusFailure).Inc()
+		blog.Errorf("[Critical]BcsEndpoint %s/%s get no relative BcsService in Cache when updating", newBcsendpoint.GetNamespace(), newBcsendpoint.GetName())
 		return
 	}
-	for index, svc := range svcs {
-		if isSelected(svc, newTaskgroup) {
-			blog.Infof(
-				"TaskGroup %s/%s updated, relative BcsService [%d] %s/%s need to updated",
-				newTaskgroup.GetNamespace(), newTaskgroup.GetName(), index,
-				svc.GetNamespace(), svc.GetName(),
-			)
-			mm.updateAppService(svc)
-		}
-	}
-	mesosEvent.WithLabelValues(typeTaskGroup, eventUpdate, statusSuccess).Inc()
+	mesosEvent.WithLabelValues(typeBcsEndpoint, eventUpdate, statusSuccess).Inc()
+	mm.updateAppService(svc, newBcsendpoint)
 }
 
-//OnTaskGroupDelete delete event implementation
-func (mm *Manager) OnTaskGroupDelete(obj interface{}) {
-	taskgroup, ok := obj.(*v2.TaskGroup)
+//OnBcsEndpointDelete delete event implementation
+func (mm *Manager) OnBcsEndpointDelete(obj interface{}) {
+	bcsendpoint, ok := obj.(*v2.BcsEndpoint)
 	if !ok {
-		mesosCritical.WithLabelValues(typeTaskGroup, eventDelete).Inc()
-		blog.Errorf("[Critical]MesosManager TaskGroup event handler get unknown type obj %v OnDelete", obj)
+		mesosCritical.WithLabelValues(typeBcsEndpoint, eventDelete).Inc()
+		blog.Errorf("[Critical]MesosManager BcsEndpoint event handler get unknown type obj %v OnDelete", obj)
 		return
 	}
-	//todo(DeveloperJim): for metrics
-	//customEvent.With(prometheus.Labels{"type": typeAppSvc, "event": eventDelete})
-	blog.Infof("TaskGroup %s/%s delete, ready to refresh", taskgroup.GetNamespace(), taskgroup.GetName())
-	svcLister := mm.svcLister.BcsServices(taskgroup.GetNamespace())
-	svcs, err := svcLister.List(labels.Everything())
-	if err != nil {
-		mesosCritical.WithLabelValues(typeTaskGroup, eventDelete).Inc()
-		blog.Errorf("[Critical]MesosManager Get BcsService by taskgroup Namespace %s failed, %s", taskgroup.GetNamespace(), err.Error())
-		return
-	}
-	if len(svcs) == 0 {
-		mesosEvent.WithLabelValues(typeTaskGroup, eventDelete, statusNotFinish).Inc()
-		blog.Warnf("TaskGroup %s/%s get no relative BcsService in Cache when updating", taskgroup.GetNamespace(), taskgroup.GetName())
-		return
-	}
-	for index, svc := range svcs {
-		if isSelected(svc, taskgroup) {
-			blog.Infof(
-				"TaskGroup %s/%s updated, relative BcsService [%d] %s/%s need to updated",
-				taskgroup.GetNamespace(), taskgroup.GetName(), index,
-				svc.GetNamespace(), svc.GetName(),
-			)
-			mm.updateAppService(svc)
-		}
-	}
-	mesosEvent.WithLabelValues(typeTaskGroup, eventDelete, statusSuccess).Inc()
-}
-
-//isTaskGroupValid check TaskGroup has container IP address
-func (mm *Manager) isTaskGroupValid(taskgroup *v2.TaskGroup) bool {
-	if !(taskgroup.Spec.Status == schetypes.TASK_STATUS_RUNNING || taskgroup.Spec.Status == schetypes.TASK_STATUS_LOST) {
-		blog.Errorf(
-			"MesosManager TaskGroup %s/%s Status[%s] lost IPAddress info. Not Ready",
-			taskgroup.GetNamespace(), taskgroup.GetName(), taskgroup.Spec.Status,
-		)
-		return false
-	}
-	return true
-}
-
-// isSelected check if BcsService select specified TaskGroup
-func isSelected(svc *v2.BcsService, taskgroup *v2.TaskGroup) bool {
-	if svc == nil || taskgroup == nil {
-		return false
-	}
-	taskgroupSelector := labels.Set(svc.Spec.Spec.Selector).AsSelector()
-	if taskgroupSelector.Matches(labels.Set(taskgroup.Labels)) {
-		return true
-	}
-	return false
+	key := fmt.Sprintf("%s/%s", bcsendpoint.GetNamespace(), bcsendpoint.GetName())
+	blog.Infof("BcsEndpoint %s delete, ready to refresh", key)
+	mesosEvent.WithLabelValues(typeBcsEndpoint, eventDelete, statusSuccess).Inc()
+	mm.deleteAppService(key)
 }
