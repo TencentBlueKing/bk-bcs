@@ -51,7 +51,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 	// option for clb controller server process
 	serverCmd.Flags().IntVar(&port, "port", 18080, "port for clb controller server")
-	serverCmd.Flags().StringVar(&serviceRegistry, "serviceRegistry", "kubernetes", "service registry for clb controller, available: [kubernetes, custom]")
+	serverCmd.Flags().StringVar(&serviceRegistry, "serviceRegistry", "kubernetes", "service registry for clb controller, available: [kubernetes, custom, mesos]")
 	serverCmd.Flags().StringVar(&clbName, "clbname", "", "lb name for qcloud clb")
 	serverCmd.Flags().StringVar(&netType, "netType", "private", "network type for clb, available: [private, public]")
 	serverCmd.Flags().StringVar(&backendIPType, "backendIPType", "", "backend pod ip network type, available: [overlay, underlay]")
@@ -78,8 +78,8 @@ func validateArgs() bool {
 		blog.Infof("port %d invalid, must be in range [0, 65535]", port)
 		return false
 	}
-	if serviceRegistry != "kubernetes" && serviceRegistry != "custom" {
-		blog.Errorf("serviceRegistry %s invalid, must be in (kubernetes, custom)", serviceRegistry)
+	if serviceRegistry != "kubernetes" && serviceRegistry != "custom" && serviceRegistry != "mesos" {
+		blog.Errorf("serviceRegistry %s invalid, must be in (kubernetes, custom, mesos)", serviceRegistry)
 		return false
 	}
 	reg, _ := regexp.Compile("[a-zA-Z0-9-\\.]+")
