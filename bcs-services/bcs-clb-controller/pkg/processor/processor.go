@@ -62,7 +62,9 @@ type Option struct {
 func NewProcessor(opt *Option) (*Processor, error) {
 
 	stopCh := make(chan struct{})
-	proc := &Processor{}
+	proc := &Processor{
+		stopCh: stopCh,
+	}
 	updateFlag := model.NewAtomicBool()
 	updateFlag.Set(true)
 	doingFlag := model.NewAtomicBool()

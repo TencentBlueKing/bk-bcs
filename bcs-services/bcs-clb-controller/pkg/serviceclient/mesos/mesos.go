@@ -121,8 +121,7 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 		DeleteFunc: manager.OnBcsEndpointDelete,
 	})
 	blog.Infof("MesosManager start running informer....")
-	go svcInformer.Informer().Run(manager.stopCh)
-	go bcsEndpointInformer.Informer().Run(manager.stopCh)
+	factory.Start(manager.stopCh)
 	results := factory.WaitForCacheSync(manager.stopCh)
 	for key, value := range results {
 		blog.Infof("MesosManager Wait For Cache %s Sync, result: %s", key, value)
