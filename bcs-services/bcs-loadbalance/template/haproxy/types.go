@@ -40,16 +40,24 @@ const (
 	envHaproxyProxyTimeoutHTTPRequest   = "LB_HAPROXY_TIMEOUT_HTTP_REQUEST"
 	envHaproxyProxyTimeoutQueue         = "LB_HAPROXY_TIMEOUT_QUEUE"
 	envHaproxyProxyTimeoutTarpit        = "LB_HAPROXY_TIMEOUT_TARPIT"
-	envHaproxyProxyOptions              = "LB_HAPROXY_OPTIONS"
-	envHaproxyHTTPProxyOptions          = "LB_HAPROXY_HTTP_OPTIONS"
+	// options for both tcp backend and http backend
+	// split by comma
+	envHaproxyProxyOptions = "LB_HAPROXY_OPTIONS"
+	// options only for http backend
+	// split by comma
+	envHaproxyHTTPProxyOptions = "LB_HAPROXY_HTTP_OPTIONS"
+
+	// config for server health check
 	envHaproxyServerHealthCheckInterval = "LB_HARPOXY_SERVER_HEALTH_CHECK_INTERVAL"
 	envHaproxyServerRiseHealthCheckNum  = "LB_HAPROXY_SERVER_RISE_HEALTH_CHECK_NUM"
 	envHaproxyServerFallHealthCheckNum  = "LB_HAPROXY_SERVER_FALL_HEALTH_CHECK_NUM"
+	// config for lua stats page
 	envHaproxyStatsFrontendPort         = "LB_HAPROXY_STATS_FRONTEND_PORT"
 	envHaproxyStatsFrontendURI          = "LB_HAPROXY_STATS_FRONTEND_URI"
 	envHaproxyStatsFrontendAuthUser     = "LB_HAPROXY_STATS_FRONTEND_AUTH_USER"
 	envHaproxyStatsFrontendAuthPassword = "LB_HAPROXY_STATS_FRONTEND_AUTH_PASSWORD"
 
+	// default config for configs
 	defaultHaproxyLogEnabled                = 0
 	defaultHaproxyLogLevel                  = "err"
 	defaultHaproxySockPath                  = "/var/run/haproxy.sock"
@@ -78,6 +86,7 @@ const (
 	defaultHaproxyStatsFrontendAuthPassword = "Bcs1qaz2wsx"
 )
 
+// EnvConfig config for haproxy from env
 type EnvConfig struct {
 	LogEnabled                bool
 	LogLevel                  string
@@ -129,6 +138,7 @@ var defaultValueMap = map[string]int64{
 	envHaproxyStatsFrontendPort:         defaultHaproxyStatsFrontendPort,
 }
 
+// loadNumEnv load number type config from env
 func loadNumEnv(envName string) int64 {
 	envValue := os.Getenv(envName)
 	if len(envValue) != 0 {
@@ -253,6 +263,7 @@ type Config struct {
 	TCPList   TCPListenerList
 }
 
+// generateRenderData generate frontend list from frontend map, ensure the rendered data is always in order
 func (c *Config) generateRenderData() {
 	c.HTTPList = nil
 	for _, frontend := range c.HTTPMap {
@@ -276,6 +287,7 @@ func (c *Config) generateRenderData() {
 	sort.Sort(c.TCPList)
 }
 
+// generateServerName generate real server name from ordered ips of servers
 func (c *Config) generateServerName() {
 	// create server name for each server
 	for _, frontend := range c.HTTPMap {
@@ -284,6 +296,7 @@ func (c *Config) generateServerName() {
 			for _, server := range backend.Servers {
 				tmpList = append(tmpList, server)
 			}
+			// sort by ip
 			sort.Sort(tmpList)
 			for index, server := range tmpList {
 				server.Name = getServerName(backend.Name, index)
@@ -296,6 +309,7 @@ func (c *Config) generateServerName() {
 			for _, server := range backend.Servers {
 				tmpList = append(tmpList, server)
 			}
+			// sort by ip
 			sort.Sort(tmpList)
 			for index, server := range tmpList {
 				server.Name = getServerName(backend.Name, index)
@@ -307,6 +321,7 @@ func (c *Config) generateServerName() {
 		for _, server := range listener.Servers {
 			tmpList = append(tmpList, server)
 		}
+		// sort by ip
 		sort.Sort(tmpList)
 		for index, server := range tmpList {
 			server.Name = getServerName(listener.Name, index)
@@ -349,6 +364,7 @@ type HTTPFrontend struct {
 	BackendList HTTPBackendList
 }
 
+// HTTPFrontendList http frontend list, sorted by service port
 type HTTPFrontendList []*HTTPFrontend
 
 func (hl HTTPFrontendList) Len() int {
@@ -387,6 +403,7 @@ type HTTPBackend struct {
 	ServerList RealServerList
 }
 
+// HTTPBackendList http backend list
 type HTTPBackendList []*HTTPBackend
 
 func (hl HTTPBackendList) Len() int {
@@ -423,6 +440,7 @@ type TCPListener struct {
 	ServerList RealServerList
 }
 
+// TCPListenerList tcp listener list for sort
 type TCPListenerList []*TCPListener
 
 func (hl TCPListenerList) Len() int {
@@ -454,10 +472,12 @@ type RealServer struct {
 	Disabled bool
 }
 
+// Key generate the map key for real server in backend
 func (rs *RealServer) Key() string {
 	return rs.IP + ":" + strconv.Itoa(rs.Port)
 }
 
+// RealServerList real server list, sorted by name
 type RealServerList []*RealServer
 
 func (hl RealServerList) Len() int {
@@ -472,6 +492,7 @@ func (hl RealServerList) Swap(i, j int) {
 	hl[i], hl[j] = hl[j], hl[i]
 }
 
+// IPRealServerList real server list, sorted by ip
 type IPRealServerList []*RealServer
 
 func (hl IPRealServerList) Len() int {
