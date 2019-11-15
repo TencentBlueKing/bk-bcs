@@ -46,7 +46,7 @@ func NewNetSvcClient(conf *conf.NetArgs) (*NetSvcClient, error) {
 		return nil, clientErr
 	}
 	//client get bcs-netservice info
-	conf.Zookeeper = strings.ReplaceAll(conf.Zookeeper, ",", ";")
+	conf.Zookeeper = strings.Replace(conf.Zookeeper, ",", ";", -1)
 	hosts := strings.Split(conf.Zookeeper, ";")
 	if err := client.GetNetService(hosts); err != nil {
 		return nil, fmt.Errorf("get netservice failed, %s", err.Error())
