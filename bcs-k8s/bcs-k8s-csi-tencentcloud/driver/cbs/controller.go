@@ -35,7 +35,9 @@ var (
 	// cbs disk type
 	DiskTypeAttr = "diskType"
 
+	// cbs disk name
 	DiskNameAttr = "diskName"
+	// cbs disk tags
 	DiskTagsAttr = "diskTags"
 
 	DiskTypeCloudBasic   = "CLOUD_BASIC"
@@ -87,6 +89,7 @@ type cbsController struct {
 	zone      string
 }
 
+//newCbsController create cbsController object
 func newCbsController(secretId, secretKey, region, zone, cbsUrl string) (*cbsController, error) {
 	cpf := profile.NewClientProfile()
 	cpf.HttpProfile.Endpoint = cbsUrl
@@ -101,6 +104,7 @@ func newCbsController(secretId, secretKey, region, zone, cbsUrl string) (*cbsCon
 	}, nil
 }
 
+//CreateVolume implements the csi grpc interface to create volume with tencentcloud api
 func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	if req.Name == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume name is empty")
@@ -127,16 +131,19 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		volumeType = DiskTypeDefault
 	}
 
+	// get volume name from storageclass parameters
 	volumeName, ok := req.Parameters[DiskNameAttr]
 	if !ok {
 		volumeName = ""
 	}
 
+	// get volume tags from storageclass parameters
 	volumeTags, ok := req.Parameters[DiskTagsAttr]
 	if !ok {
 		volumeTags = ""
 	}
 
+	// validate volume tags 
 	var cbsTags []*cbs.Tag
 	if volumeTags != "" {
 		volumeTagArray := strings.Split(volumeTags, ",")
@@ -193,7 +200,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		if !ok {
 			volumeChargePrepaidRenewFlag = DiskChargePrepaidRenewFlagDefault
 		}
-		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd {
+		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd {  // no lint
 			return nil, status.Error(codes.InvalidArgument, "invalid renew flag")
 		}
 
@@ -327,6 +334,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 	}
 }
 
+//DeleteVolume implements the csi grpc interface to delete volume with tencentcloud api
 func (ctrl *cbsController) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
@@ -354,6 +362,7 @@ func (ctrl *cbsController) DeleteVolume(ctx context.Context, req *csi.DeleteVolu
 	return &csi.DeleteVolumeResponse{}, nil
 }
 
+//ControllerPublishVolume implements the csi grpc interface to attach volume with tencentcloud api
 func (ctrl *cbsController) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
@@ -431,6 +440,7 @@ func (ctrl *cbsController) ControllerPublishVolume(ctx context.Context, req *csi
 	}
 }
 
+//ControllerUnpublishVolume implements the csi grpc interface to detach volume with tencentcloud api
 func (ctrl *cbsController) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
