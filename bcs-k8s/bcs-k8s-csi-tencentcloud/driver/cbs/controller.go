@@ -26,6 +26,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/golang/glog"
 )
 
 var (
@@ -33,6 +34,9 @@ var (
 
 	// cbs disk type
 	DiskTypeAttr = "diskType"
+
+	DiskNameAttr = "diskName"
+	DiskTagsAttr = "diskTags"
 
 	DiskTypeCloudBasic   = "CLOUD_BASIC"
 	DiskTypeCloudPremium = "CLOUD_PREMIUM"
@@ -123,6 +127,31 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		volumeType = DiskTypeDefault
 	}
 
+	volumeName, ok := req.Parameters[DiskNameAttr]
+	if !ok {
+		volumeName = ""
+	}
+
+	volumeTags, ok := req.Parameters[DiskTagsAttr]
+	if !ok {
+		volumeTags = ""
+	}
+
+	var cbsTags []*cbs.Tag
+	if volumeTags != "" {
+		volumeTagArray := strings.Split(volumeTags, ",")
+		for _, volumeTag := range volumeTagArray {
+			tag := strings.Split(volumeTag, ":")
+			if len(tag) != 2 {
+				return nil, status.Errorf(codes.InvalidArgument, "cbs tag not valid")
+			}
+			cbsTag := new(cbs.Tag)
+			cbsTag.Key = &tag[0]
+			cbsTag.Value = &tag[1]
+			cbsTags = append(cbsTags, cbsTag)
+		}
+	}
+
 	if volumeType != DiskTypeCloudBasic && volumeType != DiskTypeCloudPremium && volumeType != DiskTypeCloudSsd {
 		return nil, status.Error(codes.InvalidArgument, "cbs type not supported")
 	}
@@ -184,6 +213,18 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 	createCbsReq.ClientToken = &volumeIdempotencyName
 	createCbsReq.DiskType = &volumeType
 	createCbsReq.DiskChargeType = &volumeChargeType
+
+	if volumeName != "" {
+		glog.Infof("set volume name %s", volumeName)
+		createCbsReq.DiskName = &volumeName
+	}
+	if len(cbsTags) > 0 {
+		for _, cbsTagForLog := range cbsTags {
+			glog.Infof("set volume tags for volume %s, key: %s, value: %s", volumeName, *cbsTagForLog.Key, *cbsTagForLog.Value)
+		}
+
+		createCbsReq.Tags = cbsTags
+	}
 
 	if volumeChargeType == DiskChargeTypePrePaid {
 		period := uint64(volumeChargePrepaidPeriod)
