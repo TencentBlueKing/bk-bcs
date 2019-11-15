@@ -27,9 +27,9 @@ var (
 	defaultConfig = "/data/bcs/bcs-cni/bin/conf/bcs.conf"
 )
 
-//NewDriver create IPDriver for bcs-netservice
+// NewDriver create IPDriver for bcs-netservice
 func NewDriver() (resource.IPDriver, error) {
-	//check config for zookeeper list
+	// check config for zookeeper list
 	conf, err := conf.LoadConfigFromFile(defaultConfig)
 	if err != nil {
 		return nil, fmt.Errorf("load config bcs.conf failed, %s", err.Error())
