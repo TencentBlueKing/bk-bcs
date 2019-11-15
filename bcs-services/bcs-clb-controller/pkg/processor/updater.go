@@ -26,9 +26,10 @@ import (
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb"
 	qcloudlb "bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/common/constant"
+	"bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
 	listenerclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/listenerclient"
 	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -584,7 +585,7 @@ func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule)
 			// svc port and node port may be associated by name port or port number
 			if port.NodePort == ruledSvcPort.TargetPort || port.Name == ruledSvcPort.Name {
 				var newBackend *cloudListenerType.Backend
-				if updater.opt.BackendIPType == constant.BackendIPTypeOverlay {
+				if updater.opt.BackendIPType == common.BackendIPTypeOverlay {
 					newBackend = &cloudListenerType.Backend{
 						IP:     node.ProxyIP,
 						Port:   ruledSvcPort.ProxyPort,

@@ -16,6 +16,7 @@ package cmd
 import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/metric"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/processor"
 	"fmt"
@@ -86,11 +87,11 @@ func validateArgs() bool {
 		blog.Errorf("clbName %s invalid, must be [a-zA-Z0-9-\\.]+", clbName)
 		return false
 	}
-	if netType != "public" && netType != "private" {
+	if netType != common.CLBNetTypePublic && netType != common.CLBNetTypePrivate {
 		blog.Errorf("netType %s invalid, network type for clb, available: [private, public]", netType)
 		return false
 	}
-	if backendIPType != "overlay" && backendIPType != "underlay" {
+	if backendIPType != common.BackendIPTypeOverlay && backendIPType != common.BackendIPTypeUnderlay {
 		blog.Errorf("backendIPType %s invalid, backendIPType must be in (overlay, underlay)", backendIPType)
 		return false
 	}
