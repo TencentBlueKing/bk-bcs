@@ -45,6 +45,8 @@ func (store *managerStore) SaveEndpoint(endpoint *commtypes.BcsEndpoint) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      endpoint.Name,
 			Namespace: endpoint.NameSpace,
+			Labels: endpoint.Labels,
+			Annotations: endpoint.Annotations,
 		},
 		Spec: v2.BcsEndpointSpec{
 			BcsEndpoint: *endpoint,
