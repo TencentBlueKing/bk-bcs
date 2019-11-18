@@ -41,7 +41,7 @@ type EventHandler interface {
 	OnUpdate(oldObj, newObj interface{})
 }
 
-//InitLogger init app logger
+// InitLogger init app logger
 func InitLogger(config *option.LBConfig) {
 	blog.InitLogs(config.LogConfig)
 }
@@ -51,7 +51,7 @@ func CloseLogger() {
 	blog.CloseLogs()
 }
 
-//NewEventProcessor create EventProcessor with LBConfig
+// NewEventProcessor create EventProcessor with LBConfig
 func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	var err error
 	processor := &LBEventProcessor{
@@ -116,7 +116,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	return processor
 }
 
-//LBEventProcessor event loop for handling data change event.
+// LBEventProcessor event loop for handling data change event.
 type LBEventProcessor struct {
 	update       bool                 //update flag
 	generate     bool                 //flag for resetting HAProxy configuration
@@ -132,10 +132,10 @@ type LBEventProcessor struct {
 	monitor      *monitor.Monitor     // monitor to support metric and status api
 }
 
-//Start starting point for event processing
-//1. start reflector to cache data from storage
-//2. start template manager for Create/Reload config for haproxy.cfg
-//3. start local logic loop for check data changed
+// Start starting point for event processing
+// 1. start reflector to cache data from storage
+// 2. start template manager for Create/Reload config for haproxy.cfg
+// 3. start local logic loop for check data changed
 func (lp *LBEventProcessor) Start() error {
 
 	go func() {
@@ -179,7 +179,7 @@ func (lp *LBEventProcessor) Start() error {
 	return nil
 }
 
-//run main loop
+// run main loop
 func (lp *LBEventProcessor) run() {
 	updateTick := time.NewTicker(time.Second * time.Duration(int64(lp.config.CfgCheckPeriod)))
 	syncTick := time.NewTicker(time.Second * time.Duration(int64(lp.config.SyncPeriod)))
@@ -210,8 +210,8 @@ func (lp *LBEventProcessor) run() {
 	}
 }
 
-//configHandle Get all data from reflector, export to template
-//to generating haproxy.cfg
+// configHandle Get all data from reflector, export to template
+// to generating haproxy.cfg
 func (lp *LBEventProcessor) configHandle() {
 	lp.reload = true
 	//Get all data from ServiceReflector
@@ -229,7 +229,7 @@ func (lp *LBEventProcessor) configHandle() {
 	lp.reload = false
 }
 
-//doReload reset HAproy configuration
+// doReload reset HAproy configuration
 func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 
 	// do config check and try update without reload
@@ -276,7 +276,7 @@ func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 	return true
 }
 
-//Stop stop processor all worker gracefully
+// Stop stop processor all worker gracefully
 func (lp *LBEventProcessor) Stop() {
 	lp.reflector.Stop()
 	lp.cfgManager.Stop()
@@ -292,7 +292,7 @@ func (lp *LBEventProcessor) Stop() {
 	close(lp.exit)
 }
 
-//HandleSignal interface for handle signal from system/User
+// HandleSignal interface for handle signal from system/User
 func (lp *LBEventProcessor) HandleSignal(signalChan <-chan os.Signal) {
 	for {
 		select {
@@ -307,7 +307,7 @@ func (lp *LBEventProcessor) HandleSignal(signalChan <-chan os.Signal) {
 	}
 }
 
-//OnAdd receive data Add event
+// OnAdd receive data Add event
 func (lp *LBEventProcessor) OnAdd(obj interface{}) {
 	svr, ok := obj.(*loadbalance.ExportService)
 	if !ok {
