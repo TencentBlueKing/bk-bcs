@@ -164,6 +164,14 @@
   version = "v3.6.1"
 
 [[projects]]
+  digest = "1:a54dc69ec3668e0e57ad159a0a8c0ce1ec571174bb4eb6b3915833a8c21d40f3"
+  name = "github.com/container-storage-interface/spec"
+  packages = ["lib/go/csi/v0"]
+  pruneopts = "UT"
+  revision = "2178fdeea87f1150a17a63252eee28d4d8141f72"
+  version = "v0.3.0"
+
+[[projects]]
   branch = "master"
   digest = "1:ddbcc8c842f4e5cf1fbf87f197a38ccf90c3930694b1beddb0776a0bc2d58089"
   name = "github.com/containerd/console"
@@ -354,6 +362,17 @@
   packages = ["spew"]
   pruneopts = "UT"
   revision = "782f4967f2dc4564575ca782fe2d04090b5faca8"
+
+[[projects]]
+  branch = "master"
+  digest = "1:800a090eac2fd71dd9f6183dea1712efc907f72a02ca5e6255b76e2c07a9cb99"
+  name = "github.com/dbdd4us/qcloudapi-sdk-go"
+  packages = [
+    "metadata",
+    "util",
+  ]
+  pruneopts = "UT"
+  revision = "c8d9381de48c4a18bfe34d28bc09a39d468d75bf"
 
 [[projects]]
   branch = "master"
@@ -752,7 +771,7 @@
   revision = "869f871628b6baa9cfbc11732cdf6546b17c1298"
 
 [[projects]]
-  digest = "1:17fe264ee908afc795734e8c4e63db2accabaf57326dbf21763a7d6b86096260"
+  digest = "1:4f506581876d380af43c2a3a424abd7c8f4431569165baa72208b456c4f5c106"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -760,6 +779,7 @@
     "ptypes/any",
     "ptypes/duration",
     "ptypes/timestamp",
+    "ptypes/wrappers",
   ]
   pruneopts = "UT"
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
@@ -1708,9 +1728,10 @@
   revision = "d98352740cb2c55f81556b63d4a1ec64c5a319c2"
 
 [[projects]]
-  digest = "1:102f9819a6f5047bb48b177a0fd67011fa7a3c8eccf6cba88e1e5e9621bef30b"
+  digest = "1:346bc6eb62aa89f32d2e6b5199cafd53c666fad05a745a6652f2311ab3c09a41"
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
   packages = [
+    "tencentcloud/cbs/v20170312",
     "tencentcloud/common",
     "tencentcloud/common/errors",
     "tencentcloud/common/http",
@@ -2352,11 +2373,12 @@
   revision = "743ec37842bffe49dd4221d9026f30fb1d5adbc4"
 
 [[projects]]
-  digest = "1:7fa77436497b6b562b7df324627861bfbc1fdd548d57a4ae96a44abbeb58f59a"
+  digest = "1:14d3e43b01a55ffa173e06f70173fb9204d8ab4350d8a6d2800818f1ea6cce1b"
   name = "k8s.io/kubernetes"
   packages = [
     "pkg/apis/core",
     "pkg/scheduler/api",
+    "pkg/util/mount",
     "staging/src/k8s.io/apimachinery/pkg/util/json",
   ]
   pruneopts = "UT"
@@ -2365,9 +2387,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:75485344459fa9f0c50015e427e8ec1e72051c6e05e22fcd366779ca023fad71"
+  digest = "1:b6a2c0d6c0803470c5abf61a65c22df06d8f0590688d73b521eab1bc218cd0da"
   name = "k8s.io/utils"
-  packages = ["clock"]
+  packages = [
+    "clock",
+    "exec",
+    "io",
+    "keymutex",
+    "path",
+  ]
   pruneopts = "UT"
   revision = "69764acb6e8e900b7c05296c5d3c9c19545475f9"
 
@@ -2457,6 +2485,7 @@
     "github.com/asaskevich/govalidator",
     "github.com/aws/aws-sdk-go",
     "github.com/bitly/go-simplejson",
+    "github.com/container-storage-interface/spec/lib/go/csi/v0",
     "github.com/containernetworking/cni/libcni",
     "github.com/containernetworking/cni/pkg/skel",
     "github.com/containernetworking/cni/pkg/types",
@@ -2486,6 +2515,7 @@
     "github.com/coreos/etcd/client",
     "github.com/coreos/etcd/clientv3",
     "github.com/danwakefield/fnmatch",
+    "github.com/dbdd4us/qcloudapi-sdk-go/metadata",
     "github.com/dchest/uniuri",
     "github.com/deckarep/golang-set",
     "github.com/dgrijalva/jwt-go",
@@ -2533,6 +2563,7 @@
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
+    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312",
     "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common",
     "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors",
     "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile",
@@ -2544,6 +2575,9 @@
     "go4.org/lock",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
+    "google.golang.org/grpc",
+    "google.golang.org/grpc/codes",
+    "google.golang.org/grpc/status",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",
@@ -2586,6 +2620,7 @@
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "k8s.io/kubernetes/pkg/scheduler/api",
+    "k8s.io/kubernetes/pkg/util/mount",
     "k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json",
     "sigs.k8s.io/controller-runtime/pkg/cache",
     "sigs.k8s.io/controller-runtime/pkg/client",

@@ -1,0 +1,88 @@
+kind: StatefulSet
+apiVersion: apps/v1beta1
+metadata:
+  name: csi-tencentcloud
+spec:
+  serviceName: "csi-tencentcloud"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: csi-tencentcloud
+    spec:
+      serviceAccount: csi-tencentcloud
+      dnsPolicy: Default
+      containers:
+        - name: csi-provisioner
+          image: ${csiProvisionerImage}
+          args:
+            - "--provisioner=com.tencent.cloud.csi.cbs"
+            - "--csi-address=$(ADDRESS)"
+            - "--v=5"
+            - "-connection-timeout=120s"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+        - name: csi-attacher
+          image: ${csiAttacherImage}
+          args:
+            - "--v=5"
+            - "--csi-address=$(ADDRESS)"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+        - name: csi-tencentcloud
+          image: ${csiCbsImage}
+          command:
+          - "/bin/bcs-k8s-csi-tencentcloud"
+          args:
+          - "--v=5"
+          - "--logtostderr=true"
+          - "--endpoint=unix:///var/lib/csi/sockets/pluginproxy/csi.sock"
+          env:
+            - name: TENCENTCLOUD_CBS_API_SECRET_ID
+              valueFrom:
+                secretKeyRef:
+                  name: csi-tencentcloud
+                  key: TENCENTCLOUD_CBS_API_SECRET_ID
+            - name: TENCENTCLOUD_CBS_API_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: csi-tencentcloud
+                  key: TENCENTCLOUD_CBS_API_SECRET_KEY
+          imagePullPolicy: "Always"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+            - mountPath: /dev
+              name: host-dev
+            - mountPath: /rootfs
+              name: host-rootfs
+            - mountPath: /sys
+              name: host-sys
+            - mountPath: /lib/modules
+              name: lib-modules
+              readOnly: true
+      volumes:
+        - name: socket-dir
+          emptyDir: {}
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: host-rootfs
+          hostPath:
+            path: /
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
