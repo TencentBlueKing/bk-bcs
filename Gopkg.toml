@@ -366,3 +366,7 @@ required = [
 [[constraint]]
   name = "github.com/haproxytech/client-native"
   version = "v1.2.6"
+
+[[constraint]]
+  name = "github.com/container-storage-interface/spec"
+  version = "v0.3.0"
