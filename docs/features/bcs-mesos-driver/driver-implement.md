@@ -31,7 +31,7 @@ AdmissionWebhook定义
   "kind":"admissionwebhook",
   "metadata":{
     "name":"webhook-test",
-    "namespace": "defaultGroup"
+    "namespace": "defaultgroup"
   },
   "resourcesRef": {
     "operation": "Create | Update",
@@ -45,6 +45,10 @@ AdmissionWebhook定义
         "caBundle": "xxxxxxxxx",
         "namespace": "sidecar-webhook-namespace",
         "name": "sidecar-webhook-service"
+      },
+      "namespaceSelector": {
+        "operator": "NotIn",
+        "values": ["defaultgroup","bcs-system"]
       }
     },
     {
@@ -54,6 +58,10 @@ AdmissionWebhook定义
         "caBundle": "xxxxxxxxx",
         "namespace": "image-webhook-namespace",
         "name": "image-webhook-service"
+      },
+      "namespaceSelector": {
+        "operator": "In",
+        "values": ["defaultgroup","bcs-system"]
       }
     }
   ]
@@ -69,6 +77,9 @@ AdmissionWebhook
   - namespace: 拉起webhook服务的namespace
   - name: webhook服务的service name
   - caBundle: webhook服务的ca.cert证书的base64编码
+- namespaceSelector //namespace选择器，webhook只对选择器通过的资源生效
+  - operator: selector操作，"In"表示在values的namespace中；"NotIn"表示不在values的namespace中。
+  - values: namespace
 
 **注意事项**
 1. 对于同一类资源(operations&kind)，只允许创建一个AdmissionWebhook定义，一个定义里面允许有多个webhook服务

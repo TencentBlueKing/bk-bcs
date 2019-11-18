@@ -77,6 +77,11 @@ func NewAdmissionWebhookFilter(scheduler backend.Scheduler, zkServers []string) 
 	return hookFilter
 }
 
+type Meta struct {
+	commtypes.TypeMeta   `json:",inline"`
+	commtypes.ObjectMeta `json:"metadata"`
+}
+
 func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 	/*	//if http method not POST&PUT return
 		if req.Request.Method!=http.MethodPost&&req.Request.Method!=http.MethodPut {
@@ -93,7 +98,7 @@ func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 		return 0, nil
 	}
 
-	var meta *commtypes.TypeMeta
+	var meta *Meta
 	err = json.Unmarshal(body, &meta)
 	if err != nil {
 		blog.V(3).Infof("AdmissionWebhookFilter handler url %s method %s Unmarshal data error %s, and return",
@@ -129,6 +134,12 @@ func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 		req.Request.RequestURI, req.Request.Method)
 	newBody := body
 	for _, webhook := range admissionHook.AdmissionWebhooks {
+		if webhook.NamespaceSelector != nil && !webhook.NamespaceSelector.CheckSelector(meta.NameSpace) {
+			blog.Infof("admissionwebhook %s webhook %s NamespaceSelector namespace(%s) not match, then continue",
+				uuid, webhook.Name, meta.NameSpace)
+			continue
+		}
+
 		hookBody, err := hook.requestAdmissionWebhook(webhook, newBody)
 		if err != nil {
 			blog.Errorf("admissionwebhook %s request webhoook %s error %s", uuid, webhook.Name, err.Error())
@@ -141,6 +152,8 @@ func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 				req.Request.RequestURI, req.Request.Method)
 			continue
 		}
+		blog.V(3).Infof("admissionwebhook %s webhook %s handle object(%s:%s) success",
+			uuid, webhook.Name, meta.NameSpace, meta.Name)
 
 		newBody = hookBody
 	}
