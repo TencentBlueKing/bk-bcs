@@ -22,6 +22,8 @@ const (
 	MetricLabelFrontent = "frontend"
 	// MetricLabelServer metric label name for loadbalance server
 	MetricLabelServer = "server"
+	// MetricLabelServerAddress metric label name for loadbalance server
+	MetricLabelServerAddress = "address"
 	// MetricLabelServiceName metric label name for service name
 	MetricLabelServiceName = "serviceName"
 	// MetricLabelNamespace metric label name for bcs namespace
