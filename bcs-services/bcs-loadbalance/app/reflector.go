@@ -203,7 +203,11 @@ func convertPortBackends(portInfo loadbalance.ExportPort, svr *loadbalance.Expor
 		if svr.ServiceWeight != nil && bk.Label != nil && len(bk.Label) > 0 {
 			if value, ok := weightCopy[bk.Label[0]]; ok {
 				backend.Weight = value
+			} else {
+				backend.Weight = 1
 			}
+		} else {
+			backend.Weight = 1
 		}
 		backends = append(backends, backend)
 	}

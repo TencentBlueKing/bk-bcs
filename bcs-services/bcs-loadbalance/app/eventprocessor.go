@@ -14,7 +14,6 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/bcs-health/api"
 	"bk-bcs/bcs-common/common/blog"
 	loadbalance "bk-bcs/bcs-common/pkg/loadbalance/v2"
 	"bk-bcs/bcs-services/bcs-loadbalance/clear"
@@ -42,7 +41,7 @@ type EventHandler interface {
 	OnUpdate(oldObj, newObj interface{})
 }
 
-//InitLogger init app logger
+// InitLogger init app logger
 func InitLogger(config *option.LBConfig) {
 	blog.InitLogs(config.LogConfig)
 }
@@ -52,8 +51,9 @@ func CloseLogger() {
 	blog.CloseLogs()
 }
 
-//NewEventProcessor create EventProcessor with LBConfig
+// NewEventProcessor create EventProcessor with LBConfig
 func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
+	var err error
 	processor := &LBEventProcessor{
 		update:       false,
 		generate:     false,
@@ -74,22 +74,11 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	}
 
 	processor.reflector = NewReflector(config, processor)
-	// new Alarming interface
-	blog.Infof("new bcs health with ca %s, cert %s, key %s", config.CAFile, config.ClientCertFile, config.ClientKeyFile)
-	tls := api.TLSConfig{
-		CaFile:   config.CAFile,
-		CertFile: config.ClientCertFile,
-		KeyFile:  config.ClientKeyFile,
-	}
-	if err := api.NewBcsHealth(config.BcsZkAddr, tls); nil != err {
-		blog.Errorf("new bcs health instance failed. err: %s", err.Error())
-	}
-
 	lbMonitor := monitor.NewMonitor(config.Address, int(config.MetricPort))
 	newMetricResource := bcsprometheus.NewPromMetric()
 	if config.Proxy == option.ProxyHaproxy {
 		blog.Infof("use haproxy transmit")
-		processor.cfgManager = haproxy.NewManager(
+		processor.cfgManager, err = haproxy.NewManager(
 			config.Name,
 			config.BinPath,
 			config.CfgPath,
@@ -98,6 +87,9 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 			config.TemplateDir,
 			config.StatusFetchPeriod,
 		)
+		if err != nil {
+			blog.Infof("failed to create haproxy manager wiith config %v, err %s", config, err.Error())
+		}
 	} else {
 		blog.Infof("use nginx transmit")
 		processor.cfgManager = nginx.NewManager(
@@ -124,7 +116,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	return processor
 }
 
-//LBEventProcessor event loop for handling data change event.
+// LBEventProcessor event loop for handling data change event.
 type LBEventProcessor struct {
 	update       bool                 //update flag
 	generate     bool                 //flag for resetting HAProxy configuration
@@ -140,10 +132,10 @@ type LBEventProcessor struct {
 	monitor      *monitor.Monitor     // monitor to support metric and status api
 }
 
-//Start starting point for event processing
-//1. start reflector to cache data from storage
-//2. start template manager for Create/Reload config for haproxy.cfg
-//3. start local logic loop for check data changed
+// Start starting point for event processing
+// 1. start reflector to cache data from storage
+// 2. start template manager for Create/Reload config for haproxy.cfg
+// 3. start local logic loop for check data changed
 func (lp *LBEventProcessor) Start() error {
 
 	go func() {
@@ -187,7 +179,7 @@ func (lp *LBEventProcessor) Start() error {
 	return nil
 }
 
-//run main loop
+// run main loop
 func (lp *LBEventProcessor) run() {
 	updateTick := time.NewTicker(time.Second * time.Duration(int64(lp.config.CfgCheckPeriod)))
 	syncTick := time.NewTicker(time.Second * time.Duration(int64(lp.config.SyncPeriod)))
@@ -218,8 +210,8 @@ func (lp *LBEventProcessor) run() {
 	}
 }
 
-//configHandle Get all data from reflector, export to template
-//to generating haproxy.cfg
+// configHandle Get all data from reflector, export to template
+// to generating haproxy.cfg
 func (lp *LBEventProcessor) configHandle() {
 	lp.reload = true
 	//Get all data from ServiceReflector
@@ -237,8 +229,15 @@ func (lp *LBEventProcessor) configHandle() {
 	lp.reload = false
 }
 
-//doReload reset HAproy configuration
+// doReload reset HAproy configuration
 func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
+
+	// do config check and try update without reload
+	if !lp.cfgManager.TryUpdateWithoutReload(data) {
+		blog.Infof("try update successfully, no need reload")
+		return true
+	}
+
 	//create configuration
 	newFile, creatErr := lp.cfgManager.Create(data)
 	if creatErr != nil {
@@ -250,6 +249,7 @@ func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 		blog.Warnf("No difference in new configuration file")
 		return true
 	}
+
 	//use check command validate correct of configuration
 	if !lp.cfgManager.Validate(newFile) {
 		template.LoadbalanceConfigRenderTotal.WithLabelValues("fail").Inc()
@@ -276,7 +276,7 @@ func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 	return true
 }
 
-//Stop stop processor all worker gracefully
+// Stop stop processor all worker gracefully
 func (lp *LBEventProcessor) Stop() {
 	lp.reflector.Stop()
 	lp.cfgManager.Stop()
@@ -292,7 +292,7 @@ func (lp *LBEventProcessor) Stop() {
 	close(lp.exit)
 }
 
-//HandleSignal interface for handle signal from system/User
+// HandleSignal interface for handle signal from system/User
 func (lp *LBEventProcessor) HandleSignal(signalChan <-chan os.Signal) {
 	for {
 		select {
@@ -307,7 +307,7 @@ func (lp *LBEventProcessor) HandleSignal(signalChan <-chan os.Signal) {
 	}
 }
 
-//OnAdd receive data Add event
+// OnAdd receive data Add event
 func (lp *LBEventProcessor) OnAdd(obj interface{}) {
 	svr, ok := obj.(*loadbalance.ExportService)
 	if !ok {

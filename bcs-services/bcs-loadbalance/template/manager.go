@@ -86,6 +86,7 @@ type Manager interface {
 	Replace(oldFile, curFile string) error
 	//Reload haproxy with new config file
 	Reload(cfgFile string) error
+	TryUpdateWithoutReload(tmpData *types.TemplateData) bool
 	//GetHealthInfo response healthz info
 	// GetHealthInfo() metric.HealthMeta
 	// //Get metric meta

@@ -27,9 +27,9 @@ var (
 	defaultConfig = "/data/bcs/bcs-cni/bin/conf/bcs.conf"
 )
 
-//NewDriver create IPDriver for bcs-netservice
+// NewDriver create IPDriver for bcs-netservice
 func NewDriver() (resource.IPDriver, error) {
-	//check config for zookeeper list
+	// check config for zookeeper list
 	conf, err := conf.LoadConfigFromFile(defaultConfig)
 	if err != nil {
 		return nil, fmt.Errorf("load config bcs.conf failed, %s", err.Error())
@@ -49,6 +49,7 @@ func NewDriver() (resource.IPDriver, error) {
 		netClient: client,
 	}
 	//client get bcs-netservice info
+	conf.ZkHost = strings.Replace(conf.ZkHost, ",", ";", -1)
 	hosts := strings.Split(conf.ZkHost, ";")
 	if err := client.GetNetService(hosts); err != nil {
 		return nil, fmt.Errorf("get netservice failed, %s", err.Error())
