@@ -266,7 +266,7 @@ func (s *taskGroupController) convertTaskGroupToAppNode(taskGroup *TaskGroup) *v
 			APIVersion: v1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        taskGroup.GetName(),
+			Name:        str.ReplaceSpecialCharForAppName(taskGroup.GetName()),
 			Namespace:   taskGroup.GetNamespace(),
 			Labels:      str.ReplaceSpecialCharForLabel(taskGroup.GetLabels()),
 			Annotations: taskGroup.GetAnnotations(),
