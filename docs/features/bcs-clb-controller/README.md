@@ -179,7 +179,7 @@ spec:
       - name: docker-secret
       containers:
       - name: c1
-        image: tlinux:latest
+        image: centos:latest
         command: 
         - python
         args:
