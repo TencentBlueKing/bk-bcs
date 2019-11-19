@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - name: http-metric
+      port: {{ .Values.port }}
+      targetPort: {{ .Values.port }}
+  selector:
+    app: {{ .Release.Name }}

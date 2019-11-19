@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.useHostNetwork }}
+      hostNetwork: {{ .Values.useHostNetwork }}
+    {{- end }}
+      serviceAccountName: {{ .Release.Name }}-serviceaccount
+      containers:
+      - name: {{ .Release.Name }}-con1
+        image: "{{ .Values.image }}"
+        command:
+        - /clb/clb-controller
+        args:
+        - server
+        - --port
+        - "{{ .Values.port }}"
+        - --serviceRegistry
+        - "{{ .Values.serviceRegistry }}"
+        - --backendIPType
+        - "{{ .Values.backendIPType }}"
+        - --clbname
+        - {{ .Values.clbName }}
+        - --netType
+        - {{ .Values.netType }}
+        - --v
+        - "{{ .Values.v }}"
+        - --alsologtostderr
+        env:
+        - name: BCS_CLB_IMPLEMENT
+          value: {{ .Values.clbImplement }}
+        - name: BCS_CLB_BACKENDMODE
+          value: {{ .Values.clbBackendMode }}
+        - name: BCS_CLB_REGION
+          value: {{ .Values.clbRegion }}
+        - name: BCS_CLB_SECRETID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: secretID
+        - name: BCS_CLB_SECRETKEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: secretKey
+        - name: BCS_CLB_PROJECTID
+          value: "{{ .Values.clbProjectID }}"
+        - name: BCS_CLB_VPCID
+          value: "{{ .Values.clbVpcID }}"
+        {{- if .Values.clbSubnetID }}
+        - name: BCS_CLB_SUBNET
+          value: "{{ .Values.clbSubnetID }}"
+        {{- end }}
+        {{- with .Values.env }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        ports:
+        - name: http-metric
+          containerPort: {{ .Values.port }}
+        

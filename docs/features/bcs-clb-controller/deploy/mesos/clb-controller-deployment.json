@@ -1,0 +1,98 @@
+{
+    "apiVersion": "v4",
+    "kind": "deployment",
+    "restartPolicy": {
+        "policy": "OnFailure"
+    },
+    "metadata": {
+        "labels": {
+            "app": "clb-controller"
+        },
+        "name": "clb-controller",
+        "namespace": "clb"
+    },
+    "spec": {
+        "instance": 1,
+        "template": {
+            "metadata": {
+                "name": "clb-controller",
+                "namespace": "clb",
+                "labels": {
+                    "app": "clb-controller"
+                }
+            },
+            "spec": {
+                "containers": [{
+                    "image": "{{CLB_CTRL_IMAGE}}",
+                    "command": "/clb/clb-controller",
+                    "args": [
+                        "server",
+                        "--port",
+                        "{{CLB_CTRL_METRIC_PORT}}",
+                        "--serviceRegistry",
+                        "{{CLB_CTRL_REGISTRY}}",
+                        "--backendIPType",
+                        "{{CLB_CTRL_BACKEND_IP_TYPE}}",
+                        "--netType",
+                        "{{CLB_NET_TYPE}}",
+                        "--clbname",
+                        "{{CLB_NAME}}",
+                        "--v",
+                        "3"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "0.5",
+                            "memory": "1024"
+                        }
+                    },
+                    "env": [
+                        {
+                            "name": "BCS_CLB_IMPLEMENT",
+                            "value": "{{CLB_IMPLEMENT}}"
+                        },
+                        {
+                            "name": "BCS_CLB_BACKENDMODE",
+                            "value": "{{CLB_BACKENDMODE}}"
+                        },
+                        {
+                            "name": "BCS_CLB_REGION",
+                            "value": "{{CLB_REGION}}"
+                        },
+                        {
+                            "name": "BCS_CLB_PROJECTID",
+                            "value": "{{CLB_PROJECTID}}"
+                        },
+                        {
+                            "name": "BCS_CLB_VPCID",
+                            "value": "{{CLB_VPCID}}"
+                        },
+                        {
+                            "name": "BCS_CLB_SUBNET",
+                            "value": "{{CLB_SUBNET}}"
+                        }
+                    ],
+                    "secrets": [
+                        {
+                            "secretName": "clb-controller-secret",
+                            "items": [
+                                {
+                                    "type": "env",
+                                    "dataKey": "clb-controller-secretid",
+                                    "keyOrPath": "BCS_CLB_SECRETID"                    
+                                },
+                                {
+                                    "type": "env",
+                                    "dataKey": "clb-controller-secretkey",
+                                    "keyOrPath": "BCS_CLB_SECRETKEY"
+                                }
+                            ]
+                        }
+                    ]
+                }],
+                "networkMode": "bcs-qcloud",
+                "networkType": "cni"
+            }
+        }
+    }
+}
