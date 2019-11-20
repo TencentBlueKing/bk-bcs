@@ -30,8 +30,7 @@ AdmissionWebhook定义
   "apiVersion":"v4",
   "kind":"admissionwebhook",
   "metadata":{
-    "name":"webhook-test",
-    "namespace": "defaultgroup"
+    "name":"webhook-test"
   },
   "resourcesRef": {
     "operation": "Create | Update",
@@ -44,7 +43,9 @@ AdmissionWebhook定义
       "clientConfig": {
         "caBundle": "xxxxxxxxx",
         "namespace": "sidecar-webhook-namespace",
-        "name": "sidecar-webhook-service"
+        "name": "sidecar-webhook-service",
+        "path": "/sidecar",
+        "port": 443
       },
       "namespaceSelector": {
         "operator": "NotIn",
@@ -57,7 +58,9 @@ AdmissionWebhook定义
       "clientConfig": {
         "caBundle": "xxxxxxxxx",
         "namespace": "image-webhook-namespace",
-        "name": "image-webhook-service"
+        "name": "image-webhook-service",
+        "path": "/sidecar",
+        "port": 443
       },
       "namespaceSelector": {
         "operator": "In",
@@ -77,6 +80,8 @@ AdmissionWebhook
   - namespace: 拉起webhook服务的namespace
   - name: webhook服务的service name
   - caBundle: webhook服务的ca.cert证书的base64编码
+  - path: url path, default: '/'
+  - port: service port, default: 443
 - namespaceSelector //namespace选择器，webhook只对选择器通过的资源生效
   - operator: selector操作，"In"表示在values的namespace中；"NotIn"表示不在values的namespace中。
   - values: namespace
