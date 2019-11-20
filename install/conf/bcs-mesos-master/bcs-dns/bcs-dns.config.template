@@ -10,6 +10,7 @@
         cluster ${clusterIdNumber}
         resyncperiod 30
         endpoints ${mesosZkHostSpace}
+        kubeconfig ${schedulerKubeConfig}
         endpoints-path /blueking
         fallthrough
 
