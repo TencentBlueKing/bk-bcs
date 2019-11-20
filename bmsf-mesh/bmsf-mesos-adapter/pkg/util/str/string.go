@@ -15,6 +15,12 @@ package str
 
 import "strings"
 
+// ReplaceSpecialCharForAppName replace special char for app name
+func ReplaceSpecialCharForAppName(str string) string {
+	str = strings.Replace(str, "_", "-", -1)
+	return str
+}
+
 // ReplaceSpecialCharForLabelKey replace special char to "-" for label key
 func ReplaceSpecialCharForLabelKey(str string) string {
 	str = strings.Replace(str, "@", "-", -1)
@@ -23,6 +29,13 @@ func ReplaceSpecialCharForLabelKey(str string) string {
 	str = strings.Replace(str, " ", "", -1)
 	str = strings.Replace(str, "{", "", -1)
 	str = strings.Replace(str, "}", "", -1)
+	str = strings.Replace(str, "_", "-", -1)
+	if strings.HasPrefix(str, "io.tencent.paas") {
+		str = strings.Replace(str, "-", "", -1)
+		if len(str) > 63 {
+			str = str[0:63]
+		}
+	}
 	return str
 }
 
@@ -36,6 +49,9 @@ func ReplaceSpecialCharForLabelValue(str string) string {
 	str = strings.Replace(str, " ", "", -1)
 	str = strings.Replace(str, "{", "", -1)
 	str = strings.Replace(str, "}", "", -1)
+	if len(str) > 63 {
+		str = str[0:63]
+	}
 	return str
 }
 
