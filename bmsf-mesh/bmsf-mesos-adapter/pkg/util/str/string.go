@@ -54,7 +54,7 @@ func ReplaceSpecialCharForLabelValue(str string) string {
 	return str
 }
 
-// ReplaceSpecialCharForLabel replace special char for label
+// ReplaceSpecialCharForLabel replace special character for label
 func ReplaceSpecialCharForLabel(ss map[string]string) map[string]string {
 	ret := make(map[string]string)
 	for key, value := range ss {
