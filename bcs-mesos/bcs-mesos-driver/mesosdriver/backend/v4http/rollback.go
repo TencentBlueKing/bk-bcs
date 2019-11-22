@@ -22,6 +22,7 @@ import (
 	"strconv"
 )
 
+//RollbackApplication application rollback implementation
 func (s *Scheduler) RollbackApplication(body []byte, kind bcstype.BcsDataType) (string, error) {
 	blog.Info("rollback application. param(%s)", string(body))
 	var param bcstype.ReplicaController

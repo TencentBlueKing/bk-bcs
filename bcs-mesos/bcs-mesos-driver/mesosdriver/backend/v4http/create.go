@@ -21,11 +21,13 @@ import (
 	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
+
 	//"github.com/golang/protobuf/proto"
 	"strconv"
 	"strings"
 )
 
+//CreateApplication create application implementation
 func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 	blog.Info("create application. param(%s)", string(body))
 	var param bcstype.ReplicaController
@@ -53,7 +55,7 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 
 	if s.GetHost() == "" {
 		blog.Error("no scheduler is connected by driver")
-		err := bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
+		err = bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
 		return err.Error(), err
 	}
 
@@ -295,9 +297,9 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 			if oneCheck.TimeoutSeconds <= 0 {
 				oneCheck.TimeoutSeconds = 20
 			}
-			if oneCheck.ConsecutiveFailures < 0 {
-				oneCheck.ConsecutiveFailures = 0
-			}
+			// if oneCheck.ConsecutiveFailures < 0 {
+			// 	oneCheck.ConsecutiveFailures = 0
+			// }
 			if oneCheck.GracePeriodSeconds <= 0 {
 				oneCheck.GracePeriodSeconds = 300
 			}
