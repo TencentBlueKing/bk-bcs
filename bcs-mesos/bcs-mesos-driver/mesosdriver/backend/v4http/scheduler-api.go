@@ -47,10 +47,6 @@ func NewScheduler() *Scheduler {
 		client: httpclient.NewHttpClient(),
 		rwHost: new(sync.RWMutex),
 	}
-
-	s.initKube()
-	s.initActions()
-
 	return s
 }
 
@@ -69,6 +65,9 @@ func (s *Scheduler) InitConfig(conf *config.MesosDriverConfig) {
 
 	s.client.SetHeader("Content-Type", "application/json")
 	s.client.SetHeader("Accept", "application/json")
+
+	s.initKube()
+	s.initActions()
 }
 
 //Actions all http action implementation

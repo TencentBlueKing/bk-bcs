@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -35,7 +36,8 @@ const (
 	//default kube custom resource definition url
 	defaultCRDURL = "/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions"
 	//default custom resource definition apiVersion we use
-	defaultAPIVersion = "apiextensions.k8s.io/v1beta1"
+	defaultAPIVersion   = "apiextensions.k8s.io/v1beta1"
+	defaultMesosVersion = "v4"
 )
 
 //kubeProxy proxy for custom resource
@@ -56,6 +58,7 @@ func (proxy *kubeProxy) init() error {
 		return fmt.Errorf("bcs-mesos-driver create CustomResource transport failed")
 	}
 	proxy.crsProxy = &httputil.ReverseProxy{
+		Director:  func(req *http.Request) {},
 		Transport: httpRoundTripper,
 	}
 	proxy.crdsProxy = &httputil.ReverseProxy{
@@ -88,7 +91,9 @@ func (proxy *kubeProxy) apiVersionReqConvert(req *http.Request) {
 		blog.Errorf("bcs-mesos-driver new custom resource definition Request json Marshal failed, %s. URL: %s", err.Error(), req.URL.Path)
 		return
 	}
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(newBody))
+	buffer := bytes.NewBuffer(newBody)
+	req.Body = ioutil.NopCloser(buffer)
+	req.ContentLength = int64(buffer.Len())
 	req.GetBody = func() (io.ReadCloser, error) {
 		r := bytes.NewReader(newBody)
 		return ioutil.NopCloser(r), nil
@@ -96,7 +101,18 @@ func (proxy *kubeProxy) apiVersionReqConvert(req *http.Request) {
 	blog.Infof("bcs-mesos-driver custom resource definition [%s] Request convert success.", req.URL.Path)
 }
 
-func (proxy *kubeProxy) apiVersionResConvert(req *http.Response) error {
+func (proxy *kubeProxy) apiVersionResConvert(resp *http.Response) error {
+	allBytes, _ := ioutil.ReadAll(resp.Body)
+	if len(allBytes) == 0 {
+		blog.Errorf("mesos-driver response for %s is Empty", resp.Request.URL.String())
+		return nil
+	}
+	tmpStr := string(allBytes)
+	newStr := strings.Replace(tmpStr, defaultAPIVersion, defaultMesosVersion, 1)
+	buffer := bytes.NewBuffer([]byte(newStr))
+	resp.Body = ioutil.NopCloser(buffer)
+	resp.ContentLength = int64(buffer.Len())
+	blog.Infof("mesos-driver convert custom resource definition [%s] response success", resp.Request.URL.String())
 	return nil
 }
 
@@ -139,11 +155,14 @@ func (s *Scheduler) customResourceForwarding(req *restful.Request, resp *restful
 	}
 	//change Path & Host
 	rawRequest := req.Request
+	original := rawRequest.URL.String()
 	mesosURL := req.PathParameter("uri")
-	kubeURL := filepath.Join("apis", mesosURL)
-	rawRequest.URL.Host = s.localProxy.config.Host
+	kubeURL := filepath.Join("/apis", mesosURL)
+	tmpURL, _ := url.Parse(s.localProxy.config.Host)
+	rawRequest.URL.Scheme = tmpURL.Scheme
+	rawRequest.URL.Host = tmpURL.Host
 	rawRequest.URL.Path = kubeURL
-	blog.Infof("bcs-mesos-driver custom resource forwarding: %s", rawRequest.URL.String())
+	blog.Infof("bcs-mesos-driver custom resource forwarding from %s to %s", original, rawRequest.URL.String())
 	s.localProxy.crsProxy.ServeHTTP(resp, rawRequest)
 }
 
@@ -154,8 +173,11 @@ func (s *Scheduler) customResourceDefinitionForwarding(req *restful.Request, res
 		kubeURL = filepath.Join(defaultCRDURL, name)
 	}
 	rawRequest := req.Request
-	rawRequest.URL.Host = s.localProxy.config.Host
+	original := rawRequest.URL.String()
+	tmpURL, _ := url.Parse(s.localProxy.config.Host)
+	rawRequest.URL.Scheme = tmpURL.Scheme
+	rawRequest.URL.Host = tmpURL.Host
 	rawRequest.URL.Path = kubeURL
-	blog.Infof("bcs-mesos-driver CustomResourceDefinition forwarding: %s", rawRequest.URL.String())
+	blog.Infof("bcs-mesos-driver CustomResourceDefinition forwarding from %s to %s", original, rawRequest.URL.String())
 	s.localProxy.crdsProxy.ServeHTTP(resp, rawRequest)
 }
