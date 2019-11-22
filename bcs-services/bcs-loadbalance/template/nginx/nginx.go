@@ -179,3 +179,10 @@ func (m *Manager) Reload(cfgFile string) error {
 	blog.Infof("Reload with command %s, output: %s", command, output)
 	return nil
 }
+
+// TryUpdateWithoutReload update haproxy config without reloading
+// needReload: true for reload
+func (m *Manager) TryUpdateWithoutReload(tmpData *types.TemplateData) (needReload bool) {
+	// always reload
+	return true
+}

@@ -35,9 +35,9 @@ type Option struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	DataDir      string `json:"data-dir" value:"" usage:"the process daemon data dir"`
-	UnixSocket   string `json:"unix-socket" value:"" usage:"the unix socket path"`
-	WorkspaceDir string `json:"workspace-dir" value:"" usage:"the process packages dir"`
+	DataDir      string `json:"data_dir" value:"" usage:"the process daemon data dir"`
+	UnixSocket   string `json:"unix_socket" value:"" usage:"the unix socket path"`
+	WorkspaceDir string `json:"workspace_dir" value:"" usage:"the process packages dir"`
 }
 
 // Init process init
@@ -45,9 +45,9 @@ func Init() {
 	op := &Option{}
 	conf.Parse(op)
 	op.LogConfig.ToStdErr = true
-	op.DataDir = "./data"
-	op.UnixSocket = "/var/run/process.sock"
-	op.WorkspaceDir = "/data/bcs/workspace"
+	// op.DataDir = "./data"
+	// op.UnixSocket = "/var/run/process.sock"
+	// op.WorkspaceDir = "/data/bcs/workspace"
 
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()

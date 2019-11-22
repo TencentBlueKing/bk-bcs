@@ -1,0 +1,23 @@
+{
+    "apiVersion":"v4",
+    "kind":"service",
+    "metadata":{
+        "name":"clb-controller",
+        "namespace":"clb",
+        "labels":{
+            "app": "clb-controller"
+        }
+    },
+    "spec": {
+        "selector": {
+            "app": "clb-controller"
+        },
+        "ports": [
+            {
+                "name": "tcp_metrics",
+                "servicePort": {{CLB_CTRL_METRIC_PORT}},
+                "targetPort": {{CLB_CTRL_METRIC_PORT}}
+            }
+        ]
+    }
+}

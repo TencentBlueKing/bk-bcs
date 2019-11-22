@@ -14,6 +14,8 @@
 package app
 
 import (
+	"os"
+
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-hpacontroller/app/options"
@@ -32,9 +34,22 @@ func Run(op *options.HpaControllerOption) error {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	//init zk store
-	store := reflector.NewZkReflector(op.Conf)
-	blog.Infof("init cluster store zk %s success", op.Conf.ClusterZkAddr)
+	//init store
+	var store reflector.Reflector
+	if op.Conf.ClusterZkAddr != "" {
+		// init zk store
+		store = reflector.NewZkReflector(op.Conf)
+		blog.Infof("init cluster store zk %s success", op.Conf.ClusterZkAddr)
+	} else if op.Conf.KubeConfig != "" {
+		//init etcd store
+		store = reflector.NewEtcdReflector(op.Conf)
+		blog.Infof("init cluster store kubeconfig %s success", op.Conf.KubeConfig)
+	} else {
+		blog.Errorf("cluster zk addresses and kubeconfig not provided, exit")
+		os.Exit(1)
+	}
+	//store := reflector.NewZkReflector(op.Conf)
+	//blog.Infof("init cluster store zk %s success", op.Conf.ClusterZkAddr)
 
 	//init bcs mesos driver
 	scaleController := scaler.NewBcsMesosScalerController(op.Conf)
@@ -52,6 +67,7 @@ func Run(op *options.HpaControllerOption) error {
 }
 
 func setConfig(op *options.HpaControllerOption) {
+	op.Conf.KubeConfig = op.KubeConfig
 	op.Conf.ClusterZkAddr = op.ClusterZkAddr
 	op.Conf.CadvisorPort = op.CadvisorPort
 	op.Conf.BcsZkAddr = op.BCSZk

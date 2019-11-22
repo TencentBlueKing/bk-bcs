@@ -30,6 +30,7 @@ type HpaControllerOption struct {
 	conf.ProcessConfig
 
 	ClusterZkAddr string `json:"cluster_zookeeper" value:"" usage:"bcs mesos cluster zk address"`
+	KubeConfig    string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver"`
 	CadvisorPort  int    `json:"cadvisor_port" value:"" usage:"container cadvisor port"`
 	ClusterID     string `json:"clusterid" value:"" usage:"bcs mesos cluster id"`
 

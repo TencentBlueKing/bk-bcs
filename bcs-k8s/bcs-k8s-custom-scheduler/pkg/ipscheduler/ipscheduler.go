@@ -186,7 +186,14 @@ func (i *Ipscheduler) checkSchedulable(node v1.Node) (bool, error) {
 
 	var matchedNetPool *types.NetPool
 	for _, netPool := range i.NetPools {
-		if netPool.Cluster == i.Cluster && netPool.Net == nodeIp {
+		found := false
+		for _, hostIp := range netPool.Hosts {
+			if hostIp == nodeIp {
+				found = true
+				break
+			}
+		}
+		if found && netPool.Cluster == i.Cluster {
 			matchedNetPool = netPool
 			break
 		}

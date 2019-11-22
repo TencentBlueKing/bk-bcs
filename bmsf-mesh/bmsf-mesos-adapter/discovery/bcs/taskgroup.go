@@ -26,14 +26,15 @@ import (
 	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	k8scache "k8s.io/client-go/tools/cache"
 	"path"
 	"reflect"
 	"strings"
 	"time"
+
+	"golang.org/x/net/context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	k8scache "k8s.io/client-go/tools/cache"
 )
 
 //TaskGroup adaptor for bcs-scheduler TaskGroup to object data
@@ -255,7 +256,7 @@ func (s *taskGroupController) convertTaskGroupToAppNode(taskGroup *TaskGroup) *v
 			APIVersion: v1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        taskGroup.GetName(),
+			Name:        str.ReplaceSpecialCharForAppName(taskGroup.GetName()),
 			Namespace:   taskGroup.GetNamespace(),
 			Labels:      str.ReplaceSpecialCharForLabel(taskGroup.GetLabels()),
 			Annotations: taskGroup.GetAnnotations(),

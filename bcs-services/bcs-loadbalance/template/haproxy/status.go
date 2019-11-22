@@ -383,10 +383,13 @@ func sendCommandToHaproxy(sockAddr, command string) (string, error) {
 }
 
 func (m *Manager) fetch() error {
-	sockAddr := "/var/run/haproxy.sock"
+
+	// sockAddr := "/var/run/haproxy.sock"
 	showInfoCommand := "show info\nquit\n"
 	showStatCommand := "show stat\nquit\n"
-	infoStr, err := sendCommandToHaproxy(sockAddr, showInfoCommand)
+	m.sockMutex.Lock()
+	infoStr, err := m.haproxyClient.ExecuteRaw(showInfoCommand)
+	m.sockMutex.Unlock()
 	if err != nil {
 		blog.Errorf("send command %s to haproxy failed, err %s", showInfoCommand, err.Error())
 		return err
@@ -396,7 +399,9 @@ func (m *Manager) fetch() error {
 		blog.Errorf("convert str %s to haproxy info failed, err %s", infoStr, err.Error())
 		return err
 	}
-	str, err := sendCommandToHaproxy(sockAddr, showStatCommand)
+	m.sockMutex.Lock()
+	str, err := m.haproxyClient.ExecuteRaw(showStatCommand)
+	m.sockMutex.Unlock()
 	if err != nil {
 		blog.Errorf("send command %s to haproxy failed, err %s", showStatCommand, err.Error())
 		return err
