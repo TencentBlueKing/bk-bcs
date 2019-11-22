@@ -277,7 +277,7 @@ func (hook *AdmissionWebhookFilter) addAdmissionWebhook(ad *commtypes.AdmissionW
 	defer hook.Unlock()
 
 	if len(ad.AdmissionWebhooks) == 0 {
-		blog.Errorf("AdmissionWebhookConfiguration %s have no AdmissionWebhooks, and return")
+		blog.Errorf("AdmissionWebhookConfiguration %s have no AdmissionWebhooks, and return", ad.Name)
 		return
 	}
 	//get webhook servers info
