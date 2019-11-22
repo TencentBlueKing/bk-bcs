@@ -33,7 +33,6 @@ type MesosDriverOptionsOut struct {
 	Cluster          string `json:"cluster" value:"" usage:"the cluster ID under bcs"`
 	AdmissionWebhook bool   `json:"admission_webhook" value:"true" usage:"whether admission webhook"`
 	Kubeconfig       string `json:"kubeconfig" value:"" usage:"kubeconfig, when store_driver is etcd"`
-	StoreDriver      string `json:"store_driver" value:"zookeeper" usage:"the store driver, enum: zookeeper, etcd"`
 }
 
 //MesosDriverOption is option in flags
@@ -56,7 +55,6 @@ func NewMesosDriverOption(opOut *MesosDriverOptionsOut) *MesosDriverOption {
 			SchedDiscvSvr:    opOut.SchedDiscvSvr,
 			AdmissionWebhook: opOut.AdmissionWebhook,
 			Kubeconfig:       opOut.Kubeconfig,
-			StoreDriver:      opOut.StoreDriver,
 
 			ServCert: &config.CertConfig{
 				CAFile:     opOut.CAFile,

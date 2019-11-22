@@ -33,8 +33,8 @@ PACKAGEPATH=./build/bcs.${VERSION}/
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus process_executor process_daemon bmsf-mesos-adapter hpacontroller
-specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice hpacontroller bmsf-mesos-adapter
+default:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice sd_prometheus process_executor process_daemon bmsf-mesos-adapter hpacontroller logbeat-sidecar
+specific:api dns health client storage check executor driver mesos_watch scheduler loadbalance metricservice metriccollector exporter k8s_watch kube_agent api_export netservice hpacontroller bmsf-mesos-adapter logbeat-sidecar
 
 # tag for different edition compiling
 inner:
@@ -131,6 +131,9 @@ hpacontroller:pre
 
 sd_prometheus:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-service-prometheus/bcs-service-prometheus ./bcs-services/bcs-sd-prometheus/main.go
+
+logbeat-sidecar:pre
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./bcs-services/bcs-logbeat-sidecar/main.go
 
 k8s_watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-watch
