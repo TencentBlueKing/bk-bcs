@@ -20,13 +20,13 @@ import (
 	"time"
 
 	"github.com/container-storage-interface/spec/lib/go/csi/v0"
+	"github.com/golang/glog"
 	cbs "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/golang/glog"
 )
 
 var (
@@ -203,7 +203,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		if !ok {
 			volumeChargePrepaidRenewFlag = DiskChargePrepaidRenewFlagDefault
 		}
-		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd {  // nolint
+		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd { // nolint
 			return nil, status.Error(codes.InvalidArgument, "invalid renew flag")
 		}
 
@@ -262,14 +262,14 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 	if ok1 && ok2 {
 		return nil, status.Error(codes.InvalidArgument, "both zone and zones StorageClass parameters must not be used at the same time")
 	}
-	if !ok1 && !ok2{
+	if !ok1 && !ok2 {
 		volumeZone = ctrl.zone
 	}
 
 	if !ok1 && ok2 {
 		zonesSlice := strings.Split(volumeZones, ",")
 		hash := rand.Uint32()
-		volumeZone = zonesSlice[hash % uint32(len(zonesSlice))]
+		volumeZone = zonesSlice[hash%uint32(len(zonesSlice))]
 	}
 
 	createCbsReq.Placement = &cbs.Placement{
