@@ -33,6 +33,7 @@ func ReplaceSpecialCharForLabelKey(str string) string {
 	if strings.HasPrefix(str, "io.tencent.paas") {
 		if len(str) > 63 {
 			str = str[0:63]
+			str = strings.Trim(str, "@\"' _-")
 		}
 	}
 	return str
