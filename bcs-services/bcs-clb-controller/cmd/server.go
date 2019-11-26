@@ -19,6 +19,7 @@ import (
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/metric"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/processor"
+	"github.com/prometheus/client_golang/prometheus"
 	"fmt"
 	"os"
 	"os/signal"
@@ -149,10 +150,13 @@ the server watch k8s services and clbIngresses to generate clb listener`,
 		}
 
 		versionMetric := metric.NewVersionMetric()
+		prometheus.MustRegister(proc)
 		promMetric := metric.NewPromMetric()
+		jsonStatus := metric.NewJSONStatus(proc.GetStatusFunction())
 		metrics := metric.NewClbMetric(port)
 		metrics.RegisterResource(versionMetric)
 		metrics.RegisterResource(promMetric)
+		metrics.RegisterResource(jsonStatus)
 
 		go metrics.Run()
 

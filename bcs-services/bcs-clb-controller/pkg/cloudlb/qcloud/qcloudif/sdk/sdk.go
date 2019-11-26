@@ -15,6 +15,7 @@ package sdk
 
 import (
 	"fmt"
+	"encoding/json"
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
@@ -1049,4 +1050,281 @@ func (c *Client) waitTaskDone(taskID string) error {
 	}
 	blog.Errorf("describe task status with request %s timeout", request.ToJsonString())
 	return fmt.Errorf("describe task status with request %s timeout", request.ToJsonString())
+}
+
+// ListListener listener listeners in tencent cloud
+func (c *Client) ListListener(lbID string) ([]*cloudListenerType.CloudListener, error) {
+
+	tclbListeners, err := c.doListListenerWithoutBackends(lbID)
+	if err != nil {
+		return nil, err
+	}
+	tclbListenerBackendMap, err := c.doListBackends(lbID)
+	if err != nil {
+		return nil, err
+	}
+	tclbListenerHealthMap, err := c.doListenerHealthStatus(lbID)
+	if err != nil {
+		return nil, err
+	}
+
+	var retListenerList []*cloudListenerType.CloudListener
+	for _, tlistener := range tclbListeners {
+		cloudListener, err := c.convertTclbListenerToCloudListener(tlistener, tclbListenerBackendMap[*tlistener.ListenerId], tclbListenerHealthMap[*tlistener.ListenerId])
+		if err != nil {
+			return nil, err
+		}
+		retListenerList = append(retListenerList, cloudListener)
+	}
+
+	return retListenerList, nil
+}
+
+func backendToJSONString(b *tclb.Backend) string {
+	data, _ := json.Marshal(b)
+	return string(data)
+}
+
+func (c *Client) convertBackendToCloudListenerBackend(backendList []*tclb.Backend) ([]*cloudListenerType.Backend, error) {
+	var retBackends []*cloudListenerType.Backend
+	for _, backend := range backendList {
+		if len(backend.PrivateIpAddresses) == 0 {
+			return nil, fmt.Errorf("invalid backend %v", backendToJSONString(backend))
+		}
+		retBackends = append(retBackends, &cloudListenerType.Backend{
+			IP:     *backend.PrivateIpAddresses[0],
+			Port:   int(*backend.Port),
+			Weight: int(*backend.Weight),
+		})
+	}
+	return retBackends, nil
+}
+
+func (c *Client) convertHealthCheckToCloudListenerHealthCheck(hc *tclb.HealthCheck) (*cloudListenerType.TargetGroupHealthCheck, error) {
+	if hc == nil {
+		return nil, fmt.Errorf("cannot covert empty health check struct")
+	}
+	retHealthCheck := cloudListenerType.NewTargetGroupHealthCheck()
+	if hc.HealthSwitch != nil {
+		retHealthCheck.Enabled = int(*hc.HealthSwitch)
+	}
+	if hc.IntervalTime != nil {
+		retHealthCheck.IntervalTime = int(*hc.IntervalTime)
+	}
+	if hc.HealthNum != nil {
+		retHealthCheck.HealthNum = int(*hc.HealthNum)
+	}
+	if hc.UnHealthNum != nil {
+		retHealthCheck.UnHealthNum = int(*hc.UnHealthNum)
+	}
+	if hc.HttpCode != nil {
+		retHealthCheck.HTTPCode = int(*hc.HttpCode)
+	}
+	if hc.HttpCheckPath != nil {
+		retHealthCheck.HTTPCheckPath = string(*hc.HttpCheckPath)
+	}
+	return retHealthCheck, nil
+}
+
+func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclbRuleTargets *tclb.RuleTargets) (*cloudListenerType.Rule, error) {
+	rule := cloudListenerType.NewRule(*tclbRule.Domain, *tclbRule.Url)
+	rule.ID = *tclbRule.LocationId
+	hc, err := c.convertHealthCheckToCloudListenerHealthCheck(tclbRule.HealthCheck)
+	if err != nil {
+		return nil, err
+	}
+	rule.TargetGroup.HealthCheck = hc
+	rule.TargetGroup.LBPolicy = LBAlgorithmTypeSDK2BcsMap[*tclbRule.Scheduler]
+	if tclbRule.SessionExpireTime != nil {
+		rule.TargetGroup.SessionExpire = int(*tclbRule.SessionExpireTime)
+	}
+	if tclbRuleTargets != nil && len(tclbRuleTargets.Targets) != 0 {
+		backends, err := c.convertBackendToCloudListenerBackend(tclbRuleTargets.Targets)
+		if err != nil {
+			return nil, err
+		}
+		rule.TargetGroup.Backends = backends
+	}
+	return nil, nil
+}
+
+func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, listenerBackend *tclb.ListenerBackend, listenerHeath *tclb.ListenerHealth) (*cloudListenerType.CloudListener, error) {
+	if listener == nil {
+		return nil, fmt.Errorf("cannot convert empty tclb listener object to cloud listener")
+	}
+	cloudListener := &cloudListenerType.CloudListener{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: *listener.ListenerName,
+		},
+		Spec: cloudListenerType.CloudListenerSpec{
+			ListenerID: *listener.ListenerId,
+			Protocol:   ProtocolSDK2BcsMap[*listener.Protocol],
+			ListenPort: int(*listener.Port),
+		},
+	}
+	if *listener.Protocol == ListenerProtocolHTTPS {
+		sslMode, _ := SSLModeSDK2BcsMap[*listener.Certificate.SSLMode]
+		cloudListener.Spec.TLS = &cloudListenerType.CloudListenerTls{
+			Mode:   sslMode,
+			CertID: *listener.Certificate.CertId,
+		}
+		if listener.Certificate.CertCaId != nil {
+			cloudListener.Spec.TLS.CertCaID = *listener.Certificate.CertCaId
+		}
+	}
+	switch *listener.Protocol {
+	case ListenerProtocolHTTP, ListenerProtocolHTTPS:
+		ruleBackendsMap := make(map[string]*tclb.RuleTargets)
+		for _, ruleTarget := range listenerBackend.Rules {
+			ruleBackendsMap[*ruleTarget.LocationId] = ruleTarget
+		}
+		var retRules []*cloudListenerType.Rule
+		for _, tclbRule := range listener.Rules {
+			rule, err := c.convertRuleTargetsToTargetGroup(tclbRule, ruleBackendsMap[*tclbRule.LocationId])
+			if err != nil {
+				return nil, err
+			}
+			retRules = append(retRules, rule)
+		}
+
+	case ListenerProtocolTCP, ListenerProtocolUDP:
+		cloudListener.Spec.TargetGroup = cloudListenerType.NewTargetGroup("", "", SSLModeSDK2BcsMap[*listener.Protocol], int(*listener.Port))
+		hc, err := c.convertHealthCheckToCloudListenerHealthCheck(listener.HealthCheck)
+		if err != nil {
+			return nil, err
+		}
+		cloudListener.Spec.TargetGroup.HealthCheck = hc
+		cloudListener.Spec.TargetGroup.LBPolicy = LBAlgorithmTypeSDK2BcsMap[*listener.Scheduler]
+		if listener.SessionExpireTime != nil {
+			cloudListener.Spec.TargetGroup.SessionExpire = int(*listener.SessionExpireTime)
+		}
+		if len(listenerBackend.Targets) != 0 {
+			backends, err := c.convertBackendToCloudListenerBackend(listenerBackend.Targets)
+			if err != nil {
+				return nil, err
+			}
+			cloudListener.Spec.TargetGroup.Backends = backends
+		}
+	}
+
+	healthStatus := &cloudListenerType.CloudListenerHealthStatus{}
+	for _, ruleHealth := range listenerHeath.Rules {
+		tmpRuleHealthStatus := &cloudListenerType.CloudListenerRuleHealthStatus{}
+		if ruleHealth.Domain != nil {
+			tmpRuleHealthStatus.Domain = *ruleHealth.Domain
+		}
+		if ruleHealth.Url != nil {
+			tmpRuleHealthStatus.URL = *ruleHealth.Url
+		}
+		if len(ruleHealth.Targets) != 0 {
+			for _, target := range ruleHealth.Targets {
+				tmpRuleHealthStatus.Backends = append(tmpRuleHealthStatus.Backends, &cloudListenerType.CloudListenerBackendHealthStatus{
+					IP:                 *target.IP,
+					Port:               int(*target.Port),
+					HealthStatus:       *target.HealthStatus,
+					HealthStatusDetail: *target.HealthStatusDetial,
+					TargetID:           *target.TargetId,
+				})
+			}
+		}
+		healthStatus.RulesHealth = append(healthStatus.RulesHealth, tmpRuleHealthStatus)
+	}
+	cloudListener.Status.HealthStatus = healthStatus
+
+	return cloudListener, nil
+}
+
+func (c *Client) doListListenerWithoutBackends(lbID string) ([]*tclb.Listener, error) {
+	request := tclb.NewDescribeListenersRequest()
+	request.LoadBalancerId = tcommon.StringPtr(lbID)
+	blog.Infof("describe listeners request:\n%s", request.ToJsonString())
+	for counter := 0; counter < c.sdkConfig.MaxTimeout; counter++ {
+		response, err := c.clb.DescribeListeners(request)
+		if err != nil {
+			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
+				c.checkErrCode(terr)
+				if terr.Code == "4400" || terr.Code == "4000" {
+					continue
+				}
+			}
+			blog.Errorf("describe listener failed, err %s", err.Error())
+			return nil, fmt.Errorf("describe listener failed, err %s", err.Error())
+		}
+		blog.Infof("describe listener response:\n%s", response.ToJsonString())
+		if len(response.Response.Listeners) == 0 {
+			blog.Warnf("describe listeners return no listener")
+			return nil, nil
+		}
+		return response.Response.Listeners, nil
+	}
+	return nil, fmt.Errorf("describe listeners timeout")
+}
+
+func (c *Client) doListBackends(lbID string) (map[string]*tclb.ListenerBackend, error) {
+	request := tclb.NewDescribeTargetsRequest()
+	request.LoadBalancerId = tcommon.StringPtr(lbID)
+	blog.Infof("describe backends request:\n%s", request.ToJsonString())
+	for counter := 0; counter < c.sdkConfig.MaxTimeout; counter++ {
+		response, err := c.clb.DescribeTargets(request)
+		if err != nil {
+			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
+				c.checkErrCode(terr)
+				if terr.Code == "4400" || terr.Code == "4000" {
+					continue
+				}
+			}
+			blog.Errorf("describe backends failed, err %s", err.Error())
+			return nil, fmt.Errorf("backends targets failed, err %s", err.Error())
+		}
+		blog.Infof("describe backends response:\n%s", response.ToJsonString())
+		if len(response.Response.Listeners) == 0 {
+			blog.Warnf("describe listener backends return no listener")
+			return nil, nil
+		}
+		retMap := make(map[string]*tclb.ListenerBackend)
+		for _, listenerBackend := range response.Response.Listeners {
+			retMap[*listenerBackend.ListenerId] = listenerBackend
+		}
+		return retMap, nil
+	}
+	return nil, fmt.Errorf("describe listener backend timeout")
+}
+
+func (c *Client) doListenerHealthStatus(lbID string) (map[string]*tclb.ListenerHealth, error) {
+	request := tclb.NewDescribeTargetHealthRequest()
+	request.LoadBalancerIds = []*string{tcommon.StringPtr(lbID)}
+	blog.Infof("DescribeTargetsHealth request:\n%s", request.ToJsonString())
+	for counter := 0; counter < c.sdkConfig.MaxTimeout; counter++ {
+		response, err := c.clb.DescribeTargetHealth(request)
+		if err != nil {
+			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
+				c.checkErrCode(terr)
+				if terr.Code == "4400" || terr.Code == "4000" {
+					continue
+				}
+			}
+			blog.Errorf("DescribeTargetsHealth failed, err %s", err.Error())
+			return nil, fmt.Errorf("DescribeTargetsHealth failed, err %s", err.Error())
+		}
+		blog.Infof("DescribeTargetsHealth response:\n%s", response.ToJsonString())
+		if len(response.Response.LoadBalancers) == 0 {
+			blog.Warnf("DescribeTargetsHealth return no loadbalancerHealth")
+			return nil, nil
+		}
+		if len(response.Response.LoadBalancers) != 1 {
+			blog.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1", len(response.Response.LoadBalancers))
+			return nil, fmt.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1", len(response.Response.LoadBalancers))
+		}
+		lbHealth := response.Response.LoadBalancers[0]
+		if len(lbHealth.Listeners) == 0 {
+			blog.Warnf("DescribeTargetsHealth return no listenerHealth")
+			return nil, nil
+		}
+		listenerHealthMap := make(map[string]*tclb.ListenerHealth)
+		for _, listenerHealth := range lbHealth.Listeners {
+			listenerHealthMap[*listenerHealth.ListenerId] = listenerHealth
+		}
+		return listenerHealthMap, nil
+	}
+	return nil, fmt.Errorf("describe listener health timeout")
 }

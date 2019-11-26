@@ -479,3 +479,9 @@ func (clb *ClbAPI) DeRegister4LayerBackends(lbID, listenerID string, backendsDeR
 	}
 	return clb.deRegisterInstances4thListener(lbID, listenerID, bList)
 }
+
+// ListListener list all listeners
+func (clb *ClbAPI) ListListener(lbID string) ([]*loadbalance.CloudListener, error) {
+	blog.Errorf("Not implemented")
+	return nil, nil
+}

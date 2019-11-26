@@ -272,7 +272,25 @@ type ClbIngressSpec struct {
 type ClbIngressStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Status         string      `json:"status"`
+	Message        string      `json:"message"`
 	LastUpdateTime metav1.Time `json:"lastUpdateTime"`
+}
+
+const (
+	// ClbIngressStatusNormal normal status for clb ingress
+	ClbIngressStatusNormal = "Normal"
+	// ClbIngressStatusAbnormal abnormal status for clb ingress
+	ClbIngressStatusAbnormal = "Abnormal"
+	// ClbIngressMessagePortConflict message for por conflict
+	ClbIngressMessagePortConflict = "Port Conflict"
+	// ClbIngressMessage
+)
+
+// SetStatusMessage set clb ingress status message
+func (c *ClbIngress) SetStatusMessage(status, message string) {
+	c.Status.Status = status
+	c.Status.Message = message
 }
 
 // +genclient

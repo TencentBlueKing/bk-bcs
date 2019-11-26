@@ -515,12 +515,18 @@ spec:
         status:
           properties:
             lastUpdateTime:
+              format: date-time
+              type: string
+            message:
+              type: string
+            status:
               description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                 of cluster Important: Run "make" to regenerate code after modifying
                 this file'
-              format: date-time
               type: string
           required:
+          - status
+          - message
           - lastUpdateTime
           type: object
   version: v1

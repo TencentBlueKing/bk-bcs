@@ -24,7 +24,29 @@ import (
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/api"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/sdk"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	clbBackendsAddMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "clb",
+		Subsystem: "updater",
+		Name:      "add_backends",
+		Help:      "clb backend add",
+	}, []string{"ip", "port"})
+	clbBackendsDeleteMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "clb",
+		Subsystem: "updater",
+		Name:      "delete_backends",
+		Help:      "clb backend change",
+	}, []string{"ip", "port"})
+)
+
+func init() {
+	prometheus.Register(clbBackendsAddMetric)
+	prometheus.Register(clbBackendsDeleteMetric)
+}
 
 // ClbClient client for operating clb
 type ClbClient struct {
@@ -192,6 +214,11 @@ func (clb *ClbClient) Delete(ls *loadbalance.CloudListener) error {
 	if err != nil {
 		return fmt.Errorf("QCloudDeleteListener failed, %s", err.Error())
 	}
-
 	return nil
+}
+
+// ListListeners list listener
+// list listeners in current clb instance
+func (clb *ClbClient) ListListeners() ([]*loadbalance.CloudListener, error) {
+	return clb.clbAdapter.ListListener(clb.clbInfo.ID)
 }

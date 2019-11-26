@@ -228,6 +228,43 @@ spec:
           type: object
         status:
           properties:
+            healthStatus:
+              properties:
+                rules:
+                  items:
+                    properties:
+                      backends:
+                        items:
+                          properties:
+                            healthStatus:
+                              type: boolean
+                            healthStatusDetail:
+                              type: string
+                            ip:
+                              type: string
+                            port:
+                              format: int64
+                              type: integer
+                            targetId:
+                              type: string
+                          required:
+                          - ip
+                          - port
+                          - healthStatus
+                          - targetId
+                          - healthStatusDetail
+                          type: object
+                        type: array
+                      domain:
+                        type: string
+                      url:
+                        type: string
+                    required:
+                    - domain
+                    - url
+                    type: object
+                  type: array
+              type: object
             lastUpdateTime:
               description: last updated timestamp
               format: date-time

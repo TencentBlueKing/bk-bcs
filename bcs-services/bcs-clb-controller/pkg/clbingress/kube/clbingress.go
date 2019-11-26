@@ -18,6 +18,7 @@ import (
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
 	informerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/clb/v1"
 	listerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/clb/v1"
+	ingressClientV1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
 
 	"fmt"
@@ -28,25 +29,31 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 )
 
+// KubeRegistry clb ingress kube registry
 type KubeRegistry struct {
 	clbName  string
 	informer informerv1.ClbIngressInformer
 	lister   listerv1.ClbIngressLister
+	client   ingressClientV1.ClbV1Interface
 }
 
-func NewKubeRegistry(clbname string, informer informerv1.ClbIngressInformer, lister listerv1.ClbIngressLister) (clbingress.Registry, error) {
+// NewKubeRegistry create new registry for clb ingress
+func NewKubeRegistry(clbname string, informer informerv1.ClbIngressInformer, lister listerv1.ClbIngressLister, client ingressClientV1.ClbV1Interface) (clbingress.Registry, error) {
 
 	return &KubeRegistry{
 		clbName:  clbname,
 		informer: informer,
 		lister:   lister,
+		client:   client,
 	}, nil
 }
 
+// AddIngressHandler add ingress handler
 func (kr *KubeRegistry) AddIngressHandler(handler model.EventHandler) {
 	kr.informer.Informer().AddEventHandler(handler)
 }
 
+// ListIngresses implements clbingress interface
 func (kr *KubeRegistry) ListIngresses() ([]*ingressv1.ClbIngress, error) {
 
 	// get ingresses for the certain clb name
@@ -96,4 +103,23 @@ func (kr *KubeRegistry) GetIngress(name string) (*ingressv1.ClbIngress, error) {
 		}
 	}
 	return nil, fmt.Errorf("no found ingress with name %s", name)
+}
+
+// SetIngress implement Registry interface
+func (kr *KubeRegistry) SetIngress(ingress *ingressv1.ClbIngress) error {
+	// ingress with labels ("bmsf.tencent.com/clbname": "all") should be skip,
+	// which has effects on multiple clb controller
+	if ingress.GetLabels()["bmsf.tencent.com/clbname"] == "all" {
+		return nil
+	}
+
+	old, err := kr.lister.ClbIngresses(ingress.GetNamespace()).Get(ingress.GetName())
+	if err != nil {
+		blog.Infof("get old ingress %s %s failed, err %s", ingress.GetNamespace(), ingress.GetName())
+		return fmt.Errorf("get old ingress %s %s failed, err %s",
+			ingress.GetNamespace(), ingress.GetName(), err.Error())
+	}
+	ingress.SetResourceVersion(old.GetResourceVersion())
+	_, err = kr.client.ClbIngresses(ingress.GetNamespace()).Update(ingress)
+	return err
 }

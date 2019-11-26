@@ -11,17 +11,33 @@
  *
  */
 
-package clbingress
+package metric
 
 import (
-	ingressv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
+	"github.com/emicklei/go-restful"
+
+	"bk-bcs/bcs-common/common/blog"
 )
 
-// IngressRegistry interface for clb ingress rule discovery
-type Registry interface {
-	AddIngressHandler(handler model.EventHandler)
-	ListIngresses() ([]*ingressv1.ClbIngress, error)
-	GetIngress(name string) (*ingressv1.ClbIngress, error)
-	SetIngress(*ingressv1.ClbIngress) error
+// JSONStatus json status
+type JSONStatus struct {
+	hFunc restful.RouteFunction
+}
+
+// NewJSONStatus new json status object
+func NewJSONStatus(hf restful.RouteFunction) Resource {
+	return &JSONStatus{
+		hFunc: hf,
+	}
+}
+
+// Register implements metric.Resource interface
+func (js *JSONStatus) Register(container *restful.Container) {
+	blog.Infof("register json status resource to metric")
+	ws := new(restful.WebService)
+	ws.Path("/status").
+		Consumes(restful.MIME_JSON, restful.MIME_XML).
+		Produces(restful.MIME_JSON, restful.MIME_XML)
+	ws.Route(ws.GET("/").To(js.hFunc))
+	container.Add(ws)
 }

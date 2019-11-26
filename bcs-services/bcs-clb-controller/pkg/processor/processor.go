@@ -37,6 +37,7 @@ type Processor struct {
 	opt             *Option
 	serviceClient   svcclient.Client
 	ingressRegistry clbingress.Registry
+	listenerClient  listenerclient.Interface
 	updater         *Updater
 	updateFlag      *model.AtomicBool
 	doingFlag       *model.AtomicBool
@@ -110,6 +111,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	ingressInformer := factory.Clb().V1().ClbIngresses()
 	ingressInformer.Informer().AddEventHandler(ingressHandler)
 	ingressLister := factory.Clb().V1().ClbIngresses().Lister()
+	ingressInterface := cliset.ClbV1()
 
 	listenerHandler := newListenerHandler()
 	listenerInformer := factory.Network().V1().CloudListeners()
@@ -124,7 +126,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	blog.Infof("success to wait clbIngress and cloudListener synced")
 
 	// create ingress registry
-	ingressRegistry, err := clbIngressClient.NewKubeRegistry(opt.ClbName, ingressInformer, ingressLister)
+	ingressRegistry, err := clbIngressClient.NewKubeRegistry(opt.ClbName, ingressInformer, ingressLister, ingressInterface)
 	if err != nil {
 		blog.Errorf("create ingress registry  failed, err %s", err.Error())
 		return nil, fmt.Errorf("create ingress registry  failed, err %s", err.Error())
