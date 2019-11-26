@@ -28,7 +28,7 @@ func NewDeleteCommand() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment",
+				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment/crd",
 			},
 			cli.StringFlag{
 				Name:  "name, n",
@@ -78,7 +78,10 @@ func deleteF(c *utils.ClientContext) error {
 		return deleteService(c)
 	case "deploy", "deployment":
 		return deleteDeployment(c)
+	case "crd", "customresourcedefinition":
+		return deleteCustomResourceDefinition(c)
 	default:
+		//unkown type, try Custom Resource
 		return fmt.Errorf("invalid type: %s", resourceType)
 	}
 }

@@ -55,7 +55,7 @@ func getNamespaceFilter(storage v1.Storage, clusterID string) (url.Values, error
 
 	data := url.Values{}
 	for _, item := range ns {
-		data.Add(FilterNamespaceTag, item)
+		data.Add(filterNamespaceTag, item)
 	}
 
 	return data, nil

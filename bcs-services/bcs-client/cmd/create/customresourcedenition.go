@@ -14,13 +14,12 @@
 package create
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"fmt"
 )
 
-func createProcess(c *utils.ClientContext) error {
+func createCustomResourceDefinition(c *utils.ClientContext) error {
 	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
 		return err
 	}
@@ -30,17 +29,44 @@ func createProcess(c *utils.ClientContext) error {
 		return err
 	}
 
-	namespace, err := utils.ParseNamespaceFromJSON(data)
+	version, _, err := utils.ParseAPIVersionAndKindFromJSON(data)
+	if err != nil {
+		return err
+	}
+	if version != "v4" {
+		return fmt.Errorf("custom resource definition only support v4 `apiVersion`")
+	}
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	err = scheduler.CreateCustomResourceDefinition(c.ClusterID(), data)
+	if err != nil {
+		return fmt.Errorf("failed to create CustomResourceDefinition: %v", err)
+	}
+
+	fmt.Printf("success to create CustomResourceDefinition.\n")
+	return nil
+}
+
+func createCustomResource(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+		return err
+	}
+
+	data, err := c.FileData()
+	if err != nil {
+		return err
+	}
+
+	version, kind, err := utils.ParseAPIVersionAndKindFromJSON(data)
 	if err != nil {
 		return err
 	}
 
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	err = scheduler.CreateProcess(c.ClusterID(), namespace, data)
+	err = scheduler.CreateCustomResourceDefinition(c.ClusterID(), data)
 	if err != nil {
-		return fmt.Errorf("failed to create process: %v", err)
+		return fmt.Errorf("failed to create CustomResourceDefinition: %v", err)
 	}
 
-	fmt.Printf("success to create process\n")
+	fmt.Printf("success to create CustomResourceDefinition.\n")
 	return nil
 }

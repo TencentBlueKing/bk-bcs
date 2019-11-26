@@ -11,36 +11,23 @@
  *
  */
 
-package update
+package inspect
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"fmt"
 )
 
-func updateSecret(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+func inspectCustomResourceDefinition(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionName); err != nil {
 		return err
 	}
-
-	data, err := c.FileData()
-	if err != nil {
-		return err
-	}
-
-	namespace, err := utils.ParseNamespaceFromJSON(data)
-	if err != nil {
-		return err
-	}
-
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	err = scheduler.UpdateSecret(c.ClusterID(), namespace, data, nil)
+	crd, err := scheduler.GetCustomResourceDefinition(c.ClusterID(), c.String(utils.OptionName))
 	if err != nil {
-		return fmt.Errorf("failed to update secret: %v", err)
+		return fmt.Errorf("failed to Get CustomResourceDefinition: %v", err)
 	}
 
-	fmt.Printf("success to update secret\n")
-	return nil
+	return printInspect(crd)
 }

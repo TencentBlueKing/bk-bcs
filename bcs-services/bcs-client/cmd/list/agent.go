@@ -29,7 +29,7 @@ func listAgent(c *utils.ClientContext) error {
 	}
 
 	condition := url.Values{}
-	condition.Add(FilterNamespaceTag, c.Namespace())
+	condition.Add(filterNamespaceTag, c.Namespace())
 
 	ipList := utils.GetIPList(c.String(utils.OptionIP))
 

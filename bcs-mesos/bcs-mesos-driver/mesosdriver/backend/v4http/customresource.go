@@ -80,17 +80,23 @@ func (proxy *kubeProxy) apiVersionReqConvert(req *http.Request) {
 		blog.Errorf("bcs-mesos-driver custom resource definition Request Convert failed, %s", err.Error())
 		return
 	}
+	if len(allBytes) == 0 {
+		blog.Errorf("bcs-mesos-driver get empty body when in POST or PUT request, URL: %s, Method: %s", req.URL.String(), req.Method)
+		return
+	}
 	crd := &apiextensions.CustomResourceDefinition{}
 	if err = json.Unmarshal(allBytes, crd); err != nil {
 		blog.Errorf("bcs-mesos-driver custom resource definition Request json Unmarshal failed, %s. URL: %s", err.Error(), req.URL.Path)
 		return
 	}
+	blog.V(3).Infof("request body: %s", string(allBytes))
 	crd.APIVersion = defaultAPIVersion
 	newBody, err := json.Marshal(crd)
 	if err != nil {
 		blog.Errorf("bcs-mesos-driver new custom resource definition Request json Marshal failed, %s. URL: %s", err.Error(), req.URL.Path)
 		return
 	}
+	blog.V(3).Infof("forwarding new body: %s", string(newBody))
 	buffer := bytes.NewBuffer(newBody)
 	req.Body = ioutil.NopCloser(buffer)
 	req.ContentLength = int64(buffer.Len())

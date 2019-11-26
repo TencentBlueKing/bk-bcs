@@ -11,36 +11,22 @@
  *
  */
 
-package update
+package delete
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"fmt"
 )
 
-func updateSecret(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+func deleteCustomResourceDefinition(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionName); err != nil {
 		return err
 	}
-
-	data, err := c.FileData()
-	if err != nil {
-		return err
-	}
-
-	namespace, err := utils.ParseNamespaceFromJSON(data)
-	if err != nil {
-		return err
-	}
-
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	err = scheduler.UpdateSecret(c.ClusterID(), namespace, data, nil)
-	if err != nil {
-		return fmt.Errorf("failed to update secret: %v", err)
+	if err := scheduler.DeleteCustomResourceDefinition(c.ClusterID(), c.String(utils.OptionName)); err != nil {
+		return fmt.Errorf("failed to delete customresourcedefinition: %v", err)
 	}
-
-	fmt.Printf("success to update secret\n")
+	fmt.Printf("success to delete customresourcedefinition %s\n", c.String(utils.OptionName))
 	return nil
 }

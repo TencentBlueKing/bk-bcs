@@ -14,13 +14,12 @@
 package update
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"fmt"
 )
 
-func updateSecret(c *utils.ClientContext) error {
+func updateCustomResourceDefinition(c *utils.ClientContext) error {
 	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
 		return err
 	}
@@ -30,17 +29,23 @@ func updateSecret(c *utils.ClientContext) error {
 		return err
 	}
 
-	namespace, err := utils.ParseNamespaceFromJSON(data)
+	version, _, err := utils.ParseAPIVersionAndKindFromJSON(data)
 	if err != nil {
 		return err
 	}
-
-	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	err = scheduler.UpdateSecret(c.ClusterID(), namespace, data, nil)
+	if version != "v4" {
+		return fmt.Errorf("custom resource definition only support v4 `apiVersion`")
+	}
+	_, name, err := utils.ParseNamespaceNameFromJSON(data)
 	if err != nil {
-		return fmt.Errorf("failed to update secret: %v", err)
+		return err
+	}
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	err = scheduler.UpdateCustomResourceDefinition(c.ClusterID(), name, data)
+	if err != nil {
+		return fmt.Errorf("failed to update CustomResourceDefinition: %v", err)
 	}
 
-	fmt.Printf("success to update secret\n")
+	fmt.Printf("success to update CustomResourceDefinition.\n")
 	return nil
 }
