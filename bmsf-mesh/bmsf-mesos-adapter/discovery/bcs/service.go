@@ -184,7 +184,7 @@ func (s *svcController) convertBkToAppSvc(bkSvc *bcstypes.BcsService) *v1.AppSvc
 			APIVersion: v1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        bkSvc.GetName(),
+			Name:        str.ReplaceSpecialCharForSvcName(bkSvc.GetName()),
 			Namespace:   bkSvc.GetNamespace(),
 			Labels:      str.ReplaceSpecialCharForLabel(bkSvc.GetLabels()),
 			Annotations: bkSvc.GetAnnotations(),
