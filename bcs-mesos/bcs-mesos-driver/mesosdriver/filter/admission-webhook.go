@@ -282,14 +282,19 @@ func (hook *AdmissionWebhookFilter) addAdmissionWebhook(ad *commtypes.AdmissionW
 	}
 	//get webhook servers info
 	for _, webhook := range ad.AdmissionWebhooks {
-		if webhook.ClientConfig.Port <= 0 {
-			webhook.ClientConfig.Port = 443
+		var server string
+		if webhook.ClientConfig.Url != "" {
+			server = webhook.ClientConfig.Url
+		} else {
+			if webhook.ClientConfig.Port <= 0 {
+				webhook.ClientConfig.Port = 443
+			}
+			if webhook.ClientConfig.Path == "" {
+				webhook.ClientConfig.Path = "/"
+			}
+			server = fmt.Sprintf("https://%s.%s:%d%s", webhook.ClientConfig.Namespace, webhook.ClientConfig.Name,
+				webhook.ClientConfig.Port, webhook.ClientConfig.Path)
 		}
-		if webhook.ClientConfig.Path == "" {
-			webhook.ClientConfig.Path = "/"
-		}
-		server := fmt.Sprintf("https://%s.%s:%d%s", webhook.ClientConfig.Namespace, webhook.ClientConfig.Name,
-			webhook.ClientConfig.Port, webhook.ClientConfig.Path)
 
 		blog.Infof("AdmissionWebhookFilter add AdmissionWebhook %s Name %s server %s", ad.Name, webhook.Name, server)
 		webhook.WebhookServers = []string{server}

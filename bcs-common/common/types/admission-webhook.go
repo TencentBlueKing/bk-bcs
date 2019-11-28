@@ -210,6 +210,8 @@ const (
 )
 
 type WebhookClientConfig struct {
+	//url
+	Url string `json:"url"`
 	//pem encoded ca cert that signs the server cert used by the webhook
 	CaBundle string `json:"caBundle"`
 	//webhook service namespace
