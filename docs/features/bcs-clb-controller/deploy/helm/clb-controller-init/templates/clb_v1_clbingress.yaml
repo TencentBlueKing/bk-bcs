@@ -527,7 +527,6 @@ spec:
           required:
           - status
           - message
-          - lastUpdateTime
           type: object
   version: v1
 status:

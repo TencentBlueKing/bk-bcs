@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	cloudlbType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 
@@ -274,7 +275,7 @@ type ClbIngressStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	Status         string      `json:"status"`
 	Message        string      `json:"message"`
-	LastUpdateTime metav1.Time `json:"lastUpdateTime"`
+	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
 }
 
 const (
@@ -291,6 +292,7 @@ const (
 func (c *ClbIngress) SetStatusMessage(status, message string) {
 	c.Status.Status = status
 	c.Status.Message = message
+	c.Status.LastUpdateTime = metav1.NewTime(time.Now())
 }
 
 // +genclient
@@ -304,6 +306,15 @@ type ClbIngress struct {
 
 	Spec   ClbIngressSpec   `json:"spec,omitempty"`
 	Status ClbIngressStatus `json:"status,omitempty"`
+}
+
+// ToString convert ClbIngress to String
+func (c *ClbIngress) ToString() string {
+	str, err := json.Marshal(c)
+	if err != nil {
+		return ""
+	}
+	return string(str)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

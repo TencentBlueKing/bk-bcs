@@ -882,7 +882,7 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 		request.LocationId = tcommon.StringPtr(ruleID)
 	}
 	if len(backendsRegister) == 0 {
-		blog.Infof("lb %s, listener %s, rule %s has no backend, no need to register")
+		blog.Infof("lb %s, listener %s, rule %s has no backend, no need to register", lbID, listenerID, ruleID)
 		return nil
 	}
 	if c.sdkConfig.BackendType == ClbBackendTargetTypeCVM {
