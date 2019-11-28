@@ -430,6 +430,11 @@ func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule)
 						Port:   port.NodePort,
 						Weight: 10,
 					}
+					// support pod with mesos bridge network
+					if port.ProxyPort > 0 {
+						newBackend.IP = node.ProxyIP
+						newBackend.Port = port.ProxyPort
+					}
 				}
 				if _, ok := backendMap[newBackend.IP+strconv.Itoa(newBackend.Port)]; ok {
 					continue

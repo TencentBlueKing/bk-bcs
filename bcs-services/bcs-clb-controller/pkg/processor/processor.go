@@ -28,7 +28,6 @@ import (
 	svccadapter "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/adapter"
 
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -120,9 +119,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	listenerInterface := cliset.NetworkV1()
 	factory.Start(stopCh)
 	blog.Infof("success to clbIngress and cloudListener informer factory")
-	if !cache.WaitForCacheSync(stopCh, ingressInformer.Informer().HasSynced, listenerInformer.Informer().HasSynced) {
-		return nil, fmt.Errorf("wait for ingress and listener cache sync failed")
-	}
+	factory.WaitForCacheSync(stopCh)
 	blog.Infof("success to wait clbIngress and cloudListener synced")
 
 	// create ingress registry
@@ -151,6 +148,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 
 	proc.serviceClient = svcClient
 	proc.ingressRegistry = ingressRegistry
+	proc.listenerClient = listenerClient
 	proc.updater = updater
 	return proc, nil
 }
