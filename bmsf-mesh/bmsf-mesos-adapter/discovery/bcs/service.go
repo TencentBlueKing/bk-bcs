@@ -184,13 +184,13 @@ func (s *svcController) convertBkToAppSvc(bkSvc *bcstypes.BcsService) *v1.AppSvc
 			APIVersion: v1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        bkSvc.GetName(),
+			Name:        str.ReplaceSpecialCharForSvcName(bkSvc.GetName()),
 			Namespace:   bkSvc.GetNamespace(),
 			Labels:      str.ReplaceSpecialCharForLabel(bkSvc.GetLabels()),
 			Annotations: bkSvc.GetAnnotations(),
 		},
 		Spec: v1.AppSvcSpec{
-			Selector: bkSvc.Spec.Selector,
+			Selector: str.ReplaceSpecialCharForLabel(bkSvc.Spec.Selector),
 			Type:     bkSvc.Spec.Type,
 			Frontend: bkSvc.Spec.ClusterIP,
 		},
