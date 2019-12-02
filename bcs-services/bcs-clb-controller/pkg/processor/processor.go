@@ -28,7 +28,6 @@ import (
 	svccadapter "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/adapter"
 
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -37,6 +36,7 @@ type Processor struct {
 	opt             *Option
 	serviceClient   svcclient.Client
 	ingressRegistry clbingress.Registry
+	listenerClient  listenerclient.Interface
 	updater         *Updater
 	updateFlag      *model.AtomicBool
 	doingFlag       *model.AtomicBool
@@ -110,6 +110,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	ingressInformer := factory.Clb().V1().ClbIngresses()
 	ingressInformer.Informer().AddEventHandler(ingressHandler)
 	ingressLister := factory.Clb().V1().ClbIngresses().Lister()
+	ingressInterface := cliset.ClbV1()
 
 	listenerHandler := newListenerHandler()
 	listenerInformer := factory.Network().V1().CloudListeners()
@@ -118,13 +119,11 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	listenerInterface := cliset.NetworkV1()
 	factory.Start(stopCh)
 	blog.Infof("success to clbIngress and cloudListener informer factory")
-	if !cache.WaitForCacheSync(stopCh, ingressInformer.Informer().HasSynced, listenerInformer.Informer().HasSynced) {
-		return nil, fmt.Errorf("wait for ingress and listener cache sync failed")
-	}
+	factory.WaitForCacheSync(stopCh)
 	blog.Infof("success to wait clbIngress and cloudListener synced")
 
 	// create ingress registry
-	ingressRegistry, err := clbIngressClient.NewKubeRegistry(opt.ClbName, ingressInformer, ingressLister)
+	ingressRegistry, err := clbIngressClient.NewKubeRegistry(opt.ClbName, ingressInformer, ingressLister, ingressInterface)
 	if err != nil {
 		blog.Errorf("create ingress registry  failed, err %s", err.Error())
 		return nil, fmt.Errorf("create ingress registry  failed, err %s", err.Error())
@@ -149,6 +148,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 
 	proc.serviceClient = svcClient
 	proc.ingressRegistry = ingressRegistry
+	proc.listenerClient = listenerClient
 	proc.updater = updater
 	return proc, nil
 }

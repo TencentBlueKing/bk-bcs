@@ -16,6 +16,7 @@ package qcloud
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"bk-bcs/bcs-common/common/blog"
 
@@ -84,6 +85,12 @@ func (clb *ClbClient) update4LayerListener(old, cur *loadbalance.CloudListener) 
 
 	blog.Infof("get %d backend to del: %v", len(backendsDel), backendsDel)
 	blog.Infof("get %d backend to add: %v", len(backendsNew), backendsNew)
+	for _, backend := range backendsNew {
+		clbBackendsAddMetric.WithLabelValues(backend.IP, strconv.Itoa(backend.Port)).Inc()
+	}
+	for _, backend := range backendsDel {
+		clbBackendsDeleteMetric.WithLabelValues(backend.IP, strconv.Itoa(backend.Port)).Inc()
+	}
 
 	//deregister old backend
 	if len(backendsDel) > 0 {
@@ -241,6 +248,12 @@ func (clb *ClbClient) updateRule(ls *loadbalance.CloudListener, ruleOld *loadbal
 	}
 
 	backendsDel, backendsNew := ruleOld.TargetGroup.GetDiffBackend(ruleUpdate.TargetGroup)
+	for _, backend := range backendsNew {
+		clbBackendsAddMetric.WithLabelValues(backend.IP, strconv.Itoa(backend.Port)).Inc()
+	}
+	for _, backend := range backendsDel {
+		clbBackendsDeleteMetric.WithLabelValues(backend.IP, strconv.Itoa(backend.Port)).Inc()
+	}
 
 	//2.1 deregister old backend
 	if len(backendsDel) > 0 {

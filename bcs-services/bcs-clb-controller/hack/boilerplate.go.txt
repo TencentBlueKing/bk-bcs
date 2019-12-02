@@ -10,18 +10,4 @@
  * limitations under the License.
  *
  */
-
-package clbingress
-
-import (
-	ingressv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
-)
-
-// IngressRegistry interface for clb ingress rule discovery
-type Registry interface {
-	AddIngressHandler(handler model.EventHandler)
-	ListIngresses() ([]*ingressv1.ClbIngress, error)
-	GetIngress(name string) (*ingressv1.ClbIngress, error)
-	SetIngress(*ingressv1.ClbIngress) error
-}
+ 

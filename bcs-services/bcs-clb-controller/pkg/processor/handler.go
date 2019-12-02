@@ -14,8 +14,10 @@
 package processor
 
 import (
+	"reflect"
 	"bk-bcs/bcs-common/common/blog"
 	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	ingressType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
 )
 
 type appServiceHandler struct {
@@ -55,14 +57,40 @@ func (handler *ingressHandler) RegisterProcessor(p *Processor) {
 }
 
 func (handler *ingressHandler) OnAdd(obj interface{}) {
+	ingress, ok := obj.(*ingressType.ClbIngress)
+	if ok {
+		blog.V(5).Infof("sync clb ingress add event: %s", ingress.ToString())
+	} else {
+		blog.Errorf("get object add %v, no a clb ingress object", obj)
+		return
+	}
 	handler.processor.SetUpdated()
 }
 
 func (handler *ingressHandler) OnUpdate(objOld, objNew interface{}) {
+	ingressNew, okNew := objNew.(*ingressType.ClbIngress)
+	ingressOld, okOld := objOld.(*ingressType.ClbIngress)
+	if okNew && okOld {
+		blog.V(5).Infof("sync clb ingress update event: %s, old %s", ingressNew.ToString(), ingressOld.ToString())
+	} else {
+		blog.Errorf("get object update %v, old %v, no a listener object", objNew, objOld)
+		return
+	}
+	if reflect.DeepEqual(ingressNew.Spec, ingressOld.Spec) {
+		blog.V(5).Infof("clb ingress new %s has no change, no need to call updater", ingressNew.ToString())
+		return
+	}
 	handler.processor.SetUpdated()
 }
 
 func (handler *ingressHandler) OnDelete(obj interface{}) {
+	ingress, ok := obj.(*ingressType.ClbIngress)
+	if ok {
+		blog.V(5).Infof("sync clb ingress delete event: %s", ingress.ToString())
+	} else {
+		blog.Errorf("get object delete %v, no a clb ingress object", obj)
+		return
+	}
 	handler.processor.SetUpdated()
 }
 

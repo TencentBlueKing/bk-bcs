@@ -198,3 +198,8 @@ func (aws *ElbClient) Delete(ls *loadbalance.CloudListener) error {
 	}
 	return nil
 }
+
+// ListListeners list all listener on clb instance controlled by this controller
+func (aws *ElbClient) ListListeners() ([]*loadbalance.CloudListener, error) {
+	return nil, nil
+}

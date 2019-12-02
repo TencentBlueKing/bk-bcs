@@ -48,8 +48,8 @@ deploy: manifests
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests:
-	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
-	cp ./config/crds/* ./deploy/helm/clb-controller-init/templates/
+	go run ../../vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
+	cp ./config/crds/* ../../docs/features/bcs-clb-controller/deploy/helm/clb-controller-init/templates/
 
 # Run go fmt against code
 fmt:
