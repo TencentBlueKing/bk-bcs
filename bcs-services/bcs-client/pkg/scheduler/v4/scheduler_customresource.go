@@ -56,12 +56,22 @@ func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, d
 	if len(name) == 0 {
 		return fmt.Errorf("Lost specified crd name")
 	}
+	//get exist data for version validation
+	crd, err := bs.GetCustomResourceDefinition(clusterID, name)
+	if err != nil {
+		return err
+	}
+	udpateObject := &v1beta1.CustomResourceDefinition{}
+	json.Unmarshal(data, udpateObject)
+	udpateObject.ResourceVersion = crd.ResourceVersion
+	updateData, _ := json.Marshal(udpateObject)
+	//update work flow
 	preURL := fmt.Sprintf(bcsScheudlerCustomResourceDefinitionURL, bs.bcsAPIAddress)
 	reqURL := fmt.Sprintf("%s/%s", preURL, name)
 	resp, err := bs.requester.DoForResponse(
 		reqURL,
 		http.MethodPut,
-		data,
+		updateData,
 		getClusterIDHeader(clusterID),
 	)
 	if err != nil {
@@ -140,7 +150,7 @@ func (bs *bcsScheduler) GetCustomResourceDefinition(clusterID string, name strin
 	json.Unmarshal(resp.Reply, crd)
 	//clean info
 	crd.SelfLink = ""
-	crd.ResourceVersion = ""
+	//crd.ResourceVersion = ""
 	crd.Generation = 0
 	crd.UID = ""
 	return crd, nil
@@ -228,11 +238,22 @@ func (bs *bcsScheduler) UpdateCustomResource(clusterID, apiVersion, plural, name
 	if len(data) == 0 {
 		return fmt.Errorf("lost detail for creation")
 	}
+	oldData, err := bs.GetCustomResource(clusterID, apiVersion, plural, namespace, name)
+	if err != nil {
+		return err
+	}
+	//copy meta data for update
+	oldObject, _ := simplejson.NewJson(oldData)
+	updateObject, _ := simplejson.NewJson(data)
+	oldMeta := oldObject.Get("metadata")
+	updateObject.Set("metadata", oldMeta)
+	updateData, _ := updateObject.Encode()
+	//ready to Update
 	baseURL := fmt.Sprintf(bcsSchedulerCustomResourceURL, bs.bcsAPIAddress)
 	resp, err := bs.requester.DoForResponse(
 		fmt.Sprintf("%s/%s/namespaces/%s/%s/%s", baseURL, apiVersion, namespace, plural, name),
 		http.MethodPut,
-		data,
+		updateData,
 		getClusterIDHeader(clusterID),
 	)
 	if err != nil {
