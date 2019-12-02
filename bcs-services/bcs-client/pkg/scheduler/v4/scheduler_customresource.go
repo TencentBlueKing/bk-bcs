@@ -60,7 +60,7 @@ func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, d
 	reqURL := fmt.Sprintf("%s/%s", preURL, name)
 	resp, err := bs.requester.DoForResponse(
 		reqURL,
-		http.MethodPost,
+		http.MethodPut,
 		data,
 		getClusterIDHeader(clusterID),
 	)
