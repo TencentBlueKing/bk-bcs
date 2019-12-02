@@ -309,10 +309,32 @@ type CloudListenerSpec struct {
 	Rules       RuleList     `json:"rules,omitempty"`       //only for http/https
 }
 
+// CloudListenerBackendHealthStatus backend health status of listener
+type CloudListenerBackendHealthStatus struct {
+	IP                 string `json:"ip"`
+	Port               int    `json:"port"`
+	HealthStatus       bool   `json:"healthStatus"`
+	TargetID           string `json:"targetId"`
+	HealthStatusDetail string `json:"healthStatusDetail"`
+}
+
+// CloudListenerRuleHealthStatus rule health status of listener
+type CloudListenerRuleHealthStatus struct {
+	Domain   string                              `json:"domain"`
+	URL      string                              `json:"url"`
+	Backends []*CloudListenerBackendHealthStatus `json:"backends,omitempty"`
+}
+
+// CloudListenerHealthStatus health status of listener
+type CloudListenerHealthStatus struct {
+	RulesHealth []*CloudListenerRuleHealthStatus `json:"rules,omitempty"`
+}
+
 // CloudListenerStatus defines the observed state of CloudListener
 type CloudListenerStatus struct {
 	// last updated timestamp
-	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
+	LastUpdateTime metav1.Time                `json:"lastUpdateTime,omitempty"`
+	HealthStatus   *CloudListenerHealthStatus `json:"healthStatus,omitempty"`
 }
 
 // +genclient

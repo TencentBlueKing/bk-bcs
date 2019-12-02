@@ -43,4 +43,5 @@ type MesosDriverConfig struct {
 	ClientCert *CertConfig
 
 	AdmissionWebhook bool
+	Kubeconfig       string
 }

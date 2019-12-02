@@ -23,4 +23,5 @@ type Registry interface {
 	AddIngressHandler(handler model.EventHandler)
 	ListIngresses() ([]*ingressv1.ClbIngress, error)
 	GetIngress(name string) (*ingressv1.ClbIngress, error)
+	SetIngress(*ingressv1.ClbIngress) error
 }

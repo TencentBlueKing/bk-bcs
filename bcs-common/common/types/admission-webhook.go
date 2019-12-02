@@ -15,6 +15,10 @@ package types
 
 import "fmt"
 
+const (
+	DefaultAdmissionNamespace = "bkbcs"
+)
+
 type AdmissionWebhookConfiguration struct {
 	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata"`
@@ -206,10 +210,16 @@ const (
 )
 
 type WebhookClientConfig struct {
+	//url
+	Url string `json:"url"`
 	//pem encoded ca cert that signs the server cert used by the webhook
 	CaBundle string `json:"caBundle"`
 	//webhook service namespace
 	Namespace string `json:"namespace"`
 	//webhook service name
 	Name string `json:"name"`
+	//url path
+	Path string `json:"path"`
+	//port
+	Port int `json:"port"`
 }
