@@ -36,7 +36,7 @@ func updateCustomResourceDefinition(c *utils.ClientContext) error {
 	if version != "v4" {
 		return fmt.Errorf("custom resource definition only support v4 `apiVersion`")
 	}
-	_, name, err := utils.ParseNamespaceNameFromJSON(data)
+	name, err := utils.ParseNameFromJSON(data)
 	if err != nil {
 		return err
 	}
@@ -46,6 +46,39 @@ func updateCustomResourceDefinition(c *utils.ClientContext) error {
 		return fmt.Errorf("failed to update CustomResourceDefinition: %v", err)
 	}
 
-	fmt.Printf("success to update CustomResourceDefinition.\n")
+	fmt.Printf("success to update CustomResourceDefinition: %s\n", name)
+	return nil
+}
+
+func updateCustomResource(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionType); err != nil {
+		return err
+	}
+
+	data, err := c.FileData()
+	if err != nil {
+		return err
+	}
+
+	version, kind, err := utils.ParseAPIVersionAndKindFromJSON(data)
+	if err != nil {
+		return err
+	}
+	namespace, name, err := utils.ParseNamespaceNameFromJSON(data)
+	if err != nil {
+		return err
+	}
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	//validate command line option type
+	plural, err := utils.ValidateCustomResourceType(scheduler, c.ClusterID(), version, kind, c.String(utils.OptionType))
+	if err != nil {
+		return err
+	}
+	err = scheduler.UpdateCustomResource(c.ClusterID(), version, plural, namespace, name, data)
+	if err != nil {
+		return fmt.Errorf("failed to create %s: %v", plural, err)
+	}
+
+	fmt.Printf("success to update %s: %s.\n", plural, name)
 	return nil
 }

@@ -46,10 +46,7 @@ func NewInspectCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := inspect(utils.NewClientContext(c)); err != nil {
-				return err
-			}
-			return nil
+			return inspect(utils.NewClientContext(c))
 		},
 	}
 }
@@ -82,7 +79,7 @@ func inspect(c *utils.ClientContext) error {
 		return inspectCustomResourceDefinition(c)
 	default:
 		//unkown type, try Custom Resource
-		return fmt.Errorf("invalid type: %s", resourceType)
+		return inspectCustomResource(c)
 	}
 }
 

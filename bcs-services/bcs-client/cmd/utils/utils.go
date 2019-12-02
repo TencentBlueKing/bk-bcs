@@ -261,7 +261,7 @@ func TryIndent(data interface{}) []byte {
 //TryBytesIndent pretty print
 func TryBytesIndent(data []byte) []byte {
 	indented := &bytes.Buffer{}
-	if err := json.Indent(indented, data, "", "\t"); err == nil {
+	if err := json.Indent(indented, data, "", "  "); err == nil {
 		return indented.Bytes()
 	}
 	return data
@@ -280,6 +280,21 @@ func ParseNamespaceFromJSON(ctx []byte) (string, error) {
 		return "", fmt.Errorf("parse namespace failed or json structure error")
 	}
 	return namespace, nil
+}
+
+//ParseNameFromJSON reading name from specified json file
+func ParseNameFromJSON(ctx []byte) (string, error) {
+	js, err := simplejson.NewJson(ctx)
+	if err != nil {
+		return "", fmt.Errorf("decode json in file failed, err: %v", err)
+	}
+
+	jsMetaData := js.Get("metadata")
+	name, _ := jsMetaData.Get("name").String()
+	if name == "" {
+		return "", fmt.Errorf("parse name failed or json structure error")
+	}
+	return name, nil
 }
 
 //ParseNamespaceNameFromJSON reading namespace & name from specified json file
@@ -309,7 +324,7 @@ func ParseAPIVersionAndKindFromJSON(ctx []byte) (string, string, error) {
 	}
 
 	version, _ := js.Get("apiVersion").String()
-	kind, _ := js.Get("namespace").String()
+	kind, _ := js.Get("kind").String()
 	if version == "" {
 		return "", "", fmt.Errorf("parse apiVersion failed or json structure error")
 	}

@@ -47,7 +47,7 @@ func createCustomResourceDefinition(c *utils.ClientContext) error {
 }
 
 func createCustomResource(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionType); err != nil {
 		return err
 	}
 
@@ -60,13 +60,21 @@ func createCustomResource(c *utils.ClientContext) error {
 	if err != nil {
 		return err
 	}
-
-	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	err = scheduler.CreateCustomResourceDefinition(c.ClusterID(), data)
+	namespace, name, err := utils.ParseNamespaceNameFromJSON(data)
 	if err != nil {
-		return fmt.Errorf("failed to create CustomResourceDefinition: %v", err)
+		return err
+	}
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	//validate command line option type
+	plural, err := utils.ValidateCustomResourceType(scheduler, c.ClusterID(), version, kind, c.String(utils.OptionType))
+	if err != nil {
+		return err
+	}
+	err = scheduler.CreateCustomResource(c.ClusterID(), version, plural, namespace, data)
+	if err != nil {
+		return fmt.Errorf("failed to create %s: %v", plural, err)
 	}
 
-	fmt.Printf("success to create CustomResourceDefinition.\n")
+	fmt.Printf("success to create %s: %s\n", plural, name)
 	return nil
 }

@@ -48,10 +48,7 @@ func NewListCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := list(utils.NewClientContext(c)); err != nil {
-				return err
-			}
-			return nil
+			return list(utils.NewClientContext(c))
 		},
 	}
 }

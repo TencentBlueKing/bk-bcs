@@ -16,6 +16,8 @@ package inspect
 import (
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"bytes"
+	"encoding/json"
 	"fmt"
 )
 
@@ -26,8 +28,32 @@ func inspectCustomResourceDefinition(c *utils.ClientContext) error {
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
 	crd, err := scheduler.GetCustomResourceDefinition(c.ClusterID(), c.String(utils.OptionName))
 	if err != nil {
-		return fmt.Errorf("failed to Get CustomResourceDefinition: %v", err)
+		return fmt.Errorf("failed to Get CustomResourceDefinition: %s", err.Error())
 	}
-
 	return printInspect(crd)
+}
+
+func inspectCustomResource(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName); err != nil {
+		return err
+	}
+	namespace := c.String(utils.OptionNamespace)
+	name := c.String(utils.OptionName)
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	//validate command line option type
+	apiVersion, plural, err := utils.GetCustomResourceType(scheduler, c.ClusterID(), c.String(utils.OptionType))
+	if err != nil {
+		return err
+	}
+	crd, err := scheduler.GetCustomResource(c.ClusterID(), apiVersion, plural, namespace, name)
+	if err != nil {
+		return fmt.Errorf("failed to Get %s: %v", plural, err)
+	}
+	utils.DebugPrintf("original CustomResource: %s", string(crd))
+	var buffer bytes.Buffer
+	if err := json.Indent(&buffer, crd, "", "  "); err != nil {
+		return fmt.Errorf("pretty print CustomResource failed, %s", err.Error())
+	}
+	fmt.Println(buffer.String())
+	return nil
 }

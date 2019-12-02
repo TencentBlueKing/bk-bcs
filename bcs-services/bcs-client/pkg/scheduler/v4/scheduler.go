@@ -92,15 +92,15 @@ type Scheduler interface {
 		CustomResource section, depend on ListCustomResourceDefinition for validation
 	*/
 	//CreateResource create CRD by definition file
-	CreateCustomResource(clusterID, namespace string, data []byte) error
+	CreateCustomResource(clusterID, apiVersion, plural, namespace string, data []byte) error
 	//UpdateResource replace specified CRD
-	UpdateCustomResource(clusterID, namespace, name string, data []byte) error
+	UpdateCustomResource(clusterID, apiVersion, plural, namespace, name string, data []byte) error
 	//ListCustomResource list all created CRD
-	ListCustomResource(clusterID, namespace string) ([]byte, error)
+	ListCustomResource(clusterID, apiVersion, plural, namespace string) ([]byte, error)
 	//GetCustomResource get specified CRD
-	GetCustomResource(clusterID, namespace, name string) ([]byte, error)
+	GetCustomResource(clusterID, apiVersion, plural, namespace, name string) ([]byte, error)
 	//DeleteCustomResource delete specified CRD
-	DeleteCustomResource(clusterID, namespace, name string) error
+	DeleteCustomResource(clusterID, apiVersion, plural, namespace, name string) error
 }
 
 const (
@@ -121,7 +121,7 @@ const (
 	bcsSchedulerOfferURI                    = "%s/bcsapi/v4/scheduler/mesos/cluster/current/offers"
 	bcsSchedulerAppDefinitionURI            = "%s/bcsapi/v4/scheduler/mesos/definition/application/%s/%s"
 	bcsSchedulerDeployDefinitionURI         = "%s/bcsapi/v4/scheduler/mesos/definition/deployment/%s/%s"
-	bcsSchedulerCustomResourceURL           = "%s/bcsapi/v4/scheduler/mesos/customresources/%s/%s"
+	bcsSchedulerCustomResourceURL           = "%s/bcsapi/v4/scheduler/mesos/customresources"
 	bcsScheudlerCustomResourceDefinitionURL = "%s/bcsapi/v4/scheduler/mesos/customresourcedefinitions"
 )
 

@@ -39,10 +39,7 @@ func NewCreateCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := create(utils.NewClientContext(c)); err != nil {
-				return err
-			}
-			return nil
+			return create(utils.NewClientContext(c))
 		},
 	}
 }
