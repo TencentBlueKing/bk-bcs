@@ -42,7 +42,7 @@ func createCustomResourceDefinition(c *utils.ClientContext) error {
 		return fmt.Errorf("failed to create CustomResourceDefinition: %v", err)
 	}
 
-	fmt.Printf("success to create CustomResourceDefinition.\n")
+	fmt.Printf("success to create CustomResourceDefinition\n")
 	return nil
 }
 
@@ -75,6 +75,6 @@ func createCustomResource(c *utils.ClientContext) error {
 		return fmt.Errorf("failed to create %s: %v", plural, err)
 	}
 
-	fmt.Printf("success to create %s: %s\n", plural, name)
+	fmt.Printf("success to create %s: %s/%s\n", plural, namespace, name)
 	return nil
 }

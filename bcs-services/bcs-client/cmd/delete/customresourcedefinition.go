@@ -30,3 +30,19 @@ func deleteCustomResourceDefinition(c *utils.ClientContext) error {
 	fmt.Printf("success to delete customresourcedefinition %s\n", c.String(utils.OptionName))
 	return nil
 }
+
+func deleteCustomResource(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionName, utils.OptionNamespace); err != nil {
+		return err
+	}
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	apiVersion, plural, err := utils.GetCustomResourceType(scheduler, c.ClusterID(), c.String(utils.OptionType))
+	if err != nil {
+		return err
+	}
+	if err := scheduler.DeleteCustomResource(c.ClusterID(), apiVersion, plural, c.Namespace(), c.String(utils.OptionName)); err != nil {
+		return fmt.Errorf("failed to delete customresourcedefinition: %v", err)
+	}
+	fmt.Printf("success to delete %s: %s/%s\n", plural, c.Namespace(), c.String(utils.OptionName))
+	return nil
+}
