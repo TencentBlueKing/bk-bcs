@@ -11,37 +11,35 @@
  *
  */
 
-package config
+package main
 
 import (
-//"bk-bcs/bcs-common/common/static"
+	"os"
+	"runtime"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-common/common/license"
+	"bk-bcs/bcs-services/bcs-logbeat-sidecar/app"
+	"bk-bcs/bcs-services/bcs-logbeat-sidecar/app/options"
 )
 
-//CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	op := options.NewSidecarOption()
+	conf.Parse(op)
 
-//MesosDriverConfig is a configuration of mesos driver
-type MesosDriverConfig struct {
-	Address      string
-	Port         uint
-	ExternalIp   string
-	ExternalPort uint
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
+	blog.Info("init logs success")
+	license.CheckLicense(op.LicenseServerConfig)
 
-	MetricPort uint
+	err := app.Run(op)
+	if err != nil {
+		blog.Errorf(err.Error())
+		os.Exit(1)
+	}
 
-	RegDiscvSvr   string
-	SchedDiscvSvr string
-	Cluster       string
-
-	ServCert   *CertConfig
-	ClientCert *CertConfig
-
-	AdmissionWebhook bool
-	Kubeconfig       string
+	ch := make(chan bool)
+	<-ch
 }

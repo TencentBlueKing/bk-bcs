@@ -72,6 +72,11 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 }
 
 func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*types.Version, error) {
+	//check ObjectMeta is valid
+	err := param.MetaIsValid()
+	if err != nil {
+		return nil, err
+	}
 
 	//var version types.Version
 	version := &types.Version{
@@ -114,7 +119,7 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 		version.Labels[k] = v
 	}
 
-	version, err := s.setVersionWithPodSpec(version, param.ReplicaControllerSpec.Template)
+	version, err = s.setVersionWithPodSpec(version, param.ReplicaControllerSpec.Template)
 	if err != nil {
 		return nil, err
 	}

@@ -234,6 +234,11 @@ func (s *Scheduler) scaleDeployment(ns, name string, instances int) (string, err
 }
 
 func (s *Scheduler) newDeploymentDefWithParam(param *bcstype.BcsDeployment) (*types.DeploymentDef, error) {
+	//check ObjectMeta is valid
+	err := param.MetaIsValid()
+	if err != nil {
+		return nil, err
+	}
 
 	deploymentDef := &types.DeploymentDef{
 		ObjectMeta: param.ObjectMeta,
@@ -294,7 +299,7 @@ func (s *Scheduler) newDeploymentDefWithParam(param *bcstype.BcsDeployment) (*ty
 		version.Labels[k] = v
 	}
 
-	version, err := s.setVersionWithPodSpec(version, param.Spec.Template)
+	version, err = s.setVersionWithPodSpec(version, param.Spec.Template)
 	if err != nil {
 		return nil, err
 	}
