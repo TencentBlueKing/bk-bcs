@@ -76,9 +76,9 @@ func updateCustomResource(c *utils.ClientContext) error {
 	}
 	err = scheduler.UpdateCustomResource(c.ClusterID(), version, plural, namespace, name, data)
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %v", plural, err)
+		return fmt.Errorf("failed to update %s: %v", plural, err)
 	}
 
-	fmt.Printf("success to update %s: %s.\n", plural, name)
+	fmt.Printf("success to update %s: %s\n", plural, name)
 	return nil
 }

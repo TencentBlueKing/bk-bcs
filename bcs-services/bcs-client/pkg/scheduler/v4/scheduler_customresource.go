@@ -231,7 +231,7 @@ func (bs *bcsScheduler) UpdateCustomResource(clusterID, apiVersion, plural, name
 	baseURL := fmt.Sprintf(bcsSchedulerCustomResourceURL, bs.bcsAPIAddress)
 	resp, err := bs.requester.DoForResponse(
 		fmt.Sprintf("%s/%s/namespaces/%s/%s/%s", baseURL, apiVersion, namespace, plural, name),
-		http.MethodPost,
+		http.MethodPut,
 		data,
 		getClusterIDHeader(clusterID),
 	)
