@@ -367,6 +367,10 @@ func (bs *bcsScheduler) DeleteCustomResource(clusterID, apiVersion, plural, name
 	replyKind, _ := json.Get("kind").String()
 	if replyKind == StatusKind {
 		msg, _ := json.Get("message").String()
+		if msg == "" {
+			//success
+			return nil
+		}
 		return fmt.Errorf("%s", msg)
 	}
 	return nil
