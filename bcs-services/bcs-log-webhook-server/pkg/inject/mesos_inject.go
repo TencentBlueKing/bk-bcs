@@ -33,6 +33,7 @@ type Meta struct {
 	commtypes.ObjectMeta `json:"metadata"`
 }
 
+//MesosLogInject inject bcs log config to container and respond to mesos
 func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Request) {
 	blog.Infof("received inject request")
 	if whSvr.EngineType == "kubernetes" {
@@ -71,6 +72,7 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 
 	blog.Info(string(meta.Kind))
 
+	// action to mesos application resource
 	if meta.Kind == commtypes.BcsDataType_APP {
 		var application, injectedApplication *commtypes.ReplicaController
 		err := json.Unmarshal(body, &application)
@@ -80,17 +82,7 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 			http.Error(w, message.Error(), http.StatusInternalServerError)
 		}
 
-		blog.Infof("%v", *application)
-		for _, container := range application.ReplicaControllerSpec.Template.PodSpec.Containers {
-			blog.Infof("%v", container.Env)
-		}
-
 		injectedApplication, err = whSvr.mesosApplicationInject(application)
-
-		blog.Infof("%v", *injectedApplication)
-		for _, container := range injectedApplication.ReplicaControllerSpec.Template.PodSpec.Containers {
-			blog.Infof("%v", container.Env)
-		}
 
 		resp, err := json.Marshal(injectedApplication)
 		if err != nil {
@@ -101,7 +93,7 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 			blog.Errorf("Could not write response: %v", err)
 			http.Error(w, fmt.Sprintf("could write response: %v", err), http.StatusInternalServerError)
 		}
-	} else if meta.Kind == commtypes.BcsDataType_DEPLOYMENT {
+	} else if meta.Kind == commtypes.BcsDataType_DEPLOYMENT { // action to mesos deployment resource
 		var deployment, injectedDeployment *commtypes.BcsDeployment
 		err := json.Unmarshal(body, &deployment)
 		if err != nil {
@@ -109,8 +101,6 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 			message := fmt.Errorf("could not decode body to deployment: %s", err.Error())
 			http.Error(w, message.Error(), http.StatusInternalServerError)
 		}
-
-		blog.Infof("%v", *deployment)
 
 		injectedDeployment, err = whSvr.mesosDeploymentInject(deployment)
 		resp, err := json.Marshal(injectedDeployment)
@@ -125,12 +115,14 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// mesosApplicationInject inject bcs log config to containers for applications
 func (whSvr *WebhookServer) mesosApplicationInject(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {
 	if !mesosInjectRequired(ignoredNamespaces, &application.ObjectMeta) {
 		blog.Infof("Skipping %s/%s due to policy check", application.ObjectMeta.NameSpace, application.ObjectMeta.Name)
 		return application, nil
 	}
 
+	// get all BcsLogConfig
 	bcsLogConfs, err := whSvr.BcsLogConfigLister.List(labels.Everything())
 	if err != nil {
 		blog.Errorf("list bcslogconfig error %s", err.Error())
@@ -151,6 +143,7 @@ func (whSvr *WebhookServer) mesosApplicationInject(application *commtypes.Replic
 		return application, nil
 	}
 
+	// handle business modules log inject
 	var injectedContainers []commtypes.Container
 	for _, container := range application.ReplicaControllerSpec.Template.PodSpec.Containers {
 		matchedLogConf := findMatchedConfigType(container.Name, bcsLogConfs)
@@ -170,12 +163,14 @@ func (whSvr *WebhookServer) mesosApplicationInject(application *commtypes.Replic
 	return application, nil
 }
 
+// mesosDeploymentInject inject bcs log config to containers for deployment
 func (whSvr *WebhookServer) mesosDeploymentInject(deployment *commtypes.BcsDeployment) (*commtypes.BcsDeployment, error) {
 	if !mesosInjectRequired(ignoredNamespaces, &deployment.ObjectMeta) {
 		blog.Infof("Skipping %s/%s due to policy check", deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name)
 		return deployment, nil
 	}
 
+	// get all BcsLogConfig
 	bcsLogConfs, err := whSvr.BcsLogConfigLister.List(labels.Everything())
 	if err != nil {
 		blog.Errorf("list bcslogconfig error %s", err.Error())
@@ -196,6 +191,7 @@ func (whSvr *WebhookServer) mesosDeploymentInject(deployment *commtypes.BcsDeplo
 		return deployment, nil
 	}
 
+	// handle business modules log inject
 	var injectedContainers []commtypes.Container
 	for _, container := range deployment.Spec.Template.PodSpec.Containers {
 		matchedLogConf := findMatchedConfigType(container.Name, bcsLogConfs)
@@ -210,6 +206,7 @@ func (whSvr *WebhookServer) mesosDeploymentInject(deployment *commtypes.BcsDeplo
 	return deployment, nil
 }
 
+// injectMesosContainer injects bcs log config to an container
 func (whSvr *WebhookServer) injectMesosContainer(namespace string, container commtypes.Container, logConf *bcsv2.BcsLogConfig) commtypes.Container {
 	var envs []commtypes.EnvVar
 	dataIdEnv := commtypes.EnvVar{
@@ -254,6 +251,7 @@ func (whSvr *WebhookServer) injectMesosContainer(namespace string, container com
 	return container
 }
 
+// injectMesosContainers injects bcs log config to all containers
 func (whSvr *WebhookServer) injectMesosContainers(namespace string, podTemplate *commtypes.PodTemplateSpec, logConf *bcsv2.BcsLogConfig) *commtypes.PodTemplateSpec {
 
 	var injectedContainers []commtypes.Container
@@ -266,6 +264,7 @@ func (whSvr *WebhookServer) injectMesosContainers(namespace string, podTemplate 
 	return podTemplate
 }
 
+// mesosInjectRequired validates whether an application or deployment should be injected
 func mesosInjectRequired(ignored []string, metadata *commtypes.ObjectMeta) bool {
 
 	annotations := metadata.GetAnnotations()

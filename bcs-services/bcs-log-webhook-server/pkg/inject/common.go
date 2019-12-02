@@ -29,6 +29,7 @@ var ignoredNamespaces = []string{
 	NamespaceBcs,
 }
 
+// findBcsSystemConfigType get the matced bcs-system BcsLogConfig
 func findBcsSystemConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig {
 	var matchedLogConf *bcsv2.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
@@ -40,6 +41,7 @@ func findBcsSystemConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogCon
 	return matchedLogConf
 }
 
+// findMatchedConfigType get the matched BcsLogConfig
 func findMatchedConfigType(name string, bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig {
 	var matchedLogConf *bcsv2.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
