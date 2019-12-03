@@ -263,12 +263,12 @@ func (mm *Manager) bcsendpointConvertAppNode(bcsEndpoint *v2.BcsEndpoint) []svcc
 			NodeIP:  endpoint.ContainerIP,
 			ProxyIP: endpoint.NodeIP,
 		}
-		nodes = append(nodes, node)
 		if len(endpoint.Ports) != 0 {
 			node.Ports = convertContainerPortMapping(endpoint.Ports)
 		} else {
 			blog.Warnf("BcsEndpoints %s/%s Endpoint %s lost Port Information.", bcsEndpoint.GetNamespace(), bcsEndpoint.GetName(), endpoint.Target.Name)
 		}
+		nodes = append(nodes, node)
 	}
 	return nodes
 

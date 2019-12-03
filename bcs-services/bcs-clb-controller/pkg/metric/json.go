@@ -11,35 +11,33 @@
  *
  */
 
-package discovery
+package metric
 
-import "bk-bcs/bcs-services/bcs-sd-prometheus/types"
+import (
+	"github.com/emicklei/go-restful"
 
-const (
-	DefaultBcsModuleLabelKey = "bcs_module"
-	DiscoveryFileName        = "_sd_config.json"
+	"bk-bcs/bcs-common/common/blog"
 )
 
-const (
-	CadvisorModule   = "cadvisor"
-	NodeexportModule = "node_export"
-)
-
-type Discovery interface {
-	//start
-	Start() error
-
-	// GetDiscoveryKey
-	GetDiscoveryKey() string
-
-	// get prometheus service discovery config
-	GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error)
-
-	// get prometheus sd config file path
-	GetPromSdConfigFile() string
-
-	//register event handle function
-	RegisterEventFunc(handleFunc EventHandleFunc)
+// JSONStatus json status
+type JSONStatus struct {
+	hFunc restful.RouteFunction
 }
 
-type EventHandleFunc func(discoveryKey string)
+// NewJSONStatus new json status object
+func NewJSONStatus(hf restful.RouteFunction) Resource {
+	return &JSONStatus{
+		hFunc: hf,
+	}
+}
+
+// Register implements metric.Resource interface
+func (js *JSONStatus) Register(container *restful.Container) {
+	blog.Infof("register json status resource to metric")
+	ws := new(restful.WebService)
+	ws.Path("/status").
+		Consumes(restful.MIME_JSON, restful.MIME_XML).
+		Produces(restful.MIME_JSON, restful.MIME_XML)
+	ws.Route(ws.GET("/").To(js.hFunc))
+	container.Add(ws)
+}

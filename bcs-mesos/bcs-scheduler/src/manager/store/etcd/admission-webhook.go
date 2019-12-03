@@ -21,6 +21,7 @@ import (
 )
 
 func (store *managerStore) CheckAdmissionWebhookExist(admission *commtypes.AdmissionWebhookConfiguration) (string, bool) {
+	admission.NameSpace = commtypes.DefaultAdmissionNamespace
 	client := store.BkbcsClient.AdmissionWebhookConfigurations(admission.NameSpace)
 	obj, err := client.Get(admission.Name, metav1.GetOptions{})
 	if err == nil {
@@ -31,6 +32,7 @@ func (store *managerStore) CheckAdmissionWebhookExist(admission *commtypes.Admis
 }
 
 func (store *managerStore) SaveAdmissionWebhook(admission *commtypes.AdmissionWebhookConfiguration) error {
+	admission.NameSpace = commtypes.DefaultAdmissionNamespace
 	err := store.checkNamespace(admission.NameSpace)
 	if err != nil {
 		return err
@@ -64,7 +66,7 @@ func (store *managerStore) SaveAdmissionWebhook(admission *commtypes.AdmissionWe
 }
 
 func (store *managerStore) FetchAdmissionWebhook(ns, name string) (*commtypes.AdmissionWebhookConfiguration, error) {
-
+	ns = commtypes.DefaultAdmissionNamespace
 	client := store.BkbcsClient.AdmissionWebhookConfigurations(ns)
 	v2Admission, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
@@ -75,6 +77,7 @@ func (store *managerStore) FetchAdmissionWebhook(ns, name string) (*commtypes.Ad
 }
 
 func (store *managerStore) DeleteAdmissionWebhook(ns, name string) error {
+	ns = commtypes.DefaultAdmissionNamespace
 	client := store.BkbcsClient.AdmissionWebhookConfigurations(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
 	return err

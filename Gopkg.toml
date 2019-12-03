@@ -50,6 +50,10 @@ required = [
   "github.com/google/cadvisor",
   "github.com/haproxytech/models",
   "github.com/haproxytech/client-native/runtime",
+  "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common",
+  "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317",
+  "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312",
+  "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312",
 ]
 
 [[override]]
@@ -357,7 +361,7 @@ required = [
 
 [[constraint]]
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
-  version = "v3.0.88"
+  version = "v3.0.103"
 
 [[constraint]]
   name = "github.com/haproxytech/models"

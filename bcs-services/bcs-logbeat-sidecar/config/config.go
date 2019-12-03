@@ -11,35 +11,25 @@
  *
  */
 
-package discovery
+package config
 
-import "bk-bcs/bcs-services/bcs-sd-prometheus/types"
-
-const (
-	DefaultBcsModuleLabelKey = "bcs_module"
-	DiscoveryFileName        = "_sd_config.json"
-)
-
-const (
-	CadvisorModule   = "cadvisor"
-	NodeexportModule = "node_export"
-)
-
-type Discovery interface {
-	//start
-	Start() error
-
-	// GetDiscoveryKey
-	GetDiscoveryKey() string
-
-	// get prometheus service discovery config
-	GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error)
-
-	// get prometheus sd config file path
-	GetPromSdConfigFile() string
-
-	//register event handle function
-	RegisterEventFunc(handleFunc EventHandleFunc)
+//CertConfig is configuration of Cert
+type CertConfig struct {
+	CAFile     string
+	CertFile   string
+	KeyFile    string
+	CertPasswd string
+	IsSSL      bool
 }
 
-type EventHandleFunc func(discoveryKey string)
+type Config struct {
+	DockerSock   string
+	LogbeatDir   string
+	TemplateFile string
+	PrefixFile   string
+}
+
+//NewConfig create a config object
+func NewConfig() *Config {
+	return &Config{}
+}
