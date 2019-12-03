@@ -15,24 +15,10 @@ package backend
 
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
-	"fmt"
 )
 
 //save admission webhook
 func (b *backend) SaveAdmissionWebhook(admission *commtypes.AdmissionWebhookConfiguration) error {
-	admissions, err := b.FetchAllAdmissionWebhooks()
-	if err != nil {
-		return err
-	}
-	for _, currAdmission := range admissions {
-		if currAdmission.ResourcesRef.Operation == admission.ResourcesRef.Operation &&
-			currAdmission.ResourcesRef.Kind == admission.ResourcesRef.Kind {
-			return fmt.Errorf("AdmissionWebhookConfiguration Operation %s Kind %s conflict with "+
-				"AdmissionWebhook(%s:%s)", admission.ResourcesRef.Operation, admission.ResourcesRef.Kind,
-				currAdmission.NameSpace, currAdmission.Name)
-		}
-	}
-
 	return b.store.SaveAdmissionWebhook(admission)
 }
 
