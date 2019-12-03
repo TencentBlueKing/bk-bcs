@@ -36,36 +36,6 @@ import (
 )
 
 var (
-	clbIngressRulesMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "clb",
-		Subsystem: "updater",
-		Name:      "ingress_rules",
-		Help:      "clb ingress rule list",
-	}, []string{"service", "namespace", "protocol", "clbport", "stateful"})
-	clbBackendsMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "clb",
-		Subsystem: "updater",
-		Name:      "backends",
-		Help:      "clb backend list",
-	}, []string{"listener", "protocol", "ip", "port", "host", "path"})
-	clbBackendsAddLastChangeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "clb",
-		Subsystem: "updater",
-		Name:      "last_change_add_backends",
-		Help:      "clb backend add in last change",
-	}, []string{"listener", "protocol", "ip", "port", "host", "path"})
-	clbBackendsUpdateLastChangeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "clb",
-		Subsystem: "updater",
-		Name:      "last_change_update_backends",
-		Help:      "clb backend update in last change",
-	}, []string{"listener", "protocol", "ip", "port", "host", "path"})
-	clbBackendsDeleteLastChangeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "clb",
-		Subsystem: "updater",
-		Name:      "last_change_delete_backends",
-		Help:      "clb backend change in last change",
-	}, []string{"listener", "protocol", "ip", "port", "host", "path"})
 	updateTotalDurationMetric = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
@@ -92,172 +62,34 @@ var (
 		Name:      "listener_op_apiserver_errors",
 		Help:      "clb listener apiserver operation errors",
 	}, []string{"action"})
-	clbListenersAddLastChangeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	clbListenersAddMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
-		Name:      "last_change_add_listeners",
-		Help:      "added listener number last time",
-	}, []string{"name", "protocol", "port"})
-	clbListenersUpdateLastChangeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "add_listeners",
+		Help:      "added listener number",
+	}, []string{"name"})
+	clbListenersUpdateMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
-		Name:      "last_change_update_listeners",
-		Help:      "updated listener number last time",
-	}, []string{"name", "protocol", "port"})
-	clbListenersDeleteLastChangeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "update_listeners",
+		Help:      "updated listener number",
+	}, []string{"name"})
+	clbListenersDeleteMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
-		Name:      "last_change_delete_listeners",
-		Help:      "deleted listener number last time",
-	}, []string{"name", "protocol", "port"})
-	ingressInvalid = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "clb",
-		Subsystem: "updater",
-		Name:      "ingress_invalid",
-		Help:      "clb ingresses is invalid or not",
-	})
+		Name:      "delete_listeners",
+		Help:      "deleted listener number",
+	}, []string{"name"})
 )
 
-func addIngressListToMetric(ingressList []*ingressType.ClbIngress) {
-	clbIngressRulesMetric.Reset()
-	for _, ingress := range ingressList {
-		for _, tcp := range ingress.Spec.TCP {
-			clbIngressRulesMetric.With(prometheus.Labels{
-				"service":   tcp.ServiceName,
-				"namespace": tcp.Namespace,
-				"protocol":  cloudListenerType.ClbListenerProtocolTCP,
-				"clbport":   strconv.Itoa(tcp.ClbPort),
-				"stateful":  "false",
-			}).Inc()
-		}
-		for _, udp := range ingress.Spec.UDP {
-			clbIngressRulesMetric.With(prometheus.Labels{
-				"service":   udp.ServiceName,
-				"namespace": udp.Namespace,
-				"protocol":  cloudListenerType.ClbListenerProtocolUDP,
-				"clbport":   strconv.Itoa(udp.ClbPort),
-				"stateful":  "false",
-			}).Inc()
-		}
-		for _, http := range ingress.Spec.HTTP {
-			clbIngressRulesMetric.With(prometheus.Labels{
-				"service":   http.ServiceName,
-				"namespace": http.Namespace,
-				"protocol":  cloudListenerType.ClbListenerProtocolHTTP,
-				"clbport":   strconv.Itoa(http.ClbPort),
-				"stateful":  "false",
-			}).Inc()
-		}
-		for _, https := range ingress.Spec.HTTPS {
-			clbIngressRulesMetric.With(prometheus.Labels{
-				"service":   https.ServiceName,
-				"namespace": https.Namespace,
-				"protocol":  cloudListenerType.ClbListenerProtocolHTTPS,
-				"clbport":   strconv.Itoa(https.ClbPort),
-				"stateful":  "false",
-			}).Inc()
-		}
-		if ingress.Spec.StatefulSet != nil {
-			for _, tcp := range ingress.Spec.StatefulSet.TCP {
-				clbIngressRulesMetric.With(prometheus.Labels{
-					"service":   tcp.ServiceName,
-					"namespace": tcp.Namespace,
-					"protocol":  cloudListenerType.ClbListenerProtocolTCP,
-					"clbport":   strconv.Itoa(tcp.StartPort),
-					"stateful":  "true",
-				}).Inc()
-			}
-			for _, udp := range ingress.Spec.StatefulSet.UDP {
-				clbIngressRulesMetric.With(prometheus.Labels{
-					"service":   udp.ServiceName,
-					"namespace": udp.Namespace,
-					"protocol":  cloudListenerType.ClbListenerProtocolUDP,
-					"clbport":   strconv.Itoa(udp.StartPort),
-					"stateful":  "true",
-				}).Inc()
-			}
-			for _, http := range ingress.Spec.StatefulSet.HTTP {
-				clbIngressRulesMetric.With(prometheus.Labels{
-					"service":   http.ServiceName,
-					"namespace": http.Namespace,
-					"protocol":  cloudListenerType.ClbListenerProtocolHTTP,
-					"clbport":   strconv.Itoa(http.StartPort),
-					"stateful":  "true",
-				}).Inc()
-			}
-			for _, https := range ingress.Spec.StatefulSet.HTTPS {
-				clbIngressRulesMetric.With(prometheus.Labels{
-					"service":   https.ServiceName,
-					"namespace": https.Namespace,
-					"protocol":  cloudListenerType.ClbListenerProtocolHTTPS,
-					"clbport":   strconv.Itoa(https.StartPort),
-					"stateful":  "true",
-				}).Inc()
-			}
-		}
-	}
-}
-
-func addBackendToMetric(list []*cloudListenerType.CloudListener, vec *prometheus.GaugeVec) {
-	vec.Reset()
-	for _, listener := range list {
-		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
-			for _, backend := range listener.Spec.TargetGroup.Backends {
-				vec.With(prometheus.Labels{
-					"listener": listener.GetName(),
-					"protocol": listener.Spec.Protocol,
-					"ip":       backend.IP,
-					"port":     strconv.Itoa(backend.Port),
-					"host":     "",
-					"path":     "",
-				}).Inc()
-			}
-		}
-		if len(listener.Spec.Rules) != 0 {
-			for _, rule := range listener.Spec.Rules {
-				if rule.TargetGroup != nil && len(rule.TargetGroup.Backends) != 0 {
-					for _, backend := range rule.TargetGroup.Backends {
-						vec.With(prometheus.Labels{
-							"listener": listener.GetName(),
-							"protocol": listener.Spec.Protocol,
-							"ip":       backend.IP,
-							"port":     strconv.Itoa(backend.Port),
-							"host":     rule.Domain,
-							"path":     rule.URL,
-						}).Inc()
-					}
-				}
-			}
-		}
-	}
-}
-
-func addListenerToMetric(list []*cloudListenerType.CloudListener, vec *prometheus.GaugeVec) {
-	vec.Reset()
-	for _, listener := range list {
-		vec.With(prometheus.Labels{
-			"name":     listener.GetName(),
-			"protocol": listener.Spec.Protocol,
-			"port":     strconv.Itoa(listener.Spec.ListenPort),
-		}).Inc()
-	}
-}
-
 func init() {
-	prometheus.Register(clbIngressRulesMetric)
-	prometheus.Register(clbBackendsMetric)
-	prometheus.Register(clbBackendsAddLastChangeMetric)
-	prometheus.Register(clbBackendsUpdateLastChangeMetric)
-	prometheus.Register(clbBackendsDeleteLastChangeMetric)
 	prometheus.Register(updateTotalDurationMetric)
 	prometheus.Register(listenerDurationMetric)
 	prometheus.Register(listenerErrorsMetric)
 	prometheus.Register(listenerApiserverErrorsMetric)
-	prometheus.Register(clbListenersAddLastChangeMetric)
-	prometheus.Register(clbListenersUpdateLastChangeMetric)
-	prometheus.Register(clbListenersDeleteLastChangeMetric)
-	prometheus.Register(ingressInvalid)
-	ingressInvalid.Set(0)
+	prometheus.Register(clbListenersAddMetric)
+	prometheus.Register(clbListenersUpdateMetric)
+	prometheus.Register(clbListenersDeleteMetric)
 }
 
 // Updater generate listeners from ingress and service discovery
@@ -297,20 +129,7 @@ func NewUpdater(opt *Option, svcClient svcclient.Client, ingressRegistry clbingr
 		serviceClient:   svcClient,
 		ingressRegistry: ingressRegistry,
 		listenerClient:  listenerClient,
-		errMessages:     make([]string, 5),
 	}, nil
-}
-
-func (updater *Updater) AddErrMessage(msg string) {
-	updater.errMessages = append(updater.errMessages, msg)
-}
-
-func (updater *Updater) GetErrMessages() []string {
-	return updater.errMessages
-}
-
-func (updater *Updater) CleanErrMessages() {
-	updater.errMessages = updater.errMessages[:0]
 }
 
 func (updater *Updater) EnsureLoadBalancer() error {
@@ -338,6 +157,11 @@ func (updater *Updater) EnsureLoadBalancer() error {
 	return nil
 }
 
+// ListRemoteListener list remote listener
+func (updater *Updater) ListRemoteListener() ([]*cloudListenerType.CloudListener, error) {
+	return updater.cloudlbCtl.ListListeners()
+}
+
 // Update sync update to clb
 func (updater *Updater) Update() error {
 	updateTotalTimer := prometheus.NewTimer(updateTotalDurationMetric)
@@ -346,22 +170,18 @@ func (updater *Updater) Update() error {
 		blog.Errorf("list all ingress failed, err %s", err.Error())
 		return fmt.Errorf("list all ingress failed, err %s", err.Error())
 	}
-	addIngressListToMetric(ingressList)
 
 	isValid := updater.validateClbIngress(ingressList)
 	if !isValid {
-		ingressInvalid.Set(1)
 		blog.Errorf("validate clb ingress failed")
 		return fmt.Errorf("validate clb ingress failed")
 	}
-	ingressInvalid.Set(0)
 
 	listenerList, err := updater.generateCloudListeners(ingressList)
 	if err != nil {
 		blog.Errorf("generate listeners failed, err %s", err.Error())
 		return fmt.Errorf("generate listeners failed, err %s", err.Error())
 	}
-	addBackendToMetric(listenerList, clbBackendsMetric)
 
 	oldList, err := updater.getCloudListenerFromCache()
 	if err != nil {
@@ -390,6 +210,7 @@ func (updater *Updater) Update() error {
 			continue
 		}
 		dtimer.ObserveDuration()
+		clbListenersDeleteMetric.WithLabelValues(d.GetName()).Inc()
 	}
 
 	for _, a := range toAddListeners {
@@ -407,6 +228,7 @@ func (updater *Updater) Update() error {
 			continue
 		}
 		atimer.ObserveDuration()
+		clbListenersAddMetric.WithLabelValues(a.GetName()).Inc()
 	}
 
 	updatesOld, updatesNew, err := updater.getUpdateCloudListeners(oldList, listenerList)
@@ -430,59 +252,54 @@ func (updater *Updater) Update() error {
 			continue
 		}
 		utimer.ObserveDuration()
+		clbListenersUpdateMetric.WithLabelValues(u.GetName()).Inc()
 	}
 
 	if len(toDeleteListeners) != 0 || len(toAddListeners) != 0 || len(updatesNew) != 0 {
-		addBackendToMetric(toDeleteListeners, clbBackendsDeleteLastChangeMetric)
-		addBackendToMetric(toAddListeners, clbBackendsAddLastChangeMetric)
-		addBackendToMetric(updatesNew, clbBackendsUpdateLastChangeMetric)
-		addListenerToMetric(toDeleteListeners, clbListenersDeleteLastChangeMetric)
-		addListenerToMetric(toAddListeners, clbListenersAddLastChangeMetric)
-		addListenerToMetric(updatesNew, clbListenersUpdateLastChangeMetric)
 		updateTotalTimer.ObserveDuration()
 	}
 	return nil
 }
 
 // if ok, return true
-func (updater *Updater) validateFourLayerRuleConflict(rule *ingressType.ClbRule, fourLayerMap map[int]*ingressType.ClbRule, sevenLayerMap map[int]map[string]*ingressType.ClbHttpRule) bool {
+func (updater *Updater) validateFourLayerRuleConflict(
+	rule *ingressType.ClbRule, fourLayerMap map[int]*ingressType.ClbRule,
+	sevenLayerMap map[int]map[string]*ingressType.ClbHttpRule) error {
 	if conflictRule, ok := fourLayerMap[rule.ClbPort]; ok {
-		blog.Errorf("rule %v has conflict port %d conflict with rule %v", rule, rule.ClbPort, conflictRule)
-		updater.AddErrMessage(fmt.Sprintf("rule %v has conflict port %d conflict with rule %v", rule, rule.ClbPort, conflictRule))
-		return false
+		blog.Errorf("rule %s has conflict port %d conflict with rule %s", rule.ToString(), rule.ClbPort, conflictRule.ToString())
+		return fmt.Errorf("rule %s has conflict port %d conflict with rule %s", rule.ToString(), rule.ClbPort, conflictRule.ToString())
 	}
 	if conflictRuleMap, ok := sevenLayerMap[rule.ClbPort]; ok && len(conflictRuleMap) != 0 {
-		blog.Errorf("rule %v has conflict port %d with http rule", rule, rule.ClbPort)
-		updater.AddErrMessage(fmt.Sprintf("rule %v has conflict port %d with http rule", rule, rule.ClbPort))
-		return false
+		blog.Errorf("rule %s has conflict port %d with http rule", rule.ToString(), rule.ClbPort)
+		return fmt.Errorf("rule %s has conflict port %d with http rule", rule.ToString(), rule.ClbPort)
 	}
 	fourLayerMap[rule.ClbPort] = rule
-	return true
+	return nil
 }
 
 // if ok, return true
-func (updater *Updater) validateSevenLayerRuleConflict(rule *ingressType.ClbHttpRule, fourLayerMap map[int]*ingressType.ClbRule, sevenLayerMap map[int]map[string]*ingressType.ClbHttpRule) bool {
+func (updater *Updater) validateSevenLayerRuleConflict(
+	rule *ingressType.ClbHttpRule, fourLayerMap map[int]*ingressType.ClbRule,
+	sevenLayerMap map[int]map[string]*ingressType.ClbHttpRule) error {
 	if conflictRule, ok := fourLayerMap[rule.ClbPort]; ok {
-		blog.Errorf("rule %v has conflict port %d conflict with rule %v", rule, rule.ClbPort, conflictRule)
-		updater.AddErrMessage(fmt.Sprintf("rule %v has conflict port %d conflict with rule %v", rule, rule.ClbPort, conflictRule))
-		return false
+		blog.Errorf("rule %s has conflict port %d conflict with rule %s", rule.ToString(), rule.ClbPort, conflictRule.ToString())
+		return fmt.Errorf("rule %s has conflict port %d conflict with rule %s", rule.ToString(), rule.ClbPort, conflictRule.ToString())
 	}
 
 	httpRuleMap, ok := sevenLayerMap[rule.ClbPort]
 	if ok {
 		if httpRule, isExisted := httpRuleMap[rule.Host+rule.Path]; isExisted {
-			blog.Errorf("rule %v has conflict host %s and url %s with rule %v", rule, rule.Host, rule.Path, httpRule)
-			updater.AddErrMessage(fmt.Sprintf("rule %v has conflict host %s and url %s with rule %v", rule, rule.Host, rule.Path, httpRule))
-			return false
+			blog.Errorf("rule %s has conflict host %s and url %s with rule %s", rule.ToString(), rule.Host, rule.Path, httpRule.ToString())
+			return fmt.Errorf("rule %s has conflict host %s and url %s with rule %s", rule.ToString(), rule.Host, rule.Path, httpRule.ToString())
 		}
-
 		sevenLayerMap[rule.ClbPort][rule.Host+rule.Path] = rule
-		return true
+		return nil
 	}
 
 	newMap := make(map[string]*ingressType.ClbHttpRule)
 	newMap[rule.Host+rule.Path] = rule
-	return true
+	sevenLayerMap[rule.ClbPort] = newMap
+	return nil
 }
 
 func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress) bool {
@@ -494,32 +311,52 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 		for _, tmpTcpRule := range tmpIngress.Spec.TCP {
 			err := tmpTcpRule.Validate()
 			if err != nil {
-				blog.Errorf("rule %v validate failed, err %s", tmpTcpRule, err.Error())
-				updater.AddErrMessage(fmt.Sprintf("rule %v validate failed, err %s", tmpTcpRule, err.Error()))
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
+					fmt.Sprintf("rule %s validate failed, err %s", tmpTcpRule.ToString(), err.Error()))
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
+				blog.Errorf("rule %s validate failed, err %s", tmpTcpRule.ToString(), err.Error())
 				return false
 			}
 		}
 		for _, tmpUdpRule := range tmpIngress.Spec.UDP {
 			err := tmpUdpRule.Validate()
 			if err != nil {
-				blog.Errorf("rule %v validate failed, err %s", tmpUdpRule, err.Error())
-				updater.AddErrMessage(fmt.Sprintf("rule %v validate failed, err %s", tmpUdpRule, err.Error()))
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
+					fmt.Sprintf("rule %s validate failed, err %s", tmpUdpRule.ToString(), err.Error()))
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
+				blog.Errorf("rule %s validate failed, err %s", tmpUdpRule.ToString(), err.Error())
 				return false
 			}
 		}
 		for _, tmpHttpRule := range tmpIngress.Spec.HTTP {
 			err := tmpHttpRule.ValidateHTTP()
 			if err != nil {
-				blog.Errorf("rule %v validate failed, err %s", tmpHttpRule, err.Error())
-				updater.AddErrMessage(fmt.Sprintf("rule %v validate failed, err %s", tmpHttpRule, err.Error()))
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
+					fmt.Sprintf("rule %s validate failed, err %s", tmpHttpRule.ToString(), err.Error()))
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
+				blog.Errorf("rule %s validate failed, err %s", tmpHttpRule.ToString(), err.Error())
 				return false
 			}
 		}
 		for _, tmpHttpsRule := range tmpIngress.Spec.HTTPS {
 			err := tmpHttpsRule.ValidateHTTPS()
 			if err != nil {
-				blog.Errorf("rule %v validate failed, err %s", tmpHttpsRule, err.Error())
-				updater.AddErrMessage(fmt.Sprintf("rule %v validate failed, err %s", tmpHttpsRule, err.Error()))
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal,
+					fmt.Sprintf("rule %s validate failed, err %s", tmpHttpsRule.ToString(), err.Error()))
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
+				blog.Errorf("rule %s validate failed, err %s", tmpHttpsRule.ToString(), err.Error())
 				return false
 			}
 		}
@@ -527,26 +364,46 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 
 	for _, tmpIngress := range ingressList {
 		for _, tmpTcpRule := range tmpIngress.Spec.TCP {
-			ok := updater.validateFourLayerRuleConflict(tmpTcpRule, fourLayerMap, sevenLayerMap)
-			if !ok {
+			err := updater.validateFourLayerRuleConflict(tmpTcpRule, fourLayerMap, sevenLayerMap)
+			if err != nil {
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
 				return false
 			}
 		}
 		for _, tmpUdpRule := range tmpIngress.Spec.UDP {
-			ok := updater.validateFourLayerRuleConflict(tmpUdpRule, fourLayerMap, sevenLayerMap)
-			if !ok {
+			err := updater.validateFourLayerRuleConflict(tmpUdpRule, fourLayerMap, sevenLayerMap)
+			if err != nil {
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
 				return false
 			}
 		}
 		for _, tmpHttpRule := range tmpIngress.Spec.HTTP {
-			ok := updater.validateSevenLayerRuleConflict(tmpHttpRule, fourLayerMap, sevenLayerMap)
-			if !ok {
+			err := updater.validateSevenLayerRuleConflict(tmpHttpRule, fourLayerMap, sevenLayerMap)
+			if err != nil {
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
 				return false
 			}
 		}
 		for _, tmpHttpsRule := range tmpIngress.Spec.HTTPS {
-			ok := updater.validateSevenLayerRuleConflict(tmpHttpsRule, fourLayerMap, sevenLayerMap)
-			if !ok {
+			err := updater.validateSevenLayerRuleConflict(tmpHttpsRule, fourLayerMap, sevenLayerMap)
+			if err != nil {
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
 				return false
 			}
 		}
@@ -596,6 +453,11 @@ func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule)
 						IP:     node.NodeIP,
 						Port:   port.NodePort,
 						Weight: 10,
+					}
+					// support pod with mesos bridge network
+					if port.ProxyPort > 0 {
+						newBackend.IP = node.ProxyIP
+						newBackend.Port = port.ProxyPort
 					}
 				}
 				if _, ok := backendMap[newBackend.IP+strconv.Itoa(newBackend.Port)]; ok {

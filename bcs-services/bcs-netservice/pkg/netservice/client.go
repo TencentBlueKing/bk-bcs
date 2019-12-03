@@ -774,7 +774,7 @@ func (c *client) getHTTPClient(timeout int) (*http.Client, string) {
 		ExpectContinueTimeout: 1 * time.Second,
 		DisableKeepAlives:     true,
 	}
-	if c.tlsConfig == nil {
+	if c.tlsConfig != nil {
 		prefix = "https://"
 		transport.TLSClientConfig = c.tlsConfig
 	}

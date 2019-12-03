@@ -42,4 +42,7 @@ type ClbAdapter interface {
 	//4 layer backend
 	Register4LayerBackends(lbID, listenerID string, backendsRegister cloudListenerType.BackendList) error
 	DeRegister4LayerBackends(lbID, listenerID string, backendsDeRegister cloudListenerType.BackendList) error
+
+	// list all listener
+	ListListener(lbID string) ([]*cloudListenerType.CloudListener, error)
 }

@@ -1428,6 +1428,10 @@ type Listener struct {
 	// 监听器的创建时间。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	CreateTime *string `json:"CreateTime,omitempty" name:"CreateTime"`
+
+	// 端口段结束端口
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	EndPort *int64 `json:"EndPort,omitempty" name:"EndPort"`
 }
 
 type ListenerBackend struct {
@@ -1604,6 +1608,14 @@ type LoadBalancer struct {
 	// 暂做保留，一般用户无需关注。
 	// 注意：此字段可能返回 null，表示取不到有效值。
 	ExtraInfo *ExtraInfo `json:"ExtraInfo,omitempty" name:"ExtraInfo"`
+
+	// 是否可绑定高防包
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	IsDDos *bool `json:"IsDDos,omitempty" name:"IsDDos"`
+
+	// 负载均衡维度的个性化配置ID
+	// 注意：此字段可能返回 null，表示取不到有效值。
+	ConfigId *string `json:"ConfigId,omitempty" name:"ConfigId"`
 }
 
 type LoadBalancerHealth struct {
@@ -1681,7 +1693,7 @@ type ModifyDomainAttributesRequest struct {
 	// 域名相关的证书信息，注意，仅对启用SNI的监听器适用。
 	Certificate *CertificateInput `json:"Certificate,omitempty" name:"Certificate"`
 
-	// 是否开启Http2，注意，只用HTTPS域名才能开启Http2。
+	// 是否开启Http2，注意，只有HTTPS域名才能开启Http2。
 	Http2 *bool `json:"Http2,omitempty" name:"Http2"`
 
 	// 是否设为默认域名，注意，一个监听器下只能设置一个默认域名。
@@ -1782,6 +1794,9 @@ type ModifyListenerRequest struct {
 	// 监听器转发的方式。可选值：WRR、LEAST_CONN
 	// 分别表示按权重轮询、最小连接数， 默认为 WRR。
 	Scheduler *string `json:"Scheduler,omitempty" name:"Scheduler"`
+
+	// 是否开启SNI特性，此参数仅适用于HTTPS监听器。注意：未开启SNI的监听器可以开启SNI；已开启SNI的监听器不能关闭SNI
+	SniSwitch *int64 `json:"SniSwitch,omitempty" name:"SniSwitch"`
 }
 
 func (r *ModifyListenerRequest) ToJsonString() string {
@@ -2164,11 +2179,11 @@ type RsWeightRule struct {
 	// 负载均衡监听器 ID
 	ListenerId *string `json:"ListenerId,omitempty" name:"ListenerId"`
 
-	// 转发规则的ID
-	LocationId *string `json:"LocationId,omitempty" name:"LocationId"`
-
 	// 要修改权重的后端机器列表
 	Targets []*Target `json:"Targets,omitempty" name:"Targets" list`
+
+	// 转发规则的ID，七层规则时需要此参数，4层规则不需要
+	LocationId *string `json:"LocationId,omitempty" name:"LocationId"`
 
 	// 目标规则的域名，提供LocationId参数时本参数不生效
 	Domain *string `json:"Domain,omitempty" name:"Domain"`
@@ -2227,6 +2242,9 @@ type RuleInput struct {
 
 	// 是否开启Http2，注意，只用HTTPS域名才能开启Http2。
 	Http2 *bool `json:"Http2,omitempty" name:"Http2"`
+
+	// 后端目标类型，NODE表示绑定普通节点，TARGETGROUP表示绑定目标组
+	TargetType *string `json:"TargetType,omitempty" name:"TargetType"`
 }
 
 type RuleOutput struct {

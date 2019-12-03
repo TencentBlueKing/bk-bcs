@@ -18,8 +18,10 @@ import (
 )
 
 const (
+	//AWSCloudLB aws lb
 	AWSCloudLB = "awslb"
-	QCloudLB   = "qcloudclb"
+	// QCloudLB tencent cloud lb
+	QCloudLB = "qcloudclb"
 )
 
 //Interface definition for cloud infrastructure
@@ -30,4 +32,5 @@ type Interface interface {
 	Update(old, cur *cloudListenerType.CloudListener) error                        //update event
 	Add(ls *cloudListenerType.CloudListener) error                                 //new listener event
 	Delete(ls *cloudListenerType.CloudListener) error                              //listener delete event
+	ListListeners() ([]*cloudListenerType.CloudListener, error)                    // list all listener on clb instance controlled by this controller
 }
