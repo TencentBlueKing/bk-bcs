@@ -165,12 +165,12 @@ func (clbCfg *CLBConfig) LoadFromEnv() error {
 }
 
 // GenerateSdkConfig generate sdk config
-func (clbCfg *CLBConfig) GenerateSdkConfig() *sdk.SdkConfig {
+func (clbCfg *CLBConfig) GenerateSdkConfig() *sdk.Config {
 	backendType := sdk.ClbBackendTargetTypeCVM
 	if clbCfg.BackendMode == ConfigBcsClbBackendModeENI {
 		backendType = sdk.ClbBackendTargetTypeENI
 	}
-	return &sdk.SdkConfig{
+	return &sdk.Config{
 		BackendType:           backendType,
 		Region:                clbCfg.Region,
 		ProjectID:             clbCfg.ProjectID,

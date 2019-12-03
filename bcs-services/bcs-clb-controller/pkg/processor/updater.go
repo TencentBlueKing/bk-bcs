@@ -36,6 +36,7 @@ import (
 )
 
 var (
+	// update duration histogram for updater.Update function
 	updateTotalDurationMetric = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
@@ -43,6 +44,7 @@ var (
 		Help:      "update duration a update loop",
 		Buckets:   prometheus.LinearBuckets(0, 10, 10),
 	})
+	// listener operation duration histogram vector
 	listenerDurationMetric = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
@@ -50,30 +52,35 @@ var (
 		Help:      "clb listener operation duration",
 		Buckets:   prometheus.LinearBuckets(0, 3, 10),
 	}, []string{"action"})
+	// listener operation error counter to cloud api
 	listenerErrorsMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
 		Name:      "listener_op_cloud_errors",
 		Help:      "clb listener operation errors",
 	}, []string{"action"})
+	// listener operation error counter to kube apiserver
 	listenerApiserverErrorsMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
 		Name:      "listener_op_apiserver_errors",
 		Help:      "clb listener apiserver operation errors",
 	}, []string{"action"})
+	// listener add operation counter
 	clbListenersAddMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
 		Name:      "add_listeners",
 		Help:      "added listener number",
 	}, []string{"name"})
+	// listener update operation counter
 	clbListenersUpdateMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
 		Name:      "update_listeners",
 		Help:      "updated listener number",
 	}, []string{"name"})
+	// listener delete operation counter
 	clbListenersDeleteMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "clb",
 		Subsystem: "updater",
@@ -94,34 +101,35 @@ func init() {
 
 // Updater generate listeners from ingress and service discovery
 type Updater struct {
-	opt         *Option
-	lbInfo      *cloudListenerType.CloudLoadBalancer //loadbalance info for cloud-lb
-	cloudlbCtl  cloudlb.Interface
-	errMessages []string
-
-	serviceClient   svcclient.Client
+	// Processor options
+	opt    *Option
+	lbInfo *cloudListenerType.CloudLoadBalancer //loadbalance info for cloud-lb
+	// interface to operate cloud lb instance
+	cloudlbCtl cloudlb.Interface
+	// service client for service discovery
+	serviceClient svcclient.Client
+	// ingress client for ingress discovery
 	ingressRegistry clbingress.Registry
-	listenerClient  listenerclient.Interface
+	// client for save Intermediate cloud listener info
+	listenerClient listenerclient.Interface
 }
 
 // NewUpdater create updater
 func NewUpdater(opt *Option, svcClient svcclient.Client, ingressRegistry clbingress.Registry, listenerClient listenerclient.Interface) (*Updater, error) {
-
 	lbInfo := &cloudListenerType.CloudLoadBalancer{
 		ID:          "",
 		Name:        opt.ClbName,
 		NetworkType: opt.NetType,
 	}
-
 	cloudlbCtl, err := qcloudlb.NewClient(lbInfo)
 	if err != nil {
 		return nil, fmt.Errorf("create cloudlb control client with lbInfo %v failed, err %s", lbInfo, err.Error())
 	}
+	// load cloud lb config from env, these configs are particular
 	err = cloudlbCtl.LoadConfig()
 	if err != nil {
 		return nil, fmt.Errorf("cloudlb control client load config failed, err %s", err.Error())
 	}
-
 	return &Updater{
 		opt:             opt,
 		lbInfo:          lbInfo,
@@ -132,8 +140,8 @@ func NewUpdater(opt *Option, svcClient svcclient.Client, ingressRegistry clbingr
 	}, nil
 }
 
+// EnsureLoadBalancer create new loadbalance cloud lb instance or take over existed cloud lb instance
 func (updater *Updater) EnsureLoadBalancer() error {
-
 	lbInfoDesc, err := updater.cloudlbCtl.DescribeLoadbalance(updater.lbInfo.Name)
 	if err != nil {
 		blog.Errorf("describe loadbalance with name %s failed, err %s", updater.lbInfo.Name, err.Error())
@@ -149,52 +157,59 @@ func (updater *Updater) EnsureLoadBalancer() error {
 		updater.lbInfo.ID = lbInfoCreated.ID
 		return nil
 	}
+	// exit when there is existed loadbalance with same name but different net type
 	if updater.lbInfo.NetworkType != lbInfoDesc.NetworkType {
 		blog.Errorf("clb with name %s is already exist, want %s but with invalid network type %s", updater.lbInfo.Name, updater.lbInfo.NetworkType, lbInfoDesc.NetworkType)
 		return fmt.Errorf("clb with name %s is already exist, want %s but with invalid network type %s", updater.lbInfo.Name, updater.lbInfo.NetworkType, lbInfoDesc.NetworkType)
 	}
 	updater.lbInfo.ID = lbInfoDesc.ID
+	updater.lbInfo.PublicIPs = lbInfoDesc.PublicIPs
+	updater.lbInfo.VIPS = lbInfoDesc.VIPS
 	return nil
 }
 
 // ListRemoteListener list remote listener
+// currently it calls cloud api directly
+// TODO: cloud lb interface should has events informer
+// this function should get remote listeners from local cache
 func (updater *Updater) ListRemoteListener() ([]*cloudListenerType.CloudListener, error) {
 	return updater.cloudlbCtl.ListListeners()
 }
 
 // Update sync update to clb
 func (updater *Updater) Update() error {
+	// get all associated ingresses
 	updateTotalTimer := prometheus.NewTimer(updateTotalDurationMetric)
 	ingressList, err := updater.ingressRegistry.ListIngresses()
 	if err != nil {
 		blog.Errorf("list all ingress failed, err %s", err.Error())
 		return fmt.Errorf("list all ingress failed, err %s", err.Error())
 	}
-
+	// validate all ingresses
 	isValid := updater.validateClbIngress(ingressList)
 	if !isValid {
 		blog.Errorf("validate clb ingress failed")
 		return fmt.Errorf("validate clb ingress failed")
 	}
-
+	// generate cloud listener objects from ingresses
 	listenerList, err := updater.generateCloudListeners(ingressList)
 	if err != nil {
 		blog.Errorf("generate listeners failed, err %s", err.Error())
 		return fmt.Errorf("generate listeners failed, err %s", err.Error())
 	}
-
+	// get cloud listener objects from local cache
 	oldList, err := updater.getCloudListenerFromCache()
 	if err != nil {
 		blog.Errorf("get listeners from cache failed, err %s", err.Error())
 		return fmt.Errorf("get listeners from cache failed, err %s", err.Error())
 	}
-
+	// get different objects between new objects and old objects
 	toDeleteListeners, toAddListeners, err := updater.getDiffCloudListeners(oldList, listenerList)
 	if err != nil {
 		blog.Errorf("get different listeners between old and new CloudListener failed, err %s", err.Error())
 		return fmt.Errorf("get different listeners between old and new CloudListener failed, err %s", err.Error())
 	}
-
+	// delete listeners
 	for _, d := range toDeleteListeners {
 		dtimer := prometheus.NewTimer(listenerDurationMetric.With(prometheus.Labels{"action": "delete"}))
 		err := updater.cloudlbCtl.Delete(d)
@@ -212,7 +227,7 @@ func (updater *Updater) Update() error {
 		dtimer.ObserveDuration()
 		clbListenersDeleteMetric.WithLabelValues(d.GetName()).Inc()
 	}
-
+	// add listeners
 	for _, a := range toAddListeners {
 		atimer := prometheus.NewTimer(listenerDurationMetric.With(prometheus.Labels{"action": "add"}))
 		err := updater.cloudlbCtl.Add(a)
@@ -230,13 +245,13 @@ func (updater *Updater) Update() error {
 		atimer.ObserveDuration()
 		clbListenersAddMetric.WithLabelValues(a.GetName()).Inc()
 	}
-
+	// get all listeners that shoud be updated
 	updatesOld, updatesNew, err := updater.getUpdateCloudListeners(oldList, listenerList)
 	if err != nil {
 		blog.Errorf("get updated listener between old and new CloudListener failed, err %s", err.Error())
 		return fmt.Errorf("get updated listener between old and new CloudListener failed, err %s", err.Error())
 	}
-
+	// do update
 	for index, u := range updatesNew {
 		utimer := prometheus.NewTimer(listenerDurationMetric.With(prometheus.Labels{"action": "update"}))
 		err := updater.cloudlbCtl.Update(updatesOld[index], u)
@@ -254,14 +269,14 @@ func (updater *Updater) Update() error {
 		utimer.ObserveDuration()
 		clbListenersUpdateMetric.WithLabelValues(u.GetName()).Inc()
 	}
-
 	if len(toDeleteListeners) != 0 || len(toAddListeners) != 0 || len(updatesNew) != 0 {
 		updateTotalTimer.ObserveDuration()
 	}
 	return nil
 }
 
-// if ok, return true
+// if ok, return nil
+// check port conflicts
 func (updater *Updater) validateFourLayerRuleConflict(
 	rule *ingressType.ClbRule, fourLayerMap map[int]*ingressType.ClbRule,
 	sevenLayerMap map[int]map[string]*ingressType.ClbHttpRule) error {
@@ -277,7 +292,8 @@ func (updater *Updater) validateFourLayerRuleConflict(
 	return nil
 }
 
-// if ok, return true
+// if ok, return nil
+// check ports conflicts and (domain, url) conflicts
 func (updater *Updater) validateSevenLayerRuleConflict(
 	rule *ingressType.ClbHttpRule, fourLayerMap map[int]*ingressType.ClbRule,
 	sevenLayerMap map[int]map[string]*ingressType.ClbHttpRule) error {
@@ -285,7 +301,6 @@ func (updater *Updater) validateSevenLayerRuleConflict(
 		blog.Errorf("rule %s has conflict port %d conflict with rule %s", rule.ToString(), rule.ClbPort, conflictRule.ToString())
 		return fmt.Errorf("rule %s has conflict port %d conflict with rule %s", rule.ToString(), rule.ClbPort, conflictRule.ToString())
 	}
-
 	httpRuleMap, ok := sevenLayerMap[rule.ClbPort]
 	if ok {
 		if httpRule, isExisted := httpRuleMap[rule.Host+rule.Path]; isExisted {
@@ -295,19 +310,21 @@ func (updater *Updater) validateSevenLayerRuleConflict(
 		sevenLayerMap[rule.ClbPort][rule.Host+rule.Path] = rule
 		return nil
 	}
-
 	newMap := make(map[string]*ingressType.ClbHttpRule)
 	newMap[rule.Host+rule.Path] = rule
 	sevenLayerMap[rule.ClbPort] = newMap
 	return nil
 }
 
+// validate all ingresses
 func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress) bool {
-
 	fourLayerMap := make(map[int]*ingressType.ClbRule)
 	sevenLayerMap := make(map[int]map[string]*ingressType.ClbHttpRule)
-
+	// for each ingress rule
+	// 1. validate all fields
+	// 2. check if there is conflicts, once a rule is checked, it will be added into fourLayerMap or sevenLayerMap
 	for _, tmpIngress := range ingressList {
+		// tcp rules
 		for _, tmpTcpRule := range tmpIngress.Spec.TCP {
 			err := tmpTcpRule.Validate()
 			if err != nil {
@@ -320,7 +337,17 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 				blog.Errorf("rule %s validate failed, err %s", tmpTcpRule.ToString(), err.Error())
 				return false
 			}
+			err = updater.validateFourLayerRuleConflict(tmpTcpRule, fourLayerMap, sevenLayerMap)
+			if err != nil {
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
+				return false
+			}
 		}
+		// udp rules
 		for _, tmpUdpRule := range tmpIngress.Spec.UDP {
 			err := tmpUdpRule.Validate()
 			if err != nil {
@@ -333,7 +360,17 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 				blog.Errorf("rule %s validate failed, err %s", tmpUdpRule.ToString(), err.Error())
 				return false
 			}
+			err = updater.validateFourLayerRuleConflict(tmpUdpRule, fourLayerMap, sevenLayerMap)
+			if err != nil {
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
+				return false
+			}
 		}
+		// http rules
 		for _, tmpHttpRule := range tmpIngress.Spec.HTTP {
 			err := tmpHttpRule.ValidateHTTP()
 			if err != nil {
@@ -346,7 +383,17 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 				blog.Errorf("rule %s validate failed, err %s", tmpHttpRule.ToString(), err.Error())
 				return false
 			}
+			err = updater.validateSevenLayerRuleConflict(tmpHttpRule, fourLayerMap, sevenLayerMap)
+			if err != nil {
+				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
+				err = updater.ingressRegistry.SetIngress(tmpIngress)
+				if err != nil {
+					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
+				}
+				return false
+			}
 		}
+		// https rules
 		for _, tmpHttpsRule := range tmpIngress.Spec.HTTPS {
 			err := tmpHttpsRule.ValidateHTTPS()
 			if err != nil {
@@ -359,45 +406,7 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 				blog.Errorf("rule %s validate failed, err %s", tmpHttpsRule.ToString(), err.Error())
 				return false
 			}
-		}
-	}
-
-	for _, tmpIngress := range ingressList {
-		for _, tmpTcpRule := range tmpIngress.Spec.TCP {
-			err := updater.validateFourLayerRuleConflict(tmpTcpRule, fourLayerMap, sevenLayerMap)
-			if err != nil {
-				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
-				err = updater.ingressRegistry.SetIngress(tmpIngress)
-				if err != nil {
-					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
-				}
-				return false
-			}
-		}
-		for _, tmpUdpRule := range tmpIngress.Spec.UDP {
-			err := updater.validateFourLayerRuleConflict(tmpUdpRule, fourLayerMap, sevenLayerMap)
-			if err != nil {
-				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
-				err = updater.ingressRegistry.SetIngress(tmpIngress)
-				if err != nil {
-					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
-				}
-				return false
-			}
-		}
-		for _, tmpHttpRule := range tmpIngress.Spec.HTTP {
-			err := updater.validateSevenLayerRuleConflict(tmpHttpRule, fourLayerMap, sevenLayerMap)
-			if err != nil {
-				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
-				err = updater.ingressRegistry.SetIngress(tmpIngress)
-				if err != nil {
-					blog.Warnf("set ingress %s/%s failed, err %s", tmpIngress.GetNamespace(), tmpIngress.GetName(), err.Error())
-				}
-				return false
-			}
-		}
-		for _, tmpHttpsRule := range tmpIngress.Spec.HTTPS {
-			err := updater.validateSevenLayerRuleConflict(tmpHttpsRule, fourLayerMap, sevenLayerMap)
+			err = updater.validateSevenLayerRuleConflict(tmpHttpsRule, fourLayerMap, sevenLayerMap)
 			if err != nil {
 				tmpIngress.SetStatusMessage(ingressType.ClbIngressStatusAbnormal, err.Error())
 				err = updater.ingressRegistry.SetIngress(tmpIngress)
@@ -411,13 +420,15 @@ func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress
 	return true
 }
 
+// getBackendListFromIngressRule get backends ip and port from ingress rules
 func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule) (cloudListenerType.BackendList, error) {
+	// get AppService according to service name and namespace
 	appSvc, err := updater.serviceClient.GetAppService(rule.Namespace, rule.ServiceName)
 	if err != nil {
 		blog.Errorf("get AppService by ns %s name %s failed, err %s", rule.Namespace, rule.ServiceName, err.Error())
 		return nil, fmt.Errorf("get AppService by ns %s name %s failed, err %s", rule.Namespace, rule.ServiceName, err.Error())
 	}
-
+	// find port according to port and clb rule
 	var ruledSvcPort svcclient.ServicePort
 	foundPort := false
 	for _, svcPort := range appSvc.ServicePorts {
@@ -430,11 +441,12 @@ func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule)
 		blog.Errorf("no found port %d of service %s.%s", rule.ServicePort, rule.ServiceName, rule.Namespace)
 		return nil, fmt.Errorf("no found port %d of service %s.%s", rule.ServicePort, rule.ServiceName, rule.Namespace)
 	}
+	// check if there are no backends
 	if len(appSvc.Nodes) == 0 {
 		blog.Errorf("service %s.%s has no endpoint", rule.ServiceName, rule.Namespace)
 		return nil, fmt.Errorf("service %s.%s has no endpoint", rule.ServiceName, rule.Namespace)
 	}
-
+	// get backends ip and port
 	var backendList cloudListenerType.BackendList
 	backendMap := make(map[string]*cloudListenerType.Backend)
 	for _, node := range appSvc.Nodes {
@@ -442,12 +454,15 @@ func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule)
 			// svc port and node port may be associated by name port or port number
 			if port.NodePort == ruledSvcPort.TargetPort || port.Name == ruledSvcPort.Name {
 				var newBackend *cloudListenerType.Backend
+				// for overlay ip, we use service NodeIP and service NodePort as backend ip and port
 				if updater.opt.BackendIPType == common.BackendIPTypeOverlay {
 					newBackend = &cloudListenerType.Backend{
 						IP:     node.ProxyIP,
 						Port:   ruledSvcPort.ProxyPort,
 						Weight: 10,
 					}
+				// for underlay ip
+				// use pod ip and port directly
 				} else {
 					newBackend = &cloudListenerType.Backend{
 						IP:     node.NodeIP,
@@ -460,6 +475,7 @@ func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule)
 						newBackend.Port = port.ProxyPort
 					}
 				}
+				// to filter same ip and port, cloud lb cannot bind the same backend twice
 				if _, ok := backendMap[newBackend.IP+strconv.Itoa(newBackend.Port)]; ok {
 					continue
 				}
@@ -538,6 +554,9 @@ func (updater *Updater) generate4LayerListener(layer4Rule *ingressType.ClbRule, 
 }
 
 func (updater *Updater) generate7LayerListener(layer7Rule *ingressType.ClbHttpRule, protocol string) (*cloudListenerType.CloudListener, error) {
+	// [Design]
+	// creating a listener for a clb rule, even if there is neither service nor backend for the clb rule.
+	// it may too much time to create a clb listener, so we can create it previously
 	listener := &cloudListenerType.CloudListener{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "cloudlistener",
@@ -594,6 +613,7 @@ func (updater *Updater) generate7LayerListener(layer7Rule *ingressType.ClbHttpRu
 			}
 		}
 	}
+	// set tls config for https listener
 	if protocol == cloudListenerType.ClbListenerProtocolHTTPS {
 		listener.Spec.TLS = &cloudListenerType.CloudListenerTls{}
 		listener.Spec.TLS.Mode = layer7Rule.TLS.Mode
@@ -619,7 +639,8 @@ func (updater *Updater) generate7LayerListener(layer7Rule *ingressType.ClbHttpRu
 			listener.Spec.TLS.CertClientCaContent = layer7Rule.TLS.CertClientCaContent
 		}
 	}
-
+	// when get backends error, we still generate listener,
+	// because creating listener on clb instance is slow.
 	backendList, err := updater.getBackendListFromIngressRule(&layer7Rule.ClbRule)
 	if err != nil {
 		blog.Warnf("get backend List from rule %s failed, err %s", layer7Rule.ToString(), err.Error())
@@ -629,11 +650,16 @@ func (updater *Updater) generate7LayerListener(layer7Rule *ingressType.ClbHttpRu
 	return listener, nil
 }
 
+// for http listener and https listener, multiple rules may listen the same port
+// merge listener with same port here
 func (updater *Updater) combineHttpListener(mainListener *cloudListenerType.CloudListener, secondListener *cloudListenerType.CloudListener) {
 	mainListener.Spec.Rules = append(mainListener.Spec.Rules, secondListener.Spec.Rules...)
 }
 
-func (updater *Updater) convertStatefulSetRuleToCloudListener(statefulSetRule *ingressType.ClbStatefulSetRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
+// [Design]
+// for statfulset rule, we expose a port for each pod,
+// ports number depends on the StartIndex and EndIndex in statefulSetRule
+func (updater *Updater) convertStatefulSetRuleToListener(statefulSetRule *ingressType.ClbStatefulSetRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
 	var retListenerList []*cloudListenerType.CloudListener
 	for portIndex := statefulSetRule.StartIndex; portIndex <= statefulSetRule.EndIndex; portIndex++ {
 		listener := &cloudListenerType.CloudListener{
@@ -687,19 +713,19 @@ func (updater *Updater) convertStatefulSetRuleToCloudListener(statefulSetRule *i
 		}
 		retListenerList = append(retListenerList, listener)
 	}
+	// get AppService from statefulset by service client according to service name and namespace in stateful set rule
 	appServices, err := updater.serviceClient.ListAppServiceFromStatefulSet(statefulSetRule.Namespace, statefulSetRule.ServiceName)
 	if err != nil {
 		return nil, fmt.Errorf("get app services from statefulSetRule %v, err %s", statefulSetRule, err.Error())
 	}
-
 	if len(appServices) == 0 {
 		return retListenerList, nil
 	}
-
 	for portIndex, appService := range appServices {
 		if len(appService.ServicePorts) != 1 {
 			return nil, fmt.Errorf("service port length of stateful set appService %v is not equal to 1", appService)
 		}
+		// check if the service port is in certain range
 		if appService.ServicePorts[0].ServicePort < statefulSetRule.StartIndex || appService.ServicePorts[0].ServicePort > statefulSetRule.EndIndex {
 			blog.Infof("index %d is not in [%d, %d], skip appService %s",
 				appService.ServicePorts[0].ServicePort,
@@ -720,7 +746,8 @@ func (updater *Updater) convertStatefulSetRuleToCloudListener(statefulSetRule *i
 	return retListenerList, nil
 }
 
-func (updater *Updater) convertStatefulSetHttpRuleToCloudListener(statefulSetRule *ingressType.ClbStatefulSetHttpRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
+// like convertStatefulSetRuleToListener, but set extra config (health check, tls)
+func (updater *Updater) convertStatefulSetHttpRuleToListener(statefulSetRule *ingressType.ClbStatefulSetHttpRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
 	var retListenerList []*cloudListenerType.CloudListener
 	for portIndex := statefulSetRule.StartIndex; portIndex <= statefulSetRule.EndIndex; portIndex++ {
 		listener := &cloudListenerType.CloudListener{
@@ -754,6 +781,7 @@ func (updater *Updater) convertStatefulSetHttpRuleToCloudListener(statefulSetRul
 				rule.TargetGroup.LBPolicy = statefulSetRule.ClbRule.LbPolicy.Strategy
 			}
 		}
+		// health check config
 		if statefulSetRule.ClbRule.HealthCheck != nil {
 			if statefulSetRule.ClbRule.HealthCheck.Enabled == false {
 				rule.TargetGroup.HealthCheck.Enabled = 0
@@ -778,6 +806,7 @@ func (updater *Updater) convertStatefulSetHttpRuleToCloudListener(statefulSetRul
 				}
 			}
 		}
+		// tls config
 		listener.Spec.Rules = append(listener.Spec.Rules, rule)
 		if protocol == cloudListenerType.ClbListenerProtocolHTTPS {
 			listener.Spec.TLS = &cloudListenerType.CloudListenerTls{}
@@ -806,7 +835,6 @@ func (updater *Updater) convertStatefulSetHttpRuleToCloudListener(statefulSetRul
 		}
 		retListenerList = append(retListenerList, listener)
 	}
-
 	appServices, err := updater.serviceClient.ListAppServiceFromStatefulSet(statefulSetRule.Namespace, statefulSetRule.ServiceName)
 	if err != nil {
 		return nil, fmt.Errorf("get app services from statefulSetRule %v, err %s", statefulSetRule, err.Error())
@@ -815,7 +843,6 @@ func (updater *Updater) convertStatefulSetHttpRuleToCloudListener(statefulSetRul
 	if len(appServices) == 0 {
 		return retListenerList, nil
 	}
-
 	for portIndex, appService := range appServices {
 		if len(appService.ServicePorts) != 1 {
 			return nil, fmt.Errorf("service port length of stateful set appService %v is not equal to 1", appService)
@@ -840,6 +867,8 @@ func (updater *Updater) convertStatefulSetHttpRuleToCloudListener(statefulSetRul
 }
 
 func (updater *Updater) generateCloudListeners(ingressList []*ingressType.ClbIngress) ([]*cloudListenerType.CloudListener, error) {
+	// valide ingresses
+	// TODO: validation does not include statefulset ingresses
 	ok := updater.validateClbIngress(ingressList)
 	if !ok {
 		return nil, fmt.Errorf("validate clb ingress list falied")
@@ -894,7 +923,7 @@ func (updater *Updater) generateCloudListeners(ingressList []*ingressType.ClbIng
 		// generate listener for stateful set
 		if tmpIngress.Spec.StatefulSet != nil {
 			for _, tmpTcpRule := range tmpIngress.Spec.StatefulSet.TCP {
-				listeners, err := updater.convertStatefulSetRuleToCloudListener(tmpTcpRule, cloudListenerType.ClbListenerProtocolTCP)
+				listeners, err := updater.convertStatefulSetRuleToListener(tmpTcpRule, cloudListenerType.ClbListenerProtocolTCP)
 				if err != nil {
 					blog.Warnf("convert stateful set tcp rule failed, err %s", err.Error())
 					continue
@@ -904,7 +933,7 @@ func (updater *Updater) generateCloudListeners(ingressList []*ingressType.ClbIng
 				}
 			}
 			for _, tmpUdpRule := range tmpIngress.Spec.StatefulSet.UDP {
-				listeners, err := updater.convertStatefulSetRuleToCloudListener(tmpUdpRule, cloudListenerType.ClbListenerProtocolUDP)
+				listeners, err := updater.convertStatefulSetRuleToListener(tmpUdpRule, cloudListenerType.ClbListenerProtocolUDP)
 				if err != nil {
 					blog.Warnf("convert stateful set udp rule failed, err %s", err.Error())
 					continue
@@ -914,7 +943,7 @@ func (updater *Updater) generateCloudListeners(ingressList []*ingressType.ClbIng
 				}
 			}
 			for _, tmpHttpRule := range tmpIngress.Spec.StatefulSet.HTTP {
-				listeners, err := updater.convertStatefulSetHttpRuleToCloudListener(tmpHttpRule, cloudListenerType.ClbListenerProtocolHTTP)
+				listeners, err := updater.convertStatefulSetHttpRuleToListener(tmpHttpRule, cloudListenerType.ClbListenerProtocolHTTP)
 				if err != nil {
 					blog.Warnf("convert stateful set http rule failed, err %s", err.Error())
 					continue
@@ -924,7 +953,7 @@ func (updater *Updater) generateCloudListeners(ingressList []*ingressType.ClbIng
 				}
 			}
 			for _, tmpHttpsRule := range tmpIngress.Spec.StatefulSet.HTTPS {
-				listeners, err := updater.convertStatefulSetHttpRuleToCloudListener(tmpHttpsRule, cloudListenerType.ClbListenerProtocolHTTPS)
+				listeners, err := updater.convertStatefulSetHttpRuleToListener(tmpHttpsRule, cloudListenerType.ClbListenerProtocolHTTPS)
 				if err != nil {
 					blog.Warnf("convert stateful set http rule failed, err %s", err.Error())
 					continue
@@ -948,6 +977,7 @@ func (updater *Updater) getCloudListenerFromCache() ([]*cloudListenerType.CloudL
 	return updater.listenerClient.ListListeners()
 }
 
+// get diff cloud listener
 func (updater *Updater) getDiffCloudListeners(olds, curs []*cloudListenerType.CloudListener) (
 	dels, adds []*cloudListenerType.CloudListener, err error) {
 
@@ -982,6 +1012,7 @@ func (updater *Updater) getDiffCloudListeners(olds, curs []*cloudListenerType.Cl
 	return
 }
 
+// get cloud listener to be updated
 func (updater *Updater) getUpdateCloudListeners(olds, curs []*cloudListenerType.CloudListener) (
 	toUpdates, updates []*cloudListenerType.CloudListener, err error) {
 	tmpMap := make(map[string]*cloudListenerType.CloudListener)

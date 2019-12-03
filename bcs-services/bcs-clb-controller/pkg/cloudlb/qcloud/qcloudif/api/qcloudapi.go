@@ -29,15 +29,25 @@ import (
 
 //ClbAPI Clb api operator
 type ClbAPI struct {
+	// api for tencent cloud clb v2 api
 	api                      qcloud.APIInterface
+	// project id for tencent cloud account
 	ProjectID                int
+	// region for clb
 	Region                   string
+	// subnet id for private clb instance
 	SubnetID                 string
+	// vpc id for clb instance
 	VpcID                    string
+	// secret id for tencent cloud account
 	SecretID                 string
+	// secret key for tencent cloud account
 	SecretKey                string
+	// backend type: CVM or eni
 	BackendType              string
+	// wait second for next query when task is dealing
 	WaitPeriodLBDealing      int
+	// wait second for next query when exceeding api limit
 	WaitPeriodExceedLimit    int
 	ExpireTimeForHTTPSession int
 }
@@ -63,9 +73,9 @@ func NewCloudClbAPI(projectID int, region, subnet, vpcID, secretID, secretKey, b
 	}
 }
 
-//CreateLoadBalance create clb
+// CreateLoadBalance create clb by incoming cloud loadbalance info
+// return clb instance id, vips and err
 func (clb *ClbAPI) CreateLoadBalance(lb *loadbalance.CloudLoadBalancer) (string, []string, error) {
-
 	networkType, ok := NetworkTypeBcs2QCloudMap[lb.NetworkType]
 	if !ok {
 		return "", nil, fmt.Errorf("unknown bcs network type %s", lb.NetworkType)
@@ -84,7 +94,6 @@ func (clb *ClbAPI) CreateLoadBalance(lb *loadbalance.CloudLoadBalancer) (string,
 		input.SubnetID = clb.SubnetID
 	}
 	input.VpcID = clb.VpcID
-
 	output, err := clb.api.CreateLoadBalance(input)
 	if err != nil {
 		return "", nil, fmt.Errorf("create loadbalance with input %v failed, err %s", input, err.Error())
@@ -94,20 +103,16 @@ func (clb *ClbAPI) CreateLoadBalance(lb *loadbalance.CloudLoadBalancer) (string,
 		blog.Errorf("create clb failed, response code %d, code desc %s, message %s", output.Code, output.CodeDesc, output.Message)
 		return "", nil, fmt.Errorf("create clb failed, response code %d, code desc %s, message %s", output.Code, output.CodeDesc, output.Message)
 	}
-
 	blog.Infof("create clb request done, wait asynchronous task done")
-
 	for _, id := range output.UnLoadBalancerIds {
 		if len(id) != 1 {
 			blog.Errorf("create clb result invalid, returned length of %s error, %v", id, output)
 			return "", nil, fmt.Errorf("create clb result invalid, returned length of %s error, %v", id, output)
 		}
-
 		err := clb.waitForTaskResult(output.RequestID)
 		if err != nil {
 			return "", nil, fmt.Errorf("wait for task result %d failed, err %s", output.RequestID, err.Error())
 		}
-
 		count := 0
 		for ; count <= ClbMaxTimeout; count++ {
 			if count == ClbMaxTimeout {
@@ -141,9 +146,8 @@ func (clb *ClbAPI) CreateLoadBalance(lb *loadbalance.CloudLoadBalancer) (string,
 	return "", nil, fmt.Errorf("empty ids map in create clb output %v", output)
 }
 
-//DescribeLoadBalance describe clb
+//DescribeLoadBalance describe clb by name
 func (clb *ClbAPI) DescribeLoadBalance(name string) (*loadbalance.CloudLoadBalancer, bool, error) {
-
 	output, err := clb.doDescribeLoadBalance(name)
 	if err != nil {
 		return nil, false, fmt.Errorf("describe clb failed, err %s", err.Error())
@@ -152,12 +156,10 @@ func (clb *ClbAPI) DescribeLoadBalance(name string) (*loadbalance.CloudLoadBalan
 		blog.Warnf("clb %s is not existed", name)
 		return nil, false, nil
 	}
-
 	if len(output.LoadBalances) == 0 {
 		blog.Warnf("describe clb %s info return nil", name)
 		return nil, false, nil
 	}
-
 	networkType, ok := NetworkTypeQCloud2BcsMap[output.LoadBalances[0].LoadBalancerType]
 	if !ok {
 		return nil, false, fmt.Errorf("convert qcloud network type %d to bcs type failed, err %s", output.LoadBalances[0].LoadBalancerType, err.Error())
@@ -183,19 +185,19 @@ func (clb *ClbAPI) DescribeLoadBalance(name string) (*loadbalance.CloudLoadBalan
 
 //CreateListener create listener
 func (clb *ClbAPI) CreateListener(listener *loadbalance.CloudListener) (string, error) {
-
 	protocol, ok := ProtocolTypeBcs2QCloudMap[listener.Spec.Protocol]
 	if !ok {
 		return "", fmt.Errorf("convert bcs protocol %s to qcloud type failed", listener.Spec.Protocol)
 	}
-
 	var listenerID string
 	var err error
+	// https and http
 	if protocol == ClbListenerProtocolHTTP || protocol == ClbListenerProtocolHTTPS {
 		listenerID, err = clb.create7LayerListener(listener)
 		if err != nil {
 			return "", fmt.Errorf("create 7 layer listener failed, err %s", err.Error())
 		}
+	// tcp and udp
 	} else {
 		listenerID, err = clb.create4LayerListener(listener)
 		if err != nil {
@@ -218,7 +220,7 @@ func (clb *ClbAPI) ModifyListenerAttribute(listener *loadbalance.CloudListener) 
 	if !ok {
 		return fmt.Errorf("convert bcs protocol %s to qcloud type failed", listener.Spec.Protocol)
 	}
-
+	// tls config modification is only available for https listener
 	if protocol == ClbListenerProtocolHTTPS {
 		if listener.Spec.TLS == nil {
 			return fmt.Errorf("https with nil tls config, error https listener cannot be modified")
@@ -236,7 +238,8 @@ func (clb *ClbAPI) ModifyListenerAttribute(listener *loadbalance.CloudListener) 
 	return clb.doModify4LayerListenerAttribute(listener)
 }
 
-//DescribeListener describe listener
+// DescribeListener describe listener
+// response does not contains backends info
 func (clb *ClbAPI) DescribeListener(lbID, listenerID string, port int) (*loadbalance.CloudListener, bool, error) {
 	var listenerInfo *qcloud.ListenerInfo
 	var err error
@@ -271,7 +274,6 @@ func (clb *ClbAPI) DescribeListener(lbID, listenerID string, port int) (*loadbal
 		listener.Spec.Protocol == loadbalance.ClbListenerProtocolUDP {
 		return listener, true, nil
 	}
-
 	if listener.Spec.Protocol == loadbalance.ClbListenerProtocolHTTPS {
 		listener.Spec.TLS = &loadbalance.CloudListenerTls{
 			Mode:     listenerInfo.SSLMode,
@@ -359,6 +361,8 @@ func (clb *ClbAPI) ModifyRuleAttribute(loadBalanceID, listenerID string, rule *l
 	return clb.doModifyRule(loadBalanceID, listenerID, rule)
 }
 
+// when backend mode is cvm, describe cvm instance id by ips,
+// when backend mode is eni, use original ip
 func (clb *ClbAPI) getBackends(backends loadbalance.BackendList) (qcloud.BackendTargetList, error) {
 	if len(backends) == 0 {
 		return nil, fmt.Errorf("no backends")
@@ -448,6 +452,7 @@ func (clb *ClbAPI) Register4LayerBackends(lbID, listenerID string, backendsRegis
 }
 
 //_Register4LayerBackends register 4 layer backends
+// deprecated
 func (clb *ClbAPI) _Register4LayerBackends(lbID, listenerID string, backendsRegister loadbalance.BackendList) error {
 	if len(backendsRegister) == 0 {
 		return fmt.Errorf("no backends in request")
@@ -469,6 +474,7 @@ func (clb *ClbAPI) _Register4LayerBackends(lbID, listenerID string, backendsRegi
 }
 
 // DeRegister4LayerBackends de register backends for 4 layer
+// deprecated
 func (clb *ClbAPI) DeRegister4LayerBackends(lbID, listenerID string, backendsDeRegister loadbalance.BackendList) error {
 	if len(backendsDeRegister) == 0 {
 		return fmt.Errorf("zero length of backends to be deRegister")
