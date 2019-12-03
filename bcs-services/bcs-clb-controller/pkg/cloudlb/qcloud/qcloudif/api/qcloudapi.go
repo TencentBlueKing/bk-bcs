@@ -400,7 +400,7 @@ func (clb *ClbAPI) Register7LayerBackends(lbID, listenerID, ruleID string, backe
 	if err != nil {
 		return err
 	}
-	return clb.registerInstanceWith7thLayerListener(lbID, listenerID, ruleID, bList)
+	return clb.registerInsWith7thLayerListener(lbID, listenerID, ruleID, bList)
 }
 
 //_Register7LayerBackends register 7 layer backends
@@ -422,7 +422,7 @@ func (clb *ClbAPI) _Register7LayerBackends(lbID, listenerID, ruleID string, back
 		bList = append(bList, newBack)
 	}
 
-	return clb.registerInstanceWith7thLayerListener(lbID, listenerID, ruleID, bList)
+	return clb.registerInsWith7thLayerListener(lbID, listenerID, ruleID, bList)
 }
 
 // DeRegister7LayerBackends de register backends for 7 layer
@@ -448,7 +448,7 @@ func (clb *ClbAPI) Register4LayerBackends(lbID, listenerID string, backendsRegis
 	if err != nil {
 		return err
 	}
-	return clb.registerInstanceWith4thLayerListener(lbID, listenerID, bList)
+	return clb.registerInsWith4thLayerListener(lbID, listenerID, bList)
 }
 
 //_Register4LayerBackends register 4 layer backends
@@ -470,7 +470,7 @@ func (clb *ClbAPI) _Register4LayerBackends(lbID, listenerID string, backendsRegi
 		}
 		bList = append(bList, newBack)
 	}
-	return clb.registerInstanceWith4thLayerListener(lbID, listenerID, bList)
+	return clb.registerInsWith4thLayerListener(lbID, listenerID, bList)
 }
 
 // DeRegister4LayerBackends de register backends for 4 layer

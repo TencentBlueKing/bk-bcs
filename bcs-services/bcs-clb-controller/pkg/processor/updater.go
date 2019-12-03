@@ -461,8 +461,8 @@ func (updater *Updater) getBackendListFromIngressRule(rule *ingressType.ClbRule)
 						Port:   ruledSvcPort.ProxyPort,
 						Weight: 10,
 					}
-				// for underlay ip
-				// use pod ip and port directly
+					// for underlay ip
+					// use pod ip and port directly
 				} else {
 					newBackend = &cloudListenerType.Backend{
 						IP:     node.NodeIP,
@@ -747,7 +747,7 @@ func (updater *Updater) convertStatefulSetRuleToListener(statefulSetRule *ingres
 }
 
 // like convertStatefulSetRuleToListener, but set extra config (health check, tls)
-func (updater *Updater) convertStatefulSetHttpRuleToListener(statefulSetRule *ingressType.ClbStatefulSetHttpRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
+func (updater *Updater) convertStatefulSetHttpToListener(statefulSetRule *ingressType.ClbStatefulSetHttpRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
 	var retListenerList []*cloudListenerType.CloudListener
 	for portIndex := statefulSetRule.StartIndex; portIndex <= statefulSetRule.EndIndex; portIndex++ {
 		listener := &cloudListenerType.CloudListener{
@@ -943,7 +943,7 @@ func (updater *Updater) generateCloudListeners(ingressList []*ingressType.ClbIng
 				}
 			}
 			for _, tmpHttpRule := range tmpIngress.Spec.StatefulSet.HTTP {
-				listeners, err := updater.convertStatefulSetHttpRuleToListener(tmpHttpRule, cloudListenerType.ClbListenerProtocolHTTP)
+				listeners, err := updater.convertStatefulSetHttpToListener(tmpHttpRule, cloudListenerType.ClbListenerProtocolHTTP)
 				if err != nil {
 					blog.Warnf("convert stateful set http rule failed, err %s", err.Error())
 					continue
@@ -953,7 +953,7 @@ func (updater *Updater) generateCloudListeners(ingressList []*ingressType.ClbIng
 				}
 			}
 			for _, tmpHttpsRule := range tmpIngress.Spec.StatefulSet.HTTPS {
-				listeners, err := updater.convertStatefulSetHttpRuleToListener(tmpHttpsRule, cloudListenerType.ClbListenerProtocolHTTPS)
+				listeners, err := updater.convertStatefulSetHttpToListener(tmpHttpsRule, cloudListenerType.ClbListenerProtocolHTTPS)
 				if err != nil {
 					blog.Warnf("convert stateful set http rule failed, err %s", err.Error())
 					continue

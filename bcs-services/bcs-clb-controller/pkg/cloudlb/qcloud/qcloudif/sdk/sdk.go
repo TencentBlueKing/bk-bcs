@@ -1175,7 +1175,7 @@ func backendToJSONString(b *tclb.Backend) string {
 }
 
 // convert tclb backend to cloud listener backend
-func (c *Client) convertBackendToCloudListenerBackend(backendList []*tclb.Backend) ([]*cloudListenerType.Backend, error) {
+func (c *Client) convertToCloudListenerBackend(backendList []*tclb.Backend) ([]*cloudListenerType.Backend, error) {
 	var retBackends []*cloudListenerType.Backend
 	for _, backend := range backendList {
 		// TODO: is there backend with no private ip address?
@@ -1192,7 +1192,7 @@ func (c *Client) convertBackendToCloudListenerBackend(backendList []*tclb.Backen
 }
 
 // convert tclb health check to local type
-func (c *Client) convertHealthCheckToCloudListenerHealthCheck(hc *tclb.HealthCheck) (*cloudListenerType.TargetGroupHealthCheck, error) {
+func (c *Client) convertToCloudListenerHealthCheck(hc *tclb.HealthCheck) (*cloudListenerType.TargetGroupHealthCheck, error) {
 	if hc == nil {
 		return nil, fmt.Errorf("cannot covert empty health check struct")
 	}
@@ -1223,7 +1223,7 @@ func (c *Client) convertHealthCheckToCloudListenerHealthCheck(hc *tclb.HealthChe
 func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclbRuleTargets *tclb.RuleTargets) (*cloudListenerType.Rule, error) {
 	rule := cloudListenerType.NewRule(*tclbRule.Domain, *tclbRule.Url)
 	rule.ID = *tclbRule.LocationId
-	hc, err := c.convertHealthCheckToCloudListenerHealthCheck(tclbRule.HealthCheck)
+	hc, err := c.convertToCloudListenerHealthCheck(tclbRule.HealthCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -1233,7 +1233,7 @@ func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclb
 		rule.TargetGroup.SessionExpire = int(*tclbRule.SessionExpireTime)
 	}
 	if tclbRuleTargets != nil && len(tclbRuleTargets.Targets) != 0 {
-		backends, err := c.convertBackendToCloudListenerBackend(tclbRuleTargets.Targets)
+		backends, err := c.convertToCloudListenerBackend(tclbRuleTargets.Targets)
 		if err != nil {
 			return nil, err
 		}
@@ -1287,7 +1287,7 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 	// convert tcp udp listener
 	case ListenerProtocolTCP, ListenerProtocolUDP:
 		cloudListener.Spec.TargetGroup = cloudListenerType.NewTargetGroup("", "", SSLModeSDK2BcsMap[*listener.Protocol], int(*listener.Port))
-		hc, err := c.convertHealthCheckToCloudListenerHealthCheck(listener.HealthCheck)
+		hc, err := c.convertToCloudListenerHealthCheck(listener.HealthCheck)
 		if err != nil {
 			return nil, err
 		}
@@ -1297,7 +1297,7 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 			cloudListener.Spec.TargetGroup.SessionExpire = int(*listener.SessionExpireTime)
 		}
 		if len(listenerBackend.Targets) != 0 {
-			backends, err := c.convertBackendToCloudListenerBackend(listenerBackend.Targets)
+			backends, err := c.convertToCloudListenerBackend(listenerBackend.Targets)
 			if err != nil {
 				return nil, err
 			}

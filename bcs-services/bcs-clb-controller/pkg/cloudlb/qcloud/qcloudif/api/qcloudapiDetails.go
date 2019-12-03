@@ -554,8 +554,8 @@ func (clb *ClbAPI) doModifyRule(loadBalanceID, listenerID string, rule *loadbala
 	return nil
 }
 
-//registerInstanceWith7thLayerListener
-func (clb *ClbAPI) registerInstanceWith7thLayerListener(loadBalanceID, listenerID, locationID string, bdTargets qcloud.BackendTargetList) error {
+//registerInsWith7thLayerListener
+func (clb *ClbAPI) registerInsWith7thLayerListener(loadBalanceID, listenerID, locationID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBSeventhListenerInput)
 	desc.Action = "RegisterInstancesWithForwardLBSeventhListener"
 	desc.Nonce = uint(rand.Uint32())
@@ -585,7 +585,7 @@ func (clb *ClbAPI) registerInstanceWith7thLayerListener(loadBalanceID, listenerI
 }
 
 //registerInstanceWith4thLayerListener
-func (clb *ClbAPI) registerInstanceWith4thLayerListener(loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
+func (clb *ClbAPI) registerInsWith4thLayerListener(loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBFourthListenerInput)
 	desc.Action = "RegisterInstancesWithForwardLBFourthListener"
 	desc.Nonce = uint(rand.Uint32())
