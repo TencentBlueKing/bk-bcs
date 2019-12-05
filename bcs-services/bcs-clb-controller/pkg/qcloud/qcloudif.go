@@ -31,10 +31,10 @@ type APIInterface interface {
 	Modify7LayerListener(input *ModifyForwardLBSeventhListenerInput) (*ModifyForwardLBSeventhListenerOutput, error)
 	Modify4LayerListener(input *ModifyForwardLBFourthListenerInput) (*ModifyForwardLBFourthListenerOutput, error)
 
-	RegisterInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (*RegisterInstancesWithForwardLBFourthListenerOutput, error)
-	DeRegisterInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (*DeregisterInstancesFromForwardLBFourthListenerOutput, error)
-	RegisterInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (*RegisterInstancesWithForwardLBSeventhListenerOutput, error)
-	DeRegisterInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (*DeregisterInstancesFromForwardLBSeventhListenerOutput, error)
+	RegInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (*RegisterInstancesWithForwardLBFourthListenerOutput, error)
+	DeRegInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (*DeregisterInstancesFromForwardLBFourthListenerOutput, error)
+	RegInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (*RegisterInstancesWithForwardLBSeventhListenerOutput, error)
+	DeRegInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (*DeregisterInstancesFromForwardLBSeventhListenerOutput, error)
 	ModifyForward4LayerBackendsWeight(input *ModifyForwardFourthBackendsInput) (*ModifyForwardFourthBackendsOutput, error)
 	ModifyForward7LayerBackendsWeight(input *ModifyForwardSeventhBackendsInput) (*ModifyForwardSeventhBackendsOutput, error)
 	CreateRules(input *CreateForwardLBListenerRulesInput) (*CreateForwardLBListenerRulesOutput, error)
@@ -184,8 +184,8 @@ func (api *API) Modify4LayerListener(input *ModifyForwardLBFourthListenerInput) 
 	return output, nil
 }
 
-//RegisterInstancesWith4LayerListener register instance with 4 layer listener
-func (api *API) RegisterInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (*RegisterInstancesWithForwardLBFourthListenerOutput, error) {
+//RegInstancesWith4LayerListener register instance with 4 layer listener
+func (api *API) RegInstancesWith4LayerListener(input *RegisterInstancesWithForwardLBFourthListenerInput) (*RegisterInstancesWithForwardLBFourthListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -198,8 +198,8 @@ func (api *API) RegisterInstancesWith4LayerListener(input *RegisterInstancesWith
 	return output, nil
 }
 
-//DeRegisterInstancesWith4LayerListener deregister instance with 4 layer listener
-func (api *API) DeRegisterInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (*DeregisterInstancesFromForwardLBFourthListenerOutput, error) {
+//DeRegInstancesWith4LayerListener deregister instance with 4 layer listener
+func (api *API) DeRegInstancesWith4LayerListener(input *DeregisterInstancesFromForwardLBFourthListenerInput) (*DeregisterInstancesFromForwardLBFourthListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -212,8 +212,8 @@ func (api *API) DeRegisterInstancesWith4LayerListener(input *DeregisterInstances
 	return output, nil
 }
 
-//RegisterInstancesWith7LayerListener register instance with 7 layer listener
-func (api *API) RegisterInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (*RegisterInstancesWithForwardLBSeventhListenerOutput, error) {
+//RegInstancesWith7LayerListener register instance with 7 layer listener
+func (api *API) RegInstancesWith7LayerListener(input *RegisterInstancesWithForwardLBSeventhListenerInput) (*RegisterInstancesWithForwardLBSeventhListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {
@@ -226,8 +226,8 @@ func (api *API) RegisterInstancesWith7LayerListener(input *RegisterInstancesWith
 	return output, nil
 }
 
-//DeRegisterInstancesWith7LayerListener deregister instance with 7 layer listener
-func (api *API) DeRegisterInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (*DeregisterInstancesFromForwardLBSeventhListenerOutput, error) {
+//DeRegInstancesWith7LayerListener deregister instance with 7 layer listener
+func (api *API) DeRegInstancesWith7LayerListener(input *DeregisterInstancesFromForwardLBSeventhListenerInput) (*DeregisterInstancesFromForwardLBSeventhListenerOutput, error) {
 
 	dataBytes, err := api.LBClient.GetRequest(input)
 	if err != nil {

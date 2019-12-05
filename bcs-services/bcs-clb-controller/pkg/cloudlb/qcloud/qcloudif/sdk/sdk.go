@@ -34,37 +34,67 @@ import (
 )
 
 const (
+	// DescribeFilterNamePrivateIP filter name for private IP
 	DescribeFilterNamePrivateIP = "private-ip-address"
+	// ClbBackendTargetTypeCVM clb backend type is cvm
+	// clb backend type defined the way to call register backend to listener or rule
+	// when use "CVM": register backend with instance id which is get from cvm ip
+	// when use "ENI": register backend with eni IP
 	ClbBackendTargetTypeCVM     = "CVM"
+	// ClbBackendTargetTypeENI clb backend type is elastic network interface
 	ClbBackendTargetTypeENI     = "ENI"
+	// TaskStatusDealing  task is dealing
 	TaskStatusDealing           = 2
+	// TaskStatusFailed task is failed
 	TaskStatusFailed            = 1
+	// TaskStatusSucceed task is successful
 	TaskStatusSucceed           = 0
+	// ClbStatusCreating clb instance is creating
 	ClbStatusCreating           = 0
+	// ClbStatusNormal clb instance is normal
 	ClbStatusNormal             = 1
 )
 
-type SdkConfig struct {
+// Config config for sdk client
+type Config struct {
+	// Region tencent cloud region
 	Region                string
+	// ProjectID project id for tencent cloud
 	ProjectID             int
+	// SubnetID subent id for tencent cloud vpc, only for creating private clb instance
+	// it is useless when take over a existed private clb intance
 	SubnetID              string
+	// VpcID vpc id for tencent cloud
 	VpcID                 string
+	// SecretID secret id for tencent cloud
 	SecretID              string
+	// SecretKey secret key for tencent cloud
 	SecretKey             string
+	// BackendType cvm or eni
 	BackendType           string
+	// MaxTimeout times for retrying query asynchronous task result
 	MaxTimeout            int
+	// WaitPeriodExceedLimit wait second when exceed api limit
 	WaitPeriodExceedLimit int
+	// WaitPeriodLBDealing wait second when retrying query asynchronous task result
 	WaitPeriodLBDealing   int
 }
 
+// Client client for call tencent cloud sdk
 type Client struct {
+	// client for operate clb
 	clb       *tclb.Client
+	// client for query cvm
 	cvm       *tcvm.Client
+	// client for query vpc
 	vpc       *tvpc.Client
-	sdkConfig *SdkConfig
+	// config
+	sdkConfig *Config
 }
 
-func NewClient(sc *SdkConfig) qcloudif.ClbAdapter {
+// NewClient create client for tencent cloud sdk
+func NewClient(sc *Config) qcloudif.ClbAdapter {
+	// referenced tencent cloud example
 	credential := tcommon.NewCredential(sc.SecretID, sc.SecretKey)
 	profile := tprofile.NewClientProfile()
 	clbClient := &tclb.Client{}
@@ -82,11 +112,12 @@ func NewClient(sc *SdkConfig) qcloudif.ClbAdapter {
 	}
 }
 
+// checkErrCode common method for check tencent cloud sdk err
 func (c *Client) checkErrCode(err *terrors.TencentCloudSDKError) {
-	if err.Code == "4400" {
+	if err.Code == RequestLimitExceededCode {
 		blog.Warnf("request exceed limit, have a rest for %d second", c.sdkConfig.WaitPeriodExceedLimit)
 		time.Sleep(time.Duration(c.sdkConfig.WaitPeriodLBDealing) * time.Second)
-	} else if err.Code == "4000" {
+	} else if err.Code == WrongStatusCode {
 		blog.Warnf("clb is dealing another action, have a rest for %d second", c.sdkConfig.WaitPeriodLBDealing)
 		time.Sleep(time.Duration(c.sdkConfig.WaitPeriodLBDealing) * time.Second)
 	}
@@ -96,9 +127,13 @@ func (c *Client) checkErrCode(err *terrors.TencentCloudSDKError) {
 // TODO: deal with vips
 func (c *Client) CreateLoadBalance(lb *cloudListenerType.CloudLoadBalancer) (lbID string, vips []string, err error) {
 	request := tclb.NewCreateLoadBalancerRequest()
+	// loadbalance has application type and tradition type
+	// we always use application type
 	request.Forward = tcommon.Int64Ptr(LoadBalancerForwardApplication)
+	// public
 	if lb.NetworkType == cloudListenerType.ClbNetworkTypePublic {
 		request.LoadBalancerType = tcommon.StringPtr(LoadBalancerNetworkPublic)
+	// when create private loadbalance, need subentid 
 	} else {
 		request.LoadBalancerType = tcommon.StringPtr(LoadBalancerNetworkInternal)
 		request.SubnetId = tcommon.StringPtr(c.sdkConfig.SubnetID)
@@ -115,6 +150,7 @@ func (c *Client) CreateLoadBalance(lb *cloudListenerType.CloudLoadBalancer) (lbI
 		return "", nil, fmt.Errorf("create loadbalance err %s", err.Error())
 	}
 	blog.Infof("create clb response:\n%s", response.ToJsonString())
+	// wait util clb instance status is normal
 	for counter := 0; counter < c.sdkConfig.MaxTimeout; counter++ {
 		clb, err := c.doDescribeLoadBalance(lb.Name)
 		if err != nil {
@@ -142,6 +178,7 @@ func (c *Client) CreateLoadBalance(lb *cloudListenerType.CloudLoadBalancer) (lbI
 	return "", nil, fmt.Errorf("waiting for loadbalance creating timeout")
 }
 
+// do actually describe loadbalance by loadbalance name
 func (c *Client) doDescribeLoadBalance(name string) (*tclb.LoadBalancer, error) {
 	request := tclb.NewDescribeLoadBalancersRequest()
 	request.Forward = tcommon.Int64Ptr(LoadBalancerForwardApplication)
@@ -166,7 +203,7 @@ func (c *Client) doDescribeLoadBalance(name string) (*tclb.LoadBalancer, error) 
 	return response.Response.LoadBalancerSet[0], nil
 }
 
-// DescribeLoadBalance describe clb by name, return clb info, and return if it is existed
+// DescribeLoadBalance describe clb by name, return clb info, and return true if it is existed
 func (c *Client) DescribeLoadBalance(name string) (*cloudListenerType.CloudLoadBalancer, bool, error) {
 	lb, err := c.doDescribeLoadBalance(name)
 	if err != nil {
@@ -196,6 +233,8 @@ func (c *Client) DescribeLoadBalance(name string) (*cloudListenerType.CloudLoadB
 }
 
 // CreateListener create listener
+// create7LayerListener and create4LayerListener only return request object
+// CreateListener does request action and waits for result
 func (c *Client) CreateListener(listener *cloudListenerType.CloudListener) (listenerID string, err error) {
 	protocol, ok := ProtocolBcs2SDKMap[listener.Spec.Protocol]
 	if !ok {
@@ -215,6 +254,7 @@ func (c *Client) CreateListener(listener *cloudListenerType.CloudListener) (list
 	}
 
 	blog.Infof("create listener request:\n%s", request.ToJsonString())
+	// wait util listener is created
 	counter := 0
 	var response *tclb.CreateListenerResponse
 	for ; counter < c.sdkConfig.MaxTimeout; counter++ {
@@ -222,13 +262,14 @@ func (c *Client) CreateListener(listener *cloudListenerType.CloudListener) (list
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
 			blog.Errorf("create listener failed with request %s, err %s", request.ToJsonString(), err.Error())
 			return "", fmt.Errorf("create listener failed with request %s, err %s", request.ToJsonString(), err.Error())
 		}
+		// should return listener id in response
 		if len(response.Response.ListenerIds) == 0 {
 			blog.Errorf("create listener return zero length ids with request %s, err %s", request.ToJsonString(), err.Error())
 			return "", fmt.Errorf("create listener return zero length ids with request %s, err %s", request.ToJsonString(), err.Error())
@@ -240,6 +281,7 @@ func (c *Client) CreateListener(listener *cloudListenerType.CloudListener) (list
 		blog.Errorf("create listener with request %s timeout", request.ToJsonString())
 		return "", fmt.Errorf("create listener with request %s timeout", request.ToJsonString())
 	}
+	// creating listener is asynchronous
 	err = c.waitTaskDone(*response.Response.RequestId)
 	if err != nil {
 		return "", err
@@ -247,6 +289,8 @@ func (c *Client) CreateListener(listener *cloudListenerType.CloudListener) (list
 	return *response.Response.ListenerIds[0], nil
 }
 
+// create7LayerListener create request for creating 7 layer listener
+// create listener won't bind backends
 func (c *Client) create7LayerListener(listener *cloudListenerType.CloudListener) (*tclb.CreateListenerRequest, error) {
 	request := tclb.NewCreateListenerRequest()
 	request.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadBalancerID)
@@ -261,6 +305,7 @@ func (c *Client) create7LayerListener(listener *cloudListenerType.CloudListener)
 		return nil, fmt.Errorf("protocol %s cannot be recognized", listener.Spec.Protocol)
 	}
 	request.Protocol = tcommon.StringPtr(protocol)
+	// https tls config
 	if protocol == ListenerProtocolHTTPS {
 		if listener.Spec.TLS == nil {
 			return nil, fmt.Errorf("tls config must be defined for protocol %s listener", protocol)
@@ -293,9 +338,12 @@ func (c *Client) create7LayerListener(listener *cloudListenerType.CloudListener)
 			request.Certificate.CertCaContent = tcommon.StringPtr(listener.Spec.TLS.CertClientCaContent)
 		}
 	}
+	// 7 layer listener has no target group, deal with target group in rule operations
 	return request, nil
 }
 
+// create4LayerListener create request for creating 4 layer listener
+// create listener won't bind backends
 func (c *Client) create4LayerListener(listener *cloudListenerType.CloudListener) (*tclb.CreateListenerRequest, error) {
 	request := tclb.NewCreateListenerRequest()
 	request.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadBalancerID)
@@ -310,6 +358,7 @@ func (c *Client) create4LayerListener(listener *cloudListenerType.CloudListener)
 		return nil, fmt.Errorf("protocol %s cannot be recognized", listener.Spec.Protocol)
 	}
 	request.Protocol = tcommon.StringPtr(protocol)
+	// 4 layer listener has target group
 	if listener.Spec.TargetGroup != nil {
 		request.SessionExpireTime = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.SessionExpire))
 		lbPolicy := LBAlgorithmRoundRobin
@@ -343,7 +392,7 @@ func (c *Client) DeleteListener(lbID, listenerID string) error {
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -361,6 +410,8 @@ func (c *Client) DeleteListener(lbID, listenerID string) error {
 }
 
 // DescribeListener describe listener
+// by loadbalance id, either listener id or listener port
+// this function does different convertion for 4 layer listener and 7 layer listener.
 func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *cloudListenerType.CloudListener, isExisted bool, err error) {
 	request := tclb.NewDescribeListenersRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -372,14 +423,14 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *
 	if port > 0 {
 		request.Port = tcommon.Int64Ptr(int64(port))
 	}
-
+	// do request
 	blog.Infof("describe listener request:\n%s", request.ToJsonString())
 	for counter := 0; counter < c.sdkConfig.MaxTimeout; counter++ {
 		response, err := c.clb.DescribeListeners(request)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -413,11 +464,13 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *
 				Rules:          make([]*cloudListenerType.Rule, 0),
 			},
 		}
+		// convert 4 layer listener
 		if *listener.Protocol == ListenerProtocolTCP || *listener.Protocol == ListenerProtocolUDP {
 			lbPolicy := LBAlgorithmRoundRobin
 			if validPolicy, ok := LBAlgorithmTypeSDK2BcsMap[*listener.Scheduler]; ok {
 				lbPolicy = validPolicy
 			}
+			// convert target group
 			retListener.Spec.TargetGroup = &cloudListenerType.TargetGroup{
 				SessionExpire: int(*listener.SessionExpireTime),
 				LBPolicy:      lbPolicy,
@@ -444,6 +497,7 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *
 			}
 			return retListener, true, nil
 		}
+		// convert tls config
 		if *listener.Protocol == ListenerProtocolHTTPS {
 			sslMode, _ := SSLModeSDK2BcsMap[*listener.Certificate.SSLMode]
 			retListener.Spec.TLS = &cloudListenerType.CloudListenerTls{
@@ -454,6 +508,7 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *
 				retListener.Spec.TLS.CertCaID = *listener.Certificate.CertCaId
 			}
 		}
+		// convert 7 layer rules
 		for _, rule := range listener.Rules {
 			newRule := &cloudListenerType.Rule{
 				ID:     *rule.LocationId,
@@ -464,6 +519,7 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *
 					LBPolicy:      *rule.Scheduler,
 				},
 			}
+			// convert target group for every rule
 			newRule.TargetGroup.HealthCheck = &cloudListenerType.TargetGroupHealthCheck{}
 			if rule.HealthCheck != nil {
 				newRule.TargetGroup.HealthCheck.Enabled = 1
@@ -485,6 +541,8 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *
 }
 
 // ModifyListenerAttribute modify listener attribute
+// modify7LayerListenerAttribute can only modify https listener tls config, leave other modify actions to ModifyRuleAttribute
+// modify4LayerListenerAttribute can modify health check, session, lb policy for 4 layer listener
 func (c *Client) ModifyListenerAttribute(listener *cloudListenerType.CloudListener) error {
 	protocol, ok := ProtocolBcs2SDKMap[listener.Spec.Protocol]
 	if !ok {
@@ -505,6 +563,8 @@ func (c *Client) ModifyListenerAttribute(listener *cloudListenerType.CloudListen
 	return c.modify4LayerListenerAttribute(listener)
 }
 
+// modify7LayerListenerAttribute modify tls configs for https listener
+// http listener don't support modify attribute
 func (c *Client) modify7LayerListenerAttribute(listener *cloudListenerType.CloudListener) error {
 	request := tclb.NewModifyListenerRequest()
 	request.ListenerId = tcommon.StringPtr(listener.Spec.ListenerID)
@@ -541,7 +601,7 @@ func (c *Client) modify7LayerListenerAttribute(listener *cloudListenerType.Cloud
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -558,6 +618,7 @@ func (c *Client) modify7LayerListenerAttribute(listener *cloudListenerType.Cloud
 	return c.waitTaskDone(*response.Response.RequestId)
 }
 
+// modify4LayerListenerAttribute modify health check, session config, lb policy for 4 layer listener
 func (c *Client) modify4LayerListenerAttribute(listener *cloudListenerType.CloudListener) error {
 	request := tclb.NewModifyListenerRequest()
 	request.ListenerId = tcommon.StringPtr(listener.Spec.ListenerID)
@@ -589,7 +650,7 @@ func (c *Client) modify4LayerListenerAttribute(listener *cloudListenerType.Cloud
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -611,6 +672,7 @@ func (c *Client) CreateRules(lbID, listenerID string, rules cloudListenerType.Ru
 	request := tclb.NewCreateRuleRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
 	request.ListenerId = tcommon.StringPtr(listenerID)
+	// convert rules in CloudListener
 	for _, rule := range rules {
 		ruleInput := &tclb.RuleInput{}
 		ruleInput.Domain = tcommon.StringPtr(rule.Domain)
@@ -646,7 +708,7 @@ func (c *Client) CreateRules(lbID, listenerID string, rules cloudListenerType.Ru
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -663,7 +725,7 @@ func (c *Client) CreateRules(lbID, listenerID string, rules cloudListenerType.Ru
 	return c.waitTaskDone(*response.Response.RequestId)
 }
 
-// DeleteRule delete rule of clb listener by domain and url
+// DeleteRule delete rule of clb listener by domain and url, loadbalance id and listener id
 func (c *Client) DeleteRule(lbID, listenerID, domain, url string) error {
 	request := tclb.NewDeleteRuleRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -679,7 +741,7 @@ func (c *Client) DeleteRule(lbID, listenerID, domain, url string) error {
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -697,6 +759,8 @@ func (c *Client) DeleteRule(lbID, listenerID, domain, url string) error {
 }
 
 // DescribeRuleByDomainAndURL describe rule by domain and url
+// call DescribeListener api to find the certain listener
+// traverse all the rules in listener with certain domain and url
 func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, URL string) (rule *cloudListenerType.Rule, isExisted bool, err error) {
 	request := tclb.NewDescribeListenersRequest()
 	request.LoadBalancerId = tcommon.StringPtr(loadBalanceID)
@@ -710,7 +774,7 @@ func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, U
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -723,6 +787,7 @@ func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, U
 			return nil, false, fmt.Errorf("describe response invalid listeners length %d", len(response.Response.Listeners))
 		}
 		listener := response.Response.Listeners[0]
+		// find rule with domain and url
 		for _, ruleOutput := range listener.Rules {
 			if *ruleOutput.Domain == Domain && *ruleOutput.Url == URL {
 				retRule := &cloudListenerType.Rule{
@@ -738,6 +803,7 @@ func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, U
 					SessionExpire: int(*ruleOutput.SessionExpireTime),
 					LBPolicy:      lbPolicy,
 				}
+				// health check config
 				if ruleOutput.HealthCheck != nil {
 					retHealth := &cloudListenerType.TargetGroupHealthCheck{}
 					if ruleOutput.HealthCheck.HealthSwitch != nil {
@@ -782,6 +848,7 @@ func (c *Client) ModifyRuleAttribute(loadBalanceID, listenerID string, rule *clo
 		lbPolicy = validPolicy
 	}
 	request.Scheduler = tcommon.StringPtr(lbPolicy)
+	// health check config
 	if rule.TargetGroup.HealthCheck != nil {
 		request.HealthCheck = &tclb.HealthCheck{}
 		request.HealthCheck.HealthSwitch = tcommon.Int64Ptr(int64(rule.TargetGroup.HealthCheck.Enabled))
@@ -794,7 +861,7 @@ func (c *Client) ModifyRuleAttribute(loadBalanceID, listenerID string, rule *clo
 			request.HealthCheck.HttpCheckPath = tcommon.StringPtr(rule.TargetGroup.HealthCheck.HTTPCheckPath)
 		}
 	}
-
+	// do request
 	blog.Infof("modify rule with %v", request.ToJsonString())
 	counter := 0
 	var err error
@@ -804,7 +871,7 @@ func (c *Client) ModifyRuleAttribute(loadBalanceID, listenerID string, rule *clo
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -821,6 +888,7 @@ func (c *Client) ModifyRuleAttribute(loadBalanceID, listenerID string, rule *clo
 	return c.waitTaskDone(*response.Response.RequestId)
 }
 
+// inStringPtrSlice see if StringPtr array contains key
 func inStringPtrSlice(key string, array []*string) bool {
 	for _, e := range array {
 		if key == *e {
@@ -830,8 +898,11 @@ func inStringPtrSlice(key string, array []*string) bool {
 	return false
 }
 
+// getCVMInstanceIDMapByIP get (ip, CVM InstanceID) from ip array
+// when use backend is cvm, we use cvm instance id to regsiter listener
 func (c *Client) getCVMInstanceIDMapByIP(ips []string) (map[string]string, error) {
 	request := tcvm.NewDescribeInstancesRequest()
+	// construct filter
 	privateIPFilter := &tcvm.Filter{
 		Name: tcommon.StringPtr(DescribeFilterNamePrivateIP),
 	}
@@ -842,13 +913,13 @@ func (c *Client) getCVMInstanceIDMapByIP(ips []string) (map[string]string, error
 		privateIPFilter,
 	}
 	blog.Infof("describe instance id by ips request:\n%s", request.ToJsonString())
-
+	// do request
 	for counter := 0; counter < c.sdkConfig.MaxTimeout; counter++ {
 		response, err := c.cvm.DescribeInstances(request)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -874,6 +945,9 @@ func (c *Client) getCVMInstanceIDMapByIP(ips []string) (map[string]string, error
 	return nil, fmt.Errorf("describe instances by ips with request %s timeout", request.ToJsonString())
 }
 
+// registerBackends register backendList to rules
+// when backend type is CVM: use instance id to register
+// when backend type is eni: use eni ip to register
 func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegister cloudListenerType.BackendList) error {
 	request := tclb.NewRegisterTargetsRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -885,6 +959,7 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 		blog.Infof("lb %s, listener %s, rule %s has no backend, no need to register", lbID, listenerID, ruleID)
 		return nil
 	}
+	// cvm backend
 	if c.sdkConfig.BackendType == ClbBackendTargetTypeCVM {
 		var ips []string
 		for _, backend := range backendsRegister {
@@ -902,6 +977,7 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 				Weight:     tcommon.Int64Ptr(int64(backend.Weight)),
 			})
 		}
+	// eni backend
 	} else {
 		for _, backend := range backendsRegister {
 			request.Targets = append(request.Targets, &tclb.Target{
@@ -912,7 +988,7 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 			})
 		}
 	}
-
+	// do request
 	blog.Infof("register backend request:\n%s", request.ToJsonString())
 	counter := 0
 	var err error
@@ -922,7 +998,7 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -939,6 +1015,9 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 	return c.waitTaskDone(*response.Response.RequestId)
 }
 
+// deRegisterBackends deregister backendList to rules
+// when backend type is CVM: use instance id to deregister
+// when backend type is eni: use eni ip to deregister
 func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDeregister cloudListenerType.BackendList) error {
 	request := tclb.NewDeregisterTargetsRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -946,11 +1025,13 @@ func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDer
 	if len(ruleID) != 0 {
 		request.LocationId = tcommon.StringPtr(ruleID)
 	}
+	// backend type is cvm
 	if c.sdkConfig.BackendType == ClbBackendTargetTypeCVM {
 		var ips []string
 		for _, backend := range backendsDeregister {
 			ips = append(ips, backend.IP)
 		}
+		// get cvm instance id from cvm ip
 		ipMap, err := c.getCVMInstanceIDMapByIP(ips)
 		if err != nil {
 			return err
@@ -962,6 +1043,7 @@ func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDer
 				Type:       tcommon.StringPtr(ClbBackendTargetTypeCVM),
 			})
 		}
+	// backend type is eni
 	} else {
 		for _, backend := range backendsDeregister {
 			request.Targets = append(request.Targets, &tclb.Target{
@@ -971,6 +1053,7 @@ func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDer
 			})
 		}
 	}
+	// do request
 	blog.Infof("de register backend request:\n%s", request.ToJsonString())
 	counter := 0
 	var err error
@@ -980,7 +1063,7 @@ func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDer
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -1017,17 +1100,19 @@ func (c *Client) DeRegister4LayerBackends(lbID, listenerID string, backendsDeReg
 	return c.deRegisterBackends(lbID, listenerID, "", backendsDeRegister)
 }
 
+// waitTaskDone wait asynchronous task done
 func (c *Client) waitTaskDone(taskID string) error {
 	blog.Infof("start waiting for task %s", taskID)
 	request := tclb.NewDescribeTaskStatusRequest()
 	request.TaskId = tcommon.StringPtr(taskID)
 	blog.Infof("describe task status request:\n%s", request.ToJsonString())
 	for counter := 0; counter < c.sdkConfig.MaxTimeout; counter++ {
+		// it may exceed limit when describe task result
 		response, err := c.clb.DescribeTaskStatus(request)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -1035,13 +1120,16 @@ func (c *Client) waitTaskDone(taskID string) error {
 			return fmt.Errorf("describe task status failed, err %s", err.Error())
 		}
 		blog.Infof("describe task status response:\n%s", response.ToJsonString())
+		// dealing
 		if *response.Response.Status == TaskStatusDealing {
 			blog.Infof("task %s is dealing", taskID)
 			time.Sleep(time.Duration(c.sdkConfig.WaitPeriodLBDealing) * time.Second)
 			continue
+		// failed
 		} else if *response.Response.Status == TaskStatusFailed {
 			blog.Errorf("task %s is failed", taskID)
 			return fmt.Errorf("task %s is failed", taskID)
+		// succeed
 		} else if *response.Response.Status == TaskStatusSucceed {
 			blog.Infof("task %s is done", taskID)
 			return nil
@@ -1053,8 +1141,10 @@ func (c *Client) waitTaskDone(taskID string) error {
 }
 
 // ListListener listener listeners in tencent cloud
+// 1. list listener infos
+// 2. list backends
+// 3. list listener health status info
 func (c *Client) ListListener(lbID string) ([]*cloudListenerType.CloudListener, error) {
-
 	tclbListeners, err := c.doListListenerWithoutBackends(lbID)
 	if err != nil {
 		return nil, err
@@ -1067,7 +1157,6 @@ func (c *Client) ListListener(lbID string) ([]*cloudListenerType.CloudListener, 
 	if err != nil {
 		return nil, err
 	}
-
 	var retListenerList []*cloudListenerType.CloudListener
 	for _, tlistener := range tclbListeners {
 		cloudListener, err := c.convertTclbListenerToCloudListener(tlistener, tclbListenerBackendMap[*tlistener.ListenerId], tclbListenerHealthMap[*tlistener.ListenerId])
@@ -1076,18 +1165,20 @@ func (c *Client) ListListener(lbID string) ([]*cloudListenerType.CloudListener, 
 		}
 		retListenerList = append(retListenerList, cloudListener)
 	}
-
 	return retListenerList, nil
 }
 
+// mashal backends to string
 func backendToJSONString(b *tclb.Backend) string {
 	data, _ := json.Marshal(b)
 	return string(data)
 }
 
-func (c *Client) convertBackendToCloudListenerBackend(backendList []*tclb.Backend) ([]*cloudListenerType.Backend, error) {
+// convert tclb backend to cloud listener backend
+func (c *Client) convertToCloudListenerBackend(backendList []*tclb.Backend) ([]*cloudListenerType.Backend, error) {
 	var retBackends []*cloudListenerType.Backend
 	for _, backend := range backendList {
+		// TODO: is there backend with no private ip address?
 		if len(backend.PrivateIpAddresses) == 0 {
 			return nil, fmt.Errorf("invalid backend %v", backendToJSONString(backend))
 		}
@@ -1100,11 +1191,13 @@ func (c *Client) convertBackendToCloudListenerBackend(backendList []*tclb.Backen
 	return retBackends, nil
 }
 
-func (c *Client) convertHealthCheckToCloudListenerHealthCheck(hc *tclb.HealthCheck) (*cloudListenerType.TargetGroupHealthCheck, error) {
+// convert tclb health check to local type
+func (c *Client) convertToCloudListenerHealthCheck(hc *tclb.HealthCheck) (*cloudListenerType.TargetGroupHealthCheck, error) {
 	if hc == nil {
 		return nil, fmt.Errorf("cannot covert empty health check struct")
 	}
 	retHealthCheck := cloudListenerType.NewTargetGroupHealthCheck()
+	// string ptr may be nil for all field
 	if hc.HealthSwitch != nil {
 		retHealthCheck.Enabled = int(*hc.HealthSwitch)
 	}
@@ -1126,10 +1219,11 @@ func (c *Client) convertHealthCheckToCloudListenerHealthCheck(hc *tclb.HealthChe
 	return retHealthCheck, nil
 }
 
+// convert rules targets to local target group
 func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclbRuleTargets *tclb.RuleTargets) (*cloudListenerType.Rule, error) {
 	rule := cloudListenerType.NewRule(*tclbRule.Domain, *tclbRule.Url)
 	rule.ID = *tclbRule.LocationId
-	hc, err := c.convertHealthCheckToCloudListenerHealthCheck(tclbRule.HealthCheck)
+	hc, err := c.convertToCloudListenerHealthCheck(tclbRule.HealthCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -1139,7 +1233,7 @@ func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclb
 		rule.TargetGroup.SessionExpire = int(*tclbRule.SessionExpireTime)
 	}
 	if tclbRuleTargets != nil && len(tclbRuleTargets.Targets) != 0 {
-		backends, err := c.convertBackendToCloudListenerBackend(tclbRuleTargets.Targets)
+		backends, err := c.convertToCloudListenerBackend(tclbRuleTargets.Targets)
 		if err != nil {
 			return nil, err
 		}
@@ -1148,6 +1242,7 @@ func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclb
 	return nil, nil
 }
 
+// convert tclb listener type to local cloud listener type
 func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, listenerBackend *tclb.ListenerBackend, listenerHeath *tclb.ListenerHealth) (*cloudListenerType.CloudListener, error) {
 	if listener == nil {
 		return nil, fmt.Errorf("cannot convert empty tclb listener object to cloud listener")
@@ -1162,6 +1257,7 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 			ListenPort: int(*listener.Port),
 		},
 	}
+	// only https listener has tls config
 	if *listener.Protocol == ListenerProtocolHTTPS {
 		sslMode, _ := SSLModeSDK2BcsMap[*listener.Certificate.SSLMode]
 		cloudListener.Spec.TLS = &cloudListenerType.CloudListenerTls{
@@ -1173,6 +1269,7 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 		}
 	}
 	switch *listener.Protocol {
+	// convert http https listener
 	case ListenerProtocolHTTP, ListenerProtocolHTTPS:
 		ruleBackendsMap := make(map[string]*tclb.RuleTargets)
 		for _, ruleTarget := range listenerBackend.Rules {
@@ -1180,16 +1277,17 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 		}
 		var retRules []*cloudListenerType.Rule
 		for _, tclbRule := range listener.Rules {
+			// convertRuleTargetsToTargetGroup will deal with health check and backends info
 			rule, err := c.convertRuleTargetsToTargetGroup(tclbRule, ruleBackendsMap[*tclbRule.LocationId])
 			if err != nil {
 				return nil, err
 			}
 			retRules = append(retRules, rule)
 		}
-
+	// convert tcp udp listener
 	case ListenerProtocolTCP, ListenerProtocolUDP:
 		cloudListener.Spec.TargetGroup = cloudListenerType.NewTargetGroup("", "", SSLModeSDK2BcsMap[*listener.Protocol], int(*listener.Port))
-		hc, err := c.convertHealthCheckToCloudListenerHealthCheck(listener.HealthCheck)
+		hc, err := c.convertToCloudListenerHealthCheck(listener.HealthCheck)
 		if err != nil {
 			return nil, err
 		}
@@ -1199,17 +1297,18 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 			cloudListener.Spec.TargetGroup.SessionExpire = int(*listener.SessionExpireTime)
 		}
 		if len(listenerBackend.Targets) != 0 {
-			backends, err := c.convertBackendToCloudListenerBackend(listenerBackend.Targets)
+			backends, err := c.convertToCloudListenerBackend(listenerBackend.Targets)
 			if err != nil {
 				return nil, err
 			}
 			cloudListener.Spec.TargetGroup.Backends = backends
 		}
 	}
-
+	// deal with listener health info
 	healthStatus := &cloudListenerType.CloudListenerHealthStatus{}
 	for _, ruleHealth := range listenerHeath.Rules {
 		tmpRuleHealthStatus := &cloudListenerType.CloudListenerRuleHealthStatus{}
+		// domain and url is nil for tcp and udp listener
 		if ruleHealth.Domain != nil {
 			tmpRuleHealthStatus.Domain = *ruleHealth.Domain
 		}
@@ -1234,6 +1333,8 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 	return cloudListener, nil
 }
 
+// call tencent sdk DescribeListeners
+// there is no backends in response
 func (c *Client) doListListenerWithoutBackends(lbID string) ([]*tclb.Listener, error) {
 	request := tclb.NewDescribeListenersRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -1243,7 +1344,7 @@ func (c *Client) doListListenerWithoutBackends(lbID string) ([]*tclb.Listener, e
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -1260,6 +1361,7 @@ func (c *Client) doListListenerWithoutBackends(lbID string) ([]*tclb.Listener, e
 	return nil, fmt.Errorf("describe listeners timeout")
 }
 
+// call tencent sdk DescribeTargets
 func (c *Client) doListBackends(lbID string) (map[string]*tclb.ListenerBackend, error) {
 	request := tclb.NewDescribeTargetsRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -1269,7 +1371,7 @@ func (c *Client) doListBackends(lbID string) (map[string]*tclb.ListenerBackend, 
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -1290,6 +1392,8 @@ func (c *Client) doListBackends(lbID string) (map[string]*tclb.ListenerBackend, 
 	return nil, fmt.Errorf("describe listener backend timeout")
 }
 
+// get listener health status by loadbalance id
+// return map[key]*tclb.ListenerHealth, key is listenerid
 func (c *Client) doListenerHealthStatus(lbID string) (map[string]*tclb.ListenerHealth, error) {
 	request := tclb.NewDescribeTargetHealthRequest()
 	request.LoadBalancerIds = []*string{tcommon.StringPtr(lbID)}
@@ -1299,7 +1403,7 @@ func (c *Client) doListenerHealthStatus(lbID string) (map[string]*tclb.ListenerH
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				c.checkErrCode(terr)
-				if terr.Code == "4400" || terr.Code == "4000" {
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
 			}
@@ -1311,6 +1415,7 @@ func (c *Client) doListenerHealthStatus(lbID string) (map[string]*tclb.ListenerH
 			blog.Warnf("DescribeTargetsHealth return no loadbalancerHealth")
 			return nil, nil
 		}
+		// expect one loadbalance info
 		if len(response.Response.LoadBalancers) != 1 {
 			blog.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1", len(response.Response.LoadBalancers))
 			return nil, fmt.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1", len(response.Response.LoadBalancers))

@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// metric desc for normal clb ingress rule
 func newClbIngressRuleMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("clb", "processor", "ingressrule"),
@@ -35,6 +36,7 @@ func newClbIngressRuleMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// metric desc for statefulset ingress rule
 func newClbStatefulSetRuleMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("clb", "processor", "ingressrule_statefulset"),
@@ -46,6 +48,7 @@ func newClbStatefulSetRuleMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// metric desc for appnode
 func newAppNodeMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("clb", "processor", "app_node"),
@@ -57,6 +60,7 @@ func newAppNodeMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// metric desc for listener
 func newClbListenerMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("clb", "processor", "listener"),
@@ -68,6 +72,7 @@ func newClbListenerMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// metric desc for clb backends
 func newClbBackendMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("clb", "processor", "backend"),
@@ -79,6 +84,7 @@ func newClbBackendMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// metric desc for remote backend
 func newRemoteBackendMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("clb", "processor", "remote_backend"),
@@ -101,11 +107,14 @@ func (p *Processor) Describe(ch chan<- *prometheus.Desc) {
 	ch <- newRemoteBackendMetricDesc(clbname)
 }
 
+// collect app node info from AppService cache
+// TODO: for mesos bridge network, the metric is not suitable
 func (p *Processor) collectAppService(ch chan<- prometheus.Metric, appService *serviceclient.AppService) {
 	if len(appService.Nodes) != 0 {
 		for _, servicePort := range appService.ServicePorts {
 			for _, node := range appService.Nodes {
 				for _, port := range node.Ports {
+					// match port
 					if servicePort.TargetPort == port.NodePort || servicePort.Name == port.Name {
 						ch <- prometheus.MustNewConstMetric(
 							newAppNodeMetricDesc(p.opt.ClbName),
@@ -124,9 +133,11 @@ func (p *Processor) collectAppService(ch chan<- prometheus.Metric, appService *s
 	}
 }
 
+// collect ingress info from clb cache
 func (p *Processor) collectIngress(
 	ch chan<- prometheus.Metric,
 	httpArr, httpsArr []*ingress.ClbHttpRule, tcpArr, udpArr []*ingress.ClbRule) {
+	// http rule
 	for _, http := range httpArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbIngressRuleMetricDesc(p.opt.ClbName),
@@ -142,6 +153,7 @@ func (p *Processor) collectIngress(
 		}
 		p.collectAppService(ch, appService)
 	}
+	// https rules
 	for _, https := range httpsArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbIngressRuleMetricDesc(p.opt.ClbName),
@@ -157,6 +169,7 @@ func (p *Processor) collectIngress(
 		}
 		p.collectAppService(ch, appService)
 	}
+	// tcp rules
 	for _, tcp := range tcpArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbIngressRuleMetricDesc(p.opt.ClbName),
@@ -172,6 +185,7 @@ func (p *Processor) collectIngress(
 		}
 		p.collectAppService(ch, appService)
 	}
+	// udp rules
 	for _, udp := range udpArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbIngressRuleMetricDesc(p.opt.ClbName),
@@ -189,9 +203,11 @@ func (p *Processor) collectIngress(
 	}
 }
 
+// collectStatefulSetIngress collect ingress rule for statefulset rule
 func (p *Processor) collectStatefulSetIngress(
 	ch chan<- prometheus.Metric,
 	httpArr, httpsArr []*ingress.ClbStatefulSetHttpRule, tcpArr, udpArr []*ingress.ClbStatefulSetRule) {
+	// http
 	for _, http := range httpArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbStatefulSetRuleMetricDesc(p.opt.ClbName),
@@ -202,6 +218,7 @@ func (p *Processor) collectStatefulSetIngress(
 				strconv.Itoa(http.StartIndex), strconv.Itoa(http.EndIndex)}...,
 		)
 	}
+	// https
 	for _, https := range httpsArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbStatefulSetRuleMetricDesc(p.opt.ClbName),
@@ -212,6 +229,7 @@ func (p *Processor) collectStatefulSetIngress(
 				strconv.Itoa(https.StartIndex), strconv.Itoa(https.EndIndex)}...,
 		)
 	}
+	// tcp
 	for _, tcp := range tcpArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbStatefulSetRuleMetricDesc(p.opt.ClbName),
@@ -222,6 +240,7 @@ func (p *Processor) collectStatefulSetIngress(
 				strconv.Itoa(tcp.StartIndex), strconv.Itoa(tcp.EndIndex)}...,
 		)
 	}
+	// udp
 	for _, udp := range udpArr {
 		ch <- prometheus.MustNewConstMetric(
 			newClbStatefulSetRuleMetricDesc(p.opt.ClbName),
@@ -234,6 +253,7 @@ func (p *Processor) collectStatefulSetIngress(
 	}
 }
 
+// collect cloud listener info from cloud api
 func (p *Processor) collectRemoteListener(ch chan<- prometheus.Metric, listeners []*loadbalance.CloudListener) {
 	if len(listeners) == 0 {
 		return
@@ -271,6 +291,7 @@ func (p *Processor) collectRemoteListener(ch chan<- prometheus.Metric, listeners
 
 // Collect implements prometheus exporter Collect interface
 func (p *Processor) Collect(ch chan<- prometheus.Metric) {
+	// ingress
 	ingresses, err := p.ingressRegistry.ListIngresses()
 	if err != nil {
 		blog.Warnf("failed to list ingress in exporter, err %s", err.Error())
@@ -283,13 +304,14 @@ func (p *Processor) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 	}
-
+	// local listener
 	listeners, err := p.updater.listenerClient.ListListeners()
 	if err != nil {
 		blog.Warnf("failed to list ingress in exporter, err %s", err.Error())
 	} else {
 		for _, listener := range listeners {
 			switch listener.Spec.Protocol {
+			// http or https listener
 			case loadbalance.ClbListenerProtocolHTTP, loadbalance.ClbListenerProtocolHTTPS:
 				for _, rule := range listener.Spec.Rules {
 					ch <- prometheus.MustNewConstMetric(
@@ -322,7 +344,7 @@ func (p *Processor) Collect(ch chan<- prometheus.Metric) {
 						)
 					}
 				}
-
+			// tcp or udp listener
 			case loadbalance.ClbListenerProtocolTCP, loadbalance.ClbListenerProtocolUDP:
 				ch <- prometheus.MustNewConstMetric(
 					newClbListenerMetricDesc(p.opt.ClbName),
@@ -357,6 +379,7 @@ func (p *Processor) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 	}
+	// remote listener
 	remoteListeners, err := p.updater.ListRemoteListener()
 	if err != nil {
 		blog.Warnf("failed to list remote listeners in exporter, err %s", err.Error())
