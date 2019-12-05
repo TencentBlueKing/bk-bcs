@@ -14,10 +14,10 @@
 package processor
 
 import (
-	"reflect"
 	"bk-bcs/bcs-common/common/blog"
-	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 	ingressType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	"reflect"
 )
 
 type appServiceHandler struct {
