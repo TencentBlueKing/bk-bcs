@@ -182,13 +182,18 @@ func checkRequestIP(version *types.Version, offer *mesos.Offer, store store.Stor
 		}
 		index = taskgroup.InstanceID
 	}
-
+	var v string
+	var ok bool
 	k := "io.tencent.bcs.netsvc.requestip." + strconv.Itoa(int(index))
-	v, ok := version.Labels[k]
+	v, ok = version.Labels[k]
 	if !ok {
-		blog.Error("check requestip: version(%s.%s) label(%s) not exist", runAs, appID, k)
-		return false, errors.New("requestip not exist")
+		v, ok = version.ObjectMeta.Annotations[k]
+		if !ok {
+			blog.Error("check requestip: version(%s.%s) label,annotation(%s) not exist", runAs, appID, k)
+			return false, errors.New("requestip not exist")
+		}
 	}
+
 	splitV := strings.Split(v, "|")
 	if len(splitV) < 2 {
 		blog.Infof("check requestip: version(%s.%s) label(%s:%s) has no constraints, pass", runAs, appID, k, v)
@@ -252,6 +257,12 @@ func checkRequestIP(version *types.Version, offer *mesos.Offer, store store.Stor
 
 func isVersionRequestIp(version *types.Version) bool {
 	for k := range version.Labels {
+		splitK := strings.Split(k, ".")
+		if len(splitK) == 6 && splitK[3] == "netsvc" && splitK[4] == "requestip" {
+			return true
+		}
+	}
+	for k := range version.ObjectMeta.Annotations {
 		splitK := strings.Split(k, ".")
 		if len(splitK) == 6 && splitK[3] == "netsvc" && splitK[4] == "requestip" {
 			return true

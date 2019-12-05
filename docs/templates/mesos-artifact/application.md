@@ -100,8 +100,14 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 	},
 	"metadata": {
 		"labels": {
-			"test_label": "test_label"
+			"test_label": "test_label",
+			"io.tencent.bcs.netsvc.requestip.0": "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2",
+			"io.tencent.bcs.netsvc.requestip.1": "127.0.0.2|InnerIp=127.0.0.1;127.0.0.2"
 		},
+		"annotations": {
+            "io.tencent.bcs.netsvc.requestip.0": "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2",
+            "io.tencent.bcs.netsvc.requestip.1": "127.0.0.2|InnerIp=127.0.0.1;127.0.0.2"
+        },
 		"name": "ri-test-rc-001",
 		"namespace": "nfsol"
 	},
@@ -352,16 +358,16 @@ UnionData字段说明：
 * namespace：App命名空间，小写字母与数字构成，不能完全由数字构成，不能数字开头；不同业务必然不同，默认值为defaultGroup
 * label：app的lable信息，对应k8s RC label
 
-### Label特殊字段说
+### Label或Annotations特殊字段说
 
 当容器网络使用bcs-cni方案的时，如果想针对容器指定IP，可以使用以下label
 
-* io.tencent.bcs.netsvc.requestip.[i]：针对Pod申请IP，i代表Pod的实例，从0开始计算
+* io.tencent.bcs.netsvc.requestip.i：针对Pod申请IP，i代表Pod的实例，从0开始计算
 
 当容器指定Ip时，不同的taskgroup需要调度到特定的宿主机上面，宿主机的制定方式与constraint调度约束一致，如下是使用InnerIp：
-io.tencent.bcs.netsvc.requestip.[i]: "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2"
+io.tencent.bcs.netsvc.requestip.i: "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2"
 使用分隔符"|"分隔，"|"前面为容器Ip，后面为需要调度到的宿主机Ip，多个宿主机之间使用分隔符";"分隔，宿主机Ip支持正则表示式，方式如下：
-io.tencent.bcs.netsvc.requestip.[i]: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.[11-13]"
+io.tencent.bcs.netsvc.requestip.i: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.[11-13]"
 
 ## 容器字段信息
 
