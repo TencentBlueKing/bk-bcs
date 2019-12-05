@@ -308,6 +308,8 @@ func (watch *ExportServiceWatch) createEpServiceInfo(service *commtypes.BcsServi
 
 func (watch *ExportServiceWatch) getTaskGroupServiceLabel(service *commtypes.BcsService, tskgroup *schedtypes.TaskGroup) bool {
 	if tskgroup.ObjectMeta.NameSpace != "" && service.ObjectMeta.NameSpace != tskgroup.ObjectMeta.NameSpace {
+		blog.V(3).Infof("namespace of service (%s.%s) and taskgroup (%s) is different",
+			service.NameSpace, service.Name, tskgroup.ID)
 		return false
 	}
 	//if task.labels==nil, then return false
@@ -317,14 +319,15 @@ func (watch *ExportServiceWatch) getTaskGroupServiceLabel(service *commtypes.Bcs
 	}
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
 	for ks, vs := range service.Spec.Selector {
-		isFit := false
-		for kt, vt := range task.Labels {
-			if ks == kt && vs == vt {
-				isFit = true
-				break
-			}
+		vt,ok := task.Labels[ks]
+		if !ok {
+			blog.V(3).Infof("taskgroup label not match service: taskgroup(%s) label(%s:%s) service(%s)",
+				tskgroup.ID, ks, vs, key)
+			return false
 		}
-		if !isFit {
+		if vs!=vt {
+			blog.V(3).Infof("taskgroup label not match service: taskgroup(%s) label(%s:%s) service(%s)",
+				tskgroup.ID, ks, vs, key)
 			return false
 		}
 	}
@@ -341,14 +344,13 @@ func (watch *ExportServiceWatch) getApplicationServiceLabel(service *commtypes.B
 
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
 	for ks, vs := range service.Spec.Selector {
-		isFit := false
-		for kt, vt := range app.ObjectMeta.Labels {
-			if ks == kt && vs == vt {
-				isFit = true
-				break
-			}
+		vt,ok := app.ObjectMeta.Labels[ks]
+		if !ok {
+			blog.V(3).Infof("application label not match service: application(%s.%s) label(%s:%s) service(%s)",
+				app.RunAs, app.ID, ks, vs, key)
+			return false
 		}
-		if !isFit {
+		if vs!=vt {
 			blog.V(3).Infof("application label not match service: application(%s.%s) label(%s:%s) service(%s)",
 				app.RunAs, app.ID, ks, vs, key)
 			return false
