@@ -30,61 +30,75 @@ curl -H "BCS-ClusterID: BCS-xxxxx-xxxxx" -X GET http://127.0.0.1:8899/bcsapi/v4/
 
 ## api
 ### api list
-* [**create application**](#createapplication)
-- [**update application**](#updateapplication)
-- [**delete application**](#deleteapplication)
-- [**scale application**](#scaleapplication)
-- [**rollback application**](#rollbackapplication)
-- [**fetch application**](#fetchapplication)
-- [**list applications**](#listapplications)
-- [**list taskgroups**](#listtaskgroups)
-- [**list tasks**](#listtasks)
-- [**rescheduler taskgroup**](#reschedulertaskgroup)
-- [**list versions**](#listversions)
-- [**fetch version**](#fetchversion)
-- [**send application message**](#sendapplicationmessage)
-- [**send taskgroup message**](#sendtaskgroupmessage)
-- [**create configmap**](#createconfigmap)
-- [**update configmap**](#updateconfigmap)
-- [**delete configmap**](#deleteconfigmap)
-- [**create secret**](#createsecret)
-- [**update secret**](#updatesecret)
-- [**delete secret**](#deletesecret)
-- [**create service**](#createservice)
-- [**update service**](#updateservice)
-- [**delete service**](#deleteservice)
+
+* Application
+  - [**create application**](#createapplication)
+  - [**update application**](#updateapplication)
+  - [**delete application**](#deleteapplication)
+  - [**scale application**](#scaleapplication)
+  - [**rollback application**](#rollbackapplication)
+  - [**fetch application**](#fetchapplication)
+  - [**list applications**](#listapplications)
+  - [**list taskgroups**](#listtaskgroups)
+  - [**list tasks**](#listtasks)
+  - [**rescheduler taskgroup**](#reschedulertaskgroup)
+  - [**list versions**](#listversions)
+  - [**fetch version**](#fetchversion)
+  - [**send application message**](#sendapplicationmessage)
+  - [**send taskgroup message**](#sendtaskgroupmessage)
+* ConfigMap
+  - [**create configmap**](#createconfigmap)
+  - [**update configmap**](#updateconfigmap)
+  - [**delete configmap**](#deleteconfigmap)
+* Secret
+  - [**create secret**](#createsecret)
+  - [**update secret**](#updatesecret)
+  - [**delete secret**](#deletesecret)
+* Sercice
+  - [**create service**](#createservice)
+  - [**update service**](#updateservice)
+  - [**delete service**](#deleteservice)
 - [**get cluster resources**](#getclusterresources)
 - [**get cluster endpoints**](#getclusterendpoints)
 - [**get cluster offers**](#getclusteroffers)
 - [**health check report**](#healthcheckreport)
-- [**create deployment**](#createdeployment)
-- [**update deployment**](#updatedeployment)
-- [**cancel update deployment**](#cancelupdatedeployment)
-- [**pause update deployment**](#pauseupdatedeployment)
-- [**resume update deployment**](#resumeupdatedeployment)
-- [**scale deployment**](#scaledeployment)
-- [**delete deployment**](#deletedeployment)
-- [**get agent setting list**](#getagentsettinglist)
-- [**set agent setting list**](#setagentsettinglist)
-- [**delete agent setting list**](#deleteagentsettinglist)
-- [**update agent setting list**](#updateagentsettinglist)
-- [**disable agent list**](#disableagentlist)
-- [**enable agent list**](#enableagentlist)
-- [**commit image**](#commitimage)
-- [**crr register**](#crrregister)
+* Deployment
+  - [**create deployment**](#createdeployment)
+  - [**update deployment**](#updatedeployment)
+  - [**cancel update deployment**](#cancelupdatedeployment)
+  - [**pause update deployment**](#pauseupdatedeployment)
+  - [**resume update deployment**](#resumeupdatedeployment)
+  - [**scale deployment**](#scaledeployment)
+  - [**delete deployment**](#deletedeployment)
+* AgentSetting
+  - [**get agent setting list**](#getagentsettinglist)
+  - [**set agent setting list**](#setagentsettinglist)
+  - [**delete agent setting list**](#deleteagentsettinglist)
+  - [**update agent setting list**](#updateagentsettinglist)
+  - [**disable agent list**](#disableagentlist)
+  - [**enable agent list**](#enableagentlist)
+* [自定义资源定义(CustomResourceDefinition)](#customresourcedefinition)
+  - [**create**](#createcrd)
+  - [**get**](#getcrd)
+  - [**delete**](#deletecrd)
+* [自定义资源(CustomResource)](#customresource)
 - [**create crd**](#createcrd)
 - [**delete crd**](#deletecrd)
-- [**get deployment definition json**](getDeploymentDef)
-- [**get application definition json**](getApplicationDef)
-- [**send signal to application**](#sendapplicationSignal)
-- [**send signal to taskgroup**](#sendtaskgroupSignal)
-- [**send application/deployment command**](#sendCommand)
-- [**get application/deloyment command**](#getCommand)
-- [**delete application/deployment command**](#deleteCommand)
-- [**create admission webhook**](#createadmission)
-- [**update admission webhook**](#updateadmission)
-- [**get admission webhook**](#getadmission)
-- [**delete admission webhook**](#deleteadmission)
+* Mesos Json定义
+  - [**get deployment definition json**](getDeploymentDef)
+  - [**get application definition json**](getApplicationDef)
+* 信号与控制
+  - [**commit image**](#commitimage)
+  - [**send signal to application**](#sendapplicationSignal)
+  - [**send signal to taskgroup**](#sendtaskgroupSignal)
+  - [**send application/deployment command**](#sendCommand)
+  - [**get application/deloyment command**](#getCommand)
+  - [**delete application/deployment command**](#deleteCommand)
+* Webhook
+  - [**create admission webhook**](#createadmission)
+  - [**update admission webhook**](#updateadmission)
+  - [**get admission webhook**](#getadmission)
+  - [**delete admission webhook**](#deleteadmission)
 
 ### createApplication
 #### 描述
@@ -1861,12 +1875,12 @@ curl -H "BCS-ClusterID: {ClusterID}" -X PUT http://{Bcs-Domain}/v4/scheduler/mes
 }
 ```
 
-### crrRegister
-#### 描述
-注册自定义资源类型
+### customresourcedefinition
+#### createcrd
+创建自定义资源类型
 
 #### 请求地址
-- /v4/scheduler/mesos/crr/register
+- /v4/scheduler/mesos/customresourcedefinitions
 
 #### 请求方式
 - POST
@@ -1874,100 +1888,195 @@ curl -H "BCS-ClusterID: {ClusterID}" -X PUT http://{Bcs-Domain}/v4/scheduler/mes
 #### 请求参数
 ```json
 {
-  "apiVersion": "v4",
-  "kind": "crr",
-  "spec":{
-    "names":{
-      "kind":"{custom resource type}"
+  "apiVersion": "v4", //api请求版本，当前为v4，必填
+  "kind": "CustomResourceDefinition",//类型，必填
+  "metadata": {
+    "name": "logcollector.bkbcs.tencent.com" //自定义资源名称，必须唯一，由以下group和plural组合
+  },
+  "spec": {
+    //自定义资源属组和版本信息，用于构成后续操作api部分
+    //构成格式：/v4/scheduler/mesos/customresources/{group}/{version}/{plural}
+    // 例如/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v1/crontabs
+    "group": "bkbcs.tencent.com", 
+    "versions": [
+      {
+        "name": "v1",
+        "served": true, //确认该版本是否生效
+        "storage": true //落地存储至少一个版本需要标志
+      }
+    ],
+    "scope": "Namespaced",//CRD数据生效范围，Namespaced,Cluster
+    "names": {
+      "plural": "crontabs", //URL组成部分
+      "singular": "crontab", //命令行操作下使用类型，用于bcs-client命令映射与校验
+      "kind": "CronTab" //驼峰命名的数据类型，用于填写Json匹配与校验
     }
   }
 }
 ```
 
 #### 请求示例
-- curl -H "BCS-ClusterID: {ClusterID}" -d "crr.json"  http://{Bcs-Domain}/v4/scheduler/mesos/crr/register
+
+curl -H "BCS-ClusterID: {ClusterID}" -d "crd.json"  http://{Bcs-Domain}/v4/scheduler/mesos/customresourcedefinitions
 
 #### 返回结果
 
-```json
-{
-    "result":true,
-    "code":0,
-    "message":"success",
-    "data":null
-}
-```
+http Code：200
 
-### createcrd
+### getcrd
 #### 描述
-创建、更新自定义资源
+
+* 通过名称获取指定自定义资源
+* 获取当前注册的所有自定义资源
 
 #### 请求地址
-- /v4/scheduler/mesos/crd/namespaces/{ns}/{kind}
+
+- /v4/scheduler/mesos/customresourcesdefinitions/{name}
 
 #### 请求方式
-- POST
+
+- GTE
 
 #### 请求参数
--ns  //namespace
--kind //自定义资源类型
+
+- name: 指定CustomResourceDefinition名称，可选
+
+#### 请求示例
+
+- curl -H "BCS-ClusterID: {ClusterID}" -d "crd.json"  http://{Bcs-Domain}/v4/scheduler/mesos/customresourcedefinitions/logcollector.bkbcs.tencent.com
+
+#### 返回结果
 
 ```json
 {
   "apiVersion": "v4",
-  "kind": "{custom resource type}",
+  "kind": "CustomResourceDefinition",
   "metadata": {
-    "labels": {
-    },
-    "name": "{custom resource name}",
-    "namespace": "defaultGroup"
+    "name": "logcollector.bkbcs.tencent.com"
   },
-  "spec": interface{}
-}
-```
-
-#### 请求示例
-- curl -H "BCS-ClusterID: {ClusterID}" -d "crd.json"  http://{Bcs-Domain}/v4/scheduler/mesos/crd/namespaces/crd-test/crd-type
-
-#### 返回结果
-
-```json
-{
-    "result":true,
-    "code":0,
-    "message":"success",
-    "data":null
+  "spec": {
+    "group": "bkbcs.tencent.com", 
+    "versions": [
+      {
+        "name": "v1",
+        "served": true,
+        "storage": true
+      }
+    ],
+    "scope": "Namespaced",
+    "names": {
+      "plural": "crontabs",
+      "singular": "crontab",
+      "kind": "CronTab"
+    }
+  }
 }
 ```
 
 ### deletecrd
 #### 描述
-删除自定义资源
+
+删除指定自定义资源
 
 #### 请求地址
-- /v4/scheduler/mesos/crd/namespaces/{ns}/{kind}/{name}
+- /v4/scheduler/mesos/customresourcedefinitions/{name}
 
 #### 请求方式
 - DELETE
 
-#### 请求参数
--ns  //namespace
--kind //自定义资源类型
--name  // name
-
 #### 请求示例
-- curl -H "BCS-ClusterID: {ClusterID}" -X DELETE http://{Bcs-Domain}/v4/scheduler/mesos/crd/namespaces/crd-test/crd-type/custom-name
+
+- curl -H "BCS-ClusterID: {ClusterID}" -X DELETE http://{Bcs-Domain}/v4/scheduler/mesos/customresourcedefinitions/logcollector.bkbcs.tencent.com
 
 #### 返回结果
 
 ```json
+```
+
+### customresource
+
+基于CRD接口完成资源定义后，可以通过API完成新资源的增删改查。
+
+新资源API规则为: /v4/scheduler/mesos/customresources/{group}/{version}/{plural}
+
+CRD案例说明：
+
+```json
 {
-    "result":true,
-    "code":0,
-    "message":"success",
-    "data":null
+  "apiVersion": "v4",
+  "kind": "CustomResourceDefinition",
+  "metadata": {
+    "name": "bklogconfig.bkbcs.tencent.com"
+  },
+  "spec": {
+    "group": "bkbcs.tencent.com", 
+    "versions": [
+      {
+        "name": "v2",
+        "served": true,
+        "storage": true
+      }
+    ],
+    "scope": "Namespaced",
+    "names": {
+      "plural": "bklogconfigs",
+      "singular": "bklogconfig",
+      "kind": "BKLogConfig"
+    }
+  }
 }
 ```
+
+
+#### 生成请求接口
+
+* 创建资源
+  * Method：POST
+  * URL：/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/{namespace}/bklogconfigs
+  * body: 资源json结构
+* 查询资源
+  * Method：GET
+  * URL：/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/{namespace}/bklogconfigs/{name}
+* 删除资源
+  * Method: DELETE
+  * URL：/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/{namespace}/bklogconfigs/{name}
+
+#### 请求示例
+
+BKLogConfig结构json文件bklog.json
+```json
+{
+  "apiVersion": "bkbcs.tencent.com/v2",
+  "kind": "BKLogConfig",
+  "metadata": {
+    "name": "myappconfig",
+    "namespace": "global"
+  },
+  "spec": {
+    "selector": {
+      "app": "loadbalance"
+    },
+    "stdout": false,
+    "logpath": "bcs-lb/logs/bcss-loadbalance.log",
+    "dataid": 123456,
+    "level": 3
+  }
+}
+```
+
+* 创建
+curl -XPOST -H "BCS-ClusterID: {ClusterID}" -d bklog.json  http://{Bcs-Domain}/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/global/bklogconfigs
+
+* 查询
+- NS下数据查询：curl -H "BCS-ClusterID: {ClusterID}"  http://{Bcs-Domain}/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/namespaces/global/bklogconfigs
+- 具体实例查询：curl -H "BCS-ClusterID: {ClusterID}"  http://{Bcs-Domain}/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/namespaces/global/bklogconfigs/{name}
+- 全量数据查询：具体实例查询：curl -H "BCS-ClusterID: {ClusterID}"  http://{Bcs-Domain}/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/bklogconfigs
+
+* 更新
+curl -XPUT -H "BCS-ClusterID: {ClusterID}" -d bklog.json   http://{Bcs-Domain}/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/{namespace}/bklogconfigs/{name}
+
+* 删除
+curl -XDELETE -H "BCS-ClusterID: {ClusterID}"  http://{Bcs-Domain}/v4/scheduler/mesos/customresources/bkbcs.tencent.com/v2/namespaces/{namespace}/bklogconfigs/{name}
 
 ### getDeploymentDef
 #### 描述

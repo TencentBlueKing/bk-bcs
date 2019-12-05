@@ -17,8 +17,8 @@ import (
 	ingressv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
 	informerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/clb/v1"
-	listerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/clb/v1"
 	ingressClientV1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
+	listerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/clb/v1"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
 
 	"fmt"
@@ -94,7 +94,7 @@ func (kr *KubeRegistry) GetIngress(name string) (*ingressv1.ClbIngress, error) {
 
 	list, err := kr.ListIngresses()
 	if err != nil {
-		blog.Errorf("list ingresses failed, err %s")
+		blog.Errorf("list ingresses failed, err %s", err.Error())
 		return nil, fmt.Errorf("list ingresses failed, err %s", err.Error())
 	}
 	for _, ingress := range list {

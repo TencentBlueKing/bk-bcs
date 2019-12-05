@@ -14,9 +14,9 @@
 package processor
 
 import (
+	"bk-bcs/bcs-common/common/blog"
 	clbingressType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
 	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 	"github.com/emicklei/go-restful"
 )

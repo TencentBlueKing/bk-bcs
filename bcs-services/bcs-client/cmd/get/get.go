@@ -29,7 +29,7 @@ func NewGetCommand() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Get type, app/process/deployment",
+				Usage: "Get type, application(app)/process/deployment(deploy)",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",

@@ -35,7 +35,7 @@ func (bs *bcsScheduler) GetDeploymentDefinition(clusterID, namespace, name strin
 
 func (bs *bcsScheduler) getApplicationDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error) {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerAppDefinitionURI, bs.bcsApiAddress, namespace, name),
+		fmt.Sprintf(bcsSchedulerAppDefinitionURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodGet,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -65,7 +65,7 @@ func (bs *bcsScheduler) getApplicationDefinition(clusterID, namespace, name stri
 
 func (bs *bcsScheduler) getProcessDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error) {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerAppDefinitionURI, bs.bcsApiAddress, namespace, name),
+		fmt.Sprintf(bcsSchedulerAppDefinitionURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodGet,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -95,7 +95,7 @@ func (bs *bcsScheduler) getProcessDefinition(clusterID, namespace, name string) 
 
 func (bs *bcsScheduler) getDeploymentDefinition(clusterID, namespace, name string) (*commonTypes.BcsDeployment, error) {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerDeployDefinitionURI, bs.bcsApiAddress, namespace, name),
+		fmt.Sprintf(bcsSchedulerDeployDefinitionURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodGet,
 		nil,
 		getClusterIDHeader(clusterID),
