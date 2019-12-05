@@ -48,7 +48,7 @@ func (bs *bcsScheduler) updateResource(clusterID, namespace, resourceType string
 		extraValue = make(url.Values)
 	}
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerResourceURI, bs.bcsApiAddress, namespace, resourceType, extraValue.Encode()),
+		fmt.Sprintf(bcsSchedulerResourceURI, bs.bcsAPIAddress, namespace, resourceType, extraValue.Encode()),
 		http.MethodPut,
 		data,
 		getClusterIDHeader(clusterID),

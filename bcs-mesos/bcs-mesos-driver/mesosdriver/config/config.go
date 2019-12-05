@@ -13,9 +13,7 @@
 
 package config
 
-import (
 //"bk-bcs/bcs-common/common/static"
-)
 
 //CertConfig is configuration of Cert
 type CertConfig struct {
@@ -43,5 +41,6 @@ type MesosDriverConfig struct {
 	ClientCert *CertConfig
 
 	AdmissionWebhook bool
-	Kubeconfig       string
+	//KubeConfig kubeconfig for CustomResource
+	KubeConfig string
 }
