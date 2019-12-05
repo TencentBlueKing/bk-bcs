@@ -72,4 +72,3 @@ func ReplaceSpecialCharForLabel(ss map[string]string) map[string]string {
 	}
 	return ret
 }
- 

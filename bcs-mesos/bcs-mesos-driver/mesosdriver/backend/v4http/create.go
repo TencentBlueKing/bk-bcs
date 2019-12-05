@@ -134,6 +134,12 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 			version.Labels[k] = val
 		}
 	}
+	for k, v := range version.ObjectMeta.Annotations {
+		if strings.Contains(k, "io.tencent.bcs.netsvc.requestip.") {
+			val := strings.Replace(v, " ", "", -1)
+			version.ObjectMeta.Annotations[k] = val
+		}
+	}
 
 	return version, nil
 }

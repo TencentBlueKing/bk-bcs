@@ -73,7 +73,7 @@ func (clb *ClbAPI) describeLoadBalancersTaskResult(requestID int) (int, error) {
 			"codeDesc":"RequestLimitExceeded"
 		}
 	*/
-	if output.Code == 4400 && output.CodeDesc == "RequestLimitExceeded" {
+	if output.Code == RequestLimitExceededCode && output.CodeDesc == RequestLimitExceededMessage {
 		blog.Warn("clb request exceed limit, need to have a rest")
 		time.Sleep(time.Duration(clb.WaitPeriodExceedLimit) * time.Second)
 		return TaskResultStatusDealing, nil
@@ -85,7 +85,7 @@ func (clb *ClbAPI) describeLoadBalancersTaskResult(requestID int) (int, error) {
 			"codeDesc": "IncorrectStatus.LBWrongStatus"
 		}
 	*/
-	if output.Code == 4000 && output.CodeDesc == "IncorrectStatus.LBWrongStatus" {
+	if output.Code == WrongStatusCode && output.CodeDesc == WrongStatusMessage {
 		blog.Warn("clb request lb busy status, lb is dealing another action")
 		return TaskResultStatusDealing, nil
 	}
@@ -160,12 +160,12 @@ func (clb *ClbAPI) create7LayerListener(listener *loadbalance.CloudListener) (st
 		if err != nil {
 			return "", fmt.Errorf("create 7 layer listener name %s protocol %d port %d failed, err %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, err.Error())
 		}
-		if output.Code == 4000 && output.CodeDesc == "IncorrectStatus.LBWrongStatus" {
+		if output.Code == WrongStatusCode && output.CodeDesc == WrongStatusMessage {
 			blog.Warn("LB is dealing another action will wait a second")
 			time.Sleep(time.Duration(clb.WaitPeriodLBDealing) * time.Second)
 			continue
 		}
-		if output.Code == 4400 && output.CodeDesc == "RequestLimitExceeded" {
+		if output.Code == RequestLimitExceededCode && output.CodeDesc == RequestLimitExceededMessage {
 			time.Sleep(time.Duration(clb.WaitPeriodExceedLimit) * time.Second)
 			blog.Errorf("clb request exceed limit, create 7 layer listener failed")
 			return "", fmt.Errorf("clb request exceed limit, create 7 layer listener failed")
@@ -223,12 +223,12 @@ func (clb *ClbAPI) create4LayerListener(listener *loadbalance.CloudListener) (st
 		if err != nil {
 			return "", fmt.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, err %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, err.Error())
 		}
-		if output.Code == 4000 && output.CodeDesc == "IncorrectStatus.LBWrongStatus" {
+		if output.Code == WrongStatusCode && output.CodeDesc == WrongStatusMessage {
 			blog.Warn("LB is dealing another action will wait a second")
 			time.Sleep(time.Duration(clb.WaitPeriodLBDealing) * time.Second)
 			continue
 		}
-		if output.Code == 4400 && output.CodeDesc == "RequestLimitExceeded" {
+		if output.Code == RequestLimitExceededCode && output.CodeDesc == RequestLimitExceededMessage {
 			time.Sleep(time.Duration(clb.WaitPeriodExceedLimit) * time.Second)
 			blog.Errorf("clb request exceed limit, create 4 layer listener failed")
 			return "", fmt.Errorf("clb request exceed limit, create 4 layer listener failed")
@@ -554,8 +554,8 @@ func (clb *ClbAPI) doModifyRule(loadBalanceID, listenerID string, rule *loadbala
 	return nil
 }
 
-//registerInstanceWith7thLayerListener
-func (clb *ClbAPI) registerInstanceWith7thLayerListener(loadBalanceID, listenerID, locationID string, bdTargets qcloud.BackendTargetList) error {
+//registerInsWith7thLayerListener
+func (clb *ClbAPI) registerInsWith7thLayerListener(loadBalanceID, listenerID, locationID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBSeventhListenerInput)
 	desc.Action = "RegisterInstancesWithForwardLBSeventhListener"
 	desc.Nonce = uint(rand.Uint32())
@@ -569,7 +569,7 @@ func (clb *ClbAPI) registerInstanceWith7thLayerListener(loadBalanceID, listenerI
 
 	blog.Infof("start register instance with 7 layer listener %v for listener %s rule %s", bdTargets, listenerID, locationID)
 
-	output, err := clb.api.RegisterInstancesWith7LayerListener(desc)
+	output, err := clb.api.RegInstancesWith7LayerListener(desc)
 	if err != nil {
 		return fmt.Errorf("register instance with 7 layer listener failed, err %s", err.Error())
 	}
@@ -585,7 +585,7 @@ func (clb *ClbAPI) registerInstanceWith7thLayerListener(loadBalanceID, listenerI
 }
 
 //registerInstanceWith4thLayerListener
-func (clb *ClbAPI) registerInstanceWith4thLayerListener(loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
+func (clb *ClbAPI) registerInsWith4thLayerListener(loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBFourthListenerInput)
 	desc.Action = "RegisterInstancesWithForwardLBFourthListener"
 	desc.Nonce = uint(rand.Uint32())
@@ -598,7 +598,7 @@ func (clb *ClbAPI) registerInstanceWith4thLayerListener(loadBalanceID, listenerI
 
 	blog.Infof("start register instance with 4 layer listener %v for listener %s", bdTargets, listenerID)
 
-	output, err := clb.api.RegisterInstancesWith4LayerListener(desc)
+	output, err := clb.api.RegInstancesWith4LayerListener(desc)
 	if err != nil {
 		return fmt.Errorf("register instance with 4 layer listener failed, err %s", err.Error())
 	}
@@ -627,7 +627,7 @@ func (clb *ClbAPI) deRegisterInstances7thListener(loadBalanceID, listenerID, rul
 	desc.LocationID = ruleID
 	blog.Infof("start deRegister instances %v of lb %s, listener %s, rule %s", bdTargets, loadBalanceID, listenerID, ruleID)
 
-	output, err := clb.api.DeRegisterInstancesWith7LayerListener(desc)
+	output, err := clb.api.DeRegInstancesWith7LayerListener(desc)
 	if err != nil {
 		return fmt.Errorf("deRegister instance with 7 layer listener failed, err %s", err.Error())
 	}
@@ -656,7 +656,7 @@ func (clb *ClbAPI) deRegisterInstances4thListener(loadBalanceID, listenerID stri
 
 	blog.Infof("start deRegister instances %v of lb %s, listener %s", bdTargets, loadBalanceID, listenerID)
 
-	output, err := clb.api.DeRegisterInstancesWith4LayerListener(desc)
+	output, err := clb.api.DeRegInstancesWith4LayerListener(desc)
 	if err != nil {
 		return fmt.Errorf("deRegister instance with 4 layer listener failed, err %s", err.Error())
 	}

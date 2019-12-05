@@ -18,8 +18,6 @@ import (
 )
 
 const (
-	//AWSCloudLB aws lb
-	AWSCloudLB = "awslb"
 	// QCloudLB tencent cloud lb
 	QCloudLB = "qcloudclb"
 )

@@ -35,6 +35,11 @@ const (
 	LBAlgorithmLeastConn  = "LEAST_CONN"
 	LBAlgorithmRoundRobin = "WRR"
 	LBAlgorithmIPHash     = "IP_HASH"
+
+	// RequestLimitExceededCode code for request exceeded limit
+	RequestLimitExceededCode = "4400"
+	// WrongStatusCode code for incorrect status
+	WrongStatusCode = "4000"
 )
 
 // ProtocolBcs2SDKMap map for bcs protocol type to sdk protocol type

@@ -29,11 +29,11 @@ import (
 )
 
 const (
-	EnvLogInfoDataid       = "io.tencent.bcs.app.dataid"
-	EnvLogInfoStdout       = "io.tencent.bcs.app.stdout"
-	EnvLogInfoLogPath      = "io.tencent.bcs.app.logpath"
-	EnvLogInfoLogCluster   = "io.tencent.bcs.app.cluster"
-	EnvLogInfoLogNamepsace = "io.tencent.bcs.app.namespcae"
+	EnvLogInfoDataid       = "io_tencent_bcs_app_dataid"
+	EnvLogInfoStdout       = "io_tencent_bcs_app_stdout"
+	EnvLogInfoLogPath      = "io_tencent_bcs_app_logpath"
+	EnvLogInfoLogCluster   = "io_tencent_bcs_app_cluster"
+	EnvLogInfoLogNamepsace = "io_tencent_bcs_app_namespcae"
 )
 
 type SidecarController struct {
