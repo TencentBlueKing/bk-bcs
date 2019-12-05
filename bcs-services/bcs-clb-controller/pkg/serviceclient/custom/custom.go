@@ -50,10 +50,12 @@ const (
 )
 
 var (
+	// metric for event
 	customEvent = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "clb_serviceclient_custom_events",
 		Help: "Events for custom service client.",
 	}, []string{"type", "event", "status"})
+	// metric for critical err
 	customCritical = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "clb_serviceclient_custom_critical_err",
 		Help: "logic error for custom service client(mesos adapter)",
@@ -65,6 +67,7 @@ func init() {
 	prometheus.MustRegister(customCritical)
 }
 
+// handler for AppSvc event
 type innerAppSvcEventHandler struct {
 	manager *CustomizedManager
 }
@@ -77,6 +80,8 @@ func (h *innerAppSvcEventHandler) RegisterManager(manager *CustomizedManager) {
 	h.manager = manager
 }
 
+// AppSvc add event
+// when AppSvc add or update, do update AppService in cache
 func (h *innerAppSvcEventHandler) OnAdd(obj interface{}) {
 	svc, ok := obj.(*v1.AppSvc)
 	if !ok {
@@ -87,6 +92,7 @@ func (h *innerAppSvcEventHandler) OnAdd(obj interface{}) {
 	h.manager.updateAppService(svc)
 }
 
+// AppSvc update event
 func (h *innerAppSvcEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	oldSvc, okOld := oldObj.(*v1.AppSvc)
 	if !okOld {
@@ -111,6 +117,7 @@ func (h *innerAppSvcEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	return
 }
 
+// AppSvc delete event
 func (h *innerAppSvcEventHandler) OnDelete(obj interface{}) {
 	svc, ok := obj.(*v1.AppSvc)
 	if !ok {
@@ -122,6 +129,7 @@ func (h *innerAppSvcEventHandler) OnDelete(obj interface{}) {
 	return
 }
 
+// handler for AppNode event
 type innerAppNodeEventHandler struct {
 	manager *CustomizedManager
 }
@@ -134,6 +142,8 @@ func (h *innerAppNodeEventHandler) RegisterManager(manager *CustomizedManager) {
 	h.manager = manager
 }
 
+// AppNode add event
+// when AppNode add or update, find each associated service and update corresponding AppService in cache
 func (h *innerAppNodeEventHandler) OnAdd(obj interface{}) {
 	node, ok := obj.(*v1.AppNode)
 	if !ok {
@@ -156,6 +166,7 @@ func (h *innerAppNodeEventHandler) OnAdd(obj interface{}) {
 	return
 }
 
+// AppNode update event
 func (h *innerAppNodeEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	oldNode, okOld := oldObj.(*v1.AppNode)
 	if !okOld {
@@ -190,6 +201,7 @@ func (h *innerAppNodeEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	}
 }
 
+// AppNode delete event
 func (h *innerAppNodeEventHandler) OnDelete(obj interface{}) {
 	node, ok := obj.(*v1.AppNode)
 	if !ok {
@@ -212,8 +224,8 @@ func (h *innerAppNodeEventHandler) OnDelete(obj interface{}) {
 	return
 }
 
+// NewClient create custom service client
 func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod time.Duration) (svcclient.Client, error) {
-
 	var restConfig *rest.Config
 	var err error
 	if len(config) == 0 {
@@ -240,8 +252,10 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 
 	blog.Infof("start create informer factory")
 	factory := informers.NewSharedInformerFactory(cliset, syncPeriod)
+	// informer and lister for AppSvc
 	appSvcInformer := factory.Mesh().V1().AppSvcs()
 	appSvcLister := appSvcInformer.Lister()
+	// informer and lister for AppNode
 	appNodeInformer := factory.Mesh().V1().AppNodes()
 	appNodeLister := appNodeInformer.Lister()
 	blog.Infof("create AppService cache")
@@ -274,6 +288,7 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 	return cus, nil
 }
 
+// CustomizedManager client for custom service discovery
 type CustomizedManager struct {
 	factory           informers.SharedInformerFactory
 	svcInformer       informermeshv1.AppSvcInformer
@@ -351,6 +366,7 @@ func (cm *CustomizedManager) Close() {
 }
 
 // ListAppServiceFromStatefulSet list app service from stateful set
+// not implemented
 func (cm *CustomizedManager) ListAppServiceFromStatefulSet(ns, name string) ([]*svcclient.AppService, error) {
 	blog.Warnf("ListAppServiceFromStatefulSet is not implemented for CustomizedManager")
 	return nil, nil
@@ -410,6 +426,7 @@ func isMatch(svc *v1.AppSvc, node *v1.AppNode) bool {
 	return false
 }
 
+// convert ServicePort of AppSvc to ServicePort of AppService
 func servicePortConvert(ports []v1.ServicePort) (ret []svcclient.ServicePort) {
 	for _, p := range ports {
 		ret = append(ret, svcclient.ServicePort{
@@ -424,6 +441,7 @@ func servicePortConvert(ports []v1.ServicePort) (ret []svcclient.ServicePort) {
 	return ret
 }
 
+// convert NodePort of AppNode to NodePort of AppService
 func nodePortConvert(ports []v1.NodePort) (ret []svcclient.NodePort) {
 	for _, p := range ports {
 		ret = append(ret, svcclient.NodePort{
@@ -438,18 +456,21 @@ func nodePortConvert(ports []v1.NodePort) (ret []svcclient.NodePort) {
 
 //TODO: 考虑建立node到svc的反向索引
 func (cm *CustomizedManager) updateAppService(svc *v1.AppSvc) {
+	// get all AppNode object by AppSvc
 	nodes, err := cm.getAppNodesBySvc(svc)
 	if err != nil {
 		customCritical.WithLabelValues(typeAppService, eventUpdate).Inc()
 		blog.Warnf("get AppNode by AppSvc %s/%s failed, err %s", svc.GetName(), svc.GetNamespace(), err.Error())
 		return
 	}
+	// get new AppService
 	newAppService, err := cm.convert(svc, nodes)
 	if err != nil {
 		customCritical.WithLabelValues(typeAppService, eventUpdate).Inc()
 		blog.Warnf("convert %v with its nodes %v to AppService failed, err %s", svc, nodes, err.Error())
 		return
 	}
+	// get old AppService
 	oldAppService, isExisted, err := cm.appServiceCache.Get(newAppService)
 	if err != nil {
 		customCritical.WithLabelValues(typeAppService, eventUpdate).Inc()
@@ -478,6 +499,7 @@ func (cm *CustomizedManager) updateAppService(svc *v1.AppSvc) {
 	customEvent.WithLabelValues(typeAppService, eventUpdate, statusSuccess).Inc()
 }
 
+// deleteAppService delete AppService from cache by AppService name and Namespace
 func (cm *CustomizedManager) deleteAppService(svc *v1.AppSvc) {
 	key := fmt.Sprintf("%s/%s", svc.GetNamespace(), svc.GetName())
 	oldAppService, isExisted, err := cm.appServiceCache.GetByKey(key)

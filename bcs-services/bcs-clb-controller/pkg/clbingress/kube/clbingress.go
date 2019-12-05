@@ -94,7 +94,7 @@ func (kr *KubeRegistry) GetIngress(name string) (*ingressv1.ClbIngress, error) {
 
 	list, err := kr.ListIngresses()
 	if err != nil {
-		blog.Errorf("list ingresses failed, err %s")
+		blog.Errorf("list ingresses failed, err %s", err.Error())
 		return nil, fmt.Errorf("list ingresses failed, err %s", err.Error())
 	}
 	for _, ingress := range list {

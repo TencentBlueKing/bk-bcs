@@ -88,6 +88,15 @@ const (
 
 	//ClbMaxTimeout 异步clb接口超时时间，之所以定三分钟是因为之前遇到过最久的接口是一分多钟
 	ClbMaxTimeout = 180
+
+	// RequestLimitExceededCode code for request exceeded limit
+	RequestLimitExceededCode = 4400
+	// RequestLimitExceededMessage message for request exceeded limit
+	RequestLimitExceededMessage = "RequestLimitExceeded"
+	// WrongStatusCode code for incorrect status
+	WrongStatusCode = 4000
+	// WrongStatusMessage message for incorrect status
+	WrongStatusMessage = "IncorrectStatus.LBWrongStatus"
 )
 
 var (
