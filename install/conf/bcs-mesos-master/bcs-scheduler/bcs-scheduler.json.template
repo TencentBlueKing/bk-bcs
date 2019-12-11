@@ -20,5 +20,7 @@
   "kubeconfig": "${schedulerKubeConfig}",
   "store_driver": "${schedulerStorage}",
   "plugins": "${schedulerPlugins}",
+  "plugin_dir": "${schedulerPluginDir}",
+  "cni_dir": "${schedulerCNIDir}",
   "cluster": "${clusterId}"
 }
