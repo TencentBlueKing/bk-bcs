@@ -10,7 +10,7 @@ spec:
   containers:
     - name: bcs-datawatch
       image: ${kubeWatchImage}
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: Always
       volumeMounts:
         - name: watcherconfig
           mountPath: /config/
@@ -19,4 +19,3 @@ spec:
     - name: watcherconfig
       hostPath:
         path: ${kubeWatchConfig}
-
