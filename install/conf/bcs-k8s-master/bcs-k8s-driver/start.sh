@@ -23,7 +23,7 @@ done
 
 echo ${REPORT_IP}
 
-chmod +x k8s-driver
+chmod +x bcs-k8s-driver
 
 ./bcs-k8s-driver \
  --address=${HOST_IP} \
