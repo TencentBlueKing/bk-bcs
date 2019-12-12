@@ -248,19 +248,20 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	}
 	glog.Info("New and init Writer DONE!")
 
-	// 3. create cluster with watchers
-	glog.Info("New and init Cluster with list-watch begin......")
-	cluster, err := k8s.NewCluster(writer, &config.K8s, clusterID, storageService)
+	// 3. create watcher manager.
+	glog.Info("creating watcher manager now...")
+	watcherMgr, err := k8s.NewWatcherManager(writer, &config.K8s, clusterID, storageService)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-	glog.Info("New and init Cluster with list-watch DONE!")
+	glog.Info("creating watcher manager success")
 
-	glog.Info("start cluster and writer......")
+	glog.Info("starting watcher manager and writer now...")
 	if err := writer.Run(stopChan); err != nil {
 		panic(err)
 	}
-	go cluster.Run(stopChan)
+	watcherMgr.Run(stopChan)
+	glog.Info("starting watcher manager and writer success")
 
 	// finally, start metric, allow fail
 	glog.Info("start metric......")

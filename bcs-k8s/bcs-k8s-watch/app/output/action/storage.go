@@ -13,7 +13,6 @@
 
 package action
 
-// Use http protocol to sync data to BCSStorage Service
 import (
 	glog "bk-bcs/bcs-common/common/blog"
 

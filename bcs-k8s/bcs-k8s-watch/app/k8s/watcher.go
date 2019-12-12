@@ -19,203 +19,166 @@ import (
 	"strings"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
-
-	// client-go v4.0.0
-	//"k8s.io/client-go/pkg/api/v1"
-	//"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-
-	// client-go v5.0.1
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
-	//appsv1beta2 "k8s.io/api/apps/v1beta2"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
-
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	//"k8s.io/api/apps/v1beta2"
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 )
 
-// =================== interface & struct ===================
-
-// WatcherInterface : interface for all watchers
-type WatcherInterface interface {
-	Run(stop <-chan struct{})
-	AddEvent(obj interface{})
-	DeleteEvent(obj interface{})
-	UpdateEvent(oldObject, newObject interface{})
-	GetByKey(key string) (interface{}, bool, error)
-	ListKeys() []string
-}
-
-// Watcher struct
-type Watcher struct {
-	controller              cache.Controller
-	store                   cache.Store
-	resourceType            string
-	writer                  *output.Writer
-	exportServiceController *ExportServiceController
-	sharedWatchers          map[string]WatcherInterface
-}
-
-type OriginEvent struct {
-	ResourceName string
-	ResourceType string
-	Namespace    string
-	Action       string
-}
-
 const (
-	ListWatchSyncPeriodSecond = 30
+	// defaultSyncInterval is default sync interval.
+	defaultSyncInterval = 30 * time.Second
 )
 
-// =================== New & Run ===================
+// Watcher watch target type resource metadata from k8s cluster,
+// and write to storage by synchronizer with series actions.
+type Watcher struct {
+	controller     cache.Controller
+	store          cache.Store
+	resourceType   string
+	writer         *output.Writer
+	sharedWatchers map[string]WatcherInterface
+}
 
-// NewWatcher https://github.com/kubernetes/client-go#how-to-use-it
-// https://github.com/kubernetes/client-go/blob/master/examples/in-cluster-client-configuration/main.go
-func NewWatcher(client *rest.Interface, resourceType string, resourceName string, objType runtime.Object, writer *output.Writer, sharedWatchers map[string]WatcherInterface, es *ExportServiceController) *Watcher {
-	watcher := new(Watcher)
-	// resource name in this
+// NewWatcher creates a new watcher of target type resource.
+func NewWatcher(client *rest.Interface, resourceType string, resourceName string, objType runtime.Object,
+	writer *output.Writer, sharedWatchers map[string]WatcherInterface) *Watcher {
+
+	watcher := &Watcher{
+		resourceType:   resourceType,
+		writer:         writer,
+		sharedWatchers: sharedWatchers,
+	}
+
+	// build list watch.
 	listWatch := cache.NewListWatchFromClient(*client, resourceName, metav1.NamespaceAll, fields.Everything())
-	store, controller := cache.NewInformer(
-		listWatch,
-		objType,
-		time.Second*ListWatchSyncPeriodSecond,
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    watcher.AddEvent,
-			UpdateFunc: watcher.UpdateEvent,
-			DeleteFunc: watcher.DeleteEvent,
-		},
-	)
 
-	watcher.resourceType = resourceType
+	// register event handler.
+	eventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc:    watcher.AddEvent,
+		UpdateFunc: watcher.UpdateEvent,
+		DeleteFunc: watcher.DeleteEvent,
+	}
+
+	// build informer.
+	store, controller := cache.NewInformer(listWatch, objType, defaultSyncInterval, eventHandler)
 	watcher.store = store
 	watcher.controller = controller
-	watcher.writer = writer
-	watcher.exportServiceController = es
-
-	watcher.sharedWatchers = sharedWatchers
 
 	return watcher
 }
 
-func (watcher *Watcher) Run(stop <-chan struct{}) {
-	watcher.controller.Run(stop)
+func (w *Watcher) GetByKey(key string) (interface{}, bool, error) {
+	return w.store.GetByKey(key)
 }
 
-// =================== Methods ===================
-
-func (watcher *Watcher) GetByKey(key string) (interface{}, bool, error) {
-	return watcher.store.GetByKey(key)
-
+func (w *Watcher) ListKeys() []string {
+	return w.store.ListKeys()
 }
 
-func (watcher *Watcher) ListKeys() []string {
-	return watcher.store.ListKeys()
-
+// Run starts the watcher.
+func (w *Watcher) Run(stop <-chan struct{}) {
+	// run controller.
+	w.controller.Run(stop)
 }
 
-func (watcher *Watcher) AddEvent(obj interface{}) {
-	syncData := watcher.genSyncData(obj, "Add")
-	if syncData == nil {
+// AddEvent is event handler for add resource event.
+func (w *Watcher) AddEvent(obj interface{}) {
+	data := w.genSyncData(obj, action.SyncDataActionAdd)
+	if data == nil {
 		return
 	}
-	watcher.writer.Sync(syncData)
-	// watcher.InformExportServiceChange(obj, "Add")
+	w.writer.Sync(data)
 
-	// do alarm
-	if syncData.OwnerUID != "" {
-		watcher.writer.SyncAlarmEvent(syncData)
+	// send alarm when there is an add event with non-empty owner uid.
+	if data.OwnerUID != "" {
+		w.writer.SyncAlarmEvent(data)
 	}
 }
 
-func (watcher *Watcher) DeleteEvent(obj interface{}) {
-	syncData := watcher.genSyncData(obj, "Delete")
-	if syncData == nil {
+// DeleteEvent is event handler for delete resource event.
+func (w *Watcher) DeleteEvent(obj interface{}) {
+	data := w.genSyncData(obj, action.SyncDataActionDelete)
+	if data == nil {
 		return
 	}
-	watcher.writer.Sync(syncData)
-	// watcher.InformExportServiceChange(obj, "Delete")
+	w.writer.Sync(data)
 }
 
-func (watcher *Watcher) UpdateEvent(oldObj, newObj interface{}) {
-	// check if no data change
-	d, ok := watcher.convert(newObj)
+// UpdateEvent is event handler for update resource event.
+func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
+	newObjReal, ok := w.convert(newObj)
 	if !ok {
-		glog.Errorf("Convert object to %s fail! object is %v", watcher.resourceType, newObj)
+		glog.Errorf("Convert object to %s fail! object is %v", w.resourceType, newObj)
 		return
 	}
 
-	//oldObject, ok := watcher.convert(oldObj)
-	//if !ok {
-	//	glog.Errorf("Convert old object to %s fail! object is %v", watcher.resourceType, newObj)
-	//	return
-	//}
-	// TODO: test resource version equal
-	//    newTgwIngress := new.(*tgwv1.TgwIngress)
-	//    oldTgwIngress := old.(*tgwv1.TgwIngress)
-	//    if newTgwIngress.ResourceVersion == oldTgwIngress.ResourceVersion {
-	//        return
-	//}
+	// compare the object changes for update.
+	if reflect.DeepEqual(oldObj, newObjReal) {
+		newObjMetadata := newObjReal.(metav1.Object)
 
-	if reflect.DeepEqual(oldObj, d) {
-		dMeta := d.(metav1.Object)
-		namespace := dMeta.GetNamespace()
-		name := dMeta.GetName()
-		// -v >=2 then log.info will show detail
-		glog.V(2).Infof("Got same %s: %s/%s", watcher.resourceType, namespace, name)
+		// there is no changes, no need to update.
+		glog.V(2).Infof("watcher got the same ResourceType[%s]: %s/%s",
+			w.resourceType, newObjMetadata.GetNamespace(), newObjMetadata.GetName())
 		return
 	}
 
-	// skip unnecessary node update event, to avoid writer queue stuck
-	if watcher.resourceType == "Node" {
+	// skip unnecessary node update event to reduce writer-queues pressure.
+	if w.resourceType == "Node" {
 		oldNode := oldObj.(*v1.Node)
 		newNode := newObj.(*v1.Node)
 
-		// a best way is to use deepcopy function
+		// TODO: a best way is to use deepcopy function, save the common fields,
+		// update the change fields.
+
+		// NOTE: why 5 ?
 		var tempLastTimes = make([]metav1.Time, 5)
 		tempVersion := newNode.ResourceVersion
 		newNode.ResourceVersion = oldNode.ResourceVersion
+
 		for i := range newNode.Status.Conditions {
 			tempLastTimes[i] = newNode.Status.Conditions[i].LastHeartbeatTime
 			newNode.Status.Conditions[i].LastHeartbeatTime = oldNode.Status.Conditions[i].LastHeartbeatTime
 		}
 
+		// the first DeepEqual skips in obj level, the second DeepEqual skips
+		// the node data after save common fields.
 		if reflect.DeepEqual(oldNode, newNode) {
 			glog.V(2).Infof("skip unnecessary node update event")
 			return
 		}
 
+		// recover new node metadata after DeepEqual finally.
 		newNode.ResourceVersion = tempVersion
 		for i := range newNode.Status.Conditions {
 			newNode.Status.Conditions[i].LastHeartbeatTime = tempLastTimes[i]
 		}
 	}
 
-	syncData := watcher.genSyncData(newObj, "Update")
-	if syncData == nil {
+	// it's need to update finally, sync metadata now.
+	data := w.genSyncData(newObj, action.SyncDataActionUpdate)
+	if data == nil {
 		return
 	}
-	watcher.writer.Sync(syncData)
-	//watcher.InformExportServiceChange(newObj, "Update")
+	w.writer.Sync(data)
 
-	// do alarm
-	if syncData.OwnerUID != "" {
-		watcher.writer.SyncAlarmEvent(syncData)
+	// send alarm when there is an add event with non-empty owner uid.
+	if data.OwnerUID != "" {
+		w.writer.SyncAlarmEvent(data)
 	}
 }
 
-// =================== Helpers ===================
-
-func (watcher *Watcher) convert(obj interface{}) (v interface{}, ok bool) {
-	switch watcher.resourceType {
+func (w *Watcher) convert(obj interface{}) (v interface{}, ok bool) {
+	switch w.resourceType {
 	case "Node":
 		v, ok = obj.(*v1.Node)
 	case "Pod":
@@ -259,17 +222,17 @@ func (watcher *Watcher) convert(obj interface{}) (v interface{}, ok bool) {
 	return v, ok
 }
 
-// IsEventShouldFilter: filter kubernetes system event
-func (watcher *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bool {
+// isEventShouldFilter filters k8s system events.
+func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bool {
 	// NOTE: event not support delete
-	// bugfix here: must in top of this func, in case of Name or Namespace return true
-	if eventAction == "Delete" && watcher.resourceType == "Event" {
-		// Event not support delete
+	// bugfix here: must in top of this func, in case of Name or Namespace return true.
+	if eventAction == action.SyncDataActionDelete && w.resourceType == "Event" {
+		// Event not support delete.
 		return true
 	}
 
-	if meta.GetNamespace() == "kube-system" && watcher.resourceType == "Event" {
-		// kubeops start pod with those prefix
+	if meta.GetNamespace() == "kube-system" && w.resourceType == "Event" {
+		// kubeops start pod with those prefix.
 		name := meta.GetName()
 		if strings.HasPrefix(name, "kube-") ||
 			strings.HasPrefix(name, "kubedns-") ||
@@ -279,21 +242,21 @@ func (watcher *Watcher) isEventShouldFilter(meta metav1.Object, eventAction stri
 		}
 		return true
 	}
+
 	if meta.GetNamespace() == "kube-system" {
 		return true
 	}
+
 	if meta.GetName() == "kubernetes" {
 		return true
 	}
-
 	return false
 }
 
-func (watcher *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncData {
-
-	d, ok := watcher.convert(obj)
+func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncData {
+	d, ok := w.convert(obj)
 	if !ok {
-		glog.Errorf("Convert object to %s fail! object is %v", watcher.resourceType, obj)
+		glog.Errorf("watcher convert object to %s failed, object[%v]", w.resourceType, obj)
 		return nil
 	}
 
@@ -301,19 +264,19 @@ func (watcher *Watcher) genSyncData(obj interface{}, eventAction string) *action
 	dMeta := d.(metav1.Object)
 	namespace := dMeta.GetNamespace()
 	name := dMeta.GetName()
-	if watcher.isEventShouldFilter(dMeta, eventAction) {
-		glog.V(2).Infof("Filtered %s %s: %s/%s", eventAction, watcher.resourceType, namespace, name)
+
+	if w.isEventShouldFilter(dMeta, eventAction) {
+		glog.V(2).Infof("watcher metadata is filtered %s %s: %s/%s", eventAction, w.resourceType, namespace, name)
 		return nil
 	}
 
 	ownerUID := ""
 	// NOTE: 生成时, 就确认了是否会告警, 即 ownerUID != "", 告警
 	// if Event, get OwnerReference uid
-	if watcher.resourceType == "Event" {
+	if w.resourceType == "Event" {
 		event, ok := d.(*v1.Event)
-
 		if !ok {
-			glog.Infof("genSyncData parse to Event fail: %v", d)
+			glog.Infof("watcher parse object to Event failed, %v", d)
 		}
 
 		// TODO: handle 1) not just pod 2) system component warning event
@@ -327,10 +290,7 @@ func (watcher *Watcher) genSyncData(obj interface{}, eventAction string) *action
 			key := fmt.Sprintf("%s/%s", iNamespace, iName)
 
 			// NOTE: 这里的store, 是watcher(Event)的store, 所以拿不到..........
-			//relatedPodInterface, exists, err := watcher.store.GetByKey(key)
-
-			relatedPodInterface, exists, err := watcher.sharedWatchers["Pod"].GetByKey(key)
-
+			relatedPodInterface, exists, err := w.sharedWatchers["Pod"].GetByKey(key)
 			if exists && err == nil {
 				relatedPod, ok := relatedPodInterface.(*v1.Pod)
 				if ok {
@@ -342,18 +302,12 @@ func (watcher *Watcher) genSyncData(obj interface{}, eventAction string) *action
 			} else {
 				glog.Warnf("The owner of Event's related-object not exists! Event=%v, related-object=%s", event, key)
 			}
-
 		}
 	}
 
-	//if ownerUID != "" {
-	//	glog.Infof("=========== ownerUID: %s", ownerUID)
-	//}
-
-	//var json =  jsoniter.ConfigCompatibleWithStandardLibrary
-	glog.Infof("Ready: %s %s: %s/%s", eventAction, watcher.resourceType, namespace, name)
+	glog.Infof("Ready to sync: %s %s: %s/%s", eventAction, w.resourceType, namespace, name)
 	syncData := &action.SyncData{
-		Kind:      watcher.resourceType,
+		Kind:      w.resourceType,
 		Namespace: namespace,
 		Name:      name,
 		Action:    eventAction,
@@ -362,36 +316,4 @@ func (watcher *Watcher) genSyncData(obj interface{}, eventAction string) *action
 	}
 
 	return syncData
-}
-
-func (watcher *Watcher) InformExportServiceChange(obj interface{}, originAction string) {
-	// only following types will influence ingress
-	// struct{} doesn't require any additional space
-	var IngressRelatedResource = map[string]struct{}{
-		"Ingress":   {},
-		"Service":   {},
-		"EndPoints": {},
-		"ConfigMap": {},
-		"Secret":    {},
-	}
-	if _, ok := IngressRelatedResource[watcher.resourceType]; !ok {
-		return
-	}
-
-	d, ok := watcher.convert(obj)
-	if !ok {
-		glog.Errorf("Convert object to %s fail! object is %v", watcher.resourceType, obj)
-		return
-	}
-
-	dMeta := d.(metav1.Object)
-	name := dMeta.GetName()
-	namespace := dMeta.GetNamespace()
-	originEvent := OriginEvent{
-		Action:       originAction,
-		ResourceType: watcher.resourceType,
-		ResourceName: name,
-		Namespace:    namespace,
-	}
-	watcher.exportServiceController.SyncIngress(originEvent)
 }
