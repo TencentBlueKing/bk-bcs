@@ -10,11 +10,14 @@ spec:
   containers:
   - name: bcs-driver
     image: ${kubeDriverImage}
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     command: ["./start.sh"]
     args: [
         "-h", "${localIp}",
         "-p", "${kubeDriverPort}",
         "-k", "http://127.0.0.1:8080",
         "-z", "${bcsZkHost}",
+        "-i", "",
+        "-r", "0",
+        "-c", "${clusterId}",
         ]
