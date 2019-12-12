@@ -41,28 +41,37 @@ bcs容器日志方案包含如下功能：
 ### 日志采集任务CRD资源定义
 ```
 apiVersion: bkbcs.tencent.com/v2
-kind: BkLogConfig
+kind: BcsLogConfig
 metadata:
   # your config name, must be unique in you container cluster
   name: stdout-example
 spec:
-  # label selector select match pod to collect log
-  selector:
-    app: loadbalance
+  # 配置类型，可选项。如果配置这个参数，可选值standard, bcs-system
+  configType: standard
   # whether container stdout
-  stdout: false
+  stdOut: false
   # when stdout=false, logpath is log path
-  logpath: bcs-lb/logs/bcss-loadbalance.log
+  logPath: bcs-lb/logs/bcss-loadbalance.log
   # dataid
-  dataid: 123456
-  # task level: 0-10, the higher the number, the higher the level
-  level: 3
+  dataId: "20001"
+  # appid
+  appId: "10001"
+  # clusterid
+  clusterId: bcs-k8s-10001
+  # 所需注入日志配置的容器的名字
+  containers:
+    - istio-proxy
+    - clb-sidecar
 ```
-- selector: 通过label selector选择需要采集的pod
-- stdout: 如果需要采集容器标准输出则为true，采集文本日志则为false
-- logpath: 当采集文本日志时，需要采集的日志文件目录
-- dataid: 数据平台日志清洗任务dataid，logbeat上报数据平台需要
-- level: 日志任务级别，0-10，数值越大，级别越高。当同一个pod属于多个日志任务时，高级别的日志任务生效
+- configType: log配置的类型，可选项。如果配置这个参数，可选值为standard, bcs-system
+- stdOut: 如果需要采集容器标准输出则为true，采集文本日志则为false
+- logPath: 当采集文本日志时，需要采集的日志文件目录
+- dataId: 数据平台日志清洗任务dataid，logbeat上报数据平台需要
+- appId: 应用id
+- clusterId: 集群id
+- containers: 所需注入日志配置的容器的名字。当配置了configType时，该参数不用填写。
+
+具体实现可参考 [bcs-log-webhook-server 文档](./bcs-log-webhook-server.md)
 
 ### 采集器logbeat&sidercar
 logbeat是蓝鲸内部通用的采集物理机日志的采集器，拥有非常高的稳定性以及性能。但是由于容器随时创建、随时销毁等特性，logbeat不能直接采集容器日志。
@@ -81,13 +90,13 @@ logbeat日志采集配置
     "tlogcfg": [
       {
         "file": "/data/bcs/docker/lib/docker/containers/ba2d22b78d677d028ba705b4f199b820cfa993ac8bb29d1d29ed84d2cc69bc57/ba2d22b78d677d028ba705b4f199b820cfa993ac8bb29d1d29ed84d2cc69bc57-json.log",
-        "dataid": 123456,
+        "dataid": "20001",
         "private": [
           {
             "container_id": "ba2d22b78d677d028ba705b4f199b820cfa993ac8bb29d1d29ed84d2cc69bc57",
-            "io.tencent.bcs.app.appid": "132",
-            "io.tencent.bcs.cluster": "BCS-DEBUGSZSELF00-20000",
-            "io.tencent.bcs.namespace": "defaultgroup"
+            "io_tencent_bcs_app_appid": "10001",
+            "io_tencent_bcs_app_cluster": "bcs-k8s-10001",
+            "io_tencent_bcs_app_namespace": "defaultgroup"
           }
         ],
         "field_sep": "|",
@@ -101,12 +110,10 @@ logbeat日志采集配置
 ### 自动注入容器日志采集信息
 采集器sidecar需要容器的env中包含上述所说的一些日志采集信息，为了尽量减少对业务yaml的侵入型，基于bcs的webhook机制实现容器env信息的自动注入。
 容器env注入信息如下：
-- io.tencent.bcs.app.appid   //业务appid
-- io.tencent.bcs.app.stdout //是否是标准输出
-- io.tencent.bcs.app.logpath //文本日志时的日志目录
-- io.tencent.bcs.app.cluster //集群id
-- io.tencent.bcs.app.namespace //namespcae
+- io_tencent_bcs_app_appid   //业务appid
+- io_tencent_bcs_app_stdout //是否是标准输出
+- io_tencent_bcs_app_logpath //文本日志时的日志目录
+- io_tencent_bcs_app_cluster //集群id
+- io_tencent_bcs_app_namespace //namespcae
 
-注意：
-1. 针对k8s集群基于Admission Webhook特性实现，详情请查看官方文档：https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/
-2. 针对mesos集群基于mesos driver的webhokk特性实现，详情请参考文档：[mesosdriver webhook](../bcs-mesos-driver/driver-implement.md)
+具体实现可参考 [bcs-log-webhook-server 文档](./bcs-log-webhook-server.md)

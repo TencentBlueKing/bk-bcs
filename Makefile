@@ -33,8 +33,8 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs
-specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs
+default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-log-webhook
+specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-log-webhook
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche
 
 allpack: svcpack k8spack mmpack mnpack
@@ -239,3 +239,7 @@ network:pre
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	GOOS=linux go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+
+bcs-log-webhook:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-log-webhook-server/bcs-log-webhook-server ./bcs-services/bcs-log-webhook-server/main.go
