@@ -14,6 +14,7 @@
 package output
 
 import (
+	"errors"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -23,101 +24,191 @@ import (
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 )
 
-// writer queue -> handler queue -> action func
+const (
+	// defaultQueueSizeNormalMetadata is default queue size of Writer for normal metadata.
+	defaultQueueSizeNormalMetadata = 10 * 1024
 
+	// defaultQueueSizeAlarmMetadata is default queue size of Writer for alarm metadata.
+	defaultQueueSizeAlarmMetadata = 2 * 1024
+
+	// defaultQueueTimeout is default timeout of queue.
+	defaultQueueTimeout = 1 * time.Second
+
+	// defaultDistributeInterval is default interval of distribution.
+	defaultDistributeInterval = 500 * time.Millisecond
+
+	// debugInterval is interval of debug.
+	debugInterval = 10 * time.Second
+)
+
+var (
+	// writerResources is resource list could be handled by the writer.
+	writerResources = []string{
+		"Service",
+		"EndPoints",
+		"Node",
+		"Pod",
+		"ReplicationController",
+		"ConfigMap",
+		"Secret",
+		"Namespace",
+		"Event",
+		"Deployment",
+		"DaemonSet",
+		"Job",
+		"StatefulSet",
+		"Ingress",
+		"ReplicaSet",
+		"ExportService",
+	}
+)
+
+// Writer writes the metadata to target storage service.
+// There are queues for normal data and alarm message data, every
+// metadata in queues would be distributed to settled handler.
 type Writer struct {
-	queue      chan *action.SyncData
+	// normal metadata queue.
+	queue chan *action.SyncData
+
+	// alarm message queue.
 	alarmQueue chan *action.SyncData
-	stop       <-chan struct{}
-	handlers   map[string]*Handler
-	alertor    *action.Alertor
+
+	// settled handlers.
+	handlers map[string]*Handler
+
+	// alarm sender.
+	alertor *action.Alertor
+
+	// groutine stop channel.
+	stopCh <-chan struct{}
 }
 
+// NewWriter creates a new Writer instance which base on bcs-storage service and alarm sender.
 func NewWriter(clusterID string, storageService *bcs.StorageService, alertor *action.Alertor) (*Writer, error) {
-
-	// FIXME: 1024, will stuck while there are a log of resources add/update comming
-	// 2018-05-20 queue size change to 10240
 	w := &Writer{
-		queue:      make(chan *action.SyncData, 10240),
+		queue:      make(chan *action.SyncData, defaultQueueSizeNormalMetadata),
+		alarmQueue: make(chan *action.SyncData, defaultQueueSizeAlarmMetadata),
 		handlers:   make(map[string]*Handler),
-		alarmQueue: make(chan *action.SyncData, 2048),
 		alertor:    alertor,
 	}
+
 	if err := w.init(clusterID, storageService); err != nil {
 		return nil, err
 	}
 	return w, nil
 }
 
-func (writer *Writer) init(clusterID string, storageService *bcs.StorageService) error {
-	resourceList := []string{"Service", "EndPoints", "Node", "Pod", "ReplicationController", "ConfigMap", "Secret", "Namespace", "Event",
-		"Deployment", "DaemonSet",
-		"Job", "StatefulSet",
-		"Ingress", "ReplicaSet", "ExportService"}
-
-	for _, resource := range resourceList {
-		writer.handlers[resource] = &Handler{
-			dataType: resource,
-			// FIXME: 1024, maybe the limit
-			queue: make(chan *action.SyncData, 1024),
-			action: &action.StorageAction{
-				Name:           resource,
-				ClusterID:      clusterID,
-				StorageService: storageService,
-			},
+func (w *Writer) init(clusterID string, storageService *bcs.StorageService) error {
+	for _, resource := range writerResources {
+		action := &action.StorageAction{
+			Name:           resource,
+			ClusterID:      clusterID,
+			StorageService: storageService,
 		}
+
+		w.handlers[resource] = NewHandler(resource, action)
 	}
 	return nil
 }
 
-func (writer *Writer) Sync(data *action.SyncData) {
+// Sync syncs normal metadata by sending into queue.
+func (w *Writer) Sync(data *action.SyncData) {
 	if data == nil {
-		glog.Error("Writer got nil data")
+		glog.Warn("can't sync the nil data")
+		return
 	}
-	writer.queue <- data
+
+	select {
+	case w.queue <- data:
+	case <-time.After(defaultQueueTimeout):
+		glog.Warn("can't sync data, queue timeout")
+	}
 }
 
-func (writer *Writer) SyncAlarmEvent(data *action.SyncData) {
+// SyncAlarmEvent syncs alarm message data by sending into alarm queue.
+func (w *Writer) SyncAlarmEvent(data *action.SyncData) {
 	if data == nil {
-		glog.Error("Writer got nil alarm data")
+		glog.Error("can't sync the nil alarm data")
+		return
 	}
-	writer.alarmQueue <- data
+
+	select {
+	case w.alarmQueue <- data:
+	case <-time.After(defaultQueueTimeout):
+		glog.Warn("can't sync data, alarm queue timeout")
+	}
 }
 
-func (writer *Writer) Run(stop <-chan struct{}) {
-	writer.stop = stop
-	for name, handler := range writer.handlers {
-		glog.Infof("Writer starting %s data channel", name)
-		go handler.Run()
-	}
-	wait.Until(writer.route, time.Second, wait.NeverStop)
-}
-
-// Route from writer.queue To handler.queue
-func (writer *Writer) route() {
-	glog.Info("Writer ready to go into worker!")
+// distributeNormal distributes normal metadata from queue. The distribute
+// func is drived by wait.NonSlidingUntil with a stop channel, do not block to
+// recv the queue here in order to make it have runtime to handle the stop channel.
+func (w *Writer) distributeNormal() {
+	// try to keep reading from queue until there is no more data every period.
 	for {
 		select {
-		case <-writer.stop:
-			glog.Info("Writer Got exit signal, ready to exit")
-			return
-		case syncData := <-writer.queue:
-			// notify 10 item once, decrease the log amount
-			// TODO: use groutine to print queue length, every 10 seconds or 1minss
-			currentQueueLen := len(writer.queue)
-			if currentQueueLen != 0 && currentQueueLen%10 == 0 {
-				glog.Infof("Data in writer's queue: %d", currentQueueLen)
+		case data := <-w.queue:
+			if handler, ok := w.handlers[data.Kind]; ok {
+				handler.HandleWithTimeout(data, defaultQueueTimeout)
+			} else {
+				glog.Errorf("can't distribute the normal metadata, unknown DataType[%+v]", data.Kind)
 			}
 
-			// FIXME: 如果某个handler的channel stuck了, 则这里会stuck
-			if handler, ok := writer.handlers[syncData.Kind]; ok {
-				handler.Handle(syncData)
-			} else {
-				glog.Errorf("Got unknown DataType: %s", syncData.Kind)
-			}
-		case syncData := <-writer.alarmQueue:
-			writer.alertor.DoAlarm(syncData)
+		case <-time.After(defaultQueueTimeout):
+			// no more data, break loop.
+			return
 		}
 	}
+}
 
+// distributeAlarm distributes alarm metadata from alarm queue. The distribute
+// func is drived by wait.NonSlidingUntil with a stop channel, do not block to
+// recv the queue here in order to make it have runtime to handle the stop channel.
+func (w *Writer) distributeAlarm() {
+	// try to keep reading from queue until there is no more data every period.
+	for {
+		select {
+		case data := <-w.alarmQueue:
+			w.alertor.DoAlarm(data)
+
+		case <-time.After(defaultQueueTimeout):
+			// no more data, break loop.
+			return
+		}
+	}
+}
+
+// debugs here.
+func (w *Writer) debug() {
+	for {
+		time.Sleep(debugInterval)
+		glog.Infof("Writer debug: NormalQueueLen[%d] AlarmQueueLen[%d]", len(w.queue), len(w.alarmQueue))
+	}
+}
+
+// Run runs the Writer instance with target stop channel, and starts all handlers.
+// There is a groutine which keep consuming metadata in queues and distributes data
+// to settled handler until stop channel is activated.
+func (w *Writer) Run(stopCh <-chan struct{}) error {
+	if stopCh != nil {
+		w.stopCh = stopCh
+	}
+
+	if w.stopCh == nil {
+		return errors.New("can't run the writer with nil stop channel")
+	}
+
+	// start all handlers.
+	for _, handler := range w.handlers {
+		handler.Run(stopCh)
+	}
+
+	// keep consuming metadata from queues.
+	glog.Info("Writer keeps consuming/distributing metadata now")
+	go wait.NonSlidingUntil(w.distributeNormal, defaultDistributeInterval, w.stopCh)
+	go wait.NonSlidingUntil(w.distributeAlarm, defaultDistributeInterval, w.stopCh)
+
+	// setup debug.
+	go w.debug()
+
+	return nil
 }

@@ -257,7 +257,9 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	glog.Info("New and init Cluster with list-watch DONE!")
 
 	glog.Info("start cluster and writer......")
-	go writer.Run(stopChan)
+	if err := writer.Run(stopChan); err != nil {
+		panic(err)
+	}
 	go cluster.Run(stopChan)
 
 	// finally, start metric, allow fail

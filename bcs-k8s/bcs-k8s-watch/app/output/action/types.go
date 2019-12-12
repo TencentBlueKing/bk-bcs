@@ -13,6 +13,18 @@
 
 package action
 
+const (
+	// SyncDataActionAdd is add action on SyncData.
+	SyncDataActionAdd = "Add"
+
+	// SyncDataActionDelete is delete action on SyncData.
+	SyncDataActionDelete = "Delete"
+
+	// SyncDataActionUpdate is update action on SyncData.
+	SyncDataActionUpdate = "Update"
+)
+
+// SyncData is metadata would be synced to storage.
 type SyncData struct {
 	Kind      string
 	Namespace string
