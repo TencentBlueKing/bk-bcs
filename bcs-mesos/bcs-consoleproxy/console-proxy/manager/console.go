@@ -48,6 +48,12 @@ type wsConn struct {
 	conn *websocket.Conn
 }
 
+func newWsConn(conn *websocket.Conn) *wsConn {
+	return &wsConn{
+		conn: conn,
+	}
+}
+
 func (c *wsConn) Read(p []byte) (n int, err error) {
 	_, rc, err := c.conn.NextReader()
 	if err != nil {
@@ -57,7 +63,7 @@ func (c *wsConn) Read(p []byte) (n int, err error) {
 }
 
 func (c *wsConn) Write(p []byte) (n int, err error) {
-	wc, err := c.conn.NextWriter(websocket.TextMessage)
+	wc, err := c.conn.NextWriter(websocket.BinaryMessage)
 	if err != nil {
 		return 0, err
 	}
@@ -151,7 +157,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 		}
 	}()
 
-	err = m.startExec(&wsConn{ws}, conf)
+	err = m.startExec(newWsConn(ws), conf)
 	if err != nil {
 		blog.Errorf("start exec failed for container %s: %s", conf.ContainerID, err.Error())
 		ResponseJSON(w, http.StatusBadRequest, errMsg{err.Error()})

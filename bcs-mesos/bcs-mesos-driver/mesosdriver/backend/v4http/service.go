@@ -22,6 +22,7 @@ import (
 	//"encoding/json"
 )
 
+//CreateService create service request forwarding
 func (s *Scheduler) CreateService(body []byte) (string, error) {
 
 	blog.Info("create service data(%s)", string(body))
@@ -45,6 +46,7 @@ func (s *Scheduler) CreateService(body []byte) (string, error) {
 	return string(reply), nil
 }
 
+//UpdateService update service request forwarding
 func (s *Scheduler) UpdateService(body []byte) (string, error) {
 
 	blog.Info("update service data(%s)", string(body))
@@ -68,6 +70,7 @@ func (s *Scheduler) UpdateService(body []byte) (string, error) {
 	return string(reply), nil
 }
 
+//DeleteService delete service request forwarding
 func (s *Scheduler) DeleteService(ns string, name string) (string, error) {
 	blog.Info("delete service(%s, %s)", ns, name)
 

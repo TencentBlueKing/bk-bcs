@@ -32,7 +32,7 @@ type MesosDriverOptionsOut struct {
 	SchedDiscvSvr    string `json:"sched_regdiscv" value:"127.0.0.1:2181" usage:"the address to discove schdulers"`
 	Cluster          string `json:"cluster" value:"" usage:"the cluster ID under bcs"`
 	AdmissionWebhook bool   `json:"admission_webhook" value:"false" usage:"whether admission webhook"`
-	Kubeconfig       string `json:"kubeconfig" value:"" usage:"kubeconfig, when store_driver is etcd"`
+	KubeConfig       string `json:"kubeconfig" value:"" usage:"kube config for custom resource feature and etcd storage"`
 }
 
 //MesosDriverOption is option in flags
@@ -54,8 +54,7 @@ func NewMesosDriverOption(opOut *MesosDriverOptionsOut) *MesosDriverOption {
 			RegDiscvSvr:      opOut.BCSZk,
 			SchedDiscvSvr:    opOut.SchedDiscvSvr,
 			AdmissionWebhook: opOut.AdmissionWebhook,
-			Kubeconfig:       opOut.Kubeconfig,
-
+			KubeConfig:       opOut.KubeConfig,
 			ServCert: &config.CertConfig{
 				CAFile:     opOut.CAFile,
 				CertFile:   opOut.ServerCertFile,

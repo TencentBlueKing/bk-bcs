@@ -21,14 +21,15 @@ import (
 	"github.com/urfave/cli"
 )
 
+//NewInspectCommand inspect sub command, get specified resource details
 func NewInspectCommand() cli.Command {
 	return cli.Command{
 		Name:  "inspect",
-		Usage: "show detailed information of application, taskgroup, service, configmap, deployment or secret",
+		Usage: "show detailed information of application, taskgroup, service, configmap, deployment, secret and etc.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Inspect type, app/process/taskgroup/service/configmap/secret/deployment/endpoint",
+				Usage: "Inspect type, application(app)/process/taskgroup/service/configmap/secret/deployment(deploy)/endpoint/customresourcedefinition(crd)",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -45,10 +46,7 @@ func NewInspectCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := inspect(utils.NewClientContext(c)); err != nil {
-				return err
-			}
-			return nil
+			return inspect(utils.NewClientContext(c))
 		},
 	}
 }
@@ -77,8 +75,11 @@ func inspect(c *utils.ClientContext) error {
 		return inspectDeployment(c)
 	case "endpoint":
 		return inspectEndpoint(c)
+	case "crd", "customresourcedefinition":
+		return inspectCustomResourceDefinition(c)
 	default:
-		return fmt.Errorf("invalid type: %s", resourceType)
+		//unkown type, try Custom Resource
+		return inspectCustomResource(c)
 	}
 }
 

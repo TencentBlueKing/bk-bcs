@@ -18,12 +18,14 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	bcstype "bk-bcs/bcs-common/common/types"
+
 	//"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	//"github.com/golang/protobuf/proto"
 	//"strconv"
 )
 
+//UpdateApplication update application forwarding
 func (s *Scheduler) UpdateApplication(body []byte, instances, args string) (string, error) {
 	blog.Info("update application. param(%s), instances(%s), args(%s)", string(body), instances, args)
 	var param bcstype.ReplicaController
@@ -52,7 +54,7 @@ func (s *Scheduler) UpdateApplication(body []byte, instances, args string) (stri
 
 	if s.GetHost() == "" {
 		blog.Error("no scheduler is connected by driver")
-		err := bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
+		err = bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
 		return err.Error(), err
 	}
 
