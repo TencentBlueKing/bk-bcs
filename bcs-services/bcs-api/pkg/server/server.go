@@ -41,8 +41,13 @@ func Setup(conf *config.ApiServConfig) {
 		&m.Cluster{},
 		&m.ClusterCredentials{},
 		&m.RegisterToken{},
+
 		// BCS
 		&m.BCSClusterInfo{},
+
+		// Network
+		&m.TkeLbSubnet{},
+		&m.TkeCidr{},
 	)
 
 	if conf != nil {

@@ -28,7 +28,7 @@ import (
 func (s *Scheduler) RunDeleteApplication(transaction *Transaction) {
 
 	blog.Infof("transaction %s delete application(%s.%s) run begin", transaction.ID, transaction.RunAs, transaction.AppID)
-
+	started := time.Now()
 	for {
 
 		if transaction.CreateTime+transaction.DelayTime > time.Now().Unix() {
@@ -58,6 +58,7 @@ func (s *Scheduler) RunDeleteApplication(transaction *Transaction) {
 	}
 
 	s.FinishTransaction(transaction)
+	reportOperateAppMetrics(transaction.RunAs, transaction.AppID, DeleteApplicationType, started)
 	blog.Infof("transaction %s delete application(%s.%s) run end, result(%s)",
 		transaction.ID, transaction.RunAs, transaction.AppID, transaction.Status)
 }
@@ -95,7 +96,7 @@ func (s *Scheduler) doDeleteAppTrans(trans *Transaction) bool {
 			}
 
 			if enforce == true {
-				blog.Warn("transaction %s delete applicatio: taskGroup(%s) is not end, but enforce to delete",
+				blog.Warn("transaction %s delete application: taskGroup(%s) is not end, but enforce to delete",
 					trans.ID, taskGroup.ID)
 			} else {
 				blog.Infof("transaction %s delete application(%s.%s) pending", trans.ID, runAs, appID)

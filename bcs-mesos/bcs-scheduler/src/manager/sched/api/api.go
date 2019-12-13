@@ -19,18 +19,19 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"errors"
 	"github.com/emicklei/go-restful"
-	"github.com/samuel/go-zookeeper/zk"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func (r *Router) queryAgentSettingList(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -56,7 +57,7 @@ func (r *Router) queryAgentSettingList(req *restful.Request, resp *restful.Respo
 }
 
 func (r *Router) deleteAgentSettingList(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -82,7 +83,7 @@ func (r *Router) deleteAgentSettingList(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) setAgentSettingList(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -114,7 +115,7 @@ func (r *Router) setAgentSettingList(req *restful.Request, resp *restful.Respons
 }
 
 func (r *Router) disableAgentList(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -140,7 +141,7 @@ func (r *Router) disableAgentList(req *restful.Request, resp *restful.Response) 
 }
 
 func (r *Router) enableAgentList(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -166,7 +167,7 @@ func (r *Router) enableAgentList(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) updateAgentSettingList(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -198,7 +199,7 @@ func (r *Router) updateAgentSettingList(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) queryAgentSetting(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -222,7 +223,7 @@ func (r *Router) queryAgentSetting(req *restful.Request, resp *restful.Response)
 }
 
 func (r *Router) disableAgent(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -246,7 +247,7 @@ func (r *Router) disableAgent(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) enableAgent(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -271,7 +272,7 @@ func (r *Router) enableAgent(req *restful.Request, resp *restful.Response) {
 
 func (r *Router) healthCheckReport(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -295,7 +296,7 @@ func (r *Router) healthCheckReport(req *restful.Request, resp *restful.Response)
 }
 
 func (r *Router) createDeployment(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -312,10 +313,10 @@ func (r *Router) createDeployment(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request create deployment(%s.%s)",
 		deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	if deploymentDef.RawJson == nil {
+	/*if deploymentDef.RawJson == nil {
 		blog.Warn("request create deployment(%s.%s) without raw json, please check driver version",
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	}
+	}*/
 
 	if errcode, err := r.backend.CreateDeployment(&deploymentDef); err != nil {
 		blog.Error("fail to create deployment(%s.%s), err:%s",
@@ -334,7 +335,7 @@ func (r *Router) createDeployment(req *restful.Request, resp *restful.Response) 
 }
 
 func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -351,10 +352,10 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request update deployment(%s.%s)",
 		deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	if deploymentDef.RawJson == nil {
+	/*if deploymentDef.RawJson == nil {
 		blog.Warn("request update deployment(%s.%s) without raw json, please check driver version",
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	}
+	}*/
 
 	if errCode, err := r.backend.UpdateDeployment(&deploymentDef); err != nil {
 		blog.Error("fail to update deployment(%s.%s), err:%s",
@@ -373,7 +374,7 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 }
 
 func (r *Router) cancelUpdateDeployment(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -396,7 +397,7 @@ func (r *Router) cancelUpdateDeployment(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) pauseUpdateDeployment(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -419,7 +420,7 @@ func (r *Router) pauseUpdateDeployment(req *restful.Request, resp *restful.Respo
 }
 
 func (r *Router) resumeUpdateDeployment(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -442,7 +443,7 @@ func (r *Router) resumeUpdateDeployment(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) deleteDeployment(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -480,7 +481,7 @@ func (r *Router) deleteDeployment(req *restful.Request, resp *restful.Response) 
 
 func (r *Router) getClusterResources(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -501,7 +502,7 @@ func (r *Router) getClusterResources(req *restful.Request, resp *restful.Respons
 }
 
 func (r *Router) getCurrentOffers(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -515,7 +516,7 @@ func (r *Router) getCurrentOffers(req *restful.Request, resp *restful.Response) 
 }
 
 func (r *Router) getClusterEndpoints(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -531,7 +532,7 @@ func (r *Router) getClusterEndpoints(req *restful.Request, resp *restful.Respons
 
 func (r *Router) createConfigMap(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -571,7 +572,7 @@ func (r *Router) createConfigMap(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) updateConfigMap(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -609,7 +610,7 @@ func (r *Router) updateConfigMap(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) deleteConfigMap(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -637,7 +638,7 @@ func (r *Router) deleteConfigMap(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) createSecret(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -676,7 +677,7 @@ func (r *Router) createSecret(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) updateSecret(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -713,7 +714,7 @@ func (r *Router) updateSecret(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) deleteSecret(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -741,7 +742,7 @@ func (r *Router) deleteSecret(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) createService(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -780,7 +781,7 @@ func (r *Router) createService(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) updateService(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -823,7 +824,7 @@ func (r *Router) updateService(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) deleteService(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -852,7 +853,7 @@ func (r *Router) deleteService(req *restful.Request, resp *restful.Response) {
 
 // BuildApplication is used to build a new application.
 func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -867,9 +868,9 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	if version.RawJson == nil {
+	/*if version.RawJson == nil {
 		blog.Error("request create application(%s.%s) without raw json", version.RunAs, version.ID)
-	}
+	}*/
 
 	if version.Instances <= 0 {
 		blog.Error("request build application(%s.%s) Instances(%d) err", version.RunAs, version.ID, version.Instances)
@@ -905,7 +906,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 	}
 
 	app, err := r.backend.FetchApplication(version.RunAs, version.ID)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("request build: fail to fetch application, err:%s", err.Error())
 		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
@@ -966,7 +967,7 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 
 // ListApplications is used to list all applications.
 func (r *Router) listApplications(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -992,7 +993,7 @@ func (r *Router) listApplications(req *restful.Request, resp *restful.Response) 
 
 // FetchApplication is used to fetch a application via applicaiton id.
 func (r *Router) fetchApplication(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1017,9 +1018,9 @@ func (r *Router) fetchApplication(req *restful.Request, resp *restful.Response) 
 	return
 }
 
-func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response) {
+/*func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1051,11 +1052,11 @@ func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response)
 	blog.Info("request get definition of application(%s::%s) end", runAs, appId)
 	return
 
-}
+}*/
 
-func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) {
+/*func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1086,11 +1087,11 @@ func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request get definition of deployment(%s::%s) end", runAs, deploymentId)
 	return
-}
+}*/
 
 // DeleteApplication is used to delete a application from mesos and consul via application id.
 func (r *Router) deleteApplication(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1128,7 +1129,7 @@ func (r *Router) deleteApplication(req *restful.Request, resp *restful.Response)
 
 //ListApplicationTasks is used to list all tasks belong to application via application id.
 func (r *Router) listApplicationTasks(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1157,7 +1158,7 @@ func (r *Router) listApplicationTasks(req *restful.Request, resp *restful.Respon
 }
 
 func (r *Router) listApplicationTaskGroups(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1185,7 +1186,7 @@ func (r *Router) listApplicationTaskGroups(req *restful.Request, resp *restful.R
 
 // DeleteApplicationTaskGroups is used to delete all tasks belong to application via applicaiton id.
 func (r *Router) deleteApplicationTaskGroups_r(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1194,7 +1195,7 @@ func (r *Router) deleteApplicationTaskGroups_r(req *restful.Request, resp *restf
 
 // DeleteApplicationTaskGroup is used to delete specified task belong to application via application id and task id.
 func (r *Router) deleteApplicationTaskGroup_r(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1203,7 +1204,7 @@ func (r *Router) deleteApplicationTaskGroup_r(req *restful.Request, resp *restfu
 
 // ListApplicationVersions is used to list all versions for a application specified by applicationId.
 func (r *Router) listApplicationVersions(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1229,7 +1230,7 @@ func (r *Router) listApplicationVersions(req *restful.Request, resp *restful.Res
 
 // FetchApplicationVersion is used to fetch specified version from consul by version id and application id.
 func (r *Router) fetchApplicationVersion_r(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1256,7 +1257,7 @@ func (r *Router) fetchApplicationVersion_r(req *restful.Request, resp *restful.R
 
 // UpdateApplication is used to update application version.
 func (r *Router) updateApplication(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1390,7 +1391,7 @@ func (r *Router) updateApplication(req *restful.Request, resp *restful.Response)
 
 // ScaleApplication is used to scale application instances.
 func (r *Router) scaleApplication(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1434,7 +1435,7 @@ func (r *Router) scaleApplication(req *restful.Request, resp *restful.Response) 
 
 func (r *Router) sendApplicationCommand(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1496,7 +1497,7 @@ func (r *Router) sendApplicationCommand(req *restful.Request, resp *restful.Resp
 
 func (r *Router) getApplicationCommand(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1534,7 +1535,7 @@ func (r *Router) getApplicationCommand(req *restful.Request, resp *restful.Respo
 
 func (r *Router) deleteApplicationCommand(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1558,7 +1559,7 @@ func (r *Router) deleteApplicationCommand(req *restful.Request, resp *restful.Re
 
 func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1594,7 +1595,7 @@ func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Respo
 		return
 	}
 
-	commandID := kind + "-" + ns + "-" + name + "-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	commandID := strings.ToLower(kind + "-" + ns + "-" + name + "-" + strconv.FormatInt(time.Now().UnixNano(), 10))
 	blog.Info("send command(%s) to %s:%s.%s", commandID, kind, ns, name)
 	commandInfo := commtypes.BcsCommandInfo{
 		Id:         commandID,
@@ -1620,7 +1621,7 @@ func (r *Router) sendDeploymentCommand(req *restful.Request, resp *restful.Respo
 
 func (r *Router) getDeploymentCommand(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1659,7 +1660,7 @@ func (r *Router) getDeploymentCommand(req *restful.Request, resp *restful.Respon
 
 func (r *Router) deleteDeploymentCommand(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1684,7 +1685,7 @@ func (r *Router) deleteDeploymentCommand(req *restful.Request, resp *restful.Res
 
 //SendMessageApplication send msg to application
 func (r *Router) sendMessageApplication(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1727,7 +1728,7 @@ func (r *Router) sendMessageApplication(req *restful.Request, resp *restful.Resp
 
 //SendMessageApplicationTaskGroup send msg to the specified taskgroup
 func (r *Router) sendMessageApplicationTaskGroup(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1790,7 +1791,7 @@ func createResponeDataV2(errCode int, msg string, data interface{}) string {
 
 // RescheduleTaskgroup is used to rescheduler taskgroup.
 func (r *Router) reschedulerTaskgroup(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1821,7 +1822,7 @@ func (r *Router) reschedulerTaskgroup(req *restful.Request, resp *restful.Respon
 
 // ScaleDeployment is used to scale deployment instances.
 func (r *Router) scaleDeployment_r(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1863,7 +1864,7 @@ func (r *Router) scaleDeployment_r(req *restful.Request, resp *restful.Response)
 }
 
 func (r *Router) registerCustomResource(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1892,7 +1893,7 @@ func (r *Router) registerCustomResource(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) createCustomResource(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1921,7 +1922,7 @@ func (r *Router) createCustomResource(req *restful.Request, resp *restful.Respon
 }
 
 func (r *Router) updateCustomResource(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1950,7 +1951,7 @@ func (r *Router) updateCustomResource(req *restful.Request, resp *restful.Respon
 }
 
 func (r *Router) deleteCustomResource(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -1979,7 +1980,7 @@ func (r *Router) deleteCustomResource(req *restful.Request, resp *restful.Respon
 }
 
 func (r *Router) listCustomResource(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2001,8 +2002,30 @@ func (r *Router) listCustomResource(req *restful.Request, resp *restful.Response
 	return
 }
 
+func (r *Router) listAllCustomResource(req *restful.Request, resp *restful.Response) {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
+		blog.Warn("scheduler is not master, can not process cmd")
+		return
+	}
+	kind := req.PathParameter("kind")
+	blog.V(3).Infof("receive list all custom resource request kind %s", kind)
+
+	crds, err := r.backend.ListAllCrds(kind)
+	if err != nil {
+		blog.Error("request list custom resource(%s) err(%s)", kind, err.Error())
+		data := createResponeData(err, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+
+	data := createResponeData(nil, "success", crds)
+	resp.Write([]byte(data))
+	blog.V(3).Infof("request list custom resource(%s)end", kind)
+	return
+}
+
 func (r *Router) getCustomResource(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2027,7 +2050,7 @@ func (r *Router) getCustomResource(req *restful.Request, resp *restful.Response)
 
 func (r *Router) commitImage(req *restful.Request, resp *restful.Response) {
 
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2053,7 +2076,7 @@ func (r *Router) commitImage(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) restartTaskGroup(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2078,7 +2101,7 @@ func (r *Router) restartTaskGroup(req *restful.Request, resp *restful.Response) 
 }
 
 func (r *Router) reloadTaskGroup(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2103,7 +2126,7 @@ func (r *Router) reloadTaskGroup(req *restful.Request, resp *restful.Response) {
 }
 
 func (r *Router) createAdmissionwebhook(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2142,7 +2165,7 @@ func (r *Router) createAdmissionwebhook(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) updateAdmissionwebhook(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2183,7 +2206,7 @@ func (r *Router) updateAdmissionwebhook(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) deleteAdmissionwebhook(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2211,7 +2234,7 @@ func (r *Router) deleteAdmissionwebhook(req *restful.Request, resp *restful.Resp
 }
 
 func (r *Router) fetchAllAdmissionwebhooks(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2229,12 +2252,12 @@ func (r *Router) fetchAllAdmissionwebhooks(req *restful.Request, resp *restful.R
 	data = createResponeData(nil, "success", admissions)
 	resp.Write([]byte(data))
 
-	blog.Info("request list all admissions end")
+	blog.V(3).Info("request list all admissions end")
 	return
 }
 
 func (r *Router) fetchAdmissionwebhook(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != "master" {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
 	}
@@ -2254,6 +2277,6 @@ func (r *Router) fetchAdmissionwebhook(req *restful.Request, resp *restful.Respo
 	data = createResponeData(nil, "success", admission)
 	resp.Write([]byte(data))
 
-	blog.Info("request list all admissions end")
+	blog.V(3).Info("request fetch admissions end")
 	return
 }

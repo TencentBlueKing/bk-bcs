@@ -14,6 +14,8 @@
 package manager
 
 import (
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/etcd"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,7 +34,6 @@ import (
 )
 
 type Manager struct {
-	store        *store.Store
 	sched        *sched.Sched
 	schedContext *schedcontext.SchedContext
 	config       util.SchedConfig
@@ -43,14 +44,27 @@ func New(config util.SchedConfig) (*Manager, error) {
 		config: config,
 	}
 
-	dbzk := store.NewDbZk(strings.Split(config.ZkHost, ","))
-	dbzk.Connect()
-
-	zkStore := store.NewManagerStore(dbzk)
+	var s store.Store
+	var err error
+	if config.Scheduler.StoreDriver == "etcd" {
+		s, err = etcd.NewEtcdStore(config.Scheduler.Kubeconfig)
+		if err != nil {
+			blog.Errorf("new etcd store failed: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		dbzk := zk.NewDbZk(strings.Split(config.ZkHost, ","))
+		err = dbzk.Connect()
+		if err != nil {
+			blog.Errorf("connect zookeeper %s failed: %s", config.ZkHost, err.Error())
+			return nil, err
+		}
+		s = zk.NewManagerStore(dbzk)
+	}
 
 	manager.schedContext = &schedcontext.SchedContext{
 		Config: config,
-		Store:  zkStore,
+		Store:  s,
 	}
 
 	listener := &manager.config.HttpListener

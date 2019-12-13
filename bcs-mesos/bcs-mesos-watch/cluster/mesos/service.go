@@ -21,18 +21,21 @@ import (
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
+//ServiceInfo wrapper for BCSService
 type ServiceInfo struct {
 	data       *commtypes.BcsService
 	syncTime   int64
 	reportTime int64
 }
 
+//NewServiceWatch create watch for Service
 func NewServiceWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *ServiceWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
@@ -51,6 +54,7 @@ func NewServiceWatch(cxt context.Context, client ZkClient, reporter cluster.Repo
 	}
 }
 
+//ServiceWatch watch all event for Service and store in local cache
 type ServiceWatch struct {
 	eventLock sync.Mutex       //lock for event
 	report    cluster.Reporter //reporter
@@ -60,6 +64,7 @@ type ServiceWatch struct {
 	watchPath string
 }
 
+//Work list all Service data periodically
 func (watch *ServiceWatch) Work() {
 	watch.ProcessAllServices()
 	tick := time.NewTicker(8 * time.Second)
@@ -75,6 +80,7 @@ func (watch *ServiceWatch) Work() {
 	}
 }
 
+//ProcessAllServices handle all namespace service
 func (watch *ServiceWatch) ProcessAllServices() error {
 
 	currTime := time.Now().Unix()
@@ -206,7 +212,11 @@ func (watch *ServiceWatch) AddEvent(obj interface{}) {
 		Action:   "Add",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionAdd, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionAdd, cluster.SyncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -223,7 +233,11 @@ func (watch *ServiceWatch) DeleteEvent(obj interface{}) {
 		Action:   "Delete",
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionDelete, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionDelete, cluster.SyncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -244,5 +258,9 @@ func (watch *ServiceWatch) UpdateEvent(old, cur interface{}) {
 		Action:   "Update",
 		Item:     cur,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncSuccess).Inc()
+	}
 }

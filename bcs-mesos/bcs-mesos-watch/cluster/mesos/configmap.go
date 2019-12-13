@@ -17,15 +17,17 @@ import (
 	"bk-bcs/bcs-common/pkg/cache"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+
 	//schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 //NSControlInfo store all app info under one namespace
@@ -35,12 +37,14 @@ import (
 //	cancel context.CancelFunc //for cancel sub goroutine
 //}
 
+//ConfigMapInfo wrapper for BCS ConfigMap
 type ConfigMapInfo struct {
 	data       *commtypes.BcsConfigMap
 	syncTime   int64
 	reportTime int64
 }
 
+//NewConfigMapWatch create watch for BCS ConfigMap
 func NewConfigMapWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *ConfigMapWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
@@ -70,6 +74,7 @@ func NewConfigMapWatch(cxt context.Context, client ZkClient, reporter cluster.Re
 	}
 }
 
+//ConfigMapWatch watch for configmap, watch all detail and store to local cache
 type ConfigMapWatch struct {
 	eventLock sync.Mutex       //lock for event
 	report    cluster.Reporter //reporter
@@ -80,7 +85,7 @@ type ConfigMapWatch struct {
 	watchPath string
 }
 
-//to add path and node watch
+//Work to add path and node watch
 func (watch *ConfigMapWatch) Work() {
 	watch.ProcessAllConfigmaps()
 	tick := time.NewTicker(12 * time.Second)
@@ -96,6 +101,7 @@ func (watch *ConfigMapWatch) Work() {
 	}
 }
 
+//ProcessAllConfigmaps handle all configmap under all namespace
 func (watch *ConfigMapWatch) ProcessAllConfigmaps() error {
 
 	currTime := time.Now().Unix()
@@ -225,10 +231,14 @@ func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
-		Action:   "Add",
+		Action:   types.ActionAdd,
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionAdd, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionAdd, cluster.SyncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -242,10 +252,14 @@ func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 	//report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
-		Action:   "Delete",
+		Action:   types.ActionDelete,
 		Item:     obj,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionDelete, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionDelete, cluster.SyncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -265,8 +279,12 @@ func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 	//report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
-		Action:   "Update",
+		Action:   types.ActionUpdate,
 		Item:     cur,
 	}
-	watch.report.ReportData(data)
+	if err := watch.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncSuccess).Inc()
+	}
 }

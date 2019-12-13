@@ -23,7 +23,6 @@ import (
 	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/golang/protobuf/proto"
-	"github.com/samuel/go-zookeeper/zk"
 	"net/http"
 	"time"
 )
@@ -180,7 +179,7 @@ func (mgr *OperatorMgr) updateAgents() {
 		//blog.V(3).Infof("update agents: ===>agent[%d]: name(%s), info(%s)", index, oneAgent.GetAgentInfo().GetHostname(), string(data))
 
 		dbAgent, dbErr := mgr.store.FetchAgent(oneAgent.GetAgentInfo().GetHostname())
-		if dbAgent == nil && dbErr == zk.ErrNoNode {
+		if dbAgent == nil && dbErr == store.ErrNoFound {
 			blog.Warn("update agents: new agent(%s) come to online", oneAgent.GetAgentInfo().GetHostname())
 		}
 

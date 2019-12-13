@@ -22,13 +22,14 @@ import (
 	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
-	"golang.org/x/net/context"
 	"path"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/samuel/go-zookeeper/zk"
+	"golang.org/x/net/context"
 )
 
 //TaskControlInfo store all app info under one namespace
@@ -318,10 +319,14 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	data := &types.BcsSyncData{
 		//DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
-		Action:   "Add",
+		Action:   types.ActionAdd,
 		Item:     obj,
 	}
-	task.report.ReportData(data)
+	if err := task.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionAdd, cluster.SyncSuccess).Inc()
+	}
 }
 
 //DeleteEvent when delete
@@ -337,10 +342,14 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	data := &types.BcsSyncData{
 		//DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
-		Action:   "Delete",
+		Action:   types.ActionDelete,
 		Item:     obj,
 	}
-	task.report.ReportData(data)
+	if err := task.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionDelete, cluster.SyncSuccess).Inc()
+	}
 }
 
 //UpdateEvent when update
@@ -359,18 +368,24 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 	data := &types.BcsSyncData{
 		//DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
-		Action:   "Update",
+		Action:   types.ActionUpdate,
 		Item:     cur,
 	}
-	task.report.ReportData(data)
+	if err := task.report.ReportData(data); err != nil {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncFailure).Inc()
+	} else {
+		cluster.SyncTotal.WithLabelValues(cluster.DataTypeTaskGroup, types.ActionUpdate, cluster.SyncSuccess).Inc()
+	}
 }
 
+//GetTaskGroupChannel get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannel(taskGroup *schedulertypes.TaskGroup) string {
 
 	return "TaskGroup_" + strconv.Itoa(int(taskGroup.InstanceID%100))
 
 }
 
+//GetTaskGroupChannelV2 get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannelV2(taskGroup *schedulertypes.TaskGroup) string {
 
 	index := util.GetHashId(taskGroup.ID, TaskgroupThreadNum)

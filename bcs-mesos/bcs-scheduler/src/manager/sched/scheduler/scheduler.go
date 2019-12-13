@@ -25,7 +25,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	sched "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"github.com/andygrunwald/megos"
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"net/url"
 	"os"
@@ -49,7 +50,6 @@ import (
 	"reflect"
 
 	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
-	"github.com/samuel/go-zookeeper/zk"
 )
 
 // Interval for update task, taskgroup, application in ZK
@@ -62,6 +62,11 @@ const DATA_CHECK_INTERVAL = 60
 const MESOS_HEARTBEAT_TIMEOUT = 120
 
 const MAX_STAGING_UPDATE_INTERVAL = 120
+
+const (
+	SchedulerRoleMaster = "master"
+	SchedulerRoleSlave  = "slave"
+)
 
 // Scheduler represents a Mesos scheduler
 type Scheduler struct {
@@ -144,6 +149,7 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 
 	s.store.InitLockPool()
 	s.store.InitDeploymentLockPool()
+	s.store.InitCmdLockPool()
 
 	// TODO, the follow statements are only used for passing test,
 	// should resovled to make sure test pass
@@ -163,6 +169,13 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 	}
 
 	return s
+}
+
+func (s *Scheduler) runPrometheusMetrics() {
+	http.Handle("/metrics", promhttp.Handler())
+	addr := s.IP + ":" + strconv.Itoa(int(s.config.MetricPort))
+	blog.Infof("scheduler listen metrics %s", addr)
+	go http.ListenAndServe(addr, nil)
 }
 
 func (s *Scheduler) runMetric() {
@@ -233,17 +246,11 @@ func (s *Scheduler) Start() error {
 		return err
 	}
 
-	s.ServiceMgr = NewServiceMgr(s.config.ZK, "/blueking", s)
+	s.ServiceMgr = NewServiceMgr(s)
 	if s.ServiceMgr == nil {
 		return fmt.Errorf("new serviceMgr(%s:/blueking) error", s.config.ZK)
 	}
 	go s.ServiceMgr.Worker()
-
-	//blog.Info("to create transaction manager")
-	//s.TransMgr, _ = CreateTransactionMgr(s)
-	//blog.Info("to create transaction manage goroutine")
-	//go TransManage(s.TransMgr)
-	//blog.Info("after creating transaction manage goroutine")
 
 	// get Host and Port
 	splitID := strings.Split(s.config.Address, ":")
@@ -258,7 +265,8 @@ func (s *Scheduler) Start() error {
 	s.Port = port
 	blog.Info("scheduler run address(%s:%d)", s.IP, s.Port)
 
-	s.runMetric()
+	s.runPrometheusMetrics()
+	//s.runMetric()
 
 	s.Role = "unknown"
 	s.currMesosMaster = ""
@@ -294,7 +302,7 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 
 	frameworkId, err := store.FetchFrameworkID()
 	if err != nil {
-		if strings.ToLower(err.Error()) != "zk: node does not exist" {
+		if strings.ToLower(err.Error()) != "zk: node does not exist" && !strings.Contains(err.Error(), "not found") {
 			blog.Error("Fetch framework id failed: %s", err.Error())
 			return nil, err
 		}
@@ -356,7 +364,7 @@ func (s *Scheduler) discvMesos() {
 		case <-tick.C:
 			blog.Info("mesos discove(%s:%s), curr mesos master:%s", MesosDiscv, discvPath, s.currMesosMaster)
 			// add mesos heartbeat check
-			if s.Role == "master" {
+			if s.Role == SchedulerRoleMaster {
 				s.lockService()
 				heartbeat := s.mesosHeartBeatTime
 				now := time.Now().Unix()
@@ -446,7 +454,7 @@ func (s *Scheduler) checkMesosChange(currMaster, MasterID string) error {
 	s.mesosMasterID = MasterID
 	servermetric.SetMesosMaster(s.currMesosMaster)
 
-	if s.Role != "master" {
+	if s.Role != SchedulerRoleMaster {
 		blog.Info("mesos master leader changed to %s, but scheduler's role is %s, do nothing", currMaster, s.Role)
 		return nil
 	}
@@ -638,10 +646,10 @@ func (s *Scheduler) regDiscove() {
 				return
 			}
 			if isMaster {
-				err = s.checkRoleChange("master")
+				err = s.checkRoleChange(SchedulerRoleMaster)
 				servermetric.SetRole(metric.MasterRole)
 			} else {
-				err = s.checkRoleChange("slave")
+				err = s.checkRoleChange(SchedulerRoleSlave)
 				servermetric.SetRole(metric.SlaveRole)
 			}
 			if err != nil {
@@ -775,8 +783,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 
 	blog.Info("scheduler role change: %s --> %s", s.Role, currRole)
-	s.Role = currRole
-	if s.Role != "master" {
+	if currRole != SchedulerRoleMaster {
 		if s.currMesosResp != nil {
 			blog.Info("close current http ...")
 			s.currMesosResp.Body.Close()
@@ -803,16 +810,21 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 			s.dataChecker.SendMsg(&msg)
 			blog.Info("after close data check goroutine")
 		}
-
+		s.store.StopStoreMetrics()
 		s.store.UnInitCacheMgr()
 
 		return nil
 	}
 
-	s.store.InitCacheMgr(s.config.UseCache)
+	err := s.store.InitCacheMgr(s.config.UseCache)
+	if err != nil {
+		blog.Errorf("InitCacheMgr failed: %s, and exit", err.Error())
+		os.Exit(1)
+	}
+	s.Role = currRole
 
+	go s.store.StartStoreObjectMetrics()
 	go s.startCheckDeployments()
-
 	if s.ServiceMgr != nil {
 		var msgOpen ServiceMgrMsg
 		msgOpen.MsgType = "open"
@@ -993,11 +1005,10 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 			}()
 
 		case sched.Event_MESSAGE:
-			blog.Info("mesos report message event")
 			message := event.GetMessage()
-			blog.Info("receive message(%s)", message.String())
+			blog.V(3).Infof("receive message(%s)", message.String())
 			data := message.GetData()
-			var bcsMsg types.BcsMessage
+			var bcsMsg *types.BcsMessage
 			err := json.Unmarshal(data, &bcsMsg)
 			if err != nil {
 				blog.Error("unmarshal bcsmessage(%s) err:%s", data, err.Error())
@@ -1005,7 +1016,9 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 			}
 			switch *bcsMsg.Type {
 			case types.Msg_Res_COMMAND_TASK:
-				go s.ProcessCommandMessage(&bcsMsg)
+				go s.ProcessCommandMessage(bcsMsg)
+			case types.Msg_TASK_STATUS_UPDATE:
+				go s.UpdateTaskStatus(message.GetAgentId().GetValue(), message.GetExecutorId().GetValue(), bcsMsg)
 			default:
 				blog.Error("unknown message type(%s)", *bcsMsg.Type)
 			}
@@ -1415,7 +1428,7 @@ func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.Bc
 		agent.HostAttributes = mesosAttribute2commonAttribute(oneAgent.AgentInfo.Attributes)
 		agent.Attributes = agent.HostAttributes
 		settings, err := s.FetchAgentSetting(agent.IP)
-		if err != nil && err != zk.ErrNoNode {
+		if err != nil && err != store.ErrNoFound {
 			blog.Errorf("get cluster resource: query ageng settings failed IP(%s): %v", agent.IP, err)
 			return nil, err
 		}
@@ -1478,6 +1491,7 @@ func (s *Scheduler) GetCurrentOffers() []*mesos.Offer {
 	return inOffers
 }
 
+//convert mesos.Attribute to commtype.BcsAgentAttribute
 func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*commtype.BcsAgentAttribute {
 	if oldAttributeList == nil {
 		return nil

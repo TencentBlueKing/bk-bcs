@@ -1,6 +1,8 @@
 *.DS_Store
 .idea/
+*exvim*
 build/
+vendor/
 vendor/github.com/Sirupsen/Sirupsen
 vendor/github.com/Nvveen/Gotty/
 vendor/github.com/bitly/go-simplejson/
@@ -28,7 +30,3 @@ vendor/github.com/prometheus/client_model/
 vendor/github.com/prometheus/common/
 vendor/github.com/spf13/afero/
 bcs-k8s/bcs-external-dns/
-bcs-mesos/bcs-consoleproxy/
-bcs-mesos/bcs-hpacontroller/
-bcs-mesos/bcs-process-daemon/
-bcs-mesos/bcs-process-executor/

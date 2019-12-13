@@ -43,6 +43,12 @@ func (b *backend) DoCommand(command *commtypes.BcsCommandInfo) error {
 			var taskgroupCommand commtypes.TaskgroupCommandInfo
 			taskgroupCommand.TaskgroupId = taskGroup.ID
 			for _, task := range taskGroup.Taskgroup {
+				if command.Spec.CommandTargetRef.Image != "" && task.Image != command.Spec.CommandTargetRef.Image {
+					blog.Infof("command %s task %s image don't match %s, and continue",
+						command.Id, task.ID, command.Spec.CommandTargetRef.Image)
+					continue
+				}
+
 				var taskCommand commtypes.TaskCommandInfo
 				taskCommand.TaskId = task.ID
 				taskCommand.Status = commtypes.TaskCommandStatusStaging
@@ -63,6 +69,12 @@ func (b *backend) DoCommand(command *commtypes.BcsCommandInfo) error {
 			var taskgroupCommand commtypes.TaskgroupCommandInfo
 			taskgroupCommand.TaskgroupId = taskGroup.ID
 			for _, task := range taskGroup.Taskgroup {
+				if command.Spec.CommandTargetRef.Image != "" && task.Image != command.Spec.CommandTargetRef.Image {
+					blog.Infof("command %s task %s image don't match %s, and continue",
+						command.Id, task.ID, command.Spec.CommandTargetRef.Image)
+					continue
+				}
+
 				var taskCommand commtypes.TaskCommandInfo
 				taskCommand.TaskId = task.ID
 				taskCommand.Status = commtypes.TaskCommandStatusStaging
@@ -112,6 +124,12 @@ func (b *backend) getDepoymentTaskgroup(command *commtypes.BcsCommandInfo) error
 			var taskgroupCommand commtypes.TaskgroupCommandInfo
 			taskgroupCommand.TaskgroupId = taskGroup.ID
 			for _, task := range taskGroup.Taskgroup {
+				if command.Spec.CommandTargetRef.Image != "" && task.Image != command.Spec.CommandTargetRef.Image {
+					blog.Infof("command %s task %s image don't match %s, and continue",
+						command.Id, task.ID, command.Spec.CommandTargetRef.Image)
+					continue
+				}
+
 				var taskCommand commtypes.TaskCommandInfo
 				taskCommand.TaskId = task.ID
 				taskCommand.Status = commtypes.TaskCommandStatusStaging
@@ -134,6 +152,12 @@ func (b *backend) getDepoymentTaskgroup(command *commtypes.BcsCommandInfo) error
 			var taskgroupCommand commtypes.TaskgroupCommandInfo
 			taskgroupCommand.TaskgroupId = taskGroup.ID
 			for _, task := range taskGroup.Taskgroup {
+				if command.Spec.CommandTargetRef.Image != "" && task.Image != command.Spec.CommandTargetRef.Image {
+					blog.Infof("command %s task %s image don't match %s, and continue",
+						command.Id, task.ID, command.Spec.CommandTargetRef.Image)
+					continue
+				}
+
 				var taskCommand commtypes.TaskCommandInfo
 				taskCommand.TaskId = task.ID
 				taskCommand.Status = commtypes.TaskCommandStatusStaging

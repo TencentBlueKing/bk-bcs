@@ -17,19 +17,22 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	"bk-bcs/bcs-common/common/http/httpclient"
 	"bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
 )
 
 const (
+	//BcsApiPrefix k8s driver url prefix
 	BcsApiPrefix = "/bcsapi/v4/scheduler/k8s/"
 )
 
@@ -42,8 +45,12 @@ func init() {
 }
 
 func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
+	start := time.Now()
+
 	data, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 		blog.Error("handler url %s read request body failed, error: %s", uri, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrCommHttpReadBodyFail, common.BcsErrCommHttpReadBodyFailStr)
 		return err1.Error(), nil
@@ -51,6 +58,8 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 
 	cluster := req.Request.Header.Get("BCS-ClusterID")
 	if cluster == "" {
+		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 		blog.Error("handler url %s read header BCS-ClusterID is empty", uri)
 		err1 := bhttp.InternalError(common.BcsErrCommHttpParametersFailed, "http header BCS-ClusterID can't be empty")
 		return err1.Error(), nil
@@ -58,6 +67,8 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 
 	rd, err := regdiscv.GetRDiscover()
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 		blog.Error("hander url %s get RDiscover error %s", uri, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrApiInternalFail, common.BcsErrApiInternalFailStr)
 		return err1.Error(), nil
@@ -65,6 +76,8 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 
 	serv, err := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_K8SAPISERVER, cluster))
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 		blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_K8SAPISERVER, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrApiGetK8sApiFail, fmt.Sprintf("k8s cluster %s not found", cluster))
 		return err1.Error(), nil
@@ -72,6 +85,8 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 
 	ser, ok := serv.(*types.BcsK8sApiserverInfo)
 	if !ok {
+		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 		blog.Errorf("servers convert to BcsK8sApiserverInfo")
 		err1 := bhttp.InternalError(common.BcsErrApiGetK8sApiFail, common.BcsErrApiGetK8sApiFailStr)
 		return err1.Error(), nil
@@ -96,10 +111,15 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 
 	reply, err := httpcli.Request(url, method, req.Request.Header, data)
 	if err != nil {
+		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 		blog.Error("request url %s error %s", url, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrApiRequestMesosApiFail, common.BcsErrApiRequestMesosApiFailStr)
 		return err1.Error(), nil
 	}
+
+	metric.RequestCount.WithLabelValues("k8s_driver", method).Inc()
+	metric.RequestLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
 
 	return string(reply), err
 }

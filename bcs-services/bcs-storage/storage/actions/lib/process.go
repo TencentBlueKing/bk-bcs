@@ -15,6 +15,7 @@ package lib
 
 import (
 	"io/ioutil"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,7 +23,7 @@ import (
 	"bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
 )
 
 // MarkProcess does the following things:
@@ -32,7 +33,7 @@ import (
 func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 	return func(req *restful.Request, resp *restful.Response) {
 		apiConf := apiserver.GetAPIResource().Conf
-
+		entranceTime := time.Now()
 		// print request body to log
 		var stringBody = "Not Parsed"
 		if apiConf.PrintBody {
@@ -40,13 +41,11 @@ func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 			stringBody = string(body)
 			req.Request.Body = ioutil.NopCloser(strings.NewReader(stringBody))
 		}
-
-		entranceTime := time.Now()
 		// print log when a request comes in and returns
 		blog.Infof("Receive %s %s?%s, body: %s", req.Request.Method, req.Request.URL.Path, req.Request.URL.RawQuery, stringBody)
 		f(req, resp)
 		blog.Infof("Return [%d] %s %s", resp.StatusCode(), req.Request.Method, req.Request.URL.Path)
-
+		reportAPIMetrics(req.Request.URL.Path, req.Request.Method, strconv.Itoa(resp.StatusCode()), entranceTime)
 		if apiConf.PrintManager {
 			// Count request time
 			if req.Request.Method == "GET" {

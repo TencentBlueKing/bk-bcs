@@ -20,8 +20,10 @@ import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/conf"
 
+	bsMetrics "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
+	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/plugin/pkg/parse"
 	"github.com/coredns/coredns/plugin/proxy"
 	"github.com/mholt/caddy"
@@ -56,6 +58,7 @@ func setup(c *caddy.Controller) error {
 	}
 	//start & stop register
 	c.OnStartup(func() error {
+		metrics.MustRegister(c, bsMetrics.RequestCount, bsMetrics.RequestLatency, bsMetrics.RequestOutProxyCount, bsMetrics.DnsTotal, bsMetrics.StorageOperatorTotal, bsMetrics.StorageOperatorLatency, bsMetrics.ZkNotifyTotal)
 		return scheduler.Start()
 	})
 	c.OnShutdown(func() error {
@@ -77,6 +80,7 @@ type ConfigItem struct {
 	ResyncPeriod int         //resync all data from scheduler zookeeper
 	Endpoints    []string    //scheduler event storage endpoints
 	EndpointPath string      //path for original datas
+	KubeConfig   string      //path of kubeconfig for kube-apiserver
 	EndpointCA   string      //ca for endpoints
 	EndpointKey  string      //key for endpoint
 	EndpointCert string      //cert for endpoint
@@ -88,6 +92,7 @@ type ConfigItem struct {
 	UpStream     []string    //dns upstream
 	Fallthrough  bool        //pass to next plugin when no data
 	Proxy        proxy.Proxy //proxy for upstream
+	MetricPort   uint        //port for prometheus metric
 }
 
 func defaultConfigItem() *ConfigItem {
@@ -199,6 +204,25 @@ func schedulerParse(c *caddy.Controller) (*ConfigItem, error) {
 					config.Proxy = proxy.NewLookup(ups)
 				case "fallthrough":
 					config.Fallthrough = true
+				case "metric-port":
+					args := c.RemainingArgs()
+					if len(args) == 1 {
+						metricPortStr := args[0]
+						metricPort, err := strconv.Atoi(metricPortStr)
+						if err != nil {
+							return nil, c.ArgErr()
+						}
+						config.MetricPort = uint(metricPort)
+						continue
+					}
+					return nil, c.ArgErr()
+				case "kubeconfig":
+					args := c.RemainingArgs()
+					if len(args) == 1 {
+						config.KubeConfig = args[0]
+						continue
+					}
+					return nil, c.ArgErr()
 				}
 			}
 			return config, nil

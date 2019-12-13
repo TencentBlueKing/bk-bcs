@@ -60,7 +60,7 @@ func (bs *bcsScheduler) DisableAgent(clusterID string, ipList []string) error {
 
 func (bs *bcsScheduler) listAgentInfo(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentInfo, error) {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerClusterResourceURI, bs.bcsApiAddress),
+		fmt.Sprintf(bcsSchedulerClusterResourceURI, bs.bcsAPIAddress),
 		http.MethodGet,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -96,7 +96,7 @@ func (bs *bcsScheduler) listAgentInfo(clusterID string, ipList []string) ([]*com
 
 func (bs *bcsScheduler) listAgentSetting(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentSetting, error) {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerAgentSettingURI, bs.bcsApiAddress, strings.Join(ipList, ",")),
+		fmt.Sprintf(bcsSchedulerAgentSettingURI, bs.bcsAPIAddress, strings.Join(ipList, ",")),
 		http.MethodGet,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -146,7 +146,7 @@ func (bs *bcsScheduler) updateScalarAgentSetting(clusterID string, ipList []stri
 
 func (bs *bcsScheduler) updateAgentSetting(clusterID string, data []byte) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerUpdateAgentSettingURI, bs.bcsApiAddress),
+		fmt.Sprintf(bcsSchedulerUpdateAgentSettingURI, bs.bcsAPIAddress),
 		http.MethodPost,
 		data,
 		getClusterIDHeader(clusterID),
@@ -170,7 +170,7 @@ func (bs *bcsScheduler) updateAgentSetting(clusterID string, data []byte) error 
 
 func (bs *bcsScheduler) setAgentSetting(clusterID string, data []byte) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerSetAgentSettingURI, bs.bcsApiAddress),
+		fmt.Sprintf(bcsSchedulerSetAgentSettingURI, bs.bcsAPIAddress),
 		http.MethodPost,
 		data,
 		getClusterIDHeader(clusterID),
@@ -194,7 +194,7 @@ func (bs *bcsScheduler) setAgentSetting(clusterID string, data []byte) error {
 
 func (bs *bcsScheduler) deleteAgentSetting(clusterID string, ipList []string) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerAgentSettingURI, bs.bcsApiAddress, strings.Join(ipList, ",")),
+		fmt.Sprintf(bcsSchedulerAgentSettingURI, bs.bcsAPIAddress, strings.Join(ipList, ",")),
 		http.MethodDelete,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -218,7 +218,7 @@ func (bs *bcsScheduler) deleteAgentSetting(clusterID string, ipList []string) er
 
 func (bs *bcsScheduler) enableAgent(clusterID string, ipList []string) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerEnableAgentURI, bs.bcsApiAddress, strings.Join(ipList, ",")),
+		fmt.Sprintf(bcsSchedulerEnableAgentURI, bs.bcsAPIAddress, strings.Join(ipList, ",")),
 		http.MethodPost,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -242,7 +242,7 @@ func (bs *bcsScheduler) enableAgent(clusterID string, ipList []string) error {
 
 func (bs *bcsScheduler) disableAgent(clusterID string, ipList []string) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerDisableAgentURI, bs.bcsApiAddress, strings.Join(ipList, ",")),
+		fmt.Sprintf(bcsSchedulerDisableAgentURI, bs.bcsAPIAddress, strings.Join(ipList, ",")),
 		http.MethodPost,
 		nil,
 		getClusterIDHeader(clusterID),

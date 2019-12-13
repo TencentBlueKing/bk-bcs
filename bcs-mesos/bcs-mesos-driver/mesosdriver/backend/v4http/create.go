@@ -18,13 +18,16 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	bhttp "bk-bcs/bcs-common/common/http"
 	bcstype "bk-bcs/bcs-common/common/types"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
+
 	//"github.com/golang/protobuf/proto"
 	"strconv"
 	"strings"
 )
 
+//CreateApplication create application implementation
 func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 	blog.Info("create application. param(%s)", string(body))
 	var param bcstype.ReplicaController
@@ -41,7 +44,7 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 		return err.Error(), err
 	}
 
-	version.RawJson = &param
+	//version.RawJson = &param
 	// post version to bcs-mesos-scheduler, /v1/apps
 	data, err := json.Marshal(version)
 	if err != nil {
@@ -52,7 +55,7 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 
 	if s.GetHost() == "" {
 		blog.Error("no scheduler is connected by driver")
-		err := bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
+		err = bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
 		return err.Error(), err
 	}
 
@@ -71,6 +74,11 @@ func (s *Scheduler) CreateApplication(body []byte) (string, error) {
 }
 
 func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*types.Version, error) {
+	//check ObjectMeta is valid
+	err := param.MetaIsValid()
+	if err != nil {
+		return nil, err
+	}
 
 	//var version types.Version
 	version := &types.Version{
@@ -113,7 +121,7 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 		version.Labels[k] = v
 	}
 
-	version, err := s.setVersionWithPodSpec(version, param.ReplicaControllerSpec.Template)
+	version, err = s.setVersionWithPodSpec(version, param.ReplicaControllerSpec.Template)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +132,12 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 		if strings.Contains(k, "io.tencent.bcs.netsvc.requestip.") {
 			val := strings.Replace(v, " ", "", -1)
 			version.Labels[k] = val
+		}
+	}
+	for k, v := range version.ObjectMeta.Annotations {
+		if strings.Contains(k, "io.tencent.bcs.netsvc.requestip.") {
+			val := strings.Replace(v, " ", "", -1)
+			version.ObjectMeta.Annotations[k] = val
 		}
 	}
 
@@ -148,6 +162,14 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		blog.Warn("containers and Processes can not coexist.")
 		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+"containers and processes cannot coexist")
 		return nil, replyErr
+	}
+
+	if NumContainer > 0 {
+		version.Kind = commtypes.BcsDataType_APP
+	}
+
+	if NumProcess > 0 {
+		version.Kind = commtypes.BcsDataType_PROCESS
 	}
 
 	version.PodObjectMeta = spec.ObjectMeta
@@ -286,9 +308,9 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 			if oneCheck.TimeoutSeconds <= 0 {
 				oneCheck.TimeoutSeconds = 20
 			}
-			if oneCheck.ConsecutiveFailures < 0 {
-				oneCheck.ConsecutiveFailures = 0
-			}
+			// if oneCheck.ConsecutiveFailures < 0 {
+			// 	oneCheck.ConsecutiveFailures = 0
+			// }
 			if oneCheck.GracePeriodSeconds <= 0 {
 				oneCheck.GracePeriodSeconds = 300
 			}

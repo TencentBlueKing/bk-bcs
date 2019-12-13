@@ -1,39 +1,37 @@
 global
-  daemon{{ if .LogFlag }}
-  log 127.0.0.1 local0 info{{end}}
+  daemon{{ if .LogEnabled }}
+  log 127.0.0.1 local0 {{.LogLevel}}{{end}}
   lua-load /bcs-lb/bcs-statistic/main.lua
-  stats socket /var/run/haproxy.sock mode 600 level admin
+  stats socket {{.SockPath}} mode 600 level admin
   nbproc 1
-  nbthread 4
+  nbthread {{.ThreadNum}}
   spread-checks 5
   max-spread-checks 15000
-  maxconn 102400
-  pidfile /var/run/haproxy.pid {{if ne .SSLCert ""}}
-  ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
-  ssl-default-bind-options no-tls-tickets{{end}}
+  maxconn {{.MaxConn}}
+  pidfile {{.PidPath}}
+
 defaults
-  log                  global
-  retries                   3
-  backlog               10000
-  maxconn               102400
-  timeout connect          3s
-  timeout client          15s
-  timeout server          15s
-  timeout tunnel        3600s
-  timeout http-keep-alive 60s
-  timeout http-request    15s
-  timeout queue           30s
-  timeout tarpit          60s
-  option            dontlognull
-  option            http-server-close
-  option            redispatch
-  option            forwardfor
+  log                     global
+  retries                 {{.DefaultProxyConfig.Retries}}
+  backlog                 {{.DefaultProxyConfig.Backlog}}
+  maxconn                 {{.DefaultProxyConfig.MaxConn}}
+  timeout connect         {{.DefaultProxyConfig.TimeoutConnection}}s
+  timeout client          {{.DefaultProxyConfig.TimeoutClient}}s
+  timeout server          {{.DefaultProxyConfig.TimeoutServer}}s
+  timeout tunnel          {{.DefaultProxyConfig.TimeoutTunnel}}s
+  timeout http-keep-alive {{.DefaultProxyConfig.TimeoutHTTPKeepAlive}}s
+  timeout http-request    {{.DefaultProxyConfig.TimeoutHTTPRequest}}s
+  timeout queue           {{.DefaultProxyConfig.TimeoutQueue}}s
+  timeout tarpit          {{.DefaultProxyConfig.TimeoutTarpit}}s
+  {{range $i, $option := .DefaultProxyConfig.Options}}option                  {{$option}}
+  {{end}}
+
 frontend secure
-  bind *:8080
+  bind *:{{.Stats.Port}}
   mode http
   stats enable
-  stats uri /bcsadm?token=bcsteam
-  stats auth bcsadmin:GseBcs1qaz@WSX
+  stats uri {{.Stats.URI}}
+  stats auth {{.Stats.AuthUser}}:{{.Stats.AuthPassword}}
   stats hide-version
   stats admin if TRUE
   stats refresh 30s
@@ -46,45 +44,45 @@ backend luastats
   http-request use-service lua.bcs-statistic
 
 #http section
-{{range $i, $svc := .HTTP}}
-frontend bcs_http_frontend_{{$svc.ServicePort}}
-  bind *:{{$svc.ServicePort}}
+{{range $i, $httpFrontend := .HTTPList}}
+frontend bcs_http_frontend_{{$httpFrontend.ServicePort}}
+  bind *:{{$httpFrontend.ServicePort}}
   mode http
-  {{range $j, $backend := $svc.Backends}}
-  {{if ne $backend.Path "/" }}acl is_{{$backend.UpstreamName}} path_beg -i {{$backend.Path}}{{end}}
-  acl http_host_acl_{{$svc.Name}} hdr(host) {{$svc.BCSVHost}}
-  use_backend http_{{$backend.UpstreamName}} if http_host_acl_{{$svc.Name}} {{if ne $backend.Path "/" }}is_{{$backend.UpstreamName}}{{end}}
+  {{range $j, $httpBackend := $httpFrontend.BackendList}}{{if ne $httpBackend.URL "/" }}acl is_{{$httpBackend.Name}} path_beg -i {{$httpBackend.URL}}{{end}}
+  acl host_acl_{{$httpBackend.Name}} hdr(host) {{$httpBackend.Domain}}
+  use_backend {{$httpBackend.Name}} if host_acl_{{$httpBackend.Name}} {{if ne $httpBackend.URL "/" }}is_{{$httpBackend.Name}}{{end}}
 {{end}}{{end}}
-{{range $i, $svc := .HTTP}}
-{{range $j, $backend := $svc.Backends}}
-backend http_{{$backend.UpstreamName}}
+{{range $i, $httpFrontend := .HTTPList}}{{range $j, $httpBackend := $httpFrontend.BackendList}}
+backend {{$httpBackend.Name}}
   mode http
-  option  httplog
-  balance {{$svc.Balance}} {{range $j, $bend := $backend.BackendList}}
-  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} cookie s{{$j}} check port {{$bend.Port}} inter 500 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
-{{end}}
-{{end}}
+  {{range $k, $option := $.DefaultProxyConfig.HTTPOptions}}option {{$option}}{{end}}
+  balance {{$httpBackend.Balance}} {{range $k, $server := $httpBackend.ServerList}}
+  server {{$server.Name}} {{$server.IP}}:{{$server.Port}} check port {{$server.Port}} inter {{$httpBackend.HealthCheckInterval}} rise {{$httpBackend.RiseHealthCheckNum}} fall {{$httpBackend.FallHealthCheckNum}} {{if ne $server.Weight 0 }}weight {{$server.Weight}}{{end}}{{end}}
+{{end}}{{end}}
+
 #https section {{ if ne .SSLCert "" }}
 frontend bcs_https_frontend
   mode http
   bind :443 ssl {{ .SSLCert }} no-sslv3
   # HSTS (15768000 seconds = 6 months)
-  rspadd  Strict-Transport-Security:\ max-age=15768000 {{range $i, $svc := .HTTPS}}
-  {{range $j, $backend := $svc.Backends}}
-  acl https_host_acl_{{$svc.Name}} hdr(host) {{$svc.BCSVHost}}
-  use_backend https_{{$svc.BCSVHost}} if https_host_acl_{{$svc.Name}} {{end}}{{end}}
-{{range $i, $svc := .HTTPS}}
-{{range $j, $backend := $svc.Backends}}
-backend https_{{$backend.UpstreamName}}
-  balance {{$svc.Balance}} {{range $j, $bend := $backend.BackendList}}
-  server {{$bend.Host}} {{$bend.IP}}:{{$bend.Port}} check port {{$bend.Port}} inter 500 rise 2 fall 1 {{if ne $bend.Weight 0 }}weight {{$bend.Weight}}{{end}}{{end}}
+  rspadd  Strict-Transport-Security:\ max-age=15768000 {{range $i, $httpFrontend := .HTTPSList}}
+{{range $j, $httpBackend := $httpFrontend.Backends}}
+  acl host_acl_{{$httpBackend.Name}} hdr(host) {{$httpBackend.Domain}}
+  use_backend {{$httpBackend.Name}} if host_acl_{{$httpBackend.Name}} {{end}}{{end}}
+{{range $i, $httpFrontend := .HTTPSList}}
+{{range $j, $httpBackend := $httpFrontend.BackendList}}
+backend {{$httpBackend.Name}}
+  {{range $k, $option := $.DefaultProxyConfig.HTTPOptions}}option {{$option}}{{end}}
+  balance {{$httpBackend.Balance}} {{range $k, $server := $httpBackend.ServerList}}
+  server {{$server.Name}} {{$server.IP}}:{{$server.Port}} check port {{$server.Port}} inter {{$httpBackend.HealthCheckInterval}} rise {{$httpBackend.RiseHealthCheckNum}} fall {{$httpBackend.FallHealthCheckNum}} {{if ne $server.Weight 0 }}weight {{$server.Weight}}{{end}}{{end}}
 {{end}}
 {{end}}
 {{end}}
-#tcp section {{range $i, $svc := .TCP}}
-listen tcp_{{$svc.Name}}_{{$svc.ServicePort}}
-  bind *:{{$svc.ServicePort}} 
-  mode tcp 
-  balance {{$svc.Balance}}{{range $j, $backend := $svc.Backends}} 
-  server {{$backend.Host}} {{$backend.IP}}:{{$backend.Port}} check inter 500 rise 2 fall 1 {{if ne $backend.Weight 0 }}weight {{$backend.Weight}}{{end}}{{end}}
+#tcp section 
+{{range $i, $tcpBackend := .TCPList}}
+listen {{$tcpBackend.Name}}
+  bind *:{{$tcpBackend.ServicePort}}
+  mode tcp
+  balance {{$tcpBackend.Balance}}{{range $j, $server := $tcpBackend.ServerList}} 
+  server {{$server.Name}} {{$server.IP}}:{{$server.Port}} check inter {{$tcpBackend.HealthCheckInterval}} rise {{$tcpBackend.RiseHealthCheckNum}} fall {{$tcpBackend.FallHealthCheckNum}} {{if ne $server.Weight 0 }}weight {{$server.Weight}}{{end}}{{end}}
 {{end}}

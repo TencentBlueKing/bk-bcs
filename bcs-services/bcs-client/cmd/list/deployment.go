@@ -31,7 +31,7 @@ func listDeployment(c *utils.ClientContext) error {
 
 	// get namespace
 	condition := url.Values{}
-	condition.Add(FilterNamespaceTag, c.Namespace())
+	condition.Add(filterNamespaceTag, c.Namespace())
 
 	if c.IsAllNamespace() {
 		var err error

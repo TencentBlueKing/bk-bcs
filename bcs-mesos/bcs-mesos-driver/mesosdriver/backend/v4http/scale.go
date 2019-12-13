@@ -20,6 +20,7 @@ import (
 	bcstype "bk-bcs/bcs-common/common/types"
 )
 
+//ScaleApplication scale application transparent forwarding
 func (s *Scheduler) ScaleApplication(ns, name, instances string, kind bcstype.BcsDataType) (string, error) {
 	blog.Info("scale application (%s.%s) instances (%s)", ns, name, instances)
 

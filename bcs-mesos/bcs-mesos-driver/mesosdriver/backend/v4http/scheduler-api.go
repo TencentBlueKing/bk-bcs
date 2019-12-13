@@ -23,10 +23,11 @@ import (
 	commonTypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/util"
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
-	"github.com/emicklei/go-restful"
 	"io/ioutil"
 	"strconv"
 	"sync"
+
+	restful "github.com/emicklei/go-restful"
 )
 
 //Scheduler is data struct of mesos scheduler
@@ -36,6 +37,8 @@ type Scheduler struct {
 	acts   []*httpserver.Action
 	hosts  []string
 	rwHost *sync.RWMutex
+	//reversProxy from 1.15.x for CustomResource
+	localProxy *kubeProxy
 }
 
 //NewScheduler create a scheduler
@@ -44,12 +47,10 @@ func NewScheduler() *Scheduler {
 		client: httpclient.NewHttpClient(),
 		rwHost: new(sync.RWMutex),
 	}
-
-	s.initActions()
-
 	return s
 }
 
+//InitConfig scheduler init configuration
 func (s *Scheduler) InitConfig(conf *config.MesosDriverConfig) {
 	s.config = conf
 
@@ -64,12 +65,17 @@ func (s *Scheduler) InitConfig(conf *config.MesosDriverConfig) {
 
 	s.client.SetHeader("Content-Type", "application/json")
 	s.client.SetHeader("Accept", "application/json")
+
+	s.initKube()
+	s.initActions()
 }
 
+//Actions all http action implementation
 func (s *Scheduler) Actions() []*httpserver.Action {
 	return s.acts
 }
 
+//GetHttpClient get scheudler specified http client implementation
 func (s *Scheduler) GetHttpClient() *httpclient.HttpClient {
 	return s.client
 }
@@ -165,14 +171,14 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("POST", "/agentsettings/disable", nil, s.disableAgentListHandler),
 		/*================= agentsetting ====================*/
 
-		/*-------------- custom resource -----------------*/
+		/*-------------- custom resource deprecated from 1.15.x -----------------*/
 		httpserver.NewAction("POST", "/crr/register", nil, s.registerCustomResourceHander),
 		httpserver.NewAction("POST", "/crd/namespaces/{ns}/{kind}", nil, s.createCustomResourceHander),
 		httpserver.NewAction("PUT", "/crd/namespaces/{ns}/{kind}", nil, s.updateCustomResourceHander),
 		httpserver.NewAction("DELETE", "/crd/namespaces/{ns}/{kind}/{name}", nil, s.deleteCustomResourceHander),
 		httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}/{name}", nil, s.getCustomResourceHander),
 		httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}", nil, s.listCustomResourceHander),
-		/*-------------- custom resource -----------------*/
+		httpserver.NewAction("GET", "/crd/{kind}", nil, s.listAllCustomResourceHander),
 
 		/*-------------- image -----------------*/
 		httpserver.NewAction("POST", "/image/commit/{taskgroup}", nil, s.commitImageHander),
@@ -197,11 +203,32 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("PUT", "/namespaces/{ns}/admissionwebhook", nil, s.UpdateAdmissionwebhookHandler),
 		httpserver.NewAction("DELETE", "/namespaces/{ns}/admissionwebhook/{name}", nil, s.DeleteAdmissionwebhookHandler),
 		httpserver.NewAction("GET", "/namespaces/{ns}/admissionwebhook/{name}", nil, s.FetchAdmissionwebhookHandler),
-		httpserver.NewAction("DELETE", "/admissionwebhooks", nil, s.FetchAllAdmissionwebhooksHandler),
+		httpserver.NewAction("GET", "/admissionwebhooks", nil, s.FetchAllAdmissionwebhooksHandler),
 		/*================= admissionwebhook ====================*/
+	}
+	//custom resource solution that compatible with k8s & mesos
+	if s.config.KubeConfig != "" {
+		crd := []*httpserver.Action{
+			/*-------------- custom resource definition implementation-----------------*/
+			httpserver.NewAction("GET", "/customresourcedefinitions/{name}", nil, s.customResourceDefinitionForwarding),
+			httpserver.NewAction("DELETE", "/customresourcedefinitions/{name}", nil, s.customResourceDefinitionForwarding),
+			httpserver.NewAction("PUT", "/customresourcedefinitions/{name}", nil, s.customResourceDefinitionForwarding),
+			httpserver.NewAction("GET", "/customresourcedefinitions", nil, s.customResourceDefinitionForwarding),
+			httpserver.NewAction("POST", "/customresourcedefinitions", nil, s.customResourceDefinitionForwarding),
+
+			/*-------------- custom resource implementation-----------------*/
+			httpserver.NewAction("GET", "/customresources/{uri:*}", nil, s.customResourceForwarding),
+			httpserver.NewAction("DELETE", "/customresources/{uri:*}", nil, s.customResourceForwarding),
+			httpserver.NewAction("PUT", "/customresources/{uri:*}", nil, s.customResourceForwarding),
+			httpserver.NewAction("POST", "/customresources/{uri:*}", nil, s.customResourceForwarding),
+			//TODO(DeveloperJim): support custom resource watch if needed
+			//httpserver.NewAction("PATCH", "/customresources/{uri:*}", nil, s.customResourceForwarding),
+		}
+		s.acts = append(s.acts, crd...)
 	}
 }
 
+//GetHost scheduler implementation
 func (s *Scheduler) GetHost() string {
 	s.rwHost.RLock()
 	defer s.rwHost.RUnlock()
@@ -213,6 +240,7 @@ func (s *Scheduler) GetHost() string {
 	return s.hosts[0]
 }
 
+//SetHost scheduler implementation
 func (s *Scheduler) SetHost(hosts []string) {
 	s.rwHost.Lock()
 	defer s.rwHost.Unlock()
@@ -275,7 +303,6 @@ func (s *Scheduler) getDeploymentDefHander(req *restful.Request, resp *restful.R
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) disableAgentHandler(req *restful.Request, resp *restful.Response) {
@@ -329,7 +356,6 @@ func (s *Scheduler) enableAgentHandler(req *restful.Request, resp *restful.Respo
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) getAgentSettingHandler(req *restful.Request, resp *restful.Response) {
@@ -356,7 +382,6 @@ func (s *Scheduler) getAgentSettingHandler(req *restful.Request, resp *restful.R
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) getAgentSettingListHandler(req *restful.Request, resp *restful.Response) {
@@ -384,7 +409,6 @@ func (s *Scheduler) getAgentSettingListHandler(req *restful.Request, resp *restf
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) deleteAgentSettingListHandler(req *restful.Request, resp *restful.Response) {
@@ -411,7 +435,6 @@ func (s *Scheduler) deleteAgentSettingListHandler(req *restful.Request, resp *re
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) setAgentSettingListHandler(req *restful.Request, resp *restful.Response) {
@@ -439,7 +462,6 @@ func (s *Scheduler) setAgentSettingListHandler(req *restful.Request, resp *restf
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) updateAgentSettingListHandler(req *restful.Request, resp *restful.Response) {
@@ -467,7 +489,6 @@ func (s *Scheduler) updateAgentSettingListHandler(req *restful.Request, resp *re
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) enableAgentListHandler(req *restful.Request, resp *restful.Response) {
@@ -494,7 +515,6 @@ func (s *Scheduler) enableAgentListHandler(req *restful.Request, resp *restful.R
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) disableAgentListHandler(req *restful.Request, resp *restful.Response) {
@@ -522,7 +542,6 @@ func (s *Scheduler) disableAgentListHandler(req *restful.Request, resp *restful.
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) GetClusterResourcesHandler(req *restful.Request, resp *restful.Response) {
@@ -548,7 +567,6 @@ func (s *Scheduler) GetClusterResourcesHandler(req *restful.Request, resp *restf
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) GetClusterEndpointsHandler(req *restful.Request, resp *restful.Response) {
@@ -573,7 +591,6 @@ func (s *Scheduler) GetClusterEndpointsHandler(req *restful.Request, resp *restf
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) GetClusterCurrentOffersHandler(req *restful.Request, resp *restful.Response) {
@@ -598,7 +615,6 @@ func (s *Scheduler) GetClusterCurrentOffersHandler(req *restful.Request, resp *r
 	}
 
 	resp.Write([]byte(reply))
-	return
 }
 
 func (s *Scheduler) CreateConfigMapHandler(req *restful.Request, resp *restful.Response) {
@@ -1152,6 +1168,7 @@ func (s *Scheduler) FetchProcessHandler(req *restful.Request, resp *restful.Resp
 	resp.Write([]byte(reply))
 }
 
+//FetchApplicationVersionHandler get Application information
 func (s *Scheduler) FetchApplicationVersionHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1433,6 +1450,19 @@ func (s *Scheduler) listCustomResourceHander(req *restful.Request, resp *restful
 	resp.Write([]byte(reply))
 }
 
+func (s *Scheduler) listAllCustomResourceHander(req *restful.Request, resp *restful.Response) {
+	kind := req.PathParameter("kind")
+
+	reply, err := s.ListAllCustomResource(kind)
+	if err != nil {
+		blog.Error("fail to list custom resource. reply(%s), err(%s)", reply, err.Error())
+		resp.Write([]byte(err.Error()))
+		return
+	}
+
+	resp.Write([]byte(reply))
+}
+
 func (s *Scheduler) getCustomResourceHander(req *restful.Request, resp *restful.Response) {
 	ns := req.PathParameter("ns")
 	kind := req.PathParameter("kind")
@@ -1642,6 +1672,7 @@ func (s *Scheduler) deleteDeploymentCommandHandler(req *restful.Request, resp *r
 	resp.Write([]byte(reply))
 }
 
+//CreateAdmissionwebhookHandler create Admissionwebhook implementation
 func (s *Scheduler) CreateAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1667,6 +1698,7 @@ func (s *Scheduler) CreateAdmissionwebhookHandler(req *restful.Request, resp *re
 	resp.Write([]byte(reply))
 }
 
+//UpdateAdmissionwebhookHandler update Admissionwebhook
 func (s *Scheduler) UpdateAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1692,6 +1724,7 @@ func (s *Scheduler) UpdateAdmissionwebhookHandler(req *restful.Request, resp *re
 	resp.Write([]byte(reply))
 }
 
+//DeleteAdmissionwebhookHandler delete Admissionwebhook implementation
 func (s *Scheduler) DeleteAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1703,6 +1736,7 @@ func (s *Scheduler) DeleteAdmissionwebhookHandler(req *restful.Request, resp *re
 	resp.Write([]byte(reply))
 }
 
+//FetchAdmissionwebhookHandler get specified admission webhook
 func (s *Scheduler) FetchAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1714,6 +1748,7 @@ func (s *Scheduler) FetchAdmissionwebhookHandler(req *restful.Request, resp *res
 	resp.Write([]byte(reply))
 }
 
+//FetchAllAdmissionwebhooksHandler get all admission webhook request
 func (s *Scheduler) FetchAllAdmissionwebhooksHandler(req *restful.Request, resp *restful.Response) {
 	reply, err := s.FetchAllAdmissionWebhooks()
 	if err != nil {

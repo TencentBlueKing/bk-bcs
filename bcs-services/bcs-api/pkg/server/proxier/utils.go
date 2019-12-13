@@ -23,6 +23,7 @@ import (
 
 	restclient "k8s.io/client-go/rest"
 
+	"bk-bcs/bcs-common/common/blog"
 	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"fmt"
 )
@@ -52,6 +53,7 @@ func TurnCredentialsIntoConfig(clusterCredentials *m.ClusterCredentials) (*restc
 	if err != nil {
 		return nil, err
 	}
+	blog.Info(ipAddress.Host)
 
 	return &restclient.Config{
 		Host:            clusterCredentials.ServerAddresses,

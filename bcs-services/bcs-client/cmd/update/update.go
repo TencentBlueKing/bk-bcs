@@ -15,14 +15,15 @@ package update
 
 import (
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"fmt"
+
 	"github.com/urfave/cli"
 )
 
+//NewUpdateCommand update sub command
 func NewUpdateCommand() cli.Command {
 	return cli.Command{
 		Name:  "update",
-		Usage: "update application/service/secret/configmap/deployment",
+		Usage: "update application(app)/service/secret/configmap/deployment(deploy)/customresourcedefinition(crd)",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "from-file, f",
@@ -30,7 +31,7 @@ func NewUpdateCommand() cli.Command {
 			},
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "update type, app/process/service/secret/configmap/deployment",
+				Usage: "update type, application(app)/service/secret/configmap/deployment(deploy)/customresourcedefinition(crd)",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -71,7 +72,10 @@ func update(c *utils.ClientContext) error {
 		return updateService(c)
 	case "deploy", "deployment":
 		return updateDeployment(c)
+	case "crd", "customresourcedefinition":
+		return updateCustomResourceDefinition(c)
 	default:
-		return fmt.Errorf("invalid type: %s", resourceType)
+		//unkown type, try CustomResource
+		return updateCustomResource(c)
 	}
 }

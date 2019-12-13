@@ -14,7 +14,6 @@
 package app
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -214,51 +213,65 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	zkHosts := strings.Join(config.BCS.ZkHosts, ",")
 	bcsTLSConfig := config.BCS.TLS
 
-	// 1.1 get storage service
-	glog.Info("Get StorageService begin......")
+	glog.Info("getting storage service now...")
 	storageService, err := bcs.GetStorageService(zkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-	glog.Info("Get StorageService DONE!")
+	glog.Info("get storage service done")
 
-	// sleep for 5 seconds, wait
-	glog.Infof("sleep for 5 seconds, wait for fetching storage address from zk")
+	glog.Info("getting netservice now...")
+	netservice, err := bcs.GetNetService(zkHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints)
+	if err != nil {
+		panic(err)
+	}
+	glog.Info("get netservice done")
+
+	// sleep for 5 seconds, wait.
+	glog.Infof("sleep for 5 seconds, wait for fetching storage/netservice address from ZK")
 	time.Sleep(5 * time.Second)
-	if len(storageService.Servers) == 0 && config.Default.Environment != "development" {
+
+	if len(storageService.Servers()) == 0 && config.Default.Environment != "development" {
 		glog.Infof("got non storage service address, sleep for another again")
 		time.Sleep(5 * time.Second)
-		if len(storageService.Servers) == 0 {
-			panic(errors.New("can't get storage service address from zk after 10 seconds, quit"))
+
+		if len(storageService.Servers()) == 0 {
+			panic("can't get storage service address from ZK after 10 seconds")
 		}
 	}
+	if len(netservice.Servers()) == 0 {
+		glog.Infof("got non netservice address this moment")
+	}
 
-	// 1.2 init alertor with bcs-health
+	// init alertor with bcs-health.
 	moduleIP := config.Default.HostIP
 	alertor, err := action.NewAlertor(clusterID, moduleIP, zkHosts, config.BCS.TLS)
 	if err != nil {
-		glog.Errorf("Init Alertor fail, no alarm will be sent!")
+		glog.Warnf("Init Alertor fail, no alarm will be sent!")
 	}
 
-	// 2. create writer and init
-	glog.Info("New and init Writer begin......")
+	// create writer.
+	glog.Info("creating writer now...")
 	writer, err := output.NewWriter(clusterID, storageService, alertor)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-	glog.Info("New and init Writer DONE!")
+	glog.Info("create writer success")
 
-	// 3. create cluster with watchers
-	glog.Info("New and init Cluster with list-watch begin......")
-	cluster, err := k8s.NewCluster(writer, &config.K8s, clusterID, storageService)
+	// create watcher manager.
+	glog.Info("creating watcher manager now...")
+	watcherMgr, err := k8s.NewWatcherManager(clusterID, writer, &config.K8s, storageService, netservice)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-	glog.Info("New and init Cluster with list-watch DONE!")
+	glog.Info("create watcher manager success")
 
-	glog.Info("start cluster and writer......")
-	go writer.Run(stopChan)
-	go cluster.Run(stopChan)
+	glog.Info("starting watcher manager and writer now...")
+	if err := writer.Run(stopChan); err != nil {
+		panic(err)
+	}
+	watcherMgr.Run(stopChan)
+	glog.Info("start watcher manager and writer success")
 
 	// finally, start metric, allow fail
 	glog.Info("start metric......")

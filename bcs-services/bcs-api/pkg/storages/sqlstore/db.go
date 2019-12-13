@@ -21,6 +21,7 @@ import (
 	"github.com/jinzhu/gorm"
 	// import empty mysql package
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"time"
 )
 
 var GCoreDB *gorm.DB
@@ -39,6 +40,10 @@ func InitCoreDatabase(conf *config.ApiServConfig) error {
 	if err != nil {
 		return err
 	}
+	db.DB().SetConnMaxLifetime(60 * time.Second)
+	db.DB().SetMaxIdleConns(20)
+	db.DB().SetMaxOpenConns(20)
+
 	GCoreDB = db
 	return nil
 }

@@ -247,6 +247,23 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 					task.Labels[k] = v
 				}
 			}
+			if version.ObjectMeta.Annotations != nil {
+				if task.Labels == nil {
+					task.Labels = make(map[string]string)
+				}
+				for k, v := range version.ObjectMeta.Annotations {
+					if k == requestIpLabel {
+						k = "io.tencent.bcs.netsvc.requestip"
+						splitV := strings.Split(v, "|")
+						if len(splitV) >= 1 {
+							v = splitV[0]
+						}
+
+						blog.Info("task(%s) set io.tencent.bcs.netsvc.requestip = %s", task.ID, v)
+					}
+					task.Labels[k] = v
+				}
+			}
 
 			task.Status = types.TASK_STATUS_STAGING
 			task.UpdateTime = time.Now().Unix()
@@ -1337,11 +1354,11 @@ func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {
 	return &ID
 }
 
-// Whether an taskgroup is in ending statuses
+// IsTaskGroupEnd Whether an taskgroup is in ending statuses
 func IsTaskGroupEnd(taskGroup *types.TaskGroup) bool {
 	for _, task := range taskGroup.Taskgroup {
 		status := task.Status
-		if status == types.TASK_STATUS_LOST || status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING || status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING {
+		if status == types.TASK_STATUS_LOST || status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING || status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING { //nolint
 			blog.Info("task %s status(%s), not end status", task.ID, status)
 			return false
 		}
@@ -1350,7 +1367,7 @@ func IsTaskGroupEnd(taskGroup *types.TaskGroup) bool {
 	return true
 }
 
-// Whether an taskgroup can be shutdown currently
+// CanTaskGroupShutdown Whether an taskgroup can be shutdown currently
 func CanTaskGroupShutdown(taskGroup *types.TaskGroup) bool {
 	for _, task := range taskGroup.Taskgroup {
 		status := task.Status

@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	//defualt cni directory
+	//DefaultCNIDirectory defualt cni directory
 	DefaultCNIDirectory = "/data/bcs/bcs-cni"
 )
 

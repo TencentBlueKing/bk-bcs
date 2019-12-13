@@ -111,13 +111,13 @@ func (wh *watchHandler) watching(pCtx context.Context) {
 	var op *opLog
 	var eventsNumber uint
 
-	for {
-		if wh.opts.Timeout > 0 {
-			ctx, cancel = context.WithTimeout(pCtx, wh.opts.Timeout)
-		} else {
-			ctx, cancel = context.WithCancel(pCtx) //nolint
-		}
+	if wh.opts.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(pCtx, wh.opts.Timeout)
+	} else {
+		ctx, cancel = context.WithCancel(pCtx) //nolint
+	}
 
+	for {
 		if (wh.opts.MaxEvents > 0) && (eventsNumber >= wh.opts.MaxEvents) {
 			cancel()
 		}
@@ -127,6 +127,7 @@ func (wh *watchHandler) watching(pCtx context.Context) {
 			wh.event <- operator.EventWatchBreak
 			listener.wr.unsubscribe(we)
 			blog.Infof("mongodb watching | end watch: %s", ns)
+			cancel()
 			return //nolint
 		case op = <-we.w:
 			eventsNumber++
@@ -315,6 +316,7 @@ func (ol *opLogListener) listen() {
 		}
 		if err := iter.Err(); err != nil {
 			blog.Errorf(ol.sprint("get mongodb tail Next() failed: %v"), err)
+			_ = iter.Close()
 			time.Sleep(opLogRetryGap)
 		}
 		iter = tank.Copy().Filter(operator.BaseCondition.AddOp(operator.Gt, opLogTimestampKey, ol.getLastTimestamp()).AddOp(operator.Ne, "op", opNopValue)).(*mongoTank).Tail()
@@ -456,6 +458,7 @@ var (
 	listenerPoolLock sync.RWMutex
 )
 
+// StartWatch start storage operator unit watch
 func StartWatch(tank operator.Tank, name string) {
 	t, ok := tank.(*mongoTank)
 	if !ok {

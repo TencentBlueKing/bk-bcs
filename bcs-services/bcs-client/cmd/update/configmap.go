@@ -30,7 +30,7 @@ func updateConfigMap(c *utils.ClientContext) error {
 		return err
 	}
 
-	namespace, err := utils.ParseNamespaceFromJson(data)
+	namespace, err := utils.ParseNamespaceFromJSON(data)
 	if err != nil {
 		return err
 	}

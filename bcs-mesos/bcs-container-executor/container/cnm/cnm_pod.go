@@ -15,6 +15,7 @@ package cnm
 
 import (
 	"bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"bk-bcs/bcs-mesos/bcs-container-executor/util"
 	"fmt"
@@ -464,22 +465,12 @@ func (p *DockerPod) runningFailedStop(err error) {
 			p.conClient.RemoveContainer(name, true)
 		}
 		task.RuntimeConf.Status = container.ContainerStatus_EXITED
-
-		if p.exitCode == 0 {
-			task.RuntimeConf.Message = fmt.Sprintf("container exit because other container finished in pod")
-		} else {
-			task.RuntimeConf.Message = fmt.Sprintf("container exit because other container exited in pod")
-		}
+		task.RuntimeConf.Message = fmt.Sprintf("container exit because other container exited in pod")
 
 		delete(p.runningContainer, name)
 	}
 
-	if p.exitCode == 0 {
-		p.status = container.PodStatus_FINISH
-	} else {
-		p.status = container.PodStatus_FAILED
-	}
-
+	p.status = container.PodStatus_FAILED
 	p.message = err.Error()
 	logs.Infoln("DockerPod runningFailed stop end.")
 }
@@ -491,13 +482,6 @@ func (p *DockerPod) containersWatch(cxt context.Context) {
 		logs.Errorf("DockerPod status Error, request %s, but got %s, DockerPod Container watch exit\n", container.PodStatus_STARTING, p.status)
 		return
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Infof("CNMPod panic:\n\n%+v", err)
-			p.runningFailedStop(fmt.Errorf("CNMPod failed because panic"))
-			return
-		}
-	}()
 
 	tick := time.NewTicker(defaultPodWatchInterval * time.Second)
 	//total := defaultErrTolerate * len(p.runningContainer)
@@ -521,17 +505,16 @@ func (p *DockerPod) containerCheck() error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	//logs.Infof("start check container...")
-
 	for name := range p.runningContainer {
 		info, err := p.conClient.InspectContainer(name)
-		info.Healthy = true
 		if err != nil {
 			//todo(developerJim): inspect error, how to handle ?
 			tolerance++
 			logs.Errorf("DockerPod Inspect info from container runtime Err: %s, #########wait for next tick, tolerance: %d#########\n", err.Error(), tolerance)
 			continue
 		}
+
+		info.Healthy = true
 		//logs.Infof("DEBUG %+v\n", info)
 		if p.cnmIPAddr == "" && info.IPAddress != "" {
 			//setting cnm ip address again if get nothing in Init Stage
@@ -553,7 +536,12 @@ func (p *DockerPod) containerCheck() error {
 				if task.HealthCheck != nil && !task.HealthCheck.IsStarting() {
 					//health check starting when Status become RUNNING
 					logs.Infof("container [%s] is running, healthy status unkown, starting HealthyChecker, ip: %s\n", task.RuntimeConf.Name, p.cnmIPAddr)
-					task.HealthCheck.SetHost(p.cnmIPAddr)
+					if task.HealthCheck.Name() == healthcheck.CommandHealthcheck {
+						task.HealthCheck.SetHost(p.GetContainerID())
+					} else {
+						task.HealthCheck.SetHost(p.cnmIPAddr)
+					}
+
 					go task.HealthCheck.Start()
 				}
 				running++
@@ -572,12 +560,7 @@ func (p *DockerPod) containerCheck() error {
 				delete(p.runningContainer, name)
 
 				p.exitCode = task.RuntimeConf.ExitCode
-
-				if task.RuntimeConf.ExitCode == 0 {
-					task.RuntimeConf.Message = "container is finished"
-				} else {
-					task.RuntimeConf.Message = "container is down"
-				}
+				task.RuntimeConf.Message = "container is down"
 
 				//stop running container
 				p.runningFailedStop(fmt.Errorf("Pod failed because %s", task.RuntimeConf.Message))

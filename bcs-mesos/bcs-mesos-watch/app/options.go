@@ -33,5 +33,6 @@ func DefaultConfig() *types.CmdConfig {
 		TaskgroupThreadNum:     100,
 		ExportserviceThreadNum: 100,
 		ServerPassWord:         static.ServerCertPwd,
+		IsExternal:             false,
 	}
 }

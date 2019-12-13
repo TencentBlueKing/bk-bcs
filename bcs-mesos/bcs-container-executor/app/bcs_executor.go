@@ -333,6 +333,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 		driver.Stop()
 		return
 	}
+
 	//create recovery for release ip address
 	defer func() {
 		if err := recover(); err != nil && executor.podInst != nil {
@@ -344,10 +345,30 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 			driver.Stop()
 		}
 	}()
+
+	// When the start time of the container is too long (for example: pull images is too long),
+	// continuously send the starting status to ensure the normal start of the container
+	stopCh := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+
+		for {
+			select {
+			case <-stopCh:
+				logs.Infof("stop send task status starting")
+				return
+
+			case <-ticker.C:
+				executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_STARTING, "taskgroup is starting")
+			}
+		}
+	}()
+
 	//go executor.watchStartingTask()
 	logs.Infof("BcsExecutor init pod success.")
 
 	if setupErr := executor.netManager.SetUpPod(executor.podInst); setupErr != nil {
+		close(stopCh)
 		executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_FAILED, "Pod Setup failed: "+setupErr.Error())
 		executor.status = ExecutorStatus_SHUTDOWN
 		executor.podInst.Finit()
@@ -357,6 +378,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 	logs.Infof("BcsExecutor Setup pod network success.")
 
 	if startErr := executor.podInst.Start(); startErr != nil {
+		close(stopCh)
 		executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_FAILED, "Pod Start failed: "+startErr.Error())
 		executor.status = ExecutorStatus_SHUTDOWN
 		executor.netManager.TearDownPod(executor.podInst)
@@ -364,6 +386,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 		driver.Stop()
 		return
 	}
+	close(stopCh)
 	logs.Infof("BcsExecutor start pod success. update local container info, ready to watch Pod status")
 
 	executor.podStatus = container.PodStatus_STARTING
@@ -563,9 +586,12 @@ func (executor *BcsExecutor) monitorPod() {
 				executor.exeLock.Unlock()
 				return
 			}
+
+			var changed bool
 			podNewStatus := executor.podInst.GetPodStatus()
 			if executor.podStatus != podNewStatus {
 				logs.Infof("Pod status change from %s to %s\n", executor.podStatus, podNewStatus)
+				changed = true
 				executor.podStatus = podNewStatus
 			}
 			switch executor.podStatus {
@@ -588,18 +614,18 @@ func (executor *BcsExecutor) monitorPod() {
 				}
 
 				for _, task := range executor.podInst.GetContainerTasks() {
-					var changed bool
+					var healthyChanged bool
 					if task.HealthCheck != nil {
 						if task.RuntimeConf.Healthy != task.HealthCheck.IsHealthy() || task.RuntimeConf.IsChecked != task.HealthCheck.IsTicks() ||
 							task.RuntimeConf.ConsecutiveFailureTimes != task.HealthCheck.ConsecutiveFailure() {
-							changed = true
+							healthyChanged = true
 							task.RuntimeConf.Healthy = task.HealthCheck.IsHealthy()
 							task.RuntimeConf.IsChecked = task.HealthCheck.IsTicks()
 							task.RuntimeConf.ConsecutiveFailureTimes = task.HealthCheck.ConsecutiveFailure()
 						}
 					}
 
-					if reporting%30 == 0 || changed || message != nil {
+					if reporting%30 == 0 || changed || healthyChanged || message != nil {
 						//report data every 30 seconds or pod healthy status changed
 						executor.status = ExecutorStatus_RUNNING
 						logs.Infof("all task is Running, healthy: %t, isChecked: %t, ConsecutiveFailureTimes: %d"+
@@ -608,20 +634,36 @@ func (executor *BcsExecutor) monitorPod() {
 						///for _, info := range containers {
 						info := task.RuntimeConf
 						info.BcsMessage = message
-
 						localInfo := executor.tasks.GetContainer(info.Name)
 						localInfo.Update(info)
+						infoby, _ := json.Marshal(localInfo)
 						taskInfo := executor.tasks.GetTaskByContainerID(info.Name)
-						update := &mesos.TaskStatus{
-							TaskId:  taskInfo.GetTaskId(),
-							State:   mesos.TaskState_TASK_RUNNING.Enum(),
-							Message: proto.String(localInfo.Message),
-							Source:  mesos.TaskStatus_SOURCE_EXECUTOR.Enum(),
-							Healthy: proto.Bool(task.RuntimeConf.Healthy),
+
+						//if changed, send task status update
+						if changed {
+							update := &mesos.TaskStatus{
+								TaskId:  taskInfo.GetTaskId(),
+								State:   mesos.TaskState_TASK_RUNNING.Enum(),
+								Message: proto.String(localInfo.Message),
+								Source:  mesos.TaskStatus_SOURCE_EXECUTOR.Enum(),
+								Healthy: proto.Bool(task.RuntimeConf.Healthy),
+							}
+							update.Data = infoby
+							executor.driver.SendStatusUpdate(update)
+							//if running, send message for task status update
+						} else {
+							bcsMsg := &bcstype.BcsMessage{
+								Id:         time.Now().UnixNano(),
+								TaskID:     taskInfo.GetTaskId(),
+								Type:       bcstype.Msg_TASK_STATUS_UPDATE.Enum(),
+								TaskStatus: infoby,
+							}
+							by, _ := json.Marshal(bcsMsg)
+							_, err := executor.driver.SendFrameworkMessage(string(by))
+							if err != nil {
+								logs.Errorf("send framework message error %s", err.Error())
+							}
 						}
-						update.Data, _ = json.Marshal(localInfo)
-						executor.driver.SendStatusUpdate(update)
-						//}
 					}
 				}
 
@@ -991,6 +1033,9 @@ func (executor *BcsExecutor) healthcheckSetting(containerTask *container.BcsCont
 		case mesos.HealthCheck_TCP:
 			tcpChecker := health.GetTcp()
 			checker, checkErr = healthcheck.NewTCPChecker(containerTask.Name, int(tcpChecker.GetPort()), tm, nil)
+		case mesos.HealthCheck_COMMAND:
+			cmdChcker := health.GetCommand()
+			checker, checkErr = healthcheck.NewCommandChecker(cmdChcker.GetValue(), executor.flag.DockerSocket, tm)
 		default:
 			checkErr = fmt.Errorf("Get Unsupported health check type %d", health.GetType())
 		}

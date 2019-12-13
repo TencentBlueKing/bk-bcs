@@ -16,14 +16,14 @@
 package scheduler
 
 import (
+	"net/http"
+	"time"
+
 	alarm "bk-bcs/bcs-common/common/bcs-health/api"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"net/http"
-	"time"
 )
 
 // The goroutine function for reschedule taskgroup transaction
@@ -36,6 +36,7 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 
 	blog.Infof("transaction %s reschedule(%s) run begin", transaction.ID, taskGroupID)
 
+	started := time.Now()
 	//var offerIdx int64 = 0
 	for {
 		blog.Infof("transaction %s reschedule(%s) run check", transaction.ID, taskGroupID)
@@ -49,7 +50,7 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 		}
 
 		//precheck application status, add 20180620
-		runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+		runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 		app, _ := s.store.FetchApplication(runAs, appID)
 		if app == nil {
 			blog.Infof("transaction %s fail: fetch application(%s.%s) return nil", transaction.ID, runAs, appID)
@@ -95,7 +96,7 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 					blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {
 						blog.Info("transaction %s reschedule(%s) use offer(%d) %s||%s", transaction.ID, taskGroupID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-						s.doRescheduleTrans(transaction, curOffer)
+						s.doRescheduleTrans(transaction, curOffer, started)
 						break
 					} else {
 						blog.Info("transaction %s use offer(%d) %s||%s fail", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
@@ -110,6 +111,16 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			blog.Infof("transaction %s reschedule(%s) finish", transaction.ID, taskGroupID)
 			break
 		}
+
+		//don't have fit enough resources
+		rescheduleOpdata := transaction.OpData.(*TransRescheduleOpData)
+		taskGroupID := rescheduleOpdata.TaskGroupID
+		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
+		if taskGroup != nil {
+			taskGroup.Message = "don't have fit resources to reschedule this taskgroup"
+			s.store.SaveTaskGroup(taskGroup)
+		}
+
 		//check timeout
 		if (transaction.CreateTime + transaction.LifePeriod) < time.Now().Unix() {
 			blog.Warn("transaction %s reschedule(%s) timeout", transaction.ID, taskGroupID)
@@ -154,7 +165,7 @@ func (s *Scheduler) passRescheduleCheck(trans *Transaction, app *types.Applicati
 	return true
 }
 
-func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer) {
+func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer, started time.Time) {
 
 	blog.Infof("do transaction %s begin", trans.ID)
 
@@ -162,7 +173,7 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer)
 
 	rescheduleOpdata := trans.OpData.(*TransRescheduleOpData)
 	taskGroupID := rescheduleOpdata.TaskGroupID
-	runAs, appID := store.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 
 	cpus, mem, disk := s.OfferedResources(offer)
 	blog.Info("transaction %s reschedule taskgroup(%s), offer:%s||%s, cpu:%f, mem:%f, disk:%f",
@@ -192,6 +203,7 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer)
 		return
 	}
 
+	var taskgroupName string
 	//reschededTimes := 0
 	taskGroup, err := s.store.FetchTaskGroup(taskGroupID)
 	if taskGroup == nil {
@@ -200,6 +212,7 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer)
 		s.DeclineResource(offer.Id.Value)
 		return
 	}
+	taskgroupName = taskGroup.Name
 
 	if rescheduleOpdata.IsInner && taskGroup.Status == types.TASKGROUP_STATUS_RUNNING {
 		blog.Info("transaction %s finish: lost taskGroup(%s) recover to running",
@@ -287,8 +300,9 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer)
 		return
 	}
 
+	//launch taskgroup success, and metrics
+	reportScheduleTaskgroupMetrics(app.RunAs, app.Name, taskgroupName, RescheduleTaskgroupType, started)
 	trans.Status = types.OPERATION_STATUS_FINISH
-
 	blog.Info("transaction %s reschedule new taskgroup(%s) succeed", trans.ID, newTaskGroupID)
 
 	var alarmTimeval uint16 = 600

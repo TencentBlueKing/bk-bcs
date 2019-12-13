@@ -1,0 +1,12 @@
+apiVersion: clb.bmsf.tencent.com/v1
+kind: ClbIngress
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+    bmsf.tencent.com/clbname: {{ .Values.clbName }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+{{- with .Values.ingresses }}
+  {{- toYaml . | nindent 2 }}
+{{- end }}

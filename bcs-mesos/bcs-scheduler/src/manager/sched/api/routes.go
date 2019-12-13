@@ -121,7 +121,7 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/healthcheck", nil, r.healthCheckReport))
 	/*-------------- healthcheck ---------------*/
 
-	/*-------------- mesos slave ---------------*/
+	/*-------------- agent setting ---------------*/
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/agentsetting/{IP}", nil, r.queryAgentSetting))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsetting/{IP}/enable", nil, r.enableAgent))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsetting/{IP}/disable", nil, r.disableAgent))
@@ -131,7 +131,7 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/update", nil, r.updateAgentSettingList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/enable", nil, r.enableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/disable", nil, r.disableAgentList))
-	/*-------------- mesos slave ---------------*/
+	/*-------------- agent setting ---------------*/
 
 	/*-------------- custom resource -----------------*/
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/crr/register", nil, r.registerCustomResource))
@@ -140,6 +140,7 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.deleteCustomResource))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}", nil, r.listCustomResource))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/namespaces/{ns}/{kind}/{name}", nil, r.getCustomResource))
+	r.actions = append(r.actions, httpserver.NewAction("GET", "/crd/{kind}", nil, r.listAllCustomResource))
 	/*-------------- custom resource -----------------*/
 
 	/*-------------- image -----------------*/
@@ -147,8 +148,8 @@ func (r *Router) initRoutes() {
 	/*-------------- image -----------------*/
 
 	/*------------- definition --------------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/application/{ns}/{name}", nil, r.getApplicationDef))
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/deployment/{ns}/{name}", nil, r.getDeploymentDef))
+	//r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/application/{ns}/{name}", nil, r.getApplicationDef))
+	//r.actions = append(r.actions, httpserver.NewAction("GET", "/definition/deployment/{ns}/{name}", nil, r.getDeploymentDef))
 	/*------------- definition --------------------*/
 
 	/*------------- command ---------------------*/

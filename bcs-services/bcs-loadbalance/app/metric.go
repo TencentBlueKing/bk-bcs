@@ -14,40 +14,50 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-services/bcs-loadbalance/rdiscover"
-	"strings"
+	"bk-bcs/bcs-services/bcs-loadbalance/types"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
-func (lp *LBEventProcessor) metricRegister() error {
-	runMode := metric.Master_Master_Mode
-	if strings.ToLower(lp.config.Proxy) == "awselb" || strings.ToLower(lp.config.Proxy) == "qcloudclb" {
-		runMode = metric.Master_Slave_Mode
-	}
-
-	c := metric.Config{
-		ModuleName: "bcs-loadbalance",
-		MetricPort: lp.config.MetricPort,
-		IP:         rdiscover.GetAvailableIP(),
-		ClusterID:  lp.config.ClusterID,
-		RunMode:    runMode,
-	}
-
-	statData := metric.MetricContructor{
-		GetMeta:   lp.cfgManager.GetMetricMeta,
-		GetResult: lp.cfgManager.GetMetricResult,
-	}
-
-	if err := metric.NewMetricController(
-		c,
-		lp.cfgManager.GetHealthInfo,
-		&statData,
-	); err != nil {
-		blog.Errorf("metric server error: %v", err)
-		return err
-	}
-	blog.Infof("start metric server successfully, IP %s, metric port %d",
-		rdiscover.GetAvailableIP(), lp.config.MetricPort)
-	return nil
-}
+var (
+	// LoadbalanceZookeeperStateMetric loadbalance metric for zookeeper connection
+	LoadbalanceZookeeperStateMetric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "state",
+			Help:      "the state for zookeeper connection, 0 for abnormal, 1 for normal",
+		},
+		[]string{types.MetricLabelLoadbalance},
+	)
+	// LoadbalanceZookeeperEventAddMetric loadbalance metric for zookeeper event add
+	LoadbalanceZookeeperEventAddMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "export_service_event_add",
+			Help:      "add event of exported service record in zookeeper",
+		},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+	)
+	// LoadbalanceZookeeperEventUpdateMetric loadbalance metric for zookeeper event update
+	LoadbalanceZookeeperEventUpdateMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "export_service_event_update",
+			Help:      "update event of exported service record in zookeeper",
+		},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+	)
+	// LoadbalanceZookeeperEventDeleteMetric loadbalance metric for zookeeper event delete
+	LoadbalanceZookeeperEventDeleteMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "zookeeper",
+			Name:      "export_service_event_delete",
+			Help:      "delete event of exported service record in zookeeper",
+		},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+	)
+)

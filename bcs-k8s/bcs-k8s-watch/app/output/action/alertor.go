@@ -17,14 +17,12 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/api/core/v1"
+
 	"bk-bcs/bcs-common/common/bcs-health/api"
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/version"
-
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
-
-	//"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
-	"k8s.io/api/core/v1"
 )
 
 type Alertor struct {
@@ -83,6 +81,8 @@ func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 		//AlarmID:            string(event.InvolvedObject.UID),
 		AlarmID:            syncData.OwnerUID,
 		ConvergenceSeconds: &seconds,
+		ResourceType:       event.InvolvedObject.Kind,
+		ResourceName:       event.InvolvedObject.Name,
 	}
 	return healthInfo
 

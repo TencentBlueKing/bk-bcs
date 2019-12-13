@@ -20,6 +20,7 @@ import (
 	bcstype "bk-bcs/bcs-common/common/types"
 )
 
+//ListApplications list all apps
 func (s *Scheduler) ListApplications(ns string, kind bcstype.BcsDataType) (string, error) {
 	blog.V(3).Infof("list namespace (%s) applications", ns)
 
@@ -64,6 +65,7 @@ func (s *Scheduler) ListApplicationTasks(ns, name string) (string, error) {
 	return string(reply), nil
 }
 
+//ListApplicationTaskGroups list all taskgroup under application
 func (s *Scheduler) ListApplicationTaskGroups(ns, name string) (string, error) {
 	blog.V(3).Infof("list application (%s.%s) taskgroups", ns, name)
 
@@ -86,6 +88,7 @@ func (s *Scheduler) ListApplicationTaskGroups(ns, name string) (string, error) {
 	return string(reply), nil
 }
 
+//ListApplicationVersions list application inner definition
 func (s *Scheduler) ListApplicationVersions(ns, name string) (string, error) {
 	blog.V(3).Infof("list application (%s.%s) versions", ns, name)
 

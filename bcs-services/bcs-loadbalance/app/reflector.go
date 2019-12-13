@@ -161,7 +161,15 @@ func caculateBackendWeight(portInfo loadbalance.ExportPort, svr *loadbalance.Exp
 				backendCounts[backend.Label[0]] = value
 			}
 		} else {
-			blog.Warnf("Backend %s/%d in Service %s/%s with protocol %s/%d lost label info", backend.TargetIP, backend.TargetPort, svr.Namespace, svr.ServiceName, portInfo.Protocol, portInfo.ServicePort)
+			blog.Warnf(
+				"Backend %s/%d in Service %s/%s with protocol %s/%d lost label info",
+				backend.TargetIP,
+				backend.TargetPort,
+				svr.Namespace,
+				svr.ServiceName,
+				portInfo.Protocol,
+				portInfo.ServicePort,
+			)
 		}
 	}
 	//all backend weights
@@ -195,7 +203,11 @@ func convertPortBackends(portInfo loadbalance.ExportPort, svr *loadbalance.Expor
 		if svr.ServiceWeight != nil && bk.Label != nil && len(bk.Label) > 0 {
 			if value, ok := weightCopy[bk.Label[0]]; ok {
 				backend.Weight = value
+			} else {
+				backend.Weight = 1
 			}
+		} else {
+			backend.Weight = 1
 		}
 		backends = append(backends, backend)
 	}
@@ -298,6 +310,7 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 func (reflector *ServiceReflector) Start() error {
 	//step1: zkInit, all zookeeper event setting
 	if err := reflector.zkInit(); err != nil {
+		LoadbalanceZookeeperStateMetric.WithLabelValues(reflector.cfg.Name).Set(0)
 		blog.Errorf("zookeeper init failed: %s", err.Error())
 		return err
 	}
@@ -368,12 +381,14 @@ func (reflector *ServiceReflector) watchClusterPath() error {
 func (reflector *ServiceReflector) listChildrenNode(node string) []string {
 	children, _, err := reflector.zkConn.Children(reflector.watchPath)
 	if err != nil {
+		LoadbalanceZookeeperStateMetric.WithLabelValues(reflector.cfg.Name).Set(0)
 		blog.Errorf("reflector get cluster path children error: %s", err.Error())
 		return nil
 	}
 	if len(children) == 0 {
 		blog.Infof("Get no service children node from cluster path: %s", reflector.watchPath)
 	}
+	LoadbalanceZookeeperStateMetric.WithLabelValues(reflector.cfg.Name).Set(1)
 	return children
 }
 
@@ -599,6 +614,7 @@ func (reflector *ServiceReflector) run() {
 	for {
 		select {
 		case <-reflector.exit:
+			LoadbalanceZookeeperStateMetric.WithLabelValues(reflector.cfg.Name).Set(0)
 			blog.Infof("Ticker receive exit event.")
 			return
 		case <-tick.C:

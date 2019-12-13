@@ -31,13 +31,13 @@ mesos方案新增加了Autoscaler资源用来描述业务容器自动伸缩的�
         },
         "minInstance": 2,
         "maxInstance": 10,
-        "metricsTarget":[
+        "metrics":[
           {
             "type": "Resource",
             "name": "cpu",
             "described": "cpu utilization",
             "target": {
-              "kind": "AverageUtilization",
+              "type": "AverageUtilization",
               "averageUtilization": 50
             }
           },
@@ -46,7 +46,7 @@ mesos方案新增加了Autoscaler资源用来描述业务容器自动伸缩的�
             "name": "memory",
             "described": "memory utilization",
             "target": {
-              "kind": "AverageUtilization",
+              "type": "AverageUtilization",
               "averageUtilization": 50
             }
           }
@@ -67,7 +67,7 @@ mesos方案新增加了Autoscaler资源用来描述业务容器自动伸缩的�
   - type: Resource表示cpu，memory资源；Taskgroup表示自定义metrics(暂时未支持)
   - name：metric name，例如：cpu,memory
   - described: metric描述
-  - target.kind:
+  - target.type:
     - AverageUtilization: value值的百分比计算，例如: cpu value=50，表示50%
     - AverageValue: value值的绝对值，例如：packets-per-second value=1000，表示平均每秒的收包数为1000
 
@@ -79,6 +79,7 @@ mesos方案新增加了Autoscaler资源用来描述业务容器自动伸缩的�
 
 ### 自定义metric
 **此特性暂时预留了接口，是下一个阶段需要实现的方案**
+
 mesos方案默认提供容器cpu，memory的metrics采集，为了增加自动扩缩容的纬度，满足业务个性化的需求，mesos支持自定义metrics信息的采集，并且能够依赖自定义metrics实现自动扩缩容。
 ```
 {
@@ -102,6 +103,9 @@ mesos方案默认提供容器cpu，memory的metrics采集，为了增加自动�
 - timestamp：时间戳
 - window：metric采集的窗口期，单位second，采集的窗口为[timestamp, timestamp+window]
 - value: metric的value值
+
+### 实践
+
 
 ## k8s方案
 k8s方案是使用原生的hpa方案实现的，Horizontal-Pod-Autoscaler模块通过scale up/down RC/Deployment实现应用的自动伸缩功能，架构图如下：

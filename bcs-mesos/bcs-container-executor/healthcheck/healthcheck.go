@@ -77,6 +77,12 @@ func (check *CheckerStat) IsHealthy() bool {
 	return check.Healthy
 }
 
+const (
+	HttpHealthcheck    = "http"
+	TcpHealthcheck     = "tcp"
+	CommandHealthcheck = "command"
+)
+
 //Checker health check interface
 type Checker interface {
 	IsStarting() bool           //checker is running
