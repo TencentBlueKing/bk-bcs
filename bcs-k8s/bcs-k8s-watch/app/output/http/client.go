@@ -30,10 +30,18 @@ import (
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 )
 
+// Client is http client for inner services.
 type Client interface {
+	// GetURL returns target url.
 	GetURL()
+
+	// GET is http restfull GET method.
 	GET()
+
+	// DELETE is http restfull DELETE method.
 	DELETE()
+
+	// PUT is http restfull PUT method.
 	PUT()
 }
 

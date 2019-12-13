@@ -56,12 +56,12 @@ const (
 	defaultHTTPRetryerTime = time.Second
 )
 
-// Watcher watch target type resource metadata from k8s cluster,
+// Watcher watchs target type resource metadata from k8s cluster,
 // and write to storage by synchronizer with series actions.
 type Watcher struct {
+	resourceType   string
 	controller     cache.Controller
 	store          cache.Store
-	resourceType   string
 	writer         *output.Writer
 	sharedWatchers map[string]WatcherInterface
 }
@@ -94,18 +94,20 @@ func NewWatcher(client *rest.Interface, resourceType string, resourceName string
 	return watcher
 }
 
+// GetByKey returns object data by target key.
 func (w *Watcher) GetByKey(key string) (interface{}, bool, error) {
 	return w.store.GetByKey(key)
 }
 
+// ListKeys returns all keys in local store.
 func (w *Watcher) ListKeys() []string {
 	return w.store.ListKeys()
 }
 
 // Run starts the watcher.
-func (w *Watcher) Run(stop <-chan struct{}) {
+func (w *Watcher) Run(stopCh <-chan struct{}) {
 	// run controller.
-	w.controller.Run(stop)
+	w.controller.Run(stopCh)
 }
 
 // AddEvent is event handler for add resource event.
@@ -154,10 +156,9 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		oldNode := oldObj.(*v1.Node)
 		newNode := newObj.(*v1.Node)
 
-		// TODO: a best way is to use deepcopy function, save the common fields,
+		// NOTE: a best way is to use deepcopy function, save the common fields,
 		// update the change fields.
 
-		// NOTE: why 5 ?
 		var tempLastTimes = make([]metav1.Time, 5)
 		tempVersion := newNode.ResourceVersion
 		newNode.ResourceVersion = oldNode.ResourceVersion

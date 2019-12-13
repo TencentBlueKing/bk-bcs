@@ -20,12 +20,14 @@ import (
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
 
+// StorageAction is http action of storage service.
 type StorageAction struct {
 	clusterID      string
 	name           string
 	storageService *bcs.InnerService
 }
 
+// NewStorageAction creates a new StorageAction instance.
 func NewStorageAction(clusterID, name string, storageService *bcs.InnerService) *StorageAction {
 	return &StorageAction{
 		clusterID:      clusterID,
@@ -34,14 +36,17 @@ func NewStorageAction(clusterID, name string, storageService *bcs.InnerService) 
 	}
 }
 
+// Add adds new resource data by http PUT.
 func (act *StorageAction) Add(syncData *SyncData) {
 	act.request("PUT", syncData)
 }
 
+// Delete deletes target resource data by http DELETE.
 func (act *StorageAction) Delete(syncData *SyncData) {
 	act.request("DELETE", syncData)
 }
 
+// Update updates old resource data by http PUT.
 func (act *StorageAction) Update(syncData *SyncData) {
 	act.request("PUT", syncData)
 }
@@ -59,8 +64,8 @@ func (act *StorageAction) request(method string, syncData *SyncData) {
 	var client http.StorageClient
 	var resp http.StorageResponse
 	var err error
-	for _, httpClientConfig := range targets {
 
+	for _, httpClientConfig := range targets {
 		client = http.StorageClient{
 			HTTPClientConfig: httpClientConfig,
 			ClusterID:        act.clusterID,
@@ -68,6 +73,7 @@ func (act *StorageAction) request(method string, syncData *SyncData) {
 			ResourceType:     syncData.Kind,
 			ResourceName:     syncData.Name,
 		}
+
 		switch method {
 		case "GET":
 			resp, err = client.GET()
@@ -76,6 +82,7 @@ func (act *StorageAction) request(method string, syncData *SyncData) {
 		case "DELETE":
 			resp, err = client.DELETE()
 		}
+
 		if err != nil {
 			glog.Errorf("%s %s FAIL %s retry: [%s/%s]", method, syncData.Kind, err.Error(), syncData.Namespace, syncData.Name)
 			continue
@@ -90,5 +97,4 @@ func (act *StorageAction) request(method string, syncData *SyncData) {
 
 	glog.V(2).Infof("%s %s SUCCESS: [%s/%s]", method, syncData.Kind, syncData.Namespace, syncData.Name)
 	return
-
 }

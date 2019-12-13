@@ -20,11 +20,22 @@ import (
 
 // WatcherInterface describes a resource watcher.
 type WatcherInterface interface {
+	// Run starts the watcher.
 	Run(stopCh <-chan struct{})
+
+	// AddEvent is event to sync new resource.
 	AddEvent(obj interface{})
+
+	// DeleteEvent is event to delete old resource.
 	DeleteEvent(obj interface{})
+
+	// UpdateEvent is event to update old resource.
 	UpdateEvent(oldObj, newObj interface{})
+
+	// GetByKey returns object data by target key.
 	GetByKey(key string) (interface{}, bool, error)
+
+	// ListKeys returns all keys in local store.
 	ListKeys() []string
 }
 

@@ -34,14 +34,14 @@ const (
 
 // Synchronizer syncs resource metadata to storage.
 type Synchronizer struct {
+	// id of current cluster.
+	clusterID string
+
 	// watchers that products metadata.
 	watchers map[string]WatcherInterface
 
 	// target storage service.
 	storageService *bcs.InnerService
-
-	// id of current cluster.
-	clusterID string
 }
 
 // NewSynchronizer creates a new Synchronizer instance.
@@ -65,7 +65,6 @@ func (sync *Synchronizer) Run(stopCh <-chan struct{}) {
 			glog.Warn("synchronizer is stopped by signal...")
 			return
 		default:
-			// do nothing.
 		}
 
 		// check all watchers sync-state.

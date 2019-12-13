@@ -240,7 +240,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 		}
 	}
 	if len(netservice.Servers()) == 0 {
-		glog.Infof("got non netservice address this mouent")
+		glog.Infof("got non netservice address this moment")
 	}
 
 	// init alertor with bcs-health.
@@ -260,7 +260,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create watcher manager.
 	glog.Info("creating watcher manager now...")
-	watcherMgr, err := k8s.NewWatcherManager(writer, &config.K8s, clusterID, storageService, netservice)
+	watcherMgr, err := k8s.NewWatcherManager(clusterID, writer, &config.K8s, storageService, netservice)
 	if err != nil {
 		panic(err)
 	}

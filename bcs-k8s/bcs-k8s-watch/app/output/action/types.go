@@ -26,10 +26,18 @@ const (
 
 // SyncData is metadata would be synced to storage.
 type SyncData struct {
-	Kind      string
+	// Kind is resource kind.
+	Kind string
+	// Namespace is k8s resource namespace.
 	Namespace string
-	Name      string
-	Action    string
-	Data      interface{}
-	OwnerUID  string
+	// Name is resource name.
+	Name string
+	// Action is SyncDataAction Add/Delete/Update.
+	Action string
+
+	// Data is resource metadata.
+	Data interface{}
+
+	// OwnerUID is resource owner id.
+	OwnerUID string
 }

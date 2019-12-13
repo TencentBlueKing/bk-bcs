@@ -42,8 +42,8 @@ type WatcherManager struct {
 }
 
 // NewWatcherManager creates a new WatcherManager instance.
-func NewWatcherManager(writer *output.Writer, k8sConfig *options.K8sConfig,
-	clusterID string, storageService, netservice *bcs.InnerService) (*WatcherManager, error) {
+func NewWatcherManager(clusterID string, writer *output.Writer, k8sConfig *options.K8sConfig,
+	storageService, netservice *bcs.InnerService) (*WatcherManager, error) {
 
 	mgr := &WatcherManager{
 		watchers: make(map[string]WatcherInterface),

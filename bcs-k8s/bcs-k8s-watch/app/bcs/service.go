@@ -28,11 +28,22 @@ import (
 
 // HTTPClientConfig is bcs inner service http client config struct.
 type HTTPClientConfig struct {
-	URL      string
-	Scheme   string
-	CAFile   string
+	// URL is http whole url.
+	URL string
+
+	// Scheme is http url scheme, http/https.
+	Scheme string
+
+	// CAFile is https root certificate authority file path.
+	CAFile string
+
+	// CertFile is https certificate file path.
 	CertFile string
-	KeyFile  string
+
+	// KeyFile is https key file path.
+	KeyFile string
+
+	// Password is certificate authority file password.
 	Password string
 }
 
@@ -61,7 +72,7 @@ func NewInnerService(serviceName string, eventChan <-chan *RegisterDiscover.Disc
 
 // Watch keeps watching service instance endpoints from ZK.
 func (s *InnerService) Watch(bcsTLSConfig options.TLS) error {
-	glog.Infof("start to watch service[%s] from zookeeper", s.name)
+	glog.Infof("start to watch service[%s] from ZK", s.name)
 
 	for data := range s.eventChan {
 		glog.Infof("received ZK event, Server: %+v", data.Server)
@@ -161,7 +172,7 @@ func (s *InnerService) update(servers []string, bcsTLSConfig options.TLS) {
 	for address := range s.servers {
 		if _, exists := currentServers[address]; !exists {
 			delete(s.servers, address)
-			glog.Infof("delete %s server address[%s] synced from ZK from list", s.name, address)
+			glog.Infof("delete %s server old address[%s] synced from ZK", s.name, address)
 		}
 	}
 	glog.Infof("update %s service addresses done, final: %+v", s.name, s.servers)
