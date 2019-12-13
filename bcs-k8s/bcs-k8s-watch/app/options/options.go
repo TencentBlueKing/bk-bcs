@@ -62,7 +62,8 @@ type BCSConfig struct {
 	ZkHosts []string `json:"zk"`
 	TLS     TLS      `json:"tls"`
 
-	CustomStorageEndpoints []string `json:"custom-storage-endpoints"`
+	CustomStorageEndpoints    []string `json:"custom-storage-endpoints"`
+	CustomNetServiceEndpoints []string `json:"custom-netservice-endpoints"`
 }
 
 type K8sConfig struct {

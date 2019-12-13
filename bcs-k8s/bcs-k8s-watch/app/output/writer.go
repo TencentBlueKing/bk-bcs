@@ -84,7 +84,7 @@ type Writer struct {
 }
 
 // NewWriter creates a new Writer instance which base on bcs-storage service and alarm sender.
-func NewWriter(clusterID string, storageService *bcs.StorageService, alertor *action.Alertor) (*Writer, error) {
+func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *action.Alertor) (*Writer, error) {
 	w := &Writer{
 		queue:      make(chan *action.SyncData, defaultQueueSizeNormalMetadata),
 		alarmQueue: make(chan *action.SyncData, defaultQueueSizeAlarmMetadata),
@@ -98,14 +98,9 @@ func NewWriter(clusterID string, storageService *bcs.StorageService, alertor *ac
 	return w, nil
 }
 
-func (w *Writer) init(clusterID string, storageService *bcs.StorageService) error {
+func (w *Writer) init(clusterID string, storageService *bcs.InnerService) error {
 	for _, resource := range writerResources {
-		action := &action.StorageAction{
-			Name:           resource,
-			ClusterID:      clusterID,
-			StorageService: storageService,
-		}
-
+		action := action.NewStorageAction(clusterID, resource, storageService)
 		w.handlers[resource] = NewHandler(resource, action)
 	}
 	return nil

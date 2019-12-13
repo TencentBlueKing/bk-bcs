@@ -31,21 +31,24 @@ import (
 
 // WatcherManager is resource watcher manager.
 type WatcherManager struct {
-	// resource watchers.
+	// normal k8s resource watchers.
 	watchers map[string]WatcherInterface
 
-	// synchronizer syncs metadata got by watchers to storage.
+	// synchronizer syncs normal metadata got by watchers to storage.
 	synchronizer *Synchronizer
+
+	// special resource watchers.
+	netserviceWatcher *NetServiceWatcher
 }
 
 // NewWatcherManager creates a new WatcherManager instance.
 func NewWatcherManager(writer *output.Writer, k8sConfig *options.K8sConfig,
-	clusterID string, storageService *bcs.StorageService) (*WatcherManager, error) {
+	clusterID string, storageService, netservice *bcs.InnerService) (*WatcherManager, error) {
 
 	mgr := &WatcherManager{
 		watchers: make(map[string]WatcherInterface),
 	}
-	mgr.initWatchers(writer, k8sConfig, clusterID)
+	mgr.initWatchers(clusterID, writer, k8sConfig, storageService, netservice)
 
 	mgr.synchronizer = NewSynchronizer(clusterID, mgr.watchers, storageService)
 	return mgr, nil
@@ -94,7 +97,9 @@ func (mgr *WatcherManager) newClientSet(k8sConfig *options.K8sConfig) (*kubernet
 	return kubernetes.NewForConfig(config)
 }
 
-func (mgr *WatcherManager) initWatchers(writer *output.Writer, k8sconfig *options.K8sConfig, clusterID string) {
+func (mgr *WatcherManager) initWatchers(clusterID string, writer *output.Writer,
+	k8sconfig *options.K8sConfig, storageService, netservice *bcs.InnerService) {
+
 	// create k8s clientset.
 	clientSet, err := mgr.newClientSet(k8sconfig)
 	if err != nil {
@@ -207,13 +212,22 @@ func (mgr *WatcherManager) initWatchers(writer *output.Writer, k8sconfig *option
 	    cluster.watchers[name] = watcher
 	}
 	*/
+
+	// init netservice watcher.
+	mgr.netserviceWatcher = NewNetServiceWatcher(clusterID, "IPPoolStatic", storageService, netservice)
 }
 
 // Run starts the watcher manager, and runs all watchers.
 func (mgr *WatcherManager) Run(stopCh <-chan struct{}) {
+	// run normal resource watchers.
 	for resourceName, watcher := range mgr.watchers {
 		glog.Infof("watcher manager, start list-watcher[%+v]", resourceName)
 		go watcher.Run(stopCh)
 	}
+
+	// run netservice watcher.
+	go mgr.netserviceWatcher.Run(stopCh)
+
+	// run synchronizer.
 	go mgr.synchronizer.Run(stopCh)
 }

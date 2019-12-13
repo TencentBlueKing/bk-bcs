@@ -14,11 +14,16 @@
 package k8s
 
 import (
+	"errors"
 	"fmt"
+	"math/rand"
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
 
+	"bk-bcs/bcs-common/common/ssl"
+	"github.com/parnurzeal/gorequest"
 	appsv1beta1 "k8s.io/api/apps/v1beta1"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
@@ -26,17 +31,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
 	glog "bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 const (
 	// defaultSyncInterval is default sync interval.
 	defaultSyncInterval = 30 * time.Second
+
+	// defaultNetServiceTimeout is default netservice timeout.
+	defaultNetServiceTimeout = 2 * time.Second
+
+	// defaultHTTPRetryerCount is default http request retry count.
+	defaultHTTPRetryerCount = 2
+
+	// defaultHTTPRetryerTime is default http request retry time.
+	defaultHTTPRetryerTime = time.Second
 )
 
 // Watcher watch target type resource metadata from k8s cluster,
@@ -316,4 +333,118 @@ func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncD
 	}
 
 	return syncData
+}
+
+// NetServiceWatcher watchs resources in netservice, and sync to storage.
+type NetServiceWatcher struct {
+	clusterID      string
+	resourceType   string
+	storageService *bcs.InnerService
+	netservice     *bcs.InnerService
+	action         *action.StorageAction
+}
+
+// NewNetServiceWatcher creates a new NetServiceWatcher instance.
+func NewNetServiceWatcher(clusterID, resourceType string, storageService, netservice *bcs.InnerService) *NetServiceWatcher {
+	w := &NetServiceWatcher{
+		clusterID:      clusterID,
+		resourceType:   resourceType,
+		storageService: storageService,
+		netservice:     netservice,
+		action:         action.NewStorageAction(clusterID, "", storageService),
+	}
+	return w
+}
+
+func (w *NetServiceWatcher) httpClient(httpConfig *bcs.HTTPClientConfig) (*gorequest.SuperAgent, error) {
+	request := gorequest.New().Set("Accept", "application/json").Set("BCS-ClusterID", w.clusterID)
+
+	if httpConfig.Scheme == "https" {
+		tlsConfig, err := ssl.ClientTslConfVerity(httpConfig.CAFile, httpConfig.CertFile,
+			httpConfig.KeyFile, httpConfig.Password)
+
+		if err != nil {
+			return nil, fmt.Errorf("init tls fail [clientConfig=%v, errors=%s]", tlsConfig, err)
+		}
+		request = request.TLSClientConfig(tlsConfig)
+	}
+
+	return request, nil
+}
+
+func (w *NetServiceWatcher) queryIPResource() (*netservicetypes.NetResponse, error) {
+	targets := w.netservice.Servers()
+	serversCount := len(targets)
+
+	if serversCount == 0 {
+		return nil, errors.New("netservice server list is empty, there is no available services now")
+	}
+
+	var httpClientConfig *bcs.HTTPClientConfig
+	if serversCount == 1 {
+		httpClientConfig = targets[0]
+	} else {
+		index := rand.Intn(serversCount)
+		httpClientConfig = targets[index]
+	}
+
+	request, err := w.httpClient(httpClientConfig)
+	if err != nil {
+		return nil, fmt.Errorf("can't create netservice client, %+v, %+v", httpClientConfig, err)
+	}
+
+	url := fmt.Sprintf("%s/v1/pool/%s", httpClientConfig.URL, w.clusterID)
+	response := &netservicetypes.NetResponse{}
+
+	if _, _, err := request.
+		Timeout(defaultNetServiceTimeout).
+		Get(url).
+		Retry(defaultHTTPRetryerCount, defaultHTTPRetryerTime, http.StatusBadRequest, http.StatusInternalServerError).
+		EndStruct(response); err != nil {
+		return nil, fmt.Errorf("request to netservice, get ip resource failed, %+v", err)
+	}
+
+	if response.Code != 0 {
+		return nil, fmt.Errorf("request to netservice, get ip resource failed, code[%d], message[%s]",
+			response.Code, response.Message)
+	}
+	return response, nil
+}
+
+// Sync syncs target resources to storages.
+func (w *NetServiceWatcher) Sync() {
+	// query resource from netservice.
+	resource, err := w.queryIPResource()
+	if err != nil {
+		glog.Warnf("sync netservice ip resource, query from netservice failed, %+v", err)
+		return
+	}
+
+	// only sync ip pool static information.
+	if resource.Type != netservicetypes.ResponseType_PSTATIC {
+		glog.Warnf("sync netservice ip resource, query from netservice, invalid response type[%+v]", resource.Type)
+		return
+	}
+
+	pStatic, ok := resource.Data.(*netservicetypes.NetStatic)
+	if !ok {
+		glog.Warnf("sync netservice ip resource, query from netservice, invalid response")
+		return
+	}
+
+	// sync ip resource.
+	metadata := &action.SyncData{
+		Kind:   w.resourceType,
+		Action: action.SyncDataActionUpdate,
+		Data:   pStatic,
+	}
+	w.action.Update(metadata)
+}
+
+// Run starts the netservice watcher.
+func (w *NetServiceWatcher) Run(stopCh <-chan struct{}) {
+	// sync ip resource.
+	wait.NonSlidingUntil(w.Sync, defaultSyncInterval, stopCh)
+
+	// TODO: add more resource-sync logics here.
 }

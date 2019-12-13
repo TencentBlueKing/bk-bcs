@@ -38,14 +38,14 @@ type Synchronizer struct {
 	watchers map[string]WatcherInterface
 
 	// target storage service.
-	storageService *bcs.StorageService
+	storageService *bcs.InnerService
 
 	// id of current cluster.
 	clusterID string
 }
 
 // NewSynchronizer creates a new Synchronizer instance.
-func NewSynchronizer(clusterID string, watchers map[string]WatcherInterface, storageService *bcs.StorageService) *Synchronizer {
+func NewSynchronizer(clusterID string, watchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
 	return &Synchronizer{
 		clusterID:      clusterID,
 		watchers:       watchers,
@@ -252,7 +252,8 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 
 // get resource from storage, namespace can be empty.
 func (sync *Synchronizer) doRequest(namespace string, kind string) (data []interface{}, err error) {
-	serversCount := len(sync.storageService.Servers)
+	targets := sync.storageService.Servers()
+	serversCount := len(targets)
 
 	if serversCount == 0 {
 		// the process get address from zk not finished yet or there is no storage server on zk.
@@ -261,17 +262,12 @@ func (sync *Synchronizer) doRequest(namespace string, kind string) (data []inter
 		return
 	}
 
-	keys := make([]string, 0, serversCount)
-	for key := range sync.storageService.Servers {
-		keys = append(keys, key)
-	}
-
 	var httpClientConfig *bcs.HTTPClientConfig
 	if serversCount == 1 {
-		httpClientConfig = sync.storageService.Servers[keys[0]]
+		httpClientConfig = targets[0]
 	} else {
 		index := rand.Intn(serversCount)
-		httpClientConfig = sync.storageService.Servers[keys[index]]
+		httpClientConfig = targets[index]
 	}
 
 	client := http.StorageClient{
