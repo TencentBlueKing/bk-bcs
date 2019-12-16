@@ -19,15 +19,16 @@ import (
 )
 
 const (
-	BcsStorageDynamicTypeApplication = "application"
-	BcsStorageDynamicTypeProcess     = "process"
-	BcsStorageDynamicTypeTaskGroup   = "taskgroup"
-	BcsStorageDynamicTypeConfigMap   = "configmap"
-	BcsStorageDynamicTypeSecret      = "secret"
-	BcsStorageDynamicTypeService     = "service"
-	BcsStorageDynamicTypeEndpoint    = "endpoint"
-	BcsStorageDynamicTypeDeployment  = "deployment"
-	BcsStorageDynamicTypeNamespace   = "namespace"
+	BcsStorageDynamicTypeApplication  = "application"
+	BcsStorageDynamicTypeProcess      = "process"
+	BcsStorageDynamicTypeTaskGroup    = "taskgroup"
+	BcsStorageDynamicTypeConfigMap    = "configmap"
+	BcsStorageDynamicTypeSecret       = "secret"
+	BcsStorageDynamicTypeService      = "service"
+	BcsStorageDynamicTypeEndpoint     = "endpoint"
+	BcsStorageDynamicTypeDeployment   = "deployment"
+	BcsStorageDynamicTypeNamespace    = "namespace"
+	BcsStorageDynamicTypeIPPoolStatic = "ippoolstatic"
 )
 
 type ApplicationSet struct {
