@@ -14,12 +14,6 @@
 package storage
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	commtypes "bk-bcs/bcs-common/common/types"
-	lbtypes "bk-bcs/bcs-common/pkg/loadbalance/v2"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -27,6 +21,13 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/http/httpclient"
+	commtypes "bk-bcs/bcs-common/common/types"
+	lbtypes "bk-bcs/bcs-common/pkg/loadbalance/v2"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //CCResponse response struct from CC
@@ -201,6 +202,15 @@ func (cc *CCStorage) init() error {
 		actionHandler: &EndpointHandler{
 			oper:      cc,
 			dataType:  "endpoint",
+			ClusterID: cc.ClusterID,
+		},
+	}
+
+	cc.handlers["IPPoolStatic"] = &ChannelProxy{
+		dataQueue: make(chan *types.BcsSyncData, 1024),
+		actionHandler: &NetServiceHandler{
+			oper:      cc,
+			dataType:  "IPPoolStatic",
 			ClusterID: cc.ClusterID,
 		},
 	}

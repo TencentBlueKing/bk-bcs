@@ -21,6 +21,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/etcd"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/mesos"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/service"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"encoding/json"
@@ -151,15 +152,22 @@ func Run(cfg *types.CmdConfig) error {
 		}
 	}()
 
+	// watch netservice servers from ZK.
+	netservice, err := GetNetService(cfg)
+	if err != nil {
+		blog.Error("watch netservice servers failed, %+v", err)
+		return err
+	}
+
 	blog.Info("after storage created, to run server...")
-	retry, rdErr := runServer(rdCxt, cfg, ccStorage)
+	retry, rdErr := runServer(rdCxt, cfg, ccStorage, netservice)
 	for retry == true {
 		if rdErr != nil {
 			blog.Error("run server err: %s", rdErr.Error())
 		}
 		time.Sleep(3 * time.Second)
 		blog.Info("retry run server...")
-		retry, rdErr = runServer(rdCxt, cfg, ccStorage)
+		retry, rdErr = runServer(rdCxt, cfg, ccStorage, netservice)
 	}
 	if rdErr != nil {
 		blog.Error("run server err: %s", rdErr.Error())
@@ -183,7 +191,7 @@ func handleSysSignal(exitCxt context.Context, signalChan <-chan os.Signal, cance
 	}
 }
 
-func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Storage) (bool, error) {
+func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Storage, netservice *service.InnerService) (bool, error) {
 
 	// servermetric.SetClusterStatus(false, "begin run server")
 	// servermetric.SetRole(metric.SlaveRole)
@@ -346,7 +354,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 					blog.Info("become to master: to new and run cluster...")
 					var cluster cluster.Cluster
 					if cfg.StoreDriver == "etcd" {
-						cluster = etcd.NewEtcdCluster(cfg, storage)
+						cluster = etcd.NewEtcdCluster(cfg, storage, netservice)
 					} else {
 						cluster = mesos.NewMesosCluster(cfg, storage)
 					}
@@ -377,6 +385,27 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 		} // end select
 	} // end for
 
+}
+
+// GetNetService returns netservice InnerService object for discovery.
+func GetNetService(cfg *types.CmdConfig) (*service.InnerService, error) {
+	discovery := rd.NewRegDiscoverEx(cfg.RegDiscvSvr, 10*time.Second)
+	if err := discovery.Start(); err != nil {
+		return nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
+	}
+	defer discovery.Stop()
+
+	// zknode: bcs/services/endpoints/netservice
+	path := fmt.Sprintf("%s/%s", commtype.BCS_SERV_BASEPATH, commtype.BCS_MODULE_NETSERVICE)
+	eventChan, err := discovery.DiscoverService(path)
+	if err != nil {
+		return nil, fmt.Errorf("discover netservice failed, %+v", err)
+	}
+
+	netService := service.NewInnerService(commtype.BCS_MODULE_NETSERVICE, eventChan)
+	go netService.Watch(cfg)
+
+	return netService, nil
 }
 
 //RefreshDCHost update bcs-storage info
