@@ -362,7 +362,7 @@ func (watch *ExportServiceWatch) getApplicationServiceLabel(service *commtypes.B
 }
 
 func (watch *ExportServiceWatch) addEpBackend(ep *lbtypes.ExportPort, backend *lbtypes.Backend) bool {
-	if backend.TargetIP == "" || backend.TargetPort <= 0 || backend.Label[0] == "" {
+	if backend.TargetIP == "" || backend.TargetPort <= 0 {
 		blog.Error("ExportServiceWatch add backend, backend data not correct: %+v", backend)
 		return false
 	}

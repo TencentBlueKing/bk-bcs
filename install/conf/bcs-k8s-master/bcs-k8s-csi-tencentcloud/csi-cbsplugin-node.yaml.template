@@ -2,6 +2,7 @@ kind: DaemonSet
 apiVersion: apps/v1beta2
 metadata:
   name: csi-tencentcloud
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -37,7 +38,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: ${csiCbsImage}
+          image: ${bcsCSICBSImage}
           command:
           - "/bin/bcs-k8s-csi-tencentcloud"
           args:
@@ -79,7 +80,7 @@ spec:
         - name: global-mount-dir
           hostPath:
             path: /var/lib/kubelet/plugins/kubernetes.io/csi
-            type: Directory
+            type: DirectoryOrCreate
         - name: device-dir
           hostPath:
             path: /dev

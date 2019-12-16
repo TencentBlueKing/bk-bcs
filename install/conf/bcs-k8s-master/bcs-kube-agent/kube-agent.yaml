@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
       - name: bcs-kube-agent
-        image:
+        image: ${kubeAgentImage}
         imagePullPolicy: IfNotPresent
         args:
         - --bke-address=${bkeAddress}

@@ -49,7 +49,7 @@ spec:
       name: policy-config-file
       readOnly: true
   - name: bcs-k8s-custom-scheduler
-    image: ${kubeCustomSchduler}
+    image: ${kubeCustomSchdulerImage}
     imagePullPolicy: IfNotPresent
     args:
     - --insecure_address=0.0.0.0
@@ -61,7 +61,7 @@ spec:
     - --alsologtostderr=true
     - --v=1
     - --stderrthreshold=2
-    - --cluster=BCS-K8S-40048
+    - --cluster=${clusterId}
     - --kubeconfig=/etc/kubernetes/bcs-k8s-custom-scheduler-kubeconfig.yaml
     - --ca_file=${containerCAFile}
     - --client_cert_file=${containerClientCertFile}
