@@ -23,11 +23,13 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/service"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/client/informers"
 	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 
 	"golang.org/x/net/context"
 	"k8s.io/client-go/tools/clientcmd"
@@ -43,7 +45,7 @@ var (
 )
 
 //NewEtcdCluster create mesos cluster
-func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
+func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage, netservice *service.InnerService) cluster.Cluster {
 	blog.Info("etcd cluster(%s) will be created ...", cfg.ClusterID)
 
 	ApplicationThreadNum = cfg.ApplicationThreadNum
@@ -54,6 +56,7 @@ func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
 		kubeconfig:     cfg.KubeConfig,
 		clusterID:      cfg.ClusterID,
 		storage:        st,
+		netservice:     netservice,
 		reportCallback: make(map[string]cluster.ReportFunc),
 		existCallback:  make(map[string]cluster.DataExister),
 	}
@@ -68,24 +71,26 @@ func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
 
 //EtcdCluster cluster implements all cluster interface
 type EtcdCluster struct {
-	kubeconfig     string
-	factory        informers.SharedInformerFactory
-	clusterID      string                         //watch cluster id
-	connCxt        context.Context                //context for client disconnected
-	cancel         context.CancelFunc             //cancel func when client disconnected
-	reportCallback map[string]cluster.ReportFunc  //report map for handling registery data type
-	existCallback  map[string]cluster.DataExister //check data exist in local cache
-	storage        storage.Storage                //storage interface for remote Storage, like CC
-	app            *AppWatch                      //watch for application
-	taskGroup      *TaskGroupWatch                //watch for taskgroup
-	exportSvr      *ExportServiceWatch            //watch for exportservice
-	Status         string                         //curr status
-	configmap      *ConfigMapWatch
-	secret         *SecretWatch
-	service        *ServiceWatch
-	deployment     *DeploymentWatch
-	endpoint       *EndpointWatch
-	stopCh         chan struct{}
+	kubeconfig        string
+	factory           informers.SharedInformerFactory
+	clusterID         string                         //watch cluster id
+	connCxt           context.Context                //context for client disconnected
+	cancel            context.CancelFunc             //cancel func when client disconnected
+	reportCallback    map[string]cluster.ReportFunc  //report map for handling registery data type
+	existCallback     map[string]cluster.DataExister //check data exist in local cache
+	storage           storage.Storage                //storage interface for remote Storage, like CC
+	netservice        *service.InnerService
+	app               *AppWatch           //watch for application
+	taskGroup         *TaskGroupWatch     //watch for taskgroup
+	exportSvr         *ExportServiceWatch //watch for exportservice
+	Status            string              //curr status
+	configmap         *ConfigMapWatch
+	secret            *SecretWatch
+	service           *ServiceWatch
+	deployment        *DeploymentWatch
+	endpoint          *EndpointWatch
+	netServiceWatcher *NetServiceWatcher
+	stopCh            chan struct{}
 }
 
 // GenerateRandnum just for test
@@ -125,6 +130,9 @@ func (ms *EtcdCluster) registerReportHandler() error {
 
 	ms.reportCallback["Endpoint"] = ms.reportEndpoint
 
+	// report ip pool static resource data callback.
+	ms.reportCallback["IPPoolStatic"] = ms.reportIPPoolStatic
+
 	return nil
 }
 
@@ -163,6 +171,9 @@ func (ms *EtcdCluster) createDatTypeWatch() error {
 	endpointCxt, _ := context.WithCancel(ms.connCxt)
 	ms.endpoint = NewEndpointWatch(endpointCxt, ms.factory.Bkbcs().V2().BcsEndpoints(), ms)
 	go ms.endpoint.Work()
+
+	ms.netServiceWatcher = NewNetServiceWatcher(ms.clusterID, ms, ms.netservice)
+	go ms.netServiceWatcher.Run(ms.stopCh)
 
 	return nil
 }
@@ -204,7 +215,6 @@ func (ms *EtcdCluster) initialize() error {
 
 	//register ReporterHandler
 	if err := ms.registerReportHandler(); err != nil {
-
 		blog.Error("Mesos cluster register report handler err:%s", err.Error())
 		return err
 	}
@@ -288,6 +298,17 @@ func (ms *EtcdCluster) reportEndpoint(data *types.BcsSyncData) error {
 	if err := ms.storage.Sync(data); err != nil {
 		blog.Error("endpoint(%s.%s) sync(%s) dispatch failed: %+v",
 			dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action, err)
+		return err
+	}
+	return nil
+}
+
+func (ms *EtcdCluster) reportIPPoolStatic(data *types.BcsSyncData) error {
+	dataType := data.Item.(*netservicetypes.NetStatic)
+	blog.V(3).Infof("mesos cluster report netservice ip pool static resource[%+v]", dataType)
+
+	if err := ms.storage.Sync(data); err != nil {
+		blog.Errorf("mesos cluster report netservice ip pool static resource failed, %+v", err)
 		return err
 	}
 	return nil

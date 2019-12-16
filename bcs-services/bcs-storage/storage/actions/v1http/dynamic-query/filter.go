@@ -11,7 +11,7 @@
  *
  */
 
-package dynamicQuery
+package dynamicquery
 
 import (
 	"reflect"

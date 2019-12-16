@@ -11,7 +11,7 @@
  *
  */
 
-package dynamicQuery
+package dynamicquery
 
 import (
 	"bk-bcs/bcs-common/common"
@@ -285,6 +285,11 @@ func GetStatefulSet(req *restful.Request, resp *restful.Response) {
 	doQuery(req, resp, &StatefulSetFilter{}, "StatefulSet")
 }
 
+// GetIPPoolStatic query netservice ip pool static resource data.
+func GetIPPoolStatic(req *restful.Request, resp *restful.Response) {
+	doQuery(req, resp, &IPPoolStaticFilter{}, "IPPoolStatic")
+}
+
 func init() {
 	// GET
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/taskgroup"), Params: nil, Handler: lib.MarkProcess(GetTaskGroup)})
@@ -297,6 +302,7 @@ func init() {
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/endpoints"), Params: nil, Handler: lib.MarkProcess(GetEndpoints)})
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/exportservice"), Params: nil, Handler: lib.MarkProcess(GetExportService)})
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/namespace"), Params: nil, Handler: lib.MarkProcess(GetNameSpace)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/ippoolstatic"), Params: nil, Handler: lib.MarkProcess(GetIPPoolStatic)})
 
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/pod"), Params: nil, Handler: lib.MarkProcess(GetPod)})
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/replicaset"), Params: nil, Handler: lib.MarkProcess(GetReplicaSet)})
@@ -311,6 +317,7 @@ func init() {
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/daemonset"), Params: nil, Handler: lib.MarkProcess(GetDaemonSet)})
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/job"), Params: nil, Handler: lib.MarkProcess(GetJob)})
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/statefulset"), Params: nil, Handler: lib.MarkProcess(GetStatefulSet)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/ippoolstatic"), Params: nil, Handler: lib.MarkProcess(GetIPPoolStatic)})
 
 	// POST
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/taskgroup"), Params: nil, Handler: lib.MarkProcess(GetTaskGroup)})
@@ -322,6 +329,7 @@ func init() {
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/secret"), Params: nil, Handler: lib.MarkProcess(GetSecret)})
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/endpoints"), Params: nil, Handler: lib.MarkProcess(GetEndpoints)})
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/exportservice"), Params: nil, Handler: lib.MarkProcess(GetExportService)})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/ippoolstatic"), Params: nil, Handler: lib.MarkProcess(GetIPPoolStatic)})
 
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/pod"), Params: nil, Handler: lib.MarkProcess(GetPod)})
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/replicaset"), Params: nil, Handler: lib.MarkProcess(GetReplicaSet)})
@@ -336,4 +344,5 @@ func init() {
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/daemonset"), Params: nil, Handler: lib.MarkProcess(GetDaemonSet)})
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/job"), Params: nil, Handler: lib.MarkProcess(GetJob)})
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/statefulset"), Params: nil, Handler: lib.MarkProcess(GetStatefulSet)})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/ippoolstatic"), Params: nil, Handler: lib.MarkProcess(GetIPPoolStatic)})
 }
