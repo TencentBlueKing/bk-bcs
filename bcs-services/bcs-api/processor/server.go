@@ -62,7 +62,9 @@ func (p *Processor) Start() error {
 	router := p.httpServ.GetRouter()
 	webContainer := p.httpServ.GetWebContainer()
 	router.Handle("/bcsapi/v1/webconsole/{sub_path:.*}", webconsole.NewWebconsoleProxy(p.config.ClientCert))
+	//mesos clueter api forwarding
 	router.Handle("/bcsapi/{sub_path:.*}", webContainer)
+	//kubernetes cluster api forwarding
 	router.Handle("/rest/{sub_path:.*}", resthdrs.CreateRestContainer("/rest"))
 	router.Handle("/tunnels/clusters/{cluster_identifier}/{sub_path:.*}", proxier.DefaultReverseProxyDispatcher)
 	if err := p.httpServ.ListenAndServeMux(p.config.VerifyClientTLS); err != nil {

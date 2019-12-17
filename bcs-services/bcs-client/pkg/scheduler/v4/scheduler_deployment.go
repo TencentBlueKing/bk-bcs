@@ -32,7 +32,7 @@ func (bs *bcsScheduler) PauseDeployment(clusterID, namespace, name string) error
 
 func (bs *bcsScheduler) resumeDeployment(clusterID, namespace, name string) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerResumeDeploymentURI, bs.bcsApiAddress, namespace, name),
+		fmt.Sprintf(bcsSchedulerResumeDeploymentURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodPut,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -56,7 +56,7 @@ func (bs *bcsScheduler) resumeDeployment(clusterID, namespace, name string) erro
 
 func (bs *bcsScheduler) cancelDeployment(clusterID, namespace, name string) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerCancelDeploymentURI, bs.bcsApiAddress, namespace, name),
+		fmt.Sprintf(bcsSchedulerCancelDeploymentURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodPut,
 		nil,
 		getClusterIDHeader(clusterID),
@@ -80,7 +80,7 @@ func (bs *bcsScheduler) cancelDeployment(clusterID, namespace, name string) erro
 
 func (bs *bcsScheduler) pauseDeployment(clusterID, namespace, name string) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerPauseDeploymentURI, bs.bcsApiAddress, namespace, name),
+		fmt.Sprintf(bcsSchedulerPauseDeploymentURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodPut,
 		nil,
 		getClusterIDHeader(clusterID),

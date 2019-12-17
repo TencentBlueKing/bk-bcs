@@ -22,9 +22,10 @@ import (
 )
 
 func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
+	s.store.LockCommand(command.Id)
+	defer s.store.UnLockCommand(command.Id)
 
 	blog.Info("begin send command(%s)", command.Id)
-
 	for _, taskGroup := range command.Status.Taskgroups {
 		taskGroupId := taskGroup.TaskgroupId
 		taskGroupInfo, err := s.store.FetchTaskGroup(taskGroupId)

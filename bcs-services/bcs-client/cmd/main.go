@@ -39,7 +39,7 @@ import (
 func main() {
 	bcsCli := cli.NewApp()
 	bcsCli.Name = "bcs client"
-	bcsCli.Usage = "command-line client for bcs"
+	bcsCli.Usage = "command-line client for BlueKing Container Service"
 	cliVersion := fmt.Sprintf("\n%s", version.GetVersion())
 	bcsCli.Version = cliVersion
 
@@ -52,7 +52,6 @@ func main() {
 		list.NewListCommand(),
 		inspect.NewInspectCommand(),
 		get.NewGetCommand(),
-		//metric.NewMetricCommand(),
 		deployment.NewCancelCommand(),
 		deployment.NewPauseCommand(),
 		deployment.NewResumeCommand(),

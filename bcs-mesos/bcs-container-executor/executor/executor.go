@@ -293,6 +293,8 @@ func (driver *BcsExecutorDriver) Start() (mesos.Status, error) {
 	return driver.status, nil
 }
 
+//handle executor metrics to textfile
+//module nodeexport report the textfile to prometheus
 func (driver *BcsExecutorDriver) metricsToText() {
 	err := os.MkdirAll(DefaultMetricsTextFile, 0755)
 	if err != nil {
@@ -330,6 +332,7 @@ func (driver *BcsExecutorDriver) metricsToText() {
 }
 
 //Stop the executor driver.
+//executor will exited
 func (driver *BcsExecutorDriver) Stop() (mesos.Status, error) {
 	fmt.Fprintln(os.Stdout, "Stop ExecutorDriver")
 	if driver.status != mesos.Status_DRIVER_RUNNING {
@@ -495,11 +498,11 @@ func (driver *BcsExecutorDriver) SendFrameworkMessage(data string) (mesos.Status
 }
 
 //subscribe send subscribe message to mesos slave
+//check tasks & updates info, if these two map are not
+//empty, ExecutorDriver must be disconnected with mesos slave,
+//TaskInfo & TaskStatus will consider Unacknowledged, combine
+//all info to Call_Subscribe
 func (driver *BcsExecutorDriver) subscribe() error {
-	//check tasks & updates info, if these two map are not
-	//empty, ExecutorDriver must be disconnected with mesos slave,
-	//TaskInfo & TaskStatus will consider Unacknowledged, combine
-	//all info to Call_Subscribe
 	subscribe := new(exec.Call_Subscribe)
 	driver.lock.Lock()
 	if len(driver.tasks) != 0 {
@@ -616,6 +619,7 @@ func (driver *BcsExecutorDriver) runTaskGroup(from *upid.UPID, pbMsg *exec.Event
 	driver.executor.LaunchTaskGroup(driver, taskGroup)
 }
 
+//kill task
 func (driver *BcsExecutorDriver) killTask(from *upid.UPID, pbMsg *exec.Event_Kill) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Kill message from slave because ExecutorDriver Abort")
@@ -630,6 +634,7 @@ func (driver *BcsExecutorDriver) killTask(from *upid.UPID, pbMsg *exec.Event_Kil
 	driver.executor.KillTask(driver, taskID)
 }
 
+//acknowledgementMessage acknowledge task status for scheduler
 func (driver *BcsExecutorDriver) acknowledgementMessage(from *upid.UPID, pbMsg *exec.Event_Acknowledged) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Acknowledged message from slave because ExecutorDriver Abort")
@@ -669,6 +674,8 @@ func (driver *BcsExecutorDriver) acknowledgementMessage(from *upid.UPID, pbMsg *
 	return
 }
 
+//recieve framework message from scheduler
+//the task complete is sync
 func (driver *BcsExecutorDriver) frameworkMessage(from *upid.UPID, pbMsg *exec.Event_Message) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Message info because ExecutorDriver Abort")
@@ -686,6 +693,7 @@ func (driver *BcsExecutorDriver) frameworkMessage(from *upid.UPID, pbMsg *exec.E
 	driver.executor.FrameworkMessage(driver, string(data))
 }
 
+//shutdown the executor, and killall containers
 func (driver *BcsExecutorDriver) shutdown(from *upid.UPID, pbMsg *exec.Event) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {
 		fmt.Fprintln(os.Stdout, "Ignore Shutdown info because ExecutorDriver Abort")

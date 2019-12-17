@@ -27,7 +27,7 @@ func (bs *bcsScheduler) GetOffer(clusterID string) ([]*mesos.Offer, error) {
 
 func (bs *bcsScheduler) getOffer(clusterID string) ([]*mesos.Offer, error) {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerOfferURI, bs.bcsApiAddress),
+		fmt.Sprintf(bcsSchedulerOfferURI, bs.bcsAPIAddress),
 		http.MethodGet,
 		nil,
 		getClusterIDHeader(clusterID),

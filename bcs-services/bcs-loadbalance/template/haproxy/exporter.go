@@ -240,7 +240,7 @@ func (m *Manager) newBackendMetricDesc(metricName, metricDoc string) *prometheus
 func (m *Manager) newServerMetricDesc(metricName, metricDoc string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("loadbalance", "haproxy", "server_"+metricName),
-		metricDoc, []string{types.MetricLabelServer, types.MetricLabelBackend},
+		metricDoc, []string{types.MetricLabelServer, types.MetricLabelBackend, types.MetricLabelServerAddress},
 		prometheus.Labels{
 			types.MetricLabelLoadbalance: m.LoadbalanceName,
 		},
@@ -342,11 +342,11 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 			for _, server := range servers {
 				for i := 0; i <= 33; i++ {
 					if i == 15 {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertStatus(server.Status), server.Name, backend.Name)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertStatus(server.Status), server.ServerName, backend.Name, server.Address)
 					} else if i == 27 {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(server.CheckStatus), server.Name, backend.Name)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(server.CheckStatus), server.ServerName, backend.Name, server.Address)
 					} else {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, getValue(server, keysArray[i]), server.Name, backend.Name)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, getValue(server, keysArray[i]), server.ServerName, backend.Name, server.Address)
 					}
 				}
 			}

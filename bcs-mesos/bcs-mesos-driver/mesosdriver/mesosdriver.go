@@ -27,13 +27,13 @@ import (
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/filter"
 	"encoding/json"
 	"fmt"
-	"github.com/emicklei/go-restful"
 	"net/http"
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
+
+	restful "github.com/emicklei/go-restful"
 )
 
 //MesosDriver is data struct of mesos driver
@@ -139,8 +139,12 @@ func (m *MesosDriver) Start() error {
 	generalFilter := filter.NewFilter()
 	//admission webhook filter
 	if m.config.AdmissionWebhook {
-		zkServers := strings.Split(m.config.SchedDiscvSvr, ",")
-		generalFilter.AppendFilter(filter.NewAdmissionWebhookFilter(m.v4Scheduler, zkServers))
+		admissionFilter, err := filter.NewAdmissionWebhookFilter(m.v4Scheduler, m.config.KubeConfig)
+		if err != nil {
+			blog.Errorf(err.Error())
+			os.Exit(1)
+		}
+		generalFilter.AppendFilter(admissionFilter)
 		blog.Infof("mesosdriver add admission webhook filter")
 	}
 	//check http head valid filter

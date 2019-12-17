@@ -90,7 +90,7 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 			goto run_end
 		}
 
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Second)
 	}
 
 run_end:

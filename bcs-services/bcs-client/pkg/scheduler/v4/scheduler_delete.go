@@ -49,7 +49,7 @@ func (bs *bcsScheduler) deleteResource(clusterID, namespace, resourceType, name 
 	}
 
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerDeleteResourceURI, bs.bcsApiAddress, namespace, resourceType, name, enforceNum),
+		fmt.Sprintf(bcsSchedulerDeleteResourceURI, bs.bcsAPIAddress, namespace, resourceType, name, enforceNum),
 		http.MethodDelete,
 		nil,
 		getClusterIDHeader(clusterID),

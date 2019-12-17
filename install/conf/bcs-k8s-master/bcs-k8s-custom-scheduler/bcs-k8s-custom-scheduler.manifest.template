@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bcs-k8s-custom-scheduler
+  namespace: kube-system
+  labels:
+    k8s-app: bcs-k8s-custom-scheduler
+spec:
+  hostNetwork: true
+  dnsPolicy: ClusterFirst
+  containers:
+  - name: k8s-scheduler
+    image: ${hyperkubeImage}
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 250m
+        memory: 512M
+      requests:
+        cpu: 80m
+        memory: 170M
+    command:
+    - /hyperkube
+    - scheduler
+    - --leader-elect=true
+    - --kubeconfig=/etc/kubernetes/bcs-k8s-custom-scheduler-kubeconfig.yaml
+    - --profiling=false
+    - --v=2
+    - --feature-gates=ExperimentalCriticalPodAnnotation=true
+    - --policy-config-file=/etc/kubernetes/policy-config.json
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10251
+      initialDelaySeconds: 30
+      timeoutSeconds: 10
+    volumeMounts:
+    - mountPath: /etc/ssl
+      name: ssl-certs-host
+      readOnly: true
+    - mountPath: "/etc/kubernetes/ssl"
+      name: etc-kube-ssl
+      readOnly: true
+    - mountPath: "/etc/kubernetes/bcs-k8s-custom-scheduler-kubeconfig.yaml"
+      name: kubeconfig
+      readOnly: true
+    - mountPath: "/etc/kubernetes/policy-config.json"
+      name: policy-config-file
+      readOnly: true
+  - name: bcs-k8s-custom-scheduler
+    image: ${kubeCustomSchdulerImage}
+    imagePullPolicy: IfNotPresent
+    args:
+    - --insecure_address=0.0.0.0
+    - --insecure_port=8081
+    - --bcs_zookeeper=${bcsZkHostSplitByComma}
+    - --log_max_size=500
+    - --log_max_num=10
+    - --logtostderr=true
+    - --alsologtostderr=true
+    - --v=1
+    - --stderrthreshold=2
+    - --cluster=${clusterId}
+    - --kubeconfig=/etc/kubernetes/bcs-k8s-custom-scheduler-kubeconfig.yaml
+    - --ca_file=${containerCAFile}
+    - --client_cert_file=${containerClientCertFile}
+    - --client_key_file=${containerClientKeyFile}
+    ports:
+    - containerPort: 8081
+    volumeMounts:
+    - mountPath: /etc/kubernetes/certs
+      name: bcs-certs
+      readOnly: true
+    - mountPath: "/etc/kubernetes/bcs-k8s-custom-scheduler-kubeconfig.yaml"
+      name: kubeconfig
+      readOnly: true
+  volumes:
+  - name: ssl-certs-host
+    hostPath:
+      path: /etc/ssl
+  - name: etc-kube-ssl
+    hostPath:
+      path: "/etc/kubernetes/ssl"
+  - name: kubeconfig
+    hostPath:
+      path: "/etc/kubernetes/bcs-k8s-custom-scheduler-kubeconfig.yaml"
+  - name: policy-config-file
+    hostPath:
+      path: "/etc/kubernetes/policy-config.json"
+  - name: bcs-certs
+    hostPath:
+      path: "/etc/kubernetes/certs"

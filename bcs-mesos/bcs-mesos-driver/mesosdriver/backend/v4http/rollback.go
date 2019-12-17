@@ -22,6 +22,7 @@ import (
 	"strconv"
 )
 
+//RollbackApplication application rollback implementation
 func (s *Scheduler) RollbackApplication(body []byte, kind bcstype.BcsDataType) (string, error) {
 	blog.Info("rollback application. param(%s)", string(body))
 	var param bcstype.ReplicaController
@@ -38,7 +39,7 @@ func (s *Scheduler) RollbackApplication(body []byte, kind bcstype.BcsDataType) (
 		return err.Error(), err
 	}
 
-	version.RawJson = &param
+	//version.RawJson = &param
 
 	// post version to bcs-mesos-scheduler, /v1/apps
 	data, err := json.Marshal(version)

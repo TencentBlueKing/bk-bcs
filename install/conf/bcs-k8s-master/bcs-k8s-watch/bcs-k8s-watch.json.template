@@ -1,0 +1,22 @@
+{
+    "default": {
+        "clusterID": "",
+        "hostIP": "${localIp}"
+    },
+    "bcs": {
+        "zk": ["${bcsZkHost_list}"],
+        "tls": {
+            "ca-file": "/cert/bcs-ca.crt",
+            "cert-file": "/cert/bcs-client.crt",
+            "key-file": "/cert/bcs-client.key"
+        }
+    },
+    "k8s": {
+        "master": "http://127.0.0.1:8080",
+        "tls": {
+            "ca-file": "",
+            "cert-file": "",
+            "key-file": ""
+        }
+    }
+}

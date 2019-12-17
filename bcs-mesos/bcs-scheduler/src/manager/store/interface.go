@@ -73,7 +73,7 @@ type Store interface {
 
 	// save taskgroup to db
 	SaveTaskGroup(*types.TaskGroup) error
-	// list all taskgroup
+	// list taskgroups under namespace,appid
 	ListTaskGroups(string, string) ([]*types.TaskGroup, error)
 	// fetch taskgroup
 	FetchTaskGroup(string) (*types.TaskGroup, error)
@@ -82,7 +82,7 @@ type Store interface {
 	DeleteTaskGroup(string) error
 	// delete taskgroup by appID
 	//DeleteApplicationTaskGroups(string, string) error
-	FetchTaskgroupByIndex(string, string, int) (*types.TaskGroup, error)
+	//FetchTaskgroupByIndex(string, string, int) (*types.TaskGroup, error)
 	//GetApplicationRootPath() string
 
 	// save agent
@@ -201,6 +201,12 @@ type Store interface {
 	//para3: name
 	DeleteCustomResourceDefinition(string, string, string) error
 
+	// init command lock
+	InitCmdLockPool()
+	//lock command by command_id
+	LockCommand(cmdId string)
+	//unlock command by command_id
+	UnLockCommand(cmdId string)
 	// save command
 	SaveCommand(command *commtypes.BcsCommandInfo) error
 	// fetch command
@@ -226,7 +232,7 @@ type Store interface {
 	/*=========AdmissionWebhook==========*/
 
 	//list object namespaces, object = applicationNode、versionNode...
-	ListObjectNamespaces(objectNode string) ([]string, error)
+	//ListObjectNamespaces(objectNode string) ([]string, error)
 
 	//start metrics
 	StartStoreObjectMetrics()

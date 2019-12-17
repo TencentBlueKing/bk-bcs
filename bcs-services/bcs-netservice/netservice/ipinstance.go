@@ -30,7 +30,7 @@ func (srv *NetService) UpdateAvailableIPInstance(ipinst *types.IPInst) error {
 	instpath := filepath.Join(defaultPoolInfoPath, ipinst.Cluster, ipinst.Pool, "available", ipinst.IPAddr)
 	if exist, _ := srv.store.Exist(instpath); !exist {
 		blog.Errorf("Update Available ip instance failed, no instance data: %s", instpath)
-		reportMetrics("updateAvailableIPInstance", stateLogicFailure, started)
+		reportMetrics("updateAvailableIPInstance", stateNonExistFailure, started)
 		return fmt.Errorf("lost available ip instance %s", ipinst.IPAddr)
 	}
 	//get ip instance data

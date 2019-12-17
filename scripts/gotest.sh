@@ -5,6 +5,8 @@ SKIP_DIR="\
 bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto \
 bk-bcs/bcs-mesos/bcs-container-executor/mesos \
 bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf \
+bk-bcs/bcs-mesos/pkg \
+bk-bcs/bmsf-mesh/pkg \
 bk-bcs/bcs-mesos/bcs-process-daemon"
 
 PACKAGES=$(go list ../...)

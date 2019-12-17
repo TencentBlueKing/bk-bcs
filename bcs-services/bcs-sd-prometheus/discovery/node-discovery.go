@@ -23,20 +23,12 @@ import (
 	"bk-bcs/bcs-services/bcs-sd-prometheus/types"
 )
 
-const (
-	DefaultNodeDiscoveryKey      = "NodeDiscovery"
-	DefaultNodeDiscoveryFileName = "node_sd_config.json"
-
-	CadvisorModule   = "cadvisor"
-	NodeExportModule = "node_exporter"
-)
-
 type nodeDiscovery struct {
 	zkAddr         []string
-	key            string
 	sdFilePath     string
 	cadvisorPort   int
 	nodeExportPort int
+	module         string
 
 	eventHandler   EventHandleFunc
 	nodeController commDiscovery.NodeController
@@ -44,13 +36,23 @@ type nodeDiscovery struct {
 }
 
 // new nodeDiscovery for discovery node cadvisor targets
-func NewNodeDiscovery(zkAddr []string, promFilePrefix string, cadvisorPort, nodeExportPort int) (Discovery, error) {
+func NewNodeDiscovery(zkAddr []string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
 	disc := &nodeDiscovery{
 		zkAddr:         zkAddr,
-		key:            DefaultNodeDiscoveryKey,
-		sdFilePath:     path.Join(promFilePrefix, DefaultNodeDiscoveryFileName),
+		sdFilePath:     path.Join(promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName)),
 		cadvisorPort:   cadvisorPort,
 		nodeExportPort: nodeExportPort,
+		module:         module,
+	}
+	switch module {
+	case CadvisorModule:
+		if cadvisorPort <= 0 {
+			return nil, fmt.Errorf("cadvisorPort can't be zero")
+		}
+	case NodeexportModule:
+		if nodeExportPort <= 0 {
+			return nil, fmt.Errorf("nodeExportPort can't be zero")
+		}
 	}
 
 	return disc, nil
@@ -65,12 +67,12 @@ func (disc *nodeDiscovery) Start() error {
 
 	go disc.syncTickerPromSdConfig()
 	disc.initSuccess = true
-	disc.eventHandler(disc.key)
+	disc.eventHandler(disc.module)
 	return nil
 }
 
 func (disc *nodeDiscovery) GetDiscoveryKey() string {
-	return disc.key
+	return disc.module
 }
 
 func (disc *nodeDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error) {
@@ -83,26 +85,26 @@ func (disc *nodeDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig,
 	for _, node := range nodes {
 		ip := node.GetAgentIP()
 		if ip == "" {
-			blog.Errorf("discovery %s node %s not found InnerIP", disc.key, node.GetName())
+			blog.Errorf("discovery %s node %s not found InnerIP", disc.module, node.GetName())
 			continue
 		}
 
-		if disc.cadvisorPort != 0 {
+		switch disc.module {
+		case CadvisorModule:
 			conf := &types.PrometheusSdConfig{
 				Targets: []string{fmt.Sprintf("%s:%d", ip, disc.cadvisorPort)},
 				Labels: map[string]string{
-					DefaultBcsModuleLabelKey: CadvisorModule,
+					DefaultBcsModuleLabelKey: disc.module,
 				},
 			}
 
 			promConfigs = append(promConfigs, conf)
-		}
 
-		if disc.nodeExportPort != 0 {
+		case NodeexportModule:
 			conf := &types.PrometheusSdConfig{
 				Targets: []string{fmt.Sprintf("%s:%d", ip, disc.nodeExportPort)},
 				Labels: map[string]string{
-					DefaultBcsModuleLabelKey: NodeExportModule,
+					DefaultBcsModuleLabelKey: disc.module,
 				},
 			}
 
@@ -126,7 +128,7 @@ func (disc *nodeDiscovery) OnAdd(obj interface{}) {
 		return
 	}
 
-	disc.eventHandler(disc.key)
+	disc.eventHandler(disc.module)
 }
 
 // if on update event, then don't need to update sd config
@@ -142,7 +144,7 @@ func (disc *nodeDiscovery) OnDelete(obj interface{}) {
 	}
 
 	// call event handler
-	disc.eventHandler(disc.key)
+	disc.eventHandler(disc.module)
 }
 
 func (disc *nodeDiscovery) syncTickerPromSdConfig() {
@@ -151,6 +153,6 @@ func (disc *nodeDiscovery) syncTickerPromSdConfig() {
 	select {
 	case <-ticker.C:
 		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		disc.eventHandler(disc.key)
+		disc.eventHandler(disc.module)
 	}
 }

@@ -72,7 +72,7 @@ func (srv *NetService) AddPool(pool *types.NetPool) error {
 	}
 	if exist, _ := srv.store.Exist(poolPath); exist {
 		blog.Errorf("Pool %s is exist, skip create", pool.GetKey())
-		reportMetrics("addpool", stateLogicFailure, started)
+		reportMetrics("addpool", stateNonExistFailure, started)
 		return fmt.Errorf("pool %s exist, create failed", pool.GetKey())
 	}
 	if err := srv.initPoolPath(pool, poolPath, poolData); err != nil {
@@ -220,7 +220,7 @@ func (srv *NetService) DeletePool(netKey string) error {
 	blog.Info("try to delete pool %s", poolPath)
 	if exist, _ := srv.store.Exist(poolPath); !exist {
 		blog.Errorf("Delete pool %s error, no such Pool Info", netKey)
-		reportMetrics("deletePool", stateLogicFailure, started)
+		reportMetrics("deletePool", stateNonExistFailure, started)
 		return fmt.Errorf("pool %s do not exist", netKey)
 	}
 	//try to lock
@@ -299,7 +299,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 	//update netpool node with pool data
 	if exist, _ := srv.store.Exist(poolPath); !exist {
 		blog.Errorf("Pool %s is not exist, can not update", pool.GetKey())
-		reportMetrics("updatePool", stateLogicFailure, started)
+		reportMetrics("updatePool", stateNonExistFailure, started)
 		return fmt.Errorf("pool %s not exist, can not update", pool.GetKey())
 	}
 	if len(pool.Active) > 0 {
@@ -595,7 +595,7 @@ func (srv *NetService) ListPoolByCluster(cluster string) ([]*types.NetPool, erro
 	}
 	var pools []*types.NetPool
 	if len(nets) == 0 {
-		blog.Infof("No netpool under cluster now", cluster)
+		blog.Infof("No netpool under cluster %s now", cluster)
 		reportMetrics("listPoolByCluster", stateSuccess, started)
 		return pools, nil
 	}

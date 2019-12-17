@@ -17,6 +17,12 @@ import "bk-bcs/bcs-services/bcs-sd-prometheus/types"
 
 const (
 	DefaultBcsModuleLabelKey = "bcs_module"
+	DiscoveryFileName        = "_sd_config.json"
+)
+
+const (
+	CadvisorModule   = "cadvisor"
+	NodeexportModule = "node_export"
 )
 
 type Discovery interface {

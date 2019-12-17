@@ -17,10 +17,10 @@ import (
 	comm "bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"errors"
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
 	"strconv"
 	"time"
 )
@@ -34,27 +34,27 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 	name := deploymentDef.ObjectMeta.Name
 	blog.Info("request create deployment(%s.%s) begin", ns, name)
 
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	currDeployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("request create deployment(%s.%s), fetch deployment err:%s",
 			ns, name, err.Error())
 		return comm.BcsErrMesosSchedCommon, err
 	}
 	if currDeployment != nil {
 		err := fmt.Errorf("deployment(%s.%s) already exist", ns, name)
-		blog.Warn("request create error: deployment(%s.%s) already exist", ns, name)
+		blog.Errorf("request create error: deployment(%s.%s) already exist", ns, name)
 		return comm.BcsErrMesosSchedResourceExist, err
 	}
 	deployment := types.Deployment{
-		ObjectMeta:    deploymentDef.ObjectMeta,
-		Selector:      deploymentDef.Selector,
-		Strategy:      deploymentDef.Strategy,
-		Status:        types.DEPLOYMENT_STATUS_DEPLOYING,
-		RawJson:       deploymentDef.RawJson,
-		RawJsonBackup: nil,
+		ObjectMeta: deploymentDef.ObjectMeta,
+		Selector:   deploymentDef.Selector,
+		Strategy:   deploymentDef.Strategy,
+		Status:     types.DEPLOYMENT_STATUS_DEPLOYING,
+		//RawJson:       deploymentDef.RawJson,
+		//RawJsonBackup: nil,
 	}
 	if err = b.store.SaveDeployment(&deployment); err != nil {
 		blog.Error("request create deployment, save deployment(%s.%s) err:%s", ns, name, err.Error())
@@ -212,7 +212,7 @@ func (b *backend) createDeploymentApplication(version *types.Version) (int, erro
 		return comm.BcsErrCommRequestDataErr, err
 	}
 	app, err := b.store.FetchApplication(version.RunAs, version.ID)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("create deployment application, fetch application(%s.%s) ret:%s", version.RunAs, version.ID, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
@@ -276,14 +276,15 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		deployment.Strategy.RollingUpdate.MaxSurge = 1
 	}
 
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	currDeployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("update deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
+
 	if currDeployment == nil {
 		err = errors.New("deployment not exist")
 		blog.Warn("update deployment(%s.%s): data not exist", ns, name)
@@ -307,11 +308,12 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	defer b.store.UnLockApplication(ns + "." + currDeployment.Application.ApplicationName)
 
 	app, err := b.store.FetchApplication(ns, currDeployment.Application.ApplicationName)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Info("update deployment(%s.%s), fetch application(%s) err:%s",
 			ns, name, currDeployment.Application.ApplicationName, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
+
 	if app == nil {
 		err = errors.New("deployment has not application, cannot update, you can delete and recreate it")
 		blog.Warn("update deployment(%s.%s): no bind application", ns, name)
@@ -354,12 +356,14 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		err := errors.New("namespace error")
 		return comm.BcsErrCommRequestDataErr, err
 	}
+
 	versionErr := b.CheckVersion(version)
 	if versionErr != nil {
 		blog.Error("update deployment, application(%s.%s) version error: %s",
 			version.RunAs, version.ID, versionErr.Error())
 		return comm.BcsErrCommRequestDataErr, versionErr
 	}
+
 	err = version.CheckAndDefaultResource()
 	if err != nil {
 		blog.Error("update deployment, application(%s.%s) version error: %s", version.RunAs, version.ID, err.Error())
@@ -374,16 +378,18 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	defer b.store.UnLockApplication(ns + "." + version.ID)
 
 	app, err = b.store.FetchApplication(version.RunAs, version.ID)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("update deployment, fetch application(%s.%s) err:%s", version.RunAs, version.ID, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
+
 	if app != nil {
 		err = errors.New("application already exist")
 		blog.Error("update deployment, application(%s.%s) already exist", version.RunAs, version.ID)
 		return comm.BcsErrMesosSchedCommon, err
 	}
 	application := types.Application{
+		Kind:             version.Kind,
 		ID:               version.ID,
 		Name:             version.ID,
 		DefineInstances:  uint64(version.Instances),
@@ -402,6 +408,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 			application.RunAs, application.ID, err.Error())
 		return comm.BcsErrCommCreateZkNodeFail, err
 	}
+
 	if err := b.SaveVersion(version.RunAs, version.ID, version); err != nil {
 		blog.Error("update deployment, save application(%s.%s), err:%s",
 			version.RunAs, version.ID, err.Error())
@@ -418,14 +425,13 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	currDeployment.IsInRolling = false
 
 	// add  20181122
-	currDeployment.RawJsonBackup = currDeployment.RawJson
-	currDeployment.RawJson = deployment.RawJson
+	//currDeployment.RawJsonBackup = currDeployment.RawJson
+	//currDeployment.RawJson = deployment.RawJson
 
 	if err := b.store.SaveDeployment(currDeployment); err != nil {
 		blog.Error("update deployment(%s.%s), save deployment err: %s", ns, name, err.Error())
 		return comm.BcsErrCommCreateZkNodeFail, err
 	}
-
 	//set applications status to RollingUpdate
 	app, err = b.store.FetchApplication(ns, currDeployment.Application.ApplicationName)
 	if err != nil {
@@ -433,6 +439,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 			ns, currDeployment.Application.ApplicationName, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
+
 	if app != nil {
 		app.LastStatus = app.Status
 		app.Status = types.APP_STATUS_ROLLINGUPDATE
@@ -442,16 +449,19 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 			blog.Errorf("save app %s error %s", app.ID, err.Error())
 		}
 	}
+
 	appExt, err := b.store.FetchApplication(ns, currDeployment.ApplicationExt.ApplicationName)
 	if err != nil {
 		blog.Error("update deployment, fetch ext application(%s.%s) err:%s",
 			ns, currDeployment.ApplicationExt.ApplicationName, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
+
 	if appExt != nil {
 		appExt.LastStatus = appExt.Status
 		appExt.Status = types.APP_STATUS_ROLLINGUPDATE
 		appExt.SubStatus = types.APP_SUBSTATUS_ROLLINGUPDATE_UP
+
 		err = b.store.SaveApplication(appExt)
 		if err != nil {
 			blog.Errorf("save app %s error %s", app.ID, err.Error())
@@ -466,8 +476,8 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 
 func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 	blog.Info("request cancelupdate deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil {
@@ -540,8 +550,8 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 	deployment.Application.CurrentTargetInstances = 0
 
 	// add  20181122
-	deployment.RawJson = deployment.RawJsonBackup
-	deployment.RawJson = nil
+	//deployment.RawJson = deployment.RawJsonBackup
+	//deployment.RawJson = nil
 
 	deployment.Status = types.DEPLOYMENT_STATUS_RUNNING
 	deployment.ApplicationExt = nil
@@ -559,11 +569,11 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 
 func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, error) {
 	blog.Info("request delete deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("delete deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return comm.BcsErrCommGetZkNodeFail, err
 	}
@@ -616,8 +626,8 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 	blog.V(3).Infof("check delete deployment(%s.%s)", ns, name)
 
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil {
@@ -632,7 +642,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 	if deployment.Application != nil {
 		_, err := b.store.FetchApplication(ns, deployment.Application.ApplicationName)
-		if err == zk.ErrNoNode {
+		if err == store.ErrNoFound {
 			deployment.Application = nil
 		} else {
 			blog.V(3).Infof("check delete deployment(%s.%s), application(%s) not deleted",
@@ -643,7 +653,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 	if deployment.ApplicationExt != nil {
 		_, err := b.store.FetchApplication(ns, deployment.ApplicationExt.ApplicationName)
-		if err == zk.ErrNoNode {
+		if err == store.ErrNoFound {
 			deployment.ApplicationExt = nil
 		} else {
 			blog.V(3).Infof("check delete deployment(%s.%s), application(%s) not deleted",
@@ -668,11 +678,11 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
 func (b *backend) PauseUpdateDeployment(ns string, name string) error {
 	blog.Info("request pauseupdate deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("pauseupdate deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return err
 	}
@@ -701,11 +711,11 @@ func (b *backend) PauseUpdateDeployment(ns string, name string) error {
 
 func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 	blog.Info("request resumeupdate deployment(%s.%s) begin", ns, name)
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
 	deployment, err := b.store.FetchDeployment(ns, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("resumeupdate deployment(%s.%s) fetch deployment err: %s", ns, name, err.Error())
 		return err
 	}
@@ -735,11 +745,11 @@ func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 
 func (b *backend) ScaleDeployment(runAs, name string, instances uint64) error {
 	blog.Info("request scale deployment(%s.%s) to instances %d", runAs, name, instances)
-	b.store.LockDeployment(name)
-	defer b.store.UnLockDeployment(name)
+	b.store.LockDeployment(fmt.Sprintf("%s.%s", runAs, name))
+	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", runAs, name))
 
 	deployment, err := b.store.FetchDeployment(runAs, name)
-	if err != nil && err != zk.ErrNoNode {
+	if err != nil && err != store.ErrNoFound {
 		blog.Error("scale deployment(%s.%s) fetch deployment err: %s", runAs, name, err.Error())
 		return err
 	}

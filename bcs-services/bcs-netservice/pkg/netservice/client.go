@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -756,23 +757,30 @@ func (c *client) TransferIPAttr(input *types.TranIPAttrInput) error {
 	return fmt.Errorf(res.Message)
 }
 
-//getHttpClient create http client according tlsconfig
+// getHttpClient create http client according tlsconfig
 func (c *client) getHTTPClient(timeout int) (*http.Client, string) {
-	var httpClient *http.Client
-	var prefix string
-	if c.tlsConfig == nil {
-		httpClient = &http.Client{
-			Timeout: time.Second * time.Duration(int64(timeout)),
-		}
-		prefix = "http://"
-	} else {
-		httpClient = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: c.tlsConfig,
-			},
-			Timeout: time.Second * time.Duration(int64(timeout)),
-		}
+	prefix := "http://"
+	// extend from Default Transport in package net, and disable keepalive
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		DisableKeepAlives:     true,
+	}
+	if c.tlsConfig != nil {
 		prefix = "https://"
+		transport.TLSClientConfig = c.tlsConfig
+	}
+	httpClient := &http.Client{
+		Transport: transport,
+		Timeout:   time.Second * time.Duration(int64(timeout)),
 	}
 	return httpClient, prefix
 }

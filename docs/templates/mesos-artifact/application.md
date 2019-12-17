@@ -100,8 +100,14 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 	},
 	"metadata": {
 		"labels": {
-			"test_label": "test_label"
+			"test_label": "test_label",
+			"io.tencent.bcs.netsvc.requestip.0": "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2",
+			"io.tencent.bcs.netsvc.requestip.1": "127.0.0.2|InnerIp=127.0.0.1;127.0.0.2"
 		},
+		"annotations": {
+            "io.tencent.bcs.netsvc.requestip.0": "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2",
+            "io.tencent.bcs.netsvc.requestip.1": "127.0.0.2|InnerIp=127.0.0.1;127.0.0.2"
+        },
 		"name": "ri-test-rc-001",
 		"namespace": "nfsol"
 	},
@@ -172,7 +178,7 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 						}
 					],
 					"healthChecks": [{
-						"type": "HTTP|TCP|REMOTE_HTTP|REMOTE_TCP",
+						"type": "HTTP|TCP|COMMAND|REMOTE_HTTP|REMOTE_TCP",
 						"intervalSeconds": 30,
 						"timeoutSeconds": 5,
 						"consecutiveFailures": 3,
@@ -186,7 +192,10 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 						"tcp": {
 							"port": 8090,
 							"portName": "test-tcp"
-						}
+						},
+						"command": {
+                            "value": "ls /"
+                        }
 					}],
 					"resources": {
 						"limits": {
@@ -349,16 +358,16 @@ UnionData字段说明：
 * namespace：App命名空间，小写字母与数字构成，不能完全由数字构成，不能数字开头；不同业务必然不同，默认值为defaultGroup
 * label：app的lable信息，对应k8s RC label
 
-### Label特殊字段说
+### Label或Annotations特殊字段说
 
 当容器网络使用bcs-cni方案的时，如果想针对容器指定IP，可以使用以下label
 
-* io.tencent.bcs.netsvc.requestip.[i]：针对Pod申请IP，i代表Pod的实例，从0开始计算
+* io.tencent.bcs.netsvc.requestip.i：针对Pod申请IP，i代表Pod的实例，从0开始计算
 
 当容器指定Ip时，不同的taskgroup需要调度到特定的宿主机上面，宿主机的制定方式与constraint调度约束一致，如下是使用InnerIp：
-io.tencent.bcs.netsvc.requestip.[i]: "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2"
+io.tencent.bcs.netsvc.requestip.i: "127.0.0.1|InnerIp=127.0.0.1;127.0.0.2"
 使用分隔符"|"分隔，"|"前面为容器Ip，后面为需要调度到的宿主机Ip，多个宿主机之间使用分隔符";"分隔，宿主机Ip支持正则表示式，方式如下：
-io.tencent.bcs.netsvc.requestip.[i]: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.[11-13]"
+io.tencent.bcs.netsvc.requestip.i: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.[11-13]"
 
 ## 容器字段信息
 
@@ -535,12 +544,12 @@ ports字段说明：
 
 #### **healthChecks 字段说明**
 
-* type: 检测方式，目前支持HTTP,TCP,REMOTE_TCP和REMOTE_HTTP四种
+* type: 检测方式，目前支持HTTP,TCP,COMMAND,REMOTE_TCP和REMOTE_HTTP五种
 * intervalSeconds：前后两次执行健康监测的时间间隔.
 * timeoutSeconds: 健康监测可允许的等待超时时间。在该段时间之后，不管收到什么样的响应，都被认为健康监测是失败的，**timeoutSeconds需要小于intervalSeconds**
 * consecutiveFailures: 当该参数配置大于0时，在健康检查连续失败次数大于该配置时，scheduler将task设置为Failed状态并下发kill指令（设置为Failed状态后会出发重新调度检测，如果配置了Failed状态下重新调度，则scheduler会重新调度对应的taskgroup）。目前该配置项只在executor本地check有效。如果不需要此功能，请配置为0。
 * gracePeriodSeconds：启动之后在该时段内不进行健康检查
-* command: type为COMMAND时有效(目前不支持)
+* command: type为COMMAND时有效
   * value: 需要执行的命令,value中支持环境变量.mesos协议中区分是否shell,这里不做区分,如果为shell命令,需要包括"/bin/bash ‐c",系统不会自动添加(参考marathon)
   * 后续可能需要补充其他参数如USER
 * http: type为HTTP和REMOTE_HTTP时有效

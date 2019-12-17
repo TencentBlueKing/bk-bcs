@@ -96,7 +96,7 @@ func (s *Scheduler) doDeleteAppTrans(trans *Transaction) bool {
 			}
 
 			if enforce == true {
-				blog.Warn("transaction %s delete applicatio: taskGroup(%s) is not end, but enforce to delete",
+				blog.Warn("transaction %s delete application: taskGroup(%s) is not end, but enforce to delete",
 					trans.ID, taskGroup.ID)
 			} else {
 				blog.Infof("transaction %s delete application(%s.%s) pending", trans.ID, runAs, appID)

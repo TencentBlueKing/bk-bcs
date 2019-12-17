@@ -24,7 +24,7 @@ func (bs *bcsScheduler) RescheduleTaskGroup(clusterID, namespace, applicationNam
 
 func (bs *bcsScheduler) rescheduleTaskGroup(clusterID, namespace, applicationName, taskGroupName string) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerRescheduleURI, bs.bcsApiAddress, namespace, applicationName, taskGroupName),
+		fmt.Sprintf(bcsSchedulerRescheduleURI, bs.bcsAPIAddress, namespace, applicationName, taskGroupName),
 		http.MethodPut,
 		nil,
 		getClusterIDHeader(clusterID),

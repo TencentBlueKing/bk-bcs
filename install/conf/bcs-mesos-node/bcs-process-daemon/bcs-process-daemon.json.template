@@ -1,0 +1,7 @@
+{
+  "data_dir": "${process_data_dir}",
+  "workspace_dir": "${process_workspace}",
+  "log_dir": "${log_dir}",
+  "pid_dir": "${pid_dir}",
+  "unix_socket": "/var/run/process.sock"
+}
