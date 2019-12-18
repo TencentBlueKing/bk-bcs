@@ -130,7 +130,11 @@ func getIPPoolStatic(c *utils.ClientContext) error {
 		return fmt.Errorf("failed to get ippoolstatic: %v", err)
 	}
 
-	return printGet(result)
+	if result == nil || len(result) == 0 {
+		fmt.Println("Resource Not Found.")
+		return nil
+	}
+	return printGet(result[0].Data)
 }
 
 func printGet(single interface{}) error {
