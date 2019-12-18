@@ -18,6 +18,11 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	// ResourceTypeEvent is event resource type.,
+	ResourceTypeEvent = "Event"
+)
+
 // WatcherInterface describes a resource watcher.
 type WatcherInterface interface {
 	// Run starts the watcher.

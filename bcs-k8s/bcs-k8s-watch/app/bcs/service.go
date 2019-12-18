@@ -113,9 +113,9 @@ func (s *InnerService) update(servers []string, bcsTLSConfig options.TLS) {
 
 	if s.customEndpoints != nil {
 		for _, address := range s.customEndpoints {
-			scheme := "http"
-			if strings.HasPrefix(address, "https") {
-				scheme = "https"
+			scheme := SchemeHTTP
+			if strings.HasPrefix(address, SchemeHTTPS) {
+				scheme = SchemeHTTPS
 			}
 			currentServers[address] = ""
 
@@ -126,7 +126,7 @@ func (s *InnerService) update(servers []string, bcsTLSConfig options.TLS) {
 				}
 
 				// support https.
-				if scheme == "https" {
+				if scheme == SchemeHTTPS {
 					config.CAFile = bcsTLSConfig.CAFile
 					config.CertFile = bcsTLSConfig.CertFile
 					config.KeyFile = bcsTLSConfig.KeyFile
@@ -158,7 +158,7 @@ func (s *InnerService) update(servers []string, bcsTLSConfig options.TLS) {
 				}
 
 				// support https.
-				if serverInfo.Scheme == "https" {
+				if serverInfo.Scheme == SchemeHTTPS {
 					config.CAFile = bcsTLSConfig.CAFile
 					config.CertFile = bcsTLSConfig.CertFile
 					config.KeyFile = bcsTLSConfig.KeyFile
