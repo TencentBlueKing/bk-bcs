@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
-	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 // NetServiceHandler handle netservice resources for storage.
@@ -55,12 +54,10 @@ func (h *NetServiceHandler) Delete(data interface{}) error {
 
 // Delete handle delete event for netservice resources.
 func (h *NetServiceHandler) Update(data interface{}) error {
-	ipStatic := data.(*netservicetypes.NetStatic)
-
 	started := time.Now()
-	dataNode := fmt.Sprintf("/bcsstorage/v1/mesos/dynamic/cluster_resources/clusters/%s/%s", h.ClusterID, h.dataType)
+	dataNode := fmt.Sprintf("/bcsstorage/v1/mesos/dynamic/cluster_resources/clusters/%s/%s/%s-%s", h.ClusterID, h.dataType, h.dataType, h.ClusterID)
 
-	if err := h.oper.CreateDCNode(dataNode, ipStatic, "PUT"); err != nil {
+	if err := h.oper.CreateDCNode(dataNode, data, "PUT"); err != nil {
 		blog.V(3).Infof("IPPoolStatic update node %s, err %+v", dataNode, err)
 		reportStorageMetrics(dataTypeIPPoolStatic, actionPut, statusFailure, started)
 		return err

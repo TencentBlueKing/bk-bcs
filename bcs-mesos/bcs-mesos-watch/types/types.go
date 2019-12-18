@@ -55,6 +55,10 @@ type CmdConfig struct {
 
 	KubeConfig  string
 	StoreDriver string
+
+	// NetServiceZK is zookeeper address config for netservice discovery,
+	// reuse RegDiscvSvr by default.
+	NetServiceZK string
 }
 
 const (

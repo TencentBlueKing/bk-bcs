@@ -317,8 +317,6 @@ func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string)
 		return err
 	}
 
-	//blog.V(3).Infof("DC [%s %s] begin", action, path)
-
 	begin := time.Now().UnixNano() / 1e6
 
 	resp, rerr := cc.client.Request(path, action, nil, valueBytes)

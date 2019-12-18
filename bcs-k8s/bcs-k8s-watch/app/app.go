@@ -113,6 +113,10 @@ func Run(configFilePath string) error {
 	glog.Info("Init config DONE!")
 
 	zkHosts := strings.Join(watchConfig.BCS.ZkHosts, ",")
+	if watchConfig.BCS.NetServiceZKHosts == nil || len(watchConfig.BCS.NetServiceZKHosts) == 0 {
+		watchConfig.BCS.NetServiceZKHosts = watchConfig.BCS.ZkHosts
+	}
+
 	hostIP := watchConfig.Default.HostIP
 	bcsTLSConfig := watchConfig.BCS.TLS
 
@@ -211,6 +215,7 @@ func startMetricForMaster(moduleIP, clusterID string) error {
 // RunAsLeader do the leader stuff
 func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterID string) error {
 	zkHosts := strings.Join(config.BCS.ZkHosts, ",")
+	netServiceZKHosts := strings.Join(config.BCS.NetServiceZKHosts, ",")
 	bcsTLSConfig := config.BCS.TLS
 
 	glog.Info("getting storage service now...")
@@ -221,7 +226,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	glog.Info("get storage service done")
 
 	glog.Info("getting netservice now...")
-	netservice, err := bcs.GetNetService(zkHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints)
+	netservice, err := bcs.GetNetService(netServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints)
 	if err != nil {
 		panic(err)
 	}
