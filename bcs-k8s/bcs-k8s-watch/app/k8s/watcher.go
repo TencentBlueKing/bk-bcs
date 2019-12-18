@@ -244,12 +244,12 @@ func (w *Watcher) convert(obj interface{}) (v interface{}, ok bool) {
 func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bool {
 	// NOTE: event not support delete
 	// bugfix here: must in top of this func, in case of Name or Namespace return true.
-	if eventAction == action.SyncDataActionDelete && w.resourceType == "Event" {
+	if eventAction == action.SyncDataActionDelete && w.resourceType == ResourceTypeEvent {
 		// Event not support delete.
 		return true
 	}
 
-	if meta.GetNamespace() == "kube-system" && w.resourceType == "Event" {
+	if meta.GetNamespace() == "kube-system" && w.resourceType == ResourceTypeEvent {
 		// kubeops start pod with those prefix.
 		name := meta.GetName()
 		if strings.HasPrefix(name, "kube-") ||
@@ -291,7 +291,7 @@ func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncD
 	ownerUID := ""
 	// NOTE: 生成时, 就确认了是否会告警, 即 ownerUID != "", 告警
 	// if Event, get OwnerReference uid
-	if w.resourceType == "Event" {
+	if w.resourceType == ResourceTypeEvent {
 		event, ok := d.(*v1.Event)
 		if !ok {
 			glog.Infof("watcher parse object to Event failed, %v", d)
