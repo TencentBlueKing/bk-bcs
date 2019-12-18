@@ -356,7 +356,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 					if cfg.StoreDriver == "etcd" {
 						cluster = etcd.NewEtcdCluster(cfg, storage, netservice)
 					} else {
-						cluster = mesos.NewMesosCluster(cfg, storage)
+						cluster = mesos.NewMesosCluster(cfg, storage, netservice)
 					}
 
 					if cluster == nil {
@@ -389,11 +389,10 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 
 // GetNetService returns netservice InnerService object for discovery.
 func GetNetService(cfg *types.CmdConfig) (*service.InnerService, error) {
-	discovery := rd.NewRegDiscoverEx(cfg.RegDiscvSvr, 10*time.Second)
+	discovery := rd.NewRegDiscoverEx(cfg.NetServiceZK, 10*time.Second)
 	if err := discovery.Start(); err != nil {
 		return nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
 	}
-	defer discovery.Stop()
 
 	// zknode: bcs/services/endpoints/netservice
 	path := fmt.Sprintf("%s/%s", commtype.BCS_SERV_BASEPATH, commtype.BCS_MODULE_NETSERVICE)

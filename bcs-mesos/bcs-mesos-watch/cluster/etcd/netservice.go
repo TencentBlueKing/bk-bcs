@@ -134,17 +134,11 @@ func (w *NetServiceWatcher) Sync() {
 		return
 	}
 
-	pStatic, ok := resource.Data.(*netservicetypes.NetStatic)
-	if !ok {
-		blog.Warnf("sync netservice ip resource, query from netservice, invalid response")
-		return
-	}
-
 	// sync ip resource.
 	data := &types.BcsSyncData{
 		DataType: "IPPoolStatic",
 		Action:   types.ActionUpdate,
-		Item:     pStatic,
+		Item:     resource.Data,
 	}
 
 	if err := w.report.ReportData(data); err != nil {

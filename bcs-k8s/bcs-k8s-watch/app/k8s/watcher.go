@@ -427,17 +427,12 @@ func (w *NetServiceWatcher) Sync() {
 		return
 	}
 
-	pStatic, ok := resource.Data.(*netservicetypes.NetStatic)
-	if !ok {
-		glog.Warnf("sync netservice ip resource, query from netservice, invalid response")
-		return
-	}
-
 	// sync ip resource.
 	metadata := &action.SyncData{
+		Name:   w.resourceType + "-" + w.clusterID,
 		Kind:   w.resourceType,
 		Action: action.SyncDataActionUpdate,
-		Data:   pStatic,
+		Data:   resource.Data,
 	}
 	w.action.Update(metadata)
 }

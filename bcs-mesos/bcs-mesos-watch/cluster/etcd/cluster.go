@@ -29,7 +29,6 @@ import (
 	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/client/informers"
 	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 
 	"golang.org/x/net/context"
 	"k8s.io/client-go/tools/clientcmd"
@@ -304,11 +303,10 @@ func (ms *EtcdCluster) reportEndpoint(data *types.BcsSyncData) error {
 }
 
 func (ms *EtcdCluster) reportIPPoolStatic(data *types.BcsSyncData) error {
-	dataType := data.Item.(*netservicetypes.NetStatic)
-	blog.V(3).Infof("mesos cluster report netservice ip pool static resource[%+v]", dataType)
+	blog.V(3).Infof("etcd cluster report netservice ip pool static resource[%+v]", data.Item)
 
 	if err := ms.storage.Sync(data); err != nil {
-		blog.Errorf("mesos cluster report netservice ip pool static resource failed, %+v", err)
+		blog.Errorf("etcd cluster report netservice ip pool static resource failed, %+v", err)
 		return err
 	}
 	return nil
