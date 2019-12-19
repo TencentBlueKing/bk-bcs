@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
@@ -27,11 +28,11 @@ import (
 	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 
-	"github.com/emicklei/go-restful"
-	"time"
+	restful "github.com/emicklei/go-restful"
 )
 
 const (
+	//BcsApiPrefix k8s driver url prefix
 	BcsApiPrefix = "/bcsapi/v4/scheduler/k8s/"
 )
 

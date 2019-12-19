@@ -14,11 +14,6 @@
 package etcd
 
 import (
-	"os"
-	"strconv"
-	"sync"
-	"time"
-
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
@@ -26,6 +21,9 @@ import (
 	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
+	"os"
+	"strconv"
+	"sync"
 
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/labels"
@@ -57,19 +55,6 @@ type TaskGroupWatch struct {
 
 func (task *TaskGroupWatch) Work() {
 	blog.Infof("TaskGroupWatch start work")
-
-	hasSynced := task.informer.Informer().HasSynced()
-
-	for {
-		if hasSynced {
-			blog.Infof("TaskGroupWatch taskgroup informer HasSynced")
-			break
-		}
-
-		blog.Infof("TaskGroupWatch waiting taskgroup informer syncing")
-		time.Sleep(time.Millisecond * 100)
-	}
-
 	task.syncAlltaskgroups()
 	blog.Infof("TaskGroupWatch syncAlltaskgroups done")
 

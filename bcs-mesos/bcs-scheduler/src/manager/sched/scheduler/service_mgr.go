@@ -450,8 +450,8 @@ func (mgr *ServiceMgr) syncEndpointInfo(esInfo *exportServiceInfo) {
 
 	esInfo.endpoint.Endpoints = nil
 	for _, application := range apps {
-		label := mgr.getApplicationServiceLabel(esInfo.bcsService, application)
-		if label == "" {
+		isFit := mgr.getApplicationServiceLabel(esInfo.bcsService, application)
+		if !isFit {
 			blog.V(3).Infof("application(%s:%s) not match service: %s", application.RunAs, application.ID, key)
 			continue
 		}
@@ -489,48 +489,60 @@ func (mgr *ServiceMgr) syncEndpointInfo(esInfo *exportServiceInfo) {
 	return
 }
 
-func (mgr *ServiceMgr) getTaskGroupServiceLabel(service *commtypes.BcsService, tskgroup *types.TaskGroup) string {
+func (mgr *ServiceMgr) getTaskGroupServiceLabel(service *commtypes.BcsService, tskgroup *types.TaskGroup) bool {
 
 	if tskgroup.ObjectMeta.NameSpace != "" && service.ObjectMeta.NameSpace != tskgroup.ObjectMeta.NameSpace {
-		return ""
+		blog.V(3).Infof("namespace of service (%s.%s) and taskgroup (%s) is different",
+			service.NameSpace, service.Name, tskgroup.ID)
+		return false
 	}
-
+	//if task.labels==nil, then return false
+	task := tskgroup.Taskgroup[0]
+	if task.Labels == nil {
+		return false
+	}
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
 	for ks, vs := range service.Spec.Selector {
-		task := tskgroup.Taskgroup[0]
-		if task.Labels == nil {
-			return ""
+		vt, ok := task.Labels[ks]
+		if !ok {
+			blog.V(3).Infof("taskgroup label not match service: taskgroup(%s) label(%s:%s) service(%s)",
+				tskgroup.ID, ks, vs, key)
+			return false
 		}
-		for kt, vt := range task.Labels {
-			//blog.V(3).Infof("check task(%s) label(%s:%s) with selector label(%s:%s)", task.Name, kt, vt, ks, vs)
-			if ks == kt && vs == vt {
-				blog.V(3).Infof("task label match service: task(%s) label(%s:%s) service(%s)", task.Name, kt, vt, key)
-				return vt
-			}
+		if vs != vt {
+			blog.V(3).Infof("taskgroup label not match service: taskgroup(%s) label(%s:%s) service(%s)",
+				tskgroup.ID, ks, vs, key)
+			return false
 		}
 	}
-	return ""
+	blog.V(3).Infof("tskgroup label match service: task(%s) service(%s)", tskgroup.Name, key)
+	return true
 }
 
-func (mgr *ServiceMgr) getApplicationServiceLabel(service *commtypes.BcsService, app *types.Application) string {
+func (mgr *ServiceMgr) getApplicationServiceLabel(service *commtypes.BcsService, app *types.Application) bool {
 	if service.ObjectMeta.NameSpace != app.ObjectMeta.NameSpace {
 		blog.V(3).Infof("namespace of service (%s.%s) and application (%s.%s) is different",
 			service.NameSpace, service.Name, app.ObjectMeta.NameSpace, app.ID)
-		return ""
+		return false
 	}
 
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
 	for ks, vs := range service.Spec.Selector {
-
-		for kt, vt := range app.ObjectMeta.Labels {
-			if ks == kt && vs == vt {
-				blog.V(3).Infof("application label match service: application(%s.%s) label(%s:%s) service(%s)",
-					app.RunAs, app.ID, kt, vt, key)
-				return vt
-			}
+		vt, ok := app.ObjectMeta.Labels[ks]
+		if !ok {
+			blog.V(3).Infof("application label not match service: application(%s.%s) label(%s:%s) service(%s)",
+				app.RunAs, app.ID, ks, vs, key)
+			return false
+		}
+		if vs != vt {
+			blog.V(3).Infof("application label not match service: application(%s.%s) label(%s:%s) service(%s)",
+				app.RunAs, app.ID, ks, vs, key)
+			return false
 		}
 	}
-	return ""
+	blog.V(3).Infof("application label match service: application(%s.%s) service(%s)",
+		app.RunAs, app.ID, key)
+	return true
 }
 
 func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *types.TaskGroup) *commtypes.Endpoint {
@@ -670,11 +682,11 @@ func (mgr *ServiceMgr) addTaskGroup(tskgroup *types.TaskGroup) {
 		}
 
 		// check matching of selector and task label
-		label := mgr.getTaskGroupServiceLabel(esInfo.bcsService, tskgroup)
-		if label == "" {
+		isFit := mgr.getTaskGroupServiceLabel(esInfo.bcsService, tskgroup)
+		if !isFit {
 			continue
 		}
-		blog.V(3).Infof("ServiceMgr: %s, match task label(%s:%s) ", key, tskgroup.ID, label)
+		blog.V(3).Infof("ServiceMgr: %s, match taskgroup %s fit ", key, tskgroup.ID)
 
 		podEndpoint := mgr.buildEndpoint(esInfo.bcsService, tskgroup)
 		if podEndpoint == nil {
@@ -720,11 +732,11 @@ func (mgr *ServiceMgr) updateTaskGroup(tskgroup *types.TaskGroup) {
 			continue
 		}
 		// check matching of selector and task label
-		label := mgr.getTaskGroupServiceLabel(esInfo.bcsService, tskgroup)
-		if label == "" {
+		isFit := mgr.getTaskGroupServiceLabel(esInfo.bcsService, tskgroup)
+		if !isFit {
 			continue
 		}
-		blog.V(3).Infof("ServiceMgr: %s, match task label(%s: %s) ", key, tskgroup.ID, label)
+		blog.V(3).Infof("ServiceMgr: %s, match taskgroup %s fit ", key, tskgroup.ID)
 
 		podEndpoint := mgr.buildEndpoint(esInfo.bcsService, tskgroup)
 		if podEndpoint == nil {
@@ -776,12 +788,12 @@ func (mgr *ServiceMgr) deleteTaskGroup(tskgroup *types.TaskGroup) {
 			continue
 		}
 		// check matching of selector and task label
-		label := mgr.getTaskGroupServiceLabel(esInfo.bcsService, tskgroup)
-		if label == "" {
+		isFit := mgr.getTaskGroupServiceLabel(esInfo.bcsService, tskgroup)
+		if !isFit {
 			continue
 		}
 
-		blog.V(3).Infof("ServiceMgr: %s, match task label(%s: %s) ", key, tskgroup.ID, label)
+		blog.V(3).Infof("ServiceMgr: %s, match taskgroup %s fit ", key, tskgroup.ID)
 
 		podEndpoint := mgr.buildEndpoint(esInfo.bcsService, tskgroup)
 		if podEndpoint == nil {

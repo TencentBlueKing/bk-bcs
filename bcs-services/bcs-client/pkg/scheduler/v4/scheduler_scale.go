@@ -28,7 +28,7 @@ func (bs *bcsScheduler) ScaleProcess(clusterID, namespace, name string, instance
 
 func (bs *bcsScheduler) scale(clusterID, namespace, resourceType, name string, instance int) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerScaleResourceURI, bs.bcsApiAddress, namespace, resourceType, name, instance),
+		fmt.Sprintf(bcsSchedulerScaleResourceURI, bs.bcsAPIAddress, namespace, resourceType, name, instance),
 		http.MethodPut,
 		nil,
 		getClusterIDHeader(clusterID),

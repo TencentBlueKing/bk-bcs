@@ -28,7 +28,7 @@ func (bs *bcsScheduler) RollBackProcess(clusterID, namespace string, data []byte
 
 func (bs *bcsScheduler) rollBack(clusterID, namespace, resourceType string, data []byte) error {
 	resp, err := bs.requester.Do(
-		fmt.Sprintf(BcsSchedulerRollBackResourceURI, bs.bcsApiAddress, namespace, resourceType),
+		fmt.Sprintf(bcsSchedulerRollBackResourceURI, bs.bcsAPIAddress, namespace, resourceType),
 		http.MethodPut,
 		data,
 		getClusterIDHeader(clusterID),

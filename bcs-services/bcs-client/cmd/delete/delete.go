@@ -14,13 +14,12 @@
 package delete
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 
 	"github.com/urfave/cli"
 )
 
+//NewDeleteCommand delete sub command
 func NewDeleteCommand() cli.Command {
 	return cli.Command{
 		Name:  "delete",
@@ -28,7 +27,7 @@ func NewDeleteCommand() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment",
+				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment/crd",
 			},
 			cli.StringFlag{
 				Name:  "name, n",
@@ -50,10 +49,7 @@ func NewDeleteCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := deleteF(utils.NewClientContext(c)); err != nil {
-				return err
-			}
-			return nil
+			return deleteF(utils.NewClientContext(c))
 		},
 	}
 }
@@ -78,7 +74,10 @@ func deleteF(c *utils.ClientContext) error {
 		return deleteService(c)
 	case "deploy", "deployment":
 		return deleteDeployment(c)
+	case "crd", "customresourcedefinition":
+		return deleteCustomResourceDefinition(c)
 	default:
-		return fmt.Errorf("invalid type: %s", resourceType)
+		//unkown type, try Custom Resource
+		return deleteCustomResource(c)
 	}
 }

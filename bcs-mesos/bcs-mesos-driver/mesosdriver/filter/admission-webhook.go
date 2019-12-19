@@ -22,25 +22,24 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
 	"bk-bcs/bcs-common/common/http/httpclient"
 	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/zkclient"
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend"
+	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"bk-bcs/bcs-mesos/pkg/client/informers"
+	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	v2lister "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
 
 	"github.com/emicklei/go-restful"
-)
-
-const (
-	RegexUrlApplication = ".*/namespaces/[^/]+/applications$"
-	RegexUrlDeployment  = ".*/namespaces/[^/]+/deployments$"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type AdmissionWebhookFilter struct {
@@ -52,29 +51,80 @@ type AdmissionWebhookFilter struct {
 
 	//key = Operation_Kind
 	admissionHooks map[string]*commtypes.AdmissionWebhookConfiguration
-	//mesos cluster zk client
-	zkClient *zkclient.ZkClient
-	//zk servers
-	zkServers []string
+
+	//admissionwebhook cache.SharedIndexInformer
+	adInformer cache.SharedIndexInformer
+	adLister   v2lister.AdmissionWebhookConfigurationLister
 }
 
-func NewAdmissionWebhookFilter(scheduler backend.Scheduler, zkServers []string) RequestFilterFunction {
+func NewAdmissionWebhookFilter(scheduler backend.Scheduler, kubeconfig string) (RequestFilterFunction, error) {
+	blog.Info("AdmissionWebhookFilter initialize...")
 	hookFilter := &AdmissionWebhookFilter{
-		scheduler:   scheduler,
-		schedClient: scheduler.GetHttpClient(),
-		zkServers:   zkServers,
+		scheduler:      scheduler,
+		schedClient:    scheduler.GetHttpClient(),
+		admissionHooks: make(map[string]*commtypes.AdmissionWebhookConfiguration),
 	}
-	hookFilter.zkClient = zkclient.NewZkClient(zkServers)
 
-	err := hookFilter.zkClient.ConnectEx(time.Second * 5)
+	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		blog.Errorf("AdmissionWebhookFilter connect zk %s error %v", hookFilter.zkServers, err.Error())
-		os.Exit(1)
+		blog.Errorf("AdmissionWebhookFilter build kubeconfig %s error %s", kubeconfig, err.Error())
+		return nil, err
+	}
+	blog.Infof("AdmissionWebhookFilter build kubeconfig %s success", kubeconfig)
+
+	bkbcsClientset, err := internalclientset.NewForConfig(restConfig)
+	if err != nil {
+		blog.Errorf("AdmissionWebhookFilter build clientset error %s", err.Error())
+		return nil, err
 	}
 
-	go hookFilter.start()
+	stopCh := make(chan struct{})
+	factory := informers.NewSharedInformerFactory(bkbcsClientset, time.Minute)
+	hookFilter.adInformer = factory.Bkbcs().V2().AdmissionWebhookConfigurations().Informer()
+	hookFilter.adLister = factory.Bkbcs().V2().AdmissionWebhookConfigurations().Lister()
+	blog.Infof("AdmissionWebhookFilter SharedInformerFactory start...")
+	factory.Start(stopCh)
+	// Wait for all caches to sync.
+	factory.WaitForCacheSync(stopCh)
+	hookFilter.syncAdmissionWebhooks()
 
-	return hookFilter
+	hookFilter.adInformer.AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    hookFilter.addNodeToCache,
+			UpdateFunc: hookFilter.updateNodeInCache,
+			DeleteFunc: hookFilter.deleteNodeFromCache,
+		},
+	)
+	blog.Infof("AdmissionWebhookFilter sync data to cache done")
+
+	return hookFilter, nil
+}
+
+func (hook *AdmissionWebhookFilter) addNodeToCache(obj interface{}) {
+	ad, ok := obj.(*v2.AdmissionWebhookConfiguration)
+	if !ok {
+		blog.Errorf("cannot convert to *v2.Application: %v", obj)
+		return
+	}
+	hook.addAdmissionWebhook(&ad.Spec.AdmissionWebhookConfiguration)
+}
+
+func (hook *AdmissionWebhookFilter) updateNodeInCache(oldObj, newObj interface{}) {
+	ad, ok := newObj.(*v2.AdmissionWebhookConfiguration)
+	if !ok {
+		blog.Errorf("cannot convert to *v2.Application: %v", newObj)
+		return
+	}
+	hook.addAdmissionWebhook(&ad.Spec.AdmissionWebhookConfiguration)
+}
+
+func (hook *AdmissionWebhookFilter) deleteNodeFromCache(obj interface{}) {
+	ad, ok := obj.(*v2.AdmissionWebhookConfiguration)
+	if !ok {
+		blog.Errorf("cannot convert to *v2.Application: %v", obj)
+		return
+	}
+	hook.delAdmissionWebhook(ad.Name)
 }
 
 type Meta struct {
@@ -83,16 +133,6 @@ type Meta struct {
 }
 
 func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
-	/*	//if http method not POST&PUT return
-		if req.Request.Method!=http.MethodPost&&req.Request.Method!=http.MethodPut {
-			return nil, 0
-		}
-		appMatch,_ := regexp.MatchString(RegexUrlApplication,req.Request.RequestURI)
-		depMatch,_ := regexp.MatchString(RegexUrlDeployment,req.Request.RequestURI)
-		if !appMatch&&!depMatch {
-			return nil,0
-		}*/
-
 	body, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil || len(body) == 0 {
 		return 0, nil
@@ -107,55 +147,73 @@ func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 		return 0, nil
 	}
 
-	var operation string
+	var operation commtypes.AdmissionOperation
 	switch req.Request.Method {
 	case http.MethodPost:
 		operation = commtypes.AdmissionOperationCreate
 	case http.MethodPut:
 		operation = commtypes.AdmissionOperationUpdate
 	default:
-		operation = commtypes.AdmissionOperationUnknown
 		blog.V(3).Infof("AdmissionWebhookFilter handler url %s method %s is invalid, and return",
 			req.Request.RequestURI, req.Request.Method)
 		req.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 		return 0, nil
 	}
 
-	uuid := strings.ToUpper(fmt.Sprintf("%s_%s", operation, meta.Kind))
-	admissionHook, ok := hook.admissionHooks[uuid]
-	if !ok {
-		blog.V(3).Infof("AdmissionWebhookFilter handler url %s method %s not match webhook, and return",
-			req.Request.RequestURI, req.Request.Method)
+	var metaKind commtypes.AdmissionResourcesKind
+	switch meta.Kind {
+	case commtypes.BcsDataType_APP:
+		metaKind = commtypes.AdmissionResourcesApplication
+	case commtypes.BcsDataType_DEPLOYMENT:
+		metaKind = commtypes.AdmissionResourcesDeployment
+	default:
+		blog.V(3).Infof("AdmissionWebhookFilter handler url %s metaKind %s is invalid, and return",
+			req.Request.RequestURI, meta.Kind)
 		req.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 		return 0, nil
 	}
 
-	blog.Infof("AdmissionWebhookFilter handler url %s method %s match webhook, and execute webhook",
-		req.Request.RequestURI, req.Request.Method)
+	matchWebhooks := make([]*commtypes.AdmissionWebhookConfiguration, 0)
+	hook.RLock()
+	for _, admissionHook := range hook.admissionHooks {
+		ref := admissionHook.ResourcesRef
+		if operation != ref.Operation || metaKind != ref.Kind {
+			blog.V(3).Infof("AdmissionWebhook %s don't match %s(%s:%s)", admissionHook.Name, meta.Kind,
+				meta.NameSpace, meta.Name)
+			continue
+		}
+		matchWebhooks = append(matchWebhooks, admissionHook)
+	}
+	hook.RUnlock()
+
 	newBody := body
-	for _, webhook := range admissionHook.AdmissionWebhooks {
-		if webhook.NamespaceSelector != nil && !webhook.NamespaceSelector.CheckSelector(meta.NameSpace) {
-			blog.Infof("admissionwebhook %s webhook %s NamespaceSelector namespace(%s) not match, then continue",
-				uuid, webhook.Name, meta.NameSpace)
-			continue
-		}
-
-		hookBody, err := hook.requestAdmissionWebhook(webhook, newBody)
-		if err != nil {
-			blog.Errorf("admissionwebhook %s request webhoook %s error %s", uuid, webhook.Name, err.Error())
-			if webhook.FailurePolicy == commtypes.WebhookFailurePolicyFail {
-				blog.Errorf("AdmissionWebhookFilter handler url %s method %s failed, and policy fail return",
-					req.Request.RequestURI, req.Request.Method)
-				return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("request webhoook %s error %s", webhook.Name, err.Error())
+	for _, admissionHook := range matchWebhooks {
+		blog.Infof("AdmissionWebhook %s match %s(%s:%s), and execute webhook",
+			admissionHook.Name, meta.Kind, meta.NameSpace, meta.Name)
+		for _, webhook := range admissionHook.AdmissionWebhooks {
+			if webhook.NamespaceSelector != nil && !webhook.NamespaceSelector.CheckSelector(meta.NameSpace) {
+				blog.Infof("admissionwebhook %s webhook %s NamespaceSelector namespace(%s) not match, then continue",
+					admissionHook.Name, webhook.Name, meta.NameSpace)
+				continue
 			}
-			blog.Infof("AdmissionWebhookFilter handler url %s method %s failed, and policy ignore continue",
-				req.Request.RequestURI, req.Request.Method)
-			continue
-		}
-		blog.V(3).Infof("admissionwebhook %s webhook %s handle object(%s:%s) success",
-			uuid, webhook.Name, meta.NameSpace, meta.Name)
 
-		newBody = hookBody
+			hookBody, err := hook.requestAdmissionWebhook(webhook, newBody)
+			if err != nil {
+				blog.Errorf("admissionwebhook %s request webhoook %s error %s", admissionHook.Name, webhook.Name, err.Error())
+				if webhook.FailurePolicy == commtypes.WebhookFailurePolicyFail {
+					blog.Errorf("AdmissionWebhookFilter handler url %s method %s failed, and policy fail return",
+						req.Request.RequestURI, req.Request.Method)
+					return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("request webhoook %s error %s", webhook.Name, err.Error())
+				}
+				blog.Infof("AdmissionWebhookFilter handler url %s method %s failed, and policy ignore continue",
+					req.Request.RequestURI, req.Request.Method)
+				continue
+			}
+			blog.V(3).Infof("admissionwebhook %s webhook %s handle object(%s:%s) success",
+				admissionHook.Name, webhook.Name, meta.NameSpace, meta.Name)
+
+			newBody = hookBody
+		}
 	}
 
 	req.Request.Body = ioutil.NopCloser(bytes.NewBuffer(newBody))
@@ -201,124 +259,52 @@ func (hook *AdmissionWebhookFilter) initWebhookClient(pemCerts []byte) *http.Cli
 	return client
 }
 
-func (hook *AdmissionWebhookFilter) start() {
-	//loop sync all admission webhooks
-	go hook.loopSyncAdmissionWebhooks()
-}
-
-func (hook *AdmissionWebhookFilter) loopSyncAdmissionWebhooks() {
-	time.Sleep(time.Second * 3)
-	hook.syncAdmissionWebhooks()
-
-	ticker := time.NewTicker(time.Second * 60)
-
-	for {
-		select {
-		case <-ticker.C:
-			hook.syncAdmissionWebhooks()
-		}
-	}
-}
-
 func (hook *AdmissionWebhookFilter) syncAdmissionWebhooks() {
-	admissions, err := hook.fetchAllAdmissionWebhooks()
+	admissions, err := hook.adLister.List(labels.Everything())
 	if err != nil {
 		blog.Errorf("AdmissionWebhookFilter fetch all admission webhooks error %s", err.Error())
 		return
 	}
 
-	admissionHooks := make(map[string]*commtypes.AdmissionWebhookConfiguration)
-	for _, ad := range admissions {
-		key := strings.ToUpper(fmt.Sprintf("%s_%s", ad.ResourcesRef.Operation, ad.ResourcesRef.Kind))
-		blog.V(3).Infof("AdmissionWebhookFilter add AdmissionWebhook(%s:%s) key %s", ad.NameSpace, ad.Name, key)
-		//get webhook servers info
-		for _, webhook := range ad.AdmissionWebhooks {
-			servers, err := hook.fetchWebhookServers(webhook.ClientConfig.Namespace, webhook.ClientConfig.Name)
-			if err != nil {
-				blog.Errorf("AdmissionWebhookConfiguration(%s:%s) webhook %s fetch server error %s",
-					ad.NameSpace, ad.Name, webhook.Name, err.Error())
-				continue
-			}
-
-			webhook.WebhookServers = servers
-		}
-
-		admissionHooks[key] = ad
+	for _, admission := range admissions {
+		ad := admission.Spec.AdmissionWebhookConfiguration
+		hook.addAdmissionWebhook(&ad)
 	}
+}
 
+func (hook *AdmissionWebhookFilter) addAdmissionWebhook(ad *commtypes.AdmissionWebhookConfiguration) {
 	hook.Lock()
-	hook.admissionHooks = admissionHooks
+	defer hook.Unlock()
+
+	if len(ad.AdmissionWebhooks) == 0 {
+		blog.Errorf("AdmissionWebhookConfiguration %s have no AdmissionWebhooks, and return", ad.Name)
+		return
+	}
+	//get webhook servers info
+	for _, webhook := range ad.AdmissionWebhooks {
+		var server string
+		if webhook.ClientConfig.Url != "" {
+			server = webhook.ClientConfig.Url
+		} else {
+			if webhook.ClientConfig.Port <= 0 {
+				webhook.ClientConfig.Port = 443
+			}
+			if webhook.ClientConfig.Path == "" {
+				webhook.ClientConfig.Path = "/"
+			}
+			server = fmt.Sprintf("https://%s.%s:%d%s", webhook.ClientConfig.Namespace, webhook.ClientConfig.Name,
+				webhook.ClientConfig.Port, webhook.ClientConfig.Path)
+		}
+
+		blog.Infof("AdmissionWebhookFilter add AdmissionWebhook %s Name %s server %s", ad.Name, webhook.Name, server)
+		webhook.WebhookServers = []string{server}
+	}
+
+	hook.admissionHooks[ad.Name] = ad
+}
+
+func (hook *AdmissionWebhookFilter) delAdmissionWebhook(name string) {
+	hook.Lock()
+	delete(hook.admissionHooks, name)
 	hook.Unlock()
-}
-
-func (hook *AdmissionWebhookFilter) fetchAllAdmissionWebhooks() ([]*commtypes.AdmissionWebhookConfiguration, error) {
-	blog.V(3).Info("AdmissionWebhookFilter fetch all admissionwebhooks")
-
-	var err error
-	if hook.scheduler.GetHost() == "" {
-		err = fmt.Errorf("no scheduler is connected by driver")
-		return nil, err
-	}
-
-	url := hook.scheduler.GetHost() + "/v1/admissionwebhooks"
-	reply, err := hook.schedClient.GET(url, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp *bhttp.APIRespone
-	err = json.Unmarshal(reply, &resp)
-	if err != nil {
-		return nil, fmt.Errorf("Unmarshal data %s to bhttp.APIRespone error %s", string(reply), err.Error())
-	}
-
-	if resp.Code != common.BcsSuccess {
-		return nil, fmt.Errorf("request url %s resp code %d message %s", url, resp.Code, resp.Message)
-	}
-
-	var admissions []*commtypes.AdmissionWebhookConfiguration
-	by, _ := json.Marshal(resp.Data)
-	err = json.Unmarshal(by, &admissions)
-	if err != nil {
-		return nil, fmt.Errorf("Unmarshal data %s to commtypes.AdmissionWebhookConfiguration error %s",
-			string(by), err.Error())
-	}
-
-	return admissions, nil
-}
-
-func (hook *AdmissionWebhookFilter) fetchWebhookServers(ns, name string) ([]string, error) {
-	key := fmt.Sprintf("/blueking/endpoint/%s/%s", ns, name)
-	data, err := hook.zkClient.Get(key)
-	if err != nil {
-		return nil, fmt.Errorf("AdmissionWebhookFilter get zk %s error %s", key, err.Error())
-	}
-
-	var endpoints *commtypes.BcsEndpoint
-	err = json.Unmarshal([]byte(data), &endpoints)
-	if err != nil {
-		return nil, err
-	}
-
-	servers := make([]string, 0)
-	for _, end := range endpoints.Endpoints {
-		if len(end.Ports) == 0 {
-			blog.Errorf("webhook(%s:%s) Endpoints Ports is empty", ns, name)
-			continue
-		}
-
-		port := end.Ports[0]
-		switch end.NetworkMode {
-		case "BRIDGE":
-			server := fmt.Sprintf("https://%s.%s:%d", endpoints.Name, endpoints.NameSpace, port.HostPort)
-			servers = append(servers, server)
-		default:
-			server := fmt.Sprintf("https://%s.%s:%d", endpoints.Name, endpoints.NameSpace, port.ContainerPort)
-			servers = append(servers, server)
-		}
-
-		break
-	}
-
-	return servers, nil
 }

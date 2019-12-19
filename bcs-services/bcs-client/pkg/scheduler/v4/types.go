@@ -20,4 +20,9 @@ const (
 	BcsSchedulerResourceSecret      = "secrets"
 	BcsSchedulerResourceService     = "services"
 	BcsSchedulerResourceDeployment  = "deployments"
+
+	//AllNamespace selector
+	AllNamespace = ""
+	//StatusKind for CRD error message
+	StatusKind = "Status"
 )

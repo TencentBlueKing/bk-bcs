@@ -2,6 +2,7 @@ kind: StatefulSet
 apiVersion: apps/v1beta1
 metadata:
   name: csi-tencentcloud
+  namespace: kube-system
 spec:
   serviceName: "csi-tencentcloud"
   replicas: 1
@@ -40,7 +41,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-tencentcloud
-          image: ${csiCbsImage}
+          image: ${bcsCSICBSImage}
           command:
           - "/bin/bcs-k8s-csi-tencentcloud"
           args:

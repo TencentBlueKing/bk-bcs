@@ -24,30 +24,21 @@ import (
 	"bk-bcs/bcs-services/bcs-sd-prometheus/types"
 )
 
-const (
-	DefaultbcsServiceDiscoveryKey      = "bcsServiceDiscovery"
-	DefaultbcsServiceDiscoveryFileName = "bcs_service_sd_config.json"
-)
-
 type bcsServiceDiscovery struct {
 	zkAddr     string
-	key        string
 	sdFilePath string
 
 	eventHandler    EventHandleFunc
 	moduleDiscovery moduleDiscovery.ModuleDiscovery
-	modules         []string
+	module          string
 }
 
 // new bcs service module service discovery
-func NewBcsServiceDiscovery(zkAddr string, promFilePrefix string) (Discovery, error) {
+func NewBcsServiceDiscovery(zkAddr string, promFilePrefix string, module string) (Discovery, error) {
 	disc := &bcsServiceDiscovery{
 		zkAddr:     zkAddr,
-		key:        DefaultbcsServiceDiscoveryKey,
-		sdFilePath: path.Join(promFilePrefix, DefaultbcsServiceDiscoveryFileName),
-		modules: []string{
-			commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE,
-		},
+		sdFilePath: path.Join(promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName)),
+		module:     module,
 	}
 
 	return disc, nil
@@ -66,72 +57,70 @@ func (disc *bcsServiceDiscovery) Start() error {
 }
 
 func (disc *bcsServiceDiscovery) GetDiscoveryKey() string {
-	return disc.key
+	return disc.module
 }
 
 func (disc *bcsServiceDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error) {
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
-	for _, module := range disc.modules {
-		servs, err := disc.moduleDiscovery.GetModuleServers(module)
-		if err != nil {
-			blog.Errorf("discovery %s get module %s error %s", disc.key, module, err.Error())
-			continue
-		}
+	servs, err := disc.moduleDiscovery.GetModuleServers(disc.module)
+	if err != nil {
+		blog.Errorf("discovery %s get module %s error %s", disc.module, disc.module, err.Error())
+		return nil, err
+	}
 
-		for _, serv := range servs {
-			var conf *types.PrometheusSdConfig
-			switch module {
-			case commtypes.BCS_MODULE_APISERVER:
-				ser, ok := serv.(*commtypes.APIServInfo)
-				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to APIServInfo", disc.key, module)
-					break
-				}
-
-				conf = &types.PrometheusSdConfig{
-					Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-					Labels: map[string]string{
-						DefaultBcsModuleLabelKey: module,
-					},
-				}
-
-			case commtypes.BCS_MODULE_STORAGE:
-				ser, ok := serv.(*commtypes.BcsStorageInfo)
-				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to BcsStorageInfo", disc.key, module)
-					break
-				}
-
-				conf = &types.PrometheusSdConfig{
-					Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-					Labels: map[string]string{
-						DefaultBcsModuleLabelKey: module,
-					},
-				}
-
-			case commtypes.BCS_MODULE_NETSERVICE:
-				ser, ok := serv.(*commtypes.NetServiceInfo)
-				if !ok {
-					blog.Errorf("discovery %s module %s failed convert to NetServiceInfo", disc.key, module)
-					break
-				}
-
-				conf = &types.PrometheusSdConfig{
-					Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-					Labels: map[string]string{
-						DefaultBcsModuleLabelKey: module,
-					},
-				}
-
-			default:
-				blog.Errorf("discovery %s module %s not found", disc.key, module)
+	for _, serv := range servs {
+		var conf *types.PrometheusSdConfig
+		switch disc.module {
+		case commtypes.BCS_MODULE_APISERVER:
+			ser, ok := serv.(*commtypes.APIServInfo)
+			if !ok {
+				blog.Errorf("discovery %s module %s failed convert to APIServInfo", disc.module, disc.module)
+				break
 			}
 
-			if conf != nil {
-				promConfigs = append(promConfigs, conf)
+			conf = &types.PrometheusSdConfig{
+				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
+				Labels: map[string]string{
+					DefaultBcsModuleLabelKey: disc.module,
+				},
 			}
 
+		case commtypes.BCS_MODULE_STORAGE:
+			ser, ok := serv.(*commtypes.BcsStorageInfo)
+			if !ok {
+				blog.Errorf("discovery %s module %s failed convert to BcsStorageInfo", disc.module, disc.module)
+				break
+			}
+
+			conf = &types.PrometheusSdConfig{
+				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
+				Labels: map[string]string{
+					DefaultBcsModuleLabelKey: disc.module,
+				},
+			}
+
+		case commtypes.BCS_MODULE_NETSERVICE:
+			ser, ok := serv.(*commtypes.NetServiceInfo)
+			if !ok {
+				blog.Errorf("discovery %s module %s failed convert to NetServiceInfo", disc.module, disc.module)
+				break
+			}
+
+			conf = &types.PrometheusSdConfig{
+				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
+				Labels: map[string]string{
+					DefaultBcsModuleLabelKey: disc.module,
+				},
+			}
+
+		default:
+			blog.Errorf("discovery %s module %s not found", disc.module, disc.module)
 		}
+
+		if conf != nil {
+			promConfigs = append(promConfigs, conf)
+		}
+
 	}
 
 	return promConfigs, nil
@@ -146,7 +135,7 @@ func (disc *bcsServiceDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 }
 
 func (disc *bcsServiceDiscovery) handleEventFunc(module string) {
-	blog.Infof("discovery %s handle module %s event", disc.key, module)
+	blog.Infof("discovery %s handle module %s event", disc.module, module)
 	disc.eventHandler(disc.GetDiscoveryKey())
 }
 

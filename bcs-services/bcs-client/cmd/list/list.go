@@ -14,21 +14,20 @@
 package list
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 
 	"github.com/urfave/cli"
 )
 
+//NewListCommand sub list command
 func NewListCommand() cli.Command {
 	return cli.Command{
 		Name:  "list",
-		Usage: "list brief information of application, taskgroup, agent, cluster etc.",
+		Usage: "list brief information of application, taskgroup, agent, cluster, customresource and etc.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "List type, ns/app/process/taskgroup/service/configmap/secret/deployment/endpoint/agent",
+				Usage: "List type, ns/application(app)/process/taskgroup/service/configmap/secret/deployment/endpoint/agent/customresourcedefintion(crd)",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -49,10 +48,7 @@ func NewListCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := list(utils.NewClientContext(c)); err != nil {
-				return err
-			}
-			return nil
+			return list(utils.NewClientContext(c))
 		},
 	}
 }
@@ -85,11 +81,14 @@ func list(c *utils.ClientContext) error {
 		return listEndpoint(c)
 	case "agent":
 		return listAgent(c)
+	case "crd", "customresourcedefinition":
+		return listCustomResourceDefinition(c)
 	default:
-		return fmt.Errorf("invalid type: %s", resourceType)
+		//unkown type, try custom resource
+		return listCustomResource(c)
 	}
 }
 
 const (
-	FilterNamespaceTag = "namespace"
+	filterNamespaceTag = "namespace"
 )

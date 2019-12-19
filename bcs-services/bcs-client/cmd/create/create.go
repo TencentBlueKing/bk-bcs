@@ -14,13 +14,12 @@
 package create
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 
 	"github.com/urfave/cli"
 )
 
+//NewCreateCommand sub command create registration
 func NewCreateCommand() cli.Command {
 	return cli.Command{
 		Name:  "create",
@@ -40,10 +39,7 @@ func NewCreateCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := create(utils.NewClientContext(c)); err != nil {
-				return err
-			}
-			return nil
+			return create(utils.NewClientContext(c))
 		},
 	}
 }
@@ -68,7 +64,10 @@ func create(c *utils.ClientContext) error {
 		return createService(c)
 	case "deploy", "deployment":
 		return createDeployment(c)
+	case "crd", "customresourcedefinition":
+		return createCustomResourceDefinition(c)
 	default:
-		return fmt.Errorf("invalid type: %s", resourceType)
+		//unkown type, try CustomResource
+		return createCustomResource(c)
 	}
 }

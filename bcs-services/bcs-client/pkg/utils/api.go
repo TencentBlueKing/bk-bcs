@@ -21,8 +21,10 @@ import (
 
 type ApiRequester interface {
 	Do(uri, method string, data []byte, header ...*http.HeaderSet) ([]byte, error)
+	DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (*httpclient.HttpRespone, error)
 }
 
+//NewApiRequester api request
 func NewApiRequester(clientSSL *tls.Config, bcsToken string) ApiRequester {
 	return &bcsApiRequester{
 		clientSSL: clientSSL,
@@ -51,4 +53,21 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	}
 
 	return httpCli.Request(uri, method, nil, data)
+}
+
+func (b *bcsApiRequester) DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (*httpclient.HttpRespone, error) {
+	httpCli := httpclient.NewHttpClient()
+	httpCli.SetHeader("Content-Type", "application/json")
+	httpCli.SetHeader("Accept", "application/json")
+	httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
+
+	if header != nil {
+		httpCli.SetBatchHeader(header)
+	}
+
+	if b.clientSSL != nil {
+		httpCli.SetTlsVerityConfig(b.clientSSL)
+	}
+
+	return httpCli.RequestEx(uri, method, nil, data)
 }

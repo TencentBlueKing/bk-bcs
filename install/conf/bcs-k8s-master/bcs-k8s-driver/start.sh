@@ -30,9 +30,9 @@ chmod +x bcs-k8s-driver
  --secure-port ${HOST_PORT} \
  --kube-master-url=${KUBE_MASTER_URL} \
  --host-ip=${HOST_IP} \
- --server-ca-file=bcs-ca.pem \
- --server-cert-file=bcs-server.pem \
- --server-key-file=bcs-server-key.pem \
+ --server-ca-file=bcs-ca.crt \
+ --server-cert-file=bcs-server.crt \
+ --server-key-file=bcs-server.key \
  --zk-url=${ZK_URLS} \
  --custom-report-address=${REPORT_IP} \
  --custom-report-port=${REPORT_PORT} \

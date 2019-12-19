@@ -14,11 +14,6 @@
 package etcd
 
 import (
-	"os"
-	"strconv"
-	"sync"
-	"time"
-
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
@@ -26,6 +21,9 @@ import (
 	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
+	"os"
+	"strconv"
+	"sync"
 
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/labels"
@@ -63,18 +61,6 @@ type AppWatch struct {
 
 func (app *AppWatch) Work() {
 	blog.Infof("AppWatch start work")
-
-	hasSynced := app.informer.Informer().HasSynced()
-	for {
-		if hasSynced {
-			blog.Infof("AppWatch application informer HasSynced")
-			break
-		}
-
-		blog.Infof("AppWatch waiting application informer syncing")
-		time.Sleep(time.Millisecond * 100)
-	}
-
 	app.syncAllApplications()
 	blog.Infof("AppWatch syncAllApplications done")
 

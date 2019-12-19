@@ -17,8 +17,8 @@ import (
 	ingressv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
 	informerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/clb/v1"
-	listerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/clb/v1"
 	ingressClientV1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
+	listerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/clb/v1"
 	"bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
 
 	"fmt"

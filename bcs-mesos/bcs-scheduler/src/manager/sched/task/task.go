@@ -247,6 +247,23 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 					task.Labels[k] = v
 				}
 			}
+			if version.ObjectMeta.Annotations != nil {
+				if task.Labels == nil {
+					task.Labels = make(map[string]string)
+				}
+				for k, v := range version.ObjectMeta.Annotations {
+					if k == requestIpLabel {
+						k = "io.tencent.bcs.netsvc.requestip"
+						splitV := strings.Split(v, "|")
+						if len(splitV) >= 1 {
+							v = splitV[0]
+						}
+
+						blog.Info("task(%s) set io.tencent.bcs.netsvc.requestip = %s", task.ID, v)
+					}
+					task.Labels[k] = v
+				}
+			}
 
 			task.Status = types.TASK_STATUS_STAGING
 			task.UpdateTime = time.Now().Unix()

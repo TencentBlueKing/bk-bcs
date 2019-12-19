@@ -13,6 +13,14 @@
 
 package utils
 
+import (
+	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"fmt"
+)
+
+/*
+command line option for bcs-client
+*/
 const (
 	OptionClusterID     = "clusterid"
 	OptionNamespace     = "namespace"
@@ -36,3 +44,57 @@ const (
 	OptionScalar        = "scalar"
 	OptionAll           = "all"
 )
+
+//ValidateCustomResourceType check if speicifed CustomResource was registered before.
+//return plural for api request, error if happened
+func ValidateCustomResourceType(sche v4.Scheduler, clusterID, apiVersion, kind, cmdType string) (string, error) {
+	list, err := sche.ListCustomResourceDefinition(clusterID)
+	if err != nil {
+		DebugPrintf("list all CustomResourceDefinition in cluster %s failed, %s", clusterID, err.Error())
+		return "", err
+	}
+	if len(list.Items) == 0 {
+		return "", fmt.Errorf("invalid type %s", cmdType)
+	}
+	DebugPrintf("##DEBUG##: %v", list.Items)
+	//validate apiVersion, kind & type
+	found := false
+	plural := ""
+	for _, item := range list.Items {
+		dstAPIVersion := item.Spec.Group + "/" + item.Spec.Version
+		if apiVersion != dstAPIVersion {
+			continue
+		}
+		if item.Spec.Names.Singular == cmdType && item.Spec.Names.Kind == kind {
+			found = true
+			plural = item.Spec.Names.Plural
+			break
+		}
+	}
+	if !found {
+		return "", fmt.Errorf("invalid type: %s, even not match in CustomResource", cmdType)
+	}
+	return plural, nil
+}
+
+//GetCustomResourceType get Custom Resource type from command line option
+//returns: apiVersion, plural, errror if happened
+func GetCustomResourceType(sche v4.Scheduler, cluster, cmdType string) (string, string, error) {
+	list, err := sche.ListCustomResourceDefinition(cluster)
+	if err != nil {
+		DebugPrintf("list all CustomResourceDefinition failed, %s", err.Error())
+		return "", "", err
+	}
+	if len(list.Items) == 0 {
+		return "", "", fmt.Errorf("invalid type %s", cmdType)
+	}
+	DebugPrintf("##DEBUG##: %v", list.Items)
+	//validate apiVersion, kind & type
+	for _, item := range list.Items {
+		if item.Spec.Names.Singular == cmdType {
+			apiVersion := item.Spec.Group + "/" + item.Spec.Version
+			return apiVersion, item.Spec.Names.Plural, nil
+		}
+	}
+	return "", "", fmt.Errorf("invalid type: %s, even not match CustomResource", cmdType)
+}
