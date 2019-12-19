@@ -186,5 +186,13 @@ func (whSvr *WebhookServer) createPatch(pod *corev1.Pod) ([]byte, error) {
 		patch = append(patch, logConfInjectPatch...)
 	}
 
+	if whSvr.Injects.DbPriv.DbPrivInject {
+		dbPrivConfInjectPatch, err := whSvr.K8sDbPrivConfInject.InjectContent(pod)
+		if err != nil {
+			return nil, fmt.Errorf("failed to inject db privilege conf: %s", err.Error())
+		}
+		patch = append(patch, dbPrivConfInjectPatch...)
+	}
+
 	return json.Marshal(patch)
 }

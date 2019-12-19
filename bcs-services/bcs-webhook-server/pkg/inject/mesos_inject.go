@@ -104,6 +104,11 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 		}
 
 		injectedDeployment, err = whSvr.mesosDeploymentInject(deployment)
+		if err != nil {
+			blog.Errorf("failed to inject to deployment: %s\n", err.Error())
+			http.Error(w, fmt.Sprintf("failed to inject to deployment: %s", err.Error()), http.StatusInternalServerError)
+		}
+
 		resp, err := json.Marshal(injectedDeployment)
 		if err != nil {
 			blog.Errorf("Could not encode response: %v", err)

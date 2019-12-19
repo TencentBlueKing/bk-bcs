@@ -47,6 +47,13 @@ func Parse(ops *ServerOption) error {
 }
 
 type InjectOptions struct {
-	LogConfEnv          bool `json:"log_conf" value:"false" usage:"whether inject log config to container env"`
-	DbPrivInitContainer bool `json:"db_privilege" value:"false" usage:"whether inject db privileges init-container"`
+	LogConfEnv bool          `json:"log_conf" value:"false" usage:"whether inject log config to container env"`
+	DbPriv     DbPrivOptions `json:"db_privilege"`
+}
+
+type DbPrivOptions struct {
+	DbPrivInject       bool   `json:"db_privilege_inject" value:"false" usage:"whether inject db privileges init-container"`
+	NetworkType        string `json:"network_type" value:"overlay" usage:"network type of this cluster, overlay or underlay"`
+	EsbUrl             string `json:"esb_url" value:"" usage:"esb api url to privilege"`
+	InitContainerImage string `json:"init_container_image" value:"" usage:"the image name of init-container to inject"`
 }

@@ -18,6 +18,14 @@ limitations under the License.
 
 package v2
 
+// BcsDbPrivConfigListerExpansion allows custom methods to be added to
+// BcsDbPrivConfigLister.
+type BcsDbPrivConfigListerExpansion interface{}
+
+// BcsDbPrivConfigNamespaceListerExpansion allows custom methods to be added to
+// BcsDbPrivConfigNamespaceLister.
+type BcsDbPrivConfigNamespaceListerExpansion interface{}
+
 // BcsLogConfigListerExpansion allows custom methods to be added to
 // BcsLogConfigLister.
 type BcsLogConfigListerExpansion interface{}

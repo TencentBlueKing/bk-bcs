@@ -28,12 +28,17 @@ import (
 
 type BkbcsV2Interface interface {
 	RESTClient() rest.Interface
+	BcsDbPrivConfigsGetter
 	BcsLogConfigsGetter
 }
 
 // BkbcsV2Client is used to interact with features provided by the bkbcs.tencent.com group.
 type BkbcsV2Client struct {
 	restClient rest.Interface
+}
+
+func (c *BkbcsV2Client) BcsDbPrivConfigs(namespace string) BcsDbPrivConfigInterface {
+	return newBcsDbPrivConfigs(c, namespace)
 }
 
 func (c *BkbcsV2Client) BcsLogConfigs(namespace string) BcsLogConfigInterface {

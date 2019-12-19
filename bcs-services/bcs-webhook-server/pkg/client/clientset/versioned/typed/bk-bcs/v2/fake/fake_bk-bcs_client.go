@@ -29,6 +29,10 @@ type FakeBkbcsV2 struct {
 	*testing.Fake
 }
 
+func (c *FakeBkbcsV2) BcsDbPrivConfigs(namespace string) v2.BcsDbPrivConfigInterface {
+	return &FakeBcsDbPrivConfigs{c, namespace}
+}
+
 func (c *FakeBkbcsV2) BcsLogConfigs(namespace string) v2.BcsLogConfigInterface {
 	return &FakeBcsLogConfigs{c, namespace}
 }

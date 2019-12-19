@@ -34,8 +34,14 @@ import (
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/k8s"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/mesos"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	clientGoCache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+)
+
+const (
+	DbPrivilegeSecretName = "bcs-db-privilege"
 )
 
 //Run bcs log webhook server
@@ -45,7 +51,7 @@ func Run(op *options.ServerOption) {
 
 	whSvr, err := NewWebhookServer(conf)
 	if err != nil {
-		blog.Errorf("create webhook server error %s, and exit", err.Error())
+		blog.Errorf("create webhook server error: %s, and exit", err.Error())
 		os.Exit(1)
 	}
 
@@ -96,6 +102,12 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 	if err != nil {
 		return nil, fmt.Errorf("error building kube config: %s\n", err.Error())
 	}
+	kubeClient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("error building kubernetes clientset: %s", err.Error())
+	}
+	whsvr.KubeClient = kubeClient
+
 	externalClient, err := apiextensionsclient.NewForConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error building external clientset: %s", err.Error())
@@ -118,25 +130,64 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 
 		bcsLogConfigInformer := factory.Bkbcs().V2().BcsLogConfigs()
 		whsvr.BcsLogConfigLister = bcsLogConfigInformer.Lister()
-		k8sLogConfInject := k8s.NewLogConfInject(whsvr.BcsLogConfigLister)
-		whsvr.K8sLogConfInject = k8sLogConfInject
-		mesosLogConfInject := mesos.NewLogConfInject(whsvr.BcsLogConfigLister)
-		whsvr.MesosLogConfInject = mesosLogConfInject
+
+		switch whsvr.EngineType {
+		case "kubernetes":
+			k8sLogConfInject := k8s.NewLogConfInject(whsvr.BcsLogConfigLister)
+			whsvr.K8sLogConfInject = k8sLogConfInject
+		case "mesos":
+			mesosLogConfInject := mesos.NewLogConfInject(whsvr.BcsLogConfigLister)
+			whsvr.MesosLogConfInject = mesosLogConfInject
+		}
 
 		go factory.Start(stopCh)
 
-		blog.Infof("Waiting for inormer caches to sync")
-		blog.Infof("sleep 2 seconds to wait for crd to be ready")
-		time.Sleep(2 * time.Second)
+		blog.Infof("Waiting for BcsLogConfig inormer caches to sync")
+		blog.Infof("sleep 1 seconds to wait for BcsLogConfig crd to be ready")
+		time.Sleep(1 * time.Second)
 		if ok := clientGoCache.WaitForCacheSync(stopCh, bcsLogConfigInformer.Informer().HasSynced); !ok {
+			return nil, fmt.Errorf("failed to wait for caches to sync")
+		}
+	}
+
+	if conf.Injects.DbPriv.DbPrivInject {
+		dbPrivCreated, err := createBcsDbPrivConfig(externalClient)
+		if err != nil {
+			return nil, fmt.Errorf("error creating crd: %s", err.Error())
+		}
+		blog.Infof("created BcsDbPrivConfig crd: %t", dbPrivCreated)
+
+		bcsDbPrivConfigInformer := factory.Bkbcs().V2().BcsDbPrivConfigs()
+		whsvr.BcsDbPrivConfigLister = bcsDbPrivConfigInformer.Lister()
+
+		dbPrivSecret, err := whsvr.KubeClient.CoreV1().Secrets(metav1.NamespaceSystem).Get(DbPrivilegeSecretName, metav1.GetOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("error when get db privilege secret in cluster: %s", err.Error())
+		}
+
+		switch whsvr.EngineType {
+		case "kubernetes":
+			k8sDbPrivConfInject := k8s.NewDbPrivConfInject(whsvr.BcsDbPrivConfigLister, whsvr.Injects, dbPrivSecret)
+			whsvr.K8sDbPrivConfInject = k8sDbPrivConfInject
+		case "mesos":
+			mesosDbPrivConfInject := mesos.NewDbPrivConfInject(whsvr.BcsDbPrivConfigLister)
+			whsvr.MesosDbPrivConfInject = mesosDbPrivConfInject
+		}
+
+		go factory.Start(stopCh)
+
+		blog.Infof("Waiting for BcsDbPrivConfig inormer caches to sync")
+		blog.Infof("sleep 1 seconds to wait for BcsDbPrivConfig crd to be ready")
+		time.Sleep(1 * time.Second)
+		if ok := clientGoCache.WaitForCacheSync(stopCh, bcsDbPrivConfigInformer.Informer().HasSynced); !ok {
 			return nil, fmt.Errorf("failed to wait for caches to sync")
 		}
 	}
 
 	// define http server and server handler
 	mux := http.NewServeMux()
-	mux.HandleFunc("/bcs/log_inject/v1/k8s", whsvr.K8sLogInject)
-	mux.HandleFunc("/bcs/log_inject/v1/mesos", whsvr.MesosLogInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/k8s", whsvr.K8sLogInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/mesos", whsvr.MesosLogInject)
 	whsvr.Server.Handler = mux
 
 	return whsvr, nil

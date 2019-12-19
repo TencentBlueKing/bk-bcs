@@ -18,4 +18,6 @@ limitations under the License.
 
 package v2
 
+type BcsDbPrivConfigExpansion interface{}
+
 type BcsLogConfigExpansion interface{}

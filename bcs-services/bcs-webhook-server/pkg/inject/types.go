@@ -21,14 +21,22 @@ import (
 	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/k8s"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/mesos"
+	"k8s.io/client-go/kubernetes"
 )
 
 type WebhookServer struct {
-	Server             *http.Server
-	ClientSet          *internalclientset.Clientset
-	BcsLogConfigLister listers.BcsLogConfigLister
-	EngineType         string //kubernetes or mesos
-	Injects            options.InjectOptions
-	K8sLogConfInject   k8s.K8sInject
-	MesosLogConfInject mesos.MesosInject
+	Server     *http.Server
+	KubeClient kubernetes.Interface
+	ClientSet  *internalclientset.Clientset
+	EngineType string //kubernetes or mesos
+	Injects    options.InjectOptions
+
+	BcsLogConfigLister    listers.BcsLogConfigLister
+	BcsDbPrivConfigLister listers.BcsDbPrivConfigLister
+
+	K8sLogConfInject    k8s.K8sInject
+	K8sDbPrivConfInject k8s.K8sInject
+
+	MesosLogConfInject    mesos.MesosInject
+	MesosDbPrivConfInject mesos.MesosInject
 }
