@@ -400,6 +400,7 @@ func GetNetService(cfg *types.CmdConfig) (*service.InnerService, *rd.RegDiscover
 	path := fmt.Sprintf("%s/%s", commtype.BCS_SERV_BASEPATH, commtype.BCS_MODULE_NETSERVICE)
 	eventChan, err := discovery.DiscoverService(path)
 	if err != nil {
+		discovery.Stop()
 		return nil, nil, fmt.Errorf("discover netservice failed, %+v", err)
 	}
 
