@@ -219,14 +219,14 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	bcsTLSConfig := config.BCS.TLS
 
 	glog.Info("getting storage service now...")
-	storageService, err := bcs.GetStorageService(zkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints)
+	storageService, storageServiceZKRD, err := bcs.GetStorageService(zkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints)
 	if err != nil {
 		panic(err)
 	}
 	glog.Info("get storage service done")
 
 	glog.Info("getting netservice now...")
-	netservice, err := bcs.GetNetService(netServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints)
+	netservice, netserviceZKRD, err := bcs.GetNetService(netServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints)
 	if err != nil {
 		panic(err)
 	}
@@ -290,5 +290,10 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	// go h.Run(stopChan)
 
 	<-stopChan
+
+	// stop service discovery.
+	storageServiceZKRD.Stop()
+	netserviceZKRD.Stop()
+
 	return nil
 }

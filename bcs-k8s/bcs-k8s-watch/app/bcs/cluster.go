@@ -136,10 +136,10 @@ func GetClusterID(zkHosts string, hostIP string, bcsTLSConfig options.TLS) (stri
 }
 
 // GetStorageService returns storage InnerService object for discovery.
-func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string) (*InnerService, error) {
+func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string) (*InnerService, *RegisterDiscover.RegDiscover, error) {
 	discovery := RegisterDiscover.NewRegDiscoverEx(zkHosts, 5*time.Second)
 	if err := discovery.Start(); err != nil {
-		return nil, fmt.Errorf("get storage service from ZK failed, %+v", err)
+		return nil, nil, fmt.Errorf("get storage service from ZK failed, %+v", err)
 	}
 
 	// e.g.
@@ -148,20 +148,20 @@ func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints
 	path := fmt.Sprintf("%s/%s", types.BCS_SERV_BASEPATH, types.BCS_MODULE_STORAGE)
 	eventChan, err := discovery.DiscoverService(path)
 	if err != nil {
-		return nil, fmt.Errorf("discover storage service failed, %+v", err)
+		return nil, nil, fmt.Errorf("discover storage service failed, %+v", err)
 	}
 
 	storageService := NewInnerService(types.BCS_MODULE_STORAGE, eventChan, customEndpoints)
 	go storageService.Watch(bcsTLSConfig)
 
-	return storageService, nil
+	return storageService, discovery, nil
 }
 
 // GetNetService returns netservice InnerService object for discovery.
-func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string) (*InnerService, error) {
+func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string) (*InnerService, *RegisterDiscover.RegDiscover, error) {
 	discovery := RegisterDiscover.NewRegDiscoverEx(zkHosts, 5*time.Second)
 	if err := discovery.Start(); err != nil {
-		return nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
+		return nil, nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
 	}
 
 	// e.g.
@@ -170,11 +170,11 @@ func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []s
 	path := fmt.Sprintf("%s/%s", types.BCS_SERV_BASEPATH, types.BCS_MODULE_NETSERVICE)
 	eventChan, err := discovery.DiscoverService(path)
 	if err != nil {
-		return nil, fmt.Errorf("discover netservice failed, %+v", err)
+		return nil, nil, fmt.Errorf("discover netservice failed, %+v", err)
 	}
 
 	netService := NewInnerService(types.BCS_MODULE_NETSERVICE, eventChan, customEndpoints)
 	go netService.Watch(bcsTLSConfig)
 
-	return netService, nil
+	return netService, discovery, nil
 }
