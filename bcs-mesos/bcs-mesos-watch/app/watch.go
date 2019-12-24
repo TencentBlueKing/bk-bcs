@@ -153,7 +153,7 @@ func Run(cfg *types.CmdConfig) error {
 	}()
 
 	// watch netservice servers from ZK.
-	netservice, err := GetNetService(cfg)
+	netservice, netserviceZKRD, err := GetNetService(cfg)
 	if err != nil {
 		blog.Error("watch netservice servers failed, %+v", err)
 		return err
@@ -174,7 +174,9 @@ func Run(cfg *types.CmdConfig) error {
 	}
 
 	blog.Info("to cancel root after runServer returned")
+	netserviceZKRD.Stop()
 	rootCancel()
+
 	return rdErr
 }
 
@@ -388,23 +390,23 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 }
 
 // GetNetService returns netservice InnerService object for discovery.
-func GetNetService(cfg *types.CmdConfig) (*service.InnerService, error) {
+func GetNetService(cfg *types.CmdConfig) (*service.InnerService, *rd.RegDiscover, error) {
 	discovery := rd.NewRegDiscoverEx(cfg.NetServiceZK, 10*time.Second)
 	if err := discovery.Start(); err != nil {
-		return nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
+		return nil, nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
 	}
 
 	// zknode: bcs/services/endpoints/netservice
 	path := fmt.Sprintf("%s/%s", commtype.BCS_SERV_BASEPATH, commtype.BCS_MODULE_NETSERVICE)
 	eventChan, err := discovery.DiscoverService(path)
 	if err != nil {
-		return nil, fmt.Errorf("discover netservice failed, %+v", err)
+		return nil, nil, fmt.Errorf("discover netservice failed, %+v", err)
 	}
 
 	netService := service.NewInnerService(commtype.BCS_MODULE_NETSERVICE, eventChan)
 	go netService.Watch(cfg)
 
-	return netService, nil
+	return netService, discovery, nil
 }
 
 //RefreshDCHost update bcs-storage info
