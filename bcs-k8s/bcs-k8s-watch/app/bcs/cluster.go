@@ -170,6 +170,7 @@ func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []s
 	path := fmt.Sprintf("%s/%s", types.BCS_SERV_BASEPATH, types.BCS_MODULE_NETSERVICE)
 	eventChan, err := discovery.DiscoverService(path)
 	if err != nil {
+		discovery.Stop()
 		return nil, nil, fmt.Errorf("discover netservice failed, %+v", err)
 	}
 
