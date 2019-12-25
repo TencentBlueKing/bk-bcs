@@ -30,23 +30,23 @@ import (
 //ClbAPI Clb api operator
 type ClbAPI struct {
 	// api for tencent cloud clb v2 api
-	api                      qcloud.APIInterface
+	api qcloud.APIInterface
 	// project id for tencent cloud account
-	ProjectID                int
+	ProjectID int
 	// region for clb
-	Region                   string
+	Region string
 	// subnet id for private clb instance
-	SubnetID                 string
+	SubnetID string
 	// vpc id for clb instance
-	VpcID                    string
+	VpcID string
 	// secret id for tencent cloud account
-	SecretID                 string
+	SecretID string
 	// secret key for tencent cloud account
-	SecretKey                string
+	SecretKey string
 	// backend type: CVM or eni
-	BackendType              string
+	BackendType string
 	// wait second for next query when task is dealing
-	WaitPeriodLBDealing      int
+	WaitPeriodLBDealing int
 	// wait second for next query when exceeding api limit
 	WaitPeriodExceedLimit    int
 	ExpireTimeForHTTPSession int
@@ -197,7 +197,7 @@ func (clb *ClbAPI) CreateListener(listener *loadbalance.CloudListener) (string, 
 		if err != nil {
 			return "", fmt.Errorf("create 7 layer listener failed, err %s", err.Error())
 		}
-	// tcp and udp
+		// tcp and udp
 	} else {
 		listenerID, err = clb.create4LayerListener(listener)
 		if err != nil {

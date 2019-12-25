@@ -57,6 +57,11 @@ func setCfg(op *MesosWatchOptions) {
 
 	cfg.KubeConfig = op.Kubeconfig
 	cfg.StoreDriver = op.StoreDriver
+
+	cfg.NetServiceZK = op.NetServiceZK
+	if len(cfg.NetServiceZK) == 0 {
+		cfg.NetServiceZK = cfg.RegDiscvSvr
+	}
 }
 
 func main() {
@@ -102,4 +107,8 @@ type MesosWatchOptions struct {
 	IsExternal             bool   `json:"is_external" value:"false" usage:"the cluster whether external deployment"`
 	Kubeconfig             string `json:"kubeconfig" value:"" usage:"kubeconfig, when store_driver is etcd"`
 	StoreDriver            string `json:"store_driver" value:"zookeeper" usage:"the store driver, enum: zookeeper, etcd"`
+
+	// NetServiceZK is zookeeper address config for netservice discovery,
+	// reuse RegDiscvSvr by default.
+	NetServiceZK string `json:"netservice_zookeeper" value:"" usage:"netservice discovery zookeeper address"`
 }
