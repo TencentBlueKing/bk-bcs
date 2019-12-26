@@ -73,7 +73,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	proc.updateFlag = updateFlag
 	proc.doingFlag = doingFlag
 	// create service discovery client
-	svcHandler := newAppServiceHandler()
+	svcHandler := NewAppServiceHandler()
 	svcHandler.RegisterProcessor(proc)
 	svcClient, err := svccadapter.NewClient(opt.ServiceRegistry, opt.Kubeconfig, svcHandler, time.Duration(opt.SyncPeriod)*time.Second)
 	if err != nil {
@@ -104,7 +104,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 		blog.Errorf("create clientset failed, with rest config %v, err %s", restConfig, err.Error())
 		return nil, err
 	}
-	ingressHandler := newIngressHandler()
+	ingressHandler := NewIngressHandler()
 	ingressHandler.RegisterProcessor(proc)
 	factory := informers.NewSharedInformerFactory(cliset, time.Duration(opt.SyncPeriod)*time.Second)
 	ingressInformer := factory.Clb().V1().ClbIngresses()
@@ -112,7 +112,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	ingressLister := factory.Clb().V1().ClbIngresses().Lister()
 	ingressInterface := cliset.ClbV1()
 
-	listenerHandler := newListenerHandler()
+	listenerHandler := NewListenerHandler()
 	listenerInformer := factory.Network().V1().CloudListeners()
 	listenerInformer.Informer().AddEventHandler(listenerHandler)
 	listenerLister := factory.Network().V1().CloudListeners().Lister()

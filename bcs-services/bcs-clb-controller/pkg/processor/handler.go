@@ -20,43 +20,47 @@ import (
 	"reflect"
 )
 
-type appServiceHandler struct {
-	processor *Processor
+type HandlerProcessor interface {
+	SetUpdated()
 }
 
-func newAppServiceHandler() *appServiceHandler {
-	return &appServiceHandler{}
+type AppServiceHandler struct {
+	processor HandlerProcessor
 }
 
-func (handler *appServiceHandler) RegisterProcessor(p *Processor) {
+func NewAppServiceHandler() *AppServiceHandler {
+	return &AppServiceHandler{}
+}
+
+func (handler *AppServiceHandler) RegisterProcessor(p HandlerProcessor) {
 	handler.processor = p
 }
 
-func (handler *appServiceHandler) OnAdd(obj interface{}) {
+func (handler *AppServiceHandler) OnAdd(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
-func (handler *appServiceHandler) OnUpdate(objOld, objNew interface{}) {
+func (handler *AppServiceHandler) OnUpdate(objOld, objNew interface{}) {
 	handler.processor.SetUpdated()
 }
 
-func (handler *appServiceHandler) OnDelete(obj interface{}) {
+func (handler *AppServiceHandler) OnDelete(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
-type ingressHandler struct {
-	processor *Processor
+type IngressHandler struct {
+	processor HandlerProcessor
 }
 
-func newIngressHandler() *ingressHandler {
-	return &ingressHandler{}
+func NewIngressHandler() *IngressHandler {
+	return &IngressHandler{}
 }
 
-func (handler *ingressHandler) RegisterProcessor(p *Processor) {
+func (handler *IngressHandler) RegisterProcessor(p HandlerProcessor) {
 	handler.processor = p
 }
 
-func (handler *ingressHandler) OnAdd(obj interface{}) {
+func (handler *IngressHandler) OnAdd(obj interface{}) {
 	ingress, ok := obj.(*ingressType.ClbIngress)
 	if ok {
 		blog.V(5).Infof("sync clb ingress add event: %s", ingress.ToString())
@@ -67,7 +71,7 @@ func (handler *ingressHandler) OnAdd(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
-func (handler *ingressHandler) OnUpdate(objOld, objNew interface{}) {
+func (handler *IngressHandler) OnUpdate(objOld, objNew interface{}) {
 	ingressNew, okNew := objNew.(*ingressType.ClbIngress)
 	ingressOld, okOld := objOld.(*ingressType.ClbIngress)
 	if okNew && okOld {
@@ -83,7 +87,7 @@ func (handler *ingressHandler) OnUpdate(objOld, objNew interface{}) {
 	handler.processor.SetUpdated()
 }
 
-func (handler *ingressHandler) OnDelete(obj interface{}) {
+func (handler *IngressHandler) OnDelete(obj interface{}) {
 	ingress, ok := obj.(*ingressType.ClbIngress)
 	if ok {
 		blog.V(5).Infof("sync clb ingress delete event: %s", ingress.ToString())
@@ -94,37 +98,37 @@ func (handler *ingressHandler) OnDelete(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
-type nodeHandler struct {
-	processor *Processor
+type NodeHandler struct {
+	processor HandlerProcessor
 }
 
-func newNodeHandler() *nodeHandler {
-	return &nodeHandler{}
+func NewNodeHandler() *NodeHandler {
+	return &NodeHandler{}
 }
 
-func (handler *nodeHandler) RegisterProcessor(p *Processor) {
+func (handler *NodeHandler) RegisterProcessor(p HandlerProcessor) {
 	handler.processor = p
 }
 
-func (handler *nodeHandler) OnAdd(obj interface{}) {
+func (handler *NodeHandler) OnAdd(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
-func (handler *nodeHandler) OnUpdate(objOld, objNew interface{}) {
+func (handler *NodeHandler) OnUpdate(objOld, objNew interface{}) {
 	handler.processor.SetUpdated()
 }
 
-func (handler *nodeHandler) OnDelete(obj interface{}) {
+func (handler *NodeHandler) OnDelete(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
-type listenerHandler struct{}
+type ListenerHandler struct{}
 
-func newListenerHandler() *listenerHandler {
-	return &listenerHandler{}
+func NewListenerHandler() *ListenerHandler {
+	return &ListenerHandler{}
 }
 
-func (handler *listenerHandler) OnAdd(obj interface{}) {
+func (handler *ListenerHandler) OnAdd(obj interface{}) {
 	listener, ok := obj.(*cloudListenerType.CloudListener)
 	if ok {
 		blog.V(5).Infof("sync listener add event: %s", listener.ToString())
@@ -133,7 +137,7 @@ func (handler *listenerHandler) OnAdd(obj interface{}) {
 	}
 }
 
-func (handler *listenerHandler) OnUpdate(objOld, objNew interface{}) {
+func (handler *ListenerHandler) OnUpdate(objOld, objNew interface{}) {
 	listenerNew, okNew := objNew.(*cloudListenerType.CloudListener)
 	listenerOld, okOld := objOld.(*cloudListenerType.CloudListener)
 	if okNew && okOld {
@@ -143,7 +147,7 @@ func (handler *listenerHandler) OnUpdate(objOld, objNew interface{}) {
 	}
 }
 
-func (handler *listenerHandler) OnDelete(obj interface{}) {
+func (handler *ListenerHandler) OnDelete(obj interface{}) {
 	listener, ok := obj.(*cloudListenerType.CloudListener)
 	if ok {
 		blog.V(5).Infof("sync listener delete event: %s", listener.ToString())

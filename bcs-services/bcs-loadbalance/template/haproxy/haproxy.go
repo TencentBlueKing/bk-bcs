@@ -565,7 +565,7 @@ func checkConfigDiffBetweenRealServer(backendName string, newServers map[string]
 	if len(newServerList) > 0 || len(oldServerList) > 0 {
 		backendNeedUpdate = true
 		i := 0
-		newServerMap := make(map[string]*RealServer)
+		occupiedServerMap := make(map[string]*RealServer)
 		// use new server IP port to occupy the position of the server to be deleted
 		for ; i < len(newServerList); i++ {
 			newServer := newServerList[i]
@@ -577,13 +577,13 @@ func checkConfigDiffBetweenRealServer(backendName string, newServers map[string]
 			}
 			backendCommands = append(backendCommands, newSetServerAddrCommand(backendName, oldServer.Name, newServer.IP, newServer.Port))
 			newServer.Name = oldServer.Name
-			newServerMap[newServer.Key()] = newServer
+			occupiedServerMap[oldServer.Key()] = oldServer
 			delete(oldServers, oldServer.Key())
 			oldServers[newServer.Key()] = newServer
 		}
 		// in case that the deleted servers is more than the news, we just set weight to 0 to avoid haproxy reload
 		for _, oldServer := range oldServerList {
-			_, ok := newServerMap[oldServer.Key()]
+			_, ok := occupiedServerMap[oldServer.Key()]
 			if !ok && !oldServer.Disabled {
 				backendCommands = append(backendCommands, newDisableServerCommand(backendName, oldServer.Name))
 				oldServer.Disabled = true
