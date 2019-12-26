@@ -132,6 +132,9 @@ func (ms *EtcdCluster) registerReportHandler() error {
 	// report ip pool static resource data callback.
 	ms.reportCallback["IPPoolStatic"] = ms.reportIPPoolStatic
 
+	// report ip pool static resource detail data callback.
+	ms.reportCallback["IPPoolStaticDetail"] = ms.reportIPPoolStaticDetail
+
 	return nil
 }
 
@@ -307,6 +310,16 @@ func (ms *EtcdCluster) reportIPPoolStatic(data *types.BcsSyncData) error {
 
 	if err := ms.storage.Sync(data); err != nil {
 		blog.Errorf("etcd cluster report netservice ip pool static resource failed, %+v", err)
+		return err
+	}
+	return nil
+}
+
+func (ms *EtcdCluster) reportIPPoolStaticDetail(data *types.BcsSyncData) error {
+	blog.V(3).Infof("etcd cluster report netservice ip pool static resource detail[%+v]", data.Item)
+
+	if err := ms.storage.Sync(data); err != nil {
+		blog.Errorf("etcd cluster report netservice ip pool static resource detail failed, %+v", err)
 		return err
 	}
 	return nil

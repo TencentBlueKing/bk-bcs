@@ -26,11 +26,11 @@ import (
 func NewGetCommand() cli.Command {
 	return cli.Command{
 		Name:  "get",
-		Usage: "get the original definition of application/process/deployment/ippoolstatic",
+		Usage: "get the original definition of application/process/deployment/ippoolstatic/ippoolstatic-detail",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Get type, application(app)/process/deployment(deploy)/ippoolstatic(ipps)",
+				Usage: "Get type, application(app)/process/deployment(deploy)/ippoolstatic(ipps)/ippoolstatic-detail(ippsd)",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -71,6 +71,8 @@ func get(c *utils.ClientContext) error {
 		return getDeployment(c)
 	case "ipps", "ippoolstatic":
 		return getIPPoolStatic(c)
+	case "ippsd", "ippoolstatic-detail":
+		return getIPPoolStaticDetail(c)
 	default:
 		return fmt.Errorf("invalid type: %s", resourceType)
 	}
@@ -130,7 +132,26 @@ func getIPPoolStatic(c *utils.ClientContext) error {
 		return fmt.Errorf("failed to get ippoolstatic: %v", err)
 	}
 
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
+		fmt.Println("Resource Not Found.")
+		return nil
+	}
+	return printGet(result[0].Data)
+}
+
+func getIPPoolStaticDetail(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+		return err
+	}
+
+	storage := v1.NewBcsStorage(utils.GetClientOption())
+
+	result, err := storage.ListIPPoolStaticDetail(c.ClusterID(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to get ippoolstatic-detail : %v", err)
+	}
+
+	if len(result) == 0 || len(result[0].Data) == 0 {
 		fmt.Println("Resource Not Found.")
 		return nil
 	}

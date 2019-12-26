@@ -214,7 +214,7 @@ func (mgr *WatcherManager) initWatchers(clusterID string, writer *output.Writer,
 	*/
 
 	// init netservice watcher.
-	mgr.netserviceWatcher = NewNetServiceWatcher(clusterID, "IPPoolStatic", storageService, netservice)
+	mgr.netserviceWatcher = NewNetServiceWatcher(clusterID, storageService, netservice)
 }
 
 // Run starts the watcher manager, and runs all watchers.
