@@ -50,11 +50,11 @@ spec:
   dbName: db%
 ```
 - podSelector: 指定的 labels 用来选择包含有相同 labels 的 pod ，选中的 pod 才会使用该 crd 配置进行授权 init-container 的注入。  
-- appName: db 所属的业务名，须与 gcs 授权模板中的业务名相同。  
+- appName: db 所属的业务名，须与 db 授权模板中的业务名相同。  
 - targerDb: db 的域名。  
-- dbType: gcs db 的类型，mysql 或 spider. 
-- callUser: gcs 授权模板中匹配的调用 api 的用户名。  
-- dbName: database 名，支持模糊匹配，须与 gcs 授权模板中配置的数据库名称相同  
+- dbType: db 的类型，mysql 或 spider. 
+- callUser: db 授权模板中匹配的调用 api 的用户名。  
+- dbName: database 名，支持模糊匹配，须与 db 授权模板中配置的数据库名称相同  
 
 ### bcs-webhook-server 配置
 ```
@@ -78,7 +78,7 @@ spec:
             "db_privilege_inject": true,    // 是否开启db授权的注入
             "network_type": "overlay",      // 该集群的网络方案，overlay或underlay
             "esb_url": "http://x.x.x.x:8080",   // 调用 db 授权的 ESB 接口地址
-            "init_container_image": "gcs-privilege:test"   // 用于授权的 init-container 的镜像名
+            "init_container_image": "db-privilege:test"   // 用于授权的 init-container 的镜像名
          }
       }
 }

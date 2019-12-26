@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// create crd of BcsLogConf
 func createBcsLogConfig(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsLogConfigPlural := "bcslogconfigs"
 

@@ -41,6 +41,7 @@ import (
 )
 
 const (
+	// the name of secret to store db privilege info
 	DbPrivilegeSecretName = "bcs-db-privilege"
 )
 
@@ -80,6 +81,7 @@ func Run(op *options.ServerOption) {
 	return
 }
 
+// new WebHookServer object
 func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()

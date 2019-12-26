@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// create crd of BcsDbPrivConfig
 func createBcsDbPrivConfig(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsDbPrivConfigPlural := "bcsdbprivconfigs"
 

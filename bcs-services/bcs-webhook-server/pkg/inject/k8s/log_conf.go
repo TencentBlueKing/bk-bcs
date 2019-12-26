@@ -26,10 +26,12 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+// LogConfInject implements K8sInject
 type LogConfInject struct {
 	BcsLogConfigLister listers.BcsLogConfigLister
 }
 
+// NewLogConfInject create LogConfInject object
 func NewLogConfInject(bcsLogConfLister listers.BcsLogConfigLister) K8sInject {
 	k8sInject := &LogConfInject{
 		BcsLogConfigLister: bcsLogConfLister,
@@ -38,6 +40,7 @@ func NewLogConfInject(bcsLogConfLister listers.BcsLogConfigLister) K8sInject {
 	return k8sInject
 }
 
+// InjectContent inject log envs to pod
 func (logConf *LogConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, error) {
 
 	var patch []PatchOperation

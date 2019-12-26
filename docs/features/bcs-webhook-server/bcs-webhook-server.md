@@ -141,11 +141,11 @@ spec:
 ### 4.2 db 授权 init-container 的注入
 db 授权的配置信息以 crd 的形式创建并下发到 k8s 或 mesos 集群中, 包括 podSelector, appName, targetDb, dbType, callUser, dbName.  
 - podSelector: 用于匹配包含有相同 label 的 pod 。 匹配的 pod 将会使用此 crd 中的信息来注入授权的 init-container.  
-- appName: db 所属的业务名，须与 gcs 授权模板中的业务名相同。  
+- appName: db 所属的业务名，须与 db 授权模板中的业务名相同。  
 - targerDb: db 的域名。  
-- dbType: gcs db 的类型，mysql 或 spider. 
-- callUser: gcs 授权模板中匹配的调用 api 的用户名。  
-- dbName: database 名，支持模糊匹配，须与 gcs 授权模板中配置的数据库名称相同  
+- dbType: db 的类型，mysql 或 spider. 
+- callUser: db 授权模板中匹配的调用 api 的用户名。  
+- dbName: database 名，支持模糊匹配，须与 db 授权模板中配置的数据库名称相同  
 
 示例的 crd 配置如下：  
 ```
@@ -193,7 +193,7 @@ config_file.json
             "db_privilege_inject": true,    // 是否开启db授权的注入
             "network_type": "overlay",      // 该集群的网络方案，overlay或underlay
             "esb_url": "http://x.x.x.x:8080",   // 调用 db 授权的 ESB 接口地址
-            "init_container_image": "gcs-privilege:test"  // 用于授权的 init-container 的镜像名
+            "init_container_image": "db-privilege:test"  // 用于授权的 init-container 的镜像名
          }
       }
 }

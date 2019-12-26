@@ -20,18 +20,28 @@ import (
 )
 
 const (
+	// bcs system namespace
 	NamespaceBcs                  = "bcs-system"
+	// default log config type
 	StandardConfigType            = "standard"
+	// bcs system log config type
 	BcsSystemConfigType           = "bcs-system"
+	// dataid of bcs app
 	DataIdEnvKey                  = "io_tencent_bcs_app_dataid"
+	// appid of bcs app
 	AppIdEnvKey                   = "io_tencent_bcs_app_appid"
+	// log to stdout, true or false
 	StdoutEnvKey                  = "io_tencent_bcs_app_stdout"
+	// output path of the log
 	LogPathEnvKey                 = "io_tencent_bcs_app_logpath"
+	// bcs cluster id
 	ClusterIdEnvKey               = "io_tencent_bcs_app_cluster"
+	// the namespace of app
 	NamespaceEnvKey               = "io_tencent_bcs_app_namespace"
 	BcsWebhookAnnotationInjectKey = "webhook.inject.bkbcs.tencent.com"
 )
 
+// namespaces to ignore inject
 var IgnoredNamespaces = []string{
 	metav1.NamespaceSystem,
 	metav1.NamespacePublic,

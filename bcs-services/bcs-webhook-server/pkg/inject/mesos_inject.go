@@ -65,6 +65,7 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 		blog.Errorf("Could not decode body to meta: %s", err.Error())
 		message := fmt.Errorf("could not decode body to meta: %s", err.Error())
 		http.Error(w, message.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	blog.Info(string(meta.Kind))
@@ -77,22 +78,26 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 			blog.Errorf("Could not decode bodyto application: %s", err.Error())
 			message := fmt.Errorf("could not decode body to application: %s", err.Error())
 			http.Error(w, message.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		injectedApplication, err = whSvr.mesosApplicationInject(application)
 		if err != nil {
 			blog.Errorf("failed to inject to application: %s\n", err.Error())
 			http.Error(w, fmt.Sprintf("failed to inject to application: %s", err.Error()), http.StatusInternalServerError)
+			return
 		}
 
 		resp, err := json.Marshal(injectedApplication)
 		if err != nil {
 			blog.Errorf("Could not encode response: %v", err)
 			http.Error(w, fmt.Sprintf("could not encode response: %v", err), http.StatusInternalServerError)
+			return
 		}
 		if _, err := w.Write(resp); err != nil {
 			blog.Errorf("Could not write response: %v", err)
 			http.Error(w, fmt.Sprintf("could write response: %v", err), http.StatusInternalServerError)
+			return
 		}
 	} else if meta.Kind == commtypes.BcsDataType_DEPLOYMENT { // action to mesos deployment resource
 		var deployment, injectedDeployment *commtypes.BcsDeployment
@@ -101,22 +106,26 @@ func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Reques
 			blog.Errorf("Could not decode bodyto deployment: %s", err.Error())
 			message := fmt.Errorf("could not decode body to deployment: %s", err.Error())
 			http.Error(w, message.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		injectedDeployment, err = whSvr.mesosDeploymentInject(deployment)
 		if err != nil {
 			blog.Errorf("failed to inject to deployment: %s\n", err.Error())
 			http.Error(w, fmt.Sprintf("failed to inject to deployment: %s", err.Error()), http.StatusInternalServerError)
+			return
 		}
 
 		resp, err := json.Marshal(injectedDeployment)
 		if err != nil {
 			blog.Errorf("Could not encode response: %v", err)
 			http.Error(w, fmt.Sprintf("could encode response: %v", err), http.StatusInternalServerError)
+			return
 		}
 		if _, err := w.Write(resp); err != nil {
 			blog.Errorf("Could not write response: %v", err)
 			http.Error(w, fmt.Sprintf("could write response: %v", err), http.StatusInternalServerError)
+			return
 		}
 	}
 }

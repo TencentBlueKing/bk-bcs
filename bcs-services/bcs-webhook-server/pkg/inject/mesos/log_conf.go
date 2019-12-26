@@ -25,10 +25,12 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+// LogConfInject implements MesosInject
 type LogConfInject struct {
 	BcsLogConfigLister listers.BcsLogConfigLister
 }
 
+// NewLogConfInject create LogConfInject object
 func NewLogConfInject(bcsLogConfLister listers.BcsLogConfigLister) MesosInject {
 	mesosInject := &LogConfInject{
 		BcsLogConfigLister: bcsLogConfLister,
@@ -37,6 +39,7 @@ func NewLogConfInject(bcsLogConfLister listers.BcsLogConfigLister) MesosInject {
 	return mesosInject
 }
 
+// InjectApplicationContent inject log envs to application
 func (logConf *LogConfInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {
 	// get all BcsLogConfig
 	bcsLogConfs, err := logConf.BcsLogConfigLister.List(labels.Everything())
@@ -74,6 +77,7 @@ func (logConf *LogConfInject) InjectApplicationContent(application *commtypes.Re
 	return application, nil
 }
 
+// InjectDeployContent inject log envs to Deployment
 func (logConf *LogConfInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*commtypes.BcsDeployment, error) {
 	// get all BcsLogConfig
 	bcsLogConfs, err := logConf.BcsLogConfigLister.List(labels.Everything())

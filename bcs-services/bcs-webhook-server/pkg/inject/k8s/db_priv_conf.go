@@ -25,12 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+// DbPrivConfInject implements K8sInject
 type DbPrivConfInject struct {
 	BcsDbPrivConfigLister listers.BcsDbPrivConfigLister
 	Injects               options.InjectOptions
 	DbPrivSecret          *corev1.Secret
 }
 
+// NewDbPrivConfInject create DbPrivConfInject object
 func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, injects options.InjectOptions, dbPrivSecret *corev1.Secret) K8sInject {
 	k8sInject := &DbPrivConfInject{
 		BcsDbPrivConfigLister: bcsDbPrivConfLister,
@@ -41,6 +43,7 @@ func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, inje
 	return k8sInject
 }
 
+// InjectContent inject db privilege init-container
 func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, error) {
 	var patch []PatchOperation
 
@@ -71,6 +74,7 @@ func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOpera
 	return patch, nil
 }
 
+// addInitContainer add an init-container to pod
 func (dbPrivConf *DbPrivConfInject) addInitContainer(matched *v2.BcsDbPrivConfig) (patch PatchOperation) {
 
 	var initContainers []corev1.Container
@@ -91,7 +95,6 @@ func (dbPrivConf *DbPrivConfInject) addInitContainer(matched *v2.BcsDbPrivConfig
 	initContainer := corev1.Container{
 		Name:    "db-privilege",
 		Image:   dbPrivConf.Injects.DbPriv.InitContainerImage,
-		Command: []string{"/bin/gcs-privilege"},
 		Env: []corev1.EnvVar{
 			{
 				Name: "io_tencent_bcs_privilege_ip",
