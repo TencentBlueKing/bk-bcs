@@ -49,6 +49,10 @@ func reportIPPoolStaticMetrics(action, status string) {
 	cluster.SyncTotal.WithLabelValues(cluster.DataTypeIPPoolStatic, action, status).Inc()
 }
 
+func reportIPPoolStaticDetailMetrics(action, status string) {
+	cluster.SyncTotal.WithLabelValues(cluster.DataTypeIPPoolStaticDetail, action, status).Inc()
+}
+
 // NetServiceWatcher watchs resources in netservice, and sync to storage.
 type NetServiceWatcher struct {
 	clusterID  string
@@ -120,7 +124,47 @@ func (w *NetServiceWatcher) queryIPResource() (*netservicetypes.NetResponse, err
 	return response, nil
 }
 
-func (w *NetServiceWatcher) Sync() {
+func (w *NetServiceWatcher) queryIPResourceDetail() (*netservicetypes.NetResponse, error) {
+	targets := w.netservice.Servers()
+	serversCount := len(targets)
+
+	if serversCount == 0 {
+		return nil, errors.New("netservice server list is empty, there is no available services now")
+	}
+
+	var httpClientConfig *service.HTTPClientConfig
+	if serversCount == 1 {
+		httpClientConfig = targets[0]
+	} else {
+		index := rand.Intn(serversCount)
+		httpClientConfig = targets[index]
+	}
+
+	request, err := w.httpClient(httpClientConfig)
+	if err != nil {
+		return nil, fmt.Errorf("can't create netservice client, %+v, %+v", httpClientConfig, err)
+	}
+
+	url := fmt.Sprintf("%s/v1/pool/%s?info=detail", httpClientConfig.URL, w.clusterID)
+	response := &netservicetypes.NetResponse{}
+
+	if _, _, err := request.
+		Timeout(defaultNetServiceTimeout).
+		Get(url).
+		Retry(defaultHTTPRetryerCount, defaultHTTPRetryerTime, http.StatusBadRequest, http.StatusInternalServerError).
+		EndStruct(response); err != nil {
+		return nil, fmt.Errorf("request to netservice, get ip resource detail failed, %+v", err)
+	}
+
+	if response.Code != 0 {
+		return nil, fmt.Errorf("request to netservice, get ip resource detail failed, code[%d], message[%s]",
+			response.Code, response.Message)
+	}
+	return response, nil
+}
+
+// Sync syncs target ip resources to storages.
+func (w *NetServiceWatcher) SyncIPResource() {
 	// query resource from netservice.
 	resource, err := w.queryIPResource()
 	if err != nil {
@@ -136,7 +180,7 @@ func (w *NetServiceWatcher) Sync() {
 
 	// sync ip resource.
 	data := &types.BcsSyncData{
-		DataType: "IPPoolStatic",
+		DataType: cluster.DataTypeIPPoolStatic,
 		Action:   types.ActionUpdate,
 		Item:     resource.Data,
 	}
@@ -148,10 +192,42 @@ func (w *NetServiceWatcher) Sync() {
 	}
 }
 
+// Sync syncs target ip resource detail to storages.
+func (w *NetServiceWatcher) SyncIPResourceDetail() {
+	// query resource detail from netservice.
+	resource, err := w.queryIPResourceDetail()
+	if err != nil {
+		blog.Warnf("sync netservice ip resource detail, query from netservice failed, %+v", err)
+		return
+	}
+
+	// only sync ip pool detail information.
+	if resource.Type != netservicetypes.ResponseType_POOL {
+		blog.Warnf("sync netservice ip resource detail, query from netservice, invalid response type[%+v]", resource.Type)
+		return
+	}
+
+	// sync ip resource detail.
+	data := &types.BcsSyncData{
+		DataType: cluster.DataTypeIPPoolStaticDetail,
+		Action:   types.ActionUpdate,
+		Item:     resource.Data,
+	}
+
+	if err := w.report.ReportData(data); err != nil {
+		reportIPPoolStaticDetailMetrics(types.ActionUpdate, cluster.SyncFailure)
+	} else {
+		reportIPPoolStaticDetailMetrics(types.ActionUpdate, cluster.SyncSuccess)
+	}
+}
+
 // Run starts the netservice watcher.
 func (w *NetServiceWatcher) Run(stopCh <-chan struct{}) {
 	// sync ip resource.
-	wait.NonSlidingUntil(w.Sync, defaultSyncInterval, stopCh)
+	go wait.NonSlidingUntil(w.SyncIPResource, defaultSyncInterval, stopCh)
+
+	// sync ip resource detail.
+	go wait.NonSlidingUntil(w.SyncIPResourceDetail, defaultSyncInterval, stopCh)
 
 	// TODO: add more resource-sync logics here.
 }

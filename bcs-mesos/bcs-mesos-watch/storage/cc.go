@@ -206,11 +206,20 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
-	cc.handlers["IPPoolStatic"] = &ChannelProxy{
+	cc.handlers[dataTypeIPPoolStatic] = &ChannelProxy{
 		dataQueue: make(chan *types.BcsSyncData, 1024),
 		actionHandler: &NetServiceHandler{
 			oper:      cc,
-			dataType:  "IPPoolStatic",
+			dataType:  dataTypeIPPoolStatic,
+			ClusterID: cc.ClusterID,
+		},
+	}
+
+	cc.handlers[dataTypeIPPoolStaticDetail] = &ChannelProxy{
+		dataQueue: make(chan *types.BcsSyncData, 1024),
+		actionHandler: &NetServiceHandler{
+			oper:      cc,
+			dataType:  dataTypeIPPoolStaticDetail,
 			ClusterID: cc.ClusterID,
 		},
 	}

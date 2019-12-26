@@ -55,14 +55,15 @@ func (h *NetServiceHandler) Delete(data interface{}) error {
 // Delete handle delete event for netservice resources.
 func (h *NetServiceHandler) Update(data interface{}) error {
 	started := time.Now()
-	dataNode := fmt.Sprintf("/bcsstorage/v1/mesos/dynamic/cluster_resources/clusters/%s/%s/%s-%s", h.ClusterID, h.dataType, h.dataType, h.ClusterID)
+	dataNode := fmt.Sprintf("/bcsstorage/v1/mesos/dynamic/cluster_resources/clusters/%s/%s/%s-%s",
+		h.ClusterID, h.dataType, h.dataType, h.ClusterID)
 
 	if err := h.oper.CreateDCNode(dataNode, data, "PUT"); err != nil {
-		blog.V(3).Infof("IPPoolStatic update node %s, err %+v", dataNode, err)
-		reportStorageMetrics(dataTypeIPPoolStatic, actionPut, statusFailure, started)
+		blog.V(3).Infof("%s update node %s, err %+v", h.dataType, dataNode, err)
+		reportStorageMetrics(h.dataType, actionPut, statusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeIPPoolStatic, actionPut, statusSuccess, started)
+	reportStorageMetrics(h.dataType, actionPut, statusSuccess, started)
 
 	return nil
 }
