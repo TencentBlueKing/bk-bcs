@@ -38,8 +38,8 @@ func main() {
 	processor := app.NewEventProcessor(config)
 	if err = processor.Start(); err != nil {
 		processor.Stop()
-		fmt.Printf("bcs-loadbalance starting error: %s\n", err.Error())
-		blog.Errorf("bcs-loadbalance starting error: %s", err.Error())
+		fmt.Printf("bcs-loadbalance starting error %s\n", err.Error())
+		blog.Errorf("bcs-loadbalance starting error %s", err.Error())
 		os.Exit(1)
 	}
 	interrupt := make(chan os.Signal, 10)

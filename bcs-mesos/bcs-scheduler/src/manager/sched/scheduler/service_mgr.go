@@ -503,13 +503,13 @@ func (mgr *ServiceMgr) getTaskGroupServiceLabel(service *commtypes.BcsService, t
 	}
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
 	for ks, vs := range service.Spec.Selector {
-		vt,ok := task.Labels[ks]
+		vt, ok := task.Labels[ks]
 		if !ok {
 			blog.V(3).Infof("taskgroup label not match service: taskgroup(%s) label(%s:%s) service(%s)",
 				tskgroup.ID, ks, vs, key)
 			return false
 		}
-		if vs!=vt {
+		if vs != vt {
 			blog.V(3).Infof("taskgroup label not match service: taskgroup(%s) label(%s:%s) service(%s)",
 				tskgroup.ID, ks, vs, key)
 			return false
@@ -528,13 +528,13 @@ func (mgr *ServiceMgr) getApplicationServiceLabel(service *commtypes.BcsService,
 
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
 	for ks, vs := range service.Spec.Selector {
-		vt,ok := app.ObjectMeta.Labels[ks]
+		vt, ok := app.ObjectMeta.Labels[ks]
 		if !ok {
 			blog.V(3).Infof("application label not match service: application(%s.%s) label(%s:%s) service(%s)",
 				app.RunAs, app.ID, ks, vs, key)
 			return false
 		}
-		if vs!=vt {
+		if vs != vt {
 			blog.V(3).Infof("application label not match service: application(%s.%s) label(%s:%s) service(%s)",
 				app.RunAs, app.ID, ks, vs, key)
 			return false

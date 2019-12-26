@@ -1,5 +1,6 @@
 *.DS_Store
 .idea/
+*exvim*
 build/
 vendor/github.com/Sirupsen/Sirupsen
 vendor/github.com/Nvveen/Gotty/
