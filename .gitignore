@@ -2,7 +2,6 @@
 .idea/
 *exvim*
 build/
-vendor/github.com/Sirupsen/Sirupsen
 vendor/github.com/Nvveen/Gotty/
 vendor/github.com/bitly/go-simplejson/
 vendor/github.com/coredns/coredns/
