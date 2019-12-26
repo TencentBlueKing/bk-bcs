@@ -54,7 +54,7 @@
 #     httpCheckPath: /list
 
 # https:
-# - host: clbtest.lol.qq.com
+# - host: www.qq.com
 #   path: /
 #   serviceName: https-test
 #   namespace: test
