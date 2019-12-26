@@ -109,8 +109,8 @@ func NewBatchModifyTargetWeightResponse() (response *BatchModifyTargetWeightResp
     return
 }
 
-// BatchModifyTargetWeight接口用于批量修改负载均衡监听器绑定的后端机器的转发权重，支持负载均衡的4层和7层监听器；不支持传统型负载均衡。
-// 本接口为异步接口，本接口返回成功后需以返回的RequestID为入参，调用DescribeTaskStatus接口查询本次任务是否成功。
+// 本接口(BatchModifyTargetWeight)用于批量修改负载均衡监听器绑定的后端机器的转发权重，支持负载均衡的4层和7层监听器；不支持传统型负载均衡。
+// 本接口为异步接口，本接口返回成功后需以返回的 RequestID 为入参，调用 DescribeTaskStatus 接口查询本次任务是否成功。
 func (c *Client) BatchModifyTargetWeight(request *BatchModifyTargetWeightRequest) (response *BatchModifyTargetWeightResponse, err error) {
     if request == nil {
         request = NewBatchModifyTargetWeightRequest()
@@ -135,7 +135,7 @@ func NewBatchRegisterTargetsResponse() (response *BatchRegisterTargetsResponse) 
     return
 }
 
-// 批量绑定虚拟主机或弹性网卡，支持跨域绑定，只支持四层（TCP、UDP）协议绑定。
+// 批量绑定虚拟主机或弹性网卡，支持跨域绑定，支持四层、七层（TCP、UDP、HTTP、HTTPS）协议绑定。
 func (c *Client) BatchRegisterTargets(request *BatchRegisterTargetsRequest) (response *BatchRegisterTargetsResponse, err error) {
     if request == nil {
         request = NewBatchRegisterTargetsRequest()
@@ -186,8 +186,8 @@ func NewCreateLoadBalancerResponse() (response *CreateLoadBalancerResponse) {
     return
 }
 
-// CreateLoadBalancer 接口用来创建负载均衡实例（本接口只支持购买按量计费的负载均衡，包年包月的负载均衡请通过控制台购买）。为了使用负载均衡服务，您必须购买一个或多个负载均衡实例。成功调用该接口后，会返回负载均衡实例的唯一 ID。负载均衡实例的类型分为：公网、内网。详情可参考产品说明中的产品类型。
-// 注意：(1)指定可用区申请负载均衡、跨zone容灾【如需使用，请提交工单（ https://console.cloud.tencent.com/workorder/category ）申请】；(2)目前只有北京、上海、广州支持IPv6；
+// 本接口(CreateLoadBalancer)用来创建负载均衡实例（本接口只支持购买按量计费的负载均衡，包年包月的负载均衡请通过控制台购买）。为了使用负载均衡服务，您必须购买一个或多个负载均衡实例。成功调用该接口后，会返回负载均衡实例的唯一 ID。负载均衡实例的类型分为：公网、内网。详情可参考产品说明中的产品类型。
+// 注意：(1)指定可用区申请负载均衡、跨zone容灾(仅香港支持)【如果您需要体验该功能，请通过 [工单申请](https://console.cloud.tencent.com/workorder/category)】；(2)目前只有北京、上海、广州支持IPv6；(3)一个账号在每个地域的默认购买配额为：公网100个，内网100个。
 // 本接口为异步接口，接口成功返回后，可使用 DescribeLoadBalancers 接口查询负载均衡实例的状态（如创建中、正常），以确定是否创建成功。
 func (c *Client) CreateLoadBalancer(request *CreateLoadBalancerRequest) (response *CreateLoadBalancerResponse, err error) {
     if request == nil {
@@ -376,6 +376,56 @@ func (c *Client) DeregisterTargetsFromClassicalLB(request *DeregisterTargetsFrom
         request = NewDeregisterTargetsFromClassicalLBRequest()
     }
     response = NewDeregisterTargetsFromClassicalLBResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeBlockIPListRequest() (request *DescribeBlockIPListRequest) {
+    request = &DescribeBlockIPListRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("clb", APIVersion, "DescribeBlockIPList")
+    return
+}
+
+func NewDescribeBlockIPListResponse() (response *DescribeBlockIPListResponse) {
+    response = &DescribeBlockIPListResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 查询一个负载均衡所封禁的IP列表（黑名单）。（接口灰度中，如需使用请提工单）
+func (c *Client) DescribeBlockIPList(request *DescribeBlockIPListRequest) (response *DescribeBlockIPListResponse, err error) {
+    if request == nil {
+        request = NewDescribeBlockIPListRequest()
+    }
+    response = NewDescribeBlockIPListResponse()
+    err = c.Send(request, response)
+    return
+}
+
+func NewDescribeBlockIPTaskRequest() (request *DescribeBlockIPTaskRequest) {
+    request = &DescribeBlockIPTaskRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("clb", APIVersion, "DescribeBlockIPTask")
+    return
+}
+
+func NewDescribeBlockIPTaskResponse() (response *DescribeBlockIPTaskResponse) {
+    response = &DescribeBlockIPTaskResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 根据 ModifyBlockIPList 接口返回的异步任务的ID，查询封禁IP（黑名单）异步任务的执行状态。（接口灰度中，如需使用请提工单）
+func (c *Client) DescribeBlockIPTask(request *DescribeBlockIPTaskRequest) (response *DescribeBlockIPTaskResponse, err error) {
+    if request == nil {
+        request = NewDescribeBlockIPTaskRequest()
+    }
+    response = NewDescribeBlockIPTaskResponse()
     err = c.Send(request, response)
     return
 }
@@ -656,6 +706,32 @@ func (c *Client) ManualRewrite(request *ManualRewriteRequest) (response *ManualR
     return
 }
 
+func NewModifyBlockIPListRequest() (request *ModifyBlockIPListRequest) {
+    request = &ModifyBlockIPListRequest{
+        BaseRequest: &tchttp.BaseRequest{},
+    }
+    request.Init().WithApiInfo("clb", APIVersion, "ModifyBlockIPList")
+    return
+}
+
+func NewModifyBlockIPListResponse() (response *ModifyBlockIPListResponse) {
+    response = &ModifyBlockIPListResponse{
+        BaseResponse: &tchttp.BaseResponse{},
+    }
+    return
+}
+
+// 修改负载均衡的IP（client IP）封禁黑名单列表，一个转发规则最多支持封禁 2000000 个IP，及黑名单容量为 2000000。
+// （接口灰度中，如需使用请提工单）
+func (c *Client) ModifyBlockIPList(request *ModifyBlockIPListRequest) (response *ModifyBlockIPListResponse, err error) {
+    if request == nil {
+        request = NewModifyBlockIPListRequest()
+    }
+    response = NewModifyBlockIPListResponse()
+    err = c.Send(request, response)
+    return
+}
+
 func NewModifyDomainRequest() (request *ModifyDomainRequest) {
     request = &ModifyDomainRequest{
         BaseRequest: &tchttp.BaseRequest{},
@@ -907,7 +983,7 @@ func NewReplaceCertForLoadBalancersResponse() (response *ReplaceCertForLoadBalan
 // ReplaceCertForLoadBalancers 接口用以替换负载均衡实例所关联的证书，对于各个地域的负载均衡，如果指定的老的证书ID与其有关联关系，则会先解除关联，再建立新证书与该负载均衡的关联关系。
 // 此接口支持替换服务端证书或客户端证书。
 // 需要使用的新证书，可以通过传入证书ID来指定，如果不指定证书ID，则必须传入证书内容等相关信息，用以新建证书并绑定至负载均衡。
-// 注：本接口仅可从广州地域调用，其他地域存在域名解析问题，会报错。
+// 注：本接口仅可从广州地域调用。
 func (c *Client) ReplaceCertForLoadBalancers(request *ReplaceCertForLoadBalancersRequest) (response *ReplaceCertForLoadBalancersResponse, err error) {
     if request == nil {
         request = NewReplaceCertForLoadBalancersRequest()
