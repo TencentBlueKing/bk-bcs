@@ -40,54 +40,54 @@ const (
 	// clb backend type defined the way to call register backend to listener or rule
 	// when use "CVM": register backend with instance id which is get from cvm ip
 	// when use "ENI": register backend with eni IP
-	ClbBackendTargetTypeCVM     = "CVM"
+	ClbBackendTargetTypeCVM = "CVM"
 	// ClbBackendTargetTypeENI clb backend type is elastic network interface
-	ClbBackendTargetTypeENI     = "ENI"
+	ClbBackendTargetTypeENI = "ENI"
 	// TaskStatusDealing  task is dealing
-	TaskStatusDealing           = 2
+	TaskStatusDealing = 2
 	// TaskStatusFailed task is failed
-	TaskStatusFailed            = 1
+	TaskStatusFailed = 1
 	// TaskStatusSucceed task is successful
-	TaskStatusSucceed           = 0
+	TaskStatusSucceed = 0
 	// ClbStatusCreating clb instance is creating
-	ClbStatusCreating           = 0
+	ClbStatusCreating = 0
 	// ClbStatusNormal clb instance is normal
-	ClbStatusNormal             = 1
+	ClbStatusNormal = 1
 )
 
 // Config config for sdk client
 type Config struct {
 	// Region tencent cloud region
-	Region                string
+	Region string
 	// ProjectID project id for tencent cloud
-	ProjectID             int
+	ProjectID int
 	// SubnetID subent id for tencent cloud vpc, only for creating private clb instance
 	// it is useless when take over a existed private clb intance
-	SubnetID              string
+	SubnetID string
 	// VpcID vpc id for tencent cloud
-	VpcID                 string
+	VpcID string
 	// SecretID secret id for tencent cloud
-	SecretID              string
+	SecretID string
 	// SecretKey secret key for tencent cloud
-	SecretKey             string
+	SecretKey string
 	// BackendType cvm or eni
-	BackendType           string
+	BackendType string
 	// MaxTimeout times for retrying query asynchronous task result
-	MaxTimeout            int
+	MaxTimeout int
 	// WaitPeriodExceedLimit wait second when exceed api limit
 	WaitPeriodExceedLimit int
 	// WaitPeriodLBDealing wait second when retrying query asynchronous task result
-	WaitPeriodLBDealing   int
+	WaitPeriodLBDealing int
 }
 
 // Client client for call tencent cloud sdk
 type Client struct {
 	// client for operate clb
-	clb       *tclb.Client
+	clb *tclb.Client
 	// client for query cvm
-	cvm       *tcvm.Client
+	cvm *tcvm.Client
 	// client for query vpc
-	vpc       *tvpc.Client
+	vpc *tvpc.Client
 	// config
 	sdkConfig *Config
 }
@@ -133,7 +133,7 @@ func (c *Client) CreateLoadBalance(lb *cloudListenerType.CloudLoadBalancer) (lbI
 	// public
 	if lb.NetworkType == cloudListenerType.ClbNetworkTypePublic {
 		request.LoadBalancerType = tcommon.StringPtr(LoadBalancerNetworkPublic)
-	// when create private loadbalance, need subentid 
+		// when create private loadbalance, need subentid
 	} else {
 		request.LoadBalancerType = tcommon.StringPtr(LoadBalancerNetworkInternal)
 		request.SubnetId = tcommon.StringPtr(c.sdkConfig.SubnetID)
@@ -977,7 +977,7 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 				Weight:     tcommon.Int64Ptr(int64(backend.Weight)),
 			})
 		}
-	// eni backend
+		// eni backend
 	} else {
 		for _, backend := range backendsRegister {
 			request.Targets = append(request.Targets, &tclb.Target{
@@ -1043,7 +1043,7 @@ func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDer
 				Type:       tcommon.StringPtr(ClbBackendTargetTypeCVM),
 			})
 		}
-	// backend type is eni
+		// backend type is eni
 	} else {
 		for _, backend := range backendsDeregister {
 			request.Targets = append(request.Targets, &tclb.Target{
@@ -1125,11 +1125,11 @@ func (c *Client) waitTaskDone(taskID string) error {
 			blog.Infof("task %s is dealing", taskID)
 			time.Sleep(time.Duration(c.sdkConfig.WaitPeriodLBDealing) * time.Second)
 			continue
-		// failed
+			// failed
 		} else if *response.Response.Status == TaskStatusFailed {
 			blog.Errorf("task %s is failed", taskID)
 			return fmt.Errorf("task %s is failed", taskID)
-		// succeed
+			// succeed
 		} else if *response.Response.Status == TaskStatusSucceed {
 			blog.Infof("task %s is done", taskID)
 			return nil

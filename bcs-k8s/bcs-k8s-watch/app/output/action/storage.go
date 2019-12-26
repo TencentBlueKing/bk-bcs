@@ -13,7 +13,6 @@
 
 package action
 
-// Use http protocol to sync data to BCSStorage Service
 import (
 	glog "bk-bcs/bcs-common/common/blog"
 
@@ -21,46 +20,60 @@ import (
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
 
+// StorageAction is http action of storage service.
 type StorageAction struct {
-	Name           string
-	ClusterID      string
-	StorageService *bcs.StorageService
+	clusterID      string
+	name           string
+	storageService *bcs.InnerService
 }
 
-func (storageAction *StorageAction) Add(syncData *SyncData) {
-	storageAction.request("PUT", syncData)
+// NewStorageAction creates a new StorageAction instance.
+func NewStorageAction(clusterID, name string, storageService *bcs.InnerService) *StorageAction {
+	return &StorageAction{
+		clusterID:      clusterID,
+		name:           name,
+		storageService: storageService,
+	}
 }
 
-func (storageAction *StorageAction) Delete(syncData *SyncData) {
-	storageAction.request("DELETE", syncData)
+// Add adds new resource data by http PUT.
+func (act *StorageAction) Add(syncData *SyncData) {
+	act.request("PUT", syncData)
 }
 
-func (storageAction *StorageAction) Update(syncData *SyncData) {
-	storageAction.request("PUT", syncData)
+// Delete deletes target resource data by http DELETE.
+func (act *StorageAction) Delete(syncData *SyncData) {
+	act.request("DELETE", syncData)
 }
 
-func (storageAction *StorageAction) request(method string, syncData *SyncData) {
+// Update updates old resource data by http PUT.
+func (act *StorageAction) Update(syncData *SyncData) {
+	act.request("PUT", syncData)
+}
 
-	//glog.Infof("current servers: %s", storageAction.StorageService.Servers)
-	//glog.Infof("calling request: %s %s %s/%s", method, syncData.Kind, syncData.Namespace, syncData.Name)
-	if len(storageAction.StorageService.Servers) == 0 {
-		// the process get address from zk not finished yet or there is no storage server on zk
-		//glog.Errorf("storage server list is empty! got no address yet")
+func (act *StorageAction) request(method string, syncData *SyncData) {
+	glog.Infof("calling request: %s %s %s/%s", method, syncData.Kind, syncData.Namespace, syncData.Name)
+
+	targets := act.storageService.Servers()
+
+	if len(targets) == 0 {
+		glog.Errorf("storage server list is empty, got no address yet!")
 		return
 	}
 
 	var client http.StorageClient
 	var resp http.StorageResponse
 	var err error
-	for _, httpClientConfig := range storageAction.StorageService.Servers {
 
+	for _, httpClientConfig := range targets {
 		client = http.StorageClient{
 			HTTPClientConfig: httpClientConfig,
-			ClusterID:        storageAction.ClusterID,
+			ClusterID:        act.clusterID,
 			Namespace:        syncData.Namespace,
 			ResourceType:     syncData.Kind,
 			ResourceName:     syncData.Name,
 		}
+
 		switch method {
 		case "GET":
 			resp, err = client.GET()
@@ -69,12 +82,14 @@ func (storageAction *StorageAction) request(method string, syncData *SyncData) {
 		case "DELETE":
 			resp, err = client.DELETE()
 		}
+
 		if err != nil {
 			glog.Errorf("%s %s FAIL %s retry: [%s/%s]", method, syncData.Kind, err.Error(), syncData.Namespace, syncData.Name)
 			continue
 		}
 		break
 	}
+
 	if !resp.Result {
 		glog.Errorf("%s %s ERROR: [%s/%s]", method, syncData.Kind, syncData.Namespace, syncData.Name)
 		return
@@ -82,5 +97,4 @@ func (storageAction *StorageAction) request(method string, syncData *SyncData) {
 
 	glog.V(2).Infof("%s %s SUCCESS: [%s/%s]", method, syncData.Kind, syncData.Namespace, syncData.Name)
 	return
-
 }

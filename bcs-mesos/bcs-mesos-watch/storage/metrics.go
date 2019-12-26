@@ -34,14 +34,15 @@ var (
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
 	}, []string{"datatype", "action", "status"})
 
-	dataTypeApp       = "Application"
-	dataTypeTaskGroup = "TaskGroup"
-	dataTypeCfg       = "Configmap"
-	dataTypeSecret    = "Secret"
-	dataTypeDeploy    = "Deployment"
-	dataTypeSvr       = "Service"
-	dataTypeExpSVR    = "ExportService"
-	dataTypeEp        = "Endpoint"
+	dataTypeApp          = "Application"
+	dataTypeTaskGroup    = "TaskGroup"
+	dataTypeCfg          = "Configmap"
+	dataTypeSecret       = "Secret"
+	dataTypeDeploy       = "Deployment"
+	dataTypeSvr          = "Service"
+	dataTypeExpSVR       = "ExportService"
+	dataTypeEp           = "Endpoint"
+	dataTypeIPPoolStatic = "IPPoolStatic"
 
 	actionDelete = "DELETE"
 	actionPut    = "PUT"

@@ -16,18 +16,20 @@ package v1
 import (
 	status "bk-bcs/bcs-common/common/types"
 	deploymentType "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 const (
-	BcsStorageDynamicTypeApplication = "application"
-	BcsStorageDynamicTypeProcess     = "process"
-	BcsStorageDynamicTypeTaskGroup   = "taskgroup"
-	BcsStorageDynamicTypeConfigMap   = "configmap"
-	BcsStorageDynamicTypeSecret      = "secret"
-	BcsStorageDynamicTypeService     = "service"
-	BcsStorageDynamicTypeEndpoint    = "endpoint"
-	BcsStorageDynamicTypeDeployment  = "deployment"
-	BcsStorageDynamicTypeNamespace   = "namespace"
+	BcsStorageDynamicTypeApplication  = "application"
+	BcsStorageDynamicTypeProcess      = "process"
+	BcsStorageDynamicTypeTaskGroup    = "taskgroup"
+	BcsStorageDynamicTypeConfigMap    = "configmap"
+	BcsStorageDynamicTypeSecret       = "secret"
+	BcsStorageDynamicTypeService      = "service"
+	BcsStorageDynamicTypeEndpoint     = "endpoint"
+	BcsStorageDynamicTypeDeployment   = "deployment"
+	BcsStorageDynamicTypeNamespace    = "namespace"
+	BcsStorageDynamicTypeIPPoolStatic = "ippoolstatic"
 )
 
 type ApplicationSet struct {
@@ -62,6 +64,12 @@ type DeploymentSet struct {
 	Data deploymentType.Deployment `json:"data"`
 }
 
+// IPPoolStatic is netservice ip pool resources object.
+type IPPoolStatic struct {
+	// Data includes poolnum/activeip/availableip/reservedip.
+	Data netservicetypes.NetStatic `json:"data"`
+}
+
 type ApplicationList []*ApplicationSet
 type ProcessList []*ProcessSet
 type TaskGroupList []*TaskGroupSet
@@ -70,6 +78,7 @@ type SecretList []*SecretSet
 type ServiceList []*ServiceSet
 type EndpointList []*EndpointSet
 type DeploymentList []*DeploymentSet
+type IPPoolStaticList []*IPPoolStatic
 
 // sort by namespace
 func (l ApplicationList) Len() int           { return len(l) }
