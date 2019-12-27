@@ -1,8 +1,8 @@
 ![BCS.png](./docs/logo/logo_en.png)
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.13.x-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)   
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.14.6-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)   
 
-[中文文档](./README.md)
+[中文文档](./readme.md)
 
 > **Important Note**: The `master` branch may be in an unstable or unavailable state during development*.
 > Please use [releases] (https://github.com/Tencent/bk-bcs/releases) instead of `master` to get stable binaries.
@@ -52,15 +52,17 @@ Please refer to the BlueKing Container Management Platform [white paper](https:/
 > At present, the community version 5.1 is in the beta internal test. If you want to experience it, please fill in the questionnaire and leave the mailbox and other information. The BlueKing will deliver the software by email within 1-2 business days. Thank you for your support and understanding of the BlueKing.
 > Questionnaire link: [https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
-> Blue Whale Community Edition 5.1 is fully open for download at 2019-07-30
-
 * [Download and Compile](docs/install/source_compile.md)
 * [Installation Deployment](docs/install/deploy-guide.md)
 * [API Usage Notes](./docs/apidoc/api.md)
 
-## Version Plan
+## Roadmap
 
-* [Version Details](./docs/version/README.md)
+> [history versions](./docs/version/README.md)
+
+* Open all tencent cloud plugins source code
+* Kubenretes federation solution intergration
+* All documents refactor 
 
 ## Contributing
 
@@ -85,10 +87,10 @@ If you are interested in this project and want to contribute and improve the pro
 
 - [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas): BlueKing container SAAS is UI facility for Blueking Container Service, providing convenient container operation.
 - [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
-- [CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
-- [PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
-- [SOPS](https://github.com/Tencent/bk-sops):Standard Operations (SOPS) is a system for task scheduling and execution through a visual graphical interface. It is a lightweight in the BlueKing system scheduling SaaS products.
+- [BK-CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
+- [BK-PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
+- [BK-SOPS](https://github.com/Tencent/bk-sops):Standard Operations (SOPS) is a system for task scheduling and execution through a visual graphical interface. It is a lightweight in the BlueKing system scheduling SaaS products.
 
 ## License
 
-Bk-bcs is based on the MIT protocol. Please refer to [LICENSE](./LICENSE.TXT) for details.
+Bk-bcs is based on the MIT protocol. Please refer to [LICENSE](./LICENSE.txt) for details.
