@@ -196,6 +196,9 @@ func (ms *MesosCluster) registerReportHandler() error {
 	// report ip pool static resource data callback.
 	ms.reportCallback["IPPoolStatic"] = ms.reportIPPoolStatic
 
+	// report ip pool static resource detail data callback.
+	ms.reportCallback["IPPoolStaticDetail"] = ms.reportIPPoolStaticDetail
+
 	return nil
 }
 
@@ -383,6 +386,16 @@ func (ms *MesosCluster) reportIPPoolStatic(data *types.BcsSyncData) error {
 
 	if err := ms.storage.Sync(data); err != nil {
 		blog.Errorf("mesos cluster report netservice ip pool static resource failed, %+v", err)
+		return err
+	}
+	return nil
+}
+
+func (ms *MesosCluster) reportIPPoolStaticDetail(data *types.BcsSyncData) error {
+	blog.V(3).Infof("mesos cluster report netservice ip pool static resource detail[%+v]", data.Item)
+
+	if err := ms.storage.Sync(data); err != nil {
+		blog.Errorf("mesos cluster report netservice ip pool static resource detail failed, %+v", err)
 		return err
 	}
 	return nil

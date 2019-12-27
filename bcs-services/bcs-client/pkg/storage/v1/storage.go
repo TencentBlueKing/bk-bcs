@@ -35,6 +35,7 @@ type Storage interface {
 	ListDeployment(clusterID string, condition url.Values) (DeploymentList, error)
 	ListNamespace(clusterID string, condition url.Values) ([]string, error)
 	ListIPPoolStatic(clusterID string, condition url.Values) (IPPoolStaticList, error)
+	ListIPPoolStaticDetail(clusterID string, condition url.Values) (IPPoolStaticDetailList, error)
 
 	InspectApplication(clusterID, namespace, name string) (*ApplicationSet, error)
 	InspectProcess(clusterID, namespace, name string) (*ProcessSet, error)
@@ -170,6 +171,18 @@ func (bs *bcsStorage) ListIPPoolStatic(clusterID string, condition url.Values) (
 	}
 
 	var result IPPoolStaticList
+	err = codec.DecJson(data, &result)
+	return result, err
+}
+
+// ListIPPoolStaticDetail query netservice ip pool static resource detail data from storage.
+func (bs *bcsStorage) ListIPPoolStaticDetail(clusterID string, condition url.Values) (IPPoolStaticDetailList, error) {
+	data, err := bs.listResource(clusterID, BcsStorageDynamicTypeIPPoolStaticDetail, condition)
+	if err != nil {
+		return nil, err
+	}
+
+	var result IPPoolStaticDetailList
 	err = codec.DecJson(data, &result)
 	return result, err
 }

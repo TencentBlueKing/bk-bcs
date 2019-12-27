@@ -20,16 +20,17 @@ import (
 )
 
 const (
-	BcsStorageDynamicTypeApplication  = "application"
-	BcsStorageDynamicTypeProcess      = "process"
-	BcsStorageDynamicTypeTaskGroup    = "taskgroup"
-	BcsStorageDynamicTypeConfigMap    = "configmap"
-	BcsStorageDynamicTypeSecret       = "secret"
-	BcsStorageDynamicTypeService      = "service"
-	BcsStorageDynamicTypeEndpoint     = "endpoint"
-	BcsStorageDynamicTypeDeployment   = "deployment"
-	BcsStorageDynamicTypeNamespace    = "namespace"
-	BcsStorageDynamicTypeIPPoolStatic = "ippoolstatic"
+	BcsStorageDynamicTypeApplication        = "application"
+	BcsStorageDynamicTypeProcess            = "process"
+	BcsStorageDynamicTypeTaskGroup          = "taskgroup"
+	BcsStorageDynamicTypeConfigMap          = "configmap"
+	BcsStorageDynamicTypeSecret             = "secret"
+	BcsStorageDynamicTypeService            = "service"
+	BcsStorageDynamicTypeEndpoint           = "endpoint"
+	BcsStorageDynamicTypeDeployment         = "deployment"
+	BcsStorageDynamicTypeNamespace          = "namespace"
+	BcsStorageDynamicTypeIPPoolStatic       = "ippoolstatic"
+	BcsStorageDynamicTypeIPPoolStaticDetail = "ippoolstaticdetail"
 )
 
 type ApplicationSet struct {
@@ -70,6 +71,12 @@ type IPPoolStatic struct {
 	Data netservicetypes.NetStatic `json:"data"`
 }
 
+// IPPoolStaticDetail is netservice ip pool resources detail object.
+type IPPoolStaticDetail struct {
+	// Data includes cluster hosts/available/reserved/active ip pool informations.
+	Data []*netservicetypes.NetPool `json:"data"`
+}
+
 type ApplicationList []*ApplicationSet
 type ProcessList []*ProcessSet
 type TaskGroupList []*TaskGroupSet
@@ -79,6 +86,7 @@ type ServiceList []*ServiceSet
 type EndpointList []*EndpointSet
 type DeploymentList []*DeploymentSet
 type IPPoolStaticList []*IPPoolStatic
+type IPPoolStaticDetailList []*IPPoolStaticDetail
 
 // sort by namespace
 func (l ApplicationList) Len() int           { return len(l) }

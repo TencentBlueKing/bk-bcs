@@ -27,10 +27,11 @@ const (
 	DataTypeTaskGroup = "TaskGroup"
 	DataTypeCfg       = "Configmap"
 	//DataTypeSecret    = "Secret"
-	DataTypeDeploy       = "Deployment"
-	DataTypeSvr          = "Service"
-	DataTypeExpSVR       = "ExportService"
-	DataTypeIPPoolStatic = "IPPoolStatic"
+	DataTypeDeploy             = "Deployment"
+	DataTypeSvr                = "Service"
+	DataTypeExpSVR             = "ExportService"
+	DataTypeIPPoolStatic       = "IPPoolStatic"
+	DataTypeIPPoolStaticDetail = "IPPoolStaticDetail"
 )
 
 var (
