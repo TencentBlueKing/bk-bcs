@@ -11,15 +11,15 @@ useHostNetwork: "true"
 # clb-controller服务发现的模式，可选kubernetes, custom
 serviceRegistry: "kubernetes"
 # 后端容器的ip类型，可选overlay, underlay
-backendIPType: "overlay"
+backendIPType: "underlay"
 # 已经存在的clb的名字，或者需要创建的clb的名字
-clbName: "test-clb"
+clbName: "xxxxxx-clb"
 # clb网络类型，可选private, public
 netType: "public"
 # 日志级别，推荐填3
 v: 3
-# clb控制代码的实现方式，可选api, sdk; 目前只有api模式支持eniIP的转发
-clbImplement: api
+# clb控制代码的实现方式，可选api, sdk
+clbImplement: sdk
 # 通过何种方式绑定后端，可选cvm, eni
 clbBackendMode: eni
 # clb位于的云区域
@@ -35,5 +35,4 @@ clbVpcID: "xxxxxxxx"
 # subnet id, 只需在内网clb模式下使用
 #clbSubnetID: "xxxxx"
 # 额外的环境变量
-# 
 env: []

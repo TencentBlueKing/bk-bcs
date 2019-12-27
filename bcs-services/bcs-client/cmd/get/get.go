@@ -18,6 +18,7 @@ import (
 
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 
 	"github.com/urfave/cli"
 )
@@ -25,11 +26,11 @@ import (
 func NewGetCommand() cli.Command {
 	return cli.Command{
 		Name:  "get",
-		Usage: "get the original definition of application/process/deployment",
+		Usage: "get the original definition of application/process/deployment/ippoolstatic/ippoolstatic-detail",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Get type, application(app)/process/deployment(deploy)",
+				Usage: "Get type, application(app)/process/deployment(deploy)/ippoolstatic(ipps)/ippoolstatic-detail(ippsd)",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -68,6 +69,10 @@ func get(c *utils.ClientContext) error {
 		return getProcess(c)
 	case "deploy", "deployment":
 		return getDeployment(c)
+	case "ipps", "ippoolstatic":
+		return getIPPoolStatic(c)
+	case "ippsd", "ippoolstatic-detail":
+		return getIPPoolStaticDetail(c)
 	default:
 		return fmt.Errorf("invalid type: %s", resourceType)
 	}
@@ -113,6 +118,44 @@ func getDeployment(c *utils.ClientContext) error {
 	}
 
 	return printGet(result)
+}
+
+func getIPPoolStatic(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+		return err
+	}
+
+	storage := v1.NewBcsStorage(utils.GetClientOption())
+
+	result, err := storage.ListIPPoolStatic(c.ClusterID(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to get ippoolstatic: %v", err)
+	}
+
+	if len(result) == 0 {
+		fmt.Println("Resource Not Found.")
+		return nil
+	}
+	return printGet(result[0].Data)
+}
+
+func getIPPoolStaticDetail(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+		return err
+	}
+
+	storage := v1.NewBcsStorage(utils.GetClientOption())
+
+	result, err := storage.ListIPPoolStaticDetail(c.ClusterID(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to get ippoolstatic-detail : %v", err)
+	}
+
+	if len(result) == 0 || len(result[0].Data) == 0 {
+		fmt.Println("Resource Not Found.")
+		return nil
+	}
+	return printGet(result[0].Data)
 }
 
 func printGet(single interface{}) error {

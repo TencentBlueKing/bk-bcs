@@ -14,13 +14,6 @@
 package mesos
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -29,7 +22,16 @@ import (
 
 	"github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"
-	//"encoding/json"
+
+	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-common/common/zkclient"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	clusteretcd "bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/etcd"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/service"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //ZkClient interface to define zk operation
@@ -67,7 +69,7 @@ var (
 )
 
 //NewMesosCluster create mesos cluster
-func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
+func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage, netservice *service.InnerService) cluster.Cluster {
 
 	blog.Info("mesos cluster(%s) will be created ...", cfg.ClusterID)
 
@@ -81,6 +83,7 @@ func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
 		watchPath:      "/" + strings.Join(linkItems[1:], "/"),
 		clusterID:      cfg.ClusterID,
 		storage:        st,
+		netservice:     netservice,
 		reportCallback: make(map[string]cluster.ReportFunc),
 		existCallback:  make(map[string]cluster.DataExister),
 	}
@@ -94,25 +97,28 @@ func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage) cluster.Cluster {
 
 //MesosCluster cluster implements all cluster interface
 type MesosCluster struct {
-	zkLinks        string                         //zk connection link, like 127.0.0.1:2181,127.0.0.2:2181
-	watchPath      string                         //zk watching path, like /blueking
-	clusterID      string                         //watch cluster id
-	client         ZkClient                       //client for zookeeper
-	retry          bool                           //flag for reconnect zookeeper
-	connCxt        context.Context                //context for client disconnected
-	cancel         context.CancelFunc             //cancel func when client disconnected
-	reportCallback map[string]cluster.ReportFunc  //report map for handling registery data type
-	existCallback  map[string]cluster.DataExister //check data exist in local cache
-	storage        storage.Storage                //storage interface for remote Storage, like CC
-	app            *AppWatch                      //watch for application
-	taskGroup      *TaskGroupWatch                //watch for taskgroup
-	exportSvr      *ExportServiceWatch            //watch for exportservice
-	Status         string                         //curr status
-	configmap      *ConfigMapWatch
-	secret         *SecretWatch
-	service        *ServiceWatch
-	deployment     *DeploymentWatch
-	endpoint       *EndpointWatch
+	zkLinks           string                         //zk connection link, like 127.0.0.1:2181,127.0.0.2:2181
+	watchPath         string                         //zk watching path, like /blueking
+	clusterID         string                         //watch cluster id
+	client            ZkClient                       //client for zookeeper
+	retry             bool                           //flag for reconnect zookeeper
+	connCxt           context.Context                //context for client disconnected
+	cancel            context.CancelFunc             //cancel func when client disconnected
+	reportCallback    map[string]cluster.ReportFunc  //report map for handling registery data type
+	existCallback     map[string]cluster.DataExister //check data exist in local cache
+	storage           storage.Storage                //storage interface for remote Storage, like CC
+	netservice        *service.InnerService
+	app               *AppWatch           //watch for application
+	taskGroup         *TaskGroupWatch     //watch for taskgroup
+	exportSvr         *ExportServiceWatch //watch for exportservice
+	Status            string              //curr status
+	configmap         *ConfigMapWatch
+	secret            *SecretWatch
+	service           *ServiceWatch
+	deployment        *DeploymentWatch
+	endpoint          *EndpointWatch
+	netServiceWatcher *clusteretcd.NetServiceWatcher
+	stopCh            chan struct{}
 }
 
 //createZkConn create zookeeper connection with cluster
@@ -187,6 +193,12 @@ func (ms *MesosCluster) registerReportHandler() error {
 
 	ms.reportCallback["Endpoint"] = ms.reportEndpoint
 
+	// report ip pool static resource data callback.
+	ms.reportCallback["IPPoolStatic"] = ms.reportIPPoolStatic
+
+	// report ip pool static resource detail data callback.
+	ms.reportCallback["IPPoolStaticDetail"] = ms.reportIPPoolStaticDetail
+
 	return nil
 }
 
@@ -231,6 +243,9 @@ func (ms *MesosCluster) createDatTypeWatch() error {
 	endpointCxt, _ := context.WithCancel(ms.connCxt)
 	ms.endpoint = NewEndpointWatch(endpointCxt, ms.client, ms, ms.watchPath)
 	go ms.endpoint.Work()
+
+	ms.netServiceWatcher = clusteretcd.NewNetServiceWatcher(ms.clusterID, ms, ms.netservice)
+	go ms.netServiceWatcher.Run(ms.stopCh)
 
 	return nil
 }
@@ -281,6 +296,8 @@ func (ms *MesosCluster) initialize() error {
 	}
 
 	ms.connCxt, ms.cancel = context.WithCancel(context.Background())
+	ms.stopCh = make(chan struct{})
+
 	//create datatype watch
 	if err := ms.createDatTypeWatch(); err != nil {
 		blog.Error("Mesos cluster create wathers err:%s", err.Error())
@@ -359,6 +376,26 @@ func (ms *MesosCluster) reportEndpoint(data *types.BcsSyncData) error {
 	if err := ms.storage.Sync(data); err != nil {
 		blog.Error("endpoint(%s.%s) sync(%s) dispatch failed: %+v",
 			dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action, err)
+		return err
+	}
+	return nil
+}
+
+func (ms *MesosCluster) reportIPPoolStatic(data *types.BcsSyncData) error {
+	blog.V(3).Infof("mesos cluster report netservice ip pool static resource[%+v]", data.Item)
+
+	if err := ms.storage.Sync(data); err != nil {
+		blog.Errorf("mesos cluster report netservice ip pool static resource failed, %+v", err)
+		return err
+	}
+	return nil
+}
+
+func (ms *MesosCluster) reportIPPoolStaticDetail(data *types.BcsSyncData) error {
+	blog.V(3).Infof("mesos cluster report netservice ip pool static resource detail[%+v]", data.Item)
+
+	if err := ms.storage.Sync(data); err != nil {
+		blog.Errorf("mesos cluster report netservice ip pool static resource detail failed, %+v", err)
 		return err
 	}
 	return nil
@@ -461,6 +498,7 @@ func (ms *MesosCluster) Stop() {
 	if ms.cancel != nil {
 		ms.cancel()
 	}
+	close(ms.stopCh)
 	time.Sleep(2 * time.Second)
 
 	if ms.client != nil {

@@ -1,5 +1,108 @@
-clbName: ddzzq-qa-clb
+# # 设置tcp监听器
+# tcp:
+# - serviceName: tcp-test # k8s中定义的Service的名字
+#   namespace: test # k8s中定义的Service的命名空间
+#   clbPort: 18002 # tcp监听器在clb上监听的端口 1～65535
+#   servicePort: 18002 # k8s中定义的ServicePort的端口（非NodePort）
+#   sessionTime: 90 # 会话保持时间，单位：秒。可选值：30~3600，默认 0，表示不开启
+#   lbPolicy: # 设置负载均衡策略
+#     strategy: least_conn # 负载均衡策略，可选[wrr, least_conn]
+#   # 设置健康检查策略，默认开启，timeout默认2（单位：秒），intervalTime默认3（单位：秒），timeout必须小于intervalTime，healthNum默认3（单位：次），unhealthNum默认3（单位：次）
+#   healthCheck: 
+#     enabled: true # 是否开启健康检查， true（开启），false（关闭）
+#     timeout: 50 # 健康检查的响应超时时间，可选值：2~60，默认值：2，单位：秒。响应超时时间要小于检查间隔时间。
+#     intervalTime: 150 # 健康检查探测间隔时间，默认值：5，可选值：5~300，单位：秒。
+#     healthNum: 5 # 健康阈值，默认值：3，表示当连续探测三次健康则表示该转发正常，可选值：2~10，单位：次。
+#     unHealthNum: 5 # 不健康阈值，默认值：3，表示当连续探测三次不健康则表示该转发异常，可选值：2~10，单位：次。
+# # 设置udp监听器，字段含义同tcp监听器
+# udp:
+# - serviceName: udp-test
+#   namespace: test
+#   clbPort: 18003
+#   servicePort: 18003
+#   sessionTime: 90
+#   lbPolicy:
+#     strategy: wrr
+#   healthCheck:
+#     enabled: true
+#     timeout: 50
+#     intervalTime: 150
+#     healthNum: 5
+#     unHealthNum: 5
+# # 设置http监听器
+# http:
+# - host: www.qq.com # http监听器转发规则的域名
+#   path: / # http监听器转发规则的url
+#   serviceName: http-test # k8s中定义的Service的名字
+#   namespace: test # k8s中定义的Service的命名空间
+#   clbPort: 18004 # http监听器在clb上监听的端口 1～65535
+#   servicePort: 18004 # k8s中定义的ServicePort的端口（非NodePort）
+#   sessionTime: 90 # 会话保持时间，单位：秒。可选值：30~3600，默认 0，表示不开启
+#   lbPolicy:
+#     strategy: wrr # 负载均衡策略，可选[wrr, least_conn, ip_hash]
+#   healthCheck:
+#     enabled: true
+#     timeout: 50
+#     intervalTime: 150
+#     healthNum: 5
+#     unHealthNum: 5
+#     # 应用型负载均衡监听器转发规则的健康状态码。可选值：1~31，默认31。
+#     # 1表示探测后返回值 1xx 表示健康，2表示返回 2xx 表示健康，4表示返回 3xx 表示健康，8表示返回 4xx 表示健康，16表示返回 5xx 表示健康。
+#     # 若希望多种码都表示健康，则将相应的值相加。
+#     httpCode: 31
+#     #  应用型负载均衡监听器转发规则的探测路径，默认/，必须以/开头。长度限制为：1 - 80，可用的字符包括字母、数字、‘_’、‘-’、‘.’、‘=’、‘？’、‘/’。
+#     httpCheckPath: /list
 
+# https:
+# - host: www.qq.com
+#   path: /
+#   serviceName: https-test
+#   namespace: test
+#   clbPort: 18004
+#   servicePort: 18004
+#   healthCheck: ...
+#   tls:
+#     # HTTPS 协议的认证类型，unidirectional：单向认证，mutual：双向认证
+#     mode: unidirectional
+#     # 在腾讯云控制台创建的服务端证书的 ID，HTTPS 监听器如果不填写此项则必须上传证书，包括 certServerContent，certServerKey，certServerName。
+#     certId: xxxxxx
+#     # certId为空时，必填
+#     certServerName: xxxxx
+#     # certId为空时，必填
+#     certServerKey: xxxx
+#     # certId为空时，必填
+#     certServerContent: xxxx
+#     # 客户端证书的 ID，如果 mode=mutual，监听器如果不填写此项则必须上传客户端证书，包括 certClientCaName，certCilentCaContent
+#     certCaId: xxxx
+#     # 当mode=mutual且certId为空时，必填
+#     certClientCaName: xxxx
+#     # 当mode=mutual且certId为空时，必填
+#     certCilentCaContent: xxxx
+
+# # Statefulset方案支持
+# statefulset:
+#   tcp:
+#   - serviceName: tcp-test
+#     namespace: test
+#     # clb实际监听的端口段为 [startPort+startIndex, startPort+endIndex]
+#     # 端口映射的启动端口
+#     startPort: 3000
+#     # 当前clb实例管理的启动端口段起始位置
+#     startIndex: 0
+#     # 当前clb实例管理的映射端口段结束位置
+#     endIndex: 100
+#     sessionTime: 90
+#     lbPolicy:
+#       strategy: wrr
+#     healthCheck:
+#       enabled: true
+#       timeout: 50
+#       intervalTime: 150
+#       healthNum: 5
+#       unHealthNum: 5
+
+# clbName: 所关联的clb的名字
+clbName: xxxxx-qa-clb
 ingresses:
   http: []
   https: []

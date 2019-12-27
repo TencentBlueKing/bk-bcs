@@ -14,12 +14,6 @@
 package storage
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	commtypes "bk-bcs/bcs-common/common/types"
-	lbtypes "bk-bcs/bcs-common/pkg/loadbalance/v2"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -27,6 +21,13 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/http/httpclient"
+	commtypes "bk-bcs/bcs-common/common/types"
+	lbtypes "bk-bcs/bcs-common/pkg/loadbalance/v2"
+	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //CCResponse response struct from CC
@@ -205,6 +206,24 @@ func (cc *CCStorage) init() error {
 		},
 	}
 
+	cc.handlers[dataTypeIPPoolStatic] = &ChannelProxy{
+		dataQueue: make(chan *types.BcsSyncData, 1024),
+		actionHandler: &NetServiceHandler{
+			oper:      cc,
+			dataType:  dataTypeIPPoolStatic,
+			ClusterID: cc.ClusterID,
+		},
+	}
+
+	cc.handlers[dataTypeIPPoolStaticDetail] = &ChannelProxy{
+		dataQueue: make(chan *types.BcsSyncData, 1024),
+		actionHandler: &NetServiceHandler{
+			oper:      cc,
+			dataType:  dataTypeIPPoolStaticDetail,
+			ClusterID: cc.ClusterID,
+		},
+	}
+
 	return nil
 }
 
@@ -306,8 +325,6 @@ func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string)
 		blog.Error("marsha1 json for %s failed: %+v", path, err)
 		return err
 	}
-
-	//blog.V(3).Infof("DC [%s %s] begin", action, path)
 
 	begin := time.Now().UnixNano() / 1e6
 

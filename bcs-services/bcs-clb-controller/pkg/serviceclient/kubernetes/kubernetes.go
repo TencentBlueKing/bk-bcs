@@ -11,11 +11,11 @@
  *
  */
 
-/* 
+/*
  * [Design]
- * For ordinary Service and Pod, 
- * we use Endpoint data to structure AppService, 
- * because k8s has helped to select ready Pods; 
+ * For ordinary Service and Pod,
+ * we use Endpoint data to structure AppService,
+ * because k8s has helped to select ready Pods;
  * for Statefulset pods, we use pod data directly;
  */
 
