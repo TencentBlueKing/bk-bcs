@@ -231,14 +231,14 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 		for _, portInfo := range svr.ServicePort {
 			//skip when no backends
 			if portInfo.Backends == nil || len(portInfo.Backends) == 0 || portInfo.ServicePort == 0 {
-				blog.Errorf("Get no backends in Service %s/%s in %s/%d", svr.Namespace, svr.ServiceName, portInfo.Protocol, portInfo.ServicePort)
+				blog.Warnf("Get no backends in Service %s/%s in %s/%d", svr.Namespace, svr.ServiceName, portInfo.Protocol, portInfo.ServicePort)
 				continue
 			}
 
 			backends := convertPortBackends(portInfo, svr)
 			//protect empty backend list
 			if len(backends) == 0 {
-				blog.Errorf("Reflector got no backend for %s/%s in service port %d, discard data", svr.Namespace, svr.ServiceName, portInfo.ServicePort)
+				blog.Warnf("Reflector got no backend for %s/%s in service port %d, discard data", svr.Namespace, svr.ServiceName, portInfo.ServicePort)
 				continue
 			}
 

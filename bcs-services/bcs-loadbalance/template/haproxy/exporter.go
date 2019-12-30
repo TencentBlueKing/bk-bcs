@@ -310,6 +310,7 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(haproxyCurrentConnRate, prometheus.GaugeValue, float64(status.ConnRate), []string{}...)
 	ch <- prometheus.MustNewConstMetric(haproxyMaxConnRate, prometheus.GaugeValue, float64(status.ConnMaxRate), []string{}...)
 
+	// Attentions: frontend or backend may be empty occasionally
 	for _, service := range status.Services {
 		frontend := service.Frontend
 		if frontend != nil {
@@ -342,15 +343,14 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 			for _, server := range servers {
 				for i := 0; i <= 33; i++ {
 					if i == 15 {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertStatus(server.Status), server.ServerName, backend.Name, server.Address)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertStatus(server.Status), server.ServerName, server.Name, server.Address)
 					} else if i == 27 {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(server.CheckStatus), server.ServerName, backend.Name, server.Address)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(server.CheckStatus), server.ServerName, server.Name, server.Address)
 					} else {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, getValue(server, keysArray[i]), server.ServerName, backend.Name, server.Address)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, getValue(server, keysArray[i]), server.ServerName, server.Name, server.Address)
 					}
 				}
 			}
 		}
-
 	}
 }
