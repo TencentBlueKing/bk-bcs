@@ -31,8 +31,15 @@ import (
 )
 
 const (
-	BcsApiPrefix       = "/bcsapi/v4/storage/"
+	BCSAPIPrefix       = "/bcsapi/v4/storage/"
 	BCSStoragePrefixV1 = "/bcsstorage/v1/"
+)
+
+var (
+	// FlushInterval specifies the flush interval
+	// to flush to the client while copying the
+	// response body.
+	flushImmediately time.Duration = -1
 )
 
 func init() {
@@ -59,7 +66,7 @@ var defaultStorageTransport = &http.Transport{
 	// connections per host, including connections in the dialing,
 	// active, and idle states. On limit violation, dials will block.
 	// Zero means no limit.
-	MaxConnsPerHost: 100,
+	// MaxConnsPerHost: 100,
 
 	// MaxIdleConnsPerHost, if non-zero, controls the maximum idle
 	// (keep-alive) connections to keep per-host.
@@ -68,7 +75,7 @@ var defaultStorageTransport = &http.Transport{
 	// IdleConnTimeout is the maximum amount of time an idle
 	// (keep-alive) connection will remain idle before closing itself.
 	// Zero means no limit.
-	IdleConnTimeout: 10 * time.Minute,
+	// IdleConnTimeout: 10 * time.Minute,
 }
 
 // storageDirector directe http request to target storage service.
@@ -92,7 +99,7 @@ func storageDirector(req *http.Request) {
 	// directe to new storage URL.
 	req.URL.Scheme = ser.Scheme
 	req.URL.Host = fmt.Sprintf("%s:%d", ser.IP, ser.Port)
-	req.URL.Path = BCSStoragePrefixV1 + strings.Replace(req.URL.Path, BcsApiPrefix, "", 1)
+	req.URL.Path = BCSStoragePrefixV1 + strings.Replace(req.URL.Path, BCSAPIPrefix, "", 1)
 
 	if strings.ToLower(ser.Scheme) == "https" &&
 		defaultStorageTransport.TLSClientConfig == nil {
@@ -115,6 +122,7 @@ func storageModifyResponse(resp *http.Response) error {
 
 // defaultStorageProxy is default storage reverse proxy.
 var defaultStorageProxy = &httputil.ReverseProxy{
+	FlushInterval:  flushImmediately,
 	Director:       storageDirector,
 	Transport:      defaultStorageTransport,
 	ModifyResponse: storageModifyResponse,
