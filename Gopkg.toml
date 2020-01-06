@@ -54,6 +54,9 @@ required = [
   "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317",
   "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312",
   "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312",
+  "github.com/containernetworking/plugins/plugins/main/macvlan",
+  "github.com/containernetworking/plugins/plugins/main/bridge",
+  "github.com/containernetworking/plugins/plugins/main/ptp",
 ]
 
 [[override]]
