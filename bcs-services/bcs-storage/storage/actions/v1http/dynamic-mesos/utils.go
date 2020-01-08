@@ -207,7 +207,10 @@ func (rd *reqDynamic) getFeat(resourceFeatList []string) *operator.Condition {
 			features[k] = v
 		}
 
-		rd.condition = operator.NewCondition(operator.Eq, features).And(operator.NewCondition(operator.Ne, featuresExcept))
+		rd.condition = operator.NewCondition(operator.Eq, features)
+		if len(featuresExcept) > 0 {
+			rd.condition.And(operator.NewCondition(operator.Ne, featuresExcept))
+		}
 	}
 	return rd.condition
 }
