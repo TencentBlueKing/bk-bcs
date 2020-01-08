@@ -37,8 +37,9 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 	blog.Infof("transaction %s reschedule(%s) run begin", transaction.ID, taskGroupID)
 
 	started := time.Now()
-	//var offerIdx int64 = 0
+	var schedulerNumber int64
 	for {
+		schedulerNumber++
 		blog.Infof("transaction %s reschedule(%s) run check", transaction.ID, taskGroupID)
 
 		//check begin
@@ -112,13 +113,15 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			break
 		}
 
-		//don't have fit enough resources
-		rescheduleOpdata := transaction.OpData.(*TransRescheduleOpData)
-		taskGroupID := rescheduleOpdata.TaskGroupID
-		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
-		if taskGroup != nil {
-			taskGroup.Message = "don't have fit resources to reschedule this taskgroup"
-			s.store.SaveTaskGroup(taskGroup)
+		// when scheduler taskgroup number>=10, then report resources insufficient message
+		if schedulerNumber == 10 {
+			s.store.LockApplication(runAs + "." + appID)
+			taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
+			if taskGroup != nil {
+				taskGroup.Message = "don't have fit resources to reschedule this taskgroup"
+				s.store.SaveTaskGroup(taskGroup)
+			}
+			s.store.UnLockApplication(runAs + "." + appID)
 		}
 
 		//check timeout
