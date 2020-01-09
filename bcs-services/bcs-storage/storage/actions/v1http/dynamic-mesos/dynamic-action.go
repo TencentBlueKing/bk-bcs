@@ -39,6 +39,10 @@ const (
 	updateTimeTag = "updateTime"
 	createTimeTag = "createTime"
 	timeLayout    = "2006-01-02 15:04:05"
+
+	applicationTypeName = "application"
+	processTypeName     = "process"
+	kindTag             = "data.kind"
 )
 
 var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
