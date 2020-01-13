@@ -240,8 +240,14 @@ network:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/ptp ./vendor/github.com/containernetworking/plugins/plugins/main/ptp/ptp.go
 
 clb-controller:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
-	GOOS=linux go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
+	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+
+gw-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-gw-controller
+	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
 
 bcs-log-webhook:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
