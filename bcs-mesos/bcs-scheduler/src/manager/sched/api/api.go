@@ -313,7 +313,7 @@ func (r *Router) createDeployment(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request create deployment(%s.%s)",
 		deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	if deploymentDef.RawJson == "" {
+	if deploymentDef.RawJson == nil {
 		blog.Warn("request create deployment(%s.%s) without raw json, please check driver version",
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
 	}
@@ -352,7 +352,7 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 
 	blog.Info("request update deployment(%s.%s)",
 		deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
-	if deploymentDef.RawJson == "" {
+	if deploymentDef.RawJson == nil {
 		blog.Warn("request update deployment(%s.%s) without raw json, please check driver version",
 			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name)
 	}
@@ -868,9 +868,9 @@ func (r *Router) buildApplication(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	/*if version.RawJson == nil {
+	if version.RawJson == nil {
 		blog.Error("request create application(%s.%s) without raw json", version.RunAs, version.ID)
-	}*/
+	}
 
 	if version.Instances <= 0 {
 		blog.Error("request build application(%s.%s) Instances(%d) err", version.RunAs, version.ID, version.Instances)
@@ -1038,7 +1038,7 @@ func (r *Router) getApplicationDef(req *restful.Request, resp *restful.Response)
 		return
 	}
 
-	if version == nil || version.RawJson == "" {
+	if version == nil || version.RawJson == nil {
 		blog.Error("request get definition of application(%s::%s) failed: rawJson is nil ", runAs, appId)
 		err := errors.New("application's definition not exist, maybe the application was created by deployment")
 		data := createResponeData(err, err.Error(), nil)
@@ -1074,7 +1074,7 @@ func (r *Router) getDeploymentDef(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	if deployment == nil || deployment.RawJson == "" {
+	if deployment == nil || deployment.RawJson == nil {
 		blog.Error("request get definition of deployment(%s::%s) failed: rawJson is nil ", runAs, deploymentId)
 		err := errors.New("deployment's definition not exist")
 		data := createResponeData(err, err.Error(), nil)

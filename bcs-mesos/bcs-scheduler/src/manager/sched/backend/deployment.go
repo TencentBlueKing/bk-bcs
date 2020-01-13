@@ -54,7 +54,7 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 		Strategy:      deploymentDef.Strategy,
 		Status:        types.DEPLOYMENT_STATUS_DEPLOYING,
 		RawJson:       deploymentDef.RawJson,
-		RawJsonBackup: "",
+		RawJsonBackup: nil,
 	}
 	if err = b.store.SaveDeployment(&deployment); err != nil {
 		blog.Error("request create deployment, save deployment(%s.%s) err:%s", ns, name, err.Error())
@@ -551,7 +551,7 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 
 	// rollback deployment definition
 	deployment.RawJson = deployment.RawJsonBackup
-	deployment.RawJsonBackup = ""
+	deployment.RawJsonBackup = nil
 
 	deployment.Status = types.DEPLOYMENT_STATUS_RUNNING
 	deployment.ApplicationExt = nil

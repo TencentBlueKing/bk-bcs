@@ -96,8 +96,7 @@ func (s *Scheduler) newVersionWithParam(param *bcstype.ReplicaController) (*type
 	}
 
 	//store ReplicaController original definition
-	by, _ := json.Marshal(param)
-	version.RawJson = string(by)
+	version.RawJson = param
 	version.ObjectMeta = param.ObjectMeta
 	version.KillPolicy = &param.KillPolicy
 

@@ -41,7 +41,7 @@ func (s *Scheduler) CreateDeployment(body []byte) (string, error) {
 		return err.Error(), err
 	}
 	//store BcsDeployment original definition
-	deploymentDef.RawJson = string(body)
+	deploymentDef.RawJson = &param
 
 	// post deploymentdef to bcs-mesos-scheduler,
 	data, err := json.Marshal(deploymentDef)
@@ -91,7 +91,7 @@ func (s *Scheduler) UpdateDeployment(body []byte) (string, error) {
 	}
 
 	//store BcsDeployment original definition
-	deploymentDef.RawJson = string(body)
+	deploymentDef.RawJson = &param
 
 	// post deploymentdef to bcs-mesos-scheduler,
 	data, err := json.Marshal(deploymentDef)

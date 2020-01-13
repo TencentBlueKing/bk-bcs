@@ -29,11 +29,15 @@ const TRANSACTION_APPLICATION_LAUNCH_LIFEPERIOD = 1800
 
 // Max lifeperoid for every rolling transaction, 300 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
-const TRANSACTION_DEPLOYMENT_ROLLING_LIFEPERIOD = 300
+const TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD = 300
+
+// Max lifeperoid for every rolling transaction, 300 seconds
+// If a transaction dosen't finish in its lifePeriod, it will be timeout
+const TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD = 7500
 
 // Max lifeperoid for innder delete application transaction, 300 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
-const TRANSACTION_DEPLOYMENT_INNERDELETE_LIFEPERIOD = 300
+const TRANSACTION_DEPLOYMENT_INNERDELETE_LIFEPERIOD = 7500
 
 // Max lifePeriod for inner taskgroup-reschedule, 3600 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
