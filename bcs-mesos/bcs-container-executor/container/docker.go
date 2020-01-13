@@ -446,15 +446,15 @@ func (docker *DockerContainer) StopContainer(containerName string, timeout int) 
 
 	done := make(chan error, 1)
 	func() {
-		fmt.Fprintf(os.Stdout, "start stop container %s", containerName)
+		fmt.Fprintf(os.Stdout, "start stop container %s\n", containerName)
 		err := docker.client.StopContainer(containerName, uint(timeout))
-		fmt.Fprintf(os.Stdout, "stop container %s done", containerName)
+		fmt.Fprintf(os.Stdout, "stop container %s done\n", containerName)
 		done <- err
 	}()
 
 	select {
 	case <-ticker:
-		fmt.Fprintf(os.Stdout, "stop container %s timeout", containerName)
+		fmt.Fprintf(os.Stdout, "stop container %s timeout\n", containerName)
 		return fmt.Errorf("stop container %s timeout", containerName)
 	case err := <-done:
 		return err
@@ -468,7 +468,7 @@ func (docker *DockerContainer) RemoveContainer(containerName string, force bool)
 		Force: force,
 	}
 	if err := docker.client.RemoveContainer(opt); err != nil {
-		fmt.Fprintf(os.Stderr, "Remove Container %s failed, err %s", containerName, err.Error())
+		fmt.Fprintf(os.Stderr, "Remove Container %s failed, err %s\n", containerName, err.Error())
 		return err
 	}
 	fmt.Fprintf(os.Stdout, "Success to remove container %s\n", containerName)
