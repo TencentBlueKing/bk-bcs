@@ -242,6 +242,7 @@ func (s *Scheduler) checkCreateFirstRollingStart(deployment *types.Deployment) b
 		// do delete
 		if app.Instances > uint64(deployment.Application.CurrentTargetInstances) {
 			deployment.CurrRollingOp = types.DEPLOYMENT_OPERATION_DELETE
+			deployment.LastRollingTime = time.Now().Unix()
 			s.innerScaleApplication(app.RunAs, app.ID, uint64(deployment.Application.CurrentTargetInstances))
 		} else {
 			blog.Info("deployment(%s.%s) rolling update, application(%s) instances change to %d",
@@ -337,6 +338,7 @@ func (s *Scheduler) checkDeleteFirstRollingDelete(deployment *types.Deployment) 
 		// do start
 		if appExt.Instances < uint64(deployment.ApplicationExt.CurrentTargetInstances) {
 			deployment.CurrRollingOp = types.DEPLOYMENT_OPERATION_START
+			deployment.LastRollingTime = time.Now().Unix()
 			s.innerScaleApplication(appExt.RunAs, appExt.ID, uint64(deployment.ApplicationExt.CurrentTargetInstances))
 		} else {
 			blog.Info("deployment(%s.%s) rolling update: applicationExt(%s) instances change to %d/%d",
@@ -453,7 +455,14 @@ func (s *Scheduler) deploymentCheckRolling(deployment *types.Deployment) bool {
 	name := deployment.ObjectMeta.Name
 
 	now := time.Now().Unix()
-	if deployment.LastRollingTime+TRANSACTION_DEPLOYMENT_ROLLING_LIFEPERIOD+60 < now {
+	var lifeperiod int64
+	if deployment.CurrRollingOp==types.DEPLOYMENT_OPERATION_START {
+		lifeperiod = TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD
+	}else {
+		lifeperiod = TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD
+	}
+
+	if deployment.LastRollingTime+lifeperiod+60 < now {
 		blog.Warnf("====deployment(%s.%s) rolling update: %s timeout, suspend", ns, name, deployment.CurrRollingOp)
 		if deployment.CurrRollingOp == types.DEPLOYMENT_OPERATION_START {
 			deployment.Message = "create taskgroup timeout, rollingupdate suspend"
@@ -587,7 +596,12 @@ func (s *Scheduler) innerScaleApplication(runAs, appID string, instances uint64)
 	scaleTrans.OpType = types.OPERATION_INNERSCALE
 	scaleTrans.Status = types.OPERATION_STATUS_INIT
 
-	scaleTrans.LifePeriod = TRANSACTION_DEPLOYMENT_ROLLING_LIFEPERIOD
+	if isDown {
+		scaleTrans.LifePeriod = TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD
+	}else {
+		scaleTrans.LifePeriod = TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD
+	}
+
 
 	var scaleOpdata TransAPIScaleOpdata
 	scaleOpdata.Version = version

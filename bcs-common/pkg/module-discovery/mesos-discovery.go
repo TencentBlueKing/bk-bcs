@@ -78,9 +78,9 @@ func (r *mesosDiscovery) GetModuleServers(moduleName string) ([]interface{}, err
 	defer r.RUnlock()
 
 	var servs []interface{}
-	for k,v := range r.servers {
-		if strings.Contains(k,moduleName) {
-			servs = append(servs,v...)
+	for k, v := range r.servers {
+		if strings.Contains(k, moduleName) {
+			servs = append(servs, v...)
 		}
 	}
 
