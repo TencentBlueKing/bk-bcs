@@ -247,7 +247,7 @@ clb-controller:pre
 gw-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-gw-controller
 	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
 
 bcs-log-webhook:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
