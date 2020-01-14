@@ -35,7 +35,6 @@ type Processor struct {
 	serviceClient   svcclient.Client
 	ingressRegistry clbingress.Registry
 	updater         Updater
-	updateFlag      *model.AtomicBool
 	doingFlag       *model.AtomicBool
 	rootCtx         context.Context
 	rootCancel      context.CancelFunc
@@ -79,12 +78,9 @@ func NewProcessor(opt *Option) (*Processor, error) {
 		rootCtx:    ctx,
 		rootCancel: cancel,
 	}
-	updateFlag := model.NewAtomicBool()
-	updateFlag.Set(true)
 	doingFlag := model.NewAtomicBool()
 	doingFlag.Set(false)
 	proc.opt = opt
-	proc.updateFlag = updateFlag
 	proc.doingFlag = doingFlag
 	// service handler change the update flag
 	svcHandler := processor.NewAppServiceHandler()
@@ -130,9 +126,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 }
 
 // SetUpdated set update flag 
-func (p *Processor) SetUpdated() {
-	p.updateFlag.Set(true)
-}
+func (p *Processor) SetUpdated() {}
 
 // Run run processor loop
 func (p *Processor) Run() {
@@ -144,15 +138,10 @@ func (p *Processor) Run() {
 			return
 		case <-updateTick.C:
 			blog.V(3).Infof("update tick rings")
-			if !p.updateFlag.Value() {
-				blog.V(3).Infof("no update event happend, continue")
-				continue
-			}
 
 			if !p.doingFlag.Value() {
 				blog.V(3).Infof("get update event, going to do some small things...")
 				p.doingFlag.Set(true)
-				p.updateFlag.Set(false)
 				go func() {
 					p.Handle()
 					p.doingFlag.Set(false)

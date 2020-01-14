@@ -91,7 +91,7 @@ func (c *Client) Run() error {
 	for {
 		select {
 		case event := <-ch:
-			var serverInfo *ServerInfo
+			serverInfo := new(ServerInfo)
 			if event.Err != nil {
 				blog.Errorf("get err in discovery event, err %s", err.Error())
 				c.masterMutx.Lock()

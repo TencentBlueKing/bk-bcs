@@ -81,7 +81,7 @@ func init() {
 	serverCmd.Flags().StringVar(&pathLabelKey, "pathLabelKey", "path.gw.bkbcs.tencent.com", "label key for gw path")
 	// for kube registry
 	serverCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "kubeconfig for access kube-apiserver, if empty, use in-cluster config, default: empty")
-	serverCmd.Flags().IntVar(&syncPeriod, "syncPeriod", 60, "period for synchronize k8s services")
+	serverCmd.Flags().IntVar(&syncPeriod, "syncPeriod", 30, "period for synchronize k8s services")
 	// log option
 	serverCmd.Flags().StringVar(&logDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	serverCmd.Flags().Uint64Var(&logMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
@@ -136,7 +136,7 @@ func validateArgs() bool {
 	}
 
 	reg, _ = regexp.Compile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(\\/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
-	if !reg.MatchString(serviceLabelKey) || !reg.MatchString(domainLabelKey) || 
+	if !reg.MatchString(serviceLabelKey) || !reg.MatchString(domainLabelKey) ||
 		!reg.MatchString(portLabelkey) || !reg.MatchString(proxyPortLabelKey) {
 		blog.Errorf("one of serviceLabelkey %s, domainLabelKey %s, portLabelkey %s, proxyPortLabelKey %s, invalid, must be form of "+
 			"[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(\\/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?",
