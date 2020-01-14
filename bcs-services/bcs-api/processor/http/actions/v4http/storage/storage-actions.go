@@ -15,147 +15,128 @@ package storage
 
 import (
 	"fmt"
-	"io/ioutil"
+	"net"
+	"net/http"
+	"net/http/httputil"
 	"strings"
+	"time"
 
-	"bk-bcs/bcs-common/common"
+	"github.com/emicklei/go-restful"
+
 	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
-	"bk-bcs/bcs-common/common/http/httpclient"
 	"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
-
-	"github.com/emicklei/go-restful"
-	"time"
 )
 
 const (
-	BcsApiPrefix = "/bcsapi/v4/storage/"
+	BCSAPIPrefix       = "/bcsapi/v4/storage/"
+	BCSStoragePrefixV1 = "/bcsstorage/v1/"
+)
+
+var (
+	// FlushInterval specifies the flush interval
+	// to flush to the client while copying the
+	// response body.
+	flushImmediately time.Duration = -1
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: handlerPostActions})
-	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: handlerPutActions})
-	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: handlerGetActions})
-	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: handlerDeleteActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
 }
 
-func request2storage(req *restful.Request, uri, method string) (string, error) {
-	start := time.Now()
+// defaultStorageTransport is default storage transport instance.
+var defaultStorageTransport = &http.Transport{
+	// base proxy, could be covered by director.
+	Proxy: http.ProxyFromEnvironment,
+	DialContext: (&net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).DialContext,
 
-	data, err := ioutil.ReadAll(req.Request.Body)
-	if err != nil {
-		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
-		blog.Error("handler url %s read request body failed, error: %s", uri, err.Error())
-		err1 := bhttp.InternalError(common.BcsErrCommHttpReadBodyFail, common.BcsErrCommHttpReadBodyFailStr)
-		return err1.Error(), nil
-	}
+	// TLSHandshakeTimeout specifies the maximum amount of time waiting to
+	// wait for a TLS handshake. Zero means no timeout.
+	TLSHandshakeTimeout: 10 * time.Second,
 
+	// MaxConnsPerHost optionally limits the total number of
+	// connections per host, including connections in the dialing,
+	// active, and idle states. On limit violation, dials will block.
+	// Zero means no limit.
+	// MaxConnsPerHost: 100,
+
+	// MaxIdleConnsPerHost, if non-zero, controls the maximum idle
+	// (keep-alive) connections to keep per-host.
+	MaxIdleConnsPerHost: 25,
+
+	// IdleConnTimeout is the maximum amount of time an idle
+	// (keep-alive) connection will remain idle before closing itself.
+	// Zero means no limit.
+	// IdleConnTimeout: 10 * time.Minute,
+}
+
+// storageDirector directe http request to target storage service.
+func storageDirector(req *http.Request) {
 	rd, err := regdiscv.GetRDiscover()
 	if err != nil {
-		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
-		blog.Error("hander url %s get RDiscover error %s", uri, err.Error())
-		err1 := bhttp.InternalError(common.BcsErrApiInternalFail, common.BcsErrApiInternalFailStr)
-		return err1.Error(), nil
+		blog.Error("storage director, can't get discovery handler, %+v", err)
+		return
 	}
-
 	serv, err := rd.GetModuleServers(types.BCS_MODULE_STORAGE)
 	if err != nil {
-		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
-		blog.Error("get servers %s error %s", types.BCS_MODULE_STORAGE, err.Error())
-		err1 := bhttp.InternalError(common.BcsErrApiGetStorageFail, common.BcsErrApiGetStorageFailStr)
-		return err1.Error(), nil
+		blog.Error("storage director, can't get target server module[%s] from RD, %+v", types.BCS_MODULE_STORAGE, err)
+		return
 	}
-
 	ser, ok := serv.(*types.BcsStorageInfo)
 	if !ok {
-		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
-		blog.Errorf("servers convert to BcsStorageInfo")
-		err1 := bhttp.InternalError(common.BcsErrApiGetStorageFail, common.BcsErrApiGetStorageFailStr)
-		return err1.Error(), nil
+		blog.Errorf("storage director, can't parse storage info from RD, %+v", serv)
+		return
 	}
 
-	host := fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
-	url := fmt.Sprintf("%s/bcsstorage/v1/%s", host, uri)
-	blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
+	// directe to new storage URL.
+	req.URL.Scheme = ser.Scheme
+	req.URL.Host = fmt.Sprintf("%s:%d", ser.IP, ser.Port)
+	req.URL.Path = BCSStoragePrefixV1 + strings.Replace(req.URL.Path, BCSAPIPrefix, "", 1)
 
-	httpcli := httpclient.NewHttpClient()
-	httpcli.SetHeader("Content-Type", "application/json")
-	httpcli.SetHeader("Accept", "application/json")
-	if strings.ToLower(ser.Scheme) == "https" {
+	if strings.ToLower(ser.Scheme) == "https" &&
+		defaultStorageTransport.TLSClientConfig == nil {
+
 		cliTls, err := rd.GetClientTls()
 		if err != nil {
-			blog.Errorf("get client tls error %s", err.Error())
+			blog.Errorf("storage director, can't get storage client TLS configs from RD, %+v", err)
+			return
 		}
-		httpcli.SetTlsVerityConfig(cliTls)
+		// common TLS configs, used by default storage transport.
+		defaultStorageTransport.TLSClientConfig = cliTls
 	}
-
-	reply, err := httpcli.Request(url, method, req.Request.Header, data)
-	if err != nil {
-		metric.RequestErrorCount.WithLabelValues("storage", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
-		blog.Error("request url %s error %s", url, err.Error())
-		err1 := bhttp.InternalError(common.BcsErrApiRequestMesosApiFail, common.BcsErrApiRequestMesosApiFailStr)
-		return err1.Error(), nil
-	}
-
-	metric.RequestCount.WithLabelValues("storage", method).Inc()
-	metric.RequestLatency.WithLabelValues("storage", method).Observe(time.Since(start).Seconds())
-
-	return string(reply), err
 }
 
-func handlerPostActions(req *restful.Request, resp *restful.Response) {
-	blog.V(3).Infof("client %s request %s", req.Request.RemoteAddr, req.Request.URL.Path)
-
-	url := strings.Replace(req.Request.URL.Path, BcsApiPrefix, "", 1)
-
-	if req.Request.URL.RawQuery != "" {
-		url = fmt.Sprintf("%s?%s", url, req.Request.URL.RawQuery)
-	}
-
-	data, _ := request2storage(req, url, "POST")
-	resp.Write([]byte(data))
+// storageModifyResponse modifies storage response.
+func storageModifyResponse(resp *http.Response) error {
+	// do nothing.
+	return nil
 }
 
-func handlerGetActions(req *restful.Request, resp *restful.Response) {
-	blog.V(3).Infof("client %s request %s", req.Request.RemoteAddr, req.Request.URL.Path)
-	url := strings.Replace(req.Request.URL.Path, BcsApiPrefix, "", 1)
-
-	if req.Request.URL.RawQuery != "" {
-		url = fmt.Sprintf("%s?%s", url, req.Request.URL.RawQuery)
-	}
-
-	data, _ := request2storage(req, url, "GET")
-	resp.Write([]byte(data))
+// defaultStorageProxy is default storage reverse proxy.
+var defaultStorageProxy = &httputil.ReverseProxy{
+	FlushInterval:  flushImmediately,
+	Director:       storageDirector,
+	Transport:      defaultStorageTransport,
+	ModifyResponse: storageModifyResponse,
 }
 
-func handlerDeleteActions(req *restful.Request, resp *restful.Response) {
-	blog.V(3).Infof("client %s request %s", req.Request.RemoteAddr, req.Request.URL.Path)
-	url := strings.Replace(req.Request.URL.Path, BcsApiPrefix, "", 1)
+// storageProxyActions is actions handler for storage proxy.
+func storageProxyActions(req *restful.Request, resp *restful.Response) {
+	start := time.Now()
+	blog.V(3).Infof("request to storage, client[%s] req[%+v], method[%s]",
+		req.Request.RemoteAddr, req.Request.URL.Path, req.Request.Method)
 
-	if req.Request.URL.RawQuery != "" {
-		url = fmt.Sprintf("%s?%s", url, req.Request.URL.RawQuery)
-	}
+	// proxy to storage.
+	defaultStorageProxy.ServeHTTP(resp, req.Request)
 
-	data, _ := request2storage(req, url, "DELETE")
-	resp.Write([]byte(data))
-}
-
-func handlerPutActions(req *restful.Request, resp *restful.Response) {
-	blog.V(3).Infof("client %s request %s", req.Request.RemoteAddr, req.Request.URL.Path)
-	url := strings.Replace(req.Request.URL.Path, BcsApiPrefix, "", 1)
-
-	if req.Request.URL.RawQuery != "" {
-		url = fmt.Sprintf("%s?%s", url, req.Request.URL.RawQuery)
-	}
-
-	data, _ := request2storage(req, url, "PUT")
-	resp.Write([]byte(data))
+	metric.RequestCount.WithLabelValues("storage", req.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("storage", req.Request.Method).Observe(time.Since(start).Seconds())
 }

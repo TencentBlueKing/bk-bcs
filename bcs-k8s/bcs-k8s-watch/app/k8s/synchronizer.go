@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/json-iterator/go"
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
@@ -27,81 +27,99 @@ import (
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
 
+const (
+	// defaultWatcherCheckInterval is default watcher check interval.
+	defaultWatcherCheckInterval = 5 * time.Minute
+)
+
+// Synchronizer syncs resource metadata to storage.
 type Synchronizer struct {
-	watchers       map[string]WatcherInterface
-	StorageService *bcs.StorageService
-	ClusterID      string
+	// id of current cluster.
+	clusterID string
+
+	// watchers that products metadata.
+	watchers map[string]WatcherInterface
+
+	// target storage service.
+	storageService *bcs.InnerService
 }
 
-func (sync *Synchronizer) Run(stop <-chan struct{}) {
-	glog.Info("wait for datawatcher to be ready")
-	duration := 5 * 60 * time.Second
+// NewSynchronizer creates a new Synchronizer instance.
+func NewSynchronizer(clusterID string, watchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
+	return &Synchronizer{
+		clusterID:      clusterID,
+		watchers:       watchers,
+		storageService: storageService,
+	}
+}
+
+// Run starts the Synchronizer and make it keep sync resources in period.
+func (sync *Synchronizer) Run(stopCh <-chan struct{}) {
+	glog.Info("synchronizer waiting for watchers to be ready")
 
 	for {
-		time.Sleep(duration)
+		time.Sleep(defaultWatcherCheckInterval)
 
 		select {
-		case <-stop:
-			glog.Warn("Synchronizer is stopped by signal....")
+		case <-stopCh:
+			glog.Warn("synchronizer is stopped by signal...")
 			return
 		default:
 		}
 
-		synced := true
+		// check all watchers sync-state.
+		hasSynced := true
 		for _, watcher := range sync.watchers {
 			w := watcher.(*Watcher)
+
 			if !w.controller.HasSynced() {
-				glog.Warn("Synchronizer is waiting all the watch controller synced. skip now...")
-				synced = false
+				hasSynced = false
 				break
 			}
 		}
 
-		if !synced {
+		if !hasSynced {
+			glog.Warn("synchronizer is waiting for all the watchers controller synced, skip now...")
 			continue
 		}
 
-		// sync cluster resource
+		// sync cluster resources.
 		clusterResourceTypes := []string{"Namespace", "Node"}
+
 		for _, clusterResourceType := range clusterResourceTypes {
 			glog.Info("begin to sync %s", clusterResourceType)
-			sync.SyncClusterResource(clusterResourceType, sync.watchers[clusterResourceType].(*Watcher))
+			sync.syncClusterResource(clusterResourceType, sync.watchers[clusterResourceType].(*Watcher))
 			glog.Info("sync %s done", clusterResourceType)
 		}
-		namespaces := sync.watchers["Namespace"].(*Watcher).store.ListKeys()
 
-		// sync  namespace resource
+		// sync namespace resources.
+		namespaces := sync.watchers["Namespace"].(*Watcher).store.ListKeys()
 		namespaceResourceTypes := []string{"Pod", "ReplicationController", "Service", "EndPoints", "ConfigMap", "Secret",
 			"Deployment", "Ingress", "ReplicaSet", "DaemonSet", "Job", "StatefulSet"}
 
 		for _, namespaceResourceType := range namespaceResourceTypes {
 			glog.Info("begin to sync %s", namespaceResourceType)
-			sync.SyncNamespaceResource(namespaceResourceType, namespaces, sync.watchers[namespaceResourceType].(*Watcher))
+			sync.syncNamespaceResource(namespaceResourceType, namespaces, sync.watchers[namespaceResourceType].(*Watcher))
 			glog.Info("sync %s done", namespaceResourceType)
 		}
-		// ignore event
 	}
 }
 
-func (sync *Synchronizer) SyncNamespaceResource(kind string, namespaces []string, watcher *Watcher) {
-
-	// get all pods local
+func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string, watcher *Watcher) {
+	// get all pods from local store.
 	localKeys := watcher.store.ListKeys()
-	//glog.Infof("Sync %s got pod list from local: len=%d, data=%v", kind, len(localKeys), localKeys)
 	glog.Infof("Sync %s got pod list from local: len=%d", kind, len(localKeys))
 
 	totalData := []map[string]string{}
 
 	for _, namespace := range namespaces {
-
-		//innerData := []map[string]string{}
 		data, err := sync.doRequest(namespace, kind)
-		//glog.Infof("Sync %s: namespace=%s, data len=%d, total len=%d", kind, namespace, len(data), len(totalData))
 		if err != nil {
 			glog.Errorf("Sync %s fail: namespace=%s, type=Pod, err=%s", kind, namespace, err)
 			continue
 		}
-		d, err := sync.doTransData(data)
+
+		d, err := sync.transData(data)
 		if err != nil {
 			glog.Errorf("Sync %s fail, transData err: namespace=%s, type=Pod, err=%s", kind, namespace, err)
 			continue
@@ -112,43 +130,40 @@ func (sync *Synchronizer) SyncNamespaceResource(kind string, namespaces []string
 			totalData = append(totalData, map[string]string{"resourceName": resourceName, "namespace": namespace})
 		}
 	}
-	//glog.Infof("Sync %s got list from storage: len=%d, data=%v", kind, len(totalData), totalData)
+
 	glog.Infof("Sync %s got list from storage: len=%d", kind, len(totalData))
-
 	sync.doSync(localKeys, totalData, watcher)
-
 }
 
-func (sync *Synchronizer) SyncClusterResource(kind string, watcher *Watcher) {
+func (sync *Synchronizer) syncClusterResource(kind string, watcher *Watcher) {
 	data, err := sync.doRequest("", kind)
 	if err != nil {
-		glog.Errorf("SyncClusterResource %s fail: err=%s", kind, err)
+		glog.Errorf("sync cluster resource %s fail: err=%s", kind, err)
 		return
 	}
 
 	localKeys := watcher.store.ListKeys()
 
-	d, err := sync.doTransData(data)
+	d, err := sync.transData(data)
 	if err != nil {
-		glog.Errorf("SyncClusterResource %s fail, transData error: err=%s", kind, err)
+		glog.Errorf("sync cluster resource %s fail, transData error: err=%s", kind, err)
 		return
 	}
 
-	glog.Infof("SyncClusterResource got %s list from storage: %v", kind, data)
+	glog.Infof("sync cluster resource got %s list from storage: %v", kind, data)
 	sync.doSync(localKeys, d, watcher)
-
 }
 
-func (sync *Synchronizer) doTransData(data interface{}) (d []map[string]string, err error) {
-	//d := []map[string]string{}
+func (sync *Synchronizer) transData(data interface{}) (d []map[string]string, err error) {
 	j, err := jsoniter.Marshal(data)
 	if err != nil {
-		glog.Errorf("doSync fail: err=%s", err)
+		glog.Errorf("transData fail: err=%s", err)
 		return
 	}
+
 	err = jsoniter.Unmarshal(j, &d)
 	if err != nil {
-		glog.Errorf("doSync fail: err=%s", err)
+		glog.Errorf("transData fail: err=%s", err)
 		return
 	}
 	return
@@ -156,14 +171,16 @@ func (sync *Synchronizer) doTransData(data interface{}) (d []map[string]string, 
 
 func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, watcher *Watcher) {
 	/*
+	   DEBUG:
 	   data = [
-	   {"resourceName": "n1"},
-	   {"resourceName": "n2"},
+	       {"resourceName": "n1"},
+	       {"resourceName": "n2"},
 	   ]
 	*/
+
 	localKeysMap := map[string]string{}
 	for _, localKey := range localKeys {
-		//  locakKey = namespace/name  or name
+		// localKey = namespace/name or name.
 		localKeysMap[localKey] = ""
 	}
 
@@ -172,86 +189,89 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 		resourceName := record["resourceName"]
 		namespace := record["namespace"]
 
-		// format to  storageKey = namespace/name or name
+		// format to storageKey = namespace/name or name.
 		if namespace == "" {
 			storageKeysMap[resourceName] = namespace
 		} else {
 			key := fmt.Sprintf("%s/%s", namespace, resourceName)
 			storageKeysMap[key] = namespace
 		}
-		// key = namespace/resourceName  value = namespace
+		// key = namespace/resourceName, value = namespace.
 	}
 
 	glog.Infof("sync got %s [local=%s, storage=%s]", watcher.resourceType, localKeysMap, storageKeysMap)
 
-	// sync from local to storage
+	// sync from local to storage service.
 	for key := range localKeysMap {
-		_, ok := storageKeysMap[key]
-		if !ok {
-			// to update
-			item, exists, err := watcher.store.GetByKey(key)
+		if _, ok := storageKeysMap[key]; !ok {
+			/* need to update */
 
+			item, exists, err := watcher.store.GetByKey(key)
 			if exists && err == nil {
-				syncData := watcher.genSyncData(item, "Add")
-				// maybe filtered
+				// build sync data.
+				syncData := watcher.genSyncData(item, action.SyncDataActionAdd)
+
 				if syncData == nil {
+					// maybe filtered.
 					continue
 				}
+
+				// sync add event base on the reconciliation logic.
 				watcher.writer.Sync(syncData)
 			}
 		}
 	}
 
-	// sync from storage with local
+	// sync from storage to local.
 	for key, namespace := range storageKeysMap {
-		_, ok := localKeysMap[key]
-		if !ok {
-			// to delete
+		if _, ok := localKeysMap[key]; !ok {
+			/* need to delete */
+
 			name := key
 			if namespace != "" {
 				namespaceNameList := strings.Split(key, "/")
 				name = namespaceNameList[1]
 			}
+
 			glog.Infof("sync: %s: %s (name=%s) not on local, do delete", watcher.resourceType, key, name)
 
 			syncData := &action.SyncData{
 				Kind:      watcher.resourceType,
 				Namespace: namespace,
 				Name:      name,
-				Action:    "Delete",
+				Action:    action.SyncDataActionDelete,
 				Data:      "",
 			}
+
+			// sync delete event base on the reconciliation logic.
 			watcher.writer.Sync(syncData)
 		}
 	}
 }
 
-// get resource from storage, namespace can be empty
+// get resource from storage, namespace can be empty.
 func (sync *Synchronizer) doRequest(namespace string, kind string) (data []interface{}, err error) {
-	serversCount := len(sync.StorageService.Servers)
-	if serversCount == 0 {
-		// the process get address from zk not finished yet or there is no storage server on zk
-		glog.Errorf("storage server list is empty! got no address yet")
-		err = fmt.Errorf("storage server list is empty! got no address yet")
-		return
-	}
+	targets := sync.storageService.Servers()
+	serversCount := len(targets)
 
-	keys := make([]string, 0, serversCount)
-	for key := range sync.StorageService.Servers {
-		keys = append(keys, key)
+	if serversCount == 0 {
+		// the process get address from zk not finished yet or there is no storage server on zk.
+		err = fmt.Errorf("storage server list is empty, got no address yet!")
+		glog.Errorf(err.Error())
+		return
 	}
 
 	var httpClientConfig *bcs.HTTPClientConfig
 	if serversCount == 1 {
-		httpClientConfig = sync.StorageService.Servers[keys[0]]
+		httpClientConfig = targets[0]
 	} else {
 		index := rand.Intn(serversCount)
-		httpClientConfig = sync.StorageService.Servers[keys[index]]
+		httpClientConfig = targets[index]
 	}
 
 	client := http.StorageClient{
 		HTTPClientConfig: httpClientConfig,
-		ClusterID:        sync.ClusterID,
+		ClusterID:        sync.clusterID,
 		Namespace:        namespace,
 		ResourceType:     kind,
 		ResourceName:     "",

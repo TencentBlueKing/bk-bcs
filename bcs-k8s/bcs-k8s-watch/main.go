@@ -14,47 +14,49 @@
 package main
 
 import (
-	goflag "flag"
+	"flag"
 	"runtime"
 
 	"github.com/spf13/pflag"
 
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
-
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
 )
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	// initialize logger.
 	logConf := conf.LogConfig{
 		LogDir:          "/logs",
 		ToStdErr:        true,
 		AlsoToStdErr:    true,
 		StdErrThreshold: "0",
 	}
-
 	glog.InitLogs(logConf)
 	defer glog.CloseLogs()
 
+	// parse command line flags.
 	var configFilePath string
 	var pidFilePath string
 
 	pflag.CommandLine.StringVar(&configFilePath, "config", "", "config file for data watch")
 	pflag.CommandLine.StringVar(&pidFilePath, "pid", "", "pid file path where the pid is write to")
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 
 	basic.HandleVersionFlag(pflag.CommandLine)
 	pflag.Parse()
 
+	// pre-run.
 	err := app.PrepareRun(configFilePath, pidFilePath)
 	if err != nil {
 		panic(err.Error())
 	}
+	glog.Info("bcs-k8s-watch starting...")
 
-	glog.Info("start........")
+	// real-run.
 	app.Run(configFilePath)
-	glog.Info("start done........")
+	glog.Info("bcs-k8s-watch running now.")
 }

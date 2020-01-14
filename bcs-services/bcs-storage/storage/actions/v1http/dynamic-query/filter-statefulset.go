@@ -11,7 +11,7 @@
  *
  */
 
-package dynamicQuery
+package dynamicquery
 
 import (
 	"bk-bcs/bcs-services/bcs-storage/storage/operator"

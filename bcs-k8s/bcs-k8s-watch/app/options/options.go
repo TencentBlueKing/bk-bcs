@@ -62,7 +62,13 @@ type BCSConfig struct {
 	ZkHosts []string `json:"zk"`
 	TLS     TLS      `json:"tls"`
 
+	// NetServiceZKHosts is zookeepers hosts for netservice discovery.
+	NetServiceZKHosts []string `json:"netservice-zookeepers"`
+
 	CustomStorageEndpoints []string `json:"custom-storage-endpoints"`
+
+	// CustomNetServiceEndpoints is custom target netservice endpoints.
+	CustomNetServiceEndpoints []string `json:"custom-netservice-endpoints"`
 }
 
 type K8sConfig struct {

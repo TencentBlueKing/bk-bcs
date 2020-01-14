@@ -33,8 +33,13 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
+<<<<<<< HEAD
 default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-log-webhook
 specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-log-webhook
+=======
+default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server
+specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server
+>>>>>>> 19a8fdd7b01a5f152648854d71afd46482bee371
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche
 
 allpack: svcpack k8spack mmpack mnpack
@@ -249,6 +254,6 @@ gw-controller:pre
 	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
 
-bcs-log-webhook:pre
+bcs-webhook-server:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-log-webhook-server/bcs-log-webhook-server ./bcs-services/bcs-log-webhook-server/main.go
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./bcs-services/bcs-webhook-server/main.go

@@ -49,12 +49,12 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 		return comm.BcsErrMesosSchedResourceExist, err
 	}
 	deployment := types.Deployment{
-		ObjectMeta: deploymentDef.ObjectMeta,
-		Selector:   deploymentDef.Selector,
-		Strategy:   deploymentDef.Strategy,
-		Status:     types.DEPLOYMENT_STATUS_DEPLOYING,
-		//RawJson:       deploymentDef.RawJson,
-		//RawJsonBackup: nil,
+		ObjectMeta:    deploymentDef.ObjectMeta,
+		Selector:      deploymentDef.Selector,
+		Strategy:      deploymentDef.Strategy,
+		Status:        types.DEPLOYMENT_STATUS_DEPLOYING,
+		RawJson:       deploymentDef.RawJson,
+		RawJsonBackup: nil,
 	}
 	if err = b.store.SaveDeployment(&deployment); err != nil {
 		blog.Error("request create deployment, save deployment(%s.%s) err:%s", ns, name, err.Error())
@@ -424,9 +424,9 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	currDeployment.CurrRollingOp = types.DEPLOYMENT_OPERATION_NIL
 	currDeployment.IsInRolling = false
 
-	// add  20181122
-	//currDeployment.RawJsonBackup = currDeployment.RawJson
-	//currDeployment.RawJson = deployment.RawJson
+	//store deployment definition
+	currDeployment.RawJsonBackup = currDeployment.RawJson
+	currDeployment.RawJson = deployment.RawJson
 
 	if err := b.store.SaveDeployment(currDeployment); err != nil {
 		blog.Error("update deployment(%s.%s), save deployment err: %s", ns, name, err.Error())
@@ -549,9 +549,9 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 		ns, name, deployment.Application.ApplicationName)
 	deployment.Application.CurrentTargetInstances = 0
 
-	// add  20181122
-	//deployment.RawJson = deployment.RawJsonBackup
-	//deployment.RawJson = nil
+	// rollback deployment definition
+	deployment.RawJson = deployment.RawJsonBackup
+	deployment.RawJsonBackup = nil
 
 	deployment.Status = types.DEPLOYMENT_STATUS_RUNNING
 	deployment.ApplicationExt = nil

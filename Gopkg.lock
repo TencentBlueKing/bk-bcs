@@ -145,13 +145,10 @@
     "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
-    "private/protocol/ec2query",
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
     "private/protocol/xml/xmlutil",
-    "service/ec2",
-    "service/elbv2",
     "service/sts",
   ]
   pruneopts = "T"
@@ -1874,11 +1871,11 @@
   revision = "d98352740cb2c55f81556b63d4a1ec64c5a319c2"
 
 [[projects]]
-  digest = "1:346bc6eb62aa89f32d2e6b5199cafd53c666fad05a745a6652f2311ab3c09a41"
+  digest = "1:2748ddae5a7ffd7953b94e90d962b8486bcd8364de8748321405d540b6fb9612"
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
   packages = [
-    "tencentcloud/clb/v20180317",
     "tencentcloud/cbs/v20170312",
+    "tencentcloud/clb/v20180317",
     "tencentcloud/common",
     "tencentcloud/common/errors",
     "tencentcloud/common/http",
@@ -1887,8 +1884,8 @@
     "tencentcloud/vpc/v20170312",
   ]
   pruneopts = "UT"
-  revision = "cf7a17a053dc05eaf79ebabb7a5c98ecebfb5956"
-  version = "v3.0.93"
+  revision = "e8cc0b9ffca6ba21f788656f83eac5932691e112"
+  version = "v3.0.114"
 
 [[projects]]
   digest = "1:03aa6e485e528acb119fb32901cf99582c380225fc7d5a02758e08b180cb56c3"
@@ -2718,11 +2715,6 @@
     "github.com/andygrunwald/megos",
     "github.com/asaskevich/govalidator",
     "github.com/aws/aws-sdk-go",
-    "github.com/aws/aws-sdk-go/aws",
-    "github.com/aws/aws-sdk-go/aws/awserr",
-    "github.com/aws/aws-sdk-go/aws/session",
-    "github.com/aws/aws-sdk-go/service/ec2",
-    "github.com/aws/aws-sdk-go/service/elbv2",
     "github.com/bitly/go-simplejson",
     "github.com/container-storage-interface/spec/lib/go/csi/v0",
     "github.com/containernetworking/cni/libcni",
@@ -2777,6 +2769,7 @@
     "github.com/gorilla/mux",
     "github.com/gorilla/websocket",
     "github.com/haproxytech/client-native/runtime",
+    "github.com/haproxytech/models",
     "github.com/iancoleman/strcase",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/mysql",
@@ -2804,8 +2797,8 @@
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
-    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317",
     "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs/v20170312",
+    "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317",
     "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common",
     "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors",
     "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile",
@@ -2823,6 +2816,7 @@
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",
+    "k8s.io/api/admission/v1beta1",
     "k8s.io/api/apps/v1",
     "k8s.io/api/apps/v1beta1",
     "k8s.io/api/batch/v1",
@@ -2831,6 +2825,7 @@
     "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
+    "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/internalclientset",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/resource",
@@ -2842,7 +2837,6 @@
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/selection",
     "k8s.io/apimachinery/pkg/types",
-    "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/apimachinery/pkg/util/json",
     "k8s.io/apimachinery/pkg/util/net",
     "k8s.io/apimachinery/pkg/util/proxy",

@@ -571,6 +571,12 @@ type DescribeDiskOperationLogsRequest struct {
 	// 过滤条件。支持以下条件：
 	// <li>disk-id - Array of String - 是否必填：是 - 按云盘ID过滤，每个请求最多可指定10个云盘ID。
 	Filters []*Filter `json:"Filters,omitempty" name:"Filters" list`
+
+	// 要查询的操作日志的起始时间，例如：“2019-11-22 00:00:00"
+	BeginTime *string `json:"BeginTime,omitempty" name:"BeginTime"`
+
+	// 要查询的操作日志的截止时间，例如：“2019-11-22 23:59:59"
+	EndTime *string `json:"EndTime,omitempty" name:"EndTime"`
 }
 
 func (r *DescribeDiskOperationLogsRequest) ToJsonString() string {
@@ -704,6 +710,12 @@ type DescribeSnapshotOperationLogsRequest struct {
 	// 过滤条件。支持以下条件：
 	// <li>snapshot-id - Array of String - 是否必填：是 - 按快照ID过滤，每个请求最多可指定10个快照ID。
 	Filters []*Filter `json:"Filters,omitempty" name:"Filters" list`
+
+	// 要查询的操作日志的起始时间，例如：“2019-11-22 00:00:00"
+	BeginTime *string `json:"BeginTime,omitempty" name:"BeginTime"`
+
+	// 要查询的操作日志的截止时间，例如：“2019-11-22 23:59:59"
+	EndTime *string `json:"EndTime,omitempty" name:"EndTime"`
 }
 
 func (r *DescribeSnapshotOperationLogsRequest) ToJsonString() string {

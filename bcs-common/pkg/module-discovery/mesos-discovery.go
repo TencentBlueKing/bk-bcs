@@ -20,6 +20,7 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -76,9 +77,11 @@ func (r *mesosDiscovery) GetModuleServers(moduleName string) ([]interface{}, err
 	r.RLock()
 	defer r.RUnlock()
 
-	servs, ok := r.servers[moduleName]
-	if !ok {
-		return nil, fmt.Errorf("Module %s is invalid", moduleName)
+	var servs []interface{}
+	for k, v := range r.servers {
+		if strings.Contains(k, moduleName) {
+			servs = append(servs, v...)
+		}
 	}
 
 	if len(servs) == 0 {
@@ -119,11 +122,13 @@ func (r *mesosDiscovery) start() error {
 	//create root context
 	r.rootCxt, r.cancel = context.WithCancel(context.Background())
 
+	blog.Infof("mesosDiscovery start regdiscover...")
 	//start regdiscover
 	if err := r.rd.Start(); err != nil {
 		blog.Error("fail to start register and discover serv. err:%s", err.Error())
 		return err
 	}
+	blog.Infof("mesosDiscovery start regdiscover success")
 
 	//discover other bcs service
 	for k := range r.servers {
@@ -324,7 +329,7 @@ func (r *mesosDiscovery) discoverGroupLoadbalance(key string) {
 			}
 
 			r.Lock()
-			r.servers[types.BCS_MODULE_LOADBALANCE] = lbs
+			r.servers[fmt.Sprintf("%s/%s", types.BCS_MODULE_LOADBALANCE, path.Base(key))] = lbs
 			r.Unlock()
 			if r.eventHandler != nil {
 				r.eventHandler(types.BCS_MODULE_LOADBALANCE)

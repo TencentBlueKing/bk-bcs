@@ -67,7 +67,13 @@ func (rd *reqDynamic) reset() {
 // rd.table will be save since first call, so reset() should be called if doing another op.
 func (rd *reqDynamic) getTable() string {
 	if rd.table == "" {
-		rd.table = rd.req.PathParameter(clusterIdTag) + "_" + rd.req.PathParameter(tableTag)
+
+		// process stored with application in application-table
+		tablePart := rd.req.PathParameter(tableTag)
+		if tablePart == processTypeName {
+			tablePart = applicationTypeName
+		}
+		rd.table = rd.req.PathParameter(clusterIdTag) + "_" + tablePart
 	}
 	return rd.table
 }
@@ -170,8 +176,28 @@ func (rd *reqDynamic) getTimeFeat() *operator.Condition {
 func (rd *reqDynamic) getFeat(resourceFeatList []string) *operator.Condition {
 	if rd.condition == nil {
 		features := make(operator.M)
+		featuresExcept := make(operator.M)
 		for _, key := range resourceFeatList {
 			features[key] = rd.req.PathParameter(key)
+
+			// For historical reasons, mesos process is stored with application in one table(same clusters).
+			// And process's construction is almost the same with application, except with field 'data.kind'.
+			// If 'data.kind'='process', then this object is a process stored in application-table,
+			// If 'data.kind'='application' or '', then this object is an application stored in application-table.
+			//
+			// For this case, we should:
+			// 1. Change the key 'resourceType' from 'process' to 'application' when the caller ask for 'process'.
+			// 2. Besides, getFeat() should add an extra condition that mentions the 'data.kind' to distinguish 'process' and 'application'.
+			// 3. Make sure the table is application-table whether the type is 'application' or 'process'. (with getTable())
+			if key == resourceTypeTag {
+				switch features[key] {
+				case applicationTypeName:
+					featuresExcept[kindTag] = processTypeName
+				case processTypeName:
+					features[key] = applicationTypeName
+					features[kindTag] = processTypeName
+				}
+			}
 		}
 		rd.features = features
 
@@ -182,6 +208,9 @@ func (rd *reqDynamic) getFeat(resourceFeatList []string) *operator.Condition {
 		}
 
 		rd.condition = operator.NewCondition(operator.Eq, features)
+		if len(featuresExcept) > 0 {
+			rd.condition.And(operator.NewCondition(operator.Ne, featuresExcept))
+		}
 	}
 	return rd.condition
 }
