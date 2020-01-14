@@ -93,7 +93,7 @@ func (c *Client) Run() error {
 		case event := <-ch:
 			serverInfo := new(ServerInfo)
 			if event.Err != nil {
-				blog.Errorf("get err in discovery event, err %s", err.Error())
+				blog.Errorf("get err in discovery event, err %s", event.Err.Error())
 				c.masterMutx.Lock()
 				serverInfo = nil
 				c.masterMutx.Unlock()
