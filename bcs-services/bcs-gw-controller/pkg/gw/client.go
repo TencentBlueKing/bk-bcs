@@ -46,39 +46,39 @@ type ServerInfo struct {
 // Interface interface to call gw api
 type Interface interface {
 	Run() error
-	Update(svc []*Service) error
-	Delete(key string) error
+	Update(svcs []*Service) error
+	Delete(svcs []*Service) error
 }
 
 // Client client for operate gw services
 type Client struct {
-	tlsConfig      *tls.Config
-	ControllerName string
-	ZkPath         string
-	rdiscover      *rdiscover.RegDiscover
-	ctx            context.Context
-	masterInfo     *ServerInfo
-	masterMutx     sync.Mutex
+	tlsConfig  *tls.Config
+	Cluster    string
+	ZkPath     string
+	rdiscover  *rdiscover.RegDiscover
+	ctx        context.Context
+	masterInfo *ServerInfo
+	masterMutx sync.Mutex
 }
 
 // NewClient create new client for gw server
-func NewClient(ctx context.Context, controllerName string, r *rdiscover.RegDiscover, zkPath string) *Client {
+func NewClient(ctx context.Context, cluster string, r *rdiscover.RegDiscover, zkPath string) *Client {
 	return &Client{
-		ControllerName: controllerName,
-		rdiscover:      r,
-		ZkPath:         zkPath,
-		ctx:            ctx,
+		Cluster:   cluster,
+		rdiscover: r,
+		ZkPath:    zkPath,
+		ctx:       ctx,
 	}
 }
 
 // NewClientWithTLS create new client for tls gw server
-func NewClientWithTLS(ctx context.Context, controllerName string, r *rdiscover.RegDiscover, zkPath string, tlsConfig *tls.Config) *Client {
+func NewClientWithTLS(ctx context.Context, cluster string, r *rdiscover.RegDiscover, zkPath string, tlsConfig *tls.Config) *Client {
 	return &Client{
-		tlsConfig:      tlsConfig,
-		ControllerName: controllerName,
-		rdiscover:      r,
-		ZkPath:         zkPath,
-		ctx:            ctx,
+		tlsConfig: tlsConfig,
+		Cluster:   cluster,
+		rdiscover: r,
+		ZkPath:    zkPath,
+		ctx:       ctx,
 	}
 }
 
@@ -203,7 +203,7 @@ func (c *Client) doRequest(path, method string, data []byte) ([]byte, error) {
 // Update call update api to gw concentrator
 func (c *Client) Update(svcs []*Service) error {
 	req := new(UpdateRequest)
-	req.ControllerName = c.ControllerName
+	req.Cluster = c.Cluster
 	req.ServiceList = svcs
 	data, err := json.Marshal(req)
 	if err != nil {
@@ -228,6 +228,28 @@ func (c *Client) Update(svcs []*Service) error {
 }
 
 // Delete call delete api to gw concentrator
-func (c *Client) Delete(key string) error {
+func (c *Client) Delete(svcs []*Service) error {
+	req := new(DeleteRequest)
+	req.Cluster = c.Cluster
+	req.ServiceList = svcs
+	data, err := json.Marshal(req)
+	if err != nil {
+		blog.Errorf("json encode failed, err %s", err.Error())
+		return fmt.Errorf("json encode failed, err %s", err.Error())
+	}
+	respData, err := c.doRequest("/stgw/services", "DELETE", data)
+	if err != nil {
+		blog.Errorf("do request failed, err %s", err.Error())
+		return fmt.Errorf("do request failed, err %s", err.Error())
+	}
+	resp := new(DeleteResponse)
+	err = json.Unmarshal(respData, resp)
+	if err != nil {
+		blog.Errorf("json decode failed, err %s", err.Error())
+		return fmt.Errorf("json decode failed, err %s", err.Error())
+	}
+	if resp.Code != 200 {
+		return fmt.Errorf("delete failed, message %s, code %d", resp.Message, resp.Code)
+	}
 	return nil
 }

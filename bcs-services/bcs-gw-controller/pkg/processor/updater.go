@@ -91,7 +91,39 @@ func (updater *GWUpdater) Update() error {
 }
 
 func (updater *GWUpdater) ensureServices(serviceMap map[string]*gw.Service) error {
+	// do delete services
+	var deleteList []*gw.Service
+	for _, key := range updater.cache.ListKeys() {
+		_, ok := serviceMap[key]
+		if !ok {
+			cacheSvcObj, existed, err := updater.cache.GetByKey(key)
+			if err != nil {
+				blog.Warnf("get svc %s from cache failed, err %s", key, err.Error())
+				continue
+			}
+			if existed {
+				cacheSvc, err := parseService(cacheSvcObj)
+				if err != nil {
+					blog.Warnf("parse old svc obj failed, err %s", err.Error())
+					continue
+				}
+				deleteList = append(deleteList, cacheSvc)
+			}
+		}
+	}
+	err := updater.gwClient.Delete(deleteList)
+	if err != nil {
+		return fmt.Errorf("do delete failed, err %s", err.Error())
+	}
+	for _, svc := range deleteList {
+		err = updater.cache.Delete(svc)
+		if err != nil {
+			blog.Errorf("delete svc %s from cache failed, err %s", svc.Key(), err.Error())
+			continue
+		}
+	}
 
+	// do update services
 	var updateList []*gw.Service
 	for key, svc := range serviceMap {
 		oldSvcObj, existed, err := updater.cache.Get(svc)
@@ -102,6 +134,7 @@ func (updater *GWUpdater) ensureServices(serviceMap map[string]*gw.Service) erro
 		if existed {
 			oldSvc, err := parseService(oldSvcObj)
 			if err != nil {
+				// when old svc is invalid, we should do update
 				blog.Warnf("parse old svc obj failed, err %s", err.Error())
 			} else {
 				if !svc.Diff(oldSvc) {
@@ -113,7 +146,7 @@ func (updater *GWUpdater) ensureServices(serviceMap map[string]*gw.Service) erro
 		updateList = append(updateList, svc)
 	}
 
-	err := updater.gwClient.Update(updateList)
+	err = updater.gwClient.Update(updateList)
 	if err != nil {
 		return fmt.Errorf("do update failed, err %s", err.Error())
 	}

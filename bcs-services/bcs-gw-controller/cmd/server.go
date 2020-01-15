@@ -30,7 +30,7 @@ import (
 
 var port int
 var serviceRegistry string
-var controllerName string
+var cluster string
 var backendIPType string
 var kubeconfig string
 var gwZkHosts string
@@ -67,7 +67,7 @@ func init() {
 	// option for clb controller server process
 	serverCmd.Flags().IntVar(&port, "port", 18080, "port for clb controller server")
 	serverCmd.Flags().StringVar(&serviceRegistry, "serviceRegistry", "kubernetes", "service registry for clb controller, available: [kubernetes, custom, mesos]")
-	serverCmd.Flags().StringVar(&controllerName, "controllerName", "", "lb name for controller")
+	serverCmd.Flags().StringVar(&cluster, "cluster", "", "lb name for controller")
 	serverCmd.Flags().StringVar(&backendIPType, "backendIPType", "", "backend pod ip network type, available: [overlay, underlay]")
 	serverCmd.Flags().IntVar(&updateInterval, "updateInterval", 10, "interval for update operations")
 	serverCmd.Flags().StringVar(&gwZkHosts, "gwZkHosts", "127.0.0.1:2181", "zk address for gw service")
@@ -110,8 +110,8 @@ func validateArgs() bool {
 		return false
 	}
 	reg, _ := regexp.Compile("[a-zA-Z0-9-\\.]+")
-	if !reg.MatchString(controllerName) {
-		blog.Errorf("controllerName %s invalid, must be [a-zA-Z0-9-\\.]+", controllerName)
+	if !reg.MatchString(cluster) {
+		blog.Errorf("cluster %s invalid, must be [a-zA-Z0-9-\\.]+", cluster)
 		return false
 	}
 	if backendIPType != common.BackendIPTypeOverlay && backendIPType != common.BackendIPTypeUnderlay {
@@ -178,7 +178,7 @@ the server watch k8s services and clbIngresses to generate clb listener`,
 		opt := &processor.Option{
 			Port:            port,
 			ServiceRegistry: serviceRegistry,
-			ControllerName:  controllerName,
+			Cluster:  cluster,
 			BackendIPType:   backendIPType,
 			Kubeconfig:      kubeconfig,
 			GwZkHosts:       gwZkHosts,

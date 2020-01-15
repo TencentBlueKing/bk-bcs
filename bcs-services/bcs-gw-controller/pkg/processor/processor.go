@@ -54,7 +54,7 @@ type Option struct {
 	TLSOption
 	Port              int
 	ServiceRegistry   string
-	ControllerName    string
+	Cluster           string
 	BackendIPType     string
 	Kubeconfig        string
 	GwZkHosts         string
@@ -111,9 +111,9 @@ func NewProcessor(opt *Option) (*Processor, error) {
 			blog.Errorf("load client tls config for gw client failed, err %s", err.Error())
 			return nil, fmt.Errorf("load client tls config for gw client failed, err %s", err.Error())
 		}
-		gwClient = gw.NewClientWithTLS(ctx, opt.ControllerName, rd, opt.GwZkPath, tlsConfig)
+		gwClient = gw.NewClientWithTLS(ctx, opt.Cluster, rd, opt.GwZkPath, tlsConfig)
 	} else {
-		gwClient = gw.NewClient(ctx, opt.ControllerName, rd, opt.GwZkPath)
+		gwClient = gw.NewClient(ctx, opt.Cluster, rd, opt.GwZkPath)
 	}
 
 	blog.Infof("start gw client")
@@ -125,7 +125,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	return proc, nil
 }
 
-// SetUpdated set update flag 
+// SetUpdated set update flag
 func (p *Processor) SetUpdated() {}
 
 // Run run processor loop

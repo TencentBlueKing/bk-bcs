@@ -286,7 +286,7 @@ type Service struct {
 
 // Key get service key of domain and vport
 func (s *Service) Key() string {
-	return s.Domain + ":" + strconv.Itoa(s.VPort)
+	return s.Domain + "-" + strconv.Itoa(s.VPort)
 }
 
 // Diff judge another Service is the same with s Service
@@ -342,7 +342,7 @@ func (s *Service) Diff(another *Service) bool {
 
 // Request request
 type Request struct {
-	ControllerName string `json:"controllerName"`
+	Cluster string `json:"cluster"`
 }
 
 // Response response
@@ -351,13 +351,24 @@ type Response struct {
 	Message string `json:"message"`
 }
 
-// UpdateRequest request for sync stgw services
+// UpdateRequest request for sync gw services
 type UpdateRequest struct {
 	Request
 	ServiceList []*Service `json:"service_list"`
 }
 
-// UpdateResponse response for sync stgw services
+// UpdateResponse response for sync gw services
 type UpdateResponse struct {
+	Response
+}
+
+// DeleteRequest request for delete gw services from concentrator cache
+type DeleteRequest struct {
+	Request
+	ServiceList []*Service `json:"service_list"`
+}
+
+// DeleteResponse response for delete gw services
+type DeleteResponse struct {
 	Response
 }
