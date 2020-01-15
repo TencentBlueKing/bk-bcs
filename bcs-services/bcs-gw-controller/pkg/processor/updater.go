@@ -26,10 +26,12 @@ import (
 	k8scache "k8s.io/client-go/tools/cache"
 )
 
+// Updater interface
 type Updater interface {
 	Update() error
 }
 
+// GWUpdater gw updater
 type GWUpdater struct {
 	cache    k8scache.Store
 	gwClient gw.Interface
@@ -38,6 +40,7 @@ type GWUpdater struct {
 	serviceClient svcclient.Client
 }
 
+// GwServiceKeyFunc key function for cache
 func GwServiceKeyFunc(obj interface{}) (string, error) {
 	cacheService, err := parseService(obj)
 	if err != nil {
@@ -46,6 +49,7 @@ func GwServiceKeyFunc(obj interface{}) (string, error) {
 	return cacheService.Key(), nil
 }
 
+// parseService parse service from interface
 func parseService(obj interface{}) (*gw.Service, error) {
 	if obj == nil {
 		return nil, fmt.Errorf("obj is nil")
@@ -57,24 +61,29 @@ func parseService(obj interface{}) (*gw.Service, error) {
 	return cacheService, nil
 }
 
+// NewGWUpdater create gw updater
 func NewGWUpdater() *GWUpdater {
 	return &GWUpdater{
 		cache: k8scache.NewStore(GwServiceKeyFunc),
 	}
 }
 
+// SetServiceClient set service client for GWUpdater
 func (updater *GWUpdater) SetServiceClient(svcClient svcclient.Client) {
 	updater.serviceClient = svcClient
 }
 
+// SetGWClient set gw client for GWUpdater
 func (updater *GWUpdater) SetGWClient(gwClient gw.Interface) {
 	updater.gwClient = gwClient
 }
 
+// SetOption set command line option for GWUpdater
 func (updater *GWUpdater) SetOption(opt *Option) {
 	updater.opt = opt
 }
 
+// Update implements Updater interface
 func (updater *GWUpdater) Update() error {
 	appSvcs, err := updater.getAppService()
 	if err != nil {
@@ -90,6 +99,7 @@ func (updater *GWUpdater) Update() error {
 	return nil
 }
 
+// ensureServices ensure services to gw server
 func (updater *GWUpdater) ensureServices(serviceMap map[string]*gw.Service) error {
 	// do delete services
 	var deleteList []*gw.Service
@@ -111,15 +121,17 @@ func (updater *GWUpdater) ensureServices(serviceMap map[string]*gw.Service) erro
 			}
 		}
 	}
-	err := updater.gwClient.Delete(deleteList)
-	if err != nil {
-		return fmt.Errorf("do delete failed, err %s", err.Error())
-	}
-	for _, svc := range deleteList {
-		err = updater.cache.Delete(svc)
+	if len(deleteList) != 0 {
+		err := updater.gwClient.Delete(deleteList)
 		if err != nil {
-			blog.Errorf("delete svc %s from cache failed, err %s", svc.Key(), err.Error())
-			continue
+			return fmt.Errorf("do delete failed, err %s", err.Error())
+		}
+		for _, svc := range deleteList {
+			err = updater.cache.Delete(svc)
+			if err != nil {
+				blog.Errorf("delete svc %s from cache failed, err %s", svc.Key(), err.Error())
+				continue
+			}
 		}
 	}
 
@@ -145,21 +157,23 @@ func (updater *GWUpdater) ensureServices(serviceMap map[string]*gw.Service) erro
 		}
 		updateList = append(updateList, svc)
 	}
-
-	err = updater.gwClient.Update(updateList)
-	if err != nil {
-		return fmt.Errorf("do update failed, err %s", err.Error())
-	}
-	for _, svc := range updateList {
-		err := updater.cache.Update(svc)
+	if len(updateList) != 0 {
+		err := updater.gwClient.Update(updateList)
 		if err != nil {
-			blog.Errorf("update svc %s to cache failed, err %s", svc.Key(), err.Error())
-			continue
+			return fmt.Errorf("do update failed, err %s", err.Error())
+		}
+		for _, svc := range updateList {
+			err := updater.cache.Update(svc)
+			if err != nil {
+				blog.Errorf("update svc %s to cache failed, err %s", svc.Key(), err.Error())
+				continue
+			}
 		}
 	}
 	return nil
 }
 
+// getAppService get AppService from service client
 func (updater *GWUpdater) getAppService() ([]*svcclient.AppService, error) {
 	appSvcs, err := updater.serviceClient.ListAppService(updater.opt.ServiceLabel)
 	if err != nil {
@@ -169,6 +183,7 @@ func (updater *GWUpdater) getAppService() ([]*svcclient.AppService, error) {
 	return appSvcs, nil
 }
 
+// convertAppServicesToGWServices convert AppService list to GWService map
 func (updater *GWUpdater) convertAppServicesToGWServices(appSvcs []*svcclient.AppService) map[string]*gw.Service {
 	serviceMap := make(map[string]*gw.Service)
 	for _, appSvc := range appSvcs {
@@ -177,18 +192,18 @@ func (updater *GWUpdater) convertAppServicesToGWServices(appSvcs []*svcclient.Ap
 			blog.Warnf("convert appSvc %s to gw service failed, err %s", appSvc.GetName()+"/"+appSvc.GetNamespace(), err.Error())
 			continue
 		}
-		if _, ok := serviceMap[newService.Domain+":"+strconv.Itoa(newService.VPort)]; ok {
-			existedService, _ := serviceMap[newService.Domain+":"+strconv.Itoa(newService.VPort)]
+		if _, ok := serviceMap[newService.Key()]; ok {
+			existedService, _ := serviceMap[newService.Key()]
 			existedService.LocationList = append(existedService.LocationList, newService.LocationList...)
 		} else {
-			serviceMap[newService.Domain+":"+strconv.Itoa(newService.VPort)] = newService
+			serviceMap[newService.Key()] = newService
 		}
 	}
 	return serviceMap
 }
 
+// convertToGWService convert AppService to GWService
 func (updater *GWUpdater) convertToGWService(appSvc *svcclient.AppService) (*gw.Service, error) {
-
 	domain, ok := appSvc.Labels[updater.opt.DomainLabelKey]
 	if !ok {
 		return nil, fmt.Errorf("label %s cannot be empty", updater.opt.DomainLabelKey)
@@ -201,6 +216,8 @@ func (updater *GWUpdater) convertToGWService(appSvc *svcclient.AppService) (*gw.
 	if err != nil {
 		return nil, fmt.Errorf("parse proxy port %s failed, err %s", proxyPort, err.Error())
 	}
+	// port is used to specify a service port
+	// maybe there are multiple service ports for a service
 	port, ok := appSvc.Labels[updater.opt.PortLabelKey]
 	if !ok {
 		return nil, fmt.Errorf("label %s cannot be empty", updater.opt.PortLabelKey)
@@ -209,12 +226,13 @@ func (updater *GWUpdater) convertToGWService(appSvc *svcclient.AppService) (*gw.
 	if err != nil {
 		return nil, fmt.Errorf("parse port %s failed, err %s", port, err.Error())
 	}
+	// when path label value is empty, path will be /
+	// when path label value is aaa.bbb, path will be /aaa/bbb
 	path, ok := appSvc.Labels[updater.opt.PathLabelKey]
 	if !ok {
 		path = ""
 	}
 	path = "/" + strings.Replace(path, ".", "/", -1)
-
 	gwSvc := &gw.Service{
 		BizID:                 updater.opt.GwBizID,
 		Domain:                domain,
@@ -232,7 +250,6 @@ func (updater *GWUpdater) convertToGWService(appSvc *svcclient.AppService) (*gw.
 }
 
 func (updater *GWUpdater) getRealServerList(appSvc *svcclient.AppService, port int) []*gw.RealServer {
-
 	// find port according to port and clb rule
 	var ruledSvcPort svcclient.ServicePort
 	foundPort := false

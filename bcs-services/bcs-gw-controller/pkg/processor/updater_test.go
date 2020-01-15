@@ -115,10 +115,10 @@ func TestUpdaterAdd(t *testing.T) {
 	msc := NewMockServiceClient()
 	updater.SetServiceClient(msc)
 	updater.SetOption(&Option{
-		Port:           18080,
-		BackendIPType:  common.BackendIPTypeUnderlay,
-		ControllerName: "test1",
-		GwBizID:        "测试1",
+		Port:          18080,
+		BackendIPType: common.BackendIPTypeUnderlay,
+		Cluster:       "cluster1",
+		GwBizID:       "测试1",
 		ServiceLabel: map[string]string{
 			"gw.bkbcs.tencent.com": "gw",
 		},

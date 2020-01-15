@@ -17,13 +17,16 @@ func (mc *MockClient) Update(svcs []*Service) error {
 }
 
 // Delete implements interface
-func (mc *MockClient) Delete(key string) error {
-	for index, svc := range mc.svcs {
-		if svc.Key() == key {
-			mc.svcs = append(mc.svcs[index:], mc.svcs[:index+1]...)
-			break
+func (mc *MockClient) Delete(svcs []*Service) error {
+	for _, svcToDel := range svcs {
+		for index, svc := range mc.svcs {
+			if svc.Key() == svcToDel.Key() {
+				mc.svcs = append(mc.svcs[index:], mc.svcs[:index+1]...)
+				break
+			}
 		}
 	}
+
 	return nil
 }
 
