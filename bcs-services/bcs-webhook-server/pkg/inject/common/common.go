@@ -21,21 +21,21 @@ import (
 
 const (
 	// bcs system namespace
-	NamespaceBcs                  = "bcs-system"
+	NamespaceBcs = "bcs-system"
 	// default log config type
-	StandardConfigType            = "standard"
+	StandardConfigType = "standard"
 	// bcs system log config type
-	BcsSystemConfigType           = "bcs-system"
+	BcsSystemConfigType = "bcs-system"
 	// dataid of bcs app
-	DataIdEnvKey                  = "io_tencent_bcs_app_dataid"
+	DataIdEnvKey = "io_tencent_bcs_app_dataid"
 	// appid of bcs app
-	AppIdEnvKey                   = "io_tencent_bcs_app_appid"
+	AppIdEnvKey = "io_tencent_bcs_app_appid"
 	// log to stdout, true or false
-	StdoutEnvKey                  = "io_tencent_bcs_app_stdout"
+	StdoutEnvKey = "io_tencent_bcs_app_stdout"
 	// output path of the log
-	LogPathEnvKey                 = "io_tencent_bcs_app_logpath"
+	LogPathEnvKey = "io_tencent_bcs_app_logpath"
 	// bcs cluster id
-	ClusterIdEnvKey               = "io_tencent_bcs_app_cluster"
+	ClusterIdEnvKey = "io_tencent_bcs_app_cluster"
 	// the namespace of app
 	NamespaceEnvKey               = "io_tencent_bcs_app_namespace"
 	BcsWebhookAnnotationInjectKey = "webhook.inject.bkbcs.tencent.com"
