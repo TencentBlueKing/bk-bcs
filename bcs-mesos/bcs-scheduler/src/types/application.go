@@ -1120,7 +1120,7 @@ type Deployment struct {
 	// BcsDeployment current original definition
 	RawJson *commtypes.BcsDeployment `json:"raw_json,omitempty"`
 	// BcsDeployment old version original definition
-	RawJsonBackup *commtypes.BcsDeployment  `json:"raw_json_backup,omitempty"`
+	RawJsonBackup *commtypes.BcsDeployment `json:"raw_json_backup,omitempty"`
 }
 
 type DeploymentReferApplication struct {
@@ -1151,11 +1151,11 @@ func (in *Deployment) DeepCopyInto(out *Deployment) {
 		*out = new(DeploymentReferApplication)
 		**out = **in
 	}
-	if in.RawJson!=nil {
-		deepcopy.DeepCopy(out.RawJson,in.RawJson)
+	if in.RawJson != nil {
+		deepcopy.DeepCopy(out.RawJson, in.RawJson)
 	}
-	if in.RawJsonBackup!=nil {
-		deepcopy.DeepCopy(out.RawJsonBackup,in.RawJsonBackup)
+	if in.RawJsonBackup != nil {
+		deepcopy.DeepCopy(out.RawJsonBackup, in.RawJsonBackup)
 	}
 
 	return

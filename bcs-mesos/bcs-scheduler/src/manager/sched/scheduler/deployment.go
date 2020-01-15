@@ -456,9 +456,9 @@ func (s *Scheduler) deploymentCheckRolling(deployment *types.Deployment) bool {
 
 	now := time.Now().Unix()
 	var lifeperiod int64
-	if deployment.CurrRollingOp==types.DEPLOYMENT_OPERATION_START {
+	if deployment.CurrRollingOp == types.DEPLOYMENT_OPERATION_START {
 		lifeperiod = TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD
-	}else {
+	} else {
 		lifeperiod = TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD
 	}
 
@@ -598,10 +598,9 @@ func (s *Scheduler) innerScaleApplication(runAs, appID string, instances uint64)
 
 	if isDown {
 		scaleTrans.LifePeriod = TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD
-	}else {
+	} else {
 		scaleTrans.LifePeriod = TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD
 	}
-
 
 	var scaleOpdata TransAPIScaleOpdata
 	scaleOpdata.Version = version
