@@ -244,5 +244,6 @@ clb-controller:pre
 	GOOS=linux go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
 
 bcs-webhook-server:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
+	cp ./install/conf/bcs-services/bcs-webhook-server/* ${PACKAGEPATH}/bcs-services/bcs-webhook-server
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./bcs-services/bcs-webhook-server/main.go
