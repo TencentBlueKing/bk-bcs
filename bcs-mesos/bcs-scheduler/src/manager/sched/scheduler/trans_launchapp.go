@@ -37,8 +37,9 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 
 	startedTaskgroup := time.Now()
 	startedApp := time.Now()
-	//var offerIdx int64 = 0
+	var schedulerNumber int64
 	for {
+		schedulerNumber++
 		blog.Infof("transaction %s launch(%s.%s) run check", transaction.ID, runAs, appID)
 
 		//check begin
@@ -66,6 +67,9 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 			if isFit == true {
 				blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 				if s.UseOffer(curOffer) == true {
+					//when build new taskgroup, schedulerNumber==0
+					schedulerNumber = 0
+
 					blog.Info("transaction %s launch(%s.%s) use offer(%d) %s||%s", transaction.ID, runAs, appID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 					launchedNum := opData.LaunchedNum
 					s.doLaunchTrans(transaction, curOffer, startedTaskgroup)
@@ -81,6 +85,17 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 					blog.Info("transaction %s use offer(%d) %s||%s fail", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 				}
 			}
+		}
+
+		// when scheduler taskgroup number>=10, then report resources insufficient message
+		if schedulerNumber == 10 {
+			s.store.LockApplication(runAs + "." + appID)
+			app, _ := s.store.FetchApplication(runAs, appID)
+			if app != nil {
+				app.Message = "don't have fit resources to build taskgroup"
+				s.store.SaveApplication(app)
+			}
+			s.store.UnLockApplication(runAs + "." + appID)
 		}
 
 		//check timeout

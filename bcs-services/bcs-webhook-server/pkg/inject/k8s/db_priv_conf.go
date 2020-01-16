@@ -93,8 +93,8 @@ func (dbPrivConf *DbPrivConfInject) addInitContainer(matched *v2.BcsDbPrivConfig
 	}
 
 	initContainer := corev1.Container{
-		Name:    "db-privilege",
-		Image:   dbPrivConf.Injects.DbPriv.InitContainerImage,
+		Name:  "db-privilege",
+		Image: dbPrivConf.Injects.DbPriv.InitContainerImage,
 		Env: []corev1.EnvVar{
 			{
 				Name: "io_tencent_bcs_privilege_ip",

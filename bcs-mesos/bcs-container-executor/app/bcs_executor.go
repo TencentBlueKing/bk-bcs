@@ -538,6 +538,7 @@ func (executor *BcsExecutor) Shutdown(driver exec.ExecutorDriver) {
 			executor.status = ExecutorStatus_SHUTDOWN
 			return
 		}
+		executor.updateTaskGroup(driver, taskGroup, mesos.TaskState_TASK_KILLING, "task was killing")
 		executor.killTaskGroup()
 		//todo(developerJim): maybe we need check killing results for task
 		//executor need to handle if task is under TaskState_TASK_UNREACHABLE

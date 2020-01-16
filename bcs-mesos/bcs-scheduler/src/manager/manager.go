@@ -52,6 +52,7 @@ func New(config util.SchedConfig) (*Manager, error) {
 			blog.Errorf("new etcd store failed: %s", err.Error())
 			return nil, err
 		}
+		config.Scheduler.UseCache = true
 	} else {
 		dbzk := zk.NewDbZk(strings.Split(config.ZkHost, ","))
 		err = dbzk.Connect()
@@ -60,6 +61,7 @@ func New(config util.SchedConfig) (*Manager, error) {
 			return nil, err
 		}
 		s = zk.NewManagerStore(dbzk)
+		config.Scheduler.UseCache = false
 	}
 
 	manager.schedContext = &schedcontext.SchedContext{
