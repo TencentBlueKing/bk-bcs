@@ -71,7 +71,7 @@ spec:
 - clusterId: 集群id
 - containers: 所需注入日志配置的容器的名字。当配置了configType时，该参数不用填写。
 
-具体实现可参考 [bcs-log-webhook-server 文档](./bcs-log-webhook-server.md)
+具体实现可参考 [bcs-webhook-server 文档](./bcs-webhook-server.md)
 
 ### 采集器logbeat&sidercar
 logbeat是蓝鲸内部通用的采集物理机日志的采集器，拥有非常高的稳定性以及性能。但是由于容器随时创建、随时销毁等特性，logbeat不能直接采集容器日志。
@@ -116,4 +116,4 @@ logbeat日志采集配置
 - io_tencent_bcs_app_cluster //集群id
 - io_tencent_bcs_app_namespace //namespcae
 
-具体实现可参考 [bcs-log-webhook-server 文档](./bcs-log-webhook-server.md)
+具体实现可参考 [bcs-webhook-server 文档](./bcs-webhook-server.md)
