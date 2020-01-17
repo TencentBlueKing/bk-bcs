@@ -33,19 +33,29 @@ var serviceRegistry string
 var cluster string
 var backendIPType string
 var kubeconfig string
+
+// gwZkHosts, gwZkPath, gwBizID is needed for accessing gw concentrator
 var gwZkHosts string
 var gwZkPath string
 var gwBizID string
+
+// updateInterval update interval for processor
 var updateInterval int
+
+// syncPeriod sync period for service discovery
 var syncPeriod int
 
+// serviceLabelKey, serviceLabelValue are needed for service selection
 var serviceLabelKey string
 var serviceLabelValue string
+
+// domainLabelKey, proxyPortLabelKey, portLabelkey, pathLabelKey are needed for gw rule
 var domainLabelKey string
 var proxyPortLabelKey string
 var portLabelkey string
 var pathLabelKey string
 
+// log configs
 var logDir string
 var logMaxSize uint64
 var logMaxNum int
@@ -56,6 +66,7 @@ var stdErrThreshold string
 var vModule string
 var traceLocation string
 
+// tls configs
 var caFile string
 var serverCertFile string
 var serverKeyFile string
@@ -105,6 +116,7 @@ func validateArgs() bool {
 		blog.Infof("port %d invalid, must be in range [0, 65535]", port)
 		return false
 	}
+	// currently only support [kubernetes, custom, mesos]
 	if serviceRegistry != "kubernetes" && serviceRegistry != "custom" && serviceRegistry != "mesos" {
 		blog.Errorf("serviceRegistry %s invalid, must be in (kubernetes, custom, mesos)", serviceRegistry)
 		return false
@@ -178,7 +190,7 @@ the server watch k8s services and clbIngresses to generate clb listener`,
 		opt := &processor.Option{
 			Port:            port,
 			ServiceRegistry: serviceRegistry,
-			Cluster:  cluster,
+			Cluster:         cluster,
 			BackendIPType:   backendIPType,
 			Kubeconfig:      kubeconfig,
 			GwZkHosts:       gwZkHosts,
