@@ -139,6 +139,9 @@ spec:
   containers:
     - proxy
     - istio-proxy
+  LogTags:
+      key1: value1
+      key2: value2
 ```
 例如，在创建这个名为 proxy-bcs-log-conf 的 BcsLogConfig 后，在集群中已经有 default 类型的 BcsLogConfig 下，针对 default 命名空间下名为 python-webhook 的 deployment，其 pod 中容器名为 istio-proxy 或 proxy 的容器将被  bcs-webhook-server 使用这个名为 proxy-bcs-log-conf 的 BcsLogConfig 来注入采集信息。
 

@@ -180,6 +180,13 @@ func (in *BcsLogConfigSpec) DeepCopyInto(out *BcsLogConfigSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.LogTags != nil {
+		in, out := &in.LogTags, &out.LogTags
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 

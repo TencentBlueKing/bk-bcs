@@ -40,6 +40,8 @@ const (
 	LogPathEnvKey = "io_tencent_bcs_app_logpath"
 	// bcs cluster id
 	ClusterIdEnvKey = "io_tencent_bcs_app_cluster"
+	// 日志标签
+	LogTagEnvKey = "io_tencent_bcs_app_label"
 	// the namespace of app
 	NamespaceEnvKey               = "io_tencent_bcs_app_namespace"
 	BcsWebhookAnnotationInjectKey = "webhook.inject.bkbcs.tencent.com"

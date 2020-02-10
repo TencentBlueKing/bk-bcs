@@ -68,6 +68,11 @@ spec:
   containers:
     - istio-proxy
     - clb-sidecar
+  # 所需添加的日志标签
+  LogTags:
+    key1: value1
+    key2: value2
+
 ```
 - configType: log配置的类型，可选项。如果配置这个参数，可选值为standard, bcs-system
 - stdOut: 如果需要采集容器标准输出则为true，采集文本日志则为false
@@ -78,6 +83,7 @@ spec:
 - workloadType：所需注入该日志采集信息的工作负载类型。当 configType 为 custom 时，填写该值。
 - workloadName：所需注入该日志采集信息的工作负载名称。当 configType 为 custom 时，填写该值。
 - containers: 所需注入日志配置的容器的名字。当 configType 为 custom 时，填写该值。
+- LogTags: 需添加的日志标签
 
 具体实现可参考 [bcs-webhook-server 文档](./bcs-webhook-server.md)
 

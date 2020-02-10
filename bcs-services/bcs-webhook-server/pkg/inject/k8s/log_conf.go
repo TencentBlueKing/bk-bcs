@@ -110,6 +110,20 @@ func (logConf *LogConfInject) injectK8sContainer(namespace string, container *co
 		envs = append(envs, logPathEnv)
 	}
 
+	if len(bcsLogConf.Spec.LogTags) > 0 {
+		var tags []string
+		for k, v := range bcsLogConf.Spec.LogTags {
+			tag := k + "=" + v
+			tags = append(tags, tag)
+		}
+
+		logTagEnv := corev1.EnvVar{
+			Name:  common.LogTagEnvKey,
+			Value: strings.Join(tags, ","),
+		}
+		envs = append(envs, logTagEnv)
+	}
+
 	clusterIdEnv := corev1.EnvVar{
 		Name:  common.ClusterIdEnvKey,
 		Value: bcsLogConf.Spec.ClusterId,
