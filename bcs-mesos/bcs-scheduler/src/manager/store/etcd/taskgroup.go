@@ -42,7 +42,7 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        taskGroup.ID,
 			Namespace:   taskGroup.RunAs,
-			Labels:      taskGroup.ObjectMeta.Labels,
+			Labels:      store.filterSpecialLabels(taskGroup.ObjectMeta.Labels),
 			Annotations: taskGroup.ObjectMeta.Annotations,
 		},
 		Spec: v2.TaskGroupSpec{

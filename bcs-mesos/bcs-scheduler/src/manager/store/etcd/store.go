@@ -16,6 +16,7 @@ package etcd
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -335,4 +336,24 @@ func (store *managerStore) ListRunAs() ([]string, error) {
 func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
 
 	return store.ListRunAs()
+}
+
+func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[string]string {
+	if oriLabels == nil {
+		return nil
+	}
+	regkey, _ := regexp.Compile("^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$")
+	regvalue, _ := regexp.Compile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
+	labels := make(map[string]string)
+	for k, v := range oriLabels {
+		if !regkey.MatchString(k) {
+			continue
+		}
+		if !regvalue.MatchString(v) {
+			continue
+		}
+
+		labels[k] = v
+	}
+	return labels
 }
