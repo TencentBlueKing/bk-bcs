@@ -18,7 +18,7 @@ spec:
       serviceAccountName: statefulsetplus-operator
       containers:
       - name: statefulsetplus-operator
-        image: csighub.tencentyun.com/admin/statefulsetplus-operator-leaderelection-test:latest
+        image: tkex-statefulsetplus-operator:latest
         command: ["./tkex-statefulsetplus-operator"]
         args: ["--min-resync-period=60s","--v=5"]
         ports:

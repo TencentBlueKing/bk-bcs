@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: statefulsetplus-operator
-  namespace: operator
+  namespace: tkex-system
 
 ---
 
@@ -67,4 +67,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: statefulsetplus-operator
-    namespace: operator
+    namespace: tkex-system
