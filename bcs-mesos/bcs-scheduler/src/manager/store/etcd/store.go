@@ -16,6 +16,7 @@ package etcd
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -69,6 +70,9 @@ type managerStore struct {
 	BkbcsClient     bkbcsv2.BkbcsV2Interface
 	k8sClient       *kubernetes.Clientset
 	extensionClient *extensionClientset.Clientset
+
+	regkey *regexp.Regexp
+	regvalue *regexp.Regexp
 
 	wg     sync.WaitGroup
 	ctx    context.Context
@@ -268,6 +272,10 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 		extensionClient: extensionClient,
 	}
 
+	//init object labels regexp
+	m.regkey, _ = regexp.Compile("^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$")
+	m.regvalue, _ = regexp.Compile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
+
 	//init clientset crds
 	err = m.initKubeCrd()
 	if err != nil {
@@ -335,4 +343,23 @@ func (store *managerStore) ListRunAs() ([]string, error) {
 func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
 
 	return store.ListRunAs()
+}
+
+func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[string]string {
+	if oriLabels == nil {
+		return nil
+	}
+
+	labels := make(map[string]string)
+	for k, v := range oriLabels {
+		if !store.regkey.MatchString(k) {
+			continue
+		}
+		if !store.regvalue.MatchString(v) {
+			continue
+		}
+
+		labels[k] = v
+	}
+	return labels
 }
