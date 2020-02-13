@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statefulsetplus-operator
+  namespace: tkex-system
+  labels:
+    app: operator
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: operator
+  template:
+    metadata:
+      labels:
+        app: operator
+    spec:
+      serviceAccountName: statefulsetplus-operator
+      containers:
+      - name: statefulsetplus-operator
+        image: tkex-statefulsetplus-operator:latest
+        command: ["./tkex-statefulsetplus-operator"]
+        args: ["--min-resync-period=60s","--v=5"]
+        ports:
+        - containerPort: 80

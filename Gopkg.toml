@@ -38,6 +38,8 @@ required = [
   "k8s.io/client-go/plugin/pkg/client/auth/gcp", # for development against gcp
   "k8s.io/code-generator/cmd/client-gen", # for go generate
   "k8s.io/code-generator/cmd/deepcopy-gen", # for go generate
+  "k8s.io/code-generator/cmd/lister-gen", # for go generate
+  "k8s.io/code-generator/cmd/informer-gen", # for go generate
   "sigs.k8s.io/controller-tools/cmd/controller-gen", # for crd/rbac generation
   "sigs.k8s.io/controller-runtime/pkg/client/config",
   "sigs.k8s.io/controller-runtime/pkg/controller",
@@ -161,10 +163,6 @@ required = [
 
 [[constraint]]
   branch = "master"
-  name = "github.com/howeyc/gopass"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/iancoleman/strcase"
 
 [[constraint]]
@@ -173,11 +171,7 @@ required = [
 
 [[constraint]]
   name = "github.com/json-iterator/go"
-  version = "1.1.5"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/kardianos/osext"
+  version = "1.1.5" 
 
 [[constraint]]
   name = "github.com/mesos/mesos-go"
@@ -190,10 +184,6 @@ required = [
 [[constraint]]
   name = "github.com/miekg/dns"
   version = "1.1.1"
-
-[[constraint]]
-  name = "github.com/mitchellh/mapstructure"
-  version = "1.1.2"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
@@ -288,7 +278,15 @@ required = [
   version = "kubernetes-1.12.3"
 
 [[constraint]]
+  name = "k8s.io/code-generator"
+  version = "kubernetes-1.12.3"
+
+[[constraint]]
   name = "k8s.io/client-go"
+  version = "kubernetes-1.12.3"
+
+[[constraint]]
+  name = "k8s.io/apiextensions-apiserver"
   version = "kubernetes-1.12.3"
 
 [[constraint]]
@@ -359,10 +357,6 @@ required = [
   version = "0.32.0"
 
 [[constraint]]
-  name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.12.3"
-
-[[constraint]]
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
   version = "v3.0.103"
 
@@ -377,5 +371,6 @@ required = [
 [[constraint]]
   name = "github.com/container-storage-interface/spec"
   version = "v0.3.0"
+
 
 
