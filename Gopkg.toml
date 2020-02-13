@@ -288,7 +288,7 @@ required = [
 
 [[constraint]]
   name = "k8s.io/kubernetes"
-  version = "1.12.4"
+  version = "1.13.1"
 
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
