@@ -45,7 +45,7 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        secret.Name,
 			Namespace:   secret.NameSpace,
-			Labels:      secret.Labels,
+			Labels:      store.filterSpecialLabels(secret.Labels),
 			Annotations: secret.Annotations,
 		},
 		Spec: v2.BcsSecretSpec{

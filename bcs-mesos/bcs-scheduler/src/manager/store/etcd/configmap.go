@@ -45,7 +45,7 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        configmap.Name,
 			Namespace:   configmap.NameSpace,
-			Labels:      configmap.Labels,
+			Labels:      store.filterSpecialLabels(configmap.Labels),
 			Annotations: configmap.Annotations,
 		},
 		Spec: v2.BcsConfigMapSpec{

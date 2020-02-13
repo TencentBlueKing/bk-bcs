@@ -18,6 +18,7 @@ import (
 	v2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
 	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
 )
+
 // DbPrivConfInject implements MesosInject
 type DbPrivConfInject struct {
 	BcsDbPrivConfigLister listers.BcsDbPrivConfigLister
@@ -32,7 +33,7 @@ func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister) Meso
 	return mesosInject
 }
 
-func (dbPrivConf *DbPrivConfInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {
+func (dbPrivConf *DbPrivConfInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) { // nolint
 
 	return nil, nil
 }
