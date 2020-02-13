@@ -14,16 +14,16 @@
 package k8s
 
 import (
-	"fmt"
-	"strconv"
-
 	"bk-bcs/bcs-common/common/blog"
 	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
 	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
+	"fmt"
 	mapset "github.com/deckarep/golang-set"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"strconv"
+	"strings"
 )
 
 // LogConfInject implements K8sInject
@@ -45,7 +45,7 @@ func (logConf *LogConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, 
 
 	var patch []PatchOperation
 
-	bcsLogConfs, err := logConf.BcsLogConfigLister.List(labels.Everything())
+	bcsLogConfs, err := logConf.BcsLogConfigLister.BcsLogConfigs(pod.ObjectMeta.Namespace).List(labels.Everything())
 	if err != nil {
 		blog.Errorf("list bcslogconfig error %s", err.Error())
 		return nil, err
@@ -67,8 +67,9 @@ func (logConf *LogConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, 
 		return patch, nil
 	}
 
+	//handle business modules' log inject
 	for i, container := range pod.Spec.Containers {
-		matchedLogConf := common.FindMatchedConfigType(container.Name, bcsLogConfs)
+		matchedLogConf := common.FindK8sMatchedConfigType(pod, container.Name, bcsLogConfs)
 		if matchedLogConf != nil {
 			patchedContainer := logConf.injectK8sContainer(pod.Namespace, &container, matchedLogConf)
 			patch = append(patch, replaceContainer(i, *patchedContainer))
@@ -78,7 +79,7 @@ func (logConf *LogConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, 
 	return patch, nil
 }
 
-func (logConf *LogConfInject) injectK8sContainer(namespace string, container *corev1.Container, bcsLogConf *bcsv2.BcsLogConfig) *corev1.Container {
+func (logConf *LogConfInject) injectK8sContainer(namespace string, container *corev1.Container, bcsLogConf *bcsv2.BcsLogConfig) *corev1.Container { // nolint
 
 	patchedContainer := container.DeepCopy()
 
@@ -101,11 +102,27 @@ func (logConf *LogConfInject) injectK8sContainer(namespace string, container *co
 	}
 	envs = append(envs, stdoutEnv)
 
-	logPathEnv := corev1.EnvVar{
-		Name:  common.LogPathEnvKey,
-		Value: bcsLogConf.Spec.LogPath,
+	if len(bcsLogConf.Spec.LogPaths) > 0 {
+		logPathEnv := corev1.EnvVar{
+			Name:  common.LogPathEnvKey,
+			Value: strings.Join(bcsLogConf.Spec.LogPaths, ","),
+		}
+		envs = append(envs, logPathEnv)
 	}
-	envs = append(envs, logPathEnv)
+
+	if len(bcsLogConf.Spec.LogTags) > 0 {
+		var tags []string
+		for k, v := range bcsLogConf.Spec.LogTags {
+			tag := k + ":" + v
+			tags = append(tags, tag)
+		}
+
+		logTagEnv := corev1.EnvVar{
+			Name:  common.LogTagEnvKey,
+			Value: strings.Join(tags, ","),
+		}
+		envs = append(envs, logTagEnv)
+	}
 
 	clusterIdEnv := corev1.EnvVar{
 		Name:  common.ClusterIdEnvKey,
