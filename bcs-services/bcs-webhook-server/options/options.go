@@ -28,7 +28,7 @@ type ServerOption struct {
 	Port           uint   `json:"port" short:"p" value:"443" usage:"Port to listen on for this service"`
 	ServerCertFile string `json:"server_cert_file" value:"" usage:"Server public key file(*.crt). If both server_cert_file and server_key_file are set, it will set up an HTTPS server"`
 	ServerKeyFile  string `json:"server_key_file" value:"" usage:"Server private key file(*.key). If both server_cert_file and server_key_file are set, it will set up an HTTPS server"`
-	EngineType     string `json:"engine_type" value:"kubernetes" usage:"the platform that bcs-log-webhook-server runs in, kubernetes or mesos"`
+	EngineType     string `json:"engine_type" value:"kubernetes" usage:"the platform that bcs-webhook-server runs in, kubernetes or mesos"`
 	KubeConfig     string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver, Only required if out-of-cluster."`
 	KubeMaster     string `json:"kube-master" value:"" usage:"The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster." mapstructure:"kube-master"`
 
