@@ -31,8 +31,44 @@ func getNamespaceByVersion(runAs, versionId string) string {
 	return fmt.Sprintf("%s-%s", runAs, versionId)
 }
 
+//create version, produce version id
 func (store *managerStore) SaveVersion(version *types.Version) error {
 	version.Name = strconv.FormatInt(time.Now().UnixNano(), 10)
+	runAs := version.RunAs
+	if "" == runAs {
+		runAs = defaultRunAs
+		version.RunAs = defaultRunAs
+	}
+	ns := getNamespaceByVersion(runAs, version.ID)
+	err := store.checkNamespace(ns)
+	if err != nil {
+		return err
+	}
+
+	client := store.BkbcsClient.Versions(ns)
+	v2Version := &v2.Version{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       CrdVersion,
+			APIVersion: ApiversionV2,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      version.Name,
+			Namespace: ns,
+		},
+		Spec: v2.VersionSpec{
+			Version: *version,
+		},
+	}
+	_, err = client.Create(v2Version)
+	if err != nil {
+		return err
+	}
+	saveCacheVersion(version.RunAs, version.ID, version)
+
+	return err
+}
+
+func (store *managerStore) UpdateVersion(version *types.Version) error {
 	runAs := version.RunAs
 	if "" == runAs {
 		runAs = defaultRunAs

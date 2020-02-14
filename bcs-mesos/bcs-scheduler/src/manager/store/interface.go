@@ -70,6 +70,8 @@ type Store interface {
 	DeleteVersionNode(runAs, versionId string) error
 	// get version from db
 	GetVersion(runAs, appId string) (*types.Version, error)
+	//update version, current only migrate tool use it
+	UpdateVersion(version *types.Version) error
 
 	// save taskgroup to db
 	SaveTaskGroup(*types.TaskGroup) error
