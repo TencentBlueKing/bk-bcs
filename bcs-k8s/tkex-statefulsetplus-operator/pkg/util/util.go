@@ -21,12 +21,12 @@ package util
 
 import (
 	stsplus "bk-bcs/bcs-k8s/tkex-statefulsetplus-operator/pkg/apis/tkex/v1alpha1"
-	"k8s.io/api/core/v1"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 // Fields that can be modified
 // - spec.containers[*].imag
-// TODO(garnett) support more fields changed, for example resources changed.
 func UpdatePodField(updateSet *stsplus.StatefulSetPlus, updateRevision string, pod *v1.Pod) *v1.Pod {
 
 	// make a deep copy, do not mutate the shared cache

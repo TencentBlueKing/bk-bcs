@@ -28,6 +28,7 @@ import (
 	"github.com/golang/glog"
 	api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -36,7 +37,6 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/sample-controller/pkg/signals"
 )
 
 const (
@@ -134,9 +134,8 @@ func resyncPeriod(MinResyncPeriod metav1.Duration) func() time.Duration {
 }
 
 func run() {
-	// TODO(garnett) Register metrics and expose to prometheus
 	// set up signals so we handle the first shutdown signal gracefully
-	stopCh := signals.SetupSignalHandler()
+	stopCh := server.SetupSignalHandler()
 
 	// create StatefulSetPlus CRD first
 	// initCRD()
