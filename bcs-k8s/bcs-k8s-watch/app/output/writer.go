@@ -60,6 +60,8 @@ var (
 		"Ingress",
 		"ReplicaSet",
 		"ExportService",
+		"BcsLogConfig",
+		"BcsDbPrivConfig",
 	}
 )
 

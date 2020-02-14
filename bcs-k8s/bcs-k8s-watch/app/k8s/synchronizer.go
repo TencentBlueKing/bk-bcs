@@ -95,7 +95,7 @@ func (sync *Synchronizer) Run(stopCh <-chan struct{}) {
 		// sync namespace resources.
 		namespaces := sync.watchers["Namespace"].(*Watcher).store.ListKeys()
 		namespaceResourceTypes := []string{"Pod", "ReplicationController", "Service", "EndPoints", "ConfigMap", "Secret",
-			"Deployment", "Ingress", "ReplicaSet", "DaemonSet", "Job", "StatefulSet"}
+			"Deployment", "Ingress", "ReplicaSet", "DaemonSet", "Job", "StatefulSet", "BcsLogConfig", "BcsDbPrivConfig"}
 
 		for _, namespaceResourceType := range namespaceResourceTypes {
 			glog.Info("begin to sync %s", namespaceResourceType)

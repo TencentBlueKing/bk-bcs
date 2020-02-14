@@ -27,6 +27,9 @@ import (
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+
+	wbbcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
+	webhookClientSet "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
 )
 
 // WatcherManager is resource watcher manager.
@@ -97,11 +100,68 @@ func (mgr *WatcherManager) newClientSet(k8sConfig *options.K8sConfig) (*kubernet
 	return kubernetes.NewForConfig(config)
 }
 
+func (mgr *WatcherManager) getRestConfig(k8sConfig *options.K8sConfig) (*rest.Config, error) {
+	var config *rest.Config
+	var err error
+
+	// build k8s client config.
+	if k8sConfig.Master == "" {
+		glog.Info("k8sConfig.Master is not be set, use in cluster mode")
+
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		glog.Info("k8sConfig.Master is set: %s", k8sConfig.Master)
+
+		u, err := url.Parse(k8sConfig.Master)
+		if err != nil {
+			return nil, err
+		}
+
+		var tlsConfig rest.TLSClientConfig
+		if u.Scheme == "https" {
+			if k8sConfig.TLS.CAFile == "" || k8sConfig.TLS.CertFile == "" || k8sConfig.TLS.KeyFile == "" {
+				return nil, fmt.Errorf("use https, kube-ca-file, kube-cert-file, kube-key-file required")
+			}
+
+			tlsConfig = rest.TLSClientConfig{
+				CAFile:   k8sConfig.TLS.CAFile,
+				CertFile: k8sConfig.TLS.CertFile,
+				KeyFile:  k8sConfig.TLS.KeyFile,
+			}
+		}
+		config = &rest.Config{
+			Host:            k8sConfig.Master,
+			QPS:             1e6,
+			Burst:           1e6,
+			TLSClientConfig: tlsConfig,
+		}
+	}
+
+	return config, nil
+}
+
 func (mgr *WatcherManager) initWatchers(clusterID string, writer *output.Writer,
 	k8sconfig *options.K8sConfig, storageService, netservice *bcs.InnerService) {
 
+	restConfig, err := mgr.getRestConfig(k8sconfig)
+	if err != nil {
+		panic(err)
+	}
 	// create k8s clientset.
-	clientSet, err := mgr.newClientSet(k8sconfig)
+	clientSet, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		panic(err)
+	}
+	//clientSet, err := mgr.newClientSet(k8sconfig)
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	// create webhook crd clientset
+	whClientSet, err := webhookClientSet.NewForConfig(restConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -110,6 +170,7 @@ func (mgr *WatcherManager) initWatchers(clusterID string, writer *output.Writer,
 	extensionsV1Beta1Client := clientSet.ExtensionsV1beta1().RESTClient()
 	batchV1Client := clientSet.BatchV1().RESTClient()
 	appsV1Beta1Client := clientSet.AppsV1beta1().RESTClient()
+	webhookClient := whClientSet.BkbcsV2().RESTClient()
 
 	// build watcher configs.
 	watcherConfigList := map[string]ResourceObjType{
@@ -188,6 +249,16 @@ func (mgr *WatcherManager) initWatchers(clusterID string, writer *output.Writer,
 			"statefulsets",
 			&appsv1beta1.StatefulSet{},
 			&appsV1Beta1Client,
+		},
+		"BcsLogConfig": {
+			"bcslogconfigs",
+			&wbbcsv2.BcsLogConfig{},
+			&webhookClient,
+		},
+		"BcsDbPrivConfig": {
+			"bcsdbprivconfigs",
+			&wbbcsv2.BcsDbPrivConfig{},
+			&webhookClient,
 		},
 	}
 

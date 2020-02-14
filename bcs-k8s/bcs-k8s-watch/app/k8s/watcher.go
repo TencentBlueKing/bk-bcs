@@ -40,6 +40,7 @@ import (
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	wbbcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
 )
 
 const (
@@ -232,6 +233,10 @@ func (w *Watcher) convert(obj interface{}) (v interface{}, ok bool) {
 		v, ok = obj.(*appsv1beta1.StatefulSet)
 	case "Job":
 		v, ok = obj.(*batchv1.Job)
+	case "BcsLogConfig":
+		v, ok = obj.(*wbbcsv2.BcsLogConfig)
+	case "BcsDbPrivConfig":
+		v, ok = obj.(*wbbcsv2.BcsDbPrivConfig)
 
 	default:
 		v = nil
