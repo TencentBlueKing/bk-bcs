@@ -29,11 +29,23 @@ import (
 )
 
 const (
+	//report data id
 	EnvLogInfoDataid       = "io_tencent_bcs_app_dataid"
+	//if true, then stdout; else custom logs file
 	EnvLogInfoStdout       = "io_tencent_bcs_app_stdout"
+	//if stdout=false, log file path
 	EnvLogInfoLogPath      = "io_tencent_bcs_app_logpath"
+	//clusterid
 	EnvLogInfoLogCluster   = "io_tencent_bcs_app_cluster"
+	//namespace
 	EnvLogInfoLogNamepsace = "io_tencent_bcs_app_namespcae"
+	//custom labels, log tags
+	//example: kv1:val1,kv2:val2,kv3:val3...
+	EnvLogInfoLogLabel     = "io_tencent_bcs_app_label"
+	//application or deployment't name
+	EnvLogInfoLogServerName = "io_tencent_bcs_controller_name"
+	//enum: Application、Deployment...
+	EnvLogInfoLogType      = "io_tencent_bcs_controller_type"
 )
 
 type SidecarController struct {
@@ -61,6 +73,12 @@ type LogConfParameter struct {
 	ContainerId string
 	ClusterId   string
 	Namespace   string
+	//application or deployment't name
+	ServerName  string
+	//application or deployment
+	ServerType  string
+	//custom label
+	CustemLabel string
 
 	stdout         bool
 	nonstandardLog string
@@ -201,6 +219,23 @@ func produceLogConfParameter(container *docker.Container) (*LogConfParameter, bo
 			}
 		case EnvLogInfoLogPath:
 			para.nonstandardLog = val
+		case EnvLogInfoLogServerName:
+			para.ServerName = val
+		case EnvLogInfoLogType:
+			para.ServerType = val
+		case EnvLogInfoLogLabel:
+			array := strings.Split(val,",")
+			for _,o :=range array {
+				kvs := strings.Split(o,":")
+				if len(kvs)!=2 {
+					blog.Infof("container %s env %s value %s is invalid",container.ID,EnvLogInfoLogLabel,val)
+					continue
+				}
+
+				label := fmt.Sprintf(`,
+            "%s": "%s"`, kvs[0], kvs[1])
+				para.CustemLabel += label
+			}
 		}
 	}
 
