@@ -11,6 +11,11 @@ bcs中的容器集群一般是跨地域、多机房的形式，因此可以在�
 
 ![容器基础网络探测服务架构图](./network-detection.png)
 
+### 主要特性
+1. 同时支持mesos、k8s两种方案
+2. 对接prometheus metrics
+3. 多个探测点，准确性高
+
 ## 改造goldpinger
 上图中的pinger服务是在各个物理节点容器化部署的容器网络探测点，它的主要功能是探测其它的探测点，然后将探测结果上报到network-detection。
  [goldpinger](https://github.com/bloomberg/goldpinger)是开源的监控k8s集群中的节点网络连通性的，基于goldpinger可以比较小成本的完成pinger模块。
