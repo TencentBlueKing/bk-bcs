@@ -28,13 +28,16 @@ type BcsLogConfig struct {
 }
 
 type BcsLogConfigSpec struct {
-	ConfigType string   `json:"configType"`
-	AppId      string   `json:"appId"`
-	Stdout     bool     `json:"stdOut"`
-	LogPath    string   `json:"logPath"`
-	ClusterId  string   `json:"clusterId"`
-	DataId     string   `json:"dataId"`
-	Containers []string `json:"containers"`
+	ConfigType   string            `json:"configType"`
+	AppId        string            `json:"appId"`
+	Stdout       bool              `json:"stdOut"`
+	LogPaths     []string          `json:"logPaths"`
+	ClusterId    string            `json:"clusterId"`
+	DataId       string            `json:"dataId"`
+	WorkloadType string            `json:"workloadType"`
+	WorkloadName string            `json:"workloadName"`
+	Containers   []string          `json:"containers"`
+	LogTags      map[string]string `json:"logTags"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

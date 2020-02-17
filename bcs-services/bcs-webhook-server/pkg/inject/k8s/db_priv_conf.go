@@ -33,7 +33,7 @@ type DbPrivConfInject struct {
 }
 
 // NewDbPrivConfInject create DbPrivConfInject object
-func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, injects options.InjectOptions, dbPrivSecret *corev1.Secret) K8sInject {
+func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, injects options.InjectOptions, dbPrivSecret *corev1.Secret) K8sInject { // nolint
 	k8sInject := &DbPrivConfInject{
 		BcsDbPrivConfigLister: bcsDbPrivConfLister,
 		Injects:               injects,
@@ -47,7 +47,7 @@ func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, inje
 func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, error) {
 	var patch []PatchOperation
 
-	bcsDbPrivConfs, err := dbPrivConf.BcsDbPrivConfigLister.List(labels.Everything())
+	bcsDbPrivConfs, err := dbPrivConf.BcsDbPrivConfigLister.BcsDbPrivConfigs(pod.Namespace).List(labels.Everything())
 	if err != nil {
 		blog.Errorf("list BcsDbPrivConfig error %s", err.Error())
 		return nil, err

@@ -81,9 +81,9 @@ bcs-webhook-server 在拦截到容器的创建请求时，会从集群中查询 
 
 - 系统组件的日志采集配置  
 系统组件一般都运行在 kube-system, kube-public, bcs-system 这几个命名空间下。对于这些命名空间下的系统组件，bcs-webhook-server 默认不会注入任何日志采集配置。  
-如果要对系统组件的容器也进行日志采集，需要在这些系统组件的 pod 中加入指定的 annotation : sidecar.log.conf.bkbcs.tencent.com。当 pod 中这个指定的 annotation 的值为 "y", "yes", "true", "on" 时，bcs-webhook-server 才会对这些 pod 中的容器进行环境变量的注入。  
+如果要对系统组件的容器也进行日志采集，需要在这些系统组件的 pod 中加入指定的 annotation : webhook.inject.bkbcs.tencent.com。当 pod 中这个指定的 annotation 的值为 "y", "yes", "true", "on" 时，bcs-webhook-server 才会对这些 pod 中的容器进行环境变量的注入。  
 目前，针对系统组件的日志采集，不支持针对不同容器使用不同的采集配置，统一使用一个固定的配置。  
-系统组件的日志采集配置需要创建一个 configType 类型为 bcs-system 的 BcsLogConfig。  
+系统组件的日志采集配置需要在应用所在的 namespace 下创建一个 configType 类型为 bcs-system 的 BcsLogConfig。  
 
 
 ```
@@ -91,7 +91,7 @@ apiVersion: bkbcs.tencent.com/v2
 kind: BcsLogConfig
 metadata:
   name: standard-bcs-log-conf
-  namespace: default
+  namespace: kube-system
 spec:
   configType: bcs-system
   appId: "10000"
@@ -102,7 +102,7 @@ spec:
 ```
   
 - 标准的日志采集配置  
-对于大多数业务集群，所有业务容器的日志输出是同样的格式，只需配置一种固定的日志清洗规则即可。对于这种需求，为了减少用户的负担，bk-bcs-saas 层可以默认创建一种 configType 类型为 standard 的 BcsLogConfig 资源，bcs-webhook-server 默认会对所有容器注入这个标准的日志采集配置：  
+对于大多数业务集群，所有业务容器的日志输出是同样的格式，只需配置一种固定的日志清洗规则即可。对于这种需求，为了减少用户的负担，bk-bcs-saas 层可以在每个 namespace 下默认创建一个 configType 类型为 default 的 BcsLogConfig 资源，bcs-webhook-server 默认会对该 namespace 所有容器注入这个标准的日志采集配置：  
 ```
 apiVersion: bkbcs.tencent.com/v2
 kind: BcsLogConfig
@@ -110,16 +110,15 @@ metadata:
   name: standard-bcs-log-conf
   namespace: default
 spec:
-  configType: standard
+  configType: default
   appId: "10000"
   stdOut: false
-  logPath: /data/logs/app.log
   clusterId: bcs-k8s-00001
   dataId: "20001"
 ```
 
 - 特殊的日志采集配置
-如果一个业务集群中除了标准的日志采集配置外，还有某些容器需要配置特殊的日志采集规则，此时，可由用户在 bk-bcs-saas 层创建特定的日志采集配置 BcsLogConfig , 在 BcsLogConfig 中指定需要使用这种规则的容器名。创建完后，bcs-webhook-server 会对这些容器使用指定的 BcsLogConfig 配置来进行注入，以满足特定的需求：  
+如果一个业务集群中除了标准的日志采集配置外，还有某些容器需要配置特殊的日志采集规则，此时，可由用户从 bk-bcs-saas 层在该 namespace 下创建特定的类型为 custom 的日志采集配置 BcsLogConfig , 在 BcsLogConfig 中指定需要使用这种规则的 workloads 类型(如 Deployment, Statefulset)、workloads 名、容器名。创建完后，bcs-webhook-server 会对这些容器使用指定的 BcsLogConfig 配置来进行注入，以满足特定的需求：  
 ```
 apiVersion: bkbcs.tencent.com/v2
 kind: BcsLogConfig
@@ -127,16 +126,24 @@ metadata:
   name: proxy-bcs-log-conf
   namespace: default
 spec:
+  configType: custom
   appId: "20000"
   stdOut: false
-  logPath: /data/bcs
+  logPaths:
+    - /data/home/bryanhe
+    - /data/logs
   clusterId: bcs-k8s-15049
   dataId: "20001"
+  workloadType: Deployment
+  workloadName: python-webhook
   containers:
-    - istio-proxy
     - proxy
+    - istio-proxy
+  LogTags:
+      key1: value1
+      key2: value2
 ```
-例如，在创建这个名为 proxy-bcs-log-conf 的 BcsLogConfig 后，在集群中已经有 standard 类型的 BcsLogConfig 下，针对容器名为 istio-proxy 或 proxy 的容器，bcs-webhook-server 将使用这个名为 proxy-bcs-log-conf 的 BcsLogConfig 来注入采集信息。
+例如，在创建这个名为 proxy-bcs-log-conf 的 BcsLogConfig 后，在集群中已经有 default 类型的 BcsLogConfig 下，针对 default 命名空间下名为 python-webhook 的 deployment，其 pod 中容器名为 istio-proxy 或 proxy 的容器将被  bcs-webhook-server 使用这个名为 proxy-bcs-log-conf 的 BcsLogConfig 来注入采集信息。
 
 ### 4.2 db 授权 init-container 的注入
 db 授权的配置信息以 crd 的形式创建并下发到 k8s 或 mesos 集群中, 包括 podSelector, appName, targetDb, dbType, callUser, dbName.  
