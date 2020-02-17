@@ -18,8 +18,8 @@ import (
 	"sort"
 
 	stsplus "bk-bcs/bcs-k8s/tkex-statefulsetplus-operator/pkg/apis/tkex/v1alpha1"
+	"bk-bcs/bcs-k8s/tkex-statefulsetplus-operator/pkg/util"
 	"bk-bcs/bcs-k8s/tkex-statefulsetplus-operator/pkg/util/constants"
-	"bk-bcs/bcs-k8s/tkex-statefulsetplus-operator/pkg/util/k8sutil"
 
 	"github.com/golang/glog"
 	apps "k8s.io/api/apps/v1"
@@ -94,10 +94,10 @@ func (ssc *defaultStatefulSetPlusControl) UpdateStatefulSetPlus(set *stsplus.Sta
 	}
 
 	// add Status.labelSelector
-	k8sutil.ToLabelString(set.Spec.Selector)
-	if status.LabelSelector == nil || *status.LabelSelector != k8sutil.ToLabelString(set.Spec.Selector) {
+	util.ToLabelString(set.Spec.Selector)
+	if status.LabelSelector == nil || *status.LabelSelector != util.ToLabelString(set.Spec.Selector) {
 		status.LabelSelector = new(string)
-		*status.LabelSelector = k8sutil.ToLabelString(set.Spec.Selector)
+		*status.LabelSelector = util.ToLabelString(set.Spec.Selector)
 	}
 
 	// update the set's status
