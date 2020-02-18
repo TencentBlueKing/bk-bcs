@@ -298,6 +298,9 @@ func syncSecret(zkStore store.Store, etcdStore store.Store) error {
 		return fmt.Errorf("ListAllSecrets failed: %s", err.Error())
 	}
 	for _,sct :=range scts {
+		if sct.Name=="paas_image_secret" {
+			sct.Name="paas-image-secret"
+		}
 		err = etcdStore.SaveSecret(sct)
 		if err != nil {
 			return fmt.Errorf("SaveSecret(%s:%s) failed: %s", sct.NameSpace,sct.Name,err.Error())
