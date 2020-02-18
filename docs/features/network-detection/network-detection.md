@@ -23,6 +23,31 @@ bcs中的容器集群一般是跨地域、多机房的形式，因此可以在�
 **改造点**
 1. 支持bcs mesos部署方案
 2. 探测点由从k8s集群中获取，改为支持network-detection下发
+3. 完善上报prometheus metrics，满足业务场景需求（对同一区域的所有探测点，连续1m探测失败则告警）
+当前metrics
+```cassandraql
+# TYPE goldpinger_nodes_health_total gauge
+10goldpinger_nodes_health_total{goldpinger_instance="ip-9-146-98-169-n-bcs-k8s-15091",status="healthy"} 4
+0 goldpinger_nodes_health_total{goldpinger_instance="ip-9-146-98-169-n-bcs-k8s-15091",status="unhealthy"} 1
+```
+调整后的metrics
+```cassandraql
+# TYPE goldpinger_nodes_health_total gauge
+10goldpinger_nodes_health_total{goldpinger_instance="ip-9-146-98-169-n-bcs-k8s-15091",target_region="上海-周浦",status="healthy"} 3
+0 goldpinger_nodes_health_total{goldpinger_instance="ip-9-146-98-169-n-bcs-k8s-15091",target_region="深圳-光明",target,status="unhealthy"} 3
+```
+
+### alert规则
+```cassandraql
+alert: goldpinger_nodes_unhealthy
+expr: sum(goldpinger_nodes_health_total{status="unhealthy"})
+  BY (goldpinger_instance, target_region) = 3
+for: 5m
+annotations:
+  description: |
+    Goldpinger instance {{ $labels.goldpinger_instance }} has been reporting unhealthy nodes for at least 5 minutes.
+  summary: Region {{ $labels.target_region }} down
+```
 
 
 
