@@ -24,6 +24,7 @@ bcs中的容器集群一般是跨地域、多机房的形式，因此可以在�
 1. 支持bcs mesos部署方案
 2. 探测点由从k8s集群中获取，改为支持network-detection下发
 3. 完善上报prometheus metrics，满足业务场景需求（对同一区域的所有探测点，连续1m探测失败则告警）
+
 当前metrics
 ```cassandraql
 # TYPE goldpinger_nodes_health_total gauge
