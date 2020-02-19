@@ -38,6 +38,8 @@ required = [
   "k8s.io/client-go/plugin/pkg/client/auth/gcp", # for development against gcp
   "k8s.io/code-generator/cmd/client-gen", # for go generate
   "k8s.io/code-generator/cmd/deepcopy-gen", # for go generate
+  "k8s.io/code-generator/cmd/lister-gen", # for go generate
+  "k8s.io/code-generator/cmd/informer-gen", # for go generate
   "sigs.k8s.io/controller-tools/cmd/controller-gen", # for crd/rbac generation
   "sigs.k8s.io/controller-runtime/pkg/client/config",
   "sigs.k8s.io/controller-runtime/pkg/controller",
@@ -47,7 +49,6 @@ required = [
   "sigs.k8s.io/controller-runtime/pkg/source",
   "sigs.k8s.io/testing_frameworks/integration", # for integration testing
   "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
-  "github.com/google/cadvisor",
   "github.com/haproxytech/models",
   "github.com/haproxytech/client-native/runtime",
   "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common",
@@ -161,10 +162,6 @@ required = [
 
 [[constraint]]
   branch = "master"
-  name = "github.com/howeyc/gopass"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/iancoleman/strcase"
 
 [[constraint]]
@@ -173,11 +170,7 @@ required = [
 
 [[constraint]]
   name = "github.com/json-iterator/go"
-  version = "1.1.5"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/kardianos/osext"
+  version = "1.1.5" 
 
 [[constraint]]
   name = "github.com/mesos/mesos-go"
@@ -190,10 +183,6 @@ required = [
 [[constraint]]
   name = "github.com/miekg/dns"
   version = "1.1.1"
-
-[[constraint]]
-  name = "github.com/mitchellh/mapstructure"
-  version = "1.1.2"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
@@ -280,18 +269,6 @@ required = [
   name = "gopkg.in/mgo.v2"
 
 [[constraint]]
-  name = "k8s.io/api"
-  version = "kubernetes-1.12.3"
-
-[[constraint]]
-  name = "k8s.io/apimachinery"
-  version = "kubernetes-1.12.3"
-
-[[constraint]]
-  name = "k8s.io/client-go"
-  version = "kubernetes-1.12.3"
-
-[[constraint]]
   name = "k8s.io/kubernetes"
   version = "1.13.1"
 
@@ -309,7 +286,7 @@ required = [
 
 [[constraint]]
   name = "cloud.google.com/go"
-  version = "0.34.0"
+  version = "v0.34.0"
 
 [[constraint]]
   name = "github.com/rcrowley/go-metrics"
@@ -356,11 +333,11 @@ required = [
 
 [[constraint]]
   name = "github.com/google/cadvisor"
-  version = "0.32.0"
+  version = "v0.32.0"
 
 [[constraint]]
-  name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.12.3"
+  name = "github.com/containerd/containerd"
+  version = "v1.1.8"
 
 [[constraint]]
   name = "github.com/tencentcloud/tencentcloud-sdk-go"
@@ -377,5 +354,13 @@ required = [
 [[constraint]]
   name = "github.com/container-storage-interface/spec"
   version = "v0.3.0"
+
+[[constraint]]
+  name = "github.com/godbus/dbus"
+  version = "v5.0.1"
+
+[[constraint]]
+  name = "github.com/coreos/go-systemd"
+  version = "v20"
 
 
