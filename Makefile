@@ -13,6 +13,7 @@ endif
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
 GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
+WORKSPACE=$(shell pwd)
 
 LDFLAG=-ldflags "-X bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
  -X bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
@@ -33,9 +34,9 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server
-specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server
-k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche
+default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network
+specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network
+k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche k8s-statefulsetplus
 
 allpack: svcpack k8spack mmpack mnpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -67,8 +68,6 @@ pre:
 	@echo "git tag: ${GITTAG}"
 	mkdir -p ${PACKAGEPATH}
 	mkdir -p ${EXPORTPATH}
-	if [ ! -d "./vendor/github.com/sirupsen" ]; then cd ./vendor/github.com && ln -sf Sirupsen sirupsen; fi
-	if [ ! -d "./vendor/github.com/Sirupsen" ]; then cd ./vendor/github.com && ln -sf sirupsen Sirupsen; fi
 	go fmt ./...
 	cd ./scripts && chmod +x vet.sh && ./vet.sh
 
@@ -213,6 +212,11 @@ k8s-watch:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-k8s-watch ${PACKAGEPATH}/bcs-k8s-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-watch/bcs-k8s-watch ./bcs-k8s/bcs-k8s-watch/main.go
 
+k8s-statefulsetplus:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/tkex-statefulsetplus-operator ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/tkex-statefulsetplus-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/tkex-statefulsetplus-operator/tkex-statefulsetplus-operator ./cmd/statefulsetplus-operator/main.go
+
 api-export:pre
 	mkdir -p ${EXPORTPATH}
 	cp ./bcs-common/common/types/meta.go ${EXPORTPATH}
@@ -244,5 +248,6 @@ clb-controller:pre
 	GOOS=linux go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
 
 bcs-webhook-server:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
+	cp ./install/conf/bcs-services/bcs-webhook-server/* ${PACKAGEPATH}/bcs-services/bcs-webhook-server
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./bcs-services/bcs-webhook-server/main.go
