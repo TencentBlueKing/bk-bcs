@@ -48,7 +48,7 @@ import (
 )
 
 //NewClient adapter for create different implemented service client
-func NewClient(serviceRegistry, kubeconfig string, handler cache.ResourceEventHandler, syncPeriod time.Duration) (serviceclient.Client, error) {
+func NewClient(serviceRegistry, kubeconfig string, handler cache.ResourceEventHandler, syncPeriod int) (serviceclient.Client, error) {
 	switch serviceRegistry {
 	case serviceclient.ServiceRegistryKubernetes:
 		k8sSvcClient, err := kubesvcclient.NewClient(kubeconfig, handler, (time.Duration(syncPeriod) * time.Second))

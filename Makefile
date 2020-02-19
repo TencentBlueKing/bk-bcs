@@ -34,8 +34,8 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network
-specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network
+default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network
+specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche k8s-statefulsetplus
 
 allpack: svcpack k8spack mmpack mnpack
@@ -244,8 +244,14 @@ network:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/ptp ./vendor/github.com/containernetworking/plugins/plugins/main/ptp/ptp.go
 
 clb-controller:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
-	GOOS=linux go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
+	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+
+gw-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-gw-controller
+	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
 
 bcs-webhook-server:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
