@@ -63,6 +63,8 @@ const (
 const (
 	// Default namespace
 	defaultRunAs string = "defaultGroup"
+	//object label's key or value max length 63
+	LabelKVMaxLength = 63
 )
 
 // Store Manager
@@ -272,7 +274,6 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 		extensionClient: extensionClient,
 	}
 
-	//init object labels regexp
 	m.regkey, _ = regexp.Compile("^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$")
 	m.regvalue, _ = regexp.Compile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")
 
@@ -356,6 +357,9 @@ func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[
 			continue
 		}
 		if !store.regvalue.MatchString(v) {
+			continue
+		}
+		if len(k) > LabelKVMaxLength || len(v) > LabelKVMaxLength {
 			continue
 		}
 
