@@ -99,13 +99,13 @@ func (bi *BscpInject) InjectApplicationContent(application *commtypes.ReplicaCon
 	}
 	name := fmt.Sprintf("%s/%s", application.GetNamespace(), application.GetName())
 
-	//  retrieve ENV for sidecar setup
+	// retrieve ENV for sidecar setup
+	// when retrieve ENV failed, return error
 	envMap, envErr := bi.retrieveEnvFromContainer(
 		application.ReplicaControllerSpec.Template.PodSpec.Containers, name)
 	if envErr != nil {
-		blog.Warnf("bscp retrieve specified Environment for App %s failed, %s", name, envErr.Error())
-		blog.Warnf("return original application config")
-		return application, nil
+		blog.Errorf("bscp retrieve specified Environment for App %s failed, %s", name, envErr.Error())
+		return nil, fmt.Errorf("bscp retrieve specified Environment for App %s failed, %s", name, envErr.Error())
 	}
 
 	//  append envMap to template Container
@@ -125,12 +125,12 @@ func (bi *BscpInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*com
 	name := fmt.Sprintf("%s/%s", deploy.GetNamespace(), deploy.GetName())
 
 	// retrieve ENV for sidecar setup
+	// when retrieve ENV failed, return error
 	envMap, envErr := bi.retrieveEnvFromContainer(
 		deploy.Spec.Template.PodSpec.Containers, name)
 	if envErr != nil {
-		blog.Warnf("bscp retrieve specified Environment for Deployment %s failed, %s", name, envErr.Error())
-		blog.Warnf("return original deployment config")
-		return deploy, nil
+		blog.Errorf("bscp retrieve specified Environment for Deployment %s failed, %s", name, envErr.Error())
+		return nil, fmt.Errorf("bscp retrieve specified Environment for Deployment %s failed, %s", name, envErr.Error())
 	}
 	
 	containers := bi.injectEnvToContainer(bi.temContainers, envMap)
