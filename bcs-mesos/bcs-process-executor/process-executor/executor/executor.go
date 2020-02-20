@@ -38,9 +38,6 @@ import (
 const (
 	//report task status time
 	ReportTaskStatusPeriod = 30 //seconds
-
-	ProcessPackagesDir = "/data/bcs/workspace/packages_dir"
-	ProcessExtractDir  = "/data/bcs/workspace/extract_dir"
 )
 
 type bcsExecutor struct {
@@ -98,6 +95,7 @@ func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 	e.status = types.ExecutorStatusLaunching
 	e.Unlock()
 
+	//craete process taskinfo
 	for _, task := range taskgroup.GetTasks() {
 		proc, err := createProcessTaskinfo(task)
 		if err != nil {
