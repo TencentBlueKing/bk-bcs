@@ -71,7 +71,7 @@ type managerStore struct {
 	k8sClient       *kubernetes.Clientset
 	extensionClient *extensionClientset.Clientset
 
-	regkey *regexp.Regexp
+	regkey   *regexp.Regexp
 	regvalue *regexp.Regexp
 
 	wg     sync.WaitGroup

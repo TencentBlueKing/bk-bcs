@@ -230,7 +230,7 @@ spec:
 ```
 
 运行如下指令后，几秒钟后，我们就可以在腾讯云控制台的clb实例中看到，新建了一个名为http18001的监听器。
-改监听器转发到了http-test应用实例所在主机的IP地址上，且端口是k8s为http-test服务自动分配的NodePort端口
+该监听器转发到了http-test应用实例所在主机的IP地址上，且端口是k8s为http-test服务自动分配的NodePort端口
 ```bash
 kubectl apply -f clbingress.yaml
 ```

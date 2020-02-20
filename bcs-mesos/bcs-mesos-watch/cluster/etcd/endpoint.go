@@ -15,10 +15,11 @@ package etcd
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/labels"
 	"reflect"
 	"sync"
 	"time"
+
+	"k8s.io/apimachinery/pkg/labels"
 
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
@@ -167,7 +168,7 @@ func (watch *EndpointWatch) ProcessAllEndpoints() error {
 		}
 	}
 
-	blog.Info("sync %d endpoints from zk, delete %d cache endpoints", numNode, numDel)
+	blog.Info("sync %d endpoints from etcd, delete %d cache endpoints", numNode, numDel)
 
 	return nil
 }

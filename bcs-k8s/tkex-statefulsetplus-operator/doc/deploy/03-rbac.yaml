@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: statefulsetplus-operator
+  namespace: tkex-system
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: statefulsetplus-operator
+rules:
+- apiGroups: [""]
+  resources:
+  - pods
+  - secrets
+  - services
+  - configmaps
+  - endpoints
+  - events
+  - statefulsets
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+  - delete
+
+- apiGroups: ["apps"]
+  resources: ["controllerrevisions"]
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+  - delete
+
+- apiGroups: ["tkex"]
+  resources:
+  - statefulsetpluses
+  - statefulsetpluses/status
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+  - delete
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind:  ClusterRoleBinding
+metadata:
+  name: statefulsetplus-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: statefulsetplus-operator
+subjects:
+  - kind: ServiceAccount
+    name: statefulsetplus-operator
+    namespace: tkex-system
