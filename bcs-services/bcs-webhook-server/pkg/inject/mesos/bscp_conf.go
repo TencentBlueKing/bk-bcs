@@ -132,7 +132,7 @@ func (bi *BscpInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*com
 		blog.Errorf("bscp retrieve specified Environment for Deployment %s failed, %s", name, envErr.Error())
 		return nil, fmt.Errorf("bscp retrieve specified Environment for Deployment %s failed, %s", name, envErr.Error())
 	}
-	
+
 	containers := bi.injectEnvToContainer(bi.temContainers, envMap)
 	containers = append(containers, deploy.Spec.Template.PodSpec.Containers...)
 	deploy.Spec.Template.PodSpec.Containers = containers

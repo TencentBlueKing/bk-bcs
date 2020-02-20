@@ -60,6 +60,6 @@ type DbPrivOptions struct {
 }
 
 type BscpOptions struct {
-	BscpInject bool `json:"bscp_inject" value:"false" usage:"whether inject bscp sidecar"`
+	BscpInject       bool   `json:"bscp_inject" value:"false" usage:"whether inject bscp sidecar"`
 	BscpTemplatePath string `json:"bscp_template_path" value:"" usage:"template file for sidecar"`
 }
