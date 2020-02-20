@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package resources
 
 import (
@@ -23,6 +36,7 @@ const (
 	BkbcsGroupName = "bkbcs.tencent.com"
 )
 
+// resource list to watch
 var WatcherConfigList, BkbcsWatcherConfigLister map[string]ResourceObjType
 
 // ResourceObjType used for build target watchers.
@@ -33,6 +47,7 @@ type ResourceObjType struct {
 	Namespaced   bool
 }
 
+// InitResourceList init resource list to watch
 func InitResourceList(k8sConfig *options.K8sConfig) error {
 	restConfig, err := GetRestConfig(k8sConfig)
 	if err != nil {
@@ -65,6 +80,7 @@ func InitResourceList(k8sConfig *options.K8sConfig) error {
 	return nil
 }
 
+// initNormalWatcherConfigList init k8s resource
 func initNormalWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
 	// create k8s clientset.
 	clientSet, err := kubernetes.NewForConfig(restConfig)
@@ -174,6 +190,7 @@ func initNormalWatcherConfigList(restConfig *rest.Config) (map[string]ResourceOb
 	return normalWatcherConfigList, nil
 }
 
+// initWebhookWatcherConfigList init bcs-webhook-server crd resource
 func initWebhookWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
 	// create webhook crd clientset
 	whClientSet, err := webhookClientSet.NewForConfig(restConfig)
@@ -200,6 +217,7 @@ func initWebhookWatcherConfigList(restConfig *rest.Config) (map[string]ResourceO
 	return webhookWatcherConfigLister, nil
 }
 
+// initMesosWatcherConfigList init mesos crd resource
 func initMesosWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
 	mesosClientset, err := internalclientset.NewForConfig(restConfig)
 	if err != nil {
@@ -316,6 +334,7 @@ func initMesosWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObj
 	return mesosWatcherConfigLister, nil
 }
 
+// GetRestConfig generate rest config
 func GetRestConfig(k8sConfig *options.K8sConfig) (*rest.Config, error) {
 	var config *rest.Config
 	var err error
