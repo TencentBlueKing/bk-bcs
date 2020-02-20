@@ -36,6 +36,7 @@ import (
 )
 
 const (
+	//report task status time
 	ReportTaskStatusPeriod = 30 //seconds
 
 	ProcessPackagesDir = "/data/bcs/workspace/packages_dir"
@@ -59,6 +60,7 @@ type bcsExecutor struct {
 	isAskedShutdown bool //scheduler shutdown the exeutor, and is true
 }
 
+//NewExecutor
 func NewExecutor(cxt context.Context) Executor {
 	executor := &bcsExecutor{
 		tasks:         make(map[string]*types.ProcessTaskInfo),
@@ -72,14 +74,17 @@ func NewExecutor(cxt context.Context) Executor {
 	return executor
 }
 
+//RegisterCallbackFunc
 func (e *bcsExecutor) RegisterCallbackFunc(funcType types.CallbackFuncType, fun interface{}) {
 	e.callbackFuncs[funcType] = fun
 }
 
+// GetExecutorStatus
 func (e *bcsExecutor) GetExecutorStatus() types.ExecutorStatus {
 	return e.status
 }
 
+//LaunchTaskgroup
 func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 	var err error
 
@@ -131,6 +136,7 @@ func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 	go e.loopInspectTasks()
 }
 
+//loopInspectTasks
 func (e *bcsExecutor) loopInspectTasks() {
 	var inspectNum uint64
 
@@ -186,6 +192,7 @@ func (e *bcsExecutor) loopInspectTasks() {
 	}
 }
 
+//getTaskStatusFromProcessStatus
 func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusType) (types.TaskStatus, error) {
 	switch status {
 	case types.ProcessStatusStaging:
@@ -211,6 +218,7 @@ func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusT
 	}
 }
 
+//Shutdown
 func (e *bcsExecutor) Shutdown() {
 	e.isAskedShutdown = true
 
@@ -218,6 +226,7 @@ func (e *bcsExecutor) Shutdown() {
 	e.innerShutdown()
 }
 
+//innerShutdown
 func (e *bcsExecutor) innerShutdown() {
 	e.Lock()
 	if e.status == types.ExecutorStatusShutdown || e.status == types.ExecutorStatusFinish {
@@ -276,6 +285,7 @@ func (e *bcsExecutor) innerShutdown() {
 	}
 }
 
+//ReloadTasks
 func (e *bcsExecutor) ReloadTasks() error {
 	for _, task := range e.tasks {
 		blog.Infof("reload task %s start...", task.TaskId)
@@ -289,6 +299,7 @@ func (e *bcsExecutor) ReloadTasks() error {
 	return nil
 }
 
+// RestartTasks
 func (e *bcsExecutor) RestartTasks() error {
 	for _, task := range e.tasks {
 		blog.Infof("reload task %s start...", task.TaskId)
@@ -302,6 +313,7 @@ func (e *bcsExecutor) RestartTasks() error {
 	return nil
 }
 
+//waitForAckAndExit
 func (e *bcsExecutor) waitForAckAndExit() {
 	if len(e.ackUpdates) == 0 {
 		blog.Infof("bcsExecutor ack updates message is empty, and exit")
@@ -325,6 +337,7 @@ func (e *bcsExecutor) waitForAckAndExit() {
 	}
 }
 
+// AckTaskStatusMessage
 func (e *bcsExecutor) AckTaskStatusMessage(taskId string, uid []byte) {
 	e.updatesLocks.Lock()
 	defer e.updatesLocks.Unlock()
@@ -342,6 +355,7 @@ func (e *bcsExecutor) AckTaskStatusMessage(taskId string, uid []byte) {
 	}
 }
 
+// updateTaskStatus
 func (e *bcsExecutor) updateTaskStatus(taskId string, status types.TaskStatus, msg string) {
 	var state mesos.TaskState
 
@@ -401,6 +415,7 @@ func (e *bcsExecutor) updateTaskStatus(taskId string, status types.TaskStatus, m
 	return
 }
 
+// createProcessTaskinfo
 func createProcessTaskinfo(task *mesos.TaskInfo) (*types.ProcessTaskInfo, error) {
 	if task.GetCommand() == nil {
 		err := fmt.Errorf("task %s is not command task", task.GetTaskId().GetValue())
@@ -545,6 +560,7 @@ func setProcessTaskParams(processInfo *types.ProcessTaskInfo, dataClass *bcstype
 	return nil
 }
 
+// getBcsDataClass
 func getBcsDataClass(taskInfo *mesos.TaskInfo) (*bcstype.DataClass, error) {
 	data := taskInfo.GetData()
 	if data == nil || len(data) == 0 {
@@ -568,14 +584,6 @@ func getBcsDataClass(taskInfo *mesos.TaskInfo) (*bcstype.DataClass, error) {
 	}
 
 	return dc, nil
-}
-
-func createProcessByTask(task *types.ProcessTaskInfo) *types.ProcessInfo {
-	process := &types.ProcessInfo{
-		Id: task.TaskId,
-	}
-
-	return process
 }
 
 //downloadRemoteFile download remote file, change to local one
@@ -616,6 +624,7 @@ func downloadRemoteFile(from, user, pwd string) (string, error) {
 	return string(data), nil
 }
 
+// writeLocalFile
 func writeLocalFile(localFile *types.LocalFile) error {
 	file, err := os.Create(localFile.To)
 	if err != nil {

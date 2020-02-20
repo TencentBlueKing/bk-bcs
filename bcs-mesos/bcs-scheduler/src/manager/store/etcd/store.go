@@ -63,6 +63,8 @@ const (
 const (
 	// Default namespace
 	defaultRunAs string = "defaultGroup"
+	//object label's key or value max length 63
+	LabelKVMaxLength = 63
 )
 
 // Store Manager
@@ -355,6 +357,9 @@ func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[
 			continue
 		}
 		if !store.regvalue.MatchString(v) {
+			continue
+		}
+		if len(k) > LabelKVMaxLength || len(v) > LabelKVMaxLength {
 			continue
 		}
 

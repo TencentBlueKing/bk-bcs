@@ -485,7 +485,7 @@ func RefreshDCHost(rfCxt context.Context, cfg *types.CmdConfig, storage storage.
 	} // end for
 }
 
-func registerZkEndpoints(cfg *types.CmdConfig, rdCxt context.Context) (bool, error) {
+func registerZkEndpoints(rdCxt context.Context, cfg *types.CmdConfig) (bool, error) {
 	clusterinfo := strings.Split(cfg.ClusterInfo, "/")
 	regDiscv := rd.NewRegDiscoverEx(clusterinfo[0], time.Second*10)
 	if regDiscv == nil {
