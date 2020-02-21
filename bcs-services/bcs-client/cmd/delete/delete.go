@@ -31,7 +31,7 @@ func NewDeleteCommand() cli.Command {
 			},
 			cli.StringFlag{
 				Name:  "name, n",
-				Usage: "Application name",
+				Usage: "resource name",
 			},
 			cli.StringFlag{
 				Name:  "namespace, ns",
