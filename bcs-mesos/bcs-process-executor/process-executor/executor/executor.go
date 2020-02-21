@@ -253,6 +253,7 @@ func (e *bcsExecutor) innerShutdown() {
 				e.updateTaskStatus(taskid, task.Status, status.Message)
 			}
 
+			//if process status starting or running, then stop it
 			if task.Status == types.TaskStatusStarting || task.Status == types.TaskStatusRunning {
 				blog.Infof("stop process %s status %s", task.TaskId, task.Status)
 				err = e.procDaemon.StopProcess(taskid, task.ProcInfo.StopTimeout)
