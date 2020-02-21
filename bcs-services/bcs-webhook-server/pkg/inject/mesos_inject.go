@@ -31,7 +31,7 @@ type Meta struct {
 }
 
 //MesosLogInject inject bcs log config to container and respond to mesos
-func (whSvr *WebhookServer) MesosLogInject(w http.ResponseWriter, r *http.Request) {
+func (whSvr *WebhookServer) MesosInject(w http.ResponseWriter, r *http.Request) {
 	blog.Infof("received inject request")
 	if whSvr.EngineType == "kubernetes" {
 		blog.Warnf("this webhook server only supports kubernetes log config inject")

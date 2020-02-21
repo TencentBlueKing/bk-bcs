@@ -188,8 +188,8 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 
 	// define http server and server handler
 	mux := http.NewServeMux()
-	mux.HandleFunc("/bcs/webhook/inject/v1/k8s", whsvr.K8sLogInject)
-	mux.HandleFunc("/bcs/webhook/inject/v1/mesos", whsvr.MesosLogInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/k8s", whsvr.K8sInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/mesos", whsvr.MesosInject)
 	whsvr.Server.Handler = mux
 
 	return whsvr, nil
