@@ -215,6 +215,19 @@ func (tg *TargetGroup) GetUpdateBackend(cur *TargetGroup) (updates BackendList) 
 	return
 }
 
+// AddBackends add backends to target group
+func (tg *TargetGroup) AddBackends(adds BackendList) {
+	tmp := make(map[string]*Backend)
+	for _, bk := range tg.Backends {
+		tmp[bk.IP+strconv.Itoa(int(bk.Port))] = bk
+	}
+	for _, add := range adds {
+		if _, ok := tmp[add.IP+strconv.Itoa(int(add.Port))]; !ok {
+			tg.Backends = append(tg.Backends, add)
+		}
+	}
+}
+
 // RemoveBackend clean all backend info
 func (tg *TargetGroup) RemoveBackend(dels BackendList) {
 	tmp := make(map[string]*Backend)
