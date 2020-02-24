@@ -138,14 +138,14 @@ func Run(cfg *types.CmdConfig) error {
 	rdCxt, _ := context.WithCancel(rootCxt)
 
 	go func() {
-		retry, rdErr := registerZkEndpoints(cfg, rdCxt)
+		retry, rdErr := registerZkEndpoints(rdCxt, cfg)
 		for retry == true {
 			if rdErr != nil {
 				blog.Error("registerZkEndpoints err: %s", rdErr.Error())
 			}
 			time.Sleep(3 * time.Second)
 			blog.Info("retry registerZkEndpoints...")
-			retry, rdErr = registerZkEndpoints(cfg, rdCxt)
+			retry, rdErr = registerZkEndpoints(rdCxt, cfg)
 		}
 		if rdErr != nil {
 			blog.Error("registerZkEndpoints err: %s, and exit", rdErr.Error())
