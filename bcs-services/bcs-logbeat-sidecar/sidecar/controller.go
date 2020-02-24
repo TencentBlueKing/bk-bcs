@@ -233,7 +233,7 @@ func produceLogConfParameter(container *docker.Container) (*LogConfParameter, bo
 				}
 
 				label := fmt.Sprintf(`
-        %s: %s`, kvs[0], kvs[1])
+        %s: %s`, kvs[0], kvs[1])// nolint
 				para.CustemLabel += label
 			}
 		}
@@ -267,7 +267,7 @@ func produceLogConfParameter(container *docker.Container) (*LogConfParameter, bo
 	para.LogFile += files[0]
 	for _,f :=range files[1:] {
 		filelog := fmt.Sprintf(`
-        %s`, f)
+      - %s`, f)// nolint
 		para.LogFile += filelog
 	}
 	para.ContainerId = container.ID
