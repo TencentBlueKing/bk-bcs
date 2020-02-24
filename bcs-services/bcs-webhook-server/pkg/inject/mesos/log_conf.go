@@ -19,8 +19,8 @@ import (
 
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
-	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
+	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
 	mapset "github.com/deckarep/golang-set"
 	"k8s.io/apimachinery/pkg/labels"
@@ -164,7 +164,7 @@ func (logConf *LogConfInject) InjectDeployContent(deploy *commtypes.BcsDeploymen
 }
 
 // injectMesosContainers injects bcs log config to all containers
-func (logConf *LogConfInject) injectMesosContainers(namespace string, podTemplate *commtypes.PodTemplateSpec, bcsLogConf *bcsv2.BcsLogConfig) *commtypes.PodTemplateSpec { // nolint
+func (logConf *LogConfInject) injectMesosContainers(namespace string, podTemplate *commtypes.PodTemplateSpec, bcsLogConf *bcsv1.BcsLogConfig) *commtypes.PodTemplateSpec { // nolint
 
 	var injectedContainers []commtypes.Container
 	for _, container := range podTemplate.PodSpec.Containers {
@@ -177,7 +177,7 @@ func (logConf *LogConfInject) injectMesosContainers(namespace string, podTemplat
 }
 
 // injectMesosContainer injects bcs log config to an container
-func (logConf *LogConfInject) injectMesosContainer(namespace string, container commtypes.Container, bcsLogConf *bcsv2.BcsLogConfig, index int) commtypes.Container { // nolint
+func (logConf *LogConfInject) injectMesosContainer(namespace string, container commtypes.Container, bcsLogConf *bcsv1.BcsLogConfig, index int) commtypes.Container { // nolint
 	var envs []commtypes.EnvVar
 
 	clusterIdEnv := commtypes.EnvVar{

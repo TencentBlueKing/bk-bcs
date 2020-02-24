@@ -11,7 +11,7 @@
  *
  */
 
-package v2
+package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,38 +21,26 @@ import (
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type BcsLogConfig struct {
+type BcsDbPrivConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
-	Spec              BcsLogConfigSpec `json:"spec"`
+	Spec              BcsDbPrivConfigSpec `json:"spec"`
 }
 
-type BcsLogConfigSpec struct {
-	ConfigType     string            `json:"configType"`
-	AppId          string            `json:"appId"`
-	ClusterId      string            `json:"clusterId"`
-	Stdout         bool              `json:"stdout"`
-	DataId         string            `json:"dataId"`
-	LogPaths       []string          `json:"logPaths"`
-	LogTags        map[string]string `json:"logTags"`
-	WorkloadType   string            `json:"workloadType"`
-	WorkloadName   string            `json:"workloadName"`
-	ContainerConfs []ContainerConf   `json:"containerConfs"`
-}
-
-type ContainerConf struct {
-	ContainerName string            `json:"containerName"`
-	Stdout        bool              `json:"stdout"`
-	DataId        string            `json:"dataId"`
-	LogPaths      []string          `json:"logPaths"`
-	LogTags       map[string]string `json:"logTags"`
+type BcsDbPrivConfigSpec struct {
+	PodSelector map[string]string `json:"podSelector"`
+	AppName     string            `json:"appName"`
+	TargetDb    string            `json:"targetDb"`
+	DbType      string            `json:"dbType"`
+	CallUser    string            `json:"callUser"`
+	DbName      string            `json:"dbName"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type BcsLogConfigList struct {
+type BcsDbPrivConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []BcsLogConfig `json:"items"`
+	Items []BcsDbPrivConfig `json:"items"`
 }

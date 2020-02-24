@@ -15,4 +15,4 @@
 
 // Package v1 is the v1 version of the API.
 // +groupName=bkbcs.tencent.com
-package v2
+package v1

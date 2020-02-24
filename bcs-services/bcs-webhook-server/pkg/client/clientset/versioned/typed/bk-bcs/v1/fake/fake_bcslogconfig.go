@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
+	bk_bcs_v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -31,29 +31,29 @@ import (
 
 // FakeBcsLogConfigs implements BcsLogConfigInterface
 type FakeBcsLogConfigs struct {
-	Fake *FakeBkbcsV2
+	Fake *FakeBkbcsV1
 	ns   string
 }
 
-var bcslogconfigsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v2", Resource: "bcslogconfigs"}
+var bcslogconfigsResource = schema.GroupVersionResource{Group: "bkbcs.tencent.com", Version: "v1", Resource: "bcslogconfigs"}
 
-var bcslogconfigsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v2", Kind: "BcsLogConfig"}
+var bcslogconfigsKind = schema.GroupVersionKind{Group: "bkbcs.tencent.com", Version: "v1", Kind: "BcsLogConfig"}
 
 // Get takes name of the bcsLogConfig, and returns the corresponding bcsLogConfig object, and an error if there is any.
-func (c *FakeBcsLogConfigs) Get(name string, options v1.GetOptions) (result *v2.BcsLogConfig, err error) {
+func (c *FakeBcsLogConfigs) Get(name string, options v1.GetOptions) (result *bk_bcs_v1.BcsLogConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(bcslogconfigsResource, c.ns, name), &v2.BcsLogConfig{})
+		Invokes(testing.NewGetAction(bcslogconfigsResource, c.ns, name), &bk_bcs_v1.BcsLogConfig{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v2.BcsLogConfig), err
+	return obj.(*bk_bcs_v1.BcsLogConfig), err
 }
 
 // List takes label and field selectors, and returns the list of BcsLogConfigs that match those selectors.
-func (c *FakeBcsLogConfigs) List(opts v1.ListOptions) (result *v2.BcsLogConfigList, err error) {
+func (c *FakeBcsLogConfigs) List(opts v1.ListOptions) (result *bk_bcs_v1.BcsLogConfigList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(bcslogconfigsResource, bcslogconfigsKind, c.ns, opts), &v2.BcsLogConfigList{})
+		Invokes(testing.NewListAction(bcslogconfigsResource, bcslogconfigsKind, c.ns, opts), &bk_bcs_v1.BcsLogConfigList{})
 
 	if obj == nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (c *FakeBcsLogConfigs) List(opts v1.ListOptions) (result *v2.BcsLogConfigLi
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v2.BcsLogConfigList{}
-	for _, item := range obj.(*v2.BcsLogConfigList).Items {
+	list := &bk_bcs_v1.BcsLogConfigList{}
+	for _, item := range obj.(*bk_bcs_v1.BcsLogConfigList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -80,31 +80,31 @@ func (c *FakeBcsLogConfigs) Watch(opts v1.ListOptions) (watch.Interface, error) 
 }
 
 // Create takes the representation of a bcsLogConfig and creates it.  Returns the server's representation of the bcsLogConfig, and an error, if there is any.
-func (c *FakeBcsLogConfigs) Create(bcsLogConfig *v2.BcsLogConfig) (result *v2.BcsLogConfig, err error) {
+func (c *FakeBcsLogConfigs) Create(bcsLogConfig *bk_bcs_v1.BcsLogConfig) (result *bk_bcs_v1.BcsLogConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(bcslogconfigsResource, c.ns, bcsLogConfig), &v2.BcsLogConfig{})
+		Invokes(testing.NewCreateAction(bcslogconfigsResource, c.ns, bcsLogConfig), &bk_bcs_v1.BcsLogConfig{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v2.BcsLogConfig), err
+	return obj.(*bk_bcs_v1.BcsLogConfig), err
 }
 
 // Update takes the representation of a bcsLogConfig and updates it. Returns the server's representation of the bcsLogConfig, and an error, if there is any.
-func (c *FakeBcsLogConfigs) Update(bcsLogConfig *v2.BcsLogConfig) (result *v2.BcsLogConfig, err error) {
+func (c *FakeBcsLogConfigs) Update(bcsLogConfig *bk_bcs_v1.BcsLogConfig) (result *bk_bcs_v1.BcsLogConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(bcslogconfigsResource, c.ns, bcsLogConfig), &v2.BcsLogConfig{})
+		Invokes(testing.NewUpdateAction(bcslogconfigsResource, c.ns, bcsLogConfig), &bk_bcs_v1.BcsLogConfig{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v2.BcsLogConfig), err
+	return obj.(*bk_bcs_v1.BcsLogConfig), err
 }
 
 // Delete takes name of the bcsLogConfig and deletes it. Returns an error if one occurs.
 func (c *FakeBcsLogConfigs) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(bcslogconfigsResource, c.ns, name), &v2.BcsLogConfig{})
+		Invokes(testing.NewDeleteAction(bcslogconfigsResource, c.ns, name), &bk_bcs_v1.BcsLogConfig{})
 
 	return err
 }
@@ -113,17 +113,17 @@ func (c *FakeBcsLogConfigs) Delete(name string, options *v1.DeleteOptions) error
 func (c *FakeBcsLogConfigs) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(bcslogconfigsResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v2.BcsLogConfigList{})
+	_, err := c.Fake.Invokes(action, &bk_bcs_v1.BcsLogConfigList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched bcsLogConfig.
-func (c *FakeBcsLogConfigs) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v2.BcsLogConfig, err error) {
+func (c *FakeBcsLogConfigs) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *bk_bcs_v1.BcsLogConfig, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(bcslogconfigsResource, c.ns, name, data, subresources...), &v2.BcsLogConfig{})
+		Invokes(testing.NewPatchSubresourceAction(bcslogconfigsResource, c.ns, name, data, subresources...), &bk_bcs_v1.BcsLogConfig{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v2.BcsLogConfig), err
+	return obj.(*bk_bcs_v1.BcsLogConfig), err
 }

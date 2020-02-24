@@ -11,7 +11,7 @@
  *
  */
 
-package v2
+package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +21,7 @@ import (
 	bkbcs "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs"
 )
 
-var SchemeGroupVersion = schema.GroupVersion{Group: bkbcs.GroupName, Version: "v2"}
+var SchemeGroupVersion = schema.GroupVersion{Group: bkbcs.GroupName, Version: "v1"}
 
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
 func Resource(resource string) schema.GroupResource {

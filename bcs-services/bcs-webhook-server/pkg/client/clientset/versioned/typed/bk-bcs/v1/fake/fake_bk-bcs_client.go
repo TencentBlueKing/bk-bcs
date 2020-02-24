@@ -19,27 +19,27 @@ limitations under the License.
 package fake
 
 import (
-	v2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v2"
+	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1"
 
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeBkbcsV2 struct {
+type FakeBkbcsV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeBkbcsV2) BcsDbPrivConfigs(namespace string) v2.BcsDbPrivConfigInterface {
+func (c *FakeBkbcsV1) BcsDbPrivConfigs(namespace string) v1.BcsDbPrivConfigInterface {
 	return &FakeBcsDbPrivConfigs{c, namespace}
 }
 
-func (c *FakeBkbcsV2) BcsLogConfigs(namespace string) v2.BcsLogConfigInterface {
+func (c *FakeBkbcsV1) BcsLogConfigs(namespace string) v1.BcsLogConfigInterface {
 	return &FakeBcsLogConfigs{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeBkbcsV2) RESTClient() rest.Interface {
+func (c *FakeBkbcsV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }
