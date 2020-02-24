@@ -21,6 +21,7 @@ import (
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 )
 
@@ -60,6 +61,8 @@ var (
 		"Ingress",
 		"ReplicaSet",
 		"ExportService",
+		"BcsLogConfig",
+		"BcsDbPrivConfig",
 	}
 )
 
@@ -99,7 +102,12 @@ func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *acti
 }
 
 func (w *Writer) init(clusterID string, storageService *bcs.InnerService) error {
-	for _, resource := range writerResources {
+	for resource := range resources.WatcherConfigList {
+		action := action.NewStorageAction(clusterID, resource, storageService)
+		w.handlers[resource] = NewHandler(resource, action)
+	}
+
+	for resource := range resources.BkbcsWatcherConfigLister {
 		action := action.NewStorageAction(clusterID, resource, storageService)
 		w.handlers[resource] = NewHandler(resource, action)
 	}
@@ -203,7 +211,7 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	go wait.NonSlidingUntil(w.distributeAlarm, defaultDistributeInterval, w.stopCh)
 
 	// setup debug.
-	go w.debug()
+	//go w.debug()
 
 	return nil
 }

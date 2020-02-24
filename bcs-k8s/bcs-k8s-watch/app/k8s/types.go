@@ -13,11 +13,6 @@
 
 package k8s
 
-import (
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
-)
-
 const (
 	// ResourceTypeEvent is event resource type.,
 	ResourceTypeEvent = "Event"
@@ -42,11 +37,4 @@ type WatcherInterface interface {
 
 	// ListKeys returns all keys in local store.
 	ListKeys() []string
-}
-
-// ResourceObjType used for build target watchers.
-type ResourceObjType struct {
-	resourceName string
-	objType      runtime.Object
-	client       *rest.Interface
 }

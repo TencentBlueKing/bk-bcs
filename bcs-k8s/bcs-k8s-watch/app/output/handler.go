@@ -121,5 +121,5 @@ func (h *Handler) Run(stopCh <-chan struct{}) {
 	go wait.NonSlidingUntil(h.handle, defaultHandleInterval, stopCh)
 
 	// setup debug.
-	go h.debug()
+	//go h.debug()
 }
