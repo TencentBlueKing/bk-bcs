@@ -14,19 +14,21 @@ package k8s
 
 import (
 	"fmt"
+	"strings"
 	"time"
-
-	clientGoCache "k8s.io/client-go/tools/cache"
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+	clientGoCache "k8s.io/client-go/tools/cache"
 
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 	apiextensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	crdClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiextensions-apiserver/pkg/client/informers/externalversions"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // WatcherManager is resource watcher manager.
@@ -34,7 +36,7 @@ type WatcherManager struct {
 	// normal k8s resource watchers.
 	watchers map[string]WatcherInterface
 
-	// k8s crd watchers
+	// k8s kubefed watchers
 	crdWatchers map[string]WatcherInterface
 
 	// synchronizer syncs normal metadata got by watchers to storage.
@@ -46,6 +48,12 @@ type WatcherManager struct {
 	stopChan <-chan struct{}
 
 	writer *output.Writer
+
+	// id of current cluster.
+	clusterID string
+
+	// target storage service.
+	storageService *bcs.InnerService
 }
 
 // NewWatcherManager creates a new WatcherManager instance.
@@ -53,10 +61,12 @@ func NewWatcherManager(clusterID string, writer *output.Writer, k8sConfig *optio
 	storageService, netservice *bcs.InnerService, sc <-chan struct{}) (*WatcherManager, error) {
 
 	mgr := &WatcherManager{
-		watchers:    make(map[string]WatcherInterface),
-		crdWatchers: make(map[string]WatcherInterface),
-		stopChan:    sc,
-		writer:      writer,
+		watchers:       make(map[string]WatcherInterface),
+		crdWatchers:    make(map[string]WatcherInterface),
+		stopChan:       sc,
+		writer:         writer,
+		clusterID:      clusterID,
+		storageService: storageService,
 	}
 	mgr.initWatchers(clusterID, k8sConfig, storageService, netservice)
 
@@ -78,12 +88,12 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 		mgr.watchers[name] = watcher
 	}
 
-	// begin to watch crd to init crd watchers
-	crdClientSet, err := crdClientSet.NewForConfig(restConfig)
+	// begin to watch kubefed to init kubefed watchers
+	crdClient, err := crdClientSet.NewForConfig(restConfig)
 	if err != nil {
 		panic(err)
 	}
-	crdInformerFactory := externalversions.NewSharedInformerFactory(crdClientSet, time.Second*30)
+	crdInformerFactory := externalversions.NewSharedInformerFactory(crdClient, time.Second*30)
 	crdInformer := crdInformerFactory.Apiextensions().V1beta1().CustomResourceDefinitions()
 	crdInformer.Lister()
 
@@ -97,7 +107,7 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 
 	glog.Infof("Waiting for informer caches to sync")
 	if ok := clientGoCache.WaitForCacheSync(mgr.stopChan, crdInformer.Informer().HasSynced); !ok {
-		err := fmt.Errorf("failed to wait for crd caches to sync")
+		err := fmt.Errorf("failed to wait for kubefed caches to sync")
 		panic(err)
 	}
 
@@ -110,8 +120,10 @@ func (mgr *WatcherManager) AddEvent(obj interface{}) {
 	if !ok {
 		return
 	}
-	if crdObj.Spec.Group == resources.BkbcsGroupName {
-		mgr.initBkbcsWatchers(crdObj)
+
+	if strings.HasSuffix(crdObj.Spec.Group, ".kubefed.io") || crdObj.Spec.Group == resources.BkbcsGroupName {
+		mgr.runCrdWatcher(crdObj)
+		return
 	}
 
 }
@@ -125,29 +137,46 @@ func (mgr *WatcherManager) DeleteEvent(obj interface{}) {
 	if !ok {
 		return
 	}
-	if crdObj.Spec.Group == resources.BkbcsGroupName {
-		mgr.stopBkbcsWatcher(crdObj)
-	}
+
+	mgr.stopCrdWatcher(crdObj)
 }
 
-func (mgr *WatcherManager) initBkbcsWatchers(bkbcsObj *apiextensionsV1beta1.CustomResourceDefinition) {
+// runCrdWatcher run a crd watcher and writer handler
+func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourceDefinition) {
+	groupVersion := obj.Spec.Group + "/" + obj.Spec.Version
+	if kubefedClient, ok := resources.CrdClientList[groupVersion]; ok {
+		var runtimeObject k8sruntime.Object
+		var namespaced bool
+		if obj.Spec.Scope == "Cluster" {
+			namespaced = false
+		} else if obj.Spec.Scope == "Namespaced" {
+			namespaced = true
+		}
 
-	if resourceObjType, ok := resources.BkbcsWatcherConfigLister[bkbcsObj.Spec.Names.Kind]; ok {
-		watcher := NewWatcher(resourceObjType.Client, bkbcsObj.Spec.Names.Kind, resourceObjType.ResourceName, resourceObjType.ObjType, mgr.writer, mgr.watchers, resourceObjType.Namespaced) // nolint
-		watcher.stopChan = make(chan struct{})
-		mgr.crdWatchers[bkbcsObj.Spec.Names.Kind] = watcher
-		glog.Infof("watcher manager, start list-watcher[%+v]", bkbcsObj.Spec.Names.Kind)
+		// init and run writer handler
+		action := action.NewStorageAction(mgr.clusterID, obj.Spec.Names.Kind, mgr.storageService)
+		mgr.writer.Handlers[obj.Spec.Names.Kind] = output.NewHandler(obj.Spec.Names.Kind, action)
+		stopChan := make(chan struct{})
+		mgr.writer.Handlers[obj.Spec.Names.Kind].Run(stopChan)
+
+		// init and run watcher
+		watcher := NewWatcher(&kubefedClient, obj.Spec.Names.Kind, obj.Spec.Names.Plural, runtimeObject, mgr.writer, mgr.watchers, namespaced) // nolint
+		watcher.stopChan = stopChan
+		mgr.crdWatchers[obj.Spec.Names.Kind] = watcher
+		glog.Infof("watcher manager, start list-watcher[%+v]", obj.Spec.Names.Kind)
 		go watcher.Run(watcher.stopChan)
 	}
 }
 
-func (mgr *WatcherManager) stopBkbcsWatcher(bkbcsObj *apiextensionsV1beta1.CustomResourceDefinition) {
+// stopCrdWatcher stop watcher and writer handler
+func (mgr *WatcherManager) stopCrdWatcher(obj *apiextensionsV1beta1.CustomResourceDefinition) {
 
-	if wc, ok := mgr.crdWatchers[bkbcsObj.Spec.Names.Kind]; ok {
+	if wc, ok := mgr.crdWatchers[obj.Spec.Names.Kind]; ok {
 		watcher := wc.(*Watcher)
-		glog.Infof("watcher manager, stop list-watcher[%+v]", bkbcsObj.Spec.Names.Kind)
+		glog.Infof("watcher manager, stop list-watcher[%+v]", obj.Spec.Names.Kind)
 		close(watcher.stopChan)
-		delete(mgr.crdWatchers, bkbcsObj.Spec.Names.Kind)
+		delete(mgr.crdWatchers, obj.Spec.Names.Kind)
+		delete(mgr.writer.Handlers, obj.Spec.Names.Kind)
 	}
 
 }
@@ -167,6 +196,7 @@ func (mgr *WatcherManager) Run(stopCh <-chan struct{}) {
 	go mgr.synchronizer.Run(stopCh)
 }
 
+// StopCrdWatchers stop all crd watcher and writer handler
 func (mgr *WatcherManager) StopCrdWatchers() {
 	for _, wc := range mgr.crdWatchers {
 		watcher := wc.(*Watcher)

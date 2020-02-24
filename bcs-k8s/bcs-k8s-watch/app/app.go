@@ -301,7 +301,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	<-stopChan
 
-	// stop all crd watchers
+	// stop all kubefed watchers
 	watcherMgr.StopCrdWatchers()
 
 	// stop service discovery.

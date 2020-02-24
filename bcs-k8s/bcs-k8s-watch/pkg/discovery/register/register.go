@@ -52,7 +52,7 @@ func NewNodeRegister(zkServerAddresses string, baseKey string, node Node) *NodeR
 
 		baseKey:                 baseKey,
 		zkServiceConnectTimeout: time.Duration(5 * time.Second),
-		node: node,
+		node:                    node,
 	}
 }
 
