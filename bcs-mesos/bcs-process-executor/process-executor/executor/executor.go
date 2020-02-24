@@ -193,18 +193,25 @@ func (e *bcsExecutor) loopInspectTasks() {
 //getTaskStatusFromProcessStatus
 func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusType) (types.TaskStatus, error) {
 	switch status {
+	//process status staging
+	//show executor recieve the tasks
 	case types.ProcessStatusStaging:
 		return types.TaskStatusStaging, nil
-
+	//process status starting
+	//show executor check tasks valid, starting it
 	case types.ProcessStatusStarting:
 		return types.TaskStatusStarting, nil
-
+	//process status running
+	//started tasks, process running
 	case types.ProcessStatusRunning:
 		return types.TaskStatusRunning, nil
-
+	//process status stopping
+	//executor recieve shutdown command
+	//then stop process
 	case types.ProcessStatusStopping:
 		return types.TaskStatusKilling, nil
-
+	//process status stopped
+	//executor stopped process
 	case types.ProcessStatusStopped:
 		if e.isAskedShutdown {
 			return types.TaskStatusFinish, nil
@@ -217,6 +224,9 @@ func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusT
 }
 
 //Shutdown
+//recieve the shutdown command
+//will stop all process tasks
+//exit 0
 func (e *bcsExecutor) Shutdown() {
 	e.isAskedShutdown = true
 
@@ -285,6 +295,7 @@ func (e *bcsExecutor) innerShutdown() {
 }
 
 //ReloadTasks
+//command task reload command
 func (e *bcsExecutor) ReloadTasks() error {
 	for _, task := range e.tasks {
 		blog.Infof("reload task %s start...", task.TaskId)
@@ -299,6 +310,7 @@ func (e *bcsExecutor) ReloadTasks() error {
 }
 
 // RestartTasks
+//restart process tasks
 func (e *bcsExecutor) RestartTasks() error {
 	for _, task := range e.tasks {
 		blog.Infof("reload task %s start...", task.TaskId)
@@ -355,6 +367,7 @@ func (e *bcsExecutor) AckTaskStatusMessage(taskId string, uid []byte) {
 }
 
 // updateTaskStatus
+// ticker report tasks status
 func (e *bcsExecutor) updateTaskStatus(taskId string, status types.TaskStatus, msg string) {
 	var state mesos.TaskState
 
