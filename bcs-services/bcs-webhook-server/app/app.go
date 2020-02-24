@@ -41,8 +41,12 @@ import (
 )
 
 const (
-	// the name of secret to store db privilege info
+	// DbPrivilegeSecretName the name of secret to store db privilege info
 	DbPrivilegeSecretName = "bcs-db-privilege"
+	// EngineTypeKubernetes kubernetes engine type
+	EngineTypeKubernetes = "kubernetes"
+	// EngineTypeMesos mesos engine type
+	EngineTypeMesos = "mesos"
 )
 
 //Run bcs log webhook server
@@ -81,7 +85,7 @@ func Run(op *options.ServerOption) {
 	return
 }
 
-// new WebHookServer object
+// NewWebhookServer new WebHookServer object
 func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
@@ -134,10 +138,10 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		whsvr.BcsLogConfigLister = bcsLogConfigInformer.Lister()
 
 		switch whsvr.EngineType {
-		case "kubernetes":
+		case EngineTypeKubernetes:
 			k8sLogConfInject := k8s.NewLogConfInject(whsvr.BcsLogConfigLister)
 			whsvr.K8sLogConfInject = k8sLogConfInject
-		case "mesos":
+		case EngineTypeMesos:
 			mesosLogConfInject := mesos.NewLogConfInject(whsvr.BcsLogConfigLister)
 			whsvr.MesosLogConfInject = mesosLogConfInject
 		}
@@ -168,10 +172,11 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		}
 
 		switch whsvr.EngineType {
-		case "kubernetes":
+		case EngineTypeKubernetes:
 			k8sDbPrivConfInject := k8s.NewDbPrivConfInject(whsvr.BcsDbPrivConfigLister, whsvr.Injects, dbPrivSecret)
+
 			whsvr.K8sDbPrivConfInject = k8sDbPrivConfInject
-		case "mesos":
+		case EngineTypeMesos:
 			mesosDbPrivConfInject := mesos.NewDbPrivConfInject(whsvr.BcsDbPrivConfigLister)
 			whsvr.MesosDbPrivConfInject = mesosDbPrivConfInject
 		}
@@ -184,6 +189,23 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		if ok := clientGoCache.WaitForCacheSync(stopCh, bcsDbPrivConfigInformer.Informer().HasSynced); !ok {
 			return nil, fmt.Errorf("failed to wait for caches to sync")
 		}
+	}
+
+	// if bscp_inject is true, init bscp inject
+	if conf.Injects.Bscp.BscpInject {
+		switch whsvr.EngineType {
+		case EngineTypeKubernetes:
+			// TODO:
+			whsvr.K8sBscpInject = nil
+			blog.Fatal("k8s bscp inject not implements")
+		case EngineTypeMesos:
+			bscpInject := mesos.NewBscpInject()
+			if err := bscpInject.InitTemplate(conf.Injects.Bscp.BscpTemplatePath); err != nil {
+				blog.Fatal(err.Error())
+			}
+			whsvr.MesosBscpInject = bscpInject
+		}
+		blog.Infof("create bscp inject module success")
 	}
 
 	// define http server and server handler

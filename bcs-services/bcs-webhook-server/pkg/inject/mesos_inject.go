@@ -147,6 +147,14 @@ func (whSvr *WebhookServer) mesosApplicationInject(application *commtypes.Replic
 		}
 	}
 
+	if whSvr.Injects.Bscp.BscpInject {
+		patchedApplication, err = whSvr.MesosBscpInject.InjectApplicationContent(application)
+		if err != nil {
+			return nil, fmt.Errorf("failed to inject bscp sidecar to application %s/%s, err %s",
+				application.GetNamespace(), application.GetName(), err.Error())
+		}
+	}
+
 	return patchedApplication, nil
 }
 
