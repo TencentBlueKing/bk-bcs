@@ -85,6 +85,8 @@ const (
 	BcsErrApiInternalDbError         = AdditionErrorCode + 62
 	BcsErrApiK8sInternalError        = AdditionErrorCode + 63
 	BcsErrApiWebConsoleFailedCode    = AdditionErrorCode + 64
+	BcsErrApiMediaTypeError          = AdditionErrorCode + 65
+	BcsErrApiMediaTypeErrorStr       = "request yaml convert to json error"
 
 	/*Common error code 1401 080~1401 109
 	bcs storage module errno name is as a beginning to BcsErrStorage*/

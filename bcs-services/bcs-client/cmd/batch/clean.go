@@ -14,16 +14,17 @@
 package batch
 
 import (
-	mesostype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/metastream"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	mesostype "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"bk-bcs/bcs-services/bcs-client/pkg/metastream"
+	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 
 	"github.com/urfave/cli"
 )
@@ -38,6 +39,7 @@ func NewCleanCommand() cli.Command {
 			> helm template myname sometemplate -n bcs-system | grep -v "^#" | bcs-client clean 
 			or reading resource from file
 			> bcs-client clean -f myresource.json
+			> bcs-client clean -f anyyaml.yaml --format yaml
 		`,
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -47,6 +49,11 @@ func NewCleanCommand() cli.Command {
 			cli.StringFlag{
 				Name:  "clusterid",
 				Usage: "Cluster ID",
+			},
+			cli.StringFlag{
+				Name:  "format",
+				Usage: "resource format, like json or yaml",
+				Value: metastream.JSONFormat,
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -78,7 +85,10 @@ func clean(cxt *utils.ClientContext) error {
 		return fmt.Errorf("failed to clean: no available resource datas")
 	}
 	//step: reading json object from input(file or stdin)
-	metaList := metastream.NewMetaStream(bytes.NewReader(data))
+	metaList := metastream.NewMetaStream(bytes.NewReader(data), cxt.String("format"))
+	if metaList.Length() == 0 {
+		return fmt.Errorf("failed to clean: No correct format resource")
+	}
 	//step: initialize storage client & scheduler client
 	storage := v1.NewBcsStorage(utils.GetClientOption())
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())

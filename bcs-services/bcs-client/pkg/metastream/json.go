@@ -20,21 +20,36 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/ghodss/yaml"
+
 	mesostype "bk-bcs/bcs-common/common/types"
 )
 
-/* multiple json formation must like below:
+/*
+multiple json format must like below:
+---
+{jsonObject}
+---
+{jsonObject}
+---
 
+multiple yaml format must like below:
 ---
-{jsonObject}
+{yamlObject}
 ---
-{jsonObject}
----
+{yamlObject}
 
 */
 
+const (
+	//JSONFormat json list detail for content
+	JSONFormat = "json"
+	//YAMLFormat yaml list detail for content
+	YAMLFormat = "yaml"
+)
+
 //NewJSONStream create stream implementation
-func NewMetaStream(r io.Reader) Stream {
+func NewMetaStream(r io.Reader, ft string) Stream {
 	allDatas, err := ioutil.ReadAll(r)
 	if err != nil || len(allDatas) == 0 {
 		return &jsonArray{}
@@ -46,6 +61,14 @@ func NewMetaStream(r io.Reader) Stream {
 		newLine := strings.Trim(line, " \n")
 		//line has apiVersion & kind inforamtion at least
 		if len(newLine) > 20 {
+			//convert format from yaml to json
+			if YAMLFormat == ft {
+				newJSON, err := yaml.YAMLToJSON([]byte(newLine))
+				if err != nil {
+					continue
+				}
+				newLine = string(newJSON)
+			}
 			clearList = append(clearList, newLine)
 		}
 	}
@@ -61,6 +84,11 @@ type jsonArray struct {
 	index        int
 	rawDatas     []string
 	indexRawJson string
+}
+
+//Length check if stream has Next JSON data
+func (js *jsonArray) Length() int {
+	return len(js.rawDatas)
 }
 
 //HasNext check if stream has Next JSON data

@@ -40,6 +40,7 @@ func NewApplyCommand() cli.Command {
 			> helm template myname sometemplate -n bcs-system | grep -v "^#" | bcs-client apply 
 			or reading resource from file
 			> bcs-client apply -f myresource.json
+			> bcs-client apply -f anyyaml.yaml --format yaml
 		`,
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -49,6 +50,11 @@ func NewApplyCommand() cli.Command {
 			cli.StringFlag{
 				Name:  "clusterid",
 				Usage: "Cluster ID",
+			},
+			cli.StringFlag{
+				Name:  "format",
+				Usage: "resource format, like json or yaml",
+				Value: metastream.JSONFormat,
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -90,7 +96,10 @@ func apply(cxt *utils.ClientContext) error {
 		return fmt.Errorf("failed to apply: no available resource datas")
 	}
 	//step: reading json object from input(file or stdin)
-	metaList := metastream.NewMetaStream(bytes.NewReader(data))
+	metaList := metastream.NewMetaStream(bytes.NewReader(data), cxt.String("format"))
+	if metaList.Length() == 0 {
+		return fmt.Errorf("failed to Apply: No correct format resource")
+	}
 	//step: initialize storage client & scheduler client
 	storage := v1.NewBcsStorage(utils.GetClientOption())
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
