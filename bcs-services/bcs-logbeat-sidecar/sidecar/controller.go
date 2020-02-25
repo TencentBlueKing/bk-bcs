@@ -29,11 +29,23 @@ import (
 )
 
 const (
-	EnvLogInfoDataid       = "io_tencent_bcs_app_dataid"
-	EnvLogInfoStdout       = "io_tencent_bcs_app_stdout"
-	EnvLogInfoLogPath      = "io_tencent_bcs_app_logpath"
-	EnvLogInfoLogCluster   = "io_tencent_bcs_app_cluster"
-	EnvLogInfoLogNamepsace = "io_tencent_bcs_app_namespcae"
+	//report data id
+	EnvLogInfoDataid       = "io_tencent_bcs_app_dataid_v2"
+	//if true, then stdout; else custom logs file
+	EnvLogInfoStdout       = "io_tencent_bcs_app_stdout_v2"
+	//if stdout=false, log file path
+	EnvLogInfoLogPath      = "io_tencent_bcs_app_logpath_v2"
+	//clusterid
+	EnvLogInfoLogCluster   = "io_tencent_bcs_app_cluster_v2"
+	//namespace
+	EnvLogInfoLogNamepsace = "io_tencent_bcs_app_namespcae_v2"
+	//custom labels, log tags
+	//example: kv1:val1,kv2:val2,kv3:val3...
+	EnvLogInfoLogLabel     = "io_tencent_bcs_app_label_v2"
+	//application or deployment't name
+	EnvLogInfoLogServerName = "io_tencent_bcs_controller_name"
+	//enum: Application、Deployment...
+	EnvLogInfoLogType      = "io_tencent_bcs_controller_type"
 )
 
 type SidecarController struct {
@@ -61,6 +73,12 @@ type LogConfParameter struct {
 	ContainerId string
 	ClusterId   string
 	Namespace   string
+	//application or deployment't name
+	ServerName  string
+	//application or deployment
+	ServerType  string
+	//custom label
+	CustemLabel string
 
 	stdout         bool
 	nonstandardLog string
@@ -201,6 +219,23 @@ func produceLogConfParameter(container *docker.Container) (*LogConfParameter, bo
 			}
 		case EnvLogInfoLogPath:
 			para.nonstandardLog = val
+		case EnvLogInfoLogServerName:
+			para.ServerName = val
+		case EnvLogInfoLogType:
+			para.ServerType = val
+		case EnvLogInfoLogLabel:
+			array := strings.Split(val,",")
+			for _,o :=range array {
+				kvs := strings.Split(o,":")
+				if len(kvs)!=2 {
+					blog.Infof("container %s env %s value %s is invalid",container.ID,EnvLogInfoLogLabel,val)
+					continue
+				}
+
+				label := fmt.Sprintf(`
+        %s: %s`, kvs[0], kvs[1])// nolint
+				para.CustemLabel += label
+			}
 		}
 	}
 
@@ -211,19 +246,30 @@ func produceLogConfParameter(container *docker.Container) (*LogConfParameter, bo
 		return nil, false
 	}
 
-	//if nonstandard log
-	if !para.stdout {
-		if para.nonstandardLog == "" {
-			blog.Warnf("container %s don't contain %s env", EnvLogInfoLogPath)
-			return nil, false
-		} else {
-			para.LogFile = para.nonstandardLog
-		}
-		//else standard log
-	} else {
-		para.LogFile = container.LogPath
+	files := make([]string,0)
+	//if stdout container log
+	if para.stdout {
+		files = append(files, container.LogPath)
 	}
-
+	//if nonstandard Log
+	if para.nonstandardLog!="" {
+		array := strings.Split(para.nonstandardLog, ",")
+		for _,f :=range array {
+			files = append(files, fmt.Sprintf("/proc/%d/root%s",container.State.Pid,f))
+		}
+	}
+	//if len(files)==0, then invalid
+	if len(files)==0 {
+		blog.Warnf("container %s env(%s, %s) is invalid",
+			container.ID, EnvLogInfoStdout, EnvLogInfoLogPath)
+		return nil, false
+	}
+	para.LogFile += files[0]
+	for _,f :=range files[1:] {
+		filelog := fmt.Sprintf(`
+      - %s`, f)// nolint
+		para.LogFile += filelog
+	}
 	para.ContainerId = container.ID
 	return para, true
 }
@@ -239,7 +285,7 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 
 	logConf := &ContainerLogConf{
 		containerId: c.ID,
-		confPath:    fmt.Sprintf("%s/%s-%s.conf", s.conf.LogbeatDir, s.prefixFile, []byte(c.ID)[:12]),
+		confPath:    fmt.Sprintf("%s/%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, []byte(c.ID)[:12]),
 	}
 	para, ok := produceLogConfParameter(c)
 	if !ok {

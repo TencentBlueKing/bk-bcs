@@ -138,14 +138,14 @@ func Run(cfg *types.CmdConfig) error {
 	rdCxt, _ := context.WithCancel(rootCxt)
 
 	go func() {
-		retry, rdErr := registerZkEndpoints(cfg, rdCxt)
+		retry, rdErr := registerZkEndpoints(rdCxt, cfg)
 		for retry == true {
 			if rdErr != nil {
 				blog.Error("registerZkEndpoints err: %s", rdErr.Error())
 			}
 			time.Sleep(3 * time.Second)
 			blog.Info("retry registerZkEndpoints...")
-			retry, rdErr = registerZkEndpoints(cfg, rdCxt)
+			retry, rdErr = registerZkEndpoints(rdCxt, cfg)
 		}
 		if rdErr != nil {
 			blog.Error("registerZkEndpoints err: %s, and exit", rdErr.Error())
@@ -485,7 +485,7 @@ func RefreshDCHost(rfCxt context.Context, cfg *types.CmdConfig, storage storage.
 	} // end for
 }
 
-func registerZkEndpoints(cfg *types.CmdConfig, rdCxt context.Context) (bool, error) {
+func registerZkEndpoints(rdCxt context.Context, cfg *types.CmdConfig) (bool, error) {
 	clusterinfo := strings.Split(cfg.ClusterInfo, "/")
 	regDiscv := rd.NewRegDiscoverEx(clusterinfo[0], time.Second*10)
 	if regDiscv == nil {
