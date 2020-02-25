@@ -41,7 +41,7 @@ const (
 	//default custom resource definition apiVersion we use
 	defaultAPIVersion   = "apiextensions.k8s.io/v1beta1"
 	defaultMesosVersion = "v4"
-	defaultNamespaceURL = "/api/v1/namespaces"
+	defaultNamespaceURL = "api/v1/namespaces"
 )
 
 //kubeProxy proxy for custom resource

@@ -36,7 +36,9 @@ type WebhookServer struct {
 
 	K8sLogConfInject    k8s.K8sInject
 	K8sDbPrivConfInject k8s.K8sInject
+	K8sBscpInject       k8s.K8sInject
 
 	MesosLogConfInject    mesos.MesosInject
 	MesosDbPrivConfInject mesos.MesosInject
+	MesosBscpInject       mesos.MesosInject
 }

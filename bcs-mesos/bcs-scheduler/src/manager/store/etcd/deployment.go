@@ -14,7 +14,6 @@
 package etcd
 
 import (
-	"encoding/json"
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
@@ -122,9 +121,6 @@ func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, 
 		}
 		return nil, err
 	}
-
-	by, _ := json.Marshal(v2Dep)
-	blog.Infof("deployment %s", string(by))
 
 	return &v2Dep.Spec.Deployment, nil
 }
