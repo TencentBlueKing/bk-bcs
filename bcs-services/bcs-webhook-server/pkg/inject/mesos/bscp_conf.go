@@ -94,7 +94,7 @@ func (bi *BscpInject) InjectApplicationContent(application *commtypes.ReplicaCon
 
 	// retrieve ENV for SideCar setup
 	// when retrieve ENV failed, return error
-	envMap, envErr := bi.retrieveEnvFromContainer(
+	retrievedContainers, envMap, envErr := bi.retrieveEnvFromContainer(
 		application.ReplicaControllerSpec.Template.PodSpec.Containers, name)
 	if envErr != nil {
 		blog.Errorf("bscp retrieve specified Environment for App %s failed, %s", name, envErr.Error())
@@ -103,7 +103,7 @@ func (bi *BscpInject) InjectApplicationContent(application *commtypes.ReplicaCon
 
 	//  append envMap to template Container
 	containers := bi.injectEnvToContainer(bi.temContainers, envMap)
-	containers = append(containers, application.ReplicaControllerSpec.Template.PodSpec.Containers...)
+	containers = append(containers, retrievedContainers...)
 	application.ReplicaControllerSpec.Template.PodSpec.Containers = containers
 	blog.Infof("bscp inject bscp-mesos-SideCar for Application %s successfully", name)
 	return application, nil
@@ -119,7 +119,7 @@ func (bi *BscpInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*com
 
 	// retrieve ENV for SideCar setup
 	// when retrieve ENV failed, return error
-	envMap, envErr := bi.retrieveEnvFromContainer(
+	retrievedContainers, envMap, envErr := bi.retrieveEnvFromContainer(
 		deploy.Spec.Template.PodSpec.Containers, name)
 	if envErr != nil {
 		blog.Errorf("bscp retrieve specified Environment for Deployment %s failed, %s", name, envErr.Error())
@@ -127,14 +127,15 @@ func (bi *BscpInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*com
 	}
 
 	containers := bi.injectEnvToContainer(bi.temContainers, envMap)
-	containers = append(containers, deploy.Spec.Template.PodSpec.Containers...)
+	containers = append(containers, retrievedContainers...)
 	deploy.Spec.Template.PodSpec.Containers = containers
 	blog.Infof("bscp inject bscp-mesos-SideCar for Deployment %s successfully", name)
 	return deploy, nil
 }
 
-func (bi *BscpInject) retrieveEnvFromContainer(containers []commtypes.Container, name string) (map[string]string, error) {
+func (bi *BscpInject) retrieveEnvFromContainer(containers []commtypes.Container, name string) ([]commtypes.Container, map[string]string, error) {
 	envMap := make(map[string]string)
+	var retContainers []commtypes.Container
 	for _, c := range containers {
 		for _, env := range c.Env {
 			if strings.Contains(env.Name, bscp.SideCarPrefix) {
@@ -154,29 +155,30 @@ func (bi *BscpInject) retrieveEnvFromContainer(containers []commtypes.Container,
 				c.Volumes = append(c.Volumes, v)
 			}
 		}
+		retContainers = append(retContainers, c)
 	}
 	cfgPath, ok := envMap[bscp.SideCarCfgPath]
 	if !ok {
-		return nil, fmt.Errorf("bscp SideCar environment lost BSCP_BCSSIDECAR_APPCFG_PATH")
+		return nil, nil, fmt.Errorf("bscp SideCar environment lost BSCP_BCSSIDECAR_APPCFG_PATH")
 	}
 	if len(cfgPath) == 0 {
-		return nil, fmt.Errorf("bscp SideCar environment BSCP_BCSSIDECAR_APPCFG_PATH is empty")
+		return nil, nil, fmt.Errorf("bscp SideCar environment BSCP_BCSSIDECAR_APPCFG_PATH is empty")
 	}
 	if modValue, ok := envMap[bscp.SideCarMod]; !ok {
 		// for single app
 		if !bscp.ValidateEnvs(envMap) {
-			return nil, fmt.Errorf("bscp SideCar envs are invalid")
+			return nil, nil, fmt.Errorf("bscp SideCar envs are invalid")
 		}
 	} else {
 		// for multiple app, inject BSCP_BCSSIDECAR_APPCFG_PATH into every app path
 		// if BSCP_BCSSideCar_APPINFO_MOD's value is invlaid, cannot do inject;
 		modValue, err := bscp.AddPathIntoAppInfoMode(modValue, cfgPath)
 		if err != nil {
-			return nil, fmt.Errorf("env %s:%s is invalid", bscp.SideCarMod, modValue)
+			return nil, nil, fmt.Errorf("env %s:%s is invalid", bscp.SideCarMod, modValue)
 		}
 		envMap[bscp.SideCarMod] = modValue
 	}
-	return envMap, nil
+	return retContainers, envMap, nil
 }
 
 func (bi *BscpInject) injectEnvToContainer(tempContainers []commtypes.Container, envs map[string]string) []commtypes.Container {
