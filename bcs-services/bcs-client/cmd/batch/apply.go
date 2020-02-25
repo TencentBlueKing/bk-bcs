@@ -110,15 +110,16 @@ func apply(cxt *utils.ClientContext) error {
 		//step: check json object from parsing
 		info.apiVersion, info.kind, err = metaList.GetResourceKind()
 		if err != nil {
-			fmt.Printf("apply partial failed, %s, continue...", err.Error())
+			fmt.Printf("apply partial failed, %s, continue...\n", err.Error())
 			continue
 		}
 		info.namespace, info.name, err = metaList.GetResourceKey()
 		if err != nil {
-			fmt.Printf("apply partial failed, %s, continue...", err.Error())
+			fmt.Printf("apply partial failed, %s, continue...\n", err.Error())
 			continue
 		}
 		info.rawJson = metaList.GetRawJSON()
+		utils.DebugPrintf("debugInfo: %s\n", string(info.rawJson))
 		info.clusterID = cxt.ClusterID()
 		//step: inspect resource object from storage
 		//	if resource exist, update resource to bcs-scheduler, print object status from response
@@ -163,7 +164,7 @@ func apply(cxt *utils.ClientContext) error {
 			//unkown type, try custom resource
 			crdapiVersion, plural, crdErr := utils.GetCustomResourceTypeByKind(scheduler, cxt.ClusterID(), info.kind)
 			if err != nil {
-				fmt.Printf("resource %s/%s %s apply failed, %s.", info.apiVersion, info.kind, info.name, crdErr.Error())
+				fmt.Printf("resource %s/%s %s apply failed, %s\n", info.apiVersion, info.kind, info.name, crdErr.Error())
 				continue
 			}
 			_, inspectStatus = scheduler.GetCustomResource(cxt.ClusterID(), crdapiVersion, plural, info.namespace, info.name)
@@ -188,21 +189,21 @@ func applySpecifiedResource(inspectStatus error, create createFunc, update updat
 	if inspectStatus == nil {
 		//update object
 		if err := update(info.clusterID, info.namespace, info.rawJson, nil); err != nil {
-			fmt.Printf("resource %s/%s %s update successfully.", info.apiVersion, info.kind, info.name)
+			fmt.Printf("resource %s/%s %s update successfully\n", info.apiVersion, info.kind, info.name)
 		} else {
-			fmt.Printf("resource %s/%s %s update failed, %s.", info.apiVersion, info.kind, info.name, err.Error())
+			fmt.Printf("resource %s/%s %s update failed, %s\n", info.apiVersion, info.kind, info.name, err.Error())
 		}
 		return
 	}
 
 	if !isObjectNotExist(inspectStatus) {
-		fmt.Printf("resource %s/%s %s apply failed, %s.", info.apiVersion, info.kind, info.name, inspectStatus.Error())
+		fmt.Printf("resource %s/%s %s apply failed, %s\n", info.apiVersion, info.kind, info.name, inspectStatus.Error())
 		return
 	}
 	//create
 	if err := create(info.clusterID, info.namespace, info.rawJson); err != nil {
-		fmt.Printf("resource %s/%s %s create failed, %s.", info.apiVersion, info.kind, info.name, err.Error())
+		fmt.Printf("resource %s/%s %s create failed, %s\n", info.apiVersion, info.kind, info.name, err.Error())
 	} else {
-		fmt.Printf("resource %s/%s %s create successfully", info.apiVersion, info.kind, info.name)
+		fmt.Printf("resource %s/%s %s create successfully\n", info.apiVersion, info.kind, info.name)
 	}
 }

@@ -99,12 +99,12 @@ func clean(cxt *utils.ClientContext) error {
 		//step: check json object from parsing
 		info.apiVersion, info.kind, err = metaList.GetResourceKind()
 		if err != nil {
-			fmt.Printf("apply partial failed, %s, continue...", err.Error())
+			fmt.Printf("apply partial failed, %s, continue...\n", err.Error())
 			continue
 		}
 		info.namespace, info.name, err = metaList.GetResourceKey()
 		if err != nil {
-			fmt.Printf("apply partial failed, %s, continue...", err.Error())
+			fmt.Printf("apply partial failed, %s, continue...\n", err.Error())
 			continue
 		}
 		//info.rawJson = metaList.GetRawJSON()
@@ -142,7 +142,7 @@ func clean(cxt *utils.ClientContext) error {
 			//unkown type, try custom resource
 			crdapiVersion, plural, crdErr := utils.GetCustomResourceTypeByKind(scheduler, cxt.ClusterID(), info.kind)
 			if err != nil {
-				fmt.Printf("resource %s/%s %s clean failed, %s.", info.apiVersion, info.kind, info.name, crdErr.Error())
+				fmt.Printf("resource %s/%s %s clean failed, %s\n", info.apiVersion, info.kind, info.name, crdErr.Error())
 				continue
 			}
 			_, inspectStatus = scheduler.GetCustomResource(cxt.ClusterID(), crdapiVersion, plural, info.namespace, info.name)
@@ -159,15 +159,15 @@ func cleanSpecifiedResource(inspectStatus error, delfunc deleteFunc, info *metaI
 	if inspectStatus == nil {
 		//no error when inspect, it means data exist
 		if err := delfunc(info.clusterID, info.namespace, info.name, false); err != nil {
-			fmt.Printf("resource %s/%s %s clean failed, %s.", info.apiVersion, info.kind, info.name, err.Error())
+			fmt.Printf("resource %s/%s %s clean failed, %s\n", info.apiVersion, info.kind, info.name, err.Error())
 		} else {
-			fmt.Printf("resource %s/%s %s clean successfully", info.apiVersion, info.kind, info.name)
+			fmt.Printf("resource %s/%s %s clean successfully\n", info.apiVersion, info.kind, info.name)
 		}
 		return
 	}
 	if isObjectNotExist(inspectStatus) {
-		fmt.Printf("resource %s/%s %s clean nothing", info.apiVersion, info.kind, info.name)
+		fmt.Printf("resource %s/%s %s clean nothing\n", info.apiVersion, info.kind, info.name)
 	} else {
-		fmt.Printf("resource %s/%s %s clean failed, %s", info.apiVersion, info.kind, info.name, inspectStatus.Error())
+		fmt.Printf("resource %s/%s %s clean failed, %s\n", info.apiVersion, info.kind, info.name, inspectStatus.Error())
 	}
 }

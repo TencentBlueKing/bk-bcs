@@ -48,6 +48,10 @@ const (
 	YAMLFormat = "yaml"
 )
 
+type metaObject struct {
+	mesostype.ObjectMeta `json:"metadata,omitempty"`
+}
+
 //NewJSONStream create stream implementation
 func NewMetaStream(r io.Reader, ft string) Stream {
 	allDatas, err := ioutil.ReadAll(r)
@@ -65,9 +69,11 @@ func NewMetaStream(r io.Reader, ft string) Stream {
 			if YAMLFormat == ft {
 				newJSON, err := yaml.YAMLToJSON([]byte(newLine))
 				if err != nil {
+					fmt.Printf("yaml convert err, %s\n", err.Error())
 					continue
 				}
 				newLine = string(newJSON)
+				//fmt.Printf("original yaml convert to json: %s\n", newLine)
 			}
 			clearList = append(clearList, newLine)
 		}
@@ -116,7 +122,7 @@ func (js *jsonArray) GetResourceKind() (string, string, error) {
 
 //GetResourceKey return JSON object index: namespace & name
 func (js *jsonArray) GetResourceKey() (string, string, error) {
-	objMeta := &mesostype.ObjectMeta{}
+	objMeta := &metaObject{}
 	err := json.Unmarshal([]byte(js.indexRawJson), objMeta)
 	if err != nil {
 		return "", "", fmt.Errorf("json %d object err: %s", js.index-1, err.Error())
