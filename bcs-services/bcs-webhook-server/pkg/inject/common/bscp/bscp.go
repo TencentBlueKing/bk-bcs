@@ -76,7 +76,7 @@ type AppModInfo struct {
 	DC string `json:"dc"`
 
 	// Labels sidecar instance KV labels.
-	Labels map[string]string `json:"labels"`
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// Path is sidecar mod app configs effect path.
 	Path string `json:"path"`
