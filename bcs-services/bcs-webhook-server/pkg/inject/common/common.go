@@ -14,10 +14,9 @@
 package common
 
 import (
-	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
 	"strings"
 
-	mapset "github.com/deckarep/golang-set"
+	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -32,19 +31,19 @@ const (
 	CustomConfigType    = "custom"
 	// custom log config type
 	// dataid of bcs app
-	DataIdEnvKey = "io_tencent_bcs_app_dataid"
+	DataIdEnvKey = "io_tencent_bcs_app_dataid_v2"
 	// appid of bcs app
-	AppIdEnvKey = "io_tencent_bcs_app_appid"
+	AppIdEnvKey = "io_tencent_bcs_app_appid_v2"
 	// log to stdout, true or false
-	StdoutEnvKey = "io_tencent_bcs_app_stdout"
+	StdoutEnvKey = "io_tencent_bcs_app_stdout_v2"
 	// output path of the log
-	LogPathEnvKey = "io_tencent_bcs_app_logpath"
+	LogPathEnvKey = "io_tencent_bcs_app_logpath_v2"
 	// bcs cluster id
-	ClusterIdEnvKey = "io_tencent_bcs_app_cluster"
+	ClusterIdEnvKey = "io_tencent_bcs_app_cluster_v2"
 	// 日志标签
-	LogTagEnvKey = "io_tencent_bcs_app_label"
+	LogTagEnvKey = "io_tencent_bcs_app_label_v2"
 	// the namespace of app
-	NamespaceEnvKey               = "io_tencent_bcs_app_namespace"
+	NamespaceEnvKey               = "io_tencent_bcs_app_namespace_v2"
 	BcsWebhookAnnotationInjectKey = "webhook.inject.bkbcs.tencent.com"
 )
 
@@ -67,33 +66,34 @@ func FindBcsSystemConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogCon
 	return matchedLogConf
 }
 
+func FindDefaultConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig {
+	var defaultLogConf *bcsv2.BcsLogConfig
+	for _, logConf := range bcsLogConfs {
+		if logConf.Spec.ConfigType == DefaultConfigType {
+			defaultLogConf = logConf
+			break
+		}
+	}
+	return defaultLogConf
+}
+
 // FindK8sMatchedConfigType get the matched BcsLogConfig
-func FindK8sMatchedConfigType(pod *corev1.Pod, containerName string, bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig { // nolint
+func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig { // nolint
 	if len(pod.OwnerReferences) == 0 {
 		return nil
 	}
 
 	var matchedLogConf *bcsv2.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
-		if logConf.Spec.ConfigType == DefaultConfigType {
-			matchedLogConf = logConf
-			continue
-		}
-
-		containerSet := mapset.NewSet()
-		for _, containerName := range logConf.Spec.Containers {
-			containerSet.Add(containerName)
-		}
-
 		if logConf.Spec.ConfigType == CustomConfigType {
 			if pod.OwnerReferences[0].Kind == "ReplicaSet" {
-				if strings.ToLower(logConf.Spec.WorkloadType) == strings.ToLower("Deployment") && strings.HasPrefix(pod.OwnerReferences[0].Name, logConf.Spec.WorkloadName) && containerSet.Contains(containerName) { // nolint
+				if strings.ToLower(logConf.Spec.WorkloadType) == strings.ToLower("Deployment") && strings.HasPrefix(pod.OwnerReferences[0].Name, logConf.Spec.WorkloadName) { // nolint
 					matchedLogConf = logConf
 					break
 				}
 				continue
 			}
-			if strings.ToLower(pod.OwnerReferences[0].Kind) == strings.ToLower(logConf.Spec.WorkloadType) && pod.OwnerReferences[0].Name == logConf.Spec.WorkloadName && containerSet.Contains(containerName) { // nolint
+			if strings.ToLower(pod.OwnerReferences[0].Kind) == strings.ToLower(logConf.Spec.WorkloadType) && pod.OwnerReferences[0].Name == logConf.Spec.WorkloadName { // nolint
 				matchedLogConf = logConf
 				break
 			}
@@ -103,21 +103,11 @@ func FindK8sMatchedConfigType(pod *corev1.Pod, containerName string, bcsLogConfs
 }
 
 // FindMesosMatchedConfigType get the matched BcsLogConfig
-func FindMesosMatchedConfigType(workloadType, workloadName, containerName string, bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig { // nolint
+func FindMesosMatchedConfigType(workloadType, workloadName string, bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig { // nolint
 	var matchedLogConf *bcsv2.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
-		if logConf.Spec.ConfigType == DefaultConfigType {
-			matchedLogConf = logConf
-			continue
-		}
-
-		containerSet := mapset.NewSet()
-		for _, containerName := range logConf.Spec.Containers {
-			containerSet.Add(containerName)
-		}
-
 		if logConf.Spec.ConfigType == CustomConfigType {
-			if strings.ToLower(logConf.Spec.WorkloadType) == workloadType && logConf.Spec.WorkloadName == workloadName && containerSet.Contains(containerName) { // nolint
+			if strings.ToLower(logConf.Spec.WorkloadType) == workloadType && logConf.Spec.WorkloadName == workloadName { // nolint
 				matchedLogConf = logConf
 				break
 			}

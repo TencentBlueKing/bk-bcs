@@ -1,0 +1,101 @@
+{
+    "apiVersion": "v4",
+    "kind": "deployment",
+    "restartPolicy": {
+        "policy": "OnFailure"
+    },
+    "metadata": {
+        "labels": {
+            "app": "${bcsGwControllerName}"
+        },
+        "name": "${bcsGwControllerName}",
+        "namespace": "${bcsGwControllerNamespace}"
+    },
+    "spec": {
+        "instance": 1,
+        "strategy": {
+            "type": "RollingUpdate",
+            "rollingupdate": {
+                "maxUnavilable": 1,
+                "maxSurge": 1,
+                "upgradeDuration": 50,
+                "rollingOrder": "DeleteFirst",
+                "rollingManually":false
+            }
+        },
+        "template": {
+            "metadata": {
+                "name": "${bcsGwControllerName}",
+                "namespace": "${bcsGwControllerNamespace}",
+                "labels": {
+                    "app": "${bcsGwControllerName}"
+                }
+            },
+            "spec": {
+                "containers": [{
+                    "image": "${bcsGwControllerNginxImage}:${bcsGwControllerNginxTag}",
+                    "imagePullPolicy": "IfNotPresent",
+                    "resources": {
+                        "limits": {
+                            "cpu": "0.5",
+                            "memory": "512"
+                        }
+                    },
+                    "configmaps": [
+                        {
+                            "name": "nginx-configmap",
+                            "items": [
+                                {
+                                    "type": "file",
+                                    "dataKey": "nginx-conf",
+                                    "KeyOrPath": "/etc/nginx/nginx.conf",
+                                    "readOnly": false,
+                                    "user": "root"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "image": "${bcsGwControllerImage}:${bcsGwControllerImageTag}",
+                    "imagePullPolicy": "${bcsGwControllerImagePullPolicy}",
+                    "command": "/gw/gw-controller",
+                    "args": [
+                        "server",
+                        "--port",
+                        "${bcsGwControllerMetricPort}",
+                        "--serviceRegistry",
+                        "${bcsGwControllerServiceRegistry}",
+                        "--kubeconfig",
+                        "/gw/kubeconfig",
+                        "--backendIPType",
+                        "${bcsGwControllerBackendIPType}",
+                        "--v",
+                        "3",
+                        "--alsologtostderr"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "1",
+                            "memory": "1024"
+                        }
+                    },
+                    "secrets": [
+                        {
+                            "secretName": "gw-controller-secret",
+                            "items": [
+                                {
+                                    "type": "file",
+                                    "dataKey": "gw-controller-kubeconfig",
+                                    "keyOrPath": "/gw/kubeconfig"
+                                }
+                            ]
+                        }
+                    ]
+                }],
+                "networkMode": "${bcsGwControllerNetworkMode}",
+                "networkType": "${bcsGwControllerNetworkType}"
+            }
+        }
+    }
+}

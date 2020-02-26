@@ -24,10 +24,7 @@ import (
 
 	"bk-bcs/bcs-common/common/ssl"
 	"github.com/parnurzeal/gorequest"
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
-	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -59,21 +56,24 @@ const (
 // Watcher watchs target type resource metadata from k8s cluster,
 // and write to storage by synchronizer with series actions.
 type Watcher struct {
-	resourceType   string
-	controller     cache.Controller
-	store          cache.Store
-	writer         *output.Writer
-	sharedWatchers map[string]WatcherInterface
+	resourceType       string
+	resourceNamespaced bool
+	controller         cache.Controller
+	store              cache.Store
+	writer             *output.Writer
+	sharedWatchers     map[string]WatcherInterface
+	stopChan           chan struct{}
 }
 
 // NewWatcher creates a new watcher of target type resource.
 func NewWatcher(client *rest.Interface, resourceType string, resourceName string, objType runtime.Object,
-	writer *output.Writer, sharedWatchers map[string]WatcherInterface) *Watcher {
+	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool) *Watcher {
 
 	watcher := &Watcher{
-		resourceType:   resourceType,
-		writer:         writer,
-		sharedWatchers: sharedWatchers,
+		resourceType:       resourceType,
+		writer:             writer,
+		sharedWatchers:     sharedWatchers,
+		resourceNamespaced: resourceNamespaced,
 	}
 
 	// build list watch.
@@ -135,15 +135,9 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 
 // UpdateEvent is event handler for update resource event.
 func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
-	newObjReal, ok := w.convert(newObj)
-	if !ok {
-		glog.Errorf("Convert object to %s fail! object is %v", w.resourceType, newObj)
-		return
-	}
-
 	// compare the object changes for update.
-	if reflect.DeepEqual(oldObj, newObjReal) {
-		newObjMetadata := newObjReal.(metav1.Object)
+	if reflect.DeepEqual(oldObj, newObj) {
+		newObjMetadata := newObj.(metav1.Object)
 
 		// there is no changes, no need to update.
 		glog.V(2).Infof("watcher got the same ResourceType[%s]: %s/%s",
@@ -195,51 +189,6 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	}
 }
 
-func (w *Watcher) convert(obj interface{}) (v interface{}, ok bool) {
-	switch w.resourceType {
-	case "Node":
-		v, ok = obj.(*v1.Node)
-	case "Pod":
-		v, ok = obj.(*v1.Pod)
-	case "ReplicationController":
-		v, ok = obj.(*v1.ReplicationController)
-	case "Service":
-		v, ok = obj.(*v1.Service)
-	case "EndPoints":
-		v, ok = obj.(*v1.Endpoints)
-	case "ConfigMap":
-		v, ok = obj.(*v1.ConfigMap)
-	case "Secret":
-		v, ok = obj.(*v1.Secret)
-	case "Namespace":
-		v, ok = obj.(*v1.Namespace)
-	case "Event":
-		v, ok = obj.(*v1.Event)
-	case "Deployment":
-		v, ok = obj.(*v1beta1.Deployment)
-		// NOTE: k8s v1.7 and v1.8, should use v1beta1
-		//v, ok = obj.(*v1beta2.Deployment)
-	case "Ingress":
-		v, ok = obj.(*v1beta1.Ingress)
-	case "ReplicaSet":
-		v, ok = obj.(*v1beta1.ReplicaSet)
-		// NOTE: k8s v1.7 and v1.8, should use v1beta1
-		//v, ok = obj.(*v1beta2.ReplicaSet)
-	case "DaemonSet":
-		v, ok = obj.(*v1beta1.DaemonSet)
-		//v, ok = obj.(*appsv1beta2.DaemonSet)
-	case "StatefulSet":
-		v, ok = obj.(*appsv1beta1.StatefulSet)
-	case "Job":
-		v, ok = obj.(*batchv1.Job)
-
-	default:
-		v = nil
-		ok = false
-	}
-	return v, ok
-}
-
 // isEventShouldFilter filters k8s system events.
 func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bool {
 	// NOTE: event not support delete
@@ -272,14 +221,9 @@ func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bo
 }
 
 func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncData {
-	d, ok := w.convert(obj)
-	if !ok {
-		glog.Errorf("watcher convert object to %s failed, object[%v]", w.resourceType, obj)
-		return nil
-	}
 
 	// construct and send
-	dMeta := d.(metav1.Object)
+	dMeta := obj.(metav1.Object)
 	namespace := dMeta.GetNamespace()
 	name := dMeta.GetName()
 
@@ -292,9 +236,9 @@ func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncD
 	// NOTE: 生成时, 就确认了是否会告警, 即 ownerUID != "", 告警
 	// if Event, get OwnerReference uid
 	if w.resourceType == ResourceTypeEvent {
-		event, ok := d.(*v1.Event)
+		event, ok := obj.(*v1.Event)
 		if !ok {
-			glog.Infof("watcher parse object to Event failed, %v", d)
+			glog.Infof("watcher parse object to Event failed, %v", obj)
 		}
 
 		// TODO: handle 1) not just pod 2) system component warning event
@@ -329,7 +273,7 @@ func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncD
 		Namespace: namespace,
 		Name:      name,
 		Action:    eventAction,
-		Data:      d,
+		Data:      obj,
 		OwnerUID:  ownerUID,
 	}
 

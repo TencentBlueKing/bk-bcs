@@ -24,6 +24,10 @@
 #   go-tests = true
 #   unused-packages = true
 
+ignored = [
+  "bitbucket.org/ww/goautoneg"
+]
+
 required = [
   "github.com/aws/aws-sdk-go",
   "github.com/gophercloud/gophercloud",
