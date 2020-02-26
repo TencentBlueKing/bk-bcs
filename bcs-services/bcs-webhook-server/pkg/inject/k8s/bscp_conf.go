@@ -150,6 +150,7 @@ func (bi *BscpInject) retrieveEnvFromPod(pod *corev1.Pod) (map[string]string, []
 		if err != nil {
 			return nil, nil, fmt.Errorf("env %s:%s is invalid", bscp.SideCarMod, modValue)
 		}
+		envMap[bscp.SideCarMod] = modValue
 	}
 
 	return envMap, patches, nil
