@@ -200,15 +200,15 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 				blog.Fatal(err.Error())
 			}
 			whsvr.K8sBscpInject = bscpInject
-			blog.Fatal("create bscp k8s inject module success")
+			blog.Info("create bscp k8s inject module success")
 		case EngineTypeMesos:
 			bscpInject := mesos.NewBscpInject()
 			if err := bscpInject.InitTemplate(conf.Injects.Bscp.BscpTemplatePath); err != nil {
 				blog.Fatal(err.Error())
 			}
 			whsvr.MesosBscpInject = bscpInject
+			blog.Info("create bscp mesos inject module success")
 		}
-		blog.Infof("create bscp mesos inject module success")
 	}
 
 	// define http server and server handler
