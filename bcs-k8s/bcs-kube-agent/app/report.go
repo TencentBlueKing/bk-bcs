@@ -28,6 +28,7 @@ import (
 	"github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 	"github.com/spf13/viper"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -35,7 +36,10 @@ import (
 
 const (
 	defaultNamespace   = "default"
+	systemNamespace    = "kube-system"
 	clusterServiceName = "kubernetes"
+	// endpoints name for kube-apiserver proxy
+	apiserverProxyServiceName = "apiserver-proxy-for-bcs"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -106,8 +110,16 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 	var apiserverPort int32
 	var endpointsList []string
+	var endpoints *corev1.Endpoints
+	var err error
 
-	endpoints, err := kubeClient.CoreV1().Endpoints(defaultNamespace).Get(clusterServiceName, metav1.GetOptions{})
+	isExternal := viper.GetBool("agent.isExternal")
+	if isExternal {
+		endpoints, err = kubeClient.CoreV1().Endpoints(systemNamespace).Get(apiserverProxyServiceName, metav1.GetOptions{})
+	} else {
+		endpoints, err = kubeClient.CoreV1().Endpoints(defaultNamespace).Get(clusterServiceName, metav1.GetOptions{})
+	}
+
 	if err != nil {
 		return "", err
 	}

@@ -9,6 +9,7 @@ bk-bcs/bcs-services/bcs-metricservice/pkg/zk \
 bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto \
 bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf \
 bk-bcs/bcs-services/bcs-webhook-server/pkg/client \
+bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client \
 bk-bcs/bcs-k8s/tkex-statefulsetplus-operator \
 bk-bcs/bcs-mesos/bcs-container-executor/mesos"
 

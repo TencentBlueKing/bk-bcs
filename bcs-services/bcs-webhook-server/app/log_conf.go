@@ -17,7 +17,7 @@ import (
 	"reflect"
 
 	"bk-bcs/bcs-common/common/blog"
-	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
+	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -28,20 +28,20 @@ import (
 func createBcsLogConfig(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsLogConfigPlural := "bcslogconfigs"
 
-	bcsLogConfigFullName := "bcslogconfigs" + "." + bcsv2.SchemeGroupVersion.Group
+	bcsLogConfigFullName := "bcslogconfigs" + "." + bcsv1.SchemeGroupVersion.Group
 
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: bcsLogConfigFullName,
 		},
 		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   bcsv2.SchemeGroupVersion.Group,   // BcsLogConfigsGroup,
-			Version: bcsv2.SchemeGroupVersion.Version, // BcsLogConfigsVersion,
+			Group:   bcsv1.SchemeGroupVersion.Group,   // BcsLogConfigsGroup,
+			Version: bcsv1.SchemeGroupVersion.Version, // BcsLogConfigsVersion,
 			Scope:   apiextensionsv1beta1.NamespaceScoped,
 			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 				Plural:   bcsLogConfigPlural,
-				Kind:     reflect.TypeOf(bcsv2.BcsLogConfig{}).Name(),
-				ListKind: reflect.TypeOf(bcsv2.BcsLogConfigList{}).Name(),
+				Kind:     reflect.TypeOf(bcsv1.BcsLogConfig{}).Name(),
+				ListKind: reflect.TypeOf(bcsv1.BcsLogConfigList{}).Name(),
 			},
 		},
 	}

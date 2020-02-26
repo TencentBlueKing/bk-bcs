@@ -15,8 +15,8 @@ package k8s
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
+	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
 	"fmt"
 	mapset "github.com/deckarep/golang-set"
@@ -100,7 +100,7 @@ func (logConf *LogConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, 
 	return patch, nil
 }
 
-func (logConf *LogConfInject) injectK8sContainer(namespace string, container *corev1.Container, bcsLogConf *bcsv2.BcsLogConfig, index int) *corev1.Container { // nolint
+func (logConf *LogConfInject) injectK8sContainer(namespace string, container *corev1.Container, bcsLogConf *bcsv1.BcsLogConfig, index int) *corev1.Container { // nolint
 
 	patchedContainer := container.DeepCopy()
 

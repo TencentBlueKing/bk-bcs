@@ -17,7 +17,7 @@ import (
 	"reflect"
 
 	"bk-bcs/bcs-common/common/blog"
-	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
+	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -28,20 +28,20 @@ import (
 func createBcsDbPrivConfig(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsDbPrivConfigPlural := "bcsdbprivconfigs"
 
-	bcsDbPrivConfigFullName := "bcsdbprivconfigs" + "." + bcsv2.SchemeGroupVersion.Group
+	bcsDbPrivConfigFullName := "bcsdbprivconfigs" + "." + bcsv1.SchemeGroupVersion.Group
 
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: bcsDbPrivConfigFullName,
 		},
 		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   bcsv2.SchemeGroupVersion.Group,   // BcsDbPrivConfigsGroup,
-			Version: bcsv2.SchemeGroupVersion.Version, // BcsDbPrivConfigsVersion,
+			Group:   bcsv1.SchemeGroupVersion.Group,   // BcsDbPrivConfigsGroup,
+			Version: bcsv1.SchemeGroupVersion.Version, // BcsDbPrivConfigsVersion,
 			Scope:   apiextensionsv1beta1.NamespaceScoped,
 			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 				Plural:   bcsDbPrivConfigPlural,
-				Kind:     reflect.TypeOf(bcsv2.BcsDbPrivConfig{}).Name(),
-				ListKind: reflect.TypeOf(bcsv2.BcsDbPrivConfigList{}).Name(),
+				Kind:     reflect.TypeOf(bcsv1.BcsDbPrivConfig{}).Name(),
+				ListKind: reflect.TypeOf(bcsv1.BcsDbPrivConfigList{}).Name(),
 			},
 		},
 	}

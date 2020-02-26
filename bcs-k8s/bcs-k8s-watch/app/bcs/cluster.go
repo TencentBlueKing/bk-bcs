@@ -136,7 +136,7 @@ func GetClusterID(zkHosts string, hostIP string, bcsTLSConfig options.TLS) (stri
 }
 
 // GetStorageService returns storage InnerService object for discovery.
-func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string) (*InnerService, *RegisterDiscover.RegDiscover, error) {
+func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string, isExternal bool) (*InnerService, *RegisterDiscover.RegDiscover, error) {
 	discovery := RegisterDiscover.NewRegDiscoverEx(zkHosts, 5*time.Second)
 	if err := discovery.Start(); err != nil {
 		return nil, nil, fmt.Errorf("get storage service from ZK failed, %+v", err)
@@ -151,14 +151,14 @@ func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints
 		return nil, nil, fmt.Errorf("discover storage service failed, %+v", err)
 	}
 
-	storageService := NewInnerService(types.BCS_MODULE_STORAGE, eventChan, customEndpoints)
+	storageService := NewInnerService(types.BCS_MODULE_STORAGE, eventChan, customEndpoints, isExternal)
 	go storageService.Watch(bcsTLSConfig)
 
 	return storageService, discovery, nil
 }
 
 // GetNetService returns netservice InnerService object for discovery.
-func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string) (*InnerService, *RegisterDiscover.RegDiscover, error) {
+func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []string, isExternal bool) (*InnerService, *RegisterDiscover.RegDiscover, error) {
 	discovery := RegisterDiscover.NewRegDiscoverEx(zkHosts, 5*time.Second)
 	if err := discovery.Start(); err != nil {
 		return nil, nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
@@ -174,7 +174,7 @@ func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customEndpoints []s
 		return nil, nil, fmt.Errorf("discover netservice failed, %+v", err)
 	}
 
-	netService := NewInnerService(types.BCS_MODULE_NETSERVICE, eventChan, customEndpoints)
+	netService := NewInnerService(types.BCS_MODULE_NETSERVICE, eventChan, customEndpoints, isExternal)
 	go netService.Watch(bcsTLSConfig)
 
 	return netService, discovery, nil

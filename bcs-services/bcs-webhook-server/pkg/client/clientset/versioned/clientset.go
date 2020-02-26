@@ -19,7 +19,7 @@ limitations under the License.
 package versioned
 
 import (
-	bkbcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v2"
+	bkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1"
 
 	glog "github.com/golang/glog"
 	discovery "k8s.io/client-go/discovery"
@@ -29,27 +29,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	BkbcsV2() bkbcsv2.BkbcsV2Interface
+	BkbcsV1() bkbcsv1.BkbcsV1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Bkbcs() bkbcsv2.BkbcsV2Interface
+	Bkbcs() bkbcsv1.BkbcsV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	bkbcsV2 *bkbcsv2.BkbcsV2Client
+	bkbcsV1 *bkbcsv1.BkbcsV1Client
 }
 
-// BkbcsV2 retrieves the BkbcsV2Client
-func (c *Clientset) BkbcsV2() bkbcsv2.BkbcsV2Interface {
-	return c.bkbcsV2
+// BkbcsV1 retrieves the BkbcsV1Client
+func (c *Clientset) BkbcsV1() bkbcsv1.BkbcsV1Interface {
+	return c.bkbcsV1
 }
 
 // Deprecated: Bkbcs retrieves the default version of BkbcsClient.
 // Please explicitly pick a version.
-func (c *Clientset) Bkbcs() bkbcsv2.BkbcsV2Interface {
-	return c.bkbcsV2
+func (c *Clientset) Bkbcs() bkbcsv1.BkbcsV1Interface {
+	return c.bkbcsV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -68,7 +68,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.bkbcsV2, err = bkbcsv2.NewForConfig(&configShallowCopy)
+	cs.bkbcsV1, err = bkbcsv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.bkbcsV2 = bkbcsv2.NewForConfigOrDie(c)
+	cs.bkbcsV1 = bkbcsv1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -94,7 +94,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.bkbcsV2 = bkbcsv2.New(c)
+	cs.bkbcsV1 = bkbcsv1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

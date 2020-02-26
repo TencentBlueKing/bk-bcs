@@ -87,7 +87,7 @@ bcs-webhook-server 在拦截到容器的创建请求时，会从集群中查询 
 系统组件的日志采集配置需要在应用所在的 namespace 下创建一个 configType 类型为 bcs-system 的 BcsLogConfig。  
 
 ```
-apiVersion: bkbcs.tencent.com/v2
+apiVersion: bkbcs.tencent.com/v1
 kind: BcsLogConfig
 metadata:
   name: default-log-conf
@@ -110,7 +110,7 @@ spec:
 - 默认的日志采集配置  
 对于大多数业务集群，所有业务容器的日志输出是同样的格式，只需配置一种固定的日志清洗规则即可。对于这种需求，为了减少用户的负担，bk-bcs-saas 层可以在每个 namespace 下默认创建一个 configType 类型为 default 的 BcsLogConfig 资源，bcs-webhook-server 默认会对该 namespace 所有容器注入这个标准的日志采集配置：    
 ```
-apiVersion: bkbcs.tencent.com/v2
+apiVersion: bkbcs.tencent.com/v1
 kind: BcsLogConfig
 metadata:
   name: default-log-conf
@@ -132,7 +132,7 @@ spec:
 - 自定义的日志采集配置
 如果一个业务集群中除了标准的日志采集配置外，还有某些容器需要配置特殊的日志采集规则，此时，可由用户从 bk-bcs-saas 层在该 namespace 下创建特定的类型为 custom 的日志采集配置 BcsLogConfig , 在 BcsLogConfig 中指定需要使用这种规则的 workloads 类型(如 Deployment, Statefulset)、workloads 名、容器名。创建完后，bcs-webhook-server 会对这些容器使用指定的 BcsLogConfig 配置来进行注入，以满足特定的需求：    
 ```
-apiVersion: bkbcs.tencent.com/v2
+apiVersion: bkbcs.tencent.com/v1
 kind: BcsLogConfig
 metadata:
   name: deploy-bcs-log-conf
@@ -180,7 +180,7 @@ db 授权的配置信息以 crd 的形式创建并下发到 k8s 或 mesos 集群
 
 示例的 crd 配置如下：  
 ```
-apiVersion: bkbcs.tencent.com/v2
+apiVersion: bkbcs.tencent.com/v1
 kind: BcsDbPrivConfig
 metadata:
   name: bcs-db-privilege

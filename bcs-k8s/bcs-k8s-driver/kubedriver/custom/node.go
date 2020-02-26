@@ -25,14 +25,16 @@ type ServiceNode types.ServerInfo
 
 func NewServiceNode(info types.ServerInfo) ServiceNode {
 	return ServiceNode{
-		IP:         info.IP,
-		Port:       info.Port,
-		MetricPort: info.MetricPort,
-		HostName:   info.HostName,
-		Scheme:     info.Scheme,
-		Version:    info.Version,
-		Cluster:    info.Cluster,
-		Pid:        info.Pid,
+		IP:           info.IP,
+		Port:         info.Port,
+		ExternalIp:   info.ExternalIp,
+		ExternalPort: info.ExternalPort,
+		MetricPort:   info.MetricPort,
+		HostName:     info.HostName,
+		Scheme:       info.Scheme,
+		Version:      info.Version,
+		Cluster:      info.Cluster,
+		Pid:          info.Pid,
 	}
 }
 

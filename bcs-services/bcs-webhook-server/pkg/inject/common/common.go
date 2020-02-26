@@ -16,7 +16,7 @@ package common
 import (
 	"strings"
 
-	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
+	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -55,8 +55,8 @@ var IgnoredNamespaces = []string{
 }
 
 // FindBcsSystemConfigType get the matced bcs-system BcsLogConfig
-func FindBcsSystemConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig {
-	var matchedLogConf *bcsv2.BcsLogConfig
+func FindBcsSystemConfigType(bcsLogConfs []*bcsv1.BcsLogConfig) *bcsv1.BcsLogConfig {
+	var matchedLogConf *bcsv1.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
 		if logConf.Spec.ConfigType == BcsSystemConfigType {
 			matchedLogConf = logConf
@@ -66,8 +66,8 @@ func FindBcsSystemConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogCon
 	return matchedLogConf
 }
 
-func FindDefaultConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig {
-	var defaultLogConf *bcsv2.BcsLogConfig
+func FindDefaultConfigType(bcsLogConfs []*bcsv1.BcsLogConfig) *bcsv1.BcsLogConfig {
+	var defaultLogConf *bcsv1.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
 		if logConf.Spec.ConfigType == DefaultConfigType {
 			defaultLogConf = logConf
@@ -78,12 +78,12 @@ func FindDefaultConfigType(bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfi
 }
 
 // FindK8sMatchedConfigType get the matched BcsLogConfig
-func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig { // nolint
+func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv1.BcsLogConfig) *bcsv1.BcsLogConfig { // nolint
 	if len(pod.OwnerReferences) == 0 {
 		return nil
 	}
 
-	var matchedLogConf *bcsv2.BcsLogConfig
+	var matchedLogConf *bcsv1.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
 		if logConf.Spec.ConfigType == CustomConfigType {
 			if pod.OwnerReferences[0].Kind == "ReplicaSet" {
@@ -103,8 +103,8 @@ func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv2.BcsLogConfig
 }
 
 // FindMesosMatchedConfigType get the matched BcsLogConfig
-func FindMesosMatchedConfigType(workloadType, workloadName string, bcsLogConfs []*bcsv2.BcsLogConfig) *bcsv2.BcsLogConfig { // nolint
-	var matchedLogConf *bcsv2.BcsLogConfig
+func FindMesosMatchedConfigType(workloadType, workloadName string, bcsLogConfs []*bcsv1.BcsLogConfig) *bcsv1.BcsLogConfig { // nolint
+	var matchedLogConf *bcsv1.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
 		if logConf.Spec.ConfigType == CustomConfigType {
 			if strings.ToLower(logConf.Spec.WorkloadType) == workloadType && logConf.Spec.WorkloadName == workloadName { // nolint

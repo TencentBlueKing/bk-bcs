@@ -19,25 +19,48 @@ import (
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
-	mesosv2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	kubefedClientSet "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
 	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	wbbcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
 	webhookClientSet "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	extensionsClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 const (
-	BkbcsGroupName = "bkbcs.tencent.com"
+	CoreV1GroupVersion             = "v1"
+	AppsV1GroupVersion             = "apps/v1"
+	AppsV1Beta1GroupVersion        = "apps/v1beta1"
+	AppsV1Beta2GroupVersion        = "apps/v1beta2"
+	ExtensionsV1Beta1GroupVersion  = "extensions/v1beta1"
+	AutoScalingV1GroupVersion      = "autoscaling/v1"
+	AutoScalingV2Beta1GroupVersion = "autoscaling/v2beta1"
+	AutoScalingV2Beta2GroupVersion = "autoscaling/v2beta2"
+	StorageV1GroupVersion          = "storage.k8s.io/v1"
+
+	BatchV1GroupVersion                      = "batch/v1"
+	BatchV1Beta1GroupVersion                 = "batch/v1beta1"
+	RbacV1GroupVersion                       = "rbac.authorization.k8s.io/v1"
+	RbacV1Beta1GroupVersion                  = "rbac.authorization.k8s.io/v1beta1"
+	AdmissionRegistrationV1Beta1GroupVersion = "admissionregistration.k8s.io/v1beta1"
+	ApiExtensionsV1Beta1GroupVersion         = "apiextensions.k8s.io/v1beta1"
+
+	BkbcsGroupName        = "bkbcs.tencent.com"
+	MesosV2GroupVersion   = "bkbcs.tencent.com/v2"
+	WebhookV1GroupVersion = "bkbcs.tencent.com/v1"
+
+	KubefedTypesV1Beta1GroupVersion            = "types.kubefed.io/v1beta1"
+	KubefedCoreV1Alpha1GroupVersion            = "core.kubefed.io/v1alpha1"
+	KubefedCoreV1Beta1GroupVersion             = "core.kubefed.io/v1beta1"
+	KubefedMultiClusterDnsV1Alpha1GroupVersion = "multiclusterdns.kubefed.io/v1alpha1"
+	KubefedSchedulingV1Alpha1GroupVersion      = "scheduling.kubefed.io/v1alpha1"
 )
 
 // resource list to watch
-var WatcherConfigList, BkbcsWatcherConfigLister map[string]ResourceObjType
+var WatcherConfigList, BkbcsWatcherConfigList map[string]ResourceObjType
+var K8sClientList, CrdClientList map[string]rest.Interface
 
 // ResourceObjType used for build target watchers.
 type ResourceObjType struct {
@@ -51,174 +74,75 @@ type ResourceObjType struct {
 func InitResourceList(k8sConfig *options.K8sConfig) error {
 	restConfig, err := GetRestConfig(k8sConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating rest config: %s", err.Error())
 	}
 
-	WatcherConfigList, err = initNormalWatcherConfigList(restConfig)
+	// 初始化待watch的k8s资源
+	WatcherConfigList, err = initK8sWatcherConfigList(restConfig)
 	if err != nil {
 		return err
 	}
 
-	BkbcsWatcherConfigLister = make(map[string]ResourceObjType)
+	// 初始化待watch的crd资源
+	CrdClientList = make(map[string]rest.Interface)
 
-	webhookWatcherConfigList, err := initWebhookWatcherConfigList(restConfig)
+	// 初始化联邦集群crd各个apiVersion的RestClient
+	kubefedClientList, err := initKubefedClient(restConfig)
 	if err != nil {
 		return err
 	}
-	for resourceKind, resourceObjType := range webhookWatcherConfigList {
-		BkbcsWatcherConfigLister[resourceKind] = resourceObjType
+	for groupVersion, client := range kubefedClientList {
+		CrdClientList[groupVersion] = client
 	}
 
-	mesosWatcherConfigList, err := initMesosWatcherConfigList(restConfig)
+	// 初始化mesos crd各个apiVersion的RestClient
+	mesosClientList, err := initMesosClient(restConfig)
 	if err != nil {
 		return err
 	}
-	for resourceKind, resourceObjType := range mesosWatcherConfigList {
-		BkbcsWatcherConfigLister[resourceKind] = resourceObjType
+	for groupVersion, client := range mesosClientList {
+		CrdClientList[groupVersion] = client
+	}
+
+	// 初始化bcs-webhook-server crd各个apiVersion的RestClient
+	webhookClientList, err := initWebhookClient(restConfig)
+	if err != nil {
+		return err
+	}
+	for groupVersion, client := range webhookClientList {
+		CrdClientList[groupVersion] = client
 	}
 
 	return nil
 }
 
-// initNormalWatcherConfigList init k8s resource
-func initNormalWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
-	// create k8s clientset.
-	clientSet, err := kubernetes.NewForConfig(restConfig)
+// initKubefedClient init kubefed resources restclient
+func initKubefedClient(restConfig *rest.Config) (map[string]rest.Interface, error) {
+	// create kubefed clientset
+	clientset, err := kubefedClientSet.NewForConfig(restConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	coreClient := clientSet.CoreV1().RESTClient()
-	extensionsV1Beta1Client := clientSet.ExtensionsV1beta1().RESTClient()
-	batchV1Client := clientSet.BatchV1().RESTClient()
-	appsV1Client := clientSet.AppsV1().RESTClient()
+	kubefedCoreV1Alpha1Client := clientset.CoreV1alpha1().RESTClient()
+	kubefedCoreV1Beta1Client := clientset.CoreV1beta1().RESTClient()
+	kubefedMultiDnsV1Alpha1Client := clientset.MulticlusterdnsV1alpha1().RESTClient()
+	kubefedSchedulingV1Alpha1Client := clientset.SchedulingV1alpha1().RESTClient()
+	kubefedTypesV1Beta1Client := clientset.TypesV1beta1().RESTClient()
 
-	// build k8s watcher configs.
-	normalWatcherConfigList := map[string]ResourceObjType{
-		"Node": {
-			"nodes",
-			&v1.Node{},
-			&coreClient,
-			false,
-		},
-		"Pod": {
-			"pods",
-			&v1.Pod{},
-			&coreClient,
-			true,
-		},
-		"ReplicationController": {
-			"replicationcontrollers",
-			&v1.ReplicationController{},
-			&coreClient,
-			true,
-		},
-		"Service": {
-			"services",
-			&v1.Service{},
-			&coreClient,
-			true,
-		},
-		"EndPoints": {
-			"endpoints",
-			&v1.Endpoints{},
-			&coreClient,
-			true,
-		},
-		"ConfigMap": {
-			"configmaps",
-			&v1.ConfigMap{},
-			&coreClient,
-			true,
-		},
-		"Secret": {
-			"secrets",
-			&v1.Secret{},
-			&coreClient,
-			true,
-		},
-		"Namespace": {
-			"namespaces",
-			&v1.Namespace{},
-			&coreClient,
-			false,
-		},
-		"Event": {
-			"events",
-			&v1.Event{},
-			&coreClient,
-			true,
-		},
-		"Deployment": {
-			"deployments",
-			&appsv1.Deployment{},
-			&appsV1Client,
-			true,
-		},
-		"Ingress": {
-			"ingresses",
-			&v1beta1.Ingress{},
-			&extensionsV1Beta1Client,
-			true,
-		},
-		"ReplicaSet": {
-			"replicasets",
-			&appsv1.ReplicaSet{},
-			&appsV1Client,
-			true,
-		},
-		"DaemonSet": {
-			"daemonsets",
-			&appsv1.DaemonSet{},
-			&appsV1Client,
-			true,
-		},
-		"Job": {
-			"jobs",
-			&batchv1.Job{},
-			&batchV1Client,
-			true,
-		},
-		"StatefulSet": {
-			"statefulsets",
-			&appsv1.StatefulSet{},
-			&appsV1Client,
-			true,
-		},
+	kubefedClientList := map[string]rest.Interface{
+		KubefedCoreV1Alpha1GroupVersion:            kubefedCoreV1Alpha1Client,
+		KubefedCoreV1Beta1GroupVersion:             kubefedCoreV1Beta1Client,
+		KubefedMultiClusterDnsV1Alpha1GroupVersion: kubefedMultiDnsV1Alpha1Client,
+		KubefedSchedulingV1Alpha1GroupVersion:      kubefedSchedulingV1Alpha1Client,
+		KubefedTypesV1Beta1GroupVersion:            kubefedTypesV1Beta1Client,
 	}
 
-	return normalWatcherConfigList, nil
+	return kubefedClientList, nil
 }
 
-// initWebhookWatcherConfigList init bcs-webhook-server crd resource
-func initWebhookWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
-	// create webhook crd clientset
-	whClientSet, err := webhookClientSet.NewForConfig(restConfig)
-	if err != nil {
-		return nil, err
-	}
-	webhookClient := whClientSet.BkbcsV2().RESTClient()
-
-	webhookWatcherConfigLister := map[string]ResourceObjType{
-		"BcsLogConfig": {
-			"bcslogconfigs",
-			&wbbcsv2.BcsLogConfig{},
-			&webhookClient,
-			true,
-		},
-		"BcsDbPrivConfig": {
-			"bcsdbprivconfigs",
-			&wbbcsv2.BcsDbPrivConfig{},
-			&webhookClient,
-			true,
-		},
-	}
-
-	return webhookWatcherConfigLister, nil
-}
-
-// initMesosWatcherConfigList init mesos crd resource
-func initMesosWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
+// initMesosClient init mesos resources restclient
+func initMesosClient(restConfig *rest.Config) (map[string]rest.Interface, error) {
 	mesosClientset, err := internalclientset.NewForConfig(restConfig)
 	if err != nil {
 		return nil, err
@@ -226,112 +150,102 @@ func initMesosWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObj
 
 	mesosClient := mesosClientset.BkbcsV2().RESTClient()
 
-	mesosWatcherConfigLister := map[string]ResourceObjType{
-		"AdmissionWebhookConfiguration": {
-			"admissionwebhookconfigurations",
-			&mesosv2.AdmissionWebhookConfiguration{},
-			&mesosClient,
-			true,
-		},
-		"Agent": {
-			"agents",
-			&mesosv2.Agent{},
-			&mesosClient,
-			true,
-		},
-		"AgentSchedInfo": {
-			"agentschedinfos",
-			&mesosv2.AgentSchedInfo{},
-			&mesosClient,
-			true,
-		},
-		"Application": {
-			"applications",
-			&mesosv2.Application{},
-			&mesosClient,
-			true,
-		},
-		"BcsClusterAgentSetting": {
-			"bcsclusteragentsettings",
-			&mesosv2.BcsClusterAgentSetting{},
-			&mesosClient,
-			true,
-		},
-		"BcsCommandInfo": {
-			"bcscommandinfos",
-			&mesosv2.BcsCommandInfo{},
-			&mesosClient,
-			true,
-		},
-		"BcsConfigMap": {
-			"bcsconfigmaps",
-			&mesosv2.BcsConfigMap{},
-			&mesosClient,
-			true,
-		},
-		"BcsEndpoint": {
-			"bcsendpoints",
-			&mesosv2.BcsEndpoint{},
-			&mesosClient,
-			true,
-		},
-		"BcsSecret": {
-			"bcssecrets",
-			&mesosv2.BcsSecret{},
-			&mesosClient,
-			true,
-		},
-		"BcsService": {
-			"bcsservices",
-			&mesosv2.BcsService{},
-			&mesosClient,
-			true,
-		},
-		"Crd": {
-			"crds",
-			&mesosv2.Crd{},
-			&mesosClient,
-			true,
-		},
-		"Crr": {
-			"crrs",
-			&mesosv2.Crr{},
-			&mesosClient,
-			true,
-		},
-		"Deployment": {
-			"deployments",
-			&mesosv2.Deployment{},
-			&mesosClient,
-			true,
-		},
-		"Framework": {
-			"frameworks",
-			&mesosv2.Framework{},
-			&mesosClient,
-			true,
-		},
-		"Task": {
-			"tasks",
-			&mesosv2.Task{},
-			&mesosClient,
-			true,
-		},
-		"TaskGroup": {
-			"taskgroups",
-			&mesosv2.TaskGroup{},
-			&mesosClient,
-			true,
-		},
-		"Version": {
-			"versions",
-			&mesosv2.Version{},
-			&mesosClient,
-			true,
-		},
+	mesosClientList := map[string]rest.Interface{
+		MesosV2GroupVersion: mesosClient,
 	}
 
-	return mesosWatcherConfigLister, nil
+	return mesosClientList, nil
+}
+
+// initWebhookClient init bcs-webhook-server resources restclient
+func initWebhookClient(restConfig *rest.Config) (map[string]rest.Interface, error) {
+	// create webhook clientset
+	clientset, err := webhookClientSet.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	webhookClientList := map[string]rest.Interface{
+		WebhookV1GroupVersion: clientset.BkbcsV1().RESTClient(),
+	}
+
+	return webhookClientList, nil
+}
+
+// initK8sWatcherConfigList init k8s resource
+func initK8sWatcherConfigList(restConfig *rest.Config) (map[string]ResourceObjType, error) {
+	// create k8s clientset.
+	clientSet, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating kube clientset: %s", err.Error())
+	}
+
+	crdClientSet, err := extensionsClientSet.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating crd clientset: %s", err.Error())
+	}
+
+	K8sClientList = map[string]rest.Interface{
+		CoreV1GroupVersion:                       clientSet.CoreV1().RESTClient(),
+		AppsV1GroupVersion:                       clientSet.AppsV1().RESTClient(),
+		AppsV1Beta1GroupVersion:                  clientSet.AppsV1beta1().RESTClient(),
+		AppsV1Beta2GroupVersion:                  clientSet.AppsV1beta2().RESTClient(),
+		ExtensionsV1Beta1GroupVersion:            clientSet.ExtensionsV1beta1().RESTClient(),
+		AutoScalingV1GroupVersion:                clientSet.AutoscalingV1().RESTClient(),
+		AutoScalingV2Beta1GroupVersion:           clientSet.AutoscalingV2beta1().RESTClient(),
+		AutoScalingV2Beta2GroupVersion:           clientSet.AutoscalingV2beta2().RESTClient(),
+		StorageV1GroupVersion:                    clientSet.StorageV1().RESTClient(),
+		BatchV1GroupVersion:                      clientSet.BatchV1().RESTClient(),
+		BatchV1Beta1GroupVersion:                 clientSet.BatchV1beta1().RESTClient(),
+		RbacV1GroupVersion:                       clientSet.RbacV1().RESTClient(),
+		RbacV1Beta1GroupVersion:                  clientSet.RbacV1beta1().RESTClient(),
+		AdmissionRegistrationV1Beta1GroupVersion: clientSet.AdmissionregistrationV1beta1().RESTClient(),
+		ApiExtensionsV1Beta1GroupVersion:         crdClientSet.ApiextensionsV1beta1().RESTClient(),
+	}
+
+	k8sWatcherConfigList := make(map[string]ResourceObjType)
+
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating discovery client: %s", err.Error())
+	}
+	apiResourceLists, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		return nil, fmt.Errorf("error getting apiResourceLists: %s", err.Error())
+	}
+
+	for _, apiResourceList := range apiResourceLists {
+		if kubeClient, ok := K8sClientList[apiResourceList.GroupVersion]; ok {
+			for _, apiResource := range apiResourceList.APIResources {
+				var obj runtime.Object
+				_, ok := k8sWatcherConfigList[apiResource.Kind]
+				if ok && apiResourceList.GroupVersion == ExtensionsV1Beta1GroupVersion {
+					// 如果 deployment, daemonset 在apps和extensions下面都有，则只watch apps下面的资源
+					continue
+				}
+
+				if apiResource.Kind == "ComponentStatus" || apiResource.Kind == "Binding" || apiResource.Kind == "ReplicationControllerDummy" {
+					// 这几种类型的资源无法watch，跳过
+					continue
+				}
+
+				if apiResourceList.GroupVersion == StorageV1GroupVersion && apiResource.Kind != "StorageClass" {
+					// 1.12版本的 VolumeAttachment在v1beta1下，但1.14版本放到了v1下，为了避免list报错，暂时只同步StorageClass
+					continue
+				}
+
+				k8sWatcherConfigList[apiResource.Kind] = ResourceObjType{
+					ResourceName: apiResource.Name,
+					ObjType:      obj,
+					Client:       &kubeClient,
+					Namespaced:   apiResource.Namespaced,
+				}
+
+			}
+		}
+	}
+
+	return k8sWatcherConfigList, nil
 }
 
 // GetRestConfig generate rest config
