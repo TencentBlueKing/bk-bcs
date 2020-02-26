@@ -106,7 +106,7 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 
 	cfg, err := clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.Kubeconfig)
 	if err != nil {
-		return nil, fmt.Errorf("error building kube config: %s\n", err.Error())
+		return nil, fmt.Errorf("error building kube config: %s", err.Error())
 	}
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {

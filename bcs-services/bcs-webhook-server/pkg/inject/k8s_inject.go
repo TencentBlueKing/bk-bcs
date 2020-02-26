@@ -195,5 +195,13 @@ func (whSvr *WebhookServer) createPatch(pod *corev1.Pod) ([]byte, error) {
 		patch = append(patch, dbPrivConfInjectPatch...)
 	}
 
+	if whSvr.Injects.Bscp.BscpInject {
+		bscpInjectPatch, err := whSvr.K8sBscpInject.InjectContent(pod)
+		if err != nil {
+			return nil, fmt.Errorf("failed to inject bscp sidecar, err %s", err.Error())
+		}
+		patch = append(patch, bscpInjectPatch...)
+	}
+
 	return json.Marshal(patch)
 }
