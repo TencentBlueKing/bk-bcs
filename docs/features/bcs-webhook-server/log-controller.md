@@ -59,7 +59,8 @@ spec:
   configType: bcs-system
   appId: "20000"
   clusterId: bcs-k8s-15049
-  dataId: "20001"
+  stdDataId: "20001"
+  nonStdDataId: "20002"
   stdout: true
   logPaths:
     - /data/home/logs
@@ -82,7 +83,8 @@ spec:
   configType: default
   appId: "20000"
   clusterId: bcs-k8s-15049
-  dataId: "20001"
+  stdDataId: "20001"
+  nonStdDataId: "20002"
   stdout: true
   logPaths:
     - /data/home/logs
@@ -108,7 +110,8 @@ spec:
   workloadName: python-webhook
   containerConfs:
     - containerName: python
-      dataId: "2000"
+      stdDataId: "2001"
+      nonStdDataId: "2002"
       stdout: true
       logPaths:
         - /data/home/logs1
@@ -117,7 +120,8 @@ spec:
         app: python
         platform: bcs
     - containerName: sidecar
-      dataId: "1000"
+      stdDataId: "1001"
+      nonStdDataId: "1002"
       stdout: false
       logPaths:
         - /var/log
@@ -170,6 +174,8 @@ logbeat日志采集配置
 ### 自动注入容器日志采集信息
 采集器sidecar需要容器的env中包含上述所说的一些日志采集信息，为了尽量减少对业务yaml的侵入型，基于bcs的webhook机制实现容器env信息的自动注入。
 容器env注入信息如下：
+- io_tencent_bcs_app_std_dataid_v2  //标准输出的采集规则dataid
+- io_tencent_bcs_app_non_std_dataid_v2 //非标准输出的采集规则dataid
 - io_tencent_bcs_app_appid_v2   //业务appid
 - io_tencent_bcs_app_stdout_v2 //是否是标准输出
 - io_tencent_bcs_app_logpath_v2 //文本日志时的日志目录,支持多个目录，以逗号分隔

@@ -96,7 +96,8 @@ spec:
   configType: bcs-system
   appId: "20000"
   clusterId: bcs-k8s-15049
-  dataId: "20001"
+  stdDataId: "20001"
+  nonStdDataId: "20002"
   stdout: true
   logPaths:
     - /data/home/logs
@@ -119,7 +120,8 @@ spec:
   configType: default
   appId: "20000"
   clusterId: bcs-k8s-15049
-  dataId: "20001"
+  stdDataId: "20001"
+  nonStdDataId: "20002"
   stdout: true
   logPaths:
     - /data/home/logs
@@ -145,7 +147,8 @@ spec:
   workloadName: python-webhook
   containerConfs:
     - containerName: python
-      dataId: "2000"
+      stdDataId: "2001"
+      nonStdDataId: "2002"
       stdout: true
       logPaths:
         - /data/home/logs1
@@ -154,7 +157,8 @@ spec:
         app: python
         platform: bcs
     - containerName: sidecar
-      dataId: "1000"
+      stdDataId: "1001"
+      nonStdDataId: "1002"
       stdout: false
       logPaths:
         - /var/log

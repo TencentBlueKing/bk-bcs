@@ -201,11 +201,21 @@ func (logConf *LogConfInject) injectMesosContainer(namespace string, container c
 	if index >= 0 {
 		containerConf := bcsLogConf.Spec.ContainerConfs[index]
 
-		dataIdEnv := commtypes.EnvVar{
-			Name:  common.DataIdEnvKey,
-			Value: containerConf.DataId,
+		if containerConf.StdDataId != "" {
+			stdDataIdEnv := commtypes.EnvVar{
+				Name:  common.StdDataIdEnvKey,
+				Value: containerConf.StdDataId,
+			}
+			envs = append(envs, stdDataIdEnv)
 		}
-		envs = append(envs, dataIdEnv)
+
+		if containerConf.NonStdDataId != "" {
+			nonStdDataIdEnv := commtypes.EnvVar{
+				Name:  common.NonStdDataIdEnvKey,
+				Value: containerConf.NonStdDataId,
+			}
+			envs = append(envs, nonStdDataIdEnv)
+		}
 
 		stdoutEnv := commtypes.EnvVar{
 			Name:  common.StdoutEnvKey,
@@ -241,11 +251,21 @@ func (logConf *LogConfInject) injectMesosContainer(namespace string, container c
 		}
 		envs = append(envs, stdoutEnv)
 
-		dataIdEnv := commtypes.EnvVar{
-			Name:  common.DataIdEnvKey,
-			Value: bcsLogConf.Spec.DataId,
+		if bcsLogConf.Spec.StdDataId != "" {
+			stdDataIdEnv := commtypes.EnvVar{
+				Name:  common.StdDataIdEnvKey,
+				Value: bcsLogConf.Spec.StdDataId,
+			}
+			envs = append(envs, stdDataIdEnv)
 		}
-		envs = append(envs, dataIdEnv)
+
+		if bcsLogConf.Spec.NonStdDataId != "" {
+			nonStdDataIdEnv := commtypes.EnvVar{
+				Name:  common.NonStdDataIdEnvKey,
+				Value: bcsLogConf.Spec.NonStdDataId,
+			}
+			envs = append(envs, nonStdDataIdEnv)
+		}
 
 		if len(bcsLogConf.Spec.LogPaths) > 0 {
 			logPathEnv := commtypes.EnvVar{

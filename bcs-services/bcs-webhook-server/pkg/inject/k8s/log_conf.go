@@ -127,11 +127,21 @@ func (logConf *LogConfInject) injectK8sContainer(namespace string, container *co
 	if index >= 0 {
 		containerConf := bcsLogConf.Spec.ContainerConfs[index]
 
-		dataIdEnv := corev1.EnvVar{
-			Name:  common.DataIdEnvKey,
-			Value: containerConf.DataId,
+		if containerConf.StdDataId != "" {
+			stdDataIdEnv := corev1.EnvVar{
+				Name:  common.StdDataIdEnvKey,
+				Value: containerConf.StdDataId,
+			}
+			envs = append(envs, stdDataIdEnv)
 		}
-		envs = append(envs, dataIdEnv)
+
+		if containerConf.NonStdDataId != "" {
+			nonStdDataIdEnv := corev1.EnvVar{
+				Name:  common.NonStdDataIdEnvKey,
+				Value: containerConf.NonStdDataId,
+			}
+			envs = append(envs, nonStdDataIdEnv)
+		}
 
 		stdoutEnv := corev1.EnvVar{
 			Name:  common.StdoutEnvKey,
@@ -167,11 +177,21 @@ func (logConf *LogConfInject) injectK8sContainer(namespace string, container *co
 		}
 		envs = append(envs, stdoutEnv)
 
-		dataIdEnv := corev1.EnvVar{
-			Name:  common.DataIdEnvKey,
-			Value: bcsLogConf.Spec.DataId,
+		if bcsLogConf.Spec.StdDataId != "" {
+			stdDataIdEnv := corev1.EnvVar{
+				Name:  common.StdDataIdEnvKey,
+				Value: bcsLogConf.Spec.StdDataId,
+			}
+			envs = append(envs, stdDataIdEnv)
 		}
-		envs = append(envs, dataIdEnv)
+
+		if bcsLogConf.Spec.NonStdDataId != "" {
+			nonStdDataIdEnv := corev1.EnvVar{
+				Name:  common.NonStdDataIdEnvKey,
+				Value: bcsLogConf.Spec.NonStdDataId,
+			}
+			envs = append(envs, nonStdDataIdEnv)
+		}
 
 		if len(bcsLogConf.Spec.LogPaths) > 0 {
 			logPathEnv := corev1.EnvVar{

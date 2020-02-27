@@ -28,10 +28,14 @@ const (
 	DefaultConfigType = "default"
 	// bcs system log config type
 	BcsSystemConfigType = "bcs-system"
-	CustomConfigType    = "custom"
 	// custom log config type
-	// dataid of bcs app
-	DataIdEnvKey = "io_tencent_bcs_app_dataid_v2"
+	CustomConfigType = "custom"
+
+	// std_dataid of bcs app
+	StdDataIdEnvKey = "io_tencent_bcs_app_std_dataid_v2"
+	// non_std_dataid of bcs app
+	NonStdDataIdEnvKey = "io_tencent_bcs_app_non_std_dataid_v2"
+
 	// appid of bcs app
 	AppIdEnvKey = "io_tencent_bcs_app_appid_v2"
 	// log to stdout, true or false
