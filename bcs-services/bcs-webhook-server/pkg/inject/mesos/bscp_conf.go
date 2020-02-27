@@ -21,14 +21,7 @@ import (
 
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
-)
-
-const (
-	sideCarPrefix     = "BSCP_BCSSIDECAR_"
-	sideCarCfgPath    = "BSCP_BCSSIDECAR_APPCFG_PATH"
-	sideCarVolumeName = "bscp-sidecar-cfg-shared"
-	annotationKey     = "bkbscp.tencent.com/sidecar-injection"
-	annotationValue   = "enabled"
+	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common/bscp"
 )
 
 // BscpInject implements MesosInject
@@ -66,32 +59,32 @@ func (bi *BscpInject) InitTemplate(templatePath string) error {
 
 // checkAnnotations check if deployment/application has bscp inject annotations
 func checkAnnotations(typeMeta commtypes.TypeMeta, objMeta commtypes.ObjectMeta) bool {
-	// check annotation for sidecar injection
+	// check annotation for SideCar injection
 	annotation := objMeta.GetAnnotations()
 	if annotation == nil {
-		blog.Infof("MetaType %s: %s/%s Annotation is empty, skip bscp-sidecar injection",
+		blog.Infof("MetaType %s: %s/%s Annotation is empty, skip bscp-SideCar injection",
 			typeMeta.Kind, objMeta.GetNamespace(), objMeta.GetName())
 		return false
 	}
-	v, ok := annotation[annotationKey]
+	v, ok := annotation[bscp.AnnotationKey]
 	if !ok {
 		// check annotation, if Deployment or Application do not mark ,
 		// bscp mesos injector do nothing
-		blog.Infof("MetaType %s: %s/%s Annotation find no specified annotation, skip bscp-sidecar injection",
+		blog.Infof("MetaType %s: %s/%s Annotation find no specified annotation, skip bscp-SideCar injection",
 			typeMeta.Kind, objMeta.GetNamespace(), objMeta.GetName())
 		return false
 	}
-	if v != annotationValue {
+	if v != bscp.AnnotationValue {
 		// check annotation, if Deployment or Application do not mark ,
 		// bscp mesos injector do nothing
-		blog.Warnf("MetaType %s: %s/%s Do not need sidecar injection, skip bscp-sidecar injection",
+		blog.Warnf("MetaType %s: %s/%s Do not need SideCar injection, skip bscp-SideCar injection",
 			typeMeta.Kind, objMeta.GetNamespace(), objMeta.GetName())
 		return false
 	}
 	return true
 }
 
-// InjectApplicationContent inject sidecar into mesos application
+// InjectApplicationContent inject SideCar into mesos application
 func (bi *BscpInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {
 	// if get no bscp inject annotations, just return original content
 	if !checkAnnotations(application.TypeMeta, application.ObjectMeta) {
@@ -99,9 +92,9 @@ func (bi *BscpInject) InjectApplicationContent(application *commtypes.ReplicaCon
 	}
 	name := fmt.Sprintf("%s/%s", application.GetNamespace(), application.GetName())
 
-	// retrieve ENV for sidecar setup
+	// retrieve ENV for SideCar setup
 	// when retrieve ENV failed, return error
-	envMap, envErr := bi.retrieveEnvFromContainer(
+	retrievedContainers, envMap, envErr := bi.retrieveEnvFromContainer(
 		application.ReplicaControllerSpec.Template.PodSpec.Containers, name)
 	if envErr != nil {
 		blog.Errorf("bscp retrieve specified Environment for App %s failed, %s", name, envErr.Error())
@@ -110,13 +103,13 @@ func (bi *BscpInject) InjectApplicationContent(application *commtypes.ReplicaCon
 
 	//  append envMap to template Container
 	containers := bi.injectEnvToContainer(bi.temContainers, envMap)
-	containers = append(containers, application.ReplicaControllerSpec.Template.PodSpec.Containers...)
+	containers = append(containers, retrievedContainers...)
 	application.ReplicaControllerSpec.Template.PodSpec.Containers = containers
-	blog.Infof("bscp inject bscp-mesos-sidecar for Application %s successfully", name)
+	blog.Infof("bscp inject bscp-mesos-SideCar for Application %s successfully", name)
 	return application, nil
 }
 
-// InjectDeployContent inject sidecar into mesos deployment
+// InjectDeployContent inject SideCar into mesos deployment
 func (bi *BscpInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*commtypes.BcsDeployment, error) {
 	// if get no bscp inject annotations, just return original content
 	if !checkAnnotations(deploy.TypeMeta, deploy.ObjectMeta) {
@@ -124,9 +117,9 @@ func (bi *BscpInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*com
 	}
 	name := fmt.Sprintf("%s/%s", deploy.GetNamespace(), deploy.GetName())
 
-	// retrieve ENV for sidecar setup
+	// retrieve ENV for SideCar setup
 	// when retrieve ENV failed, return error
-	envMap, envErr := bi.retrieveEnvFromContainer(
+	retrievedContainers, envMap, envErr := bi.retrieveEnvFromContainer(
 		deploy.Spec.Template.PodSpec.Containers, name)
 	if envErr != nil {
 		blog.Errorf("bscp retrieve specified Environment for Deployment %s failed, %s", name, envErr.Error())
@@ -134,24 +127,25 @@ func (bi *BscpInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*com
 	}
 
 	containers := bi.injectEnvToContainer(bi.temContainers, envMap)
-	containers = append(containers, deploy.Spec.Template.PodSpec.Containers...)
+	containers = append(containers, retrievedContainers...)
 	deploy.Spec.Template.PodSpec.Containers = containers
-	blog.Infof("bscp inject bscp-mesos-sidecar for Deployment %s successfully", name)
+	blog.Infof("bscp inject bscp-mesos-SideCar for Deployment %s successfully", name)
 	return deploy, nil
 }
 
-func (bi *BscpInject) retrieveEnvFromContainer(containers []commtypes.Container, name string) (map[string]string, error) {
+func (bi *BscpInject) retrieveEnvFromContainer(containers []commtypes.Container, name string) ([]commtypes.Container, map[string]string, error) {
 	envMap := make(map[string]string)
+	var retContainers []commtypes.Container
 	for _, c := range containers {
 		for _, env := range c.Env {
-			if strings.Contains(env.Name, sideCarPrefix) {
+			if strings.Contains(env.Name, bscp.SideCarPrefix) {
 				envMap[env.Name] = env.Value
 				blog.Infof("Injection for %s [%s=%s]", name, env.Name, env.Value)
 			}
 			//check specified directory for share within pod
-			if env.Name == sideCarCfgPath {
+			if env.Name == bscp.SideCarCfgPath {
 				v := commtypes.VolumeUnit{
-					Name: sideCarVolumeName,
+					Name: bscp.SideCarVolumeName,
 					Volume: commtypes.Volume{
 						MountPath: env.Value,
 						ReadOnly:  false,
@@ -161,14 +155,30 @@ func (bi *BscpInject) retrieveEnvFromContainer(containers []commtypes.Container,
 				c.Volumes = append(c.Volumes, v)
 			}
 		}
+		retContainers = append(retContainers, c)
 	}
-	if _, ok := envMap[sideCarCfgPath]; !ok {
-		return nil, fmt.Errorf("bscp sidecar environment lost BSCP_BCSSIDECAR_APPCFG_PATH")
+	cfgPath, ok := envMap[bscp.SideCarCfgPath]
+	if !ok {
+		return nil, nil, fmt.Errorf("bscp SideCar environment lost BSCP_BCSSIDECAR_APPCFG_PATH")
 	}
-	if len(envMap) < 7 {
-		return nil, fmt.Errorf("bscp sidecar environment is Not enough")
+	if len(cfgPath) == 0 {
+		return nil, nil, fmt.Errorf("bscp SideCar environment BSCP_BCSSIDECAR_APPCFG_PATH is empty")
 	}
-	return envMap, nil
+	if modValue, ok := envMap[bscp.SideCarMod]; !ok {
+		// for single app
+		if !bscp.ValidateEnvs(envMap) {
+			return nil, nil, fmt.Errorf("bscp SideCar envs are invalid")
+		}
+	} else {
+		// for multiple app, inject BSCP_BCSSIDECAR_APPCFG_PATH into every app path
+		// if BSCP_BCSSideCar_APPINFO_MOD's value is invlaid, cannot do inject;
+		modValue, err := bscp.AddPathIntoAppInfoMode(modValue, cfgPath)
+		if err != nil {
+			return nil, nil, fmt.Errorf("env %s:%s is invalid", bscp.SideCarMod, modValue)
+		}
+		envMap[bscp.SideCarMod] = modValue
+	}
+	return retContainers, envMap, nil
 }
 
 func (bi *BscpInject) injectEnvToContainer(tempContainers []commtypes.Container, envs map[string]string) []commtypes.Container {
@@ -182,9 +192,9 @@ func (bi *BscpInject) injectEnvToContainer(tempContainers []commtypes.Container,
 			}
 			container.Env = append(container.Env, env)
 			//check specified directory for share within pod
-			if key == sideCarCfgPath {
+			if key == bscp.SideCarCfgPath {
 				v := commtypes.VolumeUnit{
-					Name: sideCarVolumeName,
+					Name: bscp.SideCarVolumeName,
 					Volume: commtypes.Volume{
 						MountPath: value,
 						ReadOnly:  false,

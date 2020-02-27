@@ -106,7 +106,7 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 
 	cfg, err := clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.Kubeconfig)
 	if err != nil {
-		return nil, fmt.Errorf("error building kube config: %s\n", err.Error())
+		return nil, fmt.Errorf("error building kube config: %s", err.Error())
 	}
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
@@ -195,17 +195,20 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 	if conf.Injects.Bscp.BscpInject {
 		switch whsvr.EngineType {
 		case EngineTypeKubernetes:
-			// TODO:
-			whsvr.K8sBscpInject = nil
-			blog.Fatal("k8s bscp inject not implements")
+			bscpInject := k8s.NewBscpInject()
+			if err := bscpInject.InitTemplate(conf.Injects.Bscp.BscpTemplatePath); err != nil {
+				blog.Fatal(err.Error())
+			}
+			whsvr.K8sBscpInject = bscpInject
+			blog.Info("create bscp k8s inject module success")
 		case EngineTypeMesos:
 			bscpInject := mesos.NewBscpInject()
 			if err := bscpInject.InitTemplate(conf.Injects.Bscp.BscpTemplatePath); err != nil {
 				blog.Fatal(err.Error())
 			}
 			whsvr.MesosBscpInject = bscpInject
+			blog.Info("create bscp mesos inject module success")
 		}
-		blog.Infof("create bscp inject module success")
 	}
 
 	// define http server and server handler
