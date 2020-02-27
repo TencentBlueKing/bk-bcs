@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
@@ -28,11 +29,19 @@ import (
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 
 	"github.com/emicklei/go-restful"
-	"time"
+	"github.com/ghodss/yaml"
 )
 
 const (
+	//BcsApiPrefix prefix for mesos container scheduler
 	BcsApiPrefix = "/bcsapi/v4/scheduler/mesos/"
+
+	//mediaHeader key for http media content type
+	medieTypeHeader = "Content-Type"
+	//mediaTypeApplicationJSON json payload for http body
+	mediaTypeApplicationJSON = "application/json"
+	//mediaTypeApplicationYaml yaml payload for http body
+	mediaTypeApplicationYaml = "application/x-yaml"
 )
 
 func init() {
@@ -52,6 +61,17 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 		blog.Error("handler url %s read request body failed, error: %s", uri, err.Error())
 		err1 := bhttp.InternalError(common.BcsErrCommHttpReadBodyFail, common.BcsErrCommHttpReadBodyFailStr)
 		return err1.Error(), nil
+	}
+	//check application media type
+	if mediaTypeApplicationYaml == req.Request.Header.Get(medieTypeHeader) {
+		data, err = yamlTOJSON(data)
+		if err != nil {
+			blog.Errorf("bcs-api handle url %s yaml to json failed, %s", uri, err.Error())
+			mediaErr := bhttp.InternalError(common.BcsErrApiMediaTypeError, common.BcsErrApiMediaTypeErrorStr)
+			return mediaErr.Error(), nil
+		} else {
+			blog.V(3).Infof("bcs-api handle url %s converting yaml to json successfully", uri)
+		}
 	}
 
 	cluster := req.Request.Header.Get("BCS-ClusterID")
@@ -102,7 +122,7 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 	blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
 
 	httpcli := httpclient.NewHttpClient()
-	httpcli.SetHeader("Content-Type", "application/json")
+	httpcli.SetHeader(medieTypeHeader, "application/json")
 	httpcli.SetHeader("Accept", "application/json")
 	if strings.ToLower(ser.Scheme) == "https" {
 		cliTls, err := rd.GetClientTls()
@@ -173,4 +193,13 @@ func handlerPutActions(req *restful.Request, resp *restful.Response) {
 
 	data, _ := request2mesosapi(req, url, "PUT")
 	resp.Write([]byte(data))
+}
+
+//yamlTOJSON check if mesos request body is yaml,
+// then convert yaml to json
+func yamlTOJSON(rawData []byte) ([]byte, error) {
+	if len(rawData) == 0 {
+		return nil, nil
+	}
+	return yaml.YAMLToJSON(rawData)
 }
