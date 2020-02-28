@@ -122,13 +122,13 @@ func (r *mesosDiscovery) start() error {
 	//create root context
 	r.rootCxt, r.cancel = context.WithCancel(context.Background())
 
-	blog.Infof("mesosDiscovery start regdiscover...")
+	blog.V(3).Infof("mesosDiscovery start regdiscover...")
 	//start regdiscover
 	if err := r.rd.Start(); err != nil {
 		blog.Error("fail to start register and discover serv. err:%s", err.Error())
 		return err
 	}
-	blog.Infof("mesosDiscovery start regdiscover success")
+	blog.V(3).Infof("mesosDiscovery start regdiscover success")
 
 	//discover other bcs service
 	for k := range r.servers {
@@ -140,7 +140,7 @@ func (r *mesosDiscovery) start() error {
 
 func (r *mesosDiscovery) discoverModules(k string) {
 	key := fmt.Sprintf("%s/%s", types.BCS_SERV_BASEPATH, k)
-	blog.Infof("start discover service key %s", key)
+	blog.V(3).Infof("start discover service key %s", key)
 	event, err := r.rd.DiscoverService(key)
 	if err != nil {
 		blog.Error("fail to register discover for api. err:%s", err.Error())
@@ -287,7 +287,7 @@ func (r *mesosDiscovery) discoverLoadbalance(nodes []string) error {
 		}
 
 		r.loadbalanceGroupNodes[node] = struct{}{}
-		blog.Infof("start discover group %s loabalance", node)
+		blog.V(3).Infof("start discover group %s loabalance", node)
 		key := fmt.Sprintf("%s/%s/%s", types.BCS_SERV_BASEPATH, types.BCS_MODULE_LOADBALANCE, node)
 
 		go r.discoverGroupLoadbalance(key)
@@ -317,7 +317,7 @@ func (r *mesosDiscovery) discoverGroupLoadbalance(key string) {
 
 			lbs := make([]interface{}, 0)
 			for _, serv := range eve.Server {
-				blog.Infof("discover key %s mesos apiserver %s", key, serv)
+				blog.V(3).Infof("discover key %s mesos apiserver %s", key, serv)
 
 				lb := new(types.LoadBalanceInfo)
 				if err := json.Unmarshal([]byte(serv), lb); err != nil {

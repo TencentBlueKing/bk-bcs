@@ -14,6 +14,7 @@
 package RegisterDiscover
 
 import (
+	"bk-bcs/bcs-common/common/blog"
 	//"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/zkclient"
 	"fmt"
@@ -79,7 +80,7 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 	go func() {
 		newPath, err := zkRD.zkcli.CreateEphAndSeqEx(path, data)
 		if err != nil {
-			fmt.Printf("fail to register server node(%s). err:%s", path, err.Error())
+			blog.V(3).Infof("fail to register server node(%s). err:%s", path, err.Error())
 			time.Sleep(5 * time.Second)
 			zkRD.RegisterAndWatch(path, data)
 			return
@@ -89,7 +90,7 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 
 		_, _, watchEvn, err := zkRD.zkcli.ExistW(newPath)
 		if err != nil {
-			fmt.Printf("fail to watch register node(%s), err:%s\n", newPath, err.Error())
+			blog.V(3).Infof("fail to watch register node(%s), err:%s", newPath, err.Error())
 			time.Sleep(5 * time.Second)
 			zkRD.zkcli.Del(newPath, -1)
 			zkRD.RegisterAndWatch(path, data)
@@ -98,21 +99,21 @@ func (zkRD *ZkRegDiscv) RegisterAndWatch(path string, data []byte) error {
 
 		select {
 		case <-watchCtx.Done():
-			fmt.Printf("watch register node(%s) done\n", path)
+			blog.V(3).Infof("watch register node(%s) done", path)
 			return
 		case <-watchEvn:
-			fmt.Printf("watch register node(%s) exist changed, event(%v)\n", path, watchEvn)
+			blog.V(3).Infof("watch register node(%s) exist changed, event(%v)", path, watchEvn)
 			zkRD.RegisterAndWatch(path, data)
 		}
 	}()
 
-	fmt.Printf("finish register server node(%s) and watch it\n", path)
+	blog.V(3).Infof("finish register server node(%s) and watch it", path)
 	return nil
 }
 
 //Discover watch the children
 func (zkRD *ZkRegDiscv) Discover(path string) (<-chan *DiscoverEvent, error) {
-	fmt.Printf("begin to discover by watch children of path(%s)\n", path)
+	blog.V(3).Infof("begin to discover by watch children of path(%s)", path)
 	discvCtx, _ := context.WithCancel(zkRD.rootCxt)
 
 	env := make(chan *DiscoverEvent, 1)
@@ -131,9 +132,9 @@ func (zkRD *ZkRegDiscv) loopDiscover(path string, discvCtx context.Context, env 
 
 		servNodes, watchEnv, err := zkRD.zkcli.WatchChildren(path)
 		if err != nil {
-			fmt.Printf("fail to watch children for path(%s), err:%s\n", path, err.Error())
+			blog.V(3).Infof("fail to watch children for path(%s), err:%s", path, err.Error())
 			if zkclient.ErrNoNode == err {
-				fmt.Printf("children node(%s) is not exist, will watch after 5s\n", path)
+				blog.V(3).Infof("children node(%s) is not exist, will watch after 5s", path)
 				time.Sleep(5 * time.Second)
 				continue
 			}
@@ -152,7 +153,7 @@ func (zkRD *ZkRegDiscv) loopDiscover(path string, discvCtx context.Context, env 
 			servPath := path + "/" + node
 			servInfo, err := zkRD.zkcli.Get(servPath)
 			if err != nil {
-				fmt.Printf("fail to get server info from zookeeper by path(%s), err:%s\n", servPath, err.Error())
+				blog.V(3).Infof("fail to get server info from zookeeper by path(%s), err:%s", servPath, err.Error())
 				continue
 			}
 
@@ -164,10 +165,10 @@ func (zkRD *ZkRegDiscv) loopDiscover(path string, discvCtx context.Context, env 
 
 		select {
 		case <-discvCtx.Done():
-			fmt.Printf("discover path(%s) done\n", path)
+			blog.V(3).Infof("discover path(%s) done", path)
 			return
 		case <-watchEnv:
-			fmt.Printf("watch found the children of path(%s) change\n", path)
+			blog.V(3).Infof("watch found the children of path(%s) change", path)
 		}
 	}
 }
@@ -194,7 +195,7 @@ func (zkRD *ZkRegDiscv) DiscoverNodes(path string) (*DiscoverEvent, error) {
 		servPath := path + "/" + node
 		servInfo, err := zkRD.zkcli.Get(servPath)
 		if err != nil {
-			fmt.Printf("fail to get server info from zookeeper by path(%s), err:%s\n", servPath, err.Error())
+			blog.V(3).Infof("fail to get server info from zookeeper by path(%s), err:%s", servPath, err.Error())
 			continue
 		}
 
@@ -209,13 +210,13 @@ func (zkRD *ZkRegDiscv) sortNode(nodes []string) []string {
 	mapSortNode := make(map[int]string)
 	for _, chNode := range nodes {
 		if len(chNode) <= 10 {
-			fmt.Printf("node(%s) is less then 10, there is not the seq number\n", chNode)
+			blog.V(3).Infof("node(%s) is less then 10, there is not the seq number", chNode)
 			continue
 		}
 
 		p, err := strconv.Atoi(chNode[len(chNode)-10 : len(chNode)])
 		if err != nil {
-			fmt.Printf("fail to conv string to seq number for node(%s), err:%s\n", chNode, err.Error())
+			blog.V(3).Infof("fail to conv string to seq number for node(%s), err:%s", chNode, err.Error())
 			continue
 		}
 
@@ -231,4 +232,36 @@ func (zkRD *ZkRegDiscv) sortNode(nodes []string) []string {
 	}
 
 	return children
+}
+
+// DiscoverNodes discover by specified path
+func (zkRD *ZkRegDiscv) DiscoverNodesV2(path string) (*DiscoverEvent, error) {
+	discvEnv := &DiscoverEvent{
+		Err: nil,
+		Key: path,
+	}
+
+	servNodes, _, err := zkRD.zkcli.GetChildrenEx(path)
+	if err != nil {
+		discvEnv.Err = err
+		return discvEnv, nil
+	}
+
+	discvEnv.Nodes = append(discvEnv.Nodes, servNodes...)
+	//sort server node
+	servNodes = zkRD.sortNode(servNodes)
+
+	//get server info
+	for _, node := range servNodes {
+		servPath := path + "/" + node
+		servInfo, err := zkRD.zkcli.Get(servPath)
+		if err != nil {
+			blog.V(3).Infof("fail to get server info from zookeeper by path(%s), err:%s", servPath, err.Error())
+			continue
+		}
+
+		discvEnv.Server = append(discvEnv.Server, servInfo)
+	}
+
+	return discvEnv, nil
 }
