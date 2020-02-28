@@ -1,5 +1,61 @@
 # 发布版本信息
 
+## 1.15.4
+
+- 发布日期：2020-02-28
+- **新增功能**
+  * [Mesos] bcs-scheduler支持通过image名给与指定容器下发指令[#290]
+  * [K8S/Mesos] datawatch支持同步集群underlay IP资源[#315]
+  * [K8S/Mesos] BCS容器访问mysql自动授权方案[#308]
+  * [K8S/Mesos] bcs-api支持storage数据存储事件监听接口[#315]
+  * [Mesos] bcs-storage支持mesos process数据查阅[#195]
+  * [Mesos] bcs-scheduler增加获取deployment、application定义接口[#332]
+  * [K8S] bcs-k8s-driver支持1.14+ kubernetes版本[#336]
+  * bcs-scheduler数据存储扩展etcd存储方式[#213]
+  * bcs CNI网络插件qcloud-eip支持腾讯云VPC方案[#209]
+  * bcs-dns特性扩展，支持mesos etcd数据存储方式[#251]
+  * 增加k8s开源模块：bcs-k8s-csi-tencentcloud，使用CSI标准支持腾讯云CBS[#260,#261]
+  * 开源bcs-clb-controller模块，容器自动集成腾讯云clb实现负载均衡[#247]
+  * 重构并开源容器日志采集方案bcs-logbeat-sidecar[#259]
+  * bcs mesos admissionwebhook支持webhook服务自定义URL[#279]
+  * bcs-client增加CRD操作命令[#269]
+  * bcs-scheduler支持mesos annotations中指定IP资源调度[#286]
+  * bcs-scheduler支持Mesos类型自定义命令下发至指定容器[#290]
+  * bcs-consoleproxy支持非UTF8格式交互[#282]
+  * 开源bcs-log-webhook-server[#280]
+  * bcs-hpacontroller支持mesos etcd数据存储方式[#253]
+  * bcs-scheduler支持脚本方式检查容器健康[#248]
+- **功能优化**
+  * etcd存储优化label格式过滤[#351]
+  * bcs-webhook-server开源与重构，支持多webhook能力[#295]
+  * 优化蓝鲸日志采集方案，并开源配置刷新配置插件[#295]
+  * bcs-loadbalance优化haproxy配置刷新方式[#310]
+  * CNI社区插件整理[#325]
+  * 优化bcs-dns日志输出方式[#236]
+  * 优化bcs-netservice日志输出目录[#236]
+  * 优化bcs-loadbalance无损刷新haproxy backend方式[#258]
+  * 优化bcs-scheduler，admissionwebhook支持namespace selector特性[#264]
+  * 优化bmsf-mesos-adapter，兼容application名字中包含下划线的情况[#270]
+  * 优化bcs-mesos-driver，增加deployment/application名字合法性校验[#268]
+  * 优化bcs-mesos-driver webhook机制，利用bcs-scheduler CRD格式提升性能[#267]
+  * 优化bcs-service-prometheus，调整BCS各模块服务发现信息为独立配置文件[#277]
+  * 利用etcd存储重构bcs mesos CRD机制[#269]
+  * 调整metric-collector模板文件，调整资源使用限制[#287]
+  * bcs-scheduler调整mesos service selector特性[#285]
+  * bcs-container-executor优化无法识别网络容器退出问题[#245]
+  * 优化流水线自动构建流程
+- **bug修复**
+  * 修复module-discovery服务发现lb节点的问题[#311]
+  * 修复bcs-loadbalance haproxy状态显示与panic问题[#313, #320]
+  * 修复bcs-scheduler在etcd存储下taskgroup数据不一致的问题[#327]
+  * 修复bcs-scheduler在容器较长graceexit条件下状态变为Lost问题[#334]
+  * 修复bcs-k8s-watch节点事件阻塞数据汇聚的问题[#220]
+  * 修复基础库zkClient级联节点创建的问题[#227]
+  * 修复bmsf-mesos-adapter因为Mesos集群未初始化导致退出的问题[#229]
+  * 修复bcs-scheduler针对Application缺失的数据类型
+  * 修复bcs-storage读取mongodb数据时context泄露问题
+  * 修复bcs-netservice专用client存在网络链接泄露的问题[#273]
+
 ## 1.14.5
 
 - 发布日期：2019-10-30
