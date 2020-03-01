@@ -73,6 +73,7 @@ func RunRDiscover(zkserv string, conf *config.ApiServConfig) error {
 			types.BCS_MODULE_K8SAPISERVER:   make([]interface{}, 0),
 			types.BCS_MODULE_METRICSERVICE:  make([]interface{}, 0),
 			types.BCS_MODULE_CLUSTERKEEPER:  make([]interface{}, 0),
+			types.BCS_MODULE_NETWORKDETECTION: make([]interface{}, 0),
 		},
 		events:                make(chan *RegisterDiscover.DiscoverEvent, 1024),
 		k8sapiClustersNodes:   make(map[string]struct{}),
@@ -185,6 +186,9 @@ func (r *RDiscover) discoverServices(k string) {
 			//cluster keeper
 			case types.BCS_MODULE_CLUSTERKEEPER:
 				r.discoverClusterkeeper(eve.Server)
+			// network detection
+			case types.BCS_MODULE_NETWORKDETECTION:
+				r.discoverDetectionServ(eve.Server)
 			}
 
 		case <-r.rootCxt.Done():
@@ -245,6 +249,27 @@ func (r *RDiscover) discoverStorageServ(servInfos []string) error {
 
 	r.Lock()
 	r.servers[types.BCS_MODULE_STORAGE] = storages
+	r.Unlock()
+
+	return nil
+}
+
+func (r *RDiscover) discoverDetectionServ(servInfos []string) error {
+	blog.Info("discover network detection(%v)", servInfos)
+
+	detections := make([]interface{}, 0)
+	for _, serv := range servInfos {
+		detection := new(types.NetworkDetectionServInfo)
+		if err := json.Unmarshal([]byte(serv), detection); err != nil {
+			blog.Warn("fail to do json unmarshal(%s), err:%s", serv, err.Error())
+			continue
+		}
+
+		detections = append(detections, detection)
+	}
+
+	r.Lock()
+	r.servers[types.BCS_MODULE_NETWORKDETECTION] = detections
 	r.Unlock()
 
 	return nil
