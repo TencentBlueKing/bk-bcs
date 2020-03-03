@@ -45,8 +45,8 @@ const (
 	BCS_MODULE_MESOSADAPTER    = "mesosadapter"
 
 	//bcstest 2018.11.07
-	BCS_MODULE_K8SAPISERVER   = "kubernetedriver"
-	BCS_MODULE_MESOSAPISERVER = "mesosdriver"
+	BCS_MODULE_K8SAPISERVER     = "kubernetedriver"
+	BCS_MODULE_MESOSAPISERVER   = "mesosdriver"
 	BCS_MODULE_NETWORKDETECTION = "networkdetection"
 )
 

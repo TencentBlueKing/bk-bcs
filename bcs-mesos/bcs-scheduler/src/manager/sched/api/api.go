@@ -1874,7 +1874,7 @@ func (r *Router) getDeployment_r(req *restful.Request, resp *restful.Response) {
 	runAs := req.PathParameter("namespace")
 	name := req.PathParameter("name")
 	blog.Info("request get deployment(%s %s) information", runAs, name)
-	o,err := r.backend.GetDeployment(runAs, name)
+	o, err := r.backend.GetDeployment(runAs, name)
 	if err != nil {
 		blog.Error("request get deployment(%s %s) err(%s)", runAs, name, err.Error())
 		data := createResponeData(err, err.Error(), nil)

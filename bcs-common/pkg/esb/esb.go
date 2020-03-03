@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	EsbRequestPayloadAppcode = "app_code"
+	EsbRequestPayloadAppcode   = "app_code"
 	EsbRequestPayloadAppsecret = "app_secret"
-	EsbRequestPayloadOperator = "operator"
+	EsbRequestPayloadOperator  = "operator"
 )
 
 type APIResponse struct {
@@ -48,9 +48,9 @@ type EsbClient struct {
 	//request esb
 }
 
-func NewEsbClient(appCode, appSecret, appOperator, esbUrl string)(*EsbClient,error){
+func NewEsbClient(appCode, appSecret, appOperator, esbUrl string) (*EsbClient, error) {
 	esb := &EsbClient{
-		EsbUrl:      esbUrl,
+		EsbUrl: esbUrl,
 	}
 
 	//Decrypt app parameters
@@ -79,15 +79,15 @@ func NewEsbClient(appCode, appSecret, appOperator, esbUrl string)(*EsbClient,err
 //payload is request body
 //if error!=nil, then request esb failed, error.Error() is failed message
 //if error==nil, []byte is response body information
-func (esb *EsbClient) RequestEsb(method, url string, payload map[string]interface{})([]byte,error){
-	if payload==nil {
+func (esb *EsbClient) RequestEsb(method, url string, payload map[string]interface{}) ([]byte, error) {
+	if payload == nil {
 		return nil, fmt.Errorf("payload can't be nil")
 	}
 	//set payload app parameter
 	payload[EsbRequestPayloadAppcode] = esb.AppCode
 	payload[EsbRequestPayloadAppsecret] = esb.AppSecret
 	payload[EsbRequestPayloadOperator] = esb.AppOperator
-	payloadBytes,_ := json.Marshal(payload)
+	payloadBytes, _ := json.Marshal(payload)
 	//new request body
 	body := bytes.NewBuffer(payloadBytes)
 	//request url
@@ -123,7 +123,6 @@ func (esb *EsbClient) RequestEsb(method, url string, payload map[string]interfac
 		return nil, fmt.Errorf("request esb %s failed, code:%s message:%s", url, result.Code, result.Message)
 	}
 	//marshal result.data to []byte
-	by,_ := json.Marshal(result.Data)
+	by, _ := json.Marshal(result.Data)
 	return by, nil
 }
-

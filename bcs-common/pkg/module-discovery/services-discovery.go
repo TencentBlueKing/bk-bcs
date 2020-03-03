@@ -127,13 +127,13 @@ func (r *serviceDiscovery) start() error {
 		blog.Error("fail to start register and discover serv. err:%s", err.Error())
 		return err
 	}
-	zvs,err := r.rd.DiscoverNodes("/bcs/services/endpoints")
-	if err!=nil {
-		blog.Errorf("discover nodes /bcs/services/endpoints error %s",err.Error())
+	zvs, err := r.rd.DiscoverNodes("/bcs/services/endpoints")
+	if err != nil {
+		blog.Errorf("discover nodes /bcs/services/endpoints error %s", err.Error())
 		return err
 	}
-	by,_ := json.Marshal(zvs)
-	blog.Infof("servers(%s)",string(by))
+	by, _ := json.Marshal(zvs)
+	blog.Infof("servers(%s)", string(by))
 	//discover other bcs service
 	for k := range r.servers {
 		go r.discoverModules(k)

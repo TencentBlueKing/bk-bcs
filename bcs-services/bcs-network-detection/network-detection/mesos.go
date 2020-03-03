@@ -21,8 +21,8 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/http/httpclient"
 	commtypes "bk-bcs/bcs-common/common/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	moduleDiscovery "bk-bcs/bcs-common/pkg/module-discovery"
+	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-services/bcs-network-detection/config"
 	"bk-bcs/bcs-services/bcs-network-detection/types"
 )
@@ -37,7 +37,7 @@ type MesosPlatform struct {
 }
 
 // new MesosPlatform object
-func NewMesosPlatform(conf *config.Config)(ContainerPlatform,error){
+func NewMesosPlatform(conf *config.Config) (ContainerPlatform, error) {
 	m := &MesosPlatform{
 		conf: conf,
 	}
@@ -67,18 +67,18 @@ func NewMesosPlatform(conf *config.Config)(ContainerPlatform,error){
 //get module address
 //clusterid, example BCS-MESOS-10001
 //return first parameter: module address, example 127.0.0.1:8090
-func (m *MesosPlatform) getModuleAddr(clusterid string)(string, error){
-	serv, err := m.moduleDiscovery.GetRandModuleServer(fmt.Sprintf("%s/%s",commtypes.BCS_MODULE_MESOSAPISERVER,clusterid))
+func (m *MesosPlatform) getModuleAddr(clusterid string) (string, error) {
+	serv, err := m.moduleDiscovery.GetRandModuleServer(fmt.Sprintf("%s/%s", commtypes.BCS_MODULE_MESOSAPISERVER, clusterid))
 	if err != nil {
 		blog.Errorf("discovery cluster %s module %s error %s", clusterid, commtypes.BCS_MODULE_MESOSAPISERVER, err.Error())
 		return "", err
 	}
 	//serv is string object
-	data,_ := serv.(string)
+	data, _ := serv.(string)
 	var servInfo *commtypes.BcsMesosApiserverInfo
 	err = json.Unmarshal([]byte(data), &servInfo)
-	if err!=nil {
-		blog.Errorf("getModuleAddr Unmarshal data(%s) to commtypes.BcsMesosApiserverInfo failed: %s",data,err.Error())
+	if err != nil {
+		blog.Errorf("getModuleAddr Unmarshal data(%s) to commtypes.BcsMesosApiserverInfo failed: %s", data, err.Error())
 		return "", err
 	}
 
@@ -86,24 +86,24 @@ func (m *MesosPlatform) getModuleAddr(clusterid string)(string, error){
 }
 
 //get cluster all nodes
-func (m *MesosPlatform) GetNodes(clusterid string)([]*types.NodeInfo, error){
-	by,err := m.requestMesosApiserver(clusterid, http.MethodGet, "cluster/resources", nil)
-	if err!=nil {
-		blog.Errorf("Get cluster %s nodes error %s",clusterid,err.Error())
+func (m *MesosPlatform) GetNodes(clusterid string) ([]*types.NodeInfo, error) {
+	by, err := m.requestMesosApiserver(clusterid, http.MethodGet, "cluster/resources", nil)
+	if err != nil {
+		blog.Errorf("Get cluster %s nodes error %s", clusterid, err.Error())
 		return nil, err
 	}
 
 	//Unmarshal BcsClusterResource
 	var resource *commtypes.BcsClusterResource
 	err = json.Unmarshal(by, &resource)
-	if err!=nil {
-		blog.Errorf("Unmarshal body(%s) to commtypes.BcsClusterResource failed: %s",string(by),err.Error())
+	if err != nil {
+		blog.Errorf("Unmarshal body(%s) to commtypes.BcsClusterResource failed: %s", string(by), err.Error())
 		return nil, err
 	}
 
 	//create NodeInfo Object
-	nodes := make([]*types.NodeInfo,0)
-	for _,agent :=range resource.Agents {
+	nodes := make([]*types.NodeInfo, 0)
+	for _, agent := range resource.Agents {
 		node := &types.NodeInfo{
 			Ip:        agent.IP,
 			Clusterid: clusterid,
@@ -114,38 +114,38 @@ func (m *MesosPlatform) GetNodes(clusterid string)([]*types.NodeInfo, error){
 }
 
 //deploy application
-func (m *MesosPlatform) CeateDeployment(clusterid string, deploy []byte)error{
-	_,err := m.requestMesosApiserver(clusterid, http.MethodPost,"namespaces/bcs-system/deployments", deploy)
+func (m *MesosPlatform) CeateDeployment(clusterid string, deploy []byte) error {
+	_, err := m.requestMesosApiserver(clusterid, http.MethodPost, "namespaces/bcs-system/deployments", deploy)
 
 	return err
 }
 
 //fetch application
-func (m *MesosPlatform) FetchDeployment(deploy *types.DeployDetection)(interface{},error){
-	by,err := m.requestMesosApiserver(deploy.Clusterid, http.MethodGet,
-		fmt.Sprintf("/namespaces/bcs-system/applications"),nil)
+func (m *MesosPlatform) FetchDeployment(deploy *types.DeployDetection) (interface{}, error) {
+	by, err := m.requestMesosApiserver(deploy.Clusterid, http.MethodGet,
+		fmt.Sprintf("/namespaces/bcs-system/applications"), nil)
 
 	var apps []*schedtypes.Application
 	err = json.Unmarshal(by, &apps)
-	if err!=nil {
+	if err != nil {
 		return nil, fmt.Errorf("Unmarshal body(%s) to schedtypes.Application failed: %s", string(by), err.Error())
 	}
-	for _,app :=range apps {
-		if app.ObjectMeta.Annotations==nil {
+	for _, app := range apps {
+		if app.ObjectMeta.Annotations == nil {
 			continue
 		}
-		if app.ObjectMeta.Annotations["idc"]==deploy.Idc {
+		if app.ObjectMeta.Annotations["idc"] == deploy.Idc {
 			return app, nil
 		}
 	}
 
-	return nil,fmt.Errorf("Not found")
+	return nil, fmt.Errorf("Not found")
 }
 
 //fetch application't pods
-func (m *MesosPlatform) FetchPods(clusterid, ns, name string)([]byte,error){
-	by,err := m.requestMesosApiserver(clusterid, http.MethodGet,
-		fmt.Sprintf("/namespaces/%s/applications/%s/taskgroups",ns,name),nil)
+func (m *MesosPlatform) FetchPods(clusterid, ns, name string) ([]byte, error) {
+	by, err := m.requestMesosApiserver(clusterid, http.MethodGet,
+		fmt.Sprintf("/namespaces/%s/applications/%s/taskgroups", ns, name), nil)
 	return by, err
 }
 
@@ -154,11 +154,11 @@ func (m *MesosPlatform) FetchPods(clusterid, ns, name string)([]byte,error){
 //payload is request body
 //if error!=nil, then request mesos failed, errom.Error() is failed message
 //if error==nil, []byte is response body information
-func (m *MesosPlatform) requestMesosApiserver(clusterid, method, url string, payload []byte)([]byte,error){
+func (m *MesosPlatform) requestMesosApiserver(clusterid, method, url string, payload []byte) ([]byte, error) {
 	//get mesos api address
-	addr,err := m.getModuleAddr(clusterid)
-	if err!=nil {
-		return nil, fmt.Errorf("get cluster %s mesosapi failed: %s",clusterid,err.Error())
+	addr, err := m.getModuleAddr(clusterid)
+	if err != nil {
+		return nil, fmt.Errorf("get cluster %s mesosapi failed: %s", clusterid, err.Error())
 	}
 	uri := fmt.Sprintf("%s/mesosdriver/v4/%s", addr, url)
 	m.cli.SetHeader("BCS-ClusterID", clusterid)
@@ -176,21 +176,21 @@ func (m *MesosPlatform) requestMesosApiserver(clusterid, method, url string, pay
 	default:
 		err = fmt.Errorf("uri %s method %s is invalid", uri, method)
 	}
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
 	//unmarshal response.body
 	var result *types.APIResponse
 	err = json.Unmarshal(by, &result)
-	if err!=nil {
+	if err != nil {
 		return nil, fmt.Errorf("Unmarshal body(%s) failed: %s", string(by), err.Error())
 	}
 	//if result.Result==false, then request failed
 	if !result.Result {
 		return nil, fmt.Errorf("request %s failed: %s", uri, result.Message)
 	}
-	by,_ = json.Marshal(result.Data)
+	by, _ = json.Marshal(result.Data)
 	return by, nil
 }
 

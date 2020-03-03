@@ -15,10 +15,10 @@ package app
 
 import (
 	"os"
-	
+
 	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/static"
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/static"
 	"bk-bcs/bcs-services/bcs-network-detection/app/options"
 	"bk-bcs/bcs-services/bcs-network-detection/config"
 	"bk-bcs/bcs-services/bcs-network-detection/network-detection"

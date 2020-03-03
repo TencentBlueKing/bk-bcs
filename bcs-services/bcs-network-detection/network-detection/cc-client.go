@@ -30,22 +30,22 @@ type CmdbClient struct {
 	esb *esb.EsbClient
 }
 
-func NewCmdbClient(conf *config.Config)(*CmdbClient,error){
+func NewCmdbClient(conf *config.Config) (*CmdbClient, error) {
 	cmdb := &CmdbClient{
 		conf: conf,
 	}
 
 	//new esb client
 	var err error
-	cmdb.esb,err = esb.NewEsbClient(conf.AppCode,conf.AppSecret,conf.Operator,conf.EsbUrl)
-	if err!=nil {
+	cmdb.esb, err = esb.NewEsbClient(conf.AppCode, conf.AppSecret, conf.Operator, conf.EsbUrl)
+	if err != nil {
 		return nil, err
 	}
 	blog.Infof("NewEsbClient done")
 	return cmdb, nil
 }
 
-func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo)error{
+func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo) error {
 	payload := make(map[string]interface{})
 	//init request cmdb payload info
 	payload["header_on"] = 0
@@ -56,23 +56,23 @@ func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo)error{
 	payload["exact_search"] = 1
 	payload["app_id"] = c.conf.AppId
 	payload["method"] = "getTopoModuleHostList"
-	payload["host_std_req_column"] = []string{"IDC","serverRack","ModuleName"}
+	payload["host_std_req_column"] = []string{"IDC", "serverRack", "ModuleName"}
 
 	//request cmdb through esb
-	by,err := c.esb.RequestEsb(http.MethodPost,"/component/compapi/cc/get_query_info",payload)
-	if err!=nil {
+	by, err := c.esb.RequestEsb(http.MethodPost, "/component/compapi/cc/get_query_info", payload)
+	if err != nil {
 		return err
 	}
 
 	//Unmarshal CmdbHostInfo
 	var hosts []*types.CmdbHostInfo
 	err = json.Unmarshal(by, &hosts)
-	if err!=nil {
-		blog.Errorf("Unmarshal data(%s) to types.CmdbHostInfo failed: %s",string(by),err.Error())
+	if err != nil {
+		blog.Errorf("Unmarshal data(%s) to types.CmdbHostInfo failed: %s", string(by), err.Error())
 		return err
 	}
-	if len(hosts)==0 {
-		return fmt.Errorf("node %s not found, response(%s)",node.Ip,string(by))
+	if len(hosts) == 0 {
+		return fmt.Errorf("node %s not found, response(%s)", node.Ip, string(by))
 	}
 
 	//update node info
@@ -80,5 +80,3 @@ func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo)error{
 	node.Module = hosts[0].ModuleName
 	return nil
 }
-
-

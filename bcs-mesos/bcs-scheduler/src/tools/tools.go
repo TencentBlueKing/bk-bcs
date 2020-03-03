@@ -16,15 +16,15 @@ package tools
 import (
 	"encoding/json"
 
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/bcs-container-executor/container"
-	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //if status!=running, return ""
-func GetTaskgroupIp(t *types.TaskGroup)string{
-	if t.Status!=types.TASKGROUP_STATUS_RUNNING {
+func GetTaskgroupIp(t *types.TaskGroup) string {
+	if t.Status != types.TASKGROUP_STATUS_RUNNING {
 		return ""
 	}
 	bcsInfo := new(container.BcsContainerInfo)

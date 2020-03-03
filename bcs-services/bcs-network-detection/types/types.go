@@ -59,11 +59,11 @@ type APIResponse struct {
 
 type CmdbHostInfo struct {
 	ModuleName string `json:"ModuleName"`
-	IDC string `json:"IDC"`
+	IDC        string `json:"IDC"`
 	ServerRack string `json:"serverRack"`
 }
 
 type DetectionPod struct {
-	Ip string
+	Ip  string
 	Idc string
 }

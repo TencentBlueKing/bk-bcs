@@ -27,13 +27,13 @@ type Option struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	Clusters   string `json:"clusters" value:"" usage:"deploy detection node clusters; example: BCS-MESOS-10000,BCS-MESOS-10001,BCS-MESOS-10002..."`
+	Clusters  string `json:"clusters" value:"" usage:"deploy detection node clusters; example: BCS-MESOS-10000,BCS-MESOS-10001,BCS-MESOS-10002..."`
 	AppCode   string `json:"app_code" value:"" usage:"esb app_code"`
-	AppSecret   string `json:"app_secret" value:"" usage:"esb app_secret"`
-	Operator   string `json:"operator" value:"" usage:"esb operator"`
-	EsbUrl   string `json:"esb_url" value:"" usage:"esb url"`
-	AppId int `json:"app_id" value:"" usage:"cmdb app id"`
-	Template string `json:"template" value:"./template/deployment.json" usage:"deployment template json file path"`
+	AppSecret string `json:"app_secret" value:"" usage:"esb app_secret"`
+	Operator  string `json:"operator" value:"" usage:"esb operator"`
+	EsbUrl    string `json:"esb_url" value:"" usage:"esb url"`
+	AppId     int    `json:"app_id" value:"" usage:"cmdb app id"`
+	Template  string `json:"template" value:"./template/deployment.json" usage:"deployment template json file path"`
 }
 
 //NewOption create Option object

@@ -45,7 +45,7 @@ type DiscoveryV2 struct {
 	//key = bcs-module or bcs-module/clusterid
 	//example: bcs-api、bcs-storage、mesosdriver/BCS-MESOS-10000、kubernetedriver/BCS-K8S-15000
 	//value = []byte array, []byte is marshal types.ServerInfo data
-	servers      map[string][]interface{}
+	servers map[string][]interface{}
 	//register RegisterDiscover callback function
 	//when endpoint node changed, call it
 	eventHandler EventHandleFunc
@@ -59,8 +59,8 @@ type DiscoveryV2 struct {
 func NewDiscoveryV2(zkserv string, modules []string) (ModuleDiscovery, error) {
 	blog.Infof("DiscoveryV2 start...")
 	rd := &DiscoveryV2{
-		rd: RegisterDiscover.NewRegDiscoverEx(zkserv, 10*time.Second),
-		servers: make(map[string][]interface{},0),
+		rd:      RegisterDiscover.NewRegDiscoverEx(zkserv, 10*time.Second),
+		servers: make(map[string][]interface{}, 0),
 		modules: modules,
 	}
 
@@ -129,7 +129,7 @@ func (r *DiscoveryV2) start() error {
 
 	//discover all bcs module serviceinfos
 	err := r.discoverEndpoints(types.BCS_SERV_BASEPATH)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -139,35 +139,35 @@ func (r *DiscoveryV2) start() error {
 }
 
 //recursive discover bcs module serverinfo
-func (r *DiscoveryV2) discoverEndpoints(path string)error{
-	blog.V(3).Infof("discover %s endpoints",path)
-	if r.modules!=nil && path!=types.BCS_SERV_BASEPATH {
+func (r *DiscoveryV2) discoverEndpoints(path string) error {
+	blog.V(3).Infof("discover %s endpoints", path)
+	if r.modules != nil && path != types.BCS_SERV_BASEPATH {
 		exist := false
-		for _,module :=range r.modules {
-			if strings.Contains(path, fmt.Sprintf("%s/%s",types.BCS_SERV_BASEPATH,module)) {
+		for _, module := range r.modules {
+			if strings.Contains(path, fmt.Sprintf("%s/%s", types.BCS_SERV_BASEPATH, module)) {
 				exist = true
 				break
 			}
 		}
 		if !exist {
-			blog.V(3).Infof("path %s not in modules(%v), and ingore",path,r.modules)
+			blog.V(3).Infof("path %s not in modules(%v), and ingore", path, r.modules)
 			return nil
 		}
 	}
 
 	//get path children
-	zvs,err := r.rd.DiscoverNodesV2(path)
-	if err!=nil {
+	zvs, err := r.rd.DiscoverNodesV2(path)
+	if err != nil {
 		blog.V(3).Infof("discover nodes %s error %s", path, err.Error())
 		return err
 	}
 
 	//if leaf node, then parse bcs module serverinfo
-	if len(zvs.Server)!=0 {
-		key := strings.TrimLeft(path,fmt.Sprintf("%s/",types.BCS_SERV_BASEPATH))
-		val := make([]interface{},0)
-		for _,v :=range zvs.Server {
-			val = append(val,v)
+	if len(zvs.Server) != 0 {
+		key := strings.TrimLeft(path, fmt.Sprintf("%s/", types.BCS_SERV_BASEPATH))
+		val := make([]interface{}, 0)
+		for _, v := range zvs.Server {
+			val = append(val, v)
 		}
 		r.Lock()
 		r.servers[key] = val
@@ -175,9 +175,9 @@ func (r *DiscoveryV2) discoverEndpoints(path string)error{
 		return nil
 	}
 
-	for _,v :=range zvs.Nodes {
-		err = r.discoverEndpoints(fmt.Sprintf("%s/%s",path,v))
-		if err!=nil {
+	for _, v := range zvs.Nodes {
+		err = r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
+		if err != nil {
 			return err
 		}
 	}

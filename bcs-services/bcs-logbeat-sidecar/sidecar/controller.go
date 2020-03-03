@@ -16,13 +16,14 @@ package sidecar
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
 	"bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
+	"bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
 
 	"github.com/fsouza/go-dockerclient"
 	"gopkg.in/yaml.v2"
@@ -30,24 +31,24 @@ import (
 
 const (
 	//report container stdout dataid
-	EnvLogInfoStdoutDataid       = "io_tencent_bcs_app_stdout_dataid_v2"
+	EnvLogInfoStdoutDataid = "io_tencent_bcs_app_stdout_dataid_v2"
 	//report container nonstandard log dataid
-	EnvLogInfoNonstandardDataid  = "io_tencent_bcs_app_nonstandard_dataid_v2"
+	EnvLogInfoNonstandardDataid = "io_tencent_bcs_app_nonstandard_dataid_v2"
 	//if true, then stdout; else custom logs file
-	EnvLogInfoStdout       = "io_tencent_bcs_app_stdout_v2"
+	EnvLogInfoStdout = "io_tencent_bcs_app_stdout_v2"
 	//if stdout=false, log file path
-	EnvLogInfoLogPath      = "io_tencent_bcs_app_logpath_v2"
+	EnvLogInfoLogPath = "io_tencent_bcs_app_logpath_v2"
 	//clusterid
-	EnvLogInfoLogCluster   = "io_tencent_bcs_app_cluster_v2"
+	EnvLogInfoLogCluster = "io_tencent_bcs_app_cluster_v2"
 	//namespace
 	EnvLogInfoLogNamepsace = "io_tencent_bcs_app_namespcae_v2"
 	//custom labels, log tags
 	//example: kv1:val1,kv2:val2,kv3:val3...
-	EnvLogInfoLogLabel     = "io_tencent_bcs_app_label_v2"
+	EnvLogInfoLogLabel = "io_tencent_bcs_app_label_v2"
 	//application or deployment't name
 	EnvLogInfoLogServerName = "io_tencent_bcs_controller_name"
 	//enum: Application、Deployment...
-	EnvLogInfoLogType      = "io_tencent_bcs_controller_type"
+	EnvLogInfoLogType = "io_tencent_bcs_controller_type"
 )
 
 type SidecarController struct {
@@ -74,9 +75,9 @@ type LogConfParameter struct {
 	ClusterId   string
 	Namespace   string
 	//application or deployment't name
-	ServerName  string
+	ServerName string
 	//application or deployment
-	ServerType  string
+	ServerType string
 	//custom label
 	CustemLabel string
 
@@ -211,11 +212,11 @@ func produceLogConfParameter(container *docker.Container) (*types.Yaml, bool) {
 		case EnvLogInfoLogType:
 			para.ExtMeta["io_tencent_bcs_type"] = val
 		case EnvLogInfoLogLabel:
-			array := strings.Split(val,",")
-			for _,o :=range array {
-				kvs := strings.Split(o,":")
-				if len(kvs)!=2 {
-					blog.Infof("container %s env %s value %s is invalid",container.ID,EnvLogInfoLogLabel,val)
+			array := strings.Split(val, ",")
+			for _, o := range array {
+				kvs := strings.Split(o, ":")
+				if len(kvs) != 2 {
+					blog.Infof("container %s env %s value %s is invalid", container.ID, EnvLogInfoLogLabel, val)
 					continue
 				}
 				para.ExtMeta[kvs[0]] = kvs[1]
@@ -232,26 +233,28 @@ func produceLogConfParameter(container *docker.Container) (*types.Yaml, bool) {
 	//container id
 	para.ExtMeta["container_id"] = container.ID
 	para.ToJson = true
-	y := &types.Yaml{Local: make([]types.Local,0)}
+	y := &types.Yaml{Local: make([]types.Local, 0)}
 	//if stdout container log
-	if para.StdoutDataid!="" {
+	if para.StdoutDataid != "" {
 		inLocal := para
 		inLocal.Paths = []string{container.LogPath}
-		inLocal.DataId = para.StdoutDataid
+		i,_ := strconv.Atoi(para.StdoutDataid)
+		inLocal.DataId = i
 		y.Local = append(y.Local, inLocal)
 	}
 	//if nonstandard Log
-	if para.NonstandardDataid!="" {
+	if para.NonstandardDataid != "" {
 		array := strings.Split(para.NonstandardPaths, ",")
 		inLocal := para
-		for _,f :=range array {
-			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s",container.State.Pid,f))
+		for _, f := range array {
+			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s", container.State.Pid, f))
 		}
-		inLocal.DataId = para.NonstandardDataid
+		i,_ := strconv.Atoi(para.NonstandardDataid)
+		inLocal.DataId = i
 		y.Local = append(y.Local, inLocal)
 	}
 	//if len(files)==0, then invalid
-	if len(y.Local)==0 {
+	if len(y.Local) == 0 {
 		blog.Warnf("container %s env(%s, %s) is invalid", container.ID, EnvLogInfoStdout, EnvLogInfoLogPath)
 		return nil, false
 	}
@@ -292,8 +295,8 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		}
 		defer f.Close()
 
-		by,_ := yaml.Marshal(y)
-		_,err = f.Write(by)
+		by, _ := yaml.Marshal(y)
+		_, err = f.Write(by)
 		if err != nil {
 			blog.Errorf("container %s tempalte execute failed: %s", c.ID, err.Error())
 		}

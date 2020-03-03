@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	BCSAPIPrefix       = "/bcsapi/v4/detection/"
+	BCSAPIPrefix         = "/bcsapi/v4/detection/"
 	BCSDetectionPrefixV4 = "/detection/v4/"
 )
 
