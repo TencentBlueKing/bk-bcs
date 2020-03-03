@@ -83,7 +83,7 @@ func validateArgs() bool {
 		blog.Errorf("serviceRegistry %s invalid, must be in (kubernetes, custom, mesos)", serviceRegistry)
 		return false
 	}
-	reg, _ := regexp.Compile("[a-zA-Z0-9-\\.]+")
+	reg, _ := regexp.Compile("[a-zA-Z0-9-_\\.]+")
 	if !reg.MatchString(clbName) {
 		blog.Errorf("clbName %s invalid, must be [a-zA-Z0-9-\\.]+", clbName)
 		return false

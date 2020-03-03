@@ -24,28 +24,35 @@ import (
 )
 
 func (clb *ClbClient) addListener(ls *loadbalance.CloudListener) error {
-	//create name
+	// create name
 	listenerID, err := clb.clbAdapter.CreateListener(ls)
 	if err != nil {
 		return fmt.Errorf("create listener failed, %s", err.Error())
 	}
-	//set listener id
+	// set listener id
 	ls.Spec.ListenerID = listenerID
 
 	if ls.Spec.Protocol == loadbalance.ClbListenerProtocolTCP || ls.Spec.Protocol == loadbalance.ClbListenerProtocolUDP {
-		//register backends for 4 layer protocol
-		//when failed, we do not record these backends in cache
-		err := clb.clbAdapter.Register4LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ls.Spec.TargetGroup.Backends)
-		if err != nil {
-			blog.Warnf("register 4 layer listener backends failed, %s", err.Error())
-			ls.Spec.TargetGroup.Backends = make([]*loadbalance.Backend, 0)
+		// register backends for 4 layer protocol
+		// when failed, we do not record these backends in cache
+		// max backends for each register is LimitationMaxBackendNumEachBind (20)
+		effectedBackends := make([]*loadbalance.Backend, 0)
+		for i := 0; i < len(ls.Spec.TargetGroup.Backends); i = i + LimitationMaxBackendNumEachBind {
+			tmpBackends := GetBackendsSegment(ls.Spec.TargetGroup.Backends, i, LimitationMaxBackendNumEachBind)
+			err := clb.clbAdapter.Register4LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, tmpBackends)
+			if err != nil {
+				blog.Warnf("register 4 layer listener backends %v failed, %s", tmpBackends, err.Error())
+				break
+			}
+			effectedBackends = append(effectedBackends, tmpBackends...)
 		}
+		ls.Spec.TargetGroup.Backends = effectedBackends
 
 	} else if ls.Spec.Protocol == loadbalance.ClbListenerProtocolHTTP || ls.Spec.Protocol == loadbalance.ClbListenerProtocolHTTPS {
 		var successRuleList loadbalance.RuleList
-		//each rule corresponds to a target group
-		//when failed in creating rule, we do not record this rule in cache
-		//the listener is new, so we call **doCreateRule** directly
+		// each rule corresponds to a target group
+		// when failed in creating rule, we do not record this rule in cache
+		// the listener is new, so we call **doCreateRule** directly
 		for _, rule := range ls.Spec.Rules {
 			err := clb.doCreateRule(ls, rule)
 			if err != nil {
@@ -94,26 +101,29 @@ func (clb *ClbClient) update4LayerListener(old, cur *loadbalance.CloudListener) 
 
 	//deregister old backend
 	if len(backendsDel) > 0 {
-		err := clb.clbAdapter.DeRegister4LayerBackends(old.Spec.LoadBalancerID, old.Spec.ListenerID, backendsDel)
-		if err != nil {
-			blog.Warnf("QCloud4LayerDeRegisterTargets backends:%v failed, %s", backendsDel, err.Error())
-			cur.Spec.TargetGroup.Backends = old.Spec.TargetGroup.Backends
-			return nil
+		for i := 0; i < len(backendsDel); i = i + LimitationMaxBackendNumEachBind {
+			tmpBackends := GetBackendsSegment(backendsDel, i, LimitationMaxBackendNumEachBind)
+			err := clb.clbAdapter.DeRegister4LayerBackends(old.Spec.LoadBalancerID, old.Spec.ListenerID, tmpBackends)
+			if err != nil {
+				blog.Warnf("QCloud4LayerDeRegisterTargets backends %v failed, %s", tmpBackends, err.Error())
+				cur.Spec.TargetGroup.AddBackends(tmpBackends)
+			}
 		}
 	}
 
 	//register new backends
 	if len(backendsNew) > 0 {
-		err := clb.clbAdapter.Register4LayerBackends(old.Spec.LoadBalancerID, old.Spec.ListenerID, backendsNew)
-		if err != nil {
-			//when register new backend failed,
-			blog.Warnf("QCloud4LayerRegisterBackend backends:%v failed, %s", backendsNew, err.Error())
-			cur.Spec.TargetGroup.RemoveBackend(backendsNew)
-			return nil
+		for i := 0; i < len(backendsNew); i = i + LimitationMaxBackendNumEachBind {
+			tmpBackends := GetBackendsSegment(backendsNew, i, LimitationMaxBackendNumEachBind)
+			err := clb.clbAdapter.Register4LayerBackends(old.Spec.LoadBalancerID, old.Spec.ListenerID, tmpBackends)
+			if err != nil {
+				blog.Warnf("QCloud4LayerRegisterBackend backends %v failed, %s", tmpBackends, err.Error())
+				cur.Spec.TargetGroup.RemoveBackend(tmpBackends)
+			}
 		}
 	}
 
-	blog.Infof("update 4 layer listener %s successfully", cur.GetName())
+	blog.Infof("update 4 layer listener %s done", cur.GetName())
 	return nil
 }
 
@@ -211,12 +221,19 @@ func (clb *ClbClient) doCreateRule(ls *loadbalance.CloudListener, rule *loadbala
 	}
 	rule.ID = descRule.ID
 
-	err = clb.clbAdapter.Register7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, rule.ID, rule.TargetGroup.Backends)
-	if err != nil {
-		//when register backend failed after create rule successfully, we record rule and do not record backends
-		blog.Warnf("QCloud7LayerRegisterBackend, %s", err.Error())
-		rule.TargetGroup.Backends = make([]*loadbalance.Backend, 0)
+	// when failed, we do not record these backends in cache
+	// max backends for each register is LimitationMaxBackendNumEachBind (20)
+	effectedBackends := make([]*loadbalance.Backend, 0)
+	for i := 0; i < len(rule.TargetGroup.Backends); i = i + LimitationMaxBackendNumEachBind {
+		tmpBackends := GetBackendsSegment(rule.TargetGroup.Backends, i, LimitationMaxBackendNumEachBind)
+		err := clb.clbAdapter.Register7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, rule.ID, tmpBackends)
+		if err != nil {
+			blog.Warnf("register 7 layer listener backends %v failed, %s", tmpBackends, err.Error())
+			break
+		}
+		effectedBackends = append(effectedBackends, tmpBackends...)
 	}
+	rule.TargetGroup.Backends = effectedBackends
 
 	blog.Info("Create rule domain:%s url:%s for listener %s successfully", rule.Domain, rule.URL, ls.GetName())
 	return nil
@@ -257,26 +274,29 @@ func (clb *ClbClient) updateRule(ls *loadbalance.CloudListener, ruleOld *loadbal
 
 	//2.1 deregister old backend
 	if len(backendsDel) > 0 {
-		err = clb.clbAdapter.DeRegister7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.ID, backendsDel)
-		if err != nil {
-			//when deregister failed, we won't change backends of this rule in cache
-			blog.Warnf("Deregister 7 Layer Backends failed, %s", err.Error())
-			ruleUpdate.TargetGroup.Backends = ruleOld.TargetGroup.Backends
-			return nil
+		for i := 0; i < len(backendsDel); i = i + LimitationMaxBackendNumEachBind {
+			tmpBackends := GetBackendsSegment(backendsDel, i, LimitationMaxBackendNumEachBind)
+			err := clb.clbAdapter.DeRegister7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.ID, tmpBackends)
+			if err != nil {
+				blog.Warnf("Deregister 7 Layer Backends %v failed, %s", tmpBackends, err.Error())
+				ruleUpdate.TargetGroup.AddBackends(tmpBackends)
+			}
 		}
 	}
 
 	//2.2 register new backend
 	if len(backendsNew) > 0 {
-		err = clb.clbAdapter.Register7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.ID, backendsNew)
-		if err != nil {
-			blog.Warnf("Register 7Layer Backends failed, %s", err.Error())
-			ruleUpdate.TargetGroup.RemoveBackend(backendsNew)
-			return nil
+		for i := 0; i < len(backendsNew); i = i + LimitationMaxBackendNumEachBind {
+			tmpBackends := GetBackendsSegment(backendsNew, i, LimitationMaxBackendNumEachBind)
+			err := clb.clbAdapter.Register7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.ID, tmpBackends)
+			if err != nil {
+				blog.Warnf("Register 7Layer Backends %v failed, %s", tmpBackends, err.Error())
+				ruleUpdate.TargetGroup.RemoveBackend(tmpBackends)
+			}
 		}
 	}
 
-	blog.Info("update rule id:%s domain:%s url:%s successfully", ruleUpdate.ID, ruleUpdate.Domain, ruleUpdate.URL)
+	blog.Info("update rule id:%s domain:%s url:%s done", ruleUpdate.ID, ruleUpdate.Domain, ruleUpdate.URL)
 	return nil
 }
 

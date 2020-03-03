@@ -75,7 +75,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	// create service discovery client
 	svcHandler := NewAppServiceHandler()
 	svcHandler.RegisterProcessor(proc)
-	svcClient, err := svccadapter.NewClient(opt.ServiceRegistry, opt.Kubeconfig, svcHandler, time.Duration(opt.SyncPeriod)*time.Second)
+	svcClient, err := svccadapter.NewClient(opt.ServiceRegistry, opt.Kubeconfig, svcHandler, opt.SyncPeriod)
 	if err != nil {
 		return nil, err
 	}

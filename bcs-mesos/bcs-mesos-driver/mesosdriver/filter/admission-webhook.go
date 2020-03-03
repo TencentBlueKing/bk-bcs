@@ -292,7 +292,7 @@ func (hook *AdmissionWebhookFilter) addAdmissionWebhook(ad *commtypes.AdmissionW
 			if webhook.ClientConfig.Path == "" {
 				webhook.ClientConfig.Path = "/"
 			}
-			server = fmt.Sprintf("https://%s.%s:%d%s", webhook.ClientConfig.Namespace, webhook.ClientConfig.Name,
+			server = fmt.Sprintf("https://%s.%s:%d%s", webhook.ClientConfig.Name, webhook.ClientConfig.Namespace,
 				webhook.ClientConfig.Port, webhook.ClientConfig.Path)
 		}
 

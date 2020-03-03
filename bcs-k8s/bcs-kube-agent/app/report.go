@@ -35,7 +35,10 @@ import (
 
 const (
 	defaultNamespace   = "default"
+	systemNamespace    = "kube-system"
 	clusterServiceName = "kubernetes"
+	// endpoints name for kube-apiserver proxy
+	apiserverProxyServiceName = "apiserver-proxy-for-bcs"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -106,34 +109,47 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 	var apiserverPort int32
 	var endpointsList []string
+	var serverAddresses string
 
-	endpoints, err := kubeClient.CoreV1().Endpoints(defaultNamespace).Get(clusterServiceName, metav1.GetOptions{})
-	if err != nil {
-		return "", err
-	}
-	for _, subset := range endpoints.Subsets {
-		if len(subset.Addresses) == 0 {
-			continue
+	externalProxyAddresses := viper.GetString("agent.external-proxy-addresses")
+	if externalProxyAddresses == "" {
+		endpoints, err := kubeClient.CoreV1().Endpoints(systemNamespace).Get(apiserverProxyServiceName, metav1.GetOptions{})
+		if err != nil {
+			return "", err
 		}
+		for _, subset := range endpoints.Subsets {
+			if len(subset.Addresses) == 0 {
+				continue
+			}
 
-		// here we only use the apiserver secure-port
-		for _, port := range subset.Ports {
-			if port.Name == "https" {
-				apiserverPort = port.Port
-				break
+			// here we only use the apiserver secure-port
+			for _, port := range subset.Ports {
+				if port.Name == "https" {
+					apiserverPort = port.Port
+					break
+				}
+			}
+
+			for _, addr := range subset.Addresses {
+				err := pingEndpoint(net.JoinHostPort(addr.IP, strconv.Itoa(int(apiserverPort))))
+				if err == nil {
+					endpoint := "https://" + net.JoinHostPort(addr.IP, strconv.Itoa(int(apiserverPort)))
+					endpointsList = append(endpointsList, endpoint)
+				}
 			}
 		}
-
-		for _, addr := range subset.Addresses {
-			err := pingEndpoint(net.JoinHostPort(addr.IP, strconv.Itoa(int(apiserverPort))))
-			if err == nil {
-				endpoint := "https://" + net.JoinHostPort(addr.IP, strconv.Itoa(int(apiserverPort)))
-				endpointsList = append(endpointsList, endpoint)
+		sort.Strings(endpointsList)
+		serverAddresses = strings.Join(endpointsList, ";")
+	} else {
+		serverSlice := strings.Split(externalProxyAddresses, ";")
+		for _, server := range serverSlice {
+			if !strings.HasPrefix(server, "https://") {
+				return "", fmt.Errorf("got invalid external-proxy-addresses")
 			}
 		}
+		serverAddresses = externalProxyAddresses
 	}
-	sort.Strings(endpointsList)
-	serverAddresses := strings.Join(endpointsList, ";")
+
 	return serverAddresses, nil
 }
 

@@ -2,29 +2,72 @@
 
 **bcs-client** is a client of Blueking Container Service.  
 
-
 ## Commands and usages ##
 
-- [**create**](#create) (create new application/service/secret/configmap/deployment)
-- [**update**](#update) (update application/service/secret/configmap/deployment)
-- [**delete**](#delete) (delete application/taskgroup/configmap/service/secret/deployment)
-- [**scale**](#scale) (scale down or scale up applications)
-- [**rollback**](#rollback) (rollback application to last version)
-- [**list**](#list) (list brief information of application, task, taskgroup or version)
-- [**inspect**](#inspect) (show detailed information of application, taskgroup, service, loadbalance, configmap or secret)
-- [**metric**](#metric) (manage bcs metric)
-- [**cancel**](#cancel) (cancel deployment update)
-- [**pause**](#pause) (pause deployment update)
-- [**resume**](#resume) (resume deployment update)
-- [**reschedule**](#reschedule) (reschedule taskgroup)
-- [**export**](#export) (Set environmental variables)
-- [**env**](#env) (Show environmental variables)
-- [**template**](#template) (get json templates of application, service and so on)
-- [**enable**](#enable) (enable agent by ip)
-- [**disable**](#disable) (disable agent by ip)
-- [**offer**](#offer) (list offers of clusters)
-- [**as**](#as) (manage the agentsettings of nodes)
-- [**help,h**](#help) (Shows a list of commands or help for one command)
+- [Welcome to bcs-client handbook](#welcome-to-bcs-client-handbook)
+  - [Commands and usages](#commands-and-usages)
+  - [create](#create)
+    - [create application](#create-application)
+    - [create deployment](#create-deployment)
+    - [create-service](#create-service)
+    - [create-secret](#create-secret)
+    - [create-configmap](#create-configmap)
+  - [update](#update)
+    - [update application](#update-application)
+    - [update deployment](#update-deployment)
+  - [delete](#delete)
+    - [delete application](#delete-application)
+    - [delete deployment](#delete-deployment)
+  - [scale](#scale)
+    - [scale application](#scale-application)
+  - [rollback](#rollback)
+    - [rollback applications](#rollback-applications)
+  - [list](#list)
+    - [list application](#list-application)
+    - [list deployment](#list-deployment)
+    - [list taskgroup](#list-taskgroup)
+    - [list service](#list-service)
+    - [list secret](#list-secret)
+    - [list configmap](#list-configmap)
+  - [inspect](#inspect)
+    - [inspect application](#inspect-application)
+    - [inspect deployment](#inspect-deployment)
+    - [inspect taskgroup](#inspect-taskgroup)
+    - [inspect service](#inspect-service)
+    - [inspect secret](#inspect-secret)
+    - [inspect configmap](#inspect-configmap)
+  - [metric](#metric)
+    - [upsert/update metric](#upsertupdate-metric)
+    - [list/inspect metric](#listinspect-metric)
+    - [delete metric](#delete-metric)
+  - [cancel](#cancel)
+    - [cancel deployment](#cancel-deployment)
+      - [cancel deployment update](#cancel-deployment-update)
+  - [pause](#pause)
+    - [pause deployment](#pause-deployment)
+  - [resume](#resume)
+    - [resume deployment](#resume-deployment)
+  - [reschedule](#reschedule)
+    - [reschedule taskgroup by name](#reschedule-taskgroup-by-name)
+    - [reschedule taskgroup by ip](#reschedule-taskgroup-by-ip)
+  - [export](#export)
+    - [export env](#export-env)
+  - [env](#env)
+    - [show env](#show-env)
+  - [template](#template)
+    - [template configmap](#template-configmap)
+  - [enable](#enable)
+    - [enable agent](#enable-agent)
+  - [disable](#disable)
+    - [disable agent](#disable-agent)
+  - [offer](#offer)
+  - [as](#as)
+    - [list as](#list-as)
+    - [update/set as](#updateset-as)
+    - [delete as](#delete-as)
+  - [help](#help)
+  - [apply](#apply)
+  - [clean](#clean)
 
 
 
@@ -525,7 +568,9 @@ SCREENSHOT:
 
 
 <span id="update"></span>
+
 ## update ##
+
 DESCRIPTION: Command *update* can be used to update application/service/secret/configmap/deployment.
 
 USAGE:
@@ -547,7 +592,6 @@ SCREENSHOT:
 
 ### update application ###
 
-#### update application from file ####
 EXAMPLE:
 
 	bcs-client update --type app --instances 3 --from-file updateApp.json
@@ -562,7 +606,6 @@ SCREENSHOT:
 
 
 ### update deployment ###
-#### update deployment from file ####
 
 EXAMPLE:
 ​
@@ -601,8 +644,6 @@ SCREENSHOT:
 
 ### delete application ###
 
-#### delete application ####
-
 EXAMPLE:
 
 	bcs-client delete --type app --name test --namespace testns --enforce 1
@@ -615,7 +656,6 @@ SCREENSHOT:
 
 ### delete deployment ###
 
-#### delete deployment ####
 EXAMPLE:
 
 	bcs-client delete --type deployment --name deployment-test-007 --namespace defaultGroup --clusterid BCS-TESTBCSTEST01-10001
@@ -650,7 +690,6 @@ SCREENSHOT:
 ![](img/scale-help.png)
 
 ### scale application ###
-#### scale down or scale up applications ####
 
 EXAMPLE:
 
@@ -688,7 +727,6 @@ SCREENSHOT:
 
 
 ### rollback applications ###
-#### rollback application from file ####
 
 EXAMPLE:
 
@@ -1342,3 +1380,38 @@ EXAMPLE:
 SCREENSHOT:
 
 ![](img/client-help.png)
+
+## apply
+
+apply multiple Mesos resources from file or stdin
+
+example:
+
+```
+# mesos-resources.json contains multiple json structures
+$ bcs-client apply -f mesos-resources.json
+resource v4/service bkbcs-client-test create successfully
+resource v4/secret bkbcs-client-test-secret create successfully
+resource v4/deployment bkbcs-client-test create successfully
+
+# reading 
+helm template test $mychart -n mynamespace | xargs bcs-client apply 
+```
+
+## clean
+
+delete multiple Mesos resources from file or stdint
+
+example:
+
+```
+$ bcs-client clean -f mesos-resources.json
+resource v4/service bkbcs-client-test clean successfully
+resource v4/secret bkbcs-client-test-secret clean successfully
+resource v4/deployment bkbcs-client-test clean successfully
+
+$ helm template test $mychart -n mynamespace | xargs bcs-client clean
+resource v4/service bkbcs-client-test clean successfully
+resource v4/secret bkbcs-client-test-secret clean successfully
+resource v4/deployment bkbcs-client-test clean successfully
+```

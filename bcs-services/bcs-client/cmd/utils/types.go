@@ -98,3 +98,25 @@ func GetCustomResourceType(sche v4.Scheduler, cluster, cmdType string) (string, 
 	}
 	return "", "", fmt.Errorf("invalid type: %s, even not match CustomResource", cmdType)
 }
+
+//GetCustomResourceTypeByKind get Custom Resource type by
+//returns: apiVersion, plural, errror if happened
+func GetCustomResourceTypeByKind(sche v4.Scheduler, cluster, kind string) (string, string, error) {
+	list, err := sche.ListCustomResourceDefinition(cluster)
+	if err != nil {
+		DebugPrintf("list all CustomResourceDefinition failed, %s", err.Error())
+		return "", "", err
+	}
+	if len(list.Items) == 0 {
+		return "", "", fmt.Errorf("invalid kind %s", kind)
+	}
+	DebugPrintf("##DEBUG##: %v", list.Items)
+	//validate apiVersion, kind & type
+	for _, item := range list.Items {
+		if item.Spec.Names.Kind == kind {
+			apiVersion := item.Spec.Group + "/" + item.Spec.Version
+			return apiVersion, item.Spec.Names.Plural, nil
+		}
+	}
+	return "", "", fmt.Errorf("invalid kind: %s, even not match CustomResource", kind)
+}

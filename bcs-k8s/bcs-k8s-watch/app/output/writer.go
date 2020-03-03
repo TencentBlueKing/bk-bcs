@@ -21,6 +21,7 @@ import (
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 )
 
@@ -60,6 +61,8 @@ var (
 		"Ingress",
 		"ReplicaSet",
 		"ExportService",
+		"BcsLogConfig",
+		"BcsDbPrivConfig",
 	}
 )
 
@@ -74,7 +77,7 @@ type Writer struct {
 	alarmQueue chan *action.SyncData
 
 	// settled handlers.
-	handlers map[string]*Handler
+	Handlers map[string]*Handler
 
 	// alarm sender.
 	alertor *action.Alertor
@@ -88,7 +91,7 @@ func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *acti
 	w := &Writer{
 		queue:      make(chan *action.SyncData, defaultQueueSizeNormalMetadata),
 		alarmQueue: make(chan *action.SyncData, defaultQueueSizeAlarmMetadata),
-		handlers:   make(map[string]*Handler),
+		Handlers:   make(map[string]*Handler),
 		alertor:    alertor,
 	}
 
@@ -99,9 +102,14 @@ func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *acti
 }
 
 func (w *Writer) init(clusterID string, storageService *bcs.InnerService) error {
-	for _, resource := range writerResources {
+	for resource := range resources.WatcherConfigList {
 		action := action.NewStorageAction(clusterID, resource, storageService)
-		w.handlers[resource] = NewHandler(resource, action)
+		w.Handlers[resource] = NewHandler(resource, action)
+	}
+
+	for resource := range resources.BkbcsWatcherConfigList {
+		action := action.NewStorageAction(clusterID, resource, storageService)
+		w.Handlers[resource] = NewHandler(resource, action)
 	}
 	return nil
 }
@@ -142,7 +150,7 @@ func (w *Writer) distributeNormal() {
 	for {
 		select {
 		case data := <-w.queue:
-			if handler, ok := w.handlers[data.Kind]; ok {
+			if handler, ok := w.Handlers[data.Kind]; ok {
 				handler.HandleWithTimeout(data, defaultQueueTimeout)
 			} else {
 				glog.Errorf("can't distribute the normal metadata, unknown DataType[%+v]", data.Kind)
@@ -193,7 +201,7 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	}
 
 	// start all handlers.
-	for _, handler := range w.handlers {
+	for _, handler := range w.Handlers {
 		handler.Run(stopCh)
 	}
 
@@ -203,7 +211,7 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	go wait.NonSlidingUntil(w.distributeAlarm, defaultDistributeInterval, w.stopCh)
 
 	// setup debug.
-	go w.debug()
+	//go w.debug()
 
 	return nil
 }

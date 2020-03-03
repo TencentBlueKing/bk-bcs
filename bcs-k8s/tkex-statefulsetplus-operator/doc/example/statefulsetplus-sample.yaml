@@ -1,0 +1,41 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: StatefulSetPlus
+metadata:
+  name: web
+  namespace: test
+spec:
+  selector:
+    matchLabels:
+      app: python
+  serviceName: "nginx"
+  podManagementPolicy: "Parallel"
+  revisionHistoryLimit: 10
+  updateStrategy:
+    type: InplaceUpdate
+  replicas: 1
+  batchDeployConfig:
+    batchNum: 0
+    batchOrder: 0
+    podsToUpdate: []
+  template:
+    metadata:
+      labels:
+        app: python
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: python
+        image: test.artifactory.com:8090/public/bcs/bcs-loadbalance:v1.1.7
+        command: ["python"]
+        args: ["-m","SimpleHTTPServer", "8080"]
+        ports:
+        - containerPort: 8080
+          name: web
+      - name: sidecar
+        image: test.artifactory.com:8090/public/bcs/bcs-loadbalance:v1.1.7
+        command: ["python"]
+        args: ["-m","SimpleHTTPServer", "9090"]
+        ports:
+        - containerPort: 9090
+          name: web2
+  

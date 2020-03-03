@@ -23,6 +23,7 @@ import (
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
@@ -40,15 +41,19 @@ type Synchronizer struct {
 	// watchers that products metadata.
 	watchers map[string]WatcherInterface
 
+	// watchers of crd
+	crdWatchers map[string]WatcherInterface
+
 	// target storage service.
 	storageService *bcs.InnerService
 }
 
 // NewSynchronizer creates a new Synchronizer instance.
-func NewSynchronizer(clusterID string, watchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
+func NewSynchronizer(clusterID string, watchers, crdWatchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
 	return &Synchronizer{
 		clusterID:      clusterID,
 		watchers:       watchers,
+		crdWatchers:    crdWatchers,
 		storageService: storageService,
 	}
 }
@@ -83,30 +88,41 @@ func (sync *Synchronizer) Run(stopCh <-chan struct{}) {
 			continue
 		}
 
-		// sync cluster resources.
-		clusterResourceTypes := []string{"Namespace", "Node"}
+		namespaces := sync.watchers["Namespace"].(*Watcher).store.ListKeys()
 
-		for _, clusterResourceType := range clusterResourceTypes {
-			glog.Info("begin to sync %s", clusterResourceType)
-			sync.syncClusterResource(clusterResourceType, sync.watchers[clusterResourceType].(*Watcher))
-			glog.Info("sync %s done", clusterResourceType)
+		for resourceType, resourceObjType := range resources.WatcherConfigList {
+			if resourceObjType.Namespaced {
+				glog.Info("begin to sync %s", resourceType)
+				sync.syncNamespaceResource(resourceType, namespaces, sync.watchers[resourceType].(*Watcher))
+				glog.Info("sync %s done", resourceType)
+			} else {
+				glog.Info("begin to sync %s", resourceType)
+				sync.syncClusterResource(resourceType, sync.watchers[resourceType].(*Watcher))
+				glog.Info("sync %s done", resourceType)
+			}
 		}
 
-		// sync namespace resources.
-		namespaces := sync.watchers["Namespace"].(*Watcher).store.ListKeys()
-		namespaceResourceTypes := []string{"Pod", "ReplicationController", "Service", "EndPoints", "ConfigMap", "Secret",
-			"Deployment", "Ingress", "ReplicaSet", "DaemonSet", "Job", "StatefulSet"}
-
-		for _, namespaceResourceType := range namespaceResourceTypes {
-			glog.Info("begin to sync %s", namespaceResourceType)
-			sync.syncNamespaceResource(namespaceResourceType, namespaces, sync.watchers[namespaceResourceType].(*Watcher))
-			glog.Info("sync %s done", namespaceResourceType)
+		for resourceType, watcher := range sync.crdWatchers {
+			w := watcher.(*Watcher)
+			if !w.controller.HasSynced() {
+				continue
+			}
+			if w.resourceNamespaced {
+				glog.Info("begin to sync %s", resourceType)
+				sync.syncNamespaceResource(resourceType, namespaces, w)
+				glog.Info("sync %s done", resourceType)
+			} else {
+				glog.Info("begin to sync %s", resourceType)
+				sync.syncClusterResource(resourceType, w)
+				glog.Info("sync %s done", resourceType)
+			}
 		}
 	}
 }
 
 func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string, watcher *Watcher) {
-	// get all pods from local store.
+	// get all resources from local store.
+
 	localKeys := watcher.store.ListKeys()
 	glog.Infof("Sync %s got pod list from local: len=%d", kind, len(localKeys))
 
@@ -170,13 +186,6 @@ func (sync *Synchronizer) transData(data interface{}) (d []map[string]string, er
 }
 
 func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, watcher *Watcher) {
-	/*
-	   DEBUG:
-	   data = [
-	       {"resourceName": "n1"},
-	       {"resourceName": "n2"},
-	   ]
-	*/
 
 	localKeysMap := map[string]string{}
 	for _, localKey := range localKeys {
