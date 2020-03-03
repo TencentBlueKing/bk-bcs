@@ -41,11 +41,11 @@
       "spec": {
         "containers": [
           {
-            "command": "/test/start.sh",
+            "command": "",
             "args": [
-              "9999"
+              ""
             ],
-            "image": "sh.artifactory.oa.com:8090/bcs/tlinux2.2:onion.v17.08.23",
+            "image": "",
             "resources": {
               "limits": {
                 "cpu": "0.1",
@@ -54,8 +54,8 @@
             }
           }
         ],
-        "networkMode": "BRIDGE",
-        "networkType": "CNM"
+        "networkMode": "",
+        "networkType": ""
       }
     }
   }
