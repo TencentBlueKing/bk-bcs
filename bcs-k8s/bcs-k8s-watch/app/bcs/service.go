@@ -54,17 +54,19 @@ type InnerService struct {
 	eventChan       <-chan *RegisterDiscover.DiscoverEvent
 	servers         map[string]*HTTPClientConfig
 	customEndpoints []string
+	isExternal      bool
 }
 
 // NewInnerService creates a new serviceName InnerService instance for discovery.
 func NewInnerService(serviceName string, eventChan <-chan *RegisterDiscover.DiscoverEvent,
-	customEndpoints []string) *InnerService {
+	customEndpoints []string, isExternal bool) *InnerService {
 
 	svc := &InnerService{
 		name:            serviceName,
 		eventChan:       eventChan,
 		servers:         make(map[string]*HTTPClientConfig),
 		customEndpoints: customEndpoints,
+		isExternal:      isExternal,
 	}
 
 	return svc
@@ -148,7 +150,13 @@ func (s *InnerService) update(servers []string, bcsTLSConfig options.TLS) {
 				continue
 			}
 
-			address := fmt.Sprintf("%s://%s:%d", serverInfo.Scheme, serverInfo.IP, serverInfo.Port)
+			var address string
+			if s.isExternal {
+				address = fmt.Sprintf("%s://%s:%d", serverInfo.Scheme, serverInfo.ExternalIp, serverInfo.ExternalPort)
+			} else {
+				address = fmt.Sprintf("%s://%s:%d", serverInfo.Scheme, serverInfo.IP, serverInfo.Port)
+			}
+
 			currentServers[address] = ""
 
 			if _, exists := s.servers[address]; !exists {

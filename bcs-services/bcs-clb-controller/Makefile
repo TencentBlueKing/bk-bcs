@@ -79,4 +79,4 @@ binpath:
 
 clb-controller:
 	GOOS=linux go build ${LDFLAG} -o ${BINARYPATH}/clb-controller main.go
-	cp ${BINARYPATH}/clb-controller ./docker/clb-controller
+	cp ${BINARYPATH}/bcs-clb-controller ./docker/clb-controller

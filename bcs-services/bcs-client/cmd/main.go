@@ -21,6 +21,7 @@ import (
 	"bk-bcs/bcs-services/bcs-client/cmd/agent"
 	"bk-bcs/bcs-services/bcs-client/cmd/application"
 	"bk-bcs/bcs-services/bcs-client/cmd/available"
+	"bk-bcs/bcs-services/bcs-client/cmd/batch"
 	"bk-bcs/bcs-services/bcs-client/cmd/create"
 	deletion "bk-bcs/bcs-services/bcs-client/cmd/delete"
 	"bk-bcs/bcs-services/bcs-client/cmd/deployment"
@@ -63,6 +64,8 @@ func main() {
 		offer.NewOfferCommand(),
 		agent.NewAgentSettingCommand(),
 		template.NewTemplateCommand(),
+		batch.NewApplyCommand(),
+		batch.NewCleanCommand(),
 	}
 
 	if err := utils.InitCfg(); err != nil {

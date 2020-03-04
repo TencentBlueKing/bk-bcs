@@ -14,7 +14,6 @@
 package etcd
 
 import (
-	"encoding/json"
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
@@ -95,7 +94,7 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        deployment.ObjectMeta.Name,
 			Namespace:   deployment.ObjectMeta.NameSpace,
-			Labels:      deployment.ObjectMeta.Labels,
+			Labels:      store.filterSpecialLabels(deployment.ObjectMeta.Labels),
 			Annotations: deployment.ObjectMeta.Annotations,
 		},
 		Spec: v2.DeploymentSpec{
@@ -122,9 +121,6 @@ func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, 
 		}
 		return nil, err
 	}
-
-	by, _ := json.Marshal(v2Dep)
-	blog.Infof("deployment %s", string(by))
 
 	return &v2Dep.Spec.Deployment, nil
 }

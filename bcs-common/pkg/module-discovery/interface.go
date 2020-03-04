@@ -20,6 +20,7 @@ type ModuleDiscovery interface {
 	GetModuleServers(module string) ([]interface{}, error)
 
 	// get random one server
+	//if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 	GetRandModuleServer(moduleName string) (interface{}, error)
 
 	// register event handle function

@@ -95,7 +95,7 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        application.ID,
 			Namespace:   application.RunAs,
-			Labels:      application.ObjectMeta.Labels,
+			Labels:      store.filterSpecialLabels(application.ObjectMeta.Labels),
 			Annotations: application.ObjectMeta.Annotations,
 		},
 		Spec: v2.ApplicationSpec{

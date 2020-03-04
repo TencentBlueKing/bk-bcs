@@ -15,8 +15,8 @@ package mesos
 
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
-	v2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
+	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 )
 
 // DbPrivConfInject implements MesosInject
@@ -33,7 +33,7 @@ func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister) Meso
 	return mesosInject
 }
 
-func (dbPrivConf *DbPrivConfInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {
+func (dbPrivConf *DbPrivConfInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) { // nolint
 
 	return nil, nil
 }
@@ -43,7 +43,7 @@ func (dbPrivConf *DbPrivConfInject) InjectDeployContent(deploy *commtypes.BcsDep
 	return nil, nil
 }
 
-func checkSelector(d *v2.BcsDbPrivConfig, labels map[string]string) bool {
+func checkSelector(d *v1.BcsDbPrivConfig, labels map[string]string) bool {
 	for ks, vs := range d.Spec.PodSelector {
 		vt, ok := labels[ks]
 		if !ok {

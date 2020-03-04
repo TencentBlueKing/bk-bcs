@@ -1,0 +1,145 @@
+{
+    "apiVersion": "v4",
+    "kind": "deployment",
+    "restartPolicy": {
+        "policy": "OnFailure"
+    },
+    "metadata": {
+        "labels": {
+            "app": "${bcsClbControllerName}"
+        },
+        "name": "${bcsClbControllerName}",
+        "namespace": "${bcsClbControllerNamespace}"
+    },
+    "spec": {
+        "instance": 1,
+        "strategy": {
+            "type": "RollingUpdate",
+            "rollingupdate": {
+                "maxUnavilable": 1,
+                "maxSurge": 1,
+                "upgradeDuration": 50,
+                "rollingOrder": "DeleteFirst",
+                "rollingManually":false
+            }
+        },
+        "template": {
+            "metadata": {
+                "name": "${bcsClbControllerName}",
+                "namespace": "${bcsClbControllerNamespace}",
+                "labels": {
+                    "app": "${bcsClbControllerNamespace}"
+                }
+            },
+            "spec": {
+                "containers": [{
+                    "image": "${bcsClbControllerNginxImage}:${bcsClbControllerNginxTag}",
+                    "imagePullPolicy": "IfNotPresent",
+                    "resources": {
+                        "limits": {
+                            "cpu": "0.5",
+                            "memory": "512"
+                        }
+                    },
+                    "configmaps": [
+                        {
+                            "name": "nginx-configmap",
+                            "items": [
+                                {
+                                    "type": "file",
+                                    "dataKey": "nginx-conf",
+                                    "KeyOrPath": "/etc/nginx/nginx.conf",
+                                    "readOnly": false,
+                                    "user": "root"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "image": "${bcsClbControllerImage}:${bcsClbControllerImageTag}",
+                    "imagePullPolicy": "${bcsClbControllerImagePullPolicy}",
+                    "command": "/clb/clb-controller",
+                    "args": [
+                        "server",
+                        "--port",
+                        "${bcsClbControllerMetricPort}",
+                        "--serviceRegistry",
+                        "${bcsClbControllerServiceRegistry}",
+                        "--kubeconfig",
+                        "/clb/kubeconfig",
+                        "--backendIPType",
+                        "${bcsClbControllerBackendIPType}",
+                        "--netType",
+                        "${bcsClbControllerClbNetType}",
+                        "--clbname",
+                        "${bcsClbControllerClbName}",
+                        "--v",
+                        "3",
+                        "--alsologtostderr"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "1",
+                            "memory": "1024"
+                        }
+                    },
+                    "env": [
+                        {
+                            "name": "BCS_CLB_IMPLEMENT",
+                            "value": "${bcsClbControllerImplementType}"
+                        },
+                        {
+                            "name": "BCS_CLB_BACKENDMODE",
+                            "value": "${bcsClbControllerBackendMode}"
+                        },
+                        {
+                            "name": "BCS_CLB_REGION",
+                            "value": "${bcsClbControllerClbRegion}"
+                        },
+                        {
+                            "name": "BCS_CLB_PROJECTID",
+                            "value": "${bcsClbControllerClbProjectId}"
+                        },
+                        {
+                            "name": "BCS_CLB_VPCID",
+                            "value": "${bcsClbControllerVpcId}"
+                        },
+                        {
+                            "name": "BCS_CLB_SUBNET",
+                            "value": "${bcsClbControllerSubnetId}"
+                        },
+                        {
+                            "name": "BCS_CLB_WAIT_PERIOD_DEALING",
+                            "value": "1"
+                        }
+                    ],
+                    "secrets": [
+                        {
+                            "secretName": "clb-controller-secret",
+                            "items": [
+                                {
+                                    "type": "env",
+                                    "dataKey": "clb-controller-secretid",
+                                    "keyOrPath": "BCS_CLB_SECRETID"
+                                },
+                                {
+                                    "type": "env",
+                                    "dataKey": "clb-controller-secretkey",
+                                    "keyOrPath": "BCS_CLB_SECRETKEY"
+                                },
+                                {
+                                    "type": "file",
+                                    "dataKey": "clb-controller-kubeconfig",
+                                    "keyOrPath": "/clb/kubeconfig"
+                                }
+                            ]
+                        }
+                    ]
+                }],
+                "networkMode": "bcs-qcloud",
+                "networkType": "cni"
+            }
+        }
+    }
+}

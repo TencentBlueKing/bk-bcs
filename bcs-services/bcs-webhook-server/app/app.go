@@ -41,8 +41,12 @@ import (
 )
 
 const (
-	// the name of secret to store db privilege info
+	// DbPrivilegeSecretName the name of secret to store db privilege info
 	DbPrivilegeSecretName = "bcs-db-privilege"
+	// EngineTypeKubernetes kubernetes engine type
+	EngineTypeKubernetes = "kubernetes"
+	// EngineTypeMesos mesos engine type
+	EngineTypeMesos = "mesos"
 )
 
 //Run bcs log webhook server
@@ -81,7 +85,7 @@ func Run(op *options.ServerOption) {
 	return
 }
 
-// new WebHookServer object
+// NewWebhookServer new WebHookServer object
 func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
@@ -102,7 +106,7 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 
 	cfg, err := clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.Kubeconfig)
 	if err != nil {
-		return nil, fmt.Errorf("error building kube config: %s\n", err.Error())
+		return nil, fmt.Errorf("error building kube config: %s", err.Error())
 	}
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
@@ -130,14 +134,14 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		}
 		blog.Infof("created BcsLogConfig crd: %t", logCreated)
 
-		bcsLogConfigInformer := factory.Bkbcs().V2().BcsLogConfigs()
+		bcsLogConfigInformer := factory.Bkbcs().V1().BcsLogConfigs()
 		whsvr.BcsLogConfigLister = bcsLogConfigInformer.Lister()
 
 		switch whsvr.EngineType {
-		case "kubernetes":
+		case EngineTypeKubernetes:
 			k8sLogConfInject := k8s.NewLogConfInject(whsvr.BcsLogConfigLister)
 			whsvr.K8sLogConfInject = k8sLogConfInject
-		case "mesos":
+		case EngineTypeMesos:
 			mesosLogConfInject := mesos.NewLogConfInject(whsvr.BcsLogConfigLister)
 			whsvr.MesosLogConfInject = mesosLogConfInject
 		}
@@ -159,7 +163,7 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		}
 		blog.Infof("created BcsDbPrivConfig crd: %t", dbPrivCreated)
 
-		bcsDbPrivConfigInformer := factory.Bkbcs().V2().BcsDbPrivConfigs()
+		bcsDbPrivConfigInformer := factory.Bkbcs().V1().BcsDbPrivConfigs()
 		whsvr.BcsDbPrivConfigLister = bcsDbPrivConfigInformer.Lister()
 
 		dbPrivSecret, err := whsvr.KubeClient.CoreV1().Secrets(metav1.NamespaceSystem).Get(DbPrivilegeSecretName, metav1.GetOptions{})
@@ -168,10 +172,11 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		}
 
 		switch whsvr.EngineType {
-		case "kubernetes":
+		case EngineTypeKubernetes:
 			k8sDbPrivConfInject := k8s.NewDbPrivConfInject(whsvr.BcsDbPrivConfigLister, whsvr.Injects, dbPrivSecret)
+
 			whsvr.K8sDbPrivConfInject = k8sDbPrivConfInject
-		case "mesos":
+		case EngineTypeMesos:
 			mesosDbPrivConfInject := mesos.NewDbPrivConfInject(whsvr.BcsDbPrivConfigLister)
 			whsvr.MesosDbPrivConfInject = mesosDbPrivConfInject
 		}
@@ -186,10 +191,30 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		}
 	}
 
+	// if bscp_inject is true, init bscp inject
+	if conf.Injects.Bscp.BscpInject {
+		switch whsvr.EngineType {
+		case EngineTypeKubernetes:
+			bscpInject := k8s.NewBscpInject()
+			if err := bscpInject.InitTemplate(conf.Injects.Bscp.BscpTemplatePath); err != nil {
+				blog.Fatal(err.Error())
+			}
+			whsvr.K8sBscpInject = bscpInject
+			blog.Info("create bscp k8s inject module success")
+		case EngineTypeMesos:
+			bscpInject := mesos.NewBscpInject()
+			if err := bscpInject.InitTemplate(conf.Injects.Bscp.BscpTemplatePath); err != nil {
+				blog.Fatal(err.Error())
+			}
+			whsvr.MesosBscpInject = bscpInject
+			blog.Info("create bscp mesos inject module success")
+		}
+	}
+
 	// define http server and server handler
 	mux := http.NewServeMux()
-	mux.HandleFunc("/bcs/webhook/inject/v1/k8s", whsvr.K8sLogInject)
-	mux.HandleFunc("/bcs/webhook/inject/v1/mesos", whsvr.MesosLogInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/k8s", whsvr.K8sInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/mesos", whsvr.MesosInject)
 	whsvr.Server.Handler = mux
 
 	return whsvr, nil

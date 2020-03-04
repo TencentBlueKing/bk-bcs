@@ -1863,6 +1863,31 @@ func (r *Router) scaleDeployment_r(req *restful.Request, resp *restful.Response)
 	return
 }
 
+// ScaleDeployment is used to scale deployment instances.
+func (r *Router) getDeployment_r(req *restful.Request, resp *restful.Response) {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
+		blog.Warn("scheduler is not master, can not process cmd")
+		return
+	}
+	blog.V(3).Infof("receive scale deployment request")
+
+	runAs := req.PathParameter("namespace")
+	name := req.PathParameter("name")
+	blog.Info("request get deployment(%s %s) information", runAs, name)
+	o, err := r.backend.GetDeployment(runAs, name)
+	if err != nil {
+		blog.Error("request get deployment(%s %s) err(%s)", runAs, name, err.Error())
+		data := createResponeData(err, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+
+	data := createResponeData(nil, "success", o)
+	resp.Write([]byte(data))
+	blog.Infof("request get deployment(%s %s) end", runAs, name)
+	return
+}
+
 func (r *Router) registerCustomResource(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")

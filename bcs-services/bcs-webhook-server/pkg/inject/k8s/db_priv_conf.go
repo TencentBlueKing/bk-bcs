@@ -18,8 +18,8 @@ import (
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-webhook-server/options"
-	v2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
+	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -33,7 +33,7 @@ type DbPrivConfInject struct {
 }
 
 // NewDbPrivConfInject create DbPrivConfInject object
-func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, injects options.InjectOptions, dbPrivSecret *corev1.Secret) K8sInject {
+func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, injects options.InjectOptions, dbPrivSecret *corev1.Secret) K8sInject { // nolint
 	k8sInject := &DbPrivConfInject{
 		BcsDbPrivConfigLister: bcsDbPrivConfLister,
 		Injects:               injects,
@@ -47,13 +47,13 @@ func NewDbPrivConfInject(bcsDbPrivConfLister listers.BcsDbPrivConfigLister, inje
 func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOperation, error) {
 	var patch []PatchOperation
 
-	bcsDbPrivConfs, err := dbPrivConf.BcsDbPrivConfigLister.List(labels.Everything())
+	bcsDbPrivConfs, err := dbPrivConf.BcsDbPrivConfigLister.BcsDbPrivConfigs(pod.Namespace).List(labels.Everything())
 	if err != nil {
 		blog.Errorf("list BcsDbPrivConfig error %s", err.Error())
 		return nil, err
 	}
 
-	var matched *v2.BcsDbPrivConfig
+	var matched *v1.BcsDbPrivConfig
 	for _, d := range bcsDbPrivConfs {
 		labelSelector := &metav1.LabelSelector{
 			MatchLabels: d.Spec.PodSelector,
@@ -75,7 +75,7 @@ func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOpera
 }
 
 // addInitContainer add an init-container to pod
-func (dbPrivConf *DbPrivConfInject) addInitContainer(matched *v2.BcsDbPrivConfig) (patch PatchOperation) {
+func (dbPrivConf *DbPrivConfInject) addInitContainer(matched *v1.BcsDbPrivConfig) (patch PatchOperation) {
 
 	var initContainers []corev1.Container
 	var fieldPath, callType string

@@ -1,5 +1,5 @@
 /*
-Copyright The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	bkbcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v2"
-	fakebkbcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v2/fake"
+	bkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1"
+	fakebkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -71,12 +71,12 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// BkbcsV2 retrieves the BkbcsV2Client
-func (c *Clientset) BkbcsV2() bkbcsv2.BkbcsV2Interface {
-	return &fakebkbcsv2.FakeBkbcsV2{Fake: &c.Fake}
+// BkbcsV1 retrieves the BkbcsV1Client
+func (c *Clientset) BkbcsV1() bkbcsv1.BkbcsV1Interface {
+	return &fakebkbcsv1.FakeBkbcsV1{Fake: &c.Fake}
 }
 
-// Bkbcs retrieves the BkbcsV2Client
-func (c *Clientset) Bkbcs() bkbcsv2.BkbcsV2Interface {
-	return &fakebkbcsv2.FakeBkbcsV2{Fake: &c.Fake}
+// Bkbcs retrieves the BkbcsV1Client
+func (c *Clientset) Bkbcs() bkbcsv1.BkbcsV1Interface {
+	return &fakebkbcsv1.FakeBkbcsV1{Fake: &c.Fake}
 }

@@ -35,7 +35,7 @@ BCS 基于 bcs-webhook-server 的实现，使用 crd 写入配置的方式，实
 ### crd 配置
 在对 pod 容器进行 db 授权前，需提前创建 crd 信息。  
 ```
-apiVersion: bkbcs.tencent.com/v2
+apiVersion: bkbcs.tencent.com/v1
 kind: BcsDbPrivConfig
 metadata:
   name: bcs-db-privilege

@@ -69,6 +69,9 @@ type BCSConfig struct {
 
 	// CustomNetServiceEndpoints is custom target netservice endpoints.
 	CustomNetServiceEndpoints []string `json:"custom-netservice-endpoints"`
+
+	// whether the k8s cluster and bcs-k8s-watch is in external network
+	IsExternal bool `json:"is-external"`
 }
 
 type K8sConfig struct {

@@ -28,7 +28,7 @@ type ServerOption struct {
 	Port           uint   `json:"port" short:"p" value:"443" usage:"Port to listen on for this service"`
 	ServerCertFile string `json:"server_cert_file" value:"" usage:"Server public key file(*.crt). If both server_cert_file and server_key_file are set, it will set up an HTTPS server"`
 	ServerKeyFile  string `json:"server_key_file" value:"" usage:"Server private key file(*.key). If both server_cert_file and server_key_file are set, it will set up an HTTPS server"`
-	EngineType     string `json:"engine_type" value:"kubernetes" usage:"the platform that bcs-log-webhook-server runs in, kubernetes or mesos"`
+	EngineType     string `json:"engine_type" value:"kubernetes" usage:"the platform that bcs-webhook-server runs in, kubernetes or mesos"`
 	KubeConfig     string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver, Only required if out-of-cluster."`
 	KubeMaster     string `json:"kube-master" value:"" usage:"The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster." mapstructure:"kube-master"`
 
@@ -49,6 +49,7 @@ func Parse(ops *ServerOption) error {
 type InjectOptions struct {
 	LogConfEnv bool          `json:"log_conf" value:"false" usage:"whether inject log config to container env"`
 	DbPriv     DbPrivOptions `json:"db_privilege"`
+	Bscp       BscpOptions   `json:"bscp" value:"false" usage:"whether inject bscp sidecar"`
 }
 
 type DbPrivOptions struct {
@@ -56,4 +57,9 @@ type DbPrivOptions struct {
 	NetworkType        string `json:"network_type" value:"overlay" usage:"network type of this cluster, overlay or underlay"`
 	EsbUrl             string `json:"esb_url" value:"" usage:"esb api url to privilege"`
 	InitContainerImage string `json:"init_container_image" value:"" usage:"the image name of init-container to inject"`
+}
+
+type BscpOptions struct {
+	BscpInject       bool   `json:"bscp_inject" value:"false" usage:"whether inject bscp sidecar"`
+	BscpTemplatePath string `json:"bscp_template_path" value:"" usage:"template file for sidecar"`
 }

@@ -34,6 +34,8 @@ var (
 	bkeAddress         string
 	clusterId          string
 	insecureSkipVerify bool
+	// 外网跨云部署时，需要上报的api-server的公网或代理地址
+	ExternalProxyAddresses string
 )
 
 var rootCmd = &cobra.Command{
@@ -73,6 +75,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&bkeAddress, "bke-address", "", "the bke address")
 	rootCmd.PersistentFlags().StringVar(&clusterId, "cluster-id", "", "cluster which the agent run in")
 	rootCmd.PersistentFlags().BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "verifies the server's certificate chain and host name")
+	rootCmd.PersistentFlags().StringVar(&ExternalProxyAddresses, "external-proxy-addresses", "", "external proxy addresses of apiserver, separated by semicolon")
 	// these three flag support direct flag and viper config at the same time, the direct flag could cover the viper config.
 	viper.BindPFlag("agent.kubeconfig", rootCmd.PersistentFlags().Lookup("kubeconfig"))
 	viper.BindPFlag("agent.periodSync", rootCmd.PersistentFlags().Lookup("periodsync"))
@@ -80,6 +83,7 @@ func init() {
 	viper.BindPFlag("bke.serverAddress", rootCmd.PersistentFlags().Lookup("bke-address"))
 	viper.BindPFlag("cluster.id", rootCmd.PersistentFlags().Lookup("cluster-id"))
 	viper.BindPFlag("agent.insecureSkipVerify", rootCmd.PersistentFlags().Lookup("insecureSkipVerify"))
+	viper.BindPFlag("agent.external-proxy-addresses", rootCmd.PersistentFlags().Lookup("external-proxy-addresses"))
 }
 
 func initConfig() {

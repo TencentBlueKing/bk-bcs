@@ -115,6 +115,7 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/deployment/{namespace}/{name}/resumeupdate", nil, r.resumeUpdateDeployment))
 	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/deployment/{namespace}/{name}", nil, r.deleteDeployment))
 	r.actions = append(r.actions, httpserver.NewAction("PUT", "/deployment/{namespace}/{name}/scale/{instances}", nil, r.scaleDeployment_r))
+	r.actions = append(r.actions, httpserver.NewAction("GET", "/deployment/{namespace}/{name}", nil, r.getDeployment_r))
 	/*-------------- deployment ---------------*/
 
 	/*-------------- healthcheck ---------------*/

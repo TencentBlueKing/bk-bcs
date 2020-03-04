@@ -1,0 +1,14 @@
+{
+    "apiVersion":"v4",
+    "kind":"configmap",
+    "metadata":{
+        "name":"nginx-configmap",
+        "namespace":"${bcsClbControllerNamespace}"
+    },
+    "datas":{
+        "nginx-conf": {
+            "type": "file",
+            "content": "${bcsClbControllerNginxConfBase64}"
+        }
+    }
+}

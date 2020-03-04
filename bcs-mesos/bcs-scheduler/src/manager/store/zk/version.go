@@ -26,12 +26,25 @@ func getVersionRootPath() string {
 	return "/" + bcsRootNode + "/" + versionNode + "/"
 }
 
+//create version, produce version id
 func (store *managerStore) SaveVersion(version *types.Version) error {
-
-	blog.Info("save version(id:%s)", version.ID)
-
 	version.Name = strconv.FormatInt(time.Now().UnixNano(), 10)
+	data, err := json.Marshal(version)
+	if err != nil {
+		blog.Error("fail to encode object version(ID:%s) by json. err:%s", version.ID, err.Error())
+		return err
+	}
 
+	runAs := version.RunAs
+	if "" == runAs {
+		runAs = defaultRunAs
+	}
+
+	path := getVersionRootPath() + runAs + "/" + version.ID + "/" + version.Name
+	return store.Db.Insert(path, string(data))
+}
+
+func (store *managerStore) UpdateVersion(version *types.Version) error {
 	data, err := json.Marshal(version)
 	if err != nil {
 		blog.Error("fail to encode object version(ID:%s) by json. err:%s", version.ID, err.Error())

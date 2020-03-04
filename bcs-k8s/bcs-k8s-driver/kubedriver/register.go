@@ -43,12 +43,14 @@ func GetServerInfo(opts *options.KubeDriverServerOptions, clusterID string) type
 	}
 
 	return types.ServerInfo{
-		IP:       hostIp,
-		Port:     port,
-		HostName: hostname,
-		Scheme:   scheme,
-		Cluster:  clusterID,
-		Version:  bcsVersion.GetVersion(),
-		Pid:      os.Getpid(),
+		IP:           hostIp,
+		Port:         port,
+		ExternalIp:   opts.ExternalIp,
+		ExternalPort: opts.ExternalPort,
+		HostName:     hostname,
+		Scheme:       scheme,
+		Cluster:      clusterID,
+		Version:      bcsVersion.GetVersion(),
+		Pid:          os.Getpid(),
 	}
 }

@@ -1,5 +1,5 @@
 /*
-Copyright The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 package externalversions
 
 import (
-	v2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
+	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	"fmt"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -52,11 +52,11 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=bkbcs.tencent.com, Version=v2
-	case v2.SchemeGroupVersion.WithResource("bcsdbprivconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().BcsDbPrivConfigs().Informer()}, nil
-	case v2.SchemeGroupVersion.WithResource("bcslogconfigs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().BcsLogConfigs().Informer()}, nil
+	// Group=bkbcs.tencent.com, Version=v1
+	case v1.SchemeGroupVersion.WithResource("bcsdbprivconfigs"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V1().BcsDbPrivConfigs().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("bcslogconfigs"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V1().BcsLogConfigs().Informer()}, nil
 
 	}
 

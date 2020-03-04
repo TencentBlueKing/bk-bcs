@@ -64,6 +64,7 @@ const (
 	LimitationMaxListenerNum       = 50
 	LimitationMaxRulePerListener   = 50
 	LimitationMaxBackendNumPerRule = 100
+	LimitationMaxBackendNumEachBind = 20
 )
 
 // CheckRegion validate region field

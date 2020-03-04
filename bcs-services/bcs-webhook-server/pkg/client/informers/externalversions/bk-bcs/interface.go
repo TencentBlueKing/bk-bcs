@@ -1,5 +1,5 @@
 /*
-Copyright The Kubernetes Authors.
+Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ limitations under the License.
 package bkbcs
 
 import (
-	v2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/bk-bcs/v2"
+	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/bk-bcs/v1"
 	internalinterfaces "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.
 type Interface interface {
-	// V2 provides access to shared informers for resources in V2.
-	V2() v2.Interface
+	// V1 provides access to shared informers for resources in V1.
+	V1() v1.Interface
 }
 
 type group struct {
@@ -40,7 +40,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &group{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// V2 returns a new v2.Interface.
-func (g *group) V2() v2.Interface {
-	return v2.New(g.factory, g.namespace, g.tweakListOptions)
+// V1 returns a new v1.Interface.
+func (g *group) V1() v1.Interface {
+	return v1.New(g.factory, g.namespace, g.tweakListOptions)
 }

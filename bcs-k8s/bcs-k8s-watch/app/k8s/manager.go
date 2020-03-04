@@ -14,19 +14,21 @@ package k8s
 
 import (
 	"fmt"
-	"net/url"
-
-	appsv1beta1 "k8s.io/api/apps/v1beta1"
-	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"strings"
+	"time"
 
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+	clientGoCache "k8s.io/client-go/tools/cache"
+
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	apiextensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	crdClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/apiextensions-apiserver/pkg/client/informers/externalversions"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // WatcherManager is resource watcher manager.
@@ -34,187 +36,149 @@ type WatcherManager struct {
 	// normal k8s resource watchers.
 	watchers map[string]WatcherInterface
 
+	// k8s kubefed watchers
+	crdWatchers map[string]WatcherInterface
+
 	// synchronizer syncs normal metadata got by watchers to storage.
 	synchronizer *Synchronizer
 
 	// special resource watchers.
 	netserviceWatcher *NetServiceWatcher
+
+	stopChan <-chan struct{}
+
+	writer *output.Writer
+
+	// id of current cluster.
+	clusterID string
+
+	// target storage service.
+	storageService *bcs.InnerService
 }
 
 // NewWatcherManager creates a new WatcherManager instance.
 func NewWatcherManager(clusterID string, writer *output.Writer, k8sConfig *options.K8sConfig,
-	storageService, netservice *bcs.InnerService) (*WatcherManager, error) {
+	storageService, netservice *bcs.InnerService, sc <-chan struct{}) (*WatcherManager, error) {
 
 	mgr := &WatcherManager{
-		watchers: make(map[string]WatcherInterface),
+		watchers:       make(map[string]WatcherInterface),
+		crdWatchers:    make(map[string]WatcherInterface),
+		stopChan:       sc,
+		writer:         writer,
+		clusterID:      clusterID,
+		storageService: storageService,
 	}
-	mgr.initWatchers(clusterID, writer, k8sConfig, storageService, netservice)
+	mgr.initWatchers(clusterID, k8sConfig, storageService, netservice)
 
-	mgr.synchronizer = NewSynchronizer(clusterID, mgr.watchers, storageService)
+	mgr.synchronizer = NewSynchronizer(clusterID, mgr.watchers, mgr.crdWatchers, storageService)
 	return mgr, nil
 }
 
-func (mgr *WatcherManager) newClientSet(k8sConfig *options.K8sConfig) (*kubernetes.Clientset, error) {
-	var config *rest.Config
-	var err error
-
-	// build k8s client config.
-	if k8sConfig.Master == "" {
-		glog.Info("k8sConfig.Master is not be set, use in cluster mode")
-
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		glog.Info("k8sConfig.Master is set: %s", k8sConfig.Master)
-
-		u, err := url.Parse(k8sConfig.Master)
-		if err != nil {
-			return nil, err
-		}
-
-		var tlsConfig rest.TLSClientConfig
-		if u.Scheme == "https" {
-			if k8sConfig.TLS.CAFile == "" || k8sConfig.TLS.CertFile == "" || k8sConfig.TLS.KeyFile == "" {
-				return nil, fmt.Errorf("use https, kube-ca-file, kube-cert-file, kube-key-file required")
-			}
-
-			tlsConfig = rest.TLSClientConfig{
-				CAFile:   k8sConfig.TLS.CAFile,
-				CertFile: k8sConfig.TLS.CertFile,
-				KeyFile:  k8sConfig.TLS.KeyFile,
-			}
-		}
-		config = &rest.Config{
-			Host:            k8sConfig.Master,
-			QPS:             1e6,
-			Burst:           1e6,
-			TLSClientConfig: tlsConfig,
-		}
-	}
-
-	return kubernetes.NewForConfig(config)
-}
-
-func (mgr *WatcherManager) initWatchers(clusterID string, writer *output.Writer,
+func (mgr *WatcherManager) initWatchers(clusterID string,
 	k8sconfig *options.K8sConfig, storageService, netservice *bcs.InnerService) {
 
-	// create k8s clientset.
-	clientSet, err := mgr.newClientSet(k8sconfig)
+	restConfig, err := resources.GetRestConfig(k8sconfig)
 	if err != nil {
 		panic(err)
 	}
 
-	coreClient := clientSet.CoreV1().RESTClient()
-	extensionsV1Beta1Client := clientSet.ExtensionsV1beta1().RESTClient()
-	batchV1Client := clientSet.BatchV1().RESTClient()
-	appsV1Beta1Client := clientSet.AppsV1beta1().RESTClient()
-
-	// build watcher configs.
-	watcherConfigList := map[string]ResourceObjType{
-		"Node": ResourceObjType{
-			"nodes",
-			&v1.Node{},
-			&coreClient,
-		},
-		"Pod": {
-			"pods",
-			&v1.Pod{},
-			&coreClient,
-		},
-		"ReplicationController": {
-			"replicationcontrollers",
-			&v1.ReplicationController{},
-			&coreClient,
-		},
-		"Service": {
-			"services",
-			&v1.Service{},
-			&coreClient,
-		},
-		"EndPoints": {
-			"endpoints",
-			&v1.Endpoints{},
-			&coreClient,
-		},
-		"ConfigMap": {
-			"configmaps",
-			&v1.ConfigMap{},
-			&coreClient,
-		},
-		"Secret": {
-			"secrets",
-			&v1.Secret{},
-			&coreClient,
-		},
-		"Namespace": {
-			"namespaces",
-			&v1.Namespace{},
-			&coreClient,
-		},
-		"Event": {
-			"events",
-			&v1.Event{},
-			&coreClient,
-		},
-		"Deployment": {
-			"deployments",
-			&v1beta1.Deployment{},
-			&extensionsV1Beta1Client,
-		},
-		"Ingress": {
-			"ingresses",
-			&v1beta1.Ingress{},
-			&extensionsV1Beta1Client,
-		},
-		"ReplicaSet": {
-			"replicasets",
-			&v1beta1.ReplicaSet{},
-			&extensionsV1Beta1Client,
-		},
-		"DaemonSet": {
-			"daemonsets",
-			&v1beta1.DaemonSet{},
-			//&appsv1beta2.DaemonSet{},
-			&extensionsV1Beta1Client,
-		},
-		"Job": {
-			"jobs",
-			&batchv1.Job{},
-			&batchV1Client,
-		},
-		"StatefulSet": {
-			"statefulsets",
-			&appsv1beta1.StatefulSet{},
-			&appsV1Beta1Client,
-		},
-	}
-
-	for name, resourceObjType := range watcherConfigList {
-		watcher := NewWatcher(resourceObjType.client, name, resourceObjType.resourceName, resourceObjType.objType, writer, mgr.watchers)
+	// init k8s normal resource watchers
+	for name, resourceObjType := range resources.WatcherConfigList {
+		watcher := NewWatcher(resourceObjType.Client, name, resourceObjType.ResourceName, resourceObjType.ObjType, mgr.writer, mgr.watchers, resourceObjType.Namespaced) // nolint
 		mgr.watchers[name] = watcher
 	}
 
-	/* NOTE: only for k8s1.8
-	appsV1beta2WatcherList := map[string]ResourceObjType{
-	   "Deployment": {
-		   "deployments",
-	 	   &v1beta2.Deployment{},
-	    },
-	    "ReplicaSet": {
-	 	   "replicasets",
-	        &v1beta2.ReplicaSet{},
-	    },
+	// begin to watch kubefed to init kubefed watchers
+	crdClient, err := crdClientSet.NewForConfig(restConfig)
+	if err != nil {
+		panic(err)
 	}
-	for name, resourceObjType := range appsV1beta2WatcherList{
-	    watcher := NewWatcher(&appsV1beta2Client, name, resourceObjType.resourceName, resourceObjType.objType, writer)
-	    cluster.watchers[name] = watcher
+	crdInformerFactory := externalversions.NewSharedInformerFactory(crdClient, time.Second*30)
+	crdInformer := crdInformerFactory.Apiextensions().V1beta1().CustomResourceDefinitions()
+	crdInformer.Lister()
+
+	crdInformer.Informer().AddEventHandler(clientGoCache.ResourceEventHandlerFuncs{
+		AddFunc:    mgr.AddEvent,
+		UpdateFunc: mgr.UpdateEvent,
+		DeleteFunc: mgr.DeleteEvent,
+	})
+
+	go crdInformerFactory.Start(mgr.stopChan)
+
+	glog.Infof("Waiting for informer caches to sync")
+	if ok := clientGoCache.WaitForCacheSync(mgr.stopChan, crdInformer.Informer().HasSynced); !ok {
+		err := fmt.Errorf("failed to wait for kubefed caches to sync")
+		panic(err)
 	}
-	*/
 
 	// init netservice watcher.
 	mgr.netserviceWatcher = NewNetServiceWatcher(clusterID, storageService, netservice)
+}
+
+func (mgr *WatcherManager) AddEvent(obj interface{}) {
+	crdObj, ok := obj.(*apiextensionsV1beta1.CustomResourceDefinition)
+	if !ok {
+		return
+	}
+
+	if strings.HasSuffix(crdObj.Spec.Group, ".kubefed.io") || crdObj.Spec.Group == resources.BkbcsGroupName {
+		mgr.runCrdWatcher(crdObj)
+		return
+	}
+
+}
+
+func (mgr *WatcherManager) UpdateEvent(oldObj, newObj interface{}) {
+	return
+}
+
+func (mgr *WatcherManager) DeleteEvent(obj interface{}) {
+	crdObj, ok := obj.(*apiextensionsV1beta1.CustomResourceDefinition)
+	if !ok {
+		return
+	}
+
+	mgr.stopCrdWatcher(crdObj)
+}
+
+// runCrdWatcher run a crd watcher and writer handler
+func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourceDefinition) {
+	groupVersion := obj.Spec.Group + "/" + obj.Spec.Version
+	if kubefedClient, ok := resources.CrdClientList[groupVersion]; ok {
+		var runtimeObject k8sruntime.Object
+		var namespaced bool
+		if obj.Spec.Scope == "Cluster" {
+			namespaced = false
+		} else if obj.Spec.Scope == "Namespaced" {
+			namespaced = true
+		}
+
+		// init and run writer handler
+		action := action.NewStorageAction(mgr.clusterID, obj.Spec.Names.Kind, mgr.storageService)
+		mgr.writer.Handlers[obj.Spec.Names.Kind] = output.NewHandler(obj.Spec.Names.Kind, action)
+		stopChan := make(chan struct{})
+		mgr.writer.Handlers[obj.Spec.Names.Kind].Run(stopChan)
+
+		// init and run watcher
+		watcher := NewWatcher(&kubefedClient, obj.Spec.Names.Kind, obj.Spec.Names.Plural, runtimeObject, mgr.writer, mgr.watchers, namespaced) // nolint
+		watcher.stopChan = stopChan
+		mgr.crdWatchers[obj.Spec.Names.Kind] = watcher
+		glog.Infof("watcher manager, start list-watcher[%+v]", obj.Spec.Names.Kind)
+		go watcher.Run(watcher.stopChan)
+	}
+}
+
+// stopCrdWatcher stop watcher and writer handler
+func (mgr *WatcherManager) stopCrdWatcher(obj *apiextensionsV1beta1.CustomResourceDefinition) {
+
+	if wc, ok := mgr.crdWatchers[obj.Spec.Names.Kind]; ok {
+		watcher := wc.(*Watcher)
+		glog.Infof("watcher manager, stop list-watcher[%+v]", obj.Spec.Names.Kind)
+		close(watcher.stopChan)
+		delete(mgr.crdWatchers, obj.Spec.Names.Kind)
+		delete(mgr.writer.Handlers, obj.Spec.Names.Kind)
+	}
+
 }
 
 // Run starts the watcher manager, and runs all watchers.
@@ -230,4 +194,12 @@ func (mgr *WatcherManager) Run(stopCh <-chan struct{}) {
 
 	// run synchronizer.
 	go mgr.synchronizer.Run(stopCh)
+}
+
+// StopCrdWatchers stop all crd watcher and writer handler
+func (mgr *WatcherManager) StopCrdWatchers() {
+	for _, wc := range mgr.crdWatchers {
+		watcher := wc.(*Watcher)
+		close(watcher.stopChan)
+	}
 }
