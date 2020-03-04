@@ -11,32 +11,22 @@
  *
  */
 
-package filter
+package types
 
-import (
-	"fmt"
-
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
-
-	"github.com/emicklei/go-restful"
-)
-
-type HeaderValidFilter struct {
-	conf *config.MesosDriverConfig
+type Yaml struct {
+	Local []Local `yaml:"local"`
 }
 
-func NewHeaderValidFilter(conf *config.MesosDriverConfig) RequestFilterFunction {
-	return &HeaderValidFilter{
-		conf: conf,
-	}
-}
+type Local struct {
+	DataId  int            `yaml:"dataid"`
+	Paths   []string          `yaml:"paths"`
+	ToJson  bool              `yaml:"to_json"`
+	ExtMeta map[string]string `yaml:"ext_meta"`
 
-func (h *HeaderValidFilter) Execute(req *restful.Request) (int, error) {
-	clusterId := req.Request.Header.Get("BCS-ClusterID")
-	if clusterId != h.conf.Cluster {
-		return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("http header BCS-ClusterID %s don't exist", clusterId)
-	}
-
-	return 0, nil
+	//stdout dataid
+	StdoutDataid string `yaml:"-"`
+	//nonstandard log dataid
+	NonstandardDataid string `yaml:"-"`
+	//nonstandard paths
+	NonstandardPaths string `yaml:"-"`
 }

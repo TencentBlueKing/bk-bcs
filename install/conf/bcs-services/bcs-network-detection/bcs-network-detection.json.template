@@ -1,0 +1,19 @@
+{
+  "address": "${localIp}",
+  "port": ${bcsNetworkDetectionPort},
+  "metric_port": ${bcsNetworkDetectionPort},
+  "bcs_zookeeper": "${bcsZkHost}",
+  "ca_file": "${caFile}",
+  "log_dir": "${log_dir}",
+  "pid_dir": "${pid_dir}",
+  "client_cert_file": "${clientCertFile}",
+  "client_key_file": "${clientKeyFile}",
+  "server_cert_file": "${serverCertFile}",
+  "server_key_file": "${serverKeyFile}",
+  "clusters": "${deployClusters}",
+  "app_code": "${esbBcsAppCode}",
+  "app_secret": "${esbBcsAppSecret}",
+  "operator": "${esbOperator}",
+  "esb_url": "${esbUrl}",
+  "app_id": ${appId}
+}

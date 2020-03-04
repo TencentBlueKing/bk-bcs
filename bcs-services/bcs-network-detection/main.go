@@ -11,32 +11,35 @@
  *
  */
 
-package filter
+package main
 
 import (
-	"fmt"
+	"os"
+	"runtime"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
-
-	"github.com/emicklei/go-restful"
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-common/common/license"
+	"bk-bcs/bcs-services/bcs-network-detection/app"
+	"bk-bcs/bcs-services/bcs-network-detection/app/options"
 )
 
-type HeaderValidFilter struct {
-	conf *config.MesosDriverConfig
-}
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	op := options.NewOption()
+	conf.Parse(op)
 
-func NewHeaderValidFilter(conf *config.MesosDriverConfig) RequestFilterFunction {
-	return &HeaderValidFilter{
-		conf: conf,
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
+	blog.Info("init logs success")
+	license.CheckLicense(op.LicenseServerConfig)
+
+	err := app.Run(op)
+	if err != nil {
+		blog.Errorf(err.Error())
+		os.Exit(1)
 	}
-}
 
-func (h *HeaderValidFilter) Execute(req *restful.Request) (int, error) {
-	clusterId := req.Request.Header.Get("BCS-ClusterID")
-	if clusterId != h.conf.Cluster {
-		return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("http header BCS-ClusterID %s don't exist", clusterId)
-	}
-
-	return 0, nil
+	ch := make(chan bool)
+	<-ch
 }

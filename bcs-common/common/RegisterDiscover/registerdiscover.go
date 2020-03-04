@@ -85,3 +85,7 @@ func (rd *RegDiscover) DiscoverService(key string) (<-chan *DiscoverEvent, error
 func (rd *RegDiscover) DiscoverNodes(path string) (*DiscoverEvent, error) {
 	return rd.rdServer.DiscoverNodes(path)
 }
+
+func (rd *RegDiscover) DiscoverNodesV2(path string) (*DiscoverEvent, error) {
+	return rd.rdServer.DiscoverNodesV2(path)
+}

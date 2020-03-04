@@ -127,7 +127,13 @@ func (r *serviceDiscovery) start() error {
 		blog.Error("fail to start register and discover serv. err:%s", err.Error())
 		return err
 	}
-
+	zvs, err := r.rd.DiscoverNodes("/bcs/services/endpoints")
+	if err != nil {
+		blog.Errorf("discover nodes /bcs/services/endpoints error %s", err.Error())
+		return err
+	}
+	by, _ := json.Marshal(zvs)
+	blog.Infof("servers(%s)", string(by))
 	//discover other bcs service
 	for k := range r.servers {
 		go r.discoverModules(k)
@@ -138,7 +144,7 @@ func (r *serviceDiscovery) start() error {
 
 func (r *serviceDiscovery) discoverModules(k string) {
 	key := fmt.Sprintf("%s/%s", types.BCS_SERV_BASEPATH, k)
-	blog.Infof("start discover service key %s", key)
+	blog.V(3).Infof("start discover service key %s", key)
 	event, err := r.rd.DiscoverService(key)
 	if err != nil {
 		blog.Error("fail to register discover for api. err:%s", err.Error())
@@ -197,7 +203,7 @@ func (r *serviceDiscovery) discoverMesosApiserver(nodes []string) error {
 		}
 
 		r.mesosapiClustersNodes[node] = struct{}{}
-		blog.Infof("start discover cluster %s mesosapi", node)
+		blog.V(3).Infof("start discover cluster %s mesosapi", node)
 		key := fmt.Sprintf("%s/%s/%s", types.BCS_SERV_BASEPATH, types.BCS_MODULE_MESOSAPISERVER, node)
 
 		go r.discoverClusterMesosApiserver(key)
@@ -227,7 +233,7 @@ func (r *serviceDiscovery) discoverClusterMesosApiserver(key string) {
 
 			mesosApis := make([]interface{}, 0)
 			for _, serv := range eve.Server {
-				blog.Infof("discover key %s mesos apiserver %s", key, serv)
+				blog.V(3).Infof("discover key %s mesos apiserver %s", key, serv)
 
 				api := new(types.BcsMesosApiserverInfo)
 				if err := json.Unmarshal([]byte(serv), api); err != nil {
@@ -260,7 +266,7 @@ func (r *serviceDiscovery) discoverK8sApiserver(nodes []string) error {
 		}
 
 		r.k8sapiClustersNodes[node] = struct{}{}
-		blog.Infof("start discover cluster %s k8sapi", node)
+		blog.V(3).Infof("start discover cluster %s k8sapi", node)
 		key := fmt.Sprintf("%s/%s/%s", types.BCS_SERV_BASEPATH, types.BCS_MODULE_K8SAPISERVER, node)
 
 		go r.discoverClusterK8sApiserver(key)
@@ -290,7 +296,7 @@ func (r *serviceDiscovery) discoverClusterK8sApiserver(key string) {
 
 			k8sApis := make([]interface{}, 0)
 			for _, serv := range eve.Server {
-				blog.Infof("discover cluster %s k8s apiserver %s", key, serv)
+				blog.V(3).Infof("discover cluster %s k8s apiserver %s", key, serv)
 
 				api := new(types.BcsK8sApiserverInfo)
 				if err := json.Unmarshal([]byte(serv), api); err != nil {
@@ -315,7 +321,7 @@ func (r *serviceDiscovery) discoverClusterK8sApiserver(key string) {
 }
 
 func (r *serviceDiscovery) discoverStorageServ(servInfos []string) error {
-	blog.Info("discover storage(%v)", servInfos)
+	blog.V(3).Infof("discover storage(%v)", servInfos)
 
 	storages := make([]interface{}, 0)
 	for _, serv := range servInfos {
@@ -339,7 +345,7 @@ func (r *serviceDiscovery) discoverStorageServ(servInfos []string) error {
 }
 
 func (r *serviceDiscovery) discoverNetserviceServ(servInfos []string) error {
-	blog.Info("discover netservice(%v)", servInfos)
+	blog.V(3).Infof("discover netservice(%v)", servInfos)
 
 	netservices := make([]interface{}, 0)
 	for _, serv := range servInfos {
@@ -363,7 +369,7 @@ func (r *serviceDiscovery) discoverNetserviceServ(servInfos []string) error {
 }
 
 func (r *serviceDiscovery) discoverMetricServer(servInfos []string) error {
-	blog.Info("discover metricservice(%v)", servInfos)
+	blog.V(3).Infof("discover metricservice(%v)", servInfos)
 
 	clusters := make([]interface{}, 0)
 	for _, serv := range servInfos {
@@ -387,7 +393,7 @@ func (r *serviceDiscovery) discoverMetricServer(servInfos []string) error {
 }
 
 func (r *serviceDiscovery) discoverApiserver(servInfos []string) error {
-	blog.Info("discover apiserver(%v)", servInfos)
+	blog.V(3).Infof("discover apiserver(%v)", servInfos)
 
 	clusters := make([]interface{}, 0)
 	for _, serv := range servInfos {
