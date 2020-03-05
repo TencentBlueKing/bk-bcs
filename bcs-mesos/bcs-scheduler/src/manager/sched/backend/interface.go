@@ -239,6 +239,9 @@ type Backend interface {
 	//update user custom mesos slaves attributes
 	UpdateAgentSettingList(*commtypes.BcsClusterAgentSettingUpdate) (int, error)
 
+	//taints agent
+	TaintAgents([]*commtypes.BcsClusterAgentSetting) error
+
 	//custom resource register
 	RegisterCustomResource(*commtypes.Crr) error
 

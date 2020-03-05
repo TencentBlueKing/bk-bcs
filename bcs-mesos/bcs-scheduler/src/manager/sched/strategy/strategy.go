@@ -113,6 +113,11 @@ func contraintDataFit(constraint *commtypes.ConstraintData, offer *mesos.Offer, 
 	}
 
 	var attribute *mesos.Attribute
+	//taints & toleration
+	attribute, _ = offerP.GetOfferAttribute(offer, types.MesosAttributeNoSchedule)
+	if attribute!=nil {
+
+	}
 
 	// construct an attribute for hostname
 	if name == "hostname" {
@@ -307,6 +312,31 @@ func checkGreater(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 	switch constraint.Type {
 	case commtypes.ConstValueType_Scalar:
 		scalar := constraint.Scalar.Value
+		if attribute.GetType() != mesos.Value_SCALAR {
+			blog.Errorf("constraint %s type ConstValueType_Scalar, but attribute type %s", constraint.Name, attribute.GetType().String())
+			return false, nil
+		}
+
+		attrScalar := attribute.GetScalar().GetValue()
+
+		if attrScalar > scalar {
+			return true, nil
+		}
+		return false, nil
+
+	default:
+		blog.Errorf("constraint %s type %d is invalid", constraint.Name, constraint.Type)
+	}
+
+	return false, nil
+}
+
+func checkToleration(offer , attribute *mesos.Attribute) (bool, error) {
+	blog.V(3).Infof("constraint Toleration by attribute(name:%s)", constraint.Name)
+
+	switch constraint.Type {
+	case commtypes.ConstValueType_Text:
+		value := constraint.Scalar.Value
 		if attribute.GetType() != mesos.Value_SCALAR {
 			blog.Errorf("constraint %s type ConstValueType_Scalar, but attribute type %s", constraint.Name, attribute.GetType().String())
 			return false, nil

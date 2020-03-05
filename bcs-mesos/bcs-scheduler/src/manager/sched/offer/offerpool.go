@@ -724,21 +724,21 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 	}
 
 	//noSchedule, likes k8s Taints\Tolerations
-	for k,v :=range agentSetting.NoSchedule {
+	name := types.MesosAttributeNoSchedule
+	t := mesos.Value_SET
+	noScheduleAttr := &mesos.Attribute{
+		Name: &name,
+		Type: &t,
+		Set: &mesos.Value_Set{
+			Item: make([]string,0),
+		},
+	}
+	for k, v := range agentSetting.NoSchedule {
 		blog.V(3).Infof("offer(%s:%s) add noSchedule attribute(%s:%s) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
-
-		var attr mesos.Attribute
-		name := types.NoScheduleKey
-		attr.Name = &name
-		var attrType mesos.Value_Type = mesos.Value_TEXT
-		attr.Type = &attrType
-		var attrValue mesos.Value_Text
-		value := fmt.Sprintf("%s:%s",k,v)
-		attrValue.Value = &value
-		attr.Text = &attrValue
-		offer.Attributes = append(offer.Attributes, &attr)
+		noScheduleAttr.Set.Item = append(noScheduleAttr.Set.Item, fmt.Sprintf("%s=%s", k, v))
 	}
+	offer.Attributes = append(offer.Attributes, noScheduleAttr)
 
 	return nil
 }

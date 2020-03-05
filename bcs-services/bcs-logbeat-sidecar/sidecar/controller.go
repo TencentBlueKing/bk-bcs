@@ -31,9 +31,9 @@ import (
 
 const (
 	//report container stdout dataid
-	EnvLogInfoStdoutDataid = "io_tencent_bcs_app_stdout_dataid_v2"
+	EnvLogInfoStdoutDataid = "io_tencent_bcs_app_std_dataid_v2"
 	//report container nonstandard log dataid
-	EnvLogInfoNonstandardDataid = "io_tencent_bcs_app_nonstandard_dataid_v2"
+	EnvLogInfoNonstandardDataid = "io_tencent_bcs_app_non_std_dataid_v2"
 	//if true, then stdout; else custom logs file
 	EnvLogInfoStdout = "io_tencent_bcs_app_stdout_v2"
 	//if stdout=false, log file path
@@ -41,7 +41,7 @@ const (
 	//clusterid
 	EnvLogInfoLogCluster = "io_tencent_bcs_app_cluster_v2"
 	//namespace
-	EnvLogInfoLogNamepsace = "io_tencent_bcs_app_namespcae_v2"
+	EnvLogInfoLogNamepsace = "io_tencent_bcs_app_namespace_v2"
 	//custom labels, log tags
 	//example: kv1:val1,kv2:val2,kv3:val3...
 	EnvLogInfoLogLabel = "io_tencent_bcs_app_label_v2"
