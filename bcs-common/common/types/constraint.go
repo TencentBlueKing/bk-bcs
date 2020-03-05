@@ -49,6 +49,7 @@ const (
 	Constraint_Type_UNLIKE   = "UNLIKE"
 	Constraint_Type_EXCLUDE  = "EXCLUDE"
 	Constraint_Type_GREATER  = "GREATER"
+	Constraint_Type_TOLERATION  = "TOLERATION"
 )
 
 type ConstraintData struct {

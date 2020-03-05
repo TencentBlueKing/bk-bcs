@@ -129,9 +129,10 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/agentsettings", nil, r.queryAgentSettingList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/delete", nil, r.deleteAgentSettingList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings", nil, r.setAgentSettingList))
-	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/update", nil, r.updateAgentSettingList))
+	//r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/update", nil, r.updateAgentSettingList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/enable", nil, r.enableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/disable", nil, r.disableAgentList))
+	r.actions = append(r.actions, httpserver.NewAction("PUT", "/agentsettings/taint", nil, r.taintAgents))
 	/*-------------- agent setting ---------------*/
 
 	/*-------------- custom resource -----------------*/

@@ -141,7 +141,7 @@ const (
 )
 
 const (
-	NoScheduleKey = "NoSchedule"
+	MesosAttributeNoSchedule = "NoSchedule"
 )
 
 //Version for api resources application or deployment
