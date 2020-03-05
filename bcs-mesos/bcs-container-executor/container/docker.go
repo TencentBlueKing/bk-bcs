@@ -501,6 +501,7 @@ func (docker *DockerContainer) InspectContainer(containerName string) (*BcsConta
 		ExitCode:    container.State.ExitCode,
 		Hostname:    container.Config.Hostname,
 		NetworkMode: container.HostConfig.NetworkMode,
+		OOMKilled:   container.State.OOMKilled,
 		Resource: &schedTypes.Resource{
 			Cpus: float64(container.HostConfig.CPUShares / 1024),
 			Mem:  float64(container.HostConfig.Memory / 1024 / 1024),
