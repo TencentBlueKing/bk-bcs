@@ -550,9 +550,9 @@ func (p *CNIPod) runningFailedStop(err error) {
 			task.HealthCheck.Stop()
 		}
 		p.conClient.StopContainer(name, task.KillPolicy)
-		if task.AutoRemove {
+		/*if task.AutoRemove {
 			p.conClient.RemoveContainer(name, true)
-		}
+		}*/
 		task.RuntimeConf.Status = container.ContainerStatus_EXITED
 		task.RuntimeConf.Message = fmt.Sprintf("container exit because other container exited in pod")
 
@@ -641,7 +641,7 @@ func (p *CNIPod) containerCheck() error {
 				delete(p.runningContainer, name)
 
 				p.exitCode = task.RuntimeConf.ExitCode
-				task.RuntimeConf.Message = "container is finished"
+				task.RuntimeConf.Message = "The container exits with an exception and you need to look at the business log location problem"
 
 				//stop running container
 				p.runningFailedStop(fmt.Errorf("Pod failed because %s", task.RuntimeConf.Message))
