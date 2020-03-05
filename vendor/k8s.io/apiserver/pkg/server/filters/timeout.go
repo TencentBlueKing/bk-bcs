@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"runtime"
 	"sync"
 	"time"
 
@@ -92,23 +91,16 @@ func (t *timeoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errCh := make(chan interface{})
+	result := make(chan interface{})
 	tw := newTimeoutWriter(w)
 	go func() {
 		defer func() {
-			err := recover()
-			if err != nil {
-				const size = 64 << 10
-				buf := make([]byte, size)
-				buf = buf[:runtime.Stack(buf, false)]
-				err = fmt.Sprintf("%v\n%s", err, buf)
-			}
-			errCh <- err
+			result <- recover()
 		}()
 		t.handler.ServeHTTP(tw, r)
 	}()
 	select {
-	case err := <-errCh:
+	case err := <-result:
 		if err != nil {
 			panic(err)
 		}
