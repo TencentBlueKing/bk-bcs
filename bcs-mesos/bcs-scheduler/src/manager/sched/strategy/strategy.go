@@ -29,8 +29,13 @@ import (
 
 // Check whether an offer matches with the constraints for an application
 func ConstraintsFit(version *types.Version, offer *mesos.Offer, store store.Store, taskgroupID string) (bool, error) {
-
 	constraints := version.Constraints
+	//taints & toleration
+	attribute, _ := offerP.GetOfferAttribute(offer, types.MesosAttributeNoSchedule)
+	if attribute!=nil {
+
+	}
+
 	var itemInsance int
 	if constraints == nil && !isVersionRequestIp(version) {
 		blog.V(3).Infof("to check constraints: version(%s.%s) not set constraints", version.RunAs, version.ID)
@@ -113,12 +118,6 @@ func contraintDataFit(constraint *commtypes.ConstraintData, offer *mesos.Offer, 
 	}
 
 	var attribute *mesos.Attribute
-	//taints & toleration
-	attribute, _ = offerP.GetOfferAttribute(offer, types.MesosAttributeNoSchedule)
-	if attribute!=nil {
-
-	}
-
 	// construct an attribute for hostname
 	if name == "hostname" {
 		var attr mesos.Attribute
@@ -331,7 +330,7 @@ func checkGreater(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 	return false, nil
 }
 
-func checkToleration(offer , attribute *mesos.Attribute) (bool, error) {
+func checkToleration(constraint *commtypes.Constraint , offer *mesos.Offer) (bool, error) {
 	blog.V(3).Infof("constraint Toleration by attribute(name:%s)", constraint.Name)
 
 	switch constraint.Type {
