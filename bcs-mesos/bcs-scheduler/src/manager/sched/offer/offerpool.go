@@ -18,8 +18,10 @@ import (
 	typesplugin "bk-bcs/bcs-common/common/plugin"
 	commtype "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
 	"encoding/json"
+	"fmt"
 	"golang.org/x/net/context"
 	"sync"
 	"time"
@@ -718,6 +720,23 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		var attrValue mesos.Value_Scalar
 		attrValue.Value = &value.Value
 		attr.Scalar = &attrValue
+		offer.Attributes = append(offer.Attributes, &attr)
+	}
+
+	//noSchedule, likes k8s Taints\Tolerations
+	for k,v :=range agentSetting.NoSchedule {
+		blog.V(3).Infof("offer(%s:%s) add noSchedule attribute(%s:%s) from agentsetting",
+			offer.GetId().GetValue(), offer.GetHostname(), k, v)
+
+		var attr mesos.Attribute
+		name := types.NoScheduleKey
+		attr.Name = &name
+		var attrType mesos.Value_Type = mesos.Value_TEXT
+		attr.Type = &attrType
+		var attrValue mesos.Value_Text
+		value := fmt.Sprintf("%s:%s",k,v)
+		attrValue.Value = &value
+		attr.Text = &attrValue
 		offer.Attributes = append(offer.Attributes, &attr)
 	}
 
