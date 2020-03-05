@@ -19,8 +19,8 @@ import (
 
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
-	bcsv2 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v2"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
+	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
 	mapset "github.com/deckarep/golang-set"
 	"k8s.io/apimachinery/pkg/labels"
@@ -65,16 +65,39 @@ func (logConf *LogConfInject) InjectApplicationContent(application *commtypes.Re
 
 	// handle business modules log inject
 	var injectedContainers []commtypes.Container
-	for _, container := range application.ReplicaControllerSpec.Template.PodSpec.Containers {
-		matchedLogConf := common.FindMesosMatchedConfigType("application", application.Name, container.Name, bcsLogConfs) // nolint
-		if matchedLogConf != nil {
-			injectedContainer := logConf.injectMesosContainer(application.ObjectMeta.NameSpace, container, matchedLogConf)
-			injectedContainers = append(injectedContainers, injectedContainer)
-		} else {
-			injectedContainers = append(injectedContainers, container)
+
+	defaultLogConf := common.FindDefaultConfigType(bcsLogConfs)
+	matchedLogConf := common.FindMesosMatchedConfigType("application", application.Name, bcsLogConfs)
+
+	if matchedLogConf != nil {
+		for _, container := range application.ReplicaControllerSpec.Template.PodSpec.Containers {
+			containerMatched := false
+			for j, containerConf := range matchedLogConf.Spec.ContainerConfs {
+				if container.Name == containerConf.ContainerName {
+					containerMatched = true
+					injectedContainer := logConf.injectMesosContainer(application.ObjectMeta.NameSpace, container, matchedLogConf, j)
+					injectedContainers = append(injectedContainers, injectedContainer)
+					break
+				}
+			}
+			if !containerMatched {
+				if defaultLogConf != nil {
+					injectedContainer := logConf.injectMesosContainer(application.ObjectMeta.NameSpace, container, defaultLogConf, -1)
+					injectedContainers = append(injectedContainers, injectedContainer)
+				} else {
+					injectedContainers = append(injectedContainers, container)
+				}
+			}
 		}
+		application.ReplicaControllerSpec.Template.PodSpec.Containers = injectedContainers
+		return application, nil
 	}
-	application.ReplicaControllerSpec.Template.PodSpec.Containers = injectedContainers
+
+	if defaultLogConf != nil {
+		injected := logConf.injectMesosContainers(application.ObjectMeta.NameSpace, application.ReplicaControllerSpec.Template, defaultLogConf) // nolint
+		application.ReplicaControllerSpec.Template = injected
+	}
+
 	return application, nil
 }
 
@@ -103,25 +126,49 @@ func (logConf *LogConfInject) InjectDeployContent(deploy *commtypes.BcsDeploymen
 
 	// handle business modules log inject
 	var injectedContainers []commtypes.Container
-	for _, container := range deploy.Spec.Template.PodSpec.Containers {
-		matchedLogConf := common.FindMesosMatchedConfigType("deployment", deploy.Name, container.Name, bcsLogConfs)
-		if matchedLogConf != nil {
-			injectedContainer := logConf.injectMesosContainer(deploy.ObjectMeta.NameSpace, container, matchedLogConf)
-			injectedContainers = append(injectedContainers, injectedContainer)
-		} else {
-			injectedContainers = append(injectedContainers, container)
+
+	defaultLogConf := common.FindDefaultConfigType(bcsLogConfs)
+	matchedLogConf := common.FindMesosMatchedConfigType("deployment", deploy.Name, bcsLogConfs)
+
+	if matchedLogConf != nil {
+		for _, container := range deploy.Spec.Template.PodSpec.Containers {
+			containerMatched := false
+			for j, containerConf := range matchedLogConf.Spec.ContainerConfs {
+				if container.Name == containerConf.ContainerName {
+					containerMatched = true
+					injectedContainer := logConf.injectMesosContainer(deploy.ObjectMeta.NameSpace, container, matchedLogConf, j)
+					injectedContainers = append(injectedContainers, injectedContainer)
+					break
+				}
+			}
+
+			if !containerMatched {
+				if defaultLogConf != nil {
+					injectedContainer := logConf.injectMesosContainer(deploy.ObjectMeta.NameSpace, container, defaultLogConf, -1)
+					injectedContainers = append(injectedContainers, injectedContainer)
+				} else {
+					injectedContainers = append(injectedContainers, container)
+				}
+			}
 		}
+		deploy.Spec.Template.PodSpec.Containers = injectedContainers
+		return deploy, nil
 	}
-	deploy.Spec.Template.PodSpec.Containers = injectedContainers
+
+	if defaultLogConf != nil {
+		injected := logConf.injectMesosContainers(deploy.ObjectMeta.NameSpace, deploy.Spec.Template, defaultLogConf) // nolint
+		deploy.Spec.Template = injected
+	}
+
 	return deploy, nil
 }
 
 // injectMesosContainers injects bcs log config to all containers
-func (logConf *LogConfInject) injectMesosContainers(namespace string, podTemplate *commtypes.PodTemplateSpec, bcsLogConf *bcsv2.BcsLogConfig) *commtypes.PodTemplateSpec { // nolint
+func (logConf *LogConfInject) injectMesosContainers(namespace string, podTemplate *commtypes.PodTemplateSpec, bcsLogConf *bcsv1.BcsLogConfig) *commtypes.PodTemplateSpec { // nolint
 
 	var injectedContainers []commtypes.Container
 	for _, container := range podTemplate.PodSpec.Containers {
-		injectedContainer := logConf.injectMesosContainer(namespace, container, bcsLogConf)
+		injectedContainer := logConf.injectMesosContainer(namespace, container, bcsLogConf, -1)
 		injectedContainers = append(injectedContainers, injectedContainer)
 	}
 
@@ -130,47 +177,8 @@ func (logConf *LogConfInject) injectMesosContainers(namespace string, podTemplat
 }
 
 // injectMesosContainer injects bcs log config to an container
-func (logConf *LogConfInject) injectMesosContainer(namespace string, container commtypes.Container, bcsLogConf *bcsv2.BcsLogConfig) commtypes.Container { // nolint
+func (logConf *LogConfInject) injectMesosContainer(namespace string, container commtypes.Container, bcsLogConf *bcsv1.BcsLogConfig, index int) commtypes.Container { // nolint
 	var envs []commtypes.EnvVar
-	dataIdEnv := commtypes.EnvVar{
-		Name:  common.DataIdEnvKey,
-		Value: bcsLogConf.Spec.DataId,
-	}
-	envs = append(envs, dataIdEnv)
-
-	appIdEnv := commtypes.EnvVar{
-		Name:  common.AppIdEnvKey,
-		Value: bcsLogConf.Spec.AppId,
-	}
-	envs = append(envs, appIdEnv)
-
-	stdoutEnv := commtypes.EnvVar{
-		Name:  common.StdoutEnvKey,
-		Value: strconv.FormatBool(bcsLogConf.Spec.Stdout),
-	}
-	envs = append(envs, stdoutEnv)
-
-	if len(bcsLogConf.Spec.LogPaths) > 0 {
-		logPathEnv := commtypes.EnvVar{
-			Name:  common.LogPathEnvKey,
-			Value: strings.Join(bcsLogConf.Spec.LogPaths, ","),
-		}
-		envs = append(envs, logPathEnv)
-	}
-
-	if len(bcsLogConf.Spec.LogTags) > 0 {
-		var tags []string
-		for k, v := range bcsLogConf.Spec.LogTags {
-			tag := k + ":" + v
-			tags = append(tags, tag)
-		}
-
-		logTagEnv := commtypes.EnvVar{
-			Name:  common.LogTagEnvKey,
-			Value: strings.Join(tags, ","),
-		}
-		envs = append(envs, logTagEnv)
-	}
 
 	clusterIdEnv := commtypes.EnvVar{
 		Name:  common.ClusterIdEnvKey,
@@ -184,8 +192,105 @@ func (logConf *LogConfInject) injectMesosContainer(namespace string, container c
 	}
 	envs = append(envs, namespaceEnv)
 
-	container.Env = envs
+	appIdEnv := commtypes.EnvVar{
+		Name:  common.AppIdEnvKey,
+		Value: bcsLogConf.Spec.AppId,
+	}
+	envs = append(envs, appIdEnv)
 
-	blog.Infof("%v", container.Env)
+	if index >= 0 {
+		containerConf := bcsLogConf.Spec.ContainerConfs[index]
+
+		if containerConf.StdDataId != "" {
+			stdDataIdEnv := commtypes.EnvVar{
+				Name:  common.StdDataIdEnvKey,
+				Value: containerConf.StdDataId,
+			}
+			envs = append(envs, stdDataIdEnv)
+		}
+
+		if containerConf.NonStdDataId != "" {
+			nonStdDataIdEnv := commtypes.EnvVar{
+				Name:  common.NonStdDataIdEnvKey,
+				Value: containerConf.NonStdDataId,
+			}
+			envs = append(envs, nonStdDataIdEnv)
+		}
+
+		stdoutEnv := commtypes.EnvVar{
+			Name:  common.StdoutEnvKey,
+			Value: strconv.FormatBool(containerConf.Stdout),
+		}
+		envs = append(envs, stdoutEnv)
+
+		if len(containerConf.LogPaths) > 0 {
+			logPathEnv := commtypes.EnvVar{
+				Name:  common.LogPathEnvKey,
+				Value: strings.Join(containerConf.LogPaths, ","),
+			}
+			envs = append(envs, logPathEnv)
+		}
+
+		if len(containerConf.LogTags) > 0 {
+			var tags []string
+			for k, v := range containerConf.LogTags {
+				tag := k + ":" + v
+				tags = append(tags, tag)
+			}
+
+			logTagEnv := commtypes.EnvVar{
+				Name:  common.LogTagEnvKey,
+				Value: strings.Join(tags, ","),
+			}
+			envs = append(envs, logTagEnv)
+		}
+	} else {
+		stdoutEnv := commtypes.EnvVar{
+			Name:  common.StdoutEnvKey,
+			Value: strconv.FormatBool(bcsLogConf.Spec.Stdout),
+		}
+		envs = append(envs, stdoutEnv)
+
+		if bcsLogConf.Spec.StdDataId != "" {
+			stdDataIdEnv := commtypes.EnvVar{
+				Name:  common.StdDataIdEnvKey,
+				Value: bcsLogConf.Spec.StdDataId,
+			}
+			envs = append(envs, stdDataIdEnv)
+		}
+
+		if bcsLogConf.Spec.NonStdDataId != "" {
+			nonStdDataIdEnv := commtypes.EnvVar{
+				Name:  common.NonStdDataIdEnvKey,
+				Value: bcsLogConf.Spec.NonStdDataId,
+			}
+			envs = append(envs, nonStdDataIdEnv)
+		}
+
+		if len(bcsLogConf.Spec.LogPaths) > 0 {
+			logPathEnv := commtypes.EnvVar{
+				Name:  common.LogPathEnvKey,
+				Value: strings.Join(bcsLogConf.Spec.LogPaths, ","),
+			}
+			envs = append(envs, logPathEnv)
+		}
+
+		if len(bcsLogConf.Spec.LogTags) > 0 {
+			var tags []string
+			for k, v := range bcsLogConf.Spec.LogTags {
+				tag := k + ":" + v
+				tags = append(tags, tag)
+			}
+
+			logTagEnv := commtypes.EnvVar{
+				Name:  common.LogTagEnvKey,
+				Value: strings.Join(tags, ","),
+			}
+			envs = append(envs, logTagEnv)
+		}
+	}
+
+	container.Env = envs
+	//blog.Infof("%v", container.Env)
 	return container
 }

@@ -43,7 +43,7 @@ func toAdmissionResponse(err error) *v1beta1.AdmissionResponse {
 	return &v1beta1.AdmissionResponse{Result: &metav1.Status{Message: err.Error()}}
 }
 
-func (whSvr *WebhookServer) K8sLogInject(w http.ResponseWriter, r *http.Request) {
+func (whSvr *WebhookServer) K8sInject(w http.ResponseWriter, r *http.Request) {
 	if whSvr.EngineType == "mesos" {
 		blog.Warnf("this webhook server only supports mesos log config inject")
 		http.Error(w, "only support mesos log config inject", http.StatusBadRequest)

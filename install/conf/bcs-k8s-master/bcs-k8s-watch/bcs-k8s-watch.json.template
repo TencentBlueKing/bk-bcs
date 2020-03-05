@@ -9,7 +9,8 @@
             "ca-file": "/cert/bcs-ca.crt",
             "cert-file": "/cert/bcs-client.crt",
             "key-file": "/cert/bcs-client.key"
-        }
+        },
+        "is-external": ${kubeWatchExternal}
     },
     "k8s": {
         "master": "http://127.0.0.1:8080",

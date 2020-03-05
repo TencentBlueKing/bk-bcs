@@ -1389,10 +1389,13 @@ example:
 
 ```
 # mesos-resources.json contains multiple json structures
-bcs-client apply -f mesos-resources.json
+$ bcs-client apply -f mesos-resources.json
+resource v4/service bkbcs-client-test create successfully
+resource v4/secret bkbcs-client-test-secret create successfully
+resource v4/deployment bkbcs-client-test create successfully
 
 # reading 
-helm template test $mychart -n mynamespace | xargs bcs-client apply - 
+helm template test $mychart -n mynamespace | xargs bcs-client apply 
 ```
 
 ## clean
@@ -1402,7 +1405,13 @@ delete multiple Mesos resources from file or stdint
 example:
 
 ```
-bcs-client clean -f mesos-resources.json
+$ bcs-client clean -f mesos-resources.json
+resource v4/service bkbcs-client-test clean successfully
+resource v4/secret bkbcs-client-test-secret clean successfully
+resource v4/deployment bkbcs-client-test clean successfully
 
-helm template test $mychart -n mynamespace | xargs bcs-client clean -
+$ helm template test $mychart -n mynamespace | xargs bcs-client clean
+resource v4/service bkbcs-client-test clean successfully
+resource v4/secret bkbcs-client-test-secret clean successfully
+resource v4/deployment bkbcs-client-test clean successfully
 ```

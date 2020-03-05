@@ -35,7 +35,7 @@ func NewHeaderValidFilter(conf *config.MesosDriverConfig) RequestFilterFunction 
 func (h *HeaderValidFilter) Execute(req *restful.Request) (int, error) {
 	clusterId := req.Request.Header.Get("BCS-ClusterID")
 	if clusterId != h.conf.Cluster {
-		return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("ClusterId %s is invalid", clusterId)
+		return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("http header BCS-ClusterID %s don't exist", clusterId)
 	}
 
 	return 0, nil

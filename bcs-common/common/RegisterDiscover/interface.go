@@ -27,4 +27,6 @@ type RegDiscvServer interface {
 	Discover(key string) (<-chan *DiscoverEvent, error)
 	//discover nodes from path
 	DiscoverNodes(path string) (*DiscoverEvent, error)
+	//discover nodes from path v2
+	DiscoverNodesV2(path string) (*DiscoverEvent, error)
 }

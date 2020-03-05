@@ -18,7 +18,7 @@ import (
 
 	"bk-bcs/bcs-services/bcs-webhook-server/options"
 	internalclientset "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v2"
+	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/k8s"
 	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/mesos"
 	"k8s.io/client-go/kubernetes"

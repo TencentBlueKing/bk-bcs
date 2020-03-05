@@ -69,10 +69,12 @@ type AuthenticationMechanismsMessage struct {
 	XXX_unrecognized []byte   `json:"-"`
 }
 
-func (m *AuthenticationMechanismsMessage) Reset()                    { *m = AuthenticationMechanismsMessage{} }
-func (m *AuthenticationMechanismsMessage) String() string            { return proto.CompactTextString(m) }
-func (*AuthenticationMechanismsMessage) ProtoMessage()               {}
-func (*AuthenticationMechanismsMessage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (m *AuthenticationMechanismsMessage) Reset()         { *m = AuthenticationMechanismsMessage{} }
+func (m *AuthenticationMechanismsMessage) String() string { return proto.CompactTextString(m) }
+func (*AuthenticationMechanismsMessage) ProtoMessage()    {}
+func (*AuthenticationMechanismsMessage) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{1}
+}
 
 func (m *AuthenticationMechanismsMessage) GetMechanisms() []string {
 	if m != nil {

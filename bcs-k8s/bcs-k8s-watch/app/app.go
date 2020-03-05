@@ -33,6 +33,7 @@ import (
 	global "bk-bcs/bcs-common/common"
 	glog "bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/metric"
+	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 	disbcs "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/bcs"
 	disreg "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
 )
@@ -219,14 +220,14 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	bcsTLSConfig := config.BCS.TLS
 
 	glog.Info("getting storage service now...")
-	storageService, storageServiceZKRD, err := bcs.GetStorageService(zkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints)
+	storageService, storageServiceZKRD, err := bcs.GetStorageService(zkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints, config.BCS.IsExternal)
 	if err != nil {
 		panic(err)
 	}
 	glog.Info("get storage service done")
 
 	glog.Info("getting netservice now...")
-	netservice, netserviceZKRD, err := bcs.GetNetService(netServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints)
+	netservice, netserviceZKRD, err := bcs.GetNetService(netServiceZKHosts, bcsTLSConfig, config.BCS.CustomNetServiceEndpoints, false)
 	if err != nil {
 		panic(err)
 	}
@@ -255,6 +256,12 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 		glog.Warnf("Init Alertor fail, no alarm will be sent!")
 	}
 
+	// init resourceList to watch
+	err = resources.InitResourceList(&config.K8s)
+	if err != nil {
+		panic(err)
+	}
+
 	// create writer.
 	glog.Info("creating writer now...")
 	writer, err := output.NewWriter(clusterID, storageService, alertor)
@@ -263,20 +270,23 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	}
 	glog.Info("create writer success")
 
+	glog.Info("starting writer now...")
+	if err := writer.Run(stopChan); err != nil {
+		panic(err)
+	}
+	glog.Info("start writer success")
+
 	// create watcher manager.
 	glog.Info("creating watcher manager now...")
-	watcherMgr, err := k8s.NewWatcherManager(clusterID, writer, &config.K8s, storageService, netservice)
+	watcherMgr, err := k8s.NewWatcherManager(clusterID, writer, &config.K8s, storageService, netservice, stopChan)
 	if err != nil {
 		panic(err)
 	}
 	glog.Info("create watcher manager success")
 
-	glog.Info("starting watcher manager and writer now...")
-	if err := writer.Run(stopChan); err != nil {
-		panic(err)
-	}
+	glog.Info("start watcher manager now...")
 	watcherMgr.Run(stopChan)
-	glog.Info("start watcher manager and writer success")
+	glog.Info("start watcher manager success")
 
 	// finally, start metric, allow fail
 	glog.Info("start metric......")
@@ -290,6 +300,9 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	// go h.Run(stopChan)
 
 	<-stopChan
+
+	// stop all kubefed watchers
+	watcherMgr.StopCrdWatchers()
 
 	// stop service discovery.
 	storageServiceZKRD.Stop()

@@ -23,11 +23,12 @@ type BcsCommandSpec struct {
 	CommandTargetRef *TargetRef `json:"commandTargetRef"`
 	Taskgroups       []string   `json:"taskgroups"`
 	Command          []string   `json:"command"` //["/bin/bash","-c","ps -ef |grep gamesvc"]
-	Env              []string   `json:"env"`     //environments
-	User             string     `json:"user"`    //root or others
-	WorkingDir       string     `json:"workingDir"`
-	Privileged       bool       `json:"privileged"`
-	ReserveTime      int        `json:"reserveTime"` //minutes
+	//format: ["k1=v1","k2=v2"]
+	Env         []string `json:"env"`  //environments
+	User        string   `json:"user"` //root or others
+	WorkingDir  string   `json:"workingDir"`
+	Privileged  bool     `json:"privileged"`
+	ReserveTime int      `json:"reserveTime"` //minutes
 }
 
 type BcsCommandStatus struct {

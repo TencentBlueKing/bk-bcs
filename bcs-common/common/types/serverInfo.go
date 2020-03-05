@@ -45,8 +45,9 @@ const (
 	BCS_MODULE_MESOSADAPTER    = "mesosadapter"
 
 	//bcstest 2018.11.07
-	BCS_MODULE_K8SAPISERVER   = "kubernetedriver"
-	BCS_MODULE_MESOSAPISERVER = "mesosdriver"
+	BCS_MODULE_K8SAPISERVER     = "kubernetedriver"
+	BCS_MODULE_MESOSAPISERVER   = "mesosdriver"
+	BCS_MODULE_NETWORKDETECTION = "networkdetection"
 )
 
 var (
@@ -135,6 +136,11 @@ type MesosDataWatchServInfo struct {
 type MesosDriverServInfo struct {
 	ServerInfo
 	//Cluster string `json:"cluster"`
+}
+
+//NetworkDetectionServInfo netwrok-detection server information
+type NetworkDetectionServInfo struct {
+	ServerInfo
 }
 
 type DCServInfo struct {

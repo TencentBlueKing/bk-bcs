@@ -60,7 +60,7 @@ type TLSConfig struct {
 func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 	if c.CertFile == "" || c.CAFile == "" || c.KeyFile == "" {
 		err = errors.New("missing argument, must provide all certfile/keyfile/cafile")
-		return
+		return nil, err
 	}
 
 	switch c.TLSType {
@@ -74,10 +74,10 @@ func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 		config, err = bcsssl.ServerTslConfVerityClient(c.CAFile, c.CertFile, c.KeyFile, c.Password)
 	}
 	if err != nil || config == nil {
-		return
+		return config, err
 	}
 	config.BuildNameToCertificate()
-	return
+	return config, nil
 }
 
 type KubeDriverServerOptions struct {
@@ -86,6 +86,8 @@ type KubeDriverServerOptions struct {
 	ZkServers        string
 	SecurePort       uint
 	InsecurePort     uint
+	ExternalIp       string
+	ExternalPort     uint
 	KubeMasterUrl    string
 	KubeClientTLS    TLSConfig
 	ClusterClientTLS TLSConfig
@@ -117,6 +119,9 @@ func (o *KubeDriverServerOptions) BindFlagSet(fs *pflag.FlagSet) {
 
 	fs.UintVar(&o.InsecurePort, "insecure-port", 0, "The insecure port for the serve on, such as 30001.")
 	fs.UintVar(&o.SecurePort, "secure-port", 0, "The secure port for the serve on, such as 30443.")
+
+	fs.StringVar(&o.ExternalIp, "external-ip", "", "external IP address to listen on for this service.")
+	fs.UintVar(&o.ExternalPort, "external-port", 0, "external port to listen on for this service")
 
 	// k8s related
 	fs.StringVar(&o.KubeMasterUrl, "kube-master-url", "", "The host of the Kubernetes ApiServer"+

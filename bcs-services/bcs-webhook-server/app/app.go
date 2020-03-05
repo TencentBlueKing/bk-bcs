@@ -134,7 +134,7 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		}
 		blog.Infof("created BcsLogConfig crd: %t", logCreated)
 
-		bcsLogConfigInformer := factory.Bkbcs().V2().BcsLogConfigs()
+		bcsLogConfigInformer := factory.Bkbcs().V1().BcsLogConfigs()
 		whsvr.BcsLogConfigLister = bcsLogConfigInformer.Lister()
 
 		switch whsvr.EngineType {
@@ -163,7 +163,7 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 		}
 		blog.Infof("created BcsDbPrivConfig crd: %t", dbPrivCreated)
 
-		bcsDbPrivConfigInformer := factory.Bkbcs().V2().BcsDbPrivConfigs()
+		bcsDbPrivConfigInformer := factory.Bkbcs().V1().BcsDbPrivConfigs()
 		whsvr.BcsDbPrivConfigLister = bcsDbPrivConfigInformer.Lister()
 
 		dbPrivSecret, err := whsvr.KubeClient.CoreV1().Secrets(metav1.NamespaceSystem).Get(DbPrivilegeSecretName, metav1.GetOptions{})
@@ -213,8 +213,8 @@ func NewWebhookServer(conf *config.BcsWhsConfig) (*inject.WebhookServer, error) 
 
 	// define http server and server handler
 	mux := http.NewServeMux()
-	mux.HandleFunc("/bcs/webhook/inject/v1/k8s", whsvr.K8sLogInject)
-	mux.HandleFunc("/bcs/webhook/inject/v1/mesos", whsvr.MesosLogInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/k8s", whsvr.K8sInject)
+	mux.HandleFunc("/bcs/webhook/inject/v1/mesos", whsvr.MesosInject)
 	whsvr.Server.Handler = mux
 
 	return whsvr, nil
