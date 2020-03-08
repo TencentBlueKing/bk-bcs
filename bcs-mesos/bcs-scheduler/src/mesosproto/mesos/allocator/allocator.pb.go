@@ -86,7 +86,9 @@ func (x *InverseOfferStatus_Status) UnmarshalJSON(data []byte) error {
 	*x = InverseOfferStatus_Status(value)
 	return nil
 }
-func (InverseOfferStatus_Status) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0, 0} }
+func (InverseOfferStatus_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{0, 0}
+}
 
 // *
 // Describes the status of an inverse offer.

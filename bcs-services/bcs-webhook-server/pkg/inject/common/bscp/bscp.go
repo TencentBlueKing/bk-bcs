@@ -47,15 +47,15 @@ const (
 	AnnotationValue = "enabled"
 
 	// PatchOperationAdd patch add operation
-	PatchOperationAdd     = "add"
+	PatchOperationAdd = "add"
 	// PatchOperationReplace patch replace operation
 	PatchOperationReplace = "replace"
 	// PatchOperationRemove patch remove operation
-	PatchOperationRemove  = "remove"
+	PatchOperationRemove = "remove"
 	// PatchPathVolumes volumes path for patch operation
-	PatchPathVolumes      = "/spec/volumes/%v"
+	PatchPathVolumes = "/spec/volumes/%v"
 	// PatchPathContainers containers path for patch operation
-	PatchPathContainers   = "/spec/containers/%v"
+	PatchPathContainers = "/spec/containers/%v"
 )
 
 // AppModInfo is multi app mode information.

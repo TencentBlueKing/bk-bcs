@@ -60,7 +60,7 @@ type TLSConfig struct {
 func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 	if c.CertFile == "" || c.CAFile == "" || c.KeyFile == "" {
 		err = errors.New("missing argument, must provide all certfile/keyfile/cafile")
-		return
+		return nil, err
 	}
 
 	switch c.TLSType {
@@ -74,10 +74,10 @@ func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 		config, err = bcsssl.ServerTslConfVerityClient(c.CAFile, c.CertFile, c.KeyFile, c.Password)
 	}
 	if err != nil || config == nil {
-		return
+		return config, err
 	}
 	config.BuildNameToCertificate()
-	return
+	return config, nil
 }
 
 type KubeDriverServerOptions struct {

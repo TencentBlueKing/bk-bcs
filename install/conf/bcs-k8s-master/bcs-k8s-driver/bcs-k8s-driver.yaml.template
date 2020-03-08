@@ -11,13 +11,18 @@ spec:
   - name: bcs-driver
     image: ${kubeDriverImage}
     imagePullPolicy: IfNotPresent
-    command: ["./start.sh"]
-    args: [
-        "-h", "${localIp}",
-        "-p", "${kubeDriverPort}",
-        "-k", "http://127.0.0.1:8080",
-        "-z", "${bcsZkHost}",
-        "-i", "",
-        "-r", "0",
-        "-c", "${clusterId}",
-        ]
+    command: ["./bcs-k8s-driver"]
+    args:
+    - --address=${localIp} 
+    - --host-ip=${localIp} 
+    - --secure-port=${kubeDriverPort}
+    - --custom-cluster-id=${clusterId}
+    - --zk-url=${bcsZkHost}
+    - --external-ip="${kubeDriverExternalIP}"
+    - --external-port=${kubeDriverExternalPort}
+    - --kube-master-url="http://127.0.0.1:8080"
+    - --custom-report-address=""
+    - --custom-report-port=0
+    - --server-ca-file=bcs-ca.crt
+    - --server-cert-file=bcs-server.crt 
+    - --server-key-file=bcs-server.key

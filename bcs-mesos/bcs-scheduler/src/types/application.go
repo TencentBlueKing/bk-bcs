@@ -14,16 +14,14 @@
 package types
 
 import (
-	"bk-bcs/bcs-common/common/deepcopy"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"bk-bcs/bcs-common/common/deepcopy"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
-
-	commtypes "bk-bcs/bcs-common/common/types"
-	//"fmt"
 )
 
 //executor or task default resources limits

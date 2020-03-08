@@ -29,7 +29,7 @@ const (
 
 //RescheduleTaskgroup is used to reschedule taskgroup.
 func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) error {
-	blog.V(3).Infof("reschedule taskgroup(%s)", taskgroupId)
+	blog.Infof("reschedule taskgroup(%s)", taskgroupId)
 
 	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
 

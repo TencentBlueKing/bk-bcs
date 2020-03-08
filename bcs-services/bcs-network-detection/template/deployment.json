@@ -1,0 +1,62 @@
+{
+  "apiVersion": "v4",
+  "kind": "deployment",
+  "restartPolicy": {
+    "policy": "OnFailure",
+    "interval": 1
+  },
+  "killPolicy": {
+    "gracePeriod": 5
+  },
+  "constraint": {
+    "intersectionItem": [
+      {
+        "unionData": [{
+          "name": "InnerIP",
+          "operate": "CLUSTER",
+          "type": 4,
+          "set": {
+            "item": []
+          }
+        }]
+      }
+    ]
+  },
+  "metadata": {
+    "namespace": "bcs-system"
+  },
+  "spec": {
+    "instance": 3,
+    "strategy": {
+      "type": "RollingUpdate",
+      "rollingupdate": {
+        "maxUnavilable": 1,
+        "maxSurge": 1,
+        "upgradeDuration": 60,
+        "rollingOrder": "CreateFirst",
+        "rollingManually": false
+      }
+    },
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "command": "",
+            "args": [
+              ""
+            ],
+            "image": "",
+            "resources": {
+              "limits": {
+                "cpu": "0.1",
+                "memory": "100"
+              }
+            }
+          }
+        ],
+        "networkMode": "",
+        "networkType": ""
+      }
+    }
+  }
+}

@@ -1190,7 +1190,9 @@ func (x *DiscoveryInfo_Visibility) UnmarshalJSON(data []byte) error {
 	*x = DiscoveryInfo_Visibility(value)
 	return nil
 }
-func (DiscoveryInfo_Visibility) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{59, 0} }
+func (DiscoveryInfo_Visibility) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{59, 0}
+}
 
 // *
 // A unique ID assigned to a framework. A framework can reuse this ID
@@ -2854,10 +2856,12 @@ type Resource_DiskInfo_Source struct {
 	XXX_unrecognized []byte                          `json:"-"`
 }
 
-func (m *Resource_DiskInfo_Source) Reset()                    { *m = Resource_DiskInfo_Source{} }
-func (m *Resource_DiskInfo_Source) String() string            { return proto.CompactTextString(m) }
-func (*Resource_DiskInfo_Source) ProtoMessage()               {}
-func (*Resource_DiskInfo_Source) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22, 1, 1} }
+func (m *Resource_DiskInfo_Source) Reset()         { *m = Resource_DiskInfo_Source{} }
+func (m *Resource_DiskInfo_Source) String() string { return proto.CompactTextString(m) }
+func (*Resource_DiskInfo_Source) ProtoMessage()    {}
+func (*Resource_DiskInfo_Source) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{22, 1, 1}
+}
 
 func (m *Resource_DiskInfo_Source) GetType() Resource_DiskInfo_Source_Type {
 	if m != nil && m.Type != nil {
