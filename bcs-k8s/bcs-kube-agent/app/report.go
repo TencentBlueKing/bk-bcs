@@ -35,10 +35,7 @@ import (
 
 const (
 	defaultNamespace   = "default"
-	systemNamespace    = "kube-system"
 	clusterServiceName = "kubernetes"
-	// endpoints name for kube-apiserver proxy
-	apiserverProxyServiceName = "apiserver-proxy-for-bcs"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -113,7 +110,7 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 
 	externalProxyAddresses := viper.GetString("agent.external-proxy-addresses")
 	if externalProxyAddresses == "" {
-		endpoints, err := kubeClient.CoreV1().Endpoints(systemNamespace).Get(apiserverProxyServiceName, metav1.GetOptions{})
+		endpoints, err := kubeClient.CoreV1().Endpoints(defaultNamespace).Get(clusterServiceName, metav1.GetOptions{})
 		if err != nil {
 			return "", err
 		}
