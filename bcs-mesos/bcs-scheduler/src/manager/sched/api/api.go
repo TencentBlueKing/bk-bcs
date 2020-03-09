@@ -123,7 +123,7 @@ func (r *Router) taintAgents(req *restful.Request, resp *restful.Response) {
 	var agents []*commtypes.BcsClusterAgentSetting
 	decoder := json.NewDecoder(req.Request.Body)
 	if err := decoder.Decode(&agents); err != nil {
-		blog.Warn("fail to Decode json for agent, err:%s", err.Error())
+		blog.Warn("fail to Decode body(%s) for agent, err:%s", err.Error())
 		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
@@ -194,7 +194,7 @@ func (r *Router) enableAgentList(req *restful.Request, resp *restful.Response) {
 	return
 }
 
-func (r *Router) updateAgentSettingList(req *restful.Request, resp *restful.Response) {
+/*func (r *Router) updateAgentSettingList(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
@@ -224,7 +224,7 @@ func (r *Router) updateAgentSettingList(req *restful.Request, resp *restful.Resp
 	blog.Info("update agentsetting finish")
 
 	return
-}
+}*/
 
 func (r *Router) queryAgentSetting(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {

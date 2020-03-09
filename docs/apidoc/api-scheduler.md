@@ -77,6 +77,7 @@ curl -H "BCS-ClusterID: BCS-xxxxx-xxxxx" -X GET http://127.0.0.1:8899/bcsapi/v4/
   - [**update agent setting list**](#updateagentsettinglist)
   - [**disable agent list**](#disableagentlist)
   - [**enable agent list**](#enableagentlist)
+  - [**taint agents**](#taintagents)
 * [自定义资源定义(CustomResourceDefinition)](#customresourcedefinition)
   - [**create**](#createcrd)
   - [**get**](#getcrd)
@@ -1834,6 +1835,48 @@ curl -H "BCS-ClusterID: {ClusterID}" -X PUT http://{Bcs-Domain}/v4/scheduler/mes
 
 #### 请求示例
 - curl -H "BCS-ClusterID: {ClusterID}" -d ""  http://{Bcs-Domain}/v4/scheduler/mesos/agentsettings/enable?ips=127.0.0.1
+
+#### 返回结果
+
+```json
+{
+    "result":true,
+    "code":0,
+    "message":"success",
+    "data":null
+}
+```
+
+### taintagents
+#### 描述
+对node打污点，此node默认不能被应用调度；支持批量操作
+
+#### 请求地址
+- /v4/scheduler/mesos/agentsettings/taint
+
+#### 请求方式
+- PUT
+
+#### 请求参数，body
+```json
+[
+    {
+        "innerIP":"127.0.0.1",
+        "noSchedule":{
+            "key1":"value1"
+        }
+    },
+    {
+        "innerIP":"127.0.0.2",
+        "noSchedule":{
+            "key1":"value1"
+        }
+    }
+]
+```
+
+#### 请求示例
+- curl -H "BCS-ClusterID: {ClusterID}" -d ""  http://{Bcs-Domain}/v4/scheduler/mesos/agentsettings/taint
 
 #### 返回结果
 

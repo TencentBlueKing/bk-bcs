@@ -730,15 +730,20 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		Name: &name,
 		Type: &t,
 		Set: &mesos.Value_Set{
-			Item: make([]string,0),
+			Item: make([]string, 0),
 		},
 	}
 	for k, v := range agentSetting.NoSchedule {
 		blog.V(3).Infof("offer(%s:%s) add noSchedule attribute(%s:%s) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
+		if k == "" || v == "" {
+			continue
+		}
 		noScheduleAttr.Set.Item = append(noScheduleAttr.Set.Item, fmt.Sprintf("%s=%s", k, v))
 	}
-	offer.Attributes = append(offer.Attributes, noScheduleAttr)
+	if len(noScheduleAttr.Set.Item) > 0 {
+		offer.Attributes = append(offer.Attributes, noScheduleAttr)
+	}
 
 	return nil
 }
