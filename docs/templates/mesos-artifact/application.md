@@ -19,6 +19,16 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 	},
 	"constraint": {
 		"intersectionItem": [
+            { 
+				"unionData": [{
+					"name": "key1",
+					"operate": "TOLERATION",
+					"type": 3,
+					"text": {
+                            "value": "value1"
+                    }
+				}]
+			},
 			{
 				"unionData": [{
 					"name": "label",
@@ -309,6 +319,7 @@ UnionData字段说明：
   * GROUPBY: 根据name的目标个数，实例被均匀调度在目标上，与set一起使用，如果实例个数不能被set的元素个数整除，则会存在差1的情况，例如：name为IDC，实例数为3,set为["idc1","idc2"],则会在其中一个idc部署两个实例。
   * EXCLUDE: 和具有指定标签的application不部署在相同的机器上，即：如果该主机上已经部署有这些标签（符合一个即可）的application的实例，则不能部署该application的实例。目前name只支持"label",label的k:v在set数组中指定。
   * GREATER: 配合scaler字段（type为1），要求name的取值必须大于scalar的值。
+  * TOLERATION: 容忍被打taint的node
 * type: 参数的数据类型，决定operator所操作key为name的值的范围
 1: scaler: float64
 3：text：字符串。

@@ -76,7 +76,7 @@ func (b *backend) TaintAgents(agents []*commtypes.BcsClusterAgentSetting) error 
 
 		if agent != nil {
 			agent.NoSchedule = o.NoSchedule
-		}else {
+		} else {
 			agent = &commtypes.BcsClusterAgentSetting{
 				InnerIP:    o.InnerIP,
 				NoSchedule: o.NoSchedule,

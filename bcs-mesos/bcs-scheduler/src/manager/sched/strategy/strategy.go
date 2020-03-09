@@ -32,8 +32,11 @@ func ConstraintsFit(version *types.Version, offer *mesos.Offer, store store.Stor
 	constraints := version.Constraints
 	//taints & toleration
 	attribute, _ := offerP.GetOfferAttribute(offer, types.MesosAttributeNoSchedule)
-	if attribute!=nil {
-
+	if attribute != nil {
+		fit, _ := checkToleration(offer, version)
+		if !fit {
+			return false, nil
+		}
 	}
 
 	var itemInsance int
@@ -105,10 +108,10 @@ func contraintDataFit(constraint *commtypes.ConstraintData, offer *mesos.Offer, 
 	name := constraint.Name
 	operate := constraint.Operate
 
-	//if constraint.Type == nil {
-	//	blog.Error("contraint(name: %s, operate: %s) Type == nil", name, operate)
-	//	return true, nil
-	//}
+	//there's no need to judge toleration here, always true
+	if constraint.Operate == commtypes.Constraint_Type_TOLERATION {
+		return true, nil
+	}
 
 	valueType := constraint.Type
 	blog.V(3).Infof("check constraint(%s) for (name:%s, type:%d) for offer from %s", operate, name, valueType, offer.GetHostname())
@@ -153,6 +156,9 @@ func contraintDataFit(constraint *commtypes.ConstraintData, offer *mesos.Offer, 
 		return checkUnLike(constraint, attribute)
 	case commtypes.Constraint_Type_GREATER:
 		return checkGreater(constraint, attribute)
+	//there's no need to judge toleration here, always true
+	case commtypes.Constraint_Type_TOLERATION:
+		return true, nil
 	default:
 		blog.Warnf("constraint operate type(%s) for attr(%s) not supported", operate, name)
 		return false, errors.New("constraint operate type error")
@@ -330,28 +336,43 @@ func checkGreater(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 	return false, nil
 }
 
-func checkToleration(constraint *commtypes.Constraint , offer *mesos.Offer) (bool, error) {
-	blog.V(3).Infof("constraint Toleration by attribute(name:%s)", constraint.Name)
-
-	switch constraint.Type {
-	case commtypes.ConstValueType_Text:
-		value := constraint.Scalar.Value
-		if attribute.GetType() != mesos.Value_SCALAR {
-			blog.Errorf("constraint %s type ConstValueType_Scalar, but attribute type %s", constraint.Name, attribute.GetType().String())
-			return false, nil
-		}
-
-		attrScalar := attribute.GetScalar().GetValue()
-
-		if attrScalar > scalar {
-			return true, nil
-		}
+func checkToleration(offer *mesos.Offer, version *types.Version) (bool, error) {
+	attribute, _ := offerP.GetOfferAttribute(offer, types.MesosAttributeNoSchedule)
+	if version.Constraints == nil {
+		blog.V(3).Infof("version(%s:%s) don't toleration offer %s taint(%v)",
+			version.RunAs, version.ID, offer.GetHostname(), attribute.Set.Item)
 		return false, nil
-
-	default:
-		blog.Errorf("constraint %s type %d is invalid", constraint.Name, constraint.Type)
 	}
 
+	for _, union := range version.Constraints.IntersectionItem {
+		if union == nil {
+			continue
+		}
+
+		for _, item := range union.UnionData {
+			if item.Operate != commtypes.Constraint_Type_TOLERATION {
+				continue
+			}
+
+			if item.Type != commtypes.ConstValueType_Text {
+				blog.V(3).Infof("version(%s:%s) constraint(%s:%s) type %d is invalid",
+					version.RunAs, version.ID, item.Name, item.Operate, item.Type)
+				continue
+			}
+
+			for _, kv := range attribute.Set.Item {
+				kvs := strings.Split(kv, "=")
+				if item.Name == kvs[0] && item.Text.Value == kvs[1] {
+					blog.V(3).Infof("version(%s:%s) toleration offer %s taint(%s:%s)",
+						version.RunAs, version.ID, offer.GetHostname(), kvs[0], kvs[1])
+					return true, nil
+				}
+			}
+		}
+	}
+
+	blog.V(3).Infof("version(%s:%s) don't toleration offer %s taint(%v)",
+		version.RunAs, version.ID, offer.GetHostname(), attribute.Set.Item)
 	return false, nil
 }
 
