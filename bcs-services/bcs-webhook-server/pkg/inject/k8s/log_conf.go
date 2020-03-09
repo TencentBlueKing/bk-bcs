@@ -216,7 +216,7 @@ func (logConf *LogConfInject) injectK8sContainer(namespace string, container *co
 		}
 	}
 
-	patchedContainer.Env = envs
+	patchedContainer.Env = append(patchedContainer.Env, envs...)
 
 	return patchedContainer
 }

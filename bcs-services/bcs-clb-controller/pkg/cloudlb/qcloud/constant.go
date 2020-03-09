@@ -61,9 +61,9 @@ const (
 	ConfigBcsClbImplementSDK = "sdk"
 
 	// Clb limitation
-	LimitationMaxListenerNum       = 50
-	LimitationMaxRulePerListener   = 50
-	LimitationMaxBackendNumPerRule = 100
+	LimitationMaxListenerNum        = 50
+	LimitationMaxRulePerListener    = 50
+	LimitationMaxBackendNumPerRule  = 100
 	LimitationMaxBackendNumEachBind = 20
 )
 
