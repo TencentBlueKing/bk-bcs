@@ -363,7 +363,7 @@ func (p *offerPool) UseOffer(o *Offer) bool {
 
 	_, ok := p.offerIds[o.offerId]
 	if !ok {
-		blog.Errorf("use offer(%d | %s:%s), but not found", o.Id, o.offerId, o.hostname)
+		blog.Warnf("use offer(%d | %s:%s), but not found", o.Id, o.offerId, o.hostname)
 		return false
 	}
 

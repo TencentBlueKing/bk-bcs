@@ -66,8 +66,8 @@
             }
           }
         ],
-        "networkMode": "",
-        "networkType": ""
+        "networkMode": "lol",
+        "networkType": "cni"
       }
     }
   }

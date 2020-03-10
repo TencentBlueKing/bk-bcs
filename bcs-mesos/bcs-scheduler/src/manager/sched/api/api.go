@@ -386,8 +386,6 @@ func (r *Router) updateDeployment(req *restful.Request, resp *restful.Response) 
 	}
 
 	if errCode, err := r.backend.UpdateDeployment(&deploymentDef); err != nil {
-		blog.Error("fail to update deployment(%s.%s), err:%s",
-			deploymentDef.ObjectMeta.NameSpace, deploymentDef.ObjectMeta.Name, err.Error())
 		data := createResponeDataV2(errCode, err.Error(), nil)
 		resp.Write([]byte(data))
 		return
@@ -457,7 +455,6 @@ func (r *Router) resumeUpdateDeployment(req *restful.Request, resp *restful.Resp
 	blog.Infof("request resumeupdate depolyment(%s.%s)", ns, name)
 
 	if err := r.backend.ResumeUpdateDeployment(ns, name); err != nil {
-		blog.Error("fail to resumeupdate deployment(%s.%s), err:%s", ns, name, err.Error())
 		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
 		resp.Write([]byte(data))
 		return

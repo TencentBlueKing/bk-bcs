@@ -625,8 +625,12 @@ func (executor *BcsExecutor) monitorPod() {
 							task.RuntimeConf.ConsecutiveFailureTimes = task.HealthCheck.ConsecutiveFailure()
 						}
 					}
+					taskRunning := true
+					if task.RuntimeConf.Status != container.ContainerStatus_RUNNING && task.RuntimeConf.Status != container.ContainerStatus_PAUSED {
+						taskRunning = false
+					}
 
-					if reporting%30 == 0 || changed || healthyChanged || message != nil {
+					if reporting%30 == 0 || changed || healthyChanged || message != nil || !taskRunning {
 						//report data every 30 seconds or pod healthy status changed
 						executor.status = ExecutorStatus_RUNNING
 						logs.Infof("all task is Running, healthy: %t, isChecked: %t, ConsecutiveFailureTimes: %d"+
@@ -641,7 +645,8 @@ func (executor *BcsExecutor) monitorPod() {
 						taskInfo := executor.tasks.GetTaskByContainerID(info.Name)
 
 						//if changed, send task status update
-						if changed {
+						//if task status!=running, then send status update
+						if changed || !taskRunning {
 							update := &mesos.TaskStatus{
 								TaskId:  taskInfo.GetTaskId(),
 								State:   mesos.TaskState_TASK_RUNNING.Enum(),

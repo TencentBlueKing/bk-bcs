@@ -166,23 +166,10 @@ func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) err
 	return err
 }
 
+//zk stores this method by removing the version path, and etcd stores in order to be consistent
+//with the store interface, this method does not implement anything
 func (store *managerStore) DeleteVersionNode(runAs, versionId string) error {
-	if "" == runAs {
-		runAs = defaultRunAs
-	}
-
-	versionNos, err := store.ListVersions(runAs, versionId)
-	if err != nil {
-		return err
-	}
-
-	for _, no := range versionNos {
-		err = store.DeleteVersion(runAs, versionId, no)
-		if err != nil {
-			return err
-		}
-	}
-
+	//do nothing
 	return nil
 }
 
