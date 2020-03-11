@@ -19,6 +19,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -78,13 +79,17 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 }
 
 func (store *managerStore) listTaskgroupsInDB(runAs, appID string) ([]*types.TaskGroup, error) {
+	taskgroups := make([]*types.TaskGroup, 0)
 	client := store.BkbcsClient.TaskGroups(runAs)
 	v2Taskgroups, err := client.List(metav1.ListOptions{})
 	if err != nil {
-		return nil, err
+		if errors.IsNotFound(err) {
+			return taskgroups, nil
+		}else {
+			return nil, err
+		}
 	}
 
-	taskgroups := make([]*types.TaskGroup, 0, len(v2Taskgroups.Items))
 	for _, taskgroup := range v2Taskgroups.Items {
 		if taskgroup.Spec.AppID == appID {
 			obj := taskgroup.Spec.TaskGroup

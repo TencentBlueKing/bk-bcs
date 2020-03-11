@@ -409,6 +409,7 @@ io.tencent.bcs.netsvc.requestip.i: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.[1
   * limits.cpu:字符串，可以填写小数，1为使用1核，cpu硬限制，对应cpu_quota、cpu_period
   * limits.memory：内存使用，字符串，单位默认为M，memory上限。
   * limits.storage：磁盘使用大小，默认单位M
+* cpuset: 是否cpu绑定核，此参数与resources.request.cpu配合使用，并且cpu必须为整数，对应docker参数--cpuset-cpus
 * networkMode：网络模式
   * HOST: docker原生网络模式，与宿主机共用一个Network Namespace，此模式下需要自行解决网络端口冲突问题
   * BRIDGE: docker原生网络模式，此模式会为每一个容器分配Network Namespace、设置IP等，并将一个主机上的Docker容器连接到一个虚拟网桥上，通过端口映射的方式对外提供服务

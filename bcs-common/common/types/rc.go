@@ -167,6 +167,7 @@ type Container struct {
 	Ports           []ContainerPort      `json:"ports,omitempty"`
 	HealthChecks    []*HealthCheck       `json:"healthChecks,omitempty"`
 	Resources       ResourceRequirements `json:"resources,omitempty"`
+	Cpuset          bool                 `json:"cpuset,omitempty"`
 	Volumes         []VolumeUnit         `json:"volumes,omitempty"`
 	ConfigMaps      []ConfigMap          `json:"configmaps,omitempty"`
 	Secrets         []Secret             `json:"secrets,omitempty"`

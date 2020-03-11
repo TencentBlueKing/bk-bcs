@@ -18,8 +18,8 @@ import (
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	"k8s.io/apimachinery/pkg/api/errors"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -109,9 +109,8 @@ func (store *managerStore) DeleteAgent(key string) error {
 }
 
 func (store *managerStore) CheckAgentSettingExist(agent *commtypes.BcsClusterAgentSetting) (string, bool) {
-	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
-	obj, err := client.Get(agent.InnerIP, metav1.GetOptions{})
-	if err == nil {
+	obj,_ := store.FetchAgentSetting(agent.InnerIP)
+	if obj != nil {
 		return obj.ResourceVersion, true
 	}
 
@@ -143,10 +142,17 @@ func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSett
 		_, err = client.Create(v2Agent)
 	}
 
+	agent.ResourceVersion = v2Agent.ResourceVersion
+	saveCacheAgentsetting(agent)
 	return err
 }
 
 func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
+	if cacheMgr.isOK {
+		agent := getCacheAgentsetting(InnerIP)
+		return agent, nil
+	}
+
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	v2Agent, err := client.Get(InnerIP, metav1.GetOptions{})
 	if err != nil {
@@ -156,16 +162,24 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 		return nil, err
 	}
 
-	return &v2Agent.Spec.BcsClusterAgentSetting, nil
+	obj := v2Agent.Spec.BcsClusterAgentSetting
+	obj.ResourceVersion = v2Agent.ResourceVersion
+	return &obj, nil
 }
 
 func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	err := client.Delete(InnerIP, &metav1.DeleteOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		return nil
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}else {
+			return err
+		}
 	}
-	return err
+
+	deleteCacheAgentsetting(InnerIP)
+	return nil
 }
 
 func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
@@ -178,6 +192,22 @@ func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
 	agents := make([]string, 0, len(v2Agents.Items))
 	for _, v2 := range v2Agents.Items {
 		agents = append(agents, v2.Spec.InnerIP)
+	}
+	return agents, nil
+}
+
+func (store *managerStore) ListAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
+	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
+	v2Agents, err := client.List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	agents := make([]*commtypes.BcsClusterAgentSetting, 0, len(v2Agents.Items))
+	for _, v2 := range v2Agents.Items {
+		obj := v2.Spec.BcsClusterAgentSetting
+		obj.ResourceVersion = v2.ResourceVersion
+		agents = append(agents, &obj)
 	}
 	return agents, nil
 }

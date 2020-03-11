@@ -39,6 +39,8 @@ type cacheManager struct {
 	Namespaces   map[string]struct{}
 	Configmaps   map[string]*commtypes.BcsConfigMap
 	Secrets      map[string]*commtypes.BcsSecret
+	//key=agent.InnerIP
+	Agentsettings map[string]*commtypes.BcsClusterAgentSetting
 	// Manager currently is OK
 	isOK    bool
 	mapLock *sync.RWMutex
@@ -65,6 +67,7 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	cacheMgr.Namespaces = make(map[string]struct{})
 	cacheMgr.Configmaps = make(map[string]*commtypes.BcsConfigMap)
 	cacheMgr.Secrets = make(map[string]*commtypes.BcsSecret)
+	cacheMgr.Agentsettings = make(map[string]*commtypes.BcsClusterAgentSetting)
 	//when isUsed=true, then init cache
 	if isUsed {
 		// init namespace in cache
@@ -165,6 +168,22 @@ func (store *managerStore) initCacheSecrets() error {
 		blog.V(3).Infof("cacheManager sync secret %s in cache", key)
 	}
 	blog.Infof("cacheMgr init cache secrets done")
+	return nil
+}
+
+// init agentsetting in cache
+func (store *managerStore) initCacheAgentsettings() error {
+	agents, err := store.ListAgentsettings()
+	if err != nil {
+		blog.Errorf("cacheManager ListAgentsettings failed: %s", err.Error())
+		return err
+	}
+
+	for _, agent := range agents {
+		cacheMgr.Agentsettings[agent.InnerIP] = agent.DeepCopy()
+		blog.V(3).Infof("cacheManager sync agentsettings %s in cache", agent.InnerIP)
+	}
+	blog.Infof("cacheMgr init cache agentsettings done")
 	return nil
 }
 
@@ -330,6 +349,43 @@ func deleteCacheSecret(ns, name string) error {
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Secrets, key)
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+//save agentsettings in cache
+func saveCacheAgentsetting(obj *commtypes.BcsClusterAgentSetting) error {
+	if !cacheMgr.isOK {
+		return nil
+	}
+
+	tmpData := obj.DeepCopy()
+	cacheMgr.mapLock.Lock()
+	cacheMgr.Agentsettings[tmpData.InnerIP] = tmpData
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+//get Agentsetting in cache
+func getCacheAgentsetting(InnerIp string) *commtypes.BcsClusterAgentSetting {
+	cacheMgr.mapLock.RLock()
+	obj, ok := cacheMgr.Agentsettings[InnerIp]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
+		return nil
+	}
+
+	return obj.DeepCopy()
+}
+
+//delete agentsetting in cache
+func deleteCacheAgentsetting(InnerIp string) error {
+	if !cacheMgr.isOK {
+		return nil
+	}
+
+	cacheMgr.mapLock.Lock()
+	delete(cacheMgr.Agentsettings, InnerIp)
 	cacheMgr.mapLock.Unlock()
 	return nil
 }

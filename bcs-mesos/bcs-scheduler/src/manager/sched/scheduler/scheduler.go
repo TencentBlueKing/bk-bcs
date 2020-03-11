@@ -907,6 +907,19 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 	return mesosClient.GetStateFromCluster()
 }
 
+//for build pod index in agent
+func (s *Scheduler) syncAgentsettingPods()error{
+	apps,err := s.store.ListAllApplications()
+	if err!=nil {
+		blog.Infof("ListAllApplications failed: %s",err.Error())
+		return err
+	}
+	taskg := make([]*types.TaskGroup,0)
+	for _,app :=range apps {
+
+	}
+}
+
 func (s *Scheduler) Stop() {
 	blog.Info("scheduler Stop ...")
 }

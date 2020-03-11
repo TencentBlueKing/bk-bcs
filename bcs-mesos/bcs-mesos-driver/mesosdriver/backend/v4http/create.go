@@ -216,6 +216,16 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		container.Resources.Cpus, _ = strconv.ParseFloat(c.Resources.Requests.Cpu, 64)
 		container.Resources.Mem, _ = strconv.ParseFloat(c.Resources.Requests.Mem, 64)
 		container.Resources.Disk, _ = strconv.ParseFloat(c.Resources.Requests.Storage, 64)
+		//if cpuset, resources.request cpu must be integer
+		//the minimum is 1
+		container.Cpuset = c.Cpuset
+		if container.Cpuset {
+			cpu := int(container.Resources.Cpus)
+			if cpu==0 {
+				cpu = 1
+			}
+			container.Resources.Cpus = float64(cpu)
+		}
 
 		//limit resuroces
 		container.LimitResoures = new(types.Resource)

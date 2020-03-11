@@ -361,6 +361,8 @@ type Container struct {
 	Resources     *Resource
 	LimitResoures *Resource
 	DataClass     *DataClass
+	//whether cpuset docker parameter --cpuset-cpus, use with DataClass.Resources
+	Cpuset        bool
 
 	ConfigMaps []commtypes.ConfigMap
 	Secrets    []commtypes.Secret
@@ -1004,8 +1006,13 @@ type ProcDef struct {
 }
 
 type DataClass struct {
+	//resources request cpu\memory
 	Resources      *Resource
+	//resources limit cpu\memory
 	LimitResources *Resource
+	//cpuset docker parameter --cpuset-cpus, use with DataClass.Resources
+	//example: 0,1,2
+	Cpuset string
 	Msgs           []*BcsMessage
 	NetLimit       *commtypes.NetLimit
 	//add for proc 20180730
