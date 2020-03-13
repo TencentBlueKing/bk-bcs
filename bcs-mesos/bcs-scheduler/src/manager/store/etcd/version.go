@@ -27,9 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func getNamespaceByVersion(runAs, versionId string) string {
-	return fmt.Sprintf("%s-%s", runAs, versionId)
-}
+const VersionIdKey = "VersionId"
 
 //create version, produce version id
 func (store *managerStore) SaveVersion(version *types.Version) error {
@@ -39,13 +37,12 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 		runAs = defaultRunAs
 		version.RunAs = defaultRunAs
 	}
-	ns := getNamespaceByVersion(runAs, version.ID)
-	err := store.checkNamespace(ns)
+	err := store.checkNamespace(runAs)
 	if err != nil {
 		return err
 	}
 
-	client := store.BkbcsClient.Versions(ns)
+	client := store.BkbcsClient.Versions(runAs)
 	v2Version := &v2.Version{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       CrdVersion,
@@ -53,7 +50,10 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      version.Name,
-			Namespace: ns,
+			Namespace: runAs,
+			Labels: map[string]string{
+				VersionIdKey: version.ID,
+			},
 		},
 		Spec: v2.VersionSpec{
 			Version: *version,
@@ -74,13 +74,12 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 		runAs = defaultRunAs
 		version.RunAs = defaultRunAs
 	}
-	ns := getNamespaceByVersion(runAs, version.ID)
-	err := store.checkNamespace(ns)
+	err := store.checkNamespace(runAs)
 	if err != nil {
 		return err
 	}
 
-	client := store.BkbcsClient.Versions(ns)
+	client := store.BkbcsClient.Versions(runAs)
 	v2Version := &v2.Version{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       CrdVersion,
@@ -88,7 +87,10 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      version.Name,
-			Namespace: ns,
+			Namespace: runAs,
+			Labels: map[string]string{
+				VersionIdKey: version.ID,
+			},
 		},
 		Spec: v2.VersionSpec{
 			Version: *version,
@@ -123,9 +125,8 @@ func (store *managerStore) ListVersions(runAs, versionID string) ([]string, erro
 }
 
 func (store *managerStore) listVersions(runAs, versionID string) ([]*types.Version, error) {
-	ns := getNamespaceByVersion(runAs, versionID)
-	client := store.BkbcsClient.Versions(ns)
-	v2Versions, err := client.List(metav1.ListOptions{})
+	client := store.BkbcsClient.Versions(runAs)
+	v2Versions, err := client.List(metav1.ListOptions{LabelSelector: fmt.Sprintf("%s=%s", VersionIdKey, versionID)})
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +148,7 @@ func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*ty
 		return version, nil
 	}
 
-	ns := getNamespaceByVersion(runAs, versionId)
-	client := store.BkbcsClient.Versions(ns)
+	client := store.BkbcsClient.Versions(runAs)
 	v2Version, err := client.Get(versionNo, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -161,8 +161,7 @@ func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) err
 	if "" == runAs {
 		runAs = defaultRunAs
 	}
-	ns := getNamespaceByVersion(runAs, versionId)
-	client := store.BkbcsClient.Versions(ns)
+	client := store.BkbcsClient.Versions(runAs)
 	err := client.Delete(versionNo, &metav1.DeleteOptions{})
 	return err
 }
