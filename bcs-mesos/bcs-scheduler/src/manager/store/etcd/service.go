@@ -16,15 +16,16 @@ package etcd
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (store *managerStore) CheckServiceExist(service *commtypes.BcsService) (string, bool) {
-	client := store.BkbcsClient.BcsServices(service.NameSpace)
-	v2Svc, err := client.Get(service.Name, metav1.GetOptions{})
-	if err == nil {
-		return v2Svc.ResourceVersion, true
+	svc,_ := store.FetchService(service.NameSpace,service.Name)
+	if svc!=nil {
+		return svc.ResourceVersion, true
 	}
 
 	return "", false
@@ -56,30 +57,50 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 	rv, exist := store.CheckServiceExist(service)
 	if exist {
 		v2Svc.ResourceVersion = rv
-		_, err = client.Update(v2Svc)
+		v2Svc, err = client.Update(v2Svc)
 	} else {
-		_, err = client.Create(v2Svc)
+		v2Svc, err = client.Create(v2Svc)
 	}
+	if err!=nil {
+		return err
+	}
+
+	service.ResourceVersion = v2Svc.ResourceVersion
+	saveCacheService(service)
 	return err
 }
 
 func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService, error) {
+	if cacheMgr.isOK {
+		svc := getCacheService(ns,name)
+		if svc==nil {
+			return svc, schStore.ErrNoFound
+		}
+	}
+
 	client := store.BkbcsClient.BcsServices(ns)
 	v2Svc, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &v2Svc.Spec.BcsService, nil
+	obj := v2Svc.Spec.BcsService
+	obj.ResourceVersion = v2Svc.ResourceVersion
+	return &obj, nil
 }
 
 func (store *managerStore) DeleteService(ns, name string) error {
 	client := store.BkbcsClient.BcsServices(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	return err
+	if err!=nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	deleteCacheService(ns, name)
+	return nil
 }
 
-func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, error) {
+/*func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, error) {
 	client := store.BkbcsClient.BcsServices(runAs)
 	v2Svcs, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -92,9 +113,13 @@ func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, 
 		svcs = append(svcs, &obj)
 	}
 	return svcs, nil
-}
+}*/
 
 func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
+	if cacheMgr.isOK {
+		return listCacheServices()
+	}
+
 	client := store.BkbcsClient.BcsServices("")
 	v2Svcs, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -104,6 +129,7 @@ func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
 	svcs := make([]*commtypes.BcsService, 0, len(v2Svcs.Items))
 	for _, svc := range v2Svcs.Items {
 		obj := svc.Spec.BcsService
+		obj.ResourceVersion = svc.ResourceVersion
 		svcs = append(svcs, &obj)
 	}
 	return svcs, nil

@@ -70,17 +70,17 @@ const (
 
 type BcsClusterAgentSetting struct {
 	//agent ip
-	InnerIP     string                       `json:"innerIP"`
+	InnerIP string `json:"innerIP"`
 	//whether disable scheduler container
-	Disabled    bool                         `json:"disabled"`
+	Disabled bool `json:"disabled"`
 	//agent settings
-	AttrStrings map[string]MesosValue_Text   `json:"strings"`
+	AttrStrings map[string]MesosValue_Text `json:"strings"`
 	//agent settings
 	AttrScalars map[string]MesosValue_Scalar `json:"scalars"`
 	//taint agent
-	NoSchedule  map[string]string            `json:"noSchedule"`
+	NoSchedule map[string]string `json:"noSchedule"`
 	//Pods index
-	Pods        []string                     `json:"pods"`
+	Pods []string `json:"pods"`
 	// Populated by the system.
 	// Read-only.
 	// Value must be treated as opaque by clients and .
@@ -110,6 +110,11 @@ func (in *BcsClusterAgentSetting) DeepCopyInto(out *BcsClusterAgentSetting) {
 		for key, val := range *in {
 			(*out)[key] = val
 		}
+	}
+	if in.Pods != nil {
+		in, out := &in.Pods, &out.Pods
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 
 	return

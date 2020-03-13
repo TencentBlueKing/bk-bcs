@@ -62,11 +62,10 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 
 	task.ResourceVersion = v2Task.ResourceVersion
 	saveCacheTask(task)
-
 	return nil
 }
 
-func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error) {
+/*func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error) {
 	client := store.BkbcsClient.Tasks(runAs)
 	v2Tasks, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -83,18 +82,17 @@ func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error)
 		}
 	}
 	return tasks, nil
-}
+}*/
 
 func (store *managerStore) DeleteTask(taskId string) error {
 	ns, _ := types.GetRunAsAndAppIDbyTaskID(taskId)
 	client := store.BkbcsClient.Tasks(ns)
 	err := client.Delete(taskId, &metav1.DeleteOptions{})
-	if err != nil {
+	if err!=nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	deleteCacheTask(taskId)
-
 	return nil
 }
 

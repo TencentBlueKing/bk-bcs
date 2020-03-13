@@ -815,14 +815,20 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 
 		return nil
 	}
-
+	//init cache
 	err := s.store.InitCacheMgr(s.config.UseCache)
 	if err != nil {
 		blog.Errorf("InitCacheMgr failed: %s, and exit", err.Error())
 		os.Exit(1)
 	}
+	//sync agent pods index
+	err = s.syncAgentsettingPods()
+	if err!=nil {
+		blog.Errorf("syncAgentsettingPods failed: %s, and exit", err.Error())
+		os.Exit(1)
+	}
+	//current role is master
 	s.Role = currRole
-
 	go s.store.StartStoreObjectMetrics()
 	go s.startCheckDeployments()
 	if s.ServiceMgr != nil {
@@ -908,16 +914,66 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 }
 
 //for build pod index in agent
-func (s *Scheduler) syncAgentsettingPods()error{
-	apps,err := s.store.ListAllApplications()
-	if err!=nil {
-		blog.Infof("ListAllApplications failed: %s",err.Error())
+func (s *Scheduler) syncAgentsettingPods() error {
+	apps, err := s.store.ListAllApplications()
+	if err != nil {
+		blog.Infof("ListAllApplications failed: %s", err.Error())
 		return err
 	}
-	taskg := make([]*types.TaskGroup,0)
-	for _,app :=range apps {
+	//fetch cluster all taskgroups
+	taskg := make([]*types.TaskGroup, 0)
+	for _, app := range apps {
+		tasks,err := s.store.ListTaskGroups(app.RunAs, app.ID)
+		if err!=nil {
+			blog.Errorf("ListTaskGroups(%s:%s) failed: %s", app.RunAs, app.ID, err.Error())
+			return err
+		}
 
+		taskg = append(taskg, tasks...)
 	}
+	//empty agentsetting pods
+	settings,err := s.store.ListAgentsettings()
+	if err!=nil {
+		blog.Errorf("ListAgentsettings failed: %s",err.Error())
+		return err
+	}
+	for _,setting :=range settings {
+		setting.Pods = make([]string,0)
+		err = s.store.SaveAgentSetting(setting)
+		if err!=nil {
+			blog.Errorf("SaveAgentSetting %s failed: %s",setting.InnerIP,err.Error())
+			return err
+		}
+	}
+
+	//save agentsetting pods
+	for _,taskgroup :=range taskg {
+		nodeIp := taskgroup.GetAgentIp()
+		if nodeIp=="" {
+			blog.Errorf("taskgroup %s GetAgentIp failed.", taskgroup.ID)
+			continue
+		}
+
+		setting,err := s.store.FetchAgentSetting(nodeIp)
+		if err!=nil {
+			blog.Errorf("FetchAgentSetting %s failed: %s",nodeIp, err.Error())
+			return err
+		}
+		if setting==nil {
+			setting = &commtype.BcsClusterAgentSetting{
+				InnerIP: nodeIp,
+				Pods: make([]string,0),
+			}
+		}
+		setting.Pods = append(setting.Pods, taskgroup.ID)
+		err = s.store.SaveAgentSetting(setting)
+		if err!=nil {
+			blog.Errorf("SaveAgentSetting %s failed: %s",setting.InnerIP,err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *Scheduler) Stop() {
@@ -1564,4 +1620,22 @@ func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*comm
 		attributeList = append(attributeList, attribute)
 	}
 	return attributeList
+}
+
+func (s *Scheduler) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error){
+	return s.store.FetchTaskGroup(taskGroupID)
+}
+
+func (s *Scheduler) FetchMesosAgent(innerIP string)(*types.Agent,error){
+	agent,err := s.store.FetchAgent(innerIP)
+	if err!=nil && !(store.ErrNoFound.Error()==err.Error()) {
+		return nil, err
+	}
+	//fetch the agent, return it
+	if agent!=nil {
+		return agent, nil
+	}
+	//update mesos agents
+	s.oprMgr.UpdateMesosAgents()
+	return s.store.FetchAgent(innerIP)
 }

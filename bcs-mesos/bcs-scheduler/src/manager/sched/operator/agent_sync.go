@@ -14,8 +14,8 @@
 package operator
 
 import (
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"encoding/json"
-	"fmt"
 	//"strconv"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
@@ -61,7 +61,7 @@ func CreateOperatorMgr(store store.Store, client *client.Client) (*OperatorMgr, 
 	return mgr, nil
 }
 
-func (mgr *OperatorMgr) stop() {
+/*func (mgr *OperatorMgr) stop() {
 	blog.V(3).Infof("update agents: operatorMgr Stop...")
 	close(mgr.OperatorMsgQueue)
 }
@@ -79,10 +79,10 @@ func (mgr *OperatorMgr) SendMsg(msg *OperatorMsg) error {
 	}
 
 	return nil
-}
+}*/
 
 // the main loop for Operator manager
-func OperatorManage(mgr *OperatorMgr) {
+/*func OperatorManage(mgr *OperatorMgr) {
 	blog.Info("update agents: goroutine start ...")
 
 	//blog.V(3).Infof("update agents: to sync agents sync mesos master to DB")
@@ -108,9 +108,9 @@ func OperatorManage(mgr *OperatorMgr) {
 		}
 	}
 
-}
+}*/
 
-func (mgr *OperatorMgr) updateAgents() {
+func (mgr *OperatorMgr) UpdateMesosAgents() {
 
 	if mgr.openCheck == false {
 		blog.Info("update agents: opencheck is false, do nothing")
@@ -170,28 +170,27 @@ func (mgr *OperatorMgr) updateAgents() {
 
 	var agent types.Agent
 	for index, oneAgent := range agentInfo.Agents {
-
-		blog.V(3).Infof("update agents: ===>agent[%d]: name(%s), info(%s)", index, oneAgent.GetAgentInfo().GetHostname(), oneAgent.String())
-		//data, err := json.Marshal(oneAgent)
-		//if err != nil {
-		//	blog.Error("update agents: Marshal agent err(%s)", err.Error() )
-		//}
-		//blog.V(3).Infof("update agents: ===>agent[%d]: name(%s), info(%s)", index, oneAgent.GetAgentInfo().GetHostname(), string(data))
-
-		dbAgent, dbErr := mgr.store.FetchAgent(oneAgent.GetAgentInfo().GetHostname())
-		if dbAgent == nil && dbErr == store.ErrNoFound {
-			blog.Warn("update agents: new agent(%s) come to online", oneAgent.GetAgentInfo().GetHostname())
+		innerIP,_ := util.GetMesosAgentInnerIP(oneAgent.GetAgentInfo().GetAttributes())
+		if innerIP=="" {
+			blog.Errorf("mesos agent(%s) don't have InnerIP attribute",oneAgent.GetAgentInfo().GetHostname())
+			continue
 		}
 
-		agent.Key = oneAgent.GetAgentInfo().GetHostname()
+		blog.V(3).Infof("update agents: ===>agent[%d]: name(%s), info(%s)", index, innerIP, oneAgent.String())
+		dbAgent, dbErr := mgr.store.FetchAgent(innerIP)
+		if dbAgent == nil && dbErr == store.ErrNoFound {
+			blog.Infof("update agents: new agent(%s) come to online", oneAgent.GetAgentInfo().GetHostname())
+		}
+
+		agent.Key = innerIP
 		agent.AgentInfo = oneAgent
 		//agent.Info = string(data)
 		agent.LastSyncTime = currTime
 		err = mgr.store.SaveAgent(&agent)
 		if err != nil {
-			blog.Error("update agents: save agent(%s) to db err:%s", oneAgent.GetAgentInfo().GetHostname(), err.Error())
+			blog.Error("update agents: save agent(%s) to db err:%s", innerIP, err.Error())
 		} else {
-			blog.V(3).Infof("update agents: save agent(%s) to db succ", oneAgent.GetAgentInfo().GetHostname())
+			blog.V(3).Infof("update agents: save agent(%s) to db succ", innerIP)
 		}
 	}
 
@@ -207,7 +206,6 @@ func (mgr *OperatorMgr) updateAgents() {
 
 	currDBnum := len(agentNodes)
 	blog.Info("update agents: current db agents count(%d)", currDBnum)
-
 	offlineNum := 0
 	for index, agentNode := range agentNodes {
 		blog.V(3).Infof("update agents: to check agent[%d]:%s ", index, agentNode)

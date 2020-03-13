@@ -221,7 +221,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		container.Cpuset = c.Cpuset
 		if container.Cpuset {
 			cpu := int(container.Resources.Cpus)
-			if cpu==0 {
+			if cpu == 0 {
 				cpu = 1
 			}
 			container.Resources.Cpus = float64(cpu)

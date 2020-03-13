@@ -70,7 +70,7 @@ func (r *Router) initRoutes() {
 	/*-------------- taskgroup ---------------*/
 
 	/*-------------- task ---------------*/
-	r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/tasks", nil, r.listApplicationTasks))
+	//r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/tasks", nil, r.listApplicationTasks))
 	/*-------------- task ---------------*/
 
 	/*-------------- message ---------------*/

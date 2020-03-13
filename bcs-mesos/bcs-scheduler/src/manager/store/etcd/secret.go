@@ -17,6 +17,7 @@ import (
 	commtypes "bk-bcs/bcs-common/common/types"
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -85,14 +86,13 @@ func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, e
 	}
 	obj := v2Sec.Spec.BcsSecret
 	obj.ResourceVersion = v2Sec.ResourceVersion
-
 	return &obj, nil
 }
 
 func (store *managerStore) DeleteSecret(ns, name string) error {
 	client := store.BkbcsClient.BcsSecrets(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	if err != nil {
+	if err!=nil && !errors.IsNotFound(err) {
 		return err
 	}
 
@@ -100,7 +100,7 @@ func (store *managerStore) DeleteSecret(ns, name string) error {
 	return nil
 }
 
-func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, error) {
+/*func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, error) {
 	client := store.BkbcsClient.BcsSecrets(runAs)
 	v2Secs, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -115,9 +115,13 @@ func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, er
 	}
 
 	return secrets, nil
-}
+}*/
 
 func (store *managerStore) ListAllSecrets() ([]*commtypes.BcsSecret, error) {
+	if cacheMgr.isOK {
+		return listCacheSecrets()
+	}
+
 	client := store.BkbcsClient.BcsSecrets("")
 	v2Secs, err := client.List(metav1.ListOptions{})
 	if err != nil {

@@ -46,11 +46,8 @@ func (s *Scheduler) BuildTaskGroup(version *types.Version, app *types.Applicatio
 		blog.Error("save taskgroup(%s) err: %s", taskgroup.ID, err.Error())
 		return nil, err
 	}
-
 	blog.Infof("build taskgroup %s for %s", taskgroup.ID, reason)
-
 	s.ServiceMgr.TaskgroupAdd(taskgroup)
-
 	podIndex := new(bcstype.BcsPodIndex)
 	podIndex.Name = taskgroup.ID
 	app.Pods = append(app.Pods, podIndex)

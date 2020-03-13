@@ -196,6 +196,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			task.Network = container.Docker.Network
 			task.NetworkType = container.Docker.NetworkType
 			task.NetLimit = container.NetLimit
+			task.Cpuset = container.Cpuset
 			if container.Docker.Parameters != nil {
 				for _, parameter := range container.Docker.Parameters {
 					task.Parameters = append(task.Parameters, &types.Parameter{
@@ -1306,6 +1307,14 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 		task.AgentHostname = *offer.Hostname
 		task.AgentIPAddress, _ = offerP.GetOfferIp(offer)
 
+		//allocate container cpuset
+		if task.Cpuset {
+			cpuset := getOfferCpusetResources(offer)
+			if cpuset==nil {
+				
+			}
+		}
+
 		resource := *task.DataClass.Resources
 		if !executorResourceDone && resource.Cpus >= 10*types.CPUS_PER_EXECUTOR {
 			resource.Cpus -= types.CPUS_PER_EXECUTOR + 0.01
@@ -1332,6 +1341,16 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 	}
 
 	return &taskgroupinfo
+}
+
+func getOfferCpusetResources(o *mesos.Offer)*mesos.Resource{
+	for _,i :=range o.GetResources() {
+		if i.GetName()=="cpuset" {
+			return i
+		}
+	}
+
+	return nil
 }
 
 func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {
