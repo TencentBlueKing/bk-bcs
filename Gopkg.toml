@@ -24,10 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-ignored = [
-  "bitbucket.org/ww/goautoneg"
-]
-
 required = [
   "github.com/aws/aws-sdk-go",
   "github.com/gophercloud/gophercloud",
@@ -275,6 +271,10 @@ required = [
 [[constraint]]
   name = "k8s.io/kubernetes"
   version = "1.13.1"
+
+[[constraint]]
+  name = "k8s.io/apiserver"
+  version = "kubernetes-1.12.3"
 
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"

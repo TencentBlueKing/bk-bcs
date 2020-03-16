@@ -18,7 +18,7 @@ type Yaml struct {
 }
 
 type Local struct {
-	DataId  int            `yaml:"dataid"`
+	DataId  int               `yaml:"dataid"`
 	Paths   []string          `yaml:"paths"`
 	ToJson  bool              `yaml:"to_json"`
 	ExtMeta map[string]string `yaml:"ext_meta"`

@@ -238,7 +238,7 @@ func produceLogConfParameter(container *docker.Container) (*types.Yaml, bool) {
 	if para.StdoutDataid != "" {
 		inLocal := para
 		inLocal.Paths = []string{container.LogPath}
-		i,_ := strconv.Atoi(para.StdoutDataid)
+		i, _ := strconv.Atoi(para.StdoutDataid)
 		inLocal.DataId = i
 		y.Local = append(y.Local, inLocal)
 	}
@@ -249,7 +249,7 @@ func produceLogConfParameter(container *docker.Container) (*types.Yaml, bool) {
 		for _, f := range array {
 			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s", container.State.Pid, f))
 		}
-		i,_ := strconv.Atoi(para.NonstandardDataid)
+		i, _ := strconv.Atoi(para.NonstandardDataid)
 		inLocal.DataId = i
 		y.Local = append(y.Local, inLocal)
 	}

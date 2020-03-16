@@ -1,5 +1,6 @@
 *.DS_Store
 .idea/
+.vscode/
 *exvim*
 build/
 vendor/github.com/Nvveen/Gotty/

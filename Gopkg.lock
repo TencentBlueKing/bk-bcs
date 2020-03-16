@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  branch = "default"
-  digest = "1:24df057f15e7a09e75c1241cbe6f6590fd3eac9804f1110b02efade3214f042d"
-  name = "bitbucket.org/ww/goautoneg"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "75cd24fc2f2c2a2088577d12123ddee5f54e0675"
-
-[[projects]]
   digest = "1:5ad08b0e14866764a6d7475eb11c9cf05cad9a52c442593bdfa544703ff77f61"
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
@@ -913,6 +905,14 @@
   ]
   pruneopts = "UT"
   revision = "787624de3eb7bd915c329cba748687a3b22666a6"
+
+[[projects]]
+  digest = "1:9b7a07ac7577787a8ecc1334cb9f34df1c76ed82a917d556c5713d3ab84fbc43"
+  name = "github.com/grpc-ecosystem/go-grpc-prometheus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c225b8c3b01faf2899099b768856a9e916e5087b"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -2000,7 +2000,7 @@
   version = "kubernetes-1.12.3"
 
 [[projects]]
-  digest = "1:69a093b765d41b0bd1e03d5b47afff3738725f11e9410fc86c1e741454336689"
+  digest = "1:e6546e6c30174f43dac4817fc8dbcc9eff28989576992634cc91b31390812841"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
@@ -2012,6 +2012,11 @@
     "pkg/client/clientset/internalclientset",
     "pkg/client/clientset/internalclientset/scheme",
     "pkg/client/clientset/internalclientset/typed/apiextensions/internalversion",
+    "pkg/client/informers/externalversions",
+    "pkg/client/informers/externalversions/apiextensions",
+    "pkg/client/informers/externalversions/apiextensions/v1beta1",
+    "pkg/client/informers/externalversions/internalinterfaces",
+    "pkg/client/listers/apiextensions/v1beta1",
     "pkg/features",
   ]
   pruneopts = "UT"
@@ -2080,8 +2085,7 @@
   version = "kubernetes-1.12.3"
 
 [[projects]]
-  branch = "release-1.11"
-  digest = "1:6b2f2e04ef53129a13c0dee2feb5ca4317b6d6ca6dc0c86a4ebd96339982ef46"
+  digest = "1:369277b4812558c321fb80e1dd24b9fa445af1e2208dfcf412b3b7abb4ec0142"
   name = "k8s.io/apiserver"
   packages = [
     "pkg/admission",
@@ -2099,11 +2103,13 @@
     "pkg/admission/plugin/webhook/namespace",
     "pkg/admission/plugin/webhook/request",
     "pkg/admission/plugin/webhook/rules",
+    "pkg/admission/plugin/webhook/util",
     "pkg/admission/plugin/webhook/validating",
     "pkg/apis/apiserver",
     "pkg/apis/apiserver/install",
     "pkg/apis/apiserver/v1alpha1",
     "pkg/apis/audit",
+    "pkg/apis/audit/v1",
     "pkg/apis/audit/v1alpha1",
     "pkg/apis/audit/v1beta1",
     "pkg/apis/audit/validation",
@@ -2153,8 +2159,10 @@
     "pkg/storage/storagebackend",
     "pkg/storage/storagebackend/factory",
     "pkg/storage/value",
+    "pkg/util/dryrun",
     "pkg/util/feature",
     "pkg/util/flushwriter",
+    "pkg/util/logs",
     "pkg/util/openapi",
     "pkg/util/trace",
     "pkg/util/webhook",
@@ -2163,7 +2171,8 @@
     "plugin/pkg/authorizer/webhook",
   ]
   pruneopts = "UT"
-  revision = "3f1a34edf9b83a43109259c0a4b462a1a09b6af8"
+  revision = "92fdef3a232a23afb9644f6151119b5961b9feab"
+  version = "kubernetes-1.12.3"
 
 [[projects]]
   digest = "1:5aa94390c366adc57a82b19ad4f99482ab8fbeca0a2ff7b09db12d7baf590e46"
@@ -2572,6 +2581,7 @@
     "github.com/emicklei/go-restful",
     "github.com/fsnotify/fsnotify",
     "github.com/fsouza/go-dockerclient",
+    "github.com/ghodss/yaml",
     "github.com/go-sql-driver/mysql",
     "github.com/golang/glog",
     "github.com/golang/protobuf/proto",
@@ -2630,17 +2640,16 @@
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",
+    "gopkg.in/yaml.v2",
     "k8s.io/api/admission/v1beta1",
     "k8s.io/api/apps/v1",
-    "k8s.io/api/apps/v1beta1",
-    "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
-    "k8s.io/api/extensions/v1beta1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/internalclientset",
+    "k8s.io/apiextensions-apiserver/pkg/client/informers/externalversions",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",

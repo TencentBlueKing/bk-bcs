@@ -204,11 +204,8 @@ func (updater *Updater) Update() error {
 		return fmt.Errorf("get listeners from cache failed, err %s", err.Error())
 	}
 	// get different objects between new objects and old objects
-	toDeleteListeners, toAddListeners, err := updater.getDiffCloudListeners(oldList, listenerList)
-	if err != nil {
-		blog.Errorf("get different listeners between old and new CloudListener failed, err %s", err.Error())
-		return fmt.Errorf("get different listeners between old and new CloudListener failed, err %s", err.Error())
-	}
+	toDeleteListeners, toAddListeners := updater.getDiffCloudListeners(oldList, listenerList)
+
 	// delete listeners
 	for _, d := range toDeleteListeners {
 		dtimer := prometheus.NewTimer(listenerDurationMetric.With(prometheus.Labels{"action": "delete"}))
@@ -246,11 +243,8 @@ func (updater *Updater) Update() error {
 		clbListenersAddMetric.WithLabelValues(a.GetName()).Inc()
 	}
 	// get all listeners that shoud be updated
-	updatesOld, updatesNew, err := updater.getUpdateCloudListeners(oldList, listenerList)
-	if err != nil {
-		blog.Errorf("get updated listener between old and new CloudListener failed, err %s", err.Error())
-		return fmt.Errorf("get updated listener between old and new CloudListener failed, err %s", err.Error())
-	}
+	updatesOld, updatesNew := updater.getUpdateCloudListeners(oldList, listenerList)
+
 	// do update
 	for index, u := range updatesNew {
 		utimer := prometheus.NewTimer(listenerDurationMetric.With(prometheus.Labels{"action": "update"}))
@@ -979,8 +973,8 @@ func (updater *Updater) getCloudListenerFromCache() ([]*cloudListenerType.CloudL
 
 // get diff cloud listener
 func (updater *Updater) getDiffCloudListeners(olds, curs []*cloudListenerType.CloudListener) (
-	dels, adds []*cloudListenerType.CloudListener, err error) {
-
+	[]*cloudListenerType.CloudListener, []*cloudListenerType.CloudListener) {
+	var dels, adds []*cloudListenerType.CloudListener
 	tmpMapAdd := make(map[string]*cloudListenerType.CloudListener)
 	for _, old := range olds {
 		tmpMapAdd[old.Key()] = old
@@ -1008,13 +1002,13 @@ func (updater *Updater) getDiffCloudListeners(olds, curs []*cloudListenerType.Cl
 	for index, del := range dels {
 		blog.V(3).Infof("[no.%d] del %s", index, del.ToString())
 	}
-	err = nil
-	return
+	return dels, adds
 }
 
 // get cloud listener to be updated
 func (updater *Updater) getUpdateCloudListeners(olds, curs []*cloudListenerType.CloudListener) (
-	toUpdates, updates []*cloudListenerType.CloudListener, err error) {
+	[]*cloudListenerType.CloudListener, []*cloudListenerType.CloudListener) {
+	var toUpdates, updates []*cloudListenerType.CloudListener
 	tmpMap := make(map[string]*cloudListenerType.CloudListener)
 	for _, old := range olds {
 		tmpMap[old.Key()] = old
@@ -1032,6 +1026,5 @@ func (updater *Updater) getUpdateCloudListeners(olds, curs []*cloudListenerType.
 	for index, u := range updates {
 		blog.V(3).Infof("[no.%d] new: %s, old: %s", index, u.ToString(), tmpMap[u.Key()].ToString())
 	}
-	err = nil
-	return
+	return toUpdates, updates
 }
