@@ -149,7 +149,8 @@ func (p *peerManager) addRemovePeers(servs []string) {
 	p.ready = ready
 }
 
-func diff(desired, actual map[string]bool) (toCreate []string, toDelete []string, same []string) {
+func diff(desired, actual map[string]bool) ([]string, []string, []string) {
+	var same, toCreate, toDelete []string
 	for key := range desired {
 		if actual[key] {
 			same = append(same, key)
@@ -162,5 +163,5 @@ func diff(desired, actual map[string]bool) (toCreate []string, toDelete []string
 			toDelete = append(toDelete, key)
 		}
 	}
-	return
+	return same, toCreate, toDelete
 }

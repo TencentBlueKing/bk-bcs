@@ -94,7 +94,7 @@ func (s *Session) startPings(rootCtx context.Context) {
 			case <-t.C:
 				s.conn.Lock()
 				if err := s.conn.conn.WriteControl(websocket.PingMessage, []byte(""), time.Now().Add(time.Second)); err != nil {
-					blog.Errorf("Error writing ping", err.Error())
+					blog.Errorf("Error writing ping: %s", err.Error())
 				}
 				blog.Debug("Wrote ping")
 				s.conn.Unlock()
