@@ -131,7 +131,17 @@ func (m *MesosDriver) Start() error {
 	m.RunMetric()
 
 	go m.DiscvScheduler()
-	go m.RegDiscover()
+
+	if m.config.RegisterWithWebsocket {
+		err := m.buildWebsocketToApi()
+		if err != nil {
+			blog.Fatalf("err when register with websocket: %s", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		go m.RegDiscover()
+	}
+
 	go m.registerMesosZkEndpoints()
 
 	chErr := make(chan error, 1)
