@@ -26,6 +26,7 @@ import (
 	"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
+	"bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/utils"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 
 	"github.com/emicklei/go-restful"
@@ -83,6 +84,10 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 		return err1.Error(), nil
 	}
 
+	httpcli := httpclient.NewHttpClient()
+	httpcli.SetHeader(medieTypeHeader, "application/json")
+	httpcli.SetHeader("Accept", "application/json")
+
 	rd, err := regdiscv.GetRDiscover()
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("mesos", method).Inc()
@@ -92,46 +97,59 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 		return err1.Error(), nil
 	}
 
-	serv, err := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_MESOSAPISERVER, cluster))
-	if err != nil {
-		metric.RequestErrorCount.WithLabelValues("mesos", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("mesos", method).Observe(time.Since(start).Seconds())
-		blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_MESOSAPISERVER, err.Error())
-		err1 := bhttp.InternalError(common.BcsErrApiGetMesosApiFail, fmt.Sprintf("mesos cluster %s not found", cluster))
-		return err1.Error(), nil
-	}
-
-	ser, ok := serv.(*types.BcsMesosApiserverInfo)
-	if !ok {
-		metric.RequestErrorCount.WithLabelValues("mesos", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("mesos", method).Observe(time.Since(start).Seconds())
-		blog.Errorf("servers convert to BcsMesosApiserverInfo")
-		err1 := bhttp.InternalError(common.BcsErrApiGetMesosApiFail, common.BcsErrApiGetMesosApiFailStr)
-		return err1.Error(), nil
-	}
-
-	//host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
-	var host string
-	if ser.ExternalIp != "" && ser.ExternalPort != 0 {
-		host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.ExternalIp, ser.ExternalPort)
-	} else {
-		host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
-	}
-	//url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
-	url := fmt.Sprintf("%s/mesosdriver/v4/%s", host, uri)
-	blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
-
-	httpcli := httpclient.NewHttpClient()
-	httpcli.SetHeader(medieTypeHeader, "application/json")
-	httpcli.SetHeader("Accept", "application/json")
-	if strings.ToLower(ser.Scheme) == "https" {
-		cliTls, err := rd.GetClientTls()
-		if err != nil {
-			blog.Errorf("get client tls error %s", err.Error())
+	var url string
+	// 先从websocket dialer缓存中查找websocket链
+	serverAddr, tp, found := utils.LookupWsHandler(cluster)
+	if found {
+		url = fmt.Sprintf("%s/mesosdriver/v4/%s", serverAddr, uri)
+		if strings.HasPrefix(serverAddr, "https") {
+			cliTls, err := rd.GetClientTls()
+			if err != nil {
+				blog.Errorf("get client tls error %s", err.Error())
+			}
+			tp.TLSClientConfig = cliTls
 		}
-		httpcli.SetTlsVerityConfig(cliTls)
+		httpcli.SetTransPort(tp)
+	} else {
+		serv, err := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_MESOSAPISERVER, cluster))
+		if err != nil {
+			metric.RequestErrorCount.WithLabelValues("mesos", method).Inc()
+			metric.RequestErrorLatency.WithLabelValues("mesos", method).Observe(time.Since(start).Seconds())
+			blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_MESOSAPISERVER, err.Error())
+			err1 := bhttp.InternalError(common.BcsErrApiGetMesosApiFail, fmt.Sprintf("mesos cluster %s not found", cluster))
+			return err1.Error(), nil
+		}
+
+		ser, ok := serv.(*types.BcsMesosApiserverInfo)
+		if !ok {
+			metric.RequestErrorCount.WithLabelValues("mesos", method).Inc()
+			metric.RequestErrorLatency.WithLabelValues("mesos", method).Observe(time.Since(start).Seconds())
+			blog.Errorf("servers convert to BcsMesosApiserverInfo")
+			err1 := bhttp.InternalError(common.BcsErrApiGetMesosApiFail, common.BcsErrApiGetMesosApiFailStr)
+			return err1.Error(), nil
+		}
+
+		//host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
+		var host string
+		if ser.ExternalIp != "" && ser.ExternalPort != 0 {
+			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.ExternalIp, ser.ExternalPort)
+		} else {
+			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
+		}
+		//url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
+		url = fmt.Sprintf("%s/mesosdriver/v4/%s", host, uri)
+		blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
+
+		if strings.ToLower(ser.Scheme) == "https" {
+			cliTls, err := rd.GetClientTls()
+			if err != nil {
+				blog.Errorf("get client tls error %s", err.Error())
+			}
+			httpcli.SetTlsVerityConfig(cliTls)
+		}
 	}
 
+	blog.Info(url)
 	reply, err := httpcli.Request(url, method, req.Request.Header, data)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("mesos", method).Inc()
