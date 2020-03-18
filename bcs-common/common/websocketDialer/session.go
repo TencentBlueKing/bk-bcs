@@ -207,7 +207,7 @@ func (s *Session) addRemoteClient(address string) error {
 	keys[int(sessionKey)] = true
 
 	if PrintTunnelData {
-		blog.Debug("ADD REMOTE CLIENT %s, SESSION %d", address, s.sessionKey)
+		blog.Debug(fmt.Sprintf("ADD REMOTE CLIENT %s, SESSION %d", address, s.sessionKey))
 	}
 
 	return nil
@@ -226,7 +226,7 @@ func (s *Session) removeRemoteClient(address string) error {
 	}
 
 	if PrintTunnelData {
-		blog.Debug("REMOVE REMOTE CLIENT %s, SESSION %d", address, s.sessionKey)
+		blog.Debug(fmt.Sprintf("REMOVE REMOTE CLIENT %s, SESSION %d", address, s.sessionKey))
 	}
 
 	return nil
@@ -237,7 +237,7 @@ func (s *Session) closeConnection(connID int64, err error) {
 	conn := s.conns[connID]
 	delete(s.conns, connID)
 	if PrintTunnelData {
-		blog.Debug("CONNECTIONS %d %d", s.sessionKey, len(s.conns))
+		blog.Debug(fmt.Sprintf("CONNECTIONS %d %d", s.sessionKey, len(s.conns)))
 	}
 	s.Unlock()
 
@@ -252,7 +252,7 @@ func (s *Session) clientConnect(message *message) {
 	s.Lock()
 	s.conns[message.connID] = conn
 	if PrintTunnelData {
-		blog.Debug("CONNECTIONS %d %d", s.sessionKey, len(s.conns))
+		blog.Debug(fmt.Sprintf("CONNECTIONS %d %d", s.sessionKey, len(s.conns)))
 	}
 	s.Unlock()
 
@@ -266,7 +266,7 @@ func (s *Session) serverConnect(deadline time.Duration, proto, address string) (
 	s.Lock()
 	s.conns[connID] = conn
 	if PrintTunnelData {
-		blog.Debug("CONNECTIONS %d %d", s.sessionKey, len(s.conns))
+		blog.Debug(fmt.Sprintf("CONNECTIONS %d %d", s.sessionKey, len(s.conns)))
 	}
 	s.Unlock()
 
