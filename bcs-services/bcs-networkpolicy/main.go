@@ -25,10 +25,8 @@ import (
 func main() {
 	opt := options.New()
 	options.Parse(opt)
-
-	blog.InitLogs(opt.LogConfig)
-
 	blog.V(3).Infof("options: %+v", opt)
+	blog.InitLogs(opt.LogConfig)
 
 	stopChan := make(chan struct{})
 
