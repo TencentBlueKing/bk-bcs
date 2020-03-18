@@ -28,14 +28,7 @@ func main() {
 
 	blog.InitLogs(opt.LogConfig)
 
-	blog.V(3).Infof("ServiceConfig %v", opt.ServiceConfig)
-	blog.V(3).Infof("ServerOnlyCertConfig %v", opt.ServerOnlyCertConfig)
-	blog.V(3).Infof("MetricConfig %v", opt.MetricConfig)
-	blog.V(3).Infof("LogConfig %v", opt.LogConfig)
-	blog.V(3).Infof("serviceRegistry %v, kubeMaster %v, kubeconfig %v",
-		opt.ServiceRegistry, opt.KubeMaster, opt.Kubeconfig)
-	blog.V(3).Infof("kubeResyncPeried %v(s), kubeCacheSyncTimeout %v(s), iptablesSyncPeriod %v(s)",
-		opt.KubeResyncPeriod, opt.KubeCacheSyncTimeout, opt.IPTableSyncPeriond)
+	blog.V(3).Infof("options: %+v", opt)
 
 	stopChan := make(chan struct{})
 
