@@ -44,7 +44,7 @@ func main() {
 	for {
 		select {
 		case <-interupt:
-			blog.Infof("Get signal from system. Exit")
+			blog.Infof("Get signal from system. Exit!")
 			svr.Stop()
 			return
 		case <-stopChan:
