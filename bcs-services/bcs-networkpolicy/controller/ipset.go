@@ -334,7 +334,7 @@ func (set *Set) name() string {
 // Parse ipset save stdout.
 // ex:
 // create KUBE-DST-3YNVZWWGX3UQQ4VQ hash:ip family inet hashsize 1024 maxelem 65536 timeout 0
-// add KUBE-DST-3YNVZWWGX3UQQ4VQ 100.96.1.6 timeout 0
+// add KUBE-DST-3YNVZWWGX3UQQ4VQ 127.0.0.1 timeout 0
 func parseIPSetSave(ipset *IPSet, result string) map[string]*Set {
 	sets := make(map[string]*Set)
 	// Save is always in order
@@ -362,7 +362,7 @@ func parseIPSetSave(ipset *IPSet, result string) map[string]*Set {
 // Build ipset restore input
 // ex:
 // create KUBE-DST-3YNVZWWGX3UQQ4VQ hash:ip family inet hashsize 1024 maxelem 65536 timeout 0
-// add KUBE-DST-3YNVZWWGX3UQQ4VQ 100.96.1.6 timeout 0
+// add KUBE-DST-3YNVZWWGX3UQQ4VQ 127.0.0.1 timeout 0
 func buildIPSetRestore(ipset *IPSet) string {
 	ipSetRestore := ""
 	for _, set := range ipset.Sets {
