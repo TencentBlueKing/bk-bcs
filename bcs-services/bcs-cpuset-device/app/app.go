@@ -11,24 +11,34 @@
  *
  */
 
-package backend
+package app
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"os"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-services/bcs-cpuset-device/app/options"
+	"bk-bcs/bcs-services/bcs-cpuset-device/config"
+	"bk-bcs/bcs-services/bcs-cpuset-device/cpuset-device"
 )
 
-func (b *backend) ListApplications(runAs string) ([]*types.Application, error) {
-	return b.store.ListApplications(runAs)
+func Run(op *options.Option) error {
+
+	conf := &config.Config{}
+	setConfig(conf, op)
+
+	controller := cpuset_device.NewCpusetDevicePlugin(conf)
+	err := controller.Start()
+	if err != nil {
+		blog.Errorf("CpusetDevicePlugin Start failed: %s", err.Error())
+		os.Exit(1)
+	}
+
+	blog.Info("CpusetDevicePlugin server ... ")
+	return nil
 }
 
-func (b *backend) ListApplicationTaskGroups(runAs, appId string) ([]*types.TaskGroup, error) {
-	b.store.LockApplication(runAs + "." + appId)
-	defer b.store.UnLockApplication(runAs + "." + appId)
-
-	return b.store.ListTaskGroups(runAs, appId)
-}
-
-// ListApplicationVersions is used to list all versions for application from db specified by application id.
-func (b *backend) ListApplicationVersions(runAs, appId string) ([]string, error) {
-	return b.store.ListVersions(runAs, appId)
+func setConfig(conf *config.Config, op *options.Option) {
+	conf.DockerSocket = op.DockerSock
+	conf.PluginSocketDir = op.PluginSocketDir
 }

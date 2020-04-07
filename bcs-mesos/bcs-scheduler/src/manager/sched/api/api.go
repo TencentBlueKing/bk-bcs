@@ -1153,7 +1153,7 @@ func (r *Router) deleteApplication(req *restful.Request, resp *restful.Response)
 }
 
 //ListApplicationTasks is used to list all tasks belong to application via application id.
-func (r *Router) listApplicationTasks(req *restful.Request, resp *restful.Response) {
+/*func (r *Router) listApplicationTasks(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
@@ -1180,7 +1180,7 @@ func (r *Router) listApplicationTasks(req *restful.Request, resp *restful.Respon
 	blog.Info("request list application(%s %s) tasks end", runAs, appId)
 
 	return
-}
+}*/
 
 func (r *Router) listApplicationTaskGroups(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {

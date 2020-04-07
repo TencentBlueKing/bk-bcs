@@ -1300,6 +1300,7 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 
 	portTotal := 0
 	executorResourceDone := false
+	usedCpuset := make(map[string]struct{})
 	for _, task := range taskgroup.Taskgroup {
 
 		task.OfferId = *offer.GetId().Value
@@ -1309,10 +1310,31 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 
 		//allocate container cpuset
 		if task.Cpuset {
+			//get offer cpuset resources
 			cpuset := getOfferCpusetResources(offer)
-			if cpuset==nil {
-				
+			if cpuset == nil || cpuset.GetSet() == nil {
+				blog.Errorf("offer %s don't have cpuset resources", offer.GetHostname())
+				return nil
 			}
+			task.DataClass.Resources.CPUSet = make([]string, 0)
+			for _, set := range cpuset.GetSet().GetItem() {
+				if _, ok := usedCpuset[set]; ok {
+					blog.V(3).Infof("taskgroup(%s) offer(%s) cpuset(%s) have used, continue",
+						taskgroup.ID, offer.GetHostname(), set)
+					continue
+				}
+
+				task.DataClass.Resources.CPUSet = append(task.DataClass.Resources.CPUSet, set)
+				if len(task.DataClass.Resources.CPUSet) == int(task.DataClass.Resources.Cpus) {
+					break
+				}
+			}
+			if len(task.DataClass.Resources.CPUSet) != int(task.DataClass.Resources.Cpus) {
+				blog.Errorf("taskgroup(%s) offer(%s) don't have enough cpuset(%v)",
+					taskgroup.ID, offer.GetHostname(), task.DataClass.Cpuset)
+				return nil
+			}
+			blog.Infof("task(%s) offer(%s) allocate cpuset(%v) success", task.ID, offer.GetHostname(), task.DataClass.Resources.CPUSet)
 		}
 
 		resource := *task.DataClass.Resources
@@ -1343,9 +1365,9 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 	return &taskgroupinfo
 }
 
-func getOfferCpusetResources(o *mesos.Offer)*mesos.Resource{
-	for _,i :=range o.GetResources() {
-		if i.GetName()=="cpuset" {
+func getOfferCpusetResources(o *mesos.Offer) *mesos.Resource {
+	for _, i := range o.GetResources() {
+		if i.GetName() == "cpuset" {
 			return i
 		}
 	}

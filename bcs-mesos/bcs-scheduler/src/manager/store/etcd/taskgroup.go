@@ -146,7 +146,7 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	client := store.BkbcsClient.TaskGroups(runAs)
 	err = client.Delete(taskGroupID, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 

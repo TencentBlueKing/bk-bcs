@@ -162,7 +162,7 @@ func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) err
 	}
 	client := store.BkbcsClient.Versions(runAs)
 	err := client.Delete(versionNo, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 

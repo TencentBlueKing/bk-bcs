@@ -88,7 +88,7 @@ func (store *managerStore) DeleteTask(taskId string) error {
 	ns, _ := types.GetRunAsAndAppIDbyTaskID(taskId)
 	client := store.BkbcsClient.Tasks(ns)
 	err := client.Delete(taskId, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 

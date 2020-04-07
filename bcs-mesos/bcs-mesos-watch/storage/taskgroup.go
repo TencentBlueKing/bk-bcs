@@ -158,9 +158,9 @@ func (handler *TaskGroupHandler) FormatConv(taskgroup *schedtypes.TaskGroup) (*c
 			container.Message = bcsInfo.Message
 			container.FinishTime = bcsInfo.FinishAt
 
-			if bcsInfo.NodeAddress != "" {
+			/*if bcsInfo.NodeAddress != "" {
 				status.HostIP = bcsInfo.NodeAddress
-			}
+			}*/
 			if bcsInfo.IPAddress != "" {
 				status.PodIP = bcsInfo.IPAddress
 			}

@@ -228,10 +228,13 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		}
 
 		//limit resuroces
-		container.LimitResoures = new(types.Resource)
-		container.LimitResoures.Cpus, _ = strconv.ParseFloat(c.Resources.Limits.Cpu, 64)
-		container.LimitResoures.Mem, _ = strconv.ParseFloat(c.Resources.Limits.Mem, 64)
-		container.LimitResoures.Disk, _ = strconv.ParseFloat(c.Resources.Limits.Storage, 64)
+		// if cpuset==false, then limit resource is valid
+		if !container.Cpuset {
+			container.LimitResoures = new(types.Resource)
+			container.LimitResoures.Cpus, _ = strconv.ParseFloat(c.Resources.Limits.Cpu, 64)
+			container.LimitResoures.Mem, _ = strconv.ParseFloat(c.Resources.Limits.Mem, 64)
+			container.LimitResoures.Disk, _ = strconv.ParseFloat(c.Resources.Limits.Storage, 64)
+		}
 
 		container.DataClass = &types.DataClass{
 			Resources: new(types.Resource),

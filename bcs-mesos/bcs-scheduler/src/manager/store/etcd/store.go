@@ -262,17 +262,26 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 		return nil, err
 	}
 
-	bkbcsClientset, err := internalclientset.NewForConfig(restConfig)
+	clientset, err := internalclientset.NewForConfig(restConfig)
 	if err != nil {
 		blog.Errorf("etcdstore build clientset error %s", err.Error())
 		return nil, err
 	}
 
 	m := &managerStore{
-		BkbcsClient:     bkbcsClientset.BkbcsV2(),
+		BkbcsClient:     clientset.BkbcsV2(),
 		k8sClient:       k8sClientset,
 		extensionClient: extensionClient,
 	}
+
+	//fetch application
+	clientset.BkbcsV2().Applications("").List(metav1.ListOptions{})
+
+	//watch application
+	clientset.BkbcsV2().Applications("").Watch(metav1.ListOptions{})
+
+	//list application
+	clientset.BkbcsV2().Applications("").Get("", metav1.ListOptions{})
 
 	m.regkey, _ = regexp.Compile("^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$")
 	m.regvalue, _ = regexp.Compile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")

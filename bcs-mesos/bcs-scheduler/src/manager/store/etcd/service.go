@@ -15,16 +15,16 @@ package etcd
 
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (store *managerStore) CheckServiceExist(service *commtypes.BcsService) (string, bool) {
-	svc,_ := store.FetchService(service.NameSpace,service.Name)
-	if svc!=nil {
+	svc, _ := store.FetchService(service.NameSpace, service.Name)
+	if svc != nil {
 		return svc.ResourceVersion, true
 	}
 
@@ -61,7 +61,7 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 	} else {
 		v2Svc, err = client.Create(v2Svc)
 	}
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -72,8 +72,8 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 
 func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService, error) {
 	if cacheMgr.isOK {
-		svc := getCacheService(ns,name)
-		if svc==nil {
+		svc := getCacheService(ns, name)
+		if svc == nil {
 			return svc, schStore.ErrNoFound
 		}
 	}
@@ -92,7 +92,7 @@ func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService,
 func (store *managerStore) DeleteService(ns, name string) error {
 	client := store.BkbcsClient.BcsServices(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 

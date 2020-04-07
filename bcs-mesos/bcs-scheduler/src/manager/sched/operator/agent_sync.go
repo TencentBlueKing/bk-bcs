@@ -170,9 +170,9 @@ func (mgr *OperatorMgr) UpdateMesosAgents() {
 
 	var agent types.Agent
 	for index, oneAgent := range agentInfo.Agents {
-		innerIP,_ := util.GetMesosAgentInnerIP(oneAgent.GetAgentInfo().GetAttributes())
-		if innerIP=="" {
-			blog.Errorf("mesos agent(%s) don't have InnerIP attribute",oneAgent.GetAgentInfo().GetHostname())
+		innerIP, _ := util.GetMesosAgentInnerIP(oneAgent.GetAgentInfo().GetAttributes())
+		if innerIP == "" {
+			blog.Errorf("mesos agent(%s) don't have InnerIP attribute", oneAgent.GetAgentInfo().GetHostname())
 			continue
 		}
 

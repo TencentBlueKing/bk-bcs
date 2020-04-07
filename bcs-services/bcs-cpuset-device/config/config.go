@@ -11,24 +11,16 @@
  *
  */
 
-package backend
+package config
 
-import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-)
-
-func (b *backend) ListApplications(runAs string) ([]*types.Application, error) {
-	return b.store.ListApplications(runAs)
+type Config struct {
+	//device plugin socket dir, examples: /var/lib/kubelet/device-plugins
+	PluginSocketDir string
+	//docker socket
+	DockerSocket string
 }
 
-func (b *backend) ListApplicationTaskGroups(runAs, appId string) ([]*types.TaskGroup, error) {
-	b.store.LockApplication(runAs + "." + appId)
-	defer b.store.UnLockApplication(runAs + "." + appId)
-
-	return b.store.ListTaskGroups(runAs, appId)
-}
-
-// ListApplicationVersions is used to list all versions for application from db specified by application id.
-func (b *backend) ListApplicationVersions(runAs, appId string) ([]string, error) {
-	return b.store.ListVersions(runAs, appId)
+//NewConfig create a config object
+func NewConfig() *Config {
+	return &Config{}
 }

@@ -34,7 +34,7 @@ AdmissionWebhook定义
   },
   "resourcesRef": {
     "operation": "Create | Update",
-    "kind": "Application | Deployment",
+    "kind": "Application | Deployment"
   },
   "admissionWebhooks":[
     {

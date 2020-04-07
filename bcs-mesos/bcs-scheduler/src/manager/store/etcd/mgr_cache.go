@@ -41,11 +41,11 @@ type cacheManager struct {
 	Configmaps   map[string]*commtypes.BcsConfigMap
 	Secrets      map[string]*commtypes.BcsSecret
 	//key = {deployment.namespace}.{deployment.name}
-	Deployments  map[string]*types.Deployment
+	Deployments map[string]*types.Deployment
 	//agent, key = agent.Key
-	Agents       map[string]*types.Agent
+	Agents map[string]*types.Agent
 	//services, key = {service.namespace}.{service.name}
-	Services     map[string]*commtypes.BcsService
+	Services map[string]*commtypes.BcsService
 	//key=agent.InnerIP
 	Agentsettings map[string]*commtypes.BcsClusterAgentSetting
 	// Manager currently is OK
@@ -224,7 +224,7 @@ func (store *managerStore) initCacheServices() error {
 	}
 
 	for _, svc := range svcs {
-		key := fmt.Sprintf("%s.%s",svc.NameSpace,svc.Name)
+		key := fmt.Sprintf("%s.%s", svc.NameSpace, svc.Name)
 		cacheMgr.Services[key] = svc.DeepCopy()
 		blog.V(3).Infof("cacheManager sync service %s in cache", key)
 	}
@@ -549,13 +549,13 @@ func getCacheApplication(runAs, appID string) (*types.Application, error) {
 
 func listCacheApplications() ([]*types.Application, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	apps := make([]*types.Application, len(cacheMgr.Applications))
-	for _,node :=range cacheMgr.Applications {
-		if node.Application!=nil {
+	for _, node := range cacheMgr.Applications {
+		if node.Application != nil {
 			apps = append(apps, node.Application.DeepCopy())
 		}
 	}
@@ -566,13 +566,13 @@ func listCacheApplications() ([]*types.Application, error) {
 
 func listCacheRunAsApplications(runAs string) ([]*types.Application, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	apps := make([]*types.Application, 0)
-	for _,node :=range cacheMgr.Applications {
-		if node.Application!=nil && node.Application.RunAs==runAs {
+	for _, node := range cacheMgr.Applications {
+		if node.Application != nil && node.Application.RunAs == runAs {
 			apps = append(apps, node.Application.DeepCopy())
 		}
 	}
@@ -583,13 +583,13 @@ func listCacheRunAsApplications(runAs string) ([]*types.Application, error) {
 
 func listCacheRunAsDeployment(namespace string) ([]*types.Deployment, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	deps := make([]*types.Deployment, 0)
-	for _,dep :=range cacheMgr.Deployments {
-		if dep.ObjectMeta.NameSpace==namespace {
+	for _, dep := range cacheMgr.Deployments {
+		if dep.ObjectMeta.NameSpace == namespace {
 			deps = append(deps, dep.DeepCopy())
 		}
 	}
@@ -600,12 +600,12 @@ func listCacheRunAsDeployment(namespace string) ([]*types.Deployment, error) {
 
 func listCacheConfigmaps() ([]*commtypes.BcsConfigMap, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	cfgs := make([]*commtypes.BcsConfigMap, len(cacheMgr.Configmaps))
-	for _,cfg :=range cacheMgr.Configmaps {
+	for _, cfg := range cacheMgr.Configmaps {
 		cfgs = append(cfgs, cfg.DeepCopy())
 	}
 	cacheMgr.mapLock.RUnlock()
@@ -615,12 +615,12 @@ func listCacheConfigmaps() ([]*commtypes.BcsConfigMap, error) {
 
 func listCacheSecrets() ([]*commtypes.BcsSecret, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	secs := make([]*commtypes.BcsSecret, len(cacheMgr.Secrets))
-	for _,sec :=range cacheMgr.Secrets {
+	for _, sec := range cacheMgr.Secrets {
 		secs = append(secs, sec.DeepCopy())
 	}
 	cacheMgr.mapLock.RUnlock()
@@ -919,12 +919,12 @@ func deleteCacheDeployment(ns, name string) error {
 
 func listCacheDeployments() ([]*types.Deployment, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	deps := make([]*types.Deployment, len(cacheMgr.Deployments))
-	for _,dep :=range cacheMgr.Deployments {
+	for _, dep := range cacheMgr.Deployments {
 		deps = append(deps, dep.DeepCopy())
 	}
 	cacheMgr.mapLock.RUnlock()
@@ -973,12 +973,12 @@ func deleteCacheAgent(key string) error {
 
 func listCacheAgents() ([]*types.Agent, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	agents := make([]*types.Agent, len(cacheMgr.Agents))
-	for _,agent :=range cacheMgr.Agents {
+	for _, agent := range cacheMgr.Agents {
 		agents = append(agents, agent.DeepCopy())
 	}
 	cacheMgr.mapLock.RUnlock()
@@ -988,12 +988,12 @@ func listCacheAgents() ([]*types.Agent, error) {
 
 func listCacheAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	agents := make([]*commtypes.BcsClusterAgentSetting, len(cacheMgr.Agentsettings))
-	for _,agent :=range cacheMgr.Agentsettings {
+	for _, agent := range cacheMgr.Agentsettings {
 		agents = append(agents, agent.DeepCopy())
 	}
 	cacheMgr.mapLock.RUnlock()
@@ -1009,7 +1009,7 @@ func saveCacheService(obj *commtypes.BcsService) error {
 
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
-	cacheMgr.Services[fmt.Sprintf("%s.%s",obj.NameSpace,obj.Name)] = tmpData
+	cacheMgr.Services[fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)] = tmpData
 	cacheMgr.mapLock.Unlock()
 	return nil
 }
@@ -1018,7 +1018,7 @@ func saveCacheService(obj *commtypes.BcsService) error {
 //if not exist, then return nil
 func getCacheService(ns, name string) *commtypes.BcsService {
 	cacheMgr.mapLock.RLock()
-	obj, ok := cacheMgr.Services[fmt.Sprintf("%s.%s",ns,name)]
+	obj, ok := cacheMgr.Services[fmt.Sprintf("%s.%s", ns, name)]
 	cacheMgr.mapLock.RUnlock()
 	if !ok {
 		return nil
@@ -1034,19 +1034,19 @@ func deleteCacheService(ns, name string) error {
 	}
 
 	cacheMgr.mapLock.Lock()
-	delete(cacheMgr.Services, fmt.Sprintf("%s.%s",ns,name))
+	delete(cacheMgr.Services, fmt.Sprintf("%s.%s", ns, name))
 	cacheMgr.mapLock.Unlock()
 	return nil
 }
 
 func listCacheServices() ([]*commtypes.BcsService, error) {
 	if !cacheMgr.isOK {
-		return nil,nil
+		return nil, nil
 	}
 
 	cacheMgr.mapLock.RLock()
 	svcs := make([]*commtypes.BcsService, len(cacheMgr.Services))
-	for _,svc :=range cacheMgr.Services {
+	for _, svc := range cacheMgr.Services {
 		svcs = append(svcs, svc.DeepCopy())
 	}
 	cacheMgr.mapLock.RUnlock()

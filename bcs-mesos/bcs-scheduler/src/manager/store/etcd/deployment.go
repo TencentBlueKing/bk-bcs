@@ -70,8 +70,8 @@ func (store *managerStore) UnLockDeployment(deploymentName string) {
 }
 
 func (store *managerStore) CheckDeploymentExist(deployment *types.Deployment) (string, bool) {
-	obj,_ := store.FetchDeployment(deployment.ObjectMeta.NameSpace,deployment.ObjectMeta.Name)
-	if obj!=nil {
+	obj, _ := store.FetchDeployment(deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name)
+	if obj != nil {
 		return obj.ObjectMeta.ResourceVersion, true
 	}
 
@@ -108,7 +108,7 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 	} else {
 		v2Dep, err = client.Create(v2Dep)
 	}
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -119,8 +119,8 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 
 func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, error) {
 	if cacheMgr.isOK {
-		dep := getCacheDeployment(ns,name)
-		if dep==nil {
+		dep := getCacheDeployment(ns, name)
+		if dep == nil {
 			return nil, schStore.ErrNoFound
 		}
 	}
@@ -163,11 +163,11 @@ func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, erro
 func (store *managerStore) DeleteDeployment(ns, name string) error {
 	client := store.BkbcsClient.Deployments(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
-	deleteCacheDeployment(ns,name)
+	deleteCacheDeployment(ns, name)
 	return nil
 }
 

@@ -474,44 +474,35 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 	return true
 }
 
-func (p *offerPool) setOfferCpuset(offer *mesos.Offer)error{
-	ip,ok := GetOfferIp(offer)
+func (p *offerPool) setOfferCpuset(offer *mesos.Offer) error {
+	ip, ok := GetOfferIp(offer)
 	if !ok {
 		return nil
 	}
-	//lock agent setting
-	obj := commtype.BcsClusterAgentSetting{}
-	util.Lock.Lock(obj,ip)
-	defer util.Lock.UnLock(obj,ip)
-
-	setting,err := p.scheduler.FetchAgentSetting(ip)
-	if err!=nil {
-		return err
-	}
-	agent,err := p.scheduler.FetchMesosAgent(ip)
-	if err!=nil {
+	agent, err := p.scheduler.FetchMesosAgent(ip)
+	if err != nil {
 		return err
 	}
 	//key = cpu index, example: 1
 	usedCpu := make(map[string]struct{})
-	if setting!=nil {
-		for _,podId :=range setting.Pods {
-			taskg,err := p.scheduler.FetchTaskGroup(podId)
-			if err!=nil {
-				blog.Errorf("FetchTaskGroup pod %s error %s",podId,err.Error())
-				continue
-			}
-			if taskg.Status!=types.TASKGROUP_STATUS_RUNNING && taskg.Status!=types.TASKGROUP_STATUS_STAGING &&
-				taskg.Status!=types.TASKGROUP_STATUS_STARTING {
-				continue
-			}
-			for _,task :=range taskg.Taskgroup {
-				//this task have cpuset setting
-				if len(task.DataClass.Cpuset)!=0 {
-					blog.V(3).Infof("node %s task %s use cpuset %v",ip, task.ID, task.DataClass.Cpuset)
-					for _,set :=range task.DataClass.Cpuset {
-						usedCpu[set] = struct{}{}
-					}
+	for _, executorId := range offer.GetExecutorIds() {
+		//offer executorid is taskgroupid
+		podId := executorId.GetValue()
+		taskg, err := p.scheduler.FetchTaskGroup(podId)
+		if err != nil {
+			blog.Errorf("FetchTaskGroup pod %s error %s", podId, err.Error())
+			continue
+		}
+		if taskg.Status != types.TASKGROUP_STATUS_RUNNING && taskg.Status != types.TASKGROUP_STATUS_STAGING &&
+			taskg.Status != types.TASKGROUP_STATUS_STARTING {
+			continue
+		}
+		for _, task := range taskg.Taskgroup {
+			//this task have cpuset setting
+			if len(task.DataClass.Cpuset) != 0 {
+				blog.V(3).Infof("node %s task %s use cpuset %v", ip, task.ID, task.DataClass.Cpuset)
+				for _, set := range task.DataClass.Cpuset {
+					usedCpu[set] = struct{}{}
 				}
 			}
 		}
@@ -525,11 +516,11 @@ func (p *offerPool) setOfferCpuset(offer *mesos.Offer)error{
 		Name: &cpusetK,
 		Type: &cpusetT,
 		Set: &mesos.Value_Set{
-			Item: make([]string,0),
+			Item: make([]string, 0),
 		},
 	}
-	for i:=0;i<int(cpu);i++ {
-		_,ok := usedCpu[strconv.Itoa(i)]
+	for i := 0; i < int(cpu); i++ {
+		_, ok := usedCpu[strconv.Itoa(i)]
 		if !ok {
 			cpuset.Set.Item = append(cpuset.Set.Item, strconv.Itoa(i))
 		}

@@ -61,7 +61,7 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 	} else {
 		v2Cfg, err = client.Create(v2Cfg)
 	}
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -92,7 +92,7 @@ func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfig
 func (store *managerStore) DeleteConfigMap(ns, name string) error {
 	client := store.BkbcsClient.BcsConfigMaps(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 

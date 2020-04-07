@@ -191,7 +191,7 @@ func (in *Version) DeepCopy() *Version {
 type Resource struct {
 	//cpu核数
 	Cpus   float64
-	CPUSet int16
+	CPUSet int
 	//MB
 	Mem  float64
 	Disk float64
@@ -355,12 +355,13 @@ func (version *Version) AllResource() *Resource {
 
 //Container for Version
 type Container struct {
-	Type          string
-	Docker        *Docker
-	Volumes       []*Volume
-	Resources     *Resource
-	LimitResoures *Resource
-	DataClass     *DataClass
+	Type              string
+	Docker            *Docker
+	Volumes           []*Volume
+	Resources         *Resource
+	LimitResoures     *Resource
+	ExternalResources *commtypes.ExternalResource
+	DataClass         *DataClass
 	//whether cpuset docker parameter --cpuset-cpus, use with DataClass.Resources
 	Cpuset bool
 
@@ -458,8 +459,8 @@ type Task struct {
 	Labels          map[string]string
 	DataClass       *DataClass
 	//whether cpuset
-	Cpuset          bool
-	HealthChecks    []*commtypes.HealthCheck
+	Cpuset       bool
+	HealthChecks []*commtypes.HealthCheck
 	// health check status
 	HealthCheckStatus           []*commtypes.BcsHealthCheckStatus
 	Healthy                     bool
@@ -490,8 +491,8 @@ type Task struct {
 }
 
 //get taskgroup allocated node ip
-func (t *TaskGroup) GetAgentIp()string{
-	if len(t.Taskgroup)==0 {
+func (t *TaskGroup) GetAgentIp() string {
+	if len(t.Taskgroup) == 0 {
 		return ""
 	}
 

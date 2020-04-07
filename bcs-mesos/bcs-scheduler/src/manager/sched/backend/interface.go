@@ -87,7 +87,7 @@ type Backend interface {
 
 	//list all tasks of a specific application
 	//first para is namespace, and second one is appid
-	ListApplicationTasks(string, string) ([]*types.Task, error)
+	//ListApplicationTasks(string, string) ([]*types.Task, error)
 
 	//list all versions of application
 	//first para is namespace, and second one is appid

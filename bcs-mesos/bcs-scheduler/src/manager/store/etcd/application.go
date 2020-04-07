@@ -14,7 +14,6 @@
 package etcd
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
@@ -22,6 +21,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -110,7 +110,7 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	} else {
 		v2Application, err = client.Create(v2Application)
 	}
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -120,8 +120,8 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 }
 
 func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) {
-	apps,err := store.ListApplications(runAs)
-	if err!=nil {
+	apps, err := store.ListApplications(runAs)
+	if err != nil {
 		return nil, err
 	}
 
@@ -183,7 +183,7 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	client := store.BkbcsClient.Applications(runAs)
 	err := client.Delete(appID, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 

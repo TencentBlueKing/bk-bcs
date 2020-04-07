@@ -11,24 +11,35 @@
  *
  */
 
-package backend
+package main
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"os"
+	"runtime"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-common/common/license"
+	"bk-bcs/bcs-services/bcs-cpuset-device/app"
+	"bk-bcs/bcs-services/bcs-cpuset-device/app/options"
 )
 
-func (b *backend) ListApplications(runAs string) ([]*types.Application, error) {
-	return b.store.ListApplications(runAs)
-}
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	op := options.NewOption()
+	conf.Parse(op)
 
-func (b *backend) ListApplicationTaskGroups(runAs, appId string) ([]*types.TaskGroup, error) {
-	b.store.LockApplication(runAs + "." + appId)
-	defer b.store.UnLockApplication(runAs + "." + appId)
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
+	blog.Info("init logs success")
+	license.CheckLicense(op.LicenseServerConfig)
 
-	return b.store.ListTaskGroups(runAs, appId)
-}
+	err := app.Run(op)
+	if err != nil {
+		blog.Errorf(err.Error())
+		os.Exit(1)
+	}
 
-// ListApplicationVersions is used to list all versions for application from db specified by application id.
-func (b *backend) ListApplicationVersions(runAs, appId string) ([]string, error) {
-	return b.store.ListVersions(runAs, appId)
+	ch := make(chan bool)
+	<-ch
 }

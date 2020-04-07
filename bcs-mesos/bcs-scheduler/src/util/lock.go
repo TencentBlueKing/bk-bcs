@@ -22,19 +22,20 @@ import (
 )
 
 var Lock *ObjectLock
-func init(){
+
+func init() {
 	Lock = &ObjectLock{
 		locks: make(map[string]*sync.RWMutex),
 	}
 }
 
 type ObjectLock struct {
-	rw sync.RWMutex
+	rw    sync.RWMutex
 	locks map[string]*sync.RWMutex
 }
 
-func (l *ObjectLock) Lock(obj interface{},key string){
-	k := fmt.Sprintf("%s.%s",reflect.TypeOf(obj).Name(),key)
+func (l *ObjectLock) Lock(obj interface{}, key string) {
+	k := fmt.Sprintf("%s.%s", reflect.TypeOf(obj).Name(), key)
 	l.rw.RLock()
 	myLock, ok := l.locks[k]
 	l.rw.RUnlock()
@@ -55,8 +56,8 @@ func (l *ObjectLock) Lock(obj interface{},key string){
 	return
 }
 
-func (l *ObjectLock) UnLock(obj interface{},key string) {
-	k := fmt.Sprintf("%s.%s",reflect.TypeOf(obj).Name(),key)
+func (l *ObjectLock) UnLock(obj interface{}, key string) {
+	k := fmt.Sprintf("%s.%s", reflect.TypeOf(obj).Name(), key)
 	l.rw.RLock()
 	myLock, ok := l.locks[k]
 	l.rw.RUnlock()

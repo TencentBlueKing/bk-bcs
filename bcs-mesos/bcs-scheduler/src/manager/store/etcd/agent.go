@@ -24,8 +24,8 @@ import (
 )
 
 func (store *managerStore) CheckAgentExist(agent *types.Agent) (string, bool) {
-	obj,_ := store.FetchAgent(agent.Key)
-	if obj!=nil {
+	obj, _ := store.FetchAgent(agent.Key)
+	if obj != nil {
 		return obj.ResourceVersion, true
 	}
 
@@ -57,7 +57,7 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 	} else {
 		v2Agent, err = client.Create(v2Agent)
 	}
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -68,8 +68,8 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 
 func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 	if cacheMgr.isOK {
-		agent:= getCacheAgent(Key)
-		if agent==nil {
+		agent := getCacheAgent(Key)
+		if agent == nil {
 			return nil, schStore.ErrNoFound
 		}
 		return agent, nil
@@ -125,7 +125,7 @@ func (store *managerStore) ListAgentNodes() ([]string, error) {
 func (store *managerStore) DeleteAgent(key string) error {
 	client := store.BkbcsClient.Agents(DefaultNamespace)
 	err := client.Delete(key, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
@@ -166,7 +166,7 @@ func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSett
 	} else {
 		v2Agent, err = client.Create(v2Agent)
 	}
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -197,7 +197,7 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	err := client.Delete(InnerIP, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
@@ -206,8 +206,8 @@ func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 }
 
 func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
-	agents,err := store.ListAgentsettings()
-	if err!=nil {
+	agents, err := store.ListAgentsettings()
+	if err != nil {
 		return nil, err
 	}
 
@@ -291,7 +291,7 @@ func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSch
 func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
 	err := client.Delete(HostName, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 

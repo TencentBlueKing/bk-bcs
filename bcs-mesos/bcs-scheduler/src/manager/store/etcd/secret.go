@@ -92,7 +92,7 @@ func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, e
 func (store *managerStore) DeleteSecret(ns, name string) error {
 	client := store.BkbcsClient.BcsSecrets(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	if err!=nil && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
