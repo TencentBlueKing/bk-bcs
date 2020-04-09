@@ -1,0 +1,149 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: nodenetworks.cloud.bkbcs.tencent.com
+spec:
+  group: cloud.bkbcs.tencent.com
+  names:
+    kind: NodeNetwork
+    plural: nodenetworks
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            cluster:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
+              type: string
+            eniNum:
+              format: int64
+              type: integer
+            hostname:
+              type: string
+            ipNumPerENI:
+              format: int64
+              type: integer
+            nodeAddress:
+              type: string
+            vmInfo:
+              properties:
+                instanceId:
+                  type: string
+                regionId:
+                  type: string
+                subnetId:
+                  type: string
+                vpcId:
+                  type: string
+              required:
+              - regionId
+              - vpcId
+              - subnetId
+              - instanceId
+              type: object
+          required:
+          - cluster
+          - hostname
+          - nodeAddress
+          - vmInfo
+          - eniNum
+          - ipNumPerENI
+          type: object
+        status:
+          properties:
+            enis:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              items:
+                properties:
+                  address:
+                    properties:
+                      dnsName:
+                        type: string
+                      ip:
+                        type: string
+                      isPrimary:
+                        type: boolean
+                    required:
+                    - ip
+                    - isPrimary
+                    type: object
+                  attachment:
+                    properties:
+                      attachmentId:
+                        type: string
+                      index:
+                        format: int64
+                        type: integer
+                      instanceId:
+                        type: string
+                    required:
+                    - instanceId
+                    type: object
+                  eniId:
+                    type: string
+                  eniName:
+                    type: string
+                  eniSubnetId:
+                    type: string
+                  index:
+                    format: int64
+                    type: integer
+                  ipNum:
+                    format: int64
+                    type: integer
+                  macAddress:
+                    type: string
+                  secondaryAddresses:
+                    items:
+                      properties:
+                        dnsName:
+                          type: string
+                        ip:
+                          type: string
+                        isPrimary:
+                          type: boolean
+                      required:
+                      - ip
+                      - isPrimary
+                      type: object
+                    type: array
+                required:
+                - index
+                - eniId
+                - eniSubnetId
+                - macAddress
+                - attachment
+                - ipNum
+                - address
+                - secondaryAddresses
+                type: object
+              type: array
+          required:
+          - enis
+          type: object
+  version: v1
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
