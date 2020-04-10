@@ -748,6 +748,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		return nil
 	}
 
+	//customized definition agent setting
 	for k, v := range agentSetting.AttrStrings {
 		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
@@ -766,7 +767,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		attr.Text = &attrValue
 		offer.Attributes = append(offer.Attributes, &attr)
 	}
-
+	//customized definition agent setting
 	for k, v := range agentSetting.AttrScalars {
 		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%f) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)

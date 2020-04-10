@@ -82,21 +82,21 @@ type BcsClusterAgentSetting struct {
 	//Pods index
 	Pods []string `json:"pods"`
 	//External Resources, key=ExternalResource.Name
-	ExternalResources map[string]ExternalResource
+	ExtendedResources map[string]*ExtendedResource
 	// Populated by the system.
 	// Read-only.
 	// Value must be treated as opaque by clients and .
 	ResourceVersion string `json:"-"`
 }
 
-type ExternalResource struct {
+type ExtendedResource struct {
 	//InnerIP, agent ip
 	InnerIP string
 	//external resource name, example: bkbcs/cpuset
 	Name string
-	//Value
+	//Value, container need extended resource value
 	Value float64
-	//Capacity
+	//Capacity, extended resource total
 	Capacity float64
 	//device plugin socket address, exmaple: /data/bcs/cpuset.socket
 	Socket string

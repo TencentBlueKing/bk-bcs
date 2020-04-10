@@ -191,7 +191,6 @@ func (in *Version) DeepCopy() *Version {
 type Resource struct {
 	//cpu核数
 	Cpus   float64
-	CPUSet int
 	//MB
 	Mem  float64
 	Disk float64
@@ -360,10 +359,8 @@ type Container struct {
 	Volumes           []*Volume
 	Resources         *Resource
 	LimitResoures     *Resource
-	ExternalResources *commtypes.ExternalResource
+	ExtendedResources []*commtypes.ExtendedResource
 	DataClass         *DataClass
-	//whether cpuset docker parameter --cpuset-cpus, use with DataClass.Resources
-	Cpuset bool
 
 	ConfigMaps []commtypes.ConfigMap
 	Secrets    []commtypes.Secret
@@ -1026,9 +1023,6 @@ type DataClass struct {
 	Resources *Resource
 	//resources limit cpu\memory
 	LimitResources *Resource
-	//cpuset docker parameter --cpuset-cpus, use with DataClass.Resources
-	//example: ["0","1","2"]
-	Cpuset   []string
 	Msgs     []*BcsMessage
 	NetLimit *commtypes.NetLimit
 	//add for proc 20180730
