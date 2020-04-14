@@ -10,32 +10,34 @@ type ServiceClient struct {
 }
 
 type ServiceRequest struct {
-	Name           *string `json:"name" yaml:"name"`
-	Protocol       *string `json:"protocol" yaml:"protocol"`
-	Host           *string `json:"host" yaml:"host"`
-	Port           *int    `json:"port,omitempty" yaml:"port,omitempty"`
-	Path           *string `json:"path,omitempty" yaml:"path,omitempty"`
-	Retries        *int    `json:"retries,omitempty" yaml:"retries,omitempty"`
-	ConnectTimeout *int    `json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"`
-	WriteTimeout   *int    `json:"write_timeout,omitempty" yaml:"write_timeout,omitempty"`
-	ReadTimeout    *int    `json:"read_timeout,omitempty" yaml:"read_timeout,omitempty"`
-	Url            *string `json:"url,omitempty" yaml:"url,omitempty"`
+	Name           *string   `json:"name" yaml:"name"`
+	Protocol       *string   `json:"protocol" yaml:"protocol"`
+	Host           *string   `json:"host" yaml:"host"`
+	Port           *int      `json:"port,omitempty" yaml:"port,omitempty"`
+	Path           *string   `json:"path,omitempty" yaml:"path,omitempty"`
+	Retries        *int      `json:"retries,omitempty" yaml:"retries,omitempty"`
+	ConnectTimeout *int      `json:"connect_timeout,omitempty" yaml:"connect_timeout,omitempty"`
+	WriteTimeout   *int      `json:"write_timeout,omitempty" yaml:"write_timeout,omitempty"`
+	ReadTimeout    *int      `json:"read_timeout,omitempty" yaml:"read_timeout,omitempty"`
+	Url            *string   `json:"url,omitempty" yaml:"url,omitempty"`
+	Tags           []*string `json:"tags" yaml:"tags"`
 }
 
 type Service struct {
-	Id             *string `json:"id" yaml:"id"`
-	CreatedAt      *int    `json:"created_at" yaml:"created_at"`
-	UpdatedAt      *int    `json:"updated_at" yaml:"updated_at"`
-	Protocol       *string `json:"protocol" yaml:"protocol"`
-	Host           *string `json:"host" yaml:"host"`
-	Port           *int    `json:"port" yaml:"port"`
-	Path           *string `json:"path" yaml:"path"`
-	Name           *string `json:"name" yaml:"name"`
-	Retries        *int    `json:"retries" yaml:"retries"`
-	ConnectTimeout *int    `json:"connect_timeout" yaml:"connect_timeout"`
-	WriteTimeout   *int    `json:"write_timeout" yaml:"write_timeout"`
-	ReadTimeout    *int    `json:"read_timeout" yaml:"read_timeout"`
-	Url            *string `json:"url" yaml:"url"`
+	Id             *string   `json:"id" yaml:"id"`
+	CreatedAt      *int      `json:"created_at" yaml:"created_at"`
+	UpdatedAt      *int      `json:"updated_at" yaml:"updated_at"`
+	Protocol       *string   `json:"protocol" yaml:"protocol"`
+	Host           *string   `json:"host" yaml:"host"`
+	Port           *int      `json:"port" yaml:"port"`
+	Path           *string   `json:"path" yaml:"path"`
+	Name           *string   `json:"name" yaml:"name"`
+	Retries        *int      `json:"retries" yaml:"retries"`
+	ConnectTimeout *int      `json:"connect_timeout" yaml:"connect_timeout"`
+	WriteTimeout   *int      `json:"write_timeout" yaml:"write_timeout"`
+	ReadTimeout    *int      `json:"read_timeout" yaml:"read_timeout"`
+	Url            *string   `json:"url" yaml:"url"`
+	Tags           []*string `json:"tags" yaml:"tags"`
 }
 
 type Services struct {

@@ -10,36 +10,40 @@ type RouteClient struct {
 }
 
 type RouteRequest struct {
-	Name          *string   `json:"name" yaml:"name"`
-	Protocols     []*string `json:"protocols" yaml:"protocols"`
-	Methods       []*string `json:"methods" yaml:"methods"`
-	Hosts         []*string `json:"hosts" yaml:"hosts"`
-	Paths         []*string `json:"paths" yaml:"paths"`
-	RegexPriority *int      `json:"regex_priority" yaml:"regex_priority"`
-	StripPath     *bool     `json:"strip_path" yaml:"strip_path"`
-	PreserveHost  *bool     `json:"preserve_host" yaml:"preserve_host"`
-	Snis          []*string `json:"snis" yaml:"snis"`
-	Sources       []*IpPort `json:"sources" yaml:"sources"`
-	Destinations  []*IpPort `json:"destinations" yaml:"destinations"`
-	Service       *Id       `json:"service" yaml:"service"`
+	Name          *string              `json:"name" yaml:"name"`
+	Protocols     []*string            `json:"protocols" yaml:"protocols"`
+	Methods       []*string            `json:"methods" yaml:"methods"`
+	Hosts         []*string            `json:"hosts" yaml:"hosts"`
+	Header        map[string][]*string `json:"headers" yaml:"headers"`
+	Paths         []*string            `json:"paths" yaml:"paths"`
+	RegexPriority *int                 `json:"regex_priority" yaml:"regex_priority"`
+	StripPath     *bool                `json:"strip_path" yaml:"strip_path"`
+	PreserveHost  *bool                `json:"preserve_host" yaml:"preserve_host"`
+	Snis          []*string            `json:"snis" yaml:"snis"`
+	Sources       []*IpPort            `json:"sources" yaml:"sources"`
+	Destinations  []*IpPort            `json:"destinations" yaml:"destinations"`
+	Service       *Id                  `json:"service" yaml:"service"`
+	Tags          []*string            `json:"tags" yaml:"tags"`
 }
 
 type Route struct {
-	Id            *string   `json:"id" yaml:"id"`
-	Name          *string   `json:"name" yaml:"name"`
-	CreatedAt     *int      `json:"created_at" yaml:"created_at"`
-	UpdatedAt     *int      `json:"updated_at" yaml:"updated_at"`
-	Protocols     []*string `json:"protocols" yaml:"protocols"`
-	Methods       []*string `json:"methods" yaml:"methods"`
-	Hosts         []*string `json:"hosts" yaml:"hosts"`
-	Paths         []*string `json:"paths" yaml:"paths"`
-	RegexPriority *int      `json:"regex_priority" yaml:"regex_priority"`
-	StripPath     *bool     `json:"strip_path" yaml:"strip_path"`
-	PreserveHost  *bool     `json:"preserve_host" yaml:"preserve_host"`
-	Snis          []*string `json:"snis" yaml:"snis"`
-	Sources       []*IpPort `json:"sources" yaml:"sources"`
-	Destinations  []*IpPort `json:"destinations" yaml:"destinations"`
-	Service       *Id       `json:"service" yaml:"service"`
+	Id            *string              `json:"id" yaml:"id"`
+	Name          *string              `json:"name" yaml:"name"`
+	CreatedAt     *int                 `json:"created_at" yaml:"created_at"`
+	UpdatedAt     *int                 `json:"updated_at" yaml:"updated_at"`
+	Protocols     []*string            `json:"protocols" yaml:"protocols"`
+	Methods       []*string            `json:"methods" yaml:"methods"`
+	Hosts         []*string            `json:"hosts" yaml:"hosts"`
+	Header        map[string][]*string `json:"headers" yaml:"headers"`
+	Paths         []*string            `json:"paths" yaml:"paths"`
+	RegexPriority *int                 `json:"regex_priority" yaml:"regex_priority"`
+	StripPath     *bool                `json:"strip_path" yaml:"strip_path"`
+	PreserveHost  *bool                `json:"preserve_host" yaml:"preserve_host"`
+	Snis          []*string            `json:"snis" yaml:"snis"`
+	Sources       []*IpPort            `json:"sources" yaml:"sources"`
+	Destinations  []*IpPort            `json:"destinations" yaml:"destinations"`
+	Service       *Id                  `json:"service" yaml:"service"`
+	Tags          []*string            `json:"tags" yaml:"tags"`
 }
 
 type IpPort struct {

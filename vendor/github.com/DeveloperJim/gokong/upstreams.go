@@ -19,6 +19,7 @@ type UpstreamRequest struct {
 	HashOnCookie       string               `json:"hash_on_cookie,omitempty" yaml:"hash_on_cookie,omitempty"`
 	HashOnCookiePath   string               `json:"hash_on_cookie_path,omitempty" yaml:"hash_on_cookie_path,omitempty"`
 	HealthChecks       *UpstreamHealthCheck `json:"healthchecks,omitempty" yaml:"healthchecks,omitempty"`
+	Tags               []*string            `json:"tags" yaml:"tags"`
 }
 
 type UpstreamHealthCheck struct {

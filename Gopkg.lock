@@ -37,6 +37,14 @@
   version = "v1.3.4"
 
 [[projects]]
+  branch = "master"
+  digest = "1:e49492b4fb01e1a8bdd34c351e481b9df4ffbd7aeda396a2f38b3a6699fe1b0c"
+  name = "github.com/DeveloperJim/gokong"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "64b9604df4c1f65c20aa768b147a421e39baf395"
+
+[[projects]]
   digest = "1:5d24344f711ecb9175a6fefcaac996b2040e34b73a27f61feb1896d50d055065"
   name = "github.com/Microsoft/go-winio"
   packages = [
@@ -1070,14 +1078,6 @@
   pruneopts = "UT"
   revision = "1624edc4454b8682399def8740d46db5e4362ba4"
   version = "v1.1.5"
-
-[[projects]]
-  digest = "1:954991be87f3f51206ea4cd7e72d1562e4250217a0aa56af9d4d3dc41344edc9"
-  name = "github.com/kevholditch/gokong"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "305470f01f9a2e2d049b718796716825369d4469"
-  version = "v6.0.1"
 
 [[projects]]
   digest = "1:26c3d66616e9d7c21fca41358591af1e35a91378c2c888958a3720c0dc1c1afb"
@@ -2548,6 +2548,7 @@
   analyzer-version = 1
   input-imports = [
     "cloud.google.com/go/compute/metadata",
+    "github.com/DeveloperJim/gokong",
     "github.com/Microsoft/go-winio/archive/tar",
     "github.com/andygrunwald/megos",
     "github.com/asaskevich/govalidator",
@@ -2615,7 +2616,6 @@
     "github.com/jinzhu/gorm/dialects/mysql",
     "github.com/jmespath/go-jmespath",
     "github.com/json-iterator/go",
-    "github.com/kevholditch/gokong",
     "github.com/mattn/go-sqlite3",
     "github.com/mesos/mesos-go/api/v0/upid",
     "github.com/mholt/caddy",
