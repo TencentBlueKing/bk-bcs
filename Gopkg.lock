@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "default"
+  digest = "1:24df057f15e7a09e75c1241cbe6f6590fd3eac9804f1110b02efade3214f042d"
+  name = "bitbucket.org/ww/goautoneg"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "75cd24fc2f2c2a2088577d12123ddee5f54e0675"
+
+[[projects]]
   digest = "1:5ad08b0e14866764a6d7475eb11c9cf05cad9a52c442593bdfa544703ff77f61"
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
@@ -1062,6 +1070,14 @@
   pruneopts = "UT"
   revision = "1624edc4454b8682399def8740d46db5e4362ba4"
   version = "v1.1.5"
+
+[[projects]]
+  digest = "1:954991be87f3f51206ea4cd7e72d1562e4250217a0aa56af9d4d3dc41344edc9"
+  name = "github.com/kevholditch/gokong"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "305470f01f9a2e2d049b718796716825369d4469"
+  version = "v6.0.1"
 
 [[projects]]
   digest = "1:26c3d66616e9d7c21fca41358591af1e35a91378c2c888958a3720c0dc1c1afb"
@@ -2599,6 +2615,7 @@
     "github.com/jinzhu/gorm/dialects/mysql",
     "github.com/jmespath/go-jmespath",
     "github.com/json-iterator/go",
+    "github.com/kevholditch/gokong",
     "github.com/mattn/go-sqlite3",
     "github.com/mesos/mesos-go/api/v0/upid",
     "github.com/mholt/caddy",

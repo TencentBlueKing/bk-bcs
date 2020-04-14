@@ -48,6 +48,11 @@ const (
 	BCS_MODULE_K8SAPISERVER     = "kubernetedriver"
 	BCS_MODULE_MESOSAPISERVER   = "mesosdriver"
 	BCS_MODULE_NETWORKDETECTION = "networkdetection"
+
+	//bcs-api-gateway refactor 2020-04-10
+	BCS_MODULE_KUBEAGENT        = "kubeagent"
+	BCS_MODULE_USERMANAGER      = "usermanager"
+	BCS_MODULE_GATEWAYDISCOVERY = "gatewaydiscovery"
 )
 
 var (
@@ -80,6 +85,7 @@ var (
 		BCS_MODULE_MESOSSLAVE,
 		BCS_MODULE_IPSERVICE,
 		BCS_MODULE_MESOSADAPTER,
+		BCS_MODULE_KUBEAGENT,
 	}
 )
 
@@ -95,6 +101,7 @@ const (
 //ServerInfo base server information
 type ServerInfo struct {
 	IP           string `json:"ip"`
+	IPv6         string `json:"ipv6"`
 	Port         uint   `json:"port"`
 	MetricPort   uint   `json:"metric_port"`
 	HostName     string `json:"hostname"`
@@ -103,6 +110,7 @@ type ServerInfo struct {
 	Cluster      string `json:"cluster"`
 	Pid          int    `json:"pid"`
 	ExternalIp   string `json:"external_ip"`
+	ExternalIPv6 string `json:"external_ipv6"`
 	ExternalPort uint   `json:"external_port"`
 }
 

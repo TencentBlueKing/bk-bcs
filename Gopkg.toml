@@ -61,6 +61,10 @@ required = [
 ]
 
 [[override]]
+  name = "github.com/DeveloperJim/gokong"
+  branch = "master"
+
+[[override]]
   name = "github.com/DataDog/dd-trace-go"
   version = "1.7.0"
 
