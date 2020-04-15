@@ -14,14 +14,15 @@
 package main
 
 import (
-	"bcs/control-common/blog"
-	"bcs/control-common/conf"
-	"bk-bcs/bcs-services/bcs-gateway-discovery/app"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-services/bcs-gateway-discovery/app"
 )
 
 //disovery now is designed for stage that bkbcs routes http/https traffics.

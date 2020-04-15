@@ -130,7 +130,7 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/mesosdriver/v4/",
-		Reties:   3,
+		Retries:  3,
 		Labels:   labels,
 		HeadOption: &register.HeaderOption{
 			Replace: map[string]string{
@@ -187,7 +187,7 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/k8sdriver/v4/",
-		Reties:   3,
+		Retries:  3,
 		Labels:   labels,
 		HeadOption: &register.HeaderOption{
 			Replace: map[string]string{
@@ -231,7 +231,7 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/bcsstorage/v1/",
-		Reties:   3,
+		Retries:  3,
 		Labels:   labels,
 		HeadOption: &register.HeaderOption{
 			Replace: map[string]string{
@@ -280,7 +280,7 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/bcsstorage/v1/",
-		Reties:   3,
+		Retries:  3,
 		Labels:   labels,
 		HeadOption: &register.HeaderOption{
 			Replace: map[string]string{
@@ -322,7 +322,7 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/detection/v4/",
-		Reties:   3,
+		Retries:  3,
 		Labels:   labels,
 		HeadOption: &register.HeaderOption{
 			Replace: map[string]string{
@@ -364,7 +364,7 @@ func (adp *Adapter) constructStandardProxy(module string, svcs []*types.ServerIn
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     fmt.Sprintf("/%s/v4/", module),
-		Reties:   3,
+		Retries:  3,
 		Labels:   labels,
 		HeadOption: &register.HeaderOption{
 			Replace: map[string]string{

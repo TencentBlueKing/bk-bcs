@@ -36,6 +36,7 @@ func New() *DiscoveryServer {
 	s := &DiscoveryServer{
 		exitCancel: cfunc,
 		exitCxt:    cxt,
+		evtCh:      make(chan *ModuleEvent, 12),
 	}
 	return s
 }
@@ -240,7 +241,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 		if ok {
 			//service reigsted, we affirm that proxy rule is correct
 			// so just update backend targets info
-			if err := s.regMgr.UpdateTargetByService(svc, local.Backends); err != nil {
+			if err := s.regMgr.ReplaceTargetByService(svc, local.Backends); err != nil {
 				blog.Errorf("gateway-discovery update Service %s backend failed in synchronization, %s. backend %v", svc.Name, local.Backends)
 				continue
 			}
@@ -257,7 +258,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 		}
 	}
 	blog.Infof("gateway-discovery data synchroniztion finish")
-	//todo(DevelperJim): try to fix this feature if we don't allow edit api-gateway configuration
+	//todo(DevelperJim): try to fix this feature if we don't allow edit api-gateway configuration manually
 	//we don't clean additional datas in api-gateway,
 	// because we allow registe service information in api-gateway manually
 	return nil
@@ -294,7 +295,8 @@ func (s *DiscoveryServer) handleModuleChange(event *ModuleEvent) error {
 		blog.Infof("gateway-discovery create Service %s in ModuleChanged Event successfully, serviceName: %s", event.Module, event.Svc.Name)
 	} else {
 		//only update Target for Service
-		if err := s.regMgr.UpdateTargetByService(event.Svc, event.Svc.Backends); err != nil {
+		//todo(DeveloperJim): discovery needs to check service plugins changed when version updates
+		if err := s.regMgr.ReplaceTargetByService(event.Svc, event.Svc.Backends); err != nil {
 			blog.Errorf("gateway-discovery update Service %s Target failed, %s", event.Svc.Name, err.Error())
 			return err
 		}

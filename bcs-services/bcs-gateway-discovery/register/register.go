@@ -29,14 +29,14 @@ type Register interface {
 	//GetService get specified service by name, if no service, return nil
 	GetService(svc string) (*Service, error)
 	//DeleteService delete specified service, success even if no such service
-	DeleteService(svc string) error
+	DeleteService(svc *Service) error
 	//ListServices get all existence services
 	ListServices() ([]*Service, error)
 	//GetTargetByService get service relative backends
 	GetTargetByService(svc *Service) ([]Backend, error)
-	//UpdateTargetByService replace specified service backend list
+	//ReplaceTargetByService replace specified service backend list
 	// so we don't care what original backend list are
-	UpdateTargetByService(svc *Service, backends []Backend) error
+	ReplaceTargetByService(svc *Service, backends []Backend) error
 	//DeleteTargetByService clean all backend list for service
 	DeleteTargetByService(svc *Service) error
 	//GetRoutesByService(name string) ([]Route, error)
