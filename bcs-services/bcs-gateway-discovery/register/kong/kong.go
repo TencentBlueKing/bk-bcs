@@ -14,10 +14,10 @@
 package kong
 
 import (
-	"bcs/control-common/blog"
 	"crypto/tls"
 	"fmt"
 
+	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-gateway-discovery/register"
 
 	"github.com/DeveloperJim/gokong"
@@ -194,7 +194,7 @@ func (r *kRegister) DeleteService(svc *register.Service) error {
 			blog.Errorf("kong register delete upstream %s target %s failed, %s", svc.Host, target.Target, err.Error())
 			return err
 		}
-		blog.V(3).Infof("kong register delete upstream %s target %s success", svc.Host, target.Id)
+		blog.V(3).Infof("kong register delete upstream %s target %s success", svc.Host, *target.Id)
 	}
 	if err = r.kClient.Upstreams().DeleteByName(svc.Host); err != nil {
 		blog.Errorf("kong register delete service %s relative Upstream %s failed, %s", svc.Name, svc.Host, err.Error())
