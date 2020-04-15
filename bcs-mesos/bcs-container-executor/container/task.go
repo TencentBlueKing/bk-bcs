@@ -66,6 +66,7 @@ type BcsContainerTask struct {
 	Labels          []BcsKV                //label for container
 	Resource        *bcstypes.Resource     //container resource request
 	LimitResource   *bcstypes.Resource     // container resource limit
+	ExtendedResources []*comtypes.ExtendedResource //extended resources
 	BcsMessages     []*bcstypes.BcsMessage //bcs define message
 	RuntimeConf     *BcsContainerInfo      //container runtime info
 	HealthCheck     healthcheck.Checker    //for health check

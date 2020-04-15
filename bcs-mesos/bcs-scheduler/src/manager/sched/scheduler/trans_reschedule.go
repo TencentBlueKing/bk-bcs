@@ -92,7 +92,8 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			curOffer := offerOut
 			offerOut = s.GetNextOffer(offerOut)
 			if hostRetain == false || offer.GetHostname() == opData.HostRetain {
-				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, taskGroupID)
+				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, taskGroupID) &&
+					s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 				if isFit == true {
 					blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {

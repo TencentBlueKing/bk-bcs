@@ -63,7 +63,8 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 			curOffer := offerOut
 			offerOut = s.GetNextOffer(offerOut)
 			//isFit := s.IsResourceFit(opData.NeedResource, offer) && s.IsConstraintsFit(version, offer, "")
-			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "")
+			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "") &&
+				s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 			if isFit == true {
 				blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 				if s.UseOffer(curOffer) == true {
@@ -158,7 +159,8 @@ func (s *Scheduler) doLaunchTrans(trans *Transaction, outOffer *offer.Offer, sta
 	}
 
 	var taskgroupName string
-	if opData.LaunchedNum < int(version.Instances) && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) {
+	if opData.LaunchedNum < int(version.Instances) && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) &&
+		s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), outOffer) {
 		//if opData.LaunchedNum < int(version.Instances) && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
 		taskGroup, err := s.BuildTaskGroup(version, app, "", "launch application")
 		if err != nil {

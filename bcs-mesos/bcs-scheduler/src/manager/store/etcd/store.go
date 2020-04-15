@@ -281,7 +281,7 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 	clientset.BkbcsV2().Applications("").Watch(metav1.ListOptions{})
 
 	//list application
-	clientset.BkbcsV2().Applications("").Get("", metav1.ListOptions{})
+	clientset.BkbcsV2().Applications("").Get("", metav1.GetOptions{})
 
 	m.regkey, _ = regexp.Compile("^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$")
 	m.regvalue, _ = regexp.Compile("^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$")

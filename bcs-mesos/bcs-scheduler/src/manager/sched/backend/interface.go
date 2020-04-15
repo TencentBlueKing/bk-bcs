@@ -243,7 +243,7 @@ type Backend interface {
 	TaintAgents([]*commtypes.BcsClusterAgentSetting) error
 
 	//update agent extenedresources
-	UpdateExtendedResources(ex *commtypes.ExtendedResource)error
+	UpdateExtendedResources(ex *commtypes.ExtendedResource) error
 
 	//custom resource register
 	RegisterCustomResource(*commtypes.Crr) error

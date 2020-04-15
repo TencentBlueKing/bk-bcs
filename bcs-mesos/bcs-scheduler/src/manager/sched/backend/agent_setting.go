@@ -23,8 +23,8 @@ import (
 
 // DisableAgent setting agent unschedulable
 func (b *backend) DisableAgent(IP string) error {
-	util.Lock.Lock(commtypes.BcsClusterAgentSetting{},IP)
-	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{},IP)
+	util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, IP)
+	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, IP)
 
 	agent, err := b.store.FetchAgentSetting(IP)
 	if err != nil {
@@ -47,8 +47,8 @@ func (b *backend) DisableAgent(IP string) error {
 
 // EnableAgent enable Agent schedulable
 func (b *backend) EnableAgent(IP string) error {
-	util.Lock.Lock(commtypes.BcsClusterAgentSetting{},IP)
-	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{},IP)
+	util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, IP)
+	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, IP)
 
 	agent, err := b.store.FetchAgentSetting(IP)
 	if err != nil {
@@ -73,7 +73,7 @@ func (b *backend) EnableAgent(IP string) error {
 func (b *backend) TaintAgents(agents []*commtypes.BcsClusterAgentSetting) error {
 	for _, o := range agents {
 		err := b.taintAgent(o)
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -81,9 +81,9 @@ func (b *backend) TaintAgents(agents []*commtypes.BcsClusterAgentSetting) error 
 	return nil
 }
 
-func (b *backend) taintAgent(o *commtypes.BcsClusterAgentSetting)error{
-	util.Lock.Lock(commtypes.BcsClusterAgentSetting{},o.InnerIP)
-	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{},o.InnerIP)
+func (b *backend) taintAgent(o *commtypes.BcsClusterAgentSetting) error {
+	util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, o.InnerIP)
+	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, o.InnerIP)
 
 	agent, err := b.store.FetchAgentSetting(o.InnerIP)
 	if err != nil {
@@ -174,7 +174,7 @@ func (b *backend) SetAgentSettingList(agents []*commtypes.BcsClusterAgentSetting
 
 	for _, agent := range agents {
 		err := b.setAgentSetting(agent)
-		if err!=nil {
+		if err != nil {
 			return comm.BcsErrCommGetZkNodeFail, err
 		}
 	}
@@ -182,9 +182,9 @@ func (b *backend) SetAgentSettingList(agents []*commtypes.BcsClusterAgentSetting
 	return comm.BcsSuccess, nil
 }
 
-func (b *backend) setAgentSetting(agent *commtypes.BcsClusterAgentSetting)error{
-	util.Lock.Lock(commtypes.BcsClusterAgentSetting{},agent.InnerIP)
-	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{},agent.InnerIP)
+func (b *backend) setAgentSetting(agent *commtypes.BcsClusterAgentSetting) error {
+	util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, agent.InnerIP)
+	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, agent.InnerIP)
 
 	o, err := b.store.FetchAgentSetting(agent.InnerIP)
 	if err != nil {
@@ -211,7 +211,7 @@ func (b *backend) setAgentSetting(agent *commtypes.BcsClusterAgentSetting)error{
 func (b *backend) DisableAgentList(IPs []string) (int, error) {
 	for _, IP := range IPs {
 		err := b.DisableAgent(IP)
-		if err!=nil {
+		if err != nil {
 			return comm.BcsErrCommGetZkNodeFail, err
 		}
 	}
@@ -224,7 +224,7 @@ func (b *backend) EnableAgentList(IPs []string) (int, error) {
 
 	for _, IP := range IPs {
 		err := b.EnableAgent(IP)
-		if err!=nil {
+		if err != nil {
 			return comm.BcsErrCommGetZkNodeFail, err
 		}
 	}
@@ -232,9 +232,9 @@ func (b *backend) EnableAgentList(IPs []string) (int, error) {
 	return comm.BcsSuccess, nil
 }
 
-func (b *backend) UpdateExtendedResources(ex *commtypes.ExtendedResource)error{
-	util.Lock.Lock(commtypes.BcsClusterAgentSetting{},ex.InnerIP)
-	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{},ex.InnerIP)
+func (b *backend) UpdateExtendedResources(ex *commtypes.ExtendedResource) error {
+	util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, ex.InnerIP)
+	defer util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, ex.InnerIP)
 
 	agent, err := b.store.FetchAgentSetting(ex.InnerIP)
 	if err != nil {
@@ -245,11 +245,11 @@ func (b *backend) UpdateExtendedResources(ex *commtypes.ExtendedResource)error{
 
 	if agent == nil {
 		agent = &commtypes.BcsClusterAgentSetting{
-			InnerIP:  ex.InnerIP,
+			InnerIP:           ex.InnerIP,
 			ExtendedResources: make(map[string]*commtypes.ExtendedResource),
 		}
 	}
-	if agent.ExtendedResources==nil {
+	if agent.ExtendedResources == nil {
 		agent.ExtendedResources = make(map[string]*commtypes.ExtendedResource)
 	}
 	agent.ExtendedResources[ex.Name] = ex

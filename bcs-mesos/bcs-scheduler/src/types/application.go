@@ -187,10 +187,26 @@ func (in *Version) DeepCopy() *Version {
 	return out
 }
 
+func (in *Version) GetExtendedResources() map[string]*commtypes.ExtendedResource {
+	ers := make(map[string]*commtypes.ExtendedResource)
+	for _, c := range in.Container {
+		for _, ex := range c.ExtendedResources {
+			o := ers[ex.Name]
+			//if extended resources already exist, then superposition
+			if o != nil {
+				o.Value += ex.Value
+			} else {
+				ers[ex.Name] = ex
+			}
+		}
+	}
+	return ers
+}
+
 //Resource discribe resources needed by a task
 type Resource struct {
 	//cpu核数
-	Cpus   float64
+	Cpus float64
 	//MB
 	Mem  float64
 	Disk float64
@@ -677,6 +693,22 @@ type TaskGroup struct {
 	ResourceVersion string `json:"-"`
 }
 
+func (in *TaskGroup) GetExtendedResources() map[string]*commtypes.ExtendedResource {
+	ers := make(map[string]*commtypes.ExtendedResource)
+	for _, task := range in.Taskgroup {
+		for _, ex := range task.DataClass.ExtendedResources {
+			o := ers[ex.Name]
+			//if extended resources already exist, then superposition
+			if o != nil {
+				o.Value += ex.Value
+			} else {
+				ers[ex.Name] = ex
+			}
+		}
+	}
+	return ers
+}
+
 // return namespace, appid
 func GetRunAsAndAppIDbyTaskGroupID(taskGroupId string) (string, string) {
 	appID := ""
@@ -1023,8 +1055,10 @@ type DataClass struct {
 	Resources *Resource
 	//resources limit cpu\memory
 	LimitResources *Resource
-	Msgs     []*BcsMessage
-	NetLimit *commtypes.NetLimit
+	//extended resources, key=ExtendedResource.Name
+	ExtendedResources []*commtypes.ExtendedResource
+	Msgs              []*BcsMessage
+	NetLimit          *commtypes.NetLimit
 	//add for proc 20180730
 	ProcInfo *ProcDef
 }

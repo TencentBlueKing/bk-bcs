@@ -121,8 +121,8 @@ type VolumeUnit struct {
 
 // ResourceRequirements describes the compute resource requirement
 type ResourceRequirements struct {
-	Limits    ResourceList     `json:"limits,omitempty"`
-	Requests  ResourceList     `json:"requests,omitempty"`
+	Limits            ResourceList        `json:"limits,omitempty"`
+	Requests          ResourceList        `json:"requests,omitempty"`
 	ExtendedResources []*ExtendedResource `json:"extendedResources,omitempty"`
 }
 

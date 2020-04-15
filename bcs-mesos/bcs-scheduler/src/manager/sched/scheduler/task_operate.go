@@ -262,6 +262,40 @@ func (s *Scheduler) IsOfferResourceFitLaunch(needResource *types.Resource, outOf
 	return false
 }
 
+// check whether the offer is match extended resources for launching a taskgroup
+func (s *Scheduler) IsOfferExtendedResourcesFitLaunch(needs map[string]*bcstype.ExtendedResource, outOffer *offer.Offer) bool {
+	//if version don't have extended resources, then return true
+	if needs == nil || len(needs) == 0 {
+		return true
+	}
+
+	for _, need := range needs {
+		resource := s.getNeedResourceOfOffer(outOffer.Offer, need.Name)
+		if resource == nil {
+			blog.V(3).Infof("offer %s don't have extended resources %s", outOffer.Offer.GetHostname(), need.Name)
+			return false
+		}
+		//if offer extended resources not enough, then return false
+		if need.Value > resource.GetScalar().GetValue() {
+			blog.V(3).Infof("offer %s extended resources %s not enough: need(%f), offer(%f)",
+				outOffer.Offer.GetHostname(), need.Name, need.Value, resource.GetScalar().GetValue())
+			return false
+		}
+	}
+	//if offer extended resources match fit, then return true
+	return true
+}
+
+func (s *Scheduler) getNeedResourceOfOffer(o *mesos.Offer, name string) *mesos.Resource {
+	for _, re := range o.GetResources() {
+		if re.GetName() == name {
+			return re
+		}
+	}
+
+	return nil
+}
+
 // Check whether the offer is match required resource for updating a taskgroup's resource
 func (s *Scheduler) IsOfferResourceFitUpdate(needResource *types.Resource, outOffer *offer.Offer) bool {
 

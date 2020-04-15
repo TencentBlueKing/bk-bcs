@@ -62,7 +62,8 @@ func (s *Scheduler) RunUpdateApplication(transaction *Transaction) {
 			offerOut = s.GetNextOffer(offerOut)
 			blog.V(3).Infof("transaction %s get offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 
-			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, taskGroupID)
+			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, taskGroupID) &&
+				s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 			if isFit == true {
 				blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 				if s.UseOffer(curOffer) == true {
@@ -154,7 +155,8 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 	var taskGroupID string
 	var taskgroupName string
 	//if opData.LaunchedNum < opData.Instances && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
-	if opData.LaunchedNum < opData.Instances && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) {
+	if opData.LaunchedNum < opData.Instances && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) &&
+		s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), outOffer) {
 		taskGroupID = opData.Taskgroups[opData.LaunchedNum].ID
 		blog.Info("transaction %s get taskgroup(%s) to do update", trans.ID, taskGroupID)
 		var taskGroup *types.TaskGroup
