@@ -1094,6 +1094,17 @@ func (in *DataClass) DeepCopyInto(out *DataClass) {
 			fmt.Println("DeepCopy DataClass.Msgs", "failed", err.Error())
 		}
 	}
+	if in.ExtendedResources != nil {
+		in, out := &in.ExtendedResources, &out.ExtendedResources
+		*out = make([]*commtypes.ExtendedResource, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(commtypes.ExtendedResource)
+				**out = **in
+			}
+		}
+	}
 	return
 }
 

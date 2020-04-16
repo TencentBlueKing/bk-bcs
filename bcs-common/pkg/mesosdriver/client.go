@@ -51,7 +51,7 @@ func NewMesosPlatform(conf *Config) (*MesosDriverClient, error) {
 	//init http client
 	m.cli = httpclient.NewHttpClient()
 	//if https
-	if m.conf.ClientCert.IsSSL {
+	if m.conf.ClientCert!=nil && m.conf.ClientCert.IsSSL {
 		blog.Infof("NetworkDetection http client cert ssl")
 		m.cli.SetTlsVerity(m.conf.ClientCert.CAFile, m.conf.ClientCert.CertFile, m.conf.ClientCert.KeyFile,
 			m.conf.ClientCert.CertPasswd)

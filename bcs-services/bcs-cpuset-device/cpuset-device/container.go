@@ -45,6 +45,8 @@ func (c *CpusetDevicePlugin) updateCpusetNodes() error {
 		node.AllocatedCpuset = append(node.AllocatedCpuset, sets...)
 	}
 	blog.Infof("update cpuset nodes success")
+
+	return nil
 }
 
 func (c *CpusetDevicePlugin) listContainersCpusetEnvs() ([]string, error) {

@@ -14,11 +14,12 @@
 package container
 
 import (
+	"strings"
+
 	comtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	bcstypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"strings"
 )
 
 //BcsPort port service for container port reflection

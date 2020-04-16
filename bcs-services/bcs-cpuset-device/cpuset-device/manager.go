@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-common/pkg/mesosdriver"
 	"bk-bcs/bcs-services/bcs-cpuset-device/config"
 	"bk-bcs/bcs-services/bcs-cpuset-device/types"
 
@@ -105,12 +107,23 @@ func (c *CpusetDevicePlugin) Start() error {
 	}
 	blog.Infof("grpc serve on %s success", c.cpusetSocket)
 
-	err = c.register()
-	if err != nil {
-		blog.Errorf("register kubelet failed: %s", err.Error())
-		return err
+	//if device plugin in k8s cluster, then register device plugin info to kubelet
+	if c.conf.Engine=="k8s" {
+		err = c.register()
+		if err != nil {
+			blog.Errorf("register kubelet failed: %s", err.Error())
+			return err
+		}
+		blog.Infof("Registered device plugin for '%s' with Kubelet", c.resourceName)
+	//else device plugin in mesos cluster, then report extended resources info to mesos scheduler
+	}else {
+		err = c.reportMesosSchedulerExtendedResources()
+		if err!=nil {
+			return err
+		}
+		blog.Infof("device plugin %s report mesos scheduler extended resources success",c.resourceName)
 	}
-	blog.Infof("Registered device plugin for '%s' with Kubelet", c.resourceName)
+
 	return nil
 }
 
@@ -163,7 +176,7 @@ func (c *CpusetDevicePlugin) register() error {
 	return nil
 }
 
-// dial establishes the gRPC communication with the registered device plugin.
+// dial establishes the gRPC communication with device plugin.
 func (c *CpusetDevicePlugin) dial(unixSocketPath string, timeout time.Duration) (*grpc.ClientConn, error) {
 	conn, err := grpc.Dial(unixSocketPath, grpc.WithInsecure(), grpc.WithBlock(),
 		grpc.WithTimeout(timeout),
@@ -220,6 +233,32 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 
 	}
 	blog.Infof("CpusetDevicePlugin init cpuset device success")
+	return nil
+}
+
+func (c *CpusetDevicePlugin) reportMesosSchedulerExtendedResources()error{
+	conf := &mesosdriver.Config{
+		ZkAddr: c.conf.BcsZk,
+		ClientCert: c.conf.ClientCert,
+		ClusterId: c.conf.ClusterId,
+	}
+
+	client,err := mesosdriver.NewMesosPlatform(conf)
+	if err!=nil {
+		blog.Errorf("NewMesosPlatform failed: %s",err.Error())
+		return err
+	}
+	ex := &commtypes.ExtendedResource{
+		InnerIP:  c.conf.NodeIp,
+		Name:     c.resourceName,
+		Capacity: float64(len(c.devices)),
+		Socket:   c.cpusetSocket,
+	}
+	err = client.UpdateAgentExtendedResources(ex)
+	if err!=nil {
+		blog.Errorf("Update Agent ExtendedResources failed: %s",err.Error())
+		return err
+	}
 	return nil
 }
 
