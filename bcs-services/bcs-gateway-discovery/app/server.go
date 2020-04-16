@@ -309,7 +309,7 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 	//data structure conversion
 	rSvcs, err := s.adapter.GetService(module, svcs)
 	if err != nil {
-		blog.Errorf("converts module %s ServerInfo to api-gateway info failed in synchronization, %s", k, err.Error())
+		blog.Errorf("converts module %s ServerInfo to api-gateway info failed in synchronization, %s", module, err.Error())
 		return nil, err
 	}
 	return rSvcs, nil

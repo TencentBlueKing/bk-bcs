@@ -175,7 +175,9 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 		r.servers[key] = val
 		r.Unlock()
 		blog.V(3).Infof("set server %s endpoints %v", key, val)
-		r.eventHandler(key)
+		if r.eventHandler != nil {
+			r.eventHandler(key)
+		}
 		return nil
 	}
 	blog.V(5).Infof("module-discovery get nodes details: %+v", zvs.Nodes)
