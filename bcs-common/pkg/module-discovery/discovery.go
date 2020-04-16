@@ -79,9 +79,11 @@ func (r *DiscoveryV2) GetModuleServers(moduleName string) ([]interface{}, error)
 	r.RLock()
 	defer r.RUnlock()
 
-	servs, ok := r.servers[moduleName]
-	if !ok {
-		return nil, fmt.Errorf("Module %s not found", moduleName)
+	servs := make([]interface{}, 0)
+	for k, v := range r.servers {
+		if strings.Contains(k, moduleName) {
+			servs = append(servs, v...)
+		}
 	}
 
 	if len(servs) == 0 {

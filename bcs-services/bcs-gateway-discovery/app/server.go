@@ -213,24 +213,10 @@ func (s *DiscoveryServer) dataSynchronization() error {
 	}
 	//get all register module information
 	allModules := append(defaultModules, s.option.Modules...)
-	var localCaches []*register.Service
-	for _, m := range allModules {
-		svcs, err := s.formatBCSServerInfo(m)
-		if err != nil {
-			blog.Errorf("gateway-discovery even get Module %s from cache failed in synchronization, continue", m)
-			continue
-		}
-		if len(svcs) == 0 {
-			blog.Warnf("gateway-discovery get no %s ServerInfo from module-discovery synchronization, try next modules", m)
-			continue
-		}
-		//data structure conversion
-		rSvcs, err := s.adapter.GetService(m, svcs)
-		if err != nil {
-			blog.Errorf("gateway-discovery converts module %s ServerInfo to api-gateway info failed in synchronization, %s", m, err.Error())
-			continue
-		}
-		localCaches = append(localCaches, rSvcs)
+	localCaches, err := s.formatMultiServerInfo(allModules)
+	if err != nil {
+		blog.Errorf("disovery formate Service info when in Synchronization, %s", err.Error())
+		return err
 	}
 	//differ datas
 	if len(localCaches) == 0 {
@@ -270,18 +256,10 @@ func (s *DiscoveryServer) handleModuleChange(event *ModuleEvent) error {
 	//get specified module info and construct data for refresh
 	svcs, err := s.formatBCSServerInfo(event.Module)
 	if err != nil {
+		blog.Errorf("discovery handle module %s changed failed, %s", event.Module, err.Error())
 		return err
 	}
-	if len(svcs) == 0 {
-		blog.Errorf("gateway-discovery get no %s ServerInfo from module-discovery when in ModuleChanged Event", event.Module)
-		return fmt.Errorf("Lost %s ServerInfo after Module Event", event.Module)
-	}
-	//data structure conversion
-	event.Svc, err = s.adapter.GetService(event.Module, svcs)
-	if err != nil {
-		blog.Errorf("gateway-discovery converts module %s ServerInfo to api-gateway info failed, %s", event.Module, err.Error())
-		return err
-	}
+	event.Svc = svcs
 	//update service route
 	exist, err := s.regMgr.GetService(event.Svc.Name)
 	if err != nil {
@@ -307,10 +285,11 @@ func (s *DiscoveryServer) handleModuleChange(event *ModuleEvent) error {
 	return nil
 }
 
-func (s *DiscoveryServer) formatBCSServerInfo(module string) ([]*types.ServerInfo, error) {
+func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service, error) {
 	originals, err := s.discovery.GetModuleServers(module)
 	if err != nil {
-		blog.Errorf("gateway-discovery get module %s information from module-discovery failed, %s", module, err.Error())
+		//* if get no ServerInfo, GetModuleServers return error
+		blog.Errorf("get module %s information from module-discovery failed, %s", module, err.Error())
 		return nil, err
 	}
 	var svcs []*types.ServerInfo
@@ -318,10 +297,84 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) ([]*types.ServerInf
 		data := info.(string)
 		var svc *types.ServerInfo
 		if err := json.Unmarshal([]byte(data), svc); err != nil {
-			blog.Errorf("gateway-discovery handle module %s json unmarshal failed, %s", module, err.Error())
+			blog.Errorf("handle module %s json unmarshal failed, %s", module, err.Error())
 			continue
 		}
 		svcs = append(svcs, svc)
 	}
-	return svcs, nil
+	if len(svcs) == 0 {
+		blog.Errorf("convert module %s all json info failed, pay more attention", module)
+		return nil, fmt.Errorf("module %s all json err", module)
+	}
+	//data structure conversion
+	rSvcs, err := s.adapter.GetService(module, svcs)
+	if err != nil {
+		blog.Errorf("converts module %s ServerInfo to api-gateway info failed in synchronization, %s", k, err.Error())
+		return nil, err
+	}
+	return rSvcs, nil
+}
+
+func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Service, error) {
+	originals, err := s.discovery.GetModuleServers(module)
+	if err != nil {
+		blog.Errorf("get module %s information from module-discovery failed, %s", module, err.Error())
+		return nil, err
+	}
+	var svcs map[string][]*types.ServerInfo
+	for _, info := range originals {
+		data := info.(string)
+		var svc *types.ServerInfo
+		if err := json.Unmarshal([]byte(data), svc); err != nil {
+			blog.Errorf("handle module %s json unmarshal failed, %s", module, err.Error())
+			continue
+		}
+		if len(svc.Cluster) == 0 {
+			blog.Errorf("find driver %s node lost cluster information. detail: %s", module, data)
+			continue
+		}
+		key := fmt.Sprintf("%s/%s", module, svc.Cluster)
+		svcs[key] = append(svcs[key], svc)
+	}
+	if len(svcs) == 0 {
+		blog.Errorf("unmarshal module %s json all failed!", module)
+		return nil, fmt.Errorf("driver %s all clusters json err", module)
+	}
+	var localSvcs []*register.Service
+	for k, v := range svcs {
+		//data structure conversion
+		rSvcs, err := s.adapter.GetService(k, v)
+		if err != nil {
+			blog.Errorf("converts module %s ServerInfo to api-gateway info failed in synchronization, %s", k, err.Error())
+			continue
+		}
+		localSvcs = append(localSvcs, rSvcs)
+	}
+	if len(localSvcs) == 0 {
+		blog.Errorf("convert module %s to api-gateway info failed!", module)
+		return nil, fmt.Errorf("convert %s to api-gateway err", module)
+	}
+	return localSvcs, nil
+}
+
+func (s *DiscoveryServer) formatMultiServerInfo(modules []string) ([]*register.Service, error) {
+	var regSvcs []*register.Service
+	for _, m := range modules {
+		if m == types.BCS_MODULE_MESOSDRIVER || m == types.BCS_MODULE_KUBERNETEDRIVER {
+			svcs, err := s.formatDriverServerInfo(m)
+			if err != nil {
+				blog.Errorf("gateway-discovery format module %s to inner register Service failed %s, try next module", m, err.Error())
+				continue
+			}
+			regSvcs = append(regSvcs, svcs...)
+		} else {
+			svc, err := s.formatBCSServerInfo(m)
+			if err != nil {
+				blog.Errorf("gateway-discovery even get Module %s from cache failed: %s, continue", m, err.Error())
+				continue
+			}
+			regSvcs = append(regSvcs, svc)
+		}
+	}
+	return regSvcs, nil
 }
