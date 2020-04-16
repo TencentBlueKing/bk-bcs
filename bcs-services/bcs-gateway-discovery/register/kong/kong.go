@@ -152,50 +152,19 @@ func (r *kRegister) DeleteService(svc *register.Service) error {
 		return fmt.Errorf("service lost Name or Host")
 	}
 	var err error
-	//clean route relative plugins, get first then delete
-	kplugins, err := r.kClient.Plugins().GetByRouteId(svc.Name)
-	if err != nil {
-		blog.Errorf("kong register get route %s plugins failed when delete service, %s", svc.Name, err.Error())
-		return err
-	}
-	//todo(DeveloperJim): if route has lots of plugins, we need to trace kplugins.Next
-	if err = r.deletePlugins("route/"+svc.Name, kplugins.Data); err != nil {
-		return err
-	}
 	//clean route, route name is same with service
 	if err = r.kClient.Routes().DeleteByName(svc.Name); err != nil {
 		blog.Errorf("kong register delete service %s relative route failed, %s", svc, err.Error())
 		return err
 	}
 	blog.V(3).Infof("kong register delete route %s success", svc.Name)
-	//clean service plugin first
-	ksplugins, err := r.kClient.Plugins().GetByServiceId(svc.Name)
-	if err != nil {
-		blog.Errorf("kong register get service %s relative plugins failed, %s", svc.Name, err.Error())
-		return err
-	}
-	if err = r.deletePlugins("service/"+svc.Name, ksplugins.Data); err != nil {
-		return err
-	}
 	err = r.kClient.Services().DeleteServiceByName(svc.Name)
 	if err != nil {
 		blog.Errorf("kong register delete service by name %s failed, %s", svc, err.Error())
 		return err
 	}
 	blog.V(3).Infof("kong register delete service %s success", svc.Name)
-	//* clean upstream relative Targets
-	targets, err := r.kClient.Targets().GetTargetsFromUpstreamId(svc.Host)
-	if err != nil {
-		blog.Errorf("kong register get upstream %s targets failed, %s", svc.Host, err.Error())
-		return err
-	}
-	for _, target := range targets {
-		if err = r.kClient.Targets().DeleteFromUpstreamById(svc.Host, *target.Id); err != nil {
-			blog.Errorf("kong register delete upstream %s target %s failed, %s", svc.Host, target.Target, err.Error())
-			return err
-		}
-		blog.V(3).Infof("kong register delete upstream %s target %s success", svc.Host, *target.Id)
-	}
+	//* clean upstream
 	if err = r.kClient.Upstreams().DeleteByName(svc.Host); err != nil {
 		blog.Errorf("kong register delete service %s relative Upstream %s failed, %s", svc.Name, svc.Host, err.Error())
 		return err

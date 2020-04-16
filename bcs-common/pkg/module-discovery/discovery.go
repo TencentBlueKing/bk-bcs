@@ -161,7 +161,7 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 		blog.V(3).Infof("discover nodes %s error %s", path, err.Error())
 		return err
 	}
-
+	blog.V(3).Infof("module-discovery get servers %d, nodes %d", len(zvs.Server), len(zvs.Nodes))
 	//if leaf node, then parse bcs module serverinfo
 	if len(zvs.Server) != 0 {
 		key := strings.TrimLeft(path, fmt.Sprintf("%s/", types.BCS_SERV_BASEPATH))
@@ -172,9 +172,11 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 		r.Lock()
 		r.servers[key] = val
 		r.Unlock()
+		blog.V(3).Infof("set server %s endpoints %v", key, val)
+		r.eventHandler(key)
 		return nil
 	}
-
+	blog.V(5).Infof("module-discovery get nodes details: %+v", zvs.Nodes)
 	for _, v := range zvs.Nodes {
 		err = r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
 		if err != nil {

@@ -107,6 +107,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 
 //Run running all necessary convertion logic, block
 func (s *DiscoveryServer) Run() error {
+	//s.discovery.
 	//check master status first
 	if err := s.dataSynchronization(); err != nil {
 		blog.Errorf("gateway-discovery first data synchronization failed, %s", err.Error())
@@ -194,6 +195,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 		blog.Infof("gateway-discovery instance is not master, skip data synchronization")
 		return nil
 	}
+	blog.V(3).Infof("gateway-discovery instance is master, ready to sync all datas")
 	//first get all gateway route information
 	regisetedService, err := s.regMgr.ListServices()
 	if err != nil {
@@ -215,7 +217,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 	for _, m := range allModules {
 		svcs, err := s.formatBCSServerInfo(m)
 		if err != nil {
-			blog.Errorf("gateway-discovery even get Module %s from cache failed in synchronization, continue")
+			blog.Errorf("gateway-discovery even get Module %s from cache failed in synchronization, continue", m)
 			continue
 		}
 		if len(svcs) == 0 {
