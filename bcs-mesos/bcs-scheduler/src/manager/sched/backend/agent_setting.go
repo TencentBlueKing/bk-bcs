@@ -17,18 +17,16 @@ import (
 	comm "bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
-	"errors"
+	"encoding/json"
 )
 
 // DisableAgent setting agent unschedulable
 func (b *backend) DisableAgent(IP string) error {
-
 	agent, err := b.store.FetchAgentSetting(IP)
 	if err != nil {
 		blog.Error("fetch agent setting(%s) from db fail:%s", IP, err.Error())
 		return err
 	}
-
 	blog.Infof("disable agent(%s)", IP)
 
 	if agent != nil {
@@ -64,6 +62,35 @@ func (b *backend) EnableAgent(IP string) error {
 		Disabled: false,
 	}
 	return b.store.SaveAgentSetting(&agentNew)
+}
+
+func (b *backend) TaintAgents(agents []*commtypes.BcsClusterAgentSetting) error {
+	for _, o := range agents {
+		agent, err := b.store.FetchAgentSetting(o.InnerIP)
+		if err != nil {
+			blog.Error("fetch agent setting(%s) from db fail:%s", o.InnerIP, err.Error())
+			return err
+		}
+		by, _ := json.Marshal(o.NoSchedule)
+		blog.Infof("taints agent(%s) %s", o.InnerIP, string(by))
+
+		if agent != nil {
+			agent.NoSchedule = o.NoSchedule
+		} else {
+			agent = &commtypes.BcsClusterAgentSetting{
+				InnerIP:    o.InnerIP,
+				NoSchedule: o.NoSchedule,
+			}
+		}
+
+		err = b.store.SaveAgentSetting(agent)
+		if err != nil {
+			blog.Error("save agent(%s) in db fail:%s", o.InnerIP, err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 //QueryAgentSetting by IP address
@@ -128,13 +155,24 @@ func (b *backend) DeleteAgentSettingList(IPs []string) (int, error) {
 func (b *backend) SetAgentSettingList(agents []*commtypes.BcsClusterAgentSetting) (int, error) {
 
 	for _, agent := range agents {
-		err := b.store.SaveAgentSetting(agent)
+		o, err := b.store.FetchAgentSetting(agent.InnerIP)
 		if err != nil {
-			blog.Error("save agent setting(%s) [%+v] to zk err:%s", agent.InnerIP, agent, err.Error())
+			blog.Error("fetch agent setting(%s) from db fail:%s", agent.InnerIP, err.Error())
 			return comm.BcsErrCommCreateZkNodeFail, err
 		}
-
-		blog.Infof("save agent setting(%s) [%+v] to zk", agent.InnerIP, agent)
+		by, _ := json.Marshal(agent)
+		blog.Infof("set agent(%s) setting(%s)", agent.InnerIP, string(by))
+		if o == nil {
+			o = agent
+		} else {
+			o.AttrScalars = agent.AttrScalars
+			o.AttrStrings = agent.AttrStrings
+		}
+		err = b.store.SaveAgentSetting(o)
+		if err != nil {
+			blog.Error("save agent setting(%s) [%+v] to zk err:%s", o.InnerIP, o, err.Error())
+			return comm.BcsErrCommCreateZkNodeFail, err
+		}
 	}
 
 	return comm.BcsSuccess, nil
@@ -212,7 +250,7 @@ func (b *backend) EnableAgentList(IPs []string) (int, error) {
 }
 
 //UpdateAgentSettingList update agent setting by details
-func (b *backend) UpdateAgentSettingList(update *commtypes.BcsClusterAgentSettingUpdate) (int, error) {
+/*func (b *backend) UpdateAgentSettingList(update *commtypes.BcsClusterAgentSettingUpdate) (int, error) {
 
 	if len(update.IPs) <= 0 {
 		return comm.BcsErrCommRequestDataErr, errors.New("no ips to update")
@@ -298,4 +336,4 @@ func (b *backend) UpdateAgentSettingList(update *commtypes.BcsClusterAgentSettin
 	}
 
 	return comm.BcsSuccess, nil
-}
+}*/

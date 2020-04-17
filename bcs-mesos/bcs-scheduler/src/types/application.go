@@ -140,6 +140,10 @@ const (
 	APP_TASK_TEMPLATE_KEY_PODNAME     = "bcs.taskgroupname"
 )
 
+const (
+	MesosAttributeNoSchedule = "NoSchedule"
+)
+
 //Version for api resources application or deployment
 type Version struct {
 	ID            string

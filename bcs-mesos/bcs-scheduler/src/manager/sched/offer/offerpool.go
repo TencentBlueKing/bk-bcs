@@ -18,8 +18,10 @@ import (
 	typesplugin "bk-bcs/bcs-common/common/plugin"
 	commtype "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
 	"encoding/json"
+	"fmt"
 	"golang.org/x/net/context"
 	"sync"
 	"time"
@@ -719,6 +721,28 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		attrValue.Value = &value.Value
 		attr.Scalar = &attrValue
 		offer.Attributes = append(offer.Attributes, &attr)
+	}
+
+	//noSchedule, likes k8s Taints\Tolerations
+	name := types.MesosAttributeNoSchedule
+	t := mesos.Value_SET
+	noScheduleAttr := &mesos.Attribute{
+		Name: &name,
+		Type: &t,
+		Set: &mesos.Value_Set{
+			Item: make([]string, 0),
+		},
+	}
+	for k, v := range agentSetting.NoSchedule {
+		blog.V(3).Infof("offer(%s:%s) add noSchedule attribute(%s:%s) from agentsetting",
+			offer.GetId().GetValue(), offer.GetHostname(), k, v)
+		if k == "" || v == "" {
+			continue
+		}
+		noScheduleAttr.Set.Item = append(noScheduleAttr.Set.Item, fmt.Sprintf("%s=%s", k, v))
+	}
+	if len(noScheduleAttr.Set.Item) > 0 {
+		offer.Attributes = append(offer.Attributes, noScheduleAttr)
 	}
 
 	return nil
