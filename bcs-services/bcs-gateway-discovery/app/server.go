@@ -292,7 +292,7 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 		blog.Errorf("get module %s information from module-discovery failed, %s", module, err.Error())
 		return nil, err
 	}
-	blog.V(5).Infof("get module %s string detail: %+v", originals)
+	blog.V(5).Infof("get module %s string detail: %+v", module, originals)
 	var svcs []*types.ServerInfo
 	for _, info := range originals {
 		data := info.(string)
@@ -322,8 +322,8 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 		blog.Errorf("get module %s information from module-discovery failed, %s", module, err.Error())
 		return nil, err
 	}
-	blog.V(5).Infof("get module %s string detail: %+v", originals)
-	var svcs map[string][]*types.ServerInfo
+	blog.V(5).Infof("get module %s string detail: %+v", module, originals)
+	svcs := make(map[string][]*types.ServerInfo)
 	for _, info := range originals {
 		data := info.(string)
 		svc := new(types.ServerInfo)

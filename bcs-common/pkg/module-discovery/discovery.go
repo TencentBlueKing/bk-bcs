@@ -166,7 +166,7 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 	blog.V(3).Infof("module-discovery get servers %d, nodes %d", len(zvs.Server), len(zvs.Nodes))
 	//if leaf node, then parse bcs module serverinfo
 	if len(zvs.Server) != 0 {
-		key := strings.TrimLeft(path, fmt.Sprintf("%s/", types.BCS_SERV_BASEPATH))
+		key := strings.TrimPrefix(path, fmt.Sprintf("%s/", types.BCS_SERV_BASEPATH))
 		val := make([]interface{}, 0)
 		for _, v := range zvs.Server {
 			val = append(val, v)

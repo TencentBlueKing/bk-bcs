@@ -271,15 +271,15 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
-	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_STORAGE, defaultDomain)
+	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain)
 	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_STORAGE
+	labels["module"] = types.BCS_MODULE_USERMANAGER
 	labels["service"] = "bkbcs-service"
 	regSvc := &register.Service{
 		Name:     module,
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
-		Path:     "/bcsstorage/v1/",
+		Path:     fmt.Sprintf("/%s/", types.BCS_MODULE_USERMANAGER),
 		Retries:  3,
 		Labels:   labels,
 		HeadOption: &register.HeaderOption{
@@ -293,7 +293,7 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 	rt := register.Route{
 		Name:        module,
 		Protocol:    svcs[0].Scheme,
-		Paths:       []string{"/bcsapi/v4/storage/"},
+		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", types.BCS_MODULE_USERMANAGER)},
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,

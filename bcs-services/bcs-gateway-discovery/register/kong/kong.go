@@ -120,7 +120,7 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 			blog.Errorf("kong register create target %s for upstream %s failed, %s. try next one ", targetReq.Target, kUpstream.Name, err.Error())
 			continue
 		}
-		blog.Infof("kong register create target %s[%s] for upstream %s successfully", targetReq.Target, ktarget.Id, kUpstream.Name)
+		blog.Infof("kong register create target %s[%s] for upstream %s successfully", targetReq.Target, *ktarget.Id, kUpstream.Name)
 	}
 	return nil
 }
