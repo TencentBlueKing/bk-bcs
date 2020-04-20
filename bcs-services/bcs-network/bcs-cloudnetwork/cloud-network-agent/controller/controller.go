@@ -14,14 +14,19 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
+	netsvc "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
 	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni"
+	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/netservice"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/networkutil"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
 
@@ -29,35 +34,40 @@ import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	CRD_NAMESPACES = "bcs-system"
-	ENI_PREFIX     = "eni"
-)
-
 // NetworkController controller for cloud network
 type NetworkController struct {
-	hostip   string
 	hostname string
-
-	eniNum int
-	ipNum  int
+	eniNum   int
+	ipNum    int
 
 	options *options.NetworkOption
+
+	vmInfo *cloud.VMInfo
 
 	nodeNetwork     *cloud.NodeNetwork
 	nodeNetworkMutx sync.Mutex
 
+	netsvcClient netservice.Interface
+
 	nodeNetClient nodenetwork.Interface
 
 	eniClient eni.Interface
-	netUtil   networkutil.Interface
+
+	netUtil networkutil.Interface
+
+	// lock for controller
+	// ensure that reconcle and release not do at the same time
+	controllerLock sync.Mutex
 }
 
 // New create new network controller
-func New(op *options.NetworkOption, nodeNetClient nodenetwork.Interface,
+func New(hostname string, op *options.NetworkOption,
+	netsvcClient netservice.Interface, nodeNetClient nodenetwork.Interface,
 	eniClient eni.Interface, netUtil networkutil.Interface) *NetworkController {
 	return &NetworkController{
+		hostname:      hostname,
 		options:       op,
+		netsvcClient:  netsvcClient,
 		nodeNetClient: nodeNetClient,
 		eniClient:     eniClient,
 		netUtil:       netUtil,
@@ -66,22 +76,38 @@ func New(op *options.NetworkOption, nodeNetClient nodenetwork.Interface,
 
 // OnAdd add event
 func (nc *NetworkController) OnAdd(obj interface{}) {
-	// TODO:
+	nodeNetwork, ok := obj.(*cloud.NodeNetwork)
+	if !ok {
+		blog.Errorf("obj %+v is not *cloud.NodeNetwork", obj)
+		return
+	}
+	blog.V(3).Infof("new NodeNetwork added: %+v", nodeNetwork)
 }
 
 // OnUpdate update event
 func (nc *NetworkController) OnUpdate(oldObj, newObj interface{}) {
-	// TODO:
+
 }
 
 // OnDelete delete event
 func (nc *NetworkController) OnDelete(obj interface{}) {
-	// TODO:
+	nodeNetwork, ok := obj.(*cloud.NodeNetwork)
+	if !ok {
+		blog.Errorf("get nodeNetwork %s/%s deleted", nodeNetwork.GetNamespace(), nodeNetwork.GetName())
+		return
+	}
+
+	if nodeNetwork.GetNamespace() == nc.nodeNetwork.GetNamespace() &&
+		nodeNetwork.GetName() == nc.nodeNetwork.GetName() {
+		if err := nc.releaseNodeNetwork(); err != nil {
+			blog.Errorf("releaseNodeNetwork failed, err %s", err.Error())
+		}
+	}
 }
 
-// GetNodeNetwork get node network config from etcd
-func (nc *NetworkController) GetNodeNetwork() error {
-	nodeNetwork, err := nc.nodeNetClient.Get(CRD_NAMESPACES, nc.hostname)
+// getNodeNetwork get node network config from etcd
+func (nc *NetworkController) getNodeNetwork() error {
+	nodeNetwork, err := nc.nodeNetClient.Get(constant.CRD_NAMESPACES, nc.hostname)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			blog.Warnf("node network not found in etcd")
@@ -102,13 +128,16 @@ func (nc *NetworkController) getEniQuota() error {
 		blog.Infof("get eni quota limit, err %s", err.Error())
 	}
 
+	eniNum = eniNum - 1
+	ipNum = ipNum - 1
+
 	if nc.options.EniNum == 0 || int(nc.options.EniNum) > eniNum {
 		nc.eniNum = eniNum
 	} else {
 		nc.eniNum = int(nc.options.EniNum)
 	}
 
-	if nc.options.IPNumPerEni == 0 || int(nc.options.IPNumPerEni) > ipNum {
+	if nc.options.IPNumPerEni == 0 || int(nc.options.IPNumPerEni-1) > ipNum {
 		nc.ipNum = ipNum
 	} else {
 		nc.ipNum = int(nc.options.IPNumPerEni)
@@ -117,17 +146,201 @@ func (nc *NetworkController) getEniQuota() error {
 }
 
 func getEniName(instanceid string, index int) string {
-	return instanceid + ENI_PREFIX + strconv.Itoa(index)
+	return instanceid + "-" + constant.ENI_PREFIX + strconv.Itoa(index)
+}
+
+func getEniIfaceName(index int) string {
+	return constant.ENI_PREFIX + strconv.Itoa(index)
+}
+
+func (nc *NetworkController) createEnis() error {
+	newNode := &cloud.NodeNetwork{
+		TypeMeta: k8smetav1.TypeMeta{
+			APIVersion: cloud.SchemeGroupVersion.Version,
+		},
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      nc.hostname,
+			Namespace: constant.CRD_NAMESPACES,
+		},
+		Spec: cloud.NodeNetworkSpec{
+			Cluster:     nc.options.Cluster,
+			Hostname:    nc.hostname,
+			NodeAddress: nc.vmInfo.InstanceIP,
+			VM:          nc.vmInfo,
+			ENINum:      nc.eniNum,
+			IPNumPerENI: nc.ipNum,
+		},
+	}
+
+	maxIndex, err := nc.eniClient.GetMaxENIIndex()
+	if err != nil {
+		blog.Errorf("get max eni index failed, err %s", err.Error())
+		return err
+	}
+	blog.Infof("get current max index %d", maxIndex)
+
+	for i := 0; i < nc.eniNum; i++ {
+		eniName := getEniName(nc.vmInfo.InstanceID, i)
+
+		// createENI
+		newIf, err := nc.eniClient.CreateENI(eniName, nc.ipNum)
+		if err != nil {
+			blog.Errorf("create eni failed, err %s", err.Error())
+			return err
+		}
+		blog.Infof("create eni %s done", eniName)
+
+		if newIf.Attachment == nil {
+			// attachENI
+			attachment, err := nc.eniClient.AttachENI(
+				maxIndex+i+1,
+				newIf.EniID,
+				nc.vmInfo.InstanceID,
+				newIf.MacAddress)
+
+			if err != nil {
+				blog.Errorf("attach eni %s failed, err %s", err.Error())
+				return err
+			}
+			newIf.Attachment = attachment
+		}
+
+		newIf.Index = i
+		newIf.EniIfaceName = getEniIfaceName(i)
+		newIf.RouteTableID = constant.START_ROUTE_TABLE + i
+		blog.Infof("attach eni %s done", eniName)
+
+		newNode.Status.Enis = append(newNode.Status.Enis, newIf)
+	}
+
+	if err := nc.createNodeNetwork(newNode); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (nc *NetworkController) deleteEnis() error {
+	for _, eni := range nc.nodeNetwork.Status.Enis {
+		if err := nc.eniClient.DetachENI(eni.Attachment); err != nil {
+			blog.Errorf("detach eni by %+v failed, err %s", eni.Attachment, err.Error())
+			return fmt.Errorf("detach eni by %+v, err %s", eni.Attachment, err.Error())
+		}
+		blog.Infof("detach eni by %+v successfully", eni.Attachment)
+		if err := nc.eniClient.DeleteENI(eni.EniID); err != nil {
+			blog.Errorf("delete eni by eni id %s failed, err %s", eni.EniID, err.Error())
+			return fmt.Errorf("delete eni by eni id %s failed, err %s", eni.EniID, err.Error())
+		}
+		blog.Infof("delete eni by eni id %s successfully", eni.EniID)
+	}
+	return nil
+}
+
+func (nc *NetworkController) deleteNodeNetwork() {
+	nc.nodeNetworkMutx.Lock()
+	nc.nodeNetwork = nil
+	nc.nodeNetworkMutx.Unlock()
+}
+
+func (nc *NetworkController) createNodeNetwork(newNode *cloud.NodeNetwork) error {
+	if err := nc.nodeNetClient.Create(newNode); err != nil {
+		blog.Errorf("write node network %+v to apiserver failed, err %s", newNode, err.Error())
+		return err
+	}
+
+	nc.nodeNetworkMutx.Lock()
+	nc.nodeNetwork = newNode
+	nc.nodeNetworkMutx.Unlock()
+	return nil
+}
+
+func getSubnetMask(cidr string) (int, error) {
+	strs := strings.Split(cidr, "/")
+	if len(strs) == 2 {
+		mask, err := strconv.Atoi(strs[1])
+		if err != nil {
+			return -1, fmt.Errorf("convert mask %s of cidr %s to int failed, err %s",
+				strs[1], cidr, err.Error())
+		}
+		return mask, nil
+	}
+	return -1, fmt.Errorf("invalid cidr %s", cidr)
+}
+
+func (nc *NetworkController) createNetservicePool() error {
+	if len(nc.nodeNetwork.Status.Enis) == 0 {
+		return fmt.Errorf("no eni in node network, cannot create netservice pool")
+	}
+
+	subnetCidr := nc.nodeNetwork.Status.Enis[0].EniSubnetCidr
+	mask, err := getSubnetMask(subnetCidr)
+	if err != nil {
+		blog.Errorf("get subnet mask of cidr %s", subnetCidr)
+		return fmt.Errorf("get subnet mask of cidr %s", subnetCidr)
+	}
+	pool := new(netsvc.NetPool)
+	pool.Net = nc.nodeNetwork.Spec.NodeAddress
+	pool.Cluster = nc.options.Cluster
+	pool.Mask = mask
+	pool.Hosts = append(pool.Hosts, nc.nodeNetwork.Spec.NodeAddress)
+	pool.Gateway = "169.254.1.1"
+	var ipInstances []*netsvc.IPInst
+	for _, eni := range nc.nodeNetwork.Status.Enis {
+		for _, ip := range eni.SecondaryAddresses {
+			if !ip.IsPrimary {
+				pool.Available = append(pool.Available, ip.IP)
+				ipIns := new(netsvc.IPInst)
+				ipIns.IPAddr = ip.IP
+				ipIns.MacAddr = eni.MacAddress
+				ipIns.Pool = pool.Net
+				ipIns.Mask = pool.Mask
+				ipIns.Gateway = pool.Gateway
+				ipIns.Cluster = pool.Cluster
+				ipInstances = append(ipInstances, ipIns)
+			}
+		}
+	}
+	err = nc.netsvcClient.CreateOrUpdatePool(pool)
+	if err != nil {
+		blog.Errorf("create netservice pool %+v failed, err %s", pool, err.Error())
+		return err
+	}
+	blog.Infof("create netservice pool %+v successfully", pool)
+	// add newly ip address into ip pool in service
+	for _, ipIns := range ipInstances {
+		err := nc.netsvcClient.UpdateIPInstance(ipIns)
+		if err != nil {
+			blog.Errorf("update ip instance with %+v failed, err %s", ipIns, err.Error())
+			return err
+		}
+		blog.Infof("update ip instance with %+v successfully", ipIns)
+	}
+
+	blog.Infof("create netservice pool done")
+	return nil
+}
+
+func (nc *NetworkController) deleteNetservicePool() error {
+	if len(nc.nodeNetwork.Status.Enis) == 0 {
+		return fmt.Errorf("no eni in node network, cannot create netservice pool")
+	}
+
+	err := nc.netsvcClient.DeletePool(nc.options.Cluster, nc.nodeNetwork.Spec.NodeAddress)
+	if err != nil {
+		return fmt.Errorf("delete netservice pool failed, err %s", err.Error())
+	}
+	blog.Infof("delete netservice pool %s/%s successfully", nc.options.Cluster, nc.nodeNetwork.Spec.NodeAddress)
+
+	return nil
 }
 
 // Init node init
 func (nc *NetworkController) Init() error {
-	nc.nodeNetworkMutx.Lock()
-	if nc.nodeNetwork != nil {
-		blog.Infof("node work exists, no need to create eni")
-		return nil
+
+	if err := nc.getNodeNetwork(); err != nil {
+		blog.Errorf("get node network failed, err %s", err.Error())
+		return err
 	}
-	nc.nodeNetworkMutx.Unlock()
 
 	if err := nc.eniClient.Init(); err != nil {
 		blog.Errorf("aws client init failed, err %s", err.Error())
@@ -139,68 +352,41 @@ func (nc *NetworkController) Init() error {
 		blog.Errorf("get vm info failed, err %s", err.Error())
 		return err
 	}
-
-	newNode := &cloud.NodeNetwork{
-		TypeMeta: k8smetav1.TypeMeta{
-			APIVersion: cloud.SchemeGroupVersion.Version,
-		},
-		ObjectMeta: k8smetav1.ObjectMeta{
-			Name:      nc.hostip,
-			Namespace: CRD_NAMESPACES,
-		},
-		Spec: cloud.NodeNetworkSpec{
-			Cluster:     nc.options.Cluster,
-			Hostname:    nc.hostname,
-			NodeAddress: nc.hostip,
-			VM:          vmInfo,
-			ENINum:      nc.eniNum,
-			IPNumPerENI: nc.ipNum,
-		},
-	}
-
-	maxIndex, err := nc.netUtil.GetNetworkInterfaceMaxIndex()
-	if err != nil {
-		return err
-	}
+	nc.vmInfo = vmInfo
 
 	if err := nc.getEniQuota(); err != nil {
 		blog.Errorf("get eni quota failed, err %s", err.Error())
 		return err
 	}
 
-	for i := 0; i < nc.eniNum; i++ {
-		eniName := getEniName(vmInfo.InstanceID, i)
+	// Determine if the node network exists
+	nc.nodeNetworkMutx.Lock()
+	if nc.nodeNetwork != nil {
+		nc.nodeNetworkMutx.Unlock()
+		blog.Infof("node network alrady exists %+v", nc.nodeNetwork)
+		return nil
+	}
+	nc.nodeNetworkMutx.Unlock()
 
-		// createENI
-		newIf, err := nc.eniClient.CreateENI(eniName, nc.ipNum)
-		if err != nil {
-			blog.Errorf("create eni failed, err %s", err.Error())
-			return err
-		}
-		blog.Infof("create eni %s done", eniName)
-
-		// attachENI
-		newIndex := maxIndex + i + 1
-		attachment, err := nc.eniClient.AttachENI(newIndex, newIf.EniID, vmInfo.InstanceID)
-		if err != nil {
-			blog.Errorf("attach eni %s failed, err %s", err.Error())
-			return err
-		}
-		newIf.Attachment = attachment
-		blog.Infof("attach eni %s done", eniName)
-
-		newNode.Status.Enis = append(newNode.Status.Enis, newIf)
+	if err := nc.createEnis(); err != nil {
+		blog.Errorf("create enis failed, err %s", err.Error())
+		return err
 	}
 
-	// TODO: write new node network to apiserver
-	err = nc.nodeNetClient.Create(newNode)
-	if err != nil {
-		blog.Errorf("write node network %+v to apiserver failed, err %s", newNode, err.Error())
+	if err := nc.createNetservicePool(); err != nil {
+		blog.Errorf("create netservice pool failed, err %s", err.Error())
+		return err
 	}
-
-	// TODO: write new ip info to netservice
 
 	return nil
+}
+
+func (nc *NetworkController) getRouteIDMap() map[string]string {
+	ret := make(map[string]string)
+	for _, eni := range nc.nodeNetwork.Status.Enis {
+		ret[strconv.Itoa(eni.RouteTableID)] = constant.ENI_PREFIX + strconv.Itoa(eni.Index)
+	}
+	return ret
 }
 
 // Run run controller
@@ -209,6 +395,12 @@ func (nc *NetworkController) Run(ctx context.Context, wg *sync.WaitGroup) {
 
 	if err := nc.reconcileNodeNetwork(); err != nil {
 		blog.Infof("first reconcile node network failed, err %s", err.Error())
+		return
+	}
+
+	routeIDMap := nc.getRouteIDMap()
+	if err := nc.netUtil.SetHostNetwork(routeIDMap); err != nil {
+		blog.Infof("set host network failed, err %s", err.Error())
 		return
 	}
 
@@ -231,19 +423,69 @@ func (nc *NetworkController) Run(ctx context.Context, wg *sync.WaitGroup) {
 
 // reconcileNodeNetwork restore network interface on vm
 func (nc *NetworkController) reconcileNodeNetwork() error {
-	// eniMap := make(map[string]*cloud.ElasticNetworkInterface)
-	// for _, netif := range nc.nodeNetwork.Status.Enis {
-	// 	eniMap[netif.EniID] = netif
-	// }
+	nc.controllerLock.Lock()
+	defer nc.controllerLock.Unlock()
 
-	// // query ENIs
-	// remoteEnis, err := nc.eniClient.ListENIs(nc.nodeNetwork.Spec.VM.InstanceID)
-	// if err != nil {
-	// 	blog.Errorf("list enis failed, err %s", err.Error())
-	// 	return err
-	// }
+	if nc.nodeNetwork == nil {
+		blog.Errorf("no node network found")
+		return fmt.Errorf("no node network found")
+	}
 
-	// compare difference
+	rules, err := nc.netUtil.RuleList()
+	if err != nil {
+		blog.Errorf("list rule failed, err %s", err.Error())
+		return fmt.Errorf("list rule failed, err %s", err.Error())
+	}
+
+	for _, netiface := range nc.nodeNetwork.Status.Enis {
+		err := nc.netUtil.SetUpNetworkInterface(
+			netiface.Address.IP,
+			netiface.EniSubnetCidr,
+			netiface.MacAddress,
+			netiface.EniIfaceName,
+			netiface.RouteTableID,
+			rules,
+		)
+		if err != nil {
+			blog.Errorf("sync network interface failed, err %s", err.Error())
+		}
+	}
+
+	return nil
+}
+
+// releaseNodeNetwork release node network
+func (nc *NetworkController) releaseNodeNetwork() error {
+	nc.controllerLock.Lock()
+	defer nc.controllerLock.Unlock()
+
+	var err error
+
+	// delete netservice pool
+	if err = nc.deleteNetservicePool(); err != nil {
+		blog.Errorf(
+			"failed delete netservice pool when release node network, err %s",
+			err.Error())
+
+		blog.Warnf("try to restore node network to etcd")
+		// try to restore node network to etcd
+		if err = nc.createNodeNetwork(nc.nodeNetwork); err != nil {
+			blog.Warnf("falied to restore node network")
+		}
+
+		return fmt.Errorf(
+			"failed delete netservice pool when release node network, err %s",
+			err.Error())
+	}
+
+	// delete enis
+	if err := nc.deleteEnis(); err != nil {
+		blog.Errorf("failed to delete enis, err %s", err.Error())
+		return err
+	}
+
+	// delete node work network
+	nc.deleteNodeNetwork()
 
 	return nil
 }

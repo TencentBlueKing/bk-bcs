@@ -16,11 +16,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/vishvananda/netlink"
 
 	"bk-bcs/bcs-common/common/blog"
 	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
@@ -146,51 +148,83 @@ func (c *Client) GetVMInfo() (*cloud.VMInfo, error) {
 		NodeVpcID:    vpcID,
 		NodeSubnetID: subnetID,
 		InstanceID:   instanceID,
+		InstanceIP:   c.InstanceIP,
 	}, nil
+}
+
+// GetMaxENIIndex get current eni max binding index
+func (c *Client) GetMaxENIIndex() (int, error) {
+	if c.instance == nil {
+		return -1, fmt.Errorf("no vm info")
+	}
+	return len(c.instance.NetworkInterfaces) - 1, nil
 }
 
 // CreateENI create eni
 func (c *Client) CreateENI(name string, ipNum int) (*cloud.ElasticNetworkInterface, error) {
-	// find available subnets
-	subnetID, err := c.getAvailableSubnet(ipNum)
+
+	eni, err := c.queryEni(name)
 	if err != nil {
-		blog.Errorf("get available subnet when create eni")
-		return nil, err
+		return nil, fmt.Errorf("queryEni failed, err %s", err.Error())
 	}
-
-	// use description for created eni name
-	req := &ec2.CreateNetworkInterfaceInput{}
-	req.SetDescription(name)
-	req.SetSubnetId(subnetID)
-	req.SetSecondaryPrivateIpAddressCount(int64(ipNum))
-	if len(c.SecurityGroups) != 0 {
-		req.SetGroups(aws.StringSlice(c.SecurityGroups))
+	// take over existed eni
+	if eni != nil {
+		if len(eni.PrivateIpAddresses)-1 < ipNum {
+			err = c.assignIPsToEni(aws.StringValue(eni.NetworkInterfaceId), ipNum-(len(eni.PrivateIpAddresses)-1))
+			if err != nil {
+				return nil, fmt.Errorf("assign ip to %s failed, err %s", name, err.Error())
+			}
+		} else if len(eni.PrivateIpAddresses)-1 > ipNum {
+			var arrs []string
+			for _, ipAddr := range eni.PrivateIpAddresses {
+				if !aws.BoolValue(ipAddr.Primary) {
+					arrs = append(arrs, aws.StringValue(ipAddr.PrivateIpAddress))
+					if len(arrs) >= len(eni.PrivateIpAddresses)-1-ipNum {
+						break
+					}
+				}
+			}
+			err := c.unassignIPsFromEni(aws.StringValue(eni.NetworkInterfaceId), arrs)
+			if err != nil {
+				return nil, fmt.Errorf("unassign ips %+v from %s failed, err %s", arrs, name, err.Error())
+			}
+		}
+		if len(eni.PrivateIpAddresses)-1 != ipNum {
+			eni, err = c.queryEni(name)
+			if err != nil {
+				return nil, fmt.Errorf("queryEni failed, err %s", err.Error())
+			}
+		}
+		// create eni
+	} else {
+		eni, err = c.createEni(name, ipNum)
+		if err != nil {
+			return nil, fmt.Errorf("createEni failed, err %s", err.Error())
+		}
 	}
-
-	blog.V(2).Infof("aws CreateNetworkInterface request %+v", req)
-
-	resp, err := c.ec2client.CreateNetworkInterface(req)
+	subnet, err := c.querySubent(aws.StringValue(eni.SubnetId))
 	if err != nil {
-		blog.Errorf("aws CreateNetworkInterface failed, err %s", err.Error())
-		return nil, err
-	}
-
-	blog.V(2).Infof("aws CreateNetworkInterface response %+v", resp)
-
-	if resp.NetworkInterface == nil {
-		blog.Errorf("aws CreateNetworkInterface failed, NetworkInterface in resp is empty")
-		return nil, fmt.Errorf("aws CreateNetworkInterface failed, NetworkInterface in resp is empty")
+		return nil, fmt.Errorf("querySubnet failed, err %s", err.Error())
 	}
 
 	netIf := &cloud.ElasticNetworkInterface{}
 	netIf.EniName = name
-	netIf.EniSubnetID = subnetID
+	netIf.EniSubnetID = aws.StringValue(eni.SubnetId)
+	netIf.EniSubnetCidr = aws.StringValue(subnet.CidrBlock)
 	netIf.IPNum = ipNum
-	netIf.EniID = aws.StringValue(resp.NetworkInterface.NetworkInterfaceId)
-	netIf.MacAddress = aws.StringValue(resp.NetworkInterface.MacAddress)
+	netIf.EniID = aws.StringValue(eni.NetworkInterfaceId)
+	netIf.MacAddress = aws.StringValue(eni.MacAddress)
+
+	if eni.Attachment != nil {
+		netIf.Attachment = &cloud.NetworkInterfaceAttachment{
+			Index:        int(aws.Int64Value(eni.Attachment.DeviceIndex)),
+			AttachmentID: aws.StringValue(eni.Attachment.AttachmentId),
+			InstanceID:   aws.StringValue(eni.Attachment.InstanceId),
+		}
+	}
 
 	// PrivateIpAddresses in response contains both primary ip and secondary ips
-	for _, ip := range resp.NetworkInterface.PrivateIpAddresses {
+	for _, ip := range eni.PrivateIpAddresses {
 		if aws.BoolValue(ip.Primary) {
 			netIf.Address = &cloud.IPAddress{
 				IP:        aws.StringValue(ip.PrivateIpAddress),
@@ -211,7 +245,7 @@ func (c *Client) CreateENI(name string, ipNum int) (*cloud.ElasticNetworkInterfa
 }
 
 // AttachENI attach eni to vm
-func (c *Client) AttachENI(index int, eniID, instanceID string) (*cloud.NetworkInterfaceAttachment, error) {
+func (c *Client) AttachENI(index int, eniID, instanceID, eniMac string) (*cloud.NetworkInterfaceAttachment, error) {
 	req := &ec2.AttachNetworkInterfaceInput{}
 	req.SetNetworkInterfaceId(eniID)
 	req.SetInstanceId(instanceID)
@@ -231,6 +265,14 @@ func (c *Client) AttachENI(index int, eniID, instanceID string) (*cloud.NetworkI
 		blog.Errorf("aws AttachNetworkInterface, AttachmentId in resp is empty")
 		return nil, fmt.Errorf("aws AttachNetworkInterface, AttachmentId in resp is empty")
 	}
+
+	// wait for real attachment
+	err = c.waitForENIAttached(eniMac)
+	if err != nil {
+		blog.Errorf("wait for eni attached failed, err %s", err.Error())
+		return nil, fmt.Errorf("wait for eni attached failed, err %s", err.Error())
+	}
+
 	return &cloud.NetworkInterfaceAttachment{
 		Index:        index,
 		AttachmentID: aws.StringValue(resp.AttachmentId),
@@ -245,13 +287,21 @@ func (c *Client) DetachENI(attachment *cloud.NetworkInterfaceAttachment) error {
 
 	blog.V(2).Infof("aws DetachNetworkInterface request %+v", req)
 
-	resp, err := c.ec2client.DetachNetworkInterface(req)
+	var err error
+	var resp *ec2.DetachNetworkInterfaceOutput
+	RetryWithBackoffTime(100, NewIncreseSeries(3*time.Second, 0.3, 0.3), func() bool {
+		resp, err = c.ec2client.DetachNetworkInterface(req)
+		if err != nil {
+			blog.Errorf("aws DetachNetworkInterface failed, err %s", err.Error())
+			return false
+		}
+		blog.V(2).Infof("aws DetachNetworkInterface response, %+v", resp)
+		return true
+	})
 	if err != nil {
-		blog.Errorf("aws DetachNetworkInterface failed, err %s", err.Error())
-		return err
+		return fmt.Errorf("aws DetachNetworkInterface failed, err %s", err.Error())
 	}
 
-	blog.V(2).Infof("aws DetachNetworkInterface response, %+v", resp)
 	return nil
 }
 
@@ -262,14 +312,50 @@ func (c *Client) DeleteENI(eniID string) error {
 
 	blog.V(2).Infof("aws DeleteNetworkInterface request %+v", req)
 
-	resp, err := c.ec2client.DeleteNetworkInterface(req)
+	var err error
+	var resp *ec2.DeleteNetworkInterfaceOutput
+	RetryWithBackoffTime(100, NewIncreseSeries(3*time.Second, 0.3, 0.3), func() bool {
+		resp, err = c.ec2client.DeleteNetworkInterface(req)
+		if err != nil {
+			blog.Errorf("aws DeleteNetworkInterface failed, err %s", err.Error())
+			return false
+		}
+
+		blog.V(2).Infof("aws DeleteNetworkInterface response, %+v", resp)
+		return true
+	})
 	if err != nil {
-		blog.Errorf("aws DeleteNetworkInterface failed, err %s", err.Error())
-		return err
+		return fmt.Errorf("aws DeleteNetworkInterface failed, err %s", err.Error())
 	}
 
-	blog.V(2).Infof("aws DeleteNetworkInterface response, %+v", resp)
 	return nil
+}
+
+// wait for eni attach
+func (c *Client) waitForENIAttached(eniMac string) error {
+	retries := 0
+	for {
+		linkList, err := netlink.LinkList()
+		if err != nil {
+			blog.Errorf("failed to list links, err %s", err.Error())
+			return err
+		}
+		for _, link := range linkList {
+			macFound := link.Attrs().HardwareAddr.String()
+			linkName := link.Attrs().Name
+			blog.V(3).Infof("link with mac: %s, name: %s", macFound, linkName)
+			if strings.ToLower(macFound) == strings.ToLower(eniMac) {
+				blog.V(3).Infof("found eni with mac %s", eniMac)
+				return nil
+			}
+		}
+		retries = retries + 1
+		if retries > waitAttachedMaxRetries {
+			return fmt.Errorf("wait for eni attached failed, exceed max retries")
+		}
+		blog.V(3).Infof("%s not attached, retry (%d/%d)", eniMac, retries, waitAttachedMaxRetries)
+		time.Sleep(waitAttachedInterval)
+	}
 }
 
 // ListENIs list enis of a vm

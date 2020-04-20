@@ -31,20 +31,21 @@ type Interface interface {
 	// GetAvailableHostIP get available host ip by network interface names
 	GetAvailableHostIP(ifnames []string) (string, error)
 	// SetHostNetwork disable rp_filter, enable ip_forwarding
-	SetHostNetwork()
+	SetHostNetwork(routeTableIDs map[string]string) error
 	// SetUpNetworkInterface set elastic network interface up
-	SetUpNetworkInterface(ip, cidrBlock, eniMac, eniName string, table int) error
+	SetUpNetworkInterface(ip, cidrBlock, eniMac, eniName string, table int, rules []netlink.Rule) error
 	// GetHostName get hostname
 	GetHostName() (string, error)
 	// GetNetworkInterfaceMaxIndex get max index of network interfaces on hosts
-	GetNetworkInterfaceMaxIndex() (int, error)
+	// GetNetworkInterfaceMaxIndex() (int, error)
 	// LinkByMac find link by mac
 	LinkByMac(mac string) (netlink.Link, error)
+	// RuleList list route table rules
+	RuleList() ([]netlink.Rule, error)
 }
 
 // NetUtil network util
-type NetUtil struct {
-}
+type NetUtil struct{}
 
 // GetAvailableHostIP get available host ip by network interface names
 func (nc *NetUtil) GetAvailableHostIP(ifnames []string) (string, error) {
@@ -75,14 +76,35 @@ func (nc *NetUtil) GetAvailableHostIP(ifnames []string) (string, error) {
 }
 
 // SetHostNetwork disable rp_filter, enable ip_forwarding
-func (nc *NetUtil) SetHostNetwork() {
+func (nc *NetUtil) SetHostNetwork(routeTableIDs map[string]string) error {
 
+	ipForwardValue, err := getIPForward()
+	if err != nil {
+		return err
+	}
+	blog.Infof("get system ipv4.ip_forward = %d", ipForwardValue)
+	if ipForwardValue != 1 {
+		blog.Infof("enable system ipv4.ip_forward ......")
+		if ok := setIPForward(true); !ok {
+			blog.Warnf("enable system ipv4.ip_forward failed")
+		}
+	}
+
+	// create route tables
+	blog.Infof("ensure route table IDs in /etc/iproute2/rt_tables......")
+	if ok := ensureRouteTables(routeTableIDs); !ok {
+		blog.Errorf("ensure route tables failed")
+		return fmt.Errorf("ensure route tables failed")
+	}
+	blog.Infof("ensure route table IDs successfully")
+
+	return nil
 }
 
-func isRouteExisted(routes []netlink.Route, route netlink.Route) bool {
+func isDefaultRouteExisted(routes []netlink.Route, route netlink.Route) bool {
 	for _, r := range routes {
 		if r.LinkIndex == route.LinkIndex &&
-			reflect.DeepEqual(r.Dst, route.Dst) &&
+			reflect.DeepEqual(r.Gw, route.Gw) &&
 			r.Scope == route.Scope &&
 			r.Table == route.Table {
 			return true
@@ -91,17 +113,39 @@ func isRouteExisted(routes []netlink.Route, route netlink.Route) bool {
 	return false
 }
 
-func isRuleExisted(rules []netlink.Rule, rule netlink.Rule) bool {
+func findToTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	for _, r := range rules {
-		if reflect.DeepEqual(r.Src, rule.Src) && reflect.DeepEqual(r.Dst, rule.Dst) {
-			return true
+		if r.Table == rule.Table {
+			if r.Dst != nil && rule.Dst != nil {
+				if r.Dst.String() == rule.Dst.String() {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
+	for _, r := range rules {
+		if r.Table == rule.Table {
+			if r.Src != nil && rule.Src != nil {
+				if r.Src.String() == rule.Src.String() {
+					return true
+				}
+			}
 		}
 	}
 	return false
 }
 
 // SetUpNetworkInterface set up network interface
-func (nc *NetUtil) SetUpNetworkInterface(addr, cidrBlock, eniMac, eniName string, table int) error {
+func (nc *NetUtil) SetUpNetworkInterface(
+	addr, cidrBlock, eniMac, eniIfaceName string, table int,
+	existedRules []netlink.Rule) error {
+
+	blog.Infof("ensure network interface, addr %s, cidrBlock %s, eniMac %s, name %s, table %d",
+		addr, cidrBlock, eniMac, eniIfaceName, table)
 	eniLink, err := nc.LinkByMac(eniMac)
 	if err != nil {
 		return err
@@ -112,22 +156,25 @@ func (nc *NetUtil) SetUpNetworkInterface(addr, cidrBlock, eniMac, eniName string
 	}
 
 	// set netlink name if necessary
-	if curName := eniLink.Attrs().Name; curName != eniName {
-		blog.Infof("set netlink name %s to name %s", curName, eniName)
-		if err := netlink.LinkSetName(eniLink, eniName); err != nil {
-			return fmt.Errorf("set netlink with mac %s to name %s failed, err %s", eniMac, eniName, err.Error())
+	blog.Infof("checking netlink name ......")
+	if curName := eniLink.Attrs().Name; curName != eniIfaceName {
+		blog.Infof("set netlink name %s to name %s", curName, eniIfaceName)
+		if err := netlink.LinkSetName(eniLink, eniIfaceName); err != nil {
+			return fmt.Errorf("set netlink with mac %s to name %s failed, err %s", eniMac, eniIfaceName, err.Error())
 		}
 	}
 
 	// if netlink is not up, set up
+	blog.Infof("checking status of netlink ......")
 	if eniLink.Attrs().Flags&net.FlagUp == 0 {
-		blog.Infof("set netlink name %s up", eniName)
+		blog.Infof("set netlink name %s up", eniIfaceName)
 		if err := netlink.LinkSetUp(eniLink); err != nil {
-			return fmt.Errorf("set up netlink %s failed, err %s", eniName, err.Error())
+			return fmt.Errorf("set up netlink %s failed, err %s", eniIfaceName, err.Error())
 		}
 	}
 
 	// set ip addr
+	blog.Infof("checking ip addr of netlink ......")
 	ipNet := &net.IPNet{
 		IP:   net.ParseIP(addr),
 		Mask: cidrNet.Mask,
@@ -148,6 +195,7 @@ func (nc *NetUtil) SetUpNetworkInterface(addr, cidrBlock, eniMac, eniName string
 
 	// get the subnet cidr of applied ip address,
 	// and get gateway according to subnet cidr
+	blog.Infof("checking default routing ......")
 	cidrIP, _, err := net.ParseCIDR(cidrBlock)
 	if err != nil {
 		blog.Errorf("parse cidr %s failed, err %s", cidrBlock, err.Error())
@@ -163,12 +211,15 @@ func (nc *NetUtil) SetUpNetworkInterface(addr, cidrBlock, eniMac, eniName string
 		Table:     table,
 	}
 
-	routes, err := netlink.RouteList(eniLink, unix.AF_INET)
+	routes, err := netlink.RouteListFiltered(unix.AF_INET, &defaultRoute,
+		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE|netlink.RT_FILTER_GW)
 	if err != nil {
-		return fmt.Errorf("failed to list route list for netlink with mac %s, err %s", eniMac, err.Error())
+		return fmt.Errorf("failed to list route list with route %+v , err %s", defaultRoute, err.Error())
 	}
+	blog.Infof("find routes %+v", routes)
 
-	if !isRouteExisted(routes, defaultRoute) {
+	if !isDefaultRouteExisted(routes, defaultRoute) {
+		blog.Infof("add default route %+v", defaultRoute)
 		// add default route
 		err = netlink.RouteAdd(&defaultRoute)
 		if err != nil {
@@ -176,31 +227,42 @@ func (nc *NetUtil) SetUpNetworkInterface(addr, cidrBlock, eniMac, eniName string
 		}
 	}
 
+	blog.Infof("checking ip rules ......")
 	fromEniRule := netlink.NewRule()
-	fromEniRule.Src = ipNet
+	fromEniRule.Src = &net.IPNet{IP: net.ParseIP(addr), Mask: net.IPv4Mask(255, 255, 255, 255)}
 	fromEniRule.Table = table
 
-	toEniRule := netlink.NewRule()
-	toEniRule.Dst = ipNet
-	toEniRule.Table = table
-
-	rules, err := netlink.RuleList(unix.AF_INET)
-	if err != nil {
-		return fmt.Errorf("failed to list rule list for netlink with mac %s, err %s", eniMac, err.Error())
-	}
-
-	if !isRuleExisted(rules, *fromEniRule) {
+	if !findFromTableRule(existedRules, fromEniRule) {
+		blog.Infof("add ip rule %+v", fromEniRule)
 		// add from eni rule
 		err = netlink.RuleAdd(fromEniRule)
 		if err != nil {
 			return fmt.Errorf("add from eni rule %+v for table %d failed, err %s", fromEniRule, table, err.Error())
 		}
 	}
-	if !isRuleExisted(rules, *toEniRule) {
+
+	toEniRule := netlink.NewRule()
+	toEniRule.Dst = &net.IPNet{IP: net.ParseIP(addr), Mask: net.IPv4Mask(255, 255, 255, 255)}
+	toEniRule.Table = table
+
+	if !findToTableRule(existedRules, toEniRule) {
+		blog.Infof("add ip rule %+v", toEniRule)
 		// add to eni rule
 		err = netlink.RuleAdd(toEniRule)
 		if err != nil {
 			return fmt.Errorf("add to eni rule %+v for table %d failed, err %s", toEniRule, table, err.Error())
+		}
+	}
+
+	blog.Infof("checking rp filter ......")
+	rpFilterValue, err := getRpFilter(eniIfaceName)
+	blog.Infof("get system %s.rp_filter = %d", eniIfaceName, rpFilterValue)
+	if err != nil {
+		return fmt.Errorf("get rpFilter failed, err %s", err.Error())
+	}
+	if rpFilterValue != 0 {
+		if ok := setRpFilter(eniIfaceName, false); !ok {
+			blog.Warnf("set rp_filter %s to %s failed", eniIfaceName, "0")
 		}
 	}
 
@@ -246,4 +308,13 @@ func (nc *NetUtil) LinkByMac(mac string) (netlink.Link, error) {
 		}
 	}
 	return nil, fmt.Errorf("no found eni with mac %s", mac)
+}
+
+// RuleList list rule
+func (nc *NetUtil) RuleList() ([]netlink.Rule, error) {
+	rules, err := netlink.RuleList(unix.AF_INET)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list rule list, err %s", err.Error())
+	}
+	return rules, nil
 }

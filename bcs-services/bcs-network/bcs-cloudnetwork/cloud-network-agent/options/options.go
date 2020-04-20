@@ -18,10 +18,10 @@ import (
 )
 
 const (
-	// ServiceRegistryKubernetes service discovery for k8s
-	ServiceRegistryKubernetes = "kubernetes"
-	// ServiceRegistryMesos service discovery for mesos
-	ServiceRegistryMesos = "mesos"
+	// CloudAWS aws cloud service
+	CloudAWS = "aws"
+	// CloudTencent tencent cloud service
+	CloudTencent = "qcloud"
 )
 
 // NetworkOption the option of bcs elastic network interface controller
@@ -34,11 +34,16 @@ type NetworkOption struct {
 	conf.ProcessConfig
 
 	Cluster              string `json:"cluster" value:"" usage:"cluster for bcs"`
-	ServiceRegistry      string `json:"serviceRegistry" value:"kubernetes" usage:"registry for service discovery; [kubernetes, mesos]"`
+	Cloud                string `json:"cloud" value:"" usage:"name of cloud service, [aws, qcloud]"`
 	Kubeconfig           string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver, Only required if out-of-cluster."`
 	KubeResyncPeriod     int    `json:"kubeResyncPeried" value:"300" usage:"resync interval for informer factory in seconds; (default 300)"`
 	KubeCacheSyncTimeout int    `json:"kubeCacheSyncTimeout" value:"10" usage:"wait for kube cache sync timeout in seconds; (default 10)"`
 	CheckInterval        int    `json:"checkInterval" value:"300" usage:"interval for checking ip rules and route tables"`
+
+	NetServiceZookeeper string `json:"netserviceZookeeper" value:"" usage:"zookeeper to discovery netservice"`
+	NetServiceCa        string `json:"netserviceCa" value:"" usage:"ca for netservice"`
+	NetServiceKey       string `json:"netserviceKey" value:"" usage:"key for netservice"`
+	NetServiceCert      string `json:"netserviceCert" value:"" usage:"cert for netservice"`
 
 	SecurityGroups string `json:"securityGroups" value:"" usage:"vpc security groups used by elastic network interface, e.g. \"vpc-001:sg-111;vpc-002:sg-222\""`
 	Subnets        string `json:"subnets" value:"" usage:"the ips of elastic network interface come from these subnets, if no subnet specified means using the subnet which the node belongs to, e.g. \"vpc-001:subnet-111,subnet-112;vpc-002:subnet-222\""`
@@ -58,11 +63,15 @@ func New() *NetworkOption {
 func Parse(opt *NetworkOption) {
 	conf.Parse(opt)
 
-	// validate config
-	if opt.ServiceRegistry != ServiceRegistryKubernetes && opt.ServiceRegistry != ServiceRegistryMesos {
-		blog.Fatal("registry for service discovery, available values [kubernetes, mesos]")
+	if len(opt.Cloud) == 0 {
+		blog.Fatal("cloud cannot be empty")
 	}
 	if len(opt.Kubeconfig) == 0 {
 		blog.Fatal("kubeconfig cannot be empty")
 	}
+	if len(opt.NetServiceZookeeper) == 0 {
+		blog.Fatal("netservice zookeeper cannot be empty")
+	}
+
+	blog.Infof("get option %+v", opt)
 }

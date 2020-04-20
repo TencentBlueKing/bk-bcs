@@ -14,18 +14,30 @@ package main
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/server"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/eni"
+	"runtime"
+
+	"github.com/containernetworking/cni/pkg/skel"
+	"github.com/containernetworking/cni/pkg/version"
 )
 
-func main() {
-	op := options.New()
-	options.Parse(op)
+func init() {
+	// this ensures that main runs only on main thread (thread group leader).
+	// since namespace ops (unshare, setns) are done for a single thread, we
+	// must ensure that the goroutine does not jump from OS thread to thread
+	runtime.LockOSThread()
+}
 
-	blog.InitLogs(op.LogConfig)
+func main() {
+	blog.InitLogs(conf.LogConfig{
+		LogDir:     "./logs",
+		LogMaxSize: 20,
+		LogMaxNum:  100,
+	})
 	defer blog.CloseLogs()
 
-	server := server.New(op)
-	server.Init()
-	server.Run()
+	obj := eni.New()
+
+	skel.PluginMain(obj.CNIAdd, obj.CNIDel, version.All)
 }

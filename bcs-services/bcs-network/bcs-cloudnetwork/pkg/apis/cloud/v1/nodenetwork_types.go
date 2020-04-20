@@ -38,8 +38,11 @@ type NetworkInterfaceAttachment struct {
 type ElasticNetworkInterface struct {
 	Index              int                         `json:"index"`
 	EniID              string                      `json:"eniId"`
+	RouteTableID       int                         `json:"routeTableId"`
 	EniName            string                      `json:"eniName,omitempty"`
+	EniIfaceName       string                      `json:"eniIfaceName"`
 	EniSubnetID        string                      `json:"eniSubnetId"`
+	EniSubnetCidr      string                      `json:"eniSubnetCidr"`
 	MacAddress         string                      `json:"macAddress"`
 	Attachment         *NetworkInterfaceAttachment `json:"attachment"`
 	IPNum              int                         `json:"ipNum"`
@@ -53,6 +56,7 @@ type VMInfo struct {
 	NodeVpcID    string `json:"vpcId"`
 	NodeSubnetID string `json:"subnetId"`
 	InstanceID   string `json:"instanceId"`
+	InstanceIP   string `json:"instanceIP"`
 }
 
 // NodeNetworkSpec defines the desired state of NodeNetwork

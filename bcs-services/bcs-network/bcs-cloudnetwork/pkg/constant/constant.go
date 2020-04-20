@@ -10,22 +10,10 @@
  * limitations under the License.
  */
 
-package main
+package constant
 
-import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/server"
+const (
+	START_ROUTE_TABLE = 100
+	CRD_NAMESPACES    = "bcs-system"
+	ENI_PREFIX        = "eni"
 )
-
-func main() {
-	op := options.New()
-	options.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	server := server.New(op)
-	server.Init()
-	server.Run()
-}

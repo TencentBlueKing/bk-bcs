@@ -10,5 +10,5 @@
  * limitations under the License.
  */
 
-package netservice
+package metric
 

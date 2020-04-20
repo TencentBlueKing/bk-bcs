@@ -21,12 +21,14 @@ type Interface interface {
 	Init() error
 	// GetVMInfo get vm info
 	GetVMInfo() (*cloud.VMInfo, error)
+	// GetMaxENIIndex get max eni index
+	GetMaxENIIndex() (int, error)
 	// GetENILimit get eni limit
 	GetENILimit() (eniNum, ipNum int, err error)
 	// CreateENI create eni
 	CreateENI(name string, ipNum int) (*cloud.ElasticNetworkInterface, error)
 	// AttachENI attach eni
-	AttachENI(index int, eniID, instanceID string) (*cloud.NetworkInterfaceAttachment, error)
+	AttachENI(index int, eniID, instanceID, eniMac string) (*cloud.NetworkInterfaceAttachment, error)
 	// DetachENI detach eni
 	DetachENI(*cloud.NetworkInterfaceAttachment) error
 	// DeleteENI delete eni

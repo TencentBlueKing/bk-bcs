@@ -10,22 +10,20 @@
  * limitations under the License.
  */
 
-package main
+package aws
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/server"
+	"testing"
+	"time"
 )
 
-func main() {
-	op := options.New()
-	options.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	server := server.New(op)
-	server.Init()
-	server.Run()
+func TestIncreaseTimeSeries(t *testing.T) {
+	it := NewIncreseSeries(time.Second*2, 0.15, 0.15)
+	for i := 0; i < 20; i++ {
+		tmp := it.Next()
+		t.Log(tmp)
+		if tmp/time.Second < 2 {
+			t.Errorf("invalid time duration %+v", tmp)
+		}
+	}
 }

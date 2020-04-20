@@ -12,6 +12,10 @@
 
 package aws
 
+import (
+	"time"
+)
+
 const (
 	// ENV_NAME_AWS_REGION env name of aws region
 	ENV_NAME_AWS_REGION = "AWS_REGION"
@@ -25,6 +29,11 @@ const (
 	ENV_NAME_AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY"
 	// ENV_NAME_AWS_SESSION_TOKEN env name of aws session token
 	ENV_NAME_AWS_SESSION_TOKEN = "AWS_SESSION_TOKEN"
+)
+
+const (
+	waitAttachedInterval   = 5 * time.Second
+	waitAttachedMaxRetries = 10
 )
 
 var EniNumLimit = map[string]int{

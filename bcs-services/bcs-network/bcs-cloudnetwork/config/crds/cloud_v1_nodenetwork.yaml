@@ -44,6 +44,8 @@ spec:
               type: string
             vmInfo:
               properties:
+                instanceIP:
+                  type: string
                 instanceId:
                   type: string
                 regionId:
@@ -57,6 +59,7 @@ spec:
               - vpcId
               - subnetId
               - instanceId
+              - instanceIP
               type: object
           required:
           - cluster
@@ -100,7 +103,11 @@ spec:
                     type: object
                   eniId:
                     type: string
+                  eniIfaceName:
+                    type: string
                   eniName:
+                    type: string
+                  eniSubnetCidr:
                     type: string
                   eniSubnetId:
                     type: string
@@ -112,6 +119,9 @@ spec:
                     type: integer
                   macAddress:
                     type: string
+                  routeTableId:
+                    format: int64
+                    type: integer
                   secondaryAddresses:
                     items:
                       properties:
@@ -129,7 +139,10 @@ spec:
                 required:
                 - index
                 - eniId
+                - routeTableId
+                - eniIfaceName
                 - eniSubnetId
+                - eniSubnetCidr
                 - macAddress
                 - attachment
                 - ipNum
