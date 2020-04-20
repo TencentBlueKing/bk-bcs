@@ -43,4 +43,6 @@ type MesosDriverConfig struct {
 	AdmissionWebhook bool
 	//KubeConfig kubeconfig for CustomResource
 	KubeConfig string
+	//MesosWebconsoleProxyPort
+	MesosWebconsoleProxyPort uint
 }

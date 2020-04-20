@@ -41,8 +41,6 @@ type ServerOptions struct {
 	IPv6Mode bool `json:"ipv6_mode" value:"false" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed." mapstructure:"admin_api"`
 	//gateway admin api info
 	AdminAPI string `json:"admin_api" value:"127.0.0.1:8001" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed. custom cert/key comes from client_cert_file/client_key_file" mapstructure:"admin_api" `
-	//MesosWebconsoleProxyPort no discovery machinery, setting in configuration
-	MesosWebconsoleProxyPort uint `json:"mesos_webconsole_proxy_port" value:"8083" usage:"Port to connect to mesos webconsole proxy"`
 	//new standard modules
 	Modules []string `json:"modules" usage:"new standard moduels that discovery serve for" mapstructure:"modules" `
 }

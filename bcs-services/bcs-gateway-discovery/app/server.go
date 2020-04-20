@@ -365,14 +365,14 @@ func (s *DiscoveryServer) formatMultiServerInfo(modules []string) ([]*register.S
 		if m == types.BCS_MODULE_MESOSDRIVER || m == types.BCS_MODULE_KUBERNETEDRIVER {
 			svcs, err := s.formatDriverServerInfo(m)
 			if err != nil {
-				blog.Errorf("gateway-discovery format module %s to inner register Service failed %s, try next module", m, err.Error())
+				blog.Errorf("gateway-discovery format DriverModule %s to inner register Service failed %s, continue", m, err.Error())
 				continue
 			}
 			regSvcs = append(regSvcs, svcs...)
 		} else {
 			svc, err := s.formatBCSServerInfo(m)
 			if err != nil {
-				blog.Errorf("gateway-discovery even get Module %s from cache failed: %s, continue", m, err.Error())
+				blog.Errorf("gateway-discovery format BCSServerInfo Module %s from cache failed: %s, continue", m, err.Error())
 				continue
 			}
 			regSvcs = append(regSvcs, svc)

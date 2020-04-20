@@ -53,6 +53,7 @@ const (
 	BCS_MODULE_KUBEAGENT        = "kubeagent"
 	BCS_MODULE_USERMANAGER      = "usermanager"
 	BCS_MODULE_GATEWAYDISCOVERY = "gatewaydiscovery"
+	BCS_MODULE_MESOSWEBCONSOLE  = "mesoswebconsole"
 )
 
 var (
