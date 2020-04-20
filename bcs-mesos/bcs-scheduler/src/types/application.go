@@ -190,7 +190,7 @@ func (in *Version) DeepCopy() *Version {
 func (in *Version) GetExtendedResources() map[string]*commtypes.ExtendedResource {
 	ers := make(map[string]*commtypes.ExtendedResource)
 	for _, c := range in.Container {
-		for _, ex := range c.ExtendedResources {
+		for _, ex := range c.DataClass.ExtendedResources {
 			o := ers[ex.Name]
 			//if extended resources already exist, then superposition
 			if o != nil {
@@ -375,7 +375,7 @@ type Container struct {
 	Volumes           []*Volume
 	Resources         *Resource
 	LimitResoures     *Resource
-	ExtendedResources []*commtypes.ExtendedResource
+	//ExtendedResources []*commtypes.ExtendedResource
 	DataClass         *DataClass
 
 	ConfigMaps []commtypes.ConfigMap
@@ -768,7 +768,7 @@ func (in *TaskGroup) DeepCopyInto(out *TaskGroup) {
 	if in.Attributes != nil {
 		in, out := &in.Attributes, &out.Attributes
 		*out = make([]*mesos.Attribute, len(*in))
-		err := deepcopy.DeepCopy(*out, *in)
+		err := deepcopy.DeepCopy(out, in)
 		if err != nil {
 			fmt.Println("DeepCopy TaskGroup.Attributes", "failed", err.Error())
 		}
@@ -884,7 +884,7 @@ func (in *Agent) DeepCopyInto(out *Agent) {
 	if in.AgentInfo != nil {
 		in, out := &in.AgentInfo, &out.AgentInfo
 		*out = new(mesos_master.Response_GetAgents_Agent)
-		err := deepcopy.DeepCopy(*out, *in)
+		err := deepcopy.DeepCopy(out, in)
 		if err != nil {
 			fmt.Println("deepcopy Agent", "failed", err.Error())
 		}
@@ -1089,7 +1089,7 @@ func (in *DataClass) DeepCopyInto(out *DataClass) {
 	if in.Msgs != nil {
 		in, out := &in.Msgs, &out.Msgs
 		*out = make([]*BcsMessage, len(*in))
-		err := deepcopy.DeepCopy(*out, *in)
+		err := deepcopy.DeepCopy(out, in)
 		if err != nil {
 			fmt.Println("DeepCopy DataClass.Msgs", "failed", err.Error())
 		}

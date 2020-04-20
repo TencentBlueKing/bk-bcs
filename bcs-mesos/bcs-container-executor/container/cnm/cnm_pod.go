@@ -193,6 +193,41 @@ func (p *DockerPod) Init() error {
 	p.netTask.Env = append(p.netTask.Env, envHost)
 	//assignment for environments
 	container.EnvOperCopy(p.netTask)
+	var extendedErr error
+	//if task contains extended resources, need connect device plugin to allocate resources
+	for _,ex :=range p.netTask.ExtendedResources {
+		logs.Infof("task %s contains extended resource %s, then allocate it", p.netTask.TaskId, ex.Name)
+		deviceIds,err := p.pluginManager.ListAndWatch(ex)
+		if err!=nil {
+			logs.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
+				p.netTask.TaskId, ex.Name, err.Error())
+			extendedErr = err
+			break
+		}
+
+		//allocate device
+		if len(deviceIds)<int(ex.Value) {
+			extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
+			logs.Errorf(extendedErr.Error())
+			break
+		}
+		envs,err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
+		if err!=nil {
+			logs.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
+				p.netTask.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
+			extendedErr = err
+			break
+		}
+
+		//append response docker envs to task.envs
+		for k,v :=range envs {
+			kv := container.BcsKV{
+				Key:   k,
+				Value: v,
+			}
+			p.netTask.Env = append(p.netTask.Env, kv)
+		}
+	}
 
 	//fix(developerJim): all containers in pod can not create PortMappings separately,
 	// so we need to copy all PortMappings from other containers to Network

@@ -131,7 +131,7 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 		lostSlave:    make(map[string]int64),
 	}
 
-	para := &offer.OfferPara{Sched: s}
+	para := &offer.OfferPara{Sched: s, Store: store}
 	s.offerPool = offer.NewOfferPool(para)
 
 	//if config.ClientCertDir != "" {

@@ -128,6 +128,7 @@ func (c *CpusetDevicePlugin) Start() error {
 }
 
 func (c *CpusetDevicePlugin) serve() error {
+	os.Remove(c.cpusetSocket)
 	sock, err := net.Listen("unix", c.cpusetSocket)
 	if err != nil {
 		blog.Errorf("Listen %s failed: %s", c.cpusetSocket, err.Error())
@@ -278,6 +279,7 @@ func (c *CpusetDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
+		blog.Infof("request allocate devices(%v)",req.DevicesIDs)
 		var mnode *types.CpusetNode
 		for _, node := range c.nodes {
 			if node.Capacity() >= len(req.DevicesIDs) {

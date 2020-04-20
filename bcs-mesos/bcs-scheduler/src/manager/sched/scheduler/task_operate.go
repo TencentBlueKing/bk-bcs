@@ -22,6 +22,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"net/http"
@@ -200,6 +201,7 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 	s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
 	//}
 
+	//update app taskgroup index info
 	if app != nil {
 		delete := -1
 		for index, currPod := range app.Pods {
@@ -214,6 +216,42 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 		app.UpdateTime = time.Now().Unix()
 		app.Pods = append(app.Pods[:delete], app.Pods[delete+1:]...)
 	}
+
+	//update agentsetting taskgroup index info
+	nodeIp := taskGroup.GetAgentIp()
+	if nodeIp=="" {
+		blog.Errorf("taskgroup %s don't have nodeIp", taskGroup.ID)
+		return nil
+	}
+	//lock agentsetting
+	util.Lock.Lock(bcstype.BcsClusterAgentSetting{}, nodeIp)
+	defer util.Lock.UnLock(bcstype.BcsClusterAgentSetting{}, nodeIp)
+
+	agentsetting,err := s.store.FetchAgentSetting(nodeIp)
+	if err!=nil {
+		blog.Errorf("fetch agentsetting %s failed: %s", nodeIp, err.Error())
+		return nil
+	}
+	if agentsetting==nil {
+		blog.Errorf("fetch agentsetting %s Not found", nodeIp)
+		return nil
+	}
+	delete := -1
+	for index, currPod := range agentsetting.Pods {
+		if currPod == taskGroup.ID {
+			delete = index
+			break
+		}
+	}
+	if delete == -1 {
+		return nil
+	}
+	agentsetting.Pods = append(agentsetting.Pods[:delete], agentsetting.Pods[delete+1:]...)
+	err = s.store.SaveAgentSetting(agentsetting)
+	if err!=nil {
+		blog.Errorf("save agentsetting %s failed: %s", nodeIp, err.Error())
+	}
+
 	return nil
 }
 

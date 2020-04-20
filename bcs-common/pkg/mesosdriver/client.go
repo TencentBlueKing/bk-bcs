@@ -84,7 +84,8 @@ func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 
 //update agent external resources
 func (m *MesosDriverClient) UpdateAgentExtendedResources(er *commtypes.ExtendedResource) error {
-	_, err := m.requestMesosApiserver(m.conf.ClusterId, http.MethodPut, "agentsettings/extendedresources", nil)
+	by,_ := json.Marshal(er)
+	_, err := m.requestMesosApiserver(m.conf.ClusterId, http.MethodPut, "agentsettings/extendedresource", by)
 	if err != nil {
 		blog.Errorf("update agent %s external resources error %s", er.InnerIP, err.Error())
 		return err
@@ -106,6 +107,7 @@ func (m *MesosDriverClient) requestMesosApiserver(clusterid, method, url string,
 	}
 	uri := fmt.Sprintf("%s/mesosdriver/v4/%s", addr, url)
 	m.cli.SetHeader("BCS-ClusterID", clusterid)
+	blog.V(3).Infof("request %s body(%s)",uri, string(payload))
 
 	var by []byte
 	switch method {

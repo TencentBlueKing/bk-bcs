@@ -101,6 +101,26 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 		if err != nil {
 			return err
 		}
+		//init agentsetting
+		err = store.initCacheAgentsettings()
+		if err != nil {
+			return err
+		}
+		//init agent
+		err = store.initCacheAgents()
+		if err != nil {
+			return err
+		}
+		//init deployment
+		err = store.initCacheDeployments()
+		if err != nil {
+			return err
+		}
+		//init services
+		err = store.initCacheServices()
+		if err != nil {
+			return err
+		}
 	}
 	cacheMgr.isOK = isUsed
 	cacheMgr.mapLock.Unlock()
@@ -553,7 +573,7 @@ func listCacheApplications() ([]*types.Application, error) {
 	}
 
 	cacheMgr.mapLock.RLock()
-	apps := make([]*types.Application, len(cacheMgr.Applications))
+	apps := make([]*types.Application, 0, len(cacheMgr.Applications))
 	for _, node := range cacheMgr.Applications {
 		if node.Application != nil {
 			apps = append(apps, node.Application.DeepCopy())
@@ -604,7 +624,7 @@ func listCacheConfigmaps() ([]*commtypes.BcsConfigMap, error) {
 	}
 
 	cacheMgr.mapLock.RLock()
-	cfgs := make([]*commtypes.BcsConfigMap, len(cacheMgr.Configmaps))
+	cfgs := make([]*commtypes.BcsConfigMap, 0, len(cacheMgr.Configmaps))
 	for _, cfg := range cacheMgr.Configmaps {
 		cfgs = append(cfgs, cfg.DeepCopy())
 	}
@@ -619,7 +639,7 @@ func listCacheSecrets() ([]*commtypes.BcsSecret, error) {
 	}
 
 	cacheMgr.mapLock.RLock()
-	secs := make([]*commtypes.BcsSecret, len(cacheMgr.Secrets))
+	secs := make([]*commtypes.BcsSecret, 0, len(cacheMgr.Secrets))
 	for _, sec := range cacheMgr.Secrets {
 		secs = append(secs, sec.DeepCopy())
 	}
@@ -923,7 +943,7 @@ func listCacheDeployments() ([]*types.Deployment, error) {
 	}
 
 	cacheMgr.mapLock.RLock()
-	deps := make([]*types.Deployment, len(cacheMgr.Deployments))
+	deps := make([]*types.Deployment, 0, len(cacheMgr.Deployments))
 	for _, dep := range cacheMgr.Deployments {
 		deps = append(deps, dep.DeepCopy())
 	}
@@ -977,7 +997,7 @@ func listCacheAgents() ([]*types.Agent, error) {
 	}
 
 	cacheMgr.mapLock.RLock()
-	agents := make([]*types.Agent, len(cacheMgr.Agents))
+	agents := make([]*types.Agent, 0, len(cacheMgr.Agents))
 	for _, agent := range cacheMgr.Agents {
 		agents = append(agents, agent.DeepCopy())
 	}
@@ -992,7 +1012,7 @@ func listCacheAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
 	}
 
 	cacheMgr.mapLock.RLock()
-	agents := make([]*commtypes.BcsClusterAgentSetting, len(cacheMgr.Agentsettings))
+	agents := make([]*commtypes.BcsClusterAgentSetting, 0, len(cacheMgr.Agentsettings))
 	for _, agent := range cacheMgr.Agentsettings {
 		agents = append(agents, agent.DeepCopy())
 	}
@@ -1045,7 +1065,7 @@ func listCacheServices() ([]*commtypes.BcsService, error) {
 	}
 
 	cacheMgr.mapLock.RLock()
-	svcs := make([]*commtypes.BcsService, len(cacheMgr.Services))
+	svcs := make([]*commtypes.BcsService, 0, len(cacheMgr.Services))
 	for _, svc := range cacheMgr.Services {
 		svcs = append(svcs, svc.DeepCopy())
 	}

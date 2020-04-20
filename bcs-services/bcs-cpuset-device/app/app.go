@@ -25,7 +25,7 @@ import (
 
 func Run(op *options.Option) error {
 
-	conf := &config.Config{}
+	conf := config.NewConfig()
 	setConfig(conf, op)
 
 	controller := cpuset_device.NewCpusetDevicePlugin(conf)

@@ -133,7 +133,7 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/enable", nil, r.enableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/disable", nil, r.disableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("PUT", "/agentsettings/taint", nil, r.taintAgents))
-	r.actions = append(r.actions, httpserver.NewAction("PUT", "/agentsettings/extendedresource", nil, r.taintAgents))
+	r.actions = append(r.actions, httpserver.NewAction("PUT", "/agentsettings/extendedresource", nil, r.updateExtendedResource))
 	/*-------------- agent setting ---------------*/
 
 	/*-------------- custom resource -----------------*/

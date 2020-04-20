@@ -13,9 +13,15 @@
 
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+
+	"bk-bcs/bcs-common/common/blog"
+)
 
 type CpusetNode struct {
+	sync.RWMutex
 	//cpuset node id
 	//show available: 2 nodes (0-1)
 	Id string
@@ -32,6 +38,8 @@ func (c *CpusetNode) Capacity() int {
 }
 
 func (c *CpusetNode) AllocateCpuset(number int) ([]string, error) {
+	c.Lock()
+	defer c.Unlock()
 	if c.Capacity() < number {
 		return nil, fmt.Errorf("Cpuset node %s Capacity %d, then can't allocate %d cpuset", c.Id, c.Capacity(), number)
 	}
@@ -55,5 +63,6 @@ func (c *CpusetNode) AllocateCpuset(number int) ([]string, error) {
 		}
 	}
 
+	blog.Infof("node %s allocate cpuset(%v), and AllocatedCpuset(%v)", c.Id, cpuset, c.AllocatedCpuset)
 	return cpuset, nil
 }

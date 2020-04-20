@@ -216,15 +216,15 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		container.Resources.Cpus, _ = strconv.ParseFloat(c.Resources.Requests.Cpu, 64)
 		container.Resources.Mem, _ = strconv.ParseFloat(c.Resources.Requests.Mem, 64)
 		container.Resources.Disk, _ = strconv.ParseFloat(c.Resources.Requests.Storage, 64)
-		//extended resources
-		container.ExtendedResources = c.Resources.ExtendedResources
-
 		container.DataClass = &types.DataClass{
 			Resources: new(types.Resource),
 			Msgs:      []*types.BcsMessage{},
 		}
-
+		//extended resources
+		container.DataClass.ExtendedResources = c.Resources.ExtendedResources
+		//request resources
 		container.DataClass.Resources = container.Resources
+		//limit resources
 		container.DataClass.LimitResources = container.LimitResoures
 
 		//set network flow limit parameters

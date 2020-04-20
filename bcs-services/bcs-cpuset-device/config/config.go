@@ -34,5 +34,7 @@ type Config struct {
 
 //NewConfig create a config object
 func NewConfig() *Config {
-	return &Config{}
+	return &Config{
+		ClientCert: &types.CertConfig{},
+	}
 }

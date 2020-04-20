@@ -17,10 +17,12 @@ package scheduler
 
 import (
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"net/http"
 	"time"
 )
@@ -214,6 +216,21 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 		opData.LaunchedNum++
 		taskGroupInfos = append(taskGroupInfos, newTaskGroupInfo)
 		oldTaskGroups = append(oldTaskGroups, taskGroup)
+
+		//lock agentsetting
+		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, newTaskGroup.GetAgentIp())
+		//update agentsettings taskgroup index info
+		agentsetting,_ := s.store.FetchAgentSetting(newTaskGroup.GetAgentIp())
+		if agentsetting!=nil {
+			agentsetting.Pods = append(agentsetting.Pods, newTaskGroup.ID)
+			err := s.store.SaveAgentSetting(agentsetting)
+			if err!=nil {
+				blog.Errorf("save agentsetting %s pods error %s", agentsetting.InnerIP, err.Error())
+			}
+		} else {
+			blog.Errorf("fetch agentsetting %s Not Found", newTaskGroup.GetAgentIp())
+		}
+		util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, newTaskGroup.GetAgentIp())
 	}
 
 	if len(taskGroupInfos) <= 0 {

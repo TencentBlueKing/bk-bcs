@@ -14,7 +14,6 @@
 package cni
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	comtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-container-executor/container"
 	device_plugin_manager "bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
@@ -275,6 +274,7 @@ func (p *CNIPod) Init() error {
 	for _, task := range p.conTasks {
 		p.netTask.Labels = append(p.netTask.Labels, task.Labels...)
 	}
+
 	//step 2: starting network container
 	var createErr error
 	if p.networkName == "host" {
@@ -391,7 +391,7 @@ func (p *CNIPod) Start() error {
 		var extendedErr error
 		//if task contains extended resources, need connect device plugin to allocate resources
 		for _,ex :=range task.ExtendedResources {
-			blog.Infof("task %s contains extended resource %s, then allocate it", task.TaskId, ex.Name)
+			logs.Infof("task %s contains extended resource %s, then allocate it", task.TaskId, ex.Name)
 			deviceIds,err := p.pluginManager.ListAndWatch(ex)
 			if err!=nil {
 				logs.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",

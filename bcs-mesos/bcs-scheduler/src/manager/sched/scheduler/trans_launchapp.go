@@ -16,13 +16,16 @@
 package scheduler
 
 import (
+	"net/http"
+	"time"
+
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"net/http"
-	"time"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
 // The goroutine function for launch application transaction
@@ -187,9 +190,23 @@ func (s *Scheduler) doLaunchTrans(trans *Transaction, outOffer *offer.Offer, sta
 			s.DeclineResource(offer.Id.Value)
 			return
 		}
-
 		opData.LaunchedNum++
 		taskGroupInfos = append(taskGroupInfos, taskGroupInfo)
+
+		//lock agentsetting
+		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, taskGroup.GetAgentIp())
+		//update agentsettings taskgroup index info
+		agentsetting,_ := s.store.FetchAgentSetting(taskGroup.GetAgentIp())
+		if agentsetting!=nil {
+			agentsetting.Pods = append(agentsetting.Pods, taskGroup.ID)
+			err := s.store.SaveAgentSetting(agentsetting)
+			if err!=nil {
+				blog.Errorf("save agentsetting %s pods error %s", agentsetting.InnerIP, err.Error())
+			}
+		} else {
+			blog.Errorf("fetch agentsetting %s Not Found", taskGroup.GetAgentIp())
+		}
+		util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, taskGroup.GetAgentIp())
 	}
 
 	if len(taskGroupInfos) <= 0 {

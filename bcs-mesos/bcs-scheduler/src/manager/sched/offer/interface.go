@@ -16,6 +16,7 @@ package offer
 import (
 	typesplugin "bk-bcs/bcs-common/common/plugin"
 	commtype "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
@@ -116,4 +117,7 @@ type OfferPara struct {
 	//DefaultLostSlaveGracePeriod
 	//if you don't specify, it will the const DefaultOfferLifePeriod
 	OfferlifePeriod int
+
+	//store
+	Store store.Store
 }

@@ -17,6 +17,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	typesplugin "bk-bcs/bcs-common/common/plugin"
 	commtype "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
@@ -57,7 +58,10 @@ type offerPool struct {
 
 	offerEvents chan []*mesos.Offer
 
+	//scheduler manager
 	scheduler SchedManager
+	//store
+	store store.Store
 
 	lostSlaveGracePeriod int
 	offerLifePeriod      int
@@ -77,6 +81,7 @@ func NewOfferPool(para *OfferPara) OfferPool {
 		scheduler:       para.Sched,
 		lostSlaves:      make(map[string]int64, 0),
 		offerEvents:     make(chan []*mesos.Offer, DefaultOfferEventLength),
+		store:           para.Store,
 	}
 
 	if para.LostSlaveGracePeriod > 0 {
@@ -567,7 +572,14 @@ func (p *offerPool) setInnerOffersAttributes(offers []*mesos.Offer) {
 		}
 
 		if setting == nil {
-			blog.V(3).Infof("FetchAgentSetting ip %s is nil", ip)
+			blog.Infof("Fetch AgentSetting %s is nil, then create it", ip)
+			setting = &commtype.BcsClusterAgentSetting{
+				InnerIP: ip,
+			}
+			err = p.store.SaveAgentSetting(setting)
+			if err!=nil {
+				blog.Errorf("save agentsetting %s error %s", ip, err.Error())
+			}
 			continue
 		}
 
@@ -751,6 +763,9 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 			blog.Errorf("FetchTaskGroup %s failed: %s", id, err.Error())
 			continue
 		}
+		if pod.Status!=types.TASKGROUP_STATUS_RUNNING {
+			blog.V(3).Infof("taskgroup %s status %s ")
+		}
 
 		pods = append(pods, pod)
 	}
@@ -769,7 +784,8 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 			}
 		}
 	}
-
+	by,_ := json.Marshal(allocatedResources)
+	blog.Infof("extended resources %s", string(by))
 	//extended resources, agentsetting have total extended resources
 	for _, ex := range agentSetting.ExtendedResources {
 		//if the extended resources have allocated, then minus it
@@ -777,13 +793,18 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		var value float64
 		if allocated != nil {
 			value = ex.Capacity - allocated.Value
+		} else {
+			value = ex.Capacity
 		}
+		//current device plugin socket set int mesos.resource.Role parameter
+		socket := ex.Socket
 		r := &mesos.Resource{
 			Name: &ex.Name,
 			Type: mesos.Value_SCALAR.Enum(),
 			Scalar: &mesos.Value_Scalar{
 				Value: &value,
 			},
+			Role: &socket,
 		}
 		offer.Resources = append(offer.Resources, r)
 		blog.Infof("offer(%s:%s) add Extended Resources(%s:%f) from agentsetting",
