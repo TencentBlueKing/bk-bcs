@@ -46,32 +46,32 @@ type BcsVolume struct {
 
 //BcsContainerTask task info for running container
 type BcsContainerTask struct {
-	Name            string                 //container name
-	Image           string                 //container image
-	HostName        string                 //container hostname
-	Hosts           []string               //host:ip pair for /etc/hosts in container
-	Command         string                 //container command
-	Args            []string               //args for command
-	Env             []BcsKV                //environments
-	Volums          []BcsVolume            //host path mount
-	NetworkName     string                 //container network name
-	NetworkIPAddr   string                 //container ip address request
-	ForcePullImage  bool                   //pull image every time
-	OOMKillDisabled bool                   //OOM kill feature, default is true
-	AutoRemove      bool                   //remove container when exit, default false
-	Ulimits         []BcsKV                //ulimit for docker parameter
-	ShmSize         int64                  //docker hostconfig shm size, 1 = 1B
-	Privileged      bool                   //setting container privileged
-	PublishAllPorts bool                   //publish all ports in container
-	PortBindings    map[string]BcsPort     //port for container reflection, only useful for docker bridge
-	Labels          []BcsKV                //label for container
-	Resource        *bcstypes.Resource     //container resource request
-	LimitResource   *bcstypes.Resource     // container resource limit
+	Name              string                       //container name
+	Image             string                       //container image
+	HostName          string                       //container hostname
+	Hosts             []string                     //host:ip pair for /etc/hosts in container
+	Command           string                       //container command
+	Args              []string                     //args for command
+	Env               []BcsKV                      //environments
+	Volums            []BcsVolume                  //host path mount
+	NetworkName       string                       //container network name
+	NetworkIPAddr     string                       //container ip address request
+	ForcePullImage    bool                         //pull image every time
+	OOMKillDisabled   bool                         //OOM kill feature, default is true
+	AutoRemove        bool                         //remove container when exit, default false
+	Ulimits           []BcsKV                      //ulimit for docker parameter
+	ShmSize           int64                        //docker hostconfig shm size, 1 = 1B
+	Privileged        bool                         //setting container privileged
+	PublishAllPorts   bool                         //publish all ports in container
+	PortBindings      map[string]BcsPort           //port for container reflection, only useful for docker bridge
+	Labels            []BcsKV                      //label for container
+	Resource          *bcstypes.Resource           //container resource request
+	LimitResource     *bcstypes.Resource           // container resource limit
 	ExtendedResources []*comtypes.ExtendedResource //extended resources
-	BcsMessages     []*bcstypes.BcsMessage //bcs define message
-	RuntimeConf     *BcsContainerInfo      //container runtime info
-	HealthCheck     healthcheck.Checker    //for health check
-	KillPolicy      int                    //kill policy timeout, unit is seconds
+	BcsMessages       []*bcstypes.BcsMessage       //bcs define message
+	RuntimeConf       *BcsContainerInfo            //container runtime info
+	HealthCheck       healthcheck.Checker          //for health check
+	KillPolicy        int                          //kill policy timeout, unit is seconds
 	//container network flow limit args
 	NetLimit *comtypes.NetLimit
 	TaskId   string

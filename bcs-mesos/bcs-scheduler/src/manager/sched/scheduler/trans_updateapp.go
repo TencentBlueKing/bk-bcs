@@ -220,11 +220,11 @@ func (s *Scheduler) doUpdateTrans(trans *Transaction, outOffer *offer.Offer, sta
 		//lock agentsetting
 		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, newTaskGroup.GetAgentIp())
 		//update agentsettings taskgroup index info
-		agentsetting,_ := s.store.FetchAgentSetting(newTaskGroup.GetAgentIp())
-		if agentsetting!=nil {
+		agentsetting, _ := s.store.FetchAgentSetting(newTaskGroup.GetAgentIp())
+		if agentsetting != nil {
 			agentsetting.Pods = append(agentsetting.Pods, newTaskGroup.ID)
 			err := s.store.SaveAgentSetting(agentsetting)
-			if err!=nil {
+			if err != nil {
 				blog.Errorf("save agentsetting %s pods error %s", agentsetting.InnerIP, err.Error())
 			}
 		} else {

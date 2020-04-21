@@ -219,7 +219,7 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 
 	//update agentsetting taskgroup index info
 	nodeIp := taskGroup.GetAgentIp()
-	if nodeIp=="" {
+	if nodeIp == "" {
 		blog.Errorf("taskgroup %s don't have nodeIp", taskGroup.ID)
 		return nil
 	}
@@ -227,12 +227,12 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 	util.Lock.Lock(bcstype.BcsClusterAgentSetting{}, nodeIp)
 	defer util.Lock.UnLock(bcstype.BcsClusterAgentSetting{}, nodeIp)
 
-	agentsetting,err := s.store.FetchAgentSetting(nodeIp)
-	if err!=nil {
+	agentsetting, err := s.store.FetchAgentSetting(nodeIp)
+	if err != nil {
 		blog.Errorf("fetch agentsetting %s failed: %s", nodeIp, err.Error())
 		return nil
 	}
-	if agentsetting==nil {
+	if agentsetting == nil {
 		blog.Errorf("fetch agentsetting %s Not found", nodeIp)
 		return nil
 	}
@@ -248,7 +248,7 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 	}
 	agentsetting.Pods = append(agentsetting.Pods[:delete], agentsetting.Pods[delete+1:]...)
 	err = s.store.SaveAgentSetting(agentsetting)
-	if err!=nil {
+	if err != nil {
 		blog.Errorf("save agentsetting %s failed: %s", nodeIp, err.Error())
 	}
 

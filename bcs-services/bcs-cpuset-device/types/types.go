@@ -63,6 +63,29 @@ func (c *CpusetNode) AllocateCpuset(number int) ([]string, error) {
 		}
 	}
 
-	blog.Infof("node %s allocate cpuset(%v), and AllocatedCpuset(%v)", c.Id, cpuset, c.AllocatedCpuset)
+	blog.Infof("node %s allocate cpuset(%v), and AllocatedCpuset(%v) AllCpuset(%v)",
+		c.Id, cpuset, c.AllocatedCpuset, c.Cpuset)
 	return cpuset, nil
+}
+
+func (c *CpusetNode) ReleaseCpuset(cpuset []string) {
+	c.Lock()
+	defer c.Unlock()
+
+	allocated := make([]string, 0)
+	for _, o := range c.AllocatedCpuset {
+		release := false
+		for _, r := range cpuset {
+			if o == r {
+				release = true
+				break
+			}
+		}
+		if !release {
+			allocated = append(allocated, o)
+		}
+	}
+	c.AllocatedCpuset = allocated
+	blog.Infof("node %s release cpuset(%v), and AllocatedCpuset(%v) AllCpuset(%v)",
+		c.Id, cpuset, c.AllocatedCpuset, c.Cpuset)
 }

@@ -51,7 +51,7 @@ func NewMesosPlatform(conf *Config) (*MesosDriverClient, error) {
 	//init http client
 	m.cli = httpclient.NewHttpClient()
 	//if https
-	if m.conf.ClientCert!=nil && m.conf.ClientCert.IsSSL {
+	if m.conf.ClientCert != nil && m.conf.ClientCert.IsSSL {
 		blog.Infof("NetworkDetection http client cert ssl")
 		m.cli.SetTlsVerity(m.conf.ClientCert.CAFile, m.conf.ClientCert.CertFile, m.conf.ClientCert.KeyFile,
 			m.conf.ClientCert.CertPasswd)
@@ -84,7 +84,7 @@ func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 
 //update agent external resources
 func (m *MesosDriverClient) UpdateAgentExtendedResources(er *commtypes.ExtendedResource) error {
-	by,_ := json.Marshal(er)
+	by, _ := json.Marshal(er)
 	_, err := m.requestMesosApiserver(m.conf.ClusterId, http.MethodPut, "agentsettings/extendedresource", by)
 	if err != nil {
 		blog.Errorf("update agent %s external resources error %s", er.InnerIP, err.Error())
@@ -107,7 +107,7 @@ func (m *MesosDriverClient) requestMesosApiserver(clusterid, method, url string,
 	}
 	uri := fmt.Sprintf("%s/mesosdriver/v4/%s", addr, url)
 	m.cli.SetHeader("BCS-ClusterID", clusterid)
-	blog.V(3).Infof("request %s body(%s)",uri, string(payload))
+	blog.V(3).Infof("request %s body(%s)", uri, string(payload))
 
 	var by []byte
 	switch method {

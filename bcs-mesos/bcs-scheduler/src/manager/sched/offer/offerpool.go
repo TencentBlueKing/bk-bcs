@@ -577,7 +577,7 @@ func (p *offerPool) setInnerOffersAttributes(offers []*mesos.Offer) {
 				InnerIP: ip,
 			}
 			err = p.store.SaveAgentSetting(setting)
-			if err!=nil {
+			if err != nil {
 				blog.Errorf("save agentsetting %s error %s", ip, err.Error())
 			}
 			continue
@@ -763,8 +763,9 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 			blog.Errorf("FetchTaskGroup %s failed: %s", id, err.Error())
 			continue
 		}
-		if pod.Status!=types.TASKGROUP_STATUS_RUNNING {
-			blog.V(3).Infof("taskgroup %s status %s ")
+		if pod.Status != types.TASKGROUP_STATUS_RUNNING {
+			blog.V(3).Infof("taskgroup %s status %s, and continue", pod.ID, pod.Status)
+			continue
 		}
 
 		pods = append(pods, pod)
@@ -784,7 +785,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 			}
 		}
 	}
-	by,_ := json.Marshal(allocatedResources)
+	by, _ := json.Marshal(allocatedResources)
 	blog.Infof("extended resources %s", string(by))
 	//extended resources, agentsetting have total extended resources
 	for _, ex := range agentSetting.ExtendedResources {

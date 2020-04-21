@@ -100,6 +100,11 @@ func (c *CpusetDevicePlugin) Start() error {
 		return err
 	}
 
+	//watch docker create&stop event, handler container cpuset resources
+	go c.listenerDockerEvent()
+	//loop list containers to update cpuset node info
+	go c.loopUpdateCpusetNodes()
+
 	//start grpc server
 	err = c.serve()
 	if err != nil {
@@ -108,20 +113,20 @@ func (c *CpusetDevicePlugin) Start() error {
 	blog.Infof("grpc serve on %s success", c.cpusetSocket)
 
 	//if device plugin in k8s cluster, then register device plugin info to kubelet
-	if c.conf.Engine=="k8s" {
+	if c.conf.Engine == "k8s" {
 		err = c.register()
 		if err != nil {
 			blog.Errorf("register kubelet failed: %s", err.Error())
 			return err
 		}
 		blog.Infof("Registered device plugin for '%s' with Kubelet", c.resourceName)
-	//else device plugin in mesos cluster, then report extended resources info to mesos scheduler
-	}else {
+		//else device plugin in mesos cluster, then report extended resources info to mesos scheduler
+	} else {
 		err = c.reportMesosSchedulerExtendedResources()
-		if err!=nil {
+		if err != nil {
 			return err
 		}
-		blog.Infof("device plugin %s report mesos scheduler extended resources success",c.resourceName)
+		blog.Infof("device plugin %s report mesos scheduler extended resources success", c.resourceName)
 	}
 
 	return nil
@@ -214,7 +219,7 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 			blog.Errorf(err.Error())
 			return err
 		}
-		blog.Infof("numa node %d cpus(%v)", node, cpusets)
+		blog.Infof("numa node %s cpus(%v)", node, cpusets)
 
 		o := &types.CpusetNode{
 			Id:              node,
@@ -223,7 +228,7 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 		}
 		for _, cpuset := range cpusets {
 			device := &pluginapi.Device{
-				ID:     fmt.Sprintf("node%d:cpus%d", node, cpuset),
+				ID:     fmt.Sprintf("node:%s;cpuset:%s", node, cpuset),
 				Health: "Healthy",
 			}
 
@@ -237,16 +242,16 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 	return nil
 }
 
-func (c *CpusetDevicePlugin) reportMesosSchedulerExtendedResources()error{
+func (c *CpusetDevicePlugin) reportMesosSchedulerExtendedResources() error {
 	conf := &mesosdriver.Config{
-		ZkAddr: c.conf.BcsZk,
+		ZkAddr:     c.conf.BcsZk,
 		ClientCert: c.conf.ClientCert,
-		ClusterId: c.conf.ClusterId,
+		ClusterId:  c.conf.ClusterId,
 	}
 
-	client,err := mesosdriver.NewMesosPlatform(conf)
-	if err!=nil {
-		blog.Errorf("NewMesosPlatform failed: %s",err.Error())
+	client, err := mesosdriver.NewMesosPlatform(conf)
+	if err != nil {
+		blog.Errorf("NewMesosPlatform failed: %s", err.Error())
 		return err
 	}
 	ex := &commtypes.ExtendedResource{
@@ -256,8 +261,8 @@ func (c *CpusetDevicePlugin) reportMesosSchedulerExtendedResources()error{
 		Socket:   c.cpusetSocket,
 	}
 	err = client.UpdateAgentExtendedResources(ex)
-	if err!=nil {
-		blog.Errorf("Update Agent ExtendedResources failed: %s",err.Error())
+	if err != nil {
+		blog.Errorf("Update Agent ExtendedResources failed: %s", err.Error())
 		return err
 	}
 	return nil
@@ -279,7 +284,7 @@ func (c *CpusetDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
-		blog.Infof("request allocate devices(%v)",req.DevicesIDs)
+		blog.Infof("request allocate devices(%v)", req.DevicesIDs)
 		var mnode *types.CpusetNode
 		for _, node := range c.nodes {
 			if node.Capacity() >= len(req.DevicesIDs) {
@@ -291,10 +296,14 @@ func (c *CpusetDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 		if mnode == nil {
 			return nil, fmt.Errorf("no enough cpuset to allocated container")
 		}
-		cpuset, _ := mnode.AllocateCpuset(len(req.DevicesIDs))
+		cpuset, err := mnode.AllocateCpuset(len(req.DevicesIDs))
+		if err != nil {
+			blog.Errorf(err.Error())
+			return nil, err
+		}
 		response := pluginapi.ContainerAllocateResponse{
 			Envs: map[string]string{
-				EnvBkbcsAllocateCpuset: strings.Join(cpuset, ","),
+				EnvBkbcsAllocateCpuset: fmt.Sprintf("node:%s;cpuset:%s", mnode.Id, strings.Join(cpuset, ",")),
 			},
 		}
 

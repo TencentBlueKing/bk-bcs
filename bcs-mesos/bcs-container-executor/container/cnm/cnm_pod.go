@@ -92,7 +92,7 @@ type DockerPod struct {
 	conTasks         map[string]*container.BcsContainerTask //task for running containers, key is taskID
 	runningContainer map[string]*container.BcsContainerInfo //running container Name list for monitor
 	//device plugin manager
-	pluginManager    *device_plugin_manager.DevicePluginManager
+	pluginManager *device_plugin_manager.DevicePluginManager
 }
 
 //IsHealthy check pod is healthy
@@ -195,38 +195,42 @@ func (p *DockerPod) Init() error {
 	container.EnvOperCopy(p.netTask)
 	var extendedErr error
 	//if task contains extended resources, need connect device plugin to allocate resources
-	for _,ex :=range p.netTask.ExtendedResources {
+	for _, ex := range p.netTask.ExtendedResources {
 		logs.Infof("task %s contains extended resource %s, then allocate it", p.netTask.TaskId, ex.Name)
-		deviceIds,err := p.pluginManager.ListAndWatch(ex)
-		if err!=nil {
-			logs.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
+		deviceIds, err := p.pluginManager.ListAndWatch(ex)
+		if err != nil {
+			extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
 				p.netTask.TaskId, ex.Name, err.Error())
-			extendedErr = err
 			break
 		}
 
 		//allocate device
-		if len(deviceIds)<int(ex.Value) {
+		if len(deviceIds) < int(ex.Value) {
 			extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
-			logs.Errorf(extendedErr.Error())
 			break
 		}
-		envs,err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
-		if err!=nil {
-			logs.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
+		envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
+		if err != nil {
+			extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
 				p.netTask.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
-			extendedErr = err
 			break
 		}
 
 		//append response docker envs to task.envs
-		for k,v :=range envs {
+		for k, v := range envs {
 			kv := container.BcsKV{
 				Key:   k,
 				Value: v,
 			}
 			p.netTask.Env = append(p.netTask.Env, kv)
 		}
+	}
+	//if allocate extended resource failed, then return and exit
+	if extendedErr != nil {
+		logs.Errorf(extendedErr.Error())
+		p.status = container.PodStatus_FAILED
+		p.message = extendedErr.Error()
+		return extendedErr
 	}
 
 	//fix(developerJim): all containers in pod can not create PortMappings separately,
@@ -322,32 +326,29 @@ func (p *DockerPod) Start() error {
 		container.EnvOperCopy(task)
 		var extendedErr error
 		//if task contains extended resources, need connect device plugin to allocate resources
-		for _,ex :=range task.ExtendedResources {
+		for _, ex := range task.ExtendedResources {
 			blog.Infof("task %s contains extended resource %s, then allocate it", task.TaskId, ex.Name)
-			deviceIds,err := p.pluginManager.ListAndWatch(ex)
-			if err!=nil {
-				logs.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
+			deviceIds, err := p.pluginManager.ListAndWatch(ex)
+			if err != nil {
+				extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
 					task.TaskId, ex.Name, err.Error())
-				extendedErr = err
 				break
 			}
 
 			//allocate device
-			if len(deviceIds)<int(ex.Value) {
+			if len(deviceIds) < int(ex.Value) {
 				extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
-				logs.Errorf(extendedErr.Error())
 				break
 			}
-			envs,err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
-			if err!=nil {
-				logs.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
+			envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
+			if err != nil {
+				extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
 					task.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
-				extendedErr = err
 				break
 			}
 
 			//append response docker envs to task.envs
-			for k,v :=range envs {
+			for k, v := range envs {
 				kv := container.BcsKV{
 					Key:   k,
 					Value: v,
@@ -357,7 +358,8 @@ func (p *DockerPod) Start() error {
 		}
 
 		//if allocate extended resource failed, then return and exit
-		if extendedErr!=nil {
+		if extendedErr != nil {
+			logs.Errorf(extendedErr.Error())
 			task.RuntimeConf.Status = container.ContainerStatus_EXITED
 			task.RuntimeConf.Message = extendedErr.Error()
 			p.startFailedStop(extendedErr)

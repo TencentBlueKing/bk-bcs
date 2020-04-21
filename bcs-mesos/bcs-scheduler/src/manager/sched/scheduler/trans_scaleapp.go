@@ -263,11 +263,11 @@ func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer,
 		//lock agentsetting
 		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, taskGroup.GetAgentIp())
 		//update agentsettings taskgroup index info
-		agentsetting,_ := s.store.FetchAgentSetting(taskGroup.GetAgentIp())
-		if agentsetting!=nil {
+		agentsetting, _ := s.store.FetchAgentSetting(taskGroup.GetAgentIp())
+		if agentsetting != nil {
 			agentsetting.Pods = append(agentsetting.Pods, taskGroup.ID)
 			err := s.store.SaveAgentSetting(agentsetting)
-			if err!=nil {
+			if err != nil {
 				blog.Errorf("save agentsetting %s pods error %s", agentsetting.InnerIP, err.Error())
 			}
 		} else {

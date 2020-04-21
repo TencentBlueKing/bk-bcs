@@ -1308,9 +1308,9 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 		task.AgentHostname = *offer.Hostname
 		task.AgentIPAddress, _ = offerP.GetOfferIp(offer)
 		//if task contains extended resources, then set device plugin socket address int it
-		for _,ex :=range task.DataClass.ExtendedResources {
-			for _,re :=range offer.GetResources() {
-				if re.GetName()==ex.Name {
+		for _, ex := range task.DataClass.ExtendedResources {
+			for _, re := range offer.GetResources() {
+				if re.GetName() == ex.Name {
 					//device plugin socket setted in role parameter
 					ex.Socket = re.GetRole()
 				}

@@ -370,13 +370,13 @@ func (version *Version) AllResource() *Resource {
 
 //Container for Version
 type Container struct {
-	Type              string
-	Docker            *Docker
-	Volumes           []*Volume
-	Resources         *Resource
-	LimitResoures     *Resource
+	Type          string
+	Docker        *Docker
+	Volumes       []*Volume
+	Resources     *Resource
+	LimitResoures *Resource
 	//ExtendedResources []*commtypes.ExtendedResource
-	DataClass         *DataClass
+	DataClass *DataClass
 
 	ConfigMaps []commtypes.ConfigMap
 	Secrets    []commtypes.Secret

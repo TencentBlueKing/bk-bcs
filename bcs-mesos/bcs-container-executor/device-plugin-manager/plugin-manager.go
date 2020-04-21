@@ -21,23 +21,22 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	comtypes "bk-bcs/bcs-common/common/types"
 
-	"google.golang.org/grpc"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
 )
 
 type DevicePluginManager struct {
-
 }
 
 //new DevicePluginManager function
-func NewDevicePluginManager()*DevicePluginManager{
+func NewDevicePluginManager() *DevicePluginManager {
 	return &DevicePluginManager{}
 }
 
 //request device plugin to listandwatch device list ids
 //return deviceIds, examples: ["cpuset0","cpuset1","cpuset2"...]
-func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource)([]string, error){
+func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource) ([]string, error) {
 	//connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
@@ -49,25 +48,25 @@ func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource)([]stri
 	client := pluginapi.NewDevicePluginClient(conn)
 	listAndWatchClient, err := client.ListAndWatch(context.Background(), &pluginapi.Empty{})
 	if err != nil {
-		blog.Errorf("extended resource %s ListAndWatch failed: %s",ex.Name, err.Error())
+		blog.Errorf("extended resource %s ListAndWatch failed: %s", ex.Name, err.Error())
 		return nil, err
 	}
-	response,err := listAndWatchClient.Recv()
+	response, err := listAndWatchClient.Recv()
 	if err != nil {
-		blog.Errorf("extended resource %s ListAndWatch receive message failed: %s",ex.Name, err.Error())
+		blog.Errorf("extended resource %s ListAndWatch receive message failed: %s", ex.Name, err.Error())
 		return nil, err
 	}
-	deviceIds := make([]string,0,len(response.Devices))
-	for _,device :=range response.Devices {
+	deviceIds := make([]string, 0, len(response.Devices))
+	for _, device := range response.Devices {
 		deviceIds = append(deviceIds, device.ID)
 	}
-	blog.Infof("extended resource %s ListAndWatch success, devices(%s)",ex.Name,deviceIds)
+	blog.Infof("extended resource %s ListAndWatch success, devices(%s)", ex.Name, deviceIds)
 	return deviceIds, nil
 }
 
 //request deviceplugin to allocate extended resources
 //before create container call the function
-func (m *DevicePluginManager) Allocate(ex *comtypes.ExtendedResource, deviceIds []string)(map[string]string,error){
+func (m *DevicePluginManager) Allocate(ex *comtypes.ExtendedResource, deviceIds []string) (map[string]string, error) {
 	//connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
@@ -78,30 +77,30 @@ func (m *DevicePluginManager) Allocate(ex *comtypes.ExtendedResource, deviceIds 
 
 	client := pluginapi.NewDevicePluginClient(conn)
 	in := &pluginapi.AllocateRequest{
-		ContainerRequests: make([]*pluginapi.ContainerAllocateRequest,0),
+		ContainerRequests: make([]*pluginapi.ContainerAllocateRequest, 0),
 	}
-	req := &pluginapi.ContainerAllocateRequest{DevicesIDs:deviceIds}
+	req := &pluginapi.ContainerAllocateRequest{DevicesIDs: deviceIds}
 	in.ContainerRequests = append(in.ContainerRequests, req)
 	response, err := client.Allocate(context.Background(), in)
 	if err != nil {
-		blog.Errorf("extended resource %s Allocate devices(%v) failed: %s",ex.Name, deviceIds, err.Error())
+		blog.Errorf("extended resource %s Allocate devices(%v) failed: %s", ex.Name, deviceIds, err.Error())
 		return nil, err
 	}
-	if len(response.ContainerResponses)==0 {
+	if len(response.ContainerResponses) == 0 {
 		err = fmt.Errorf("ContainerResponses is empty")
-		blog.Errorf("extended resource %s Allocate devices(%v) failed: %s",ex.Name, deviceIds, err.Error())
+		blog.Errorf("extended resource %s Allocate devices(%v) failed: %s", ex.Name, deviceIds, err.Error())
 		return nil, err
 	}
 
 	//the envs are appended when the container is created
 	//Some Settings of device plugin are done according to these docker envs
-	blog.Infof("extended resource %s Allocate success, envs(%v)",ex.Name,response.ContainerResponses[0].Envs)
+	blog.Infof("extended resource %s Allocate success, envs(%v)", ex.Name, response.ContainerResponses[0].Envs)
 	return response.ContainerResponses[0].Envs, nil
 }
 
 //request deviceplugin to allocate extended resources
 //before create container call the function
-func (m *DevicePluginManager) PreStartContainer(ex *comtypes.ExtendedResource, deviceIds []string)error{
+func (m *DevicePluginManager) PreStartContainer(ex *comtypes.ExtendedResource, deviceIds []string) error {
 	//connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
@@ -111,14 +110,14 @@ func (m *DevicePluginManager) PreStartContainer(ex *comtypes.ExtendedResource, d
 	defer conn.Close()
 
 	client := pluginapi.NewDevicePluginClient(conn)
-	in := &pluginapi.PreStartContainerRequest{DevicesIDs:deviceIds}
+	in := &pluginapi.PreStartContainerRequest{DevicesIDs: deviceIds}
 	_, err = client.PreStartContainer(context.Background(), in)
 	if err != nil {
-		blog.Errorf("extended resource %s Allocate devices(%v) failed: %s",ex.Name, deviceIds, err.Error())
+		blog.Errorf("extended resource %s Allocate devices(%v) failed: %s", ex.Name, deviceIds, err.Error())
 		return err
 	}
 
-	blog.Infof("extended resource %s PreStartContainer success",ex.Name)
+	blog.Infof("extended resource %s PreStartContainer success", ex.Name)
 	return nil
 }
 

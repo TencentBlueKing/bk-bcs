@@ -94,7 +94,7 @@ func NewPod(operator container.Container, tasks []*container.BcsContainerTask,
 		conTasks:         taskMap,
 		networkTaskId:    tasks[0].TaskId,
 		runningContainer: make(map[string]*container.BcsContainerInfo),
-		pluginManager: device_plugin_manager.NewDevicePluginManager(),
+		pluginManager:    device_plugin_manager.NewDevicePluginManager(),
 	}
 	if len(tasks[0].NetworkIPAddr) != 0 {
 		//ip injected by executor
@@ -138,7 +138,7 @@ type CNIPod struct {
 	networkTaskId string
 	netImage      string
 	//device plugin manager
-	pluginManager    *device_plugin_manager.DevicePluginManager
+	pluginManager *device_plugin_manager.DevicePluginManager
 }
 
 //IsHealthy check pod is healthy
@@ -254,7 +254,7 @@ func (p *CNIPod) Init() error {
 		HostName:       p.cniHostName,
 	}
 	p.netTask.Resource = &bcstypes.Resource{
-		Cpus:   1,
+		Cpus: 1,
 	}
 
 	netflag := container.BcsKV{
@@ -390,32 +390,29 @@ func (p *CNIPod) Start() error {
 		task.HostName = ""
 		var extendedErr error
 		//if task contains extended resources, need connect device plugin to allocate resources
-		for _,ex :=range task.ExtendedResources {
+		for _, ex := range task.ExtendedResources {
 			logs.Infof("task %s contains extended resource %s, then allocate it", task.TaskId, ex.Name)
-			deviceIds,err := p.pluginManager.ListAndWatch(ex)
-			if err!=nil {
-				logs.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
+			deviceIds, err := p.pluginManager.ListAndWatch(ex)
+			if err != nil {
+				extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
 					task.TaskId, ex.Name, err.Error())
-				extendedErr = err
 				break
 			}
 
 			//allocate device
-			if len(deviceIds)<int(ex.Value) {
+			if len(deviceIds) < int(ex.Value) {
 				extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
-				logs.Errorf(extendedErr.Error())
 				break
 			}
-			envs,err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
-			if err!=nil {
-				logs.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
+			envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
+			if err != nil {
+				extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
 					task.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
-				extendedErr = err
 				break
 			}
 
 			//append response docker envs to task.envs
-			for k,v :=range envs {
+			for k, v := range envs {
 				kv := container.BcsKV{
 					Key:   k,
 					Value: v,
@@ -425,7 +422,8 @@ func (p *CNIPod) Start() error {
 		}
 
 		//if allocate extended resource failed, then return and exit
-		if extendedErr!=nil {
+		if extendedErr != nil {
+			logs.Errorf(extendedErr.Error())
 			task.RuntimeConf.Status = container.ContainerStatus_EXITED
 			task.RuntimeConf.Message = extendedErr.Error()
 			p.startFailedStop(extendedErr)
