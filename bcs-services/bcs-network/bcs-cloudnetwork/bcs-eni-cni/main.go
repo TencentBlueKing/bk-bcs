@@ -30,13 +30,6 @@ func init() {
 }
 
 func main() {
-	blog.InitLogs(conf.LogConfig{
-		LogDir:     "./logs",
-		LogMaxSize: 20,
-		LogMaxNum:  100,
-	})
-	defer blog.CloseLogs()
-
 	obj := eni.New()
 
 	skel.PluginMain(obj.CNIAdd, obj.CNIDel, version.All)

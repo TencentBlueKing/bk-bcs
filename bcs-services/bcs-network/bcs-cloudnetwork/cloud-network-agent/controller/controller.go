@@ -226,6 +226,7 @@ func (nc *NetworkController) deleteEnis() error {
 			blog.Errorf("detach eni by %+v failed, err %s", eni.Attachment, err.Error())
 			return fmt.Errorf("detach eni by %+v, err %s", eni.Attachment, err.Error())
 		}
+		time.Sleep(2 * time.Second)
 		blog.Infof("detach eni by %+v successfully", eni.Attachment)
 		if err := nc.eniClient.DeleteENI(eni.EniID); err != nil {
 			blog.Errorf("delete eni by eni id %s failed, err %s", eni.EniID, err.Error())
@@ -476,6 +477,26 @@ func (nc *NetworkController) releaseNodeNetwork() error {
 		return fmt.Errorf(
 			"failed delete netservice pool when release node network, err %s",
 			err.Error())
+	}
+
+	// set down eni
+	rules, err := nc.netUtil.RuleList()
+	if err != nil {
+		blog.Errorf("list rule failed, err %s", err.Error())
+		return fmt.Errorf("list rule failed, err %s", err.Error())
+	}
+	for _, netiface := range nc.nodeNetwork.Status.Enis {
+		err := nc.netUtil.SetDownNetworkInterface(
+			netiface.Address.IP,
+			netiface.EniSubnetCidr,
+			netiface.MacAddress,
+			netiface.EniIfaceName,
+			netiface.RouteTableID,
+			rules,
+		)
+		if err != nil {
+			blog.Errorf("set down network interface failed, err %s", err.Error())
+		}
 	}
 
 	// delete enis

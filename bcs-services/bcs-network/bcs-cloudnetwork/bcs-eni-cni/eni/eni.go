@@ -235,11 +235,16 @@ func configureContainerNS(hostMac, netns, containerIfName string, ipNet *net.IPN
 func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 	netConf, cniVersion, err := loadConf(args.StdinData, args.Args)
 	if err != nil {
-		blog.Errorf("load config stdindata %s, args %s failed, err %s",
-			string(args.StdinData), args.Args, err.Error())
 		return fmt.Errorf("load config stdindata %s, args %s failed, err %s",
 			string(args.StdinData), args.Args, err.Error())
 	}
+
+	blog.InitLogs(conf.LogConfig{
+		LogDir:     netConf.LogDir,
+		LogMaxSize: 20,
+		LogMaxNum:  100,
+	})
+	defer blog.CloseLogs()
 
 	// get ip address from ipam plugin
 	resultFromIPAM, err := ipam.ExecAdd(netConf.IPAM.Type, args.StdinData)
@@ -329,13 +334,19 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 // CNIDel cni cmd del
 func (e *ENI) CNIDel(args *skel.CmdArgs) error {
 
-	blog.Infof("received cni del command: containerid %s, netns %s, ifname %s, args %s, path %s argsStdinData %s",
-		args.ContainerID, args.Netns, args.IfName, args.Args, args.Path, args.StdinData)
 	netConf, _, err := loadConf(args.StdinData, args.Args)
 	if err != nil {
-		blog.Infof("load config file failed, err %s", err.Error())
 		return fmt.Errorf("load config file failed, err %s", err.Error())
 	}
+	blog.InitLogs(conf.LogConfig{
+		LogDir:     netConf.LogDir,
+		LogMaxSize: 20,
+		LogMaxNum:  100,
+	})
+	defer blog.CloseLogs()
+
+	blog.Infof("received cni del command: containerid %s, netns %s, ifname %s, args %s, path %s argsStdinData %s",
+		args.ContainerID, args.Netns, args.IfName, args.Args, args.Path, args.StdinData)
 
 	err = ipam.ExecDel(netConf.IPAM.Type, args.StdinData)
 	if err != nil {

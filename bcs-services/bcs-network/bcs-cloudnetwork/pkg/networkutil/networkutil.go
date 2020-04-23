@@ -34,6 +34,8 @@ type Interface interface {
 	SetHostNetwork(routeTableIDs map[string]string) error
 	// SetUpNetworkInterface set elastic network interface up
 	SetUpNetworkInterface(ip, cidrBlock, eniMac, eniName string, table int, rules []netlink.Rule) error
+	// SetDownNetworkInterface set elastic network interface down
+	SetDownNetworkInterface(ip, cidrBlock, eniMac, eniName string, table int, rules []netlink.Rule) error
 	// GetHostName get hostname
 	GetHostName() (string, error)
 	// GetNetworkInterfaceMaxIndex get max index of network interfaces on hosts
@@ -144,7 +146,7 @@ func (nc *NetUtil) SetUpNetworkInterface(
 	addr, cidrBlock, eniMac, eniIfaceName string, table int,
 	existedRules []netlink.Rule) error {
 
-	blog.Infof("ensure network interface, addr %s, cidrBlock %s, eniMac %s, name %s, table %d",
+	blog.Infof("set up network interface, addr %s, cidrBlock %s, eniMac %s, name %s, table %d",
 		addr, cidrBlock, eniMac, eniIfaceName, table)
 	eniLink, err := nc.LinkByMac(eniMac)
 	if err != nil {
@@ -289,6 +291,89 @@ func (nc *NetUtil) GetNetworkInterfaceMaxIndex() (int, error) {
 		}
 	}
 	return maxIndex, nil
+}
+
+// SetDownNetworkInterface set down network interface
+func (nc *NetUtil) SetDownNetworkInterface(
+	addr, cidrBlock, eniMac, eniIfaceName string, table int,
+	existedRules []netlink.Rule) error {
+
+	blog.Infof("set down network interface, addr %s, cidrBlock %s, eniMac %s, name %s, table %s",
+		addr, cidrBlock, eniMac, eniIfaceName, table)
+
+	eniLink, err := nc.LinkByMac(eniMac)
+	if err != nil {
+		return err
+	}
+
+	blog.Infof("clean ip rules ......")
+	fromEniRule := netlink.NewRule()
+	fromEniRule.Src = &net.IPNet{IP: net.ParseIP(addr), Mask: net.IPv4Mask(255, 255, 255, 255)}
+	fromEniRule.Table = table
+
+	if findFromTableRule(existedRules, fromEniRule) {
+		blog.Infof("del ip rule %+v", fromEniRule)
+		// del from eni rule
+		err = netlink.RuleDel(fromEniRule)
+		if err != nil {
+			blog.Warnf("del from eni rule %+v for table %d failed, err %s", fromEniRule, table, err.Error())
+		}
+	}
+
+	toEniRule := netlink.NewRule()
+	toEniRule.Dst = &net.IPNet{IP: net.ParseIP(addr), Mask: net.IPv4Mask(255, 255, 255, 255)}
+	toEniRule.Table = table
+
+	if findToTableRule(existedRules, toEniRule) {
+		blog.Infof("del ip rule %+v", toEniRule)
+		// add to eni rule
+		err = netlink.RuleDel(toEniRule)
+		if err != nil {
+			blog.Warnf("add to eni rule %+v for table %d failed, err %s", toEniRule, table, err.Error())
+		}
+	}
+
+	blog.Infof("checking default routing ......")
+	cidrIP, _, err := net.ParseCIDR(cidrBlock)
+	if err != nil {
+		blog.Errorf("parse cidr %s failed, err %s", cidrBlock, err.Error())
+		os.Exit(1)
+	}
+	gw := ip.NextIP(cidrIP)
+	// del default route for eni
+	defaultRoute := netlink.Route{
+		LinkIndex: eniLink.Attrs().Index,
+		Dst:       &net.IPNet{IP: net.IPv4zero, Mask: net.CIDRMask(0, 32)},
+		Scope:     netlink.SCOPE_UNIVERSE,
+		Gw:        gw,
+		Table:     table,
+	}
+	routes, err := netlink.RouteListFiltered(unix.AF_INET, &defaultRoute,
+		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE|netlink.RT_FILTER_GW)
+	if err != nil {
+		return fmt.Errorf("failed to list route list with route %+v , err %s", defaultRoute, err.Error())
+	}
+	blog.Infof("find routes %+v", routes)
+
+	if isDefaultRouteExisted(routes, defaultRoute) {
+		blog.Infof("del default route %+v", defaultRoute)
+		// del default route
+		err = netlink.RouteDel(&defaultRoute)
+		if err != nil {
+			return fmt.Errorf("del default route %+v for table %d failed, err %s", defaultRoute, table, err.Error())
+		}
+	}
+
+	// if netlink is up, set down
+	blog.Infof("checking status of netlink ......")
+	if eniLink.Attrs().Flags&net.FlagUp != 0 {
+		blog.Infof("set netlink name %s down", eniIfaceName)
+		if err := netlink.LinkSetDown(eniLink); err != nil {
+			return fmt.Errorf("set down netlink %s failed, err %s", eniIfaceName, err.Error())
+		}
+	}
+
+	return nil
 }
 
 // LinkByMac find link by mac
