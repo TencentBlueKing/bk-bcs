@@ -97,6 +97,10 @@ func (client *HttpClient) SetTlsVerityConfig(tlsConf *tls.Config) {
 	client.httpCli.Transport = trans
 }
 
+func (client *HttpClient) SetTransPort(transport http.RoundTripper) {
+	client.httpCli.Transport = transport
+}
+
 func (client *HttpClient) NewTransPort() *http.Transport {
 	return &http.Transport{
 		TLSHandshakeTimeout: 5 * time.Second,

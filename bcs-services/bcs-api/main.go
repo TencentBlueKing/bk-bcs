@@ -116,6 +116,7 @@ func parseConfig(op *options.ServerOption) *config.ApiServConfig {
 	config.ClusterCredentialsFixtures = apiServConfig.BKE.ClusterCredentialsFixtures
 	config.MesosWebconsoleProxyPort = apiServConfig.MesosWebconsoleProxyPort
 	config.TkeConf = op.TKE
+	apiServConfig.PeerToken = op.PeerToken
 
 	//server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {
