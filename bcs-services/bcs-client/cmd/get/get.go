@@ -14,11 +14,14 @@
 package get
 
 import (
-	"fmt"
-
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	userV1 "bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
+	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/urfave/cli"
 )
@@ -26,11 +29,11 @@ import (
 func NewGetCommand() cli.Command {
 	return cli.Command{
 		Name:  "get",
-		Usage: "get the original definition of application/process/deployment/ippoolstatic/ippoolstatic-detail",
+		Usage: "get the original definition of application/process/deployment/ippoolstatic/ippoolstatic-detail/user/permission",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Get type, application(app)/process/deployment(deploy)/ippoolstatic(ipps)/ippoolstatic-detail(ippsd)",
+				Usage: "Get type, application(app)/process/deployment(deploy)/ippoolstatic(ipps)/ippoolstatic-detail(ippsd)/user/permission",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -44,6 +47,18 @@ func NewGetCommand() cli.Command {
 			cli.StringFlag{
 				Name:  "name, n",
 				Usage: "Name",
+			},
+			cli.StringFlag{
+				Name:  "usertype",
+				Usage: "user type, value can be admin/saas/plain",
+			},
+			cli.StringFlag{
+				Name:  "username",
+				Usage: "user name",
+			},
+			cli.StringFlag{
+				Name:  "resourcetype",
+				Usage: "resource type, value can be cluster/storage/network-detection...",
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -73,6 +88,10 @@ func get(c *utils.ClientContext) error {
 		return getIPPoolStatic(c)
 	case "ippsd", "ippoolstatic-detail":
 		return getIPPoolStaticDetail(c)
+	case "user":
+		return getUser(c)
+	case "permission":
+		return getPermission(c)
 	default:
 		return fmt.Errorf("invalid type: %s", resourceType)
 	}
@@ -156,6 +175,42 @@ func getIPPoolStaticDetail(c *utils.ClientContext) error {
 		return nil
 	}
 	return printGet(result[0].Data)
+}
+
+func getUser(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionUserName, utils.OptionUserType); err != nil {
+		return err
+	}
+
+	userManager := userV1.NewBcsUserManager(utils.GetClientOption())
+	user, err := userManager.CreateOrGetUser(c.String(utils.OptionUserType), c.String(utils.OptionUserName), http.MethodGet)
+	if err != nil {
+		return fmt.Errorf("failed to create user: %v", err)
+	}
+
+	return printGet(user)
+}
+
+func getPermission(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionUserName, utils.OptionResourceType); err != nil {
+		return err
+	}
+
+	userManager := userV1.NewBcsUserManager(utils.GetClientOption())
+	pf := v1http.GetPermissionForm{
+		UserName:     c.String(utils.OptionUserName),
+		ResourceType: c.String(utils.OptionResourceType),
+	}
+	data, err := json.Marshal(pf)
+	if err != nil {
+		return err
+	}
+	permissions, err := userManager.ActPermission(http.MethodGet, data)
+	if err != nil {
+		return fmt.Errorf("failed to grant permission: %v", err)
+	}
+
+	return printGet(permissions)
 }
 
 func printGet(single interface{}) error {

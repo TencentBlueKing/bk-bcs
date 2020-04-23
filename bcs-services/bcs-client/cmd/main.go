@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"bk-bcs/bcs-common/common/version"
+	"bk-bcs/bcs-services/bcs-client/cmd/add"
 	"bk-bcs/bcs-services/bcs-client/cmd/agent"
 	"bk-bcs/bcs-services/bcs-client/cmd/application"
 	"bk-bcs/bcs-services/bcs-client/cmd/available"
@@ -27,9 +28,12 @@ import (
 	"bk-bcs/bcs-services/bcs-client/cmd/deployment"
 	"bk-bcs/bcs-services/bcs-client/cmd/env"
 	"bk-bcs/bcs-services/bcs-client/cmd/get"
+	"bk-bcs/bcs-services/bcs-client/cmd/grant"
 	"bk-bcs/bcs-services/bcs-client/cmd/inspect"
 	"bk-bcs/bcs-services/bcs-client/cmd/list"
 	"bk-bcs/bcs-services/bcs-client/cmd/offer"
+	"bk-bcs/bcs-services/bcs-client/cmd/refresh"
+	"bk-bcs/bcs-services/bcs-client/cmd/revoke"
 	"bk-bcs/bcs-services/bcs-client/cmd/template"
 	"bk-bcs/bcs-services/bcs-client/cmd/update"
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
@@ -66,6 +70,10 @@ func main() {
 		template.NewTemplateCommand(),
 		batch.NewApplyCommand(),
 		batch.NewCleanCommand(),
+		refresh.NewRefreshCommand(),
+		grant.NewGrantCommand(),
+		revoke.NewRevokeCommand(),
+		add.NewAddCommand(),
 	}
 
 	if err := utils.InitCfg(); err != nil {

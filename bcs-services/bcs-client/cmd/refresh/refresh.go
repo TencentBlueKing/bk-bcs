@@ -11,35 +11,28 @@
  *
  */
 
-package create
+package refresh
 
 import (
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"fmt"
 
+	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/urfave/cli"
 )
 
-//NewCreateCommand sub command create registration
-func NewCreateCommand() cli.Command {
+//NewRefreshCommand sub command refresh registration
+func NewRefreshCommand() cli.Command {
 	return cli.Command{
-		Name:  "create",
-		Usage: "create new application/process/service/secret/configmap/deployment/user",
+		Name:  "refresh",
+		Usage: "refresh usertoken",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:  "from-file, f",
-				Usage: "Create with configuration `FILE`",
-			},
-			cli.StringFlag{
-				Name:  "clusterid",
-				Usage: "Cluster ID",
-			},
-			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Create type, value can be app/service/secret/configmap/deployment/user",
+				Usage: "Refresh type, value can be usertoken",
 			},
 			cli.StringFlag{
 				Name:  "usertype",
-				Usage: "user type, value can be admin/saas/plain",
+				Usage: "user type, value can be saas/plain",
 			},
 			cli.StringFlag{
 				Name:  "username",
@@ -47,12 +40,12 @@ func NewCreateCommand() cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			return create(utils.NewClientContext(c))
+			return refresh(utils.NewClientContext(c))
 		},
 	}
 }
 
-func create(c *utils.ClientContext) error {
+func refresh(c *utils.ClientContext) error {
 	if err := c.MustSpecified(utils.OptionType); err != nil {
 		return err
 	}
@@ -60,24 +53,9 @@ func create(c *utils.ClientContext) error {
 	resourceType := c.String(utils.OptionType)
 
 	switch resourceType {
-	case "app", "application":
-		return createApplication(c)
-	case "process":
-		return createProcess(c)
-	case "configmap":
-		return createConfigMap(c)
-	case "secret":
-		return createSecret(c)
-	case "service":
-		return createService(c)
-	case "deploy", "deployment":
-		return createDeployment(c)
-	case "crd", "customresourcedefinition":
-		return createCustomResourceDefinition(c)
-	case "user":
-		return createUser(c)
+	case "usertoken":
+		return refreshUsertoken(c)
 	default:
-		//unkown type, try CustomResource
-		return createCustomResource(c)
+		return fmt.Errorf("invalid type: %s", resourceType)
 	}
 }
