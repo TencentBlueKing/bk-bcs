@@ -28,5 +28,7 @@ type Local struct {
 	//nonstandard log dataid
 	NonstandardDataid string `yaml:"-"`
 	//nonstandard paths
-	NonstandardPaths string `yaml:"-"`
+	NonstandardPaths []string `yaml:"-"`
+	//log tags
+	LogTags map[string]string `yaml:"-"`
 }

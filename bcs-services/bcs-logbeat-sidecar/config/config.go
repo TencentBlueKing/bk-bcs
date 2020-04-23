@@ -27,6 +27,8 @@ type Config struct {
 	LogbeatDir   string
 	TemplateFile string
 	PrefixFile   string
+	//kube-apiserver config file path
+	Kubeconfig   string
 }
 
 //NewConfig create a config object
