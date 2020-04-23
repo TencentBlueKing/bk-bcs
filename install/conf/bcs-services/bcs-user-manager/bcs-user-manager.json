@@ -1,0 +1,34 @@
+{
+  "address": "0.0.0.0",
+  "port": ${bcsUserManagerPort},
+  "metric_port": ${bcsUserManagerMetricPort},
+  "insecure_address": "0.0.0.0",
+  "insecure_port": ${bcsUserManagerInsecurePort},
+  "bcs_zookeeper": "${bcsZkHost}",
+  "ca_file": "${caFile}",
+  "server_cert_file": "${serverCertFile}",
+  "server_key_file": "${serverKeyFile}",
+  "client_cert_file": "${clientCertFile}",
+  "client_key_file": "${clientKeyFile}",
+  "log_dir": "${log_dir}",
+  "local_ip": "${localIp}",
+  "pid_dir": "${pid_dir}",
+
+  "verify_client_tls": false,
+  "mysql_dsn": "${coreDatabaseDsn}",
+
+  "bootstrap_users": [
+    {
+      "name": "${adminUser}",
+      "user_type": "admin",
+      "token": "${adminToken}"
+    }
+  ],
+
+  "tke": {
+    "secret_id": "${tkeSecretId}",
+    "secret_key": "${tkeSecretKey}",
+    "ccs_host": "${tkeCcsHost}",
+    "ccs_path": "${tkeCcsPath}"
+  }
+}

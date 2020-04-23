@@ -16,6 +16,7 @@ package types
 const (
 	BCS_SERV_BASEPATH          = "/bcs/services/endpoints"
 	BCS_MODULE_APISERVER       = "apiserver"
+	BCS_MODULE_USERMGR         = "usermanager"
 	BCS_MODULE_ROUTE           = "route"
 	BCS_MODULE_AUTH            = "auth"
 	BCS_MODULE_CCAPI           = "ccapi"
@@ -136,6 +137,11 @@ type MesosDataWatchServInfo struct {
 type MesosDriverServInfo struct {
 	ServerInfo
 	//Cluster string `json:"cluster"`
+}
+
+//BcsUserMgrServInfo bcs-user-manager server information
+type BcsUserMgrServInfo struct {
+	ServerInfo
 }
 
 //NetworkDetectionServInfo netwrok-detection server information
