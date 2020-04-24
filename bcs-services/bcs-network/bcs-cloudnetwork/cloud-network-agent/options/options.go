@@ -45,13 +45,11 @@ type NetworkOption struct {
 	NetServiceKey       string `json:"netserviceKey" value:"" usage:"key for netservice"`
 	NetServiceCert      string `json:"netserviceCert" value:"" usage:"cert for netservice"`
 
-	Subnets        string `json:"subnets" value:"" usage:"the ips of elastic network interface come from these subnets, if no subnet specified means using the subnet which the node belongs to, e.g. \"vpc-001:subnet-111,subnet-112;vpc-002:subnet-222\""`
-	EniNum         int    `json:"eniNum" value:"0" usage:"the number of elastic network interface for each node; default is 0, means apply for as many eni as possible"`
-	IPNumPerEni    int    `json:"ipNumPerEni" value:"0" usage:"the number of ip for each eni; default is 0, means apply for as many ip as possible"`
-	EniMTU         int    `json:"eniMTU" value:"1500" usage:"the mtu of eni"`
-	Ifaces         string `json:"ifaces" value:"eth1" usage:"use ip of these network interfaces as node identity, split with comma or semicolon"`
-
-	Debug bool `json:"debug" value:"false" usage:"open pprof"`
+	Subnets     string `json:"subnets" value:"" usage:"the ips of elastic network interface come from these subnets, if no subnet specified means using the subnet which the node belongs to, e.g. \"vpc-001:subnet-111,subnet-112;vpc-002:subnet-222\""`
+	EniNum      int    `json:"eniNum" value:"0" usage:"the number of elastic network interface for each node; default is 0, means apply for as many eni as possible"`
+	IPNumPerEni int    `json:"ipNumPerEni" value:"0" usage:"the number of ip for each eni; default is 0, means apply for as many ip as possible"`
+	EniMTU      int    `json:"eniMTU" value:"1500" usage:"the mtu of eni"`
+	Ifaces      string `json:"ifaces" value:"eth1" usage:"use ip of these network interfaces as node identity, split with comma or semicolon"`
 }
 
 // New new option
