@@ -73,6 +73,5 @@ func Parse(opt *NetworkOption) {
 	if opt.EniMTU < 68 || opt.EniMTU > 65535 {
 		blog.Fatal("invalid eni mtu")
 	}
-
 	blog.Infof("get option %+v", opt)
 }
