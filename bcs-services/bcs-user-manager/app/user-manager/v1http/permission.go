@@ -79,6 +79,7 @@ type UserPermissions struct {
 var PermissionsCache map[uint][]UserPermissions
 var mutex *sync.RWMutex
 
+// initCache sync data from db to cache periodically
 func initCache() {
 	mutex = new(sync.RWMutex)
 	var ura []UserResourceAction
@@ -105,6 +106,7 @@ func initCache() {
 	}
 }
 
+// GrantPermission grant permissions
 func GrantPermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -183,6 +185,7 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("permission", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// GetPermission get permissions of a user for a resourceType
 func GetPermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -220,12 +223,25 @@ func GetPermission(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("permission", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// RevokePermission revoke permissions
 func RevokePermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	//var form []PermissionForm
 	var bp types.BcsPermission
 	_ = request.ReadEntity(&bp)
+	if bp.Kind != types.BcsDataType_PERMISSION {
+		blog.Warnf("BcsPermission kind must be permission")
+		message := fmt.Sprintf("errcode: %d, BcsPermission kind must be permission", common.BcsErrApiBadRequest)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		return
+	}
+	if bp.APIVersion != "v1" {
+		blog.Warnf("BcsPermission apiVersion must be v1")
+		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		return
+	}
 	for _, v := range bp.Spec.Permissions {
 		user := &models.BcsUser{
 			Name: v.UserName,
@@ -337,6 +353,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("permission", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// verifyResourceReplica verify whether a user have permission for s resource, return true or false
 func verifyResourceReplica(userId uint, resourceType, resource, action string) (bool, string) {
 	var op []OwnedPermissions
 	if resource == "" {

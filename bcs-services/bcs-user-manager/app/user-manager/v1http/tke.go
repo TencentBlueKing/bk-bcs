@@ -65,6 +65,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 	form := AddTkeCidrForm{}
 	_ = request.ReadEntity(&form)
 
+	// validate the request data
 	err := utils.Validate.Struct(&form)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
@@ -111,6 +112,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	form := ApplyTkeCidrForm{}
 	_ = request.ReadEntity(&form)
 
+	// validate the request data
 	err := utils.Validate.Struct(&form)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
@@ -121,11 +123,13 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
+	// apply a available cidr
 	tkeCidr := sqlstore.QueryTkeCidr(&models.TkeCidr{
 		Vpc:      form.Vpc,
 		IpNumber: form.IpNumber,
 		Status:   sqlstore.CidrStatusAvailable,
 	})
+	// no more available cidr
 	if tkeCidr == nil {
 		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -135,6 +139,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// update and save to db
 	updatedTkeCidr := tkeCidr
 	updatedTkeCidr.Status = sqlstore.CidrStatusUsed
 	updatedTkeCidr.Cluster = &form.Cluster
@@ -170,6 +175,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	form := ReleaseTkeCidrForm{}
 	_ = request.ReadEntity(&form)
 
+	// validate the request data
 	err := utils.Validate.Struct(&form)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()
@@ -178,6 +184,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// check if the cidr is valid
 	mutex.Lock()
 	defer mutex.Unlock()
 	tkeCidr := sqlstore.QueryTkeCidr(&models.TkeCidr{
@@ -194,6 +201,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// update and save to db
 	updatedTkeCidr := tkeCidr
 	updatedTkeCidr.Status = sqlstore.CidrStatusAvailable
 	cluster := ""
@@ -220,6 +228,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 func SyncTkeClusterCredentials(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
+	// whether this cluster is valid
 	clusterId := request.PathParameter("cluster_id")
 	cluster := sqlstore.GetCluster(clusterId)
 	if cluster == nil {
@@ -241,6 +250,7 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 
 	tkeCluster := tke.NewTkeCluster(cluster.ID, cluster.TkeClusterId, cluster.TkeClusterRegion)
 
+	// call tke api to sync credentials
 	err := tkeCluster.SyncClusterCredentials()
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("tke", request.Request.Method).Inc()

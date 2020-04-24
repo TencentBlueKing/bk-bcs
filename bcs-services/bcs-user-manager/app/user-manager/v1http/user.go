@@ -29,6 +29,7 @@ import (
 
 const DefaultTokenLength = 32
 
+// CreateAdminUser create a admin user
 func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -37,6 +38,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 		Name:     userName,
 		UserType: sqlstore.AdminUser,
 	}
+	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
 	if userInDb != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -49,6 +51,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	user.UserToken = uniuri.NewLen(DefaultTokenLength)
 	user.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
+	// create this user and save to db
 	err := sqlstore.CreateUser(user)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -66,6 +69,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// GetAdminUser get an admin user and usertoken information
 func GetAdminUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -87,6 +91,7 @@ func GetAdminUser(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// CreateSaasUser create a saas user
 func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -95,6 +100,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 		Name:     userName,
 		UserType: sqlstore.SaasUser,
 	}
+	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
 	if userInDb != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -107,6 +113,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	user.UserToken = uniuri.NewLen(DefaultTokenLength)
 	user.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
+	// create this user and save to db
 	err := sqlstore.CreateUser(user)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -124,6 +131,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// GetSaasUser get an saas user and usertoken information
 func GetSaasUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -145,6 +153,7 @@ func GetSaasUser(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// CreatePlainUser create a plain user
 func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -153,6 +162,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 		Name:     userName,
 		UserType: sqlstore.PlainUser,
 	}
+	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
 	if userInDb != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -165,6 +175,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	user.UserToken = uniuri.NewLen(DefaultTokenLength)
 	user.ExpiresAt = time.Now().Add(sqlstore.PlainUserExpiredTime)
 
+	// create this user and save to db
 	err := sqlstore.CreateUser(user)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -182,6 +193,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// GetPlainUser get an plain user and usertoken information
 func GetPlainUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -203,6 +215,7 @@ func GetPlainUser(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// RefreshPlainToken refresh usertoken for a plain user
 func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -218,6 +231,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	}
 
 	updatedUser := user
+	// if usertoken has been expired, refresh the usertoken, else just refresh the expiresTime
 	if time.Now().After(user.ExpiresAt) {
 		updatedUser.UserToken = uniuri.NewLen(DefaultTokenLength)
 		updatedUser.ExpiresAt = time.Now().Add(sqlstore.PlainUserExpiredTime)
@@ -225,6 +239,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 		updatedUser.ExpiresAt = time.Now().Add(sqlstore.PlainUserExpiredTime)
 	}
 
+	// update and save to db
 	err := sqlstore.UpdateUser(user, updatedUser)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -242,6 +257,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// RefreshPlainToken refresh usertoken for a saas user
 func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -256,10 +272,12 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// refresh the usertoken
 	updatedUser := user
 	updatedUser.UserToken = uniuri.NewLen(DefaultTokenLength)
 	updatedUser.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
+	// update and save to db
 	err := sqlstore.UpdateUser(user, updatedUser)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()

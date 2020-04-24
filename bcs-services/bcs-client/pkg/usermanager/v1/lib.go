@@ -18,7 +18,11 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
-func parseResponse(resp []byte) (code int, msg string, data []byte, err error) {
+func parseResponse(resp []byte) (int, string, []byte, error) {
+	var code int
+	var msg string
+	var data []byte
+	var err error
 	var js *simplejson.Json
 	js, err = simplejson.NewJson(resp)
 	if err != nil {
@@ -36,5 +40,5 @@ func parseResponse(resp []byte) (code int, msg string, data []byte, err error) {
 		return -1, fmt.Sprintf("decode response failed, raw resp: %s", string(resp)), nil, err
 	}
 
-	return
+	return code, msg, data, err
 }
