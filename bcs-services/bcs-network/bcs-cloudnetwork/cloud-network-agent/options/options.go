@@ -45,10 +45,10 @@ type NetworkOption struct {
 	NetServiceKey       string `json:"netserviceKey" value:"" usage:"key for netservice"`
 	NetServiceCert      string `json:"netserviceCert" value:"" usage:"cert for netservice"`
 
-	SecurityGroups string `json:"securityGroups" value:"" usage:"vpc security groups used by elastic network interface, e.g. \"vpc-001:sg-111;vpc-002:sg-222\""`
 	Subnets        string `json:"subnets" value:"" usage:"the ips of elastic network interface come from these subnets, if no subnet specified means using the subnet which the node belongs to, e.g. \"vpc-001:subnet-111,subnet-112;vpc-002:subnet-222\""`
 	EniNum         int    `json:"eniNum" value:"0" usage:"the number of elastic network interface for each node; default is 0, means apply for as many eni as possible"`
 	IPNumPerEni    int    `json:"ipNumPerEni" value:"0" usage:"the number of ip for each eni; default is 0, means apply for as many ip as possible"`
+	EniMTU         int    `json:"eniMTU" value:"1500" usage:"the mtu of eni"`
 	Ifaces         string `json:"ifaces" value:"eth1" usage:"use ip of these network interfaces as node identity, split with comma or semicolon"`
 
 	Debug bool `json:"debug" value:"false" usage:"open pprof"`
@@ -71,6 +71,9 @@ func Parse(opt *NetworkOption) {
 	}
 	if len(opt.NetServiceZookeeper) == 0 {
 		blog.Fatal("netservice zookeeper cannot be empty")
+	}
+	if opt.EniMTU < 68 || opt.EniMTU > 65535 {
+		blog.Fatal("invalid eni mtu")
 	}
 
 	blog.Infof("get option %+v", opt)

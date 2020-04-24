@@ -33,7 +33,7 @@ type Interface interface {
 	// SetHostNetwork disable rp_filter, enable ip_forwarding
 	SetHostNetwork(routeTableIDs map[string]string) error
 	// SetUpNetworkInterface set elastic network interface up
-	SetUpNetworkInterface(ip, cidrBlock, eniMac, eniName string, table int, rules []netlink.Rule) error
+	SetUpNetworkInterface(ip, cidrBlock, eniMac, eniName string, table, mtu int, rules []netlink.Rule) error
 	// SetDownNetworkInterface set elastic network interface down
 	SetDownNetworkInterface(ip, cidrBlock, eniMac, eniName string, table int, rules []netlink.Rule) error
 	// GetHostName get hostname
@@ -143,7 +143,7 @@ func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 
 // SetUpNetworkInterface set up network interface
 func (nc *NetUtil) SetUpNetworkInterface(
-	addr, cidrBlock, eniMac, eniIfaceName string, table int,
+	addr, cidrBlock, eniMac, eniIfaceName string, table, mtu int,
 	existedRules []netlink.Rule) error {
 
 	blog.Infof("set up network interface, addr %s, cidrBlock %s, eniMac %s, name %s, table %d",
@@ -169,6 +169,10 @@ func (nc *NetUtil) SetUpNetworkInterface(
 	// if netlink is not up, set up
 	blog.Infof("checking status of netlink ......")
 	if eniLink.Attrs().Flags&net.FlagUp == 0 {
+		blog.Infof("set netlink mtu %d", mtu)
+		if err := netlink.LinkSetMTU(eniLink, mtu); err != nil {
+			return fmt.Errorf("set netlink mtu %s failed, err %s", eniIfaceName, err.Error())
+		}
 		blog.Infof("set netlink name %s up", eniIfaceName)
 		if err := netlink.LinkSetUp(eniLink); err != nil {
 			return fmt.Errorf("set up netlink %s failed, err %s", eniIfaceName, err.Error())

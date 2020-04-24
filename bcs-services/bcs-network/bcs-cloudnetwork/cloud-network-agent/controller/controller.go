@@ -30,9 +30,54 @@ import (
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/networkutil"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
 
+	"github.com/prometheus/client_golang/prometheus"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const (
+	eventTypeAdd    = "add"
+	eventTypeDel    = "del"
+	eventTypeUpdate = "update"
+
+	statusSuccess = "success"
+	statusFailed  = "failed"
+)
+
+var (
+	// ControllerEventCounter node network event counter for network controller
+	ControllerEventCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "cloudnetwork_agent",
+			Subsystem: "controller",
+			Name:      "event_counter",
+			Help:      "controller node network event counter",
+		},
+		[]string{"event_type"})
+
+	// ControllerReconcilNetworkCounter counter for reconcile network
+	ControllerReconcilNetworkCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "cloudnetwork_agent",
+			Subsystem: "controller",
+			Name:      "reconcile_counter",
+			Help:      "counter for controller reconcile network",
+		},
+		[]string{"status"})
+)
+
+func init() {
+	prometheus.MustRegister(ControllerEventCounter)
+	prometheus.MustRegister(ControllerReconcilNetworkCounter)
+}
+
+func reportEventMetric(eventType string) {
+	ControllerEventCounter.WithLabelValues(eventType).Inc()
+}
+
+func reportReconcileMetric(status string) {
+	ControllerReconcilNetworkCounter.WithLabelValues(status).Inc()
+}
 
 // NetworkController controller for cloud network
 type NetworkController struct {
@@ -82,11 +127,23 @@ func (nc *NetworkController) OnAdd(obj interface{}) {
 		return
 	}
 	blog.V(3).Infof("new NodeNetwork added: %+v", nodeNetwork)
+	reportEventMetric(eventTypeAdd)
 }
 
 // OnUpdate update event
 func (nc *NetworkController) OnUpdate(oldObj, newObj interface{}) {
+	_, okOld := oldObj.(*cloud.NodeNetwork)
+	if !okOld {
+		blog.Errorf("oldObj %+v is not *cloud.NodeNetwork", oldObj)
+		return
+	}
+	_, okNew := newObj.(*cloud.NodeNetwork)
+	if !okNew {
+		blog.Errorf("newObj %+v is not *cloud.NodeNetwork", newObj)
+		return
+	}
 
+	reportEventMetric(eventTypeUpdate)
 }
 
 // OnDelete delete event
@@ -97,11 +154,15 @@ func (nc *NetworkController) OnDelete(obj interface{}) {
 		return
 	}
 
+	reportEventMetric(eventTypeDel)
+
 	if nodeNetwork.GetNamespace() == nc.nodeNetwork.GetNamespace() &&
 		nodeNetwork.GetName() == nc.nodeNetwork.GetName() {
-		if err := nc.releaseNodeNetwork(); err != nil {
-			blog.Errorf("releaseNodeNetwork failed, err %s", err.Error())
-		}
+		go func() {
+			if err := nc.releaseNodeNetwork(); err != nil {
+				blog.Errorf("releaseNodeNetwork failed, err %s", err.Error())
+			}
+		}()
 	}
 }
 
@@ -395,9 +456,11 @@ func (nc *NetworkController) Run(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	if err := nc.reconcileNodeNetwork(); err != nil {
+		reportReconcileMetric(statusFailed)
 		blog.Infof("first reconcile node network failed, err %s", err.Error())
 		return
 	}
+	reportReconcileMetric(statusSuccess)
 
 	routeIDMap := nc.getRouteIDMap()
 	if err := nc.netUtil.SetHostNetwork(routeIDMap); err != nil {
@@ -412,7 +475,10 @@ func (nc *NetworkController) Run(ctx context.Context, wg *sync.WaitGroup) {
 			blog.Infof("it's time to check node network and enis!")
 
 			if err := nc.reconcileNodeNetwork(); err != nil {
+				reportReconcileMetric(statusFailed)
 				blog.Warnf("reconcile node network failed, err %s", err.Error())
+			} else {
+				reportReconcileMetric(statusSuccess)
 			}
 
 		case <-ctx.Done():
@@ -445,6 +511,7 @@ func (nc *NetworkController) reconcileNodeNetwork() error {
 			netiface.MacAddress,
 			netiface.EniIfaceName,
 			netiface.RouteTableID,
+			nc.options.EniMTU,
 			rules,
 		)
 		if err != nil {
@@ -470,7 +537,7 @@ func (nc *NetworkController) releaseNodeNetwork() error {
 
 		blog.Warnf("try to restore node network to etcd")
 		// try to restore node network to etcd
-		if err = nc.createNodeNetwork(nc.nodeNetwork); err != nil {
+		if restoreErr := nc.createNodeNetwork(nc.nodeNetwork); restoreErr != nil {
 			blog.Warnf("falied to restore node network")
 		}
 

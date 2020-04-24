@@ -23,6 +23,8 @@ const (
 	ENV_NAME_AWS_VPC = "AWS_VPC"
 	// ENV_NAME_AWS_SUBNETS env name of available subnet ids
 	ENV_NAME_AWS_SUBNETS = "AWS_SUBNETS"
+	// ENV_NAME_AWS_SECURITY_GROUPS env name of security groups used by enis
+	ENV_NAME_AWS_SECURITY_GROUPS = "AWS_SECURITY_GROUPS"
 	// ENV_NAME_AWS_ACCESS_KEY_ID env name of aws app key
 	ENV_NAME_AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID"
 	// ENV_NAME_AWS_SECRET_ACCESS_KEY env name of aws app secret

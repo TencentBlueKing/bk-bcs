@@ -71,6 +71,13 @@ func (c *Client) loadEnv() {
 		c.SubnetIDs = subnets
 	}
 
+	sGroupsStr := os.Getenv(ENV_NAME_AWS_SECURITY_GROUPS)
+	if len(sGroupsStr) != 0 {
+		strings.Replace(sGroupsStr, ";", ",", -1)
+		sGroups := strings.Split(sGroupsStr, ",")
+		c.SecurityGroups = sGroups
+	}
+
 	c.AccessID = os.Getenv(ENV_NAME_AWS_ACCESS_KEY_ID)
 	c.AccessSecret = os.Getenv(ENV_NAME_AWS_SECRET_ACCESS_KEY)
 	c.SessionToken = os.Getenv(ENV_NAME_AWS_SESSION_TOKEN)

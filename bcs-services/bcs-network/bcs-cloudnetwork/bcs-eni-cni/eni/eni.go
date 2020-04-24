@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
 	bcsconf "bk-bcs/bcs-services/bcs-netservice/config"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
 
@@ -47,12 +48,12 @@ func loadConf(bytes []byte, args string) (*NetConf, string, error) {
 	if err := json.Unmarshal(bytes, conf); err != nil {
 		return nil, "", fmt.Errorf("failed to load cni conf, err %s", err.Error())
 	}
-	if conf.MTU < 0 {
-		blog.Infof("mtu must be zero or positive")
-		return nil, "", fmt.Errorf("mtu must be zero or positive")
+	if conf.MTU < 68 || conf.MTU > 65535 {
+		blog.Errorf("invalid mtu %d", conf.MTU)
+		return nil, "", fmt.Errorf("invalid mtu %d", conf.MTU)
 	}
 	if len(conf.LogDir) == 0 {
-		blog.Infof("log dir is empty, use default log dir './logs'")
+		blog.Errorf("log dir is empty, use default log dir './logs'")
 		conf.LogDir = defaultLogDir
 	}
 	if args != "" {
@@ -252,15 +253,6 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 		return err
 	}
 	blog.Infof("get result from ipam %s", resultFromIPAM.String())
-	// if cni set failed, return ip to ipam
-	defer func() {
-		if err != nil {
-			errDel := ipam.ExecDel(netConf.IPAM.Type, args.StdinData)
-			if errDel != nil {
-				blog.Errorf("del from ipam failed, err %s", errDel.Error())
-			}
-		}
-	}()
 
 	result, err := current.NewResultFromResult(resultFromIPAM)
 	if err != nil {
@@ -295,7 +287,7 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("failed to get netns %q, err %s", netns, err.Error())
 	}
 
-	hostVethInfo, containerVethInfo, err := createVethPair(netns.Path(), args.IfName, 1500)
+	hostVethInfo, containerVethInfo, err := createVethPair(netns.Path(), args.IfName, netConf.MTU)
 	if err != nil {
 		blog.Errorf("create veth pair failed, err %s", err.Error())
 		return fmt.Errorf("create veth pair failed, err %s", err.Error())
@@ -344,6 +336,11 @@ func (e *ENI) CNIDel(args *skel.CmdArgs) error {
 		LogMaxNum:  100,
 	})
 	defer blog.CloseLogs()
+
+	if args.Netns == "" {
+		blog.Warnf("Netns lost in parameter")
+		return nil
+	}
 
 	blog.Infof("received cni del command: containerid %s, netns %s, ifname %s, args %s, path %s argsStdinData %s",
 		args.ContainerID, args.Netns, args.IfName, args.Args, args.Path, args.StdinData)

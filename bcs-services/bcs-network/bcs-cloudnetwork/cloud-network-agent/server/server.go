@@ -22,6 +22,7 @@ import (
 	"syscall"
 
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/http/httpserver"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/controller"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni"
@@ -30,6 +31,8 @@ import (
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/netservice"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/networkutil"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Server server for cloud network agent
@@ -41,6 +44,7 @@ type Server struct {
 	nodeNetClient nodenetwork.Interface
 	netsvcClient  netservice.Interface
 	controller    *controller.NetworkController
+	metricServer  *httpserver.HttpServer
 	opt           *options.NetworkOption
 	wg            sync.WaitGroup
 }
@@ -81,7 +85,7 @@ func (s *Server) initNetworkUtil() error {
 func (s *Server) initNodeNetworkClient() error {
 	nodeNetClient := nodenetwork.New(
 		s.opt.Kubeconfig,
-		
+
 		s.opt.KubeResyncPeriod,
 		s.opt.KubeCacheSyncTimeout)
 
@@ -131,7 +135,17 @@ func (s *Server) initNetServiceClient() error {
 
 // init metric collector
 func (s *Server) initMetric() error {
-	// TODO:
+
+	metricServer := httpserver.NewHttpServer(s.opt.MetricPort, s.opt.Address, "")
+	metricServer.GetWebContainer().Handle("/metrics", promhttp.Handler())
+
+	go func() {
+		if err := metricServer.ListenAndServe(); err != nil {
+			blog.Warnf("metric server serve failed, err %s", err.Error())
+		}
+	}()
+
+	s.metricServer = metricServer
 	return nil
 }
 
@@ -147,14 +161,14 @@ func (s *Server) initNetworkController() error {
 
 	s.nodeNetClient.Register(controller)
 
-	if err := controller.Init(); err != nil {
-		blog.Errorf("init network controller failed, err %s", err.Error())
-		return fmt.Errorf("init network controller failed, err %s", err.Error())
-	}
-
 	if err := s.nodeNetClient.Run(); err != nil {
 		blog.Errorf("run node network client failed, err %s", err.Error())
 		return fmt.Errorf("run node network client failed, err %s", err.Error())
+	}
+
+	if err := controller.Init(); err != nil {
+		blog.Errorf("init network controller failed, err %s", err.Error())
+		return fmt.Errorf("init network controller failed, err %s", err.Error())
 	}
 
 	s.controller = controller

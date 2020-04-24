@@ -13,8 +13,6 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
 	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/eni"
 	"runtime"
 
@@ -31,6 +29,5 @@ func init() {
 
 func main() {
 	obj := eni.New()
-
 	skel.PluginMain(obj.CNIAdd, obj.CNIDel, version.All)
 }

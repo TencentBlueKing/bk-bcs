@@ -150,6 +150,8 @@ func (c *Client) Create(n *cloud.NodeNetwork) error {
 	if err := c.ensureNamespace(n.GetNamespace()); err != nil {
 		return err
 	}
+	// clean resource version when create
+	n.ResourceVersion = ""
 	_, err := c.client.NodeNetworks(n.GetNamespace()).Create(n)
 	if err != nil {
 		blog.Errorf("create node network %+v failed, err %s", err.Error())
