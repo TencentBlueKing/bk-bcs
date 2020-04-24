@@ -72,6 +72,7 @@ type LbStatus struct {
 	Status    string `json:"status"`
 }
 
+// BindLb bind a clb to tke cluster
 func BindLb(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()
@@ -114,6 +115,7 @@ func BindLb(request *restful.Request, response *restful.Response) {
 
 }
 
+// GetLbStatus call the tke api to get clb status
 func GetLbStatus(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()
@@ -138,6 +140,7 @@ func GetLbStatus(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// call tke api
 	tkeCluster := tke.NewTkeCluster(cluster.ID, externalClusterInfo.TkeClusterId, externalClusterInfo.TkeClusterRegion)
 	status, err := tkeCluster.GetMasterVip()
 	if err != nil {
@@ -160,6 +163,7 @@ func GetLbStatus(request *restful.Request, response *restful.Response) {
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// UpdateTkeLbSubnet update a tke subnet
 func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()
@@ -168,6 +172,7 @@ func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 	form := UpdateTkeLbForm{}
 	request.ReadEntity(&form)
 
+	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
@@ -176,6 +181,7 @@ func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// save to db
 	err = sqlstore.SaveTkeLbSubnet(form.ClusterRegion, form.SubnetId)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
@@ -200,6 +206,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 	form := AddTkeCidrForm{}
 	request.ReadEntity(&form)
 
+	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
 		response.WriteEntity(FormatValidationError(err))
@@ -219,6 +226,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 		if tkeCidr.Status == "" {
 			tkeCidr.Status = sqlstore.CidrStatusAvailable
 		}
+		// save to db
 		err = sqlstore.SaveTkeCidr(form.Vpc, tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Status, "")
 		if err != nil {
 			metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
@@ -244,6 +252,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	form := ApplyTkeCidrForm{}
 	request.ReadEntity(&form)
 
+	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
@@ -254,6 +263,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
+	// apply from db
 	tkeCidr := sqlstore.QueryTkeCidr(&m.TkeCidr{
 		Vpc:      form.Vpc,
 		IpNumber: form.IpNumber,
@@ -268,6 +278,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// update to db
 	updatedTkeCidr := tkeCidr
 	updatedTkeCidr.Status = sqlstore.CidrStatusUsed
 	updatedTkeCidr.Cluster = &form.Cluster
@@ -302,6 +313,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 	form := ReleaseTkeCidrForm{}
 	request.ReadEntity(&form)
 
+	// validate request data
 	err := validate.Struct(&form)
 	if err != nil {
 		response.WriteEntity(FormatValidationError(err))
@@ -324,6 +336,7 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// update to db
 	updatedTkeCidr := tkeCidr
 	updatedTkeCidr.Status = sqlstore.CidrStatusAvailable
 	cluster := ""
