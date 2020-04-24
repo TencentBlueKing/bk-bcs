@@ -13,22 +13,13 @@
 
 package config
 
-//CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
-
 type Config struct {
 	DockerSock   string
 	LogbeatDir   string
 	TemplateFile string
 	PrefixFile   string
 	//kube-apiserver config file path
-	Kubeconfig   string
+	Kubeconfig string
 }
 
 //NewConfig create a config object

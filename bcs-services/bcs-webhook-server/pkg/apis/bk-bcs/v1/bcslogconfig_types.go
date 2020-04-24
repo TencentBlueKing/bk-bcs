@@ -37,18 +37,18 @@ type BcsLogConfig struct {
 }
 
 type BcsLogConfigSpec struct {
-	ConfigType     string            `json:"configType"`
-	AppId          string            `json:"appId"`
-	ClusterId      string            `json:"clusterId"`
-	Stdout         bool              `json:"stdout"`
-	StdDataId      string            `json:"stdDataId"`
-	NonStdDataId   string            `json:"nonStdDataId"`
-	LogPaths       []string          `json:"logPaths"`
-	LogTags        map[string]string `json:"logTags"`
-	WorkloadType   string            `json:"workloadType"`
-	WorkloadName   string            `json:"workloadName"`
-	WorkloadNamespace string         `json:"workloadNamespace"`
-	ContainerConfs []ContainerConf   `json:"containerConfs"`
+	ConfigType        string            `json:"configType"`
+	AppId             string            `json:"appId"`
+	ClusterId         string            `json:"clusterId"`
+	Stdout            bool              `json:"stdout"`
+	StdDataId         string            `json:"stdDataId"`
+	NonStdDataId      string            `json:"nonStdDataId"`
+	LogPaths          []string          `json:"logPaths"`
+	LogTags           map[string]string `json:"logTags"`
+	WorkloadType      string            `json:"workloadType"`
+	WorkloadName      string            `json:"workloadName"`
+	WorkloadNamespace string            `json:"workloadNamespace"`
+	ContainerConfs    []ContainerConf   `json:"containerConfs"`
 }
 
 type ContainerConf struct {
