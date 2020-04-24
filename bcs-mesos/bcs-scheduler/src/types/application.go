@@ -768,9 +768,15 @@ func (in *TaskGroup) DeepCopyInto(out *TaskGroup) {
 	if in.Attributes != nil {
 		in, out := &in.Attributes, &out.Attributes
 		*out = make([]*mesos.Attribute, len(*in))
-		err := deepcopy.DeepCopy(out, in)
-		if err != nil {
-			fmt.Println("DeepCopy TaskGroup.Attributes", "failed", err.Error())
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(mesos.Attribute)
+				err := deepcopy.DeepCopy(out, in)
+				if err != nil {
+					fmt.Println("DeepCopy TaskGroup.Attributes", "failed", err.Error())
+				}
+			}
 		}
 	}
 	if in.BcsEventMsg != nil {
@@ -1089,9 +1095,15 @@ func (in *DataClass) DeepCopyInto(out *DataClass) {
 	if in.Msgs != nil {
 		in, out := &in.Msgs, &out.Msgs
 		*out = make([]*BcsMessage, len(*in))
-		err := deepcopy.DeepCopy(out, in)
-		if err != nil {
-			fmt.Println("DeepCopy DataClass.Msgs", "failed", err.Error())
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(BcsMessage)
+				err := deepcopy.DeepCopy(out, in)
+				if err != nil {
+					fmt.Println("DeepCopy DataClass.BcsMessage", "failed", err.Error())
+				}
+			}
 		}
 	}
 	if in.ExtendedResources != nil {

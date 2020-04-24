@@ -22,8 +22,16 @@ import (
 )
 
 func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
+	if len(command.Status.Taskgroups)==0 {
+		return
+	}
+	//lock command
 	s.store.LockCommand(command.Id)
 	defer s.store.UnLockCommand(command.Id)
+	//lock application
+	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(command.Status.Taskgroups[0].TaskgroupId)
+	s.store.LockApplication(runAs + "." + appId)
+	defer s.store.UnLockApplication(runAs + "." + appId)
 
 	blog.Info("begin send command(%s)", command.Id)
 	for _, taskGroup := range command.Status.Taskgroups {
