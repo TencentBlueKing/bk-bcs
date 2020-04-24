@@ -66,13 +66,13 @@ func (s *Server) initNetworkUtil() error {
 	instanceIP, err := netutil.GetAvailableHostIP(ifaces)
 	if err != nil {
 		blog.Errorf("get node ip failed, err %s", err.Error())
-		fmt.Errorf("get node ip failed, err %s", err.Error())
+		return fmt.Errorf("get node ip failed, err %s", err.Error())
 	}
 	// get hostname
 	hostName, err := netutil.GetHostName()
 	if err != nil {
 		blog.Errorf("get hostname failed, err %s", err.Error())
-		fmt.Errorf("get node ip failed, err %s", err.Error())
+		return fmt.Errorf("get node ip failed, err %s", err.Error())
 	}
 
 	s.netutil = netutil
