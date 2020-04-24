@@ -27,7 +27,8 @@ import (
 type UserManager interface {
 	CreateOrGetUser(userType string, userName string, method string) (*models.BcsUser, error)
 	RefreshUsertoken(userType string, userName string) (*models.BcsUser, error)
-	ActPermission(method string, data []byte) ([]v1http.PermissionsResp, error)
+	GrantOrRevokePermission(method string, data []byte) error
+	GetPermission(method string, data []byte) ([]v1http.PermissionsResp, error)
 	AddVpcCidrs(data []byte) error
 }
 
@@ -95,7 +96,30 @@ func (b *bcsUserManager) RefreshUsertoken(userType string, userName string) (*mo
 	return &result, err
 }
 
-func (b *bcsUserManager) ActPermission(method string, data []byte) ([]v1http.PermissionsResp, error) {
+func (b *bcsUserManager) GrantOrRevokePermission(method string, data []byte) error {
+	resp, err := b.requester.Do(
+		fmt.Sprintf(BcsUserManagerPermissionURI, b.bcsAPIAddress),
+		method,
+		data,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	code, msg, data, err := parseResponse(resp)
+	if err != nil {
+		return err
+	}
+
+	if code != 0 {
+		return fmt.Errorf("failed to act permission: %s", msg)
+	}
+
+	return nil
+}
+
+func (b *bcsUserManager) GetPermission(method string, data []byte) ([]v1http.PermissionsResp, error) {
 	resp, err := b.requester.Do(
 		fmt.Sprintf(BcsUserManagerPermissionURI, b.bcsAPIAddress),
 		method,
@@ -112,7 +136,7 @@ func (b *bcsUserManager) ActPermission(method string, data []byte) ([]v1http.Per
 	}
 
 	if code != 0 {
-		return nil, fmt.Errorf("failed to act permission: %s", msg)
+		return nil, fmt.Errorf("failed to get permission: %s", msg)
 	}
 
 	var result []v1http.PermissionsResp

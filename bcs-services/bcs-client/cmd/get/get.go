@@ -205,7 +205,7 @@ func getPermission(c *utils.ClientContext) error {
 	if err != nil {
 		return err
 	}
-	permissions, err := userManager.ActPermission(http.MethodGet, data)
+	permissions, err := userManager.GetPermission(http.MethodGet, data)
 	if err != nil {
 		return fmt.Errorf("failed to grant permission: %v", err)
 	}

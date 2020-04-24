@@ -40,9 +40,9 @@ func revokePermission(c *utils.ClientContext) error {
 	}
 
 	userManager := v1.NewBcsUserManager(utils.GetClientOption())
-	_, err = userManager.ActPermission(http.MethodDelete, data)
+	err = userManager.GrantOrRevokePermission(http.MethodDelete, data)
 	if err != nil {
-		return fmt.Errorf("failed to grant permission: %v", err)
+		return fmt.Errorf("failed to revoke permission: %v", err)
 	}
 
 	fmt.Printf("success to revoke permission\n")

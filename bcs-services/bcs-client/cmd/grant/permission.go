@@ -40,7 +40,7 @@ func grantPermission(c *utils.ClientContext) error {
 	}
 
 	userManager := v1.NewBcsUserManager(utils.GetClientOption())
-	_, err = userManager.ActPermission(http.MethodPost, data)
+	err = userManager.GrantOrRevokePermission(http.MethodPost, data)
 	if err != nil {
 		return fmt.Errorf("failed to grant permission: %v", err)
 	}

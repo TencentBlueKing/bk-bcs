@@ -270,4 +270,4 @@ bcs-networkpolicy:pre
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-user-manager ${PACKAGEPATH}/bcs-services
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./bcs-services/bcs-user-manager/main.go
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./bcs-services/bcs-user-manager/main.go

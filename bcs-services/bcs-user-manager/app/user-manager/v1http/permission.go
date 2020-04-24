@@ -21,6 +21,7 @@ import (
 
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-services/bcs-user-manager/app/metrics"
 	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -107,10 +108,23 @@ func initCache() {
 func GrantPermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
-	var form []PermissionForm
-	_ = request.ReadEntity(&form)
+	//var form []PermissionForm
+	var bp types.BcsPermission
+	_ = request.ReadEntity(&bp)
+	if bp.Kind != types.BcsDataType_PERMISSION {
+		blog.Warnf("BcsPermission kind must be permission")
+		message := fmt.Sprintf("errcode: %d, BcsPermission kind must be permission", common.BcsErrApiBadRequest)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		return
+	}
+	if bp.APIVersion != "v1" {
+		blog.Warnf("BcsPermission apiVersion must be v1")
+		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		return
+	}
 
-	for _, v := range form {
+	for _, v := range bp.Spec.Permissions {
 		if v.ResourceType == "" {
 			metrics.RequestErrorCount.WithLabelValues("permission", request.Request.Method).Inc()
 			metrics.RequestErrorLatency.WithLabelValues("permission", request.Request.Method).Observe(time.Since(start).Seconds())
@@ -209,9 +223,10 @@ func GetPermission(request *restful.Request, response *restful.Response) {
 func RevokePermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
-	var form []PermissionForm
-	_ = request.ReadEntity(&form)
-	for _, v := range form {
+	//var form []PermissionForm
+	var bp types.BcsPermission
+	_ = request.ReadEntity(&bp)
+	for _, v := range bp.Spec.Permissions {
 		user := &models.BcsUser{
 			Name: v.UserName,
 		}
