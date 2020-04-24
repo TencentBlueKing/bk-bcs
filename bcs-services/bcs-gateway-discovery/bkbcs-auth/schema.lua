@@ -21,9 +21,9 @@ return {
           -- NOTE: any field added here must be also included in the handler's get_queue_id method
           { bkbcs_auth_endpoints = typedefs.url({ required = true }) },
           -- module for bkbcs module
-          { module = {type = "string", default = "", required = true}, },
+          { module = {type = "string", required = true}, },
           -- token for post request to bkbcs-user-mananger
-          { token = {type = "string", default = "", required = true}, },
+          { token = {type = "string", required = true}, },
           -- network timeout
           { timeout = { type = "number", default = 3 }, },
           -- keepalive for connection reuse

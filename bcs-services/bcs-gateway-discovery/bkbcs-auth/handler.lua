@@ -10,7 +10,7 @@
 --
 
 local basic = require "kong.plugins.base_plugin"
-local userclient = require "kong.plugins.bkbcs-auth.bkbcs.lua"
+local userclient = require "kong.plugins.bkbcs-auth.bkbcs"
 local kong = kong
 
 local BKBCSAuthHandler = basic:extend()

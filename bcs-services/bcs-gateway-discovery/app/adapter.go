@@ -42,10 +42,11 @@ var defaultMediaType = "application/json"
 type Handler func(module string, svcs []*types.ServerInfo) (*register.Service, error)
 
 //NewAdapter create service data convertion
-func NewAdapter(standardModules []string) *Adapter {
+func NewAdapter(option *ServerOptions, standardModules []string) *Adapter {
 	adp := &Adapter{
-		modules:  standardModules,
-		handlers: make(map[string]Handler),
+		admintoken: option.AuthToken,
+		modules:    standardModules,
+		handlers:   make(map[string]Handler),
 	}
 	//init all service data
 	adp.initDefaultModules()
@@ -56,8 +57,9 @@ func NewAdapter(standardModules []string) *Adapter {
 //Adapter uses for converting bkbcs service discovery
 // information to inner register data structures
 type Adapter struct {
-	modules  []string
-	handlers map[string]Handler
+	admintoken string
+	modules    []string
+	handlers   map[string]Handler
 }
 
 //GetService interface for all service data convertion
@@ -88,8 +90,6 @@ func (adp *Adapter) initDefaultModules() error {
 	//kube-apiserver proxy rule is not compatible with bcs-api
 	adp.handlers[types.BCS_MODULE_KUBEAGENT] = adp.constructKubeAPIServer
 	blog.Infof("gateway-discovery init module %s proxy rules", types.BCS_MODULE_KUBEAGENT)
-	adp.handlers[types.BCS_MODULE_MESOSWEBCONSOLE] = adp.constructMesosWebConsole
-	blog.Infof("gateway-discovery init module %s proxy rules", types.BCS_MODULE_MESOSWEBCONSOLE)
 	return nil
 }
 
@@ -133,58 +133,7 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/mesosdriver/v4/",
-		Retries:  3,
-		Labels:   labels,
-	}
-	//setting route information
-	rt := register.Route{
-		Name:        name,
-		Protocol:    svcs[0].Scheme,
-		Paths:       []string{"/bcsapi/v4/scheduler/mesos/"},
-		PathRewrite: true,
-		Header: map[string]string{
-			defaultClusterIDKey: resources[1],
-		},
-		Service: name,
-		Labels:  labels,
-	}
-	regSvc.Routes = append(regSvc.Routes, rt)
-	//setting upstream backend information
-	bcks := adp.constructBackends(svcs)
-	regSvc.Backends = append(regSvc.Backends, bcks...)
-	return regSvc, nil
-}
-
-//constructMesosWebConsole convert bcs-mesos-driver service information
-// to custom service definition. this is compatible with original bcs-api proxy
-func (adp *Adapter) constructMesosWebConsole(module string, svcs []*types.ServerInfo) (*register.Service, error) {
-	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
-		return nil, fmt.Errorf("ServerInfo lost")
-	}
-	resources := strings.Split(module, "/")
-	if len(resources) != 2 {
-		blog.Errorf("contruct MesosDriver server info for %s failed, module name is invalid", module)
-		return nil, fmt.Errorf("module information is invalid")
-	}
-	bkbcsID := strings.Split(resources[1], "-")
-	if len(bkbcsID) != 3 {
-		blog.Errorf("contruct MesosDriver Server Info failed, ClusterID is invalid in Module name [%s]", module)
-		return nil, fmt.Errorf("mesosdriver clusterID is invalid")
-	}
-	name := types.BCS_MODULE_MESOSDRIVER + "-" + bkbcsID[2]
-	hostName := bkbcsID[2] + "." + types.BCS_MODULE_MESOSDRIVER + "." + defaultDomain
-	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_MESOSDRIVER
-	labels["service"] = "bkbcs-cluster"
-	labels["scheduler"] = "mesos"
-	labels["cluster"] = resources[1]
-	regSvc := &register.Service{
-		Name:     name,
-		Protocol: svcs[0].Scheme,
-		Host:     hostName,
-		Path:     "/mesosdriver/v4/",
-		Retries:  3,
+		Retries:  1,
 		Labels:   labels,
 	}
 	//setting route information
@@ -192,6 +141,7 @@ func (adp *Adapter) constructMesosWebConsole(module string, svcs []*types.Server
 		Name:     name,
 		Protocol: svcs[0].Scheme,
 		//* contains mesosdriver & mesoswebconsole proxy rules
+		//! path /bcsapi/v1 must maintain until bk-bcs-saas move to new api-gateway
 		Paths:       []string{"/bcsapi/v4/scheduler/mesos/", "/bcsapi/v1/"},
 		PathRewrite: true,
 		Header: map[string]string{
@@ -199,6 +149,14 @@ func (adp *Adapter) constructMesosWebConsole(module string, svcs []*types.Server
 		},
 		Service: name,
 		Labels:  labels,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: "bkbcs-auth",
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+			},
+		},
 	}
 	regSvc.Routes = append(regSvc.Routes, rt)
 	//setting upstream backend information
@@ -236,7 +194,7 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/k8sdriver/v4/",
-		Retries:  3,
+		Retries:  1,
 		Labels:   labels,
 	}
 	//setting route information
@@ -250,6 +208,14 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 		},
 		Service: name,
 		Labels:  labels,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: "bkbcs-auth",
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+			},
+		},
 	}
 	regSvc.Routes = append(regSvc.Routes, rt)
 	//setting upstream backend information
@@ -274,7 +240,7 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/bcsstorage/v1/",
-		Retries:  3,
+		Retries:  1,
 		Labels:   labels,
 	}
 	//setting route information
@@ -285,6 +251,14 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: "bkbcs-auth",
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+			},
+		},
 	}
 	regSvc.Routes = append(regSvc.Routes, rt)
 	//setting upstream backend information
@@ -295,9 +269,68 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 
 //constructKubeAPIServer convert kube-apiserver service information
 // to custom service definition. this is `not` compatible with original bcs-api proxy
-// todo(DeveloperJim): try to use regex proxy rule to compatibilize original proxy rule
+//! @param svc instance plays a trick, it's field HostName holding token from kubeagent
 func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerInfo) (*register.Service, error) {
-	return nil, nil
+	if len(svcs) == 0 {
+		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		return nil, fmt.Errorf("ServerInfo lost")
+	}
+	resources := strings.Split(module, "/")
+	if len(resources) != 2 {
+		blog.Errorf("contruct Kube-apiserver info for %s failed, module name is invalid", module)
+		return nil, fmt.Errorf("module information is invalid")
+	}
+	bkbcsID := strings.Split(resources[1], "-")
+	if len(bkbcsID) != 3 {
+		blog.Errorf("contruct Kube-apiServer Info failed, ClusterID is invalid in Module name [%s]", module)
+		return nil, fmt.Errorf("kubeagent clusterID is invalid")
+	}
+	name := types.BCS_MODULE_KUBEAGENT + "-" + bkbcsID[2]
+	hostName := bkbcsID[2] + "." + types.BCS_MODULE_KUBEAGENT + "." + defaultDomain
+	labels := make(map[string]string)
+	labels["module"] = types.BCS_MODULE_KUBEAGENT
+	labels["service"] = "bkbcs-cluster"
+	labels["scheduler"] = "kubernetes"
+	labels["cluster"] = resources[1]
+	//create service & setting header plugin for kube-apiserver
+	regSvc := &register.Service{
+		Name:     name,
+		Protocol: svcs[0].Scheme,
+		Host:     hostName,
+		Path:     "/",
+		Retries:  1,
+		Plugin: &register.Plugins{
+			HeadOption: &register.HeaderOption{
+				Replace: map[string]string{
+					"Authentication": fmt.Sprintf("Bearer %s", svcs[0].HostName),
+				},
+			},
+		},
+		Labels: labels,
+	}
+
+	//setting route information
+	rt := register.Route{
+		Name:        name,
+		Protocol:    svcs[0].Scheme,
+		Paths:       []string{fmt.Sprintf("/tunnel/cluster/%s/", resources[1])},
+		PathRewrite: true,
+		Service:     name,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: "bkbcs-auth",
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+			},
+		},
+		Labels: labels,
+	}
+	regSvc.Routes = append(regSvc.Routes, rt)
+	//setting upstream backend information
+	bcks := adp.constructBackends(svcs)
+	regSvc.Backends = append(regSvc.Backends, bcks...)
+	return regSvc, nil
 }
 
 //constructClusterMgr convert bcs-cluster-manager service information
@@ -317,14 +350,8 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     fmt.Sprintf("/%s/", types.BCS_MODULE_USERMANAGER),
-		Retries:  3,
+		Retries:  1,
 		Labels:   labels,
-		HeadOption: &register.HeaderOption{
-			Replace: map[string]string{
-				defaultMediaTypeKey: defaultMediaType,
-				defaultAcceptKey:    defaultMediaType,
-			},
-		},
 	}
 	//setting route information
 	rt := register.Route{
@@ -359,14 +386,8 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     "/detection/v4/",
-		Retries:  3,
+		Retries:  1,
 		Labels:   labels,
-		HeadOption: &register.HeaderOption{
-			Replace: map[string]string{
-				defaultMediaTypeKey: defaultMediaType,
-				defaultAcceptKey:    defaultMediaType,
-			},
-		},
 	}
 	//setting route information
 	rt := register.Route{
@@ -374,8 +395,16 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 		Protocol:    svcs[0].Scheme,
 		Paths:       []string{"/bcsapi/v4/detection/"},
 		PathRewrite: true,
-		Service:     module,
-		Labels:      labels,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: "bkbcs-auth",
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+			},
+		},
+		Service: module,
+		Labels:  labels,
 	}
 	regSvc.Routes = append(regSvc.Routes, rt)
 	//setting upstream backend information
@@ -401,14 +430,8 @@ func (adp *Adapter) constructStandardProxy(module string, svcs []*types.ServerIn
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
 		Path:     fmt.Sprintf("/%s/v4/", module),
-		Retries:  3,
+		Retries:  1,
 		Labels:   labels,
-		// HeadOption: &register.HeaderOption{
-		// 	Replace: map[string]string{
-		// 		defaultMediaTypeKey: defaultMediaType,
-		// 		defaultAcceptKey:    defaultMediaType,
-		// 	},
-		// },
 	}
 	//setting route information
 	apipath := fmt.Sprintf("/bcsapi/v4/%s/", module)
@@ -419,6 +442,14 @@ func (adp *Adapter) constructStandardProxy(module string, svcs []*types.ServerIn
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: "bkbcs-auth",
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+			},
+		},
 	}
 	regSvc.Routes = append(regSvc.Routes, rt)
 	//setting upstream backend information

@@ -39,8 +39,8 @@ type Route struct {
 	PathRewrite bool
 	//Header filter when using http(s)
 	Header map[string]string
-	//Header Option for http head modification
-	HeadOption *HeaderOption
+	//plugin Option for http modification
+	Plugin *Plugins
 	//Service relative svc name
 	Service string
 	Labels  map[string]string
@@ -55,12 +55,18 @@ type Service struct {
 	Retries   int
 	Path      string
 	Algorithm string
-	//Option for change header
-	HeadOption *HeaderOption
+	//Option for plugin
+	Plugin *Plugins
 	//Routes several route can redirect traffics to same service
 	Routes   []Route
 	Backends []Backend
 	Labels   map[string]string
+}
+
+//Plugins holder for all gateway plugins
+type Plugins struct {
+	HeadOption *HeaderOption
+	AuthOption *BCSAuthOption
 }
 
 //HeaderOption for proxy rules that change http header
@@ -71,6 +77,14 @@ type HeaderOption struct {
 	Add map[string]string
 	//Replace specified header
 	Replace map[string]string
+}
+
+//AuthOption for bkbcs-auth plugin
+type BCSAuthOption struct {
+	Name          string
+	AuthEndpoints string
+	AuthToken     string
+	Module        string
 }
 
 //Backend inner data structure for application instance

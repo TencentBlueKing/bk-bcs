@@ -62,16 +62,17 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 		return err
 	}
 	// create service plugins
-	if svc.HeadOption != nil {
-		blog.Infof("kong register create plugin request-transformer for service %s", svc.Name)
-		pReq := kongSvcReqTransformerConvert(svc.HeadOption, ksvc.Id)
-		splugin, err := r.kClient.Plugins().Create(pReq)
-		if err != nil {
-			//todo(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
-			blog.Errorf("kong register create plugin request-transformer for Service %s failed, %s", svc.Name, err.Error())
-			return err
+	if svc.Plugin != nil {
+		pReqs := kongPluginConvert(svc.Plugin, ksvc.Id, "service")
+		for _, pluReq := range pReqs {
+			splugin, err := r.kClient.Plugins().Create(pluReq)
+			if err != nil {
+				//todo(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
+				blog.Errorf("kong register create plugin %s for Service %s failed, %s", pluReq.Name, svc.Name, err.Error())
+				return err
+			}
+			blog.Infof("kong register create plugin for service %s successfully, plugin ID: %s/%s", svc.Name, splugin.Id, splugin.Name)
 		}
-		blog.Infof("kong register create plugin request-transformer for service %s successfully, plugin ID: %s", svc.Name, splugin.Id)
 	}
 	// 2. create service relative route rules
 	for _, route := range svc.Routes {
@@ -81,17 +82,18 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 			blog.Errorf("kong register create route for Service %s failed, %s", svc.Name, err.Error())
 			return err
 		}
-		if route.HeadOption != nil {
-			rReq := kongRouteReqTransformerConvert(route.HeadOption, kroute.Id)
-			rplugin, err := r.kClient.Plugins().Create(rReq)
-			if err != nil {
-				//todo(DeveloperJim): roll back discussion
-				blog.Errorf("kong register create plugins for route %s failed, %s", route.Name, err.Error())
-				return err
+		if route.Plugin != nil {
+			rReqs := kongPluginConvert(route.Plugin, kroute.Id, "route")
+			for _, pluReq := range rReqs {
+				rplugin, err := r.kClient.Plugins().Create(pluReq)
+				if err != nil {
+					//todo(DeveloperJim): roll back discussion
+					blog.Errorf("kong register create plugin %s for route %s failed, %s", pluReq.Name, route.Name, err.Error())
+					return err
+				}
+				blog.Infof("kong register create plugins for route %s successfully, pluginID: %s/%s", route.Name, rplugin.Id, rplugin.Name)
 			}
-			blog.Infof("kong register create plugins for route %s successfully, pluginID: %s", route.Name, rplugin.Id)
 		}
-
 	}
 	// 3. create service relative Upstream & targets
 	kupstrreq := &gokong.UpstreamRequest{
@@ -321,7 +323,7 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
 	kr := &gokong.RouteRequest{
 		Name:      &route.Name,
-		Protocols: []*string{gokong.String(route.Protocol)},
+		Protocols: []*string{gokong.String("https"), gokong.String("http")},
 		Paths:     gokong.StringSlice(route.Paths),
 		StripPath: gokong.Bool(route.PathRewrite),
 	}
@@ -342,11 +344,29 @@ func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
 	return kr
 }
 
-//kongSvcReqTransformerConvert convert inner service request plugin to request-transformer
-func kongSvcReqTransformerConvert(option *register.HeaderOption, ID *string) *gokong.PluginRequest {
+//kongPluginConvert convert inner service request plugin to request-transformer
+func kongPluginConvert(plugin *register.Plugins, ID *string, tys string) []*gokong.PluginRequest {
+	var plugins []*gokong.PluginRequest
+	if plugin.HeadOption != nil {
+		plu := kongReqTransformerConvert(plugin.HeadOption, *ID, tys)
+		plugins = append(plugins, plu)
+	}
+	if plugin.AuthOption != nil {
+		plu := kongBKBCSAuthConvert(plugin.AuthOption, *ID, tys)
+		plugins = append(plugins, plu)
+	}
+	return plugins
+}
+
+//kongReqTransformerConvert convert inner service request plugin to request-transformer
+func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys string) *gokong.PluginRequest {
 	pr := &gokong.PluginRequest{
-		Name:      "request-transformer",
-		ServiceId: gokong.ToId(*ID),
+		Name: "request-transformer",
+	}
+	if tys == "service" {
+		pr.ServiceId = gokong.ToId(ID)
+	} else {
+		pr.RouteId = gokong.ToId(ID)
 	}
 	//setting clean operation
 	pr.Config = make(map[string]interface{})
@@ -380,41 +400,21 @@ func kongSvcReqTransformerConvert(option *register.HeaderOption, ID *string) *go
 	return pr
 }
 
-//kongRouteReqTransformerConvert convert inner route plugin to request-transformer
-func kongRouteReqTransformerConvert(option *register.HeaderOption, ID *string) *gokong.PluginRequest {
+//kongBKBCSAuthConvert convert inner service request plugin to request-transformer
+func kongBKBCSAuthConvert(option *register.BCSAuthOption, ID string, tys string) *gokong.PluginRequest {
 	pr := &gokong.PluginRequest{
-		Name:    "request-transformer",
-		RouteId: gokong.ToId(*ID),
+		Name: option.Name,
 	}
-	//setting clean operation
+	if tys == "service" {
+		pr.ServiceId = gokong.ToId(ID)
+	} else {
+		pr.RouteId = gokong.ToId(ID)
+	}
 	pr.Config = make(map[string]interface{})
-	if len(option.Clean) != 0 {
-		pr.Config["remove"] = &httpTransformer{
-			Headers: gokong.StringSlice(option.Clean),
-		}
-	}
-	//add operation
-	if len(option.Add) != 0 {
-		var values []string
-		for k, v := range option.Add {
-			value := fmt.Sprintf("%s: %s", k, v)
-			values = append(values, value)
-		}
-		pr.Config["add"] = &httpTransformer{
-			Headers: gokong.StringSlice(values),
-		}
-	}
-	//replace operation
-	if len(option.Replace) != 0 {
-		var values []string
-		for k, v := range option.Replace {
-			value := fmt.Sprintf("%s: %s", k, v)
-			values = append(values, value)
-		}
-		pr.Config["replace"] = &httpTransformer{
-			Headers: gokong.StringSlice(values),
-		}
-	}
+	//setting clean operation
+	pr.Config["bkbcs_auth_endpoints"] = option.AuthEndpoints
+	pr.Config["module"] = option.Module
+	pr.Config["token"] = option.AuthToken
 	return pr
 }
 

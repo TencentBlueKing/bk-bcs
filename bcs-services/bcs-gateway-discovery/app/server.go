@@ -17,14 +17,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/version"
+	"bk-bcs/bcs-common/pkg/bcsapi"
 	"bk-bcs/bcs-common/pkg/master"
 	discoverys "bk-bcs/bcs-common/pkg/module-discovery"
 	"bk-bcs/bcs-services/bcs-gateway-discovery/register"
@@ -93,7 +96,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 		return err
 	}
 	//init service data adapter
-	s.adapter = NewAdapter(option.Modules)
+	s.adapter = NewAdapter(option, option.Modules)
 	//init module disovery
 	allModules := append(defaultModules, option.Modules...)
 	s.discovery, err = discoverys.NewDiscoveryV2(option.ZkConfig.BCSZk, allModules)
@@ -228,7 +231,9 @@ func (s *DiscoveryServer) dataSynchronization() error {
 		svc, ok := regisetedMap[local.Name]
 		if ok {
 			//service reigsted, we affirm that proxy rule is correct
-			// so just update backend targets info
+			// so just update backend targets info, if rules of plugins & routes
+			// change frequently, we need to verify all changes between oldSvc & newSvc.
+			// but now, we confirm that rules are stable. operations can be done quickly by manually
 			if err := s.regMgr.ReplaceTargetByService(svc, local.Backends); err != nil {
 				blog.Errorf("gateway-discovery update Service %s backend failed in synchronization, %s. backend %v", svc.Name, local.Backends)
 				continue
@@ -283,6 +288,11 @@ func (s *DiscoveryServer) handleModuleChange(event *ModuleEvent) error {
 		blog.Infof("gateway-discovery update Target for Service %s in api-gateway successfully, serviceName: %s", event.Module, event.Svc.Name)
 	}
 	return nil
+}
+
+//detailServiceVerification all information including service/plugin/target check
+func (s *DiscoveryServer) detailServiceVerification(newSvc *register.Service, oldSvc *register.Service) {
+	//todo(DeveloperJim): we need complete verification if plugin & route rules changed frequently, not now
 }
 
 func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service, error) {
@@ -359,6 +369,83 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 	return localSvcs, nil
 }
 
+func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Service, error) {
+	//we get all kubernetes api-server from bcs-user-manager
+	original, err := s.discovery.GetRandModuleServer(types.BCS_MODULE_USERMANAGER)
+	if err != nil {
+		blog.Errorf("get module %s info for list all kube-apiserver failed, %s", types.BCS_MODULE_USERMANAGER, err.Error())
+		return nil, err
+	}
+	blog.V(5).Infof("get module %s string detail: %+v", types.BCS_MODULE_USERMANAGER, original)
+	data := original.(string)
+	svc := new(types.ServerInfo)
+	if err := json.Unmarshal([]byte(data), svc); err != nil {
+		blog.Errorf("in [kubernetes api-server] handle module %s json %s unmarshal failed, %s", types.BCS_MODULE_USERMANAGER, data, err.Error())
+		return nil, err
+	}
+	//ready to get kube-apiserver list from bcs-user-manager
+	config := &bcsapi.Config{
+		Host:      fmt.Sprintf("%s:%d", svc.IP, svc.Port),
+		AuthToken: s.option.AuthToken,
+		Gateway:   false,
+	}
+	config.TLSConfig, _ = s.option.GetClientTLS()
+	apiCli := bcsapi.NewClient(config)
+	clusters, err := apiCli.UserManager().ListAllClusters()
+	if err != nil {
+		blog.Errorf("request all kube-apiserver cluster info from bcs-user-manager %s failed, %s", config.Host, err.Error())
+		return nil, err
+	}
+	if len(clusters) == 0 {
+		blog.Warnf("No kube-apiserver registed, skip kube-apiserver proxy rules")
+		return nil, nil
+	}
+	//construct inner Service definition
+	var localSvcs []*register.Service
+	for _, cluster := range clusters {
+		k := fmt.Sprintf("%s/%s", module, cluster.ClusterID)
+		//one clustercredential converts to ServerInfo
+		var svcs []*types.ServerInfo
+		clusterAddress := strings.Split(cluster.ServerAddresses, ";")
+		for _, address := range clusterAddress {
+			u, err := url.Parse(address)
+			if err != nil {
+				blog.Errorf("kube-apiserver[%s] cluster_address %s parse failed, %s", cluster.ClusterID, cluster.ServerAddresses, err.Error())
+				continue
+			}
+			svc := &types.ServerInfo{
+				Cluster: cluster.ClusterID,
+				Scheme:  u.Scheme,
+				Port:    443,
+				//! trick here
+				HostName: cluster.UserToken,
+			}
+			hostport := strings.Split(u.Host, ":")
+			if len(hostport) == 2 {
+				svc.IP = hostport[0]
+				port, _ := strconv.Atoi(hostport[1])
+				svc.Port = uint(port)
+			} else {
+				if svc.Scheme == "http" {
+					svc.Port = 80
+				}
+			}
+			svcs = append(svcs, svc)
+		}
+		rSvcs, err := s.adapter.GetService(k, svcs)
+		if err != nil {
+			blog.Errorf("converts module %s ServerInfo to api-gateway info failed in synchronization, %s", k, err.Error())
+			continue
+		}
+		localSvcs = append(localSvcs, rSvcs)
+	}
+	if len(localSvcs) == 0 {
+		blog.Errorf("convert kube-apiserver [%s] to api-gateway info failed!", module)
+		return nil, fmt.Errorf("convert [%s] to api-gateway err", module)
+	}
+	return localSvcs, nil
+}
+
 func (s *DiscoveryServer) formatMultiServerInfo(modules []string) ([]*register.Service, error) {
 	var regSvcs []*register.Service
 	for _, m := range modules {
@@ -369,6 +456,13 @@ func (s *DiscoveryServer) formatMultiServerInfo(modules []string) ([]*register.S
 				continue
 			}
 			regSvcs = append(regSvcs, svcs...)
+		} else if m == types.BCS_MODULE_KUBEAGENT {
+			svc, err := s.formatKubeAPIServerInfo(m)
+			if err != nil {
+				blog.Errorf("gateway-discovery format kubernetes api-server to inner register Service failed %s, continue", err.Error())
+				continue
+			}
+			regSvcs = append(regSvcs, svc...)
 		} else {
 			svc, err := s.formatBCSServerInfo(m)
 			if err != nil {

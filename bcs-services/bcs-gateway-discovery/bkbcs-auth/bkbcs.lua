@@ -171,6 +171,7 @@ end
 --* @return true/false: return true if authentication success, other false.
 -- example: curl -H"Content-Type: application/json" http://127.0.0.L1:8080/usermanager/v1/permissions/verify -d \
 --          -H "Authorization: Bearer ${token}" -d '{"user_token":"", "resource_type":"cluster", "resource":"clsuterId", "action":"POST"}'
+-- response: {"result":true,"code":0,"message":"success","data":{"allowed":false,"message":"usertoken is invalid"}}
 function bkbcs_user_cli:authentication(info)
   -- ready to send http authentication information
   if self._httpc == nil then
@@ -201,7 +202,7 @@ function bkbcs_user_cli:authentication(info)
   end
   local body = res:read_body()
   local auth_response = json.decode(body)
-  if not auth_response then
+  if not auth_response or not auth_response.data then
     kong.log.err("[bkbcs-auth] user_cli get no correct response from user-manager, body: ", body)
     return false, "invalid verify response"
   end
@@ -212,7 +213,7 @@ function bkbcs_user_cli:authentication(info)
     -- will not return false (the batch might not need to be reprocessed)
     kong.log.err("[bkbcs-auth] user_cli failed keepalive for ", self._ip, ":", tostring(self._port), ": ", err)
   end
-  return auth_response.allowed, nil
+  return auth_response.data.allowed, nil
 end
 
 return bkbcs_user_cli
