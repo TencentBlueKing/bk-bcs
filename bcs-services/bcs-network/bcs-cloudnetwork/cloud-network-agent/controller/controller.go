@@ -85,19 +85,26 @@ type NetworkController struct {
 	eniNum   int
 	ipNum    int
 
+	// options for network agent
 	options *options.NetworkOption
 
+	// infor for current vm node
 	vmInfo *cloud.VMInfo
 
+	// node network object for current node
 	nodeNetwork     *cloud.NodeNetwork
 	nodeNetworkMutx sync.Mutex
 
+	// netservice client
 	netsvcClient netservice.Interface
 
+	// crd client
 	nodeNetClient nodenetwork.Interface
 
+	// eni cloud client
 	eniClient eni.Interface
 
+	// network util client
 	netUtil networkutil.Interface
 
 	// lock for controller
@@ -131,6 +138,7 @@ func (nc *NetworkController) OnAdd(obj interface{}) {
 }
 
 // OnUpdate update event
+// TODO: to deal with node network changes
 func (nc *NetworkController) OnUpdate(oldObj, newObj interface{}) {
 	_, okOld := oldObj.(*cloud.NodeNetwork)
 	if !okOld {
@@ -156,6 +164,7 @@ func (nc *NetworkController) OnDelete(obj interface{}) {
 
 	reportEventMetric(eventTypeDel)
 
+	// when deleted node network was on current node, start release network
 	if nodeNetwork.GetNamespace() == nc.nodeNetwork.GetNamespace() &&
 		nodeNetwork.GetName() == nc.nodeNetwork.GetName() {
 		go func() {
@@ -184,20 +193,23 @@ func (nc *NetworkController) getNodeNetwork() error {
 }
 
 func (nc *NetworkController) getEniQuota() error {
+	// get limitation according to vm info
 	eniNum, ipNum, err := nc.eniClient.GetENILimit()
 	if err != nil {
 		blog.Infof("get eni quota limit, err %s", err.Error())
 	}
-
 	eniNum = eniNum - 1
 	ipNum = ipNum - 1
 
+	// when request eni number is 0 or over limitation,
+	// apply for as many network cards as possible
 	if nc.options.EniNum == 0 || int(nc.options.EniNum) > eniNum {
 		nc.eniNum = eniNum
 	} else {
 		nc.eniNum = int(nc.options.EniNum)
 	}
-
+	// when request ip number is 0 or over limitation,
+	// apply for as many ip addresses as possible
 	if nc.options.IPNumPerEni == 0 || int(nc.options.IPNumPerEni-1) > ipNum {
 		nc.ipNum = ipNum
 	} else {
@@ -206,15 +218,18 @@ func (nc *NetworkController) getEniQuota() error {
 	return nil
 }
 
+// generate eni name by vm instance id and eni index
 func getEniName(instanceid string, index int) string {
 	return instanceid + "-" + constant.ENI_PREFIX + strconv.Itoa(index)
 }
 
+// get eni interface name
 func getEniIfaceName(index int) string {
 	return constant.ENI_PREFIX + strconv.Itoa(index)
 }
 
 func (nc *NetworkController) createEnis() error {
+	// create new node network object
 	newNode := &cloud.NodeNetwork{
 		TypeMeta: k8smetav1.TypeMeta{
 			APIVersion: cloud.SchemeGroupVersion.Version,
@@ -260,7 +275,7 @@ func (nc *NetworkController) createEnis() error {
 				newIf.MacAddress)
 
 			if err != nil {
-				blog.Errorf("attach eni %s failed, err %s", err.Error())
+				blog.Errorf("attach eni %s failed, err %s", newIf.EniID, err.Error())
 				return err
 			}
 			newIf.Attachment = attachment

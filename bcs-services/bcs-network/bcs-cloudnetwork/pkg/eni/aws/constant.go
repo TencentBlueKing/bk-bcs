@@ -38,6 +38,7 @@ const (
 	waitAttachedMaxRetries = 10
 )
 
+// EniNumLimit eni num limit
 var EniNumLimit = map[string]int{
 	"a1.2xlarge":    4,
 	"a1.4xlarge":    8,
@@ -319,6 +320,7 @@ var EniNumLimit = map[string]int{
 	"z1d.xlarge":    4,
 }
 
+// IPNumLimit ip num limit for per eni of certain hvm
 var IPNumLimit = map[string]int{
 	"a1.2xlarge":    15,
 	"a1.4xlarge":    30,
