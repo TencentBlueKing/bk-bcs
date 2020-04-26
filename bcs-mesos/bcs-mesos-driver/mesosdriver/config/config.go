@@ -43,4 +43,10 @@ type MesosDriverConfig struct {
 	AdmissionWebhook bool
 	//KubeConfig kubeconfig for CustomResource
 	KubeConfig string
+
+	// websocket register
+	RegisterWithWebsocket bool
+	RegisterToken         string
+	RegisterUrl           string
+	InsecureSkipVerify    bool
 }

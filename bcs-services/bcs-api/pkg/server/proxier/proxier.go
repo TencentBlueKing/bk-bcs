@@ -145,6 +145,44 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		return
 	}
 
+	var proxyHandler *ClusterHandlerInstance
+	// 先从websocket dialer缓存中查找websocket链
+	websocketHandler, found, err := lookupWsHandler(clusterId, req)
+	if err != nil {
+		blog.Errorf("error when lookup websocket conn: %s", err.Error())
+		err := fmt.Errorf("error when lookup websocket conn: %s", err.Error())
+		status := utils.NewInternalError(err)
+		status.ErrStatus.Reason = "CREATE_TUNNEL_ERROR"
+		utils.WriteKubeAPIError(rw, status)
+		return
+	}
+	if found {
+		blog.Info("found websocket conn for cluster %s", clusterId)
+		handlerServer := stripLeaveSlash(f.ExtractPathPrefix(req), websocketHandler)
+		proxyHandler = &ClusterHandlerInstance{
+			Handler: handlerServer,
+		}
+	} else {
+		// Try not to initialize the handler everytime by using a map to store all the initialized handler
+		// Use RWLock to fix race condition
+		f.handlerMutateLock.Lock()
+		if f.handlerStore[clusterId] == nil {
+			handlerServer, err := f.InitializeHandlerForCluster(clusterId, externalClusterInfo, req)
+			if err != nil {
+				err = fmt.Errorf("error when creating proxy channel: %s", err.Error())
+				status := utils.NewInternalError(err)
+				status.ErrStatus.Reason = "CREATE_TUNNEL_ERROR"
+				utils.WriteKubeAPIError(rw, status)
+				f.handlerMutateLock.Unlock()
+				return
+			}
+			f.handlerStore[clusterId] = handlerServer
+		}
+		proxyHandler = f.handlerStore[clusterId]
+		f.handlerMutateLock.Unlock()
+	}
+
+	blog.Info(req.Header.Get("Authorization"))
 	// Delete the original auth header so that the original user token won't be passed to the rev-proxy request and
 	// damage the real cluster authentication process.
 	delete(req.Header, "Authorization")
@@ -162,40 +200,6 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	// bke-server instance?
 	req.URL.Scheme = "https"
 
-	// Try not to initialize the handler everytime by using a map to store all the initialized handler
-	f.handlerMutateLock.RLock()
-	existedHander := f.handlerStore[clusterId]
-	f.handlerMutateLock.RUnlock()
-	if existedHander != nil {
-		if websocket.IsWebSocketUpgrade(req) {
-			metric.RequestCount.WithLabelValues("k8s_native", "websocket").Inc()
-			metric.RequestLatency.WithLabelValues("k8s_native", "websocket").Observe(time.Since(start).Seconds())
-		}
-		existedHander.Handler.ServeHTTP(rw, req)
-		if !websocket.IsWebSocketUpgrade(req) {
-			metric.RequestCount.WithLabelValues("k8s_native", req.Method).Inc()
-			metric.RequestLatency.WithLabelValues("k8s_native", req.Method).Observe(time.Since(start).Seconds())
-		}
-		return
-	}
-
-	// Use RWLock to fix race condition
-	f.handlerMutateLock.Lock()
-	if f.handlerStore[clusterId] == nil {
-		handlerServer, err := f.InitializeHandlerForCluster(clusterId, externalClusterInfo, req)
-		if err != nil {
-			err = fmt.Errorf("error when creating proxy channel: %s", err.Error())
-			status := utils.NewInternalError(err)
-			status.ErrStatus.Reason = "CREATE_TUNNEL_ERROR"
-			utils.WriteKubeAPIError(rw, status)
-			f.handlerMutateLock.Unlock()
-			return
-		}
-		f.handlerStore[clusterId] = handlerServer
-	}
-	f.handlerMutateLock.Unlock()
-
-	proxyHandler := f.handlerStore[clusterId]
 	if websocket.IsWebSocketUpgrade(req) {
 		metric.RequestCount.WithLabelValues("k8s_native", "websocket").Inc()
 		metric.RequestLatency.WithLabelValues("k8s_native", "websocket").Observe(time.Since(start).Seconds())
@@ -230,6 +234,7 @@ func (f *ReverseProxyDispatcher) InitializeUpstreamServer(clusterId string, serv
 // other cases when we may also need to re-establish the apiserver connection. This includes apiserver connection
 // failure or apiserver addresses's major changes.
 func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string, externalClusterInfo *m.BCSClusterInfo, req *http.Request) (*ClusterHandlerInstance, error) {
+
 	// Query for the cluster credentials
 	clusterCredentials := f.GetClusterCredentials(clusterId)
 	if clusterCredentials == nil || clusterCredentials.ServerAddresses == "" {

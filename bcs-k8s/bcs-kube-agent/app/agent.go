@@ -51,10 +51,18 @@ func Run() error {
 
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return fmt.Errorf("Error building kubernetes clientset: %s", err.Error())
+		return fmt.Errorf("error building kubernetes clientset: %s", err.Error())
 	}
 
-	go reportToBke(kubeClient, cfg)
+	useWebsocket := viper.GetBool("agent.use-websocket")
+	if useWebsocket {
+		err := buildWebsocketToBke(cfg)
+		if err != nil {
+			return err
+		}
+	} else {
+		go reportToBke(kubeClient, cfg)
+	}
 
 	// TODO: Add prometheus monitor metrics
 	http.Handle("/metrics", promhttp.Handler())
