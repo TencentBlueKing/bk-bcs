@@ -22,7 +22,7 @@ import (
 func configureRequest(r *gorequest.SuperAgent, config *Config) *gorequest.SuperAgent {
 	//setting insecureSkipVerify
 	if config.TLSConfig != nil {
-		config.TLSConfig.InsecureSkipVerify = false
+		config.TLSConfig.InsecureSkipVerify = true
 		r.TLSClientConfig(config.TLSConfig)
 	}
 	if config.AuthToken != "" {
