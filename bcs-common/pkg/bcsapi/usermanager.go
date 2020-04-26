@@ -42,9 +42,9 @@ type UserManagerCli struct {
 func (cli *UserManagerCli) getRequestPath() string {
 	if cli.Config.Gateway {
 		//format bcs-api-gateway path
-		return fmt.Sprintf("%s%s", gatewayPrefix, usermanagerPrefix)
+		return fmt.Sprintf("%s%s/", gatewayPrefix, usermanagerPrefix)
 	}
-	return fmt.Sprintf("/%s", usermanagerPrefix)
+	return fmt.Sprintf("/%s/", usermanagerPrefix)
 }
 
 //ListClusters get all registed kubernetes api-server

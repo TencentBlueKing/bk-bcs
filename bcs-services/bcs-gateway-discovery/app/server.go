@@ -235,10 +235,10 @@ func (s *DiscoveryServer) dataSynchronization() error {
 			// change frequently, we need to verify all changes between oldSvc & newSvc.
 			// but now, we confirm that rules are stable. operations can be done quickly by manually
 			if err := s.regMgr.ReplaceTargetByService(svc, local.Backends); err != nil {
-				blog.Errorf("gateway-discovery update Service %s backend failed in synchronization, %s. backend %v", svc.Name, local.Backends)
+				blog.Errorf("gateway-discovery update Service %s backend failed in synchronization, %s. backend %+v", svc.Name, err.Error(), local.Backends)
 				continue
 			}
-			blog.V(3).Infof("Update serivce %s backend %v successfully", svc.Name, local.Backends)
+			blog.V(3).Infof("Update serivce %s backend %+v successfully", svc.Name, local.Backends)
 		} else {
 			blog.Infof("Service %s is Not affective in api-gateway when synchronization, try creation", local.Name)
 			//create service in api-gateway
@@ -385,7 +385,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	}
 	//ready to get kube-apiserver list from bcs-user-manager
 	config := &bcsapi.Config{
-		Host:      fmt.Sprintf("%s:%d", svc.IP, svc.Port),
+		Host:      fmt.Sprintf("%s://%s:%d", svc.Scheme, svc.IP, svc.Port),
 		AuthToken: s.option.AuthToken,
 		Gateway:   false,
 	}

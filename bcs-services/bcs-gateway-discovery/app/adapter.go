@@ -29,7 +29,6 @@ var defaultModules = []string{
 	types.BCS_MODULE_NETWORKDETECTION,
 	types.BCS_MODULE_USERMANAGER,
 	types.BCS_MODULE_KUBEAGENT,
-	types.BCS_MODULE_MESOSWEBCONSOLE,
 }
 
 var defaultDomain = "bkbcs.tencent.com"
