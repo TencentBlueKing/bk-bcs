@@ -10,7 +10,7 @@
 --
 
 local basic = require "kong.plugins.base_plugin"
-local userclient = require "kong.plugins.bkbcs-auth.bkbcs"
+local BKUserCli = require "kong.plugins.bkbcs-auth.bkbcs"
 local kong = kong
 
 local BKBCSAuthHandler = basic:extend()
@@ -25,7 +25,7 @@ end
 function BKBCSAuthHandler:access(conf)
   BKBCSAuthHandler.super.access(self, conf)
   -- ready to creat bkbcs userclient for authentication
-  local userc = userclient:new(conf.bkbcs_auth_endpoints)
+  local userc = BKUserCli(conf.bkbcs_auth_endpoints)
   local err = userc:init(conf)
   if err then
     kong.log.err("[bkbcs-auth] init user-manager client with endpoint [", conf.bkbcs_auth_endpoints, "] failed: ", err)

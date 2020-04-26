@@ -183,8 +183,10 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 	r.Unlock()
 
 	//discovery path's children node
-	for _, v := range zvs.Nodes {
-		r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
+	if len(zvs.Server) == 0 {
+		for _, v := range zvs.Nodes {
+			r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
+		}
 	}
 
 	return nil

@@ -14,6 +14,7 @@
 package v1
 
 import (
+	"bk-bcs/bcs-common/common/http"
 	"fmt"
 
 	"github.com/bitly/go-simplejson"
@@ -38,4 +39,11 @@ func parseResponse(resp []byte) (code int, msg string, data []byte, err error) {
 	}
 
 	return
+}
+
+func getClusterIDHeader(clusterId string) *http.HeaderSet {
+	return &http.HeaderSet{
+		Key:   "BCS-ClusterID",
+		Value: clusterId,
+	}
 }

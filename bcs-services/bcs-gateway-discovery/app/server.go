@@ -238,7 +238,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 				blog.Errorf("gateway-discovery update Service %s backend failed in synchronization, %s. backend %+v", svc.Name, err.Error(), local.Backends)
 				continue
 			}
-			blog.V(3).Infof("Update serivce %s backend %+v successfully", svc.Name, local.Backends)
+			blog.V(5).Infof("Update serivce %s backend %+v successfully", svc.Name, local.Backends)
 		} else {
 			blog.Infof("Service %s is Not affective in api-gateway when synchronization, try creation", local.Name)
 			//create service in api-gateway
@@ -406,7 +406,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 		k := fmt.Sprintf("%s/%s", module, cluster.ClusterID)
 		//one clustercredential converts to ServerInfo
 		var svcs []*types.ServerInfo
-		clusterAddress := strings.Split(cluster.ServerAddresses, ";")
+		clusterAddress := strings.Split(cluster.ServerAddresses, ",")
 		for _, address := range clusterAddress {
 			u, err := url.Parse(address)
 			if err != nil {
@@ -432,6 +432,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 			}
 			svcs = append(svcs, svc)
 		}
+		blog.V(5).Infof("kube-apiserver cluster info [%s] ServerInfo %+v", k, svcs)
 		rSvcs, err := s.adapter.GetService(k, svcs)
 		if err != nil {
 			blog.Errorf("converts module %s ServerInfo to api-gateway info failed in synchronization, %s", k, err.Error())
