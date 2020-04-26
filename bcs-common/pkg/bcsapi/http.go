@@ -26,7 +26,7 @@ func configureRequest(r *gorequest.SuperAgent, config *Config) *gorequest.SuperA
 		r.TLSClientConfig(config.TLSConfig)
 	}
 	if config.AuthToken != "" {
-		r.Set("Authentication", fmt.Sprintf("Bearer %s", config.AuthToken))
+		r.Set("Authorization", fmt.Sprintf("Bearer %s", config.AuthToken))
 	}
 	if config.ClusterID != "" {
 		r.Set(clusterIDHeader, config.ClusterID)
