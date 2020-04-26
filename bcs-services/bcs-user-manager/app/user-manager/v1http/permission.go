@@ -389,7 +389,8 @@ func verifyResourceReplica(userId uint, resourceType, resource, action string) (
 		mutex.RUnlock()
 	} else {
 		//sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select("bcs_roles.actions").
-		//	Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id where bcs_user_resource_roles.user_id = ? and bcs_user_resource_roles.resource_type = ? and (bcs_user_resource_roles.resource = ? or bcs_user_resource_roles.resource = ?)", userId, resourceType, resource, "*").Scan(&op) //nolint
+		//	Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id where bcs_user_resource_roles.user_id = ? and bcs_user_resource_roles.resource_type = ?
+		//	and (bcs_user_resource_roles.resource = ? or bcs_user_resource_roles.resource = ?)", userId, resourceType, resource, "*").Scan(&op) //nolint
 
 		mutex.RLock()
 		for _, v := range PermissionsCache[userId] {
