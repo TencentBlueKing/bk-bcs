@@ -42,7 +42,8 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	httpCli := httpclient.NewHttpClient()
 	httpCli.SetHeader("Content-Type", "application/json")
 	httpCli.SetHeader("Accept", "application/json")
-	httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
+	httpCli.SetHeader("Authorization", "Bearer "+b.bcsToken)
+	//httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
 
 	if header != nil {
 		httpCli.SetBatchHeader(header)
