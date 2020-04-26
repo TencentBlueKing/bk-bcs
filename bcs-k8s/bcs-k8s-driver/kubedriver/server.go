@@ -71,22 +71,31 @@ func StartServer(o *options.KubeDriverServerOptions) error {
 	}
 
 	if o.Environment == "prod" || o.Environment == "stag" {
-		// Register node to zk and then keep it registed
-		// Get current node info to register it to zookeeper
-		serverInfo := GetServerInfo(o, clusterID)
-		node := custom.NewServiceNode(serverInfo)
 
-		// Register current node info to zookeeper and start discovering
-		basePath := fmt.Sprintf("%s/%s/%s",
-			types.BCS_SERV_BASEPATH,
-			types.BCS_MODULE_KUBERNETEDRIVER,
-			clusterID,
-		)
-		reg := disreg.NewNodeRegister(o.ZkServers, basePath, &node)
-		if err := reg.DoRegister(); err != nil {
-			return fmt.Errorf("unable to register driver: %s", err)
+		if o.RegisterWithWebsocket {
+			err := buildWebsocketToApi(o)
+			if err != nil {
+				blog.Fatalf("err when register with websocket: %s", err.Error())
+				return err
+			}
+		} else {
+			// Register node to zk and then keep it registed
+			// Get current node info to register it to zookeeper
+			serverInfo := GetServerInfo(o, clusterID)
+			node := custom.NewServiceNode(serverInfo)
+
+			// Register current node info to zookeeper and start discovering
+			basePath := fmt.Sprintf("%s/%s/%s",
+				types.BCS_SERV_BASEPATH,
+				types.BCS_MODULE_KUBERNETEDRIVER,
+				clusterID,
+			)
+			reg := disreg.NewNodeRegister(o.ZkServers, basePath, &node)
+			if err := reg.DoRegister(); err != nil {
+				return fmt.Errorf("unable to register driver: %s", err)
+			}
+			go reg.StartDiscover(0)
 		}
-		go reg.StartDiscover(0)
 	}
 
 	proxier := NewKubeSmartProxier(o.KubeMasterUrl, o.KubeClientTLS)

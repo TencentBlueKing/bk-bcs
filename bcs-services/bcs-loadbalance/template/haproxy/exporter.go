@@ -249,10 +249,16 @@ func (m *Manager) newServerMetricDesc(metricName, metricDoc string) *prometheus.
 
 func convertStatus(status string) float64 {
 	switch status {
-	case "UP", "UP 1/3", "UP 2/3", "OPEN", "no check":
-		return 1
-	case "DOWN", "DOWN 1/2", "NOLB", "MAINT":
+	case "DOWN", "DOWN 1/2":
 		return 0
+	case "UP", "UP 1/3", "UP 2/3", "OPEN":
+		return 1
+	case "MAINT":
+		return 2
+	case "no check":
+		return 3
+	case "NOLB":
+		return 4
 	}
 	return 0
 }

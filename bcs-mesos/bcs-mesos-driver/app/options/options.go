@@ -34,6 +34,11 @@ type MesosDriverOptionsOut struct {
 	AdmissionWebhook         bool   `json:"admission_webhook" value:"false" usage:"whether admission webhook"`
 	KubeConfig               string `json:"kubeconfig" value:"" usage:"kube config for custom resource feature and etcd storage"`
 	MesosWebconsoleProxyPort uint   `json:"mesos_webconsole_proxy_port" value:"8083" usage:"Port to connect to mesos webconsole proxy"`
+	// websocket register
+	RegisterWithWebsocket bool   `json:"register-with-websocket" value:"false" usage:"whether register to bcs-api with websocket"`
+	RegisterToken         string `json:"register-token" value:"" usage:"register token to register to bcs-api"`
+	RegisterUrl           string `json:"register-url" value:"" usage:"bcs-api url to register"`
+	InsecureSkipVerify    bool   `json:"insecure-skip-verify" value:"false" usage:"whether insecure skip verify"`
 }
 
 //MesosDriverOption is option in flags
@@ -72,6 +77,10 @@ func NewMesosDriverOption(opOut *MesosDriverOptionsOut) *MesosDriverOption {
 				CertPasswd: static.ClientCertPwd,
 				IsSSL:      false,
 			},
+			RegisterWithWebsocket: opOut.RegisterWithWebsocket,
+			RegisterToken:         opOut.RegisterToken,
+			RegisterUrl:           opOut.RegisterUrl,
+			InsecureSkipVerify:    opOut.InsecureSkipVerify,
 		},
 	}
 }

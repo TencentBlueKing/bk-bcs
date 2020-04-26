@@ -45,4 +45,10 @@ type MesosDriverConfig struct {
 	KubeConfig string
 	//MesosWebconsoleProxyPort
 	MesosWebconsoleProxyPort uint
+
+	// websocket register
+	RegisterWithWebsocket bool
+	RegisterToken         string
+	RegisterUrl           string
+	InsecureSkipVerify    bool
 }

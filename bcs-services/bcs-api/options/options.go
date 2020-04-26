@@ -41,6 +41,8 @@ type ServerOption struct {
 	MesosWebconsoleProxyPort uint `json:"mesos_webconsole_proxy_port" value:"8083" usage:"Port to connect to mesos webconsole proxy"`
 
 	TKE TKEOptions `json:"tke"`
+
+	PeerToken string `json:"peer_token" value:"" usage:"peer token to auth with each other, only used to websocket peer"`
 }
 
 type BKEOptions struct {
