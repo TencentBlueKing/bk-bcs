@@ -241,9 +241,11 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 	}
 
 	blog.InitLogs(conf.LogConfig{
-		LogDir:     netConf.LogDir,
-		LogMaxSize: 20,
-		LogMaxNum:  100,
+		LogDir: netConf.LogDir,
+		// never log to stderr
+		StdErrThreshold: "6",
+		LogMaxSize:      20,
+		LogMaxNum:       100,
 	})
 	defer blog.CloseLogs()
 
@@ -331,9 +333,11 @@ func (e *ENI) CNIDel(args *skel.CmdArgs) error {
 		return fmt.Errorf("load config file failed, err %s", err.Error())
 	}
 	blog.InitLogs(conf.LogConfig{
-		LogDir:     netConf.LogDir,
-		LogMaxSize: 20,
-		LogMaxNum:  100,
+		LogDir: netConf.LogDir,
+		// never log to stderr
+		StdErrThreshold: "6",
+		LogMaxSize:      20,
+		LogMaxNum:       100,
 	})
 	defer blog.CloseLogs()
 
