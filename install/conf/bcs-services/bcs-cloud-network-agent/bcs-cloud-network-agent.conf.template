@@ -1,4 +1,6 @@
 {
+    "address": "${bcsCloudNetworkAddress}",
+    "metric_port": ${bcsCloudNetworkMetricPort},
     "cluster": "${bcsCloudNetworkAgentClusterid}",
     "cloud": "bcsCloudNetworkAgentCloud",
     "kubeconfig": "${bcsCloudNetworkAgentKubeconfig}",

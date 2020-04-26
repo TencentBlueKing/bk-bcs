@@ -37,6 +37,8 @@ export AWS_SECURITY_GROUPS=sg-xxxx1,sg-xxxx2
 
 ```json
 {
+    "address": "${bcsCloudNetworkAgentAddress}",
+    "metric_port": ${bcsCloudNetworkAgentMetricPort},
     "cluster": "${bcsCloudNetworkAgentClusterid}",
     "cloud": "bcsCloudNetworkAgentCloud",
     "kubeconfig": "${bcsCloudNetworkAgentKubeconfig}",
@@ -52,6 +54,8 @@ export AWS_SECURITY_GROUPS=sg-xxxx1,sg-xxxx2
 }
 ```
 
+* bcsCloudNetworkAgentAddress: agent地址
+* bcsCloudNetworkAgentMetricPort: metric端口
 * bcsCloudNetworkAgentClusterid: BCS集群ID
 * bcsCloudNetworkAgentCloud: 公有云类型
 * bcsCloudNetworkAgentKubeconfig: kubeconfig位置
