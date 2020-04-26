@@ -50,7 +50,7 @@ func (s *SidecarController) initKubeconfig() error {
 		blog.Errorf("build kubeclient by kubeconfig %s error %s", s.conf.Kubeconfig, err.Error())
 		return err
 	}
-	factory := informers.NewSharedInformerFactory(kubeClient, time.Minute*10)
+	factory := informers.NewSharedInformerFactory(kubeClient, 0)
 	s.podLister = factory.Core().V1().Pods().Lister()
 	factory.Start(stopCh)
 	// Wait for all caches to sync.
@@ -75,7 +75,7 @@ func (s *SidecarController) initKubeconfig() error {
 		blog.Errorf("build internal clientset by kubeconfig %s error %s", s.conf.Kubeconfig, err.Error())
 		return err
 	}
-	internalFactory := externalversions.NewSharedInformerFactory(internalClientset, time.Minute*10)
+	internalFactory := externalversions.NewSharedInformerFactory(internalClientset, time.Hour)
 	s.bcsLogConfigInformer = internalFactory.Bkbcs().V1().BcsLogConfigs().Informer()
 	s.bcsLogConfigLister = internalFactory.Bkbcs().V1().BcsLogConfigs().Lister()
 	internalFactory.Start(stopCh)
@@ -134,6 +134,10 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 		blog.Errorf("list bcslogconfig error %s", err.Error())
 		return nil
 	}
+	if len(bcsLogConfs)==0 {
+		blog.Warnf("The container clusters don't have any BcsLogConfig")
+		return nil
+	}
 
 	var highLogConfig *bcsv1.BcsLogConfig
 	var highScore int
@@ -141,14 +145,14 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 		blog.Infof("BcsLogConfig(%s) check pod(%s) container(%s)", conf.Name, pod.Name, container.ID)
 		score := scoreBcsLogConfig(container, pod, conf)
 		if score > highScore {
-			blog.Infof("container %s pod(%s) BcsLogConfig(%s) higher score(%d)",
-				container.ID, pod.Name, highLogConfig.Name, score)
 			highScore = score
 			highLogConfig = conf
+			blog.Infof("container %s pod(%s) BcsLogConfig(%s) higher score(%d)",
+				container.ID, pod.Name, highLogConfig.Name, score)
 		}
 	}
 	if highLogConfig == nil {
-		blog.Warnf("container %s pod(%s) not match BcsLogConfig", container.ID, pod.Name)
+		blog.Warnf("container %s pod(%s) not match BcsLogConfigs", container.ID, pod.Name)
 	} else {
 		blog.Infof("container %s pod(%s) match BcsLogConfig(%s)", container.ID, pod.Name, highLogConfig.Name)
 	}
@@ -177,9 +181,17 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	//BcsLogConfig parameter WorkloadType、WorkloadName、WorkloadNamespace matched, increased 2 score
 	//else not matched, return 0 score
 	if bcsLogConf.Spec.WorkloadType != "" {
+		//if pod don't belong any workload
+		if len(pod.OwnerReferences)==0 {
+			blog.Warnf("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) WorkloadType",
+				container.ID, pod.Name, pod.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
+			return 0
+		}
+
 		matched := false
 		if pod.OwnerReferences[0].Kind == "ReplicaSet" {
-			if strings.ToLower(bcsLogConf.Spec.WorkloadType) == strings.ToLower("Deployment") {
+			if strings.ToLower(bcsLogConf.Spec.WorkloadType) == strings.ToLower("Deployment") &&
+				strings.HasPrefix(pod.OwnerReferences[0].Name, bcsLogConf.Spec.WorkloadName){
 				score += 2
 				matched = true
 			}
@@ -233,7 +245,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	//not matched, return 0 score
 	if len(bcsLogConf.Spec.ContainerConfs) != 0 && !matched {
 		blog.Warnf("container(%s:%s) pod(%s:%s) not match BcsLogConfig(%s) containerName",
-			container.ID, container.Config.Labels[ContainerLabelK8sContainerName], pod.Name, bcsLogConf.Name)
+			container.ID, container.Config.Labels[ContainerLabelK8sContainerName], pod.Name, pod.Name, bcsLogConf.Name)
 		return 0
 	}
 
@@ -241,9 +253,21 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 }
 
 func (s *SidecarController) handleChangedBcsLogConfig(obj interface{}) {
+	conf, ok := obj.(*bcsv1.BcsLogConfig)
+	if !ok {
+		blog.Errorf("cannot convert to *bcsv1.BcsLogConfig: %v", obj)
+		return
+	}
+	blog.Infof("handle kubernetes AddOrDelete event BcsLogConfig(%s:%s)", conf.Name, conf.Namespace)
 	s.syncLogConfs()
 }
 
 func (s *SidecarController) handleUpdatedBcsLogConfig(oldObj, newObj interface{}) {
+	conf, ok := newObj.(*bcsv1.BcsLogConfig)
+	if !ok {
+		blog.Errorf("cannot convert to *bcsv1.BcsLogConfig: %v", newObj)
+		return
+	}
+	blog.Infof("handle kubernetes Update event BcsLogConfig(%s:%s)", conf.Name, conf.Namespace)
 	s.syncLogConfs()
 }

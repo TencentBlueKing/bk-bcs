@@ -14,17 +14,15 @@
 package sidecar
 
 import (
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
+	"bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
+	bkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
-	"time"
-
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
-	"bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
-	bkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 
 	"github.com/fsouza/go-dockerclient"
 	"gopkg.in/yaml.v2"
@@ -61,7 +59,7 @@ type SidecarController struct {
 type ContainerLogConf struct {
 	containerId string
 	confPath    string
-	needCollect bool
+	//needCollect bool
 }
 
 type LogConfParameter struct {
@@ -101,15 +99,12 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	//sync logconfig file
-	s.syncLogConfs()
 	return s, nil
 }
 
 func (s *SidecarController) Start() {
 	go s.listenerDockerEvent()
-	go s.tickerSyncContainerLogConfs()
+	//go s.tickerSyncContainerLogConfs()
 }
 
 //start listen docker api event
@@ -148,25 +143,16 @@ func (s *SidecarController) listenerDockerEvent() {
 
 		// stop container
 		case "destroy":
+			s.Lock()
 			s.deleteContainerLogConf(msg.ID)
-		}
-	}
-}
-
-func (s *SidecarController) tickerSyncContainerLogConfs() {
-	ticker := time.NewTicker(time.Minute * 10)
-
-	for {
-		select {
-		case <-ticker.C:
-			s.syncLogConfs()
+			s.Unlock()
 		}
 	}
 }
 
 func (s *SidecarController) syncLogConfs() {
 	//list all running containers
-	apiContainers, err := s.client.ListContainers(docker.ListContainersOptions{})
+	apiContainers, err := s.client.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		blog.Errorf("docker ListContainers failed: %s", err.Error())
 		return
@@ -289,11 +275,18 @@ func (s *SidecarController) getContainerLogConfKey(containerId string) string {
 
 func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	key := s.getContainerLogConfKey(c.ID)
-	s.RLock()
-	_, ok := s.logConfs[key]
-	s.RUnlock()
-	if ok {
-		blog.V(3).Infof("container %s already under SidecarController manager", c.ID)
+	y, ok := s.produceLogConfParameterV2(c)
+	//the container don't match any BcsLogConfig
+	if !ok {
+		s.Lock()
+		defer s.Unlock()
+		_, ok := s.logConfs[key]
+		//if the container have logconfig, then delete it
+		if ok {
+			s.deleteContainerLogConf(c.ID)
+			delete(s.logConfs,key)
+		}
+		blog.Infof("container %s don't need collect log", c.ID)
 		return
 	}
 
@@ -301,38 +294,21 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		containerId: c.ID,
 		confPath:    key,
 	}
-	y, ok := s.produceLogConfParameterV2(c)
-	if !ok {
-		logConf.needCollect = false
-		s.Lock()
-		s.logConfs[key] = logConf
-		s.Unlock()
-		return
-	}
-
 	by, _ := yaml.Marshal(y)
 	blog.Infof("container %s need been collected log, and LogConfig(%s)", c.ID, string(by))
-	logConf.needCollect = true
-	_, err := os.Stat(logConf.confPath)
-	//if confpath not exist, then create it
+	f, err := os.Create(logConf.confPath)
 	if err != nil {
-		f, err := os.Create(logConf.confPath)
-		if err != nil {
-			blog.Errorf("container %s open file %s failed: %s", c.ID, logConf.confPath, err.Error())
-			return
-		}
-		defer f.Close()
-
-		_, err = f.Write(by)
-		if err != nil {
-			blog.Errorf("container %s tempalte execute failed: %s", c.ID, err.Error())
-			return
-		}
-		blog.Infof("produce container %s log config %s success", c.ID, logConf.confPath)
-	} else {
-		blog.Infof("container %s log config %s already exist, then don't need create it", c.ID, logConf.confPath)
+		blog.Errorf("container %s open file %s failed: %s", c.ID, logConf.confPath, err.Error())
+		return
 	}
+	defer f.Close()
 
+	_, err = f.Write(by)
+	if err != nil {
+		blog.Errorf("container %s tempalte execute failed: %s", c.ID, err.Error())
+		return
+	}
+	blog.Infof("produce container %s log config %s success", c.ID, logConf.confPath)
 	s.Lock()
 	s.logConfs[key] = logConf
 	s.Unlock()
@@ -341,25 +317,17 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 
 func (s *SidecarController) deleteContainerLogConf(containerId string) {
 	key := s.getContainerLogConfKey(containerId)
-	s.RLock()
 	logConf, ok := s.logConfs[key]
-	s.RUnlock()
 	if !ok {
 		blog.Infof("container %s don't have LogConfig, then ignore", containerId)
 		return
 	}
-
-	if logConf.needCollect {
-		err := os.Remove(logConf.confPath)
-		if err != nil {
-			blog.Errorf("remove log config %s error %s", logConf.confPath, err.Error())
-			return
-		}
+	err := os.Remove(logConf.confPath)
+	if err != nil {
+		blog.Errorf("remove log config %s error %s", logConf.confPath, err.Error())
+		return
 	}
-
-	s.Lock()
 	delete(s.logConfs, key)
-	s.Unlock()
 	blog.Infof("delete container %s log config success", containerId)
 }
 
@@ -389,6 +357,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		blog.Warnf("container %s don't match BcsLogConfig", container.ID)
 		return nil, false
 	}
+
 	para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 	para.ExtMeta["io_tencent_bcs_namespace"] = pod.Namespace
 	para.ExtMeta["io_tencent_bcs_server_name"] = pod.OwnerReferences[0].Name
@@ -413,6 +382,9 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		para.NonstandardDataid = logConf.Spec.NonStdDataId
 		para.NonstandardPaths = logConf.Spec.LogPaths
 		para.LogTags = logConf.Spec.LogTags
+	}
+	for k,v :=range para.LogTags {
+		para.ExtMeta[k] = v
 	}
 
 	y := &types.Yaml{Local: make([]types.Local, 0)}

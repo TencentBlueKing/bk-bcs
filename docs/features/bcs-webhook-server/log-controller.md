@@ -108,6 +108,7 @@ spec:
   appId: "20000"
   workloadType: Deployment
   workloadName: python-webhook
+  workloadNamespace: python-webhook
   containerConfs:
     - containerName: python
       stdDataId: "2001"
