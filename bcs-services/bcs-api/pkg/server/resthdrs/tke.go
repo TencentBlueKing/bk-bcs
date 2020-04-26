@@ -75,10 +75,12 @@ type LbStatus struct {
 // BindLb bind a clb to tke cluster
 func BindLb(request *restful.Request, response *restful.Response) {
 
+	// support prometheus metrics
 	start := time.Now()
 
 	cluster := filters.GetCluster(request)
 
+	// check if the cluster is valid
 	externalClusterInfo := sqlstore.QueryBCSClusterInfo(&m.BCSClusterInfo{
 		ClusterId: cluster.ID,
 	})
@@ -97,6 +99,7 @@ func BindLb(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// call tke api to bind cluster clb
 	tkeCluster := tke.NewTkeCluster(cluster.ID, externalClusterInfo.TkeClusterId, externalClusterInfo.TkeClusterRegion)
 	err := tkeCluster.BindClusterLb()
 	if err != nil {
@@ -118,10 +121,12 @@ func BindLb(request *restful.Request, response *restful.Response) {
 // GetLbStatus call the tke api to get clb status
 func GetLbStatus(request *restful.Request, response *restful.Response) {
 
+	// support prometheus metrics
 	start := time.Now()
 
 	cluster := filters.GetCluster(request)
 
+	// check if the cluster is valid
 	externalClusterInfo := sqlstore.QueryBCSClusterInfo(&m.BCSClusterInfo{
 		ClusterId: cluster.ID,
 	})
@@ -140,7 +145,7 @@ func GetLbStatus(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	// call tke api
+	// call tke api to get lb status
 	tkeCluster := tke.NewTkeCluster(cluster.ID, externalClusterInfo.TkeClusterId, externalClusterInfo.TkeClusterRegion)
 	status, err := tkeCluster.GetMasterVip()
 	if err != nil {
@@ -166,6 +171,7 @@ func GetLbStatus(request *restful.Request, response *restful.Response) {
 // UpdateTkeLbSubnet update a tke subnet
 func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 
+	// support prometheus metrics
 	start := time.Now()
 
 	blog.Debug(fmt.Sprintf("Create or Update tke lb subnet"))
@@ -200,6 +206,7 @@ func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 // AddTkeCidr init tke cidrs into bcs-api
 func AddTkeCidr(request *restful.Request, response *restful.Response) {
 
+	// support prometheus metrics
 	start := time.Now()
 
 	blog.Info(fmt.Sprintf("Insert cidr"))
@@ -219,10 +226,12 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 			Cidr:     tkeCidr.Cidr,
 			IpNumber: tkeCidr.IpNumber,
 		})
+		// this vpc cidr already exist, skip and continue
 		if cidr != nil {
 			blog.Warnf("Add Cidr failed, Cidr %s IpNumber %d in vpc %s already exists", tkeCidr.Cidr, tkeCidr.IpNumber, form.Vpc)
 			continue
 		}
+		// set the cidr status to be "available"
 		if tkeCidr.Status == "" {
 			tkeCidr.Status = sqlstore.CidrStatusAvailable
 		}
@@ -247,6 +256,7 @@ func AddTkeCidr(request *restful.Request, response *restful.Response) {
 // ApplyTkeCidr assign an cidr to client
 func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 
+	// support prometheus metrics
 	start := time.Now()
 
 	form := ApplyTkeCidrForm{}
@@ -308,6 +318,7 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 // ReleaseTkeCidr release a cidr to be available
 func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 
+	// support prometheus metrics
 	start := time.Now()
 
 	form := ReleaseTkeCidrForm{}

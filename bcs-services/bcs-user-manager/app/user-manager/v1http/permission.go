@@ -81,6 +81,26 @@ var mutex *sync.RWMutex
 
 // initCache sync data from db to cache periodically
 func initCache() {
+	initRoles := []models.BcsRole{
+		{
+			Name:    "manager",
+			Actions: "GET,POST,PUT,PATCH,DELETE",
+		},
+		{
+			Name:    "viewer",
+			Actions: "GET",
+		},
+	}
+	for _, role := range initRoles {
+		m := sqlstore.GetRole(role.Name)
+		if m == nil {
+			err := sqlstore.CreateRole(&role)
+			if err != nil {
+				blog.Errorf("Failed to init role [%s]: %s", role.Name, err.Error())
+			}
+		}
+	}
+
 	mutex = new(sync.RWMutex)
 	var ura []UserResourceAction
 	ticker := time.NewTicker(60 * time.Second)
