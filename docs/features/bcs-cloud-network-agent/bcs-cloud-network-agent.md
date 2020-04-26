@@ -15,6 +15,26 @@ bcs cloud network agent作为进程或者daemonSet方式常驻于slave节点上�
 
 ## 参数说明
 
+### aws环境变量参数
+
+```shell
+export AWS_REGION=sa-xxx-1
+export AWS_VPC=vpc-xxx
+export AWS_ACCESS_KEY_ID=xxxxxxxxxxxxxxxx
+export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxx
+export AWS_SUBNETS=subnetid-1,subnetid-2
+export AWS_SECURITY_GROUPS=sg-xxxx1,sg-xxxx2
+```
+
+* AWS_REGION: aws云区域
+* AWS_VPC: aws vpc id
+* AWS_ACCESS_KEY_ID: aws api访问id
+* AWS_SECRET_ACCESS_KEY: aws api访问key
+* AWS_SUBNETS: 弹性网卡IP所属子网id
+* AWS_SECURITY_GROUPS: 弹性网卡绑定的安全组
+
+### 通用参数
+
 ```json
 {
     "cluster": "${bcsCloudNetworkAgentClusterid}",
@@ -24,7 +44,6 @@ bcs cloud network agent作为进程或者daemonSet方式常驻于slave节点上�
     "netserviceCa": "${bcsCloudNetworkAgentNetserviceCaFile}",
     "netserviceKey": "${bcsCloudNetworkAgentNetserviceClientKeyFile}",
     "netserviceCert": "${bcsCloudNetworkAgentNetserviceClentCertFile}",
-    "subnets": "${bcsCloudNetworkAgentSubnets}",
     "eniNum": ${bcsCloudNetworkAgentEniNum},
     "ipNumPerEni": ${bcsCloudNetworkAgentIpNumPerEni},
     "eniMTU": ${bcsCloudNetworkAgentEniMTU},
@@ -40,7 +59,6 @@ bcs cloud network agent作为进程或者daemonSet方式常驻于slave节点上�
 * bcsCloudNetworkAgentNetserviceCaFile: bcs-netservice tls ca证书
 * bcsCloudNetworkAgentNetserviceClientKeyFile: bcs-netservice 客户端私钥
 * bcsCloudNetworkAgentNetserviceClentCertFile: bcs-netservice 客户端证书
-* bcsCloudNetworkAgentSubnets: 公有云VPC中，弹性网卡IP可用子网ID，逗号分割
 * bcsCloudNetworkAgentEniNum: 申请的弹性网卡数量, "0"表示申请尽可能多的网卡
 * bcsCloudNetworkAgentIpNumPerEni: 每张弹性网卡IP数量: "0"表示尽可能多的申请IP
 * bcsCloudNetworkAgentEniMTU: 弹性的网卡MTU，默认为1500，(AWS上推荐使用9001)

@@ -6,7 +6,6 @@
     "netserviceCa": "${bcsCloudNetworkAgentNetserviceCaFile}",
     "netserviceKey": "${bcsCloudNetworkAgentNetserviceClientKeyFile}",
     "netserviceCert": "${bcsCloudNetworkAgentNetserviceClentCertFile}",
-    "subnets": "${bcsCloudNetworkAgentSubnets}",
     "eniNum": ${bcsCloudNetworkAgentEniNum},
     "ipNumPerEni": ${bcsCloudNetworkAgentIpNumPerEni},
     "eniMTU": ${bcsCloudNetworkAgentEniMTU},
