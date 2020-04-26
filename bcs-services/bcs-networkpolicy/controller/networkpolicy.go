@@ -1358,13 +1358,13 @@ func (npc *NetworkPolicyController) evalIPBlockPeer(peer networking.NetworkPolic
 	ipBlock := make([][]string, 0)
 	if peer.PodSelector == nil && peer.NamespaceSelector == nil && peer.IPBlock != nil {
 		if cidr := peer.IPBlock.CIDR; strings.HasSuffix(cidr, "/0") {
-			ipBlock = append(ipBlock, []string{"0.0.0.0/1", OptionTimeout, "0"}, []string{"128.0.0.0/1", OptionTimeout, "0"})
+			ipBlock = append(ipBlock, []string{"0.0.0.0/1", OptionTimeout, "0"}, []string{"127.0.0.0/1", OptionTimeout, "0"})
 		} else {
 			ipBlock = append(ipBlock, []string{cidr, OptionTimeout, "0"})
 		}
 		for _, except := range peer.IPBlock.Except {
 			if strings.HasSuffix(except, "/0") {
-				ipBlock = append(ipBlock, []string{"0.0.0.0/1", OptionTimeout, "0", OptionNoMatch}, []string{"128.0.0.0/1", OptionTimeout, "0", OptionNoMatch})
+				ipBlock = append(ipBlock, []string{"0.0.0.0/1", OptionTimeout, "0", OptionNoMatch}, []string{"127.0.0.0/1", OptionTimeout, "0", OptionNoMatch})
 			} else {
 				ipBlock = append(ipBlock, []string{except, OptionTimeout, "0", OptionNoMatch})
 			}
