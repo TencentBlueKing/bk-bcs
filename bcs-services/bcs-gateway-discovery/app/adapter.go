@@ -153,8 +153,9 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 			AuthOption: &register.BCSAuthOption{
 				Name: "bkbcs-auth",
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
+				Module:        types.BCS_MODULE_MESOSDRIVER,
 			},
 		},
 	}
@@ -212,8 +213,9 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 			AuthOption: &register.BCSAuthOption{
 				Name: "bkbcs-auth",
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
+				Module:        types.BCS_MODULE_KUBERNETEDRIVER,
 			},
 		},
 	}
@@ -255,8 +257,9 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 			AuthOption: &register.BCSAuthOption{
 				Name: "bkbcs-auth",
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
+				Module:        types.BCS_MODULE_STORAGE,
 			},
 		},
 	}
@@ -320,8 +323,9 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 			AuthOption: &register.BCSAuthOption{
 				Name: "bkbcs-auth",
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
+				Module:        types.BCS_MODULE_KUBEAGENT,
 			},
 		},
 		Labels: labels,
@@ -399,8 +403,9 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 			AuthOption: &register.BCSAuthOption{
 				Name: "bkbcs-auth",
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
+				Module:        types.BCS_MODULE_NETWORKDETECTION,
 			},
 		},
 		Service: module,
@@ -446,8 +451,9 @@ func (adp *Adapter) constructStandardProxy(module string, svcs []*types.ServerIn
 			AuthOption: &register.BCSAuthOption{
 				Name: "bkbcs-auth",
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
+				Module:        module,
 			},
 		},
 	}
