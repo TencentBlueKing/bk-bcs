@@ -59,7 +59,7 @@ function BKUserCli:init(config)
   -- parse endpoint for request details
   local parsed_url = parse_url(config.bkbcs_auth_endpoints)
   if not parsed_url then
-    kong.log.err("[bkbcs-auth] bkbcs_auth_endpoints format error")
+    kong.log.err(" bkbcs_auth_endpoints format error")
     return "endpoints format error"
   end
   -- construct target for getting bkbcs-auth kongBalancer
@@ -69,7 +69,7 @@ function BKUserCli:init(config)
   local balancer, err  = kongBalancer._get_balancer(target, false)
   -- ready to get ip:port information for initialization
   if not balancer then
-    kong.log.err("[bkbcs-auth] user_cli get no balancer for ", parsed_url.host, " ,  err: ", parsed_url.host)
+    kong.log.err(" user_cli get no balancer for ", parsed_url.host, " ,  err: ", parsed_url.host)
     return err
   end
   self.balancer = balancer
@@ -77,7 +77,7 @@ function BKUserCli:init(config)
   local hostName
    self.ip, self.port, hostName, self.handle = balancer:getPeer(true)
   if not self.ip then
-    kong.log.err("[bkbcs-auth] user_cli get no target from upstream ", parsed_url.host)
+    kong.log.err(" user_cli get no target from upstream ", parsed_url.host)
     return "no avaliable ip for balancer"
   end
   -- init http for authentication later
@@ -85,13 +85,13 @@ function BKUserCli:init(config)
   self.httpc:set_timeout(config.timeout)
   local ok, err = self.httpc:connect(self.ip, self.port)
   if not ok then
-    kong.log.err("[bkbcs-auth] user_cli connect to ", self.ip, ":", self.port, " failed, ", err)
+    kong.log.err(" user_cli connect to ", self.ip, ":", self.port, " failed, ", err)
     return err
   end
   if parsed_url.scheme == "https" then
     local _, err = self.httpc:ssl_handshake(true, parsed_url.host, false)
     if err then
-      kong.log.err("[bkbcs-auth] user_cli ssl handshake with ", self.ip, ":", self.port, " failed, ", err)
+      kong.log.err(" user_cli ssl handshake with ", self.ip, ":", self.port, " failed, ", err)
       return err
     end
   end
@@ -125,19 +125,19 @@ function BKUserCli:construct_identity(conf, request)
   local cluster_id = request.get_header(CLUSTER_HEADER)
   if not cluster_id and 
   not (conf.module == KUBEAGENT or conf.module == NETWORKDETECTION) then
-    kong.log.err("[bkbcs-auth] user_cli get no BCS-ClusterID from request ", request.get_path())
+    kong.log.err(" user_cli get no BCS-ClusterID from request ", request.get_path())
     return nil, "lost BCS-ClusterID in header"
   end
   if conf.module == KUBEAGENT then
     -- retrieve bcs-cluster-id from url as resource
     local id_iterator, id_err = ngx.re.gmatch(request.get_path(), "BCS-K8S-([0-9]+[^/])")
     if not id_iterator then
-      kong.log.err("[bkbcs-auth] user_cli get no BCS-ClusterID in kubernetes request ", request.get_path(), " error: ", id_err)
+      kong.log.err(" user_cli get no BCS-ClusterID in kubernetes request ", request.get_path(), " error: ", id_err)
       return nil, "lost BCS-ClusterID in url"
     end
     local id, err = id_iterator()
     if not id or #id < 1 then
-      kong.log.err("[bkbcs-auth] user_cli parse kubernetes BCS-ClusterID in request ", request.get_path(), " failed, ", err)
+      kong.log.err(" user_cli parse kubernetes BCS-ClusterID in request ", request.get_path(), " failed, ", err)
       return nil, "kuberentes BCS-ClusterID "
     end
     auth.resource = id[0]
@@ -149,17 +149,17 @@ function BKUserCli:construct_identity(conf, request)
   -- get token for http header
   local auth_header = request.get_header("Authorization")
   if not auth_header then
-    kong.log.err("[bkbcs-auth] user_cli get no Authorization from http header, request path:", request.get_path())
+    kong.log.err(" user_cli get no Authorization from http header, request path:", request.get_path())
     return nil, "lost Authorization"
   end
   local iterator, iter_err = ngx.re.gmatch(auth_header, "\\s*[Bb]earer\\s+(.+)")
   if not iterator then
-    kong.log.err("[bkbcs-auth] user_cli search token for request ", request.get_path(), " failed, ", iter_err)
+    kong.log.err(" user_cli search token for request ", request.get_path(), " failed, ", iter_err)
     return nil, "Authorization format error"
   end
   local m, err = iterator()
   if not m or #m < 1 then
-    kong.log.err("[bkbcs-auth] user_cli get token information from request ",  request.get_path(), " failed: ", err)
+    kong.log.err(" user_cli get token information from request ",  request.get_path(), " failed: ", err)
     return nil, "Authorization token lost"
   end
   auth.user_token = m[1]
@@ -173,10 +173,10 @@ end
 -- example: curl -H"Content-Type: application/json" http://127.0.0.L1:8080/usermanager/v1/permissions/verify -d \
 --          -H "Authorization: Bearer ${token}" -d '{"user_token":"", "resource_type":"cluster", "resource":"clsuterId", "action":"POST"}'
 -- response: {"result":true,"code":0,"message":"success","data":{"allowed":false,"message":"usertoken is invalid"}}
-function BKUserCli:authentication(info)
+function BKUserCli:authentication(conf, info)
   -- ready to send http authentication information
   if self.httpc == nil then
-    kong.log.err("[bkbcs-auth] user_cli need to be initialized...")
+    kong.log.err(" user_cli need to be initialized...")
     return false, "not initialization"
   end
   -- serialization from table to string
@@ -185,26 +185,25 @@ function BKUserCli:authentication(info)
     method = USERMGR_METHOD,
     path = USERMGR_URL,
     headers = {
-      ["Host"] = USERMGR_HOST,
       ["Content-Type"] = "application/json",
       ["Accept"] = "application/json",
       ["Content-Length"] = #payload,
-      ["Authorization"] = "Bearer " .. info.token,
+      ["Authorization"] = "Bearer " .. conf.token,
     },
     body = payload,
   })
   if not res then
-    kong.log.err("[bkbcs-auth] user_cli send request to user-manager failed, ", err, ". info: ", self.ip, ":", tostring(self.port))
+    kong.log.err(" user_cli send request to user-manager failed, ", err, ". info: ", self.ip, ":", tostring(self.port))
     return false, "authentication connection failed" .. ": " .. err
   end
   if res.status >= 400 then
-    kong.log.err("[bkbcs-auth] user_cli send request to user-manager failed, http code: ", tostring(res.status))
+    kong.log.err(" user_cli send request to user-manager failed, http code: ", tostring(res.status))
     return false, "authentication internal err: " .. tostring(res.status)
   end
   local body = res:read_body()
   local auth_response = json.decode(body)
   if not auth_response or not auth_response.data then
-    kong.log.err("[bkbcs-auth] user_cli get no correct response from user-manager, body: ", body)
+    kong.log.err(" user_cli get no correct response from user-manager, body: ", body)
     return false, "invalid verify response"
   end
   -- connection setting keepalive
@@ -212,7 +211,7 @@ function BKUserCli:authentication(info)
   if not ok then
     -- the batch might already be processed at this point, so not being able to set the keepalive
     -- will not return false (the batch might not need to be reprocessed)
-    kong.log.err("[bkbcs-auth] user_cli failed keepalive for ", self.ip, ":", tostring(self.port), ": ", err)
+    kong.log.err(" user_cli failed keepalive for ", self.ip, ":", tostring(self.port), ": ", err)
   end
   return auth_response.data.allowed, nil
 end

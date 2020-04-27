@@ -28,18 +28,18 @@ function BKBCSAuthHandler:access(conf)
   local userc = BKUserCli(conf.bkbcs_auth_endpoints)
   local err = userc:init(conf)
   if err then
-    kong.log.err("[bkbcs-auth] init user-manager client with endpoint [", conf.bkbcs_auth_endpoints, "] failed: ", err)
+    kong.log.err("init user-manager client with endpoint [", conf.bkbcs_auth_endpoints, "] failed: ", err)
     -- response internal error
     return kong.response.exit(500, {message = "An unexpected error occurred when authentication"})
   end
   -- construct request according configuration
   local req, err = userc:construct_identity(conf, kong.request)
   if err then
-    kong.log.err("[bkbcs-auth] construct auth request for [", kong.request.get_method(), "]", kong.request.get_path(), ", err:", err)
+    kong.log.err("construct auth request for [", kong.request.get_method(), "]", kong.request.get_path(), ", err:", err)
     return kong.response.exit(400, {message = "Bad Request: " .. err})
   end
   -- init success, try to anthentication
-  local ok, err = userc:authentication(req)
+  local ok, err = userc:authentication(conf, req)
   if err then
     return kong.response.exit(500, {message = "An unexpected error occurred in verify: " .. err})
   end
