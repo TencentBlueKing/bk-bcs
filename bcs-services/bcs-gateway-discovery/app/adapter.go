@@ -123,10 +123,11 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 	name := types.BCS_MODULE_MESOSDRIVER + "-" + bkbcsID[2]
 	hostName := bkbcsID[2] + "." + types.BCS_MODULE_MESOSDRIVER + "." + defaultDomain
 	labels := make(map[string]string)
+	upcaseID := strings.ToUpper(resources[1])
 	labels["module"] = types.BCS_MODULE_MESOSDRIVER
 	labels["service"] = "bkbcs-cluster"
 	labels["scheduler"] = "mesos"
-	labels["cluster"] = resources[1]
+	labels["cluster"] = upcaseID
 	regSvc := &register.Service{
 		Name:     name,
 		Protocol: svcs[0].Scheme,
@@ -144,7 +145,7 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 		Paths:       []string{"/bcsapi/v4/scheduler/mesos/", "/bcsapi/v1/"},
 		PathRewrite: true,
 		Header: map[string]string{
-			defaultClusterIDKey: resources[1],
+			defaultClusterIDKey: upcaseID,
 		},
 		Service: name,
 		Labels:  labels,
@@ -185,10 +186,11 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 	name := fmt.Sprintf("%s-%s", types.BCS_MODULE_KUBERNETEDRIVER, bkbcsID[2])
 	hostName := fmt.Sprintf("%s.%s.%s", bkbcsID[2], types.BCS_MODULE_KUBERNETEDRIVER, defaultDomain)
 	labels := make(map[string]string)
+	upcaseID := strings.ToUpper(resources[1])
 	labels["module"] = types.BCS_MODULE_KUBERNETEDRIVER
 	labels["service"] = "bkbcs-cluster"
 	labels["scheduler"] = "kubernetes"
-	labels["cluster"] = resources[1]
+	labels["cluster"] = upcaseID
 	regSvc := &register.Service{
 		Name:     name,
 		Protocol: svcs[0].Scheme,
@@ -204,7 +206,7 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 		Paths:       []string{"/bcsapi/v4/scheduler/k8s/"},
 		PathRewrite: true,
 		Header: map[string]string{
-			defaultClusterIDKey: resources[1],
+			defaultClusterIDKey: upcaseID,
 		},
 		Service: name,
 		Labels:  labels,
@@ -290,10 +292,11 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	name := types.BCS_MODULE_KUBEAGENT + "-" + bkbcsID[2]
 	hostName := bkbcsID[2] + "." + types.BCS_MODULE_KUBEAGENT + "." + defaultDomain
 	labels := make(map[string]string)
+	upcaseID := strings.ToUpper(resources[1])
 	labels["module"] = types.BCS_MODULE_KUBEAGENT
 	labels["service"] = "bkbcs-cluster"
 	labels["scheduler"] = "kubernetes"
-	labels["cluster"] = resources[1]
+	labels["cluster"] = upcaseID
 	//create service & setting header plugin for kube-apiserver
 	regSvc := &register.Service{
 		Name:     name,
@@ -316,7 +319,7 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	rt := register.Route{
 		Name:        name,
 		Protocol:    svcs[0].Scheme,
-		Paths:       []string{fmt.Sprintf("/tunnels/clusters/%s/", strings.ToUpper(resources[1]))},
+		Paths:       []string{fmt.Sprintf("/tunnels/clusters/%s/", upcaseID)},
 		PathRewrite: true,
 		Service:     name,
 		Plugin: &register.Plugins{
