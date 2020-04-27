@@ -372,7 +372,9 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 	pr.Config = make(map[string]interface{})
 	if len(option.Clean) != 0 {
 		pr.Config["remove"] = &httpTransformer{
-			Headers: gokong.StringSlice(option.Clean),
+			Body:     []*string{},
+			Headers:  gokong.StringSlice(option.Clean),
+			QueryStr: []*string{},
 		}
 	}
 	//add operation
@@ -383,7 +385,9 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 			values = append(values, value)
 		}
 		pr.Config["add"] = &httpTransformer{
-			Headers: gokong.StringSlice(values),
+			Body:     []*string{},
+			Headers:  gokong.StringSlice(values),
+			QueryStr: []*string{},
 		}
 	}
 	//replace operation
@@ -394,7 +398,9 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 			values = append(values, value)
 		}
 		pr.Config["replace"] = &httpTransformer{
-			Headers: gokong.StringSlice(values),
+			Body:     []*string{},
+			Headers:  gokong.StringSlice(values),
+			QueryStr: []*string{},
 		}
 	}
 	return pr
