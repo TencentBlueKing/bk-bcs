@@ -207,7 +207,7 @@ function BKUserCli:authentication(conf, info)
     return false, "invalid verify response"
   end
   -- connection setting keepalive
-  local ok, err = self.httpc:set_keepalive(true)
+  local ok, err = self.httpc:set_keepalive(conf.keepalive)
   if not ok then
     -- the batch might already be processed at this point, so not being able to set the keepalive
     -- will not return false (the batch might not need to be reprocessed)

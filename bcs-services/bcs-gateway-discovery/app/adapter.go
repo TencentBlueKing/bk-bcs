@@ -315,7 +315,7 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	rt := register.Route{
 		Name:        name,
 		Protocol:    svcs[0].Scheme,
-		Paths:       []string{fmt.Sprintf("/tunnel/cluster/%s/", resources[1])},
+		Paths:       []string{fmt.Sprintf("/tunnels/clusters/%s/", resources[1])},
 		PathRewrite: true,
 		Service:     name,
 		Plugin: &register.Plugins{
