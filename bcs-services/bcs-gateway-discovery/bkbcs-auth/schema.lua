@@ -25,7 +25,7 @@ return {
           -- token for post request to bkbcs-user-mananger
           { token = {type = "string", required = true}, },
           -- network timeout
-          { timeout = { type = "number", default = 3 }, },
+          { timeout = { type = "number", default = 3000 }, },
           -- keepalive for connection reuse
           { keepalive = { type = "number", default = 60000 }, },
           -- retry count when failing
