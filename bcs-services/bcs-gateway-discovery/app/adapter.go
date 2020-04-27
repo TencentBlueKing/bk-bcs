@@ -303,8 +303,9 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 		Retries:  1,
 		Plugin: &register.Plugins{
 			HeadOption: &register.HeaderOption{
-				Replace: map[string]string{
-					"Authentication": fmt.Sprintf("Bearer %s", svcs[0].HostName),
+				Clean: []string{"Authorization"},
+				Add: map[string]string{
+					"Authorization": fmt.Sprintf("Bearer %s", svcs[0].HostName),
 				},
 			},
 		},
@@ -315,7 +316,7 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	rt := register.Route{
 		Name:        name,
 		Protocol:    svcs[0].Scheme,
-		Paths:       []string{fmt.Sprintf("/tunnels/clusters/%s/", resources[1])},
+		Paths:       []string{fmt.Sprintf("/tunnels/clusters/%s/", strings.ToUpper(resources[1]))},
 		PathRewrite: true,
 		Service:     name,
 		Plugin: &register.Plugins{
