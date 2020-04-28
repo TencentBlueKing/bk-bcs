@@ -1,0 +1,11 @@
+#
+# bscp-templateserver configuration
+#
+enabled: true
+
+replicaCount: 1
+image: bscp-templateserver:latest
+imagePullPolicy:
+nodeSelector: {}
+tolerations: []
+env: []

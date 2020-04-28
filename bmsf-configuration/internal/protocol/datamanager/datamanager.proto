@@ -1,0 +1,1415 @@
+syntax = "proto3";
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package datamanager;
+
+service DataManager {
+    rpc QueryAuthInfo(QueryAuthInfoReq) returns (QueryAuthInfoResp) {}
+    rpc QueryAppMetadata(QueryAppMetadataReq) returns (QueryAppMetadataResp) {}
+
+    rpc CreateBusiness(CreateBusinessReq) returns (CreateBusinessResp) {}
+    rpc QueryBusiness(QueryBusinessReq) returns (QueryBusinessResp) {}
+    rpc QueryBusinessList(QueryBusinessListReq) returns (QueryBusinessListResp) {}
+    rpc UpdateBusiness(UpdateBusinessReq) returns (UpdateBusinessResp) {}
+
+    rpc CreateApp(CreateAppReq) returns (CreateAppResp) {}
+    rpc QueryApp(QueryAppReq) returns (QueryAppResp) {}
+    rpc QueryAppList(QueryAppListReq) returns (QueryAppListResp) {}
+    rpc UpdateApp(UpdateAppReq) returns (UpdateAppResp) {}
+    rpc DeleteApp(DeleteAppReq) returns (DeleteAppResp) {}
+
+    rpc CreateCluster(CreateClusterReq) returns (CreateClusterResp) {}
+    rpc QueryCluster(QueryClusterReq) returns (QueryClusterResp) {}
+    rpc QueryClusterList(QueryClusterListReq) returns (QueryClusterListResp) {}
+    rpc UpdateCluster(UpdateClusterReq) returns (UpdateClusterResp) {}
+    rpc DeleteCluster(DeleteClusterReq) returns (DeleteClusterResp) {}
+
+    rpc CreateZone(CreateZoneReq) returns (CreateZoneResp) {}
+    rpc QueryZone(QueryZoneReq) returns (QueryZoneResp) {}
+    rpc QueryZoneList(QueryZoneListReq) returns (QueryZoneListResp) {}
+    rpc UpdateZone(UpdateZoneReq) returns (UpdateZoneResp) {}
+    rpc DeleteZone(DeleteZoneReq) returns (DeleteZoneResp) {}
+
+    rpc CreateConfigSet(CreateConfigSetReq) returns (CreateConfigSetResp) {}
+    rpc QueryConfigSet(QueryConfigSetReq) returns (QueryConfigSetResp) {}
+    rpc QueryConfigSetList(QueryConfigSetListReq) returns (QueryConfigSetListResp) {}
+    rpc UpdateConfigSet(UpdateConfigSetReq) returns (UpdateConfigSetResp) {}
+    rpc DeleteConfigSet(DeleteConfigSetReq) returns (DeleteConfigSetResp) {}
+
+    rpc LockConfigSet(LockConfigSetReq) returns (LockConfigSetResp) {}
+    rpc UnlockConfigSet(UnlockConfigSetReq) returns (UnlockConfigSetResp) {}
+
+    rpc CreateConfigs(CreateConfigsReq) returns (CreateConfigsResp) {}
+    rpc QueryConfigs(QueryConfigsReq) returns (QueryConfigsResp) {}
+    rpc QueryConfigsList(QueryConfigsListReq) returns (QueryConfigsListResp) {}
+    rpc QueryReleaseConfigs(QueryReleaseConfigsReq) returns (QueryReleaseConfigsResp) {}
+
+    rpc CreateCommit(CreateCommitReq) returns (CreateCommitResp) {}
+    rpc QueryCommit(QueryCommitReq) returns (QueryCommitResp) {}
+    rpc QueryHistoryCommits(QueryHistoryCommitsReq) returns (QueryHistoryCommitsResp) {}
+    rpc UpdateCommit(UpdateCommitReq) returns (UpdateCommitResp) {}
+    rpc CancelCommit(CancelCommitReq) returns (CancelCommitResp) {}
+    rpc ConfirmCommit(ConfirmCommitReq) returns (ConfirmCommitResp) {}
+
+    rpc CreateMultiCommit(CreateMultiCommitReq) returns (CreateMultiCommitResp) {}
+    rpc QueryMultiCommit(QueryMultiCommitReq) returns (QueryMultiCommitResp) {}
+    rpc QueryHistoryMultiCommits(QueryHistoryMultiCommitsReq) returns (QueryHistoryMultiCommitsResp) {}
+    rpc QueryMultiCommitSubList(QueryMultiCommitSubListReq) returns (QueryMultiCommitSubListResp) {}
+    rpc UpdateMultiCommit(UpdateMultiCommitReq) returns (UpdateMultiCommitResp) {}
+    rpc CancelMultiCommit(CancelMultiCommitReq) returns (CancelMultiCommitResp) {}
+    rpc ConfirmMultiCommit(ConfirmMultiCommitReq) returns (ConfirmMultiCommitResp) {}
+
+    rpc CreateRelease(CreateReleaseReq) returns (CreateReleaseResp) {}
+    rpc QueryRelease(QueryReleaseReq) returns (QueryReleaseResp) {}
+    rpc QueryNewestReleases(QueryNewestReleasesReq) returns (QueryNewestReleasesResp) {}
+    rpc QueryHistoryReleases(QueryHistoryReleasesReq) returns (QueryHistoryReleasesResp) {}
+    rpc UpdateRelease(UpdateReleaseReq) returns (UpdateReleaseResp) {}
+    rpc CancelRelease(CancelReleaseReq) returns (CancelReleaseResp) {}
+    rpc RollbackRelease(RollbackReleaseReq) returns (RollbackReleaseResp) {}
+    rpc PublishRelease(PublishReleaseReq) returns (PublishReleaseResp) {}
+
+    rpc CreateMultiRelease(CreateMultiReleaseReq) returns (CreateMultiReleaseResp) {}
+    rpc QueryMultiRelease(QueryMultiReleaseReq) returns (QueryMultiReleaseResp) {}
+    rpc QueryMultiReleaseSubList(QueryMultiReleaseSubListReq) returns (QueryMultiReleaseSubListResp) {}
+    rpc UpdateMultiRelease(UpdateMultiReleaseReq) returns (UpdateMultiReleaseResp) {}
+    rpc CancelMultiRelease(CancelMultiReleaseReq) returns (CancelMultiReleaseResp) {}
+    rpc PublishMultiRelease(PublishMultiReleaseReq) returns (PublishMultiReleaseResp) {}
+    rpc RollbackMultiRelease(RollbackMultiReleaseReq) returns (RollbackMultiReleaseResp) {}
+    rpc QueryHistoryMultiReleases(QueryHistoryMultiReleasesReq) returns (QueryHistoryMultiReleasesResp) {}
+
+    rpc CreateAppInstance(CreateAppInstanceReq) returns (CreateAppInstanceResp) {}
+    rpc QueryHistoryAppInstances(QueryHistoryAppInstancesReq) returns (QueryHistoryAppInstancesResp) {}
+    rpc QueryReachableAppInstances(QueryReachableAppInstancesReq) returns (QueryReachableAppInstancesResp) {}
+    rpc UpdateAppInstance(UpdateAppInstanceReq) returns (UpdateAppInstanceResp) {}
+
+    rpc CreateAppInstanceRelease(CreateAppInstanceReleaseReq) returns (CreateAppInstanceReleaseResp) {}
+    rpc QueryAppInstanceRelease(QueryAppInstanceReleaseReq) returns (QueryAppInstanceReleaseResp) {}
+    rpc QueryEffectedAppInstances(QueryEffectedAppInstancesReq) returns (QueryEffectedAppInstancesResp) {}
+    rpc QueryMatchedAppInstances(QueryMatchedAppInstancesReq) returns (QueryMatchedAppInstancesResp) {}
+
+    rpc CreateStrategy(CreateStrategyReq) returns (CreateStrategyResp) {}
+    rpc QueryStrategy(QueryStrategyReq) returns (QueryStrategyResp) {}
+    rpc QueryStrategyList(QueryStrategyListReq) returns (QueryStrategyListResp) {}
+    rpc DeleteStrategy(DeleteStrategyReq) returns (DeleteStrategyResp) {}
+
+    rpc CreateShardingDB(CreateShardingDBReq) returns (CreateShardingDBResp) {}
+    rpc QueryShardingDB(QueryShardingDBReq) returns (QueryShardingDBResp) {}
+    rpc QueryShardingDBList(QueryShardingDBListReq) returns (QueryShardingDBListResp) {}
+    rpc UpdateShardingDB(UpdateShardingDBReq) returns (UpdateShardingDBResp) {}
+
+    rpc CreateSharding(CreateShardingReq) returns (CreateShardingResp) {}
+    rpc QuerySharding(QueryShardingReq) returns (QueryShardingResp) {}
+    rpc UpdateSharding(UpdateShardingReq) returns (UpdateShardingResp) {}
+
+    rpc CreateAudit(CreateAuditReq) returns (CreateAuditResp) {}
+    rpc QueryAuditList(QueryAuditListReq) returns (QueryAuditListResp) {}
+}
+
+message QueryAuthInfoReq {
+    uint64 seq = 1;
+    string bid = 2;
+}
+
+message QueryAuthInfoResp {
+    uint64         seq       = 1;
+    common.ErrCode errCode   = 2;
+    string         errMsg    = 3;
+    string         auth      = 4;
+}
+
+message QueryAppMetadataReq {
+    uint64 seq          = 1;
+    string businessName = 2;
+    string appName      = 3;
+    string clusterName  = 4;
+    string zoneName     = 5;
+
+    // add fields here.
+    string clusterLabels = 6;
+}
+
+message QueryAppMetadataResp {
+    uint64         seq       = 1;
+    common.ErrCode errCode   = 2;
+    string         errMsg    = 3;
+    string         bid       = 4;
+    string         appid     = 5;
+    string         clusterid = 6;
+    string         zoneid    = 7;
+}
+
+message CreateBusinessReq {
+    uint64 seq     = 1;
+    string bid     = 2;
+    string name    = 3;
+    string depid   = 4;
+    int32  state   = 5;
+    string creator = 6;
+    string memo    = 7;
+    string auth    = 8;
+}
+
+message CreateBusinessResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    string         bid     = 4;
+}
+
+message QueryBusinessReq {
+    uint64 seq  = 1;
+    string bid  = 2;
+    string name = 3;
+}
+
+message QueryBusinessResp {
+    uint64          seq      = 1;
+    common.ErrCode  errCode  = 2;
+    string          errMsg   = 3;
+    common.Business business = 4;
+}
+
+message QueryBusinessListReq {
+    uint64 seq   = 1;
+    int32  index = 2;
+    int32  limit = 3;
+}
+
+message QueryBusinessListResp {
+    uint64                   seq        = 1;
+    common.ErrCode           errCode    = 2;
+    string                   errMsg     = 3;
+    repeated common.Business businesses = 4;
+}
+
+message UpdateBusinessReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string name     = 3;
+    string depid    = 4;
+    string memo     = 5;
+    int32  state    = 6;
+    string operator = 7;
+}
+
+message UpdateBusinessResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateAppReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string appid      = 3;
+    string name       = 4;
+    int32  deployType = 5;
+    int32  state      = 6;
+    string creator    = 7;
+    string memo       = 8;
+}
+
+message CreateAppResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    string         appid   = 4;
+}
+
+message QueryAppReq {
+    uint64 seq   = 1;
+    string bid   = 2;
+    string appid = 3;
+    string name  = 4;
+}
+
+message QueryAppResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.App     app     = 4;
+}
+
+message QueryAppListReq {
+    uint64 seq   = 1;
+    string bid   = 2;
+    int32  index = 3;
+    int32  limit = 4;
+}
+
+message QueryAppListResp {
+    uint64              seq     = 1;
+    common.ErrCode      errCode = 2;
+    string              errMsg  = 3;
+    repeated common.App apps    = 4;
+}
+
+message UpdateAppReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string appid      = 3;
+    string name       = 4;
+    int32  deployType = 5;
+    string memo       = 6;
+    int32  state      = 7;
+    string operator   = 8;
+}
+
+message UpdateAppResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message DeleteAppReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string appid    = 3;
+    string operator = 4;
+}
+
+message DeleteAppResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateClusterReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string clusterid  = 3;
+    string name       = 4;
+    string appid      = 5;
+    string rClusterid = 6;
+    string creator    = 7;
+    string memo       = 8;
+    string labels     = 9;
+}
+
+message CreateClusterResp {
+    uint64         seq       = 1;
+    common.ErrCode errCode   = 2;
+    string         errMsg    = 3;
+    string         clusterid = 4;
+}
+
+message QueryClusterReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string name      = 5;
+    string labels    = 6;
+}
+
+message QueryClusterResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.Cluster cluster = 4;
+}
+
+message QueryClusterListReq {
+    uint64 seq     = 1;
+    string bid     = 2;
+    string appid   = 3;
+    string appName = 4;
+    int32  index   = 5;
+    int32  limit   = 6;
+}
+
+message QueryClusterListResp {
+    uint64                  seq      = 1;
+    common.ErrCode          errCode  = 2;
+    string                  errMsg   = 3;
+    repeated common.Cluster clusters = 4;
+}
+
+message UpdateClusterReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string clusterid  = 3;
+    string name       = 4;
+    string rClusterid = 5;
+    string memo       = 6;
+    int32  state      = 7;
+    string operator   = 8;
+    string labels     = 9;
+}
+
+message UpdateClusterResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message DeleteClusterReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string clusterid = 3;
+    string operator  = 4;
+}
+
+message DeleteClusterResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateZoneReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string zoneid    = 3;
+    string name      = 4;
+    string appid     = 5;
+    string clusterid = 6;
+    int32  state     = 7;
+    string creator   = 8;
+    string memo      = 9;
+}
+
+message CreateZoneResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    string         zoneid  = 4;
+}
+
+message QueryZoneReq {
+    uint64 seq    = 1;
+    string bid    = 2;
+    string appid  = 3;
+    string zoneid = 4;
+    string name   = 5;
+}
+
+message QueryZoneResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.Zone    zone    = 4;
+}
+
+message QueryZoneListReq {
+    uint64 seq         = 1;
+    string bid         = 2;
+    string appid       = 3;
+    string clusterName = 4;
+    string clusterid   = 5;
+    int32  index       = 6;
+    int32  limit       = 7;
+
+    // add fields here.
+    string clusterLabels = 8;
+}
+
+message QueryZoneListResp {
+    uint64               seq     = 1;
+    common.ErrCode       errCode = 2;
+    string               errMsg  = 3;
+    repeated common.Zone zones   = 4;
+}
+
+message UpdateZoneReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string zoneid   = 3;
+    string name     = 4;
+    string memo     = 5;
+    int32  state    = 6;
+    string operator = 7;
+}
+
+message UpdateZoneResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message DeleteZoneReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string zoneid   = 3;
+    string operator = 4;
+}
+
+message DeleteZoneResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateConfigSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string cfgsetid = 3;
+    string name     = 4;
+    string appid    = 5;
+    int32  state    = 6;
+    string creator  = 7;
+    string memo     = 8;
+    string fpath    = 9;
+}
+
+message CreateConfigSetResp {
+    uint64         seq      = 1;
+    common.ErrCode errCode  = 2;
+    string         errMsg   = 3;
+    string         cfgsetid = 4;
+}
+
+message QueryConfigSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string appid    = 3;
+    string cfgsetid = 4;
+    string name     = 5;
+    string fpath    = 6;
+}
+
+message QueryConfigSetResp {
+    uint64           seq       = 1;
+    common.ErrCode   errCode   = 2;
+    string           errMsg    = 3;
+    common.ConfigSet configSet = 4;
+}
+
+message QueryConfigSetListReq {
+    uint64 seq     = 1;
+    string bid     = 2;
+    string appid   = 3;
+    string appName = 4;
+    int32  index   = 5;
+    int32  limit   = 6;
+}
+
+message QueryConfigSetListResp {
+    uint64                    seq        = 1;
+    common.ErrCode            errCode    = 2;
+    string                    errMsg     = 3;
+    repeated common.ConfigSet configSets = 4;
+}
+
+message UpdateConfigSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string cfgsetid = 3;
+    string name     = 4;
+    string memo     = 5;
+    int32  state    = 6;
+    string operator = 7;
+    string fpath    = 8;
+}
+
+message UpdateConfigSetResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message DeleteConfigSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string cfgsetid = 3;
+    string operator = 4;
+}
+
+message DeleteConfigSetResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message LockConfigSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string cfgsetid = 3;
+    string operator = 4;
+    string memo     = 5;
+}
+
+message LockConfigSetResp {
+    uint64         seq      = 1;
+    common.ErrCode errCode  = 2;
+    string         errMsg   = 3;
+    string         locker   = 4;
+    string         lockTime = 5;
+}
+
+message UnlockConfigSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string cfgsetid = 3;
+    string operator = 4;
+}
+
+message UnlockConfigSetResp{
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateConfigsReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string cfgsetid  = 6;
+    string commitid  = 7;
+    string cid       = 8;
+    string cfgLink   = 9;
+    bytes  content   = 10;
+    string creator   = 11;
+    string memo      = 12;
+    int32  state     = 13;
+    string index     = 14;
+}
+
+message CreateConfigsResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryConfigsReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string cfgsetid  = 6;
+    string commitid  = 7;
+    string index     = 8;
+}
+
+message QueryConfigsResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.Configs configs = 4;
+}
+
+message QueryReleaseConfigsReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string cfgsetid  = 6;
+    string commitid  = 7;
+    bool   abstract  = 8;
+    string index     = 9;
+}
+
+message QueryReleaseConfigsResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.Configs configs = 4;
+}
+
+message QueryConfigsListReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string cfgsetid = 3;
+    string commitid = 4;
+    int32  index    = 5;
+    int32  limit    = 6;
+}
+
+message QueryConfigsListResp {
+    uint64                  seq      = 1;
+    common.ErrCode          errCode  = 2;
+    string                  errMsg   = 3;
+    repeated common.Configs cfgslist = 4;
+}
+
+message CreateCommitReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string commitid      = 3;
+    string appid         = 4;
+    string cfgsetid      = 5;
+    int32  op            = 6;
+    string operator      = 7;
+    string templateid    = 8;
+    string template      = 9;
+    string templateRule  = 10;
+    bytes  configs       = 11;
+    string changes       = 12;
+    string memo          = 13;
+    int32  state         = 14;
+    string multiCommitid = 15;
+}
+
+message CreateCommitResp {
+    uint64         seq      = 1;
+    common.ErrCode errCode  = 2;
+    string         errMsg   = 3;
+    string         commitid = 4;
+}
+
+message QueryCommitReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string commitid = 3;
+    bool   abstract = 4;
+}
+
+message QueryCommitResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.Commit  commit  = 4;
+}
+
+message QueryHistoryCommitsReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string cfgsetid  = 4;
+    string operator  = 5;
+    int32  queryType = 6;
+    int32  index     = 7;
+    int32  limit     = 8;
+}
+
+message QueryHistoryCommitsResp {
+    uint64                 seq     = 1;
+    common.ErrCode         errCode = 2;
+    string                 errMsg  = 3;
+    repeated common.Commit commits = 4;
+}
+
+message UpdateCommitReq {
+    uint64 seq          = 1;
+    string bid          = 2;
+    string commitid     = 3;
+    string templateid   = 4;
+    string template     = 5;
+    string templateRule = 6;
+    bytes  configs      = 7;
+    string changes      = 8;
+    string memo         = 9;
+    string operator     = 10;
+}
+
+message UpdateCommitResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CancelCommitReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string commitid = 3;
+    string operator = 4;
+}
+
+message CancelCommitResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message ConfirmCommitReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string appid    = 3;
+    string cfgsetid = 4;
+    string commitid = 5;
+    string operator = 6;
+}
+
+message ConfirmCommitResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateMultiCommitReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string multiCommitid = 3;
+    string appid         = 4;
+    string memo          = 5;
+    string operator      = 6;
+}
+
+message CreateMultiCommitResp {
+    uint64         seq           = 1;
+    common.ErrCode errCode       = 2;
+    string         errMsg        = 3;
+    string         multiCommitid = 4;
+}
+
+message QueryMultiCommitReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string multiCommitid = 3;
+}
+
+message QueryMultiCommitResp {
+    uint64             seq         = 1;
+    common.ErrCode     errCode     = 2;
+    string             errMsg      = 3;
+    common.MultiCommit multiCommit = 4;
+}
+
+message QueryHistoryMultiCommitsReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string operator  = 4;
+    int32  queryType = 5;
+    int32  index     = 6;
+    int32  limit     = 7;
+}
+
+message QueryHistoryMultiCommitsResp {
+    uint64                      seq          = 1;
+    common.ErrCode              errCode      = 2;
+    string                      errMsg       = 3;
+    repeated common.MultiCommit multiCommits = 4;
+}
+
+message QueryMultiCommitSubListReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string multiCommitid = 3;
+}
+
+message QueryMultiCommitSubListResp {
+    uint64          seq       = 1;
+    common.ErrCode  errCode   = 2;
+    string          errMsg    = 3;
+    repeated string commitids = 4;
+}
+
+message UpdateMultiCommitReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string multiCommitid = 3;
+    string memo          = 4;
+    string operator      = 5;
+}
+
+message UpdateMultiCommitResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CancelMultiCommitReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string multiCommitid = 3;
+    string operator      = 4;
+}
+
+message CancelMultiCommitResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message ConfirmMultiCommitReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string multiCommitid = 3;
+    string operator      = 4;
+}
+
+message ConfirmMultiCommitResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateReleaseReq {
+    uint64 seq         = 1;
+    string bid         = 2;
+    string releaseid   = 3;
+    string name        = 4;
+    string appid       = 5;
+    string cfgsetid    = 6;
+    string cfgsetName  = 7;
+    string strategyid  = 8;
+    string strategies  = 9;
+    string commitid    = 10;
+    string memo        = 11;
+    string creator     = 12;
+    int32  state       = 13;
+
+    // add fields here.
+    string cfgsetFpath    = 14;
+    string multiReleaseid = 15;
+}
+
+message CreateReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+}
+
+message QueryReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.Release release = 4;
+}
+
+message QueryNewestReleasesReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string cfgsetid       = 3;
+    string localReleaseid = 4;
+    int32  index          = 5;
+    int32  limit          = 6;
+}
+
+message QueryNewestReleasesResp {
+    uint64                  seq      = 1;
+    common.ErrCode          errCode  = 2;
+    string                  errMsg   = 3;
+    repeated common.Release releases = 4;
+}
+
+message QueryHistoryReleasesReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string cfgsetid  = 3;
+    string operator  = 4;
+    int32  queryType = 5;
+    int32  index     = 6;
+    int32  limit     = 7;
+
+    // add new fields here.
+    int32 orderType = 8;
+}
+
+message QueryHistoryReleasesResp {
+    uint64                  seq      = 1;
+    common.ErrCode          errCode  = 2;
+    string                  errMsg   = 3;
+    repeated common.Release releases = 4;
+}
+
+message UpdateReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+    string name      = 4;
+    string memo      = 5;
+    string operator  = 6;
+}
+
+message UpdateReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CancelReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+    string operator  = 4;
+}
+
+message CancelReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message RollbackReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+    string operator  = 4;
+}
+
+message RollbackReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message PublishReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+    string operator  = 4;
+}
+
+message PublishReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateMultiReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string appid          = 3;
+    string multiReleaseid = 4;
+    string name           = 5;
+    string multiCommitid  = 6;
+    string strategyid     = 7;
+    string strategies     = 8;
+    string memo           = 9;
+    string creator        = 10;
+}
+
+message CreateMultiReleaseResp {
+    uint64         seq            = 1;
+    common.ErrCode errCode        = 2;
+    string         errMsg         = 3;
+    string         multiReleaseid = 4;
+}
+
+message QueryMultiReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string multiReleaseid = 3;
+}
+
+message QueryMultiReleaseResp {
+    uint64              seq          = 1;
+    common.ErrCode      errCode      = 2;
+    string              errMsg       = 3;
+    common.MultiRelease multiRelease = 4;
+}
+
+message QueryHistoryMultiReleasesReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string operator  = 4;
+    int32  queryType = 5;
+    int32  orderType = 6;
+    int32  index     = 7;
+    int32  limit     = 8;
+}
+
+message QueryHistoryMultiReleasesResp {
+    uint64                       seq           = 1;
+    common.ErrCode               errCode       = 2;
+    string                       errMsg        = 3;
+    repeated common.MultiRelease multiReleases = 4;
+}
+
+message UpdateMultiReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string multiReleaseid = 3;
+    string name           = 4;
+    string memo           = 5;
+    string operator       = 6;
+}
+
+message UpdateMultiReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryMultiReleaseSubListReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string multiReleaseid = 3;
+}
+
+message QueryMultiReleaseSubListResp {
+    uint64          seq        = 1;
+    common.ErrCode  errCode    = 2;
+    string          errMsg     = 3;
+    repeated string releaseids = 4;
+}
+
+message CancelMultiReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string multiReleaseid = 3;
+    string operator       = 4;
+}
+
+message CancelMultiReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message PublishMultiReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string multiReleaseid = 3;
+    string operator       = 4;
+}
+
+message PublishMultiReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message RollbackMultiReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string multiReleaseid = 3;
+    string operator       = 4;
+}
+
+message RollbackMultiReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateAppInstanceReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string dc        = 6;
+    string IP        = 7;
+    string labels    = 8;
+    int32  state     = 9;
+}
+
+message CreateAppInstanceResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryHistoryAppInstancesReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    int32  queryType = 6;
+    int32  index     = 7;
+    int32  limit     = 8;
+}
+
+message QueryHistoryAppInstancesResp {
+    uint64                      seq       = 1;
+    common.ErrCode              errCode   = 2;
+    string                      errMsg    = 3;
+    repeated common.AppInstance instances = 4;
+}
+
+message QueryReachableAppInstancesReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    int32  index     = 6;
+    int32  limit     = 7;
+}
+
+message QueryReachableAppInstancesResp {
+    uint64                      seq       = 1;
+    common.ErrCode              errCode   = 2;
+    string                      errMsg    = 3;
+    repeated common.AppInstance instances = 4;
+}
+
+message UpdateAppInstanceReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string dc        = 6;
+    string IP        = 7;
+    string labels    = 8;
+    int32  state     = 9;
+}
+
+message UpdateAppInstanceResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateAppInstanceReleaseReq {
+    uint64                     seq       = 1;
+    string                     bid       = 2;
+    string                     appid     = 3;
+    string                     clusterid = 4;
+    string                     zoneid    = 5;
+    string                     dc        = 6;
+    string                     IP        = 7;
+    string                     labels    = 8;
+    repeated common.ReportInfo infos     = 9;
+}
+
+message CreateAppInstanceReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryAppInstanceReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string dc        = 6;
+    string IP        = 7;
+    string cfgsetid  = 8;
+}
+
+message QueryAppInstanceReleaseResp {
+    uint64         seq       = 1;
+    common.ErrCode errCode   = 2;
+    string         errMsg    = 3;
+    string         releaseid = 4;
+    string         commitid  = 5;
+    string         cid       = 6;
+    string         cfgLink   = 7;
+    bytes          content   = 8;
+}
+
+message QueryMatchedAppInstancesReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string appid      = 3;
+    string strategyid = 4;
+    int32  index      = 5;
+    int32  limit      = 6;
+}
+
+message QueryMatchedAppInstancesResp {
+    uint64                      seq       = 1;
+    common.ErrCode              errCode   = 2;
+    string                      errMsg    = 3;
+    repeated common.AppInstance instances = 4;
+}
+
+message QueryEffectedAppInstancesReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string cfgsetid  = 3;
+    string releaseid = 4;
+    int32  index     = 5;
+    int32  limit     = 6;
+}
+
+message QueryEffectedAppInstancesResp {
+    uint64                      seq       = 1;
+    common.ErrCode              errCode   = 2;
+    string                      errMsg    = 3;
+    repeated common.AppInstance instances = 4;
+}
+
+message CreateStrategyReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string appid      = 3;
+    string strategyid = 4;
+    string name       = 5;
+    string content    = 6;
+    string memo       = 7;
+    string creator    = 8;
+}
+
+message CreateStrategyResp {
+    uint64         seq        = 1;
+    common.ErrCode errCode    = 2;
+    string         errMsg     = 3;
+    string         strategyid = 4;
+}
+
+message QueryStrategyReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string appid      = 3;
+    string strategyid = 4;
+    string name       = 5;
+}
+
+message QueryStrategyResp {
+    uint64          seq      = 1;
+    common.ErrCode  errCode  = 2;
+    string          errMsg   = 3;
+    common.Strategy strategy = 4;
+}
+
+message QueryStrategyListReq {
+    uint64 seq     = 1;
+    string bid     = 2;
+    string appid   = 3;
+    string appName = 4;
+    int32  index   = 5;
+    int32  limit   = 6;
+}
+
+message QueryStrategyListResp {
+    uint64                   seq        = 1;
+    common.ErrCode           errCode    = 2;
+    string                   errMsg     = 3;
+    repeated common.Strategy strategies = 4;
+}
+
+message DeleteStrategyReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string strategyid = 3;
+    string operator   = 4;
+}
+
+message DeleteStrategyResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateShardingDBReq {
+    uint64 seq      = 1;
+    string dbid     = 2;
+    string host     = 3;
+    int32  port     = 4;
+    string user     = 5;
+    string password = 6;
+    string memo     = 7;
+    int32  state    = 8;
+}
+
+message CreateShardingDBResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryShardingDBReq {
+    uint64 seq  = 1;
+    string dbid = 2;
+}
+
+message QueryShardingDBResp {
+    uint64            seq        = 1;
+    common.ErrCode    errCode    = 2;
+    string            errMsg     = 3;
+    common.ShardingDB shardingDB = 4;
+}
+
+message QueryShardingDBListReq {
+    uint64 seq  = 1;
+}
+
+message QueryShardingDBListResp {
+    uint64                     seq         = 1;
+    common.ErrCode             errCode     = 2;
+    string                     errMsg      = 3;
+    repeated common.ShardingDB shardingDBs = 4;
+}
+
+message UpdateShardingDBReq {
+    uint64 seq      = 1;
+    string dbid     = 2;
+    string host     = 3;
+    int32  port     = 4;
+    string user     = 5;
+    string password = 6;
+    string memo     = 7;
+    int32  state    = 8;
+}
+
+message UpdateShardingDBResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateShardingReq {
+    uint64 seq    = 1;
+    string key    = 2;
+    string dbid   = 3;
+    string dbname = 4;
+    string memo   = 5;
+    int32  state  = 6;
+}
+
+message CreateShardingResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryShardingReq {
+    uint64 seq = 1;
+    string key = 2;
+}
+
+message QueryShardingResp {
+    uint64          seq      = 1;
+    common.ErrCode  errCode  = 2;
+    string          errMsg   = 3;
+    common.Sharding sharding = 4;
+}
+
+message UpdateShardingReq {
+    uint64 seq    = 1;
+    string key    = 2;
+    string dbid   = 3;
+    string dbname = 4;
+    string memo   = 5;
+    int32  state  = 6;
+}
+
+message UpdateShardingResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateAuditReq {
+    uint64 seq        = 1;
+    int32  sourceType = 2;
+	int32  opType     = 3;
+	string bid        = 4;
+	string sourceid   = 5;
+	string operator   = 6;
+	string memo       = 7;
+	int32  state      = 8;
+}
+
+message CreateAuditResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryAuditListReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    int32  sourceType = 3;
+    int32  opType     = 4;
+    string sourceid   = 5;
+    string operator   = 6;
+    int32  index      = 7;
+    int32  limit      = 8;
+}
+
+message QueryAuditListResp {
+    uint64                seq     = 1;
+    common.ErrCode        errCode = 2;
+    string                errMsg  = 3;
+    repeated common.Audit audits  = 4;
+}

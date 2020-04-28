@@ -1,0 +1,26 @@
+#
+# bscp-datamanager configuration
+#
+enabled: true
+
+gateway:
+  # endpoint:
+  #   ip: 0.0.0.0
+  #   port: 443
+  # tls:
+  #   cafile: bscp-ca.crt
+  #   certfile: bscp-server.crt
+  #   keyfile: bscp-server.key
+  #   certPassword: xxxxxxx
+  insecureEndpoint:
+    ip: 0.0.0.0
+    port: 8080
+    api:
+      open: true
+
+replicaCount: 1
+image: bscp-gateway:latest
+imagePullPolicy:
+nodeSelector: {}
+tolerations: []
+env: []

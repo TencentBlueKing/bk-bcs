@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bscp-accessserver-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bscp-accessserver-config
+data:
+  server.yaml: |-
+    server:
+      servicename: bk-bscp-accessserver
+      endpoint:
+        ip: 0.0.0.0
+        port: 9510
+      metadata: bk-bscp-accessserver
+    etcdCluster:
+{{ toYaml $.Values.global.etcdCluster | indent 6 }}
+    businessserver:
+      servicename: bk-bscp-businessserver
+      calltimeout: 3s
+    integrator:
+      servicename: bk-bscp-integrator
+      calltimeout: 3s
+    logger:
+{{ toYaml $.Values.global.logger | indent 6 }}
+    

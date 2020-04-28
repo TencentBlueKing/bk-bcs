@@ -1,0 +1,16 @@
+#
+# bscp-connserver configuration
+#
+enabled: true
+
+natsmqCluster:
+  endpoints:
+  - nats://127.0.0.1:4222
+  timeout: 3s
+
+replicaCount: 1
+image: bscp-connserver:latest
+imagePullPolicy: 
+nodeSelector: {}
+tolerations: []
+env: []

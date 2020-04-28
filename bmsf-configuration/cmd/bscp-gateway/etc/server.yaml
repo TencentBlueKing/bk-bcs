@@ -1,0 +1,41 @@
+# 当前模块相关配置信息
+gateway:
+    # 监听配置
+    endpoint:
+        ip: 127.0.0.1
+        port: 443
+    # TLS接口配置
+    tls:
+        cafile: bscp-ca.crt
+        certfile: bscp-server.crt
+        keyfile: bscp-server.key
+
+    # 非加密接口配置信息
+    insecureEndpoint:
+        ip: 127.0.0.1
+        port: 8080
+
+    # SWAGGER API开关(线上环境关闭)
+    api:
+        open: false
+
+# 接入服务相关配置信息
+accessserver:
+    # 服务名，用于服务发现
+    servicename: bk-bscp-accessserver
+    # RPC调用超时时间
+    calltimeout: 3s
+
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - 127.0.0.1:2379
+    # 建立链接超时时间
+    dialtimeout: 2s
+
+# 日志相关配置信息
+logger:
+    level: 3
+    maxnum: 5
+    maxsize: 200

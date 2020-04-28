@@ -1,0 +1,13 @@
+kind: commit
+version: v1
+op: commit
+spec:
+    businessName: business-itg
+    appName: app-itg
+    configSetName: server.yaml
+    configSetFpath: /
+    memo: created by itg
+
+configs: 'dGhpcyBpcyBhIGV4YW1wbGU='
+
+changes: changes

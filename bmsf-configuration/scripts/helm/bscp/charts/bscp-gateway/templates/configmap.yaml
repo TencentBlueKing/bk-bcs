@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bscp-gateway-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bscp-gateway-config
+data:
+  server.yaml: |-
+    gateway:
+{{ toYaml .Values.gateway | indent 6 }}
+
+    accessserver:
+      servicename: bk-bscp-accessserver
+      calltimeout: 3s
+
+    etcdCluster:
+{{ toYaml $.Values.global.etcdCluster | indent 6 }}
+
+    logger:
+{{ toYaml $.Values.global.logger | indent 6 }}
+    
