@@ -272,6 +272,7 @@ bcs-cloud-network-agent:pre
 	cp -R ./install/conf/bcs-services/bcs-cloud-network-agent ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/main.go
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ./bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/main.go
+	cp ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni
 	
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
