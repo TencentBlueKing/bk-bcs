@@ -136,7 +136,7 @@ func (s *Server) initNetServiceClient() error {
 // init metric collector
 func (s *Server) initMetric() error {
 
-	metricServer := httpserver.NewHttpServer(s.opt.MetricPort, s.opt.Address, "")
+	metricServer := httpserver.NewHttpServer(s.opt.MetricPort, s.instanceIP, "")
 	metricServer.GetWebContainer().Handle("/metrics", promhttp.Handler())
 
 	go func() {
