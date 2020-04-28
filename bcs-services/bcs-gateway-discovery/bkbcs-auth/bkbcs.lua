@@ -31,11 +31,20 @@ local USERMGR_METHOD = "GET"
 local USERMGR_URL = "/usermanager/v1/permissions/verify"
 local USERMGR_HOST = "usermanager.bkbcs.tencent.com"
 
+local userTarget = {
+  type = "name",
+  host = USERMGR_HOST,
+  try_count = 0,
+}
+
 -- Parse user-manager url
 --* @param `endpoints` http(s)://host:port/url
 --* @return `parsed_url` a table with host details: scheme, host, port, path, query, userinfo
 local function parse_url(endpoints)
   local parsed_url = url.parse(endpoints)
+  if not parsed_url.host then
+    parsed_url.host = USERMGR_HOST
+  end
   if not parsed_url.port then
     if parsed_url.scheme == "http" then
       parsed_url.port = 80
@@ -53,45 +62,41 @@ function BKUserCli:new(name)
   self.name = name
 end
 
+-- get ring balancer instance from local global cache
+--* @return: ip, port, error if happened
+function BKUserCli:instance_balancer(key)
+  if key then
+    userTarget.hostname = key
+  end
+  local ok, msg, code = kongBalancer.execute(userTarget)
+  if not ok then
+    kong.log.err("user_cli get upstream ", key, " balance target failed[", code, "] ", msg)
+    return nil, nil, "balancer error"
+  end
+  return userTarget.ip, userTarget.port, nil
+end
+
 -- init http client according kong balancer setting
 --* @param endpoints: comes from plugin configuration
 function BKUserCli:init(config)
   -- parse endpoint for request details
   local parsed_url = parse_url(config.bkbcs_auth_endpoints)
-  if not parsed_url then
-    kong.log.err(" bkbcs_auth_endpoints format error")
-    return "endpoints format error"
-  end
-  -- construct target for getting bkbcs-auth kongBalancer
-  local target = {
-    host = parsed_url.host,
-  }
-  local balancer, err  = kongBalancer._get_balancer(target, false)
-  -- ready to get ip:port information for initialization
-  if not balancer then
-    kong.log.err(" user_cli get no balancer for ", parsed_url.host, " ,  err: ", parsed_url.host)
+  local ip, port, err = self:instance_balancer(parsed_url.host)
+  if err then
     return err
-  end
-  self.balancer = balancer
-  -- get backend target information
-  local hostName
-   self.ip, self.port, hostName, self.handle = balancer:getPeer(true)
-  if not self.ip then
-    kong.log.err(" user_cli get no target from upstream ", parsed_url.host)
-    return "no avaliable ip for balancer"
   end
   -- init http for authentication later
   self.httpc = http.new()
   self.httpc:set_timeout(config.timeout)
-  local ok, err = self.httpc:connect(self.ip, self.port)
+  local ok, err = self.httpc:connect(ip, port)
   if not ok then
-    kong.log.err(" user_cli connect to ", self.ip, ":", self.port, " failed, ", err)
+    kong.log.err(" user_cli connect to ", ip, ":", port, " failed, ", err)
     return err
   end
   if parsed_url.scheme == "https" then
     local _, err = self.httpc:ssl_handshake(true, parsed_url.host, false)
     if err then
-      kong.log.err(" user_cli ssl handshake with ", self.ip, ":", self.port, " failed, ", err)
+      kong.log.err(" user_cli ssl handshake with ", ip, ":", port, " failed, ", err)
       return err
     end
   end
