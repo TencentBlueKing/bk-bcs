@@ -3739,7 +3739,7 @@
         "depid": "blueking",
         "dbid": "db01",
         "dbname": "testdb",
-        "creator": "meloji",
+        "creator": "melo",
         "memo": "备注"
       },
       "properties": {
@@ -3787,7 +3787,7 @@
         },
         "auth": {
           "type": "string",
-          "description": "格式：USER:PASSWORD, 示例: admin:123456",
+          "description": "格式：USER:PASSWORD",
           "title": "授权AUTH信息",
           "maxLength": 64
         }
@@ -4497,7 +4497,7 @@
         "host": "127.0.0.1",
         "port": 3306,
         "user": "root",
-        "password": "123456",
+        "password": "",
         "memo": "备注",
         "state": 0
       },
@@ -8052,7 +8052,7 @@
         "host": "127.0.0.1",
         "port": 3306,
         "user": "root",
-        "password": "123456",
+        "password": "",
         "memo": "备注",
         "state": 0
       },

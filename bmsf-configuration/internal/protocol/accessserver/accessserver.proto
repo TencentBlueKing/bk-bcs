@@ -730,7 +730,7 @@ message CreateBusinessReq {
 			description: "创建新业务请求"
 			required: ["seq", "name", "depid", "dbid", "dbname", "creator"]
 		}
-        example: { value: '{ "seq": "1", "name": "mybusiness", "depid": "blueking", "dbid": "db01", "dbname": "testdb", "creator": "meloji", "memo": "备注" }' }
+        example: { value: '{ "seq": "1", "name": "mybusiness", "depid": "blueking", "dbid": "db01", "dbname": "testdb", "creator": "melo", "memo": "备注" }' }
 	};
 
     uint64 seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
@@ -742,7 +742,7 @@ message CreateBusinessReq {
     string memo    = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "备注", max_length: 64}];
 
     // add fields here.
-    string auth = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "授权AUTH信息", description: "格式：USER:PASSWORD, 示例: admin:123456", max_length: 64}];
+    string auth = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "授权AUTH信息", description: "格式：USER:PASSWORD", max_length: 64}];
 }
 
 message CreateBusinessResp {
@@ -2907,7 +2907,7 @@ message CreateShardingDBReq {
 			description: "创建分片存储实例请求, 一般为管理员操作"
 			required: ["seq", "dbid", "host", "port", "user"]
 		}
-        example: { value: '{ "seq": "1", "dbid": "db01", "host": "127.0.0.1", "port": 3306, "user": "root", "password": "123456", "memo": "备注", "state": 0}' }
+        example: { value: '{ "seq": "1", "dbid": "db01", "host": "127.0.0.1", "port": 3306, "user": "root", "password": "", "memo": "备注", "state": 0}' }
 	};
 
     uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
@@ -3001,7 +3001,7 @@ message UpdateShardingDBReq {
 			description: "更新分片存储实例信息请求"
 			required: ["seq", "dbid"]
 		}
-        example: { value: '{ "seq": "1", "dbid": "db01", "host": "127.0.0.1", "port": 3306, "user": "root", "password": "123456", "memo": "备注", "state": 0 }' }
+        example: { value: '{ "seq": "1", "dbid": "db01", "host": "127.0.0.1", "port": 3306, "user": "root", "password": "", "memo": "备注", "state": 0 }' }
 	};
 
     uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];

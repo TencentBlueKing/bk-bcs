@@ -26,7 +26,7 @@ var (
 	USER = "root"
 
 	// PASSWD.
-	PASSWD = "123456"
+	PASSWD = ""
 
 	// HOST.
 	HOST = "localhost"
