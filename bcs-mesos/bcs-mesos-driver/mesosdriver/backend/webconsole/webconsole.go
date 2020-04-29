@@ -68,6 +68,7 @@ func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	backendURL, err := w.Backend(req)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
 	}
 	if websocket.IsWebSocketUpgrade(req) {
 		websocketProxy := NewWebsocketProxy(w.CertConfig, backendURL)
@@ -78,6 +79,7 @@ func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	httpProxy, err := NewHttpReverseProxy(backendURL, w.CertConfig)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	httpProxy.ServeHTTP(rw, req)
 	return
