@@ -124,10 +124,9 @@ type Version struct {
 
 //Resource discribe resources needed by a task
 type Resource struct {
-	Cpus   float64
-	CPUSet int16
-	Mem    float64
-	Disk   float64
+	Cpus float64
+	Mem  float64
+	Disk float64
 	//IOTps  uint32 //default times per second
 	//IOBps  uint32 //default MB/s
 }

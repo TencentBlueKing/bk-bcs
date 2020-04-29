@@ -56,7 +56,7 @@ func (r *Router) queryAgentSettingList(req *restful.Request, resp *restful.Respo
 	return
 }
 
-func (r *Router) deleteAgentSettingList(req *restful.Request, resp *restful.Response) {
+/*func (r *Router) deleteAgentSettingList(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
 		return
@@ -80,7 +80,7 @@ func (r *Router) deleteAgentSettingList(req *restful.Request, resp *restful.Resp
 	blog.Info("delete agentsettinglist finish")
 
 	return
-}
+}*/
 
 func (r *Router) setAgentSettingList(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
@@ -132,6 +132,34 @@ func (r *Router) taintAgents(req *restful.Request, resp *restful.Response) {
 	err := r.backend.TaintAgents(agents)
 	if err != nil {
 		blog.Error("fail to taint agents(%v), err:%s", agents, err.Error())
+		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+
+	data := createResponeData(nil, "success", nil)
+	resp.Write([]byte(data))
+	return
+}
+
+func (r *Router) updateExtendedResource(req *restful.Request, resp *restful.Response) {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
+		blog.Warn("scheduler is not master, can not process cmd")
+		return
+	}
+
+	var ex *commtypes.ExtendedResource
+	decoder := json.NewDecoder(req.Request.Body)
+	if err := decoder.Decode(&ex); err != nil {
+		blog.Warn("fail to Decode body(%s) for agent, err:%s", err.Error())
+		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+
+	err := r.backend.UpdateExtendedResources(ex)
+	if err != nil {
+		blog.Error("fail to taint agents(%v), err:%s", ex, err.Error())
 		data := createResponeDataV2(comm.BcsErrCommRequestDataErr, err.Error(), nil)
 		resp.Write([]byte(data))
 		return

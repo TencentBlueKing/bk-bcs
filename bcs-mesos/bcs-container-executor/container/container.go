@@ -14,9 +14,10 @@
 package container
 
 import (
-	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"strings"
 	"time"
+
+	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 const (

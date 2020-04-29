@@ -13,19 +13,12 @@
 
 package mesosdriver
 
-//CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
+import "bk-bcs/bcs-common/common/types"
 
 type Config struct {
 	ZkAddr string
 	//http client cert config
-	ClientCert *CertConfig
+	ClientCert *types.CertConfig
 	//clusterid
 	ClusterId string
 }

@@ -187,11 +187,26 @@ func (in *Version) DeepCopy() *Version {
 	return out
 }
 
+func (in *Version) GetExtendedResources() map[string]*commtypes.ExtendedResource {
+	ers := make(map[string]*commtypes.ExtendedResource)
+	for _, c := range in.Container {
+		for _, ex := range c.DataClass.ExtendedResources {
+			o := ers[ex.Name]
+			//if extended resources already exist, then superposition
+			if o != nil {
+				o.Value += ex.Value
+			} else {
+				ers[ex.Name] = ex
+			}
+		}
+	}
+	return ers
+}
+
 //Resource discribe resources needed by a task
 type Resource struct {
 	//cpu核数
-	Cpus   float64
-	CPUSet int
+	Cpus float64
 	//MB
 	Mem  float64
 	Disk float64
@@ -355,15 +370,13 @@ func (version *Version) AllResource() *Resource {
 
 //Container for Version
 type Container struct {
-	Type              string
-	Docker            *Docker
-	Volumes           []*Volume
-	Resources         *Resource
-	LimitResoures     *Resource
-	ExternalResources *commtypes.ExternalResource
-	DataClass         *DataClass
-	//whether cpuset docker parameter --cpuset-cpus, use with DataClass.Resources
-	Cpuset bool
+	Type          string
+	Docker        *Docker
+	Volumes       []*Volume
+	Resources     *Resource
+	LimitResoures *Resource
+	//ExtendedResources []*commtypes.ExtendedResource
+	DataClass *DataClass
 
 	ConfigMaps []commtypes.ConfigMap
 	Secrets    []commtypes.Secret
@@ -680,6 +693,22 @@ type TaskGroup struct {
 	ResourceVersion string `json:"-"`
 }
 
+func (in *TaskGroup) GetExtendedResources() map[string]*commtypes.ExtendedResource {
+	ers := make(map[string]*commtypes.ExtendedResource)
+	for _, task := range in.Taskgroup {
+		for _, ex := range task.DataClass.ExtendedResources {
+			o := ers[ex.Name]
+			//if extended resources already exist, then superposition
+			if o != nil {
+				o.Value += ex.Value
+			} else {
+				ers[ex.Name] = ex
+			}
+		}
+	}
+	return ers
+}
+
 // return namespace, appid
 func GetRunAsAndAppIDbyTaskGroupID(taskGroupId string) (string, string) {
 	appID := ""
@@ -739,9 +768,15 @@ func (in *TaskGroup) DeepCopyInto(out *TaskGroup) {
 	if in.Attributes != nil {
 		in, out := &in.Attributes, &out.Attributes
 		*out = make([]*mesos.Attribute, len(*in))
-		err := deepcopy.DeepCopy(*out, *in)
-		if err != nil {
-			fmt.Println("DeepCopy TaskGroup.Attributes", "failed", err.Error())
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(mesos.Attribute)
+				err := deepcopy.DeepCopy(out, in)
+				if err != nil {
+					fmt.Println("DeepCopy TaskGroup.Attributes", "failed", err.Error())
+				}
+			}
 		}
 	}
 	if in.BcsEventMsg != nil {
@@ -855,7 +890,7 @@ func (in *Agent) DeepCopyInto(out *Agent) {
 	if in.AgentInfo != nil {
 		in, out := &in.AgentInfo, &out.AgentInfo
 		*out = new(mesos_master.Response_GetAgents_Agent)
-		err := deepcopy.DeepCopy(*out, *in)
+		err := deepcopy.DeepCopy(out, in)
 		if err != nil {
 			fmt.Println("deepcopy Agent", "failed", err.Error())
 		}
@@ -1026,11 +1061,10 @@ type DataClass struct {
 	Resources *Resource
 	//resources limit cpu\memory
 	LimitResources *Resource
-	//cpuset docker parameter --cpuset-cpus, use with DataClass.Resources
-	//example: ["0","1","2"]
-	Cpuset   []string
-	Msgs     []*BcsMessage
-	NetLimit *commtypes.NetLimit
+	//extended resources, key=ExtendedResource.Name
+	ExtendedResources []*commtypes.ExtendedResource
+	Msgs              []*BcsMessage
+	NetLimit          *commtypes.NetLimit
 	//add for proc 20180730
 	ProcInfo *ProcDef
 }
@@ -1061,9 +1095,26 @@ func (in *DataClass) DeepCopyInto(out *DataClass) {
 	if in.Msgs != nil {
 		in, out := &in.Msgs, &out.Msgs
 		*out = make([]*BcsMessage, len(*in))
-		err := deepcopy.DeepCopy(*out, *in)
-		if err != nil {
-			fmt.Println("DeepCopy DataClass.Msgs", "failed", err.Error())
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(BcsMessage)
+				err := deepcopy.DeepCopy(out, in)
+				if err != nil {
+					fmt.Println("DeepCopy DataClass.BcsMessage", "failed", err.Error())
+				}
+			}
+		}
+	}
+	if in.ExtendedResources != nil {
+		in, out := &in.ExtendedResources, &out.ExtendedResources
+		*out = make([]*commtypes.ExtendedResource, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(commtypes.ExtendedResource)
+				**out = **in
+			}
 		}
 	}
 	return

@@ -917,6 +917,7 @@ func (executor *BcsExecutor) customSettingContainer(taskInfo *container.BcsConta
 	//resource info
 	taskInfo.Resource = dataClass.Resources
 	taskInfo.LimitResource = dataClass.LimitResources
+	taskInfo.ExtendedResources = dataClass.ExtendedResources
 	taskInfo.NetLimit = dataClass.NetLimit
 	return nil
 

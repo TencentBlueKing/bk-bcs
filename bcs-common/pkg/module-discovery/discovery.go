@@ -135,8 +135,6 @@ func (r *DiscoveryV2) start() error {
 		return err
 	}
 
-	//watch bcs module serviceinfo event
-	go r.discoverModules(types.BCS_SERV_BASEPATH)
 	return nil
 }
 
@@ -157,6 +155,8 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 		}
 	}
 
+	//watch bcs module serviceinfo event
+	go r.discoverModules(types.BCS_SERV_BASEPATH)
 	//get path children
 	zvs, err := r.rd.DiscoverNodesV2(path)
 	if err != nil {

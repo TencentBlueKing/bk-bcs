@@ -223,7 +223,7 @@ type Backend interface {
 
 	//delete user custom mesos slaves attributes
 	//para is array of slave ip
-	DeleteAgentSettingList([]string) (int, error)
+	//DeleteAgentSettingList([]string) (int, error)
 
 	//set user custom mesos slaves attributes
 	SetAgentSettingList([]*commtypes.BcsClusterAgentSetting) (int, error)
@@ -241,6 +241,9 @@ type Backend interface {
 
 	//taints agent
 	TaintAgents([]*commtypes.BcsClusterAgentSetting) error
+
+	//update agent extenedresources
+	UpdateExtendedResources(ex *commtypes.ExtendedResource) error
 
 	//custom resource register
 	RegisterCustomResource(*commtypes.Crr) error

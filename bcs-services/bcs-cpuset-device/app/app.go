@@ -17,6 +17,7 @@ import (
 	"os"
 
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/static"
 	"bk-bcs/bcs-services/bcs-cpuset-device/app/options"
 	"bk-bcs/bcs-services/bcs-cpuset-device/config"
 	"bk-bcs/bcs-services/bcs-cpuset-device/cpuset-device"
@@ -24,7 +25,7 @@ import (
 
 func Run(op *options.Option) error {
 
-	conf := &config.Config{}
+	conf := config.NewConfig()
 	setConfig(conf, op)
 
 	controller := cpuset_device.NewCpusetDevicePlugin(conf)
@@ -41,4 +42,19 @@ func Run(op *options.Option) error {
 func setConfig(conf *config.Config, op *options.Option) {
 	conf.DockerSocket = op.DockerSock
 	conf.PluginSocketDir = op.PluginSocketDir
+	conf.BcsZk = op.BCSZk
+	conf.Engine = op.Engine
+	conf.ClusterId = op.ClusterId
+	conf.NodeIp = op.Address
+
+	//client cert directoty
+	if op.CertConfig.ClientCertFile != "" && op.CertConfig.CAFile != "" &&
+		op.CertConfig.ClientKeyFile != "" {
+
+		conf.ClientCert.CertFile = op.CertConfig.ClientCertFile
+		conf.ClientCert.KeyFile = op.CertConfig.ClientKeyFile
+		conf.ClientCert.CAFile = op.CertConfig.CAFile
+		conf.ClientCert.IsSSL = true
+		conf.ClientCert.CertPasswd = static.ClientCertPwd
+	}
 }

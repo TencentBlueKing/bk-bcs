@@ -13,14 +13,28 @@
 
 package config
 
+import "bk-bcs/bcs-common/common/types"
+
 type Config struct {
 	//device plugin socket dir, examples: /var/lib/kubelet/device-plugins
 	PluginSocketDir string
 	//docker socket
 	DockerSocket string
+	//client https certs
+	ClientCert *types.CertConfig `json:"-"`
+	//cluster zk address
+	BcsZk string
+	//clusterid
+	ClusterId string
+	//Engine, enum: k8s、mesos
+	Engine string
+	//NodeIp
+	NodeIp string
 }
 
 //NewConfig create a config object
 func NewConfig() *Config {
-	return &Config{}
+	return &Config{
+		ClientCert: &types.CertConfig{},
+	}
 }

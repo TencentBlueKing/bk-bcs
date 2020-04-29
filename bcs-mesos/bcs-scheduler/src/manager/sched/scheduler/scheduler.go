@@ -131,7 +131,7 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 		lostSlave:    make(map[string]int64),
 	}
 
-	para := &offer.OfferPara{Sched: s}
+	para := &offer.OfferPara{Sched: s, Store: store}
 	s.offerPool = offer.NewOfferPool(para)
 
 	//if config.ClientCertDir != "" {
@@ -799,11 +799,11 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		os.Exit(1)
 	}
 	//sync agent pods index
-	/*err = s.syncAgentsettingPods()
-	if err!=nil {
+	err = s.syncAgentsettingPods()
+	if err != nil {
 		blog.Errorf("syncAgentsettingPods failed: %s, and exit", err.Error())
 		os.Exit(1)
-	}*/
+	}
 	//current role is master
 	s.Role = currRole
 	go s.store.StartStoreObjectMetrics()

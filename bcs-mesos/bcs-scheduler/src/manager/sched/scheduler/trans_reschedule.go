@@ -21,9 +21,11 @@ import (
 
 	alarm "bk-bcs/bcs-common/common/bcs-health/api"
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
 // The goroutine function for reschedule taskgroup transaction
@@ -92,7 +94,8 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			curOffer := offerOut
 			offerOut = s.GetNextOffer(offerOut)
 			if hostRetain == false || offer.GetHostname() == opData.HostRetain {
-				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, taskGroupID)
+				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, taskGroupID) &&
+					s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 				if isFit == true {
 					blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {
@@ -275,6 +278,21 @@ func (s *Scheduler) doRescheduleTrans(trans *Transaction, outOffer *offer.Offer,
 		s.DeclineResource(offer.Id.Value)
 		return
 	}
+
+	//lock agentsetting
+	util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, newTaskGroup.GetAgentIp())
+	//update agentsettings taskgroup index info
+	agentsetting, _ := s.store.FetchAgentSetting(newTaskGroup.GetAgentIp())
+	if agentsetting != nil {
+		agentsetting.Pods = append(agentsetting.Pods, newTaskGroup.ID)
+		err := s.store.SaveAgentSetting(agentsetting)
+		if err != nil {
+			blog.Errorf("save agentsetting %s pods error %s", agentsetting.InnerIP, err.Error())
+		}
+	} else {
+		blog.Errorf("fetch agentsetting %s Not Found", newTaskGroup.GetAgentIp())
+	}
+	util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, newTaskGroup.GetAgentIp())
 
 	//delete old taskgroup
 	if err = s.DeleteTaskGroup(app, taskGroup, "do reschedule"); err != nil {

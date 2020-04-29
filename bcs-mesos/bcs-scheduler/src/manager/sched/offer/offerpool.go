@@ -17,14 +17,13 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	typesplugin "bk-bcs/bcs-common/common/plugin"
 	commtype "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"container/list"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -59,7 +58,10 @@ type offerPool struct {
 
 	offerEvents chan []*mesos.Offer
 
+	//scheduler manager
 	scheduler SchedManager
+	//store
+	store store.Store
 
 	lostSlaveGracePeriod int
 	offerLifePeriod      int
@@ -79,6 +81,7 @@ func NewOfferPool(para *OfferPara) OfferPool {
 		scheduler:       para.Sched,
 		lostSlaves:      make(map[string]int64, 0),
 		offerEvents:     make(chan []*mesos.Offer, DefaultOfferEventLength),
+		store:           para.Store,
 	}
 
 	if para.LostSlaveGracePeriod > 0 {
@@ -429,8 +432,6 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		} else {
 			blog.V(3).Infof("validateOffer offer(%s:%s) is ok", o.GetId().GetValue(), o.GetHostname())
 		}
-		//set offer cpuset resources
-		p.setOfferCpuset(o)
 		//set offer attributes
 		p.setOffersAttributes([]*mesos.Offer{o})
 		//print offer info
@@ -472,63 +473,6 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 	blog.Infof("after add offers, offers num(%d)", p.offerList.Len())
 
 	return true
-}
-
-func (p *offerPool) setOfferCpuset(offer *mesos.Offer) error {
-	ip, ok := GetOfferIp(offer)
-	if !ok {
-		return nil
-	}
-	agent, err := p.scheduler.FetchMesosAgent(ip)
-	if err != nil {
-		return err
-	}
-	//key = cpu index, example: 1
-	usedCpu := make(map[string]struct{})
-	for _, executorId := range offer.GetExecutorIds() {
-		//offer executorid is taskgroupid
-		podId := executorId.GetValue()
-		taskg, err := p.scheduler.FetchTaskGroup(podId)
-		if err != nil {
-			blog.Errorf("FetchTaskGroup pod %s error %s", podId, err.Error())
-			continue
-		}
-		if taskg.Status != types.TASKGROUP_STATUS_RUNNING && taskg.Status != types.TASKGROUP_STATUS_STAGING &&
-			taskg.Status != types.TASKGROUP_STATUS_STARTING {
-			continue
-		}
-		for _, task := range taskg.Taskgroup {
-			//this task have cpuset setting
-			if len(task.DataClass.Cpuset) != 0 {
-				blog.V(3).Infof("node %s task %s use cpuset %v", ip, task.ID, task.DataClass.Cpuset)
-				for _, set := range task.DataClass.Cpuset {
-					usedCpu[set] = struct{}{}
-				}
-			}
-		}
-	}
-
-	//create offer cpuset resources
-	cpu, _, _, _ := util.ParseMesosResources(agent.AgentInfo.GetTotalResources())
-	cpusetK := "cpuset"
-	cpusetT := mesos.Value_SET
-	cpuset := &mesos.Resource{
-		Name: &cpusetK,
-		Type: &cpusetT,
-		Set: &mesos.Value_Set{
-			Item: make([]string, 0),
-		},
-	}
-	for i := 0; i < int(cpu); i++ {
-		_, ok := usedCpu[strconv.Itoa(i)]
-		if !ok {
-			cpuset.Set.Item = append(cpuset.Set.Item, strconv.Itoa(i))
-		}
-	}
-
-	offer.Resources = append(offer.Resources, cpuset)
-	blog.Infof("offer %s cpuset resources(%s)", ip, cpuset.Set.Item)
-	return nil
 }
 
 func (p *offerPool) pushOfferBySort(offer *innerOffer) {
@@ -628,7 +572,14 @@ func (p *offerPool) setInnerOffersAttributes(offers []*mesos.Offer) {
 		}
 
 		if setting == nil {
-			blog.V(3).Infof("FetchAgentSetting ip %s is nil", ip)
+			blog.Infof("Fetch AgentSetting %s is nil, then create it", ip)
+			setting = &commtype.BcsClusterAgentSetting{
+				InnerIP: ip,
+			}
+			err = p.store.SaveAgentSetting(setting)
+			if err != nil {
+				blog.Errorf("save agentsetting %s error %s", ip, err.Error())
+			}
 			continue
 		}
 
@@ -745,18 +696,17 @@ func (p *offerPool) printOffer(offer *mesos.Offer) {
 func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtype.BcsClusterAgentSetting) error {
 
 	if agentSetting == nil {
+		blog.V(3).Infof("offer(%s:%s) don't have agentsetting", offer.GetId().GetValue(), offer.GetHostname())
 		return nil
 	}
 
+	//customized definition agent setting
 	for k, v := range agentSetting.AttrStrings {
-		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
+		blog.Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
 		var attr mesos.Attribute
 		key := k
 		value := v
-
-		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
-			offer.GetId().GetValue(), offer.GetHostname(), k, v)
 
 		attr.Name = &key
 		var attrType mesos.Value_Type = mesos.Value_TEXT
@@ -766,9 +716,9 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		attr.Text = &attrValue
 		offer.Attributes = append(offer.Attributes, &attr)
 	}
-
+	//customized definition agent setting
 	for k, v := range agentSetting.AttrScalars {
-		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%f) from agentsetting",
+		blog.Infof("offer(%s:%s) add attribute(%s:%f) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
 		var attr mesos.Attribute
 		key := k
@@ -794,7 +744,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		},
 	}
 	for k, v := range agentSetting.NoSchedule {
-		blog.V(3).Infof("offer(%s:%s) add noSchedule attribute(%s:%s) from agentsetting",
+		blog.Infof("offer(%s:%s) add noSchedule attribute(%s:%s) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
 		if k == "" || v == "" {
 			continue
@@ -803,6 +753,63 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 	}
 	if len(noScheduleAttr.Set.Item) > 0 {
 		offer.Attributes = append(offer.Attributes, noScheduleAttr)
+	}
+
+	pods := make([]*types.TaskGroup, 0, len(agentSetting.Pods))
+	//get node's pod list
+	for _, id := range agentSetting.Pods {
+		pod, err := p.scheduler.FetchTaskGroup(id)
+		if err != nil {
+			blog.Errorf("FetchTaskGroup %s failed: %s", id, err.Error())
+			continue
+		}
+		if pod.Status != types.TASKGROUP_STATUS_RUNNING {
+			blog.V(3).Infof("taskgroup %s status %s, and continue", pod.ID, pod.Status)
+			continue
+		}
+
+		pods = append(pods, pod)
+	}
+
+	//all extended resources of the node already allocated
+	allocatedResources := make(map[string]*commtype.ExtendedResource)
+	for _, pod := range pods {
+		ers := pod.GetExtendedResources()
+		for _, er := range ers {
+			o := allocatedResources[er.Name]
+			//if extended resources already exist, then superposition
+			if o != nil {
+				o.Value += er.Value
+			} else {
+				allocatedResources[er.Name] = er
+			}
+		}
+	}
+	by, _ := json.Marshal(allocatedResources)
+	blog.Infof("extended resources %s", string(by))
+	//extended resources, agentsetting have total extended resources
+	for _, ex := range agentSetting.ExtendedResources {
+		//if the extended resources have allocated, then minus it
+		allocated := allocatedResources[ex.Name]
+		var value float64
+		if allocated != nil {
+			value = ex.Capacity - allocated.Value
+		} else {
+			value = ex.Capacity
+		}
+		//current device plugin socket set int mesos.resource.Role parameter
+		socket := ex.Socket
+		r := &mesos.Resource{
+			Name: &ex.Name,
+			Type: mesos.Value_SCALAR.Enum(),
+			Scalar: &mesos.Value_Scalar{
+				Value: &value,
+			},
+			Role: &socket,
+		}
+		offer.Resources = append(offer.Resources, r)
+		blog.Infof("offer(%s:%s) add Extended Resources(%s:%f) from agentsetting",
+			offer.GetId().GetValue(), offer.GetHostname(), ex.Name, value)
 	}
 
 	return nil

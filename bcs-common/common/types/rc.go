@@ -121,9 +121,9 @@ type VolumeUnit struct {
 
 // ResourceRequirements describes the compute resource requirement
 type ResourceRequirements struct {
-	Limits    ResourceList     `json:"limits,omitempty"`
-	Requests  ResourceList     `json:"requests,omitempty"`
-	Externals ExternalResource `json:"externals,omitempty"`
+	Limits            ResourceList        `json:"limits,omitempty"`
+	Requests          ResourceList        `json:"requests,omitempty"`
+	ExtendedResources []*ExtendedResource `json:"extendedResources,omitempty"`
 }
 
 type ResourceList struct {
@@ -168,7 +168,6 @@ type Container struct {
 	Ports           []ContainerPort      `json:"ports,omitempty"`
 	HealthChecks    []*HealthCheck       `json:"healthChecks,omitempty"`
 	Resources       ResourceRequirements `json:"resources,omitempty"`
-	Cpuset          bool                 `json:"cpuset,omitempty"`
 	Volumes         []VolumeUnit         `json:"volumes,omitempty"`
 	ConfigMaps      []ConfigMap          `json:"configmaps,omitempty"`
 	Secrets         []Secret             `json:"secrets,omitempty"`
