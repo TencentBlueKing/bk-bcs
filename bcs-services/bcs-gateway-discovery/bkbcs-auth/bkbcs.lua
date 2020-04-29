@@ -66,7 +66,7 @@ end
 --* @return: ip, port, error if happened
 function BKUserCli:instance_balancer(key)
   if key then
-    userTarget.hostname = key
+    userTarget.host = key
   end
   local ok, msg, code = kongBalancer.execute(userTarget)
   if not ok then

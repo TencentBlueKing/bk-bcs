@@ -30,22 +30,22 @@ function BKBCSAuthHandler:access(conf)
   if err then
     kong.log.err("init user-manager client with endpoint [", conf.bkbcs_auth_endpoints, "] failed: ", err)
     -- response internal error
-    return kong.response.exit(500, {message = "An unexpected error occurred when authentication"})
+    return kong.response.exit(500, {code = 400, result = false, message = "An unexpected error occurred when authentication"})
   end
   -- construct request according configuration
   local req, err = userc:construct_identity(conf, kong.request)
   if err then
     kong.log.err("construct auth request for [", kong.request.get_method(), "]", kong.request.get_path(), ", err:", err)
-    return kong.response.exit(400, {message = "Bad Request: " .. err})
+    return kong.response.exit(400, {code = 400, result = false, message = "Bad Request: " .. err})
   end
   -- init success, try to anthentication
   local ok, err = userc:authentication(conf, req)
   if err then
-    return kong.response.exit(500, {message = "An unexpected error occurred in verify: " .. err})
+    return kong.response.exit(500, {code = 500, result = false, message = "An unexpected error occurred in verify: " .. err})
   end
   if not ok then
     kong.log.warn("token is not allow to access to [", kong.request.get_method(), "]", kong.request.get_path())
-    return kong.response.exit(401, {message = "Resource is Unauthorized"})
+    return kong.response.exit(401, {code = 401, result = false, message = "Resource is Unauthorized"})
   end
 end
 
