@@ -144,7 +144,7 @@ client_ssl_cert_key = /data/bcs/bcs-api-gateway/cert/bcs.key
 kong migrations bootstrap -c /etc/kong/kong.conf
 ```
 
-## 服务发现demo注册
+## 服务发现demo注册说明
 
 **注册storage**
 
@@ -230,3 +230,17 @@ curl -XPOST localhost:8001/upstreams/01.kube-agent.bkbcs.tencent.com/targets \
 * 服务Host命名规则，使用域bkbcs.tencent.com
   * 非集群模块为服务信息索引 + bkbcs.tencent.com，例如storage.bkbcs.tencent.com
   * 集群模块增加集群ID进行识别，例如01.mesosdriver.bkbcs.tencent.com
+
+### bcs-gateway-discovery部署
+
+bcs-gateway-discovery的主要用于对接BCS现有的服务发现机制，利用kong admin api完成模块服务数据注册至kong中，
+利用kong网关能力实现转发服务转发。bcs-gateway-discovery部署有以下要求：
+
+* 多实例部署，多个实例会通过bcs服务发现会完成master选择，仅有master角色会同步数据至kong中
+* 与kong实例必须同机部署，kong admin接口必须仅针对localhost开启
+
+## 鉴权依赖bcs-user-manager
+
+启用kong作为bcs gateway，在部分受限环境中，可以开启bkbcs-auth插件对接bcs-user-manager实现token鉴权。
+可以使用bcs-client命令/接口/bk-bcs-saas等完成token申请。在使用kubectl、bcs-client、独立使用接口时
+附带对应的token实现gateway受限访问。
