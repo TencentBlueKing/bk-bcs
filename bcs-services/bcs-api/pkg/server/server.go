@@ -41,6 +41,7 @@ func Setup(conf *config.ApiServConfig) {
 		&m.Cluster{},
 		&m.ClusterCredentials{},
 		&m.RegisterToken{},
+		&m.WsClusterCredentials{},
 
 		// BCS
 		&m.BCSClusterInfo{},

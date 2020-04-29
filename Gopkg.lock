@@ -907,6 +907,14 @@
   revision = "787624de3eb7bd915c329cba748687a3b22666a6"
 
 [[projects]]
+  digest = "1:9b7a07ac7577787a8ecc1334cb9f34df1c76ed82a917d556c5713d3ab84fbc43"
+  name = "github.com/grpc-ecosystem/go-grpc-prometheus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c225b8c3b01faf2899099b768856a9e916e5087b"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:1a1206efd03a54d336dce7bb8719e74f2f8932f661cb9f57d5813a1d99c083d8"
   name = "github.com/grpc-ecosystem/grpc-opentracing"
@@ -2077,8 +2085,7 @@
   version = "kubernetes-1.12.3"
 
 [[projects]]
-  branch = "release-1.11"
-  digest = "1:6b2f2e04ef53129a13c0dee2feb5ca4317b6d6ca6dc0c86a4ebd96339982ef46"
+  digest = "1:369277b4812558c321fb80e1dd24b9fa445af1e2208dfcf412b3b7abb4ec0142"
   name = "k8s.io/apiserver"
   packages = [
     "pkg/admission",
@@ -2096,11 +2103,13 @@
     "pkg/admission/plugin/webhook/namespace",
     "pkg/admission/plugin/webhook/request",
     "pkg/admission/plugin/webhook/rules",
+    "pkg/admission/plugin/webhook/util",
     "pkg/admission/plugin/webhook/validating",
     "pkg/apis/apiserver",
     "pkg/apis/apiserver/install",
     "pkg/apis/apiserver/v1alpha1",
     "pkg/apis/audit",
+    "pkg/apis/audit/v1",
     "pkg/apis/audit/v1alpha1",
     "pkg/apis/audit/v1beta1",
     "pkg/apis/audit/validation",
@@ -2150,8 +2159,10 @@
     "pkg/storage/storagebackend",
     "pkg/storage/storagebackend/factory",
     "pkg/storage/value",
+    "pkg/util/dryrun",
     "pkg/util/feature",
     "pkg/util/flushwriter",
+    "pkg/util/logs",
     "pkg/util/openapi",
     "pkg/util/trace",
     "pkg/util/webhook",
@@ -2160,7 +2171,8 @@
     "plugin/pkg/authorizer/webhook",
   ]
   pruneopts = "UT"
-  revision = "3f1a34edf9b83a43109259c0a4b462a1a09b6af8"
+  revision = "92fdef3a232a23afb9644f6151119b5961b9feab"
+  version = "kubernetes-1.12.3"
 
 [[projects]]
   digest = "1:5aa94390c366adc57a82b19ad4f99482ab8fbeca0a2ff7b09db12d7baf590e46"

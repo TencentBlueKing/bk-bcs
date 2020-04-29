@@ -37,6 +37,7 @@ const (
 	BcsDataType_WebConsole       BcsDataType = "webconsole"
 	BcsDataType_Admissionwebhook BcsDataType = "admissionwebhook"
 	BcsDataType_CRD              BcsDataType = "customresourcedefinition"
+	BcsDataType_PERMISSION       BcsDataType = "permission"
 )
 
 //TypeMeta for bcs data type

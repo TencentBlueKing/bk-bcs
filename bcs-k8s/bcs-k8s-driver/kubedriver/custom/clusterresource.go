@@ -134,14 +134,14 @@ func (cph *ClusterResourceAPIHandler) FetchAllPods() (allPodsInNode *v1.PodList)
 	fieldSelector, err := fields.ParseSelector(
 		"status.phase!=" + string(v1.PodSucceeded) + ",status.phase!=" + string(v1.PodFailed))
 	if err != nil {
-		return
+		return nil
 	}
 	// get all pods
 	allPodsInNode, err = cph.clientSet.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: fieldSelector.String()})
 	if err != nil {
-		return
+		return nil
 	}
-	return
+	return allPodsInNode
 }
 
 func PodRequestsAndLimits(pod *v1.Pod) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
@@ -187,7 +187,7 @@ func PodRequestsAndLimits(pod *v1.Pod) (reqs map[v1.ResourceName]resource.Quanti
 			}
 		}
 	}
-	return
+	return reqs, limits
 }
 
 func getPodsTotalRequestsAndLimits(podList *v1.PodList) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
@@ -211,5 +211,5 @@ func getPodsTotalRequestsAndLimits(podList *v1.PodList) (reqs map[v1.ResourceNam
 			}
 		}
 	}
-	return
+	return reqs, limits
 }

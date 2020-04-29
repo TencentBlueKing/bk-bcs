@@ -26,6 +26,7 @@ import (
 	"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-services/bcs-api/metric"
 	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
+	"bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/utils"
 	"bk-bcs/bcs-services/bcs-api/regdiscv"
 
 	restful "github.com/emicklei/go-restful"
@@ -65,6 +66,10 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 		return err1.Error(), nil
 	}
 
+	httpcli := httpclient.NewHttpClient()
+	httpcli.SetHeader("Content-Type", "application/json")
+	httpcli.SetHeader("Accept", "application/json")
+
 	rd, err := regdiscv.GetRDiscover()
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
@@ -74,45 +79,57 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 		return err1.Error(), nil
 	}
 
-	serv, err := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_K8SAPISERVER, cluster))
-	if err != nil {
-		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
-		blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_K8SAPISERVER, err.Error())
-		err1 := bhttp.InternalError(common.BcsErrApiGetK8sApiFail, fmt.Sprintf("k8s cluster %s not found", cluster))
-		return err1.Error(), nil
-	}
-
-	ser, ok := serv.(*types.BcsK8sApiserverInfo)
-	if !ok {
-		metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
-		metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
-		blog.Errorf("servers convert to BcsK8sApiserverInfo")
-		err1 := bhttp.InternalError(common.BcsErrApiGetK8sApiFail, common.BcsErrApiGetK8sApiFailStr)
-		return err1.Error(), nil
-	}
-
-	//host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
-	var host string
-	if ser.ExternalIp != "" && ser.ExternalPort != 0 {
-		host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.ExternalIp, ser.ExternalPort)
-	} else {
-		host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
-	}
-
-	//url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
-	url := fmt.Sprintf("%s/k8sdriver/v4/%s", host, uri)
-	blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
-
-	httpcli := httpclient.NewHttpClient()
-	httpcli.SetHeader("Content-Type", "application/json")
-	httpcli.SetHeader("Accept", "application/json")
-	if strings.ToLower(ser.Scheme) == "https" {
-		cliTls, err := rd.GetClientTls()
-		if err != nil {
-			blog.Errorf("get client tls error %s", err.Error())
+	var url string
+	// 先从websocket dialer缓存中查找websocket链
+	serverAddr, tp, found := utils.LookupWsHandler(cluster)
+	if found {
+		url = fmt.Sprintf("%s/k8sdriver/v4/%s", serverAddr, uri)
+		if strings.HasPrefix(serverAddr, "https") {
+			cliTls, err := rd.GetClientTls()
+			if err != nil {
+				blog.Errorf("get client tls error %s", err.Error())
+			}
+			tp.TLSClientConfig = cliTls
 		}
-		httpcli.SetTlsVerityConfig(cliTls)
+		httpcli.SetTransPort(tp)
+	} else {
+		serv, err := rd.GetModuleServers(fmt.Sprintf("%s/%s", types.BCS_MODULE_K8SAPISERVER, cluster))
+		if err != nil {
+			metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+			metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
+			blog.Error("get cluster %s servers %s error %s", cluster, types.BCS_MODULE_K8SAPISERVER, err.Error())
+			err1 := bhttp.InternalError(common.BcsErrApiGetK8sApiFail, fmt.Sprintf("k8s cluster %s not found", cluster))
+			return err1.Error(), nil
+		}
+
+		ser, ok := serv.(*types.BcsK8sApiserverInfo)
+		if !ok {
+			metric.RequestErrorCount.WithLabelValues("k8s_driver", method).Inc()
+			metric.RequestErrorLatency.WithLabelValues("k8s_driver", method).Observe(time.Since(start).Seconds())
+			blog.Errorf("servers convert to BcsK8sApiserverInfo")
+			err1 := bhttp.InternalError(common.BcsErrApiGetK8sApiFail, common.BcsErrApiGetK8sApiFailStr)
+			return err1.Error(), nil
+		}
+
+		//host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
+		var host string
+		if ser.ExternalIp != "" && ser.ExternalPort != 0 {
+			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.ExternalIp, ser.ExternalPort)
+		} else {
+			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
+		}
+
+		//url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
+		url = fmt.Sprintf("%s/k8sdriver/v4/%s", host, uri)
+		blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
+
+		if strings.ToLower(ser.Scheme) == "https" {
+			cliTls, err := rd.GetClientTls()
+			if err != nil {
+				blog.Errorf("get client tls error %s", err.Error())
+			}
+			httpcli.SetTlsVerityConfig(cliTls)
+		}
 	}
 
 	reply, err := httpcli.Request(url, method, req.Request.Header, data)

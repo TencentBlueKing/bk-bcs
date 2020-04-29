@@ -290,7 +290,7 @@ func (logConf *LogConfInject) injectMesosContainer(namespace string, container c
 		}
 	}
 
-	container.Env = envs
+	container.Env = append(container.Env, envs...)
 	//blog.Infof("%v", container.Env)
 	return container
 }

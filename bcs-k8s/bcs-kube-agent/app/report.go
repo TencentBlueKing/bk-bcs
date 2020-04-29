@@ -35,10 +35,7 @@ import (
 
 const (
 	defaultNamespace   = "default"
-	systemNamespace    = "kube-system"
 	clusterServiceName = "kubernetes"
-	// endpoints name for kube-apiserver proxy
-	apiserverProxyServiceName = "apiserver-proxy-for-bcs"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -113,7 +110,7 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 
 	externalProxyAddresses := viper.GetString("agent.external-proxy-addresses")
 	if externalProxyAddresses == "" {
-		endpoints, err := kubeClient.CoreV1().Endpoints(systemNamespace).Get(apiserverProxyServiceName, metav1.GetOptions{})
+		endpoints, err := kubeClient.CoreV1().Endpoints(defaultNamespace).Get(clusterServiceName, metav1.GetOptions{})
 		if err != nil {
 			return "", err
 		}
@@ -158,7 +155,8 @@ func getBkeAgentInfo() (string, string) {
 	clusterId := viper.GetString("cluster.id")
 	registerToken := os.Getenv("REGISTER_TOKEN")
 
-	bkeUrl := fmt.Sprintf("%s/rest/clusters/%s/credentials", bkeServerAddress, clusterId)
+	//bkeUrl := fmt.Sprintf("%s/rest/clusters/%s/credentials", bkeServerAddress, clusterId)
+	bkeUrl := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/clusters/%s/credentials", bkeServerAddress, clusterId)
 
 	return bkeUrl, registerToken
 }

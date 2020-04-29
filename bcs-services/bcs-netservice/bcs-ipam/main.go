@@ -150,9 +150,6 @@ func cmdDel(args *skel.CmdArgs) error {
 	if err != nil {
 		return err
 	}
-	if args.Netns == "" {
-		return fmt.Errorf("Netns lost in parameter")
-	}
 	//check host ip if configuration designated
 	if ipamConf.Host == nil {
 		//get one available host ip from system

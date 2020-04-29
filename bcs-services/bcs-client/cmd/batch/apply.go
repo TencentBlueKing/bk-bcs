@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	"bk-bcs/bcs-services/bcs-client/pkg/metastream"
 	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	userV1 "bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
 
 	"github.com/urfave/cli"
 )
@@ -103,6 +105,7 @@ func apply(cxt *utils.ClientContext) error {
 	//step: initialize storage client & scheduler client
 	storage := v1.NewBcsStorage(utils.GetClientOption())
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	userManager := userV1.NewBcsUserManager(utils.GetClientOption())
 
 	//step: create/update all resource according json list
 	for metaList.HasNext() {
@@ -159,6 +162,11 @@ func apply(cxt *utils.ClientContext) error {
 			}
 			update = func(cluster, ns string, data []byte, urlv url.Values) error {
 				return scheduler.UpdateCustomResourceDefinition(cluster, info.name, data)
+			}
+		case mesostype.BcsDataType_PERMISSION:
+			inspectStatus = fmt.Errorf("resource does not exist")
+			create = func(cluster string, ns string, data []byte) error {
+				return userManager.GrantOrRevokePermission(http.MethodPost, data)
 			}
 		default:
 			//unkown type, try custom resource

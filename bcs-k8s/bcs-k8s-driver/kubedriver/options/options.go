@@ -60,7 +60,7 @@ type TLSConfig struct {
 func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 	if c.CertFile == "" || c.CAFile == "" || c.KeyFile == "" {
 		err = errors.New("missing argument, must provide all certfile/keyfile/cafile")
-		return
+		return nil, err
 	}
 
 	switch c.TLSType {
@@ -74,10 +74,10 @@ func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 		config, err = bcsssl.ServerTslConfVerityClient(c.CAFile, c.CertFile, c.KeyFile, c.Password)
 	}
 	if err != nil || config == nil {
-		return
+		return config, err
 	}
 	config.BuildNameToCertificate()
-	return
+	return config, nil
 }
 
 type KubeDriverServerOptions struct {
@@ -100,6 +100,11 @@ type KubeDriverServerOptions struct {
 	CustomReportAddress string
 	CustomReportPort    uint
 	CustomClusterID     string
+
+	RegisterWithWebsocket bool
+	RegisterToken         string
+	RegisterUrl           string
+	InsecureSkipVerify    bool
 }
 
 func NewKubeDriverServerOptions() *KubeDriverServerOptions {
@@ -150,6 +155,12 @@ func (o *KubeDriverServerOptions) BindFlagSet(fs *pflag.FlagSet) {
 	fs.UintVar(&o.CustomReportPort, "custom-report-port", 0, "custom bind port to report to zk")
 	fs.StringVar(&o.CustomClusterID, "custom-cluster-id", "", "custom clusterID")
 
+	// websocket register
+	fs.BoolVar(&o.RegisterWithWebsocket, "register-with-websocket", false, "whether register to bcs-api with websocket")
+	fs.StringVar(&o.RegisterToken, "register-token", "", "register token to register to bcs-api")
+	fs.StringVar(&o.RegisterUrl, "register-url", "", "bcs-api url to register")
+	fs.BoolVar(&o.InsecureSkipVerify, "insecure-skip-verify", false, "whether insecure skip verify")
+
 }
 
 func (o *KubeDriverServerOptions) SecureServerConfigured() bool {
@@ -198,6 +209,7 @@ func (o *KubeDriverServerOptions) MakeServerAddress(serverType ServerType) strin
 	} else {
 		port = o.InsecurePort
 	}
+
 	return net.JoinHostPort(o.BindAddress.String(), strconv.FormatUint(uint64(port), 10))
 }
 
