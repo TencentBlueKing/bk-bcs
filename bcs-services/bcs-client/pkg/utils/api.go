@@ -14,6 +14,9 @@
 package utils
 
 import (
+	"fmt"
+	htplib "net/http"
+
 	"bk-bcs/bcs-common/common/http"
 	"bk-bcs/bcs-common/common/http/httpclient"
 	"crypto/tls"
@@ -42,7 +45,9 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	httpCli := httpclient.NewHttpClient()
 	httpCli.SetHeader("Content-Type", "application/json")
 	httpCli.SetHeader("Accept", "application/json")
-	httpCli.SetHeader("Authorization", "Bearer "+b.bcsToken)
+	if b.bcsToken != "" {
+		httpCli.SetHeader("Authorization", "Bearer "+b.bcsToken)
+	}
 	//httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
 
 	if header != nil {
@@ -52,15 +57,24 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	if b.clientSSL != nil {
 		httpCli.SetTlsVerityConfig(b.clientSSL)
 	}
-
-	return httpCli.Request(uri, method, nil, data)
+	//changed by DeveloperJim in 2020-04-27 for handling http error code
+	response, err := httpCli.RequestEx(uri, method, nil, data)
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode != htplib.StatusOK {
+		return nil, fmt.Errorf("%s", response.Status)
+	}
+	return response.Reply, nil
 }
 
 func (b *bcsApiRequester) DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (*httpclient.HttpRespone, error) {
 	httpCli := httpclient.NewHttpClient()
 	httpCli.SetHeader("Content-Type", "application/json")
 	httpCli.SetHeader("Accept", "application/json")
-	httpCli.SetHeader("X-Bcs-User-Token", b.bcsToken)
+	if b.bcsToken != "" {
+		httpCli.SetHeader("Authorization", "Bearer "+b.bcsToken)
+	}
 
 	if header != nil {
 		httpCli.SetBatchHeader(header)

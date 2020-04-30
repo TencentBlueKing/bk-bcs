@@ -299,6 +299,7 @@ func (bs *bcsStorage) listResource(clusterID, resourceType string, condition url
 		fmt.Sprintf(BcsStorageListDynamicURI, bs.bcsApiAddress, clusterID, resourceType),
 		method,
 		data,
+		getClusterIDHeader(clusterID),
 	)
 
 	if err != nil {
@@ -322,6 +323,7 @@ func (bs *bcsStorage) inspectResource(clusterID, namespace, resourceType, name s
 		fmt.Sprintf(BcsStorageInspectDynamicURI, bs.bcsApiAddress, clusterID, namespace, resourceType, name),
 		http.MethodGet,
 		nil,
+		getClusterIDHeader(clusterID),
 	)
 
 	if err != nil {

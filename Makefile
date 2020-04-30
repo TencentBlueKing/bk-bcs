@@ -37,6 +37,7 @@ EXPORTPATH=./build/api_export
 default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection bcs-networkpolicy
 specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection bcs-networkpolicy
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche k8s-statefulsetplus
+mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
 allpack: svcpack k8spack mmpack mnpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -45,7 +46,7 @@ allpack: svcpack k8spack mmpack mnpack
 inner:
 	$(MAKE) specific bcs_edition=inner_edition
 ce:
-	$(MAKE) specific bcs_edition=communication_edition
+	$(MAKE) specific bcs_edition=community_edition
 ee:
 	$(MAKE) specific bcs_edition=enterprise_edition
 
@@ -75,6 +76,11 @@ api:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-api ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-api/bcs-api ./bcs-services/bcs-api/main.go
+
+gateway:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cp -R ./install/conf/bcs-services/bcs-gateway-discovery ${PACKAGEPATH}/bcs-services
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./bcs-services/bcs-gateway-discovery/main.go
 
 kube-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
@@ -262,6 +268,9 @@ detection:pre
 	mkdir -p ${PACKAGEPATH}/bcs-network-detection
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-network-detection/bcs-network-detection ./bcs-services/bcs-network-detection/main.go
 
+tools:
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
+	
 bcs-networkpolicy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-networkpolicy
 	cp -R ./install/conf/bcs-services/bcs-networkpolicy ${PACKAGEPATH}/bcs-services

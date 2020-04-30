@@ -22,6 +22,7 @@ import (
 	"bk-bcs/bcs-common/common/types"
 	commonTypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/util"
+	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/webconsole"
 	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 	"io/ioutil"
 	"strconv"
@@ -39,6 +40,8 @@ type Scheduler struct {
 	rwHost *sync.RWMutex
 	//reversProxy from 1.15.x for CustomResource
 	localProxy *kubeProxy
+	//proxy from 1.17.x for mesos webconsole
+	consoleProxy *webconsole.WebconsoleProxy
 }
 
 //NewScheduler create a scheduler
@@ -65,8 +68,10 @@ func (s *Scheduler) InitConfig(conf *config.MesosDriverConfig) {
 
 	s.client.SetHeader("Content-Type", "application/json")
 	s.client.SetHeader("Accept", "application/json")
-
+	//init kube client for CRD
 	s.initKube()
+	//init webconsole proxy
+	s.initMesosWebconsole()
 	s.initActions()
 }
 
@@ -205,6 +210,13 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("GET", "/namespaces/{ns}/admissionwebhook/{name}", nil, s.FetchAdmissionwebhookHandler),
 		httpserver.NewAction("GET", "/admissionwebhooks", nil, s.FetchAllAdmissionwebhooksHandler),
 		/*================= admissionwebhook ====================*/
+
+		//*-------------- mesos webconsole proxy-----------------*//
+		httpserver.NewAction("GET", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
+		//httpserver.NewAction("DELETE", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
+		//httpserver.NewAction("PUT", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
+		httpserver.NewAction("POST", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
+		//*-------------- mesos webconsole proxy-----------------*//
 	}
 	//custom resource solution that compatible with k8s & mesos
 	if s.config.KubeConfig != "" {
