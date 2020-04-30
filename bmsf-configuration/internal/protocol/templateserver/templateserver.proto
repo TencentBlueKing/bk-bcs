@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package templateserver;
+
+service Template {
+    rpc Render(RenderReq) returns (RenderResp) {}
+    rpc PreviewRendering(PreviewRenderingReq) returns (PreviewRenderingResp) {}
+}
+
+message RenderReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string appid    = 3;
+    string cfgsetid = 4;
+    string commitid = 5;
+    string operator = 6;
+}
+
+message RenderResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message PreviewRenderingReq {
+    uint64 seq          = 1;
+    string bid          = 2;
+    string appid        = 3;
+    string template     = 4;
+    string templateRule = 5;
+}
+
+message PreviewRenderingResp {
+    uint64          seq     = 1;
+    common.ErrCode  errCode = 2;
+    string          errMsg  = 3;
+    bytes           content = 4;
+}

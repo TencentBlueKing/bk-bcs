@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bscp-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bscp-gateway
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  - port: 443
+    targetPort: 443
+    name: https
+  selector:
+    app: bscp-gateway

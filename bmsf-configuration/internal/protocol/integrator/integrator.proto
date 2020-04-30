@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package integrator;
+
+service Integrator {
+    rpc Integrate(IntegrateReq) returns (IntegrateResp) {}
+}
+
+message IntegrateReq {
+    uint64 seq      = 1;
+    string metadata = 2;
+    string operator = 3;
+}
+
+message IntegrateResp {
+    uint64         seq        = 1;
+    common.ErrCode errCode    = 2;
+    string         errMsg     = 3;
+    string         bid        = 4;
+    string         appid      = 5;
+    string         clusterid  = 6;
+    string         zoneid     = 7;
+    string         cfgsetid   = 8;
+    string         commitid   = 9;
+    string         strategyid = 10;
+    string         releaseid  = 11;
+    string         locker     = 12;
+    string         lockTime   = 13;
+}

@@ -1,0 +1,46 @@
+# 当前模块相关配置信息
+server:
+    # 服务名，用于服务发现
+    servicename: bk-bscp-connserver
+    # RPC监听配置
+    endpoint:
+        ip: 127.0.0.1
+        port: 9516
+    # 模块服务信息描述
+    metadata: bk-bscp-connserver
+
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - 127.0.0.1:2379
+    # 建立链接超时时间
+    dialtimeout: 3s
+
+# BCS容器通道控制器相关配置信息
+bcscontroller:
+    # 服务名，用于服务发现
+    servicename: bk-bscp-bcs-controller
+    # RPC调用超时时间
+    calltimeout: 3s
+
+# 数据缓存服务相关配置信息
+datamanager:
+    # 服务名，用于服务发现
+    servicename: bk-bscp-datamanager
+    # RPC调用超时时间
+    calltimeout: 3s
+
+# MQ集群相关配置信息
+natsmqCluster:
+    # 集群USR接口配置
+    endpoints:
+        - nats://127.0.0.1:4222
+    # 建立链接超时时间
+    timeout: 3s
+
+# 日志相关配置信息
+logger:
+    level: 3
+    maxnum: 5
+    maxsize: 200

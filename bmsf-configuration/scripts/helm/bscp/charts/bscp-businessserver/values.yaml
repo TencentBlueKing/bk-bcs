@@ -1,0 +1,11 @@
+#
+# bscp-businessserver configuration
+#
+enabled: true
+
+replicaCount: 1
+image: bscp-businessserver:latest
+imagePullPolicy: 
+nodeSelector: {}
+tolerations: []
+env: []

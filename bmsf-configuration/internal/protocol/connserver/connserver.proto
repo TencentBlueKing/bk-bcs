@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package connserver;
+
+service Connection {
+    rpc QueryAppMetadata(QueryAppMetadataReq) returns (QueryAppMetadataResp) {}
+    rpc Access(AccessReq) returns (AccessResp) {}
+    rpc SignallingChannel(stream SignallingChannelDownStream) returns (stream SignallingChannelUpStream) {}
+    rpc Report(ReportReq) returns (ReportResp) {}
+    rpc PullRelease(PullReleaseReq) returns (PullReleaseResp) {}
+    rpc PullReleaseConfigs(PullReleaseConfigsReq) returns (PullReleaseConfigsResp) {}
+    rpc PullConfigSetList(PullConfigSetListReq) returns (PullConfigSetListResp) {}
+}
+
+message QueryAppMetadataReq {
+    uint64 seq          = 1;
+    string businessName = 2;
+    string appName      = 3;
+    string clusterName  = 4;
+    string zoneName     = 5;
+
+    // add fields here.
+    string clusterLabels = 6;
+}
+
+message QueryAppMetadataResp {
+    uint64         seq       = 1;
+    common.ErrCode errCode   = 2;
+    string         errMsg    = 3;
+    string         bid       = 4;
+    string         appid     = 5;
+    string         clusterid = 6;
+    string         zoneid    = 7;
+}
+
+message AccessReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string dc        = 6;
+    string IP        = 7;
+    string labels    = 8;
+}
+
+message AccessResp {
+    uint64                   seq       = 1;
+    common.ErrCode           errCode   = 2;
+    string                   errMsg    = 3;
+    repeated common.Endpoint endpoints = 4;
+}
+
+enum SignallingChannelCmd {
+    SCCMD_C2S_PING                       = 0;
+    SCCMD_S2C_PONG                       = 1;
+    SCCMD_S2C_PUSH_NOTIFICATION          = 2;
+    SCCMD_S2C_PUSH_ROLLBACK_NOTIFICATION = 3;
+}
+
+message SCCMDPing {
+    string bid       = 1;
+    string appid     = 2;
+    string clusterid = 3;
+    string zoneid    = 4;
+    string dc        = 5;
+    string IP        = 6;
+    string labels    = 7;
+    int64  timeout   = 8;
+}
+
+message SCCMDPushNotification {
+    string bid         = 1;
+    string appid       = 2;
+    string cfgsetid    = 3;
+    string cfgsetName  = 4;
+    uint64 serialno    = 5;
+    string releaseid   = 6;
+    string cfgsetFpath = 7;
+}
+
+message SCCMDPushRollbackNotification {
+    string bid         = 1;
+    string appid       = 2;
+    string cfgsetid    = 3;
+    string cfgsetName  = 4;
+    uint64 serialno    = 5;
+    string releaseid   = 6;
+    string cfgsetFpath = 7;
+}
+
+message SignallingChannelDownStream {
+    uint64               seq     = 1;
+    SignallingChannelCmd cmd     = 2;
+    SCCMDPing            cmdPing = 3;
+}
+
+message SignallingChannelUpStream {
+    uint64                        seq         = 1;
+    SignallingChannelCmd          cmd         = 2;
+    SCCMDPushNotification         cmdPush     = 3;
+    SCCMDPushRollbackNotification cmdRollback = 4;
+}
+
+message ReportReq {
+    uint64                     seq       = 1;
+    string                     bid       = 2;
+    string                     appid     = 3;
+    string                     clusterid = 4;
+    string                     zoneid    = 5;
+    string                     dc        = 6;
+    string                     IP        = 7;
+    string                     labels    = 8;
+    repeated common.ReportInfo infos     = 9;
+}
+
+message ReportResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message PullReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string appid          = 3;
+    string clusterid      = 4;
+    string zoneid         = 5;
+    string dc             = 6;
+    string IP             = 7;
+    string labels         = 8;
+    string cfgsetid       = 9;
+    string localReleaseid = 10;
+    string releaseid      = 11;
+}
+
+message PullReleaseResp {
+    uint64         seq        = 1;
+    common.ErrCode errCode    = 2;
+    string         errMsg     = 3;
+    bool           needEffect = 4;
+    common.Release release    = 5;
+    string         cid        = 6;
+    string         cfgLink    = 7;
+}
+
+message PullReleaseConfigsReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    string cfgsetid  = 6;
+    string releaseid = 7;
+    string cid       = 8;
+}
+
+message PullReleaseConfigsResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    string         cid     = 4;
+    string         cfgLink = 5;
+    bytes          content = 6;
+}
+
+message PullConfigSetListReq {
+    uint64 seq   = 1;
+    string bid   = 2;
+    string appid = 3;
+    int32  index = 4;
+    int32  limit = 5;
+}
+
+message PullConfigSetListResp {
+    uint64                    seq        = 1;
+    common.ErrCode            errCode    = 2;
+    string                    errMsg     = 3;
+    repeated common.ConfigSet configSets = 4;
+}

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bscp-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bscp-gateway
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: bscp-gateway
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: bscp-gateway
+    spec:
+      containers:
+        - name: bscp-gateway
+          image: "{{ .Values.image }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+          - containerPort: 8080
+          - containerPort: 443
+          volumeMounts:
+          - name: config
+            mountPath: /bk-bscp/etc/server.yaml
+            subPath: server.yaml
+          - name: tls
+            mountPath: /bk-bscp/tls
+          {{- if .Values.env }}
+          env:
+            {{- range .Values.env }}
+              {{- with . }}
+          - name: {{ .name }}
+            value: "{{ .value }}"
+              {{- end}}
+            {{- end}}
+          {{- end}}
+          resources:
+{{- if .Values.resources }}
+{{ toYaml .Values.resources | indent 12 }}
+{{- else }}
+{{ toYaml .Values.global.defaultResources | indent 12 }}
+{{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: bscp-gateway-config
+          items:
+          - key: server.yaml
+            path: server.yaml
+      - name: tls
+        secret:
+          secretName: bscp-gateway-secret
