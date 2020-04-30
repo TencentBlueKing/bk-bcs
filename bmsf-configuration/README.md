@@ -66,16 +66,16 @@ release R-85a74cc6-d14b-11e9-a11f-5254000ea971 confirm to publish successfully
 
 ## Documents
 
-[蓝鲸服务配置平台 客户端手册](docs/client_book.md)
+[客户端手册](docs/client_book.md)
 
-[蓝鲸服务配置平台 系统对接指南](api/api.md)
+[系统对接指南](api/api.md)
 
-[蓝鲸服务配置平台 逻辑集成功能介绍](docs/integrator.md)
+[逻辑集成功能介绍](docs/integrator.md)
 
-[蓝鲸服务配置平台 模板渲染介绍](docs/template.md)
+[模板渲染介绍](docs/template.md)
 
-[蓝鲸服务配置平台 配置发布策略](docs/strategy.md)
+[配置发布策略](docs/strategy.md)
 
-[蓝鲸服务配置平台 设计文档](docs/arch.md)
+[设计文档](docs/arch.md)
 
-[蓝鲸服务配置平台 项目规范](docs/standard.md)
+[项目规范](docs/standard.md)
