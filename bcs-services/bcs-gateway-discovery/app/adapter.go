@@ -36,6 +36,9 @@ var defaultClusterIDKey = "BCS-ClusterID"
 var defaultMediaTypeKey = "Content-Type"
 var defaultAcceptKey = "Accept"
 var defaultMediaType = "application/json"
+var defaultClusterName = "bkbcs-cluster"
+var defaultServiceTag = "bkbcs-service"
+var defaultPluginName = "bkbcs-auth"
 
 //Handler for module automatic reflection
 type Handler func(module string, svcs []*types.ServerInfo) (*register.Service, error)
@@ -125,7 +128,7 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 	labels := make(map[string]string)
 	upcaseID := strings.ToUpper(resources[1])
 	labels["module"] = types.BCS_MODULE_MESOSDRIVER
-	labels["service"] = "bkbcs-cluster"
+	labels["service"] = defaultClusterName
 	labels["scheduler"] = "mesos"
 	labels["cluster"] = upcaseID
 	regSvc := &register.Service{
@@ -151,7 +154,7 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 		Labels:  labels,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
-				Name: "bkbcs-auth",
+				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -188,7 +191,7 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 	labels := make(map[string]string)
 	upcaseID := strings.ToUpper(resources[1])
 	labels["module"] = types.BCS_MODULE_KUBERNETEDRIVER
-	labels["service"] = "bkbcs-cluster"
+	labels["service"] = defaultClusterName
 	labels["scheduler"] = "kubernetes"
 	labels["cluster"] = upcaseID
 	regSvc := &register.Service{
@@ -212,7 +215,7 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 		Labels:  labels,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
-				Name: "bkbcs-auth",
+				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -237,7 +240,7 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_STORAGE, defaultDomain)
 	labels := make(map[string]string)
 	labels["module"] = types.BCS_MODULE_STORAGE
-	labels["service"] = "bkbcs-service"
+	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
 		Protocol: svcs[0].Scheme,
@@ -256,7 +259,7 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 		Labels:      labels,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
-				Name: "bkbcs-auth",
+				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -294,7 +297,7 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	labels := make(map[string]string)
 	upcaseID := strings.ToUpper(resources[1])
 	labels["module"] = types.BCS_MODULE_KUBEAGENT
-	labels["service"] = "bkbcs-cluster"
+	labels["service"] = defaultClusterName
 	labels["scheduler"] = "kubernetes"
 	labels["cluster"] = upcaseID
 	//create service & setting header plugin for kube-apiserver
@@ -324,7 +327,7 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 		Service:     name,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
-				Name: "bkbcs-auth",
+				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -351,7 +354,7 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain)
 	labels := make(map[string]string)
 	labels["module"] = types.BCS_MODULE_USERMANAGER
-	labels["service"] = "bkbcs-service"
+	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
 		Protocol: svcs[0].Scheme,
@@ -387,7 +390,7 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_NETWORKDETECTION, defaultDomain)
 	labels := make(map[string]string)
 	labels["module"] = types.BCS_MODULE_NETWORKDETECTION
-	labels["service"] = "bkbcs-service"
+	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
 		Protocol: svcs[0].Scheme,
@@ -404,7 +407,7 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 		PathRewrite: true,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
-				Name: "bkbcs-auth",
+				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
@@ -432,12 +435,12 @@ func (adp *Adapter) constructStandardProxy(module string, svcs []*types.ServerIn
 	hostName := fmt.Sprintf("%s.%s", module, defaultDomain)
 	labels := make(map[string]string)
 	labels["module"] = module
-	labels["service"] = "bkbcs-service"
+	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
-		Path:     fmt.Sprintf("/%s/v4/", module),
+		Path:     fmt.Sprintf("/%s/", module),
 		Retries:  1,
 		Labels:   labels,
 	}
@@ -452,7 +455,7 @@ func (adp *Adapter) constructStandardProxy(module string, svcs []*types.ServerIn
 		Labels:      labels,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
-				Name: "bkbcs-auth",
+				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
 				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
 				AuthToken:     adp.admintoken,
