@@ -206,7 +206,7 @@ func (r *DiscoveryV2) discoverModules(key string, init bool) {
 
 	index := 0
 	for {
-		index += 1
+		index++
 		select {
 		case eve := <-event:
 			if eve.Err != nil {
