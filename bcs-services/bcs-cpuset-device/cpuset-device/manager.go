@@ -122,7 +122,7 @@ func (c *CpusetDevicePlugin) Start() error {
 		blog.Infof("Registered device plugin for '%s' with Kubelet", c.resourceName)
 		//else device plugin in mesos cluster, then report extended resources info to mesos scheduler
 	} else {
-		err = c.reportMesosSchedulerExtendedResources()
+		err = c.reportExtendedResources()
 		if err != nil {
 			return err
 		}
@@ -242,7 +242,7 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 	return nil
 }
 
-func (c *CpusetDevicePlugin) reportMesosSchedulerExtendedResources() error {
+func (c *CpusetDevicePlugin) reportExtendedResources() error {
 	conf := &mesosdriver.Config{
 		ZkAddr:     c.conf.BcsZk,
 		ClientCert: c.conf.ClientCert,

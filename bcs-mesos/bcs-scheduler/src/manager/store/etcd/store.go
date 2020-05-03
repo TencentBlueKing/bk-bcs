@@ -40,6 +40,7 @@ const (
 	DefaultNamespace = "bkbcs"
 )
 
+//bcs mesos custom resources list
 const (
 	CrdAdmissionWebhookConfiguration = "AdmissionWebhookConfiguration"
 	CrdAgent                         = "Agent"
@@ -81,6 +82,8 @@ type managerStore struct {
 	cancel context.CancelFunc
 }
 
+//init bcs mesos custom resources
+//connect kube-apiserver, and create custom resources definition
 func (s *managerStore) initKubeCrd() error {
 	crds := []string{
 		CrdAdmissionWebhookConfiguration,
@@ -130,7 +133,7 @@ func (s *managerStore) initKubeCrd() error {
 				},
 			},
 		}
-
+		//create crd definition
 		_, err := client.Create(crd)
 		if err != nil && !errors.IsAlreadyExists(err) {
 			blog.Errorf("etcdstore register Crds failed:%s", err.Error())
@@ -151,6 +154,7 @@ func (s *managerStore) StopStoreMetrics() {
 	s.wg.Wait()
 }
 
+//store metrics report prometheus
 func (s *managerStore) StartStoreObjectMetrics() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 
@@ -242,7 +246,9 @@ func (s *managerStore) StartStoreObjectMetrics() {
 	}
 }
 
+//etcd store, based on kube-apiserver
 func NewEtcdStore(kubeconfig string) (store.Store, error) {
+	//build kube-apiserver config
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		blog.Errorf("etcdstore build kubeconfig %s error %s", kubeconfig, err.Error())
@@ -250,6 +256,7 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 	}
 	blog.Infof("etcdstore build kubeconfig %s success", kubeconfig)
 
+	//build kubernetes clientset for kubeconfig
 	k8sClientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		blog.Errorf("etcdstore build clientset error %s", err.Error())
@@ -261,7 +268,7 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 		blog.Errorf("etcdstore build clientset error %s", err.Error())
 		return nil, err
 	}
-
+	//build internal clientset for kubeconfig
 	clientset, err := internalclientset.NewForConfig(restConfig)
 	if err != nil {
 		blog.Errorf("etcdstore build clientset error %s", err.Error())
@@ -301,6 +308,7 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 	return m, nil
 }
 
+//check namespace exist, if not exist, then create it
 func (store *managerStore) checkNamespace(ns string) error {
 	if cacheMgr != nil && cacheMgr.isOK {
 		exist := checkCacheNamespaceExist(ns)
@@ -335,6 +343,7 @@ func (store *managerStore) checkNamespace(ns string) error {
 	return nil
 }
 
+//list all namespaces
 func (store *managerStore) ListRunAs() ([]string, error) {
 	client := store.k8sClient.CoreV1().Namespaces()
 	nss, err := client.List(metav1.ListOptions{})
@@ -355,6 +364,7 @@ func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
 	return store.ListRunAs()
 }
 
+//filter invalid labels
 func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[string]string {
 	if oriLabels == nil {
 		return nil

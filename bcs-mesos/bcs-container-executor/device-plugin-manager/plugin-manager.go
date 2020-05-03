@@ -40,7 +40,7 @@ func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource) ([]str
 	//connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
-		blog.Errorf("connect extended resource %s socket failed: %s", ex.Name, ex.Socket, err.Error())
+		blog.Errorf("connect extended resource %s socket %s failed: %s", ex.Name, ex.Socket, err.Error())
 		return nil, err
 	}
 	defer conn.Close()
@@ -70,7 +70,7 @@ func (m *DevicePluginManager) Allocate(ex *comtypes.ExtendedResource, deviceIds 
 	//connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
-		blog.Errorf("connect extended resource %s socket failed: %s", ex.Name, ex.Socket, err.Error())
+		blog.Errorf("connect extended resource %s socket %s failed: %s", ex.Name, ex.Socket, err.Error())
 		return nil, err
 	}
 	defer conn.Close()
@@ -104,7 +104,7 @@ func (m *DevicePluginManager) PreStartContainer(ex *comtypes.ExtendedResource, d
 	//connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
-		blog.Errorf("connect extended resource %s socket failed: %s", ex.Name, ex.Socket, err.Error())
+		blog.Errorf("connect extended resource %s socket %s failed: %s", ex.Name, ex.Socket, err.Error())
 		return err
 	}
 	defer conn.Close()
