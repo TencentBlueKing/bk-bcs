@@ -1,0 +1,31 @@
+# 当前模块相关配置信息
+server:
+    # 服务名，用于服务发现
+    servicename: bk-bscp-integrator
+    # RPC监听配置
+    endpoint:
+        ip: 127.0.0.1
+        port: 9517
+    # 模块服务信息描述
+    metadata: bk-bscp-integrator
+
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - 127.0.0.1:2379
+    # 建立链接超时时间
+    dialtimeout: 2s
+
+# 业务逻辑服务相关配置信息
+businessserver:
+    # 服务名，用于服务发现
+    servicename: bk-bscp-businessserver
+    # RPC调用超时时间
+    calltimeout: 3s
+
+# 日志相关配置信息
+logger:
+    level: 3
+    maxnum: 5
+    maxsize: 200

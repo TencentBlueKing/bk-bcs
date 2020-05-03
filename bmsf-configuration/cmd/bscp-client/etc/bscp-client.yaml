@@ -1,0 +1,13 @@
+kind: bscp-client
+version: 0.1.1
+access:
+  servicename: bk-bscp-accessserver
+  timeout: 3s
+etcd:
+  endpoints:
+    - 127.0.0.1:2379
+  dialtimeout: 3s
+  #todo: tls configuration
+logger:
+  #logger level to print details
+  level: 0

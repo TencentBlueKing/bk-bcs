@@ -53,15 +53,18 @@ type DiscoveryV2 struct {
 	//DiscoveryV2 only discover the specified modules
 	//then lose sight of others
 	modules []string
+	//watched key
+	watchedKey map[string]struct{}
 }
 
 //NewDiscoveryV2 create a object of DiscoveryV2
 func NewDiscoveryV2(zkserv string, modules []string) (ModuleDiscovery, error) {
 	blog.Infof("DiscoveryV2 start...")
 	rd := &DiscoveryV2{
-		rd:      RegisterDiscover.NewRegDiscoverEx(zkserv, 10*time.Second),
-		servers: make(map[string][]interface{}, 0),
-		modules: modules,
+		rd:         RegisterDiscover.NewRegDiscoverEx(zkserv, 10*time.Second),
+		servers:    make(map[string][]interface{}, 0),
+		modules:    modules,
+		watchedKey: make(map[string]struct{}),
 	}
 
 	err := rd.start()
@@ -81,7 +84,6 @@ func (r *DiscoveryV2) GetModuleServers(moduleName string) ([]interface{}, error)
 
 	servs := make([]interface{}, 0)
 	for k, v := range r.servers {
-		blog.Infof("k")
 		if strings.Contains(k, moduleName) {
 			servs = append(servs, v...)
 		}
@@ -130,12 +132,7 @@ func (r *DiscoveryV2) start() error {
 	}
 
 	//discover all bcs module serviceinfos
-	err := r.discoverEndpoints(types.BCS_SERV_BASEPATH)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r.discoverEndpoints(types.BCS_SERV_BASEPATH)
 }
 
 //recursive discover bcs module serverinfo
@@ -155,40 +152,50 @@ func (r *DiscoveryV2) discoverEndpoints(path string) error {
 		}
 	}
 
-	//watch bcs module serviceinfo event
-	go r.discoverModules(types.BCS_SERV_BASEPATH)
+	r.Lock()
 	//get path children
 	zvs, err := r.rd.DiscoverNodesV2(path)
 	if err != nil {
-		blog.V(3).Infof("discover nodes %s error %s", path, err.Error())
+		blog.V(3).Infof("discover %s nodes error %s", path, err.Error())
 		return err
 	}
-
+	blog.V(3).Infof("module-discovery get path %s servers %d, nodes %d", path, len(zvs.Server), len(zvs.Nodes))
 	//if leaf node, then parse bcs module serverinfo
 	if len(zvs.Server) != 0 {
-		key := strings.TrimLeft(path, fmt.Sprintf("%s/", types.BCS_SERV_BASEPATH))
+		key := strings.TrimPrefix(path, fmt.Sprintf("%s/", types.BCS_SERV_BASEPATH))
 		val := make([]interface{}, 0)
 		for _, v := range zvs.Server {
 			val = append(val, v)
 		}
-		r.Lock()
 		r.servers[key] = val
-		r.Unlock()
-		return nil
+		blog.V(3).Infof("set server %s endpoints %v", key, val)
+		if r.eventHandler != nil {
+			r.eventHandler(key)
+		}
 	}
+	blog.V(5).Infof("module-discovery get path %s nodes details: %+v", path, zvs.Nodes)
+	//watch key
+	_, ok := r.watchedKey[path]
+	if !ok {
+		go r.discoverModules(path, true)
+	}
+	r.Unlock()
 
-	for _, v := range zvs.Nodes {
-		err = r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
-		if err != nil {
-			return err
+	//discovery path's children node
+	if len(zvs.Server) == 0 {
+		for _, v := range zvs.Nodes {
+			r.discoverEndpoints(fmt.Sprintf("%s/%s", path, v))
 		}
 	}
 
 	return nil
 }
 
-func (r *DiscoveryV2) discoverModules(key string) {
-	blog.V(3).Infof("start discover service key %s", key)
+func (r *DiscoveryV2) discoverModules(key string, init bool) {
+	blog.Infof("discover watch key %s start...", key)
+	r.Lock()
+	r.watchedKey[key] = struct{}{}
+	r.Unlock()
 	event, err := r.rd.DiscoverService(key)
 	if err != nil {
 		blog.Error("fail to register discover for api. err:%s", err.Error())
@@ -196,16 +203,22 @@ func (r *DiscoveryV2) discoverModules(key string) {
 		os.Exit(1)
 	}
 
+	index := 0
 	for {
+		index++
 		select {
 		case eve := <-event:
 			if eve.Err != nil {
 				blog.V(3).Infof("discover zk key %s error %s", key, eve.Err.Error())
 				time.Sleep(time.Second)
-				go r.discoverModules(key)
+				go r.discoverModules(key, false)
 				return
 			}
-			r.discoverEndpoints(eve.Key)
+			if index == 1 && init {
+				blog.V(3).Infof("the init watch key %s event, then ignore", key)
+			} else {
+				r.discoverEndpoints(eve.Key)
+			}
 
 		case <-r.rootCxt.Done():
 			blog.V(3).Infof("zk register path %s and discover done", key)

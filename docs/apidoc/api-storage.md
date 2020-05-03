@@ -1311,7 +1311,63 @@ http://bcs_api_address:port/bcsapi/v4/storage/query/dynamic/clusters/BCS-TEST-10
 
 ```
 
+#### 8. IP pool statistic
 
+| 说明                                       |
+| ---------------------------------------- |
+| URL                                      |
+| /query/mesos/dynamic/clusters/{clusterId}/ippoolstatic |
+| METHOD                                   |
+| GET                                      |
+
+
+
+请求示例
+
+```
+/query/mesos/dynamic/clusters/BCS-TEST-10000/ippoolstatic
+```
+
+
+
+成功返回示例
+
+```
+{
+  "code": 0,
+  "data": [
+    {
+      "resourceName": "IPPoolStatic-BCS-TEST-10000",
+      "resourceType": "IPPoolStatic",
+      "data": {
+          "reservedip": 0,
+          "activeip": 0,
+          "availableip": 8,
+          "poolnum": 1
+      },
+      "createTime": "2020-02-20T11:04:44.162+08:00",
+      "updateTime": "2020-03-11T14:32:18.912+08:00",
+      "_id": "5e4df74cfcc088392c991783",
+      "clusterId": "BCS-TEST-1000"
+    }
+  ],
+  "message": "success",
+  "result": true
+}
+```
+
+
+
+失败返回示例
+
+```
+{
+  "code": 10086,
+  "data": {},
+  "message": "some failed reason",
+  "result": false
+}
+```
 
 ### query-k8s
 

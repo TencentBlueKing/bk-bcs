@@ -1,0 +1,11 @@
+kind: publish
+version: v1
+op: publish
+spec:
+    businessName: business-itg
+    appName: app-itg
+    memo: created by itg
+
+release:
+    name: release-itg
+    commitid: 6867737f-ffcc-11e9-872d-525400f99278

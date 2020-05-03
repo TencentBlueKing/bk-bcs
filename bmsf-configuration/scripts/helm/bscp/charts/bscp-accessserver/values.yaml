@@ -1,0 +1,11 @@
+#
+# bscp-accessserver configuration
+#
+enabled: true
+
+replicaCount: 1
+image: bscp-accessserver:latest
+imagePullPolicy: 
+nodeSelector: {}
+tolerations: []
+env: []

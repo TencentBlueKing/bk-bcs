@@ -1,0 +1,16 @@
+#
+# bscp-bcs-controller configuration
+#
+enabled: true
+
+natsmqCluster:
+  endpoints:
+  - nats://127.0.0.1:4222
+  timeout: 3s
+
+replicaCount: 1
+image: bscp-bcs-controller:latest
+imagePullPolicy: 
+nodeSelector: {}
+tolerations: []
+env: []
