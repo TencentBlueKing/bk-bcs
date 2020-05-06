@@ -23,20 +23,17 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
-// applicationCacheNode cache is related to application(namespace:name)
-// include: taskgroups、application、versions
-type applicationCacheNode struct {
-	Taskgroups  []*types.TaskGroup
-	Application *types.Application
-	Versions    []*types.Version
-}
-
 // Cache Manager for store cache
 // include: application、namespace、configmap、secret
 type cacheManager struct {
 	// Current cached application
 	//key = {app.RunAs}.{app.ID}
-	Applications map[string]*applicationCacheNode
+	Applications map[string]*types.Application
+	//key = taskgroup.ID
+	Taskgroups map[string]*types.TaskGroup
+	//key = {version.RunAs}.{version.ID}
+	//value is version list
+	Versions map[string][]*types.Version
 	Namespaces   map[string]struct{}
 	Configmaps   map[string]*commtypes.BcsConfigMap
 	Secrets      map[string]*commtypes.BcsSecret
@@ -48,6 +45,8 @@ type cacheManager struct {
 	Services map[string]*commtypes.BcsService
 	//key=agent.InnerIP
 	Agentsettings map[string]*commtypes.BcsClusterAgentSetting
+	//key = {daemonset.namespace}.{daemonset.name}
+	Daemonsets map[string]*types.BcsDaemonset
 	// Manager currently is OK
 	isOK    bool
 	mapLock *sync.RWMutex
@@ -71,7 +70,9 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	cacheMgr.mapLock = new(sync.RWMutex)
 
 	cacheMgr.mapLock.Lock()
-	cacheMgr.Applications = make(map[string]*applicationCacheNode)
+	cacheMgr.Applications = make(map[string]*types.Application)
+	cacheMgr.Taskgroups = make(map[string]*types.TaskGroup)
+	cacheMgr.Versions = make(map[string][]*types.Version)
 	cacheMgr.Namespaces = make(map[string]struct{})
 	cacheMgr.Configmaps = make(map[string]*commtypes.BcsConfigMap)
 	cacheMgr.Secrets = make(map[string]*commtypes.BcsSecret)
@@ -79,6 +80,7 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	cacheMgr.Deployments = make(map[string]*types.Deployment)
 	cacheMgr.Services = make(map[string]*commtypes.BcsService)
 	cacheMgr.Agents = make(map[string]*types.Agent)
+	cacheMgr.Daemonsets = make(map[string]*types.BcsDaemonset)
 	//when isUsed=true, then init cache
 	if isUsed {
 		// init namespace in cache
@@ -252,6 +254,23 @@ func (store *managerStore) initCacheServices() error {
 	return nil
 }
 
+// init services in cache
+func (store *managerStore) initCacheDaemonsets() error {
+	svcs, err := store.ListAllServices()
+	if err != nil {
+		blog.Errorf("cacheManager ListAllServices failed: %s", err.Error())
+		return err
+	}
+
+	for _, svc := range svcs {
+		key := fmt.Sprintf("%s.%s", svc.NameSpace, svc.Name)
+		cacheMgr.Services[key] = svc.DeepCopy()
+		blog.V(3).Infof("cacheManager sync service %s in cache", key)
+	}
+	blog.Infof("cacheMgr init cache services done")
+	return nil
+}
+
 // init agentsetting in cache
 func (store *managerStore) initCacheAgentsettings() error {
 	agents, err := store.ListAgentsettings()
@@ -277,37 +296,51 @@ func (store *managerStore) initCacheApplications() error {
 	}
 
 	for _, app := range apps {
-		appNode := new(applicationCacheNode)
-		//cache application
-		appNode.Application = app.DeepCopy()
-		blog.V(3).Infof("cacheManager app(%s:%s) sync Application in cache", app.RunAs, app.ID)
+		cacheMgr.Applications[app.GetUuid()] = app.DeepCopy()
+		blog.V(3).Infof("cacheManager sync application %s in cache", app.GetUuid())
+	}
+	blog.Infof("cacheMgr init cache application done")
+	return nil
+}
 
+//init application in cache
+func (store *managerStore) initCacheVersions() error {
+	apps, err := store.ListAllApplications()
+	if err != nil {
+		blog.Errorf("cacheManager init application failed: %s", err.Error())
+		return err
+	}
+
+	for _, app := range apps {
 		//cache versions
 		versions, err := store.listVersions(app.RunAs, app.ID)
 		if err != nil {
 			return err
 		}
+		cacheVersions := make([]*types.Version,0)
 		for _, version := range versions {
 			blog.V(3).Infof("cacheManager app(%s:%s) sync version(%s) in cache", app.RunAs, app.ID, version.Name)
 			tmpData := version.DeepCopy()
-			appNode.Versions = append(appNode.Versions, tmpData)
+			cacheVersions = append(cacheVersions, tmpData)
 		}
-
-		//cache taskgroups
-		taskGroups, err := store.listTaskgroupsInDB(app.RunAs, app.ID)
-		if err != nil {
-			return err
-		}
-		for _, taskGroup := range taskGroups {
-			blog.V(3).Infof("cacheManager app(%s:%s) sync taskgroup(%s) in cache", app.RunAs, app.ID, taskGroup.ID)
-			tmpData := taskGroup.DeepCopy()
-			appNode.Taskgroups = append(appNode.Taskgroups, tmpData)
-		}
-
-		key := app.RunAs + "." + app.ID
-		cacheMgr.Applications[key] = appNode
+		cacheMgr.Versions[app.GetUuid()] = cacheVersions
 	}
-	blog.Infof("cacheMgr init cache applications done")
+	blog.Infof("cacheMgr init cache application done")
+	return nil
+}
+
+func (store *managerStore) initCacheTaskgroups() error {
+	taskgroups, err := store.listTaskgroupsInDB()
+	if err != nil {
+		blog.Errorf("cacheManager init taskgroup failed: %s", err.Error())
+		return err
+	}
+
+	for _, taskgroup := range taskgroups {
+		cacheMgr.Taskgroups[taskgroup.ID] = taskgroup.DeepCopy()
+		blog.V(3).Infof("cacheManager sync taskgroup %s in cache", taskgroup.ID)
+	}
+	blog.Infof("cacheMgr init cache application done")
 	return nil
 }
 

@@ -240,6 +240,14 @@ type Store interface {
 	StartStoreObjectMetrics()
 	//stop metrics
 	StopStoreMetrics()
+	//fetch daemonset
+	FetchDaemonset(namespace, name string)(*types.BcsDaemonset,error)
+	//save daemonset
+	SaveDaemonset(daemon *types.BcsDaemonset)error
+	//List all daemonsets
+	ListAllDaemonset()([]*types.BcsDaemonset,error)
+	//delete daemonset
+	DeleteDaemonset(namespace, name string)error
 }
 
 // The interface for db operations
