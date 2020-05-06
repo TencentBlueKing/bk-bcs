@@ -510,14 +510,14 @@ func saveCacheVersion(runAs, appID string, obj *types.Version) error {
 		return nil
 	}
 
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
-		return nil
+	versions,ok := cacheMgr.Versions[fmt.Sprintf("%s.%s",runAs, appID)]
+	if !ok {
+		versions = make([]*types.Version,0)
+		cacheMgr.Versions[fmt.Sprintf("%s.%s",runAs, appID)] = versions
 	}
 
 	tmpData := obj.DeepCopy()
-	app.Versions = append(app.Versions, tmpData)
+	versions = append(versions, tmpData)
 	return nil
 }
 
