@@ -117,12 +117,34 @@ func (gw *Gateway) initSvrMux() {
 
 // create access server gRPC client.
 func (gw *Gateway) initAccessServerClient() {
-	ctx := &grpclb.Context{
-		Target: gw.viper.GetString("accessserver.servicename"),
-		EtcdConfig: clientv3.Config{
+	var etcdCfg clientv3.Config
+
+	caFile := gw.viper.GetString("etcdCluster.tls.cafile")
+	certFile := gw.viper.GetString("etcdCluster.tls.certfile")
+	keyFile := gw.viper.GetString("etcdCluster.tls.keyfile")
+	certPassword := gw.viper.GetString("etcdCluster.tls.certPassword")
+
+	if len(caFile) != 0 || len(certFile) != 0 || len(keyFile) != 0 {
+		tlsConf, err := ssl.ClientTslConfVerity(caFile, certFile, keyFile, certPassword)
+		if err != nil {
+			logger.Fatalf("load etcd tls files failed, %+v", err)
+		}
+		etcdCfg = clientv3.Config{
 			Endpoints:   gw.viper.GetStringSlice("etcdCluster.endpoints"),
 			DialTimeout: gw.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+			TLS:         tlsConf,
+		}
+
+	} else {
+		etcdCfg = clientv3.Config{
+			Endpoints:   gw.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: gw.viper.GetDuration("etcdCluster.dialtimeout"),
+		}
+	}
+
+	ctx := &grpclb.Context{
+		Target:     gw.viper.GetString("accessserver.servicename"),
+		EtcdConfig: etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.

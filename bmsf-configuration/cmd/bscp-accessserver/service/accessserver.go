@@ -14,8 +14,10 @@ package service
 
 import (
 	"log"
+	"math"
 	"net"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -26,6 +28,7 @@ import (
 	pb "bk-bscp/internal/protocol/accessserver"
 	pbbusinessserver "bk-bscp/internal/protocol/businessserver"
 	pbintegrator "bk-bscp/internal/protocol/integrator"
+	pbtemplateserver "bk-bscp/internal/protocol/templateserver"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/grpclb"
 	"bk-bscp/pkg/logger"
@@ -51,6 +54,10 @@ type AccessServer struct {
 	// business server gRPC connection/client.
 	businessSvrConn *grpclb.GRPCConn
 	businessSvrCli  pbbusinessserver.BusinessClient
+
+	// template server gRPC connection/client.
+	templateSvrConn *grpclb.GRPCConn
+	templateSvrCli  pbtemplateserver.TemplateClient
 
 	// integrator gRPC connection/client.
 	itgConn *grpclb.GRPCConn
@@ -99,10 +106,10 @@ func (as *AccessServer) initLogger() {
 	logger.Info("logger init success dir[%s] level[%d].",
 		as.viper.GetString("logger.directory"), as.viper.GetInt32("logger.level"))
 
-	logger.Info("dump configs: server[%+v, %+v, %+v, %+v] auth[%+v, %+v] metrics[%+v] businessserver[%+v, %+v] integrator[%+v %+v] etcdCluster[%+v, %+v]",
+	logger.Info("dump configs: server[%+v, %+v, %+v, %+v] auth[%+v, %+v] metrics[%+v] businessserver[%+v, %+v] integrator[%+v %+v] templateserver[%+v, %+v] etcdCluster[%+v, %+v]",
 		as.viper.Get("server.servicename"), as.viper.Get("server.endpoint.ip"), as.viper.Get("server.endpoint.port"), as.viper.Get("server.discoveryttl"), as.viper.Get("auth.open"),
 		as.viper.Get("auth.admin"), as.viper.Get("metrics.endpoint"), as.viper.Get("businessserver.servicename"), as.viper.Get("businessserver.calltimeout"), as.viper.Get("integrator.servicename"),
-		as.viper.Get("integrator.calltimeout"), as.viper.Get("etcdCluster.endpoints"), as.viper.Get("etcdCluster.dialtimeout"))
+		as.viper.Get("integrator.calltimeout"), as.viper.Get("templateserver.servicename"), as.viper.Get("templateserver.calltimeout"), as.viper.Get("etcdCluster.endpoints"), as.viper.Get("etcdCluster.dialtimeout"))
 }
 
 // create new service struct of accessserver, and register service later.
@@ -113,20 +120,35 @@ func (as *AccessServer) initServiceDiscovery() {
 		as.viper.GetString("server.metadata"),
 		as.viper.GetInt64("server.discoveryttl"))
 
-	as.etcdCfg = clientv3.Config{
-		Endpoints:   as.viper.GetStringSlice("etcdCluster.endpoints"),
-		DialTimeout: as.viper.GetDuration("etcdCluster.dialtimeout"),
+	caFile := as.viper.GetString("etcdCluster.tls.cafile")
+	certFile := as.viper.GetString("etcdCluster.tls.certfile")
+	keyFile := as.viper.GetString("etcdCluster.tls.keyfile")
+	certPassword := as.viper.GetString("etcdCluster.tls.certPassword")
+
+	if len(caFile) != 0 || len(certFile) != 0 || len(keyFile) != 0 {
+		tlsConf, err := ssl.ClientTslConfVerity(caFile, certFile, keyFile, certPassword)
+		if err != nil {
+			logger.Fatalf("load etcd tls files failed, %+v", err)
+		}
+		as.etcdCfg = clientv3.Config{
+			Endpoints:   as.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: as.viper.GetDuration("etcdCluster.dialtimeout"),
+			TLS:         tlsConf,
+		}
+	} else {
+		as.etcdCfg = clientv3.Config{
+			Endpoints:   as.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: as.viper.GetDuration("etcdCluster.dialtimeout"),
+		}
 	}
+	logger.Info("init service discovery success.")
 }
 
 // create business server gRPC client.
 func (as *AccessServer) initBusinessClient() {
 	ctx := &grpclb.Context{
-		Target: as.viper.GetString("businessserver.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   as.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: as.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     as.viper.GetString("businessserver.servicename"),
+		EtcdConfig: as.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -145,14 +167,34 @@ func (as *AccessServer) initBusinessClient() {
 	logger.Info("create businessserver gRPC client success.")
 }
 
+// create template server gRPC client.
+func (as *AccessServer) initTemplateClient() {
+	ctx := &grpclb.Context{
+		Target:     as.viper.GetString("templateserver.servicename"),
+		EtcdConfig: as.etcdCfg,
+	}
+
+	// gRPC dial options, with insecure and timeout.
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithTimeout(as.viper.GetDuration("templateserver.calltimeout")),
+	}
+
+	// build gRPC client of templateserver.
+	conn, err := grpclb.NewGRPCConn(ctx, opts...)
+	if err != nil {
+		logger.Fatal("can't create templateserver gRPC client, %+v", err)
+	}
+	as.templateSvrConn = conn
+	as.templateSvrCli = pbtemplateserver.NewTemplateClient(conn.Conn())
+	logger.Info("create templateserver gRPC client success.")
+}
+
 // create integrator gRPC client.
 func (as *AccessServer) initIntegratorClient() {
 	ctx := &grpclb.Context{
-		Target: as.viper.GetString("integrator.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   as.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: as.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     as.viper.GetString("integrator.servicename"),
+		EtcdConfig: as.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -199,6 +241,9 @@ func (as *AccessServer) initMods() {
 	// initialize business server gRPC client.
 	as.initBusinessClient()
 
+	// initialize template server gRPC client.
+	as.initTemplateClient()
+
 	// initialize integrator gRPC client.
 	as.initIntegratorClient()
 
@@ -238,7 +283,7 @@ func (as *AccessServer) Run() {
 	logger.Info("register service for discovery success.")
 
 	// run service.
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
 	pb.RegisterAccessServer(s, as)
 	logger.Info("Access Server running now.")
 
@@ -252,6 +297,11 @@ func (as *AccessServer) Stop() {
 	// close integrator gRPC connection when server exit.
 	if as.itgConn != nil {
 		as.itgConn.Close()
+	}
+
+	// close template server gRPC connection when server exit.
+	if as.templateSvrConn != nil {
+		as.templateSvrConn.Close()
 	}
 
 	// close business server gRPC connection when server exit.

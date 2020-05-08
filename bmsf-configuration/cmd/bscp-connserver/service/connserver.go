@@ -15,6 +15,7 @@ package service
 import (
 	"encoding/json"
 	"log"
+	"math"
 	"net"
 	"time"
 
@@ -411,7 +412,7 @@ func (cs *ConnServer) Run() {
 	s := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
 		Time:    cs.viper.GetDuration("server.keepaliveinterval"),
 		Timeout: cs.viper.GetDuration("server.keepalivetimeout"),
-	}))
+	}), grpc.MaxRecvMsgSize(math.MaxInt32))
 
 	pb.RegisterConnectionServer(s, cs)
 	logger.Info("Connection Server running now.")

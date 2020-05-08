@@ -135,6 +135,29 @@ func CreateClusterTestData(bid, appid string) (string, error) {
 	return string(data), nil
 }
 
+// CreateClusterTestDataWithLabel returns test data for create cluster case.
+func CreateClusterTestDataWithLabel(bid, appid string) (string, error) {
+	req := &pb.CreateClusterReq{
+		Seq:        0,
+		Bid:        bid,
+		Name:       randName("e2e-cluster"),
+		Appid:      appid,
+		RClusterid: "rclusterid",
+		Creator:    "e2e",
+		Memo:       "e2e testing",
+		Labels:     "{\"environment\":\"test\"}",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
 // UpdateClusterTestData returns test data for update cluster case.
 func UpdateClusterTestData(bid, clusterid string) (string, error) {
 	req := &pb.UpdateClusterReq{
@@ -493,6 +516,342 @@ func CreateStrategyTestData(bid, appid string) (string, error) {
 		Labels:     map[string]string{},
 		Memo:       "e2e testing",
 		Creator:    "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreateVarTestData returns test data for create vars
+func CreateVarTestData(varType int32, bid, cluster, clusterLabels, zone string) (string, error) {
+	req := &pb.CreateVariableReq{
+		Seq:           0,
+		Bid:           bid,
+		Cluster:       cluster,
+		ClusterLabels: clusterLabels,
+		Zone:          zone,
+		Type:          varType,
+		Key:           randName("e2e-var"),
+		Value:         randName("e2e-var-value"),
+		Memo:          "e2e test vars",
+		Creator:       "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// UpdateVarTestData returns update data for vars
+func UpdateVarTestData(varType int32, bid, vid string) (string, error) {
+	req := &pb.UpdateVariableReq{
+		Seq:      0,
+		Bid:      bid,
+		Vid:      vid,
+		Type:     varType,
+		Key:      randName("e2e-var"),
+		Value:    randName("e2e-var-value"),
+		Memo:     "e2e test vars",
+		Operator: "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreateConfigTemplateSetTestData return create data for config template set
+func CreateConfigTemplateSetTestData(bid, fpath string) (string, error) {
+	req := &pb.CreateConfigTemplateSetReq{
+		Seq:     0,
+		Bid:     bid,
+		Fpath:   fpath,
+		Name:    randName("e2e-tpl-set"),
+		Memo:    "e2e test create template set",
+		Creator: "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// UpdateConfigTemplateSetTestData return update data for config template set
+func UpdateConfigTemplateSetTestData(bid, setid string) (string, error) {
+	req := &pb.UpdateConfigTemplateSetReq{
+		Seq:      0,
+		Bid:      bid,
+		Setid:    setid,
+		Name:     randName("e2e-tpl-set"),
+		Memo:     "e2e test update template set",
+		Operator: "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreateConfigTemplateTestData returns create data for config template
+func CreateConfigTemplateTestData(bid, setid string) (string, error) {
+	req := &pb.CreateConfigTemplateReq{
+		Seq:          0,
+		Bid:          bid,
+		Setid:        setid,
+		Name:         randName("config") + ".txt",
+		Memo:         "e2e test create config template",
+		User:         "root",
+		Group:        "root",
+		Permission:   644,
+		FileEncoding: "utf8",
+		EngineType:   0,
+		Creator:      "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// UpdateConfigTemplateTestData returns update data for config template
+func UpdateConfigTemplateTestData(bid, tid string) (string, error) {
+	req := &pb.UpdateConfigTemplateReq{
+		Seq:          0,
+		Bid:          bid,
+		Templateid:   tid,
+		Name:         randName("config") + ".txt",
+		Memo:         "e2e test update config template",
+		User:         "rootupdate",
+		Group:        "rootupdate",
+		Permission:   645,
+		FileEncoding: "gbk",
+		Operator:     "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreateTemplateVersionTestData returns create data for config template version
+func CreateTemplateVersionTestData(bid, templateid string) (string, error) {
+	str := `
+	{{ .TITLE }}
+君不見黃河之水天上來，奔流到海不復回！
+君不見高堂明鏡悲白髮，朝如青絲暮成雪。
+人生得意須盡歡，莫使金樽空對月。
+天生我材必有用，千金散盡還復來。
+烹羊宰牛且為樂，會須一飲三百杯。
+岑夫子，丹丘生，將進酒，杯莫停。
+與君歌一曲，請君為我傾耳聽。
+鐘鼓饌玉何足貴，但願長醉不復醒。
+古來聖賢皆寂寞，唯有飲者留其名。
+陳王昔時宴平樂，斗酒十千恣讙謔。
+主人何為言少錢，徑須沽取對君酌。
+五花馬，千金裘，
+呼兒將出換美酒，與爾同銷萬古愁。
+
+作者: {{ .AUTHOR }}
+朝代: {{ .DEST }}
+
+暗号: {{ .InnerIP }}
+地点: {{ .Placement }}
+`
+	req := &pb.CreateTemplateVersionReq{
+		Seq:         0,
+		Bid:         bid,
+		Templateid:  templateid,
+		VersionName: randName("version"),
+		Memo:        "e2e template version",
+		Creator:     "e2e",
+		Content:     str,
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// UpdateTemplateVersionTestData returns update data for config template version
+func UpdateTemplateVersionTestData(bid, versionid string) (string, error) {
+	str := `
+	{{ .TITLE }}
+君不見黃河之水天上來，奔流到海不復回！
+君不見高堂明鏡悲白髮，朝如青絲暮成雪。
+人生得意須盡歡，莫使金樽空對月。
+天生我材必有用，千金散盡還復來。
+烹羊宰牛且為樂，會須一飲三百杯。
+岑夫子，丹丘生，將進酒，杯莫停。
+與君歌一曲，請君為我傾耳聽。
+鐘鼓饌玉何足貴，但願長醉不復醒。
+古來聖賢皆寂寞，唯有飲者留其名。
+陳王昔時宴平樂，斗酒十千恣讙謔。
+主人何為言少錢，徑須沽取對君酌。
+五花馬，千金裘，
+呼兒將出換美酒，與爾同銷萬古愁。
+
+诗人: {{ .AUTHOR }}
+朝代: {{ .DEST }}
+
+暗号: {{ .InnerIP }}
+地点: {{ .Placement }}
+`
+	req := &pb.UpdateTemplateVersionReq{
+		Seq:         0,
+		Bid:         bid,
+		Versionid:   versionid,
+		VersionName: randName("version"),
+		Memo:        "e2e update template version",
+		Operator:    "e2e",
+		Content:     str,
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreateTemplateBindingTestData returns create data for template binding
+func CreateTemplateBindingTestData(bid, templateid, appid, versionid, bindingParam string) (string, error) {
+	req := &pb.CreateConfigTemplateBindingReq{
+		Seq:           0,
+		Bid:           bid,
+		Templateid:    templateid,
+		Appid:         appid,
+		Versionid:     versionid,
+		BindingParams: bindingParam,
+		Creator:       "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// UpdateTemplateBindingTestData returns update data for template binding
+func UpdateTemplateBindingTestData(bid, templateid, appid, versionid, bindingParam string) (string, error) {
+	req := &pb.SyncConfigTemplateBindingReq{
+		Seq:           0,
+		Bid:           bid,
+		Templateid:    templateid,
+		Appid:         appid,
+		Versionid:     versionid,
+		BindingParams: bindingParam,
+		Operator:      "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreateCertainVarTestData returns create data for certain var
+func CreateCertainVarTestData(bid string, varType int, cluster, clusterLabels, zone, key, value string) (string, error) {
+	req := &pb.CreateVariableReq{
+		Seq:           0,
+		Bid:           bid,
+		Cluster:       cluster,
+		ClusterLabels: clusterLabels,
+		Zone:          zone,
+		Type:          int32(varType),
+		Key:           key,
+		Value:         value,
+		Memo:          "e2e create var",
+		Creator:       "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreatePreviewCommitTestData returns create data for preview commit
+func CreatePreviewCommitTestData(bid, commitid string) (string, error) {
+	req := &pb.PreviewCommitReq{
+		Seq:      0,
+		Bid:      bid,
+		Commitid: commitid,
+		Operator: "e2e",
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	if len(data) == 0 {
+		return "", errors.New("test data empty")
+	}
+	return string(data), nil
+}
+
+// CreateConfirmCommitWithTemplateTestData returns confirm commit data for render
+func CreateConfirmCommitWithTemplateTestData(bid string, commitid string) (string, error) {
+	req := &pb.ConfirmCommitReq{
+		Seq:      0,
+		Bid:      bid,
+		Commitid: commitid,
+		Operator: "e2e",
 	}
 
 	data, err := json.Marshal(req)

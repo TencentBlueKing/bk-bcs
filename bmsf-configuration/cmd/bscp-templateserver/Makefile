@@ -1,4 +1,5 @@
 SERVER = bk-bscp-templateserver
+PLUGIN_GOTPL = gotemplate
 ARGS   = run
 
 # debug build
@@ -13,6 +14,8 @@ LDVersionFLAG ?= "-X bk-bscp/internal/version.VERSION=DEBUG \
 
 BINDIR = ${OUTPUT_DIR}/$(SERVER)
 BIN    = $(BINDIR)/$(SERVER)
+PLUGIN_DIR = ${BINDIR}/plugins
+PLUGIN_GOTPL_BIN = ${PLUGIN_DIR}/${PLUGIN_GOTPL}
 
 GOENVPATH = $(shell go env GOPATH)
 PROTOCOL  = $(GOENVPATH)/src/bk-bscp/internal/protocol
@@ -21,6 +24,8 @@ SCRIPTS   = $(GOENVPATH)/src/bk-bscp/scripts
 default:
 	@echo -e "\e[34;1mBuilding $(SERVER)...\033[0m"
 	go build -ldflags ${LDVersionFLAG} -gcflags "-N -l" -o $(BIN) main.go
+	@echo -e "\e[34;1mBuilding ${PLUGIN_GOTPL}...\033[0m"
+	go build -ldflags ${LDVersionFLAG} -gcflags "-N -l" -o ${PLUGIN_GOTPL_BIN} ./plugins/gotemplate/main.go
 	@cp -r etc $(BINDIR)
 	@sh $(SCRIPTS)/daemon-control/generator.sh '$(SERVER)' '$(ARGS)' '$(BINDIR)'
 	@echo -e "\e[34;1mBuild $(SERVER) success!\n\033[0m"

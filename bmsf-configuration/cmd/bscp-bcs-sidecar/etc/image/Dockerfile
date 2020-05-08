@@ -6,6 +6,7 @@ RUN mkdir -p /bk-bscp/log
 
 COPY bk-bscp-bcs-sidecar /bk-bscp/
 COPY etc/sidecar.yaml /bk-bscp/etc/
+COPY etc/init_task.sh /bk-bscp/
 
 #BSCP connection server name
 ENV BSCP_BCSSIDECAR_CONNSERVER_HOSTNAME=conn.bscp.bk.com
@@ -28,5 +29,9 @@ ENV BSCP_BCSSIDECAR_SESSION_TIMEOUT=10s
 ENV TimeZone=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TimeZone /etc/localtime && echo $TimeZone > /etc/timezone
 
+#add run permission
+RUN chmod 755 /bk-bscp/init_task.sh
+RUN chmod 755 /bk-bscp/bk-bscp-bcs-sidecar
+
 WORKDIR /bk-bscp/
-CMD ["/bk-bscp/bk-bscp-bcs-sidecar", "run", "--configfile", "etc/sidecar.yaml"]
+CMD ["/bk-bscp/init_task.sh"]
