@@ -14,17 +14,31 @@
 package utils
 
 import (
+	"bk-bcs/bcs-services/bcs-client/pkg/types"
+	"bufio"
+	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
+	"github.com/pkg/errors"
+	"io"
+	"net"
 	htplib "net/http"
+	"net/http/httputil"
+	"net/url"
+	"time"
 
 	"bk-bcs/bcs-common/common/http"
 	"bk-bcs/bcs-common/common/http/httpclient"
 	"crypto/tls"
+	"github.com/gorilla/websocket"
 )
 
 type ApiRequester interface {
 	Do(uri, method string, data []byte, header ...*http.HeaderSet) ([]byte, error)
 	DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (*httpclient.HttpRespone, error)
+	DoWebsocket(uri string, header ...*http.HeaderSet) (types.HijackedResponse, error)
+	PostHijacked(ctx context.Context, uri string, header ...*http.HeaderSet) (types.HijackedResponse, error)
 }
 
 //NewApiRequester api request
@@ -85,4 +99,158 @@ func (b *bcsApiRequester) DoForResponse(uri, method string, data []byte, header 
 	}
 
 	return httpCli.RequestEx(uri, method, nil, data)
+}
+
+func (b *bcsApiRequester) DoWebsocket(uri string, header ...*http.HeaderSet) (types.HijackedResponse, error) {
+	var hijackedResp types.HijackedResponse
+
+	u, err := url.Parse(uri)
+	if err != nil {
+		return hijackedResp, err
+	}
+	if u.Scheme == "http" {
+		u.Scheme = "ws"
+	} else if u.Scheme == "https" {
+		u.Scheme = "wss"
+	}
+
+	wsHeader := htplib.Header{}
+	if b.bcsToken != "" {
+		wsHeader.Set("Authorization", "Bearer "+b.bcsToken)
+	}
+	if header != nil {
+		for _, h := range header {
+			wsHeader.Set(h.Key, h.Value)
+		}
+	}
+
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), wsHeader)
+
+	if err != nil {
+		return hijackedResp, fmt.Errorf("unable to dial to backend websocket server: %s", err.Error())
+	}
+
+	ws := types.NewWsConn(conn)
+
+	//return types.HijackedResponse{Conn: conn.UnderlyingConn(), Reader: bufio.NewReader(conn.UnderlyingConn())}, err
+	return types.HijackedResponse{Ws: ws}, err
+}
+
+func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header ...*http.HeaderSet) (types.HijackedResponse, error) {
+	req, err := htplib.NewRequest(htplib.MethodGet, uri, nil)
+	if err != nil {
+		return types.HijackedResponse{}, err
+	}
+	if header != nil {
+		for _, h := range header {
+			req.Header.Set(h.Key, h.Value)
+		}
+	}
+	if b.bcsToken != "" {
+		req.Header.Set("Authorization", "Bearer "+b.bcsToken)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	conn, err := b.setupHijackConn(uri, ctx, req, "websocket")
+	if err != nil {
+		return types.HijackedResponse{}, err
+	}
+
+	return types.HijackedResponse{Conn: conn, Reader: bufio.NewReader(conn)}, err
+}
+
+func (b *bcsApiRequester) setupHijackConn(uri string, ctx context.Context, req *htplib.Request, proto string) (net.Conn, error) {
+	challengeKey, err := generateChallengeKey()
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Connection", "Upgrade")
+	req.Header.Set("Upgrade", proto)
+	req.Header["Sec-WebSocket-Key"] = []string{challengeKey}
+	req.Header["Sec-WebSocket-Version"] = []string{"13"}
+
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+	dialer := b.Dialer(u.Host)
+	conn, err := dialer(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot connect to the Docker daemon. Is 'docker daemon' running on this host?")
+	}
+
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		tcpConn.SetKeepAlive(true)
+		tcpConn.SetKeepAlivePeriod(30 * time.Second)
+	}
+
+	clientconn := httputil.NewClientConn(conn, nil)
+	defer clientconn.Close()
+
+	// Server hijacks the connection, error 'connection closed' expected
+	resp, err := clientconn.Do(req)
+
+	//nolint:staticcheck // ignore SA1019 for connecting to old (pre go1.8) daemons
+	if err != httputil.ErrPersistEOF {
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode != htplib.StatusSwitchingProtocols {
+			resp.Body.Close()
+			return nil, fmt.Errorf("unable to upgrade to %s, received %d", proto, resp.StatusCode)
+		}
+	}
+
+	c, br := clientconn.Hijack()
+	if br.Buffered() > 0 {
+		// If there is buffered content, wrap the connection.  We return an
+		// object that implements CloseWrite iff the underlying connection
+		// implements it.
+		if _, ok := c.(types.CloseWriter); ok {
+			c = &hijackedConnCloseWriter{&hijackedConn{c, br}}
+		} else {
+			c = &hijackedConn{c, br}
+		}
+	} else {
+		br.Reset(nil)
+	}
+
+	return c, nil
+}
+
+func (b *bcsApiRequester) Dialer(addr string) func(context.Context) (net.Conn, error) {
+	return func(ctx context.Context) (net.Conn, error) {
+		dialer := &net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 0 * time.Second,
+		}
+		return dialer.DialContext(ctx, "tcp", addr)
+	}
+}
+
+type hijackedConnCloseWriter struct {
+	*hijackedConn
+}
+
+type hijackedConn struct {
+	net.Conn
+	r *bufio.Reader
+}
+
+func (c *hijackedConn) Read(b []byte) (int, error) {
+	return c.r.Read(b)
+}
+
+func (c *hijackedConnCloseWriter) CloseWrite() error {
+	conn := c.Conn.(types.CloseWriter)
+	return conn.CloseWrite()
+}
+
+func generateChallengeKey() (string, error) {
+	p := make([]byte, 16)
+	if _, err := io.ReadFull(rand.Reader, p); err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(p), nil
 }
