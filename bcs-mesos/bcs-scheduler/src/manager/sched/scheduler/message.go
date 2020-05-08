@@ -201,7 +201,7 @@ func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 		if err != nil {
 			blog.Error("process command message: command(%s), task(%s) update failed %s", cmdId, taskId, err.Error())
 		} else {
-			blog.Error("process command message: command(%s), task(%s) updated", cmdId, taskId)
+			blog.Infof("process command message: command(%s), task(%s) updated", cmdId, taskId)
 		}
 
 	} else {

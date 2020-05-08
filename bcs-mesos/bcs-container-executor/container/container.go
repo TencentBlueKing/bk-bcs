@@ -14,9 +14,10 @@
 package container
 
 import (
-	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"strings"
 	"time"
+
+	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 const (
@@ -56,6 +57,7 @@ type BcsContainerInfo struct {
 	Message                 string                 `json:"Message,omitempty"`     //status message for container
 	Resource                *schedTypes.Resource   `json:"Resource,omitempty"`
 	BcsMessage              *schedTypes.BcsMessage `json:",omitempty"`
+	OOMKilled               bool                   `json:"OOMKilled,omitempty"` //container exited, whether oom
 }
 
 //Update data from other info
@@ -73,6 +75,7 @@ func (info *BcsContainerInfo) Update(other *BcsContainerInfo) {
 	info.Hostname = other.Hostname
 	info.IsChecked = other.IsChecked
 	info.ConsecutiveFailureTimes = other.ConsecutiveFailureTimes
+	info.OOMKilled = other.OOMKilled
 	if strings.Contains(other.NetworkMode, "container:") {
 		info.NetworkMode = "user"
 	} else {

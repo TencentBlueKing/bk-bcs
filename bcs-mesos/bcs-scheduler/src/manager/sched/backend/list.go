@@ -28,10 +28,6 @@ func (b *backend) ListApplicationTaskGroups(runAs, appId string) ([]*types.TaskG
 	return b.store.ListTaskGroups(runAs, appId)
 }
 
-func (b *backend) ListApplicationTasks(runAs, appId string) ([]*types.Task, error) {
-	return b.store.ListTasks(runAs, appId)
-}
-
 // ListApplicationVersions is used to list all versions for application from db specified by application id.
 func (b *backend) ListApplicationVersions(runAs, appId string) ([]string, error) {
 	return b.store.ListVersions(runAs, appId)

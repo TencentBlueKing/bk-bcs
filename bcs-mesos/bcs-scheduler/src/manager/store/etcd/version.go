@@ -24,6 +24,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -64,7 +65,6 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 		return err
 	}
 	saveCacheVersion(version.RunAs, version.ID, version)
-
 	return err
 }
 
@@ -153,7 +153,6 @@ func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*ty
 	if err != nil {
 		return nil, err
 	}
-
 	return &v2Version.Spec.Version, nil
 }
 
@@ -163,26 +162,17 @@ func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) err
 	}
 	client := store.BkbcsClient.Versions(runAs)
 	err := client.Delete(versionNo, &metav1.DeleteOptions{})
-	return err
-}
-
-func (store *managerStore) DeleteVersionNode(runAs, versionId string) error {
-	if "" == runAs {
-		runAs = defaultRunAs
-	}
-
-	versionNos, err := store.ListVersions(runAs, versionId)
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
-	for _, no := range versionNos {
-		err = store.DeleteVersion(runAs, versionId, no)
-		if err != nil {
-			return err
-		}
-	}
+	return nil
+}
 
+//zk stores this method by removing the version path, and etcd stores in order to be consistent
+//with the store interface, this method does not implement anything
+func (store *managerStore) DeleteVersionNode(runAs, versionId string) error {
+	//do nothing
 	return nil
 }
 

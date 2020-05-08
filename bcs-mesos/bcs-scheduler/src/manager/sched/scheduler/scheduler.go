@@ -131,7 +131,7 @@ func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
 		lostSlave:    make(map[string]int64),
 	}
 
-	para := &offer.OfferPara{Sched: s}
+	para := &offer.OfferPara{Sched: s, Store: store}
 	s.offerPool = offer.NewOfferPool(para)
 
 	//if config.ClientCertDir != "" {
@@ -467,13 +467,6 @@ func (s *Scheduler) checkMesosChange(currMaster, MasterID string) error {
 		s.currMesosResp.Body.Close()
 		s.currMesosResp = nil
 	}
-	if s.oprMgr != nil {
-		blog.Info("close current operator manager ...")
-		var msgOp operator.OperatorMsg
-		msgOp.MsgType = "stop"
-		s.oprMgr.SendMsg(&msgOp)
-		s.oprMgr = nil
-	}
 	time.Sleep(3 * time.Second)
 
 	// start new
@@ -499,22 +492,6 @@ func (s *Scheduler) checkMesosChange(currMaster, MasterID string) error {
 		return fmt.Errorf("subscribe mesos master(%s) err:%s ", state.Leader, err.Error())
 	}
 	blog.Info("subscribe to mesos master(%s) succ", state.Leader)
-
-	if s.oprMgr == nil {
-		// create operator manager
-		blog.Info("to create operator manager")
-		s.operatorClient = client.New(state.Leader, "/api/v1")
-		s.oprMgr, _ = operator.CreateOperatorMgr(s.store, s.operatorClient)
-		blog.Info("to create operator manage goroutine")
-		go func() {
-			operator.OperatorManage(s.oprMgr)
-		}()
-		var msgOp operator.OperatorMsg
-		msgOp.MsgType = "opencheck"
-		s.oprMgr.SendMsg(&msgOp)
-		blog.Info("after create operator manage goroutine")
-	}
-
 	if s.dataChecker == nil {
 		blog.Info("to create data checker")
 		s.dataChecker, _ = CreateDataCheckMgr(s.store, s)
@@ -789,13 +766,13 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 			s.currMesosResp.Body.Close()
 			s.currMesosResp = nil
 		}
-		if s.oprMgr != nil {
+		/*if s.oprMgr != nil {
 			blog.Info("close current operator manager ...")
 			var msgOp operator.OperatorMsg
 			msgOp.MsgType = "stop"
 			s.oprMgr.SendMsg(&msgOp)
 			s.oprMgr = nil
-		}
+		}*/
 
 		if s.ServiceMgr != nil {
 			var msgOpen ServiceMgrMsg
@@ -815,14 +792,20 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 
 		return nil
 	}
-
+	//init cache
 	err := s.store.InitCacheMgr(s.config.UseCache)
 	if err != nil {
 		blog.Errorf("InitCacheMgr failed: %s, and exit", err.Error())
 		os.Exit(1)
 	}
+	//sync agent pods index
+	err = s.syncAgentsettingPods()
+	if err != nil {
+		blog.Errorf("syncAgentsettingPods failed: %s, and exit", err.Error())
+		os.Exit(1)
+	}
+	//current role is master
 	s.Role = currRole
-
 	go s.store.StartStoreObjectMetrics()
 	go s.startCheckDeployments()
 	if s.ServiceMgr != nil {
@@ -866,15 +849,8 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		blog.Info("to create operator manager")
 		s.operatorClient = client.New(state.Leader, "/api/v1")
 		s.oprMgr, _ = operator.CreateOperatorMgr(s.store, s.operatorClient)
-		blog.Info("to create operator manage goroutine")
-		go func() {
-			operator.OperatorManage(s.oprMgr)
-		}()
-		var msgOp operator.OperatorMsg
-		msgOp.MsgType = "opencheck"
-		s.oprMgr.SendMsg(&msgOp)
-		blog.Info("after create operator manage goroutine")
 	}
+	s.oprMgr.UpdateMesosAgents()
 
 	if s.dataChecker == nil {
 		// create data checker
@@ -905,6 +881,69 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 
 	mesosClient := megos.NewClient(masterUrls, nil)
 	return mesosClient.GetStateFromCluster()
+}
+
+//for build pod index in agent
+func (s *Scheduler) syncAgentsettingPods() error {
+	apps, err := s.store.ListAllApplications()
+	if err != nil {
+		blog.Infof("ListAllApplications failed: %s", err.Error())
+		return err
+	}
+	//fetch cluster all taskgroups
+	taskg := make([]*types.TaskGroup, 0)
+	for _, app := range apps {
+		tasks, err := s.store.ListTaskGroups(app.RunAs, app.ID)
+		if err != nil {
+			blog.Errorf("ListTaskGroups(%s:%s) failed: %s", app.RunAs, app.ID, err.Error())
+			return err
+		}
+
+		taskg = append(taskg, tasks...)
+	}
+	//empty agentsetting pods
+	settings, err := s.store.ListAgentsettings()
+	if err != nil {
+		blog.Errorf("ListAgentsettings failed: %s", err.Error())
+		return err
+	}
+	for _, setting := range settings {
+		setting.Pods = make([]string, 0)
+		err = s.store.SaveAgentSetting(setting)
+		if err != nil {
+			blog.Errorf("SaveAgentSetting %s failed: %s", setting.InnerIP, err.Error())
+			return err
+		}
+	}
+
+	//save agentsetting pods
+	for _, taskgroup := range taskg {
+		nodeIp := taskgroup.GetAgentIp()
+		if nodeIp == "" {
+			blog.Errorf("taskgroup %s GetAgentIp failed.", taskgroup.ID)
+			continue
+		}
+
+		setting, err := s.store.FetchAgentSetting(nodeIp)
+		if err != nil {
+			blog.Errorf("FetchAgentSetting %s failed: %s", nodeIp, err.Error())
+			return err
+		}
+		if setting == nil {
+			setting = &commtype.BcsClusterAgentSetting{
+				InnerIP: nodeIp,
+				Pods:    make([]string, 0),
+			}
+		}
+		setting.Pods = append(setting.Pods, taskgroup.ID)
+		err = s.store.SaveAgentSetting(setting)
+		if err != nil {
+			blog.Errorf("SaveAgentSetting %s failed: %s", setting.InnerIP, err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *Scheduler) Stop() {
@@ -1551,4 +1590,22 @@ func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*comm
 		attributeList = append(attributeList, attribute)
 	}
 	return attributeList
+}
+
+func (s *Scheduler) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
+	return s.store.FetchTaskGroup(taskGroupID)
+}
+
+func (s *Scheduler) FetchMesosAgent(innerIP string) (*types.Agent, error) {
+	agent, err := s.store.FetchAgent(innerIP)
+	if err != nil && !(store.ErrNoFound.Error() == err.Error()) {
+		return nil, err
+	}
+	//fetch the agent, return it
+	if agent != nil {
+		return agent, nil
+	}
+	//update mesos agents
+	s.oprMgr.UpdateMesosAgents()
+	return s.store.FetchAgent(innerIP)
 }

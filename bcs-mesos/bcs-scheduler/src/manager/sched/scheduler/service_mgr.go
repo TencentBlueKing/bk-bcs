@@ -754,6 +754,7 @@ func (mgr *ServiceMgr) updateTaskGroup(tskgroup *types.TaskGroup) {
 		if changed == true {
 			blog.Info("ServiceMgr update taskgroup: service(%s) endpoint len(%d)", key, len(esInfo.endpoint.Endpoints))
 			mgr.sched.store.SaveEndpoint(esInfo.endpoint)
+
 		}
 
 	}

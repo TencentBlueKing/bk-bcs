@@ -18,6 +18,7 @@ import (
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -145,12 +146,11 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	client := store.BkbcsClient.TaskGroups(runAs)
 	err = client.Delete(taskGroupID, &metav1.DeleteOptions{})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	deleteCacheTaskGroup(taskGroupID)
-
 	return nil
 }
 

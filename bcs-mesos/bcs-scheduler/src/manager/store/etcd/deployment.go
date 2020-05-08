@@ -70,10 +70,9 @@ func (store *managerStore) UnLockDeployment(deploymentName string) {
 }
 
 func (store *managerStore) CheckDeploymentExist(deployment *types.Deployment) (string, bool) {
-	client := store.BkbcsClient.Deployments(deployment.ObjectMeta.NameSpace)
-	v2Dep, err := client.Get(deployment.ObjectMeta.Name, metav1.GetOptions{})
-	if err == nil {
-		return v2Dep.ResourceVersion, true
+	obj, _ := store.FetchDeployment(deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name)
+	if obj != nil {
+		return obj.ObjectMeta.ResourceVersion, true
 	}
 
 	return "", false
@@ -105,14 +104,27 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 	rv, exist := store.CheckDeploymentExist(deployment)
 	if exist {
 		v2Dep.ResourceVersion = rv
-		_, err = client.Update(v2Dep)
+		v2Dep, err = client.Update(v2Dep)
 	} else {
-		_, err = client.Create(v2Dep)
+		v2Dep, err = client.Create(v2Dep)
 	}
-	return err
+	if err != nil {
+		return err
+	}
+
+	deployment.ObjectMeta.ResourceVersion = v2Dep.ResourceVersion
+	saveCacheDeployment(deployment)
+	return nil
 }
 
 func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, error) {
+	if cacheMgr.isOK {
+		dep := getCacheDeployment(ns, name)
+		if dep == nil {
+			return nil, schStore.ErrNoFound
+		}
+	}
+
 	client := store.BkbcsClient.Deployments(ns)
 	v2Dep, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
@@ -122,10 +134,16 @@ func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, 
 		return nil, err
 	}
 
-	return &v2Dep.Spec.Deployment, nil
+	obj := v2Dep.Spec.Deployment
+	obj.ObjectMeta.ResourceVersion = v2Dep.ResourceVersion
+	return &obj, nil
 }
 
 func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, error) {
+	if cacheMgr.isOK {
+		return listCacheRunAsDeployment(ns)
+	}
+
 	client := store.BkbcsClient.Deployments(ns)
 	v2Deps, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -135,6 +153,7 @@ func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, erro
 	deployments := make([]*types.Deployment, 0, len(v2Deps.Items))
 	for _, dep := range v2Deps.Items {
 		obj := dep.Spec.Deployment
+		obj.ObjectMeta.ResourceVersion = dep.ResourceVersion
 		deployments = append(deployments, &obj)
 	}
 
@@ -144,7 +163,12 @@ func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, erro
 func (store *managerStore) DeleteDeployment(ns, name string) error {
 	client := store.BkbcsClient.Deployments(ns)
 	err := client.Delete(name, &metav1.DeleteOptions{})
-	return err
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	deleteCacheDeployment(ns, name)
+	return nil
 }
 
 func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
@@ -161,6 +185,10 @@ func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
 }
 
 func (store *managerStore) ListAllDeployments() ([]*types.Deployment, error) {
+	if cacheMgr.isOK {
+		return listCacheDeployments()
+	}
+
 	client := store.BkbcsClient.Deployments("")
 	v2Deps, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -170,6 +198,7 @@ func (store *managerStore) ListAllDeployments() ([]*types.Deployment, error) {
 	deployments := make([]*types.Deployment, 0, len(v2Deps.Items))
 	for _, dep := range v2Deps.Items {
 		obj := dep.Spec.Deployment
+		obj.ObjectMeta.ResourceVersion = dep.ResourceVersion
 		deployments = append(deployments, &obj)
 	}
 

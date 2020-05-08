@@ -88,7 +88,7 @@ func (b *backend) DeleteApplication(runAs, appId string, enforce bool, kind comm
 	deleteTrans.OpType = types.OPERATION_DELETE
 	deleteTrans.Status = types.OPERATION_STATUS_INIT
 	deleteTrans.DelayTime = 0
-	deleteTrans.LifePeriod = 480
+	deleteTrans.LifePeriod = 7500
 
 	var deleteOpdata sched.TransAPIDeleteOpdata
 	deleteOpdata.Enforce = enforce

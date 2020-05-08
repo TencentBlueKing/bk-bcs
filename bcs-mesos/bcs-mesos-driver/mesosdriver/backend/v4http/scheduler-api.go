@@ -171,9 +171,11 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("GET", "/agentsettings", nil, s.getAgentSettingListHandler),
 		httpserver.NewAction("DELETE", "/agentsettings", nil, s.deleteAgentSettingListHandler),
 		httpserver.NewAction("POST", "/agentsettings", nil, s.setAgentSettingListHandler),
-		httpserver.NewAction("POST", "/agentsettings/update", nil, s.updateAgentSettingListHandler),
+		//httpserver.NewAction("POST", "/agentsettings/update", nil, s.updateAgentSettingListHandler),
 		httpserver.NewAction("POST", "/agentsettings/enable", nil, s.enableAgentListHandler),
 		httpserver.NewAction("POST", "/agentsettings/disable", nil, s.disableAgentListHandler),
+		httpserver.NewAction("PUT", "/agentsettings/taint", nil, s.taintAgentsHandler),
+		httpserver.NewAction("PUT", "/agentsettings/extendedresource", nil, s.updateExtendedResourcesHandler),
 		/*================= agentsetting ====================*/
 
 		/*-------------- custom resource deprecated from 1.15.x -----------------*/
@@ -546,6 +548,52 @@ func (s *Scheduler) disableAgentListHandler(req *restful.Request, resp *restful.
 	blog.V(3).Infof("post a request to url(%s)", url)
 
 	reply, err := s.client.POST(url, nil, nil)
+	if err != nil {
+		blog.Error("request to url(%s) failed! err(%s)", url, err.Error())
+		err = bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+err.Error())
+		resp.Write([]byte(err.Error()))
+		return
+	}
+
+	resp.Write([]byte(reply))
+}
+
+func (s *Scheduler) taintAgentsHandler(req *restful.Request, resp *restful.Response) {
+	if s.GetHost() == "" {
+		blog.Error("no scheduler is connected by driver")
+		err := bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
+		resp.Write([]byte(err.Error()))
+		return
+	}
+
+	body, _ := s.getRequestInfo(req)
+	url := s.GetHost() + "/v1/agentsettings/taint"
+	blog.Infof("put url(%s) body(%s)", url, string(body))
+
+	reply, err := s.client.PUT(url, nil, body)
+	if err != nil {
+		blog.Error("request to url(%s) failed! err(%s)", url, err.Error())
+		err = bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+err.Error())
+		resp.Write([]byte(err.Error()))
+		return
+	}
+
+	resp.Write([]byte(reply))
+}
+
+func (s *Scheduler) updateExtendedResourcesHandler(req *restful.Request, resp *restful.Response) {
+	if s.GetHost() == "" {
+		blog.Error("no scheduler is connected by driver")
+		err := bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+"scheduler not exist")
+		resp.Write([]byte(err.Error()))
+		return
+	}
+
+	body, _ := s.getRequestInfo(req)
+	url := s.GetHost() + "/v1/agentsettings/extendedresource"
+	blog.Infof("put url(%s) body(%s)", url, string(body))
+
+	reply, err := s.client.PUT(url, nil, body)
 	if err != nil {
 		blog.Error("request to url(%s) failed! err(%s)", url, err.Error())
 		err = bhttp.InternalError(common.BcsErrCommHttpDo, common.BcsErrCommHttpDoStr+err.Error())

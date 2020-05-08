@@ -32,6 +32,7 @@ type SidecarOption struct {
 	LogbeatDir   string `json:"logbeat_dir" value:"" usage:"logbeat config directory"`
 	TemplateFile string `json:"template_file" value:"./unifytlogc-template.conf" usage:"logbeat tempalte config file"`
 	PrefixFile   string `json:"prefix_file" value:"" usage:"logbeat config file prefix name"`
+	Kubeconfig   string `json:"kubeconfig" value:"" usage:"kubeconfig"`
 }
 
 //NewSidecarOption create SidecarOption object

@@ -17,10 +17,12 @@ package scheduler
 
 import (
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"net/http"
 	"time"
 )
@@ -65,7 +67,8 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 				curOffer := offerOut
 				offerOut = s.GetNextOffer(offerOut)
 				blog.V(3).Infof("transaction %s get offer %s||%s ", transaction.ID, offer.GetHostname(), *(offer.Id.Value))
-				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "")
+				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "") &&
+					s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 				if isFit == true {
 					blog.V(3).Infof("transaction %s fit offer %s||%s ", transaction.ID, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {
@@ -146,7 +149,8 @@ func (s *Scheduler) RunInnerScaleApplication(transaction *Transaction) {
 				curOffer := offerOut
 				offerOut = s.GetNextOffer(offerOut)
 				blog.V(3).Infof("transaction %s get offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
-				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "")
+				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "") &&
+					s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 				if isFit == true {
 					blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {
@@ -226,7 +230,8 @@ func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer,
 
 	var taskgroupName string
 	//if app.Instances < opData.Instances && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
-	if app.Instances < opData.Instances && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) {
+	if app.Instances < opData.Instances && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) &&
+		s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), outOffer) {
 		taskGroup, err := s.BuildTaskGroup(version, app, "", "scale application")
 		if err != nil {
 			blog.Error("transaction %s build taskgroup fail", trans.ID)
@@ -254,6 +259,21 @@ func (s *Scheduler) doScaleUpAppTrans(trans *Transaction, outOffer *offer.Offer,
 		}
 		opData.LaunchedNum++
 		taskGroupInfos = append(taskGroupInfos, taskGroupInfo)
+
+		//lock agentsetting
+		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, taskGroup.GetAgentIp())
+		//update agentsettings taskgroup index info
+		agentsetting, _ := s.store.FetchAgentSetting(taskGroup.GetAgentIp())
+		if agentsetting != nil {
+			agentsetting.Pods = append(agentsetting.Pods, taskGroup.ID)
+			err := s.store.SaveAgentSetting(agentsetting)
+			if err != nil {
+				blog.Errorf("save agentsetting %s pods error %s", agentsetting.InnerIP, err.Error())
+			}
+		} else {
+			blog.Errorf("fetch agentsetting %s Not Found", taskGroup.GetAgentIp())
+		}
+		util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, taskGroup.GetAgentIp())
 	}
 
 	if len(taskGroupInfos) <= 0 {

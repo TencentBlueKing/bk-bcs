@@ -88,7 +88,6 @@ func (r *DiscoveryV2) GetModuleServers(moduleName string) ([]interface{}, error)
 			servs = append(servs, v...)
 		}
 	}
-
 	if len(servs) == 0 {
 		return nil, fmt.Errorf("Module %s don't have endpoints", moduleName)
 	}

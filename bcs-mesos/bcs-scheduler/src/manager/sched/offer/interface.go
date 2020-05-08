@@ -16,6 +16,7 @@ package offer
 import (
 	typesplugin "bk-bcs/bcs-common/common/plugin"
 	commtype "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
@@ -45,6 +46,11 @@ type SchedManager interface {
 	//seconds.
 	//input is mesos offer's id
 	DeclineResource(*string) (*http.Response, error)
+
+	//fetch taskgroup
+	FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error)
+	//fetch mesos agent
+	FetchMesosAgent(innerIP string) (*types.Agent, error)
 }
 
 //OfferPool is mesos offer pool, it is responsible for the managements of the mesos's offers.
@@ -111,4 +117,7 @@ type OfferPara struct {
 	//DefaultLostSlaveGracePeriod
 	//if you don't specify, it will the const DefaultOfferLifePeriod
 	OfferlifePeriod int
+
+	//store
+	Store store.Store
 }
