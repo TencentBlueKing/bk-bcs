@@ -1,13 +1,25 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package exec
 
 import (
+	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-services/bcs-client/pkg/types"
 	"context"
 	"fmt"
 	"github.com/docker/docker/pkg/ioutils"
-	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/moby/term"
-	"github.com/sirupsen/logrus"
 	"io"
 	"runtime"
 	"sync"
@@ -27,8 +39,7 @@ type hijackedIOStreamer struct {
 
 	resp types.HijackedResponse
 
-	tty        bool
-	detachKeys string
+	tty bool
 }
 
 // stream handles setting up the IO and then begins streaming stdin/stdout
@@ -92,14 +103,6 @@ func (h *hijackedIOStreamer) setupInput() (restore func(), err error) {
 	// Wrap the input to detect detach escape sequence.
 	// Use default escape keys if an invalid sequence is given.
 	escapeKeys := defaultEscapeKeys
-	if h.detachKeys != "" {
-		customEscapeKeys, err := term.ToBytes(h.detachKeys)
-		if err != nil {
-			logrus.Warnf("invalid detach escape keys, using default: %s", err)
-		} else {
-			escapeKeys = customEscapeKeys
-		}
-	}
 
 	h.inputStream = ioutils.NewReadCloserWrapper(term.NewEscapeProxy(h.inputStream, escapeKeys), h.inputStream.Close)
 
@@ -116,23 +119,14 @@ func (h *hijackedIOStreamer) beginOutputStream(restoreInput func()) <-chan error
 	go func() {
 		var err error
 
-		// When TTY is ON, use regular copy
-		if h.outputStream != nil && h.tty {
-			//_, err = io.Copy(h.outputStream, h.resp.Reader)
-			_, err = io.Copy(h.outputStream, h.resp.Ws)
-			// We should restore the terminal as soon as possible
-			// once the connection ends so any following print
-			// messages will be in normal type.
-			restoreInput()
-		} else {
-			//_, err = stdcopy.StdCopy(h.outputStream, h.errorStream, h.resp.Reader)
-			_, err = stdcopy.StdCopy(h.outputStream, h.errorStream, h.resp.Ws)
-		}
-
-		logrus.Debug("[hijack] End of stdout")
-
-		if err != nil {
-			logrus.Debugf("Error receiveStdout: %s", err)
+		for {
+			_, buf, err1 := h.resp.Ws.Conn.ReadMessage()
+			if err1 != nil {
+				// set err to nil, avoid to always output error when user exit the  exec
+				err = nil
+				break
+			}
+			h.outputStream.Write(buf)
 		}
 
 		outputDone <- err
@@ -147,14 +141,14 @@ func (h *hijackedIOStreamer) beginInputStream(restoreInput func()) (doneC <-chan
 
 	go func() {
 		if h.inputStream != nil {
-			//_, err := io.Copy(h.resp.Conn, h.inputStream)
+			//_, err := io.Copy(bufio.NewWriter(h.resp.Conn), h.inputStream)
 			_, err := io.Copy(h.resp.Ws, h.inputStream)
 			// We should restore the terminal as soon as possible
 			// once the connection ends so any following print
 			// messages will be in normal type.
 			restoreInput()
 
-			logrus.Debug("[hijack] End of stdin")
+			blog.Debug("[hijack] End of stdin")
 
 			if _, ok := err.(term.EscapeError); ok {
 				detached <- err
@@ -165,12 +159,12 @@ func (h *hijackedIOStreamer) beginInputStream(restoreInput func()) (doneC <-chan
 				// This error will also occur on the receive
 				// side (from stdout) where it will be
 				// propagated back to the caller.
-				logrus.Debugf("Error sendStdin: %s", err)
+				blog.Debug("Error sendStdin: %s", err)
 			}
 		}
 
 		if err := h.resp.CloseWrite(); err != nil {
-			logrus.Debugf("Couldn't send EOF: %s", err)
+			blog.Debug("Couldn't send EOF: %s", err)
 		}
 
 		close(inputDone)

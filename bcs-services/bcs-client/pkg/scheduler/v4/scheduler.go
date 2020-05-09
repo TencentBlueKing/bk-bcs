@@ -128,13 +128,9 @@ const (
 	bcsSchedulerDeployDefinitionURI         = "%s/bcsapi/v4/scheduler/mesos/definition/deployment/%s/%s"
 	bcsSchedulerCustomResourceURL           = "%s/bcsapi/v4/scheduler/mesos/customresources"
 	bcsScheudlerCustomResourceDefinitionURL = "%s/bcsapi/v4/scheduler/mesos/customresourcedefinitions"
-	//bcsSchedulerCreateExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/create_exec?host_ip=%s"
-	//bcsSchedulerStartExecUri                = "%s/bcsapi/v4/scheduler/mesos/webconsole/start_exec?host_ip=%s&container_id=%s&exec_id=%s"
-	//bcsSchedulerResizeExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/resize_exec?host_ip=%s"
-
-	bcsSchedulerCreateExecUri = "%s/bcsapi/v1/consoleproxy/create_exec"
-	bcsSchedulerStartExecUri  = "%s/bcsapi/v1/consoleproxy/start_exec?container_id=%s&exec_id=%s"
-	bcsSchedulerResizeExecUri = "%s/bcsapi/v1/consoleproxy/resize_exec"
+	bcsSchedulerCreateExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/create_exec?host_ip=%s"
+	bcsSchedulerStartExecUri                = "%s/bcsapi/v4/scheduler/mesos/webconsole/start_exec?host_ip=%s&container_id=%s&exec_id=%s"
+	bcsSchedulerResizeExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/resize_exec?host_ip=%s"
 )
 
 type bcsScheduler struct {

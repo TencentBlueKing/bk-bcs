@@ -14,7 +14,8 @@
 package exec
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/types"
+	v1 "bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	//"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
@@ -116,66 +117,59 @@ func exec(c *utils.ClientContext) error {
 
 	args := c.Args()
 	if len(args) < 2 {
-		return fmt.Errorf("require at least 2 args")
+		return fmt.Errorf("require at least 2 args, first one is pod name, others are commands")
 	}
 
-	options := &execOptions{
-		tty:         c.Bool("tty"),
-		interactive: c.Bool("interactive"),
-		clusterId:   c.String(utils.OptionClusterID),
-		container:   c.Args()[0],
-		command:     c.Args()[1:],
+	// inspect the taskgroup to get the hostIp of the taskgroup
+	storage := v1.NewBcsStorage(utils.GetClientOption())
+	single, err := storage.InspectTaskGroup(c.ClusterID(), c.Namespace(), c.Args()[0])
+	if err != nil {
+		return fmt.Errorf("failed to inspect taskgroup: %v", err)
 	}
-
-	//storage := v1.NewBcsStorage(utils.GetClientOption())
-	//single, err := storage.InspectTaskGroup(c.ClusterID(), c.Namespace(), c.Args()[0])
-	//if err != nil {
-	//	return fmt.Errorf("failed to inspect taskgroup: %v", err)
-	//}
-	//if single.Data.Status != types.Pod_Running {
-	//	return fmt.Errorf("can't exec into a pod whose status is not running")
-	//}
-	//
-	//var containerId, hostIp string
-	//hostIp = single.Data.HostIP
-	//containerName := c.String("container")
-	//if len(containerName) == 0 {
-	//	if len(single.Data.ContainerStatuses) > 0 {
-	//		usageString := fmt.Sprintf("Defaulting container name to %s.", single.Data.ContainerStatuses[0].Name)
-	//		containerId = single.Data.ContainerStatuses[0].ContainerID
-	//		fmt.Println(usageString)
-	//	}
-	//} else {
-	//	for _, c := range single.Data.ContainerStatuses {
-	//		if c.Name == containerName {
-	//			containerId = c.ContainerID
-	//			break
-	//		}
-	//	}
-	//}
-	//fmt.Printf("containerId: %s", containerId)
-	//fmt.Printf("hostIp: %s", hostIp)
+	if single.Data.Status != types.Pod_Running {
+		return fmt.Errorf("can't exec into a pod whose status is not running")
+	}
 
 	var containerId, hostIp string
-	containerId = "062569af535c"
-	hostIp = "10.217.32.127"
+	hostIp = single.Data.HostIP
+	containerName := c.String("container")
+	if len(containerName) == 0 {
+		if len(single.Data.ContainerStatuses) > 0 {
+			usageString := fmt.Sprintf("Use the first container in pod, container name is %s.", single.Data.ContainerStatuses[0].Name)
+			containerId = single.Data.ContainerStatuses[0].ContainerID
+			fmt.Println(usageString)
+		}
+	} else {
+		for _, c := range single.Data.ContainerStatuses {
+			if c.Name == containerName {
+				containerId = c.ContainerID
+				break
+			}
+		}
+		if containerId == "" {
+			return fmt.Errorf("container name invalid, please check your container name")
+		}
+	}
 
+	// call the consoleproxy create_exec api
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
 	execId, err := scheduler.CreateContainerExec(c.ClusterID(), containerId, hostIp, c.Args()[1:])
 	if err != nil {
 		return fmt.Errorf("failed to create container exec: %v", err)
 	}
 
-	cli := &ExecCli{}
 	stdin, stdout, stderr := term.StdStreams()
-	cli.in = streams.NewIn(stdin)
-	cli.out = streams.NewOut(stdout)
-	cli.err = stderr
-	cli.scheduler = scheduler
-	cli.ClusterId = c.ClusterID()
-	cli.ExecId = execId
-	cli.HostIp = hostIp
+	cli := &ExecCli{
+		in:        streams.NewIn(stdin),
+		out:       streams.NewOut(stdout),
+		err:       stderr,
+		scheduler: scheduler,
+		ClusterId: c.ClusterID(),
+		ExecId:    execId,
+		HostIp:    hostIp,
+	}
 
+	// call the consoleproxy start_exec api
 	ctx := context.Background()
 	resp, err := scheduler.StartContainerExec(ctx, c.ClusterID(), execId, containerId, hostIp)
 	if err != nil {
@@ -195,21 +189,20 @@ func exec(c *utils.ClientContext) error {
 				errorStream:  cli.Out(),
 				resp:         resp,
 				tty:          c.Bool("tty"),
-				detachKeys:   "",
 			}
 
 			return streamer.stream(ctx)
 		}()
 	}()
 
-	if options.tty && cli.In().IsTerminal() {
+	// resize the terminal
+	if c.Bool("tty") && cli.In().IsTerminal() {
 		if err := MonitorTtySize(ctx, *cli, true); err != nil {
 			fmt.Fprintln(cli.Err(), "Error monitoring TTY size:", err)
 		}
 	}
 
 	if err := <-errCh; err != nil {
-		blog.Errorf("Error hijack: %s", err)
 		return err
 	}
 

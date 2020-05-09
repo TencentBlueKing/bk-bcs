@@ -16,7 +16,6 @@ package types
 import (
 	"bufio"
 	"crypto/tls"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"net"
 )
@@ -63,7 +62,6 @@ type HijackedResponse struct {
 
 // Close closes the hijacked connection and reader.
 func (h *HijackedResponse) Close() {
-	fmt.Println("close")
 	//h.Conn.Close()
 	h.Ws.Conn.Close()
 }
