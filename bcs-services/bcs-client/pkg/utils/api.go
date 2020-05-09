@@ -151,7 +151,7 @@ func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header .
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	conn, err := b.setupHijackConn(uri, ctx, req, "websocket")
+	conn, err := b.setupHijackConn(ctx, uri, req, "websocket")
 	if err != nil {
 		return types.HijackedResponse{}, err
 	}
@@ -159,7 +159,7 @@ func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header .
 	return types.HijackedResponse{Conn: conn, Reader: bufio.NewReader(conn)}, err
 }
 
-func (b *bcsApiRequester) setupHijackConn(uri string, ctx context.Context, req *htplib.Request, proto string) (net.Conn, error) {
+func (b *bcsApiRequester) setupHijackConn(ctx context.Context, uri string, req *htplib.Request, proto string) (net.Conn, error) {
 	challengeKey, err := generateChallengeKey()
 	if err != nil {
 		return nil, err
