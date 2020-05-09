@@ -138,11 +138,11 @@ bcs-api 在启动时在配置文件中指定了一个 admin user 及其 user_tok
 
 创建user:  
 ```
-curl  -X POST -H "Content-Type: application/json" --cacert ./bcs-inner-ca.crt -H  "Authorization: Bearer {admin user_token}" https://bcs_server:8443/rest/users/ -d '{"user_name": "bryanhe"}'
+curl  -X POST -H "Content-Type: application/json" --cacert ./bcs-inner-ca.crt -H  "Authorization: Bearer {admin user_token}" https://bcs_server:8443/rest/users/ -d '{"user_name": "xxxx"}'
 ```
 获取user_id:
 ```
-curl  -X GET -H "Content-Type: application/json" --cacert ./bcs-inner-ca.crt -H  "Authorization: Bearer {admin user_token}" https://bcs_server:8443/rest/users/bryanhe
+curl  -X GET -H "Content-Type: application/json" --cacert ./bcs-inner-ca.crt -H  "Authorization: Bearer {admin user_token}" https://bcs_server:8443/rest/users/xxxx
 ```
 
 创建user_token：
