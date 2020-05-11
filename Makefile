@@ -69,8 +69,6 @@ pre:
 	@echo "git tag: ${GITTAG}"
 	mkdir -p ${PACKAGEPATH}
 	mkdir -p ${EXPORTPATH}
-	go fmt ./...
-	cd ./scripts && chmod +x vet.sh && ./vet.sh
 
 api:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services

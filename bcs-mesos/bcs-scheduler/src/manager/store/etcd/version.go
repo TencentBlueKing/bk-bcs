@@ -139,6 +139,21 @@ func (store *managerStore) listVersions(runAs, versionID string) ([]*types.Versi
 	return nodes, nil
 }
 
+func (store *managerStore) listClusterVersions() ([]*types.Version, error) {
+	client := store.BkbcsClient.Versions("")
+	v2Versions, err := client.List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]*types.Version, 0, len(v2Versions.Items))
+	for _, version := range v2Versions.Items {
+		obj := version.Spec.Version
+		nodes = append(nodes, &obj)
+	}
+	return nodes, nil
+}
+
 func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*types.Version, error) {
 	if cacheMgr.isOK {
 		version, _ := getCacheVersion(runAs, versionId, versionNo)

@@ -57,7 +57,7 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 	if exist {
 		v2Agent.ResourceVersion = rv
 		v2Agent, err = client.Update(v2Agent)
-	//else not exist, then create it
+		//else not exist, then create it
 	} else {
 		v2Agent, err = client.Create(v2Agent)
 	}

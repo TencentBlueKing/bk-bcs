@@ -134,7 +134,7 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 		blog.Errorf("list bcslogconfig error %s", err.Error())
 		return nil
 	}
-	if len(bcsLogConfs)==0 {
+	if len(bcsLogConfs) == 0 {
 		blog.Warnf("The container clusters don't have any BcsLogConfig")
 		return nil
 	}
@@ -182,7 +182,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	//else not matched, return 0 score
 	if bcsLogConf.Spec.WorkloadType != "" {
 		//if pod don't belong any workload
-		if len(pod.OwnerReferences)==0 {
+		if len(pod.OwnerReferences) == 0 {
 			blog.Warnf("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) WorkloadType",
 				container.ID, pod.Name, pod.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
 			return 0
@@ -191,7 +191,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 		matched := false
 		if pod.OwnerReferences[0].Kind == "ReplicaSet" {
 			if strings.ToLower(bcsLogConf.Spec.WorkloadType) == strings.ToLower("Deployment") &&
-				strings.HasPrefix(pod.OwnerReferences[0].Name, bcsLogConf.Spec.WorkloadName){
+				strings.HasPrefix(pod.OwnerReferences[0].Name, bcsLogConf.Spec.WorkloadName) {
 				score += 2
 				matched = true
 			}

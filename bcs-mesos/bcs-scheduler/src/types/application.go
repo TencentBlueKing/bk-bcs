@@ -58,6 +58,13 @@ const (
 	Ext_TaskState_TASK_RESTARTING int32 = 101
 )
 
+//daemonset status
+const (
+	Daemonset_Status_Running  = "Running"
+	Daemonset_Status_Abnormal = "Abnormal"
+	Daemonset_Status_Deleting = "Deleting"
+)
+
 //app status
 const (
 	APP_STATUS_STAGING       = "Staging"
@@ -828,8 +835,8 @@ type Application struct {
 	//RawJson []byte `json:"raw_json,omitempty"`
 }
 
-func (in *Application) GetUuid()string{
-	uuid := fmt.Sprintf("%s.%s",in.RunAs,in.ID)
+func (in *Application) GetUuid() string {
+	uuid := fmt.Sprintf("%s.%s", in.RunAs, in.ID)
 	return uuid
 }
 

@@ -885,21 +885,10 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 
 //for build pod index in agent
 func (s *Scheduler) syncAgentsettingPods() error {
-	apps, err := s.store.ListAllApplications()
+	taskg, err := s.store.ListClusterTaskgroups()
 	if err != nil {
-		blog.Infof("ListAllApplications failed: %s", err.Error())
+		blog.Infof("ListClusterTaskgroups failed: %s", err.Error())
 		return err
-	}
-	//fetch cluster all taskgroups
-	taskg := make([]*types.TaskGroup, 0)
-	for _, app := range apps {
-		tasks, err := s.store.ListTaskGroups(app.RunAs, app.ID)
-		if err != nil {
-			blog.Errorf("ListTaskGroups(%s:%s) failed: %s", app.RunAs, app.ID, err.Error())
-			return err
-		}
-
-		taskg = append(taskg, tasks...)
 	}
 	//empty agentsetting pods
 	settings, err := s.store.ListAgentsettings()
@@ -1594,18 +1583,4 @@ func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*comm
 
 func (s *Scheduler) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	return s.store.FetchTaskGroup(taskGroupID)
-}
-
-func (s *Scheduler) FetchMesosAgent(innerIP string) (*types.Agent, error) {
-	agent, err := s.store.FetchAgent(innerIP)
-	if err != nil && !(store.ErrNoFound.Error() == err.Error()) {
-		return nil, err
-	}
-	//fetch the agent, return it
-	if agent != nil {
-		return agent, nil
-	}
-	//update mesos agents
-	s.oprMgr.UpdateMesosAgents()
-	return s.store.FetchAgent(innerIP)
 }

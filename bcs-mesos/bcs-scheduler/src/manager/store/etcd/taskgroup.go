@@ -78,7 +78,10 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	return nil
 }
 
-
+//list mesos cluster taskgroups, include: application、deployment、daemonset...
+func (store *managerStore) ListClusterTaskgroups() ([]*types.TaskGroup, error) {
+	return listCacheTaskgroups()
+}
 
 func (store *managerStore) listTaskgroupsInDB() ([]*types.TaskGroup, error) {
 	client := store.BkbcsClient.TaskGroups("")

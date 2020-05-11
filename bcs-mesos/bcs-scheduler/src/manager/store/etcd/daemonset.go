@@ -14,7 +14,6 @@
 package etcd
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
@@ -24,8 +23,8 @@ import (
 )
 
 //check agent whether exist
-func (store *managerStore) CheckDaemonsetExist(agent *types.Agent) (string, bool) {
-	obj, _ := store.FetchAgent(agent.Key)
+func (store *managerStore) CheckDaemonsetExist(daemon *types.BcsDaemonset) (string, bool) {
+	obj, _ := store.FetchDaemonset(daemon.NameSpace, daemon.Name)
 	if obj != nil {
 		return obj.ResourceVersion, true
 	}
@@ -34,114 +33,105 @@ func (store *managerStore) CheckDaemonsetExist(agent *types.Agent) (string, bool
 }
 
 //save agent
-func (store *managerStore) SaveAgent(agent *types.Agent) error {
+func (store *managerStore) SaveDaemonset(daemon *types.BcsDaemonset) error {
 
-	client := store.BkbcsClient.Agents(DefaultNamespace)
-	v2Agent := &v2.Agent{
+	client := store.BkbcsClient.BcsDaemonsets(daemon.NameSpace)
+	v2Daemonset := &v2.BcsDaemonset{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CrdAgent,
+			Kind:       CrdBcsDaemonset,
 			APIVersion: ApiversionV2,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      agent.Key,
-			Namespace: DefaultNamespace,
+			Name:      daemon.Name,
+			Namespace: daemon.NameSpace,
 		},
-		Spec: v2.AgentSpec{
-			Agent: *agent,
+		Spec: v2.BcsDaemonsetSpec{
+			BcsDaemonset: *daemon,
 		},
 	}
 
 	var err error
-	rv, exist := store.CheckAgentExist(agent)
+	rv, exist := store.CheckDaemonsetExist(daemon)
 	//if exist, then update
 	if exist {
-		v2Agent.ResourceVersion = rv
-		v2Agent, err = client.Update(v2Agent)
+		v2Daemonset.ResourceVersion = rv
+		v2Daemonset, err = client.Update(v2Daemonset)
 		//else not exist, then create it
 	} else {
-		v2Agent, err = client.Create(v2Agent)
+		v2Daemonset, err = client.Create(v2Daemonset)
 	}
 	if err != nil {
 		return err
 	}
 
 	//update kube-apiserver ResourceVersion
-	agent.ResourceVersion = v2Agent.ResourceVersion
-	//save agent in cache
-	saveCacheAgent(agent)
+	daemon.ResourceVersion = v2Daemonset.ResourceVersion
+	//save daemonset in cache
+	saveCacheDaemonset(daemon)
 	return nil
 }
 
 //fetch agent for agent InnerIP
-func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
+func (store *managerStore) FetchDaemonset(ns, name string) (*types.BcsDaemonset, error) {
 	//fetch agent in cache
-	if cacheMgr.isOK {
-		agent := getCacheAgent(Key)
-		if agent == nil {
-			return nil, schStore.ErrNoFound
-		}
-		return agent, nil
+	agent := getCacheDaemonset(ns, name)
+	if agent == nil {
+		return nil, schStore.ErrNoFound
 	}
-
-	client := store.BkbcsClient.Agents(DefaultNamespace)
-	//fetch agent in kube-apiserver
-	v2Agent, err := client.Get(Key, metav1.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil, schStore.ErrNoFound
-		}
-		return nil, err
-	}
-
-	obj := v2Agent.Spec.Agent
-	obj.ResourceVersion = v2Agent.ResourceVersion
-	return &obj, nil
+	return agent, nil
 }
 
 //list all agent list
-func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {
+func (store *managerStore) ListAllDaemonset() ([]*types.BcsDaemonset, error) {
 	if cacheMgr.isOK {
-		return listCacheAgents()
+		return listCacheDaemonsets()
 	}
 
-	client := store.BkbcsClient
-	v2Agents, err := client.List(metav1.ListOptions{})
+	client := store.BkbcsClient.BcsDaemonsets("")
+	v2Daemonsets, err := client.List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	agents := make([]*types.Agent, 0, len(v2Agents.Items))
-	for _, v2 := range v2Agents.Items {
-		obj := v2.Spec.Agent
+	daemonsets := make([]*types.BcsDaemonset, 0, len(v2Daemonsets.Items))
+	for _, v2 := range v2Daemonsets.Items {
+		obj := v2.Spec.BcsDaemonset
 		obj.ResourceVersion = v2.ResourceVersion
-		agents = append(agents, &obj)
+		daemonsets = append(daemonsets, &obj)
 	}
-	return agents, nil
+	return daemonsets, nil
 }
 
-//list all agent ip list
-func (store *managerStore) ListAgentNodes() ([]string, error) {
-	agents, err := store.ListAllAgents()
-	if err != nil {
-		return nil, err
-	}
-	agentNodes := make([]string, 0, len(agents))
-	for _, agent := range agents {
-		agentNodes = append(agentNodes, agent.Key)
-	}
-
-	return agentNodes, nil
-}
-
-//delete agent for innerip
-func (store *managerStore) DeleteAgent(key string) error {
-	client := store.BkbcsClient.Agents(DefaultNamespace)
-	err := client.Delete(key, &metav1.DeleteOptions{})
+//delete daemonset for innerip
+func (store *managerStore) DeleteDaemonset(ns, name string) error {
+	client := store.BkbcsClient.BcsDaemonsets(ns)
+	err := client.Delete(name, &metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
-	//delete agent in cache
-	deleteCacheAgent(key)
+	//delete daemonset in cache
+	deleteCacheDaemonset(ns, name)
 	return nil
+}
+
+//ListTaskGroups show us all the task group on line
+func (store *managerStore) ListDaemonsetTaskGroups(namespace, name string) ([]*types.TaskGroup, error) {
+	taskgroups := make([]*types.TaskGroup, 0)
+	daemonset, err := store.FetchDaemonset(namespace, name)
+	//if err!=nil, show application not found
+	//then return empty
+	if err != nil {
+		return taskgroups, nil
+	}
+
+	for _, podId := range daemonset.Pods {
+		taskgroup, err := store.FetchTaskGroup(podId.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		taskgroups = append(taskgroups, taskgroup)
+	}
+	return taskgroups, nil
 }

@@ -75,9 +75,7 @@ func (s *Scheduler) CreateDaemonset(body []byte) (string, error) {
 		return err.Error(), err
 	}
 
-	name := def.ObjectMeta.Name
-	namespace := def.ObjectMeta.NameSpace
-	url := fmt.Sprintf("%s/v1/daemonset/%s/%s", s.GetHost(), namespace, name)
+	url := fmt.Sprintf("%s/v1/daemonsets", s.GetHost())
 	blog.Info("post a request to url(%s), request:%s", url, string(data))
 
 	reply, err := s.client.POST(url, nil, data)
@@ -177,7 +175,7 @@ func (s *Scheduler) deleteDaemonset(ns, name string, enforce string) (string, er
 		return err.Error(), err
 	}
 
-	url := fmt.Sprintf("%s/v1/daemonset/%s/%s?enforce=%s", s.GetHost(), ns, name, enforce)
+	url := fmt.Sprintf("%s/v1/daemonsets/%s/%s?enforce=%s", s.GetHost(), ns, name, enforce)
 	blog.Info("post a request to url(%s), request: null", url)
 
 	reply, err := s.client.DELETE(url, nil, nil)

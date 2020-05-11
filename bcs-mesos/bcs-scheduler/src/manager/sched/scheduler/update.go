@@ -22,6 +22,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"encoding/json"
 	"net/http"
 	//"sort"
@@ -41,8 +42,14 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		return
 	}
 	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	s.store.LockApplication(runAs + "." + appId)
-	defer s.store.UnLockApplication(runAs + "." + appId)
+	//check taskgroup whether belongs to daemonset
+	if s.CheckPodBelongDaemonset(taskGroupID) {
+		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appId)
+		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appId)
+	} else {
+		s.store.LockApplication(runAs + "." + appId)
+		defer s.store.UnLockApplication(runAs + "." + appId)
+	}
 
 	// ack and check
 	if s.preCheckTaskStatusReport(status) == false {
@@ -186,27 +193,35 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	if taskgroupUpdated == true {
 		taskGroup.UpdateTime = now
 	}
-
 	reportTaskgroupReportMetrics(taskGroup.RunAs, taskGroup.AppID, taskGroup.Name, taskGroup.Status)
-	// taskgroup info changed
-	if taskGroup.LastUpdateTime <= updateTime || taskgroupUpdated == true {
-		s.ServiceMgr.TaskgroupUpdate(taskGroup)
-		if taskGroup.Status != taskGroupStatus {
-			s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
-		}
-		if bcsMsg != nil {
-			taskGroup.BcsEventMsg = bcsMsg
-		}
-		taskGroup.LastUpdateTime = now
-		//save taskGroup into zk, in this function, task will alse be saved
-		if err = s.store.SaveTaskGroup(taskGroup); err != nil {
-			blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
-			return
-		}
+	// taskgroup info not changed
+	if !taskgroupUpdated && taskGroup.LastUpdateTime > updateTime {
+		return
 	}
 
-	s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
-	return
+	//when taskgroup belongs to daemonset
+	if s.CheckPodBelongDaemonset(taskGroup.ID) {
+		s.updateDaemonsetStatus(runAs, appId)
+	} else {
+		//trigger endpoints changed
+		s.ServiceMgr.TaskgroupUpdate(taskGroup)
+		if taskGroup.Status != taskGroupStatus {
+			//trigger reschedule taskgroup handler
+			s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
+		}
+		//check application whether changed
+		s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
+	}
+
+	//update taskgroup info, and save taskgroup
+	if bcsMsg != nil {
+		taskGroup.BcsEventMsg = bcsMsg
+	}
+	taskGroup.LastUpdateTime = now
+	//save taskGroup into zk, in this function, task will alse be saved
+	if err = s.store.SaveTaskGroup(taskGroup); err != nil {
+		blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
+	}
 }
 
 func (s *Scheduler) checkTaskHealth(task *types.Task, taskGroupID string, healthy bool) bool {
@@ -308,7 +323,7 @@ func (s *Scheduler) checkApplicationChange(runAs, appId, taskGroupStatus string,
 }
 
 func (s *Scheduler) preCheckTaskStatusReport(status *mesos.TaskStatus) bool {
-	//ack
+	//ack mesos master the task status report
 	if status.GetUuid() != nil {
 		call := &sched.Call{
 			FrameworkId: s.framework.GetId(),
@@ -611,8 +626,8 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 }
 
 // after a taskgroup's status changed, do some work in this function
+// only application perform
 func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originStatus string) {
-
 	if taskGroup.Status == originStatus {
 		return
 	}
@@ -710,21 +725,6 @@ func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originSta
 			rescheduleOpdata.HostRetainTime = 0
 		}
 
-		// computer resource needed
-		//versions, err := s.store.ListVersions(runAs, appID)
-		//if err != nil {
-		//	blog.Error("reschedule %s fail: list versions for application(%s.%s), err:%s",
-		//		taskGroupID, runAs, appID, err.Error())
-		//	return
-		//}
-		//sort.Strings(versions)
-		//newestVersion := versions[len(versions)-1]
-		//version, err := s.store.FetchVersion(runAs, appID, newestVersion)
-		//if err != nil {
-		//	blog.Error("reschedule taskgroup(%s) fail, fetch version(%s) for application(%s.%s), err:%s",
-		//		taskGroupID, newestVersion, runAs, appID, err.Error())
-		//	return
-		//}
 		version, _ := s.store.GetVersion(runAs, appID)
 		if version == nil {
 			blog.Error("prepare reschedule taskgroup(%s) fail, no version for application(%s.%s)", runAs, appID)
@@ -760,8 +760,14 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 		return
 	}
 	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	s.store.LockApplication(runAs + "." + appId)
-	defer s.store.UnLockApplication(runAs + "." + appId)
+	//check taskgroup whether belongs to daemonset
+	if s.CheckPodBelongDaemonset(taskGroupID) {
+		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appId)
+		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appId)
+	} else {
+		s.store.LockApplication(runAs + "." + appId)
+		defer s.store.UnLockApplication(runAs + "." + appId)
+	}
 
 	// ack and check
 	if s.preCheckMessageTaskStatus(agentID, executorID, taskId) == false {
@@ -794,7 +800,6 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 		blog.Warnf("message status report: Unprocessed task status (%v), TaskID:%s", taskInfo, taskId)
 		return
 	}
-
 	task.Status = reportStatus
 	task.StatusData = string(bcsMsg.TaskStatus)
 
@@ -859,25 +864,34 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 	}
 
 	reportTaskgroupReportMetrics(taskGroup.RunAs, taskGroup.AppID, taskGroup.Name, taskGroup.Status)
-	// taskgroup info changed
-	if taskGroup.LastUpdateTime <= updateTime || taskgroupUpdated == true {
-		s.ServiceMgr.TaskgroupUpdate(taskGroup)
-		if taskGroup.Status != taskGroupStatus {
-			s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
-		}
-		if msg != nil {
-			taskGroup.BcsEventMsg = msg
-		}
-		taskGroup.LastUpdateTime = now
-		//save taskGroup into zk, in this function, task will alse be saved
-		if err = s.store.SaveTaskGroup(taskGroup); err != nil {
-			blog.Error("message status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
-			return
-		}
+	// taskgroup info not changed
+	if !taskgroupUpdated && taskGroup.LastUpdateTime > updateTime {
+		return
 	}
 
-	s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
-	return
+	//when taskgroup belongs to daemonset
+	if s.CheckPodBelongDaemonset(taskGroup.ID) {
+		s.updateDaemonsetStatus(runAs, appId)
+	} else {
+		//trigger endpoints changed
+		s.ServiceMgr.TaskgroupUpdate(taskGroup)
+		if taskGroup.Status != taskGroupStatus {
+			//trigger reschedule taskgroup handler
+			s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
+		}
+		//check application whether changed
+		s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
+	}
+
+	//update taskgroup info, and save taskgroup
+	if msg != nil {
+		taskGroup.BcsEventMsg = msg
+	}
+	taskGroup.LastUpdateTime = now
+	//save taskGroup into zk, in this function, task will alse be saved
+	if err = s.store.SaveTaskGroup(taskGroup); err != nil {
+		blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
+	}
 }
 
 func (s *Scheduler) preCheckMessageTaskStatus(agentID, executorID, taskId string) bool {

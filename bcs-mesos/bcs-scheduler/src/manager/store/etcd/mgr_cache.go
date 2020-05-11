@@ -33,10 +33,10 @@ type cacheManager struct {
 	Taskgroups map[string]*types.TaskGroup
 	//key = {version.RunAs}.{version.ID}
 	//value is version list
-	Versions map[string][]*types.Version
-	Namespaces   map[string]struct{}
-	Configmaps   map[string]*commtypes.BcsConfigMap
-	Secrets      map[string]*commtypes.BcsSecret
+	Versions   map[string][]*types.Version
+	Namespaces map[string]struct{}
+	Configmaps map[string]*commtypes.BcsConfigMap
+	Secrets    map[string]*commtypes.BcsSecret
 	//key = {deployment.namespace}.{deployment.name}
 	Deployments map[string]*types.Deployment
 	//agent, key = agent.Key
@@ -70,6 +70,7 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	cacheMgr.mapLock = new(sync.RWMutex)
 
 	cacheMgr.mapLock.Lock()
+
 	cacheMgr.Applications = make(map[string]*types.Application)
 	cacheMgr.Taskgroups = make(map[string]*types.TaskGroup)
 	cacheMgr.Versions = make(map[string][]*types.Version)
@@ -85,6 +86,16 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	if isUsed {
 		// init namespace in cache
 		err := store.initCacheNamespaces()
+		if err != nil {
+			return err
+		}
+		//init taskgroups in cache
+		err = store.initCacheTaskgroups()
+		if err != nil {
+			return err
+		}
+		//init versions in cache
+		err = store.initCacheVersions()
 		if err != nil {
 			return err
 		}
@@ -123,6 +134,11 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 		if err != nil {
 			return err
 		}
+		//init daemonsets
+		err = store.initCacheDaemonsets()
+		if err != nil {
+			return err
+		}
 	}
 	cacheMgr.isOK = isUsed
 	cacheMgr.mapLock.Unlock()
@@ -140,6 +156,7 @@ func (store *managerStore) UnInitCacheMgr() error {
 
 	if cacheMgr != nil {
 		cacheMgr.mapLock.Lock()
+
 		cacheMgr.Applications = nil
 		cacheMgr.Namespaces = nil
 		cacheMgr.Configmaps = nil
@@ -256,18 +273,16 @@ func (store *managerStore) initCacheServices() error {
 
 // init services in cache
 func (store *managerStore) initCacheDaemonsets() error {
-	svcs, err := store.ListAllServices()
+	dms, err := store.ListAllDaemonset()
 	if err != nil {
-		blog.Errorf("cacheManager ListAllServices failed: %s", err.Error())
+		blog.Errorf("cacheManager ListAllDaemonsets failed: %s", err.Error())
 		return err
 	}
 
-	for _, svc := range svcs {
-		key := fmt.Sprintf("%s.%s", svc.NameSpace, svc.Name)
-		cacheMgr.Services[key] = svc.DeepCopy()
-		blog.V(3).Infof("cacheManager sync service %s in cache", key)
+	for _, dm := range dms {
+		cacheMgr.Daemonsets[dm.GetUuid()] = dm.DeepCopy()
 	}
-	blog.Infof("cacheMgr init cache services done")
+	blog.Infof("cacheMgr init cache daemonsets done")
 	return nil
 }
 
@@ -305,27 +320,22 @@ func (store *managerStore) initCacheApplications() error {
 
 //init application in cache
 func (store *managerStore) initCacheVersions() error {
-	apps, err := store.ListAllApplications()
+	//cache versions
+	versions, err := store.listClusterVersions()
 	if err != nil {
-		blog.Errorf("cacheManager init application failed: %s", err.Error())
 		return err
 	}
-
-	for _, app := range apps {
-		//cache versions
-		versions, err := store.listVersions(app.RunAs, app.ID)
-		if err != nil {
-			return err
+	for _, version := range versions {
+		blog.V(3).Infof("cacheManager instance(%s:%s) sync version(%s) in cache", version.RunAs, version.ID, version.Name)
+		tmpData := version.DeepCopy()
+		vns, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", version.RunAs, version.ID)]
+		if !ok {
+			vns = make([]*types.Version, 0)
+			cacheMgr.Versions[fmt.Sprintf("%s.%s", version.RunAs, version.ID)] = vns
 		}
-		cacheVersions := make([]*types.Version,0)
-		for _, version := range versions {
-			blog.V(3).Infof("cacheManager app(%s:%s) sync version(%s) in cache", app.RunAs, app.ID, version.Name)
-			tmpData := version.DeepCopy()
-			cacheVersions = append(cacheVersions, tmpData)
-		}
-		cacheMgr.Versions[app.GetUuid()] = cacheVersions
+		vns = append(vns, tmpData)
 	}
-	blog.Infof("cacheMgr init cache application done")
+	blog.Infof("cacheMgr init cache versions done")
 	return nil
 }
 
@@ -348,10 +358,6 @@ func (store *managerStore) initCacheTaskgroups() error {
 //if exist, then return true
 //else return false
 func checkCacheNamespaceExist(ns string) bool {
-	if !cacheMgr.isOK {
-		return false
-	}
-
 	cacheMgr.mapLock.RLock()
 	_, ok := cacheMgr.Namespaces[ns]
 	cacheMgr.mapLock.RUnlock()
@@ -360,10 +366,6 @@ func checkCacheNamespaceExist(ns string) bool {
 
 //cache namespace in cache
 func syncCacheNamespace(ns string) {
-	if !cacheMgr.isOK {
-		return
-	}
-
 	cacheMgr.mapLock.Lock()
 	cacheMgr.Namespaces[ns] = struct{}{}
 	cacheMgr.mapLock.Unlock()
@@ -371,27 +373,15 @@ func syncCacheNamespace(ns string) {
 
 //delete application in cache
 func deleteAppCacheNode(runAs, appID string) error {
-
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	key := runAs + "." + appID
-	blog.V(3).Infof("delete app(%s) in cache", key)
-
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Applications, key)
 	cacheMgr.mapLock.Unlock()
-
 	return nil
 }
 
 //save configmap in cache
 func saveCacheConfigmap(obj *commtypes.BcsConfigMap) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	key := fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -416,10 +406,6 @@ func getCacheConfigmap(ns, name string) *commtypes.BcsConfigMap {
 
 // delete configmap in cache
 func deleteCacheConfigmap(ns, name string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Configmaps, key)
@@ -427,12 +413,40 @@ func deleteCacheConfigmap(ns, name string) error {
 	return nil
 }
 
-//save secret in cache
-func saveCacheSecret(obj *commtypes.BcsSecret) error {
-	if !cacheMgr.isOK {
+//save daemonset in cache
+func saveCacheDaemonset(obj *types.BcsDaemonset) error {
+	tmpData := obj.DeepCopy()
+	cacheMgr.mapLock.Lock()
+	cacheMgr.Daemonsets[obj.GetUuid()] = tmpData
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+//get daemonset in cache
+//if not exist, then return nil
+func getCacheDaemonset(ns, name string) *types.BcsDaemonset {
+	key := fmt.Sprintf("%s.%s", ns, name)
+	cacheMgr.mapLock.RLock()
+	obj, ok := cacheMgr.Daemonsets[key]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil
 	}
 
+	return obj.DeepCopy()
+}
+
+// delete daemonset in cache
+func deleteCacheDaemonset(ns, name string) error {
+	key := fmt.Sprintf("%s.%s", ns, name)
+	cacheMgr.mapLock.Lock()
+	delete(cacheMgr.Daemonsets, key)
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+//save secret in cache
+func saveCacheSecret(obj *commtypes.BcsSecret) error {
 	key := fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -456,10 +470,6 @@ func getCacheSecret(ns, name string) *commtypes.BcsSecret {
 
 //delete secret in cache
 func deleteCacheSecret(ns, name string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Secrets, key)
@@ -469,10 +479,6 @@ func deleteCacheSecret(ns, name string) error {
 
 //save agentsettings in cache
 func saveCacheAgentsetting(obj *commtypes.BcsClusterAgentSetting) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
 	cacheMgr.Agentsettings[tmpData.InnerIP] = tmpData
@@ -494,10 +500,6 @@ func getCacheAgentsetting(InnerIp string) *commtypes.BcsClusterAgentSetting {
 
 //delete agentsetting in cache
 func deleteCacheAgentsetting(InnerIp string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Agentsettings, InnerIp)
 	cacheMgr.mapLock.Unlock()
@@ -506,16 +508,13 @@ func deleteCacheAgentsetting(InnerIp string) error {
 
 //save version in cache
 func saveCacheVersion(runAs, appID string, obj *types.Version) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
-	versions,ok := cacheMgr.Versions[fmt.Sprintf("%s.%s",runAs, appID)]
+	cacheMgr.mapLock.Lock()
+	versions, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, appID)]
 	if !ok {
-		versions = make([]*types.Version,0)
-		cacheMgr.Versions[fmt.Sprintf("%s.%s",runAs, appID)] = versions
+		versions = make([]*types.Version, 0)
+		cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, appID)] = versions
 	}
-
+	cacheMgr.mapLock.Unlock()
 	tmpData := obj.DeepCopy()
 	versions = append(versions, tmpData)
 	return nil
@@ -523,13 +522,13 @@ func saveCacheVersion(runAs, appID string, obj *types.Version) error {
 
 //get version from cache
 func getCacheVersion(runAs, versionId, versionNo string) (*types.Version, error) {
-	app := getCacheAppNode(runAs, versionId)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, versionId)
+	cacheMgr.mapLock.RLock()
+	versions, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, versionId)]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil, nil
 	}
-
-	for _, version := range app.Versions {
+	for _, version := range versions {
 		if version.Name == versionNo {
 			return version.DeepCopy(), nil
 		}
@@ -541,14 +540,15 @@ func getCacheVersion(runAs, versionId, versionNo string) (*types.Version, error)
 //list version from cache
 //runAs=namespace, versionId=appid
 func listCacheVersions(runAs, versionId string) ([]*types.Version, error) {
-	app := getCacheAppNode(runAs, versionId)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, versionId)
+	cacheMgr.mapLock.RLock()
+	iversions, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, versionId)]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil, nil
 	}
 
 	var versions []*types.Version
-	for _, version := range app.Versions {
+	for _, version := range iversions {
 		tmpData := version.DeepCopy()
 		versions = append(versions, tmpData)
 	}
@@ -558,59 +558,32 @@ func listCacheVersions(runAs, versionId string) ([]*types.Version, error) {
 
 //save application in cache
 func saveCacheApplication(runAs, appID string, obj *types.Application) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
+	app := obj.DeepCopy()
+	cacheMgr.mapLock.Lock()
+	cacheMgr.Applications[app.GetUuid()] = app
+	cacheMgr.mapLock.Unlock()
 
-	key := runAs + "." + appID
-	app := getCacheAppNode(runAs, appID)
-	if app != nil {
-		blog.V(3).Infof("app(%s) already in cache", key)
-	} else {
-		blog.V(3).Infof("app(%s) not in cache, to create", key)
-		cacheMgr.mapLock.Lock()
-		appNode := new(applicationCacheNode)
-		cacheMgr.Applications[key] = appNode
-		cacheMgr.mapLock.Unlock()
-	}
-	if app == nil {
-		app = getCacheAppNode(runAs, appID)
-	}
-	if app == nil {
-		blog.Warnf("app(%s) not in cache", key)
-		return nil
-	}
-
-	app.Application = obj.DeepCopy()
 	return nil
 }
 
 //get application from cache
 func getCacheApplication(runAs, appID string) (*types.Application, error) {
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
-		return nil, nil
-	}
-	if app.Application == nil {
-		blog.V(3).Infof("app(%s.%s) Application not in cache", runAs, appID)
+	cacheMgr.mapLock.RLock()
+	app, ok := cacheMgr.Applications[fmt.Sprintf("%s.%s", runAs, appID)]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil, nil
 	}
 
-	return app.Application.DeepCopy(), nil
+	return app.DeepCopy(), nil
 }
 
+//list cache applications
 func listCacheApplications() ([]*types.Application, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	apps := make([]*types.Application, 0, len(cacheMgr.Applications))
 	for _, node := range cacheMgr.Applications {
-		if node.Application != nil {
-			apps = append(apps, node.Application.DeepCopy())
-		}
+		apps = append(apps, node.DeepCopy())
 	}
 	cacheMgr.mapLock.RUnlock()
 
@@ -618,15 +591,11 @@ func listCacheApplications() ([]*types.Application, error) {
 }
 
 func listCacheRunAsApplications(runAs string) ([]*types.Application, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	apps := make([]*types.Application, 0)
 	for _, node := range cacheMgr.Applications {
-		if node.Application != nil && node.Application.RunAs == runAs {
-			apps = append(apps, node.Application.DeepCopy())
+		if node.RunAs == runAs {
+			apps = append(apps, node.DeepCopy())
 		}
 	}
 	cacheMgr.mapLock.RUnlock()
@@ -635,10 +604,6 @@ func listCacheRunAsApplications(runAs string) ([]*types.Application, error) {
 }
 
 func listCacheRunAsDeployment(namespace string) ([]*types.Deployment, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	deps := make([]*types.Deployment, 0)
 	for _, dep := range cacheMgr.Deployments {
@@ -652,10 +617,6 @@ func listCacheRunAsDeployment(namespace string) ([]*types.Deployment, error) {
 }
 
 func listCacheConfigmaps() ([]*commtypes.BcsConfigMap, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	cfgs := make([]*commtypes.BcsConfigMap, 0, len(cacheMgr.Configmaps))
 	for _, cfg := range cacheMgr.Configmaps {
@@ -666,11 +627,19 @@ func listCacheConfigmaps() ([]*commtypes.BcsConfigMap, error) {
 	return cfgs, nil
 }
 
-func listCacheSecrets() ([]*commtypes.BcsSecret, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
+//list all daemonsets from cache
+func listCacheDaemonsets() ([]*types.BcsDaemonset, error) {
+	cacheMgr.mapLock.RLock()
+	dms := make([]*types.BcsDaemonset, 0, len(cacheMgr.Daemonsets))
+	for _, dm := range cacheMgr.Daemonsets {
+		dms = append(dms, dm.DeepCopy())
 	}
+	cacheMgr.mapLock.RUnlock()
 
+	return dms, nil
+}
+
+func listCacheSecrets() ([]*commtypes.BcsSecret, error) {
 	cacheMgr.mapLock.RLock()
 	secs := make([]*commtypes.BcsSecret, 0, len(cacheMgr.Secrets))
 	for _, sec := range cacheMgr.Secrets {
@@ -681,176 +650,61 @@ func listCacheSecrets() ([]*commtypes.BcsSecret, error) {
 	return secs, nil
 }
 
-//get appnode from cache
-func getCacheAppNode(runAs, appID string) *applicationCacheNode {
-
-	if !cacheMgr.isOK {
-		return nil
-	}
-
-	key := runAs + "." + appID
-	cacheMgr.mapLock.RLock()
-	app, ok := cacheMgr.Applications[key]
-	cacheMgr.mapLock.RUnlock()
-	if ok {
-		return app
-	}
-
-	return nil
-}
-
-// list taskgroup from cache under (namespace,appid)
-func listCacheTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
-		return nil, nil
-	}
-	if app.Taskgroups == nil {
-		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
-		return nil, nil
-	}
-
-	var taskgroupsList []*types.TaskGroup
-	for _, taskGroup := range app.Taskgroups {
-		blog.V(3).Infof("app(%s.%s) list taskgroups, get %s in cache", runAs, appID, taskGroup.ID)
-		tmpData := taskGroup.DeepCopy()
-		taskgroupsList = append(taskgroupsList, tmpData)
-	}
-
-	return taskgroupsList, nil
-}
-
 //save taskgroup in cache
 func saveCacheTaskGroup(taskGroup *types.TaskGroup) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
-	app := getCacheAppNode(taskGroup.RunAs, taskGroup.AppID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", taskGroup.RunAs, taskGroup.AppID)
-		return nil
-	}
-
-	tmpData := taskGroup.DeepCopy()
-	if app.Taskgroups == nil {
-		blog.V(3).Infof("insert taskgroup(%s) in cache", tmpData.ID)
-		app.Taskgroups = append(app.Taskgroups, tmpData)
-		return nil
-	}
-
-	isExist := false
-	for index, currTaskGroup := range app.Taskgroups {
-		if currTaskGroup.ID == taskGroup.ID {
-			blog.V(3).Infof("update taskgroup(%s) in cache", taskGroup.ID)
-			app.Taskgroups[index] = tmpData
-			isExist = true
-		}
-	}
-
-	if !isExist {
-		blog.V(3).Infof("insert taskgroup(%s) in cache", tmpData.ID)
-		app.Taskgroups = append(app.Taskgroups, tmpData)
-	}
+	obj := taskGroup.DeepCopy()
+	cacheMgr.mapLock.Lock()
+	cacheMgr.Taskgroups[obj.ID] = obj
+	cacheMgr.mapLock.Unlock()
 
 	return nil
 }
 
 //get taskgroup from cache
 func fetchCacheTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
-
-	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
-		return nil, nil
-	}
-	if app.Taskgroups == nil {
-		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
+	cacheMgr.mapLock.RLock()
+	taskgroup, ok := cacheMgr.Taskgroups[taskGroupID]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil, nil
 	}
 
-	for _, taskGroup := range app.Taskgroups {
-		if taskGroup.ID == taskGroupID {
-			blog.V(3).Infof("fetched taskgroup(%s) in cache", taskGroupID)
-			tmpData := taskGroup.DeepCopy()
-			return tmpData, nil
-		}
-	}
-
-	blog.V(3).Infof("fetch taskgroup(%s) not in cache return nil", taskGroupID)
-	return nil, nil
+	return taskgroup.DeepCopy(), nil
 }
 
 //delete taskgroup in cache
 func deleteCacheTaskGroup(taskGroupID string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
-	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
-		return nil
-	}
-	if app.Taskgroups == nil {
-		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
-		return nil
-	}
-
-	for index, taskGroup := range app.Taskgroups {
-		if taskGroup.ID == taskGroupID {
-			blog.V(3).Infof("delete taskgroup(%s) in cache", taskGroupID)
-			app.Taskgroups = append(app.Taskgroups[:index], app.Taskgroups[index+1:]...)
-		}
-	}
+	cacheMgr.mapLock.Lock()
+	delete(cacheMgr.Taskgroups, taskGroupID)
+	cacheMgr.mapLock.Unlock()
 
 	return nil
 }
 
 //save task in cache
 func saveCacheTask(task *types.Task) error {
-
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	taskGroupID := types.GetTaskGroupID(task.ID)
 	if taskGroupID == "" {
 		return errors.New("task id error")
 	}
-	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
+	cacheMgr.mapLock.RLock()
+	taskGroup, ok := cacheMgr.Taskgroups[taskGroupID]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil
 	}
-	if app.Taskgroups == nil {
-		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
-		return nil
-	}
-
-	for _, taskGroup := range app.Taskgroups {
-		if taskGroup.ID == taskGroupID {
-			blog.V(3).Infof("taskgroup(%s) in cache", taskGroupID)
-
-			cacheData := task.DeepCopy()
-			isExist := false
-			for index, cacheTask := range taskGroup.Taskgroup {
-				if task.ID == cacheTask.ID {
-					blog.V(3).Infof("update task(%s) in cache", task.ID)
-					taskGroup.Taskgroup[index] = cacheData
-					isExist = true
-				}
-			}
-
-			if !isExist {
-				blog.Warnf("insert task(%s) in cache", task.ID)
-				taskGroup.Taskgroup = append(taskGroup.Taskgroup, cacheData)
-			}
+	cacheData := task.DeepCopy()
+	isExist := false
+	for index, cacheTask := range taskGroup.Taskgroup {
+		if task.ID == cacheTask.ID {
+			taskGroup.Taskgroup[index] = cacheData
+			isExist = true
 		}
+	}
+
+	if !isExist {
+		blog.Warnf("insert task(%s) in cache", task.ID)
+		taskGroup.Taskgroup = append(taskGroup.Taskgroup, cacheData)
 	}
 
 	return nil
@@ -858,34 +712,21 @@ func saveCacheTask(task *types.Task) error {
 
 //delete task in cache
 func deleteCacheTask(taskId string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	taskGroupID := types.GetTaskGroupID(taskId)
 	if taskGroupID == "" {
 		return errors.New("task id error")
 	}
-	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
-		return nil
-	}
-	if app.Taskgroups == nil {
-		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
+	cacheMgr.mapLock.RLock()
+	taskGroup, ok := cacheMgr.Taskgroups[taskGroupID]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil
 	}
 
-	for _, taskGroup := range app.Taskgroups {
-		if taskGroup.ID == taskGroupID {
-			blog.V(3).Infof("taskgroup(%s) in cache", taskGroupID)
-			for index, cacheTask := range taskGroup.Taskgroup {
-				if taskId == cacheTask.ID {
-					blog.Infof("delete task(%s) in cache", taskId)
-					taskGroup.Taskgroup = append(taskGroup.Taskgroup[:index], taskGroup.Taskgroup[index+1:]...)
-				}
-			}
+	for index, cacheTask := range taskGroup.Taskgroup {
+		if taskId == cacheTask.ID {
+			blog.Infof("delete task(%s) in cache", taskId)
+			taskGroup.Taskgroup = append(taskGroup.Taskgroup[:index], taskGroup.Taskgroup[index+1:]...)
 		}
 	}
 	return nil
@@ -893,36 +734,21 @@ func deleteCacheTask(taskId string) error {
 
 //get task from cache
 func fetchCacheTask(taskId string) (*types.Task, error) {
-
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	taskGroupID := types.GetTaskGroupID(taskId)
 	if taskGroupID == "" {
 		return nil, errors.New("task id error")
 	}
-	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	app := getCacheAppNode(runAs, appID)
-	if app == nil {
-		blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
-		return nil, nil
-	}
-	if app.Taskgroups == nil {
-		blog.V(3).Infof("app(%s.%s) taskgroups not in cache", runAs, appID)
+	cacheMgr.mapLock.RLock()
+	taskGroup, ok := cacheMgr.Taskgroups[taskGroupID]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
 		return nil, nil
 	}
 
-	for _, taskGroup := range app.Taskgroups {
-		if taskGroup.ID == taskGroupID {
-			blog.V(3).Infof("taskgroup(%s) in cache", taskGroupID)
-			for _, cacheTask := range taskGroup.Taskgroup {
-				if taskId == cacheTask.ID {
-					blog.V(3).Infof("fetched task(%s) in cache", taskId)
-					tmpData := cacheTask.DeepCopy()
-					return tmpData, nil
-				}
-			}
+	for _, cacheTask := range taskGroup.Taskgroup {
+		if taskId == cacheTask.ID {
+			tmpData := cacheTask.DeepCopy()
+			return tmpData, nil
 		}
 	}
 	blog.Warnf("fetch task(%s) in cache return nil", taskId)
@@ -931,10 +757,6 @@ func fetchCacheTask(taskId string) (*types.Task, error) {
 
 //save deployment in cache
 func saveCacheDeployment(obj *types.Deployment) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	key := fmt.Sprintf("%s.%s", obj.ObjectMeta.NameSpace, obj.ObjectMeta.Name)
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
@@ -959,10 +781,6 @@ func getCacheDeployment(ns, name string) *types.Deployment {
 
 // delete deployment in cache
 func deleteCacheDeployment(ns, name string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Deployments, key)
@@ -971,10 +789,6 @@ func deleteCacheDeployment(ns, name string) error {
 }
 
 func listCacheDeployments() ([]*types.Deployment, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	deps := make([]*types.Deployment, 0, len(cacheMgr.Deployments))
 	for _, dep := range cacheMgr.Deployments {
@@ -987,10 +801,6 @@ func listCacheDeployments() ([]*types.Deployment, error) {
 
 //save agent in cache
 func saveCacheAgent(obj *types.Agent) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
 	cacheMgr.Agents[obj.Key] = tmpData
@@ -1014,10 +824,6 @@ func getCacheAgent(key string) *types.Agent {
 
 // delete agent in cache, key = agent.key
 func deleteCacheAgent(key string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Agents, key)
 	cacheMgr.mapLock.Unlock()
@@ -1025,10 +831,6 @@ func deleteCacheAgent(key string) error {
 }
 
 func listCacheAgents() ([]*types.Agent, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	agents := make([]*types.Agent, 0, len(cacheMgr.Agents))
 	for _, agent := range cacheMgr.Agents {
@@ -1040,10 +842,6 @@ func listCacheAgents() ([]*types.Agent, error) {
 }
 
 func listCacheAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	agents := make([]*commtypes.BcsClusterAgentSetting, 0, len(cacheMgr.Agentsettings))
 	for _, agent := range cacheMgr.Agentsettings {
@@ -1056,10 +854,6 @@ func listCacheAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
 
 //save service in cache
 func saveCacheService(obj *commtypes.BcsService) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	tmpData := obj.DeepCopy()
 	cacheMgr.mapLock.Lock()
 	cacheMgr.Services[fmt.Sprintf("%s.%s", obj.NameSpace, obj.Name)] = tmpData
@@ -1082,10 +876,6 @@ func getCacheService(ns, name string) *commtypes.BcsService {
 
 // delete service in cache
 func deleteCacheService(ns, name string) error {
-	if !cacheMgr.isOK {
-		return nil
-	}
-
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Services, fmt.Sprintf("%s.%s", ns, name))
 	cacheMgr.mapLock.Unlock()
@@ -1093,10 +883,6 @@ func deleteCacheService(ns, name string) error {
 }
 
 func listCacheServices() ([]*commtypes.BcsService, error) {
-	if !cacheMgr.isOK {
-		return nil, nil
-	}
-
 	cacheMgr.mapLock.RLock()
 	svcs := make([]*commtypes.BcsService, 0, len(cacheMgr.Services))
 	for _, svc := range cacheMgr.Services {
@@ -1105,4 +891,15 @@ func listCacheServices() ([]*commtypes.BcsService, error) {
 	cacheMgr.mapLock.RUnlock()
 
 	return svcs, nil
+}
+
+func listCacheTaskgroups() ([]*types.TaskGroup, error) {
+	cacheMgr.mapLock.RLock()
+	taskgroups := make([]*types.TaskGroup, 0, len(cacheMgr.Taskgroups))
+	for _, o := range cacheMgr.Taskgroups {
+		taskgroups = append(taskgroups, o.DeepCopy())
+	}
+	cacheMgr.mapLock.RUnlock()
+
+	return taskgroups, nil
 }
