@@ -122,23 +122,25 @@ func InitCfg() error {
 	}
 
 	keyPwd := static.ClientCertPwd
-	if cfg.CustomCertFile != "" && cfg.CustomKeyFile != "" {
+	if cfg.CustomCertFile != "" && cfg.CustomKeyFile != "" && cfg.CustomCAFile != "" {
 		cfg.CAFile = cfg.CustomCAFile
 		cfg.CertFile = cfg.CustomCertFile
 		cfg.KeyFile = cfg.CustomKeyFile
 		keyPwd = cfg.CustomKeyPwd
 	}
 
-	if cfg.CertFile != "" && cfg.KeyFile != "" {
+	if cfg.CertFile != "" && cfg.KeyFile != "" && cfg.CAFile != "" {
 		if cfg.clientSSL, err = ssl.ClientTslConfVerity(cfg.CAFile, cfg.CertFile, cfg.KeyFile, keyPwd); err != nil {
 			return fmt.Errorf("failed to set client tls: %v", err)
 		}
-	} else {
-		cfg.clientSSL = &tls.Config{InsecureSkipVerify: true}
 	}
 
 	if !strings.Contains(cfg.ApiHost, "http") {
-		cfg.ApiHost = fmt.Sprintf("http://%s", cfg.ApiHost)
+		if cfg.clientSSL != nil {
+			cfg.ApiHost = fmt.Sprintf("https://%s", cfg.ApiHost)
+		} else {
+			cfg.ApiHost = fmt.Sprintf("http://%s", cfg.ApiHost)
+		}
 	}
 
 	DebugPrintf("api address: %s\n", cfg.ApiHost)
