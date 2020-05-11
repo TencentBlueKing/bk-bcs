@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -36,6 +37,9 @@ import (
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
+
+	"bk-bscp/internal/database"
+	pbcommon "bk-bscp/internal/protocol/common"
 )
 
 // Global constant variables.
@@ -69,6 +73,18 @@ const (
 
 	// STRATEGYIDPREFIX is prefix of strategyid.
 	STRATEGYIDPREFIX = "S"
+
+	// CONFIGTEMPLATESETPREFIX is prefix of config template set
+	CONFIGTEMPLATESETPREFIX = "TS"
+
+	// CONFIGTEMPLATEPREFIX is prefix of config template
+	CONFIGTEMPLATEPREFIX = "T"
+
+	// CONFIGTEMPLATEVERSIONPREFIX is prefix of config template version
+	CONFIGTEMPLATEVERSIONPREFIX = "TV"
+
+	// VARIABLEPREFIX is prefix of variables
+	VARIABLEPREFIX = "V"
 )
 
 // Global sequence num.
@@ -185,6 +201,46 @@ func GenStrategyid() (string, error) {
 		return "", err
 	}
 	id := fmt.Sprintf("%s-%s", STRATEGYIDPREFIX, uuid)
+	return id, nil
+}
+
+// GenTemplateSetid generate a config template set id
+func GenTemplateSetid() (string, error) {
+	uuid, err := GenUUID()
+	if err != nil {
+		return "", err
+	}
+	id := fmt.Sprintf("%s-%s", CONFIGTEMPLATESETPREFIX, uuid)
+	return id, nil
+}
+
+// GenTemplateid generate a config template id
+func GenTemplateid() (string, error) {
+	uuid, err := GenUUID()
+	if err != nil {
+		return "", err
+	}
+	id := fmt.Sprintf("%s-%s", CONFIGTEMPLATEPREFIX, uuid)
+	return id, nil
+}
+
+// GenTemplateVersionid generate a config template id
+func GenTemplateVersionid() (string, error) {
+	uuid, err := GenUUID()
+	if err != nil {
+		return "", err
+	}
+	id := fmt.Sprintf("%s-%s", CONFIGTEMPLATEVERSIONPREFIX, uuid)
+	return id, nil
+}
+
+// GenVariableid generate a variable id
+func GenVariableid() (string, error) {
+	uuid, err := GenUUID()
+	if err != nil {
+		return "", err
+	}
+	id := fmt.Sprintf("%s-%s", VARIABLEPREFIX, uuid)
 	return id, nil
 }
 
@@ -419,6 +475,158 @@ func CollectMemPprofData(filepath string) {
 func ParseFpath(fpath string) string {
 	// configset fpath is relative path, add root dir and parse by filepath Clean.
 	return filepath.Clean(fmt.Sprintf("/%s", fpath))
+}
+
+// VerifyFpath verify file path
+func VerifyFpath(fpath string) error {
+	if len(fpath) > database.BSCPCFGSETFPATHLENLIMIT {
+		return errors.New("invalid params, fpath too long")
+	}
+	return nil
+}
+
+// VerifyFileUser verify file user
+func VerifyFileUser(user string) error {
+	if len(user) == 0 {
+		return errors.New("invalid params, file user missing")
+	}
+	if len(user) > database.BSCPFILEUSERLENGTHLIMIT {
+		return errors.New("invalid params, file user too long")
+	}
+	// compatible with windows and linux name
+	if isMatched, err := regexp.Match("^[a-zA-Z_][a-zA-Z0-9_-]*$", []byte(user)); err != nil {
+		return errors.New("invalid params, regex match err")
+	} else if !isMatched {
+		return errors.New("invalid params, file user not match regex \"^[a-zA-Z_][a-zA-Z0-9_-]*$\"")
+	}
+	return nil
+}
+
+// VerifyFileUserGroup verify file group
+func VerifyFileUserGroup(user string) error {
+	if len(user) == 0 {
+		return errors.New("invalid params, file user group missing")
+	}
+	if len(user) > database.BSCPFILEGROUPLENGTHLIMIT {
+		return errors.New("invalid params, file user group too long")
+	}
+	// compatible with windows and linux name
+	if isMatched, err := regexp.Match("^[a-zA-Z_][a-zA-Z0-9_-]*$", []byte(user)); err != nil {
+		return errors.New("invalid params, regex match err")
+	} else if !isMatched {
+		return errors.New("invalid params, file user not match regex \"^[a-zA-Z_][a-zA-Z0-9_-]*$\"")
+	}
+	return nil
+}
+
+// VerifyFileEncoding verify file encoding
+func VerifyFileEncoding(fileEncoding string) error {
+	if len(fileEncoding) > database.BSCPFILEENCODINGLENGTHLIMIT {
+		return errors.New("invalid params, file encoding string is too long")
+	}
+	return nil
+}
+
+// VerifyID verify object id
+func VerifyID(id, objectKind string) error {
+	length := len(id)
+	if length == 0 {
+		return fmt.Errorf("invalid params, %s missing", objectKind)
+	}
+	if length > database.BSCPIDLENLIMIT {
+		return fmt.Errorf("invalid params, %s too long", objectKind)
+	}
+	return nil
+}
+
+// VerifyNormalName verify object name
+func VerifyNormalName(name, objectKind string) error {
+	length := len(name)
+	if length == 0 {
+		return fmt.Errorf("invalid params, %s missing", objectKind)
+	}
+	if length > database.BSCPNAMELENLIMIT {
+		return fmt.Errorf("invalid params, %s too long", objectKind)
+	}
+	return nil
+}
+
+// VerifyMemo verify memo
+func VerifyMemo(memo string) error {
+	if len(memo) > database.BSCPLONGSTRLENLIMIT {
+		return errors.New("invalid params, memo too long")
+	}
+	return nil
+}
+
+// VerifyTemplateContent verify config template content
+func VerifyTemplateContent(content string) error {
+	if len(content) > database.BSCPTPLSIZELIMIT {
+		return errors.New("invalid params, content too long")
+	}
+	return nil
+}
+
+// VerifyVarKey verify variable key
+func VerifyVarKey(key string) error {
+	length := len(key)
+	if length == 0 {
+		return errors.New("invalid params, key missing")
+	}
+	if length > database.BSCPVARIABLEKEYLENGTHLIMIT {
+		return errors.New("invalid params, key too long")
+	}
+	return nil
+}
+
+// VerifyVarValue verify variable value
+func VerifyVarValue(key string) error {
+	if len(key) > database.BSCPVARIABLEVALUESIZELIMIT {
+		return errors.New("invalid params, value too long")
+	}
+	return nil
+}
+
+// VerifyQueryLimit verify query limit
+func VerifyQueryLimit(limit int32) error {
+	if limit == 0 {
+		return errors.New("invalid params, limit missing")
+	}
+	if limit > database.BSCPQUERYLIMIT {
+		return errors.New("invalid params, limit too big")
+	}
+	return nil
+}
+
+// VerifyTemplateBindingParams verify template binding params
+func VerifyTemplateBindingParams(param string) error {
+	length := len(param)
+	if length == 0 {
+		return errors.New("invalid params, bindingParams missing")
+	}
+	if length > database.BSCPTEMPLATEBINDINGPARAMSSIZELIMIT {
+		return errors.New("invalid params, bindingParams too long")
+	}
+	return nil
+}
+
+// VerifyVariableType verify variable type
+func VerifyVariableType(t int32) error {
+	if t != int32(pbcommon.VariableType_VT_GLOBAL) &&
+		t != int32(pbcommon.VariableType_VT_CLUSTER) &&
+		t != int32(pbcommon.VariableType_VT_ZONE) {
+
+		return errors.New("invalid params, unavailable variable type")
+	}
+	return nil
+}
+
+// VerifyClusterLabels verify cluster labels
+func VerifyClusterLabels(clusterLabels string) error {
+	if len(clusterLabels) > database.BSCPCLUSTERLABELSLENLIMIT {
+		return errors.New("invalid params, clusterLabels too long")
+	}
+	return nil
 }
 
 // ParseHTTPBasicAuth parses http basic authorization, and return auth token.

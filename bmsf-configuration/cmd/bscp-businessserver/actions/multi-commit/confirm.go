@@ -126,7 +126,6 @@ func (act *ConfirmAction) render(commit *pbcommon.Commit) (pbcommon.ErrCode, str
 		Seq:      act.req.Seq,
 		Bid:      act.req.Bid,
 		Appid:    commit.Appid,
-		Cfgsetid: commit.Cfgsetid,
 		Commitid: commit.Commitid,
 		Operator: act.req.Operator,
 	}

@@ -14,6 +14,7 @@ package service
 
 import (
 	"log"
+	"math"
 	"net"
 
 	"github.com/coreos/etcd/clientv3"
@@ -138,7 +139,6 @@ func (itg *Integrator) initBusinessClient() {
 	}
 	itg.businessSvrConn = conn
 	itg.businessSvrCli = pbbusinessserver.NewBusinessClient(conn.Conn())
-
 	logger.Info("create businessserver gRPC client success.")
 }
 
@@ -197,7 +197,7 @@ func (itg *Integrator) Run() {
 	logger.Info("register service for discovery success.")
 
 	// run service.
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
 	pb.RegisterIntegratorServer(s, itg)
 	logger.Info("Integrator running now.")
 

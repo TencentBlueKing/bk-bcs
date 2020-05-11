@@ -31,6 +31,11 @@ businessserver:
     # RPC调用超时时间
     calltimeout: 3s
 
+# 配置模版服务相关配置信息
+templateserver:
+    servicename: bk-bscp-templateserver
+    calltimeout: 3s
+
 # 集成器服务相关配置信息
 integrator:
     # 服务名，用于服务发现

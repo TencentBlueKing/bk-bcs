@@ -77,6 +77,27 @@ const (
 	// BSCPITGTPLSIZELIMIT is bk-bscp integration template file size limit.
 	BSCPITGTPLSIZELIMIT = 4 * 1024 * 1024
 
+	// BSCPTEMPLATEBINDINGPARAMSSIZELIMIT is bk-bscp template binding params size limit.
+	BSCPTEMPLATEBINDINGPARAMSSIZELIMIT = 100 * 1024
+
+	// BSCPTEMPLATEBINDINGNUMLIMIT is bk-bscp template binding rules number limit of one binding
+	BSCPTEMPLATEBINDINGNUMLIMIT = 100
+
+	// BSCPVARIABLEKEYLENGTHLIMIT is bk-bscp variable key length limit
+	BSCPVARIABLEKEYLENGTHLIMIT = 256
+
+	// BSCPVARIABLEVALUESIZELIMIT is bk-bscp variable value size limit
+	BSCPVARIABLEVALUESIZELIMIT = 1024
+
+	// BSCPFILEENCODINGLENGTHLIMIT is bk-bscp template file encoding name length limit
+	BSCPFILEENCODINGLENGTHLIMIT = 16
+
+	// BSCPFILEUSERLENGTHLIMIT is bk-bscp file user name length limit
+	BSCPFILEUSERLENGTHLIMIT = 64
+
+	// BSCPFILEGROUPLENGTHLIMIT is bk-bscp file group name length limit
+	BSCPFILEGROUPLENGTHLIMIT = 64
+
 	// BSCPCLUSTERLABELSLENLIMIT is bk-bscp cluster labels length limit.
 	BSCPCLUSTERLABELSLENLIMIT = 128
 
@@ -473,4 +494,165 @@ type Audit struct {
 // TableName returns table name of t_audit.
 func (e *Audit) TableName() string {
 	return "t_audit"
+}
+
+// ConfigTemplateSet definition for t_template_set
+type ConfigTemplateSet struct {
+	ID           uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Setid        string     `gorm:"column:Fsetid;type:varchar(64);not null;unique_index"`
+	Bid          string     `gorm:"column:Fbid;type:varchar(64);not null;unique_index:idx_bid_name"`
+	Name         string     `gorm:"column:Fname;type:varchar(64);not null;unique_index:idx_bid_name"`
+	Memo         string     `gorm:"column:Fmemo;type:varchar(128)"`
+	Fpath        string     `gorm:"column:Ffpath;type:varchar(128);not null"`
+	Creator      string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	State        int32      `gorm:"column:Fstate"`
+	CreatedAt    time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt    time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt    *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name of t_template_set
+func (c *ConfigTemplateSet) TableName() string {
+	return "t_template_set"
+}
+
+// ConfigTemplate definition for t_template
+type ConfigTemplate struct {
+	ID           uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Templateid   string     `gorm:"column:Ftemplateid;type:varchar(64);not null;unique_index"`
+	Bid          string     `gorm:"column:Fbid;type:varchar(64);not null;index:idx_bid"`
+	Setid        string     `gorm:"column:Fsetid;type:varchar(64);not null;unique_index:idx_set_name"`
+	Name         string     `gorm:"column:Fname;type:varchar(64);not null;unique_index:idx_set_name"`
+	Memo         string     `gorm:"column:Fmemo;type:varchar(128)"`
+	Fpath        string     `gorm:"column:Ffpath;type:varchar(128);not null"`
+	User         string     `gorm:"column:Fuser;type:varchar(64)"`
+	Group        string     `gorm:"column:Fgroup;type:varchar(64)"`
+	Permission   int32      `gorm:"column:Fpermission;not null"`
+	FileEncoding string     `gorm:"column:Ffile_encoding;type:varchar(16)"`
+	EngineType   int32      `gorm:"column:Fengine_type;not null"`
+	Creator      string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	State        int32      `gorm:"column:Fstate"`
+	CreatedAt    time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt    time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt    *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name of t_template
+func (c *ConfigTemplate) TableName() string {
+	return "t_template"
+}
+
+// ConfigTemplateVersion table name of t_template_version
+type ConfigTemplateVersion struct {
+	ID           uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Versionid    string     `gorm:"column:Fversionid;type:varchar(64);not null;unique_index"`
+	Bid          string     `gorm:"column:Fbid;type:varchar(64);not null;index:idx_bid"`
+	Templateid   string     `gorm:"column:Ftemplateid;type:varchar(64);not null;unique_index:idx_tpl_version"`
+	VersionName  string     `gorm:"column:Fversion_name;type:varchar(64);not null;unique_index:idx_tpl_version"`
+	Memo         string     `gorm:"column:Fmemo;type:varchar(128)"`
+	Content      string     `gorm:"column:Fcontent;type:longtext"`
+	Creator      string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	State        int32      `gorm:"column:Fstate"`
+	CreatedAt    time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt    time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt    *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name of t_template_version
+func (c *ConfigTemplateVersion) TableName() string {
+	return "t_template_version"
+}
+
+// ConfigTemplateBinding definition for t_template_binding
+type ConfigTemplateBinding struct {
+	ID            uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Bid           string     `gorm:"column:Fbid;type:varchar(64);not null;unique_index:idx_unionids"`
+	Templateid    string     `gorm:"column:Ftemplateid;type:varchar(64);not null;unique_index:idx_unionids"`
+	Appid         string     `gorm:"column:Fappid;type:varchar(64);not null;unique_index:idx_unionids"`
+	Versionid     string     `gorm:"column:Fversionid;type:varchar(64);not null"`
+	Cfgsetid      string     `gorm:"column:Fcfgsetid;type:varchar(64);not null;index:idx_cfgset"`
+	Commitid      string     `gorm:"column:Fcommitid;type:varchar(64)"`
+	BindingParams string     `gorm:"column:Fbinding_params;type:longtext;not null"`
+	Creator       string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy  string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	State         int32      `gorm:"column:Fstate"`
+	CreatedAt     time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt     time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt     *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name for t_template_binding
+func (c *ConfigTemplateBinding) TableName() string {
+	return "t_template_binding"
+}
+
+// VariableGlobal definition for t_variable_global
+type VariableGlobal struct {
+	ID           uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Vid          string     `gorm:"column:Fvid;type:varchar(64);not null;unique_index"`
+	Bid          string     `gorm:"column:Fbid;type:varchar(64);not null;unique_index:idx_unionids"`
+	Key          string     `gorm:"column:Fkey;type:varchar(64);not null;unique_index:idx_unionids"`
+	Value        string     `gorm:"column:Fvalue;type:varchar(1024);not null"`
+	Memo         string     `gorm:"column:Fmemo;type:varchar(128)"`
+	Creator      string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	State        int32      `gorm:"column:Fstate"`
+	CreatedAt    time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt    time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt    *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name for t_variable_global
+func (v *VariableGlobal) TableName() string {
+	return "t_variable_global"
+}
+
+// VariableCluster definition for t_variable_cluster
+type VariableCluster struct {
+	ID            uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Vid           string     `gorm:"column:Fvid;type:varchar(64);not null;unique_index"`
+	Bid           string     `gorm:"column:Fbid;type:varchar(64);not null;unique_index:idx_unionids"`
+	Cluster       string     `gorm:"column:Fcluster;type:varchar(64);not null;unique_index:idx_unionids"`
+	ClusterLabels string     `gorm:"column:Fcluster_labels;type:varchar(128);not null;unique_index:idx_unionids"`
+	Key           string     `gorm:"column:Fkey;type:varchar(64);not null;unique_index:idx_unionids"`
+	Value         string     `gorm:"column:Fvalue;type:varchar(1024);not null"`
+	Memo          string     `gorm:"column:Fmemo;type:varchar(128)"`
+	Creator       string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy  string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	State         int32      `gorm:"column:Fstate"`
+	CreatedAt     time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt     time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt     *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name for t_variable_cluster
+func (v *VariableCluster) TableName() string {
+	return "t_variable_cluster"
+}
+
+// VariableZone definition for t_variable_zone
+type VariableZone struct {
+	ID            uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Vid           string     `gorm:"column:Fvid;type:varchar(64);not null;unique_index"`
+	Bid           string     `gorm:"column:Fbid;type:varchar(64);not null;unique_index:idx_unionids"`
+	Cluster       string     `gorm:"column:Fcluster;type:varchar(64);not null;unique_index:idx_unionids"`
+	ClusterLabels string     `gorm:"column:Fcluster_labels;type:varchar(128);not null;unique_index:idx_unionids"`
+	Zone          string     `gorm:"column:Fzone;type:varchar(64);not null;unique_index:idx_unionids"`
+	Key           string     `gorm:"column:Fkey;type:varchar(64);not null;unique_index:idx_unionids"`
+	Value         string     `gorm:"column:Fvalue;type:varchar(2048);not null"`
+	Memo          string     `gorm:"column:Fmemo;type:varchar(128)"`
+	Creator       string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy  string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	State         int32      `gorm:"column:Fstate"`
+	CreatedAt     time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt     time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt     *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name for t_variable_zone
+func (v *VariableZone) TableName() string {
+	return "t_variable_zone"
 }
