@@ -2413,7 +2413,7 @@
   revision = "743ec37842bffe49dd4221d9026f30fb1d5adbc4"
 
 [[projects]]
-  digest = "1:20c24e6f59d7feac4de254f819185aa4c415bf1d7d6f044d7ad85878112e2cbf"
+  digest = "1:4b5aecf1bb5a5564ea628bff1dc83ac05919ab8b733d52b48c045e8b9d524703"
   name = "k8s.io/kubernetes"
   packages = [
     "pkg/api/legacyscheme",
@@ -2434,6 +2434,7 @@
     "pkg/controller/history",
     "pkg/features",
     "pkg/fieldpath",
+    "pkg/kubelet/apis/deviceplugin/v1beta1",
     "pkg/kubelet/types",
     "pkg/master/ports",
     "pkg/scheduler/api",
@@ -2717,6 +2718,7 @@
     "k8s.io/kubernetes/pkg/apis/autoscaling",
     "k8s.io/kubernetes/pkg/controller",
     "k8s.io/kubernetes/pkg/controller/history",
+    "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1",
     "k8s.io/kubernetes/pkg/scheduler/api",
     "k8s.io/kubernetes/pkg/util/mount",
     "k8s.io/kubernetes/pkg/util/node",

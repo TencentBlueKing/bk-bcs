@@ -14,8 +14,10 @@ package service
 
 import (
 	"log"
+	"math"
 	"net"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -110,11 +112,11 @@ func (bs *BusinessServer) initLogger() {
 	logger.Info("logger init success dir[%s] level[%d].",
 		bs.viper.GetString("logger.directory"), bs.viper.GetInt32("logger.level"))
 
-	logger.Info("dump configs: server[%+v, %+v, %+v, %+v] metrics[%+v] templateserver[%+v, %+v] datamanager[%+v, %+v] bcscontroller[%+v, %+v] etcdCluster[%+v, %+v]",
-		bs.viper.Get("server.servicename"), bs.viper.Get("server.endpoint.ip"), bs.viper.Get("server.endpoint.port"), bs.viper.Get("server.discoveryttl"),
-		bs.viper.Get("metrics.endpoint"), bs.viper.Get("templateserver.servicename"), bs.viper.Get("templateserver.calltimeout"), bs.viper.Get("datamanager.servicename"),
-		bs.viper.Get("datamanager.calltimeout"), bs.viper.Get("bcscontroller.servicename"), bs.viper.Get("bcscontroller.calltimeout"), bs.viper.Get("etcdCluster.endpoints"),
-		bs.viper.Get("etcdCluster.dialtimeout"))
+	logger.Info("dump configs: server[%+v, %+v, %+v, %+v] metrics[%+v] templateserver[%+v, %+v] datamanager[%+v, %+v] bcscontroller[%+v, %+v] gsecontroller[%+v, %+v] etcdCluster[%+v, %+v]",
+		bs.viper.Get("server.servicename"), bs.viper.Get("server.endpoint.ip"), bs.viper.Get("server.endpoint.port"), bs.viper.Get("server.discoveryttl"), bs.viper.Get("metrics.endpoint"),
+		bs.viper.Get("templateserver.servicename"), bs.viper.Get("templateserver.calltimeout"), bs.viper.Get("datamanager.servicename"), bs.viper.Get("datamanager.calltimeout"),
+		bs.viper.Get("bcscontroller.servicename"), bs.viper.Get("bcscontroller.calltimeout"), bs.viper.Get("gsecontroller.servicename"), bs.viper.Get("gsecontroller.calltimeout"),
+		bs.viper.Get("etcdCluster.endpoints"), bs.viper.Get("etcdCluster.dialtimeout"))
 }
 
 // create new service struct of businessserver, and register service later.
@@ -125,9 +127,26 @@ func (bs *BusinessServer) initServiceDiscovery() {
 		bs.viper.GetString("server.metadata"),
 		bs.viper.GetInt64("server.discoveryttl"))
 
-	bs.etcdCfg = clientv3.Config{
-		Endpoints:   bs.viper.GetStringSlice("etcdCluster.endpoints"),
-		DialTimeout: bs.viper.GetDuration("etcdCluster.dialtimeout"),
+	caFile := bs.viper.GetString("etcdCluster.tls.cafile")
+	certFile := bs.viper.GetString("etcdCluster.tls.certfile")
+	keyFile := bs.viper.GetString("etcdCluster.tls.keyfile")
+	certPassword := bs.viper.GetString("etcdCluster.tls.certPassword")
+
+	if len(caFile) != 0 || len(certFile) != 0 || len(keyFile) != 0 {
+		tlsConf, err := ssl.ClientTslConfVerity(caFile, certFile, keyFile, certPassword)
+		if err != nil {
+			logger.Fatalf("load etcd tls files failed, %+v", err)
+		}
+		bs.etcdCfg = clientv3.Config{
+			Endpoints:   bs.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: bs.viper.GetDuration("etcdCluster.dialtimeout"),
+			TLS:         tlsConf,
+		}
+	} else {
+		bs.etcdCfg = clientv3.Config{
+			Endpoints:   bs.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: bs.viper.GetDuration("etcdCluster.dialtimeout"),
+		}
 	}
 	logger.Info("init service discovery success.")
 }
@@ -135,11 +154,8 @@ func (bs *BusinessServer) initServiceDiscovery() {
 // create datamanager server gRPC client.
 func (bs *BusinessServer) initDataManagerClient() {
 	ctx := &grpclb.Context{
-		Target: bs.viper.GetString("datamanager.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   bs.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: bs.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     bs.viper.GetString("datamanager.servicename"),
+		EtcdConfig: bs.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -167,11 +183,8 @@ func (bs *BusinessServer) initAuditHandler() {
 // create template server gRPC client.
 func (bs *BusinessServer) initTemplateServerClient() {
 	ctx := &grpclb.Context{
-		Target: bs.viper.GetString("templateserver.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   bs.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: bs.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     bs.viper.GetString("templateserver.servicename"),
+		EtcdConfig: bs.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -193,11 +206,8 @@ func (bs *BusinessServer) initTemplateServerClient() {
 // create bcs controller gRPC client.
 func (bs *BusinessServer) initBCSControllerClient() {
 	ctx := &grpclb.Context{
-		Target: bs.viper.GetString("bcscontroller.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   bs.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: bs.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     bs.viper.GetString("bcscontroller.servicename"),
+		EtcdConfig: bs.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -219,11 +229,8 @@ func (bs *BusinessServer) initBCSControllerClient() {
 // create gse controller gRPC client.
 func (bs *BusinessServer) initGSEControllerClient() {
 	ctx := &grpclb.Context{
-		Target: bs.viper.GetString("gsecontroller.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   bs.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: bs.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     bs.viper.GetString("gsecontroller.servicename"),
+		EtcdConfig: bs.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -318,7 +325,7 @@ func (bs *BusinessServer) Run() {
 	logger.Info("register service for discovery success.")
 
 	// run service.
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
 	pb.RegisterBusinessServer(s, bs)
 	logger.Info("Business Server running now.")
 

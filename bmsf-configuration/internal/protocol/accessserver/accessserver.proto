@@ -350,6 +350,16 @@ service Access {
             summary: "确认配置集合修改"
         };
     }
+    rpc PreviewCommit(PreviewCommitReq) returns (PreviewCommitResp) {
+        option (google.api.http) = {
+          put: "/v1/interface/preview-commit"
+          body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "预览配置集合修改，使用模板则会进行模板的渲染，但是不会生成配置实例"
+            summary: "预览配置集合修改"
+        };
+    }
     rpc CreateMultiCommit(CreateMultiCommitReq) returns (CreateMultiCommitResp) {
         option (google.api.http) = {
           post: "/v1/interface/multi-commits"
@@ -702,15 +712,6 @@ service Access {
             summary: "查询审计历史记录"
         };
     }
-    rpc PreviewRendering(PreviewRenderingReq) returns (PreviewRenderingResp) {
-        option (google.api.http) = {
-          get: "/v1/interface/renderings"
-        };
-        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-			description: "配置模板渲染预览接口, 检查模板渲染可行性，检查集群、大区信息有效性"
-            summary: "配置模板渲染预览接口"
-        };
-    }
     rpc Integrate(IntegrateReq) returns (IntegrateResp) {
         option (google.api.http) = {
           post: "/v1/interface/integrations"
@@ -721,6 +722,242 @@ service Access {
             summary: "逻辑集成接口"
         };
     }
+    rpc CreateConfigTemplateSet(CreateConfigTemplateSetReq) returns (CreateConfigTemplateSetResp) {
+        option (google.api.http) = {
+            post: "/v1/interface/configtemplatesets"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "创建配置模版集合"
+            summary: "创建配置模版集合"
+        };
+    }
+    rpc DeleteConfigTemplateSet(DeleteConfigTemplateSetReq) returns (DeleteConfigTemplateSetResp) {
+        option (google.api.http) = {
+            delete: "/v1/interface/configtemplatesets"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "删除配置模版集合"
+            summary: "删除配置模版集合"
+        };
+    }
+    rpc UpdateConfigTemplateSet(UpdateConfigTemplateSetReq) returns (UpdateConfigTemplateSetResp) {
+        option (google.api.http) = {
+            put: "/v1/interface/configtemplatesets"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "更新配置模版集合元数据，只能更新name和desc"
+            summary: "更新配置模版集合元数据"
+        };
+    }
+    rpc QueryConfigTemplateSet(QueryConfigTemplateSetReq) returns (QueryConfigTemplateSetResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/configtemplatesets"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询配置模版集合元数据"
+            summary: "查询配置模版集合元数据"
+        };
+    }
+    rpc QueryConfigTemplateSetList(QueryConfigTemplateSetListReq) returns (QueryConfigTemplateSetListResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/configtemplatesetlist"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询配置模版集合元数据列表"
+            summary: "查询配置模版集合元数据列表"
+        };
+    }
+    rpc CreateConfigTemplate(CreateConfigTemplateReq) returns (CreateConfigTemplateResp) {
+        option (google.api.http) = {
+            post: "/v1/interface/configtemplates"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "创建配置模版"
+            summary: "创建配置模版"
+        };
+    }
+    rpc DeleteConfigTemplate(DeleteConfigTemplateReq) returns (DeleteConfigTemplateResp) {
+        option (google.api.http) = {
+            delete: "/v1/interface/configtemplates"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "删除配置模版"
+            summary: "删除配置模版"
+        };
+    }
+    rpc UpdateConfigTemplate(UpdateConfigTemplateReq) returns (UpdateConfigTemplateResp) {
+        option (google.api.http) = {
+            put: "/v1/interface/configtemplates"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "更新配置模版"
+            summary: "更新配置模版"
+        };
+    }
+    rpc QueryConfigTemplate(QueryConfigTemplateReq) returns (QueryConfigTemplateResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/configtemplates"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "获取配置模版元数据"
+            summary: "获取配置模版元数据"
+        };
+    }
+    rpc QueryConfigTemplateList(QueryConfigTemplateListReq) returns (QueryConfigTemplateListResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/configtemplatelist"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "获取配置模版元数据列表"
+            summary: "获取配置模版元数据列表"
+        };
+    }
+    rpc CreateTemplateVersion(CreateTemplateVersionReq) returns (CreateTemplateVersionResp) {
+        option (google.api.http) = {
+            post: "/v1/interface/templateversions"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "创建新版本配置模版"
+            summary: "创建新版本配置模版"
+        };
+    }
+    rpc DeleteTemplateVersion(DeleteTemplateVersionReq) returns (DeleteTemplateVersionResp) {
+        option (google.api.http) = {
+            delete: "/v1/interface/templateversions"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "删除指定版本配置模版内容"
+            summary: "删除指定版本配置模版内容"
+        };
+    }
+    rpc UpdateTemplateVersion(UpdateTemplateVersionReq) returns (UpdateTemplateVersionResp) {
+        option (google.api.http) = {
+            put: "/v1/interface/templateversions"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "更新指定版本配置模版内容"
+            summary: "更新指定版本配置模版内容"
+        };
+    }
+    rpc QueryTemplateVersion(QueryTemplateVersionReq) returns(QueryTemplateVersionResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/templateversions"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "获取指定版本配置模版内容"
+            summary: "获取指定版本配置模版内容"
+        };
+    }
+    rpc QueryTemplateVersionList(QueryTemplateVersionListReq) returns(QueryTemplateVersionListResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/templateversionlist"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "获取配置模版版本列表"
+            summary: "获取配置模版版本列表"
+        };
+    }
+    rpc CreateConfigTemplateBinding(CreateConfigTemplateBindingReq) returns (CreateConfigTemplateBindingResp) {
+        option (google.api.http) = {
+            post: "/v1/interface/templatebindings"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "创建配置模版和app的绑定关系，template server将为本次绑定关系创建对应的configset"
+            summary: "创建配置模版和app的绑定关系"
+        };
+    }
+    rpc DeleteConfigTemplateBinding(DeleteConfigTemplateBindingReq) returns (DeleteConfigTemplateBindingResp) {
+        option (google.api.http) = {
+            delete: "/v1/interface/templatebindings"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "删除配置模版和app的绑定关系，template server将删除本绑定关系对应的configset"
+            summary: "删除配置模版和app的绑定关系"
+        };
+    }
+    rpc SyncConfigTemplateBinding(SyncConfigTemplateBindingReq) returns (SyncConfigTemplateBindingResp) {
+        option (google.api.http) = {
+            put: "/v1/interface/templatebindings"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "更新配置模版和app的绑定关系，template server将为本次更新创建对应的commit"
+            summary: "更新配置模版和app的绑定关系"
+        };
+    }
+    rpc QueryConfigTemplateBinding(QueryConfigTemplateBindingReq) returns (QueryConfigTemplateBindingResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/templatebindings"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询配置模版与特定app的绑定关系"
+            summary: "查询配置模版与特定app的绑定关系"
+        }; 
+    }
+    rpc QueryConfigTemplateBindingList(QueryConfigTemplateBindingListReq) returns (QueryConfigTemplateBindingListResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/templatebindinglist"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询配置模版与app的绑定关系列表"
+            summary: "查询配置模版与app的绑定关系列表"
+        }; 
+    }
+    rpc CreateVariable(CreateVariableReq) returns (CreateVariableResp) {
+        option (google.api.http) = {
+            post: "/v1/interface/variables"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "创建变量"
+            summary: "创建变量"
+        };
+    }
+    rpc UpdateVariable(UpdateVariableReq) returns (UpdateVariableResp) {
+        option (google.api.http) = {
+            put: "/v1/interface/variables"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "更新变量"
+            summary: "更新变量"
+        };
+    }
+    rpc DeleteVariable(DeleteVariableReq) returns (DeleteVariableResp) {
+        option (google.api.http) = {
+            delete: "/v1/interface/variables"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "删除变量"
+            summary: "删除变量"
+        };
+    }
+    rpc QueryVariable(QueryVariableReq) returns (QueryVariableResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/variables"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询变量"
+            summary: "查询变量"
+        };
+    }
+    rpc QueryVariableList(QueryVariableListReq) returns (QueryVariableListResp) {
+        option (google.api.http) = {
+            get: "/v1/interface/variablelist"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询变量列表"
+            summary: "查询变量列表"
+        };
+    }
+
 }
 
 message CreateBusinessReq {
@@ -742,7 +979,7 @@ message CreateBusinessReq {
     string memo    = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "备注", max_length: 64}];
 
     // add fields here.
-    string auth = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "授权AUTH信息", description: "格式：USER:PASSWORD", max_length: 64}];
+    string auth = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "授权AUTH信息", description: "格式：USER:PASSWORD, 示例: admin:pwd", max_length: 64}];
 }
 
 message CreateBusinessResp {
@@ -1699,7 +1936,7 @@ message QueryReleaseConfigsReq {
     string cfgsetid  = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置集合ID", description: "", max_length: 64}];
     string commitid  = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标提交Commit ID", description: "", max_length: 64}];
     bool   abstract  = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否获取简略信息，即不返回数据内容只返回简略信息", description: ""}];
-    string index     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "扩展索引信息", description: "如GSEKit节点IP等信息，以此来做扩展维度的内容索引", max_length: 64}];
+    string index     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "扩展索引信息", description: "如节点IP等信息，以此来做扩展维度的内容索引", max_length: 64}];
 }
 
 message QueryReleaseConfigsResp {
@@ -1912,8 +2149,8 @@ message ConfirmCommitReq {
 message ConfirmCommitResp {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
-			title: "CancelCommitResp"
-			description: "取消配置提交响应"
+			title: "ConfirmCommitResp"
+			description: "确认配置提交响应"
 			required: ["seq", "errCode", "errMsg"]
 		}
         example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK" }' }
@@ -1924,6 +2161,36 @@ message ConfirmCommitResp {
     string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
 }
 
+message PreviewCommitReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "PreviewCommitReq"
+			description: "预览配置提交渲染结果请求"
+			required: ["seq", "bid", "commitid", "operator"]
+		}
+        example: { value: '{ "seq": "1", "bid": "bxxxxx-xxxxx-xxxxxxx", "commitid": "cxxxxx-xxxxx-xxxxx", "operator": "mars" }' }
+	};
+    uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "目标配置集合所属业务ID", description: "", max_length: 64 }];
+    string commitid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "目标配置集合提交ID", description: "", max_length: 64 }];
+    string operator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作人名称", description: "", max_length: 64 }];
+}
+
+message PreviewCommitResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "PreviewCommitResp"
+			description: "预览配置提交渲染结果响应"
+			required: ["seq", "errCode", "errMsg", "cfgslist"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "cfgslist": [] }' }
+	};
+
+    uint64         seq               = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode errCode           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         errMsg            = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    repeated common.Configs cfgslist = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "commit的预览结果", description: ""}];;
+}
 message CreateMultiCommitReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
@@ -3232,4 +3499,841 @@ message IntegrateResp {
     string         releaseid  = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新发布版本ID", description: "发生release创建操作时返回新发布版本ID"}];
     string         locker     = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "锁定操作人名称", description: "锁定目标配置集合失败时，若已被锁定则返回操作人名称"}];
     string         lockTime   = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "锁定操作时间", description: "锁定目标配置集合失败时，若已被锁定则返回操作时间"}];
+}
+
+message CreateConfigTemplateSetReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CreateConfigTemplateSetReq"
+			description: "创建模版集合请求"
+			required: ["seq", "bid", "name", "fpath", "operator"]
+		}
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "name": "gameserver配置集合", "memo": "配置集合描述信息", "fpath": "/data/app/gameserver", "creator": "mars" }' }
+    };
+
+    uint64 seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid     = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string name    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "新建的配置模版集合名称", description: "", max_length: 64 }];
+    string memo    = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "新建的配置模版集合描述信息", description: "", max_length: 64 }];
+    string fpath   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "新建的配置模版集合路径", description: "", max_length: 128 }];
+    string creator = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者名称", description: "", max_length: 64 }];
+}
+
+message CreateConfigTemplateSetResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CreateConfigTemplateSetResp"
+			description: "创建模版集合接口响应"
+			required: ["seq", "errCode", "errMsg", "setid"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "ok", "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    string         setid   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新创建的配置模版集合id", description: ""}];
+}
+
+message DeleteConfigTemplateSetReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteConfigTemplateSetReq"
+			description: "删除模版集合请求, 会级联删除配置模版集合中所有配置模版，如果配置模版存在绑定关系，则无法删除"
+			required: ["seq", "bid", "setid", "operator"]
+		}
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "operator": "mars" }' }
+    };
+
+    uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string bid      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
+    string setid    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "需要删除的模版集合ID", description: "", max_length: 64}];
+    string operator = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
+}
+
+message DeleteConfigTemplateSetResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteConfigTemplateSetResp"
+			description: "删除配置模版集合接口响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "ok" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+}
+
+message UpdateConfigTemplateSetReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "UpdateConfigTemplateSetReq"
+			description: "更新配置模版集合请求，用于更改配置模版集合的名称和描述信息"
+			required: ["seq", "bid", "setid", "name", "memo", "operator"]
+		}
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "name": "server配置集合", "memo": "这是server的配置集合", "operator": "mars" }' }
+    };
+
+    uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string bid      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
+    string setid    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模版集合ID", description: "", max_length: 64}];
+    string name     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模版集合名称", description: "", max_length: 64}];
+    string memo     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模版集合描述", description: "", max_length: 64}];
+    string operator = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
+}
+
+message UpdateConfigTemplateSetResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "UpdateConfigTemplateSetResp"
+			description: "更新配置模版集合接口响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "ok" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+}
+
+message QueryConfigTemplateSetReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateSetReq"
+			description: "查询配置模版集合请求"
+			required: ["seq", "bid", "setid"]
+		}
+        example: { value: '{ "seq": "1", "bid": "b123432142134-31241234231-423142314", "setid": "s4234123421-32421412341234-32143124123" }' }
+    };
+
+    uint64 seq   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string bid   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
+    string setid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模版集合ID", description: "", max_length: 64}];
+}
+
+message QueryConfigTemplateSetResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateSetReq"
+			description: "查询配置模版集合接口响应"
+			required: ["seq", "errCode", "errMsg", "templateSet"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "ok", "templateSet": { "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "name": "server配置集合", "memo": "这是server的配置集合", "fpath": "/data/app/gameserver", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" } }' }
+    };
+
+    uint64                   seq         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode           errCode     = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string                   errMsg      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    common.ConfigTemplateSet templateSet = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合信息", description: "" }];
+}
+
+message QueryConfigTemplateSetListReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateSetListReq"
+			description: "查询配置模版集合列表请求"
+			required: [ "seq", "bid", "index", "limit" ]
+		}
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "index": 2, "limit": 2 }' }
+    };
+
+    uint64 seq   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    int32  index = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询索引", description: "" }];
+    int32  limit = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询数量", description: "", maximum: 100 }];
+}
+
+message QueryConfigTemplateSetListResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryConfigTemplateSetListResp"
+            description: "查询配置模版集合列表接口响应"
+            required: [ "seq", "errCode", "errMsg", "templateSets" ]
+        }
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "templateSets": [ { "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "name": "server配置集合", "memo": "这是server的配置集合", "fpath": "/data/app/gameserver", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" }, { "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "name": "server配置集合", "memo": "这是server的配置集合", "fpath": "/data/app/gameserver", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" } ] }' }
+    };
+
+    uint64         seq                             = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode                         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg                          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    repeated common.ConfigTemplateSet templateSets = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合列表", description: "" }];
+}
+
+message CreateConfigTemplateReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateConfigTemplateReq"
+            description: "创建配置模版请求"
+            required: [ "seq", "bid", "setid", "name", "engineType", "creator" ]
+        }
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "s879ab8f-xxxx-asdf-sdaf-525400f99278", "name": "server.yaml", "creator": "mars", "engineType": 0, "memo": "gameserver启动配置文件" }' }
+    };
+
+    uint64 seq          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string setid        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属配置模版集合ID", description: "", max_length: 64 }];
+    string name         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    string memo         = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    string user         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    string group        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    int32  permission   = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "" }];
+    string fileEncoding = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版生成的文件编码格式", description: "", max_length: 16 }];
+    int32  engineType   = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "模版引擎类型，0: golang模版；1: python mako模版", description: "", minimum: 0, maximum: 1 }];
+    string creator      = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者姓名", description: "", max_length: 64 }];
+}
+
+message CreateConfigTemplateResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateConfigTemplateResp"
+            description: "创建配置模版接口响应"
+            required: [ "seq", "errCode", "errMsg", "templateid" ]
+        }
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278" }' }
+    };
+
+    uint64         seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    string         templateid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "" }];
+}
+
+message DeleteConfigTemplateReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteConfigTemplateReq"
+			description: "删除配置模版请求"
+			required: ["seq", "bid", "templateid", "operator"]
+		}
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "operator": "mars" }' }
+    };
+
+    uint64 seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string operator   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者", description: "", max_length: 64 }];
+}
+
+message DeleteConfigTemplateResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteConfigTemplateResp"
+			description: "删除配置模版接口响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+}
+
+message UpdateConfigTemplateReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "UpdateConfigTemplateReq"
+            description: "更新配置模版请求"
+            required: [ "seq", "bid", "templateid", "name", "operator" ]
+        }
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "name": "server.yaml", "operator": "mars", "engineType": 0, "memo": "gameserver启动配置文件" }' }
+    };
+
+    uint64 seq          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string name         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    string memo         = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    string user         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    string group        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "", max_length: 64 }];
+    int32  permission   = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "" }];
+    string fileEncoding = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版生成的文件编码格式", description: "", max_length: 16 }];
+    string operator     = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者姓名", description: "", max_length: 64 }];
+}
+
+message UpdateConfigTemplateResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "UpdateConfigTemplateResp"
+            description: "创建配置模版接口响应"
+            required: [ "seq", "errCode", "errMsg", "tplid" ]
+        }
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+}
+
+message QueryConfigTemplateReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryConfigTemplateReq"
+            description: "查询配置模版请求"
+            required: [ "seq", "bid", "templateid" ]
+        }
+        example: { value: '{ "seq": "1", "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278" }' }
+    };
+
+    uint64 seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+}
+
+message QueryConfigTemplateResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateResp"
+			description: "查询配置模版接口响应"
+			required: ["seq", "errCode", "errMsg", "configTemplate"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "configTemplate": { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "name": "server.yaml", "fpath": "/data/app/gameserver", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" }  }' }
+    };
+
+    uint64                seq            = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode        errCode        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string                errMsg         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    common.ConfigTemplate configTemplate = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版元数据", description: "" }];
+}
+
+message QueryConfigTemplateListReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateListReq"
+			description: "查询配置模版列表请求"
+			required: ["seq", "bid", "setid", "index", "limit"]
+		}
+        example: { value: '{ "seq": "1", "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "s879ab8f-xxxx-asdf-sdaf-525400f99278", "index": 2, "limit": 10 }' }
+    };
+
+    uint64 seq   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string setid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合ID", description: "", max_length: 64 }];
+    int32  index = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询索引", description: "" }];
+    int32  limit = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询数量", description: "", maximum: 100 }];
+}
+
+message QueryConfigTemplateListResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateListResp"
+			description: "查询配置模版列表接口响应"
+			required: ["seq", "errCode", "errMsg", "configTemplates"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "configTemplates": [ { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "s879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "name": "server.yaml", "fpath": "/data/app/gameserver", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" }, { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "setid": "s879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "name": "config.yaml", "fpath": "/data/app/gameserver", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" } ] }' }
+    };
+
+    uint64         seq                             = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode                         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg                          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    repeated common.ConfigTemplate configTemplates = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版列表", description: "" }];
+}
+
+message CreateTemplateVersionReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateTemplateVersionReq"
+            description: "创建配置模版版本请求"
+            required: [ "seq", "bid", "templateid", "versionName", "creator", "content" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "versionName": "v0.0.1", "creator": "mars", "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==" }' }
+    };
+
+    uint64 seq         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string versionName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置版本名称", description: "", max_length: 64 }];
+    string memo        = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "备注", description: "", max_length: 64 }];
+    string creator     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者", description: "", max_length: 64 }];
+    string content     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本内容", description: "配置模版版本base64编码内容", max_length: 2097152 }];
+}
+
+message CreateTemplateVersionResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateTemplateVersionResp"
+            description: "创建配置模版版本接口响应"
+            required: [ "seq", "errCode", "errMsg", "versionid" ]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278" }' }
+    };
+
+    uint64         seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    string         versionid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本ID", description: "" }];
+}
+
+message DeleteTemplateVersionReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "DeleteTemplateVersionReq"
+            description: "删除配置模版版本请求"
+            required: [ "seq", "bid", "versionid" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "operator": "mars" }' }
+    };
+
+    uint64 seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid       = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string versionid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本ID", description: "", max_length: 64 }];
+    string operator  = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者", description: "", max_length: 64 }];
+}
+
+message DeleteTemplateVersionResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteTemplateVersionResp"
+			description: "删除配置模版版本接口响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+}
+
+message UpdateTemplateVersionReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "UpdateTemplateVersionReq"
+            description: "更新配置模版版本请求"
+            required: [ "seq", "bid", "versionid", "versionName", "operator", "content" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "versionName": "v0.0.1", "operator": "mars", "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==" }' }
+    };
+
+    uint64 seq         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string versionid   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置版本ID", description: "", max_length: 64 }];
+    string versionName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置版本名称", description: "", max_length: 64 }];
+    string memo        = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "描述信息", description: "", max_length: 64 }];
+    string operator    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者", description: "", max_length: 64 }];
+    string content     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本内容", description: "配置模版版本内容" }];
+}
+
+message UpdateTemplateVersionResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "UpdateTemplateVersionResp"
+			description: "更新配置模版版本接口响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }]; 
+}
+
+message QueryTemplateVersionReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryTemplateVersionReq"
+			description: "查询配置模版版本请求"
+			required: ["seq", "bid", "versionid"]
+		}
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "t879ab8f-xxxx-asdf-sdaf-525400f99278" }' }
+    };
+
+    uint64 seq         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string versionid   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本ID", description: "", max_length: 64 }];
+}
+
+message QueryTemplateVersionResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryTemplateVersionResp"
+            description: "查询配置模版版本接口响应"
+            required: [ "seq", "errCode", "errMsg", "templateVersion" ]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "templateVersion": { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278", "versionName": "v1.1.1", "creator": "mars", "lastModifyBy": "mars", "memo": "xxxx版本", "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" } }' }
+    };
+
+    uint64                 seq             = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode         errCode         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string                 errMsg          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    common.TemplateVersion templateVersion = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本内容", description: "" }];
+}
+
+
+message QueryTemplateVersionListReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryTemplateVersionListReq"
+            description: "查询配置模版版本列表请求"
+            required: [ "seq", "bid", "templateid" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278" }' }
+    };
+
+    uint64 seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    int32  index      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询索引", description: "" }];
+    int32  limit      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询数量", description: "", maximum: 100 }];
+}
+
+message QueryTemplateVersionListResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryTemplateVersionListResp"
+            description: "查询配置模版版本列表接口响应"
+            required: [ "seq", "errCode", "errMsg", "templateVersions" ]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "templateVersions": [ { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278", "versionName": "v1.1.1", "creator": "mars", "lastModifyBy": "mars", "memo": "xxxx版本", "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" }, { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278", "versionName": "v1.1.1", "creator": "mars", "lastModifyBy": "mars", "memo": "xxxx版本", "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" } ] }' }
+    };
+
+    uint64         seq                               = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode                           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg                            = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    repeated common.TemplateVersion templateVersions = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本列表", description: "" }];
+}
+
+message CreateConfigTemplateBindingReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateConfigTemplateBindingReq"
+            description: "创建配置模版与app绑定关系请求"
+            required: [ "seq", "bid", "templateid", "appid", "versionid", "bindingParams", "operator" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278", "bindingParams": "[{\\"clusterLabels\\":{\\"environment\\":\\"yun测试环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"shdc\\"},\\"zone\\":\\"zone1\\",\\"instanceid\\":\\"svc1_127_0_0_1\\"},{\\"clusterLabels\\":{\\"environment\\":\\"正式环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"cddc\\"},\\"zone\\":\\"zone2\\",\\"instanceid\\":\\"svc2_127_0_0_1\\"}]", "creator": "mars" }' }
+    };
+
+    uint64 seq           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string appid         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "绑定的应用ID", description: "", max_length: 64 }];
+    string versionid     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本内容ID", description: "", max_length: 64 }];
+    string bindingParams = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "绑定参数", description: "", max_length: 102400 }];
+    string creator       = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者名称", description: "", max_length: 64 }];
+}
+
+message CreateConfigTemplateBindingResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CreateConfigTemplateBindingResp"
+			description: "创建配置模版与app绑定关系接口返回"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    string         cfgsetid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "本次绑定创建的configset id", description: "" }];
+    string         commitid = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "本次绑定创建的commit id", description: "" }];
+}
+
+message DeleteConfigTemplateBindingReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "DeleteConfigTemplateBindingReq"
+            description: "删除配置模版与app绑定关系请求"
+            required: [ "seq", "bid", "templateid", "appid", "operator" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278", "operator": "mars" }' }
+    };
+
+    uint64 seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string appid      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "绑定的应用ID", description: "", max_length: 64 }];
+    string operator   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者名称", description: "", max_length: 64 }];
+}
+
+message DeleteConfigTemplateBindingResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteConfigTemplateBindingResp"
+			description: "删除配置模版与app绑定关系接口返回"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }]; 
+}
+
+message SyncConfigTemplateBindingReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "SyncConfigTemplateBindingReq"
+            description: "同步配置模版与app绑定关系请求"
+            required: [ "seq", "bid", "templateid", "appid", "versionid", "commitid", "bindingParams", "operator" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278", "commitid": "c879ab8f-xxxx-asdf-sdaf-525400f992", "bindingParams": "[{\\"clusterLabels\\":{\\"environment\\":\\"yun测试环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"shdc\\"},\\"zone\\":\\"zone1\\",\\"instanceid\\":\\"svc1_127_0_0_1\\"},{\\"clusterLabels\\":{\\"environment\\":\\"正式环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"cddc\\"},\\"zone\\":\\"zone2\\",\\"instanceid\\":\\"svc2_127_0_0_1\\"}]", "operator": "mars" }' }
+    };
+
+    uint64 seq           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string appid         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "绑定的应用ID", description: "", max_length: 64 }];
+    string versionid     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本内容ID", description: "", max_length: 64 }];
+    string bindingParams = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "绑定参数", description: "", max_length: 102400 }];
+    string operator      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者名称", description: "", max_length: 64 }];
+}
+
+message SyncConfigTemplateBindingResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "SyncConfigTemplateBindingResp"
+			description: "同步配置模版与app绑定关系接口响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    string         commitid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "本次更新绑定创建的commit id", description: "" }];
+}
+
+message QueryConfigTemplateBindingReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateBindingReq"
+			description: "查询配置模版与APP绑定关系"
+			required: ["seq", "bid", "templateid", "appid"]
+		}
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278" }' }
+    };
+
+    uint64 seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string appid      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "绑定的应用ID", description: "", max_length: 64 }];
+}
+
+message QueryConfigTemplateBindingResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryConfigTemplateBindingResp"
+			description: "查询配置模版与app绑定关系接口响应"
+			required: ["seq", "errCode", "errMsg", "configTemplateBinding"]
+		}
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "configTemplateBinding": { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278", "commitid": "c879ab8f-xxxx-asdf-sdaf-525400f99278", "bindingParams": "[{\\"clusterLabels\\":{\\"environment\\":\\"yun测试环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"shdc\\"},\\"zone\\":\\"zone1\\",\\"instanceid\\":\\"svc1_127_0_0_1\\"},{\\"clusterLabels\\":{\\"environment\\":\\"正式环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"cddc\\"},\\"zone\\":\\"zone2\\",\\"instanceid\\":\\"svc2_127_0_0_1\\"}]", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" } }' }
+    };
+
+    uint64                       seq                   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode               errCode               = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string                       errMsg                = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    common.ConfigTemplateBinding configTemplateBinding = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版与app绑定关系", description: "" }];
+}
+
+message QueryConfigTemplateBindingListReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryConfigTemplateBindingListReq"
+            description: "查询配置模版与APP绑定关系列表，如果templateid不为空，则按templateid查询列表，否则按appid查询列表"
+            required: [ "seq", "bid" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278" }' }
+    };
+
+    uint64 seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string templateid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
+    string appid      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "绑定的应用ID", description: "", max_length: 64 }];
+    int32  index      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询索引", description: "" }];
+    int32  limit      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询数量", description: "", maximum: 100 }];
+}
+
+message QueryConfigTemplateBindingListResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryConfigTemplateBindingResp"
+            description: "查询配置模版与app绑定关系接口响应"
+            required: [ "seq", "errCode", "errMsg", "configTemplateBinding" ]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "configTemplateBindings": [{ "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278", "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278", "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278", "commitid": "c879ab8f-xxxx-asdf-sdaf-525400f99278", "bindingParams": "[{\\"clusterLabels\\":{\\"environment\\":\\"yun测试环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"shdc\\"},\\"zone\\":\\"zone1\\",\\"instanceid\\":\\"svc1_127_0_0_1\\"},{\\"clusterLabels\\":{\\"environment\\":\\"正式环境\\",\\"cluster\\":\\"集群2\\",\\"dc\\":\\"cddc\\"},\\"zone\\":\\"zone2\\",\\"instanceid\\":\\"svc2_127_0_0_1\\"}]", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" }] }' }
+    };
+
+    uint64         seq                                           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode                                       = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg                                        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    repeated common.ConfigTemplateBinding configTemplateBindings = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版与app绑定关系列表", description: "" }];
+}
+
+message CreateVariableReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateVariableReq"
+            description: "创建变量请求。创建集群变量时clusterid必填，创建zone变量时clusterid和zoneid必填"
+            required: [ "seq", "bid", "type", "key", "value", "memo", "creator" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "type": 0, "key": "key1", "value": "value1", "memo": "这是一个全局变量", "creator": "mars" }' }
+    };
+    uint64 seq           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string cluster       = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属集群名称", description: "", max_length: 64 }];
+    string clusterLabels = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属集群标签", description: "", max_length: 128 }];
+    string zone          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属zone名称", description: "", max_length: 64 }];
+    int32  type          = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量类型", description: "0: 全局变量 1: 集群变量 2: zone变量", minimum: 0, maximum: 2 }];
+    string key           = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量key值", description: "", max_length: 256 }];
+    string value         = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量value值", description: "", max_length: 1024 }];
+    string memo          = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量描述", description: "", max_length: 128 }];
+    string creator       = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者", description: "", max_length: 64 }];
+}
+
+message CreateVariableResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "CreateVariableResp"
+            description: "创建变量接口返回"
+            required: [ "seq", "errCode", "errMsg", "vid" ]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "vid": "v323208-2341241252-1243124214" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    string         vid     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量ID", description: "" }];
+}
+
+message UpdateVariableReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "UpdateVariableReq"
+            description: "更新变量请求"
+            required: [ "seq", "bid", "vid", "type", "key", "value", "memo", "operator" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "vid":"v879ab8f-xxxx-asdf-sdaf-525400f9", "type": 0, "key": "key1", "value": "value1", "memo": "这是一个全局变量", "operator": "mars" }' }
+    };
+    uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string vid      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "需要更新的变量ID", description: "", max_length: 64 }];
+    int32  type     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量类型", description: "0: 全局变量 1: 集群变量 2: zone变量", minimum: 0, maximum: 2 }];
+    string key      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量key值", description: "", max_length: 256 }];
+    string value    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量value值", description: "", max_length: 1024 }];
+    string memo     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量描述", description: "", max_length: 128 }];
+    string operator = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者", description: "", max_length: 64 }];
+}
+
+message UpdateVariableResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "UpdateVariableResp"
+			description: "更新变量接口返回"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }]; 
+}
+
+message DeleteVariableReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteVariableReq"
+			description: "删除变量请求"
+			required: ["seq", "bid", "vid", "type", "operator"]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "vid": "v879ab8f-xxxx-asdf-sdaf-525400f99", "type": 0, "operator": "mars" }' }
+    };
+
+    uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string vid      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量ID", description: "", max_length: 64 }];
+    int32  type     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量类型", description: "0: 全局变量 1: 集群变量 2: zone变量", minimum: 0, maximum: 2 }];
+    string operator = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者名称", description: "", max_length: 64 }];
+}
+
+message DeleteVariableResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteVariableResp"
+			description: "删除变量接口返回"
+			required: ["seq", "errCode", "errMsg"]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }]; 
+}
+
+message QueryVariableReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QueryVariableReq"
+            description: "查询变量请求。查询集群变量时clusterid必填，查询zone变量时clusterid和zoneid必填"
+            required: [ "seq", "bid", "vid", "type" ]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "vid": "v879ab8f-xxxx-asdf-sdaf-525400f9927", "type": 0 }' }
+    };
+
+    uint64 seq  = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string vid  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量ID", description: "", max_length: 64 }];
+    int32  type = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量类型", description: "0: 全局变量 1: 集群变量 2: zone变量", minimum: 0, maximum: 2 }];
+}
+
+message QueryVariableResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryVariableResp"
+			description: "查询变量接口返回"
+			required: ["seq", "errCode", "errMsg", "var"]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "var": { "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "vid": "v879ab8f-xxxx-asdf-sdaf-525400f9927", "type": 0, "key": "key1", "value": "value1", "memo": "这是一个全局变量", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" } }' }
+    };
+
+    uint64          seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode  errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string          errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    common.Variable var     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量详情", description: "" }];
+}
+
+message QueryVariableListReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryVariableListReq"
+			description: "查询变量列表请求。查询集群变量列表时clusterid必填，查询zone变量列表时clusterid和zoneid必填"
+			required: ["seq", "bid", "type"]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "type": 0 }' }
+    };
+
+    uint64 seq           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string cluster       = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属集群名称", description: "", max_length: 64 }];
+    string clusterLabels = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属集群标签", description: "", max_length: 128 }];
+    string zone          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属zone名称", description: "", max_length: 64 }];
+    int32  type          = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量类型", description: "0: 全局变量 1: 集群变量 2: zone变量", minimum: 0, maximum: 2 }];
+    int32  index         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询索引", description: "" }];
+    int32  limit         = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "查询数量", description: "", maximum: 100 }];
+}
+
+message QueryVariableListResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryVariableListResp"
+			description: "查询变量列表接口返回"
+			required: ["seq", "errCode", "errMsg", "vars"]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK", "vars": [{ "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "vid": "v879ab8f-xxxx-asdf-sdaf-525400f9927", "type": 0, "key": "key1", "value": "value1", "memo": "这是一个全局变量", "creator": "mars", "lastModifyBy": "mars", "createAt": "2019-07-29 11:57:20", "updateAt": "2019-07-29 11:57:20" }] }' }
+    };
+
+    uint64         seq            = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
+    repeated common.Variable vars = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量列表", description: "" }];
 }

@@ -16,13 +16,16 @@
 package scheduler
 
 import (
+	"net/http"
+	"time"
+
 	"bk-bcs/bcs-common/common/blog"
+	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"net/http"
-	"time"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
 // The goroutine function for launch application transaction
@@ -63,7 +66,8 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 			curOffer := offerOut
 			offerOut = s.GetNextOffer(offerOut)
 			//isFit := s.IsResourceFit(opData.NeedResource, offer) && s.IsConstraintsFit(version, offer, "")
-			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "")
+			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "") &&
+				s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 			if isFit == true {
 				blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 				if s.UseOffer(curOffer) == true {
@@ -158,7 +162,8 @@ func (s *Scheduler) doLaunchTrans(trans *Transaction, outOffer *offer.Offer, sta
 	}
 
 	var taskgroupName string
-	if opData.LaunchedNum < int(version.Instances) && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) {
+	if opData.LaunchedNum < int(version.Instances) && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) &&
+		s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), outOffer) {
 		//if opData.LaunchedNum < int(version.Instances) && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
 		taskGroup, err := s.BuildTaskGroup(version, app, "", "launch application")
 		if err != nil {
@@ -185,9 +190,23 @@ func (s *Scheduler) doLaunchTrans(trans *Transaction, outOffer *offer.Offer, sta
 			s.DeclineResource(offer.Id.Value)
 			return
 		}
-
 		opData.LaunchedNum++
 		taskGroupInfos = append(taskGroupInfos, taskGroupInfo)
+
+		//lock agentsetting
+		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, taskGroup.GetAgentIp())
+		//update agentsettings taskgroup index info
+		agentsetting, _ := s.store.FetchAgentSetting(taskGroup.GetAgentIp())
+		if agentsetting != nil {
+			agentsetting.Pods = append(agentsetting.Pods, taskGroup.ID)
+			err := s.store.SaveAgentSetting(agentsetting)
+			if err != nil {
+				blog.Errorf("save agentsetting %s pods error %s", agentsetting.InnerIP, err.Error())
+			}
+		} else {
+			blog.Errorf("fetch agentsetting %s Not Found", taskGroup.GetAgentIp())
+		}
+		util.Lock.UnLock(commtypes.BcsClusterAgentSetting{}, taskGroup.GetAgentIp())
 	}
 
 	if len(taskGroupInfos) <= 0 {

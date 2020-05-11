@@ -40,6 +40,8 @@ var cacheMgr *cacheManager
 // Init cache manager, use cache or not
 func (store *managerStore) InitCacheMgr(isUsed bool) error {
 
+	//zk store always don't use cache
+	isUsed = false
 	if isUsed {
 		blog.Infof("init cache begin: use cache for storage")
 	} else {

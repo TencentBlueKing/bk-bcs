@@ -14,8 +14,10 @@ package service
 
 import (
 	"log"
+	"math"
 	"net"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/bluele/gcache"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
@@ -118,9 +120,26 @@ func (dm *DataManager) initServiceDiscovery() {
 		dm.viper.GetString("server.metadata"),
 		dm.viper.GetInt64("server.discoveryttl"))
 
-	dm.etcdCfg = clientv3.Config{
-		Endpoints:   dm.viper.GetStringSlice("etcdCluster.endpoints"),
-		DialTimeout: dm.viper.GetDuration("etcdCluster.dialtimeout"),
+	caFile := dm.viper.GetString("etcdCluster.tls.cafile")
+	certFile := dm.viper.GetString("etcdCluster.tls.certfile")
+	keyFile := dm.viper.GetString("etcdCluster.tls.keyfile")
+	certPassword := dm.viper.GetString("etcdCluster.tls.certPassword")
+
+	if len(caFile) != 0 || len(certFile) != 0 || len(keyFile) != 0 {
+		tlsConf, err := ssl.ClientTslConfVerity(caFile, certFile, keyFile, certPassword)
+		if err != nil {
+			logger.Fatalf("load etcd tls files failed, %+v", err)
+		}
+		dm.etcdCfg = clientv3.Config{
+			Endpoints:   dm.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: dm.viper.GetDuration("etcdCluster.dialtimeout"),
+			TLS:         tlsConf,
+		}
+	} else {
+		dm.etcdCfg = clientv3.Config{
+			Endpoints:   dm.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: dm.viper.GetDuration("etcdCluster.dialtimeout"),
+		}
 	}
 	logger.Info("create service for discovery success.")
 }
@@ -241,7 +260,7 @@ func (dm *DataManager) Run() {
 	logger.Info("register service for discovery success.")
 
 	// run service.
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
 	pb.RegisterDataManagerServer(s, dm)
 	logger.Info("Data Manager running now.")
 

@@ -195,7 +195,7 @@ spec:
   appName: xxxx
   targetDb: xxxx
   dbType: spider
-  callUser: bryanhe
+  callUser: xxxxx
   dbName: db%
 ```
 

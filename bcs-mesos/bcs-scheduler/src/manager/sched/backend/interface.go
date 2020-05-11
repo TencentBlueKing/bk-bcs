@@ -87,7 +87,7 @@ type Backend interface {
 
 	//list all tasks of a specific application
 	//first para is namespace, and second one is appid
-	ListApplicationTasks(string, string) ([]*types.Task, error)
+	//ListApplicationTasks(string, string) ([]*types.Task, error)
 
 	//list all versions of application
 	//first para is namespace, and second one is appid
@@ -223,7 +223,7 @@ type Backend interface {
 
 	//delete user custom mesos slaves attributes
 	//para is array of slave ip
-	DeleteAgentSettingList([]string) (int, error)
+	//DeleteAgentSettingList([]string) (int, error)
 
 	//set user custom mesos slaves attributes
 	SetAgentSettingList([]*commtypes.BcsClusterAgentSetting) (int, error)
@@ -237,7 +237,13 @@ type Backend interface {
 	EnableAgentList(IPs []string) (int, error)
 
 	//update user custom mesos slaves attributes
-	UpdateAgentSettingList(*commtypes.BcsClusterAgentSettingUpdate) (int, error)
+	//UpdateAgentSettingList(*commtypes.BcsClusterAgentSettingUpdate) (int, error)
+
+	//taints agent
+	TaintAgents([]*commtypes.BcsClusterAgentSetting) error
+
+	//update agent extenedresources
+	UpdateExtendedResources(ex *commtypes.ExtendedResource) error
 
 	//custom resource register
 	RegisterCustomResource(*commtypes.Crr) error

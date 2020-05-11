@@ -139,13 +139,13 @@ func (c *config) check() error {
 	c.viper.SetDefault("instance.reloadChanTimeout", 3*time.Second)
 
 	c.viper.BindEnv("instance.httpEndpoint.ip", c.envName("INS_HTTP_ENDPOINT_IP"))
-	c.viper.SetDefault("instance.httpEndpoint.ip", ipnet)
+	c.viper.SetDefault("instance.httpEndpoint.ip", "localhost")
 
 	c.viper.BindEnv("instance.httpEndpoint.port", c.envName("INS_HTTP_ENDPOINT_PORT"))
 	c.viper.SetDefault("instance.httpEndpoint.port", 39610)
 
 	c.viper.BindEnv("instance.grpcEndpoint.ip", c.envName("INS_GRPC_ENDPOINT_IP"))
-	c.viper.SetDefault("instance.grpcEndpoint.ip", ipnet)
+	c.viper.SetDefault("instance.grpcEndpoint.ip", "localhost")
 
 	c.viper.BindEnv("instance.grpcEndpoint.port", c.envName("INS_GRPC_ENDPOINT_PORT"))
 	c.viper.SetDefault("instance.grpcEndpoint.port", 39611)

@@ -174,7 +174,7 @@ clusters:
 - cluster:
     api-version: v1
     # bcs-api 的 ca 证书
-    certificate-authority: /data/home/bryanhe/cert/bcs-inner-ca.crt
+    certificate-authority: /data/home/xxxx/cert/bcs-inner-ca.crt
     server: https://0.0.0.0:8443/tunnels/clusters/bcs-k8s-004-ey0vr8si-UevSy9HBoYpkmw9J
   name: k8s-004
 contexts:

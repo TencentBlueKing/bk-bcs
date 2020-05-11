@@ -36,7 +36,7 @@ func createBusinessCmd() *cobra.Command {
 		kind: bscp-business
 		version: 0.1.1
 		spec:
-		name: lol
+		name: X-Game
 		deptID: 1201
 		creator: MrMGXXXX
 		memo: annotation

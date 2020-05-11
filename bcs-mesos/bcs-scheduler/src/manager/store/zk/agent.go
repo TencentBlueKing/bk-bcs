@@ -153,6 +153,25 @@ func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
 	return agentNodes, nil
 }
 
+func (store *managerStore) ListAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
+	nodes, err := store.ListAgentSettingNodes()
+	if err != nil {
+		return nil, err
+	}
+
+	settings := make([]*commtypes.BcsClusterAgentSetting, 0, len(nodes))
+	for _, node := range nodes {
+		setting, err := store.FetchAgentSetting(node)
+		if err != nil {
+			return nil, err
+		}
+
+		settings = append(settings, setting)
+	}
+
+	return settings, nil
+}
+
 func (store *managerStore) SaveAgentSchedInfo(agent *types.AgentSchedInfo) error {
 
 	data, err := json.Marshal(agent)

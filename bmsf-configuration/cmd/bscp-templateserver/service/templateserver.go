@@ -14,8 +14,10 @@ package service
 
 import (
 	"log"
+	"math"
 	"net"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -107,9 +109,26 @@ func (ts *TemplateServer) initServiceDiscovery() {
 		ts.viper.GetString("server.metadata"),
 		ts.viper.GetInt64("server.discoveryttl"))
 
-	ts.etcdCfg = clientv3.Config{
-		Endpoints:   ts.viper.GetStringSlice("etcdCluster.endpoints"),
-		DialTimeout: ts.viper.GetDuration("etcdCluster.dialtimeout"),
+	caFile := ts.viper.GetString("etcdCluster.tls.cafile")
+	certFile := ts.viper.GetString("etcdCluster.tls.certfile")
+	keyFile := ts.viper.GetString("etcdCluster.tls.keyfile")
+	certPassword := ts.viper.GetString("etcdCluster.tls.certPassword")
+
+	if len(caFile) != 0 || len(certFile) != 0 || len(keyFile) != 0 {
+		tlsConf, err := ssl.ClientTslConfVerity(caFile, certFile, keyFile, certPassword)
+		if err != nil {
+			logger.Fatalf("load etcd tls files failed, %+v", err)
+		}
+		ts.etcdCfg = clientv3.Config{
+			Endpoints:   ts.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: ts.viper.GetDuration("etcdCluster.dialtimeout"),
+			TLS:         tlsConf,
+		}
+	} else {
+		ts.etcdCfg = clientv3.Config{
+			Endpoints:   ts.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: ts.viper.GetDuration("etcdCluster.dialtimeout"),
+		}
 	}
 	logger.Info("init service discovery success.")
 }
@@ -117,11 +136,8 @@ func (ts *TemplateServer) initServiceDiscovery() {
 // create datamanager gRPC client.
 func (ts *TemplateServer) initDataManagerClient() {
 	ctx := &grpclb.Context{
-		Target: ts.viper.GetString("datamanager.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   ts.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: ts.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     ts.viper.GetString("datamanager.servicename"),
+		EtcdConfig: ts.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -204,7 +220,7 @@ func (ts *TemplateServer) Run() {
 	logger.Info("register templateserver service success.")
 
 	// run service.
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
 	pb.RegisterTemplateServer(s, ts)
 	logger.Info("Template Server running now.")
 

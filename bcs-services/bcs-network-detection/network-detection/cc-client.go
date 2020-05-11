@@ -56,7 +56,7 @@ func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo) error {
 	payload["exact_search"] = 1
 	payload["app_id"] = c.conf.AppId
 	payload["method"] = "getTopoModuleHostList"
-	payload["host_std_req_column"] = []string{"IDC", "serverRack", "ModuleName"}
+	payload["host_std_req_column"] = []string{"IDC", "serverRack", "ModuleName", "IDCUnit"}
 
 	//request cmdb through esb
 	by, err := c.esb.RequestEsb(http.MethodPost, "/component/compapi/cc/get_query_info", payload)
@@ -78,5 +78,6 @@ func (c *CmdbClient) updateNodeInfo(node *types.NodeInfo) error {
 	//update node info
 	node.Idc = hosts[0].IDC
 	node.Module = hosts[0].ModuleName
+	node.IdcUnit = hosts[0].IDCUnit
 	return nil
 }

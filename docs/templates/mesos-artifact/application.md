@@ -19,6 +19,16 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
 	},
 	"constraint": {
 		"intersectionItem": [
+            { 
+				"unionData": [{
+					"name": "key1",
+					"operate": "TOLERATION",
+					"type": 3,
+					"text": {
+                            "value": "value1"
+                    }
+				}]
+			},
 			{
 				"unionData": [{
 					"name": "label",
@@ -309,6 +319,7 @@ UnionData字段说明：
   * GROUPBY: 根据name的目标个数，实例被均匀调度在目标上，与set一起使用，如果实例个数不能被set的元素个数整除，则会存在差1的情况，例如：name为IDC，实例数为3,set为["idc1","idc2"],则会在其中一个idc部署两个实例。
   * EXCLUDE: 和具有指定标签的application不部署在相同的机器上，即：如果该主机上已经部署有这些标签（符合一个即可）的application的实例，则不能部署该application的实例。目前name只支持"label",label的k:v在set数组中指定。
   * GREATER: 配合scaler字段（type为1），要求name的取值必须大于scalar的值。
+  * TOLERATION: 容忍被打taint的node
 * type: 参数的数据类型，决定operator所操作key为name的值的范围
 1: scaler: float64
 3：text：字符串。
@@ -398,6 +409,7 @@ io.tencent.bcs.netsvc.requestip.i: "127.0.0.1|InnerIp=127.0.0.[12-25];127.0.0.[1
   * limits.cpu:字符串，可以填写小数，1为使用1核，cpu硬限制，对应cpu_quota、cpu_period
   * limits.memory：内存使用，字符串，单位默认为M，memory上限。
   * limits.storage：磁盘使用大小，默认单位M
+* cpuset: 是否cpu绑定核，此参数与resources.request.cpu配合使用，并且cpu必须为整数，对应docker参数--cpuset-cpus
 * networkMode：网络模式
   * HOST: docker原生网络模式，与宿主机共用一个Network Namespace，此模式下需要自行解决网络端口冲突问题
   * BRIDGE: docker原生网络模式，此模式会为每一个容器分配Network Namespace、设置IP等，并将一个主机上的Docker容器连接到一个虚拟网桥上，通过端口映射的方式对外提供服务

@@ -49,6 +49,7 @@ service Business {
     rpc UpdateCommit(UpdateCommitReq) returns (UpdateCommitResp) {}
     rpc CancelCommit(CancelCommitReq) returns (CancelCommitResp) {}
     rpc ConfirmCommit(ConfirmCommitReq) returns (ConfirmCommitResp) {}
+    rpc PreviewCommit(PreviewCommitReq) returns (PreviewCommitResp) {}
 
     rpc CreateMultiCommit(CreateMultiCommitReq) returns (CreateMultiCommitResp) {}
     rpc QueryMultiCommit(QueryMultiCommitReq) returns (QueryMultiCommitResp) {}
@@ -94,8 +95,6 @@ service Business {
     rpc UpdateSharding(UpdateShardingReq) returns (UpdateShardingResp) {}
 
     rpc QueryAuditList(QueryAuditListReq) returns (QueryAuditListResp) {}
-
-    rpc PreviewRendering(PreviewRenderingReq) returns (PreviewRenderingResp) {}
 }
 
 message QueryAuthInfoReq {
@@ -663,6 +662,20 @@ message ConfirmCommitResp {
     uint64         seq     = 1;
     common.ErrCode errCode = 2;
     string         errMsg  = 3;
+}
+
+message PreviewCommitReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string commitid = 3;
+    string operator = 4;
+}
+
+message PreviewCommitResp {
+    uint64         seq               = 1;
+    common.ErrCode errCode           = 2;
+    string         errMsg            = 3;
+    repeated common.Configs cfgslist = 4;
 }
 
 message CreateMultiCommitReq {

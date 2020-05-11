@@ -15,6 +15,7 @@ package v1http
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"bk-bcs/bcs-common/common"
@@ -220,6 +221,25 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	userName := request.PathParameter("user_name")
+	expireDays := request.PathParameter("expire_time")
+	expireDaysInt, err := strconv.Atoi(expireDays)
+	if err != nil {
+		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
+		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		blog.Warnf("invalid expire_time, failed to atoi: %s", err.Error())
+		message := fmt.Sprintf("errcode: %d, invalid expire_time, failed to atoi: %s", common.BcsErrApiBadRequest, err.Error())
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		return
+	}
+	if expireDaysInt < 0 {
+		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
+		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
+		blog.Warnf("invalid expire_time: %d", expireDaysInt)
+		message := fmt.Sprintf("errcode: %d, invalid expire_time", common.BcsErrApiBadRequest)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		return
+	}
+
 	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: sqlstore.PlainUser})
 	if user == nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -230,17 +250,18 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	expireTime := time.Duration(expireDaysInt) * sqlstore.PlainUserExpiredTime
 	updatedUser := user
 	// if usertoken has been expired, refresh the usertoken, else just refresh the expiresTime
 	if time.Now().After(user.ExpiresAt) {
 		updatedUser.UserToken = uniuri.NewLen(DefaultTokenLength)
-		updatedUser.ExpiresAt = time.Now().Add(sqlstore.PlainUserExpiredTime)
+		updatedUser.ExpiresAt = time.Now().Add(expireTime)
 	} else {
-		updatedUser.ExpiresAt = time.Now().Add(sqlstore.PlainUserExpiredTime)
+		updatedUser.ExpiresAt = time.Now().Add(expireTime)
 	}
 
 	// update and save to db
-	err := sqlstore.UpdateUser(user, updatedUser)
+	err = sqlstore.UpdateUser(user, updatedUser)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())

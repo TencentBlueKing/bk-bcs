@@ -15,14 +15,11 @@ package container
 
 import (
 	"archive/tar"
-	"bk-bcs/bcs-mesos/bcs-container-executor/util"
 	"bytes"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -352,16 +349,17 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		hostConfig.Memory = int64(containerTask.Resource.Mem * 1024 * 1024)
 		hostConfig.MemorySwap = int64(containerTask.Resource.Mem * 1024 * 1024)
 	}
-	if float64(runtime.NumCPU()) > containerTask.Resource.Cpus && containerTask.Resource.CPUSet > 0 {
+	/*if len(containerTask.Resource.CPUSet) > 0 {
 		//only setting cpu info when cpu request can be met in slave host
-		cpuList, numaList := util.GetBindingCPUs(int(math.Ceil(containerTask.Resource.Cpus)), int64(containerTask.Resource.Mem))
-		if len(cpuList) > 0 {
-			//change int list to string
-			hostConfig.CPUSetCPUs = util.ListJoin(cpuList)
-			hostConfig.CPUSetMEMs = util.ListJoin(numaList)
-			fmt.Fprintf(os.Stdout, "DEBUG: CPU List info %v, numa: %v, post: %s, %s\n", cpuList, numaList, hostConfig.CPUSetCPUs, hostConfig.CPUSetMEMs)
+		//cpuList, numaList := util.GetBindingCPUs(int(math.Ceil(containerTask.Resource.Cpus)), int64(containerTask.Resource.Mem))
+		//change int list to string
+		for _, set := range containerTask.Resource.CPUSet {
+			hostConfig.CPUSetCPUs += fmt.Sprintf("%s,", set)
+			hostConfig.CPUSetMEMs
 		}
-	}
+		hostConfig.CPUSetCPUs = strings.TrimRight(hostConfig.CPUSetCPUs, "")
+		fmt.Fprintf(os.Stdout, "DEBUG: task(%s) set cpuset(%s)\n", containerTask.Name, hostConfig.CPUSetCPUs)
+	}*/
 
 	if containerTask.LimitResource != nil && containerTask.LimitResource.Cpus > 0 {
 		hostConfig.CPUPeriod = DefaultDockerCpuPeriod
@@ -501,6 +499,7 @@ func (docker *DockerContainer) InspectContainer(containerName string) (*BcsConta
 		ExitCode:    container.State.ExitCode,
 		Hostname:    container.Config.Hostname,
 		NetworkMode: container.HostConfig.NetworkMode,
+		OOMKilled:   container.State.OOMKilled,
 		Resource: &schedTypes.Resource{
 			Cpus: float64(container.HostConfig.CPUShares / 1024),
 			Mem:  float64(container.HostConfig.Memory / 1024 / 1024),

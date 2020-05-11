@@ -31,6 +31,8 @@ type NodeInfo struct {
 	//every idc deploy three detection containers
 	//when all(three) detection containers can't ping, then give an alarm
 	Idc string
+	//idc unit,对应cmdb机房管理单元
+	IdcUnit string
 }
 
 type DeployDetection struct {
@@ -38,6 +40,8 @@ type DeployDetection struct {
 	Clusterid string
 	//deploy idc
 	Idc string
+	//idc unit
+	IdcUnit string
 	//deployment json
 	Template commtypes.BcsDeployment
 	//cluster nodes
@@ -61,9 +65,12 @@ type CmdbHostInfo struct {
 	ModuleName string `json:"ModuleName"`
 	IDC        string `json:"IDC"`
 	ServerRack string `json:"serverRack"`
+	IDCUnit    string `json:"IDCUnit"`
 }
 
 type DetectionPod struct {
-	Ip  string
-	Idc string
+	Ip        string
+	Idc       string
+	IdcUnit   string
+	ClusterId string
 }

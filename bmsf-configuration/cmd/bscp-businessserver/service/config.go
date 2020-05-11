@@ -85,15 +85,25 @@ func (c *config) check() error {
 	if !c.viper.IsSet("etcdCluster.endpoints") {
 		return errors.New("config check, missing 'etcdCluster.endpoints'")
 	}
-
 	c.viper.BindEnv("etcdCluster.dialtimeout", c.envName("ETCD_DIAL_TIMEOUT"))
 	c.viper.SetDefault("etcdCluster.dialtimeout", 3*time.Second)
+
+	c.viper.BindEnv("etcdCluster.tls.certPassword", c.envName("ETCD_TLS_CERT_PASSWORD"))
+	c.viper.SetDefault("etcdCluster.tls.certPassword", "")
+
+	c.viper.BindEnv("etcdCluster.tls.cafile", c.envName("ETCD_TLS_CAFILE"))
+	c.viper.SetDefault("etcdCluster.tls.cafile", "")
+
+	c.viper.BindEnv("etcdCluster.tls.certfile", c.envName("ETCD_TLS_CERTFILE"))
+	c.viper.SetDefault("etcdCluster.tls.certfile", "")
+
+	c.viper.BindEnv("etcdCluster.tls.keyfile", c.envName("ETCD_TLS_KEYFILE"))
+	c.viper.SetDefault("etcdCluster.tls.keyfile", "")
 
 	c.viper.BindEnv("datamanager.servicename", c.envName("DM_SERVICE_NAME"))
 	if !c.viper.IsSet("datamanager.servicename") {
 		return errors.New("config check, missing 'datamanager.servicename'")
 	}
-
 	c.viper.BindEnv("datamanager.calltimeout", c.envName("DM_CALL_TIMEOUT"))
 	c.viper.SetDefault("datamanager.calltimeout", 3*time.Second)
 
@@ -101,7 +111,6 @@ func (c *config) check() error {
 	if !c.viper.IsSet("templateserver.servicename") {
 		return errors.New("config check, missing 'templateserver.servicename'")
 	}
-
 	c.viper.BindEnv("templateserver.calltimeout", c.envName("TPL_CALL_TIMEOUT"))
 	c.viper.SetDefault("templateserver.calltimeout", 3*time.Second)
 
@@ -109,7 +118,6 @@ func (c *config) check() error {
 	if !c.viper.IsSet("bcscontroller.servicename") {
 		return errors.New("config check, missing 'bcscontroller.servicename'")
 	}
-
 	c.viper.BindEnv("bcscontroller.calltimeout", c.envName("BCS_CALL_TIMEOUT"))
 	c.viper.SetDefault("bcscontroller.calltimeout", 3*time.Second)
 
@@ -117,7 +125,6 @@ func (c *config) check() error {
 	if !c.viper.IsSet("gsecontroller.servicename") {
 		return errors.New("config check, missing 'gsecontroller.servicename'")
 	}
-
 	c.viper.BindEnv("gsecontroller.calltimeout", c.envName("GSE_CALL_TIMEOUT"))
 	c.viper.SetDefault("gsecontroller.calltimeout", 3*time.Second)
 
