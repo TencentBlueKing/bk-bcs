@@ -159,12 +159,12 @@ func (h *hijackedIOStreamer) beginInputStream(restoreInput func()) (doneC <-chan
 				// This error will also occur on the receive
 				// side (from stdout) where it will be
 				// propagated back to the caller.
-				blog.Debug("Error sendStdin: %s", err)
+				blog.Errorf("Error sendStdin: %s", err)
 			}
 		}
 
 		if err := h.resp.CloseWrite(); err != nil {
-			blog.Debug("Couldn't send EOF: %s", err)
+			blog.Errorf("Couldn't send EOF: %s", err)
 		}
 
 		close(inputDone)
