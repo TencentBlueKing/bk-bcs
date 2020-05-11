@@ -37,7 +37,7 @@ func initUsersRouters(ws *restful.WebService) {
 
 	ws.Route(AuthFunc(ws.POST("/v1/users/plain/{user_name}")).To(CreatePlainUser))
 	ws.Route(AuthFunc(ws.GET("/v1/users/plain/{user_name}")).To(GetPlainUser))
-	ws.Route(AuthFunc(ws.PUT("/v1/users/plain/{user_name}/refresh")).To(RefreshPlainToken))
+	ws.Route(AuthFunc(ws.PUT("/v1/users/plain/{user_name}/refresh/{expire_time}")).To(RefreshPlainToken))
 }
 
 // initClustersRouters init cluster api routers
