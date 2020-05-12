@@ -284,7 +284,7 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		//if the container have logconfig, then delete it
 		if ok {
 			s.deleteContainerLogConf(c.ID)
-			delete(s.logConfs,key)
+			delete(s.logConfs, key)
 		}
 		blog.Infof("container %s don't need collect log", c.ID)
 		return
@@ -383,7 +383,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		para.NonstandardPaths = logConf.Spec.LogPaths
 		para.LogTags = logConf.Spec.LogTags
 	}
-	for k,v :=range para.LogTags {
+	for k, v := range para.LogTags {
 		para.ExtMeta[k] = v
 	}
 

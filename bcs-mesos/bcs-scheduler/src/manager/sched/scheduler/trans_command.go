@@ -22,7 +22,7 @@ import (
 )
 
 func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
-	if len(command.Status.Taskgroups)==0 {
+	if len(command.Status.Taskgroups) == 0 {
 		return
 	}
 	//lock command
