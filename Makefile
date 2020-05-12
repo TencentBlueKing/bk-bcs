@@ -247,9 +247,6 @@ network:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
 	cp ./install/conf/bcs-mesos-node/qcloud-eip/* ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/qcloud-eip ./bcs-services/bcs-network/qcloud-eip/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/macvlan ./vendor/github.com/containernetworking/plugins/plugins/main/macvlan/macvlan.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bridge ./vendor/github.com/containernetworking/plugins/plugins/main/bridge/bridge.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/ptp ./vendor/github.com/containernetworking/plugins/plugins/main/ptp/ptp.go
 
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
