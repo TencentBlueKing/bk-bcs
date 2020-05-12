@@ -97,6 +97,7 @@ dns:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-dns ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
+	cp -r ${GOPATH}/pkg/mod/github.com/coredns/coredns\@v1.3.0/* vendor/github.com/coredns/coredns/
 	cp bcs-services/bcs-dns/plugin.cfg vendor/github.com/coredns/coredns/
 	cd vendor/github.com/coredns/coredns && make gen && cd -
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service bk-bcs/vendor/github.com/coredns/coredns
