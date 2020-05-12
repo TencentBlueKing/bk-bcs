@@ -41,7 +41,7 @@ bcs 在一开始的设计上就考虑到了多集群管理的需求，通过 bcs
 
 - 通过 bcs-api-gateway 调用  bcs-user-manager 的接口，注册集群  
 ```
-# curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters -d '{"cluster_id":"bcs-k8s-001", "cluster_type":"k8s", "tke_cluster_id":"xxxx", "tke_cluster_region":"shanghai"}'
+# curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters -d '{"cluster_id":"BCS-K8S-001", "cluster_type":"k8s", "tke_cluster_id":"xxxx", "tke_cluster_region":"shanghai"}'
 ```
 若注册成功，返回的 code 为 0 ：
 ``` json
@@ -50,7 +50,7 @@ bcs 在一开始的设计上就考虑到了多集群管理的需求，通过 bcs
 	"code": 0,
 	"message": "success",
 	"data": {
-		"id": "bcs-k8s-001",
+		"id": "BCS-K8S-001",
 		"cluster_type": 1,
 		"tke_cluster_id": "",
 		"tke_cluster_region": "",
@@ -63,7 +63,7 @@ bcs 在一开始的设计上就考虑到了多集群管理的需求，通过 bcs
 - 生成 register_token
 通过 bcs-api-gateway 调用 bcs-user-manager 的接口，为这个集群在 bk-bcs 上生成一个 register_token：  
 ```
-curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/bcs-k8s-001/register_tokens
+curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/BCS-K8S-001/register_tokens
 ```
 若创建成功，返回的 code 为 0 ：
 ``` json
@@ -73,7 +73,7 @@ curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: appl
 	"message": "success",
 	"data": {
 		"id": 2,
-		"cluster_id": "bcs-k8s-001",
+		"cluster_id": "BCS-K8S-001",
 		"token": "qL8BiOcYjco2ZJmCPEp0nNmLZ5ITZMeFC0VTIJmLyY1iDDGJUwrNwmZLHCf0fRAPX8Duknn5SJgHnbEiP1GATk3uNGv55J12b7R4i4DUv4MghL4UCfKxLG9iTNrCknnd",
 		"created_at": "2020-05-11T20:48:05+08:00"
 	}
@@ -145,7 +145,7 @@ spec:
         # 这里填bcs-api-gateway的地址
         - --bke-address=https://x.x.x.x:8443
         # 这里填这个集群在bcs上的{cluster_id}
-        - --cluster-id=bcs-k8s-001
+        - --cluster-id=BCS-K8S-001
         - --insecureSkipVerify           
         env:
           - name: REGISTER_TOKEN

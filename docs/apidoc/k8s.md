@@ -24,7 +24,7 @@
 管理员可以直接调用  bcs-user-manager 的 API ，或者使用 bcs-client 命令来给某用户授予某种资源的权限。  
 目前 bcs-user-manager 支持对某一资源授予管理员和只读者的角色，其中管理员具有 GET\POST\PUT\DELETE\PATCH 等所有操作的权限，只读者只有 GET 的权限。  
 
-授予 xxx 用户 bcs-k8s-100 集群管理 (manager) 的权限，为 yy 用户授权 bcs-k8s-101 集群 (viewer) 的权限。
+授予 xxx 用户 BCS-K8S-100 集群管理 (manager) 的权限，为 yy 用户授权 BCS-K8S-101 集群 (viewer) 的权限。
 ```
 # cat crd_permission.json
 {

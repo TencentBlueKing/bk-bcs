@@ -131,7 +131,7 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 
 必须使用一个已有的 admin 用户的 usertoken 才有权限调用，使用示例：
 
-    curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters -d '{"cluster_id":"bcs-k8s-001", "cluster_type":"k8s", "tke_cluster_id":"xxxx", "tke_cluster_region":"shanghai"}'
+    curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters -d '{"cluster_id":"BCS-K8S-001", "cluster_type":"k8s", "tke_cluster_id":"xxxx", "tke_cluster_region":"shanghai"}'
 
 若注册成功，返回的 code 为 0 ：
 ``` json
@@ -140,7 +140,7 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 	"code": 0,
 	"message": "success",
 	"data": {
-		"id": "bcs-k8s-001",
+		"id": "BCS-K8S-001",
 		"cluster_type": 1,
 		"tke_cluster_id": "",
 		"tke_cluster_region": "",
@@ -153,9 +153,9 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 ### 创建集群的 register-token
 
 必须使用一个已有的 admin 用户的 usertoken 才有权限调用。  
-使用示例，为名为 bcs-k8s-001 的集群创建 register-token:  
+使用示例，为名为 BCS-K8S-001 的集群创建 register-token:  
 
-    curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/bcs-k8s-001/register_tokens
+    curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/BCS-K8S-001/register_tokens
 
 若创建成功，返回的 code 为 0 ：
 ``` json
@@ -165,7 +165,7 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 	"message": "success",
 	"data": {
 		"id": 2,
-		"cluster_id": "bcs-k8s-001",
+		"cluster_id": "BCS-K8S-001",
 		"token": "qL8BiOcYjco2ZJmCPEp0nNmLZ5ITZMeFC0VTIJmLyY1iDDGJUwrNwmZLHCf0fRAPX8Duknn5SJgHnbEiP1GATk3uNGv55J12b7R4i4DUv4MghL4UCfKxLG9iTNrCknnd",
 		"created_at": "2020-05-11T20:48:05+08:00"
 	}
@@ -175,9 +175,9 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 ### 查询集群的 register-token
 
 必须使用一个已有的 admin 用户的 usertoken 才有权限调用。  
-使用示例，查询名为 bcs-k8s-001 的集群的 register-token:  
+使用示例，查询名为 BCS-K8S-001 的集群的 register-token:  
 
-    curl -X GET -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/bcs-k8s-001/register_tokens
+    curl -X GET -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/BCS-K8S-001/register_tokens
 
 返回同上。
 
@@ -187,7 +187,7 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 
 示例：  
 
-    curl -X PUT -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/bcs-k8s-001/credentials -d '{"register_token":"qL8BiOcYjco2ZJmCPEp0nNmLZ5ITZMeFC0VTIJmLyY1iDDGJUwrNwmZLHCf0fRAPX8Duknn5SJgHnbEiP1GATk3uNGv55J12b7R4i4DUv4MghL4UCfKxLG9iTNrCknnd", "server_addresses":"https://x.x.x.x:8443", "cacert_data": "xxxx", "user_token":"xxxx"}'
+    curl -X PUT -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/BCS-K8S-001/credentials -d '{"register_token":"qL8BiOcYjco2ZJmCPEp0nNmLZ5ITZMeFC0VTIJmLyY1iDDGJUwrNwmZLHCf0fRAPX8Duknn5SJgHnbEiP1GATk3uNGv55J12b7R4i4DUv4MghL4UCfKxLG9iTNrCknnd", "server_addresses":"https://x.x.x.x:8443", "cacert_data": "xxxx", "user_token":"xxxx"}'
     
 若更新成功，返回 code 为 0：  
 ``` json
@@ -203,7 +203,7 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 
 查询集群的信息，必须使用一个已有的 admin 用户的 usertoken 才有权限调用，示例：  
 
-    curl -X GET -H "Authorization: Bearer {admin-usertoken}" http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/bcs-k8s-001/credentials
+    curl -X GET -H "Authorization: Bearer {admin-usertoken}" http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/clusters/BCS-K8S-001/credentials
 
 若查询成功，返回 code 为 0 ：
 ``` json
@@ -213,7 +213,7 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 	"message": "success",
 	"data": {
 		"id": 2,
-		"cluster_id": "bcs-k8s-001",
+		"cluster_id": "BCS-K8S-001",
 		"server_addresses": "https://x.x.x.x:8443",
 		"ca_cert_data": "xxxx",
 		"user_token": "xxxx",
@@ -237,13 +237,13 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 	"code": 0,
 	"message": "success",
 	"data": {
-		"bcs-k8s-100": {
+		"BCS-K8S-100": {
 			"server_addresses": "https://x.x.x.x:6553",
 			"ca_cert_data": "xxxxxxx",
 			"user_token": "xxxxxxx",
 			"cluster_domain": ""
 		},
-		"bcs-k8s-101": {
+		"BCS-K8S-101": {
 			"server_addresses": "https://x.x.x.x:8443",
 			"ca_cert_data": "xxxx",
 			"user_token": "xxxx",
@@ -259,9 +259,9 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 ### 授权
 
 必须使用一个已有的 admin 用户的 usertoken 才有权限调用，示例：  
-给 xx 授予 bcs-k8s-001 集群的只读角色，给 yy 授予 bcs-k8s-001 集群的只读角色：
+给 xx 授予 BCS-K8S-001 集群的只读角色，给 yy 授予 BCS-K8S-001 集群的只读角色：
 
-    curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/permissions -d '{"apiVersion":"v1", "kind":"permissions", "name":"my-permission", "spec":{"permissions":[{"user_name":"xx", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"}, {"user_name":"yy", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"}]}}'
+    curl -X POST -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/permissions -d '{"apiVersion":"v1", "kind":"permissions", "name":"my-permission", "spec":{"permissions":[{"user_name":"xx", "resource_type":"cluster", "resource":"BCS-K8S-001", "role":"viewer"}, {"user_name":"yy", "resource_type":"cluster", "resource":"BCS-K8S-001", "role":"viewer"}]}}'
     
 若授权成功，返回 code 为 0 ：
 ``` json
@@ -288,11 +288,11 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 	"message": "success",
 	"data": [{
 		"resource_type": "cluster",
-		"resource": "bcs-k8s-001",
+		"resource": "BCS-K8S-001",
 		"role": "manager"
 	}, {
 		"resource_type": "cluster",
-		"resource": "bcs-k8s-002",
+		"resource": "BCS-K8S-002",
 		"role": "viewer"
 	}]
 }
@@ -302,7 +302,7 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 
 必须使用一个已有的 admin 用户的 usertoken 才有权限调用，示例：  
 
-    curl -X DELETE -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/permissions -d '{"apiVersion":"v1", "kind":"permissions", "name":"my-permission", "spec":{"permissions":[{"user_name":"xx", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"}, {"user_name":"yy", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"}]}}'
+    curl -X DELETE -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/permissions -d '{"apiVersion":"v1", "kind":"permissions", "name":"my-permission", "spec":{"permissions":[{"user_name":"xx", "resource_type":"cluster", "resource":"BCS-K8S-001", "role":"viewer"}, {"user_name":"yy", "resource_type":"cluster", "resource":"BCS-K8S-001", "role":"viewer"}]}}'
     
 若回收成功，返回 code 为 0 ：
 ``` json
@@ -317,9 +317,9 @@ cluster_type 可选类型为 k8s, mesos, tke , 当为 tke 类型时，必须同�
 ### 校验权限
 
 校验某个用户对某个资源是否有执行某操作的权限，必须使用一个已有的 admin 用户的 usertoken 才有权限调用。  
-示例，校验 usertoken 为 xxxxxxx 所对应的用户是否对名为 bcs-k8s-001 的 cluster 有 GET 的权限：  
+示例，校验 usertoken 为 xxxxxxx 所对应的用户是否对名为 BCS-K8S-001 的 cluster 有 GET 的权限：  
 
-    curl -i -X GET -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8081/bcsapi/v4/usermanager/v1/permissions/verify -d '{"user_token":"xxxxxxx", "resource_type":"cluster", "resource":"bcs-k8s-001", "action":"GET"}'
+    curl -i -X GET -H "Authorization: Bearer {admin-usertoken}" -H 'content-type: application/json' http://0.0.0.0:8081/bcsapi/v4/usermanager/v1/permissions/verify -d '{"user_token":"xxxxxxx", "resource_type":"cluster", "resource":"BCS-K8S-001", "action":"GET"}'
 
 若调用成功，返回 code 为 0 ：
 ``` json
