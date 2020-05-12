@@ -269,7 +269,7 @@ bcs-webhook-server:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./bcs-services/bcs-webhook-server/main.go
 
 detection:pre
-	mkdir -p ${PACKAGEPATH}/bcs-network-detection
+	cp ./install/conf/bcs-services/bcs-network-detection ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-network-detection/bcs-network-detection ./bcs-services/bcs-network-detection/main.go
 
 tools:

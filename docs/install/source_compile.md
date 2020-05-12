@@ -6,6 +6,8 @@
 mkdir -p /data/workspace #为GOPATH新建一个目录
 export GOPATH=/data/workspace   # 设置GOPATH地址
 mkdir -p $GOPATH/src    #为GOPATH新建源代码存放路径
+# 使用go mod进行依赖管理
+export GO111MODULE=on
 ```
 
 ## 编译环境
@@ -16,9 +18,6 @@ mkdir -p $GOPATH/src    #为GOPATH新建源代码存放路径
 ```shell
 sudo yum install numactl-devel -y
 sudo yum install go
-# 使用dep来管理Go依赖包
-go get -u github.com/golang/dep/cmd/dep
-export PATH=$PATH:$GOPATH/bin
 ```
 
 ## 源码下载
@@ -38,7 +37,8 @@ cd $GOPATH/src/bk-bcs/
 
 ### 下载完整依赖：
 ``` shell
-dep ensure -v
+go mod tidy -v
+go mod vendor
 ```
 
 ### 修改并初始化编译参数
@@ -54,7 +54,7 @@ source ./scripts/env.sh
 BCS包含大量可随时热插拔的方案组件，默认是全模块编译。
 
 ```shell
-make
+make -j
 ```
 
 如果只想编译k8s相关模块：
@@ -115,11 +115,11 @@ done
 
 ### 镜像构建
 
-针对k8s的集成插件driver、watch以及kube-agent，可以参考$GOPATH/src/bk-bcs/install/images
-的dockerfile进行构建。
+针对k8s的集成插件driver、watch以及kube-agent，默认地已经在编译输出目录放置推荐的Dockerfile，可以参照
+以下用例自行构建选择容器化方式使用。
 
 ```shell
 cd ./build/bcs-*/bcs-k8s-master/bcs-k8s-driver/
-docker build -t myk8sdriver:latest -f $GOPATH/src/bk-bcs/install/images/bcs-k8s-master/bcs-k8s-driver/Dockerfile .
+docker build -t myk8sdriver:latest .
 ```
 
