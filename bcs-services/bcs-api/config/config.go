@@ -58,6 +58,7 @@ type ApiServConfig struct {
 	TKE                      options.TKEOptions
 	Edition                  string
 	MesosWebconsoleProxyPort uint
+	PeerToken                string
 }
 
 var (

@@ -1,0 +1,52 @@
+ifdef HASTAG
+	GITTAG = $(shell git describe --tags)
+else
+	GITTAG = $(shell git describe --always)
+endif
+
+PRO_DIR   = $(shell pwd)
+BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
+GITHASH   = $(shell git rev-parse HEAD)
+VERSION   = ${GITTAG}-$(shell date +%y.%m.%d)
+
+# OUTPUT directory for release
+export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp.${VERSION}
+
+ifndef IMAGE_TAG
+	export IMAGE_TAG=dev
+endif
+
+# version for command line
+export LDVersionFLAG = "-X bk-bscp/internal/version.VERSION=${VERSION} \
+	-X bk-bscp/internal/version.BUILDTIME=${BUILDTIME} \
+	-X bk-bscp/internal/version.GITHASH=${GITHASH}"
+
+default: all
+
+pre:
+	@echo -e "\e[34;1mBuilding...\033[0m"
+	mkdir -p ${OUTPUT_DIR}
+	go vet ./...
+
+all: pre
+	@cd cmd && make
+
+clean:
+	@cd cmd && make clean
+	@rm -rf ${PRO_DIR}/build
+
+proto:
+	@cd internal/protocol && make
+
+cleanproto:
+	@cd internal/protocol && make clean
+
+images: pre
+	@cd cmd && make images
+
+bscpimages: pre
+	@cd cmd && make bscpimages
+	@cp -r scripts/helm ${OUTPUT_DIR}
+
+injector: pre
+	@cd cmd && make injector

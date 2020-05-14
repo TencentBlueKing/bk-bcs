@@ -1,0 +1,11 @@
+apiVersion: v1
+name: bscp-accessserver
+version: 0.2.1
+appVersion: 0.2.1
+tillerVersion: ">=2.7.2"
+description: Helm chart for bscp-accessserver deployment
+keywords:
+  - bscp-accessserver
+sources:
+  - https://github.com/Tencent/bk-bcs/bmsf-configuration
+engine: gotpl

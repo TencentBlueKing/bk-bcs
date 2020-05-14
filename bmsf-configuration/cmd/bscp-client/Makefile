@@ -1,0 +1,30 @@
+SERVER = bk-bscp-client
+
+# debug build
+PWD         = $(shell pwd)
+LOCALBUILD  = $(PWD)/build
+OUTPUT_DIR ?= $(LOCALBUILD)
+
+# debug version
+LDVersionFLAG ?= "-X bk-bscp/internal/version.VERSION=DEBUG \
+	-X bk-bscp/internal/version.BUILDTIME=DEBUG \
+	-X bk-bscp/internal/version.GITHASH=DEBUG"
+
+BINDIR = ${OUTPUT_DIR}/$(SERVER)
+BIN    = $(BINDIR)/$(SERVER)
+
+GOENVPATH = $(shell go env GOPATH)
+PROTOCOL  = $(GOENVPATH)/src/bk-bscp/internal/protocol
+SCRIPTS   = $(GOENVPATH)/src/bk-bscp/scripts
+
+default:
+	@echo -e "\e[34;1mBuilding $(SERVER)...\033[0m"
+	go build -ldflags ${LDVersionFLAG} -gcflags "-N -l" -o $(BIN) main.go
+	@cp -r etc $(BINDIR)
+	@echo -e "\e[34;1mBuild $(SERVER) success!\n\033[0m"
+
+proto:
+	cd $(PROTOCOL) && make
+
+clean:
+	@rm -rf $(BINDIR) $(LOCALBUILD)

@@ -14,7 +14,6 @@
 package etcd
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
@@ -22,6 +21,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -110,22 +110,24 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	} else {
 		v2Application, err = client.Create(v2Application)
 	}
+	if err != nil {
+		return err
+	}
 
 	application.ResourceVersion = v2Application.ResourceVersion
 	saveCacheApplication(application.RunAs, application.ID, application)
-	return err
+	return nil
 }
 
 func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) {
-	client := store.BkbcsClient.Applications(runAs)
-	v2App, err := client.List(metav1.ListOptions{})
+	apps, err := store.ListApplications(runAs)
 	if err != nil {
 		return nil, err
 	}
 
-	nodes := make([]string, 0, len(v2App.Items))
-	for _, app := range v2App.Items {
-		nodes = append(nodes, app.Spec.ID)
+	nodes := make([]string, 0, len(apps))
+	for _, app := range apps {
+		nodes = append(nodes, app.ID)
 	}
 
 	return nodes, nil
@@ -153,12 +155,15 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 
 	app := &v2App.Spec.Application
 	app.ResourceVersion = v2App.ResourceVersion
-	saveCacheApplication(runAs, appID, app)
 	return app, nil
 }
 
 //ListApplications is used to get all applications
 func (store *managerStore) ListApplications(runAs string) ([]*types.Application, error) {
+	if cacheMgr.isOK {
+		return listCacheRunAsApplications(runAs)
+	}
+
 	client := store.BkbcsClient.Applications(runAs)
 	v2Apps, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -178,15 +183,19 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	client := store.BkbcsClient.Applications(runAs)
 	err := client.Delete(appID, &metav1.DeleteOptions{})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	deleteAppCacheNode(runAs, appID)
-	return err
+	return nil
 }
 
 func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
+	if cacheMgr.isOK {
+		return listCacheApplications()
+	}
+
 	client := store.BkbcsClient.Applications("")
 	v2Apps, err := client.List(metav1.ListOptions{})
 	if err != nil {

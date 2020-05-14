@@ -14,6 +14,7 @@
 package v4
 
 import (
+	"context"
 	"net/url"
 
 	commonTypes "bk-bcs/bcs-common/common/types"
@@ -101,6 +102,10 @@ type Scheduler interface {
 	GetCustomResource(clusterID, apiVersion, plural, namespace, name string) ([]byte, error)
 	//DeleteCustomResource delete specified CRD
 	DeleteCustomResource(clusterID, apiVersion, plural, namespace, name string) error
+
+	CreateContainerExec(clusterId, containerId, hostIp string, command []string) (string, error)
+	StartContainerExec(ctx context.Context, clusterId, execId, containerId, hostIp string) (types.HijackedResponse, error)
+	ResizeContainerExec(clusterId, execId, hostIp string, height, width int) error
 }
 
 const (
@@ -123,6 +128,9 @@ const (
 	bcsSchedulerDeployDefinitionURI         = "%s/bcsapi/v4/scheduler/mesos/definition/deployment/%s/%s"
 	bcsSchedulerCustomResourceURL           = "%s/bcsapi/v4/scheduler/mesos/customresources"
 	bcsScheudlerCustomResourceDefinitionURL = "%s/bcsapi/v4/scheduler/mesos/customresourcedefinitions"
+	bcsSchedulerCreateExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/create_exec?host_ip=%s"
+	bcsSchedulerStartExecUri                = "%s/bcsapi/v4/scheduler/mesos/webconsole/start_exec?host_ip=%s&container_id=%s&exec_id=%s"
+	bcsSchedulerResizeExecUri               = "%s/bcsapi/v4/scheduler/mesos/webconsole/resize_exec?host_ip=%s"
 )
 
 type bcsScheduler struct {

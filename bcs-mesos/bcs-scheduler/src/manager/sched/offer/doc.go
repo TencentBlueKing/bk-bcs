@@ -18,7 +18,7 @@ struct Offer is responsible for the managements of mesos's offers, including add
 
 Offer need interface SchedManager's function to manage offers, so we need struct
 SchedManager to new struct offer. Interface SchedManager have four functions, for
-details please look offer.go
+details please look interface.go
 
 	para := &OfferPara{
 		Sched: &SchedManager{},

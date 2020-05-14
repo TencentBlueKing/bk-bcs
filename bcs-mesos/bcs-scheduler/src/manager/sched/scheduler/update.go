@@ -791,7 +791,7 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 		blog.V(3).Infof("message status report: Task(%s) Running", taskId)
 		reportStatus = types.TASK_STATUS_RUNNING
 	default:
-		blog.Error("message status report: Unprocessed task status (%d), TaskID:%s", taskInfo, taskId)
+		blog.Warnf("message status report: Unprocessed task status (%v), TaskID:%s", taskInfo, taskId)
 		return
 	}
 

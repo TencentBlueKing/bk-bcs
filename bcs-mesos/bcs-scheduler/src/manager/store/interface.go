@@ -52,7 +52,7 @@ type Store interface {
 	// save task to db
 	SaveTask(*types.Task) error
 	// list all tasks belong to a application by namespace and application name
-	ListTasks(string, string) ([]*types.Task, error)
+	//ListTasks(string, string) ([]*types.Task, error)
 	// fetch task from db
 	FetchTask(string) (*types.Task, error)
 	// delete task from db
@@ -106,7 +106,7 @@ type Store interface {
 	DeleteAgentSetting(string) error
 	// list agentsetting
 	ListAgentSettingNodes() ([]string, error)
-
+	ListAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error)
 	// save agentschedinfo
 	SaveAgentSchedInfo(*types.AgentSchedInfo) error
 	// fetch agentschedinfo
@@ -121,7 +121,7 @@ type Store interface {
 	// delete configmap
 	DeleteConfigMap(ns, name string) error
 	// list ns configmap
-	ListConfigmaps(runAs string) ([]*commtypes.BcsConfigMap, error)
+	//ListConfigmaps(runAs string) ([]*commtypes.BcsConfigMap, error)
 	// list all configmap
 	ListAllConfigmaps() ([]*commtypes.BcsConfigMap, error)
 
@@ -132,7 +132,7 @@ type Store interface {
 	// delete secret
 	DeleteSecret(ns, name string) error
 	// list ns secret
-	ListSecrets(runAs string) ([]*commtypes.BcsSecret, error)
+	//ListSecrets(runAs string) ([]*commtypes.BcsSecret, error)
 	// list all secret
 	ListAllSecrets() ([]*commtypes.BcsSecret, error)
 
@@ -143,7 +143,7 @@ type Store interface {
 	// delete service
 	DeleteService(ns, name string) error
 	// list service by namespace
-	ListServices(runAs string) ([]*commtypes.BcsService, error)
+	//ListServices(runAs string) ([]*commtypes.BcsService, error)
 	// list all services
 	ListAllServices() ([]*commtypes.BcsService, error)
 

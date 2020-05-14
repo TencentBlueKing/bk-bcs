@@ -155,7 +155,8 @@ func getBkeAgentInfo() (string, string) {
 	clusterId := viper.GetString("cluster.id")
 	registerToken := os.Getenv("REGISTER_TOKEN")
 
-	bkeUrl := fmt.Sprintf("%s/rest/clusters/%s/credentials", bkeServerAddress, clusterId)
+	//bkeUrl := fmt.Sprintf("%s/rest/clusters/%s/credentials", bkeServerAddress, clusterId)
+	bkeUrl := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/clusters/%s/credentials", bkeServerAddress, clusterId)
 
 	return bkeUrl, registerToken
 }

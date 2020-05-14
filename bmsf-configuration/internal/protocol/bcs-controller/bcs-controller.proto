@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package bcscontroller;
+
+service BCSController {
+    rpc PublishReleasePre(PublishReleasePreReq) returns (PublishReleasePreResp) {}
+    rpc PublishRelease(PublishReleaseReq) returns (PublishReleaseResp) {}
+    rpc RollbackRelease(RollbackReleaseReq) returns (RollbackReleaseResp) {}
+    rpc Report(ReportReq) returns (ReportResp) {}
+    rpc PullRelease(PullReleaseReq) returns (PullReleaseResp) {}
+    rpc PullConfigSetList(PullConfigSetListReq) returns (PullConfigSetListResp) {}
+}
+
+message PublishReleasePreReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+    string operator  = 4;
+}
+
+message PublishReleasePreResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message PublishReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+    string operator  = 4;
+}
+
+message PublishReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message RollbackReleaseReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string releaseid = 3;
+    string operator  = 4;
+}
+
+message RollbackReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message ReportReq {
+    uint64                     seq       = 1;
+    string                     bid       = 2;
+    string                     appid     = 3;
+    string                     clusterid = 4;
+    string                     zoneid    = 5;
+    string                     dc        = 6;
+    string                     IP        = 7;
+    string                     labels    = 8;
+    repeated common.ReportInfo infos     = 9;
+}
+
+message ReportResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message PullReleaseReq {
+    uint64 seq            = 1;
+    string bid            = 2;
+    string appid          = 3;
+    string clusterid      = 4;
+    string zoneid         = 5;
+    string dc             = 6;
+    string IP             = 7;
+    string labels         = 8;
+    string cfgsetid       = 9;
+    string localReleaseid = 10;
+    string releaseid      = 11;
+}
+
+message PullReleaseResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    common.Release release = 4;
+}
+
+message PullConfigSetListReq {
+    uint64 seq   = 1;
+    string bid   = 2;
+    string appid = 3;
+}
+
+message PullConfigSetListResp {
+    uint64                    seq        = 1;
+    common.ErrCode            errCode    = 2;
+    string                    errMsg     = 3;
+    repeated common.ConfigSet configSets = 4;
+}

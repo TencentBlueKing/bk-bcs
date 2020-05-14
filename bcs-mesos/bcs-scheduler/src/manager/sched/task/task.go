@@ -196,6 +196,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			task.Network = container.Docker.Network
 			task.NetworkType = container.Docker.NetworkType
 			task.NetLimit = container.NetLimit
+			//task.Cpuset = container.Cpuset
 			if container.Docker.Parameters != nil {
 				for _, parameter := range container.Docker.Parameters {
 					task.Parameters = append(task.Parameters, &types.Parameter{
@@ -1301,10 +1302,20 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 	executorResourceDone := false
 	for _, task := range taskgroup.Taskgroup {
 
+		//update task offer info
 		task.OfferId = *offer.GetId().Value
 		task.AgentId = *offer.AgentId.Value
 		task.AgentHostname = *offer.Hostname
 		task.AgentIPAddress, _ = offerP.GetOfferIp(offer)
+		//if task contains extended resources, then set device plugin socket address int it
+		for _, ex := range task.DataClass.ExtendedResources {
+			for _, re := range offer.GetResources() {
+				if re.GetName() == ex.Name {
+					//device plugin socket setted in role parameter
+					ex.Socket = re.GetRole()
+				}
+			}
+		}
 
 		resource := *task.DataClass.Resources
 		if !executorResourceDone && resource.Cpus >= 10*types.CPUS_PER_EXECUTOR {
@@ -1332,6 +1343,16 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 	}
 
 	return &taskgroupinfo
+}
+
+func getOfferCpusetResources(o *mesos.Offer) *mesos.Resource {
+	for _, i := range o.GetResources() {
+		if i.GetName() == "cpuset" {
+			return i
+		}
+	}
+
+	return nil
 }
 
 func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {

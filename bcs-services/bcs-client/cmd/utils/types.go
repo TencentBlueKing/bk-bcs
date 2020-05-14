@@ -43,6 +43,10 @@ const (
 	OptionString        = "string"
 	OptionScalar        = "scalar"
 	OptionAll           = "all"
+	OptionUserType      = "usertype"
+	OptionUserName      = "username"
+	OptionResourceType  = "resourcetype"
+	OptionVpc           = "vpcid"
 )
 
 //ValidateCustomResourceType check if speicifed CustomResource was registered before.

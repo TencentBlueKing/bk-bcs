@@ -1,0 +1,14 @@
+{
+  "bcs_zookeeper": "${bcsZkHost}",
+  "log_dir": "${log_dir}",
+  "pid_dir": "${pid_dir}",
+  "v": 3,
+  "ca_file": "${caFile}",
+  "server_cert_file": "${serverCertFile}",
+  "server_key_file": "${serverKeyFile}",
+  "client_cert_file": "${clientCertFile}",
+  "client_key_file": "${clientKeyFile}",
+  "local_ip": "${localIp}",
+  "admin_api": "http://localhost:8001",
+  "auth_token": "${gatewayToken}"
+}

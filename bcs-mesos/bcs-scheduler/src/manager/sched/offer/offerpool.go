@@ -17,9 +17,12 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	typesplugin "bk-bcs/bcs-common/common/plugin"
 	commtype "bk-bcs/bcs-common/common/types"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
 	"encoding/json"
+	"fmt"
 	"golang.org/x/net/context"
 	"sync"
 	"time"
@@ -55,7 +58,10 @@ type offerPool struct {
 
 	offerEvents chan []*mesos.Offer
 
+	//scheduler manager
 	scheduler SchedManager
+	//store
+	store store.Store
 
 	lostSlaveGracePeriod int
 	offerLifePeriod      int
@@ -75,6 +81,7 @@ func NewOfferPool(para *OfferPara) OfferPool {
 		scheduler:       para.Sched,
 		lostSlaves:      make(map[string]int64, 0),
 		offerEvents:     make(chan []*mesos.Offer, DefaultOfferEventLength),
+		store:           para.Store,
 	}
 
 	if para.LostSlaveGracePeriod > 0 {
@@ -361,7 +368,7 @@ func (p *offerPool) UseOffer(o *Offer) bool {
 
 	_, ok := p.offerIds[o.offerId]
 	if !ok {
-		blog.Errorf("use offer(%d | %s:%s), but not found", o.Id, o.offerId, o.hostname)
+		blog.Warnf("use offer(%d | %s:%s), but not found", o.Id, o.offerId, o.hostname)
 		return false
 	}
 
@@ -425,11 +432,10 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		} else {
 			blog.V(3).Infof("validateOffer offer(%s:%s) is ok", o.GetId().GetValue(), o.GetHostname())
 		}
-
+		//set offer attributes
 		p.setOffersAttributes([]*mesos.Offer{o})
-
+		//print offer info
 		p.printOffer(o)
-
 		//add agent deltaXXX 20180530
 		agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
 		if err != nil {
@@ -566,7 +572,14 @@ func (p *offerPool) setInnerOffersAttributes(offers []*mesos.Offer) {
 		}
 
 		if setting == nil {
-			blog.V(3).Infof("FetchAgentSetting ip %s is nil", ip)
+			blog.Infof("Fetch AgentSetting %s is nil, then create it", ip)
+			setting = &commtype.BcsClusterAgentSetting{
+				InnerIP: ip,
+			}
+			err = p.store.SaveAgentSetting(setting)
+			if err != nil {
+				blog.Errorf("save agentsetting %s error %s", ip, err.Error())
+			}
 			continue
 		}
 
@@ -683,18 +696,17 @@ func (p *offerPool) printOffer(offer *mesos.Offer) {
 func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtype.BcsClusterAgentSetting) error {
 
 	if agentSetting == nil {
+		blog.V(3).Infof("offer(%s:%s) don't have agentsetting", offer.GetId().GetValue(), offer.GetHostname())
 		return nil
 	}
 
+	//customized definition agent setting
 	for k, v := range agentSetting.AttrStrings {
-		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
+		blog.Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
 		var attr mesos.Attribute
 		key := k
 		value := v
-
-		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
-			offer.GetId().GetValue(), offer.GetHostname(), k, v)
 
 		attr.Name = &key
 		var attrType mesos.Value_Type = mesos.Value_TEXT
@@ -704,9 +716,9 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		attr.Text = &attrValue
 		offer.Attributes = append(offer.Attributes, &attr)
 	}
-
+	//customized definition agent setting
 	for k, v := range agentSetting.AttrScalars {
-		blog.V(3).Infof("offer(%s:%s) add attribute(%s:%f) from agentsetting",
+		blog.Infof("offer(%s:%s) add attribute(%s:%f) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
 		var attr mesos.Attribute
 		key := k
@@ -719,6 +731,85 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		attrValue.Value = &value.Value
 		attr.Scalar = &attrValue
 		offer.Attributes = append(offer.Attributes, &attr)
+	}
+
+	//noSchedule, likes k8s Taints\Tolerations
+	name := types.MesosAttributeNoSchedule
+	t := mesos.Value_SET
+	noScheduleAttr := &mesos.Attribute{
+		Name: &name,
+		Type: &t,
+		Set: &mesos.Value_Set{
+			Item: make([]string, 0),
+		},
+	}
+	for k, v := range agentSetting.NoSchedule {
+		blog.Infof("offer(%s:%s) add noSchedule attribute(%s:%s) from agentsetting",
+			offer.GetId().GetValue(), offer.GetHostname(), k, v)
+		if k == "" || v == "" {
+			continue
+		}
+		noScheduleAttr.Set.Item = append(noScheduleAttr.Set.Item, fmt.Sprintf("%s=%s", k, v))
+	}
+	if len(noScheduleAttr.Set.Item) > 0 {
+		offer.Attributes = append(offer.Attributes, noScheduleAttr)
+	}
+
+	pods := make([]*types.TaskGroup, 0, len(agentSetting.Pods))
+	//get node's pod list
+	for _, id := range agentSetting.Pods {
+		pod, err := p.scheduler.FetchTaskGroup(id)
+		if err != nil {
+			blog.Errorf("FetchTaskGroup %s failed: %s", id, err.Error())
+			continue
+		}
+		if pod.Status != types.TASKGROUP_STATUS_RUNNING {
+			blog.V(3).Infof("taskgroup %s status %s, and continue", pod.ID, pod.Status)
+			continue
+		}
+
+		pods = append(pods, pod)
+	}
+
+	//all extended resources of the node already allocated
+	allocatedResources := make(map[string]*commtype.ExtendedResource)
+	for _, pod := range pods {
+		ers := pod.GetExtendedResources()
+		for _, er := range ers {
+			o := allocatedResources[er.Name]
+			//if extended resources already exist, then superposition
+			if o != nil {
+				o.Value += er.Value
+			} else {
+				allocatedResources[er.Name] = er
+			}
+		}
+	}
+	by, _ := json.Marshal(allocatedResources)
+	blog.Infof("extended resources %s", string(by))
+	//extended resources, agentsetting have total extended resources
+	for _, ex := range agentSetting.ExtendedResources {
+		//if the extended resources have allocated, then minus it
+		allocated := allocatedResources[ex.Name]
+		var value float64
+		if allocated != nil {
+			value = ex.Capacity - allocated.Value
+		} else {
+			value = ex.Capacity
+		}
+		//current device plugin socket set int mesos.resource.Role parameter
+		socket := ex.Socket
+		r := &mesos.Resource{
+			Name: &ex.Name,
+			Type: mesos.Value_SCALAR.Enum(),
+			Scalar: &mesos.Value_Scalar{
+				Value: &value,
+			},
+			Role: &socket,
+		}
+		offer.Resources = append(offer.Resources, r)
+		blog.Infof("offer(%s:%s) add Extended Resources(%s:%f) from agentsetting",
+			offer.GetId().GetValue(), offer.GetHostname(), ex.Name, value)
 	}
 
 	return nil

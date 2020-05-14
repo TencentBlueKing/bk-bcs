@@ -1,0 +1,11 @@
+#
+# bscp-integrator configuration
+#
+enabled: true
+
+replicaCount: 1
+image: bscp-integrator:latest
+imagePullPolicy:
+nodeSelector: {}
+tolerations: []
+env: []

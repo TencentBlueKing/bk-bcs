@@ -1,0 +1,457 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package templateserver;
+
+service Template {
+    rpc Render(RenderReq) returns (RenderResp) {}
+    rpc PreviewRendering(PreviewRenderingReq) returns (PreviewRenderingResp) {}
+    
+    rpc CreateConfigTemplateSet(CreateConfigTemplateSetReq) returns (CreateConfigTemplateSetResp) {}
+    rpc DeleteConfigTemplateSet(DeleteConfigTemplateSetReq) returns (DeleteConfigTemplateSetResp) {}
+    rpc UpdateConfigTemplateSet(UpdateConfigTemplateSetReq) returns (UpdateConfigTemplateSetResp) {}
+    rpc QueryConfigTemplateSet(QueryConfigTemplateSetReq) returns (QueryConfigTemplateSetResp) {}
+    rpc QueryConfigTemplateSetList(QueryConfigTemplateSetListReq) returns (QueryConfigTemplateSetListResp) {}
+
+    rpc CreateConfigTemplate(CreateConfigTemplateReq) returns (CreateConfigTemplateResp) {}
+    rpc DeleteConfigTemplate(DeleteConfigTemplateReq) returns (DeleteConfigTemplateResp) {}
+    rpc UpdateConfigTemplate(UpdateConfigTemplateReq) returns (UpdateConfigTemplateResp) {}
+    rpc QueryConfigTemplate(QueryConfigTemplateReq) returns (QueryConfigTemplateResp) {}
+    rpc QueryConfigTemplateList(QueryConfigTemplateListReq) returns (QueryConfigTemplateListResp) {}
+
+    rpc CreateTemplateVersion(CreateTemplateVersionReq) returns (CreateTemplateVersionResp) {}
+    rpc DeleteTemplateVersion(DeleteTemplateVersionReq) returns (DeleteTemplateVersionResp) {}
+    rpc UpdateTemplateVersion(UpdateTemplateVersionReq) returns (UpdateTemplateVersionResp) {}
+    rpc QueryTemplateVersion(QueryTemplateVersionReq) returns(QueryTemplateVersionResp) {}
+    rpc QueryTemplateVersionList(QueryTemplateVersionListReq) returns(QueryTemplateVersionListResp) {}
+
+    rpc CreateConfigTemplateBinding(CreateConfigTemplateBindingReq) returns (CreateConfigTemplateBindingResp) {}
+    rpc DeleteConfigTemplateBinding(DeleteConfigTemplateBindingReq) returns (DeleteConfigTemplateBindingResp) {}
+    rpc SyncConfigTemplateBinding(SyncConfigTemplateBindingReq) returns (SyncConfigTemplateBindingResp) {}
+    rpc QueryConfigTemplateBinding(QueryConfigTemplateBindingReq) returns (QueryConfigTemplateBindingResp) {}
+    rpc QueryConfigTemplateBindingList(QueryConfigTemplateBindingListReq) returns (QueryConfigTemplateBindingListResp) {}
+
+    rpc CreateVariable(CreateVariableReq) returns (CreateVariableResp) {}
+    rpc UpdateVariable(UpdateVariableReq) returns (UpdateVariableResp) {}
+    rpc DeleteVariable(DeleteVariableReq) returns (DeleteVariableResp) {}
+    rpc QueryVariable(QueryVariableReq) returns (QueryVariableResp) {}
+    rpc QueryVariableList(QueryVariableListReq) returns (QueryVariableListResp) {}
+}
+
+message RenderReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string appid    = 3;
+    string commitid = 4;
+    string operator = 5;
+}
+
+message RenderResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message PreviewRenderingReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string appid    = 3;
+    string commitid = 4;
+    string operator = 5;
+}
+
+message PreviewRenderingResp {
+    uint64         seq               = 1;
+    common.ErrCode errCode           = 2;
+    string         errMsg            = 3;
+    repeated common.Configs cfgslist = 4;
+}
+
+message CreateConfigTemplateSetReq {
+    uint64 seq     = 1;
+    string bid     = 2;
+    string name    = 3;
+    string memo    = 4;
+    string fpath   = 5;
+    string creator = 6;
+}
+
+message CreateConfigTemplateSetResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    string         setid   = 4;
+}
+
+message DeleteConfigTemplateSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string setid    = 3;
+    string operator = 4;
+}
+
+message DeleteConfigTemplateSetResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message UpdateConfigTemplateSetReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string setid    = 3;
+    string name     = 4;
+    string memo     = 5;
+    string operator = 6;
+}
+
+message UpdateConfigTemplateSetResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryConfigTemplateSetReq {
+    uint64 seq   = 1;
+    string bid   = 2;
+    string setid = 3;
+}
+
+message QueryConfigTemplateSetResp {
+    uint64                   seq         = 1;
+    common.ErrCode           errCode     = 2;
+    string                   errMsg      = 3;
+    common.ConfigTemplateSet templateSet = 4;
+}
+
+message QueryConfigTemplateSetListReq {
+    uint64 seq   = 1;
+    string bid   = 2;
+    int32  index = 3;
+    int32  limit = 4;
+}
+
+message QueryConfigTemplateSetListResp {
+    uint64         seq                             = 1;
+    common.ErrCode errCode                         = 2;
+    string         errMsg                          = 3;
+    repeated common.ConfigTemplateSet templateSets = 4;
+}
+
+message CreateConfigTemplateReq {
+    uint64 seq          = 1;
+    string bid          = 2;
+    string setid        = 3;
+    string name         = 4;
+    string memo         = 5;
+    string user         = 6;
+    string group        = 7;
+    int32  permission   = 8;
+    string fileEncoding = 9;
+    int32  engineType   = 10;
+    string creator      = 11;
+}
+
+message CreateConfigTemplateResp {
+    uint64         seq        = 1;
+    common.ErrCode errCode    = 2;
+    string         errMsg     = 3;
+    string         templateid = 4;
+}
+
+message DeleteConfigTemplateReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string templateid = 3;
+    string operator   = 4;
+}
+
+message DeleteConfigTemplateResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message UpdateConfigTemplateReq {
+    uint64 seq          = 1;
+    string bid          = 2;
+    string templateid   = 3;
+    string name         = 4;
+    string memo         = 5;
+    string user         = 6;
+    string group        = 7;
+    int32  permission   = 8;
+    string fileEncoding = 9;
+    string operator     = 10;
+}
+
+message UpdateConfigTemplateResp {
+    uint64         seq        = 1;
+    common.ErrCode errCode    = 2;
+    string         errMsg     = 3;
+}
+
+message QueryConfigTemplateReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string templateid = 3;
+}
+
+message QueryConfigTemplateResp {
+    uint64                seq            = 1;
+    common.ErrCode        errCode        = 2;
+    string                errMsg         = 3;
+    common.ConfigTemplate configTemplate = 4;
+}
+
+message QueryConfigTemplateListReq {
+    uint64 seq   = 1;
+    string bid   = 2;
+    string setid = 3;
+    int32  index = 4;
+    int32  limit = 5;
+}
+
+message QueryConfigTemplateListResp {
+    uint64         seq                             = 1;
+    common.ErrCode errCode                         = 2;
+    string         errMsg                          = 3;
+    repeated common.ConfigTemplate configTemplates = 4;
+}
+
+message CreateTemplateVersionReq {
+    uint64 seq         = 1;
+    string bid         = 2;
+    string templateid  = 3;
+    string versionName = 4;
+    string memo        = 5;
+    string creator     = 6;
+    string content     = 7;
+}
+
+message CreateTemplateVersionResp {
+    uint64         seq       = 1;
+    common.ErrCode errCode   = 2;
+    string         errMsg    = 3;
+    string         versionid = 4;
+}
+
+message DeleteTemplateVersionReq {
+    uint64 seq         = 1;
+    string bid         = 2;
+    string versionid   = 3;
+    string operator    = 4;
+}
+
+message DeleteTemplateVersionResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message UpdateTemplateVersionReq {
+    uint64 seq         = 1;
+    string bid         = 2;
+    string versionid   = 3;
+    string versionName = 4;
+    string memo        = 5;
+    string operator    = 6;
+    string content     = 7;
+}
+
+message UpdateTemplateVersionResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryTemplateVersionReq {
+    uint64 seq         = 1;
+    string bid         = 2;
+    string versionid   = 3;
+}
+
+message QueryTemplateVersionResp {
+    uint64                 seq             = 1;
+    common.ErrCode         errCode         = 2;
+    string                 errMsg          = 3;
+    common.TemplateVersion templateVersion = 4;
+}
+
+message QueryTemplateVersionListReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string templateid = 3;
+    int32  index      = 4;
+    int32  limit      = 5;
+}
+
+message QueryTemplateVersionListResp {
+    uint64         seq                               = 1;
+    common.ErrCode errCode                           = 2;
+    string         errMsg                            = 3;
+    repeated common.TemplateVersion templateVersions = 4;
+}
+
+message CreateConfigTemplateBindingReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string templateid    = 3;
+    string appid         = 4;
+    string versionid     = 5;
+    string bindingParams = 6;
+    string creator       = 7;
+}
+
+message CreateConfigTemplateBindingResp {
+    uint64         seq      = 1;
+    common.ErrCode errCode  = 2;
+    string         errMsg   = 3;
+    string         cfgsetid = 4;
+    string         commitid = 5;
+}
+
+message DeleteConfigTemplateBindingReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string templateid = 3;
+    string appid      = 4;
+    string operator   = 5;
+}
+
+message DeleteConfigTemplateBindingResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message SyncConfigTemplateBindingReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string templateid    = 3;
+    string appid         = 4;
+    string versionid     = 5;
+    string bindingParams = 6;
+    string operator      = 7;
+}
+
+message SyncConfigTemplateBindingResp {
+    uint64         seq      = 1;
+    common.ErrCode errCode  = 2;
+    string         errMsg   = 3;
+    string         commitid = 4;
+}
+
+message QueryConfigTemplateBindingReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string templateid = 3;
+    string appid      = 4;
+}
+
+message QueryConfigTemplateBindingResp {
+    uint64                       seq                   = 1;
+    common.ErrCode               errCode               = 2;
+    string                       errMsg                = 3;
+    common.ConfigTemplateBinding configTemplateBinding = 4;
+}
+
+message QueryConfigTemplateBindingListReq {
+    uint64 seq        = 1;
+    string bid        = 2;
+    string templateid = 3;
+    string appid      = 4;
+    int32  index      = 5;
+    int32  limit      = 6;
+}
+
+message QueryConfigTemplateBindingListResp {
+    uint64         seq                                           = 1;
+    common.ErrCode errCode                                       = 2;
+    string         errMsg                                        = 3;
+    repeated common.ConfigTemplateBinding configTemplateBindings = 4;
+}
+
+message CreateVariableReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string cluster       = 3;
+    string clusterLabels = 4;
+    string zone          = 5;
+    int32  type          = 6;
+    string key           = 7;
+    string value         = 8;
+    string memo          = 9;
+    string creator       = 10;
+}
+
+message CreateVariableResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    string         vid     = 4;
+}
+
+message UpdateVariableReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string vid      = 3;
+    int32  type     = 4;
+    string key      = 5;
+    string value    = 6;
+    string memo     = 7;
+    string operator = 8;
+}
+
+message UpdateVariableResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message DeleteVariableReq {
+    uint64 seq      = 1;
+    string bid      = 2;
+    string vid      = 3;
+    int32  type     = 4;
+    string operator = 5;
+}
+
+message DeleteVariableResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryVariableReq {
+    uint64 seq  = 1;
+    string bid  = 2;
+    string vid  = 3;
+    int32  type = 4;
+}
+
+message QueryVariableResp {
+    uint64          seq     = 1;
+    common.ErrCode  errCode = 2;
+    string          errMsg  = 3;
+    common.Variable var     = 4;
+}
+
+message QueryVariableListReq {
+    uint64 seq           = 1;
+    string bid           = 2;
+    string cluster       = 3;
+    string clusterLabels = 4;
+    string zone          = 5;
+    int32  type          = 6;
+    int32  index         = 7;
+    int32  limit         = 8;
+}
+
+message QueryVariableListResp {
+    uint64         seq            = 1;
+    common.ErrCode errCode        = 2;
+    string         errMsg         = 3;
+    repeated common.Variable vars = 4;
+}

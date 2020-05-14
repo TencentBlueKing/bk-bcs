@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bscp-integrator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bscp-integrator
+spec:
+  ports:
+  - port: 9510
+    targetPort: 9510
+    name: grpc
+  selector:
+    app: bscp-integrator

@@ -165,6 +165,7 @@ func (n *NetworkDetection) createClusterDeployInfo(clusterid string) error {
 			deploy := &types.DeployDetection{
 				Clusterid: node.Clusterid,
 				Idc:       node.Idc,
+				IdcUnit:   node.IdcUnit,
 				Nodes:     make([]*types.NodeInfo, 0),
 				Template:  n.deployTemplate,
 			}
@@ -386,8 +387,10 @@ func (n *NetworkDetection) getAllDetectionPods(req *restful.Request, resp *restf
 			}
 
 			pod := &types.DetectionPod{
-				Ip:  tools.GetTaskgroupIp(o),
-				Idc: deploy.Idc,
+				Ip:        tools.GetTaskgroupIp(o),
+				Idc:       deploy.Idc,
+				IdcUnit:   deploy.IdcUnit,
+				ClusterId: deploy.Clusterid,
 			}
 			if pod.Ip == "" || pod.Idc == "" {
 				blog.Warnf("region(%s:%s) Pod %s Ip %s Idc %s, not ready", deploy.Clusterid, deploy.Idc, o.ID, pod.Ip, pod.Idc)

@@ -48,3 +48,10 @@ const (
 	HttpMethod_DELETE = "DELETE"
 	HttpMethod_PATCH  = "PATCH"
 )
+
+type APIResponse struct {
+	Result  bool        `json:"result"`
+	Code    int         `json:"code"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+}

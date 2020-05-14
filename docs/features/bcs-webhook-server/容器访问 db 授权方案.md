@@ -46,7 +46,7 @@ spec:
   appName: xxxx
   targetDb: xxxx
   dbType: spider
-  callUser: bryanhe
+  callUser: xxxx
   dbName: db%
 ```
 - podSelector: 指定的 labels 用来选择包含有相同 labels 的 pod ，选中的 pod 才会使用该 crd 配置进行授权 init-container 的注入。  

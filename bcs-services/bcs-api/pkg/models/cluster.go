@@ -69,3 +69,14 @@ type RegisterToken struct {
 	Token     string    `json:"token" gorm:"size:256"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type WsClusterCredentials struct {
+	ID            uint   `gorm:"primary_key"`
+	ServerKey     string `gorm:"unique;not null"`
+	ClientModule  string `gorm:"not null"`
+	ServerAddress string `gorm:"size:2048"`
+	CaCertData    string `gorm:"size:4096"`
+	UserToken     string `gorm:"size:2048"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
