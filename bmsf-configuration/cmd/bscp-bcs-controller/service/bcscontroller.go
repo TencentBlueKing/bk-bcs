@@ -14,8 +14,10 @@ package service
 
 import (
 	"log"
+	"math"
 	"net"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -120,9 +122,26 @@ func (c *BCSController) initServiceDiscovery() {
 		c.viper.GetString("server.metadata"),
 		c.viper.GetInt64("server.discoveryttl"))
 
-	c.etcdCfg = clientv3.Config{
-		Endpoints:   c.viper.GetStringSlice("etcdCluster.endpoints"),
-		DialTimeout: c.viper.GetDuration("etcdCluster.dialtimeout"),
+	caFile := c.viper.GetString("etcdCluster.tls.cafile")
+	certFile := c.viper.GetString("etcdCluster.tls.certfile")
+	keyFile := c.viper.GetString("etcdCluster.tls.keyfile")
+	certPassword := c.viper.GetString("etcdCluster.tls.certPassword")
+
+	if len(caFile) != 0 || len(certFile) != 0 || len(keyFile) != 0 {
+		tlsConf, err := ssl.ClientTslConfVerity(caFile, certFile, keyFile, certPassword)
+		if err != nil {
+			logger.Fatalf("load etcd tls files failed, %+v", err)
+		}
+		c.etcdCfg = clientv3.Config{
+			Endpoints:   c.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: c.viper.GetDuration("etcdCluster.dialtimeout"),
+			TLS:         tlsConf,
+		}
+	} else {
+		c.etcdCfg = clientv3.Config{
+			Endpoints:   c.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: c.viper.GetDuration("etcdCluster.dialtimeout"),
+		}
 	}
 	logger.Info("init service discovery success.")
 }
@@ -130,11 +149,8 @@ func (c *BCSController) initServiceDiscovery() {
 // create datamanager gRPC client.
 func (c *BCSController) initDataManagerClient() {
 	ctx := &grpclb.Context{
-		Target: c.viper.GetString("datamanager.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   c.viper.GetStringSlice("etcdCluster.endpoints"),
-			DialTimeout: c.viper.GetDuration("etcdCluster.dialtimeout"),
-		},
+		Target:     c.viper.GetString("datamanager.servicename"),
+		EtcdConfig: c.etcdCfg,
 	}
 
 	// gRPC dial options, with insecure and timeout.
@@ -150,7 +166,6 @@ func (c *BCSController) initDataManagerClient() {
 	}
 	c.dataMgrConn = conn
 	c.dataMgrCli = pbdatamanager.NewDataManagerClient(conn.Conn())
-
 	logger.Info("create datamanager gRPC client success.")
 }
 
@@ -246,7 +261,7 @@ func (c *BCSController) Run() {
 	logger.Info("register service for discovery success.")
 
 	// run service.
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
 	pb.RegisterBCSControllerServer(s, c)
 	logger.Info("BCS Controller running now.")
 

@@ -3,6 +3,7 @@
 .vscode/
 *exvim*
 build/
+vendor/
 vendor/github.com/Nvveen/Gotty/
 vendor/github.com/bitly/go-simplejson/
 vendor/github.com/coredns/coredns/

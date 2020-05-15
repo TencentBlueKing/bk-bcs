@@ -30,7 +30,6 @@ import (
 	shardingaction "bk-bscp/cmd/bscp-businessserver/actions/sharding"
 	shardingdbaction "bk-bscp/cmd/bscp-businessserver/actions/shardingdb"
 	strategyaction "bk-bscp/cmd/bscp-businessserver/actions/strategy"
-	tplaction "bk-bscp/cmd/bscp-businessserver/actions/template"
 	zoneaction "bk-bscp/cmd/bscp-businessserver/actions/zone"
 	pb "bk-bscp/internal/protocol/businessserver"
 	pbcommon "bk-bscp/internal/protocol/common"
@@ -644,6 +643,23 @@ func (bs *BusinessServer) ConfirmCommit(ctx context.Context, req *pb.ConfirmComm
 	}()
 
 	action := commitaction.NewConfirmAction(bs.viper, bs.dataMgrCli, bs.templateSvrCli, req, response)
+	bs.executor.Execute(action)
+
+	return response, nil
+}
+
+// PreviewCommit confirms target commit.
+func (bs *BusinessServer) PreviewCommit(ctx context.Context, req *pb.PreviewCommitReq) (*pb.PreviewCommitResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("PreviewCommit[%d]| input[%+v]", req.Seq, req)
+	response := &pb.PreviewCommitResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := bs.collector.StatRequest("PreviewCommit", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("PreviewCommit[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := commitaction.NewPreviewAction(bs.viper, bs.templateSvrCli, bs.dataMgrCli, req, response)
 	bs.executor.Execute(action)
 
 	return response, nil
@@ -1273,23 +1289,6 @@ func (bs *BusinessServer) QueryAuditList(ctx context.Context, req *pb.QueryAudit
 	}()
 
 	action := auditaction.NewListAction(bs.viper, bs.dataMgrCli, req, response)
-	bs.executor.Execute(action)
-
-	return response, nil
-}
-
-// PreviewRendering previews target template rendering results.
-func (bs *BusinessServer) PreviewRendering(ctx context.Context, req *pb.PreviewRenderingReq) (*pb.PreviewRenderingResp, error) {
-	rtime := time.Now()
-	logger.V(2).Infof("PreviewRendering[%d]| input[%+v]", req.Seq, req)
-	response := &pb.PreviewRenderingResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
-
-	defer func() {
-		cost := bs.collector.StatRequest("PreviewRendering", response.ErrCode, rtime, time.Now())
-		logger.V(2).Infof("PreviewRendering[%d]| output[%dms][%+v]", req.Seq, cost, response)
-	}()
-
-	action := tplaction.NewPreviewAction(bs.viper, bs.templateSvrCli, req, response)
 	bs.executor.Execute(action)
 
 	return response, nil

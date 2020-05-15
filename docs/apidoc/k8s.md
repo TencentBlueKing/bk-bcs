@@ -1,220 +1,96 @@
 # k8s api 使用说明
 
-## rest api
+## 前置条件
+请参考 [基于 k8s 的容器编排](../features/k8s/基于k8s的容器编排.md)，确保已完成 bcs k8s 集群的初始化。  
+集群在 bcs 上完成初始化后，集群信息会被同步到 bcs-api-gateway ，通过 bcs-api-gateway 即能管理和调用集群。  
 
-### CreateUser
-#### 描述
-创建用户
-#### 请求地址
-- /rest/users/
-#### 请求方式
-- POST
-#### 请求参数
-Content-Type: application/json
-```json
-{
-  "user_name": ""
-}
+## 认证鉴权
+对任意资源的访问都需要经过 bcs-user-manager 的认证和鉴权。  
+
+管理员可以直接使用 bcs-user-manager 的 API，或者使用 bcs-client 命令来创建用户，创建成功后会返回为该用户签发的 usertoken 。  
 ```
-#### 请求示例
-curl  -X POST -H "Content-Type: application/json" -H  "Authorization: Bearer {admin user_token}" http://bcs_server:8080/rest/users/ -d '{"user_name": "xx"}'
-#### 返回结果
-```json
+./bcs-client create --usertype=plain --username=xxx --type=user
 {
- "ID": 6,
- "Name": "plain:xx",
- "IsSuperUser": false,
- "CreatedAt": "2019-02-22T17:05:55.611242586+08:00",
- "BackendType": "",
- "BackendCredentials": null
+  "created_at": "2020-05-12T10:59:40.060551306+08:00",
+  "expires_at": "2020-05-13T10:59:40.032198191+08:00",
+  "id": 9,
+  "name": "xxx",
+  "updated_at": "2020-05-12T10:59:40.060551306+08:00",
+  "user_token": "zYCZ962Ex5KW0L7D1WmdR0ijZkEkNIE6",
+  "user_type": 3
 }
 ```
 
-### QueryBCSUserByName
-#### 描述
-查询用户
-#### 请求地址
-- /rest/users/{user_name}
-#### 请求方式
-- GET
-#### 请求参数
-Content-Type: application/json
-#### 请求示例
-curl  -X GET -H "Content-Type: application/json" -H  "Authorization: Bearer {admin user_token}" http://bcs_server:8080/rest/users/xx
-#### 返回结果
-```json
+管理员可以直接调用  bcs-user-manager 的 API ，或者使用 bcs-client 命令来给某用户授予某种资源的权限。  
+目前 bcs-user-manager 支持对某一资源授予管理员和只读者的角色，其中管理员具有 GET\POST\PUT\DELETE\PATCH 等所有操作的权限，只读者只有 GET 的权限。  
+
+授予 xxx 用户 BCS-K8S-100 集群管理 (manager) 的权限，为 yy 用户授权 BCS-K8S-101 集群 (viewer) 的权限。
+```
+# cat crd_permission.json
 {
- "ID": 6,
- "Name": "plain:xx",
- "IsSuperUser": false,
- "CreatedAt": "2019-02-22T17:05:56+08:00",
- "BackendType": "",
- "BackendCredentials": null
+  "apiVersion":"v1",
+  "kind":"permission",
+  "metadata": {
+     "name":"my-permission"
+  },
+  "spec":{
+     "permissions":[
+       {"user_name":"xxx", "resource_type":"cluster", "resource":"BCS-K8S-100", "role":"manager"},
+       {"user_name":"yy", "resource_type":"cluster", "resource":"BCS-K8S-101", "role":"viewer"}
+     ]
+  }
 }
+
+# ./bcs-client grant --type=permission --from-file=crd_permission.json
+success to grant permission
 ```
 
-### CreateUserToken
-#### 描述
-创建user_token
-#### 请求地址
-- /rest/users/{user_id}/tokens
-#### 请求方式
-- POST
-#### 请求参数
-Content-Type: application/json
-#### 请求示例
-curl  -X POST -H "Content-Type: application/json" -H  "Authorization: Bearer {admin user_token}" http://bcs_server:8080/rest/users/6/tokens
-#### 返回结果
-```json
-{
- "ID": 4,
- "UserId": 6,
- "Type": 3,
- "Value": "zztCQlWdGMqM8sxdfWVLjbl6PWb7yMjI",
- "ExpiresAt": "2029-02-19T17:45:46.521486741+08:00",
- "CreatedAt": "2019-02-22T17:45:46.52166867+08:00"
-}
-```
 
-### CreateBCSCluster
-#### 描述
-创建集群
-#### 请求地址
-- /rest/clusters/bcs
-#### 请求方式
-- POST
-#### 请求参数
-Content-Type: application/json
-```json
-{
-  "id":"", 
-  "project_id":""
-}
-```
-#### 请求示例
-curl -X POST -H "Content-Type: application/json" -H  "Authorization: Bearer {user_token}" http://bcs_server:8080/rest/clusters/bcs -d '{"id":"k8s-002", "project_id":"project-002"}'
-#### 参数返回
-```json
-{
- "id": "bcs-k8s-002-P4E2Tj68",
- "provider": 2,
- "creator_id": 1,
- "identifier": "bcs-k8s-002-p4e2tj68-yky9VRNXsLIcv6Yd",
- "created_at": "2019-02-25T10:50:12+08:00",
- "turn_on_admin": false
-}
-```
+用户拿到管理员签发的 usertoken 后，并被授予了某个 k8s 集群的权限后，就能通过 bcs-api-gateway 提供的 API 来调用集群， bcs-api-gateway 会
+调用 bcs-user-manager 完成认证鉴权工作，实现 k8s 的原生 API 访问。    
 
-### QueryBCSClusterByID
-#### 描述
-查询集群
-#### 请求地址
-/rest/clusters/bcs/query_by_id/
-#### 请求方式
-- GET
-#### 请求参数
-Content-Type: application/json
-#### 请求示例
-curl -X GET -H "Content-Type: application/json" -H  "Authorization: Bearer {user_token}" http://bcs_server:8080/rest/clusters/bcs/query_by_id/?project_id=project-002\&cluster_id=k8s-002
-#### 返回结果
-```json
-{
- "id": "bcs-k8s-002-P4E2Tj68",
- "provider": 2,
- "creator_id": 1,
- "identifier": "bcs-k8s-002-p4e2tj68-yky9VRNXsLIcv6Yd",
- "created_at": "2019-02-25T10:50:12+08:00",
- "turn_on_admin": false
-}
-```
+## k8s API
 
-### CreateRegisterToken
-#### 描述
-创建 register_token
-#### 请求地址
-/rest/clusters/{cluster_id}/register_tokens
-#### 请求方式
-- POST
-#### 请求参数
-Content-Type: application/json
-#### 请求示例
-curl -X POST -H "Content-Type: application/json" -H  "Authorization: Bearer {user_token}" http://bcs_server:8080/rest/clusters/bcs-k8s-002-P4E2Tj68/register_tokens
-#### 返回结果
-```json
-[
- {
-  "id": 2,
-  "cluster_id": "bcs-k8s-002-P4E2Tj68",
-  "token": "GOSGAZK2ikFL3lxDZeMX2GTQzgT04rc7TQ6xqyjT15wI8aQpeeov9DXIUaEwhVY2JlMHOfl7Zgdt9VFXIDBXzJkANWeAR1OxS8tQQOBzUphaS257evTMarLRWeuDCULj",
-  "created_at": "2019-02-25T11:07:40+08:00"
- }
-]
+通过 k8s API 操作集群：  
 ```
-
-### UpdateCredentials
-#### 描述
-更新 k8s 集群的地址和证书信息，用于 bcs-kube-agent 上报集群信息
-#### 请求地址
-/rest/clusters/{cluster_id}/credentials
-#### 请求方式
-- PUT
-#### 请求参数
-Content-Type: application/json
-```json
-{
-  "register_token": "", 
-  "server_addresses": "", 
-  "cacert_data": "", 
-  "user_token": ""
-}
-```
-#### 请求示例
-curl -X PUT -H "Content-Type: application/json" -H  "Authorization: Bearer {user_token}" http://bcs_server:8080/rest/clusters/bcs-k8s-002-P4E2Tj68/credentials -d '{"register_token": "", "server_addresses": "http://10.0.0.0:6553", "cacert_data": "xx", "user_token": "xx"}'
-#### 返回结果
-```json
-{}
-```
-
-### GetClientCredentials
-#### 描述
-获取集群证书信息
-#### 请求地址
-/rest/clusters/{cluster_id}/client_credentials
-#### 请求方式
-- GET
-#### 请求参数
-Content-Type: application/json
-#### 请求示例
-curl -X GET -H "Content-Type: application/json" -H  "Authorization: Bearer {user_token}" http://bcs_server:8080/rest/clusters/bcs-k8s-002-P4E2Tj68/client_credentials
-#### 返回结果
-```json
-{
- "cluster_id": "bcs-k8s-002-P4E2Tj68",
- "server_address": "http://bcs_server:8080/tunnels/clusters/bcs-k8s-002-p4e2tj68-yky9VRNXsLIcv6Yd/",
- "user_token": "y99n7HTyYcrmsYSyXOFZcOBNydRBHtEc",
- "cacert_data": "xx"
-}
-```
-
-## k8s api
-通过 bcs-api 调用 k8s api 时，只需在原有的 k8s api 上加上前缀即可。
-### k8s version
-例如，查询 k8s version 的 api。
-#### 请求方式
-- GET
-#### 请求示例
-curl -X GET -H  "Authorization: Bearer {user_token}" http://bcs_server:8080/tunnels/clusters/bcs-k8s-001-opcnwwki-v6kLYNdxIafSOhJI/version
-#### 返回结果
-```json
+curl -k -X GET -H "Authorization: Bearer zYCZ962Ex5KW0L7D1WmdR0ijZkEkNIE6" https://0.0.0.0:8443/tunnels/clusters/BCS-K8S-100/version
 {
   "major": "1",
-  "minor": "12",
-  "gitVersion": "v1.12.3",
-  "gitCommit": "435f92c719f279a3a67808c80521ea17d5715c66",
+  "minor": "14+",
+  "gitVersion": "v1.14.3-tk8s-v1.1-1",
+  "gitCommit": "5f5efb53cb900bc0bccbe1bc9c57c7e3f55290db",
   "gitTreeState": "clean",
-  "buildDate": "2018-11-26T12:46:57Z",
-  "goVersion": "go1.10.4",
+  "buildDate": "2019-08-27T06:46:41Z",
+  "goVersion": "go1.12.9",
   "compiler": "gc",
   "platform": "linux/amd64"
 }
+```
+
+通过 kubeconfig 操作集群：  
+```
+# cat kubeconfig
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    api-version: v1
+    insecure-skip-tls-verify: true
+    server: https://0.0.0.0:8443/tunnels/clusters/BCS-K8S-100/
+  name: BCS-K8S-100
+contexts:
+- context:
+    cluster: BCS-K8S-100
+    user: xxx
+  name: BCS-K8S-100-xxx
+current-context: BCS-K8S-100-xxx
+users:
+- name: xxx
+  user:
+    token: zYCZ962Ex5KW0L7D1WmdR0ijZkEkNIE6
+
+# kubectl get node --kubeconfig=./kubeconfig
+NAME      STATUS   ROLES    AGE    VERSION
+master1   Ready    master   139d   v1.14.3-tk8s-v1.1-1
+node1     Ready    node     137d   v1.14.3-tk8s-v1.1-1
 ```

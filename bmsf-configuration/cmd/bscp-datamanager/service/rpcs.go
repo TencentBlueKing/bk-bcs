@@ -31,6 +31,11 @@ import (
 	shardingaction "bk-bscp/cmd/bscp-datamanager/actions/sharding"
 	shardingdbaction "bk-bscp/cmd/bscp-datamanager/actions/shardingdb"
 	strategyaction "bk-bscp/cmd/bscp-datamanager/actions/strategy"
+	templateaction "bk-bscp/cmd/bscp-datamanager/actions/template"
+	templatebindingaction "bk-bscp/cmd/bscp-datamanager/actions/templatebinding"
+	templatesetaction "bk-bscp/cmd/bscp-datamanager/actions/templateset"
+	templateversionaction "bk-bscp/cmd/bscp-datamanager/actions/templateversion"
+	variableaction "bk-bscp/cmd/bscp-datamanager/actions/variable"
 	zoneaction "bk-bscp/cmd/bscp-datamanager/actions/zone"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
@@ -1426,6 +1431,431 @@ func (dm *DataManager) QueryAuditList(ctx context.Context, req *pb.QueryAuditLis
 	}()
 
 	action := auditaction.NewListAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// CreateConfigTemplateSet create config template set
+func (dm *DataManager) CreateConfigTemplateSet(ctx context.Context, req *pb.CreateConfigTemplateSetReq) (*pb.CreateConfigTemplateSetResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("CreateConfigTemplateSet[%d]| input[%+v]", req.Seq, req)
+	response := &pb.CreateConfigTemplateSetResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("CreateConfigTemplateSet", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("CreateConfigTemplateSet[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatesetaction.NewCreateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// DeleteConfigTemplateSet delete config template set
+func (dm *DataManager) DeleteConfigTemplateSet(ctx context.Context, req *pb.DeleteConfigTemplateSetReq) (*pb.DeleteConfigTemplateSetResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("DeleteConfigTemplateSet[%d]| input[%+v]", req.Seq, req)
+	response := &pb.DeleteConfigTemplateSetResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("DeleteConfigTemplateSet", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("DeleteConfigTemplateSet[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatesetaction.NewDeleteAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// UpdateConfigTemplateSet update config template set
+func (dm *DataManager) UpdateConfigTemplateSet(ctx context.Context, req *pb.UpdateConfigTemplateSetReq) (*pb.UpdateConfigTemplateSetResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("UpdateConfigTemplateSet[%d]| input[%+v]", req.Seq, req)
+	response := &pb.UpdateConfigTemplateSetResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("UpdateConfigTemplateSet", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("UpdateConfigTemplateSet[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatesetaction.NewUpdateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryConfigTemplateSet query config template set
+func (dm *DataManager) QueryConfigTemplateSet(ctx context.Context, req *pb.QueryConfigTemplateSetReq) (*pb.QueryConfigTemplateSetResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryConfigTemplateSet[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryConfigTemplateSetResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryConfigTemplateSet", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryConfigTemplateSet[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatesetaction.NewQueryAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryConfigTemplateSetList query config template set list
+func (dm *DataManager) QueryConfigTemplateSetList(ctx context.Context, req *pb.QueryConfigTemplateSetListReq) (*pb.QueryConfigTemplateSetListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryConfigTemplateSetList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryConfigTemplateSetListResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryConfigTemplateSetList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryConfigTemplateSetList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatesetaction.NewListAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// CreateConfigTemplate create config template
+func (dm *DataManager) CreateConfigTemplate(ctx context.Context, req *pb.CreateConfigTemplateReq) (*pb.CreateConfigTemplateResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("CreateConfigTemplate[%d]| input[%+v]", req.Seq, req)
+	response := &pb.CreateConfigTemplateResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("CreateConfigTemplate", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("CreateConfigTemplate[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateaction.NewCreateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// UpdateConfigTemplate create config template
+func (dm *DataManager) UpdateConfigTemplate(ctx context.Context, req *pb.UpdateConfigTemplateReq) (*pb.UpdateConfigTemplateResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("UpdateConfigTemplate[%d]| input[%+v]", req.Seq, req)
+	response := &pb.UpdateConfigTemplateResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("UpdateConfigTemplate", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("UpdateConfigTemplate[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateaction.NewUpdateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// DeleteConfigTemplate delete config template
+func (dm *DataManager) DeleteConfigTemplate(ctx context.Context, req *pb.DeleteConfigTemplateReq) (*pb.DeleteConfigTemplateResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("DeleteConfigTemplate[%d]| input[%+v]", req.Seq, req)
+	response := &pb.DeleteConfigTemplateResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("DeleteConfigTemplate", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("DeleteConfigTemplate[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateaction.NewDeleteAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryConfigTemplate query config template
+func (dm *DataManager) QueryConfigTemplate(ctx context.Context, req *pb.QueryConfigTemplateReq) (*pb.QueryConfigTemplateResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryConfigTemplate[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryConfigTemplateResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryConfigTemplate", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryConfigTemplate[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateaction.NewQueryAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryConfigTemplateList query config template list
+func (dm *DataManager) QueryConfigTemplateList(ctx context.Context, req *pb.QueryConfigTemplateListReq) (*pb.QueryConfigTemplateListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryConfigTemplateList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryConfigTemplateListResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryConfigTemplateList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryConfigTemplateList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateaction.NewListAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// CreateTemplateVersion create template version
+func (dm *DataManager) CreateTemplateVersion(ctx context.Context, req *pb.CreateTemplateVersionReq) (*pb.CreateTemplateVersionResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("CreateTemplateVersion[%d]| input[%+v]", req.Seq, req)
+	response := &pb.CreateTemplateVersionResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("CreateTemplateVersion", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("CreateTemplateVersion[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateversionaction.NewCreateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// DeleteTemplateVersion delete template version
+func (dm *DataManager) DeleteTemplateVersion(ctx context.Context, req *pb.DeleteTemplateVersionReq) (*pb.DeleteTemplateVersionResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("DeleteTemplateVersion[%d]| input[%+v]", req.Seq, req)
+	response := &pb.DeleteTemplateVersionResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("DeleteTemplateVersion", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("DeleteTemplateVersion[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateversionaction.NewDeleteAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// UpdateTemplateVersion update template version
+func (dm *DataManager) UpdateTemplateVersion(ctx context.Context, req *pb.UpdateTemplateVersionReq) (*pb.UpdateTemplateVersionResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("UpdateTemplateVersion[%d]| input[%+v]", req.Seq, req)
+	response := &pb.UpdateTemplateVersionResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("UpdateTemplateVersion", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("UpdateTemplateVersion[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateversionaction.NewUpdateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryTemplateVersion query template version
+func (dm *DataManager) QueryTemplateVersion(ctx context.Context, req *pb.QueryTemplateVersionReq) (*pb.QueryTemplateVersionResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryTemplateVersion[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryTemplateVersionResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryTemplateVersion", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryTemplateVersion[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateversionaction.NewQueryAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryTemplateVersionList query template version list
+func (dm *DataManager) QueryTemplateVersionList(ctx context.Context, req *pb.QueryTemplateVersionListReq) (*pb.QueryTemplateVersionListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryTemplateVersionList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryTemplateVersionListResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryTemplateVersionList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryTemplateVersionList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templateversionaction.NewListAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// CreateConfigTemplateBinding create template binding
+func (dm *DataManager) CreateConfigTemplateBinding(ctx context.Context, req *pb.CreateConfigTemplateBindingReq) (*pb.CreateConfigTemplateBindingResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("CreateConfigTemplateBinding[%d]| input[%+v]", req.Seq, req)
+	response := &pb.CreateConfigTemplateBindingResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("CreateConfigTemplateBinding", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("CreateConfigTemplateBinding[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatebindingaction.NewCreateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// DeleteConfigTemplateBinding delete template binding
+func (dm *DataManager) DeleteConfigTemplateBinding(ctx context.Context, req *pb.DeleteConfigTemplateBindingReq) (*pb.DeleteConfigTemplateBindingResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("DeleteConfigTemplateBinding[%d]| input[%+v]", req.Seq, req)
+	response := &pb.DeleteConfigTemplateBindingResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("DeleteConfigTemplateBinding", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("DeleteConfigTemplateBinding[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatebindingaction.NewDeleteAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// UpdateConfigTemplateBinding update template binding
+func (dm *DataManager) UpdateConfigTemplateBinding(ctx context.Context, req *pb.UpdateConfigTemplateBindingReq) (*pb.UpdateConfigTemplateBindingResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("UpdateConfigTemplateBinding[%d]| input[%+v]", req.Seq, req)
+	response := &pb.UpdateConfigTemplateBindingResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("UpdateConfigTemplateBinding", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("UpdateConfigTemplateBinding[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatebindingaction.NewUpdateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryConfigTemplateBinding query template binding
+func (dm *DataManager) QueryConfigTemplateBinding(ctx context.Context, req *pb.QueryConfigTemplateBindingReq) (*pb.QueryConfigTemplateBindingResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryConfigTemplateBinding[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryConfigTemplateBindingResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryConfigTemplateBinding", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryConfigTemplateBinding[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatebindingaction.NewQueryAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryConfigTemplateBindingList query template binding list
+func (dm *DataManager) QueryConfigTemplateBindingList(ctx context.Context, req *pb.QueryConfigTemplateBindingListReq) (*pb.QueryConfigTemplateBindingListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryConfigTemplateBindingList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryConfigTemplateBindingListResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryConfigTemplateBindingList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryConfigTemplateBindingList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := templatebindingaction.NewListAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// CreateVariable create variable
+func (dm *DataManager) CreateVariable(ctx context.Context, req *pb.CreateVariableReq) (*pb.CreateVariableResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("CreateVariable[%d]| input[%+v]", req.Seq, req)
+	response := &pb.CreateVariableResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("CreateVariable", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("CreateVariable[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewCreateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// UpdateVariable update variable
+func (dm *DataManager) UpdateVariable(ctx context.Context, req *pb.UpdateVariableReq) (*pb.UpdateVariableResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("UpdateVariable[%d]| input[%+v]", req.Seq, req)
+	response := &pb.UpdateVariableResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("UpdateVariable", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("UpdateVariable[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewUpdateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// DeleteVariable delete variable
+func (dm *DataManager) DeleteVariable(ctx context.Context, req *pb.DeleteVariableReq) (*pb.DeleteVariableResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("DeleteVariable[%d]| input[%+v]", req.Seq, req)
+	response := &pb.DeleteVariableResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("DeleteVariable", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("DeleteVariable[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewDeleteAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryVariable query variable
+func (dm *DataManager) QueryVariable(ctx context.Context, req *pb.QueryVariableReq) (*pb.QueryVariableResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryVariable[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryVariableResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryVariable", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryVariable[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewQueryAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryVariableList query variable list
+func (dm *DataManager) QueryVariableList(ctx context.Context, req *pb.QueryVariableListReq) (*pb.QueryVariableListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryVariableList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryVariableListResp{}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryVariableList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryVariableList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewListAction(dm.viper, dm.smgr, req, response)
 	dm.executor.Execute(action)
 
 	return response, nil

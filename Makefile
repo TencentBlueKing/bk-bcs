@@ -34,8 +34,8 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy
-specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy
+default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy tools gateway
+specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy tools gateway
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche k8s-statefulsetplus
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
@@ -95,6 +95,7 @@ dns:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-dns ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
+	cp -r ${GOPATH}/pkg/mod/github.com/coredns/coredns\@v1.3.0/* vendor/github.com/coredns/coredns/
 	cp bcs-services/bcs-dns/plugin.cfg vendor/github.com/coredns/coredns/
 	cd vendor/github.com/coredns/coredns && make gen && cd -
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service bk-bcs/vendor/github.com/coredns/coredns
@@ -204,7 +205,9 @@ hpacontroller:pre
 sd-prometheus:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-service-prometheus-service ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-service-prometheus-service/bcs-service-prometheus ./bcs-services/bcs-sd-prometheus/main.go
+	cp -R ./install/conf/bcs-mesos-master/bcs-service-prometheus ${PACKAGEPATH}/bcs-mesos-master
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-service-prometheus-service/bcs-service-prometheus-service ./bcs-services/bcs-sd-prometheus/main.go
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-service-prometheus/bcs-service-prometheus ./bcs-services/bcs-sd-prometheus/main.go
 
 k8s-driver:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
@@ -243,9 +246,6 @@ network:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
 	cp ./install/conf/bcs-mesos-node/qcloud-eip/* ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/qcloud-eip ./bcs-services/bcs-network/qcloud-eip/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/macvlan ./vendor/github.com/containernetworking/plugins/plugins/main/macvlan/macvlan.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bridge ./vendor/github.com/containernetworking/plugins/plugins/main/bridge/bridge.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/ptp ./vendor/github.com/containernetworking/plugins/plugins/main/ptp/ptp.go
 
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
@@ -267,7 +267,7 @@ bcs-webhook-server:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./bcs-services/bcs-webhook-server/main.go
 
 detection:pre
-	mkdir -p ${PACKAGEPATH}/bcs-network-detection
+	cp -R ./install/conf/bcs-services/bcs-network-detection ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-network-detection/bcs-network-detection ./bcs-services/bcs-network-detection/main.go
 
 tools:

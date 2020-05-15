@@ -256,6 +256,8 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 		blog.Errorf("etcdstore build kubeconfig %s error %s", kubeconfig, err.Error())
 		return nil, err
 	}
+	restConfig.QPS = 1e6
+	restConfig.Burst = 2e6
 	blog.Infof("etcdstore build kubeconfig %s success", kubeconfig)
 
 	//build kubernetes clientset for kubeconfig

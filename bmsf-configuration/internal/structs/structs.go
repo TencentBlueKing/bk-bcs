@@ -84,54 +84,89 @@ type ConnServer struct {
 	ConnCount int64
 }
 
-// RuleKeyType is type of template rule.
-type RuleKeyType int
+/*
+	Template Rule List Example:
+	[
+		{
+			"cluster": "cluster1",
+			"clusterLabels": {
+				"environment": "test"
+			}
+		},
+		{
+			"cluster": "cluster1",
+			"clusterLabels": {
+				"environment": "test"
+			},
+			"zones": [
+				{
+					"zone": "zone1"
+				},
+				{
+					"zone": "zone2"
+				}
+			]
+		},
+		{
+			"cluster": "cluster1",
+			"clusterLabels": {
+				"environment": "test"
+			},
+			"zones": [
+				{
+					"zone": "zone1",
+					"instances": [
+						{
+							"index": "127.0.0.1"
+						},
+						{
+							"index": "127.0.0.2"
+						}
+					]
+				},
+				{
+					"zone": "zone2",
+					"instances": [
+						{
+							"index": "127.0.0.3"
+						},
+						{
+							"index": "127.0.0.4"
+						}
+					]
+				}
+			]
+		}
+	]
+*/
 
-const (
-	// RuleKeyTypeCluster is cluster rule type.
-	RuleKeyTypeCluster RuleKeyType = iota
-
-	// RuleKeyTypeZone is zone rule type.
-	RuleKeyTypeZone
-)
-
-// Rule is bscp config template rule, template server would renders configs
-// with the template base on GO inner template engine. When the cluster or zone
-// name matched, the variables will be writed into the configs.
-type Rule struct {
-	// Type is template rule key type, 0 is cluster, 1 is zone.
-	Type RuleKeyType `json:"type"`
-
-	// Name is rule key name(cluster or zone name).
-	Name string `json:"name"`
-
+// RuleInstance is bscp config template rule instance, a rule instance generate a certain config
+type RuleInstance struct {
+	// Index is index of config instance of centain zone
+	Index string `json:"index"`
 	// Variables is template rendering variables.
 	Variables map[string]interface{} `json:"vars"`
 }
 
-/*
-   Template Rule List Example:
-   [
-       {
-           "type": 0,
-           "name": "cluster1",
-           "vars": {
-               "k1": "v1a",
-               "k2": 0,
-               "k3": ["v3a", "v3b"]
-           }
-       },
-       {
-           "type": 1,
-           "name": "zone1",
-           "vars": {
-               "k1": "v1b",
-               "k2": 1,
-               "k3": ["v3c", "v3d"]
-           }
-       }
-   ]
-*/
+// RuleZone is bscp config template rule for certain rule
+type RuleZone struct {
+	// Zone zone name
+	Zone string `json:"zone"`
+	// Instances rule instances
+	Instances []*RuleInstance `json:"instances"`
+}
+
+// Rule is bscp config template rule, template server would renders configs
+type Rule struct {
+	// Cluster cluster name
+	Cluster string `json:"cluster"`
+
+	// ClusterLabels cluster labels
+	ClusterLabels map[string]string `json:"clusterLabels"`
+
+	// Zone zone name.
+	Zones []*RuleZone `json:"zones"`
+}
 
 // RuleList is bscp configs template rule list.
 type RuleList []Rule

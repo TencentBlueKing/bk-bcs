@@ -1365,6 +1365,397 @@
         ]
       }
     },
+    "/v1/interface/configtemplatelist": {
+      "get": {
+        "summary": "获取配置模版元数据列表",
+        "description": "获取配置模版元数据列表",
+        "operationId": "QueryConfigTemplateList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryConfigTemplateListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "setid",
+            "description": "配置模版集合ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "index",
+            "description": "查询索引.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "description": "查询数量.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/configtemplates": {
+      "get": {
+        "summary": "获取配置模版元数据",
+        "description": "获取配置模版元数据",
+        "operationId": "QueryConfigTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryConfigTemplateResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "templateid",
+            "description": "配置模版ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "delete": {
+        "summary": "删除配置模版",
+        "description": "删除配置模版",
+        "operationId": "DeleteConfigTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverDeleteConfigTemplateResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "templateid",
+            "description": "配置模版ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "操作者.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "post": {
+        "summary": "创建配置模版",
+        "description": "创建配置模版",
+        "operationId": "CreateConfigTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateConfigTemplateResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateConfigTemplateReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "put": {
+        "summary": "更新配置模版",
+        "description": "更新配置模版",
+        "operationId": "UpdateConfigTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateConfigTemplateResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateConfigTemplateReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/configtemplatesetlist": {
+      "get": {
+        "summary": "查询配置模版集合元数据列表",
+        "description": "查询配置模版集合元数据列表",
+        "operationId": "QueryConfigTemplateSetList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryConfigTemplateSetListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "index",
+            "description": "查询索引.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "description": "查询数量.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/configtemplatesets": {
+      "get": {
+        "summary": "查询配置模版集合元数据",
+        "description": "查询配置模版集合元数据",
+        "operationId": "QueryConfigTemplateSet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryConfigTemplateSetResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "setid",
+            "description": "配置模版集合ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "delete": {
+        "summary": "删除配置模版集合",
+        "description": "删除配置模版集合",
+        "operationId": "DeleteConfigTemplateSet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverDeleteConfigTemplateSetResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "setid",
+            "description": "需要删除的模版集合ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "操作者名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "post": {
+        "summary": "创建配置模版集合",
+        "description": "创建配置模版集合",
+        "operationId": "CreateConfigTemplateSet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateConfigTemplateSetResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateConfigTemplateSetReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "put": {
+        "summary": "更新配置模版集合元数据",
+        "description": "更新配置模版集合元数据，只能更新name和desc",
+        "operationId": "UpdateConfigTemplateSet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateConfigTemplateSetResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateConfigTemplateSetReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
     "/v1/interface/confirm-commit": {
       "put": {
         "summary": "确认配置集合修改",
@@ -2162,6 +2553,34 @@
         ]
       }
     },
+    "/v1/interface/preview-commit": {
+      "put": {
+        "summary": "预览配置集合修改",
+        "description": "预览配置集合修改，使用模板则会进行模板的渲染，但是不会生成配置实例",
+        "operationId": "PreviewCommit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverPreviewCommitResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverPreviewCommitReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
     "/v1/interface/pub-multi-release": {
       "post": {
         "summary": "发布指定配置版本(组模式)",
@@ -2364,7 +2783,7 @@
           },
           {
             "name": "index",
-            "description": "扩展索引信息. 如GSEKit节点IP等信息，以此来做扩展维度的内容索引",
+            "description": "扩展索引信息. 如节点IP等信息，以此来做扩展维度的内容索引",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2462,62 +2881,6 @@
             "schema": {
               "$ref": "#/definitions/accessserverUpdateReleaseReq"
             }
-          }
-        ],
-        "tags": [
-          "Access"
-        ]
-      }
-    },
-    "/v1/interface/renderings": {
-      "get": {
-        "summary": "配置模板渲染预览接口",
-        "description": "配置模板渲染预览接口, 检查模板渲染可行性，检查集群、大区信息有效性",
-        "operationId": "PreviewRendering",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/accessserverPreviewRenderingResp"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "seq",
-            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "bid",
-            "description": "所属业务ID.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "appid",
-            "description": "所属应用ID.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "template",
-            "description": "配置模板.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "templateRule",
-            "description": "配置模板规则.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -2970,6 +3333,662 @@
             "required": false,
             "type": "integer",
             "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/templatebindinglist": {
+      "get": {
+        "summary": "查询配置模版与app的绑定关系列表",
+        "description": "查询配置模版与app的绑定关系列表",
+        "operationId": "QueryConfigTemplateBindingList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryConfigTemplateBindingListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "templateid",
+            "description": "配置模版ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appid",
+            "description": "绑定的应用ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "index",
+            "description": "查询索引.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "description": "查询数量.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/templatebindings": {
+      "get": {
+        "summary": "查询配置模版与特定app的绑定关系",
+        "description": "查询配置模版与特定app的绑定关系",
+        "operationId": "QueryConfigTemplateBinding",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryConfigTemplateBindingResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "templateid",
+            "description": "配置模版ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appid",
+            "description": "绑定的应用ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "delete": {
+        "summary": "删除配置模版和app的绑定关系",
+        "description": "删除配置模版和app的绑定关系，template server将删除本绑定关系对应的configset",
+        "operationId": "DeleteConfigTemplateBinding",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverDeleteConfigTemplateBindingResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "templateid",
+            "description": "配置模版ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appid",
+            "description": "绑定的应用ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "操作者名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "post": {
+        "summary": "创建配置模版和app的绑定关系",
+        "description": "创建配置模版和app的绑定关系，template server将为本次绑定关系创建对应的configset",
+        "operationId": "CreateConfigTemplateBinding",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateConfigTemplateBindingResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateConfigTemplateBindingReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "put": {
+        "summary": "更新配置模版和app的绑定关系",
+        "description": "更新配置模版和app的绑定关系，template server将为本次更新创建对应的commit",
+        "operationId": "SyncConfigTemplateBinding",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverSyncConfigTemplateBindingResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverSyncConfigTemplateBindingReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/templateversionlist": {
+      "get": {
+        "summary": "获取配置模版版本列表",
+        "description": "获取配置模版版本列表",
+        "operationId": "QueryTemplateVersionList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryTemplateVersionListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "templateid",
+            "description": "配置模版ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "index",
+            "description": "查询索引.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "description": "查询数量.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/templateversions": {
+      "get": {
+        "summary": "获取指定版本配置模版内容",
+        "description": "获取指定版本配置模版内容",
+        "operationId": "QueryTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryTemplateVersionResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "versionid",
+            "description": "配置模版版本ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "delete": {
+        "summary": "删除指定版本配置模版内容",
+        "description": "删除指定版本配置模版内容",
+        "operationId": "DeleteTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverDeleteTemplateVersionResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "versionid",
+            "description": "配置模版版本ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "操作者.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "post": {
+        "summary": "创建新版本配置模版",
+        "description": "创建新版本配置模版",
+        "operationId": "CreateTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateTemplateVersionResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateTemplateVersionReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "put": {
+        "summary": "更新指定版本配置模版内容",
+        "description": "更新指定版本配置模版内容",
+        "operationId": "UpdateTemplateVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateTemplateVersionResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateTemplateVersionReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/variablelist": {
+      "get": {
+        "summary": "查询变量列表",
+        "description": "查询变量列表",
+        "operationId": "QueryVariableList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryVariableListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cluster",
+            "description": "所属集群名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterLabels",
+            "description": "所属集群标签.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "zone",
+            "description": "所属zone名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": "变量类型. 0: 全局变量 1: 集群变量 2: zone变量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "index",
+            "description": "查询索引.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "description": "查询数量.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/variables": {
+      "get": {
+        "summary": "查询变量",
+        "description": "查询变量",
+        "operationId": "QueryVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vid",
+            "description": "变量ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": "变量类型. 0: 全局变量 1: 集群变量 2: zone变量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "delete": {
+        "summary": "删除变量",
+        "description": "删除变量",
+        "operationId": "DeleteVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverDeleteVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "所属业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vid",
+            "description": "变量ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "description": "变量类型. 0: 全局变量 1: 集群变量 2: zone变量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "operator",
+            "description": "操作者名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "post": {
+        "summary": "创建变量",
+        "description": "创建变量",
+        "operationId": "CreateVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateVariableReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "put": {
+        "summary": "更新变量",
+        "description": "更新变量",
+        "operationId": "UpdateVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateVariableReq"
+            }
           }
         ],
         "tags": [
@@ -3560,8 +4579,8 @@
           "title": "错误描述"
         }
       },
-      "description": "取消配置提交响应",
-      "title": "CancelCommitResp",
+      "description": "确认配置提交响应",
+      "title": "ConfirmCommitResp",
       "required": [
         "seq",
         "errCode",
@@ -3787,7 +4806,7 @@
         },
         "auth": {
           "type": "string",
-          "description": "格式：USER:PASSWORD",
+          "description": "格式：USER:PASSWORD, 示例: admin:pwd",
           "title": "授权AUTH信息",
           "maxLength": 64
         }
@@ -4169,6 +5188,314 @@
         "seq",
         "errCode",
         "errMsg"
+      ]
+    },
+    "accessserverCreateConfigTemplateBindingReq": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "bindingParams": "[{\"clusterLabels\":{\"environment\":\"yun测试环境\",\"cluster\":\"集群2\",\"dc\":\"shdc\"},\"zone\":\"zone1\",\"instanceid\":\"svc1_127_0_0_1\"},{\"clusterLabels\":{\"environment\":\"正式环境\",\"cluster\":\"集群2\",\"dc\":\"cddc\"},\"zone\":\"zone2\",\"instanceid\":\"svc2_127_0_0_1\"}]",
+        "creator": "mars"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID",
+          "maxLength": 64
+        },
+        "appid": {
+          "type": "string",
+          "title": "绑定的应用ID",
+          "maxLength": 64
+        },
+        "versionid": {
+          "type": "string",
+          "title": "配置模版版本内容ID",
+          "maxLength": 64
+        },
+        "bindingParams": {
+          "type": "string",
+          "title": "绑定参数",
+          "maxLength": 102400
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者名称",
+          "maxLength": 64
+        }
+      },
+      "description": "创建配置模版与app绑定关系请求",
+      "title": "CreateConfigTemplateBindingReq",
+      "required": [
+        "seq",
+        "bid",
+        "templateid",
+        "appid",
+        "versionid",
+        "bindingParams",
+        "operator"
+      ]
+    },
+    "accessserverCreateConfigTemplateBindingResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "cfgsetid": {
+          "type": "string",
+          "title": "本次绑定创建的configset id"
+        },
+        "commitid": {
+          "type": "string",
+          "title": "本次绑定创建的commit id"
+        }
+      },
+      "description": "创建配置模版与app绑定关系接口返回",
+      "title": "CreateConfigTemplateBindingResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverCreateConfigTemplateReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "setid": "s879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "name": "server.yaml",
+        "creator": "mars",
+        "engineType": 0,
+        "memo": "gameserver启动配置文件"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "setid": {
+          "type": "string",
+          "title": "所属配置模版集合ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "user": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "group": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "permission": {
+          "type": "integer",
+          "format": "int32",
+          "title": "配置模版名称"
+        },
+        "fileEncoding": {
+          "type": "string",
+          "title": "配置模版生成的文件编码格式",
+          "maxLength": 16
+        },
+        "engineType": {
+          "type": "integer",
+          "format": "int32",
+          "title": "模版引擎类型，0: golang模版；1: python mako模版",
+          "maximum": 1
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者姓名",
+          "maxLength": 64
+        }
+      },
+      "description": "创建配置模版请求",
+      "title": "CreateConfigTemplateReq",
+      "required": [
+        "seq",
+        "bid",
+        "setid",
+        "name",
+        "engineType",
+        "creator"
+      ]
+    },
+    "accessserverCreateConfigTemplateResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK",
+        "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID"
+        }
+      },
+      "description": "创建配置模版接口响应",
+      "title": "CreateConfigTemplateResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "templateid"
+      ]
+    },
+    "accessserverCreateConfigTemplateSetReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
+        "name": "gameserver配置集合",
+        "memo": "配置集合描述信息",
+        "fpath": "/data/app/gameserver",
+        "creator": "mars"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "新建的配置模版集合名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "新建的配置模版集合描述信息",
+          "maxLength": 64
+        },
+        "fpath": {
+          "type": "string",
+          "title": "新建的配置模版集合路径",
+          "maxLength": 128
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者名称",
+          "maxLength": 64
+        }
+      },
+      "description": "创建模版集合请求",
+      "title": "CreateConfigTemplateSetReq",
+      "required": [
+        "seq",
+        "bid",
+        "name",
+        "fpath",
+        "operator"
+      ]
+    },
+    "accessserverCreateConfigTemplateSetResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "ok",
+        "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "setid": {
+          "type": "string",
+          "title": "新创建的配置模版集合id"
+        }
+      },
+      "description": "创建模版集合接口响应",
+      "title": "CreateConfigTemplateSetResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "setid"
       ]
     },
     "accessserverCreateMultiCommitReq": {
@@ -4800,6 +6127,218 @@
         "errMsg"
       ]
     },
+    "accessserverCreateTemplateVersionReq": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "versionName": "v0.0.1",
+        "creator": "mars",
+        "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ=="
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID",
+          "maxLength": 64
+        },
+        "versionName": {
+          "type": "string",
+          "title": "配置版本名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注",
+          "maxLength": 64
+        },
+        "creator": {
+          "type": "string",
+          "title": "操作者",
+          "maxLength": 64
+        },
+        "content": {
+          "type": "string",
+          "description": "配置模版版本base64编码内容",
+          "title": "配置模版版本内容",
+          "maxLength": 2097152
+        }
+      },
+      "description": "创建配置模版版本请求",
+      "title": "CreateTemplateVersionReq",
+      "required": [
+        "seq",
+        "bid",
+        "templateid",
+        "versionName",
+        "creator",
+        "content"
+      ]
+    },
+    "accessserverCreateTemplateVersionResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "versionid": {
+          "type": "string",
+          "title": "配置模版版本ID"
+        }
+      },
+      "description": "创建配置模版版本接口响应",
+      "title": "CreateTemplateVersionResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "versionid"
+      ]
+    },
+    "accessserverCreateVariableReq": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "type": 0,
+        "key": "key1",
+        "value": "value1",
+        "memo": "这是一个全局变量",
+        "creator": "mars"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "cluster": {
+          "type": "string",
+          "title": "所属集群名称",
+          "maxLength": 64
+        },
+        "clusterLabels": {
+          "type": "string",
+          "title": "所属集群标签",
+          "maxLength": 128
+        },
+        "zone": {
+          "type": "string",
+          "title": "所属zone名称",
+          "maxLength": 64
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32",
+          "description": "0: 全局变量 1: 集群变量 2: zone变量",
+          "title": "变量类型",
+          "maximum": 2
+        },
+        "key": {
+          "type": "string",
+          "title": "变量key值",
+          "maxLength": 256
+        },
+        "value": {
+          "type": "string",
+          "title": "变量value值",
+          "maxLength": 1024
+        },
+        "memo": {
+          "type": "string",
+          "title": "变量描述",
+          "maxLength": 128
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者",
+          "maxLength": 64
+        }
+      },
+      "description": "创建变量请求。创建集群变量时clusterid必填，创建zone变量时clusterid和zoneid必填",
+      "title": "CreateVariableReq",
+      "required": [
+        "seq",
+        "bid",
+        "type",
+        "key",
+        "value",
+        "memo",
+        "creator"
+      ]
+    },
+    "accessserverCreateVariableResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "vid": "v323208-2341241252-1243124214"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "vid": {
+          "type": "string",
+          "title": "变量ID"
+        }
+      },
+      "description": "创建变量接口返回",
+      "title": "CreateVariableResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "vid"
+      ]
+    },
     "accessserverCreateZoneReq": {
       "type": "object",
       "example": {
@@ -4990,6 +6529,99 @@
         "errMsg"
       ]
     },
+    "accessserverDeleteConfigTemplateBindingResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除配置模版与app绑定关系接口返回",
+      "title": "DeleteConfigTemplateBindingResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverDeleteConfigTemplateResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除配置模版接口响应",
+      "title": "DeleteConfigTemplateResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverDeleteConfigTemplateSetResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "ok"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除配置模版集合接口响应",
+      "title": "DeleteConfigTemplateSetResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
     "accessserverDeleteStrategyResp": {
       "type": "object",
       "example": {
@@ -5015,6 +6647,68 @@
       },
       "description": "删除发布策略响应",
       "title": "DeleteStrategyResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverDeleteTemplateVersionResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除配置模版版本接口响应",
+      "title": "DeleteTemplateVersionResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverDeleteVariableResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除变量接口返回",
+      "title": "DeleteVariableResp",
       "required": [
         "seq",
         "errCode",
@@ -5256,13 +6950,53 @@
         "errMsg"
       ]
     },
-    "accessserverPreviewRenderingResp": {
+    "accessserverPreviewCommitReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "bid": "bxxxxx-xxxxx-xxxxxxx",
+        "commitid": "cxxxxx-xxxxx-xxxxx",
+        "operator": "mars"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "目标配置集合所属业务ID",
+          "maxLength": 64
+        },
+        "commitid": {
+          "type": "string",
+          "title": "目标配置集合提交ID",
+          "maxLength": 64
+        },
+        "operator": {
+          "type": "string",
+          "title": "操作人名称",
+          "maxLength": 64
+        }
+      },
+      "description": "预览配置提交渲染结果请求",
+      "title": "PreviewCommitReq",
+      "required": [
+        "seq",
+        "bid",
+        "commitid",
+        "operator"
+      ]
+    },
+    "accessserverPreviewCommitResp": {
       "type": "object",
       "example": {
         "seq": "1",
         "errCode": 0,
         "errMsg": "OK",
-        "content": "dGhpcyBpcyBhIGV4YW1wbGU="
+        "cfgslist": []
       },
       "properties": {
         "seq": {
@@ -5279,19 +7013,21 @@
           "type": "string",
           "title": "错误描述"
         },
-        "content": {
-          "type": "string",
-          "format": "byte",
-          "description": "成功预览后返回配置模板渲染结果，以base64形式返回",
-          "title": "配置模板渲染结果"
+        "cfgslist": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonConfigs"
+          },
+          "title": "commit的预览结果"
         }
       },
-      "description": "配置模板渲染预览响应",
-      "title": "PreviewRenderingResp",
+      "description": "预览配置提交渲染结果响应",
+      "title": "PreviewCommitResp",
       "required": [
         "seq",
         "errCode",
-        "errMsg"
+        "errMsg",
+        "cfgslist"
       ]
     },
     "accessserverPublishMultiReleaseReq": {
@@ -5991,6 +7727,326 @@
         "seq",
         "errCode",
         "errMsg"
+      ]
+    },
+    "accessserverQueryConfigTemplateBindingListResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "configTemplateBindings": [
+          {
+            "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "commitid": "c879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "bindingParams": "[{\"clusterLabels\":{\"environment\":\"yun测试环境\",\"cluster\":\"集群2\",\"dc\":\"shdc\"},\"zone\":\"zone1\",\"instanceid\":\"svc1_127_0_0_1\"},{\"clusterLabels\":{\"environment\":\"正式环境\",\"cluster\":\"集群2\",\"dc\":\"cddc\"},\"zone\":\"zone2\",\"instanceid\":\"svc2_127_0_0_1\"}]",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          }
+        ]
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "configTemplateBindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonConfigTemplateBinding"
+          },
+          "title": "配置模版与app绑定关系列表"
+        }
+      },
+      "description": "查询配置模版与app绑定关系接口响应",
+      "title": "QueryConfigTemplateBindingResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "configTemplateBinding"
+      ]
+    },
+    "accessserverQueryConfigTemplateBindingResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "configTemplateBinding": {
+          "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "commitid": "c879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "bindingParams": "[{\"clusterLabels\":{\"environment\":\"yun测试环境\",\"cluster\":\"集群2\",\"dc\":\"shdc\"},\"zone\":\"zone1\",\"instanceid\":\"svc1_127_0_0_1\"},{\"clusterLabels\":{\"environment\":\"正式环境\",\"cluster\":\"集群2\",\"dc\":\"cddc\"},\"zone\":\"zone2\",\"instanceid\":\"svc2_127_0_0_1\"}]",
+          "creator": "mars",
+          "lastModifyBy": "mars",
+          "createAt": "2019-07-29 11:57:20",
+          "updateAt": "2019-07-29 11:57:20"
+        }
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "configTemplateBinding": {
+          "$ref": "#/definitions/commonConfigTemplateBinding",
+          "title": "配置模版与app绑定关系"
+        }
+      },
+      "description": "查询配置模版与app绑定关系接口响应",
+      "title": "QueryConfigTemplateBindingResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "configTemplateBinding"
+      ]
+    },
+    "accessserverQueryConfigTemplateListResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK",
+        "configTemplates": [
+          {
+            "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "setid": "s879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "name": "server.yaml",
+            "fpath": "/data/app/gameserver",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          },
+          {
+            "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "setid": "s879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "name": "config.yaml",
+            "fpath": "/data/app/gameserver",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          }
+        ]
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "configTemplates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonConfigTemplate"
+          },
+          "title": "配置模版列表"
+        }
+      },
+      "description": "查询配置模版列表接口响应",
+      "title": "QueryConfigTemplateListResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "configTemplates"
+      ]
+    },
+    "accessserverQueryConfigTemplateResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK",
+        "configTemplate": {
+          "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "name": "server.yaml",
+          "fpath": "/data/app/gameserver",
+          "creator": "mars",
+          "lastModifyBy": "mars",
+          "createAt": "2019-07-29 11:57:20",
+          "updateAt": "2019-07-29 11:57:20"
+        }
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "configTemplate": {
+          "$ref": "#/definitions/commonConfigTemplate",
+          "title": "配置模版元数据"
+        }
+      },
+      "description": "查询配置模版接口响应",
+      "title": "QueryConfigTemplateResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "configTemplate"
+      ]
+    },
+    "accessserverQueryConfigTemplateSetListResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK",
+        "templateSets": [
+          {
+            "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
+            "name": "server配置集合",
+            "memo": "这是server的配置集合",
+            "fpath": "/data/app/gameserver",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          },
+          {
+            "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
+            "name": "server配置集合",
+            "memo": "这是server的配置集合",
+            "fpath": "/data/app/gameserver",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          }
+        ]
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "templateSets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonConfigTemplateSet"
+          },
+          "title": "配置模版集合列表"
+        }
+      },
+      "description": "查询配置模版集合列表接口响应",
+      "title": "QueryConfigTemplateSetListResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "templateSets"
+      ]
+    },
+    "accessserverQueryConfigTemplateSetResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "ok",
+        "templateSet": {
+          "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
+          "name": "server配置集合",
+          "memo": "这是server的配置集合",
+          "fpath": "/data/app/gameserver",
+          "creator": "mars",
+          "lastModifyBy": "mars",
+          "createAt": "2019-07-29 11:57:20",
+          "updateAt": "2019-07-29 11:57:20"
+        }
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "templateSet": {
+          "$ref": "#/definitions/commonConfigTemplateSet",
+          "title": "配置模版集合信息"
+        }
+      },
+      "description": "查询配置模版集合接口响应",
+      "title": "QueryConfigTemplateSetReq",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "templateSet"
       ]
     },
     "accessserverQueryConfigsListResp": {
@@ -6951,6 +9007,220 @@
         "errMsg"
       ]
     },
+    "accessserverQueryTemplateVersionListResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "templateVersions": [
+          {
+            "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "versionName": "v1.1.1",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "memo": "xxxx版本",
+            "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          },
+          {
+            "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "versionName": "v1.1.1",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "memo": "xxxx版本",
+            "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          }
+        ]
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "templateVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonTemplateVersion"
+          },
+          "title": "配置模版版本列表"
+        }
+      },
+      "description": "查询配置模版版本列表接口响应",
+      "title": "QueryTemplateVersionListResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "templateVersions"
+      ]
+    },
+    "accessserverQueryTemplateVersionResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "templateVersion": {
+          "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "versionName": "v1.1.1",
+          "creator": "mars",
+          "lastModifyBy": "mars",
+          "memo": "xxxx版本",
+          "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ==",
+          "createAt": "2019-07-29 11:57:20",
+          "updateAt": "2019-07-29 11:57:20"
+        }
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "templateVersion": {
+          "$ref": "#/definitions/commonTemplateVersion",
+          "title": "配置模版版本内容"
+        }
+      },
+      "description": "查询配置模版版本接口响应",
+      "title": "QueryTemplateVersionResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "templateVersion"
+      ]
+    },
+    "accessserverQueryVariableListResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "vars": [
+          {
+            "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+            "vid": "v879ab8f-xxxx-asdf-sdaf-525400f9927",
+            "type": 0,
+            "key": "key1",
+            "value": "value1",
+            "memo": "这是一个全局变量",
+            "creator": "mars",
+            "lastModifyBy": "mars",
+            "createAt": "2019-07-29 11:57:20",
+            "updateAt": "2019-07-29 11:57:20"
+          }
+        ]
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "vars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonVariable"
+          },
+          "title": "变量列表"
+        }
+      },
+      "description": "查询变量列表接口返回",
+      "title": "QueryVariableListResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "vars"
+      ]
+    },
+    "accessserverQueryVariableResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK",
+        "var": {
+          "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+          "vid": "v879ab8f-xxxx-asdf-sdaf-525400f9927",
+          "type": 0,
+          "key": "key1",
+          "value": "value1",
+          "memo": "这是一个全局变量",
+          "creator": "mars",
+          "lastModifyBy": "mars",
+          "createAt": "2019-07-29 11:57:20",
+          "updateAt": "2019-07-29 11:57:20"
+        }
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "var": {
+          "$ref": "#/definitions/commonVariable",
+          "title": "变量详情"
+        }
+      },
+      "description": "查询变量接口返回",
+      "title": "QueryVariableResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "var"
+      ]
+    },
     "accessserverQueryZoneListResp": {
       "type": "object",
       "example": {
@@ -7204,6 +9474,104 @@
       },
       "description": "回滚指定版本响应",
       "title": "RollbackReleaseResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverSyncConfigTemplateBindingReq": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "appid": "a879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "versionid": "v879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "commitid": "c879ab8f-xxxx-asdf-sdaf-525400f992",
+        "bindingParams": "[{\"clusterLabels\":{\"environment\":\"yun测试环境\",\"cluster\":\"集群2\",\"dc\":\"shdc\"},\"zone\":\"zone1\",\"instanceid\":\"svc1_127_0_0_1\"},{\"clusterLabels\":{\"environment\":\"正式环境\",\"cluster\":\"集群2\",\"dc\":\"cddc\"},\"zone\":\"zone2\",\"instanceid\":\"svc2_127_0_0_1\"}]",
+        "operator": "mars"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID",
+          "maxLength": 64
+        },
+        "appid": {
+          "type": "string",
+          "title": "绑定的应用ID",
+          "maxLength": 64
+        },
+        "versionid": {
+          "type": "string",
+          "title": "配置模版版本内容ID",
+          "maxLength": 64
+        },
+        "bindingParams": {
+          "type": "string",
+          "title": "绑定参数",
+          "maxLength": 102400
+        },
+        "operator": {
+          "type": "string",
+          "title": "操作者名称",
+          "maxLength": 64
+        }
+      },
+      "description": "同步配置模版与app绑定关系请求",
+      "title": "SyncConfigTemplateBindingReq",
+      "required": [
+        "seq",
+        "bid",
+        "templateid",
+        "appid",
+        "versionid",
+        "commitid",
+        "bindingParams",
+        "operator"
+      ]
+    },
+    "accessserverSyncConfigTemplateBindingResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "commitid": {
+          "type": "string",
+          "title": "本次更新绑定创建的commit id"
+        }
+      },
+      "description": "同步配置模版与app绑定关系接口响应",
+      "title": "SyncConfigTemplateBindingResp",
       "required": [
         "seq",
         "errCode",
@@ -7794,6 +10162,197 @@
         "errMsg"
       ]
     },
+    "accessserverUpdateConfigTemplateReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "templateid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "name": "server.yaml",
+        "operator": "mars",
+        "engineType": 0,
+        "memo": "gameserver启动配置文件"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "user": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "group": {
+          "type": "string",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "permission": {
+          "type": "integer",
+          "format": "int32",
+          "title": "配置模版名称"
+        },
+        "fileEncoding": {
+          "type": "string",
+          "title": "配置模版生成的文件编码格式",
+          "maxLength": 16
+        },
+        "operator": {
+          "type": "string",
+          "title": "操作者姓名",
+          "maxLength": 64
+        }
+      },
+      "description": "更新配置模版请求",
+      "title": "UpdateConfigTemplateReq",
+      "required": [
+        "seq",
+        "bid",
+        "templateid",
+        "name",
+        "operator"
+      ]
+    },
+    "accessserverUpdateConfigTemplateResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "创建配置模版接口响应",
+      "title": "UpdateConfigTemplateResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg",
+        "tplid"
+      ]
+    },
+    "accessserverUpdateConfigTemplateSetReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "bid": "f879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "setid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
+        "name": "server配置集合",
+        "memo": "这是server的配置集合",
+        "operator": "mars"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "setid": {
+          "type": "string",
+          "title": "配置模版集合ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "配置模版集合名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "配置模版集合描述",
+          "maxLength": 64
+        },
+        "operator": {
+          "type": "string",
+          "title": "操作者名称",
+          "maxLength": 64
+        }
+      },
+      "description": "更新配置模版集合请求，用于更改配置模版集合的名称和描述信息",
+      "title": "UpdateConfigTemplateSetReq",
+      "required": [
+        "seq",
+        "bid",
+        "setid",
+        "name",
+        "memo",
+        "operator"
+      ]
+    },
+    "accessserverUpdateConfigTemplateSetResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "ok"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "更新配置模版集合接口响应",
+      "title": "UpdateConfigTemplateSetResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
     "accessserverUpdateMultiCommitReq": {
       "type": "object",
       "example": {
@@ -8221,6 +10780,197 @@
       },
       "description": "更新分片存储规则响应",
       "title": "UpdateShardingResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverUpdateTemplateVersionReq": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "versionid": "t879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "versionName": "v0.0.1",
+        "operator": "mars",
+        "content": "e3tpZiAuY29uZGl0aW9uMX19DQp7e2Vsc2UgaWYgLmNvbnRpdGlvbjJ9fQ0Ke3tlbmR9fQ=="
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "versionid": {
+          "type": "string",
+          "title": "配置版本ID",
+          "maxLength": 64
+        },
+        "versionName": {
+          "type": "string",
+          "title": "配置版本名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "描述信息",
+          "maxLength": 64
+        },
+        "operator": {
+          "type": "string",
+          "title": "操作者",
+          "maxLength": 64
+        },
+        "content": {
+          "type": "string",
+          "description": "配置模版版本内容",
+          "title": "配置模版版本内容"
+        }
+      },
+      "description": "更新配置模版版本请求",
+      "title": "UpdateTemplateVersionReq",
+      "required": [
+        "seq",
+        "bid",
+        "versionid",
+        "versionName",
+        "operator",
+        "content"
+      ]
+    },
+    "accessserverUpdateTemplateVersionResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "更新配置模版版本接口响应",
+      "title": "UpdateTemplateVersionResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverUpdateVariableReq": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "vid": "v879ab8f-xxxx-asdf-sdaf-525400f9",
+        "type": 0,
+        "key": "key1",
+        "value": "value1",
+        "memo": "这是一个全局变量",
+        "operator": "mars"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "vid": {
+          "type": "string",
+          "title": "需要更新的变量ID",
+          "maxLength": 64
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32",
+          "description": "0: 全局变量 1: 集群变量 2: zone变量",
+          "title": "变量类型",
+          "maximum": 2
+        },
+        "key": {
+          "type": "string",
+          "title": "变量key值",
+          "maxLength": 256
+        },
+        "value": {
+          "type": "string",
+          "title": "变量value值",
+          "maxLength": 1024
+        },
+        "memo": {
+          "type": "string",
+          "title": "变量描述",
+          "maxLength": 128
+        },
+        "operator": {
+          "type": "string",
+          "title": "操作者",
+          "maxLength": 64
+        }
+      },
+      "description": "更新变量请求",
+      "title": "UpdateVariableReq",
+      "required": [
+        "seq",
+        "bid",
+        "vid",
+        "type",
+        "key",
+        "value",
+        "memo",
+        "operator"
+      ]
+    },
+    "accessserverUpdateVariableResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "更新变量接口返回",
+      "title": "UpdateVariableResp",
       "required": [
         "seq",
         "errCode",
@@ -8912,6 +11662,230 @@
       "description": "配置集合",
       "title": "ConfigSet"
     },
+    "commonConfigTemplate": {
+      "type": "object",
+      "properties": {
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID",
+          "maxLength": 64
+        },
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "setid": {
+          "type": "string",
+          "title": "配置模版集合ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "description": "最终配置实例文件路径=配置模版集合路径+配置模版名称",
+          "title": "配置模版名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "配置模版描述",
+          "maxLength": 64
+        },
+        "fpath": {
+          "type": "string",
+          "description": "最终配置实例文件路径=配置模版集合路径+配置模版名称",
+          "title": "配置模版集合路径",
+          "maxLength": 128
+        },
+        "user": {
+          "type": "string",
+          "title": "配置模版生成文件的所属用户",
+          "maxLength": 64
+        },
+        "group": {
+          "type": "string",
+          "title": "配置模版生成文件的所属用户组",
+          "maxLength": 64
+        },
+        "permission": {
+          "type": "integer",
+          "format": "int32",
+          "title": "配置模版生成文件的权限",
+          "maxLength": 64
+        },
+        "fileEncoding": {
+          "type": "string",
+          "title": "配置模版生成文件的编码",
+          "maxLength": 64
+        },
+        "engineType": {
+          "type": "integer",
+          "format": "int32",
+          "description": "0：golang模版； 1：python mako模版；",
+          "title": "模版引擎类型",
+          "maximum": 1
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建者：mars",
+          "title": "创建者",
+          "maxLength": 64
+        },
+        "lastModifyBy": {
+          "type": "string",
+          "description": "最后修改人：mars",
+          "title": "最后修改人",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "title": "状态"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "配置模版",
+      "title": "ConfigTemplate"
+    },
+    "commonConfigTemplateBinding": {
+      "type": "object",
+      "properties": {
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID",
+          "maxLength": 64
+        },
+        "appid": {
+          "type": "string",
+          "title": "应用ID",
+          "maxLength": 64
+        },
+        "versionid": {
+          "type": "string",
+          "title": "配置模版版本ID",
+          "maxLength": 64
+        },
+        "cfgsetid": {
+          "type": "string",
+          "title": "配置ID",
+          "maxLength": 64
+        },
+        "commitid": {
+          "type": "string",
+          "title": "配置commit ID",
+          "maxLength": 64
+        },
+        "bindingParams": {
+          "type": "string",
+          "description": "用于绑定配置与ConfigSet的参数，生成不同的配置实例，例如：[{\"clusterLabels\":{\"environment\":\"yun测试环境\",\"cluster\":\"集群2\",\"dc\":\"shdc\"},\"zone\":\"zone1\",\"instanceid\":\"svc1_127_0_0_1\"},{\"clusterLabels\":{\"environment\":\"正式环境\",\"cluster\":\"集群2\",\"dc\":\"cddc\"},\"zone\":\"zone2\",\"instanceid\":\"svc2_127_0_0_1\"}]",
+          "title": "具体绑定参数",
+          "maxLength": 102400
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建者：mars",
+          "title": "创建者",
+          "maxLength": 64
+        },
+        "lastModifyBy": {
+          "type": "string",
+          "description": "最后修改人：mars",
+          "title": "最后修改人",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "title": "状态"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "配置模版绑定关系",
+      "title": "ConfigTemplateBinding"
+    },
+    "commonConfigTemplateSet": {
+      "type": "object",
+      "properties": {
+        "setid": {
+          "type": "string",
+          "title": "配置模版集合ID",
+          "maxLength": 64
+        },
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "配置模版集合名字",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "配置模版集合描述",
+          "maxLength": 64
+        },
+        "fpath": {
+          "type": "string",
+          "description": "该配置模版集合下，所有模版生成配置的父路径",
+          "title": "配置模版集合路径",
+          "maxLength": 128
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建者：mars",
+          "title": "创建者",
+          "maxLength": 64
+        },
+        "lastModifyBy": {
+          "type": "string",
+          "description": "最后修改人：mars",
+          "title": "最后修改人",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "title": "状态"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "配置模版集合",
+      "title": "ConfigTemplateSet"
+    },
     "commonConfigs": {
       "type": "object",
       "properties": {
@@ -9020,6 +11994,15 @@
         "E_TPL_RENDER_FAILED",
         "E_TPL_NO_CLUSTER_TO_RENDER",
         "E_TPL_NO_ZONE_TO_RENDER",
+        "E_TPL_NO_TEMPLATE_TO_BIND",
+        "E_TPL_NO_VERSION_TO_BIND",
+        "E_TPL_NO_APP_TO_BIND",
+        "E_TPL_NO_CLUSTER_TO_BIND",
+        "E_TPL_NO_ZONE_TO_BIND",
+        "E_TPL_CREATE_CFGSET_FAILED",
+        "E_TPL_CREATE_COMMIT_FAILED",
+        "E_TPL_NO_CFGSET_TO_SYNC",
+        "E_TPL_GET_VARS_FAILED",
         "E_BS_SYSTEM_UNKONW",
         "E_BS_PARAMS_INVALID",
         "E_BS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT",
@@ -9069,7 +12052,7 @@
         "E_IS_PARAMS_INVALID"
       ],
       "default": "E_OK",
-      "description": "- E_OK: 0 成功\n - E_GW_SYSTEM_UNKONW: 1000 网关服务, 节点调用失败\n - E_AS_SYSTEM_UNKONW: 2000 接入服务, 节点调用失败\n - E_AS_PARAMS_INVALID: 2001 接入服务, 参数校验失败\n - E_AS_AUTH_FAILED: 2002 接入服务, 认证校验失败\n - E_AS_NOT_AUTHED: 2003 接入服务, 未授权的操作\n - E_TPL_SYSTEM_UNKONW: 3000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 3001 模板服务, 参数校验失败\n - E_TPL_RENDER_CHECK_ERROR: 3002 模板服务, 渲染前置检查失败，检查模板和模板规则内容是否正确\n - E_TPL_INVALID_TEMPLATE_RULE: 3003 模板服务, 渲染规则非法\n - E_TPL_INVALID_TEMPLATE_RULE_TYPE: 3004 模板服务, 渲染规则类型非法\n - E_TPL_RENDER_FAILED: 3005 模板服务, 渲染失败\n - E_TPL_NO_CLUSTER_TO_RENDER: 3006 模板服务, 预览渲染失败，集群信息未知\n - E_TPL_NO_ZONE_TO_RENDER: 3007 模板服务, 预览渲染失败, 大区信息未知\n - E_BS_SYSTEM_UNKONW: 4000 业务逻辑服务, 节点调用失败\n - E_BS_PARAMS_INVALID: 4001 业务逻辑服务, 参数校验失败\n - E_BS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4002 业务逻辑服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_BS_COMMIT_ALREADY_CANCELED: 4003 业务逻辑服务, 该Commit已撤销，无法再进行Confirm操作\n - E_BS_ALREADY_EXISTS: 4004 业务逻辑服务, 目标资源已存在无法重复创建\n - E_BS_ROLLBACK_UNPUBLISHED_RELEASE: 4005 业务逻辑服务, 无法回滚一个未发布的版本\n - E_DM_SYSTEM_UNKONW: 5000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 5001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 5002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 5003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 5004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 5005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 5006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 5007 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 5008 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 5009 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 5010 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 5011 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONFIGS_NOT_FOUND: 5012 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKONW: 6000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 6001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 6002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 6003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 6004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 6005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_BCS_SYSTEM_UNKONW: 7000 BCS控制器, 节点调用失败\n - E_BCS_PARAMS_INVALID: 7001 BCS控制器, 参数校验失败\n - E_BCS_MARSHAL_PUBLISHING_FAILED: 7002 BCS控制器, 配置版本发布消息解析失败\n - E_BCS_PUBLISH_RELEASE_FAILED: 7003 BCS控制器, 广播配置版本发布消息失败\n - E_BCS_ALREADY_PUBLISHED: 7004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_BCS_ALREADY_CANCELED: 7005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_CONNS_SYSTEM_UNKONW: 8000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 8001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 8002 会话链接服务, BCS sidecar接入调度失败\n - E_ITG_SYSTEM_UNKONW: 9000 逻辑集成服务, 节点调用失败\n - E_ITG_PARAMS_INVALID: 9001 逻辑集成服务, 参数校验失败\n - E_ITG_METADATA_INVALID: 9002 逻辑集成服务, 操作集合描述文件解析失败\n - E_ITG_UNKNOW_METADATA_KIND: 9003 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_UNKNOW_METADATA_OP: 9004 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_CREATE_STRATEGY_FAILED: 9005 逻辑集成服务, 创建版本发布策略失败\n - E_ITG_CONSTRUCT_CLUSTER_FAILED: 9006 逻辑集成服务, 创建集群结构失败\n - E_ITG_CONSTRUCT_ZONE_FAILED: 9007 逻辑集成服务, 创建大区结构失败\n - E_TS_SYSTEM_UNKONW: 10000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 10001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 10002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKONW: 11000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 11001 实例服务, 参数校验失败",
+      "description": "- E_OK: 0 成功\n - E_GW_SYSTEM_UNKONW: 1000 网关服务, 节点调用失败\n - E_AS_SYSTEM_UNKONW: 2000 接入服务, 节点调用失败\n - E_AS_PARAMS_INVALID: 2001 接入服务, 参数校验失败\n - E_AS_AUTH_FAILED: 2002 接入服务, 认证校验失败\n - E_AS_NOT_AUTHED: 2003 接入服务, 未授权的操作\n - E_TPL_SYSTEM_UNKONW: 3000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 3001 模板服务, 参数校验失败\n - E_TPL_RENDER_CHECK_ERROR: 3002 模板服务, 渲染前置检查失败，检查模板和模板规则内容是否正确\n - E_TPL_INVALID_TEMPLATE_RULE: 3003 模板服务, 渲染规则非法\n - E_TPL_INVALID_TEMPLATE_RULE_TYPE: 3004 模板服务, 渲染规则类型非法\n - E_TPL_RENDER_FAILED: 3005 模板服务, 渲染失败\n - E_TPL_NO_CLUSTER_TO_RENDER: 3006 模板服务, 预览渲染失败, 集群信息未知\n - E_TPL_NO_ZONE_TO_RENDER: 3007 模板服务, 预览渲染失败, 大区信息未知\n - E_TPL_NO_TEMPLATE_TO_BIND: 3008 模版服务, 创建绑定失败, 模版信息未知\n - E_TPL_NO_VERSION_TO_BIND: 3009 模版服务, 创建绑定失败, 模版版本信息未知\n - E_TPL_NO_APP_TO_BIND: 3010 模版服务, 创建绑定失败, App信息未知\n - E_TPL_NO_CLUSTER_TO_BIND: 3011 模版服务, 创建绑定失败, 集群信息未知\n - E_TPL_NO_ZONE_TO_BIND: 3012 模版服务, 创建绑定失败, 大区信息未知\n - E_TPL_CREATE_CFGSET_FAILED: 3013 模版服务, 创建绑定失败，创建configSet失败\n - E_TPL_CREATE_COMMIT_FAILED: 3014 模版服务, 创建绑定失败, 创建commit失败\n - E_TPL_NO_CFGSET_TO_SYNC: 3015 模版服务, 更新绑定失败, configSet信息未知\n - E_TPL_GET_VARS_FAILED: 3016 模版服务, 获取变量失败\n - E_BS_SYSTEM_UNKONW: 4000 业务逻辑服务, 节点调用失败\n - E_BS_PARAMS_INVALID: 4001 业务逻辑服务, 参数校验失败\n - E_BS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4002 业务逻辑服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_BS_COMMIT_ALREADY_CANCELED: 4003 业务逻辑服务, 该Commit已撤销，无法再进行Confirm操作\n - E_BS_ALREADY_EXISTS: 4004 业务逻辑服务, 目标资源已存在无法重复创建\n - E_BS_ROLLBACK_UNPUBLISHED_RELEASE: 4005 业务逻辑服务, 无法回滚一个未发布的版本\n - E_DM_SYSTEM_UNKONW: 5000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 5001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 5002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 5003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 5004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 5005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 5006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 5007 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 5008 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 5009 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 5010 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 5011 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONFIGS_NOT_FOUND: 5012 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKONW: 6000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 6001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 6002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 6003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 6004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 6005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_BCS_SYSTEM_UNKONW: 7000 BCS控制器, 节点调用失败\n - E_BCS_PARAMS_INVALID: 7001 BCS控制器, 参数校验失败\n - E_BCS_MARSHAL_PUBLISHING_FAILED: 7002 BCS控制器, 配置版本发布消息解析失败\n - E_BCS_PUBLISH_RELEASE_FAILED: 7003 BCS控制器, 广播配置版本发布消息失败\n - E_BCS_ALREADY_PUBLISHED: 7004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_BCS_ALREADY_CANCELED: 7005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_CONNS_SYSTEM_UNKONW: 8000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 8001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 8002 会话链接服务, BCS sidecar接入调度失败\n - E_ITG_SYSTEM_UNKONW: 9000 逻辑集成服务, 节点调用失败\n - E_ITG_PARAMS_INVALID: 9001 逻辑集成服务, 参数校验失败\n - E_ITG_METADATA_INVALID: 9002 逻辑集成服务, 操作集合描述文件解析失败\n - E_ITG_UNKNOW_METADATA_KIND: 9003 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_UNKNOW_METADATA_OP: 9004 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_CREATE_STRATEGY_FAILED: 9005 逻辑集成服务, 创建版本发布策略失败\n - E_ITG_CONSTRUCT_CLUSTER_FAILED: 9006 逻辑集成服务, 创建集群结构失败\n - E_ITG_CONSTRUCT_ZONE_FAILED: 9007 逻辑集成服务, 创建大区结构失败\n - E_TS_SYSTEM_UNKONW: 10000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 10001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 10002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKONW: 11000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 11001 实例服务, 参数校验失败",
       "title": "ErrCode 错误码"
     },
     "commonMultiCommit": {
@@ -9486,6 +12469,150 @@
       },
       "description": "发布策略",
       "title": "Strategy"
+    },
+    "commonTemplateVersion": {
+      "type": "object",
+      "properties": {
+        "versionid": {
+          "type": "string",
+          "title": "配置模版版本ID",
+          "maxLength": 64
+        },
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "templateid": {
+          "type": "string",
+          "title": "配置模版ID",
+          "maxLength": 64
+        },
+        "versionName": {
+          "type": "string",
+          "title": "配置模版版本名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "配置模版版本描述",
+          "maxLength": 128
+        },
+        "content": {
+          "type": "string",
+          "title": "配置模版版本内容",
+          "maxLength": 4194304
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建者：mars",
+          "title": "创建者",
+          "maxLength": 64
+        },
+        "lastModifyBy": {
+          "type": "string",
+          "description": "最后修改人：mars",
+          "title": "最后修改人",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "title": "状态"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "配置模版版本",
+      "title": "TemplateVersion"
+    },
+    "commonVariable": {
+      "type": "object",
+      "properties": {
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "vid": {
+          "type": "string",
+          "title": "变量ID",
+          "maxLength": 64
+        },
+        "cluster": {
+          "type": "string",
+          "title": "集群名称",
+          "maxLength": 64
+        },
+        "clusterLabels": {
+          "type": "string",
+          "title": "集群标签",
+          "maxLength": 128
+        },
+        "zone": {
+          "type": "string",
+          "title": "zone名称",
+          "maxLength": 64
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32",
+          "title": "变量类型",
+          "maximum": 2
+        },
+        "key": {
+          "type": "string",
+          "title": "配置变量key",
+          "maxLength": 64
+        },
+        "value": {
+          "type": "string",
+          "title": "配置变量value",
+          "maxLength": 2048
+        },
+        "memo": {
+          "type": "string",
+          "title": "配置变量描述",
+          "maxLength": 128
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建者：mars",
+          "title": "创建者",
+          "maxLength": 64
+        },
+        "lastModifyBy": {
+          "type": "string",
+          "description": "最后修改人：mars",
+          "title": "最后修改人",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "title": "状态"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "配置模版变量",
+      "title": "Variable"
     },
     "commonZone": {
       "type": "object",

@@ -12,6 +12,7 @@
     - [create-service](#create-service)
     - [create-secret](#create-secret)
     - [create-configmap](#create-configmap)
+    - [create-user](#create-user)
   - [update](#update)
     - [update application](#update-application)
     - [update deployment](#update-deployment)
@@ -50,6 +51,15 @@
   - [reschedule](#reschedule)
     - [reschedule taskgroup by name](#reschedule-taskgroup-by-name)
     - [reschedule taskgroup by ip](#reschedule-taskgroup-by-ip)
+  - [refresh](#refresh)
+    - [refresh plain user](#refresh-plain-usertoken)
+    - [refresh saas user](#refresh-saas-usertoken)
+  - [grant](#grant)
+    - [grant permission](#grant-permission)
+  - [revoke](#revoke)
+    - [revoke permission](#revoke-permission)
+  - [exec](#exec)
+    - [exec into taskgroup](#exec-into-taskgroup)      
   - [export](#export)
     - [export env](#export-env)
   - [env](#env)
@@ -566,6 +576,19 @@ SCREENSHOT:
 
 ![](picture/create-configmap.png)
 
+### create-user ###
+EXAMPLE:
+
+	./bcs-client create --usertype=plain --username=xxx --type=user
+
+USAGE:  
+
+    --usertype value           user type, value can be admin/saas/plain
+    --username value           user name
+    
+SCREENSHOT:
+
+![](picture/create-user.png)    
 
 <span id="update"></span>
 
@@ -1134,6 +1157,110 @@ bcs-client reschedule -t taskgroup -n berg-deployment-v1512093431 -ns bergtest -
 ```
 
 ![](img/reschedule-taskgroup-by-ip.png)
+
+
+
+## refresh ##
+
+### refresh plain usertoken
+
+EXAMPLE:
+
+    ./bcs-client refresh --type=usertoken --usertype=plain --username=xxxx --expiration_day=2
+
+SCREENSHOT:
+
+![img](picture/refresh-plain-user.png)
+
+
+### refresh saas usertoken
+
+EXAMPLE:
+
+    ./bcs-client refresh --type=usertoken --usertype=saas --username=saas1
+
+SCREENSHOT:
+
+![img](picture/refresh-saas-user.png)
+
+
+
+## grant ##
+
+### grant permission
+
+EXAMPLE:
+
+    ./bcs-client grant --type=permission --from-file=crd_permission.json
+
+crd_permission.json
+
+``` json
+{
+  "apiVersion":"v1",
+  "kind":"permission",
+  "metadata": {
+     "name":"my-permission"
+  },
+  "spec":{
+     "permissions":[
+       {"user_name":"xxxx", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"},
+       {"user_name":"yyyy", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"}
+     ]
+  }
+}
+```
+
+SCREENSHOT:
+
+![img](picture/grant-permission.png)
+
+
+
+## revoke ##
+
+### revoke permission
+
+EXAMPLE:
+
+    ./bcs-client revoke --type=permission --from-file=crd_permission.json
+
+crd_permission.json
+
+``` json
+{
+  "apiVersion":"v1",
+  "kind":"permission",
+  "metadata": {
+     "name":"my-permission"
+  },
+  "spec":{
+     "permissions":[
+       {"user_name":"xxxx", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"},
+       {"user_name":"yyyy", "resource_type":"cluster", "resource":"bcs-k8s-001", "role":"viewer"}
+     ]
+  }
+}
+```
+
+SCREENSHOT:
+
+![img](picture/revoke-permission.png)
+
+
+
+## exec ##
+
+### exec into taskgroup
+
+EXAMPLE:
+
+    ./bcs-client exec -i -t -ns=default 0.deployment-test.default.10032.1589188183014956881 /bin/bash
+    ./bcs-client exec -i -t -ns=default -c bcs-container-1589188183014956881.0.0.deployment-test.default.10032 0.deployment-test.default.10032.1589188183014956881 /bin/bash
+
+SCREENSHOT:
+
+![img](picture/exec-into-taskgroup.png)
 
 
 

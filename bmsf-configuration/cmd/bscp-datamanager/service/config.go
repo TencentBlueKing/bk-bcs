@@ -88,11 +88,22 @@ func (c *config) check() error {
 	if !c.viper.IsSet("etcdCluster.endpoints") {
 		return errors.New("config check, missing 'etcdCluster.endpoints'")
 	}
-
 	c.viper.BindEnv("etcdCluster.dialtimeout", c.envName("ETCD_DIAL_TIMEOUT"))
 	if !c.viper.IsSet("etcdCluster.dialtimeout") {
 		c.viper.SetDefault("etcdCluster.dialtimeout", 3*time.Second)
 	}
+
+	c.viper.BindEnv("etcdCluster.tls.certPassword", c.envName("ETCD_TLS_CERT_PASSWORD"))
+	c.viper.SetDefault("etcdCluster.tls.certPassword", "")
+
+	c.viper.BindEnv("etcdCluster.tls.cafile", c.envName("ETCD_TLS_CAFILE"))
+	c.viper.SetDefault("etcdCluster.tls.cafile", "")
+
+	c.viper.BindEnv("etcdCluster.tls.certfile", c.envName("ETCD_TLS_CERTFILE"))
+	c.viper.SetDefault("etcdCluster.tls.certfile", "")
+
+	c.viper.BindEnv("etcdCluster.tls.keyfile", c.envName("ETCD_TLS_KEYFILE"))
+	c.viper.SetDefault("etcdCluster.tls.keyfile", "")
 
 	c.viper.BindEnv("database.dialect", c.envName("DB_DIALECT"))
 	c.viper.SetDefault("database.dialect", "mysql")
