@@ -53,14 +53,11 @@ type Puller struct {
 
 	// publish event channel.
 	ch chan interface{}
-
-	// configs reloader.
-	reloader *Reloader
 }
 
 // NewPuller creates new Puller.
 func NewPuller(viper *viper.Viper, businessName, appName, cfgsetid string,
-	effectCache *EffectCache, contentCache *ContentCache, reloader *Reloader) *Puller {
+	effectCache *EffectCache, contentCache *ContentCache) *Puller {
 	return &Puller{
 		viper:        viper,
 		businessName: businessName,
@@ -68,7 +65,6 @@ func NewPuller(viper *viper.Viper, businessName, appName, cfgsetid string,
 		cfgsetid:     cfgsetid,
 		effectCache:  effectCache,
 		contentCache: contentCache,
-		reloader:     reloader,
 		stopCh:       make(chan bool, 1),
 		ch:           make(chan interface{}, viper.GetInt("sidecar.configHandlerChSize")),
 	}
@@ -127,11 +123,6 @@ func (p *Puller) effect(metadata *ReleaseMetadata) error {
 		logger.Warn("Puller[%s %s][%+v]| file reload mode, reload failed, %+v", p.businessName, p.appName, p.cfgsetid, err)
 	}
 
-	// instance server reload mode.
-	if err := p.apiReload(metadata); err != nil {
-		logger.Warn("Puller[%s %s][%+v]| instance server api reload mode, reload failed, %+v", p.businessName, p.appName, p.cfgsetid, err)
-	}
-
 	// report local effected release information right now.
 	if err := p.report(p.cfgsetid, metadata.Releaseid, metadata.EffectTime, nil); err != nil {
 		logger.Warn("Puller[%s %s][%+v]| report configs local effected, %+v", p.businessName, p.appName, p.cfgsetid, err)
@@ -163,40 +154,6 @@ func (p *Puller) fileReload(configSetName string) error {
 	}
 	logger.Infof("Puller[%s %s][%+v]| file reload mode, notify reload success!", p.businessName, p.appName, p.cfgsetid)
 
-	return nil
-}
-
-// apiReload execs the instance server api mode reload action.
-func (p *Puller) apiReload(metadata *ReleaseMetadata) error {
-	if !p.viper.GetBool("instance.open") {
-		return nil
-	}
-
-	// TODO after support multi reload, do not send reload whin release is under multi release.
-	if len(metadata.MultiReleaseid) != 0 {
-		// TODO do not send reload.
-	}
-
-	spec := &ReloadSpec{
-		BusinessName: p.businessName,
-		AppName:      p.appName,
-		Releaseid:    metadata.Releaseid,
-		ReleaseName:  metadata.ReleaseName,
-		Configs: []ConfigSpec{
-			ConfigSpec{
-				Name:  metadata.CfgsetName,
-				Fpath: metadata.CfgsetFpath,
-			},
-		},
-	}
-
-	// reload type, 0: update  1: rollback.
-	if metadata.isRollback {
-		spec.ReloadType = 1
-	}
-
-	// sync reload event.
-	p.reloader.Reload(spec)
 	return nil
 }
 

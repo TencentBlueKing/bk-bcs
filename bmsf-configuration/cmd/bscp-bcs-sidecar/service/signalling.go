@@ -219,6 +219,10 @@ func (sc *SignallingChannel) signalling(ctx context.Context, switchCh chan struc
 			logger.Info("SignallingChannel[%s %s]| CMD -- recviced ROLLBACK PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, resp.CmdRollback)
 			go sc.handler.Handle(resp.CmdRollback)
 
+		case pb.SignallingChannelCmd_SCCMD_S2C_PUSH_RELOAD_NOTIFICATION:
+			logger.Info("SignallingChannel[%s %s]| CMD -- recviced RELOAD PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, resp.CmdReload)
+			go sc.handler.Handle(resp.CmdReload)
+
 		default:
 			logger.Error("SignallingChannel[%s %s]| unknow signalling channel cmd[%+v]!", sc.businessName, sc.appName, resp.Cmd)
 		}

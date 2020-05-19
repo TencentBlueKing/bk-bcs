@@ -122,6 +122,15 @@ const (
 
 	// release effected time.
 	detailsEffectTime = "effecttime"
+
+	// release name.
+	detailsReleaseName = "releasename"
+
+	// multi releaseid.
+	detailsMultiReleaseid = "multireleaseid"
+
+	// release event type.
+	detailsIsRollback = "rollback"
 )
 
 // EffectCache is config release effect cache.
@@ -214,10 +223,13 @@ func (c *EffectCache) writeDetails(metadata *ReleaseMetadata) error {
 		return err
 	}
 
+	details.Section("").NewKey(detailsReleaseName, metadata.ReleaseName)
+	details.Section("").NewKey(detailsMultiReleaseid, metadata.MultiReleaseid)
+	details.Section("").NewKey(detailsIsRollback, fmt.Sprintf("%v", metadata.isRollback))
+
 	if err := details.SaveTo(c.detailsFile(metadata.Cfgsetid)); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -273,16 +285,22 @@ func (c *EffectCache) readDetails(cfgsetid string) (*ReleaseMetadata, error) {
 	if err != nil {
 		return nil, err
 	}
+	releaseName := details.Section("").Key(detailsReleaseName).String()
+	multiReleaseid := details.Section("").Key(detailsMultiReleaseid).String()
+	isRollback, _ := details.Section("").Key(detailsIsRollback).Bool()
 
 	metadata := &ReleaseMetadata{
-		Cfgsetid:    dCfgsetid,
-		CfgsetName:  cfgsetName,
-		CfgsetFpath: cfgsetFpath,
-		Serialno:    serialno,
-		Releaseid:   releaseid,
-		Cid:         cid,
-		CfgLink:     cfgLink,
-		EffectTime:  effectTime,
+		Cfgsetid:       dCfgsetid,
+		CfgsetName:     cfgsetName,
+		CfgsetFpath:    cfgsetFpath,
+		Serialno:       serialno,
+		Releaseid:      releaseid,
+		Cid:            cid,
+		CfgLink:        cfgLink,
+		EffectTime:     effectTime,
+		ReleaseName:    releaseName,
+		MultiReleaseid: multiReleaseid,
+		isRollback:     isRollback,
 	}
 
 	return metadata, nil

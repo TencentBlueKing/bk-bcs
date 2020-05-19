@@ -92,6 +92,24 @@ func (h *Handler) handleRoll(notification *pb.SCCMDPushRollbackNotification) err
 	return nil
 }
 
+// handleReload handles reload publish notifications.
+func (h *Handler) handleReload(notification *pb.SCCMDPushReloadNotification) error {
+	if notification == nil {
+		return errors.New("invalid reload notification struct: nil")
+	}
+
+	if notification.Bid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", h.businessName, h.appName)) ||
+		notification.Appid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", h.businessName, h.appName)) {
+		return fmt.Errorf("invalid reload notification organization: bid/appid")
+	}
+
+	// handle release reload publishing.
+	if err := h.configHandler.Handle(notification); err != nil {
+		return err
+	}
+	return nil
+}
+
 // signalling keeps processing signalling from connserver.
 func (h *Handler) signalling() {
 	for {
@@ -108,6 +126,12 @@ func (h *Handler) signalling() {
 			notification := cmd.(*pb.SCCMDPushRollbackNotification)
 			if err := h.handleRoll(notification); err != nil {
 				logger.Error("handler[%s %s]| handle rollback publish notification, %+v", h.businessName, h.appName, err)
+			}
+
+		case *pb.SCCMDPushReloadNotification:
+			notification := cmd.(*pb.SCCMDPushReloadNotification)
+			if err := h.handleReload(notification); err != nil {
+				logger.Error("handler[%s %s]| handle reload publish notification, %+v", h.businessName, h.appName, err)
 			}
 
 		default:
@@ -330,7 +354,7 @@ func (h *ConfigHandler) getPuller(cfgsetid string) *Puller {
 	defer h.mu.Unlock()
 
 	if v, ok := h.pullers[cfgsetid]; !ok || v == nil {
-		newPuller := NewPuller(h.viper, h.businessName, h.appName, cfgsetid, h.effectCache, h.contentCache, h.reloader)
+		newPuller := NewPuller(h.viper, h.businessName, h.appName, cfgsetid, h.effectCache, h.contentCache)
 
 		h.pullers[cfgsetid] = newPuller
 		newPuller.Run()
@@ -363,10 +387,99 @@ func (h *ConfigHandler) pulling() {
 				logger.Error("ConfigHandler[%s %s] | pulling, handle rollback notification to puller, %+v", h.businessName, h.appName, err)
 			}
 
+		case *pb.SCCMDPushReloadNotification:
+			msg := notification.(*pb.SCCMDPushReloadNotification)
+
+			// send publishing notification to target puller.
+			if err := h.handleReload(msg); err != nil {
+				logger.Error("ConfigHandler[%s %s] | pulling, handle reload notification to puller, %+v", h.businessName, h.appName, err)
+			}
+
 		default:
 			logger.Error("ConfigHandler[%s %s]| unknow command[%+v]", h.businessName, h.appName, notification)
 		}
 	}
+}
+
+// handleReload handles reload event, you may not know why it's here,
+// but here is the only interface to handle all puller of configsets.
+func (h *ConfigHandler) handleReload(msg *pb.SCCMDPushReloadNotification) error {
+	if !h.viper.GetBool("instance.open") {
+		// instance service is not open.
+		logger.Warnf("ConfigHandler[%s %s]| instance service is not open, can't do reload action", h.businessName, h.appName)
+		return nil
+	}
+
+	// check base message.
+	if msg == nil {
+		return errors.New("invalid struct: nil")
+	}
+	if msg.ReloadSpec == nil {
+		return errors.New("invalid struct ReloadSpec: nil")
+	}
+	if len(msg.ReloadSpec.Info) == 0 {
+		return errors.New("empty reload spec.")
+	}
+
+	// handle all reload spec info.
+	var referenceMetadata *ReleaseMetadata
+	metadatas := []*ReleaseMetadata{}
+
+	for _, eInfo := range msg.ReloadSpec.Info {
+		md, err := h.effectCache.LocalRelease(eInfo.Cfgsetid)
+		if err != nil || md == nil {
+			// suppose no effected release.
+			return fmt.Errorf("can't reload this release now, configset[%s] suppose not effectting release[%s] this moment", eInfo.Cfgsetid, eInfo.Releaseid)
+		}
+
+		if md.Releaseid != eInfo.Releaseid {
+			// not effectting target release this moment.
+			return fmt.Errorf("can't reload this release now, configset[%s] not effectting release[%s] this moment", eInfo.Cfgsetid, eInfo.Releaseid)
+		}
+
+		// mark reference metadata to judge event type.
+		referenceMetadata = md
+		metadatas = append(metadatas, md)
+
+		// NOTE: may other release is coming, but there should be a lock in user level.
+		// Reload is just check local releases and send notification to business, you should
+		// know all actions from your operators.
+	}
+
+	// all configsets are effectting target release, reload now.
+	spec := &ReloadSpec{
+		BusinessName: h.businessName,
+		AppName:      h.appName,
+
+		// all releases have the same name even under multi release.
+		ReleaseName: referenceMetadata.ReleaseName,
+	}
+
+	// config reload specs.
+	configSpec := []ConfigSpec{}
+	for _, md := range metadatas {
+		configSpec = append(configSpec, ConfigSpec{Name: md.CfgsetName, Fpath: md.CfgsetFpath})
+	}
+	spec.Configs = configSpec
+
+	// reload mode.
+	if len(msg.ReloadSpec.MultiReleaseid) != 0 {
+		// multi release reload mode.
+		spec.MultiReleaseid = msg.ReloadSpec.MultiReleaseid
+	} else {
+		// single release reload mode.
+		spec.Releaseid = referenceMetadata.Releaseid
+	}
+
+	// reload type, 0: update  1: rollback.
+	if referenceMetadata.isRollback {
+		spec.ReloadType = 1
+	}
+
+	// sync reload event.
+	h.reloader.Reload(spec)
+
+	return nil
 }
 
 // reporting keeps reporting local release effected information of
@@ -421,7 +534,7 @@ func (h *ConfigHandler) syncConfigSetList() {
 		newCfgsetids := make(map[string]string)
 		for _, cfgsetid := range cfgsetids {
 			if v, ok := h.pullers[cfgsetid]; !ok || v == nil {
-				newPuller := NewPuller(h.viper, h.businessName, h.appName, cfgsetid, h.effectCache, h.contentCache, h.reloader)
+				newPuller := NewPuller(h.viper, h.businessName, h.appName, cfgsetid, h.effectCache, h.contentCache)
 				h.pullers[cfgsetid] = newPuller
 				newPuller.Run()
 			}

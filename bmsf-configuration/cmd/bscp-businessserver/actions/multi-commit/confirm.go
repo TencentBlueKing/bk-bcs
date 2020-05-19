@@ -153,6 +153,7 @@ func (act *ConfirmAction) renderWithoutTemplate(commit *pbcommon.Commit) (pbcomm
 		CfgLink:  "",
 		Content:  commit.Configs,
 		Creator:  act.req.Operator,
+		Memo:     commit.Memo,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))

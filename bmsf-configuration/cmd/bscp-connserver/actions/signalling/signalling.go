@@ -255,6 +255,28 @@ func (act *SignallingAction) verify(r interface{}) error {
 			return errors.New("invalid params, releaseid too long")
 		}
 
+	case *pb.SCCMDPushReloadNotification:
+		req := r.(*pb.SCCMDPushReloadNotification)
+
+		length := len(req.Bid)
+		if length == 0 {
+			return errors.New("invalid params, bid missing")
+		}
+		if length > database.BSCPIDLENLIMIT {
+			return errors.New("invalid params, bid too long")
+		}
+
+		length = len(req.Appid)
+		if length == 0 {
+			return errors.New("invalid params, appid missing")
+		}
+		if length > database.BSCPIDLENLIMIT {
+			return errors.New("invalid params, appid too long")
+		}
+		if req.ReloadSpec == nil || len(req.ReloadSpec.Info) == 0 {
+			return errors.New("invalid params, reloadSpec missing")
+		}
+
 	default:
 		return fmt.Errorf("invalid request type[%+v]", r)
 	}
@@ -383,6 +405,22 @@ func (act *SignallingAction) handleNotification(stream pb.Connection_SignallingC
 					logger.Error("handleNotification| send rollback publish notification to sidecar, notification[%v], %+v", msg, err)
 				} else {
 					logger.Info("handleNotification| send rollback publish notification to sidecar success, notification[%v]", msg)
+				}
+				act.collector.StatPublishing(err == nil)
+				continue
+
+			case *pb.SCCMDPushReloadNotification:
+				msg := notification.(*pb.SCCMDPushReloadNotification)
+
+				err := stream.Send(&pb.SignallingChannelUpStream{
+					Seq:       common.Sequence(),
+					Cmd:       pb.SignallingChannelCmd_SCCMD_S2C_PUSH_RELOAD_NOTIFICATION,
+					CmdReload: msg,
+				})
+				if err != nil {
+					logger.Error("handleNotification| send reload publish notification to sidecar, notification[%v], %+v", msg, err)
+				} else {
+					logger.Info("handleNotification| send reload publish notification to sidecar success, notification[%v]", msg)
 				}
 				act.collector.StatPublishing(err == nil)
 				continue
