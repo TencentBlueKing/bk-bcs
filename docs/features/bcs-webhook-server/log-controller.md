@@ -43,7 +43,8 @@ bcs容器日志方案包含如下功能：
 bcs-webhook-server 在拦截到容器的创建请求时，会从集群中查询 BcsLogConfig 类型的 crd ，如果查询到了匹配的 BcsLogConfig ，会把这个 BcsLogConfig 中的日志采集信息以环境变量的形式注入到容器当中。
 对于一个业务集群，在配置日志采集时，主要要考虑到三方面的情况：
 
-- 系统组件的日志采集配置
+#### 系统组件的日志采集配置
+
 系统组件一般都运行在 kube-system, kube-public, bcs-system 这几个命名空间下。对于这些命名空间下的系统组件，bcs-webhook-server 默认不会注入任何日志采集配置。
 如果要对系统组件的容器也进行日志采集，需要在这些系统组件的 pod 中加入指定的 annotation : webhook.inject.bkbcs.tencent.com。当 pod 中这个指定的 annotation 的值为 "y", "yes", "true", "on" 时，bcs-webhook-server 才会对这些 pod 中的容器进行环境变量的注入。
 目前，针对系统组件的日志采集，不支持针对不同容器使用不同的采集配置，统一使用一个固定的配置。
@@ -71,7 +72,8 @@ spec:
 ```
 当 stdout 为 true 时，采集标准日志；当 logPaths 不为空时，采集非标准日志。  
 
-- 默认的日志采集配置  
+#### 默认的日志采集配置  
+
 对于大多数业务集群，所有业务容器的日志输出是同样的格式，只需配置一种固定的日志清洗规则即可。对于这种需求，为了减少用户的负担，bk-bcs-saas 层可以默认创建一个 configType 类型为 default 的 BcsLogConfig 资源，bcs-logbeat-sidecar 默认会对集群所有容器注入这个标准的日志采集配置：    
 ```
 apiVersion: bkbcs.tencent.com/v1
@@ -94,7 +96,8 @@ spec:
 ```
 当 stdout 为 true 时，采集标准日志；当 logPaths 不为空时，采集非标准日志。
 
-- 自定义的日志采集
+#### 自定义的日志采集
+
 如果一个业务集群中除了标准的日志采集配置外，还有某些容器需要配置特殊的日志采集规则，此时，可由用户从 bk-bcs-saas 层创建特定的类型为 custom 的日志采集配置 BcsLogConfig , 在 BcsLogConfig 中指定需要使用这种规则的 workloads 类型(如 Deployment, Statefulset)、workload，如下所示：    
 ```
 apiVersion: bkbcs.tencent.com/v1
@@ -122,7 +125,8 @@ spec:
 此配置指定某一个具体的应用，此应用下面的所有容器都按照上面的规则来采集。
 当 stdout 为 true 时，采集标准日志；当 logPaths 不为空时，采集非标准日志。
 
-- 自定义sidecar容器日志采集
+#### 自定义sidecar容器日志采集
+
 针对一些sidecar的容器日志采集，例如：istio-proxy，支持如下配置：    
 ```
 apiVersion: bkbcs.tencent.com/v1
