@@ -27,6 +27,7 @@ import (
 	deletion "bk-bcs/bcs-services/bcs-client/cmd/delete"
 	"bk-bcs/bcs-services/bcs-client/cmd/deployment"
 	"bk-bcs/bcs-services/bcs-client/cmd/env"
+	"bk-bcs/bcs-services/bcs-client/cmd/exec"
 	"bk-bcs/bcs-services/bcs-client/cmd/get"
 	"bk-bcs/bcs-services/bcs-client/cmd/grant"
 	"bk-bcs/bcs-services/bcs-client/cmd/inspect"
@@ -74,6 +75,7 @@ func main() {
 		grant.NewGrantCommand(),
 		revoke.NewRevokeCommand(),
 		add.NewAddCommand(),
+		exec.NewExecCommand(),
 	}
 
 	if err := utils.InitCfg(); err != nil {

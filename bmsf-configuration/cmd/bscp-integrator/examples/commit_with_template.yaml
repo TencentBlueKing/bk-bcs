@@ -1,0 +1,28 @@
+kind: commit
+version: v1
+op: commit
+spec:
+    businessName: business-itg
+    appName: app-itg
+    configSetName: server.yaml
+    configSetFpath: /
+    memo: created by itg
+
+template:
+    templateid: templateid
+    template: |
+        # single values
+        k1: {{ .k1 }}
+        k2: {{ .k2 }}
+
+        # array values {{ range .k3 }}
+        k3:
+            - {{ . }}  {{end}}
+
+    templateRule: |
+        [
+            {"type": 0, "name": "cluster-itg-1", "vars": { "k1": "v1a", "k2": 0, "k3": ["v3a", "v3b"]}},
+            {"type": 1, "name": "zone-itg-1", "vars": {"k1": "v1b", "k2": 1, "k3": ["v3c", "v3d"]}}
+        ]
+
+changes: changes

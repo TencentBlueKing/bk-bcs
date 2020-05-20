@@ -18,6 +18,8 @@ import (
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -33,6 +35,7 @@ func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) (stri
 
 //SaveTaskGroup save task group to store
 func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
+	now := time.Now().UnixNano()
 	client := store.BkbcsClient.TaskGroups(taskGroup.RunAs)
 	v2Taskgroup := &v2.TaskGroup{
 		TypeMeta: metav1.TypeMeta{
@@ -73,7 +76,10 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 			}
 		}
 	}
-
+	delay := (time.Now().UnixNano()-now)/1000/1000
+	if delay>50 {
+		blog.Warnf("save taskgroup(%s) delay(%d)", taskGroup.ID, delay)
+	}
 	return nil
 }
 
@@ -145,12 +151,11 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	client := store.BkbcsClient.TaskGroups(runAs)
 	err = client.Delete(taskGroupID, &metav1.DeleteOptions{})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	deleteCacheTaskGroup(taskGroupID)
-
 	return nil
 }
 

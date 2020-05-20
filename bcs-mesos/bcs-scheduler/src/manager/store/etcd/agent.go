@@ -18,21 +18,22 @@ import (
 	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	"k8s.io/apimachinery/pkg/api/errors"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+//check agent whether exist
 func (store *managerStore) CheckAgentExist(agent *types.Agent) (string, bool) {
-	client := store.BkbcsClient.Agents(DefaultNamespace)
-	obj, err := client.Get(agent.Key, metav1.GetOptions{})
-	if err == nil {
+	obj, _ := store.FetchAgent(agent.Key)
+	if obj != nil {
 		return obj.ResourceVersion, true
 	}
 
 	return "", false
 }
 
+//save agent
 func (store *managerStore) SaveAgent(agent *types.Agent) error {
 
 	client := store.BkbcsClient.Agents(DefaultNamespace)
@@ -52,17 +53,38 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 
 	var err error
 	rv, exist := store.CheckAgentExist(agent)
+	//if exist, then update
 	if exist {
 		v2Agent.ResourceVersion = rv
-		_, err = client.Update(v2Agent)
+		v2Agent, err = client.Update(v2Agent)
+		//else not exist, then create it
 	} else {
-		_, err = client.Create(v2Agent)
+		v2Agent, err = client.Create(v2Agent)
 	}
-	return err
+	if err != nil {
+		return err
+	}
+
+	//update kube-apiserver ResourceVersion
+	agent.ResourceVersion = v2Agent.ResourceVersion
+	//save agent in cache
+	saveCacheAgent(agent)
+	return nil
 }
 
+//fetch agent for agent InnerIP
 func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
+	//fetch agent in cache
+	if cacheMgr.isOK {
+		agent := getCacheAgent(Key)
+		if agent == nil {
+			return nil, schStore.ErrNoFound
+		}
+		return agent, nil
+	}
+
 	client := store.BkbcsClient.Agents(DefaultNamespace)
+	//fetch agent in kube-apiserver
 	v2Agent, err := client.Get(Key, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -71,10 +93,17 @@ func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 		return nil, err
 	}
 
-	return &v2Agent.Spec.Agent, nil
+	obj := v2Agent.Spec.Agent
+	obj.ResourceVersion = v2Agent.ResourceVersion
+	return &obj, nil
 }
 
+//list all agent list
 func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {
+	if cacheMgr.isOK {
+		return listCacheAgents()
+	}
+
 	client := store.BkbcsClient.Agents(DefaultNamespace)
 	v2Agents, err := client.List(metav1.ListOptions{})
 	if err != nil {
@@ -84,11 +113,13 @@ func (store *managerStore) ListAllAgents() ([]*types.Agent, error) {
 	agents := make([]*types.Agent, 0, len(v2Agents.Items))
 	for _, v2 := range v2Agents.Items {
 		obj := v2.Spec.Agent
+		obj.ResourceVersion = v2.ResourceVersion
 		agents = append(agents, &obj)
 	}
 	return agents, nil
 }
 
+//list all agent ip list
 func (store *managerStore) ListAgentNodes() ([]string, error) {
 	agents, err := store.ListAllAgents()
 	if err != nil {
@@ -102,22 +133,30 @@ func (store *managerStore) ListAgentNodes() ([]string, error) {
 	return agentNodes, nil
 }
 
+//delete agent for innerip
 func (store *managerStore) DeleteAgent(key string) error {
 	client := store.BkbcsClient.Agents(DefaultNamespace)
 	err := client.Delete(key, &metav1.DeleteOptions{})
-	return err
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	//delete agent in cache
+	deleteCacheAgent(key)
+	return nil
 }
 
+//check agentsetting exist
 func (store *managerStore) CheckAgentSettingExist(agent *commtypes.BcsClusterAgentSetting) (string, bool) {
-	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
-	obj, err := client.Get(agent.InnerIP, metav1.GetOptions{})
-	if err == nil {
+	obj, _ := store.FetchAgentSetting(agent.InnerIP)
+	if obj != nil {
 		return obj.ResourceVersion, true
 	}
 
 	return "", false
 }
 
+//save agentsetting
 func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSetting) error {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	v2Agent := &v2.BcsClusterAgentSetting{
@@ -138,15 +177,25 @@ func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSett
 	rv, exist := store.CheckAgentSettingExist(agent)
 	if exist {
 		v2Agent.ResourceVersion = rv
-		_, err = client.Update(v2Agent)
+		v2Agent, err = client.Update(v2Agent)
 	} else {
-		_, err = client.Create(v2Agent)
+		v2Agent, err = client.Create(v2Agent)
+	}
+	if err != nil {
+		return err
 	}
 
-	return err
+	agent.ResourceVersion = v2Agent.ResourceVersion
+	saveCacheAgentsetting(agent)
+	return nil
 }
 
+//fetch agentsetting for innerip
 func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
+	if cacheMgr.isOK {
+		return getCacheAgentsetting(InnerIP), nil
+	}
+
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	v2Agent, err := client.Get(InnerIP, metav1.GetOptions{})
 	if err != nil {
@@ -156,32 +205,59 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 		return nil, err
 	}
 
-	return &v2Agent.Spec.BcsClusterAgentSetting, nil
+	obj := v2Agent.Spec.BcsClusterAgentSetting
+	obj.ResourceVersion = v2Agent.ResourceVersion
+	return &obj, nil
 }
 
+//delete agentsetting
 func (store *managerStore) DeleteAgentSetting(InnerIP string) error {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	err := client.Delete(InnerIP, &metav1.DeleteOptions{})
-	if err != nil && errors.IsNotFound(err) {
-		return nil
+	if err != nil && !errors.IsNotFound(err) {
+		return err
 	}
-	return err
+
+	deleteCacheAgentsetting(InnerIP)
+	return nil
 }
 
+//list agentsetting ip list
 func (store *managerStore) ListAgentSettingNodes() ([]string, error) {
+	agents, err := store.ListAgentsettings()
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]string, 0, len(agents))
+	for _, agent := range agents {
+		nodes = append(nodes, agent.InnerIP)
+	}
+	return nodes, nil
+}
+
+//list all agentsetting list
+func (store *managerStore) ListAgentsettings() ([]*commtypes.BcsClusterAgentSetting, error) {
+	if cacheMgr.isOK {
+		return listCacheAgentsettings()
+	}
+
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	v2Agents, err := client.List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	agents := make([]string, 0, len(v2Agents.Items))
+	agents := make([]*commtypes.BcsClusterAgentSetting, 0, len(v2Agents.Items))
 	for _, v2 := range v2Agents.Items {
-		agents = append(agents, v2.Spec.InnerIP)
+		obj := v2.Spec.BcsClusterAgentSetting
+		obj.ResourceVersion = v2.ResourceVersion
+		agents = append(agents, &obj)
 	}
 	return agents, nil
 }
 
+//check agent schedinfo exist
 func (store *managerStore) CheckAgentSchedInfoExist(agent *types.AgentSchedInfo) (string, bool) {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
 	obj, err := client.Get(agent.HostName, metav1.GetOptions{})
@@ -192,6 +268,7 @@ func (store *managerStore) CheckAgentSchedInfoExist(agent *types.AgentSchedInfo)
 	return "", false
 }
 
+//save agentschedinfo
 func (store *managerStore) SaveAgentSchedInfo(agent *types.AgentSchedInfo) error {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
 	v2Agent := &v2.AgentSchedInfo{
@@ -219,6 +296,7 @@ func (store *managerStore) SaveAgentSchedInfo(agent *types.AgentSchedInfo) error
 	return err
 }
 
+//fetch agentschedinfo
 func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSchedInfo, error) {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
 	v2Agent, err := client.Get(HostName, metav1.GetOptions{})
@@ -232,8 +310,13 @@ func (store *managerStore) FetchAgentSchedInfo(HostName string) (*types.AgentSch
 	return &v2Agent.Spec.AgentSchedInfo, nil
 }
 
+//delete agent schedinfo
 func (store *managerStore) DeleteAgentSchedInfo(HostName string) error {
 	client := store.BkbcsClient.AgentSchedInfos(DefaultNamespace)
 	err := client.Delete(HostName, &metav1.DeleteOptions{})
-	return err
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	return nil
 }

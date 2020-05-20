@@ -1,0 +1,28 @@
+kind: construction
+version: v1
+op: create
+spec:
+    businessName: business-itg
+    appName: app-itg
+    deployType: 0
+    memo: created by itg
+
+construction:
+    clusters:
+    - name: cluster-itg-1
+      rclusterid: rclusterid
+      memo: created by itg
+      zones:
+      - name: zone-itg-1
+        memo: created by itg
+      - name: zone-itg-2
+        memo: created by itg
+
+    - name: cluster-itg-2
+      rclusterid: rclusterid
+      memo: created by itg
+      zones:
+      - name: zone-itg-3
+        memo: created by itg
+      - name: zone-itg-4
+        memo: created by itg

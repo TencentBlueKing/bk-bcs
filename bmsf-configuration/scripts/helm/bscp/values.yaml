@@ -1,0 +1,107 @@
+
+
+# global setting for all components
+global:
+  etcdCluster:
+    endpoints:
+    - 127.0.0.1:2379
+  
+  database:
+    host: 127.0.0.1
+    port: 3306
+    user: root
+    passwd: ${pwd}
+
+  logger:
+    level: 3
+    maxnum: 5
+    maxsize: 200
+    alsoStderr: true
+  
+  defaultResources:
+    requests:
+      cpu: 10m
+
+
+
+bscp-accessserver:
+  enabled: true
+  replicaCount: 1
+  image: bscp-accessserver:latest
+
+
+bscp-bcs-controller:
+  enabled: true
+  natsmqCluster:
+    endpoints:
+    - nats://127.0.0.1:4222
+    timeout: 3s
+
+  replicaCount: 1
+  image: bscp-bcs-controller:latest
+
+
+bscp-businessserver:
+  enabled: true
+  replicaCount: 1
+  image: bscp-businessserver:latest
+
+
+bscp-connserver:
+  enabled: true
+  natsmqCluster:
+    endpoints:
+    - nats://127.0.0.1:4222
+    timeout: 3s
+
+  replicaCount: 1
+  image: bscp-connserver:latest
+
+
+bscp-datamanager:
+  enabled: true
+  replicaCount: 1
+  image: bscp-datamanager:latest
+
+
+bscp-gateway:
+  enabled: true
+  gateway:
+    endpoint:
+      ip: 0.0.0.0
+      port: 443
+    tls:
+      cafile: ./bscp-ca.crt
+      certfile: ./bscp-server.crt
+      keyfile: ./bscp-server.key
+      certPassword: xxxxxxx
+    insecureEndpoint:
+      ip: 0.0.0.0
+      port: 8080
+      api:
+        open: true
+  replicaCount: 1
+  image: bscp-datamanager:latest
+  tlsfiles:
+    bscp-ca.crt: |-
+      xxxxxxx
+      xxxxxxx
+    bscp-server.crt: |-
+      xxxxxxx
+      xxxxxxx
+    bscp-server.key: |-
+      xxxxxxx
+      xxxxxxx
+
+
+bscp-integrator:
+  enabled: true
+  replicaCount: 1
+  image: bscp-integrator:latest
+
+
+bscp-templateserver:
+  enabled: true
+  replicaCount: 1
+  image: bscp-templateserver:latest
+

@@ -21,6 +21,15 @@ import (
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+const (
+	// default log config type
+	DefaultConfigType = "default"
+	// bcs system log config type
+	BcsSystemConfigType = "bcs-system"
+	// custom log config type
+	CustomConfigType = "custom"
+)
+
 type BcsLogConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -28,17 +37,18 @@ type BcsLogConfig struct {
 }
 
 type BcsLogConfigSpec struct {
-	ConfigType     string            `json:"configType"`
-	AppId          string            `json:"appId"`
-	ClusterId      string            `json:"clusterId"`
-	Stdout         bool              `json:"stdout"`
-	StdDataId      string            `json:"stdDataId"`
-	NonStdDataId   string            `json:"nonStdDataId"`
-	LogPaths       []string          `json:"logPaths"`
-	LogTags        map[string]string `json:"logTags"`
-	WorkloadType   string            `json:"workloadType"`
-	WorkloadName   string            `json:"workloadName"`
-	ContainerConfs []ContainerConf   `json:"containerConfs"`
+	ConfigType        string            `json:"configType"`
+	AppId             string            `json:"appId"`
+	ClusterId         string            `json:"clusterId"`
+	Stdout            bool              `json:"stdout"`
+	StdDataId         string            `json:"stdDataId"`
+	NonStdDataId      string            `json:"nonStdDataId"`
+	LogPaths          []string          `json:"logPaths"`
+	LogTags           map[string]string `json:"logTags"`
+	WorkloadType      string            `json:"workloadType"`
+	WorkloadName      string            `json:"workloadName"`
+	WorkloadNamespace string            `json:"workloadNamespace"`
+	ContainerConfs    []ContainerConf   `json:"containerConfs"`
 }
 
 type ContainerConf struct {

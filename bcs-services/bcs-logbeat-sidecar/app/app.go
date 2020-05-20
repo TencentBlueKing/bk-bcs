@@ -47,4 +47,5 @@ func setConfig(conf *config.Config, op *options.SidecarOption) {
 	conf.PrefixFile = op.PrefixFile
 	conf.TemplateFile = op.TemplateFile
 	conf.LogbeatDir = op.LogbeatDir
+	conf.Kubeconfig = op.Kubeconfig
 }

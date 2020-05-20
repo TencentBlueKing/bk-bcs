@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bscp-accessserver
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bscp-accessserver
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: bscp-accessserver
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: bscp-accessserver
+    spec:
+      containers:
+        - name: bscp-accessserver
+          image: "{{ .Values.image }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+          - containerPort: 9510
+          - containerPort: 9100
+          volumeMounts:
+          - name: config
+            mountPath: /bk-bscp/etc/server.yaml
+            subPath: server.yaml
+          {{- if .Values.env }}
+          env:
+            {{- range .Values.env }}
+              {{- with . }}
+          - name: {{ .name }}
+            value: "{{ .value }}"
+              {{- end}}
+            {{- end}}
+          {{- end}}
+          resources:
+{{- if .Values.resources }}
+{{ toYaml .Values.resources | indent 12 }}
+{{- else }}
+{{ toYaml .Values.global.defaultResources | indent 12 }}
+{{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: bscp-accessserver-config
+          items:
+          - key: server.yaml
+            path: server.yaml

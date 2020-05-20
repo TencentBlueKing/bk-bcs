@@ -14,9 +14,9 @@ roleRef:
   kind: ClusterRole
   name: cluster-admin
 subjects:
-- kind: ServiceAccount
-  name: bcs-kube-agent
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: bcs-kube-agent
+    namespace: kube-system
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -34,23 +34,22 @@ spec:
         app: bcs-kube-agent
     spec:
       containers:
-      - name: bcs-kube-agent
-        image: ${kubeAgentImage}
-        imagePullPolicy: IfNotPresent
-        args:
-        - --bke-address=${bkeAddress}
-        - --cluster-id=${clusterId}
-        - --external-proxy-addresses=${kubeAgentProxy}
-        env:
-          - name: REGISTER_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: bke-info
-                key: token
-          - name: SERVER_CERT
-            valueFrom:
-              secretKeyRef:
-                name: bke-info
-                key: bke-cert
+        - name: bcs-kube-agent
+          image: ${kubeAgentImage}
+          imagePullPolicy: IfNotPresent
+          args:
+            - --bke-address=${bkeAddress}
+            - --cluster-id=${clusterId}
+            - --external-proxy-addresses=${kubeAgentProxy}
+          env:
+            - name: REGISTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bke-info
+                  key: token
+            - name: SERVER_CERT
+              valueFrom:
+                secretKeyRef:
+                  name: bke-info
+                  key: bke-cert
       serviceAccountName: bcs-kube-agent
-
