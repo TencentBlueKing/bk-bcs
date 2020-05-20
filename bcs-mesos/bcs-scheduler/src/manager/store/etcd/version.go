@@ -106,20 +106,14 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 }
 
 func (store *managerStore) ListVersions(runAs, versionID string) ([]string, error) {
-	var versions []*types.Version
-	var err error
-	if cacheMgr.isOK {
-		versions, _ = listCacheVersions(runAs, versionID)
-	} else {
-		versions, err = store.listVersions(runAs, versionID)
-	}
-	if err != nil {
-		return nil, err
-	}
-
+	versions, _ := listCacheVersions(runAs, versionID)
 	nodes := make([]string, 0, len(versions))
 	for _, version := range versions {
 		nodes = append(nodes, version.Name)
+	}
+	if len(nodes) == 0 {
+		blog.Warnf("fetch version(%s.%s) is empty", runAs, versionID)
+		return nil, nil
 	}
 	return nodes, nil
 }
@@ -209,6 +203,5 @@ func (store *managerStore) GetVersion(runAs, appId string) (*types.Version, erro
 		}
 		return newestVersion, nil
 	}
-
 	return nil, nil
 }

@@ -60,6 +60,7 @@ const (
 
 //daemonset status
 const (
+	Daemonset_Status_Starting = "Starting"
 	Daemonset_Status_Running  = "Running"
 	Daemonset_Status_Abnormal = "Abnormal"
 	Daemonset_Status_Deleting = "Deleting"

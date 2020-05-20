@@ -50,14 +50,14 @@ func (b *backend) LaunchDaemonset(def *types.BcsDaemonsetDef) error {
 		blog.Errorf("Launch Daemonset(%s.%s), but SaveVersion failed: %s", def.NameSpace, def.Name, err.Error())
 		return err
 	}
-	blog.Errorf("Launch Daemonset(%s.%s), and SaveVersion success", def.NameSpace, def.Name)
+	blog.Infof("Launch Daemonset(%s.%s), and SaveVersion success", def.NameSpace, def.Name)
 	//launch new daemonset
 	daemonset = &types.BcsDaemonset{
 		ObjectMeta: commtypes.ObjectMeta{
 			Name:      def.Name,
 			NameSpace: def.NameSpace,
 		},
-		Status:  types.Daemonset_Status_Running,
+		Status:  types.Daemonset_Status_Starting,
 		Created: time.Now().Unix(),
 		Pods:    make([]*commtypes.BcsPodIndex, 0),
 	}
@@ -72,7 +72,6 @@ func (b *backend) LaunchDaemonset(def *types.BcsDaemonsetDef) error {
 
 //delete daemonset
 func (b *backend) DeleteDaemonset(namespace, name string, force bool) error {
-	blog.Infof("delete daemonset(%s.%s)", namespace, name)
 	//lock
 	util.Lock.Lock(types.BcsDaemonset{}, namespace+"."+name)
 	defer util.Lock.UnLock(types.BcsDaemonset{}, namespace+"."+name)
@@ -98,7 +97,6 @@ func (b *backend) DeleteDaemonset(namespace, name string, force bool) error {
 		}
 		//kill taskgroup in mesos cluster
 		b.sched.KillTaskGroup(pod)
-		blog.Infof("delete daemonset(%s) and kill taskgroup(%s) in mesos", daemonset.GetUuid(), pod.ID)
 	}
 
 	daemonset.ForceDeleting = force
@@ -109,5 +107,6 @@ func (b *backend) DeleteDaemonset(namespace, name string, force bool) error {
 		blog.Errorf("Delete Daemonset(%s.%s), but SaveDaemonset failed: %s", namespace, name, err.Error())
 		return err
 	}
+	blog.Infof("daemonset(%s) status from(%s)->to(%s)", daemonset.GetUuid(), daemonset.LastStatus, daemonset.Status)
 	return nil
 }

@@ -194,33 +194,34 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		taskGroup.UpdateTime = now
 	}
 	reportTaskgroupReportMetrics(taskGroup.RunAs, taskGroup.AppID, taskGroup.Name, taskGroup.Status)
-	// taskgroup info not changed
-	if !taskgroupUpdated && taskGroup.LastUpdateTime > updateTime {
-		return
+	// taskgroup info changed
+	if taskGroup.LastUpdateTime <= updateTime || taskgroupUpdated == true {
+		//if taskgroup belongs to application
+		if !s.CheckPodBelongDaemonset(taskGroup.ID) {
+			//report endpoints the taskgroup status changed
+			s.ServiceMgr.TaskgroupUpdate(taskGroup)
+			//whether reschedule taskgroup
+			if taskGroup.Status != taskGroupStatus {
+				s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
+			}
+		}
+		if bcsMsg != nil {
+			taskGroup.BcsEventMsg = bcsMsg
+		}
+		taskGroup.LastUpdateTime = now
+		//save taskGroup into store, in this function, task will alse be saved
+		if err = s.store.SaveTaskGroup(taskGroup); err != nil {
+			blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
+			return
+		}
 	}
 
 	//when taskgroup belongs to daemonset
 	if s.CheckPodBelongDaemonset(taskGroup.ID) {
 		s.updateDaemonsetStatus(runAs, appId)
 	} else {
-		//trigger endpoints changed
-		s.ServiceMgr.TaskgroupUpdate(taskGroup)
-		if taskGroup.Status != taskGroupStatus {
-			//trigger reschedule taskgroup handler
-			s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
-		}
 		//check application whether changed
 		s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
-	}
-
-	//update taskgroup info, and save taskgroup
-	if bcsMsg != nil {
-		taskGroup.BcsEventMsg = bcsMsg
-	}
-	taskGroup.LastUpdateTime = now
-	//save taskGroup into zk, in this function, task will alse be saved
-	if err = s.store.SaveTaskGroup(taskGroup); err != nil {
-		blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
 	}
 }
 
@@ -281,7 +282,8 @@ func (s *Scheduler) checkApplicationChange(runAs, appId, taskGroupStatus string,
 		blog.Error("status report: fetch application(%s.%s) failed, err:%s", runAs, appId, err.Error())
 		return
 	}
-
+	blog.V(3).Infof("check application(%s.%s) curstatus(%s) taskgroup(%s) oldStatus(%s)->curstatus(%s) whether change",
+		runAs, appId, app.Status, taskGroup.ID, taskGroupStatus, taskGroup.Status)
 	appStatus := app.Status
 	// add condition for performance
 	if appStatus == types.APP_STATUS_OPERATING {
@@ -727,7 +729,7 @@ func (s *Scheduler) taskGroupStatusUpdated(taskGroup *types.TaskGroup, originSta
 
 		version, _ := s.store.GetVersion(runAs, appID)
 		if version == nil {
-			blog.Error("prepare reschedule taskgroup(%s) fail, no version for application(%s.%s)", runAs, appID)
+			blog.Error("prepare reschedule taskgroup(%s) fail, no version for application(%s.%s)", taskGroup.ID, runAs, appID)
 			return
 		}
 		rescheduleOpdata.NeedResource = version.AllResource()
@@ -864,33 +866,34 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 	}
 
 	reportTaskgroupReportMetrics(taskGroup.RunAs, taskGroup.AppID, taskGroup.Name, taskGroup.Status)
-	// taskgroup info not changed
-	if !taskgroupUpdated && taskGroup.LastUpdateTime > updateTime {
-		return
+	// taskgroup info changed
+	if taskGroup.LastUpdateTime <= updateTime || taskgroupUpdated == true {
+		//if taskgroup belongs to application
+		if !s.CheckPodBelongDaemonset(taskGroup.ID) {
+			//report endpoints the taskgroup status changed
+			s.ServiceMgr.TaskgroupUpdate(taskGroup)
+			//whether reschedule taskgroup
+			if taskGroup.Status != taskGroupStatus {
+				s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
+			}
+		}
+		if msg != nil {
+			taskGroup.BcsEventMsg = msg
+		}
+		taskGroup.LastUpdateTime = now
+		//save taskGroup into store, in this function, task will alse be saved
+		if err = s.store.SaveTaskGroup(taskGroup); err != nil {
+			blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
+			return
+		}
 	}
 
 	//when taskgroup belongs to daemonset
 	if s.CheckPodBelongDaemonset(taskGroup.ID) {
 		s.updateDaemonsetStatus(runAs, appId)
 	} else {
-		//trigger endpoints changed
-		s.ServiceMgr.TaskgroupUpdate(taskGroup)
-		if taskGroup.Status != taskGroupStatus {
-			//trigger reschedule taskgroup handler
-			s.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
-		}
 		//check application whether changed
 		s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
-	}
-
-	//update taskgroup info, and save taskgroup
-	if msg != nil {
-		taskGroup.BcsEventMsg = msg
-	}
-	taskGroup.LastUpdateTime = now
-	//save taskGroup into zk, in this function, task will alse be saved
-	if err = s.store.SaveTaskGroup(taskGroup); err != nil {
-		blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
 	}
 }
 

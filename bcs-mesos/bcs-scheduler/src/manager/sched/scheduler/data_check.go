@@ -143,6 +143,7 @@ func (mgr *DataCheckMgr) doCheck() {
 		return
 	}
 
+	//check application taskgroup whether lost
 	for _, runAs := range runAses {
 		blog.Info("data checker: to check runAs(%s)", runAs)
 		appIDs, err := mgr.store.ListApplicationNodes(runAs)
@@ -159,25 +160,26 @@ func (mgr *DataCheckMgr) doCheck() {
 			//mgr.checkApplication(runAs, appID)
 			mgr.checkTaskgroup(runAs, appID)
 		}
-		//check daemonsets taskgroup whether lost
-		daemonsets, err := mgr.store.ListAllDaemonset()
-		if err != nil {
-			blog.Error("data checker ListAllDaemonset failed: %s", err.Error())
+	}
+	//check daemonsets taskgroup whether lost
+	daemonsets, err := mgr.store.ListAllDaemonset()
+	if err != nil {
+		blog.Error("data checker ListAllDaemonset failed: %s", err.Error())
+		return
+	}
+	for _, daemon := range daemonsets {
+		blog.Info("data checker: to check daemonest(%s) taskgroup status", daemon.GetUuid())
+		//lock
+		util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
+		taskgroups, _ := mgr.store.ListDaemonsetTaskGroups(daemon.NameSpace, daemon.Name)
+		lostNum := mgr.checkTaskgroupWhetherLost(taskgroups, false)
+		if lostNum == 0 {
+			util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
 			continue
 		}
-		for _, daemon := range daemonsets {
-			blog.Info("data checker: to check daemonest(%s) taskgroup status", daemon.GetUuid())
-			//lock
-			util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
-			defer util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
-			taskgroups, _ := mgr.store.ListDaemonsetTaskGroups(daemon.NameSpace, daemon.Name)
-			lostNum := mgr.checkTaskgroupWhetherLost(taskgroups, false)
-			if lostNum == 0 {
-				continue
-			}
-			//if have new lost taskgroup, then update daemonset status
-			mgr.sched.updateDaemonsetStatus(daemon.NameSpace, daemon.Name)
-		}
+		//if have new lost taskgroup, then update daemonset status
+		mgr.sched.updateDaemonsetStatus(daemon.NameSpace, daemon.Name)
+		util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
 	}
 
 	return
@@ -231,7 +233,7 @@ func (mgr *DataCheckMgr) checkTaskgroupWhetherLost(taskGroups []*types.TaskGroup
 		case types.TASKGROUP_STATUS_RUNNING, types.TASKGROUP_STATUS_STARTING:
 			updateInterval = 4 * MAX_DATA_UPDATE_INTERVAL
 		case types.TASKGROUP_STATUS_STAGING:
-			updateInterval = MAX_STAGING_UPDATE_INTERVAL
+			updateInterval = 4 * MAX_STAGING_UPDATE_INTERVAL
 		}
 
 		if taskGroup.LastUpdateTime+updateInterval < now {

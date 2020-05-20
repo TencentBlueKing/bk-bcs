@@ -11,19 +11,36 @@
  *
  */
 
-package v4
+package create
 
-const (
-	BcsSchedulerResourceApplication = "applications"
-	BcsSchedulerResourceProcess     = "processes"
-	BcsSchedulerResourceConfigMap   = "configmaps"
-	BcsSchedulerResourceSecret      = "secrets"
-	BcsSchedulerResourceService     = "services"
-	BcsSchedulerResourceDeployment  = "deployments"
-	BcsSchedulerResourceDaemonset   = "daemonset"
+import (
+	"fmt"
 
-	//AllNamespace selector
-	AllNamespace = ""
-	//StatusKind for CRD error message
-	StatusKind = "Status"
+	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
+
+func createDaemonset(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
+		return err
+	}
+
+	data, err := c.FileData()
+	if err != nil {
+		return err
+	}
+
+	namespace, err := utils.ParseNamespaceFromJSON(data)
+	if err != nil {
+		return err
+	}
+
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	err = scheduler.CreateDaemonset(c.ClusterID(), namespace, data)
+	if err != nil {
+		return fmt.Errorf("failed to create daemonset: %v", err)
+	}
+
+	fmt.Printf("success to create daemonset\n")
+	return nil
+}

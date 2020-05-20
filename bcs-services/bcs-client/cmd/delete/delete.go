@@ -27,7 +27,7 @@ func NewDeleteCommand() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment/crd",
+				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment/crd/daemonset",
 			},
 			cli.StringFlag{
 				Name:  "name, n",
@@ -76,6 +76,8 @@ func deleteF(c *utils.ClientContext) error {
 		return deleteDeployment(c)
 	case "crd", "customresourcedefinition":
 		return deleteCustomResourceDefinition(c)
+	case "daemonset":
+		return deleteDaemonset(c)
 	default:
 		//unkown type, try Custom Resource
 		return deleteCustomResource(c)

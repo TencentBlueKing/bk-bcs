@@ -139,7 +139,8 @@ func (s *Scheduler) newDaemonsetDefWithParam(param *bcstype.BcsDaemonset) (*type
 	for k, v := range param.Labels {
 		version.Labels[k] = v
 	}
-
+	//the version belongs daemonset
+	version.Kind = bcstype.BcsDataType_Daemonset
 	version, err = s.setVersionWithPodSpec(version, param.Spec.Template)
 	if err != nil {
 		return nil, err

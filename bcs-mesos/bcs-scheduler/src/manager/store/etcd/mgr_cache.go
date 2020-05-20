@@ -33,7 +33,7 @@ type cacheManager struct {
 	Taskgroups map[string]*types.TaskGroup
 	//key = {version.RunAs}.{version.ID}
 	//value is version list
-	Versions   map[string][]*types.Version
+	Versions   map[string]*cacheVersions
 	Namespaces map[string]struct{}
 	Configmaps map[string]*commtypes.BcsConfigMap
 	Secrets    map[string]*commtypes.BcsSecret
@@ -47,9 +47,17 @@ type cacheManager struct {
 	Agentsettings map[string]*commtypes.BcsClusterAgentSetting
 	//key = {daemonset.namespace}.{daemonset.name}
 	Daemonsets map[string]*types.BcsDaemonset
+	//command
+	Commands map[string]*commtypes.BcsCommandInfo
 	// Manager currently is OK
 	isOK    bool
 	mapLock *sync.RWMutex
+}
+
+type cacheVersions struct {
+	namespace string
+	name      string
+	objs      []*types.Version
 }
 
 var cacheMgr *cacheManager
@@ -73,7 +81,7 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 
 	cacheMgr.Applications = make(map[string]*types.Application)
 	cacheMgr.Taskgroups = make(map[string]*types.TaskGroup)
-	cacheMgr.Versions = make(map[string][]*types.Version)
+	cacheMgr.Versions = make(map[string]*cacheVersions)
 	cacheMgr.Namespaces = make(map[string]struct{})
 	cacheMgr.Configmaps = make(map[string]*commtypes.BcsConfigMap)
 	cacheMgr.Secrets = make(map[string]*commtypes.BcsSecret)
@@ -82,6 +90,7 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	cacheMgr.Services = make(map[string]*commtypes.BcsService)
 	cacheMgr.Agents = make(map[string]*types.Agent)
 	cacheMgr.Daemonsets = make(map[string]*types.BcsDaemonset)
+	cacheMgr.Commands = make(map[string]*commtypes.BcsCommandInfo)
 	//when isUsed=true, then init cache
 	if isUsed {
 		// init namespace in cache
@@ -139,12 +148,15 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 		if err != nil {
 			return err
 		}
+		//init commands
+		err = store.initCacheCommands()
+		if err != nil {
+			return err
+		}
 	}
 	cacheMgr.isOK = isUsed
 	cacheMgr.mapLock.Unlock()
-
 	blog.Infof("init cache end")
-
 	return nil
 }
 
@@ -271,7 +283,7 @@ func (store *managerStore) initCacheServices() error {
 	return nil
 }
 
-// init services in cache
+// init daemonsets in cache
 func (store *managerStore) initCacheDaemonsets() error {
 	dms, err := store.ListAllDaemonset()
 	if err != nil {
@@ -283,6 +295,21 @@ func (store *managerStore) initCacheDaemonsets() error {
 		cacheMgr.Daemonsets[dm.GetUuid()] = dm.DeepCopy()
 	}
 	blog.Infof("cacheMgr init cache daemonsets done")
+	return nil
+}
+
+// init commands in cache
+func (store *managerStore) initCacheCommands() error {
+	cmds, err := store.listAllCommands()
+	if err != nil {
+		blog.Errorf("cacheManager listAllCommands failed: %s", err.Error())
+		return err
+	}
+
+	for _, cmd := range cmds {
+		cacheMgr.Commands[cmd.Id] = cmd.DeepCopy()
+	}
+	blog.Infof("cacheMgr init cache commands done")
 	return nil
 }
 
@@ -330,10 +357,14 @@ func (store *managerStore) initCacheVersions() error {
 		tmpData := version.DeepCopy()
 		vns, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", version.RunAs, version.ID)]
 		if !ok {
-			vns = make([]*types.Version, 0)
+			vns = &cacheVersions{
+				namespace: version.RunAs,
+				name:      version.ID,
+				objs:      make([]*types.Version, 0),
+			}
 			cacheMgr.Versions[fmt.Sprintf("%s.%s", version.RunAs, version.ID)] = vns
 		}
-		vns = append(vns, tmpData)
+		vns.objs = append(vns.objs, tmpData)
 	}
 	blog.Infof("cacheMgr init cache versions done")
 	return nil
@@ -409,6 +440,36 @@ func deleteCacheConfigmap(ns, name string) error {
 	key := fmt.Sprintf("%s.%s", ns, name)
 	cacheMgr.mapLock.Lock()
 	delete(cacheMgr.Configmaps, key)
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+//save command in cache
+func saveCacheCommand(obj *commtypes.BcsCommandInfo) error {
+	tmpData := obj.DeepCopy()
+	cacheMgr.mapLock.Lock()
+	cacheMgr.Commands[obj.Id] = tmpData
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
+//get command in cache
+//if not exist, then return nil
+func getCacheCommand(key string) *commtypes.BcsCommandInfo {
+	cacheMgr.mapLock.RLock()
+	obj, ok := cacheMgr.Commands[key]
+	cacheMgr.mapLock.RUnlock()
+	if !ok {
+		return nil
+	}
+
+	return obj.DeepCopy()
+}
+
+// delete command in cache
+func deleteCacheCommand(key string) error {
+	cacheMgr.mapLock.Lock()
+	delete(cacheMgr.Commands, key)
 	cacheMgr.mapLock.Unlock()
 	return nil
 }
@@ -509,14 +570,18 @@ func deleteCacheAgentsetting(InnerIp string) error {
 //save version in cache
 func saveCacheVersion(runAs, appID string, obj *types.Version) error {
 	cacheMgr.mapLock.Lock()
-	versions, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, appID)]
+	vns, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, appID)]
 	if !ok {
-		versions = make([]*types.Version, 0)
-		cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, appID)] = versions
+		vns = &cacheVersions{
+			namespace: runAs,
+			name:      appID,
+			objs:      make([]*types.Version, 0),
+		}
+		cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, appID)] = vns
 	}
 	cacheMgr.mapLock.Unlock()
 	tmpData := obj.DeepCopy()
-	versions = append(versions, tmpData)
+	vns.objs = append(vns.objs, tmpData)
 	return nil
 }
 
@@ -528,7 +593,7 @@ func getCacheVersion(runAs, versionId, versionNo string) (*types.Version, error)
 	if !ok {
 		return nil, nil
 	}
-	for _, version := range versions {
+	for _, version := range versions.objs {
 		if version.Name == versionNo {
 			return version.DeepCopy(), nil
 		}
@@ -544,15 +609,15 @@ func listCacheVersions(runAs, versionId string) ([]*types.Version, error) {
 	iversions, ok := cacheMgr.Versions[fmt.Sprintf("%s.%s", runAs, versionId)]
 	cacheMgr.mapLock.RUnlock()
 	if !ok {
+		blog.Warnf("listCache versions(%s) is empty", fmt.Sprintf("%s.%s", runAs, versionId))
 		return nil, nil
 	}
 
 	var versions []*types.Version
-	for _, version := range iversions {
+	for _, version := range iversions.objs {
 		tmpData := version.DeepCopy()
 		versions = append(versions, tmpData)
 	}
-
 	return versions, nil
 }
 

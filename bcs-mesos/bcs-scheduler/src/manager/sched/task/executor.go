@@ -65,7 +65,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 	switch version.Kind {
 	case commtypes.BcsDataType_PROCESS:
 		cmdOrUri = BcsProcessExecutorPath
-	case commtypes.BcsDataType_APP, "":
+	case commtypes.BcsDataType_APP, "", commtypes.BcsDataType_Daemonset:
 		cmdOrUri = BcsContainerExecutorPath
 	}
 
@@ -84,7 +84,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 	switch version.Kind {
 	case commtypes.BcsDataType_PROCESS:
 		execCommand = fmt.Sprintf("./%s", base)
-	case commtypes.BcsDataType_APP, "":
+	case commtypes.BcsDataType_APP, "", commtypes.BcsDataType_Daemonset:
 		var user string
 		var passwd string
 		if version.Container[0].Docker.ImagePullUser != "" {

@@ -76,8 +76,8 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 			}
 		}
 	}
-	delay := (time.Now().UnixNano()-now)/1000/1000
-	if delay>50 {
+	delay := (time.Now().UnixNano() - now) / 1000 / 1000
+	if delay > 50 {
 		blog.Warnf("save taskgroup(%s) delay(%d)", taskGroup.ID, delay)
 	}
 	return nil

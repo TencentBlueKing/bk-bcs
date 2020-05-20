@@ -56,12 +56,12 @@ import (
 const MAX_DATA_UPDATE_INTERVAL = 180
 
 // Interval for checking ZK data
-const DATA_CHECK_INTERVAL = 60
+const DATA_CHECK_INTERVAL = 600
 
 // HeartBeat timeout between scheduler and mesos master
 const MESOS_HEARTBEAT_TIMEOUT = 120
 
-const MAX_STAGING_UPDATE_INTERVAL = 120
+const MAX_STAGING_UPDATE_INTERVAL = 180
 
 const (
 	SchedulerRoleMaster = "master"
@@ -120,6 +120,9 @@ type Scheduler struct {
 	offerPool offer.OfferPool
 
 	pluginManager *pluginManager.PluginManager
+
+	//stop daemonset signal
+	stopDaemonset chan struct{}
 }
 
 // NewScheduler returns a pointer to new Scheduler
@@ -789,7 +792,8 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		}
 		s.store.StopStoreMetrics()
 		s.store.UnInitCacheMgr()
-
+		//stop check and build daemonset
+		s.stopBuildDaemonset()
 		return nil
 	}
 	//init cache
@@ -806,7 +810,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 	//current role is master
 	s.Role = currRole
-	go s.store.StartStoreObjectMetrics()
+	//go s.store.StartStoreObjectMetrics()
 	go s.startCheckDeployments()
 	if s.ServiceMgr != nil {
 		var msgOpen ServiceMgrMsg
@@ -866,6 +870,8 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		s.dataChecker.SendMsg(&msg)
 		blog.Info("after open data checker")
 	}
+	//start check and build daemonset
+	go s.startBuildDaemonsets()
 
 	return nil
 
@@ -1583,4 +1589,23 @@ func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*comm
 
 func (s *Scheduler) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	return s.store.FetchTaskGroup(taskGroupID)
+}
+
+//check taskgroup whether belongs to daemonset
+func (s *Scheduler) CheckPodBelongDaemonset(taskgroupId string) bool {
+	namespace, name := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
+	version, err := s.store.GetVersion(namespace, name)
+	if err != nil {
+		blog.Errorf("Fetch taskgroup(%s) version(%s.%s) error %s", taskgroupId, namespace, name, err.Error())
+		return false
+	}
+	if version == nil {
+		blog.Errorf("Fetch taskgroup(%s) version(%s.%s) is empty", taskgroupId, namespace, name)
+		return false
+	}
+
+	if version.Kind == commtype.BcsDataType_Daemonset {
+		return true
+	}
+	return false
 }

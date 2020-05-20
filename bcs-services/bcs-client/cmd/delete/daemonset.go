@@ -11,19 +11,28 @@
  *
  */
 
-package v4
+package delete
 
-const (
-	BcsSchedulerResourceApplication = "applications"
-	BcsSchedulerResourceProcess     = "processes"
-	BcsSchedulerResourceConfigMap   = "configmaps"
-	BcsSchedulerResourceSecret      = "secrets"
-	BcsSchedulerResourceService     = "services"
-	BcsSchedulerResourceDeployment  = "deployments"
-	BcsSchedulerResourceDaemonset   = "daemonset"
+import (
+	"fmt"
 
-	//AllNamespace selector
-	AllNamespace = ""
-	//StatusKind for CRD error message
-	StatusKind = "Status"
+	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
+
+func deleteDaemonset(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName); err != nil {
+		return err
+	}
+
+	enforce := c.String(utils.OptionEnforce) == "1"
+
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	err := scheduler.DeleteDaemonset(c.ClusterID(), c.Namespace(), c.String(utils.OptionName), enforce)
+	if err != nil {
+		return fmt.Errorf("failed to delete daemonset: %v", err)
+	}
+
+	fmt.Printf("success to delete daemonset\n")
+	return nil
+}
