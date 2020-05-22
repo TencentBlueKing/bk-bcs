@@ -16,13 +16,12 @@ package controller
 import (
 	"encoding/json"
 	"os"
-	"strings"
 	"sync"
 
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/config"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/discovery"
+	"bk-bcs/bcs-services/bcs-service-prometheus/config"
+	"bk-bcs/bcs-services/bcs-service-prometheus/discovery"
 )
 
 type PrometheusController struct {
@@ -59,7 +58,7 @@ func (prom *PrometheusController) Start() error {
 	//init bcs mesos module discovery
 	if prom.conf.EnableMesos {
 		for _, module := range prom.mesosModules {
-			dis, err := discovery.NewBcsMesosDiscovery(prom.conf.ClusterZk, prom.promFilePrefix, module)
+			dis, err := discovery.NewBcsDiscovery(prom.conf.ClusterZk, prom.promFilePrefix, module)
 			if err != nil {
 				blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
 				return err
@@ -77,8 +76,7 @@ func (prom *PrometheusController) Start() error {
 	//init node discovery
 	if prom.conf.EnableNode {
 		for _, module := range prom.nodeModules {
-			zkAddr := strings.Split(prom.conf.ClusterZk, ",")
-			nodeDiscovery, err := discovery.NewNodeDiscovery(zkAddr, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
+			nodeDiscovery, err := discovery.NewNodeDiscovery(prom.conf.Kubeconfig, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
 			if err != nil {
 				blog.Errorf("NewNodeDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
 				return err
@@ -96,7 +94,7 @@ func (prom *PrometheusController) Start() error {
 	//init bcs service module discovery
 	if prom.conf.EnableService {
 		for _, module := range prom.serviceModules {
-			serviceDiscovery, err := discovery.NewBcsServiceDiscovery(prom.conf.ServiceZk, prom.promFilePrefix, module)
+			serviceDiscovery, err := discovery.NewBcsDiscovery(prom.conf.ServiceZk, prom.promFilePrefix, module)
 			if err != nil {
 				blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
 				return err

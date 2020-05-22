@@ -14,6 +14,7 @@
 package discovery
 
 import (
+	"encoding/json"
 	"fmt"
 	"path"
 	"time"
@@ -21,7 +22,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	moduleDiscovery "bk-bcs/bcs-common/pkg/module-discovery"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/types"
+	"bk-bcs/bcs-services/bcs-service-prometheus/types"
 )
 
 type bcsMesosDiscovery struct {
@@ -33,8 +34,8 @@ type bcsMesosDiscovery struct {
 	module          string
 }
 
-// new bcs mesos module service discovery
-func NewBcsMesosDiscovery(zkAddr string, promFilePrefix string, module string) (Discovery, error) {
+// new bcs module service discovery
+func NewBcsDiscovery(zkAddr string, promFilePrefix string, module string) (Discovery, error) {
 	disc := &bcsMesosDiscovery{
 		zkAddr:     zkAddr,
 		sdFilePath: path.Join(promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName)),
@@ -47,7 +48,7 @@ func NewBcsMesosDiscovery(zkAddr string, promFilePrefix string, module string) (
 // start discovery
 func (disc *bcsMesosDiscovery) Start() error {
 	var err error
-	disc.moduleDiscovery, err = moduleDiscovery.NewMesosDiscovery(disc.zkAddr)
+	disc.moduleDiscovery, err = moduleDiscovery.NewDiscoveryV2(disc.zkAddr, []string{disc.module})
 	if err != nil {
 		return err
 	}
@@ -71,86 +72,21 @@ func (disc *bcsMesosDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdCon
 	}
 
 	for _, serv := range servs {
-		var conf *types.PrometheusSdConfig
-		switch disc.module {
-		case commtypes.BCS_MODULE_SCHEDULER:
-			ser, ok := serv.(*commtypes.SchedulerServInfo)
-			if !ok {
-				blog.Errorf("discovery %s disc.module %s failed convert to SchedulerServInfo", disc.module, disc.module)
-				break
-			}
-
-			conf = &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-				Labels: map[string]string{
-					DefaultBcsModuleLabelKey: disc.module,
-				},
-			}
-
-		case commtypes.BCS_MODULE_MESOSAPISERVER:
-			ser, ok := serv.(*commtypes.BcsMesosApiserverInfo)
-			if !ok {
-				blog.Errorf("discovery %s disc.module %s failed convert to MesosDriverServInfo", disc.module, disc.module)
-				break
-			}
-
-			conf = &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-				Labels: map[string]string{
-					DefaultBcsModuleLabelKey: disc.module,
-				},
-			}
-
-		case commtypes.BCS_MODULE_MESOSDATAWATCH:
-			ser, ok := serv.(*commtypes.MesosDataWatchServInfo)
-			if !ok {
-				blog.Errorf("discovery %s disc.module %s failed convert to MesosDataWatchServInfo", disc.module, disc.module)
-				break
-			}
-
-			conf = &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-				Labels: map[string]string{
-					DefaultBcsModuleLabelKey: disc.module,
-				},
-			}
-
-		case commtypes.BCS_MODULE_DNS:
-			ser, ok := serv.(*commtypes.DNSInfo)
-			if !ok {
-				blog.Errorf("discovery %s disc.module %s failed convert to DNSInfo", disc.module, disc.module)
-				break
-			}
-
-			conf = &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-				Labels: map[string]string{
-					DefaultBcsModuleLabelKey: disc.module,
-				},
-			}
-
-		case commtypes.BCS_MODULE_LOADBALANCE:
-			ser, ok := serv.(*commtypes.LoadBalanceInfo)
-			if !ok {
-				blog.Errorf("discovery %s disc.module %s failed convert to DNSInfo", disc.module, disc.module)
-				break
-			}
-
-			conf = &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", ser.IP, ser.MetricPort)},
-				Labels: map[string]string{
-					DefaultBcsModuleLabelKey: disc.module,
-				},
-			}
-
-		default:
-			blog.Errorf("discovery %s disc.module %s not found", disc.module, disc.module)
+		//serv is string object
+		data, _ := serv.(string)
+		var servInfo *commtypes.ServerInfo
+		err = json.Unmarshal([]byte(data), &servInfo)
+		if err != nil {
+			blog.Errorf("getModuleAddr Unmarshal data(%s) to commtypes.BcsMesosApiserverInfo failed: %s", data, err.Error())
+			continue
 		}
-
-		if conf != nil {
-			promConfigs = append(promConfigs, conf)
+		conf := &types.PrometheusSdConfig{
+			Targets: []string{fmt.Sprintf("%s:%d", servInfo.IP, servInfo.MetricPort)},
+			Labels: map[string]string{
+				DefaultBcsModuleLabelKey: disc.module,
+			},
 		}
-
+		promConfigs = append(promConfigs, conf)
 	}
 
 	return promConfigs, nil

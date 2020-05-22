@@ -11,35 +11,35 @@
  *
  */
 
-package discovery
+package main
 
-import "bk-bcs/bcs-services/bcs-sd-prometheus/types"
+import (
+	"os"
+	"runtime"
 
-const (
-	DefaultBcsModuleLabelKey = "bcs_module"
-	DiscoveryFileName        = "_sd_config.json"
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-common/common/license"
+	"bk-bcs/bcs-services/bcs-service-prometheus/app"
+	"bk-bcs/bcs-services/bcs-service-prometheus/app/options"
 )
 
-const (
-	CadvisorModule   = "cadvisor"
-	NodeexportModule = "node_export"
-)
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	op := options.NewPrometheusControllerOption()
+	conf.Parse(op)
 
-type Discovery interface {
-	//start
-	Start() error
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
+	blog.Info("init logs success")
+	license.CheckLicense(op.LicenseServerConfig)
 
-	// GetDiscoveryKey
-	GetDiscoveryKey() string
+	err := app.Run(op)
+	if err != nil {
+		blog.Errorf(err.Error())
+		os.Exit(1)
+	}
 
-	// get prometheus service discovery config
-	GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error)
-
-	// get prometheus sd config file path
-	GetPromSdConfigFile() string
-
-	//register event handle function
-	RegisterEventFunc(handleFunc EventHandleFunc)
+	ch := make(chan bool)
+	<-ch
 }
-
-type EventHandleFunc func(discoveryKey string)

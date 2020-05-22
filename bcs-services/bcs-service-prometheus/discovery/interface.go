@@ -11,17 +11,35 @@
  *
  */
 
-package config
+package discovery
 
-// sd prometheus config
-type Config struct {
-	ClusterZk      string
-	CadvisorPort   int
-	NodeExportPort int
-	ClusterId      string
-	PromFilePrefix string
-	ServiceZk      string
-	EnableMesos    bool
-	EnableService  bool
-	EnableNode     bool
+import "bk-bcs/bcs-services/bcs-service-prometheus/types"
+
+const (
+	DefaultBcsModuleLabelKey = "bcs_module"
+	DiscoveryFileName        = "_sd_config.json"
+)
+
+const (
+	CadvisorModule   = "cadvisor"
+	NodeexportModule = "node_export"
+)
+
+type Discovery interface {
+	//start
+	Start() error
+
+	// GetDiscoveryKey
+	GetDiscoveryKey() string
+
+	// get prometheus service discovery config
+	GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error)
+
+	// get prometheus sd config file path
+	GetPromSdConfigFile() string
+
+	//register event handle function
+	RegisterEventFunc(handleFunc EventHandleFunc)
 }
+
+type EventHandleFunc func(discoveryKey string)

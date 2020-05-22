@@ -19,26 +19,31 @@ import (
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
-	commDiscovery "bk-bcs/bcs-common/pkg/discovery"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/types"
+	"bk-bcs/bcs-mesos/pkg/client/informers"
+	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	"bk-bcs/bcs-services/bcs-service-prometheus/types"
+
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type nodeDiscovery struct {
-	zkAddr         []string
+	kubeconfig     string
 	sdFilePath     string
 	cadvisorPort   int
 	nodeExportPort int
 	module         string
 
-	eventHandler   EventHandleFunc
-	nodeController commDiscovery.NodeController
-	initSuccess    bool
+	eventHandler EventHandleFunc
+	nodeLister   bkbcsv2.AgentLister
+	initSuccess  bool
 }
 
 // new nodeDiscovery for discovery node cadvisor targets
-func NewNodeDiscovery(zkAddr []string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
+func NewNodeDiscovery(kubeconfig string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
 	disc := &nodeDiscovery{
-		zkAddr:         zkAddr,
+		kubeconfig:     kubeconfig,
 		sdFilePath:     path.Join(promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName)),
 		cadvisorPort:   cadvisorPort,
 		nodeExportPort: nodeExportPort,
@@ -59,11 +64,24 @@ func NewNodeDiscovery(zkAddr []string, promFilePrefix, module string, cadvisorPo
 }
 
 func (disc *nodeDiscovery) Start() error {
-	var err error
-	disc.nodeController, err = commDiscovery.NewNodeController(disc.zkAddr, disc)
+	cfg, err := clientcmd.BuildConfigFromFlags("", disc.kubeconfig)
 	if err != nil {
+		blog.Errorf("build kubeconfig %s error %s", disc.kubeconfig, err.Error())
 		return err
 	}
+	stopCh := make(chan struct{})
+	//internal clientset for informer BcsLogConfig Crd
+	internalClientset, err := internalclientset.NewForConfig(cfg)
+	if err != nil {
+		blog.Errorf("build internal clientset by kubeconfig %s error %s", disc.kubeconfig, err.Error())
+		return err
+	}
+	internalFactory := informers.NewSharedInformerFactory(internalClientset, 0)
+	disc.nodeLister = internalFactory.Bkbcs().V2().Agents().Lister()
+	internalFactory.Start(stopCh)
+	// Wait for all caches to sync.
+	internalFactory.WaitForCacheSync(stopCh)
+	blog.Infof("build internalClientset for config %s success", disc.kubeconfig)
 
 	go disc.syncTickerPromSdConfig()
 	disc.initSuccess = true
@@ -76,14 +94,14 @@ func (disc *nodeDiscovery) GetDiscoveryKey() string {
 }
 
 func (disc *nodeDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error) {
-	nodes, err := disc.nodeController.List(commDiscovery.EverythingSelector())
+	nodes, err := disc.nodeLister.List(labels.Everything())
 	if err != nil {
 		return nil, err
 	}
 
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	for _, node := range nodes {
-		ip := node.GetAgentIP()
+		ip := node.Spec.GetAgentIP()
 		if ip == "" {
 			blog.Errorf("discovery %s node %s not found InnerIP", disc.module, node.GetName())
 			continue

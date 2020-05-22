@@ -976,6 +976,22 @@ func (om *Agent) GetAgentInfo() *commtypes.BcsClusterAgentInfo {
 	return agent
 }
 
+func (om *Agent) GetAgentIP() string {
+	if om.AgentInfo == nil || om.AgentInfo.AgentInfo == nil {
+		return ""
+	}
+	if len(om.AgentInfo.AgentInfo.Attributes) == 0 {
+		return ""
+	}
+	for _, attr := range om.AgentInfo.AgentInfo.Attributes {
+		if attr.GetName() == "InnerIP" {
+			return attr.GetText().GetValue()
+		}
+	}
+
+	return ""
+}
+
 func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*commtypes.BcsAgentAttribute {
 	if oldAttributeList == nil {
 		return nil
