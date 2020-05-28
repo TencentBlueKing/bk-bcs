@@ -57,12 +57,12 @@ type Reconciler struct {
 	storageClient storage.Interface
 	cmdbClient    cmdb.ClientInterface
 
-	fullSyncInterval time.Duration
+	fullSyncInterval int64
 }
 
 // NewReconciler create new reconciler
 func NewReconciler(clusterInfo common.Cluster, storageClient storage.Interface,
-	cmdbClient cmdb.ClientInterface, fullSyncInterval time.Duration) (*Reconciler, error) {
+	cmdbClient cmdb.ClientInterface, fullSyncInterval int64) (*Reconciler, error) {
 
 	clusterID := clusterInfo.ClusterID
 	// Create senders
@@ -139,19 +139,28 @@ func (r *Reconciler) decodeK8SPod(data json.RawMessage) (*common.Pod, error) {
 	}
 	newPod.PodCluster = r.clusterInfo.ClusterID
 
-	setName, okSet := kPod.ObjectMeta.Annotations["set.bkcmdb.bkbcs.tencent.com"]
-	moduleName, okModule := kPod.ObjectMeta.Annotations["module.bkcmdb.bkbcs.tencent.com"]
+	setName, okSet := kPod.ObjectMeta.Annotations[common.BCS_BKCMDB_ANNOTATIONS_SET_KEY]
+	moduleName, okModule := kPod.ObjectMeta.Annotations[common.BCS_BKCMDB_ANNOTATIONS_MODULE_KEY]
+	findModuleFlag := false
 	if okSet && okModule {
 		r.moduleIDMapLock.Lock()
 		moduleID, ok := r.moduleIDMap[setName+"."+moduleName]
 		r.moduleIDMapLock.Unlock()
 		if ok {
+			findModuleFlag = true
+			newPod.ModuleID = moduleID
+		}
+	}
+	if !findModuleFlag {
+		r.moduleIDMapLock.Lock()
+		moduleID, ok := r.moduleIDMap[common.BCS_BKCMDB_DEFAULT_SET_NAME+"."+common.BCS_BKCMDB_DEFAULT_MODLUE_NAME]
+		r.moduleIDMapLock.Unlock()
+		if ok {
 			newPod.ModuleID = moduleID
 		} else {
-			newPod.ModuleID = r.clusterInfo.DefaultModuleID
+			blog.Warnf("%s no default set and module for bkbcs", r.logPre())
+			return nil, fmt.Errorf("%s no default set and module for bkbcs", r.logPre())
 		}
-	} else {
-		newPod.ModuleID = r.clusterInfo.DefaultModuleID
 	}
 
 	return newPod, nil
@@ -173,17 +182,26 @@ func (r *Reconciler) decodeMesosTaskgroup(data json.RawMessage) (*common.Pod, er
 
 	setName, okSet := taskgroup.Annotations["set.bkcmdb.bkbcs.tencent.com"]
 	moduleName, okModule := taskgroup.Annotations["module.bkcmdb.bkbcs.tencent.com"]
+	findModuleFlag := false
 	if okSet && okModule {
 		r.moduleIDMapLock.Lock()
 		moduleID, ok := r.moduleIDMap[setName+"."+moduleName]
 		r.moduleIDMapLock.Unlock()
 		if ok {
+			findModuleFlag = true
+			newPod.ModuleID = moduleID
+		}
+	}
+	if !findModuleFlag {
+		r.moduleIDMapLock.Lock()
+		moduleID, ok := r.moduleIDMap[common.BCS_BKCMDB_DEFAULT_SET_NAME+"."+common.BCS_BKCMDB_DEFAULT_MODLUE_NAME]
+		r.moduleIDMapLock.Unlock()
+		if ok {
 			newPod.ModuleID = moduleID
 		} else {
-			newPod.ModuleID = r.clusterInfo.DefaultModuleID
+			blog.Warnf("%s no default set and module for bkbcs", r.logPre())
+			return nil, fmt.Errorf("%s no default set and module for bkbcs", r.logPre())
 		}
-	} else {
-		newPod.ModuleID = r.clusterInfo.DefaultModuleID
 	}
 
 	return newPod, nil
@@ -321,7 +339,21 @@ func (r *Reconciler) doCompare() error {
 
 // fullSyncLoop full sync loop
 func (r *Reconciler) fullSyncLoop(ctx context.Context) {
-	ticker := time.NewTicker(r.fullSyncInterval)
+
+	// lock event queue
+	r.sendersLock.Lock()
+
+	// sync all pods event to sync queue
+	err := r.doCompare()
+
+	// unlock event queue
+	r.sendersLock.Unlock()
+
+	if err != nil {
+		blog.Warnf("%s do compare failed, err %s", r.logPre(), err.Error())
+	}
+
+	ticker := time.NewTicker(time.Duration(r.fullSyncInterval) * time.Second)
 
 	for {
 		select {

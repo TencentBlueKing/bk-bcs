@@ -61,15 +61,13 @@ type Manager struct {
 
 // NewManager create new task manager
 func NewManager(paasEnv, clusterEnv string,
-	paasccHost, appcode, appsecret string,
-	checkInterval int, disc *discovery.Client, zk *zkclient.ZkClient) (*Manager, error) {
+	checkInterval int, 
+	disc *discovery.Client, zk *zkclient.ZkClient, paasccClient paascc.ClientInterface) (*Manager, error) {
 
 	interval := checkInterval
 	if checkInterval <= 0 {
 		interval = DEFAULT_CHECK_INTERVAL
 	}
-
-	paasccClient := paascc.NewClientInterface(paasccHost, appcode, appsecret, nil)
 
 	// ensure /bcs/bcs-services/bkcmdb-sychroniezer/cluster
 	isExisted, err := zk.Exist(common.BCS_BKCMDB_SYNC_DIR_CLUSTER)

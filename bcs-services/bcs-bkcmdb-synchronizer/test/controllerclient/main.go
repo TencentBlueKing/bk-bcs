@@ -24,7 +24,7 @@ import (
 	"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/version"
 	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
+	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/controller"
 	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/discovery"
 	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/taskinformer"
 	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/taskmanager"
@@ -51,21 +51,6 @@ func init() {
 		StdErrThreshold: "2",
 		AlsoToStdErr:    true,
 	})
-}
-
-type handler struct {
-}
-
-func (h *handler) OnAdd(add common.Cluster) {
-	blog.Infof("add %v", add)
-}
-
-func (h *handler) OnUpdate(old, new common.Cluster) {
-	blog.Infof("update %v %v", old, new)
-}
-
-func (h *handler) OnDelete(del common.Cluster) {
-	blog.Infof("del %v", del)
 }
 
 func main() {
@@ -102,10 +87,9 @@ func main() {
 	}
 
 	informer := taskinformer.NewInformer(serverInfo, zkcli)
-	informer.RegisterHandler(new(handler))
+
+	ctrl := controller.NewController(disc, informer, m)
 
 	ctx := context.Background()
-
-	go informer.Run(ctx)
-	m.Run()
+	ctrl.Run(ctx)
 }

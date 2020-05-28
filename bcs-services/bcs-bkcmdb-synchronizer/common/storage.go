@@ -29,7 +29,7 @@ const (
 
 const (
 	ResourceTypeTaskgroup = "taskgroup"
-	ResourceTypePod       = "pod"
+	ResourceTypePod       = "Pod"
 )
 
 // GetResTypeByClusterType get resource type by cluster type

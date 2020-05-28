@@ -99,7 +99,9 @@ func ConvertK8SPod(cluster string, kPod *K8SPod) (*Pod, error) {
 	newPod.PodVolumes = string(volumesStr)
 
 	newPod.PodCreateTime = convertK8STime(kPod.CreationTimestamp.String())
-	newPod.PodStartTime = convertK8STime(kPod.Status.StartTime.String())
+	if kPod.Status.StartTime != nil {
+		newPod.PodStartTime = convertK8STime(kPod.Status.StartTime.String())
+	}
 
 	return newPod, nil
 }

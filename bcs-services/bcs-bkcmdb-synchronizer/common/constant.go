@@ -19,4 +19,14 @@ const (
 	BCS_BKCMDB_SYNC_DIR_CLUSTER = BCS_BKCMDB_SYNC_DIR + "/cluster"
 	// BCS_BKCMDB_SYNC_DIR_WORKER synchronizer worker instance dir
 	BCS_BKCMDB_SYNC_DIR_WORKER = BCS_BKCMDB_SYNC_DIR + "/worker"
+
+	// BCS_BKCMDB_DEFAULT_SET_NAME bcs default set name in bk cmdb
+	BCS_BKCMDB_DEFAULT_SET_NAME = "bkbcs"
+	// BCS_BKCMDB_DEFAULT_MODLUE_NAME bcs default module name in bk cmdb
+	BCS_BKCMDB_DEFAULT_MODLUE_NAME = "bkbcs"
+
+	// BCS_BKCMDB_ANNOTATIONS_SET_KEY key of bcs annotations for bk cmdb
+	BCS_BKCMDB_ANNOTATIONS_SET_KEY = "set.bkcmdb.bkbcs.tencent.com"
+	// BCS_BKCMDB_ANNOTATIONS_MODULE_KEY key of bcs annotations for bk cmdb
+	BCS_BKCMDB_ANNOTATIONS_MODULE_KEY = "module.bkcmdb.bkbcs.tencent.com"
 )

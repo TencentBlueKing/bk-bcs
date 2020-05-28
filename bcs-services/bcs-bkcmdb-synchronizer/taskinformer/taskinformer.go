@@ -62,7 +62,7 @@ func (i *Informer) RegisterHandler(h TaskHandler) {
 
 func (i *Informer) inform(data []byte) error {
 	newClusters := make([]common.Cluster, 0)
-	err := json.Unmarshal(data, newClusters)
+	err := json.Unmarshal(data, &newClusters)
 	if err != nil {
 		blog.Errorf("[task informer] decode task clusters %s failed, err %s", string(data), err.Error())
 		return err

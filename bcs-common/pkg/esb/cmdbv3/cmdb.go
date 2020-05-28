@@ -147,6 +147,16 @@ func (c *Client) DeletePod(bizID int64, data *DeletePod) (*DeletedOptionResult, 
 func (c *Client) ListClusterPods(bizID int64, clusterID string) (*ListPodsResult, error) {
 	request := map[string]interface{}{
 		"bk_biz_id": bizID,
+		"pod_property_filter": map[string]interface{}{
+			"condition": "AND",
+			"rules": []map[string]interface{}{
+				{
+					"field":    "bk_pod_cluster",
+					"operator": "equal",
+					"value":    clusterID,
+				},
+			},
+		},
 	}
 	result := new(ListPodsResult)
 	err := c.client.Post().

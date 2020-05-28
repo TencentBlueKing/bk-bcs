@@ -18,7 +18,7 @@ import (
 
 const (
 	// ClusterTypeK8S k8s type cluster
-	ClusterTypeK8S = "kubernetes"
+	ClusterTypeK8S = "k8s"
 	// ClusterTypeMesos mesos type cluster
 	ClusterTypeMesos = "mesos"
 

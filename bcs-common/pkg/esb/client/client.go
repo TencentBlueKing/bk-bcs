@@ -76,13 +76,13 @@ func (r *RESTClient) initMetrics() {
 		Name: "bcs_paas_requests_duration_millisecond",
 		Help: "third party api request duration millisecond",
 	}, []string{"handler", "status_code"})
-	prometheus.MustRegister(r.requestDuration)
+	prometheus.Register(r.requestDuration)
 
 	r.requestInflight = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "bcs_requests_in_flight",
 		Help: "third party api request number in flight",
 	})
-	prometheus.MustRegister(r.requestInflight)
+	prometheus.Register(r.requestInflight)
 }
 
 // Post create post request
