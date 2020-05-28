@@ -21,7 +21,6 @@ import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/check"
-	"bk-bcs/bcs-common/common/license"
 	"bk-bcs/bcs-services/bcs-health/slave/app"
 	"bk-bcs/bcs-services/bcs-health/slave/app/config"
 )
@@ -42,8 +41,6 @@ func main() {
 	if err := common.SavePid(conf.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
-
-	license.CheckLicense(conf.LicenseServerConfig)
 
 	if err := app.Run(conf); nil != err {
 		check.Fail(err.Error())

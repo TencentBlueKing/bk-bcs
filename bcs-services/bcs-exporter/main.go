@@ -19,7 +19,6 @@ import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/check"
-	"bk-bcs/bcs-common/common/license"
 	"bk-bcs/bcs-services/bcs-exporter/app"
 	"bk-bcs/bcs-services/bcs-exporter/app/config"
 )
@@ -37,7 +36,6 @@ func main() {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	license.CheckLicense(conf.LicenseServerConfig)
 	if err := app.Run(conf); nil != err {
 		check.Fail(err.Error())
 		blog.Fatal(err)

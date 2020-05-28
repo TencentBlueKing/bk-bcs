@@ -17,12 +17,9 @@ import (
 	"runtime"
 
 	"bk-bcs/bcs-common/common/blog"
-	//"bk-bcs/bcs-common/common/util"
 	"bk-bcs/bcs-common/common/conf"
 	"bk-bcs/bcs-mesos/bcs-check/app"
 	"bk-bcs/bcs-mesos/bcs-check/app/options"
-	//"github.com/spf13/pflag"
-	"bk-bcs/bcs-common/common/license"
 )
 
 func main() {
@@ -39,7 +36,6 @@ func main() {
 	blog.Infof("options %s", string(by))*/
 
 	blog.Info("init config success")
-	license.CheckLicense(op.LicenseServerConfig)
 
 	app.Run(op)
 

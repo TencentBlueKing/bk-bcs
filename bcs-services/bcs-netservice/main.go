@@ -14,14 +14,14 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
-	"bk-bcs/bcs-services/bcs-netservice/app"
 	"fmt"
 	"os"
 	"runtime"
 	"time"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-services/bcs-netservice/app"
 )
 
 func main() {
@@ -33,7 +33,6 @@ func main() {
 	//init logs
 	blog.InitLogs(cfg.LogConfig)
 	defer blog.CloseLogs()
-	license.CheckLicense(cfg.LicenseServerConfig)
 	//running netservice application
 	if err := app.Run(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "bcs-netservice running failed: %s\n", err.Error())

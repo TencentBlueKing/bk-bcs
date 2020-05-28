@@ -17,7 +17,6 @@ import (
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/blog/glog"
-	"bk-bcs/bcs-common/common/license"
 	common_metric "bk-bcs/bcs-common/common/metric"
 	commtype "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-services/bcs-api/config"
@@ -60,7 +59,6 @@ func main() {
 	defer blog.CloseLogs()
 
 	blog.Info("init config success")
-	license.CheckLicense(op.LicenseServerConfig)
 
 	//run apiserver
 	run(op)

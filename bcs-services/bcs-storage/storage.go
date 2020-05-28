@@ -20,7 +20,6 @@ import (
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
 	"bk-bcs/bcs-services/bcs-storage/app"
 	"bk-bcs/bcs-services/bcs-storage/app/options"
 )
@@ -34,7 +33,6 @@ func main() {
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
 
-	license.CheckLicense(op.LicenseServerConfig)
 	if err := app.Run(op); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

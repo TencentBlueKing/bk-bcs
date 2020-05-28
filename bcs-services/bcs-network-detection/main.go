@@ -19,7 +19,6 @@ import (
 
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
 	"bk-bcs/bcs-services/bcs-network-detection/app"
 	"bk-bcs/bcs-services/bcs-network-detection/app/options"
 )
@@ -32,7 +31,6 @@ func main() {
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
 	blog.Info("init logs success")
-	license.CheckLicense(op.LicenseServerConfig)
 
 	err := app.Run(op)
 	if err != nil {

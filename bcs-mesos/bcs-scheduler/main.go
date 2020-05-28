@@ -19,13 +19,14 @@ Implements of init log, init flags and start scheduler manager.
 package main
 
 import (
+	"runtime"
+
 	"bk-bcs/bcs-common/common"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
 	schedutil "bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+
 	"golang.org/x/net/context"
-	"runtime"
 )
 
 func main() {
@@ -45,9 +46,6 @@ func main() {
 	config := schedutil.NewSchedulerCfg()
 
 	schedutil.SetSchedulerCfg(config, op)
-
-	//license.CheckLicense()
-	license.CheckLicense(op.LicenseServerConfig)
 
 	scheduler, _ := NewScheduler(*config)
 	scheduler.Start(context.Background())
