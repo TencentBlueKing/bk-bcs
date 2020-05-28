@@ -30,33 +30,51 @@ import (
 )
 
 const (
-	SENDER_NUMBER          = 10
-	QUEUE_LENGTH           = 10000
+	// SENDER_NUMBER default sender number for one reconciler
+	SENDER_NUMBER = 10
+	// QUEUE_LENGTH queue length for storage watch event queue
+	QUEUE_LENGTH = 10000
+	// FETCH_MODULES_INTERVAL interval for fetch biz modules from paas-cc
 	FETCH_MODULES_INTERVAL = 100
 )
 
 // Reconciler sync container data of one cluster to cmdb
 type Reconciler struct {
+	// cluster info
 	clusterInfo common.Cluster
-	clusterID   string
+
+	// cluster id
+	clusterID string
+
+	// cluster type, k8s or mesos
 	clusterType string
-	resType     string
+
+	// resource type, pod or taskgroup
+	resType string
 
 	// map to cache cmdb module id
 	moduleIDMap map[string]int64
 	// block for moduleIDMap
 	moduleIDMapLock sync.Mutex
 
+	// resource event queue
 	queue chan PodEvent
 
-	senders     []*Sender
+	// sender array
+	senders []*Sender
+	// sender lock, when locked, pod event will stay at event queue
 	sendersLock sync.Mutex
 
+	// hasher pod event to senders, to ensure the event order
 	hasher *jump.Hasher
 
+	// storage client
 	storageClient storage.Interface
-	cmdbClient    cmdb.ClientInterface
 
+	// cmdb client
+	cmdbClient cmdb.ClientInterface
+
+	// full sync interval
 	fullSyncInterval int64
 }
 
@@ -71,6 +89,8 @@ func NewReconciler(clusterInfo common.Cluster, storageClient storage.Interface,
 		senders = append(senders, NewSender(clusterInfo, int64(i), QUEUE_LENGTH, cmdbClient))
 	}
 
+	// check cluster type from cluster id
+	// TODO: some cluster with special name won't work
 	var clusterType string
 	if strings.Contains(strings.ToLower(clusterID), common.ClusterTypeMesos) {
 		clusterType = common.ClusterTypeMesos
@@ -95,6 +115,8 @@ func NewReconciler(clusterInfo common.Cluster, storageClient storage.Interface,
 		queue:            make(chan PodEvent, QUEUE_LENGTH),
 		hasher:           jump.New(SENDER_NUMBER, jump.NewCRC64()),
 	}
+
+	// should fetch the related modules when new reconciler is created
 	if err := reconciler.fetchModules(); err != nil {
 		return nil, err
 	}
@@ -121,6 +143,7 @@ func (r *Reconciler) Run(ctx context.Context) {
 	}
 }
 
+// log prefix for current reconciler
 func (r *Reconciler) logPre() string {
 	return fmt.Sprintf("[reconciler:%s]", r.clusterInfo.ClusterID)
 }
@@ -139,6 +162,8 @@ func (r *Reconciler) decodeK8SPod(data json.RawMessage) (*common.Pod, error) {
 	}
 	newPod.PodCluster = r.clusterInfo.ClusterID
 
+	// get pod annotations for bk cmdb
+	// if there is no annotations for bk cmdb, save pod into default cmdb module bkbcs/bkbcs
 	setName, okSet := kPod.ObjectMeta.Annotations[common.BCS_BKCMDB_ANNOTATIONS_SET_KEY]
 	moduleName, okModule := kPod.ObjectMeta.Annotations[common.BCS_BKCMDB_ANNOTATIONS_MODULE_KEY]
 	findModuleFlag := false
@@ -180,6 +205,8 @@ func (r *Reconciler) decodeMesosTaskgroup(data json.RawMessage) (*common.Pod, er
 	}
 	newPod.PodCluster = r.clusterInfo.ClusterID
 
+	// get pod annotations for bk cmdb
+	// if there is no annotations for bk cmdb, save pod into default cmdb module bkbcs/bkbcs
 	setName, okSet := taskgroup.Annotations["set.bkcmdb.bkbcs.tencent.com"]
 	moduleName, okModule := taskgroup.Annotations["module.bkcmdb.bkbcs.tencent.com"]
 	findModuleFlag := false
