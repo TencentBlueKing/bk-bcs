@@ -236,6 +236,7 @@ func (p *Puller) pullReleaseConfigs(releaseid, cfgsetid, cid string) (string, st
 		Appid:     p.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", p.businessName, p.appName)),
 		Clusterid: p.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", p.businessName, p.appName)),
 		Zoneid:    p.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", p.businessName, p.appName)),
+		IP:        p.viper.GetString("appinfo.ip"),
 		Cfgsetid:  cfgsetid,
 		Releaseid: releaseid,
 		Cid:       cid,
@@ -328,6 +329,11 @@ func (p *Puller) pulling() {
 	isFirstPulling := true
 
 	for {
+		if p.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", p.businessName, p.appName)) {
+			logger.Info("Puller[%s %s][%+v]| stop pulling now!", p.businessName, p.appName, p.cfgsetid)
+			return
+		}
+
 		var metadata *ReleaseMetadata
 
 		// effect with serial num, unless rollback or newest logic.

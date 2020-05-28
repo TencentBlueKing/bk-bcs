@@ -163,6 +163,9 @@ message PullReleaseConfigsReq {
     string cfgsetid  = 6;
     string releaseid = 7;
     string cid       = 8;
+
+    // add fields here.
+    string IP        = 9;
 }
 
 message PullReleaseConfigsResp {

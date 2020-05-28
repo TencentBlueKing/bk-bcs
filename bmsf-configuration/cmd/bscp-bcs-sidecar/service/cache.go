@@ -24,6 +24,7 @@ import (
 	"github.com/bluele/gcache"
 	"github.com/go-ini/ini"
 	"github.com/gofrs/flock"
+	"github.com/spf13/viper"
 
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
@@ -426,6 +427,8 @@ const (
 
 // ContentCache is release config content cache.
 type ContentCache struct {
+	viper *viper.Viper
+
 	businessName string
 	appName      string
 
@@ -449,9 +452,10 @@ type ContentCache struct {
 }
 
 // NewContentCache creates a new ContentCache.
-func NewContentCache(path, businessName, appName string, mcacheSize int, expiredPath string,
+func NewContentCache(viper *viper.Viper, path, businessName, appName string, mcacheSize int, expiredPath string,
 	mcacheExpiration, contentCacheExpiration, purgeInterval time.Duration) *ContentCache {
 	return &ContentCache{
+		viper:                  viper,
 		path:                   path,
 		businessName:           businessName,
 		appName:                appName,
@@ -797,6 +801,10 @@ func (c *ContentCache) Setup() {
 	defer ticker.Stop()
 
 	for {
+		if c.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", c.businessName, c.appName)) {
+			return
+		}
+
 		<-ticker.C
 		c.purge()
 	}

@@ -113,6 +113,11 @@ func (h *Handler) handleReload(notification *pb.SCCMDPushReloadNotification) err
 // signalling keeps processing signalling from connserver.
 func (h *Handler) signalling() {
 	for {
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
+			logger.Info("handler[%s %s]| stop signalling now!", h.businessName, h.appName)
+			return
+		}
+
 		cmd := <-h.ch
 
 		switch cmd.(type) {
@@ -366,6 +371,11 @@ func (h *ConfigHandler) getPuller(cfgsetid string) *Puller {
 // pulling keeps pulling release.
 func (h *ConfigHandler) pulling() {
 	for {
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
+			logger.Info("ConfigHandler[%s %s]| stop pulling now!", h.businessName, h.appName)
+			return
+		}
+
 		notification := <-h.ch
 
 		switch notification.(type) {
@@ -489,6 +499,11 @@ func (h *ConfigHandler) reporting() {
 	defer ticker.Stop()
 
 	for {
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
+			logger.Info("ConfigHandler[%s %s]| stop reporting now!", h.businessName, h.appName)
+			return
+		}
+
 		<-ticker.C
 
 		h.mu.RLock()
@@ -514,6 +529,11 @@ func (h *ConfigHandler) syncConfigSetList() {
 	defer ticker.Stop()
 
 	for {
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
+			logger.Info("ConfigHandler[%s %s]| stop syncing configset list now!", h.businessName, h.appName)
+			return
+		}
+
 		if !isFirstTime {
 			<-ticker.C
 		}
@@ -572,6 +592,11 @@ func (h *ConfigHandler) Debug() {
 	defer ticker.Stop()
 
 	for {
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
+			logger.Info("ConfigHandler[%s %s]| stop debuging now!", h.businessName, h.appName)
+			return
+		}
+
 		<-ticker.C
 
 		h.mu.RLock()

@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/spf13/viper"
 
@@ -51,6 +52,9 @@ type SignallingAction struct {
 
 	// mark if the sidecar instance is updated already.
 	isSidecarUpdated bool
+
+	// last sidecar instance update time.
+	lastUpdateTime time.Time
 
 	// channel for publish notification.
 	pubCh chan interface{}
@@ -285,6 +289,11 @@ func (act *SignallingAction) verify(r interface{}) error {
 
 // onSidecarOnline creates or updates app instance information when the signalling channel is setuped.
 func (act *SignallingAction) onSidecarOnline(sidecar *session.SidecarInstance) error {
+	if time.Now().Sub(act.lastUpdateTime) <= time.Minute {
+		return nil
+	}
+	act.lastUpdateTime = time.Now()
+
 	logger.Info("new sidecar connection, %+v", sidecar)
 
 	r := &pbdatamanager.CreateAppInstanceReq{
