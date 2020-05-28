@@ -166,6 +166,7 @@ func (act *PullAction) queryConfigs() (pbcommon.ErrCode, string) {
 		Cfgsetid:  act.req.Cfgsetid,
 		Commitid:  act.release.Commitid,
 		Abstract:  (len(act.content) != 0),
+		Index:     act.req.IP,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))
