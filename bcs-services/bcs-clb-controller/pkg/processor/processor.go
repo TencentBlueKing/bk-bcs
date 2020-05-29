@@ -160,6 +160,7 @@ func (p *Processor) Init() error {
 func (p *Processor) Run() {
 
 	updateTick := time.NewTicker(time.Second * time.Duration(p.opt.UpdatePeriod))
+	defer updateTick.Stop()
 	for {
 		select {
 		case <-p.stopCh:

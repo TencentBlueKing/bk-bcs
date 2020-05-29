@@ -69,6 +69,7 @@ type SecretWatch struct {
 func (watch *SecretWatch) Work() {
 	watch.ProcessAllSecrets()
 	tick := time.NewTicker(10 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-watch.cancelCxt.Done():

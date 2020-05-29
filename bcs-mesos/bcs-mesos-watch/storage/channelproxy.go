@@ -32,7 +32,7 @@ type ChannelProxy struct {
 func (proxy *ChannelProxy) Run(cxt context.Context) {
 
 	tick := time.NewTicker(300 * time.Second)
-
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

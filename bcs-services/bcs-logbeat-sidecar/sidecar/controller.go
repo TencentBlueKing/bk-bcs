@@ -57,8 +57,8 @@ type SidecarController struct {
 }
 
 type ContainerLogConf struct {
-	confPath    string
-	data []byte
+	confPath string
+	data     []byte
 }
 
 type LogConfParameter struct {
@@ -95,7 +95,7 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 
 	//mkdir logconfig dir
 	err = os.MkdirAll(conf.LogbeatDir, os.ModePerm)
-	if err!=nil {
+	if err != nil {
 		blog.Errorf("mkdir %s failed: %s", conf.LogbeatDir, err.Error())
 		return nil, err
 	}
@@ -275,17 +275,17 @@ func produceLogConfParameter(container *docker.Container) (*types.Yaml, bool) {
 	return y, true
 }*/
 
-func (s *SidecarController) initLogConfigs(){
-	fileList,err := ioutil.ReadDir(s.conf.LogbeatDir)
-	if err!=nil {
-		blog.Errorf("initLogConfigs readdir %s failed: %s",s.conf.LogbeatDir, err.Error())
+func (s *SidecarController) initLogConfigs() {
+	fileList, err := ioutil.ReadDir(s.conf.LogbeatDir)
+	if err != nil {
+		blog.Errorf("initLogConfigs readdir %s failed: %s", s.conf.LogbeatDir, err.Error())
 		return
 	}
 
-	for _,f :=range fileList {
+	for _, f := range fileList {
 		key := fmt.Sprintf("%s/%s", s.conf.LogbeatDir, f.Name())
-		by,err := ioutil.ReadFile(key)
-		if err!=nil {
+		by, err := ioutil.ReadFile(key)
+		if err != nil {
 			blog.Errorf("read file %s failed: %s", key, err.Error())
 			continue
 		}
@@ -320,11 +320,11 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	}
 	//if log config exist, and not changed
 	logConf, _ := s.logConfs[key]
-	if logConf!=nil {
-		if string(by)==string(logConf.data) {
+	if logConf != nil {
+		if string(by) == string(logConf.data) {
 			blog.Infof("container %s log config %s not changed", c.ID, logConf.confPath)
 			return
-		}else{
+		} else {
 			blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
 		}
 	} else {
@@ -332,8 +332,8 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	}
 
 	logConf = &ContainerLogConf{
-		confPath:    key,
-		data: by,
+		confPath: key,
+		data:     by,
 	}
 	f, err := os.Create(logConf.confPath)
 	if err != nil {
@@ -435,7 +435,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		y.Local = append(y.Local, inLocal)
 	}
 	//if nonstandard Log
-	if para.NonstandardDataid != "" && len(para.NonstandardPaths)>0 {
+	if para.NonstandardDataid != "" && len(para.NonstandardPaths) > 0 {
 		inLocal := para
 		for _, f := range para.NonstandardPaths {
 			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s", container.State.Pid, f))

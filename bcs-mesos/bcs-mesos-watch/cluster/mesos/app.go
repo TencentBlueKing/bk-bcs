@@ -140,6 +140,7 @@ func (app *AppWatch) pathWatch(cxt context.Context, path string) {
 	app.handleAppList(cxt, path, children)
 
 	tick := time.NewTicker(240 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -222,6 +223,7 @@ func (app *AppWatch) appNodeWatch(cxt context.Context, apppath string, ns string
 	blog.V(3).Infof("appwatch wath app ID(%s)", ID)
 
 	tick := time.NewTicker(240 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

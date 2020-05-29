@@ -26,6 +26,7 @@ import (
 
 func (cw *ClusterWatcher) metricManager() {
 	syncTick := time.NewTicker(30 * time.Second)
+	defer syncTick.Stop()
 	ctx, cancel := context.WithCancel(cw.ctx)
 	cw.syncMetric()
 	go cw.watchMetric(ctx)

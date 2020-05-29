@@ -103,6 +103,7 @@ func (watch *ExportServiceWatch) worker(cxt context.Context) {
 	blog.Infof("ExportServiceWatch start work")
 
 	tick := time.NewTicker(120 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-cxt.Done():

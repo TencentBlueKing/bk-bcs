@@ -173,6 +173,7 @@ func (disc *bcsMesosDiscovery) handleEventFunc(module string) {
 
 func (disc *bcsMesosDiscovery) syncTickerPromSdConfig() {
 	ticker := time.NewTicker(time.Minute * 5)
+	defer ticker.Stop()
 
 	select {
 	case <-ticker.C:

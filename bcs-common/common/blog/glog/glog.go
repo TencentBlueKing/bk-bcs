@@ -886,7 +886,9 @@ const flushInterval = 30 * time.Second
 
 // flushDaemon periodically flushes the log file buffers.
 func (l *loggingT) flushDaemon() {
-	for _ = range time.NewTicker(flushInterval).C {
+	ticker := time.NewTicker(flushInterval)
+	defer ticker.Stop()
+	for _ = range ticker.C {
 		l.lockAndFlushAll()
 	}
 }

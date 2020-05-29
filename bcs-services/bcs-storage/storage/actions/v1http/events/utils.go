@@ -67,7 +67,9 @@ func cleanEventOutCap(maxCaps int) {
 
 	clusterPool := make(map[string]int)
 	reportTick := time.NewTicker(30 * time.Minute)
+	defer reportTick.Stop()
 	refreshTick := time.NewTicker(24 * time.Hour)
+	defer refreshTick.Stop()
 	for {
 		select {
 		case <-reportTick.C:

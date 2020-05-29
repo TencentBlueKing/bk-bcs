@@ -254,6 +254,7 @@ func (f *ReverseProxyDispatcher) InitializeHandlerForCluster(clusterId string, r
 
 func (f *ReverseProxyDispatcher) StartClusterAddressesPoller(clusterId string) {
 	refreshTicker := time.NewTicker(60 * time.Second)
+	defer refreshTicker.Stop()
 	upstreamServer := f.availableSrvStore[clusterId]
 	for {
 		select {

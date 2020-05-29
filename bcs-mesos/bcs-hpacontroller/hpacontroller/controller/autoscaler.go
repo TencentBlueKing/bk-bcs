@@ -84,6 +84,7 @@ func (auto *Autoscaler) Start() error {
 //ticker list zk autoscalers and sync these autoscalers to workqueue
 func (auto *Autoscaler) tickerSyncAutoscalerQueue() {
 	ticker := time.NewTicker(time.Second * time.Duration(auto.config.MetricsSyncPeriod))
+	defer ticker.Stop()
 
 	for {
 
@@ -162,6 +163,7 @@ func (auto *Autoscaler) tickerSyncAutoscalerQueue() {
 
 func (auto *Autoscaler) tickerHandlerAutoscaler() {
 	ticker := time.NewTicker(time.Second * time.Duration(auto.config.MetricsSyncPeriod))
+	defer ticker.Stop()
 
 	for {
 

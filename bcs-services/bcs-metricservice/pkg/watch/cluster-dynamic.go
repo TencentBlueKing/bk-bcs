@@ -28,6 +28,7 @@ import (
 
 func (cw *ClusterWatcher) dynamicManager() {
 	syncTick := time.NewTicker(30 * time.Second)
+	defer syncTick.Stop()
 	ctx, cancel := context.WithCancel(cw.ctx)
 	cw.syncDynamic()
 	go cw.watchDynamic(ctx)

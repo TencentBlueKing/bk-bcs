@@ -72,6 +72,7 @@ func (watch *ConfigMapWatch) Work() {
 
 	watch.ProcessAllConfigmaps()
 	tick := time.NewTicker(12 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-watch.cancelCxt.Done():
