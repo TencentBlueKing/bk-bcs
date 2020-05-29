@@ -467,6 +467,7 @@ func (ms *MesosCluster) Run(cxt context.Context) {
 
 	//ready to start zk connection monitor
 	tick := time.NewTicker(5 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-cxt.Done():

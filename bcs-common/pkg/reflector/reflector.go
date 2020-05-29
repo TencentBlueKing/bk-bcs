@@ -73,8 +73,10 @@ func (r *Reflector) Run() {
 	blog.V(3).Infof("%s first resynchronization & watch success, register all ticker", r.name)
 	//create ticker for data object resync
 	syncTick := time.NewTicker(r.syncPeriod)
+	defer syncTick.Stop()
 	//create ticker check stable watcher
 	watchTick := time.NewTicker(time.Second * 2)
+	defer watchTick.Stop()
 	for {
 		select {
 		case <-r.cxt.Done():

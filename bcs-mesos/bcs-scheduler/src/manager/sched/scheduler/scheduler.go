@@ -358,6 +358,7 @@ func (s *Scheduler) discvMesos() {
 	blog.Info("watch mesos master under (%s: %s)", MesosDiscv, discvPath)
 
 	tick := time.NewTicker(120 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		//case <-rdCxt.Done():
@@ -585,6 +586,7 @@ func (s *Scheduler) regDiscove() {
 	blog.Info("scheduler DiscoverService(%s:%s) succ", s.config.RegDiscvSvr, discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -715,6 +717,7 @@ func (s *Scheduler) registerBCS() {
 	blog.Info("BCS register discove path(%s) succ", discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

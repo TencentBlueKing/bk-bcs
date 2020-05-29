@@ -118,6 +118,7 @@ func (p *dynamicPlugin) GetHostAttributes(para *typesplugin.HostPluginParameter)
 	}()
 
 	ticker := time.NewTicker(time.Second * time.Duration(p.timeout))
+	defer ticker.Stop()
 
 	select {
 	case <-ticker.C:

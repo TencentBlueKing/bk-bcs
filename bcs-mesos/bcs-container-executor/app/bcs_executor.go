@@ -359,6 +359,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 	stopCh := make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
 
 		for {
 			select {
@@ -580,6 +581,7 @@ func (executor *BcsExecutor) monitorPod() {
 	}()
 
 	tick := time.NewTicker(1 * time.Second)
+	defer tick.Stop()
 	reporting := 0
 	for {
 		select {
