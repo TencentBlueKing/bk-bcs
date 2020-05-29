@@ -194,6 +194,7 @@ func (s *HealthCheckServer) regDiscover() {
 	blog.Info("DiscoverService(%s) succ", discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -330,6 +331,7 @@ func (s *HealthCheckServer) regBcsDiscover() {
 	blog.Info("DiscoverService(%s) succ", discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

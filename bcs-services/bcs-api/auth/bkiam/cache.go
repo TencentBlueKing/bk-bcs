@@ -109,6 +109,7 @@ func (tc *TokenCache) Get(tokenKey string) (*auth.Token, error) {
 func (tc *TokenCache) start() {
 	blog.Infof("TokenCache sync start")
 	ticker := time.NewTicker(time.Duration(tc.conf.BKIamAuth.AuthTokenSyncTime) * time.Second)
+	defer ticker.Stop()
 
 	for {
 		select {

@@ -61,7 +61,9 @@ func (w *Watcher) manager() {
 	blog.Infof("launch watcher manager")
 	defer blog.Infof("shut down watcher manager")
 	logTick := time.NewTicker(180 * time.Second)
+	defer logTick.Stop()
 	syncTick := time.NewTicker(3 * time.Second)
+	defer syncTick.Stop()
 
 	for {
 		select {

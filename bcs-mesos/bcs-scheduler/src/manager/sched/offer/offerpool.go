@@ -609,6 +609,7 @@ func (p *offerPool) setInnerOffersAttributes(offers []*mesos.Offer) {
 
 func (p *offerPool) checkOffers() {
 	tick := time.NewTicker(1 * time.Second)
+	defer tick.Stop()
 
 	for {
 		select {

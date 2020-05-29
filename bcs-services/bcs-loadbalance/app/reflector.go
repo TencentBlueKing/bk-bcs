@@ -610,6 +610,7 @@ func (reflector *ServiceReflector) dataNodeWatch(node string) {
 //run run ticker for sync all data in zookeeper to local cache
 func (reflector *ServiceReflector) run() {
 	tick := time.NewTicker(time.Second * time.Duration(reflector.syncPeriod))
+	defer tick.Stop()
 	blog.Infof("Entry Ticker to sync total data")
 	for {
 		select {

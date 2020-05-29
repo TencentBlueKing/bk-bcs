@@ -91,6 +91,7 @@ type DeploymentWatch struct {
 func (watch *DeploymentWatch) Work() {
 	watch.ProcessAllDeployments()
 	tick := time.NewTicker(10 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-watch.cancelCxt.Done():
