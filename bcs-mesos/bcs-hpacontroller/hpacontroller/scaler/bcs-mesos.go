@@ -134,6 +134,7 @@ func (r *bcsMesosScaler) discvMesosdriver() {
 
 	blog.Infof("watch mesosdriver under (%s: %s)", MesosDiscv, discvPath)
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

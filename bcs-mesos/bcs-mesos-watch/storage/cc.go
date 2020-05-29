@@ -299,6 +299,7 @@ func (cc *CCStorage) Run(cxt context.Context) error {
 func (cc *CCStorage) Worker() {
 	blog.Info("CCStorage ready to go into worker!")
 	tick := time.NewTicker(120 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

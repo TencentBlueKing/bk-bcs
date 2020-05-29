@@ -273,6 +273,8 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 				}
 			}
 			return
+		} else {
+			blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
 		}
 		blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
 	} else {
