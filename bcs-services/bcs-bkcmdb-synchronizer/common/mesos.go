@@ -20,6 +20,25 @@ import (
 	commtypes "bk-bcs/bcs-common/common/types"
 )
 
+// MesosContainerPort simplied data of mesos container por
+type MesosContainerPort struct {
+	Name          string `json:"name"`
+	HostPort      int    `json:"hostPort"`
+	ContainerPort int    `json:"containerPort"`
+	HostIP        string `json:"hostIP"`
+	Protocol      string `json:"protocol"`
+}
+
+// MesosContainerStatus simplied data of mesos container stats
+type MesosContainerStatus struct {
+	Name        string               `json:"name"`
+	ContainerID string               `json:"containerID"`
+	Status      string               `json:"status"`
+	LastStatus  string               `json:"lastStatus"`
+	Image       string               `json:"image"`
+	Ports       []MesosContainerPort `json:"containerPort"`
+}
+
 func convertMesosTime(k8sTime string) string {
 	output := strings.Replace(k8sTime, "T", " ", -1)
 	output = output[0:19]
@@ -37,12 +56,20 @@ func ConvertMesosPod(mesosPod *commtypes.BcsPodStatus) (*Pod, error) {
 	newPod.WorkloadType = "Application"
 	newPod.WorkloadName = mesosPod.RcName
 
-	labelStr, err := json.Marshal(mesosPod.ObjectMeta.Labels)
-	if err != nil {
-		blog.Errorf("mesos taskgroup encoding labels failed, err %s", err.Error())
-		return nil, err
+	if mesosPod.ObjectMeta.Labels != nil {
+		labelStr, err := json.Marshal(mesosPod.ObjectMeta.Labels)
+		if err != nil {
+			blog.Errorf("mesos taskgroup encoding labels failed, err %s", err.Error())
+			return nil, err
+		}
+		newPod.PodLabels = string(labelStr)
+	} else {
+		newPod.PodLabels = "{}"
 	}
-	newPod.PodLabels = string(labelStr)
+
+	// TODO: to fullfill annotations
+	newPod.PodAnnotations = "{}"
+
 	newPod.PodIP = mesosPod.PodIP
 	newPod.PodNetworkMode = mesosPod.ContainerStatuses[0].Network
 	if strings.ToLower(newPod.PodNetworkMode) == MesosNetworkModeBridge ||
@@ -52,7 +79,28 @@ func ConvertMesosPod(mesosPod *commtypes.BcsPodStatus) (*Pod, error) {
 		newPod.PodNetworkType = MesosNetworkTypeCni
 	}
 
-	containersStr, err := json.Marshal(mesosPod.ContainerStatuses)
+	var statuses []MesosContainerStatus
+	for _, containerStatus := range mesosPod.ContainerStatuses {
+		newStatus := MesosContainerStatus{}
+		newStatus.Name = containerStatus.Name
+		newStatus.ContainerID = containerStatus.ContainerID
+		newStatus.Status = string(containerStatus.Status)
+		newStatus.LastStatus = string(containerStatus.LastStatus)
+		newStatus.Image = containerStatus.Image
+		for _, port := range containerStatus.Ports {
+			newPort := MesosContainerPort{}
+			newPort.Name = port.Name
+			newPort.HostPort = port.HostPort
+			newPort.ContainerPort = port.ContainerPort
+			newPort.HostIP = port.HostIP
+			newPort.Protocol = port.Protocol
+			newStatus.Ports = append(newStatus.Ports)
+		}
+
+		statuses = append(statuses, newStatus)
+	}
+
+	containersStr, err := json.Marshal(statuses)
 	if err != nil {
 		blog.Errorf("mesos taskgroup encoding container statuses failed, err %s", err.Error())
 		return nil, err

@@ -71,7 +71,7 @@ func (c *Client) CreatePod(bizID int64, data *CreatePod) (*CreatedOneOptionResul
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
-		SubPathf("/create/container/biz/%d/pod", bizID).
+		SubPathf("/create/container/bk_biz_id/%d/pod", bizID).
 		WithHeaders(c.defaultHeader).
 		Body(req).
 		Do().
@@ -91,7 +91,7 @@ func (c *Client) CreateManyPod(bizID int64, data *CreateManyPod) (*CreatedManyOp
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
-		SubPathf("createmany/container/biz/%d/pod", bizID).
+		SubPathf("createmany/container/bk_biz_id/%d/pod", bizID).
 		WithHeaders(c.defaultHeader).
 		Body(req).
 		Do().
@@ -112,7 +112,7 @@ func (c *Client) UpdatePod(bizID int64, data *UpdatePod) (*UpdatedOptionResult, 
 	err := c.client.Put().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
-		SubPathf("update/container/biz/%d/pod", bizID).
+		SubPathf("update/container/bk_biz_id/%d/pod", bizID).
 		WithHeaders(c.defaultHeader).
 		Body(req).
 		Do().
@@ -132,7 +132,7 @@ func (c *Client) DeletePod(bizID int64, data *DeletePod) (*DeletedOptionResult, 
 	err := c.client.Delete().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
-		SubPathf("delete/container/biz/%d/pod", bizID).
+		SubPathf("delete/container/bk_biz_id/%d/pod", bizID).
 		WithHeaders(c.defaultHeader).
 		Body(req).
 		Do().
@@ -162,7 +162,7 @@ func (c *Client) ListClusterPods(bizID int64, clusterID string) (*ListPodsResult
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
-		SubPathf("list/container/pod").
+		SubPathf("findmany/container/bk_biz_id/%d/pod", bizID).
 		WithHeaders(c.defaultHeader).
 		Body(request).
 		Do().

@@ -22,11 +22,56 @@ import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// K8SContainerPort simplified for k8s container port
+type K8SContainerPort struct {
+	Name          string `json:"name"`
+	HostPort      int32  `json:"hostPort"`
+	ContainerPort int32  `json:"containerPort"`
+	Protocol      string `json:"protocol"`
+	HostIP        string `json:"hostIP"`
+}
+
+// K8SContainer simplified data for k8s container
+type K8SContainer struct {
+	Name      string                         `json:"name"`
+	Image     string                         `json:"image"`
+	Ports     []K8SContainerPort             `json:"ports,omitempty"`
+	Resources k8scorev1.ResourceRequirements `json:"resources,omitempty"`
+}
+
+// K8SPodSpec simplified data of k8s pod spec
+type K8SPodSpec struct {
+	Containers   []K8SContainer      `json:"containers,omitempty"`
+	DNSPolicy    k8scorev1.DNSPolicy `json:"dnsPolicy,omitempty"`
+	NodeSelector map[string]string   `json:"nodeSelector"`
+	NodeName     string              `json:"nodeName"`
+	HostNetwork  bool                `json:"hostNetwork"`
+	Hostname     string              `json:"hostname"`
+}
+
+// K8SContainerStatus simplified data of container status
+type K8SContainerStatus struct {
+	Name         string `json:"name"`
+	Ready        bool   `json:"ready"`
+	RestartCount int32  `json:"restartCount"`
+	ContainerID  string `json:"containerID"`
+}
+
+// K8SPodStatus simplified data of k8s pod status
+type K8SPodStatus struct {
+	Phase             string               `json:"phase"`
+	Reason            string               `json:"reason"`
+	HostIP            string               `json:"hostIP"`
+	PodIP             string               `json:"podIP"`
+	StartTime         *k8smetav1.Time      `json:"startTime"`
+	ContainerStatuses []K8SContainerStatus `json:"containerStatuses"`
+}
+
 // K8SPod k8s pod in storage
 type K8SPod struct {
 	k8smetav1.ObjectMeta `json:"metadata"`
-	Spec                 k8scorev1.PodSpec   `json:"spec"`
-	Status               k8scorev1.PodStatus `json:"status"`
+	Spec                 K8SPodSpec   `json:"spec"`
+	Status               K8SPodStatus `json:"status"`
 }
 
 func convertK8STime(k8sTime string) string {
@@ -56,12 +101,16 @@ func ConvertK8SPod(cluster string, kPod *K8SPod) (*Pod, error) {
 	}
 	newPod.PodLabels = string(labelBytes)
 
-	annotationBytes, err := json.Marshal(kPod.Annotations)
-	if err != nil {
-		blog.Errorf("k8d pod encoding annotation failed, err %s", err.Error())
-		return nil, err
+	if kPod.Annotations != nil {
+		annotationBytes, err := json.Marshal(kPod.Annotations)
+		if err != nil {
+			blog.Errorf("k8d pod encoding annotation failed, err %s", err.Error())
+			return nil, err
+		}
+		newPod.PodAnnotations = string(annotationBytes)
+	} else {
+		newPod.PodAnnotations = "{}"
 	}
-	newPod.PodAnnotations = string(annotationBytes)
 
 	newPod.PodIP = kPod.Status.PodIP
 	newPod.PodStatus = string(kPod.Status.Phase)
@@ -90,13 +139,6 @@ func ConvertK8SPod(cluster string, kPod *K8SPod) (*Pod, error) {
 		}
 		containerData.Status = append(containerData.Status, string(cStr))
 	}
-
-	volumesStr, err := json.Marshal(kPod.Spec.Volumes)
-	if err != nil {
-		blog.Errorf("k8s pod encoding volumes failed, err %s", err.Error())
-		return nil, err
-	}
-	newPod.PodVolumes = string(volumesStr)
 
 	newPod.PodCreateTime = convertK8STime(kPod.CreationTimestamp.String())
 	if kPod.Status.StartTime != nil {
