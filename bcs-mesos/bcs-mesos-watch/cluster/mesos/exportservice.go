@@ -98,6 +98,7 @@ func (watch *ExportServiceWatch) postData(data *types.BcsSyncData) {
 
 func (watch *ExportServiceWatch) worker(cxt context.Context) {
 	tick := time.NewTicker(120 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-cxt.Done():

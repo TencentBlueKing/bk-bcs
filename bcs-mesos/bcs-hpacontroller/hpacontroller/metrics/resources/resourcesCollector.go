@@ -116,6 +116,7 @@ func (collector *resourcesCollector) getMemoryMetricsInfo() metrics.TaskgroupMet
 
 func (collector *resourcesCollector) tickerCollectorMetrics() {
 	ticker := time.NewTicker(time.Second * time.Duration(collector.collectMetricsWindow))
+	defer ticker.Stop()
 
 	for {
 		select {

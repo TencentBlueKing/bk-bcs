@@ -71,6 +71,7 @@ type EndpointWatch struct {
 func (watch *EndpointWatch) Work() {
 	watch.ProcessAllEndpoints()
 	tick := time.NewTicker(10 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-watch.cancelCxt.Done():

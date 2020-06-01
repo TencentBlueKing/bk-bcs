@@ -57,9 +57,8 @@ type SidecarController struct {
 }
 
 type ContainerLogConf struct {
-	containerId string
-	confPath    string
-	//needCollect bool
+	confPath string
+	data     []byte
 }
 
 type LogConfParameter struct {
@@ -94,6 +93,13 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 		return nil, err
 	}
 
+	//mkdir logconfig dir
+	err = os.MkdirAll(conf.LogbeatDir, os.ModePerm)
+	if err != nil {
+		blog.Errorf("mkdir %s failed: %s", conf.LogbeatDir, err.Error())
+		return nil, err
+	}
+	s.initLogConfigs()
 	//init kubeconfig
 	err = s.initKubeconfig()
 	if err != nil {
@@ -128,7 +134,7 @@ func (s *SidecarController) listenerDockerEvent() {
 		var msg *docker.APIEvents
 		select {
 		case msg = <-listener:
-			blog.Infof("receive docker event action %s container %s", msg.Action, msg.ID)
+			blog.V(3).Infof("receive docker event action %s container %s", msg.Action, msg.ID)
 		}
 
 		switch msg.Action {
@@ -175,7 +181,7 @@ func (s *SidecarController) syncLogConfs() {
 func (s *SidecarController) removeInvalidLogConfigFile() {
 	files, err := ioutil.ReadDir(s.conf.LogbeatDir)
 	if err != nil {
-		blog.Errorf("ReadDir %s failed: %s", s.conf.LogbeatDir, err.Error())
+		blog.Warnf("ReadDir %s failed: %s", s.conf.LogbeatDir, err.Error())
 		return
 	}
 
@@ -269,6 +275,29 @@ func produceLogConfParameter(container *docker.Container) (*types.Yaml, bool) {
 	return y, true
 }*/
 
+func (s *SidecarController) initLogConfigs() {
+	fileList, err := ioutil.ReadDir(s.conf.LogbeatDir)
+	if err != nil {
+		blog.Errorf("initLogConfigs readdir %s failed: %s", s.conf.LogbeatDir, err.Error())
+		return
+	}
+
+	for _, f := range fileList {
+		key := fmt.Sprintf("%s/%s", s.conf.LogbeatDir, f.Name())
+		by, err := ioutil.ReadFile(key)
+		if err != nil {
+			blog.Errorf("read file %s failed: %s", key, err.Error())
+			continue
+		}
+
+		conf := &ContainerLogConf{
+			confPath: key,
+			data:     by,
+		}
+		s.logConfs[key] = conf
+	}
+}
+
 func (s *SidecarController) getContainerLogConfKey(containerId string) string {
 	return fmt.Sprintf("%s/%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, []byte(containerId)[:12])
 }
@@ -276,6 +305,7 @@ func (s *SidecarController) getContainerLogConfKey(containerId string) string {
 func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	key := s.getContainerLogConfKey(c.ID)
 	y, ok := s.produceLogConfParameterV2(c)
+	by, _ := yaml.Marshal(y)
 	//the container don't match any BcsLogConfig
 	if !ok {
 		s.Lock()
@@ -286,16 +316,25 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 			s.deleteContainerLogConf(c.ID)
 			delete(s.logConfs, key)
 		}
-		blog.Infof("container %s don't need collect log", c.ID)
 		return
 	}
-
-	logConf := &ContainerLogConf{
-		containerId: c.ID,
-		confPath:    key,
+	//if log config exist, and not changed
+	logConf, _ := s.logConfs[key]
+	if logConf != nil {
+		if string(by) == string(logConf.data) {
+			blog.Infof("container %s log config %s not changed", c.ID, logConf.confPath)
+			return
+		} else {
+			blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
+		}
+	} else {
+		blog.Infof("container %s log config %s will created, and LogConfig(%s)", c.ID, key, string(by))
 	}
-	by, _ := yaml.Marshal(y)
-	blog.Infof("container %s need been collected log, and LogConfig(%s)", c.ID, string(by))
+
+	logConf = &ContainerLogConf{
+		confPath: key,
+		data:     by,
+	}
 	f, err := os.Create(logConf.confPath)
 	if err != nil {
 		blog.Errorf("container %s open file %s failed: %s", c.ID, logConf.confPath, err.Error())
@@ -354,7 +393,6 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	logConf := s.getPodLogConfigCrd(container, pod)
 	//if logConf==nil, container not match BcsLogConfig
 	if logConf == nil {
-		blog.Warnf("container %s don't match BcsLogConfig", container.ID)
 		return nil, false
 	}
 
@@ -362,8 +400,8 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	para.ExtMeta["io_tencent_bcs_namespace"] = pod.Namespace
 	para.ExtMeta["io_tencent_bcs_server_name"] = pod.OwnerReferences[0].Name
 	para.ExtMeta["io_tencent_bcs_type"] = pod.OwnerReferences[0].Kind
-	para.ExtMeta["io_tencent_bcs_appid"] = pod.Annotations["io.tencent.bcs.app.appid"]
-	para.ExtMeta["io_tencent_bcs_projectid"] = pod.Annotations["io.tencent.paas.projectid"]
+	para.ExtMeta["io_tencent_bcs_appid"] = logConf.Spec.AppId
+	para.ExtMeta["io_tencent_bcs_projectid"] = pod.Labels["io.tencent.paas.projectid"]
 	para.ExtMeta["container_id"] = container.ID
 	para.ExtMeta["container_hostname"] = container.Config.Hostname
 	para.ToJson = true
@@ -397,7 +435,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		y.Local = append(y.Local, inLocal)
 	}
 	//if nonstandard Log
-	if para.NonstandardDataid != "" {
+	if para.NonstandardDataid != "" && len(para.NonstandardPaths) > 0 {
 		inLocal := para
 		for _, f := range para.NonstandardPaths {
 			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s", container.State.Pid, f))

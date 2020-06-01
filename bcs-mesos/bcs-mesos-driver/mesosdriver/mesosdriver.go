@@ -268,6 +268,7 @@ func (m *MesosDriver) RegDiscover() {
 	blog.Info("DiscoverService(%s) succ", discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -336,6 +337,7 @@ func (m *MesosDriver) DiscvScheduler() {
 	blog.Infof("watch scheduler under (%s: %s), current goroutine num(%d)", MesosDiscv, discvPath, runtime.NumGoroutine())
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

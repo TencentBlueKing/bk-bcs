@@ -135,6 +135,7 @@ func (e *bcsEventManager) discvstorage() {
 	blog.Infof("watch storage under (%s: %s), current goroutine num(%d)", e.bcsZk, discvPath, runtime.NumGoroutine())
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -185,6 +186,7 @@ func (e *bcsEventManager) discvstorage() {
 func (e *bcsEventManager) handleEventQueue() {
 
 	tick := time.NewTicker(time.Second * 10)
+	defer tick.Stop()
 
 	var err error
 

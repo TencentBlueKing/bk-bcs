@@ -263,6 +263,9 @@ func (zk *ZookeeperMaster) masterLoop() {
 func (zk *ZookeeperMaster) healthLoop() {
 	masterTick := time.NewTicker(time.Second * 2)
 	selfTick := time.NewTicker(time.Second * 30)
+	defer masterTick.Stop()
+	defer selfTick.Stop()
+
 	for {
 		select {
 		case <-zk.exitCxt.Done():

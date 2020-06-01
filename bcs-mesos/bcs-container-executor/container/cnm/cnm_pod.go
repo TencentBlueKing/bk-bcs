@@ -569,6 +569,7 @@ func (p *DockerPod) containersWatch(cxt context.Context) {
 	}
 
 	tick := time.NewTicker(defaultPodWatchInterval * time.Second)
+	defer tick.Stop()
 	//total := defaultErrTolerate * len(p.runningContainer)
 	for {
 		select {

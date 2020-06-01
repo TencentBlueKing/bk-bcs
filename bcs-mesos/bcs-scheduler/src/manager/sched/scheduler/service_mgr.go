@@ -173,6 +173,7 @@ func (mgr *ServiceMgr) postData(data *ServiceSyncData) {
 // This function will process events of service add, delete and update
 func (mgr *ServiceMgr) Worker() {
 	tick := time.NewTicker(300 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case req := <-mgr.msgQueue:

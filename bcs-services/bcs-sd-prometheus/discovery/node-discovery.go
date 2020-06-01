@@ -149,6 +149,7 @@ func (disc *nodeDiscovery) OnDelete(obj interface{}) {
 
 func (disc *nodeDiscovery) syncTickerPromSdConfig() {
 	ticker := time.NewTicker(time.Minute * 5)
+	defer ticker.Stop()
 
 	select {
 	case <-ticker.C:

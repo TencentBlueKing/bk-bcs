@@ -343,7 +343,9 @@ func (driver *BcsExecutorDriver) Stop() (mesos.Status, error) {
 		logs.Infoln("ExecutorDriver is under connection, wait slave reply acknowledged")
 		//check all update info acknowledged
 		checkTick := time.NewTicker(500 * time.Microsecond)
+		defer checkTick.Stop()
 		timeoutTick := time.NewTicker(5 * time.Second)
+		defer timeoutTick.Stop()
 		for driver.updates != nil && driver.connected {
 			//if connection lost, no need to wait acknowledgement
 			select {

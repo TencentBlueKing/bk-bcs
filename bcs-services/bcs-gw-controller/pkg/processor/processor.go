@@ -131,6 +131,7 @@ func (p *Processor) SetUpdated() {}
 // Run run processor loop
 func (p *Processor) Run() {
 	updateTick := time.NewTicker(time.Second * time.Duration(p.opt.UpdatePeriod))
+	defer updateTick.Stop()
 	for {
 		select {
 		case <-p.rootCtx.Done():
