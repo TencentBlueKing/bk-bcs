@@ -282,7 +282,7 @@ func (m *Manager) convertTCPData(TCP types.FourLayerServiceInfoList) map[int]*TC
 		if !ok {
 			tmpTCPListener = &TCPListener{
 				ServicePort:         tcp.ServicePort,
-				Name:                "tcp_" + tcp.Name,
+				Name:                "tcp_" + tcp.Name + "_" + strconv.Itoa(tcp.ServicePort),
 				Balance:             tcp.Balance,
 				HealthCheckInterval: m.envConfig.ServerHealthCheckInterval,
 				RiseHealthCheckNum:  m.envConfig.ServerRiseHealthCheckNum,
