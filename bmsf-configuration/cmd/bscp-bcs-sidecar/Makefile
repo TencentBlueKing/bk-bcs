@@ -22,6 +22,8 @@ SWAGGEDIR = $(BINDIR)/swagger
 SWAGGERUI = $(GOENVPATH)/src/bk-bscp/third_party/swagger-ui
 APIDOCS   = $(PROTOCOL)/sidecar/sidecar.swagger.json
 
+export GO111MODULE=on
+
 default:
 	@echo -e "\e[34;1mBuilding $(SERVER)...\033[0m"
 	go build -ldflags ${LDVersionFLAG} -gcflags "-N -l" -o $(BIN) main.go
@@ -29,9 +31,6 @@ default:
 	@mkdir -p $(SWAGGEDIR) && cp -r $(SWAGGERUI) $(SWAGGEDIR) && cp -r $(APIDOCS) $(SWAGGEDIR)/api.swagger.json
 	@sh $(SCRIPTS)/daemon-control/generator.sh '$(SERVER)' '$(ARGS)' '$(BINDIR)'
 	@echo -e "\e[34;1mBuild $(SERVER) success!\n\033[0m"
-
-proto:
-	cd $(PROTOCOL) && make
 
 clean:
 	@rm -rf $(BINDIR) $(LOCALBUILD)

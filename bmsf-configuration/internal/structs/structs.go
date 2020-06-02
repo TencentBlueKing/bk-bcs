@@ -24,6 +24,9 @@ const (
 	// SignallingTypeRollback is type of rollback publishing.
 	SignallingTypeRollback
 
+	// SignallingTypeReload is type of reload publishing.
+	SignallingTypeReload
+
 	// TODO other signalling type...
 
 	// SignallingTypeEnd is end of the types.
@@ -37,6 +40,24 @@ type Signalling struct {
 
 	// Publishing is publishing signalling.
 	Publishing Publishing
+}
+
+// EffectInfo is effect info for reload action.
+type EffectInfo struct {
+	// Cfgsetid is configset id.
+	Cfgsetid string
+
+	// Releaseid is release id.
+	Releaseid string
+}
+
+// ReloadSpec is reload specs.
+type ReloadSpec struct {
+	// MultiReleaseid is multi release id.
+	MultiReleaseid string
+
+	// Info is effect infos for reload action.
+	Info []EffectInfo
 }
 
 // Publishing notification content.
@@ -64,6 +85,9 @@ type Publishing struct {
 
 	// Strategies is release strategies.
 	Strategies string
+
+	// ReloadSpec is spec of reload action.
+	ReloadSpec ReloadSpec
 }
 
 // Metadata is load information metadata for resource report.

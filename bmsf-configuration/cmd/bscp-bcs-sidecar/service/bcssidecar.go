@@ -76,14 +76,8 @@ func (s *Sidecar) initLogger() {
 	logger.Info("logger init success dir[%s] level[%d].",
 		s.viper.GetString("logger.directory"), s.viper.GetInt32("logger.level"))
 
-	logger.Info("dump configs: sidecar[%+v, %+v, %+v, %+v, %+v, %+v, %+v, %+v, %+v, %+v, %+v, %+v, %+v] connserver[%+v, %+v, %+v, %+v] "+
-		"appinfo[%+v, %+v, %+v] cache[%+v, %+v, %+v, %+v, %+v, %+v, %+v]",
-		s.viper.Get("sidecar.pullConfigInterval"), s.viper.Get("sidecar.syncConfigsetListInterval"), s.viper.Get("sidecar.reportInfoInterval"), s.viper.Get("sidecar.accessInterval"),
-		s.viper.Get("sidecar.sessionTimeout"), s.viper.Get("sidecar.sessionCoefficient"), s.viper.Get("sidecar.configSetListSize"), s.viper.Get("sidecar.handlerChSize"), s.viper.Get("sidecar.handlerChTimeout"),
-		s.viper.Get("sidecar.configHandlerChSize"), s.viper.Get("sidecar.configHandlerChTimeout"), s.viper.Get("sidecar.fileReloadMode"), s.viper.Get("sidecar.fileReloadFName"), s.viper.Get("connserver.hostname"),
-		s.viper.Get("connserver.port"), s.viper.Get("connserver.dialtimeout"), s.viper.Get("connserver.calltimeout"), s.viper.Get("appinfo.ipeth"), s.viper.Get("appinfo.ip"), s.viper.Get("appinfo.mod"),
-		s.viper.Get("cache.fileCachePath"), s.viper.Get("cache.contentCachePath"), s.viper.Get("cache.contentExpiredCachePath"), s.viper.Get("cache.contentMCacheSize"), s.viper.Get("cache.mcacheExpiration"),
-		s.viper.Get("cache.contentCacheExpiration"), s.viper.Get("cache.contentCachePurgeInterval"))
+	logger.Info("dump configs: sidecar[%+v] connserver[%+v] appinfo[%+v] instance[%+v] cache[%+v]",
+		s.viper.Get("sidecar"), s.viper.Get("connserver"), s.viper.Get("appinfo"), s.viper.Get("instance"), s.viper.Get("cache"))
 }
 
 // init configs reloader.
@@ -96,7 +90,6 @@ func (s *Sidecar) initReloader() {
 // init app mods.
 func (s *Sidecar) initAppMods() {
 	s.appModMgr = NewAppModManager(s.viper, s.reloader)
-	s.appModMgr.Init()
 	s.appModMgr.Setup()
 	logger.Info("Sidecar| init app mod manager setup success.")
 }
@@ -111,7 +104,7 @@ func (s *Sidecar) initInstanceServer() {
 	s.insServer = NewInstanceServer(s.viper,
 		common.Endpoint(s.viper.GetString("instance.httpEndpoint.ip"), s.viper.GetInt("instance.httpEndpoint.port")),
 		common.Endpoint(s.viper.GetString("instance.grpcEndpoint.ip"), s.viper.GetInt("instance.grpcEndpoint.port")),
-		s.appModMgr.AppModInfos(), s.reloader)
+		s.appModMgr, s.reloader)
 
 	// init and run.
 	if err := s.insServer.Init(); err != nil {

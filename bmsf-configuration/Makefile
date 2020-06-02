@@ -21,6 +21,8 @@ export LDVersionFLAG = "-X bk-bscp/internal/version.VERSION=${VERSION} \
 	-X bk-bscp/internal/version.BUILDTIME=${BUILDTIME} \
 	-X bk-bscp/internal/version.GITHASH=${GITHASH}"
 
+export GO111MODULE=on
+
 default: all
 
 pre:
@@ -35,18 +37,9 @@ clean:
 	@cd cmd && make clean
 	@rm -rf ${PRO_DIR}/build
 
-proto:
-	@cd internal/protocol && make
-
-cleanproto:
-	@cd internal/protocol && make clean
-
 images: pre
 	@cd cmd && make images
 
 bscpimages: pre
 	@cd cmd && make bscpimages
 	@cp -r scripts/helm ${OUTPUT_DIR}
-
-injector: pre
-	@cd cmd && make injector

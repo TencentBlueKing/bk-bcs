@@ -69,6 +69,7 @@ func (option *CreateBusinessOption) LoadConfig(cfg string) error {
 		Depid:   vip.GetString("spec.deptID"),
 		Creator: vip.GetString("spec.creator"),
 		Memo:    vip.GetString("spec.memo"),
+		Auth:    vip.GetString("spec.auth"),
 	}
 	if !vip.IsSet("db.dbID") {
 		logger.V(3).Infof("Loading CreateBusinessOption err, lost db.dbID in yaml")
@@ -192,6 +193,7 @@ func (operator *AccessOperator) CreateBusiness(cxt context.Context, option *Crea
 		Dbname:  option.DBName,
 		Creator: option.Spec.Creator,
 		Memo:    option.Spec.Memo,
+		Auth:    option.Spec.Auth,
 	}
 	response, err := operator.Client.CreateBusiness(cxt, request, grpcOptions...)
 	if err != nil {

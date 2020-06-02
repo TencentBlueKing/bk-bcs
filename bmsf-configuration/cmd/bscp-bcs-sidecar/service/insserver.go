@@ -45,8 +45,8 @@ type InstanceServer struct {
 	httpEndpoint string
 	grpcEndpoint string
 
-	// app mod infos.
-	appMods []*AppModInfo
+	// app mod manager.
+	appModMgr *AppModManager
 
 	// gRPC gateway server mux.
 	gwmux *runtime.ServeMux
@@ -73,12 +73,12 @@ type InstanceServer struct {
 }
 
 // NewInstanceServer creates a new InstanceServer.
-func NewInstanceServer(viper *viper.Viper, httpEndpoint, grpcEndpoint string, appMods []*AppModInfo, reloader *Reloader) *InstanceServer {
+func NewInstanceServer(viper *viper.Viper, httpEndpoint, grpcEndpoint string, appModMgr *AppModManager, reloader *Reloader) *InstanceServer {
 	return &InstanceServer{
 		viper:        viper,
 		httpEndpoint: httpEndpoint,
 		grpcEndpoint: grpcEndpoint,
-		appMods:      appMods,
+		appModMgr:    appModMgr,
 		reloader:     reloader,
 		events:       make(map[string]chan *ReloadSpec),
 	}
@@ -103,7 +103,7 @@ func (ins *InstanceServer) Ping(ctx context.Context, req *pbsidecar.PingReq) (*p
 
 	mods := []*pbsidecar.ModInfo{}
 
-	for _, mod := range ins.appMods {
+	for _, mod := range ins.appModMgr.AppModInfos() {
 		m := &pbsidecar.ModInfo{
 			BusinessName: mod.BusinessName,
 			AppName:      mod.AppName,
@@ -390,7 +390,8 @@ func (ins *InstanceServer) Run() error {
 	// init instance server gRPC client.
 	conn, err := grpc.Dial(ins.grpcEndpoint, grpc.WithInsecure(), grpc.WithTimeout(ins.viper.GetDuration("instance.dialtimeout")))
 	if err != nil {
-		return fmt.Errorf("create instance server grpc client, %+v", err)
+		logger.Errorf("create instance server grpc client, %+v", err)
+		return err
 	}
 	ins.insSvrConn = conn
 	ins.insSvrCli = pbsidecar.NewInstanceClient(conn)
@@ -400,7 +401,8 @@ func (ins *InstanceServer) Run() error {
 	defer cancel()
 
 	if err := pbsidecar.RegisterInstanceHandlerClient(ctx, ins.gwmux, ins.insSvrCli); err != nil {
-		return fmt.Errorf("gateway register instance server handler, %+v", err)
+		logger.Errorf("gateway register instance server handler, %+v", err)
+		return err
 	}
 
 	go ins.handleReloadEvents()
@@ -408,7 +410,8 @@ func (ins *InstanceServer) Run() error {
 
 	// gateway service listen and serve.
 	if err := http.ListenAndServe(ins.httpEndpoint, ins.mux); err != nil {
-		return fmt.Errorf("gateway listen and serve, %+v", err)
+		logger.Errorf("gateway listen and serve, %+v", err)
+		return err
 	}
 	return nil
 }

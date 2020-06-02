@@ -167,14 +167,12 @@ func (c *config) check() error {
 
 	// normal env settings.
 	appInfoModEnvVal := common.GetenvCfg(c.envName("APPINFO_MOD"), "")
+
 	if len(appInfoModEnvVal) != 0 {
 		// use appinfo mod config from env.
-		c.viper.Set("appmod", appInfoModEnvVal)
+		c.viper.Set("appmods", appInfoModEnvVal)
 
-	} else if len(singleAppCfgPathVal) != 0 && len(singleAppInfoBuVal) != 0 &&
-		len(singleAppInfoAppVal) != 0 {
-
-		// env settings compatibility.
+	} else if len(singleAppCfgPathVal) != 0 && len(singleAppInfoBuVal) != 0 && len(singleAppInfoAppVal) != 0 {
 		newMod := AppModInfo{
 			BusinessName: singleAppInfoBuVal,
 			AppName:      singleAppInfoAppVal,
@@ -194,34 +192,56 @@ func (c *config) check() error {
 		if err != nil {
 			return fmt.Errorf("config check, can't marshal appmod from single envs, %+v", err)
 		}
-		c.viper.Set("appmod", string(appInfoModCfgVal))
+
+		c.viper.Set("appmods", string(appInfoModCfgVal))
+
 	} else {
 		// use appinfo mod config from local file.
 		if !c.viper.IsSet("appinfo.mod") {
 			return errors.New("config check, missing 'appinfo.mod'")
 		}
+
 		modCfg := c.viper.Get("appinfo.mod")
+		if modCfg == nil {
+			return errors.New("config check, missing 'appinfo.mod' nil")
+		}
+
 		modSlice := modCfg.([]interface{})
 		if len(modSlice) == 0 {
 			return errors.New("config check, missing 'appinfo.mod', empty mods")
 		}
 
 		appModInfos := []AppModInfo{}
+
 		for _, mod := range modSlice {
+			if mod == nil {
+				continue
+			}
 			m := mod.(map[interface{}]interface{})
+
 			newMod := AppModInfo{
 				BusinessName: m["business"].(string),
 				AppName:      m["app"].(string),
-				ClusterName:  m["cluster"].(string),
-				ZoneName:     m["zone"].(string),
-				DC:           m["dc"].(string),
 				Path:         m["path"].(string),
 				Labels:       make(map[string]string),
 			}
-			labels := m["labels"].(map[interface{}]interface{})
-			for labelk, labelv := range labels {
-				newMod.Labels[labelk.(string)] = labelv.(string)
+
+			if m["cluster"] != nil {
+				newMod.ClusterName = m["cluster"].(string)
 			}
+			if m["zone"] != nil {
+				newMod.ZoneName = m["zone"].(string)
+			}
+			if m["dc"] != nil {
+				newMod.DC = m["dc"].(string)
+			}
+			if m["labels"] != nil {
+				labels := m["labels"].(map[interface{}]interface{})
+				for labelk, labelv := range labels {
+					newMod.Labels[labelk.(string)] = labelv.(string)
+				}
+			}
+
 			appModInfos = append(appModInfos, newMod)
 		}
 
@@ -230,7 +250,8 @@ func (c *config) check() error {
 		if err != nil {
 			return fmt.Errorf("config check, can't marshal appmod from local file, %+v", err)
 		}
-		c.viper.Set("appmod", string(appInfoModCfgVal))
+
+		c.viper.Set("appmods", string(appInfoModCfgVal))
 	}
 
 	// cache configs.
