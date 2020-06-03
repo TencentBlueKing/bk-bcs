@@ -245,9 +245,9 @@ func (reflector *ServiceReflector) listData(exportServiceList []*loadbalance.Exp
 			var srvInfo types.ServiceInfo
 			validPath := util.TrimSpecialChar(portInfo.Path)
 			if validPath == "" {
-				srvInfo.Name = svr.ServiceName + "_" + portInfo.Name
+				srvInfo.Name = svr.ServiceName + "_" + strconv.Itoa(portInfo.ServicePort)
 			} else {
-				srvInfo.Name = svr.ServiceName + "_" + portInfo.Name + "_" + validPath
+				srvInfo.Name = svr.ServiceName + "_" + strconv.Itoa(portInfo.ServicePort) + "_" + validPath
 			}
 			srvInfo.ServicePort = portInfo.ServicePort
 			srvInfo.Balance = svr.Balance
