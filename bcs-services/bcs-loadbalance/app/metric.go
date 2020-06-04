@@ -65,7 +65,7 @@ var (
 		prometheus.CounterOpts{
 			Namespace: "loadbalance",
 			Subsystem: "service",
-			Name:      "conflict",
+			Name:      "conflict_total",
 			Help:      "conflict counter of service",
 		},
 		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName},
