@@ -109,6 +109,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	prometheus.Register(LoadbalanceZookeeperEventAddMetric)
 	prometheus.Register(LoadbalanceZookeeperEventUpdateMetric)
 	prometheus.Register(LoadbalanceZookeeperEventDeleteMetric)
+	prometheus.Register(LoadbalanceServiceConflictMetric)
 	LoadbalanceZookeeperStateMetric.WithLabelValues(config.Name).Set(1)
 
 	newStatusResource := status.NewStatus(processor.cfgManager.GetStatusFunction())
@@ -250,6 +251,7 @@ func (lp *LBEventProcessor) findConficts(data *types.TemplateData) (bool, string
 		domainPortStr := http.BCSVHost + "," + strconv.Itoa(http.ServicePort)
 		for _, backend := range http.Backends {
 			if serviceKey, isConflict := layer7Map[domainPortStr+","+backend.Path]; isConflict {
+				LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, http.Name).Inc()
 				return true, fmt.Sprintf("%s is conflict with %s", http.Name, serviceKey)
 			}
 			layer7Map[domainPortStr+","+backend.Path] = http.Name
@@ -261,6 +263,7 @@ func (lp *LBEventProcessor) findConficts(data *types.TemplateData) (bool, string
 		domainPortStr := https.BCSVHost + "," + strconv.Itoa(https.ServicePort)
 		for _, backend := range https.Backends {
 			if serviceKey, isConflict := layer7Map[domainPortStr+","+backend.Path]; isConflict {
+				LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, https.Name).Inc()
 				return true, fmt.Sprintf("%s is conflict with %s", https.Name, serviceKey)
 			}
 			layer7Map[domainPortStr+","+backend.Path] = https.Name
@@ -270,6 +273,7 @@ func (lp *LBEventProcessor) findConficts(data *types.TemplateData) (bool, string
 
 	for _, tcp := range data.TCP {
 		if serviceKey, isConfict := layer4Map[tcp.ServicePort]; isConfict {
+			LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, tcp.Name).Inc()
 			return true, fmt.Sprintf("%s is conflict with %s", tcp.Name, serviceKey)
 		}
 		layer4Map[tcp.ServicePort] = tcp.Name
@@ -277,6 +281,7 @@ func (lp *LBEventProcessor) findConficts(data *types.TemplateData) (bool, string
 
 	for _, udp := range data.UDP {
 		if serviceKey, isConflict := layer4Map[udp.ServicePort]; isConflict {
+			LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, udp.Name).Inc()
 			return true, fmt.Sprintf("%s is conflict with %s", udp.Name, serviceKey)
 		}
 		layer4Map[udp.ServicePort] = udp.Name
