@@ -46,7 +46,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: bk.artifactory.oa.com:8080/paas/bcs/mongo:4.2.6
+          image: xxxxxx:8080/paas/bcs/mongo:4.2.6
           command:
             - mongod
             - "--bind_ip_all"

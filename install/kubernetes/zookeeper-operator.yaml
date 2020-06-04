@@ -113,7 +113,7 @@ spec:
       containers:
         - name: zookeeper-operator
           # Replace this with the built image name
-          image: bk.artifactory.oa.com:8080/paas/bcs/pravega/zookeeper-operator:0.2.7
+          image: xxxxxxxxx:8080/paas/bcs/pravega/zookeeper-operator:0.2.7
           ports:
             - containerPort: 60000
               name: metrics
@@ -143,7 +143,7 @@ spec:
   # Add fields here
   replicas: 3
   image:
-    repository: bk.artifactory.oa.com:8080/paas/public/pravega/zookeeper
+    repository: xxxxxxxxxxx:8080/paas/public/pravega/zookeeper
     tag: 0.2.7
   persistence:
     accessModes: [ "ReadWriteOnce" ]
