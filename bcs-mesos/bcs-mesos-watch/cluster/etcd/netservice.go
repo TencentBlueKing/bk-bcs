@@ -33,16 +33,16 @@ import (
 
 const (
 	// defaultSyncInterval is default sync interval.
-	defaultSyncInterval = 30 * time.Second
+	defaultSyncInterval = 60 * time.Second
 
 	// defaultNetServiceTimeout is default netservice timeout.
-	defaultNetServiceTimeout = 2 * time.Second
+	defaultNetServiceTimeout = 20 * time.Second
 
 	// defaultHTTPRetryerCount is default http request retry count.
 	defaultHTTPRetryerCount = 2
 
 	// defaultHTTPRetryerTime is default http request retry time.
-	defaultHTTPRetryerTime = time.Second
+	defaultHTTPRetryerTime = 3 * time.Second
 )
 
 func reportIPPoolStaticMetrics(action, status string) {
@@ -163,7 +163,7 @@ func (w *NetServiceWatcher) queryIPResourceDetail() (*netservicetypes.NetRespons
 	return response, nil
 }
 
-// Sync syncs target ip resources to storages.
+// SyncIPResource syncs target ip resources to storages.
 func (w *NetServiceWatcher) SyncIPResource() {
 	// query resource from netservice.
 	resource, err := w.queryIPResource()
@@ -192,7 +192,7 @@ func (w *NetServiceWatcher) SyncIPResource() {
 	}
 }
 
-// Sync syncs target ip resource detail to storages.
+// SyncIPResourceDetail syncs target ip resource detail to storages.
 func (w *NetServiceWatcher) SyncIPResourceDetail() {
 	// query resource detail from netservice.
 	resource, err := w.queryIPResourceDetail()
