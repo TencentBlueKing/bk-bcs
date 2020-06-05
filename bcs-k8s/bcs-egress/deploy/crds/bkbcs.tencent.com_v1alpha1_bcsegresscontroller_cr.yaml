@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v1alpha1
+kind: BCSEgressController
+metadata:
+  name: example-bcsegresscontroller
+spec:
+  # Add fields here
+  size: 3

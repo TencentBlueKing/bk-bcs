@@ -53,6 +53,7 @@ type TaskGroupWatch struct {
 	informer  bkbcsv2.TaskGroupInformer
 }
 
+// Work main work init for taskgroup
 func (task *TaskGroupWatch) Work() {
 	blog.Infof("TaskGroupWatch start work")
 	task.syncAlltaskgroups()
