@@ -59,6 +59,7 @@ type AppWatch struct {
 	informer  bkbcsv2.ApplicationInformer
 }
 
+//Work main work for init application
 func (app *AppWatch) Work() {
 	blog.Infof("AppWatch start work")
 	app.syncAllApplications()
