@@ -113,10 +113,11 @@ type NetworkController struct {
 }
 
 // New create new network controller
-func New(hostname string, op *options.NetworkOption,
+func New(instanceEth, hostname string, op *options.NetworkOption,
 	netsvcClient netservice.Interface, nodeNetClient nodenetwork.Interface,
 	eniClient eni.Interface, netUtil networkutil.Interface) *NetworkController {
 	return &NetworkController{
+		instanceEth:   instanceEth,
 		hostname:      hostname,
 		options:       op,
 		netsvcClient:  netsvcClient,
@@ -478,7 +479,7 @@ func (nc *NetworkController) Run(ctx context.Context, wg *sync.WaitGroup) {
 	reportReconcileMetric(statusSuccess)
 
 	routeIDMap := nc.getRouteIDMap()
-	if err := nc.netUtil.SetHostNetwork(routeIDMap); err != nil {
+	if err := nc.netUtil.SetHostNetwork(nc.instanceEth, routeIDMap); err != nil {
 		blog.Infof("set host network failed, err %s", err.Error())
 		return
 	}
