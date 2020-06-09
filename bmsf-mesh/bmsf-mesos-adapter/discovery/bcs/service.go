@@ -48,6 +48,9 @@ type svcController struct {
 }
 
 func (s *svcController) run() {
+	if err := s.reflector.ListAllData(); err != nil {
+		blog.Errorf("list all bcs service failed, err %s", err.Error())
+	}
 	go s.reflector.Run()
 }
 
