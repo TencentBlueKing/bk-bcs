@@ -114,6 +114,9 @@ type taskGroupController struct {
 }
 
 func (s *taskGroupController) run() {
+	if err := s.reflector.ListAllData(); err != nil {
+		blog.Errorf("list all bcs taskgroup failed, err %s", err.Error())
+	}
 	go s.reflector.Run()
 }
 
