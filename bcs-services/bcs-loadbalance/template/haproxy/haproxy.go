@@ -429,8 +429,8 @@ func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, nee
 		}
 	}
 	// tcp listener
-	if len(newConfig.TCPMap) > len(m.ConfigCache.TCPMap) {
-		blog.Infof("new TCP frontend list is longer than cache TCP frontend list , new length %d, old length %d", len(newConfig.TCPMap), len(m.ConfigCache.TCPMap))
+	if len(newConfig.TCPMap) != len(m.ConfigCache.TCPMap) {
+		blog.Infof("new TCP frontend list is different from cache TCP frontend list , new length %d, old length %d", len(newConfig.TCPMap), len(m.ConfigCache.TCPMap))
 		return true, false, nil
 	}
 	if len(newConfig.TCPMap) != 0 {
@@ -461,6 +461,10 @@ func checkConfigDiffBetweenTCPListener(newListener *TCPListener, oldListener *TC
 		blog.Infof("%v has different port from %v", newListener, oldListener)
 		return true, false, nil
 	}
+	if newListener.Name != oldListener.Name {
+		blog.Infof("%v has different name from %v", newListener, oldListener)
+		return true, false, nil
+	}
 	if len(newListener.Servers) > len(oldListener.Servers) {
 		blog.Infof("new listener %s has %d servers, the old only has %d servers", newListener.Name, len(newListener.Servers), len(oldListener.Servers))
 		return true, false, nil
@@ -483,6 +487,10 @@ func checkConfigDiffBetweenHTTPFrontend(newFront *HTTPFrontend, oldFront *HTTPFr
 	}
 	if newFront.ServicePort != oldFront.ServicePort {
 		blog.Infof("%v has different port from %v", newFront, oldFront)
+		return true, false, nil
+	}
+	if newFront.Name != oldFront.Name {
+		blog.Infof("%v has different name from %v", newFront, oldFront)
 		return true, false, nil
 	}
 	if len(newFront.Backends) != len(oldFront.Backends) {
