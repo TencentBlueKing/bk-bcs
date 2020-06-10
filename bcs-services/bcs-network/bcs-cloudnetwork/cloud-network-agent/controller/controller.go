@@ -81,9 +81,17 @@ func reportReconcileMetric(status string) {
 
 // NetworkController controller for cloud network
 type NetworkController struct {
-	hostname string
-	eniNum   int
-	ipNum    int
+	// eth name for identifying vm instance
+	instanceEth string
+
+	// vm instance hostname
+	hostname    string
+
+	// extra elastic network interface number
+	eniNum      int
+
+	// ip number for each extra elastic network interface
+	ipNum       int
 
 	// options for network agent
 	options *options.NetworkOption
