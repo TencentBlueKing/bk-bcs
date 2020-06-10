@@ -267,7 +267,7 @@ func (m *Manager) convertHTTPData(HTTP types.HTTPServiceInfoList, protocol strin
 				}
 				tmpHTTPBackend.Servers[tmpServer.Key()] = tmpServer
 			}
-			tmpHTTPFrontend.Backends[back.UpstreamName] = tmpHTTPBackend
+			tmpHTTPFrontend.Backends[http.BCSVHost+"_"+back.UpstreamName] = tmpHTTPBackend
 			break
 		}
 		httpMap[http.ServicePort] = tmpHTTPFrontend
@@ -498,8 +498,8 @@ func checkConfigDiffBetweenHTTPFrontend(newFront *HTTPFrontend, oldFront *HTTPFr
 		return true, false, nil
 	}
 
-	for backendName, newFrontBackend := range newFront.Backends {
-		oldFrontBackend, ok := oldFront.Backends[backendName]
+	for backendKey, newFrontBackend := range newFront.Backends {
+		oldFrontBackend, ok := oldFront.Backends[backendKey]
 		if !ok {
 			blog.Infof("backend %v is newly added", newFrontBackend)
 			return true, false, nil
