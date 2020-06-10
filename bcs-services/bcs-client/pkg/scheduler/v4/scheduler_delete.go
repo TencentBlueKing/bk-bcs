@@ -42,6 +42,10 @@ func (bs *bcsScheduler) DeleteDeployment(clusterID, namespace, name string, enfo
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceDeployment, name, enforce)
 }
 
+func (bs *bcsScheduler) DeleteDaemonset(clusterID, namespace, name string, enforce bool) error {
+	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceDaemonset, name, enforce)
+}
+
 func (bs *bcsScheduler) deleteResource(clusterID, namespace, resourceType, name string, enforce bool) error {
 	enforceNum := 0
 	if enforce {

@@ -303,4 +303,8 @@ type Backend interface {
 	DeleteAdmissionWebhook(ns, name string) error
 	FetchAllAdmissionWebhooks() ([]*commtypes.AdmissionWebhookConfiguration, error)
 	/*=========AdmissionWebhook==========*/
+	//launch daemonset
+	LaunchDaemonset(def *types.BcsDaemonsetDef) error
+	//delete daemonset
+	DeleteDaemonset(namespace, name string, force bool) error
 }

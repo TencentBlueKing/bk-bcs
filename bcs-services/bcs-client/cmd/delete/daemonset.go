@@ -11,35 +11,28 @@
  *
  */
 
-package discovery
+package delete
 
-import "bk-bcs/bcs-services/bcs-sd-prometheus/types"
+import (
+	"fmt"
 
-const (
-	DefaultBcsModuleLabelKey = "bcs_module"
-	DiscoveryFileName        = "_sd_config.json"
+	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
 
-const (
-	CadvisorModule   = "cadvisor"
-	NodeexportModule = "node_export"
-)
+func deleteDaemonset(c *utils.ClientContext) error {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName); err != nil {
+		return err
+	}
 
-type Discovery interface {
-	//start
-	Start() error
+	enforce := c.String(utils.OptionEnforce) == "1"
 
-	// GetDiscoveryKey
-	GetDiscoveryKey() string
+	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
+	err := scheduler.DeleteDaemonset(c.ClusterID(), c.Namespace(), c.String(utils.OptionName), enforce)
+	if err != nil {
+		return fmt.Errorf("failed to delete daemonset: %v", err)
+	}
 
-	// get prometheus service discovery config
-	GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error)
-
-	// get prometheus sd config file path
-	GetPromSdConfigFile() string
-
-	//register event handle function
-	RegisterEventFunc(handleFunc EventHandleFunc)
+	fmt.Printf("success to delete daemonset\n")
+	return nil
 }
-
-type EventHandleFunc func(discoveryKey string)

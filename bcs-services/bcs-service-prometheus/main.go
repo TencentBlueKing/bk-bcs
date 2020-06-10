@@ -11,17 +11,35 @@
  *
  */
 
-package config
+package main
 
-// sd prometheus config
-type Config struct {
-	ClusterZk      string
-	CadvisorPort   int
-	NodeExportPort int
-	ClusterId      string
-	PromFilePrefix string
-	ServiceZk      string
-	EnableMesos    bool
-	EnableService  bool
-	EnableNode     bool
+import (
+	"os"
+	"runtime"
+
+	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/conf"
+	"bk-bcs/bcs-common/common/license"
+	"bk-bcs/bcs-services/bcs-service-prometheus/app"
+	"bk-bcs/bcs-services/bcs-service-prometheus/app/options"
+)
+
+func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	op := options.NewPrometheusControllerOption()
+	conf.Parse(op)
+
+	blog.InitLogs(op.LogConfig)
+	defer blog.CloseLogs()
+	blog.Info("init logs success")
+	license.CheckLicense(op.LicenseServerConfig)
+
+	err := app.Run(op)
+	if err != nil {
+		blog.Errorf(err.Error())
+		os.Exit(1)
+	}
+
+	ch := make(chan bool)
+	<-ch
 }

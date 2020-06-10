@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-agent
+  namespace: mysql2
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: mysql-agent
+  namespace: mysql2
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mysql-agent
+subjects:
+  - kind: ServiceAccount
+    name: mysql-agent
+    namespace: mysql2
+---
+apiVersion: v1
+data:
+  password: cm9vdA==
+kind: Secret
+metadata:
+  labels:
+    v1alpha1.mysql.oracle.com/cluster: mysql
+  name: mysql-root-password
+  namespace: mysql2
+---
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Cluster
+metadata:
+  name: mysql
+  namespace: mysql2
+spec:
+  # 和mysql-server镜像版本的tag一直
+  version: 8.0.20
+  repository: xxxxxxxx:8080/paas/public/mysql
+  # 节点数量
+  members: 3
+  # 指定 mysql 密码，和之前创建的secret名称一致
+  rootPasswordSecret:
+    name: mysql-root-password
+  resources:
+    agent:
+      limits:
+        cpu: 500m
+        memory: 200Mi
+      requests:
+        cpu: 300m
+        memory: 100Mi
+    server:
+      limits:
+        cpu: 1000m
+        memory: 1000Mi
+      requests:
+        cpu: 500m
+        memory: 500Mi
+  volumeClaimTemplate:
+    metadata:
+      name: mysql-pv
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "cbs"
+      resources:
+        requests:
+          storage: 1Gi

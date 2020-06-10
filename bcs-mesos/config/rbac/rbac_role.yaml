@@ -307,6 +307,46 @@ rules:
 - apiGroups:
   - bkbcs.tencent.com
   resources:
+  - bcsdaemonsets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
+  - bcsdaemonsets/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - bkbcs.tencent.com
+  resources:
   - bcsendpoints
   verbs:
   - get

@@ -821,7 +821,8 @@ func (executor *BcsExecutor) customSettingContainer(taskInfo *container.BcsConta
 	//setting corefile volume
 	IDList := strings.Split(executor.driver.ExecutorID(), ".")
 	hostCore := filepath.Join(ContainerCoreFilePrefix, strings.Join(IDList[0:len(IDList)-1], "."), IDList[len(IDList)-1])
-	os.MkdirAll(hostCore, 0755)
+	os.MkdirAll(hostCore, 0777)
+	os.Chmod(hostCore, 0777)
 	coreVol := container.BcsVolume{
 		ReadOnly:      true,
 		HostPath:      hostCore,

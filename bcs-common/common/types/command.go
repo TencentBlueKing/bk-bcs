@@ -40,6 +40,10 @@ type BcsCommandInfo struct {
 	CreateTime int64             `json:"createTime"`
 	Spec       *BcsCommandSpec   `json:"spec"`
 	Status     *BcsCommandStatus `json:"status"`
+	// Populated by the system.
+	// Read-only.
+	// Value must be treated as opaque by clients and .
+	ResourceVersion string `json:"-"`
 }
 
 type TaskgroupCommandInfo struct {

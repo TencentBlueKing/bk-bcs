@@ -1,0 +1,252 @@
+---
+# Source: mysql-operator/templates/02-rbac.yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-operator
+  namespace: mysql-operator
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-agent
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: mysql-operator
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs:
+      - create
+
+  - apiGroups: [""]
+    resources:
+      - services
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs:
+      - create
+      - update
+      - patch
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+  - apiGroups: ["mysql.oracle.com"]
+    resources:
+      - mysqlbackups
+      - mysqlbackupschedules
+      - mysqlclusters
+      - mysqlclusters/finalizers
+      - mysqlrestores
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+  - apiGroups: ["mysql.oracle.com"]
+    resources: ["mysqlbackups"]
+    verbs: ["create"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: mysql-agent
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs:
+      - create
+      - update
+      - patch
+
+  - apiGroups: ["mysql.oracle.com"]
+    resources:
+      - mysqlbackups
+      - mysqlbackupschedules
+      - mysqlclusters
+      - mysqlclusters/finalizers
+      - mysqlrestores
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind:  ClusterRoleBinding
+metadata:
+  name: mysql-operator
+  namespace: mysql-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind:  ClusterRole
+  name: mysql-operator
+subjects:
+  - kind: ServiceAccount
+    name: mysql-operator
+    namespace: mysql-operator
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind:  ClusterRoleBinding
+metadata:
+  name: mysql-agent
+  namespace: mysql-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind:  ClusterRole
+  name: mysql-agent
+subjects:
+  - kind: ServiceAccount
+    name: mysql-agent
+    namespace: mysql-operator
+
+---
+# Source: mysql-operator/templates/01-resources.yaml
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: mysqlclusters.mysql.oracle.com
+  labels:
+    release: release-name
+    chart: mysql-operator-0.2.1
+spec:
+  group: mysql.oracle.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: Cluster
+    singular: mysqlcluster
+    plural: mysqlclusters
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: mysqlbackups.mysql.oracle.com
+  labels:
+    release: release-name
+    chart: mysql-operator-0.2.1
+spec:
+  group: mysql.oracle.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: Backup
+    singular: mysqlbackup
+    plural: mysqlbackups
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: mysqlrestores.mysql.oracle.com
+  labels:
+    release: release-name
+    chart: mysql-operator-0.2.1
+spec:
+  group: mysql.oracle.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: Restore
+    singular: mysqlrestore
+    plural: mysqlrestores
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: mysqlbackupschedules.mysql.oracle.com
+  labels:
+    release: release-name
+    chart: mysql-operator-0.2.1
+spec:
+  group: mysql.oracle.com
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: BackupSchedule
+    singular: mysqlbackupschedule
+    plural: mysqlbackupschedules
+---
+# Source: mysql-operator/templates/03-deployment.yaml
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: mysql-operator
+  namespace: mysql-operator
+  labels:
+    release: release-name
+    chart: mysql-operator-0.2.1
+    app: mysql-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-operator
+  template:
+    metadata:
+      labels:
+        app: mysql-operator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      serviceAccountName: mysql-operator
+      containers:
+        - name: mysql-operator-controller
+          imagePullPolicy: Always
+          image: xxxxxxxx:8080/paas/bcs/mysql-operator:0.3.0
+          ports:
+            - containerPort: 10254
+          args:
+            - --v=4
+            - --mysql-agent-image=iad.ocir.io/oracle/mysql-agent
+      imagePullSecrets:
+        - name: dockersecret
