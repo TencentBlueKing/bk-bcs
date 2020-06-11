@@ -80,6 +80,18 @@ func (nc *NetUtil) GetAvailableHostIP(ifnames []string) (string, string, error) 
 // SetHostNetwork disable rp_filter, enable ip_forwarding
 func (nc *NetUtil) SetHostNetwork(instanceEth string, routeTableIDs map[string]string) error {
 
+	// disable all rp_filter
+	allRpFilterValue, err := getRpFilter("all")
+	blog.Infof("get system all.rp_filter = %d", allRpFilterValue)
+	if err != nil {
+		return fmt.Errorf("get all.rp_filter failed, err %s", err.Error())
+	}
+	if allRpFilterValue != 0 {
+		if ok := setRpFilter("all", false); !ok {
+			blog.Warnf("set all.rp_filter to 0 failed")
+		}
+	}
+
 	// disable rp_filter to deal with asymmetric route problem
 	rpFilterValue, err := getRpFilter(instanceEth)
 	blog.Infof("get system %s.rp_filter = %d", instanceEth, rpFilterValue)
@@ -88,7 +100,7 @@ func (nc *NetUtil) SetHostNetwork(instanceEth string, routeTableIDs map[string]s
 	}
 	if rpFilterValue != 0 {
 		if ok := setRpFilter(instanceEth, false); !ok {
-			blog.Warnf("set rp_filter %s to %s failed", instanceEth, "0")
+			blog.Warnf("set rp_filter %s to 0 failed", instanceEth)
 		}
 	}
 
