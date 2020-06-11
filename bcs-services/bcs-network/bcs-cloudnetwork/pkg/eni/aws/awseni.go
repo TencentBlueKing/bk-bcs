@@ -81,7 +81,7 @@ func (c *Client) loadEnv() error {
 
 	c.AccessID = os.Getenv(ENV_NAME_AWS_ACCESS_KEY_ID)
 	accessSecret := os.Getenv(ENV_NAME_AWS_SECRET_ACCESS_KEY)
-	
+
 	decryptSecret, err := encrypt.DesDecryptFromBase([]byte(accessSecret))
 	if err != nil {
 		blog.Errorf("decrypt access secret key failed, err %s", err.Error())
@@ -221,6 +221,13 @@ func (c *Client) CreateENI(name string, ipNum int) (*cloud.ElasticNetworkInterfa
 			return nil, fmt.Errorf("createEni failed, err %s", err.Error())
 		}
 	}
+
+	// modify eni attribute for source dest check
+	err = c.modifyEniAttribute(aws.StringValue(eni.NetworkInterfaceId), nil, false)
+	if err != nil {
+		return nil, fmt.Errorf("modifyEniAttribute failed, err %s", err.Error())
+	}
+
 	subnet, err := c.querySubent(aws.StringValue(eni.SubnetId))
 	if err != nil {
 		return nil, fmt.Errorf("querySubnet failed, err %s", err.Error())
