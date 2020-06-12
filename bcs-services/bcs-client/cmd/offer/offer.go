@@ -14,7 +14,7 @@
 package offer
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"fmt"

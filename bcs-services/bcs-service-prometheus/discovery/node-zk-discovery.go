@@ -19,32 +19,28 @@ import (
 	"time"
 
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/pkg/client/informers"
-	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	commDiscovery "bk-bcs/bcs-common/pkg/discovery"
 	"bk-bcs/bcs-services/bcs-service-prometheus/types"
-
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
-type nodeDiscovery struct {
-	kubeconfig     string
+type nodeZkDiscovery struct {
+	zkAddr         []string
 	sdFilePath     string
 	cadvisorPort   int
 	nodeExportPort int
 	module         string
 
-	eventHandler EventHandleFunc
-	nodeLister   bkbcsv2.AgentLister
-	initSuccess  bool
+	eventHandler   EventHandleFunc
+	nodeController commDiscovery.NodeController
+	initSuccess    bool
+	promFilePrefix string
 }
 
-// new nodeDiscovery for discovery node cadvisor targets
-func NewNodeDiscovery(kubeconfig string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
-	disc := &nodeDiscovery{
-		kubeconfig:     kubeconfig,
-		sdFilePath:     path.Join(promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName)),
+// new nodeZkDiscovery for discovery node cadvisor targets
+func NewNodeZkDiscovery(zkAddr []string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
+	disc := &nodeZkDiscovery{
+		zkAddr:         zkAddr,
+		promFilePrefix: promFilePrefix,
 		cadvisorPort:   cadvisorPort,
 		nodeExportPort: nodeExportPort,
 		module:         module,
@@ -63,25 +59,12 @@ func NewNodeDiscovery(kubeconfig string, promFilePrefix, module string, cadvisor
 	return disc, nil
 }
 
-func (disc *nodeDiscovery) Start() error {
-	cfg, err := clientcmd.BuildConfigFromFlags("", disc.kubeconfig)
+func (disc *nodeZkDiscovery) Start() error {
+	var err error
+	disc.nodeController, err = commDiscovery.NewNodeController(disc.zkAddr, disc)
 	if err != nil {
-		blog.Errorf("build kubeconfig %s error %s", disc.kubeconfig, err.Error())
 		return err
 	}
-	stopCh := make(chan struct{})
-	//internal clientset for informer BcsLogConfig Crd
-	internalClientset, err := internalclientset.NewForConfig(cfg)
-	if err != nil {
-		blog.Errorf("build internal clientset by kubeconfig %s error %s", disc.kubeconfig, err.Error())
-		return err
-	}
-	internalFactory := informers.NewSharedInformerFactory(internalClientset, 0)
-	disc.nodeLister = internalFactory.Bkbcs().V2().Agents().Lister()
-	internalFactory.Start(stopCh)
-	// Wait for all caches to sync.
-	internalFactory.WaitForCacheSync(stopCh)
-	blog.Infof("build internalClientset for config %s success", disc.kubeconfig)
 
 	go disc.syncTickerPromSdConfig()
 	disc.initSuccess = true
@@ -89,19 +72,15 @@ func (disc *nodeDiscovery) Start() error {
 	return nil
 }
 
-func (disc *nodeDiscovery) GetDiscoveryKey() string {
-	return disc.module
-}
-
-func (disc *nodeDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error) {
-	nodes, err := disc.nodeLister.List(labels.Everything())
+func (disc *nodeZkDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
+	nodes, err := disc.nodeController.List(commDiscovery.EverythingSelector())
 	if err != nil {
 		return nil, err
 	}
 
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	for _, node := range nodes {
-		ip := node.Spec.GetAgentIP()
+		ip := node.GetAgentIP()
 		if ip == "" {
 			blog.Errorf("discovery %s node %s not found InnerIP", disc.module, node.GetName())
 			continue
@@ -133,15 +112,15 @@ func (disc *nodeDiscovery) GetPrometheusSdConfig() ([]*types.PrometheusSdConfig,
 	return promConfigs, nil
 }
 
-func (disc *nodeDiscovery) GetPromSdConfigFile() string {
-	return disc.sdFilePath
+func (disc *nodeZkDiscovery) GetPromSdConfigFile(module string) string {
+	return path.Join(disc.promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName))
 }
 
-func (disc *nodeDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
+func (disc *nodeZkDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	disc.eventHandler = handleFunc
 }
 
-func (disc *nodeDiscovery) OnAdd(obj interface{}) {
+func (disc *nodeZkDiscovery) OnAdd(obj interface{}) {
 	if !disc.initSuccess {
 		return
 	}
@@ -150,13 +129,13 @@ func (disc *nodeDiscovery) OnAdd(obj interface{}) {
 }
 
 // if on update event, then don't need to update sd config
-func (disc *nodeDiscovery) OnUpdate(old, cur interface{}) {
+func (disc *nodeZkDiscovery) OnUpdate(old, cur interface{}) {
 	if !disc.initSuccess {
 		return
 	}
 }
 
-func (disc *nodeDiscovery) OnDelete(obj interface{}) {
+func (disc *nodeZkDiscovery) OnDelete(obj interface{}) {
 	if !disc.initSuccess {
 		return
 	}
@@ -165,8 +144,9 @@ func (disc *nodeDiscovery) OnDelete(obj interface{}) {
 	disc.eventHandler(disc.module)
 }
 
-func (disc *nodeDiscovery) syncTickerPromSdConfig() {
+func (disc *nodeZkDiscovery) syncTickerPromSdConfig() {
 	ticker := time.NewTicker(time.Minute * 5)
+	defer ticker.Stop()
 
 	select {
 	case <-ticker.C:

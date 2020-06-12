@@ -15,7 +15,7 @@ package types
 
 import (
 	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 )
 
 //Message discribe all msg from bcs scheduler to bcs executor

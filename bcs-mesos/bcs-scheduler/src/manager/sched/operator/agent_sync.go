@@ -20,7 +20,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
+	master "bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/golang/protobuf/proto"
 	"net/http"

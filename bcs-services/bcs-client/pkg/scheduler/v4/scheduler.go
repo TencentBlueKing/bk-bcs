@@ -18,7 +18,7 @@ import (
 	"net/url"
 
 	commonTypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"bk-bcs/bcs-services/bcs-client/pkg/types"
 	"bk-bcs/bcs-services/bcs-client/pkg/utils"
 

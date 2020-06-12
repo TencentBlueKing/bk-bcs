@@ -19,8 +19,8 @@ import (
 	"strings"
 
 	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 )
 
 //executor or task default resources limits
