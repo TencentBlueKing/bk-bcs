@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gamestatefulset-operator
+  namespace: bcs-system
+  labels:
+    app: operator
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: operator
+  template:
+    metadata:
+      labels:
+        app: operator
+    spec:
+      serviceAccountName: gamestatefulset-operator
+      containers:
+      - name: gamestatefulset-operator
+        image: bcs-gamestatefulset-operator:latest
+        command: ["./bcs-gamestatefulset-operator"]
+        args: ["--min-resync-period=60s","--v=5"]
+        ports:
+        - containerPort: 80
