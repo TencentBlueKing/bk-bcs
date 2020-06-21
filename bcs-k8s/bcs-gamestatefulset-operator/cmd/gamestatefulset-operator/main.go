@@ -22,7 +22,7 @@ import (
 	"time"
 
 	clientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	statefulsetplus "bcs-gamestatefulset-operator/pkg/controllers"
+	gamestatefulset "bcs-gamestatefulset-operator/pkg/controllers"
 	informers "bcs-gamestatefulset-operator/pkg/informers"
 
 	"github.com/golang/glog"
@@ -118,8 +118,8 @@ func init() {
 	flag.DurationVar(&MinResyncPeriod.Duration, "min-resync-period", MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
 	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
 	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "tkex-system", "The resourcelock namespace")
-	flag.StringVar(&LockName, "leader-elect-name", "statefulsetplus", "The resourcelock name")
-	flag.StringVar(&LockComponentName, "leader-elect-componentname", "statefulsetplus", "The component name for event resource")
+	flag.StringVar(&LockName, "leader-elect-name", "gamestatefulset", "The resourcelock name")
+	flag.StringVar(&LockComponentName, "leader-elect-componentname", "gamestatefulset", "The component name for event resource")
 	flag.DurationVar(&LeaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
 	flag.DurationVar(&RenewDeadline, "leader-elect-renew-deadline", 10*time.Second, "The leader-elect RenewDeadline")
 	flag.DurationVar(&RetryPeriod, "leader-elect-retry-period", 2*time.Second, "The leader-elect RetryPeriod")
@@ -154,15 +154,15 @@ func run() {
 	tkexClient, err := clientset.NewForConfig(cfg)
 
 	if err != nil {
-		glog.Fatalf("Error building statefulsetplus clientset: %s", err.Error())
+		glog.Fatalf("Error building gamestatefulset clientset: %s", err.Error())
 	}
 	fmt.Println("Operator builds tkex client success...")
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(MinResyncPeriod)())
-	statefulsetplusInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(MinResyncPeriod)())
+	gamestatefulsetInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(MinResyncPeriod)())
 
-	stsplusController := statefulsetplus.NewStatefulSetPlusController(
+	stsplusController := gamestatefulset.NewStatefulSetPlusController(
 		kubeInformerFactory.Core().V1().Pods(),
-		statefulsetplusInformerFactory.Tkex().V1alpha1().StatefulSetPluses(),
+		gamestatefulsetInformerFactory.Tkex().V1alpha1().StatefulSetPluses(),
 		kubeInformerFactory.Core().V1().PersistentVolumeClaims(),
 		kubeInformerFactory.Apps().V1().ControllerRevisions(),
 		kubeClient,
@@ -170,7 +170,7 @@ func run() {
 
 	go kubeInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting kube Informer Factory success...")
-	go statefulsetplusInformerFactory.Start(stopCh)
+	go gamestatefulsetInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting tkex Informer factory success...")
 
 	if err = stsplusController.Run(1, stopCh); err != nil {

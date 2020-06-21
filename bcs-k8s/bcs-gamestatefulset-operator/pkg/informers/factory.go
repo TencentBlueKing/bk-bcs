@@ -18,7 +18,7 @@ package informers
 import (
 	internalclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
 	internalinterfaces "bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
-	v1alpha1 "bcs-gamestatefulset-operator/pkg/informers/v1alpha1"
+	tkex "bcs-gamestatefulset-operator/pkg/informers/tkex"
 	reflect "reflect"
 	sync "sync"
 	time "time"
@@ -169,9 +169,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Tkex() v1alpha1.Interface
+	Tkex() tkex.Interface
 }
 
-func (f *sharedInformerFactory) Tkex() v1alpha1.Interface {
-	return v1alpha1.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Tkex() tkex.Interface {
+	return tkex.New(f, f.namespace, f.tweakListOptions)
 }

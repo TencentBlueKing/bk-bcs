@@ -1,4 +1,4 @@
-module bk-bcs/bcs-k8s/bcs-gamestatefulset-operator
+module bcs-gamestatefulset-operator
 
 go 1.13
 
