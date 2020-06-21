@@ -25,7 +25,6 @@ import (
 	gamestatefulset "bcs-gamestatefulset-operator/pkg/controllers"
 	informers "bcs-gamestatefulset-operator/pkg/informers"
 
-	"github.com/golang/glog"
 	api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/server"
@@ -37,6 +36,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 )
 
 const (
@@ -143,18 +143,18 @@ func run() {
 	fmt.Printf("Rest Client Config: %v\n", cfg)
 
 	if err != nil {
-		glog.Fatalf("Error building kubeConfig: %s", err.Error())
+		klog.Fatalf("Error building kubeConfig: %s", err.Error())
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		glog.Fatalf("Error building kubernetes clientset: %s", err.Error())
+		klog.Fatalf("Error building kubernetes clientset: %s", err.Error())
 	}
 	fmt.Println("Operator builds kube client success...")
 	tkexClient, err := clientset.NewForConfig(cfg)
 
 	if err != nil {
-		glog.Fatalf("Error building gamestatefulset clientset: %s", err.Error())
+		klog.Fatalf("Error building gamestatefulset clientset: %s", err.Error())
 	}
 	fmt.Println("Operator builds tkex client success...")
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(MinResyncPeriod)())
@@ -174,7 +174,7 @@ func run() {
 	fmt.Println("Operator starting tkex Informer factory success...")
 
 	if err = stsplusController.Run(1, stopCh); err != nil {
-		glog.Fatalf("Error running controller: %s", err.Error())
+		klog.Fatalf("Error running controller: %s", err.Error())
 	}
 }
 

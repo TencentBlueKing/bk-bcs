@@ -1,11 +1,11 @@
-# Default values for statefulsetplus-operator.
+# Default values for gamestatefulset-operator.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: statefulsetplus-operator
+  repository: gamestatefulset-operator
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -19,7 +19,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: statefulsetplus-operator
+  name: gamestatefulset-operator
 
 resources: 
   # We usually recommend not to specify default resources and to leave this as a conscious

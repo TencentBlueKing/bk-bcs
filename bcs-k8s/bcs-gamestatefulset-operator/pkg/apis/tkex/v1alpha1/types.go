@@ -49,7 +49,7 @@ type GameStatefulSet struct {
 	Status GameStatefulSetStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-// PodManagementPolicyType defines the policy for creating pods under a statefulsetplus.
+// PodManagementPolicyType defines the policy for creating pods under a gamestatefulset.
 type PodManagementPolicyType string
 
 const (

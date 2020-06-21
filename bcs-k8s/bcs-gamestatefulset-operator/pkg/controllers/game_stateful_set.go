@@ -11,7 +11,7 @@
  *
  */
 
-package statefulsetplus
+package gamestatefulset
 
 import (
 	"fmt"
@@ -21,11 +21,10 @@ import (
 	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	tkexclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
 	tkexscheme "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
-	stsplusinformers "bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
-	stspluslisters "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gamestateinformers "bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
+	gamestatelister "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 	"bcs-gamestatefulset-operator/pkg/util/constants"
 
-	"github.com/golang/glog"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -42,6 +41,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/history"
 )
@@ -72,7 +72,7 @@ type GameStatefulSetController struct {
 	// podListerSynced returns true if the pod shared informer has synced at least once
 	podListerSynced cache.InformerSynced
 	// setLister is able to list/get stateful sets from a shared informer's store
-	setLister stspluslisters.GameStatefulSetLister
+	setLister gamestatelister.GameStatefulSetLister
 	// setListerSynced returns true if the stateful set shared informer has synced at least once
 	setListerSynced cache.InformerSynced
 	// pvcListerSynced returns true if the pvc shared informer has synced at least once
@@ -86,7 +86,7 @@ type GameStatefulSetController struct {
 // NewGameStatefulSetController creates a new statefulset controller.
 func NewGameStatefulSetController(
 	podInformer coreinformers.PodInformer,
-	setInformer stsplusinformers.GameStatefulSetInformer,
+	setInformer gamestateinformers.GameStatefulSetInformer,
 	pvcInformer coreinformers.PersistentVolumeClaimInformer,
 	revInformer appsinformers.ControllerRevisionInformer,
 	kubeClient clientset.Interface,
@@ -94,9 +94,9 @@ func NewGameStatefulSetController(
 ) *GameStatefulSetController {
 
 	tkexscheme.AddToScheme(scheme.Scheme)
-	glog.V(3).Info("GameStatefulSet Controller is creating event broadcaster")
+	klog.V(3).Info("GameStatefulSet Controller is creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(glog.Infof)
+	eventBroadcaster.StartLogging(klog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: constants.OperatorName})
 
@@ -137,7 +137,7 @@ func NewGameStatefulSetController(
 				oldPS := old.(*stsplus.GameStatefulSet)
 				curPS := cur.(*stsplus.GameStatefulSet)
 				if oldPS.Status.Replicas != curPS.Status.Replicas {
-					glog.Infof("Observed updated replica count for GameStatefulSet: %v, %d->%d", curPS.Name, oldPS.Status.Replicas, curPS.Status.Replicas)
+					klog.Infof("Observed updated replica count for GameStatefulSet: %v, %d->%d", curPS.Name, oldPS.Status.Replicas, curPS.Status.Replicas)
 				}
 				ssc.enqueueGameStatefulSet(cur)
 			},
@@ -157,8 +157,8 @@ func (ssc *GameStatefulSetController) Run(workers int, stopCh <-chan struct{}) e
 	defer utilruntime.HandleCrash()
 	defer ssc.queue.ShutDown()
 
-	glog.Infof("Starting stateful set controller")
-	defer glog.Infof("Shutting down statefulset controller")
+	klog.Infof("Starting stateful set controller")
+	defer klog.Infof("Shutting down statefulset controller")
 
 	if !controller.WaitForCacheSync(constants.OperatorName, stopCh, ssc.podListerSynced, ssc.setListerSynced, ssc.pvcListerSynced, ssc.revListerSynced) {
 		return fmt.Errorf("failed to wait for caches to sync")
@@ -168,9 +168,9 @@ func (ssc *GameStatefulSetController) Run(workers int, stopCh <-chan struct{}) e
 		go wait.Until(ssc.worker, time.Second, stopCh)
 	}
 
-	glog.Info("Started workers")
+	klog.Info("Started workers")
 	<-stopCh
-	glog.Info("Shutting down workers")
+	klog.Info("Shutting down workers")
 
 	return nil
 }
@@ -191,10 +191,10 @@ func (ssc *GameStatefulSetController) addPod(obj interface{}) {
 	if controllerRef := metav1.GetControllerOf(pod); controllerRef != nil {
 		set := ssc.resolveControllerRef(pod.Namespace, controllerRef)
 		if set == nil {
-			glog.V(4).Infof("Pod %s/%s not controlled by GameStatefulSet-Operator", pod.Namespace, pod.Name)
+			klog.V(4).Infof("Pod %s/%s not controlled by GameStatefulSet-Operator", pod.Namespace, pod.Name)
 			return
 		}
-		glog.Infof("Pod %s/%s created, labels: %+v", pod.Namespace, pod.Name, pod.Labels)
+		klog.Infof("Pod %s/%s created, labels: %+v", pod.Namespace, pod.Name, pod.Labels)
 		ssc.enqueueGameStatefulSet(set)
 		return
 	}
@@ -203,10 +203,10 @@ func (ssc *GameStatefulSetController) addPod(obj interface{}) {
 	// them to see if anyone wants to adopt it.
 	sets := ssc.getGameStatefulSetsForPod(pod)
 	if len(sets) == 0 {
-		glog.Infof("Pod %s/%s is orphan, but not controlled by GameStatefulSet-Operator", pod.Namespace, pod.Name)
+		klog.Infof("Pod %s/%s is orphan, but not controlled by GameStatefulSet-Operator", pod.Namespace, pod.Name)
 		return
 	}
-	glog.Infof("Orphan Pod %s/%s created, labels: %+v", pod.Namespace, pod.Name, pod.Labels)
+	klog.Infof("Orphan Pod %s/%s created, labels: %+v", pod.Namespace, pod.Name, pod.Labels)
 	for _, set := range sets {
 		ssc.enqueueGameStatefulSet(set)
 	}
@@ -219,7 +219,7 @@ func (ssc *GameStatefulSetController) updatePod(old, cur interface{}) {
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
 		// Periodic resync will send update events for all known pods.
 		// Two different versions of the same pod will always have different RVs.
-		glog.V(4).Infof("Pod %s/%s update event trigger, but nohting changed, ResourceVersion: %s", curPod.Namespace, curPod.Name, curPod.ResourceVersion)
+		klog.V(4).Infof("Pod %s/%s update event trigger, but nohting changed, ResourceVersion: %s", curPod.Namespace, curPod.Name, curPod.ResourceVersion)
 		return
 	}
 
@@ -241,7 +241,7 @@ func (ssc *GameStatefulSetController) updatePod(old, cur interface{}) {
 		if set == nil {
 			return
 		}
-		glog.V(4).Infof("Pod %s updated, objectMeta %+v -> %+v.", curPod.Name, oldPod.ObjectMeta, curPod.ObjectMeta)
+		klog.V(4).Infof("Pod %s updated, objectMeta %+v -> %+v.", curPod.Name, oldPod.ObjectMeta, curPod.ObjectMeta)
 		ssc.enqueueGameStatefulSet(set)
 		return
 	}
@@ -251,10 +251,10 @@ func (ssc *GameStatefulSetController) updatePod(old, cur interface{}) {
 	if labelChanged || controllerRefChanged {
 		sets := ssc.getGameStatefulSetsForPod(curPod)
 		if len(sets) == 0 {
-			glog.V(4).Infof("Pod %s/%s is orphan in updated, but not controlled by GameStatefulSet-Operator", curPod.Namespace, curPod.Name)
+			klog.V(4).Infof("Pod %s/%s is orphan in updated, but not controlled by GameStatefulSet-Operator", curPod.Namespace, curPod.Name)
 			return
 		}
-		glog.Infof("Orphan Pod %s/%s updated, objectMeta %+v -> %+v.", curPod.Namespace, curPod.Name, oldPod.ObjectMeta, curPod.ObjectMeta)
+		klog.Infof("Orphan Pod %s/%s updated, objectMeta %+v -> %+v.", curPod.Namespace, curPod.Name, oldPod.ObjectMeta, curPod.ObjectMeta)
 		for _, set := range sets {
 			ssc.enqueueGameStatefulSet(set)
 		}
@@ -291,7 +291,7 @@ func (ssc *GameStatefulSetController) deletePod(obj interface{}) {
 	if set == nil {
 		return
 	}
-	glog.V(3).Infof("Pod %s/%s deleted through %v.", pod.Namespace, pod.Name, utilruntime.GetCaller())
+	klog.V(3).Infof("Pod %s/%s deleted through %v.", pod.Namespace, pod.Name, utilruntime.GetCaller())
 	ssc.enqueueGameStatefulSet(set)
 }
 
@@ -403,7 +403,7 @@ func (ssc *GameStatefulSetController) enqueueGameStatefulSet(obj interface{}) {
 		utilruntime.HandleError(fmt.Errorf("Cound't get key for object %+v: %v", obj, err))
 		return
 	}
-	glog.V(4).Infof("enqueueGameStatefulSet enqueue item: %s", key)
+	klog.V(4).Infof("enqueueGameStatefulSet enqueue item: %s", key)
 	ssc.queue.Add(key)
 }
 
@@ -415,7 +415,7 @@ func (ssc *GameStatefulSetController) processNextWorkItem() bool {
 		return false
 	}
 	defer ssc.queue.Done(key)
-	glog.Infof("processNextWorkItem get item: %#v", key)
+	klog.Infof("processNextWorkItem get item: %#v", key)
 	if err := ssc.sync(key.(string)); err != nil {
 		utilruntime.HandleError(fmt.Errorf("Error syncing GameStatefulSet %v, requeuing: %v", key.(string), err))
 		ssc.queue.AddRateLimited(key)
@@ -435,7 +435,7 @@ func (ssc *GameStatefulSetController) worker() {
 func (ssc *GameStatefulSetController) sync(key string) error {
 	startTime := time.Now()
 	defer func() {
-		glog.V(3).Infof("Finished syncing statefulsetplus %q (%v)", key, time.Since(startTime))
+		klog.V(3).Infof("Finished syncing gamestatefulset %q (%v)", key, time.Since(startTime))
 	}()
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
@@ -444,7 +444,7 @@ func (ssc *GameStatefulSetController) sync(key string) error {
 	}
 	set, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
 	if errors.IsNotFound(err) {
-		glog.Infof("GameStatefulSet %s has been deleted", key)
+		klog.Infof("GameStatefulSet %s has been deleted", key)
 		return nil
 	}
 	if err != nil {
@@ -473,11 +473,11 @@ func (ssc *GameStatefulSetController) sync(key string) error {
 
 // syncGameStatefulSet syncs a tuple of (statefulset, []*v1.Pod).
 func (ssc *GameStatefulSetController) syncGameStatefulSet(set *stsplus.GameStatefulSet, pods []*v1.Pod) error {
-	//glog.Infof("Syncing GameStatefulSet %s/%s with %d pods", set.Namespace, set.Name, len(pods))
+	//klog.Infof("Syncing GameStatefulSet %s/%s with %d pods", set.Namespace, set.Name, len(pods))
 	// TODO: investigate where we mutate the set during the update as it is not obvious.
 	if err := ssc.control.UpdateGameStatefulSet(set.DeepCopy(), pods); err != nil {
 		return err
 	}
-	glog.Infof("Successfully synced GameStatefulSet %s/%s successful, pod length: %d", set.Namespace, set.Name, len(pods))
+	klog.Infof("Successfully synced GameStatefulSet %s/%s successful, pod length: %d", set.Namespace, set.Name, len(pods))
 	return nil
 }

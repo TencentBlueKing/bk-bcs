@@ -11,7 +11,7 @@
  *
  */
 
-package statefulsetplus
+package gamestatefulset
 
 import (
 	"math"
@@ -21,11 +21,11 @@ import (
 	"bcs-gamestatefulset-operator/pkg/util"
 	"bcs-gamestatefulset-operator/pkg/util/constants"
 
-	"github.com/golang/glog"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller/history"
 )
 
@@ -77,7 +77,7 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *stsplus.Gam
 	// list all revisions and sort them
 	revisions, err := ssc.ListRevisions(set)
 	if err != nil {
-		glog.Errorf("List GameStatefulSet %s/%s relative ControllerRevision err: %#v", set.Namespace, set.Name, err)
+		klog.Errorf("List GameStatefulSet %s/%s relative ControllerRevision err: %#v", set.Namespace, set.Name, err)
 		return err
 	}
 	history.SortControllerRevisions(revisions)
@@ -106,7 +106,7 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *stsplus.Gam
 		return err
 	}
 
-	glog.V(3).Infof("GameStatefulSet %s/%s pod status replicas=%d ready=%d current=%d updated=%d",
+	klog.V(3).Infof("GameStatefulSet %s/%s pod status replicas=%d ready=%d current=%d updated=%d",
 		set.Namespace,
 		set.Name,
 		status.Replicas,
@@ -114,7 +114,7 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *stsplus.Gam
 		status.CurrentReplicas,
 		status.UpdatedReplicas)
 
-	glog.V(3).Infof("GameStatefulSet %s/%s revisions current=%s update=%s",
+	klog.V(3).Infof("GameStatefulSet %s/%s revisions current=%s update=%s",
 		set.Namespace,
 		set.Name,
 		status.CurrentRevision,
@@ -202,7 +202,7 @@ func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
 	revisionCount := len(revisions)
 	history.SortControllerRevisions(revisions)
 
-	glog.V(4).Infof("getGameStatefulSetRevisions for %s/%s, revision number: %d", set.GetNamespace(), set.GetName(), revisionCount)
+	klog.V(4).Infof("getGameStatefulSetRevisions for %s/%s, revision number: %d", set.GetNamespace(), set.GetName(), revisionCount)
 
 	// Use a local copy of set.Status.CollisionCount to avoid modifying set.Status directly.
 	// This copy is returned so the value gets carried over to set.Status in updateGameStatefulSet.
@@ -214,7 +214,7 @@ func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
 	// create a new revision from the current set
 	updateRevision, err := newRevision(set, nextRevision(revisions), &collisionCount)
 	if err != nil {
-		glog.Errorf("create new revision for %s/%s err: %#v, collision count: %d", set.GetNamespace(), set.GetName(), err, collisionCount)
+		klog.Errorf("create new revision for %s/%s err: %#v, collision count: %d", set.GetNamespace(), set.GetName(), err, collisionCount)
 		return nil, nil, collisionCount, err
 	}
 
@@ -224,7 +224,7 @@ func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
 	if equalCount > 0 && history.EqualRevision(revisions[revisionCount-1], equalRevisions[equalCount-1]) {
 		// if the equivalent revision is immediately prior the update revision has not changed
 		updateRevision = revisions[revisionCount-1]
-		glog.V(4).Infof("GameStatefulSet %s/%s revision is same with prior revision, nothing change.", set.GetNamespace(), set.GetName())
+		klog.V(4).Infof("GameStatefulSet %s/%s revision is same with prior revision, nothing change.", set.GetNamespace(), set.GetName())
 	} else if equalCount > 0 {
 		// if the equivalent revision is not immediately prior we will roll back by incrementing the
 		// Revision of the equivalent revision
@@ -232,18 +232,18 @@ func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
 			equalRevisions[equalCount-1],
 			updateRevision.Revision)
 		if err != nil {
-			glog.Errorf("update equal controllerRevision %s/%s to %d err: %#v", set.GetNamespace(), set.GetName(), updateRevision.Revision, err)
+			klog.Errorf("update equal controllerRevision %s/%s to %d err: %#v", set.GetNamespace(), set.GetName(), updateRevision.Revision, err)
 			return nil, nil, collisionCount, err
 		}
-		glog.V(4).Infof("update previous controllerRevision %s/%s from %d to %d successfully", set.GetNamespace(), set.GetName(), equalRevisions[equalCount-1].Revision, updateRevision.Revision)
+		klog.V(4).Infof("update previous controllerRevision %s/%s from %d to %d successfully", set.GetNamespace(), set.GetName(), equalRevisions[equalCount-1].Revision, updateRevision.Revision)
 	} else {
 		//if there is no equivalent revision we create a new one
 		updateRevision, err = ssc.controllerHistory.CreateControllerRevision(set, updateRevision, &collisionCount)
 		if err != nil {
-			glog.Errorf("create new controllerRevision for %s/%s err: %#v", set.GetNamespace(), set.GetName(), err)
+			klog.Errorf("create new controllerRevision for %s/%s err: %#v", set.GetNamespace(), set.GetName(), err)
 			return nil, nil, collisionCount, err
 		}
-		glog.V(3).Infof("create new controllerRevision %d/%s for %s/%s successfully", updateRevision.Revision, updateRevision.Name, set.GetNamespace(), set.GetName())
+		klog.V(3).Infof("create new controllerRevision %d/%s for %s/%s successfully", updateRevision.Revision, updateRevision.Name, set.GetNamespace(), set.GetName())
 	}
 
 	// attempt to find the revision that corresponds to the current revision
@@ -371,7 +371,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	}
 
 	if unhealthy > 0 {
-		glog.Infof("GameStatefulSet %s/%s has %d unhealthy Pods starting with %s",
+		klog.Infof("GameStatefulSet %s/%s has %d unhealthy Pods starting with %s",
 			set.Namespace,
 			set.Name,
 			unhealthy,
@@ -395,9 +395,9 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				set.Namespace,
 				set.Name,
 				replicas[i].Name)
-			glog.Infof("GameStatefulSet %s/%s is deleting failed Pod %s and then recreating", set.Namespace, set.Name, replicas[i].Name)
+			klog.Infof("GameStatefulSet %s/%s is deleting failed Pod %s and then recreating", set.Namespace, set.Name, replicas[i].Name)
 			if err := ssc.podControl.DeleteGameStatefulSetPod(set, replicas[i]); err != nil {
-				glog.Errorf("Operator delete Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
+				klog.Errorf("Operator delete Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
 				return &status, err
 			}
 			if getPodRevision(replicas[i]) == currentRevision.Name {
@@ -422,9 +422,9 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				set.Namespace,
 				set.Name,
 				replicas[i].Name)
-			glog.Infof("GameStatefulSet %s/%s forcedeletes NodeLost Pod %s and then recreating", set.Namespace, set.Name, replicas[i].Name)
+			klog.Infof("GameStatefulSet %s/%s forcedeletes NodeLost Pod %s and then recreating", set.Namespace, set.Name, replicas[i].Name)
 			if err := ssc.podControl.ForceDeleteGameStatefulSetPod(set, replicas[i]); err != nil {
-				glog.Errorf("Operator force delete Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
+				klog.Errorf("Operator force delete Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
 				return &status, err
 			}
 			if getPodRevision(replicas[i]) == currentRevision.Name {
@@ -445,10 +445,10 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If we find a Pod that has not been created we create the Pod
 		if !isCreated(replicas[i]) {
 			if err := ssc.podControl.CreateGameStatefulSetPod(set, replicas[i]); err != nil {
-				glog.Errorf("Operator create new Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
+				klog.Errorf("Operator create new Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
 				return &status, err
 			}
-			glog.Infof("GameStatefulSet %s/%s is creating Pod %s", set.Namespace, set.Name, replicas[i].Name)
+			klog.Infof("GameStatefulSet %s/%s is creating Pod %s", set.Namespace, set.Name, replicas[i].Name)
 			status.Replicas++
 			if getPodRevision(replicas[i]) == currentRevision.Name {
 				status.CurrentReplicas++
@@ -467,7 +467,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If we find a Pod that is currently terminating, we must wait until graceful deletion
 		// completes before we continue to make progress.
 		if isTerminating(replicas[i]) && monotonic {
-			glog.V(3).Infof(
+			klog.V(3).Infof(
 				"GameStatefulSet %s/%s is waiting for Pod %s to Terminate",
 				set.Namespace,
 				set.Name,
@@ -478,7 +478,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If we find a Pod that is current terminating and PodManagmentPolicy is Parallel,
 		// we should ignore it and continue check next replica.
 		if isTerminating(replicas[i]) && !monotonic {
-			glog.V(3).Info(
+			klog.V(3).Info(
 				"GameStatefulSet Pod %s/%s/%s is terminating, and the PodManagmentPolicy is Parallel, "+
 					"we will not wait until graceful deletition completes before we continue to make progress.",
 				set.Namespace,
@@ -495,7 +495,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// so skipping checking for this situation
 		if !isInplaceUpdate(set) {
 			if !isRunningAndReady(replicas[i]) && monotonic {
-				glog.V(3).Infof(
+				klog.V(3).Infof(
 					"GameStatefulSet %s/%s is waiting for Pod %s to be Running and Ready",
 					set.Namespace,
 					set.Name,
@@ -510,7 +510,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// Make a deep copy so we don't mutate the shared cache
 		replica := replicas[i].DeepCopy()
 		if err := ssc.podControl.UpdateGameStatefulSetPod(updateSet, replica); err != nil {
-			glog.Errorf("Update GameStatefulSet %s/%s in normal replicas iteration err, %s", updateSet.Namespace, updateSet.Name, err.Error())
+			klog.Errorf("Update GameStatefulSet %s/%s in normal replicas iteration err, %s", updateSet.Namespace, updateSet.Name, err.Error())
 			return &status, err
 		}
 	}
@@ -523,7 +523,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	for target := len(condemned) - 1; target >= 0; target-- {
 		// wait for terminating pods to expire
 		if isTerminating(condemned[target]) {
-			glog.V(3).Infof(
+			klog.V(3).Infof(
 				"GameStatefulSet %s/%s is waiting for Pod %s to Terminate prior to scale down",
 				set.Namespace,
 				set.Name,
@@ -536,20 +536,20 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		}
 		// if we are in monotonic mode and the condemned target is not the first unhealthy Pod block
 		if !isRunningAndReady(condemned[target]) && monotonic && condemned[target] != firstUnhealthyPod {
-			glog.V(3).Infof(
+			klog.V(3).Infof(
 				"GameStatefulSet %s/%s is waiting for Pod %s to be Running and Ready prior to scale down",
 				set.Namespace,
 				set.Name,
 				firstUnhealthyPod.Name)
 			return &status, nil
 		}
-		glog.Infof("GameStatefulSet %s/%s is terminating Pod %s for scale down",
+		klog.Infof("GameStatefulSet %s/%s is terminating Pod %s for scale down",
 			set.Namespace,
 			set.Name,
 			condemned[target].Name)
 
 		if err := ssc.podControl.DeleteGameStatefulSetPod(set, condemned[target]); err != nil {
-			glog.Errorf("GameStatefulSet %s/%s clean condemoned Pod %d err: %s", set.Namespace, set.Name, target, err.Error())
+			klog.Errorf("GameStatefulSet %s/%s clean condemoned Pod %d err: %s", set.Namespace, set.Name, target, err.Error())
 			return &status, err
 		}
 		if getPodRevision(condemned[target]) == currentRevision.Name {
@@ -578,7 +578,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name {
-				glog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
+				klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
 					set.Name, replicas[target].Name)
 				replica := updateVersionedGameStatefulSetPod(
 					set,
@@ -590,7 +590,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			}
 			//TODO(DeveloperJim): add parallel featrue for fast rolling Update
 			if !isHealthy(replicas[target]) {
-				glog.V(3).Infof(
+				klog.V(3).Infof(
 					"GameStatefulSet %s/%s is waiting for Pod %s healthy to InplaceUpdate",
 					set.Namespace,
 					set.Name,
@@ -604,7 +604,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 			// delete the Pod if it is not already terminating and does not match the update revision.
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				glog.Infof("GameStatefulSet %s/%s terminating Pod %s for RollingUpdate",
+				klog.Infof("GameStatefulSet %s/%s terminating Pod %s for RollingUpdate",
 					set.Namespace,
 					set.Name,
 					replicas[target].Name)
@@ -615,7 +615,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 			// wait for unhealthy Pods on update
 			if !isHealthy(replicas[target]) {
-				glog.V(3).Infof(
+				klog.V(3).Infof(
 					"GameStatefulSet %s/%s is waiting for Pod %s to RollingUpdate",
 					set.Namespace,
 					set.Name,
@@ -638,7 +638,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSetStatus(
 	completeRollingUpdate(set, status)
 
 	if !inconsistentStatus(set, status) {
-		glog.V(4).Infof("GameStatefulSet %s/%s consistent status, ObservedGeneration %d|%d, Replica %d|%d, CurrentReplicas %d|%d, ReadyReplicas %d|%d, UpdatedReplicas %d|%d, CurrentRevision %s|%s, UpdateRevision %s|%s",
+		klog.V(4).Infof("GameStatefulSet %s/%s consistent status, ObservedGeneration %d|%d, Replica %d|%d, CurrentReplicas %d|%d, ReadyReplicas %d|%d, UpdatedReplicas %d|%d, CurrentRevision %s|%s, UpdateRevision %s|%s",
 			set.Namespace, set.Name,
 			set.Status.ObservedGeneration, status.ObservedGeneration,
 			set.Status.Replicas, status.Replicas,

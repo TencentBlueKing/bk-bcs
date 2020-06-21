@@ -11,7 +11,7 @@
  *
  */
 
-package statefulsetplus
+package gamestatefulset
 
 import (
 	"fmt"
@@ -20,9 +20,9 @@ import (
 	tkexclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
 	stspluslisters "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 
-	"github.com/golang/glog"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/klog"
 )
 
 // GameStatefulSetStatusUpdaterInterface is an interface used to update the GameStatefulSetStatus associated with a GameStatefulSet.
@@ -50,7 +50,7 @@ func (ssu *realGameStatefulSetStatusUpdater) UpdateGameStatefulSetStatus(
 	set *stsplus.GameStatefulSet,
 	status *stsplus.GameStatefulSetStatus) error {
 	// Debug Info
-	glog.V(3).Infof("Update %s/%s GameStatefulSet Status: %+v", set.Namespace, set.Name, status)
+	klog.V(3).Infof("Update %s/%s GameStatefulSet Status: %+v", set.Namespace, set.Name, status)
 	// don't wait due to limited number of clients, but backoff after the default number of steps
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		set.Status = *status

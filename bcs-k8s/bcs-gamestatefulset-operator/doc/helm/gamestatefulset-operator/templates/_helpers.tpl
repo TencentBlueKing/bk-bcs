@@ -2,7 +2,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "statefulsetplus-operator.name" -}}
+{{- define "gamestatefulset-operator.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -11,7 +11,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "statefulsetplus-operator.fullname" -}}
+{{- define "gamestatefulset-operator.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -27,16 +27,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "statefulsetplus-operator.chart" -}}
+{{- define "gamestatefulset-operator.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Common labels
 */}}
-{{- define "statefulsetplus-operator.labels" -}}
-helm.sh/chart: {{ include "statefulsetplus-operator.chart" . }}
-{{ include "statefulsetplus-operator.selectorLabels" . }}
+{{- define "gamestatefulset-operator.labels" -}}
+helm.sh/chart: {{ include "gamestatefulset-operator.chart" . }}
+{{ include "gamestatefulset-operator.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -46,17 +46,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "statefulsetplus-operator.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "statefulsetplus-operator.name" . }}
+{{- define "gamestatefulset-operator.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "gamestatefulset-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "statefulsetplus-operator.serviceAccountName" -}}
+{{- define "gamestatefulset-operator.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{ default (include "statefulsetplus-operator.fullname" .) .Values.serviceAccount.name }}
+    {{ default (include "gamestatefulset-operator.fullname" .) .Values.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}

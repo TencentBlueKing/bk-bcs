@@ -1,6 +1,6 @@
 apiVersion: v2
-name: statefulsetplus-operator
-description: A Helm chart for deployment statefulsetplus operator
+name: gamestatefulset-operator
+description: A Helm chart for deployment gamestatefulset operator
 
 # A chart can be either an 'application' or a 'library' chart.
 #

@@ -1,4 +1,4 @@
-## statefulsetplus-operator
+## gamestatefulset-operator
 
 gamestatefulset-operator是针对游戏gameserver实现增强版有状态部署operator。 
 
@@ -7,7 +7,7 @@ gamestatefulset-operator是针对游戏gameserver实现增强版有状态部署o
 * [done]本项目group重构可用
 * [done]增加InplaceUpdate策略
 * [todo]增加自动并行滚动更新
-* [todo]扩展kubectl，支持kubectl statefulsetplus子命令
+* [todo]扩展kubectl，支持kubectl gamestatefulset子命令
 * [todo]支持HPA
 
 ### 特性
@@ -50,7 +50,7 @@ $ kubectl get pod -n test | grep web
 web-0                              1/1     Running   0         21s
 ```
 
-#### 扩容statefulsetplus
+#### 扩容gamestatefulset
 
 ```shell
 $ kubectl scale --replicas=3 gamestatefulset/web -n test 

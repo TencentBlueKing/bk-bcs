@@ -11,7 +11,7 @@
  *
  */
 
-package statefulsetplus
+package gamestatefulset
 
 import (
 	"bytes"
@@ -25,7 +25,6 @@ import (
 	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	stspluslisters "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 
-	"github.com/golang/glog"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/history"
@@ -512,12 +512,12 @@ func GetPodGameStatefulSets(pod *v1.Pod, sscLister stspluslisters.GameStatefulSe
 
 func isOnDeleteUpdateStragtegy(set *stsplus.GameStatefulSet) bool {
 	if set == nil {
-		glog.Errorf("the input statefulsetplus of isOnDeleteUpdateStragtegy is nil, please check it.")
+		klog.Errorf("the input gamestatefulset of isOnDeleteUpdateStragtegy is nil, please check it.")
 		return false
 	}
 
 	if set.Spec.UpdateStrategy.Type != stsplus.OnDeleteGameStatefulSetStrategyType {
-		glog.Errorf("the statefulsetplus's UpdateStrategy is %s, not OnDelete.", set.Spec.UpdateStrategy)
+		klog.Errorf("the gamestatefulset's UpdateStrategy is %s, not OnDelete", set.Spec.UpdateStrategy.Type)
 		return false
 	}
 

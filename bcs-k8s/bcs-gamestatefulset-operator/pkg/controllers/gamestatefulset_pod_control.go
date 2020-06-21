@@ -11,7 +11,7 @@
  *
  */
 
-package statefulsetplus
+package gamestatefulset
 
 import (
 	"fmt"
@@ -19,7 +19,6 @@ import (
 
 	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
-	"github.com/golang/glog"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +28,7 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/klog"
 )
 
 // GameStatefulSetPodControlInterface defines the interface that StatefulSetController uses to create, update, and delete Pods,
@@ -121,10 +121,10 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		// commit the update, retrying on conflicts
 		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(pod)
 		if updateErr == nil {
-			glog.Infof("Pod %s/%s is updating successfully in UpdateGameStatefulSetPod", pod.Namespace, pod.Name)
+			klog.Infof("Pod %s/%s is updating successfully in UpdateGameStatefulSetPod", pod.Namespace, pod.Name)
 			return nil
 		}
-		glog.Errorf("Pod %s/%s update err in UpdateGameStatefulSetPod: %+v", pod.Namespace, pod.Name, updateErr)
+		klog.Errorf("Pod %s/%s update err in UpdateGameStatefulSetPod: %+v", pod.Namespace, pod.Name, updateErr)
 		if updated, err := spc.podLister.Pods(set.Namespace).Get(pod.Name); err == nil {
 			// make a copy so we don't mutate the shared cache
 			pod = updated.DeepCopy()

@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "statefulsetplus-operator.fullname" . }}
+  name: {{ include "gamestatefulset-operator.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "statefulsetplus-operator.labels" . | nindent 4 }}
+    {{- include "gamestatefulset-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "statefulsetplus-operator.selectorLabels" . | nindent 6 }}
+      {{- include "gamestatefulset-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "statefulsetplus-operator.selectorLabels" . | nindent 8 }}
+        {{- include "gamestatefulset-operator.selectorLabels" . | nindent 8 }}
     spec:
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      serviceAccountName: {{ include "statefulsetplus-operator.serviceAccountName" . }}
+      serviceAccountName: {{ include "gamestatefulset-operator.serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
