@@ -17,21 +17,21 @@ deepcopy-gen -O zz_generated.deepcopy -i ./... -h ../../../../hack/boilerplate.g
 ## 3. client代码生成
 
 ```shell
-go run vendor/k8s.io/code-generator/cmd/client-gen/main.go --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input="tkex/v1alpha1" --input-base="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis" --clientset-path="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset"
+go run vendor/k8s.io/code-generator/cmd/client-gen/main.go --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input="tkex/v1alpha1" --input-base="bcs-gamestatefulset-operator/pkg/apis" --clientset-path="bcs-gamestatefulset-operator/pkg/clientset"
 ```
 
 ```shell
-client-gen --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input="tkex/v1alpha1" --input-base="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis" --clientset-path="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset"
+client-gen --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input="tkex/v1alpha1" --input-base="bcs-gamestatefulset-operator/pkg/apis" --clientset-path="bcs-gamestatefulset-operator/pkg/clientset"
 ```
 
 ## 4. lister代码生成
 
 ```shell
-go run vendor/k8s.io/code-generator/cmd/lister-gen/main.go --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input-dirs="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1" --output-package="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers"
+go run vendor/k8s.io/code-generator/cmd/lister-gen/main.go --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input-dirs="bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1" --output-package="bcs-gamestatefulset-operator/pkg/listers"
 ```
 
 ```shell
-lister-gen --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input-dirs="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1" --output-package="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers"
+lister-gen --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input-dirs="bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1" --output-package="bcs-gamestatefulset-operator/pkg/listers"
 ```
 
 生成代码仅有internalversion，迁移至tkex/v1alpha1，修正了list中Watch和List中context参数。
@@ -39,5 +39,5 @@ lister-gen --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerp
 ## 5. informer代码生成
 
 ```shell
-informer-gen --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input-dirs="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"  --internal-clientset-package="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset" --versioned-clientset-package="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset" --listers-package="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers" --output-package="bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers" --single-directory=true
+informer-gen --go-header-file="./bcs-k8s/bcs-gamestatefulset-operator/hack/boilerplate.go.txt" --input-dirs="bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"  --internal-clientset-package="bcs-gamestatefulset-operator/pkg/clientset/internalclientset" --versioned-clientset-package="bcs-gamestatefulset-operator/pkg/clientset/internalclientset" --listers-package="bcs-gamestatefulset-operator/pkg/listers" --output-package="bcs-gamestatefulset-operator/pkg/informers" --single-directory=true
 ```

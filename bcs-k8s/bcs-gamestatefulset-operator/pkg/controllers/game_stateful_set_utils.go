@@ -22,8 +22,8 @@ import (
 	"regexp"
 	"strconv"
 
-	stsplus "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	stspluslisters "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	stspluslisters "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 
 	"github.com/golang/glog"
 	apps "k8s.io/api/apps/v1"

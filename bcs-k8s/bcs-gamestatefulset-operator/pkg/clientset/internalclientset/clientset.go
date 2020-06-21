@@ -16,7 +16,7 @@
 package internalclientset
 
 import (
-	tkexv1alpha1 "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
+	tkexv1alpha1 "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
 	"fmt"
 
 	discovery "k8s.io/client-go/discovery"

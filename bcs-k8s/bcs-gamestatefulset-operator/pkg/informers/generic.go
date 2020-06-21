@@ -16,7 +16,7 @@
 package informers
 
 import (
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	v1alpha1 "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	"fmt"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

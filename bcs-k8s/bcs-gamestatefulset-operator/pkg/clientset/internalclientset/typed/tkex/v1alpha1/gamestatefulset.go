@@ -16,8 +16,8 @@
 package v1alpha1
 
 import (
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	scheme "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
+	v1alpha1 "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	scheme "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
 	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

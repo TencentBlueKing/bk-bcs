@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	stsplus "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
 	"github.com/golang/glog"
 	v1 "k8s.io/api/core/v1"

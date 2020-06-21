@@ -16,7 +16,7 @@
 package fake
 
 import (
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	v1alpha1 "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"

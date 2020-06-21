@@ -20,7 +20,7 @@
 package util
 
 import (
-	stsplus "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
 	v1 "k8s.io/api/core/v1"
 )

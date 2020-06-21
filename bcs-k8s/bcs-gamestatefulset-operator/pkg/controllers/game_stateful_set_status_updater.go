@@ -16,9 +16,9 @@ package statefulsetplus
 import (
 	"fmt"
 
-	stsplus "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	tkexclientset "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	stspluslisters "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	tkexclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	stspluslisters "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 
 	"github.com/golang/glog"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"

@@ -21,9 +21,9 @@ import (
 	"os"
 	"time"
 
-	clientset "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	statefulsetplus "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/controllers"
-	informers "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers"
+	clientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	statefulsetplus "bcs-gamestatefulset-operator/pkg/controllers"
+	informers "bcs-gamestatefulset-operator/pkg/informers"
 
 	"github.com/golang/glog"
 	api "k8s.io/api/core/v1"
@@ -44,8 +44,9 @@ const (
 )
 
 var (
-	kubeConfig      string
-	masterURL       string
+	kubeConfig string
+	masterURL  string
+	//MinResyncPeriod period definition
 	MinResyncPeriod metav1.Duration
 )
 
@@ -177,17 +178,18 @@ func run() {
 	}
 }
 
+// StartedLeading callback function
 func StartedLeading(ctx context.Context) {
 	fmt.Printf("%s: started leading\n", hostname())
 	run()
 }
 
-// invoked when this node stops being the leader
+// StoppedLeading invoked when this node stops being the leader
 func StoppedLeading() {
 	fmt.Printf("%s: stopped leading\n", hostname())
 }
 
-// invoked when a new leader is elected
+// NewLeader invoked when a new leader is elected
 func NewLeader(id string) {
 	fmt.Printf("%s: new leader: %s\n", hostname(), id)
 }

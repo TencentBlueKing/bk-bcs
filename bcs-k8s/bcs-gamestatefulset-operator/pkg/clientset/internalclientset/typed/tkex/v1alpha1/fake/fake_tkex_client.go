@@ -16,7 +16,7 @@
 package fake
 
 import (
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
+	v1alpha1 "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
 
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"

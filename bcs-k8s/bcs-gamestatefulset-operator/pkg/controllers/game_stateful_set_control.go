@@ -17,9 +17,9 @@ import (
 	"math"
 	"sort"
 
-	stsplus "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	"bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util"
-	"bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/constants"
+	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	"bcs-gamestatefulset-operator/pkg/util"
+	"bcs-gamestatefulset-operator/pkg/util/constants"
 
 	"github.com/golang/glog"
 	apps "k8s.io/api/apps/v1"

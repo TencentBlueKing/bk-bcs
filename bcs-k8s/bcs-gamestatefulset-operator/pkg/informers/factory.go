@@ -16,9 +16,9 @@
 package informers
 
 import (
-	internalclientset "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	internalinterfaces "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/v1alpha1"
+	internalclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	internalinterfaces "bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
+	v1alpha1 "bcs-gamestatefulset-operator/pkg/informers/v1alpha1"
 	reflect "reflect"
 	sync "sync"
 	time "time"
