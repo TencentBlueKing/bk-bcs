@@ -160,9 +160,9 @@ func run() {
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(MinResyncPeriod)())
 	gamestatefulsetInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(MinResyncPeriod)())
 
-	stsplusController := gamestatefulset.NewStatefulSetPlusController(
+	stsplusController := gamestatefulset.NewGameStatefulSetController(
 		kubeInformerFactory.Core().V1().Pods(),
-		gamestatefulsetInformerFactory.Tkex().V1alpha1().StatefulSetPluses(),
+		gamestatefulsetInformerFactory.Tkex().V1alpha1().GameStatefulSets(),
 		kubeInformerFactory.Core().V1().PersistentVolumeClaims(),
 		kubeInformerFactory.Apps().V1().ControllerRevisions(),
 		kubeClient,
