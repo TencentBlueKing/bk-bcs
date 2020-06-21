@@ -14,14 +14,19 @@
 package rdiscover
 
 import (
+	"context"
+	"encoding/json"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
 	rd "bk-bcs/bcs-common/common/RegisterDiscover"
 	"bk-bcs/bcs-common/common/blog"
 	"bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-common/common/version"
-	"context"
-	"encoding/json"
-	"os"
-	"time"
+	"bk-bcs/bcs-common/common/zkclient"
 )
 
 // RoleEvent event for role change
@@ -38,6 +43,7 @@ const (
 type AdapterDiscover struct {
 	isMaster   bool
 	rd         *rd.RegDiscover
+	zkClient   *zkclient.ZkClient
 	zkAddr     string
 	clusterID  string
 	ip         string
@@ -47,17 +53,28 @@ type AdapterDiscover struct {
 }
 
 // NewAdapterDiscover create Adapter Discover
-func NewAdapterDiscover(zkAddr, ip, clusterID string, metricPort uint) (*AdapterDiscover, <-chan RoleEvent) {
+func NewAdapterDiscover(zkAddr, ip, clusterID string, metricPort uint) (*AdapterDiscover, <-chan RoleEvent, error) {
+
+	zkAddr = strings.Replace(zkAddr, ";", ",", -1)
+	zkAddrs := strings.Split(zkAddr, ",")
+	zkClient := zkclient.NewZkClient(zkAddrs)
+	err := zkClient.Connect()
+	if err != nil {
+		blog.Errorf("AdapterDiscover connect zk failed, err %s", err.Error())
+		return nil, nil, err
+	}
+
 	eventQueue := make(chan RoleEvent, 128)
 	return &AdapterDiscover{
 		isMaster:   false,
 		rd:         rd.NewRegDiscoverEx(zkAddr, 20*time.Second),
+		zkClient:   zkClient,
 		zkAddr:     zkAddr,
 		ip:         ip,
 		clusterID:  clusterID,
 		metricPort: metricPort,
 		eventQueue: eventQueue,
-	}, eventQueue
+	}, eventQueue, nil
 }
 
 // Start register zk path and monitor all registered adapters
@@ -83,26 +100,27 @@ func (ad *AdapterDiscover) Start() {
 		return
 	}
 	adaptersPath := ad.getZkDiscoveryPath()
-	discoveryEvent, err := ad.rd.DiscoverService(adaptersPath)
-	if err != nil {
-		blog.Errorf("failed to register discover for mesos-adapter, err %s", err.Error())
-		blog.Infof("restart AdapterDiscover after 3 second")
-		ad.rd.Stop()
-		time.Sleep(3 * time.Second)
-		go ad.Start()
-		return
-	}
+	ticker := time.NewTicker(5 * time.Second)
 	for {
 		select {
-		case curEvent := <-discoveryEvent:
-			servers := curEvent.Server
-			blog.V(3).Infof("discover mesos adapters(%v)", servers)
+		case <-ticker.C:
+			children, err := ad.zkClient.GetChildren(adaptersPath)
+			if err != nil {
+				blog.Warnf("get children of %s failed, err %s", adaptersPath, err.Error())
+				continue
+			}
+			children = ad.sortNode(children)
 			adapters := []*types.ServerInfo{}
-			for _, server := range servers {
-				adapter := new(types.ServerInfo)
-				err = json.Unmarshal([]byte(server), adapter)
+			for _, tmpChild := range children {
+				tmpData, err := ad.zkClient.Get(adaptersPath + "/" + tmpChild)
 				if err != nil {
-					blog.Warnf("failed to unmarshal(%s), err %s", server, err.Error())
+					blog.Warnf("get data for child %s failed, err %s", tmpChild)
+					continue
+				}
+				adapter := new(types.ServerInfo)
+				err = json.Unmarshal([]byte(tmpData), adapter)
+				if err != nil {
+					blog.Warnf("failed to unmarshal(%s), err %s", tmpData, err.Error())
 					continue
 				}
 				adapters = append(adapters, adapter)
@@ -127,6 +145,7 @@ func (ad *AdapterDiscover) Start() {
 				blog.Infof("Role changed, I become Slave")
 				continue
 			}
+
 		case <-rootCxt.Done():
 			blog.Warnf("AdapterDiscover context done")
 			return
@@ -162,4 +181,33 @@ func (ad *AdapterDiscover) registerAdapter() error {
 
 func (ad *AdapterDiscover) getZkDiscoveryPath() string {
 	return types.BCS_SERV_BASEPATH + "/" + types.BCS_MODULE_MESOSADAPTER + "/" + ad.clusterID
+}
+
+func (ad *AdapterDiscover) sortNode(nodes []string) []string {
+	var sortPart []int
+	mapSortNode := make(map[int]string)
+	for _, chNode := range nodes {
+		if len(chNode) <= 10 {
+			blog.V(3).Infof("node(%s) is less then 10, there is not the seq number", chNode)
+			continue
+		}
+
+		p, err := strconv.Atoi(chNode[len(chNode)-10 : len(chNode)])
+		if err != nil {
+			blog.V(3).Infof("fail to conv string to seq number for node(%s), err:%s", chNode, err.Error())
+			continue
+		}
+
+		sortPart = append(sortPart, p)
+		mapSortNode[p] = chNode
+	}
+
+	sort.Ints(sortPart)
+
+	var children []string
+	for _, part := range sortPart {
+		children = append(children, mapSortNode[part])
+	}
+
+	return children
 }
