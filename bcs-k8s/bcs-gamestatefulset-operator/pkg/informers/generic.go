@@ -51,7 +51,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	switch resource {
 	// Group=tkex, Version=internalVersion
 	case v1alpha1.SchemeGroupVersion.WithResource("gamestatefulsets"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Tkex().InternalVersion().GameStatefulSets().Informer()}, nil
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tkex().V1alpha1().GameStatefulSets().Informer()}, nil
 
 	}
 

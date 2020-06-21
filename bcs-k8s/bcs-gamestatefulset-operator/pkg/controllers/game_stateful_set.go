@@ -201,7 +201,7 @@ func (ssc *GameStatefulSetController) addPod(obj interface{}) {
 
 	// Otherwise, it's an orphan. Get a list of all matching controllers and sync
 	// them to see if anyone wants to adopt it.
-	sets := ssc.getGameStatefulSetesForPod(pod)
+	sets := ssc.getGameStatefulSetsForPod(pod)
 	if len(sets) == 0 {
 		glog.Infof("Pod %s/%s is orphan, but not controlled by GameStatefulSet-Operator", pod.Namespace, pod.Name)
 		return
@@ -249,7 +249,7 @@ func (ssc *GameStatefulSetController) updatePod(old, cur interface{}) {
 	// Otherwise, it's an orphan. If anything changed, sync matching controllers
 	// to see if anyone wants to adopt it now.
 	if labelChanged || controllerRefChanged {
-		sets := ssc.getGameStatefulSetesForPod(curPod)
+		sets := ssc.getGameStatefulSetsForPod(curPod)
 		if len(sets) == 0 {
 			glog.V(4).Infof("Pod %s/%s is orphan in updated, but not controlled by GameStatefulSet-Operator", curPod.Namespace, curPod.Name)
 			return
@@ -316,7 +316,7 @@ func (ssc *GameStatefulSetController) getPodsForGameStatefulSet(set *stsplus.Gam
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := ssc.tkexClient.TkexV1alpha1().GameStatefulSetes(set.Namespace).Get(set.Name, metav1.GetOptions{})
+		fresh, err := ssc.tkexClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(set.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -344,7 +344,7 @@ func (ssc *GameStatefulSetController) adoptOrphanRevisions(set *stsplus.GameStat
 		}
 	}
 	if hasOrphans {
-		fresh, err := ssc.tkexClient.TkexV1alpha1().GameStatefulSetes(set.Namespace).Get(set.Name, metav1.GetOptions{})
+		fresh, err := ssc.tkexClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Get(set.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -356,10 +356,10 @@ func (ssc *GameStatefulSetController) adoptOrphanRevisions(set *stsplus.GameStat
 	return nil
 }
 
-// getGameStatefulSetesForPod returns a list of GameStatefulSetes that potentially match
+// getGameStatefulSetsForPod returns a list of GameStatefulSetes that potentially match
 // a given pod.
-func (ssc *GameStatefulSetController) getGameStatefulSetesForPod(pod *v1.Pod) []*stsplus.GameStatefulSet {
-	sets, err := GetPodGameStatefulSetes(pod, ssc.setLister)
+func (ssc *GameStatefulSetController) getGameStatefulSetsForPod(pod *v1.Pod) []*stsplus.GameStatefulSet {
+	sets, err := GetPodGameStatefulSets(pod, ssc.setLister)
 	if err != nil {
 		return nil
 	}
@@ -384,7 +384,7 @@ func (ssc *GameStatefulSetController) resolveControllerRef(namespace string, con
 	if controllerRef.Kind != controllerKind.Kind {
 		return nil
 	}
-	set, err := ssc.setLister.GameStatefulSetes(namespace).Get(controllerRef.Name)
+	set, err := ssc.setLister.GameStatefulSets(namespace).Get(controllerRef.Name)
 	if err != nil {
 		return nil
 	}
@@ -442,7 +442,7 @@ func (ssc *GameStatefulSetController) sync(key string) error {
 	if err != nil {
 		return err
 	}
-	set, err := ssc.setLister.GameStatefulSetes(namespace).Get(name)
+	set, err := ssc.setLister.GameStatefulSets(namespace).Get(name)
 	if errors.IsNotFound(err) {
 		glog.Infof("GameStatefulSet %s has been deleted", key)
 		return nil

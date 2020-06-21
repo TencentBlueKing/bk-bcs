@@ -54,11 +54,11 @@ func (ssu *realGameStatefulSetStatusUpdater) UpdateGameStatefulSetStatus(
 	// don't wait due to limited number of clients, but backoff after the default number of steps
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		set.Status = *status
-		_, updateErr := ssu.tkexClient.TkexV1alpha1().GameStatefulSetes(set.Namespace).UpdateStatus(set)
+		_, updateErr := ssu.tkexClient.TkexV1alpha1().GameStatefulSets(set.Namespace).UpdateStatus(set)
 		if updateErr == nil {
 			return nil
 		}
-		if updated, err := ssu.setLister.GameStatefulSetes(set.Namespace).Get(set.Name); err == nil {
+		if updated, err := ssu.setLister.GameStatefulSets(set.Namespace).Get(set.Name); err == nil {
 			// make a copy so we don't mutate the shared cache
 			set = updated.DeepCopy()
 		} else {

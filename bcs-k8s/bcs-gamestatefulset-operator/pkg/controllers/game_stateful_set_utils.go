@@ -111,7 +111,7 @@ func isMemberOf(set *stsplus.GameStatefulSet, pod *v1.Pod) bool {
 	return getParentName(pod) == set.Name
 }
 
-// identityMatches returns true if pod has a valid identity and network identity for a member of set.
+// IdentityMatches returns true if pod has a valid identity and network identity for a member of set.
 func IdentityMatches(set *stsplus.GameStatefulSet, pod *v1.Pod) bool {
 	parent, ordinal := getParentNameAndOrdinal(pod)
 	return ordinal >= 0 &&
@@ -469,10 +469,10 @@ func (ao ascendingOrdinal) Less(i, j int) bool {
 	return getOrdinal(ao[i]) < getOrdinal(ao[j])
 }
 
-// GetPodStatefulSets returns a list of StatefulSets that potentially match a pod.
+// GetPodGameStatefulSets returns a list of StatefulSets that potentially match a pod.
 // Only the one specified in the Pod's ControllerRef will actually manage it.
 // Returns an error only if no matching StatefulSets are found.
-func GetPodGameStatefulSetes(pod *v1.Pod, sscLister stspluslisters.GameStatefulSetLister) ([]*stsplus.GameStatefulSet, error) {
+func GetPodGameStatefulSets(pod *v1.Pod, sscLister stspluslisters.GameStatefulSetLister) ([]*stsplus.GameStatefulSet, error) {
 	var selector labels.Selector
 	var ps *stsplus.GameStatefulSet
 
@@ -480,7 +480,7 @@ func GetPodGameStatefulSetes(pod *v1.Pod, sscLister stspluslisters.GameStatefulS
 		return nil, fmt.Errorf("no StatefulSets found for pod %v because it has no labels", pod.Name)
 	}
 
-	list, err := sscLister.GameStatefulSetes(pod.Namespace).List(labels.Everything())
+	list, err := sscLister.GameStatefulSets(pod.Namespace).List(labels.Everything())
 	if err != nil {
 		return nil, err
 	}
@@ -524,6 +524,7 @@ func isOnDeleteUpdateStragtegy(set *stsplus.GameStatefulSet) bool {
 	return true
 }
 
+//Contain check if object what we expected
 func Contain(obj interface{}, target interface{}) (bool, error) {
 	targetValue := reflect.ValueOf(target)
 	switch reflect.TypeOf(target).Kind() {
