@@ -20,14 +20,14 @@
 package util
 
 import (
-	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	gamestatefulset "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
 	v1 "k8s.io/api/core/v1"
 )
 
 // UpdatePodField Fields that can be modified
 // - spec.containers[*].imag
-func UpdatePodField(updateSet *stsplus.StatefulSetPlus, updateRevision string, pod *v1.Pod) *v1.Pod {
+func UpdatePodField(updateSet *gamestatefulset.GameStatefulSet, updateRevision string, pod *v1.Pod) *v1.Pod {
 
 	// make a deep copy, do not mutate the shared cache
 	newPod := pod.DeepCopy()
@@ -45,7 +45,7 @@ func UpdatePodField(updateSet *stsplus.StatefulSetPlus, updateRevision string, p
 	if newPod.Labels == nil {
 		newPod.Labels = make(map[string]string)
 	}
-	newPod.Labels[stsplus.StatefulSetPlusRevisionLabel] = updateRevision
+	newPod.Labels[gamestatefulset.GameStatefulSetRevisionLabel] = updateRevision
 
 	return newPod
 }
