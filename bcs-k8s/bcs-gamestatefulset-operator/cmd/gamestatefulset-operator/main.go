@@ -117,7 +117,7 @@ func init() {
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
 	flag.DurationVar(&MinResyncPeriod.Duration, "min-resync-period", MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
 	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
-	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "tkex-system", "The resourcelock namespace")
+	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&LockName, "leader-elect-name", "gamestatefulset", "The resourcelock name")
 	flag.StringVar(&LockComponentName, "leader-elect-componentname", "gamestatefulset", "The component name for event resource")
 	flag.DurationVar(&LeaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
