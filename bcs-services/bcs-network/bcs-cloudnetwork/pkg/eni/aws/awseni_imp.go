@@ -24,7 +24,7 @@ import (
 // create eni
 func (c *Client) createEni(name string, ipNum int) (*ec2.NetworkInterface, error) {
 	// find available subnets, ipNum is secondary ip number
-	subnet, err := c.getAvailableSubnet(ipNum + 1)
+	subnet, err := c.getAvailableSubnet(ipNum)
 	if err != nil {
 		blog.Errorf("get available subnet when create eni")
 		return nil, err
@@ -125,7 +125,6 @@ func (c *Client) assignIPsToEni(eniID string, ipNum int) error {
 	}
 
 	blog.V(2).Infof("aws AssignPrivateIpAddresses response %s", resp.String())
-
 	return nil
 }
 
@@ -143,7 +142,6 @@ func (c *Client) unassignIPsFromEni(eniID string, addrs []string) error {
 	}
 
 	blog.V(2).Infof("aws UnassignPrivateIpAddresses response %s", resp.String())
-
 	return nil
 }
 
