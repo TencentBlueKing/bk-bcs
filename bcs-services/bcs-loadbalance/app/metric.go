@@ -60,4 +60,14 @@ var (
 		},
 		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
 	)
+	// LoadbalanceServiceConflictMetric loadbalance metric for service conflict about port or [port + domain + url]
+	LoadbalanceServiceConflictMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "service",
+			Name:      "conflict_total",
+			Help:      "conflict counter of service",
+		},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName},
+	)
 )

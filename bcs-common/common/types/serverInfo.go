@@ -55,6 +55,9 @@ const (
 	BCS_MODULE_USERMANAGER      = "usermanager"
 	BCS_MODULE_GATEWAYDISCOVERY = "gatewaydiscovery"
 	BCS_MODULE_MESOSWEBCONSOLE  = "mesoswebconsole"
+
+	// for bcs-bkcmdb-synchronizer
+	BCS_MODULE_BKCMDB_SYNCHRONIZER = "bkcmdb-synchronizer"
 )
 
 var (

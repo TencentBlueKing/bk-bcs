@@ -57,6 +57,29 @@ func (c *Client) createEni(name string, ipNum int) (*ec2.NetworkInterface, error
 	return resp.NetworkInterface, nil
 }
 
+// modifyEniAttribute modify eni attribute
+func (c *Client) modifyEniAttribute(eniID string, securityGroups []string, sourceDestCheckFlag bool) error {
+	req := &ec2.ModifyNetworkInterfaceAttributeInput{}
+	req.SetNetworkInterfaceId(eniID)
+	if len(securityGroups) != 0 {
+		req.SetGroups(aws.StringSlice(securityGroups))
+	}
+	req.SetSourceDestCheck(&ec2.AttributeBooleanValue{
+		Value: aws.Bool(sourceDestCheckFlag),
+	})
+
+	blog.V(2).Infof("aws ModifyNetworkInterface Attribute request %+v", req)
+
+	resp, err := c.ec2client.ModifyNetworkInterfaceAttribute(req)
+	if err != nil {
+		blog.Errorf("aws ModifyNetworkInterface failed, err %s", err.Error())
+		return err
+	}
+
+	blog.V(2).Infof("aws ModifyNetworkInterface response %+v", resp)
+	return nil
+}
+
 // query eni by eni description
 func (c *Client) queryEni(eniName string) (*ec2.NetworkInterface, error) {
 	req := &ec2.DescribeNetworkInterfacesInput{}

@@ -14,14 +14,17 @@
 package httpclient
 
 import (
-	http2 "bk-bcs/bcs-common/common/http"
-	"bk-bcs/bcs-common/common/ssl"
 	"bytes"
 	"crypto/tls"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"time"
+
+	http2 "bk-bcs/bcs-common/common/http"
+	"bk-bcs/bcs-common/common/ssl"
 )
 
 //HttpRespone define the information of the http respone
@@ -230,4 +233,45 @@ func (client *HttpClient) RequestEx(url, method string, header http.Header, data
 
 	httpRsp.Reply = rpy
 	return httpRsp, nil
+}
+
+func (client *HttpClient) RequestStream(url, method string, header http.Header, data []byte) (io.ReadCloser, error) {
+	var req *http.Request
+	var errReq error
+
+	if data != nil {
+		req, errReq = http.NewRequest(method, url, bytes.NewReader(data))
+	} else {
+		req, errReq = http.NewRequest(method, url, nil)
+	}
+
+	if errReq != nil {
+		return nil, errReq
+	}
+
+	req.Close = true
+
+	if header != nil {
+		req.Header = header
+	}
+
+	for key, value := range client.header {
+		if req.Header.Get(key) != "" {
+			continue
+		}
+		req.Header.Set(key, value)
+	}
+
+	rsp, err := client.httpCli.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case (rsp.StatusCode >= 200) && (rsp.StatusCode < 300):
+		return rsp.Body, nil
+	default:
+		defer rsp.Body.Close()
+		return nil, fmt.Errorf("get stream failed, resp code %d", rsp.StatusCode)
+	}
 }
