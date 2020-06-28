@@ -1,0 +1,11 @@
+domain: bkbcs.tencent.com
+multigroup: true
+repo: bk-bcs
+resources:
+- group: cloud
+  kind: NodeNetwork
+  version: v1
+- group: cloud
+  kind: NewTest
+  version: v1
+version: "2"
