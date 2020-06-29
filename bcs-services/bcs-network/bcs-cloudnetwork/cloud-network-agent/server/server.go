@@ -108,7 +108,7 @@ func (s *Server) initCloudClient() error {
 		client = eniaws.New(s.instanceIP)
 	case options.CloudTencent:
 		blog.Infof("create qcloud cloud client")
-		client = eniqcloud.New()
+		client = eniqcloud.New(s.instanceIP)
 	default:
 		return fmt.Errorf("invalid cloud %s", s.opt.Cloud)
 	}

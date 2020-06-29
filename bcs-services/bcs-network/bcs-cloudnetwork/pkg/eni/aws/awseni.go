@@ -33,19 +33,25 @@ import (
 type Client struct {
 	// AccessID access id
 	AccessID string
+
 	// AccessSecret access secret
 	AccessSecret string
+	
 	// SessionToken session token
 	SessionToken string
+	
 	// Region aws region
 	Region string
+	
 	// VpcID aws vpc id
 	VpcID string
 
 	// Instance IP
 	InstanceIP string
+	
 	// SecurityGroups aws security groups
 	SecurityGroups []string
+	
 	// SubnetIDs ids for subnet
 	SubnetIDs []string
 
