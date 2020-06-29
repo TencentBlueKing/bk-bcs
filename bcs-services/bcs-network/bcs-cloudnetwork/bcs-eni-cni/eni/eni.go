@@ -15,6 +15,7 @@ package eni
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/sys/unix"
 	"net"
 	"strconv"
 	"strings"
@@ -127,6 +128,48 @@ func createVethPair(netns string, containerIfName string, mtu int) (*current.Int
 	return hostIface, containerIface, nil
 }
 
+func cleanExistedPodRoute(routes []netlink.Route, route netlink.Route) error {
+	for _, r := range routes {
+		if r.Scope == route.Scope &&
+			r.Table == route.Table {
+			if r.Dst == nil || route.Dst == nil {
+				continue
+			}
+			if r.Dst.String() == route.Dst.String() {
+				blog.Infof("clean old route %+v", r)
+				return netlink.RouteDel(&r)
+			}
+		}
+	}
+	return nil
+}
+
+func findToTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
+	for _, r := range rules {
+		if r.Table == rule.Table {
+			if r.Dst != nil && rule.Dst != nil {
+				if r.Dst.String() == rule.Dst.String() {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
+	for _, r := range rules {
+		if r.Table == rule.Table {
+			if r.Src != nil && rule.Src != nil {
+				if r.Src.String() == rule.Src.String() {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // configureHostNS configure host namespace
 func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) error {
 
@@ -135,6 +178,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	if err != nil {
 		return fmt.Errorf("failed to look up %s in host ns, err %s", hostIfName, err.Error())
 	}
+
 	// add route in certain route table
 	route := &netlink.Route{
 		LinkIndex: hostVeth.Attrs().Index,
@@ -142,36 +186,49 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 		Dst:       ipNet,
 		Table:     routeTableID,
 	}
+
+	// clean old route
+	existedRoutes, err := netlink.RouteListFiltered(unix.AF_INET, route,
+		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE)
+	if err != nil {
+		blog.Warnf("failed to list route list with route %+v , err %s", route, err.Error())
+	}
+	blog.Infof("get existed routes %+v", existedRoutes)
+	err = cleanExistedPodRoute(existedRoutes, *route)
+	if err != nil {
+		blog.Warnf("clean existed pod route failed, err %s", err.Error())
+	}
+
 	err = netlink.RouteAdd(route)
 	if err != nil {
 		return fmt.Errorf("add route %s into host failed, err %s", route.String(), err.Error())
 	}
 
+	rules, err := netlink.RuleList(unix.AF_INET)
+	if err != nil {
+		blog.Warnf("list rules failed, err %s", err.Error())
+	}
 	//add to taskgroup rule
 	//**attention** do not usage &netlink.Rule{} for struct initialization
 	ruleToTable := netlink.NewRule()
 	ruleToTable.Dst = ipNet
 	ruleToTable.Table = routeTableID
-	err = netlink.RuleDel(ruleToTable)
-	if err != nil {
-		blog.Warnf("clean old rule to table %s failed, err %s", ruleToTable.String(), err.Error())
-	}
-	err = netlink.RuleAdd(ruleToTable)
-	if err != nil {
-		return fmt.Errorf("add rule to table %s failed, err %s", ruleToTable.String(), err.Error())
+	if !findToTableRule(rules, ruleToTable) {
+		err = netlink.RuleAdd(ruleToTable)
+		if err != nil {
+			return fmt.Errorf("add rule to table %s failed, err %s", ruleToTable.String(), err.Error())
+		}
 	}
 
 	//add from taskgroup rule
 	ruleFromTaskgroup := netlink.NewRule()
 	ruleFromTaskgroup.Src = ipNet
 	ruleFromTaskgroup.Table = routeTableID
-	err = netlink.RuleDel(ruleFromTaskgroup)
-	if err != nil {
-		blog.Warnf("clean old rule from taskgroup %s failed, err %s", ruleToTable.String(), err.Error())
-	}
-	err = netlink.RuleAdd(ruleFromTaskgroup)
-	if err != nil {
-		return fmt.Errorf("add rule from taskgroup %s failed, err %s", ruleFromTaskgroup.String(), err.Error())
+	if !findFromTableRule(rules, ruleFromTaskgroup) {
+		err = netlink.RuleAdd(ruleFromTaskgroup)
+		if err != nil {
+			return fmt.Errorf("add rule from taskgroup %s failed, err %s", ruleFromTaskgroup.String(), err.Error())
+		}
 	}
 
 	return nil

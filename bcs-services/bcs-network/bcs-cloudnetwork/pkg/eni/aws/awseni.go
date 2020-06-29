@@ -25,6 +25,7 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"bk-bcs/bcs-common/common/blog"
+	"bk-bcs/bcs-common/common/encrypt"
 	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
 )
 
@@ -32,19 +33,25 @@ import (
 type Client struct {
 	// AccessID access id
 	AccessID string
+
 	// AccessSecret access secret
 	AccessSecret string
+	
 	// SessionToken session token
 	SessionToken string
+	
 	// Region aws region
 	Region string
+	
 	// VpcID aws vpc id
 	VpcID string
 
 	// Instance IP
 	InstanceIP string
+	
 	// SecurityGroups aws security groups
 	SecurityGroups []string
+	
 	// SubnetIDs ids for subnet
 	SubnetIDs []string
 
@@ -60,7 +67,7 @@ func New(instanceIP string) *Client {
 	}
 }
 
-func (c *Client) loadEnv() {
+func (c *Client) loadEnv() error {
 	c.Region = os.Getenv(ENV_NAME_AWS_REGION)
 	c.VpcID = os.Getenv(ENV_NAME_AWS_VPC)
 
@@ -79,8 +86,17 @@ func (c *Client) loadEnv() {
 	}
 
 	c.AccessID = os.Getenv(ENV_NAME_AWS_ACCESS_KEY_ID)
-	c.AccessSecret = os.Getenv(ENV_NAME_AWS_SECRET_ACCESS_KEY)
+	accessSecret := os.Getenv(ENV_NAME_AWS_SECRET_ACCESS_KEY)
+
+	decryptSecret, err := encrypt.DesDecryptFromBase([]byte(accessSecret))
+	if err != nil {
+		blog.Errorf("decrypt access secret key failed, err %s", err.Error())
+		return fmt.Errorf("decrypt access secret key failed, err %s", err.Error())
+	}
+	c.AccessSecret = string(decryptSecret)
+
 	c.SessionToken = os.Getenv(ENV_NAME_AWS_SESSION_TOKEN)
+	return nil
 }
 
 func (c *Client) validate() error {
@@ -116,7 +132,9 @@ func (c *Client) GetENILimit() (int, int, error) {
 // Init implements eni interface
 func (c *Client) Init() error {
 
-	c.loadEnv()
+	if err := c.loadEnv(); err != nil {
+		return err
+	}
 
 	if err := c.validate(); err != nil {
 		return err
@@ -209,6 +227,13 @@ func (c *Client) CreateENI(name string, ipNum int) (*cloud.ElasticNetworkInterfa
 			return nil, fmt.Errorf("createEni failed, err %s", err.Error())
 		}
 	}
+
+	// modify eni attribute for source dest check
+	err = c.modifyEniAttribute(aws.StringValue(eni.NetworkInterfaceId), nil, false)
+	if err != nil {
+		return nil, fmt.Errorf("modifyEniAttribute failed, err %s", err.Error())
+	}
+
 	subnet, err := c.querySubent(aws.StringValue(eni.SubnetId))
 	if err != nil {
 		return nil, fmt.Errorf("querySubnet failed, err %s", err.Error())
