@@ -15,9 +15,9 @@
 package internalinterfaces
 
 import (
-	versioned "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	time "time"
 
+	versioned "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"

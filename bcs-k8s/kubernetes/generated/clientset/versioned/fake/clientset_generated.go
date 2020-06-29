@@ -15,10 +15,9 @@
 package fake
 
 import (
-	clientset "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
-	cloudv1 "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
-	fakecloudv1 "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1/fake"
-
+	clientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	fakecloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

@@ -15,8 +15,7 @@
 package fake
 
 import (
-	v1 "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
-
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

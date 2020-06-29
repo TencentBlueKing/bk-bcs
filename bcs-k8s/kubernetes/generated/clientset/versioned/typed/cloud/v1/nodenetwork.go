@@ -15,11 +15,11 @@
 package v1
 
 import (
-	v1 "bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
-	scheme "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/scheme"
 	"context"
 	"time"
 
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	scheme "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

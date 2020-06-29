@@ -15,9 +15,8 @@
 package v1
 
 import (
-	v1 "bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
-	"bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/scheme"
-
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

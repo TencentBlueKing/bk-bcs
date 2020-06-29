@@ -22,6 +22,10 @@ export PATH=$PATH:/usr/local/kubebuilder/bin
 ```shell
 # 进入文件夹
 cd $GOPATH/src/bk-bcs/bcs-k8s/kubernetes
+
+go mod tidy
+go mod vendor
+
 # 创建CRD
 kubebuilder create api --group test --version v1alpha --kind TestCrd
 ```
@@ -32,7 +36,35 @@ kubebuilder create api --group test --version v1alpha --kind TestCrd
 2020/06/28 19:55:01 failed to create API: error updating main.go: failed to open main.go: open main.go: no such file or directory
 ```
 
-## step3: generate client lister and informer
+创建完成之后需要为TestCrd加上注释
+
+```golang
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+```
+
+为TestCrdList加上注释
+
+```golang
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+```
+
+```golang
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// NodeNetwork is the Schema for the nodenetworks API
+type NodeNetwork struct {}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+
+// NodeNetworkList contains a list of NodeNetwork
+type NodeNetworkList struct {}
+```
+
+## step3: generate deepcopy manifests client lister and informer
 
 ```shell
 ./update-coden.sh

@@ -15,9 +15,9 @@
 package externalversions
 
 import (
-	v1 "bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	"fmt"
 
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )

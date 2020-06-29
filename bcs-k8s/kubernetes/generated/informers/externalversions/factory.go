@@ -15,13 +15,13 @@
 package externalversions
 
 import (
-	versioned "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
-	cloud "bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud"
-	internalinterfaces "bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/internalinterfaces"
 	reflect "reflect"
 	sync "sync"
 	time "time"
 
+	versioned "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
+	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

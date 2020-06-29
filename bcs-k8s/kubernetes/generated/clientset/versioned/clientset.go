@@ -15,9 +15,9 @@
 package versioned
 
 import (
-	cloudv1 "bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
 	"fmt"
 
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

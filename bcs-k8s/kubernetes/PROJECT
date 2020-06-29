@@ -1,11 +1,8 @@
 domain: bkbcs.tencent.com
 multigroup: true
-repo: bk-bcs
+repo: github.com/Tencent/bk-bcs/bcs-k8s/kubernetes
 resources:
 - group: cloud
   kind: NodeNetwork
-  version: v1
-- group: cloud
-  kind: NewTest
   version: v1
 version: "2"

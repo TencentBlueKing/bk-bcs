@@ -15,8 +15,7 @@
 package scheme
 
 import (
-	cloudv1 "bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
-
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

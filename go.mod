@@ -3,6 +3,7 @@ module bk-bcs
 go 1.14
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ./bcs-k8s/kubernetes
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )
@@ -13,6 +14,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.11
 	github.com/Shopify/sarama v1.20.0 // indirect
 	github.com/Shopify/toxiproxy v2.1.4+incompatible // indirect
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
 	github.com/andygrunwald/megos v0.0.0-20180424065632-0fccaea93714
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
@@ -50,7 +52,7 @@ require (
 	github.com/farsightsec/golang-framestream v0.0.0-20181102145529-8a0cb8ba8710 // indirect
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/frankban/quicktest v1.10.0 // indirect
-	github.com/fsnotify/fsnotify v1.4.7
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fsouza/go-dockerclient v1.3.1
 	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0
@@ -64,7 +66,7 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.2
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/cadvisor v0.32.0
 	github.com/google/go-cmp v0.4.0
@@ -77,7 +79,6 @@ require (
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645 // indirect
 	github.com/haproxytech/client-native v1.2.6
 	github.com/haproxytech/models v1.2.4
-	github.com/hpcloud/tail v1.0.1-0.20180514194441-a1dbeea552b7 // indirect
 	github.com/iancoleman/strcase v0.0.0-20180726023541-3605ed457bf7
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
@@ -98,8 +99,8 @@ require (
 	github.com/moby/term v0.0.0-20200507201656-73f35e472e8f
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/nranchev/go-libGeoIP v0.0.0-20170629073846-d6d4a9a4c7e8 // indirect
-	github.com/onsi/ginkgo v1.11.0
-	github.com/onsi/gomega v1.8.1
+	github.com/onsi/ginkgo v1.13.0
+	github.com/onsi/gomega v1.10.1
 	github.com/opencontainers/runc v1.0.0-rc6.0.20181203215513-96ec2177ae84 // indirect
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pborman/uuid v1.2.0
@@ -125,18 +126,17 @@ require (
 	github.com/vishvananda/netns v0.0.0-20190625233234-7109fa855b0f // indirect
 	go.etcd.io/bbolt v1.3.4 // indirect
 	go4.org v0.0.0-20190313082347-94abd6928b1d
-	golang.org/x/net v0.0.0-20191112182307-2180aed22343
-	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
+	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299
 	google.golang.org/grpc v1.26.0
-	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.24.0
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
 	gopkg.in/ory-am/dockertest.v3 v3.3.5 // indirect
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2
-	k8s.io/apimachinery v0.18.2
+	k8s.io/apimachinery v0.18.5
 	k8s.io/client-go v0.18.2
 	k8s.io/code-generator v0.18.5
 	k8s.io/kubernetes v1.14.10

@@ -15,8 +15,8 @@
 package cloud
 
 import (
-	v1 "bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud/v1"
-	internalinterfaces "bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/internalinterfaces"
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

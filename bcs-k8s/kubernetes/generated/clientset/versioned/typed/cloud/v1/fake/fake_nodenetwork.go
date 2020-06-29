@@ -15,9 +15,9 @@
 package fake
 
 import (
-	cloudv1 "bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	"context"
 
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
