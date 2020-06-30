@@ -14,14 +14,14 @@
 package options
 
 import (
+	"crypto/tls"
+	"errors"
+	"fmt"
 	regd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsssl "github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"crypto/tls"
-	"errors"
-	"fmt"
 	"net"
 	"net/url"
 	"strconv"

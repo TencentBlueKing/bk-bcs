@@ -14,6 +14,8 @@
 package api
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	comm "github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -22,8 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/json"
-	"errors"
 	"github.com/emicklei/go-restful"
 	"strconv"
 	"strings"

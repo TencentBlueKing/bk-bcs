@@ -14,6 +14,8 @@
 package app
 
 import (
+	"errors"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
@@ -21,8 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/app/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg/dbus"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg/rdiscover"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"

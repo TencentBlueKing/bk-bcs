@@ -14,11 +14,11 @@
 package dbus
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/app/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg/output"
-	"fmt"
 )
 
 var msgBus = DataBus{factories: make(map[output.PluginKey]output.PluginIf)}

@@ -14,8 +14,8 @@
 package resources
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"sync"
 
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"

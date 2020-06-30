@@ -14,9 +14,9 @@
 package backend
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"fmt"
 	"strings"
 )
 

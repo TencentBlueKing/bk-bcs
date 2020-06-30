@@ -14,10 +14,10 @@
 package client
 
 import (
-	mesosjson "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/json"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	mesosjson "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/json"
 	"log"
 	"net"
 	"net/http"

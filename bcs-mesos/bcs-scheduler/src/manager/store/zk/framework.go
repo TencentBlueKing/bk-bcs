@@ -14,9 +14,9 @@
 package zk
 
 import (
+	"encoding/json"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/json"
 )
 
 func (store *managerStore) SaveFrameworkID(frameworkId string) error {

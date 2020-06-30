@@ -14,9 +14,9 @@
 package gsepipeline
 
 import (
+	"encoding/json"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	gseclient "github.com/Tencent/bk-bcs/bcs-common/common/gsepipeline/client"
-	"encoding/json"
 )
 
 type gseStorage struct {

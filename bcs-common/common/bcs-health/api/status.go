@@ -22,13 +22,13 @@ import (
 	"sync"
 	"time"
 
+	"errors"
 	regd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bresp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	cli "github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"errors"
 )
 
 func newStatusController(zkServers string, tls TLSConfig) (*Status, error) {

@@ -14,9 +14,9 @@
 package proxier
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"net"
 	"net/http"
 	"net/url"

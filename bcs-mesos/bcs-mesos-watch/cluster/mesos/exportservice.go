@@ -14,6 +14,8 @@
 package mesos
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
@@ -23,8 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/json"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"

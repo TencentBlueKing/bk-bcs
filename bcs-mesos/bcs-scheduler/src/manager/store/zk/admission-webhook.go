@@ -14,10 +14,10 @@
 package zk
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 func getAdmissionWebhookRootPath() string {

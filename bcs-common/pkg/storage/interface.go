@@ -14,9 +14,9 @@
 package storage
 
 import (
+	"errors"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
-	"errors"
 
 	"golang.org/x/net/context"
 )

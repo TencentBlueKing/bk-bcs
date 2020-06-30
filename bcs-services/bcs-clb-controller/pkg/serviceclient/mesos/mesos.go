@@ -14,6 +14,7 @@
 package mesos
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
@@ -22,7 +23,6 @@ import (
 	mesosclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	listerv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
-	"fmt"
 	"reflect"
 	"strings"
 	"time"

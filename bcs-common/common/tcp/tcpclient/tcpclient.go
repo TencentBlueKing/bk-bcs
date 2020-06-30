@@ -14,10 +14,10 @@
 package tcpclient
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 	"io"
 	"net"
 	"sync"

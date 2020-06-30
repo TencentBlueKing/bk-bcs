@@ -14,9 +14,9 @@
 package executor
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
 	"os"

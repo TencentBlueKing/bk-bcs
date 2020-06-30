@@ -14,11 +14,11 @@
 package v4http
 
 import (
+	"encoding/json"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"encoding/json"
 	"strconv"
 )
 

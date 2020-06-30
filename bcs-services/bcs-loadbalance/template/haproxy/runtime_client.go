@@ -14,8 +14,8 @@
 package haproxy
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"sync"
 
 	"github.com/haproxytech/client-native/runtime"

@@ -14,10 +14,10 @@
 package custom
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	"bytes"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	"io/ioutil"
 	"net/http"
 	urllib "net/url"

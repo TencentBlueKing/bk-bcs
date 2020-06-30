@@ -14,12 +14,12 @@
 package app
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
-	"fmt"
 	"runtime"
 
 	"github.com/spf13/pflag"

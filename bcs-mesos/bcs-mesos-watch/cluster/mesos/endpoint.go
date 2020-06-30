@@ -14,13 +14,13 @@
 package mesos
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"encoding/json"
-	"fmt"
 	"reflect"
 	"sync"
 	"time"

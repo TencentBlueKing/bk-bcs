@@ -14,9 +14,9 @@
 package httpserver
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"fmt"
 	"github.com/emicklei/go-restful"
 	"github.com/gorilla/mux"
 	"net"

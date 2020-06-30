@@ -14,10 +14,10 @@
 package v4http
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"fmt"
 )
 
 func (s *Scheduler) RegisterCustomResource(body []byte) (string, error) {

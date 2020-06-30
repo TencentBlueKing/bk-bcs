@@ -14,12 +14,12 @@
 package offer
 
 import (
+	"container/list"
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"container/list"
 	"net/http"
 )
 

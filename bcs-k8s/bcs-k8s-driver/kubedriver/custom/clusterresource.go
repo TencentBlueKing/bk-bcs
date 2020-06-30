@@ -14,10 +14,10 @@
 package custom
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/client"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
-	"fmt"
 
 	restful "github.com/emicklei/go-restful"
 	v1 "k8s.io/api/core/v1"

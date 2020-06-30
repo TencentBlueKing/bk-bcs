@@ -14,6 +14,7 @@
 package scheduler
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
@@ -23,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"net/http"
 	"time"

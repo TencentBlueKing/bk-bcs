@@ -14,14 +14,14 @@
 package app
 
 import (
+	"context"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/collector"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/output"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/rdiscover"
-	"context"
-	"fmt"
 )
 
 // BcsMetricCollector BcsMetricCollector管理器定义

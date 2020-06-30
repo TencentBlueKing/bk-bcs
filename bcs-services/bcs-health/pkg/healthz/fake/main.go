@@ -14,9 +14,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/healthz"
-	"fmt"
 )
 
 func main() {

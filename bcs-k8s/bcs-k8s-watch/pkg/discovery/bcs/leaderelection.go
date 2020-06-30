@@ -14,9 +14,9 @@
 package bcs
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
-	"fmt"
 
 	"github.com/json-iterator/go"
 )

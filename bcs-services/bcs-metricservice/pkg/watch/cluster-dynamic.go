@@ -14,6 +14,8 @@
 package watch
 
 import (
+	"context"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -21,8 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
-	"context"
-	"fmt"
 	"time"
 )
 

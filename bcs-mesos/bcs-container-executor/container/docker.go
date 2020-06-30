@@ -23,10 +23,10 @@ import (
 	"strconv"
 	"strings"
 
+	"encoding/json"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/json"
 	"time"
 
 	dockerclient "github.com/fsouza/go-dockerclient"

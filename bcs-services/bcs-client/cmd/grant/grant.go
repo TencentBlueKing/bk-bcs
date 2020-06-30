@@ -14,8 +14,8 @@
 package grant
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/urfave/cli"
 )
 

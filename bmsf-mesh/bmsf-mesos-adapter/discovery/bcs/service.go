@@ -14,6 +14,7 @@
 package bcs
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
@@ -24,7 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
 	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
-	"fmt"
 	"path"
 	"reflect"
 	"strings"

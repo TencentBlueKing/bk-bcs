@@ -14,8 +14,8 @@
 package route
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"

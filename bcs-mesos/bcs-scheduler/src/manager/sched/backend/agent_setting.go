@@ -14,11 +14,11 @@
 package backend
 
 import (
+	"encoding/json"
 	comm "github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"encoding/json"
 )
 
 // DisableAgent setting agent unschedulable

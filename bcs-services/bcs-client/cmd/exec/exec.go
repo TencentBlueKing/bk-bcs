@@ -27,8 +27,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/exec/streams"
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/exec/streams"
 	//v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	"fmt"
 	//"github.com/docker/docker/api/types"

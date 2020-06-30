@@ -14,8 +14,8 @@
 package types
 
 import (
-	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"fmt"
+	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 const (

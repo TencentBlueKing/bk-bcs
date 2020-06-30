@@ -14,9 +14,9 @@
 package manager
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/etcd"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
-	"fmt"
 	"strconv"
 	"strings"
 	//"sync"

@@ -14,6 +14,8 @@
 package kubedriver
 
 import (
+	"crypto/tls"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -22,8 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/custom"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	disreg "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
-	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
 

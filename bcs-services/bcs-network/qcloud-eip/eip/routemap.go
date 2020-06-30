@@ -13,9 +13,9 @@
 package eip
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io/ioutil"
 	"os"
 	"sync"

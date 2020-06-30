@@ -13,10 +13,10 @@
 package eip
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
-	"fmt"
 	"net"
 	"os"
 	"strconv"

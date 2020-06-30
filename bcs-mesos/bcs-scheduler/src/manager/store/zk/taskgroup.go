@@ -14,10 +14,10 @@
 package zk
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"sort"
 	"strconv"
 	"strings"

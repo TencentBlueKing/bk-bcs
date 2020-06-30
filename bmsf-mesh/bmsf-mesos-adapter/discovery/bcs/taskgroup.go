@@ -14,6 +14,8 @@
 package bcs
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
@@ -24,8 +26,6 @@ import (
 	schetypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
 	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
-	"encoding/json"
-	"fmt"
 	"path"
 	"reflect"
 	"strings"

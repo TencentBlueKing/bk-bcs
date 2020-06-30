@@ -14,6 +14,7 @@
 package scheduler
 
 import (
+	"encoding/json"
 	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -22,7 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/json"
 	"net/http"
 	//"sort"
 	"strings"

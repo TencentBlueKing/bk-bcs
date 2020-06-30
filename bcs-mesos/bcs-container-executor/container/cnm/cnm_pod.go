@@ -14,13 +14,13 @@
 package cnm
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"

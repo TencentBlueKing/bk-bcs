@@ -14,8 +14,8 @@
 package metric
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"

@@ -14,6 +14,7 @@
 package custom
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
 	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers"
@@ -21,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
 	listerv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/mesh/v1"
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
-	"fmt"
 	"reflect"
 	"time"
 

@@ -14,8 +14,8 @@
 package app
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
 // Config detail configuration item

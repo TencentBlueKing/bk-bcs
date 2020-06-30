@@ -14,15 +14,15 @@
 package executor
 
 import (
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proc_daemon "github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/proc-daemon"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"context"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"

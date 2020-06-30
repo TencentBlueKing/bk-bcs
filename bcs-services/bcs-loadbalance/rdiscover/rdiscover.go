@@ -14,11 +14,11 @@
 package rdiscover
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"encoding/json"
-	"fmt"
 	"net"
 	"os"
 	"sync"

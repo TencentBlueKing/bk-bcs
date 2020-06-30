@@ -14,6 +14,7 @@
 package driver
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -21,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/route"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
-	"fmt"
 	"strings"
 
 	simplejson "github.com/bitly/go-simplejson"

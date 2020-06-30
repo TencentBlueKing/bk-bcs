@@ -14,9 +14,9 @@
 package app
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"bytes"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"io/ioutil"
 	"net/http"
 	"testing"

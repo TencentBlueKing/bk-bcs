@@ -14,11 +14,11 @@
 package main
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"io/ioutil"
 
 	networkv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"

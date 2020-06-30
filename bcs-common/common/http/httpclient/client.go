@@ -14,10 +14,10 @@
 package httpclient
 
 import (
-	http2 "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"bytes"
 	"crypto/tls"
+	http2 "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"io/ioutil"
 	"net"
 	"net/http"

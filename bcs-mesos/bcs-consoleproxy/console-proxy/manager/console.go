@@ -18,9 +18,9 @@ import (
 	"io"
 	"net/http"
 
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
-	"fmt"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/websocket"
 	"time"

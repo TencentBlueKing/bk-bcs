@@ -14,12 +14,12 @@
 package zookeeper
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
-	"fmt"
 	"path"
 	"strings"
 	"time"

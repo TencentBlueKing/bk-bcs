@@ -14,12 +14,12 @@
 package haproxy
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/util"
-	"fmt"
 	"html/template"
 	"math/rand"
 	"os"

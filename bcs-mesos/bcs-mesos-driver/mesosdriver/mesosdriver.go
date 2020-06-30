@@ -14,6 +14,8 @@
 package mesosdriver
 
 import (
+	"encoding/json"
+	"fmt"
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
@@ -25,8 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/v4http"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/filter"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"runtime"

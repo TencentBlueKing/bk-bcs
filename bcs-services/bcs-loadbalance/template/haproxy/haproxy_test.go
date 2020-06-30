@@ -13,8 +13,8 @@
 package haproxy
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 	"bytes"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 	"html/template"
 	"io/ioutil"
 	"testing"

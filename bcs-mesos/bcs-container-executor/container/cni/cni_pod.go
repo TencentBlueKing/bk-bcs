@@ -14,6 +14,8 @@
 package cni
 
 import (
+	"bytes"
+	"fmt"
 	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
@@ -21,8 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"

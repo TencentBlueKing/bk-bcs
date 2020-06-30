@@ -14,14 +14,14 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/manager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strconv"

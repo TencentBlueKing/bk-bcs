@@ -14,11 +14,11 @@
 package k8s
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
-	"fmt"
 	mapset "github.com/deckarep/golang-set"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"

@@ -14,13 +14,13 @@
 package scheduler
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"net/http"
 	"time"

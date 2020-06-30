@@ -14,6 +14,8 @@
 package scheduler
 
 import (
+	"encoding/json"
+	"fmt"
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -29,8 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"encoding/json"
-	"fmt"
 	"github.com/andygrunwald/megos"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

@@ -14,11 +14,11 @@
 package master
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
-	"encoding/json"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"

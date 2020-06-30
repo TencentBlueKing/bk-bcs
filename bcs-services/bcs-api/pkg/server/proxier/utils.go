@@ -19,8 +19,8 @@ import (
 	"net/url"
 	"strings"
 
-	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"fmt"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 )
 
 const (

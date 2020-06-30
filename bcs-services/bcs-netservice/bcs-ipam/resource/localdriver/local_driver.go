@@ -14,10 +14,10 @@
 package localdriver
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"database/sql"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 
 	"go4.org/lock"
 	//import sqlite3

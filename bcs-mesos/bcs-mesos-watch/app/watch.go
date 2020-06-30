@@ -14,6 +14,8 @@
 package app
 
 import (
+	"encoding/json"
+	"fmt"
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -24,8 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"

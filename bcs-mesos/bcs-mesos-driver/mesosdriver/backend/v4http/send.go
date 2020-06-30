@@ -14,11 +14,11 @@
 package v4http
 
 import (
+	"encoding/json"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/json"
 	"github.com/bitly/go-simplejson"
 )
 

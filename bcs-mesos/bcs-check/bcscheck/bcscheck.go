@@ -14,6 +14,8 @@
 package bcscheck
 
 import (
+	"encoding/json"
+	"fmt"
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
@@ -22,8 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/manager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/task"
-	"encoding/json"
-	"fmt"
 	"golang.org/x/net/context"
 	"os"
 	"runtime"

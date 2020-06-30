@@ -14,11 +14,11 @@
 package manager
 
 import (
+	"context"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/collector"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/register"
-	"context"
-	"fmt"
 )
 
 type manager struct {

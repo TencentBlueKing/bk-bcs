@@ -14,12 +14,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/app"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"fmt"
 	"os"
 	"runtime"
 )

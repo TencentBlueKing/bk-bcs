@@ -14,13 +14,13 @@
 package kubedriver
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/custom"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/versions"
-	"bytes"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	urllib "net/url"

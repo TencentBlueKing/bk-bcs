@@ -14,6 +14,9 @@
 package app
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cni"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cnm"
@@ -26,9 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"

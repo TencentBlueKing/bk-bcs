@@ -14,11 +14,11 @@
 package watch
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
-	"fmt"
 	"time"
 )
 

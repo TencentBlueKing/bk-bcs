@@ -14,8 +14,8 @@
 package queue
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 )
 
 // Queue integrates all data events to one seqential queue

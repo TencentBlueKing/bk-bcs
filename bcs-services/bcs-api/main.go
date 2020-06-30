@@ -14,6 +14,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog/glog"
@@ -24,7 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
-	"fmt"
 	"log"
 	"os"
 	"runtime"

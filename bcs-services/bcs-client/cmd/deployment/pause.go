@@ -14,9 +14,9 @@
 package deployment
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"fmt"
 
 	"github.com/urfave/cli"
 )

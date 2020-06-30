@@ -14,8 +14,8 @@
 package custom
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 	uuid "github.com/satori/go.uuid"
 )

@@ -14,6 +14,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -21,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage/zookeeper"
-	"fmt"
 	"os"
 	"os/signal"
 	"strconv"

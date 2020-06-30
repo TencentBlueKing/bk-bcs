@@ -14,6 +14,9 @@
 package task
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -22,9 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"

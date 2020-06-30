@@ -14,6 +14,9 @@
 package storage
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
@@ -24,9 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"

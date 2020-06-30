@@ -14,6 +14,8 @@
 package processor
 
 import (
+	"context"
+	"fmt"
 	rdiscover "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -24,8 +26,6 @@ import (
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 	svccadapter "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/adapter"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gw-controller/pkg/gw"
-	"context"
-	"fmt"
 	"time"
 )
 

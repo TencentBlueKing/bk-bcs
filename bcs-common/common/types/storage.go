@@ -14,9 +14,9 @@
 package types
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
 // BcsStorageDynamicIf define storage dynamic interface data interaction

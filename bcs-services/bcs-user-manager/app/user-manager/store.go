@@ -14,8 +14,8 @@
 package user_manager
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"

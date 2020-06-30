@@ -14,8 +14,8 @@
 package operator
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"encoding/json"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	//"strconv"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"

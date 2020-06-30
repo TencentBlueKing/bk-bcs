@@ -14,12 +14,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/manager"
 	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
 	nettypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
-	"encoding/json"
-	"fmt"
 	"net"
 	"strconv"
 

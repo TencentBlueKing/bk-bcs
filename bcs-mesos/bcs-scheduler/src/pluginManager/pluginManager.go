@@ -14,12 +14,12 @@
 package pluginManager
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/config"
 	bcsplugin "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/plugin"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/plugin/dynamicPlugin"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"

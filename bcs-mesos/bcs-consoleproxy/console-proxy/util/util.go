@@ -14,9 +14,9 @@
 package util
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"fmt"
 )
 
 // CreateResponeData create response data

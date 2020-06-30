@@ -14,6 +14,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	loadbalance "github.com/Tencent/bk-bcs/bcs-common/pkg/loadbalance/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/clear"
@@ -26,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template/haproxy"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template/nginx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
-	"fmt"
 	"os"
 	"reflect"
 	"time"

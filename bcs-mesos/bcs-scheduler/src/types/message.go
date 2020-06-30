@@ -14,10 +14,10 @@
 package types
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/deepcopy"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"fmt"
 )
 
 //Message discribe all msg from bcs scheduler to bcs executor

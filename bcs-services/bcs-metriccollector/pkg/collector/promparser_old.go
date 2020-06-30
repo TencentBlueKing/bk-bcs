@@ -14,8 +14,8 @@
 package collector
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"bufio"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io"
 	"strconv"
 	"strings"

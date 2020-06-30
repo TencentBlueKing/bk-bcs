@@ -14,8 +14,8 @@
 package template
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 
