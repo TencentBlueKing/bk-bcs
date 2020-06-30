@@ -14,12 +14,12 @@
 package driver
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/executor"
-	protoExec "bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf/executor"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/executor"
+	protoExec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"context"
 	"encoding/base64"
 	"encoding/json"

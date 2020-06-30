@@ -14,8 +14,8 @@
 package watch
 
 import (
-	btypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 )
 
 type EventType int

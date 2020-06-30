@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"time"
 

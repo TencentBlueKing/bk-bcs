@@ -20,12 +20,12 @@ import (
 	"strconv"
 	"time"
 
-	rd "bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	commtype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/report"
+	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/report"
 
 	"golang.org/x/net/context"
 )

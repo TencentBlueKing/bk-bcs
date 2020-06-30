@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/config"
-	"bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/gorilla/websocket"
 )
 

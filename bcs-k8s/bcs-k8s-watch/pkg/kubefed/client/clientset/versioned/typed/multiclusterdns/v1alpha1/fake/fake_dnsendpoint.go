@@ -16,7 +16,7 @@
 package fake
 
 import (
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/multiclusterdns/v1alpha1"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/multiclusterdns/v1alpha1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"

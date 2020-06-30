@@ -16,7 +16,7 @@ package metric
 import (
 	"github.com/emicklei/go-restful"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // JSONStatus json status

@@ -14,7 +14,7 @@
 package queue
 
 import (
-	"bk-bcs/bcs-common/pkg/watch"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 	"fmt"
 )
 

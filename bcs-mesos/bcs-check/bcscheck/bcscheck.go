@@ -14,14 +14,14 @@
 package bcscheck
 
 import (
-	rd "bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/metric"
-	commtype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/manager"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/task"
+	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/task"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context"

@@ -14,13 +14,13 @@
 package mesos
 
 import (
-	"bk-bcs/bcs-common/pkg/cache"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 
-	//schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
+	//schedulertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
 	"reflect"

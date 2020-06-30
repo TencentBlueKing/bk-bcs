@@ -14,8 +14,8 @@
 package reflector
 
 import (
-	"bk-bcs/bcs-common/pkg/meta"
-	"bk-bcs/bcs-common/pkg/watch"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 	"fmt"
 )
 

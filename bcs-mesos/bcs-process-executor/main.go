@@ -17,10 +17,10 @@ import (
 	"encoding/json"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-mesos/bcs-process-executor/app"
-	"bk-bcs/bcs-mesos/bcs-process-executor/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/app"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/app/options"
 )
 
 func main() {

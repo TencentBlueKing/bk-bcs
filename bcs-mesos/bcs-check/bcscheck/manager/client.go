@@ -14,7 +14,7 @@
 package manager
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"bytes"
 	"io/ioutil"
 	"net/http"

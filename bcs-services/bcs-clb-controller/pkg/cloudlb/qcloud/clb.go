@@ -17,13 +17,13 @@ import (
 	"fmt"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	loadbalance "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/api"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/sdk"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/sdk"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

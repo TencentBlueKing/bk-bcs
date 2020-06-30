@@ -19,10 +19,10 @@ import (
 	"strings"
 	"sync"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/config"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-sd-prometheus/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-sd-prometheus/discovery"
 )
 
 type PrometheusController struct {

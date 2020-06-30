@@ -14,13 +14,13 @@
 package etcd
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/util"
-	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
+	schedulertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
 	"os"
 	"strconv"
 	"sync"

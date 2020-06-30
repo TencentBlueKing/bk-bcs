@@ -1,4 +1,4 @@
-module bk-bcs
+module github.com/Tencent/bk-bcs
 
 go 1.14
 

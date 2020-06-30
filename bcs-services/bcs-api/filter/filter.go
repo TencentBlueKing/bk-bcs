@@ -16,9 +16,9 @@ package filter
 import (
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	bcshttp "bk-bcs/bcs-common/common/http"
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcshttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 
 	"github.com/emicklei/go-restful"
 )

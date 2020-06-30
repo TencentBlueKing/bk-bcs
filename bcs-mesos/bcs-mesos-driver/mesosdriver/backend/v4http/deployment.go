@@ -17,11 +17,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
-	bcstype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 func (s *Scheduler) CreateDeployment(body []byte) (string, error) {

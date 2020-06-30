@@ -14,14 +14,14 @@
 package resources
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"fmt"
 	"sync"
 
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/config"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/metrics"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/reflector"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/metrics"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/reflector"
 )
 
 type resourceMetrics struct {

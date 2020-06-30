@@ -14,11 +14,11 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/app"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/app"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"fmt"
 	"os"
 	"runtime"

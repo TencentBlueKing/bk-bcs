@@ -14,7 +14,7 @@
 package apis
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
 )
 
 func init() {

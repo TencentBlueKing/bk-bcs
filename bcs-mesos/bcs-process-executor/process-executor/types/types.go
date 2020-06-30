@@ -14,9 +14,9 @@
 package types
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"time"
 )
 

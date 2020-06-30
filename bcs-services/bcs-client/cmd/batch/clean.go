@@ -20,11 +20,11 @@ import (
 	"os"
 	"strings"
 
-	mesostype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/metastream"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/metastream"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 
 	"github.com/urfave/cli"
 )

@@ -18,10 +18,10 @@ import (
 	"os"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-storage/app"
-	"bk-bcs/bcs-services/bcs-storage/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 )
 
 func main() {

@@ -15,9 +15,9 @@
 package internalclientset
 
 import (
-	clbv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
-	meshv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/mesh/v1"
-	networkv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
+	clbv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/mesh/v1"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

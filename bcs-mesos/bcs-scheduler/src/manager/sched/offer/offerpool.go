@@ -14,12 +14,12 @@
 package offer
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	typesplugin "bk-bcs/bcs-common/common/plugin"
-	commtype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
 	"encoding/json"
 	"fmt"

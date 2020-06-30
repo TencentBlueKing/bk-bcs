@@ -14,7 +14,7 @@
 package utils
 
 import (
-	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"fmt"
 )
 

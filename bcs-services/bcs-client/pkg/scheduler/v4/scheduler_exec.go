@@ -14,8 +14,8 @@
 package v4
 
 import (
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"context"
 	"fmt"
 	"net/http"

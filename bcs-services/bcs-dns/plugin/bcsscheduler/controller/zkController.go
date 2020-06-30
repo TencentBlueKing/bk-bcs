@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-common/pkg/cache"
-	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
-	bcsSchedulerUtil "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
+	bcsSchedulerUtil "github.com/Tencent/bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/util"
 	clientGoCache "k8s.io/client-go/tools/cache"
 
 	"github.com/samuel/go-zookeeper/zk"

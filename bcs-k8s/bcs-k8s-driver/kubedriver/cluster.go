@@ -14,7 +14,7 @@
 package kubedriver
 
 import (
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	"fmt"
 
 	"github.com/parnurzeal/gorequest"

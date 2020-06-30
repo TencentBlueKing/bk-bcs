@@ -14,8 +14,8 @@
 package etcd
 
 import (
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-services/bcs-dns/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-dns/storage"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"

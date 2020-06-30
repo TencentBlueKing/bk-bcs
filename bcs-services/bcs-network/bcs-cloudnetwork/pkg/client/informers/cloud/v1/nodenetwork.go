@@ -15,10 +15,10 @@
 package v1
 
 import (
-	cloud_v1 "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
-	internalinterfaces "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/internalinterfaces"
-	internalclientset "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
-	v1 "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/lister/cloud/v1"
+	cloud_v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/internalinterfaces"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/lister/cloud/v1"
 	time "time"
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

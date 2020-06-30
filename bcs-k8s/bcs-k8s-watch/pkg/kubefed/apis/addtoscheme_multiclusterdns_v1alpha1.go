@@ -14,7 +14,7 @@
 package apis
 
 import (
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/multiclusterdns/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/multiclusterdns/v1alpha1"
 )
 
 func init() {

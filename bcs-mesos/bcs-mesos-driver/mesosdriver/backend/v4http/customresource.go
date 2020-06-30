@@ -14,7 +14,7 @@
 package v4http
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"bytes"
 	"encoding/json"
 	"fmt"

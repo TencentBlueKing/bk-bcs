@@ -16,7 +16,7 @@
 package v2
 
 import (
-	v2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"

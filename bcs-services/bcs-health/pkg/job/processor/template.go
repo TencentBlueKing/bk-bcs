@@ -14,7 +14,7 @@
 package processor
 
 import (
-	"bk-bcs/bcs-services/bcs-health/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/util"
 	"fmt"
 	"time"
 )

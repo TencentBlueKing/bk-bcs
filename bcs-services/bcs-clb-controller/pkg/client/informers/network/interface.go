@@ -15,8 +15,8 @@
 package network
 
 import (
-	internalinterfaces "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/internalinterfaces"
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/network/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/internalinterfaces"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/network/v1"
 )
 
 // Interface provides access to each of this group's versions.

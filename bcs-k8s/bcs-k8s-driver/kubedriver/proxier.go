@@ -14,10 +14,10 @@
 package kubedriver
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/custom"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/versions"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/custom"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/versions"
 	"bytes"
 	"errors"
 	"fmt"

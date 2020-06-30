@@ -16,11 +16,11 @@
 package fake
 
 import (
-	corev1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/v1alpha1"
-	corev1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/v1beta1"
-	multiclusterdnsv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/multiclusterdns/v1alpha1"
-	schedulingv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/scheduling/v1alpha1"
-	typesv1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/types/v1beta1"
+	corev1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/v1alpha1"
+	corev1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/v1beta1"
+	multiclusterdnsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/multiclusterdns/v1alpha1"
+	schedulingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/scheduling/v1alpha1"
+	typesv1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/types/v1beta1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"

@@ -14,7 +14,7 @@
 package sdk
 
 import (
-	cloudlbType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	cloudlbType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 )
 
 const (

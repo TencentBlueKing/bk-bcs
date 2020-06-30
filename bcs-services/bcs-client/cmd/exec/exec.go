@@ -14,11 +14,11 @@
 package exec
 
 import (
-	"bk-bcs/bcs-common/common/types"
-	v1 "bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-	//"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	//"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"github.com/docker/docker/pkg/signal"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -27,9 +27,9 @@ import (
 	"runtime"
 	"time"
 
-	"bk-bcs/bcs-services/bcs-client/cmd/exec/streams"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/exec/streams"
 	"context"
-	//v1 "bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	//v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	"fmt"
 	//"github.com/docker/docker/api/types"
 	"github.com/moby/term"

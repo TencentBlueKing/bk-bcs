@@ -14,14 +14,14 @@
 package scheduler
 
 import (
-	alarm "bk-bcs/bcs-common/common/bcs-health/api"
-	"bk-bcs/bcs-common/common/blog"
-	bcstype "bk-bcs/bcs-common/common/types"
-	containertypes "bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"net/http"
 	//"sort"

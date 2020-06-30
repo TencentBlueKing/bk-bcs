@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	internalclientset "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions"
 
 	docker "github.com/fsouza/go-dockerclient"
 	corev1 "k8s.io/api/core/v1"

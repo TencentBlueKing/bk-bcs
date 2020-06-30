@@ -14,7 +14,7 @@
 package proxier
 
 import (
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"errors"
 	"fmt"
 	"net"
@@ -24,12 +24,12 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/metric"
-	"bk-bcs/bcs-services/bcs-api/pkg/auth"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
-	"bk-bcs/bcs-services/bcs-api/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/auth"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/utils"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"

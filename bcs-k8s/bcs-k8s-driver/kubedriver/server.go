@@ -14,14 +14,14 @@
 package kubedriver
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/custom"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
-	disreg "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/custom"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
+	disreg "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
 	"crypto/tls"
 	"fmt"
 	"net"

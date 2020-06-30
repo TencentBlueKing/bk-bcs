@@ -21,12 +21,12 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	comtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/pkg/cache"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
-	"bk-bcs/bcs-mesos/bcs-container-executor/container"
-	schtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	schtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"

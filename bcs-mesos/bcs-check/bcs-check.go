@@ -16,10 +16,10 @@ package main
 import (
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-mesos/bcs-check/app"
-	"bk-bcs/bcs-mesos/bcs-check/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/app"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/app/options"
 )
 
 func main() {

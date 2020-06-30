@@ -21,12 +21,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/pkg/cache"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
 
 	"golang.org/x/net/context"
 )

@@ -14,10 +14,10 @@
 package storage
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	containertypes "bk-bcs/bcs-mesos/bcs-container-executor/container"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
 	"time"

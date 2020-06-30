@@ -14,9 +14,9 @@
 package manager
 
 import (
-	"bk-bcs/bcs-services/bcs-metriccollector/app/config"
-	"bk-bcs/bcs-services/bcs-metriccollector/pkg/collector"
-	"bk-bcs/bcs-services/bcs-metriccollector/pkg/register"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/collector"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/register"
 	"context"
 	"fmt"
 )

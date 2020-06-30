@@ -14,7 +14,7 @@
 package ns
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"context"
 
 	corev1 "k8s.io/api/core/v1"

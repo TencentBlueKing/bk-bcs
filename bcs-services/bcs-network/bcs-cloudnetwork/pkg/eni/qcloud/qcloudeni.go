@@ -13,7 +13,7 @@
 package qcloud
 
 import (
-	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
 )
 
 // Client qcloud client

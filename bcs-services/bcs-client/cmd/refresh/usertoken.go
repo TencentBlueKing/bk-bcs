@@ -16,8 +16,8 @@ package refresh
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
 )
 
 func refreshUsertoken(c *utils.ClientContext) error {

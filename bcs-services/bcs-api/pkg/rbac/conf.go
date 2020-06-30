@@ -14,11 +14,11 @@
 package rbac
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/options"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	rbacUtils "bk-bcs/bcs-services/bcs-api/pkg/rbac/utils"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	rbacUtils "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/rbac/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 	"k8s.io/client-go/kubernetes"
 	"strings"
 )

@@ -19,14 +19,14 @@ import (
 	"net/http"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-health/master/app/config"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
-	"bk-bcs/bcs-services/bcs-health/pkg/register"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/master/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/register"
 )
 
 const (

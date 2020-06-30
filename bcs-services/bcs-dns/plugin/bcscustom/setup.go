@@ -24,9 +24,9 @@ import (
 	"net/http"
 	"time"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"

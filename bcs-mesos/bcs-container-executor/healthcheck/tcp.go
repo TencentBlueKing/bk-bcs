@@ -14,7 +14,7 @@
 package healthcheck
 
 import (
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"fmt"
 	"net"
 	"strconv"

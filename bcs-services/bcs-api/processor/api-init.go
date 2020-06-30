@@ -15,17 +15,17 @@ package processor
 
 import (
 	//import v4 http clusterkeeper actions
-	_ "bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/clusterkeeper"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/clusterkeeper"
 	//import v4 http k8s actions
-	_ "bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/k8s"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/k8s"
 	//import v4 http mesos actions
-	_ "bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/mesos"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/mesos"
 	//import v4 http metrics actions
-	_ "bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/metrics"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/metrics"
 	//import v4 http netservice actions
-	_ "bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/netservice"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/netservice"
 	//import v4 http storage actions
-	_ "bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/storage"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/storage"
 	//import v4 http detection actions
-	_ "bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/detection"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/detection"
 )

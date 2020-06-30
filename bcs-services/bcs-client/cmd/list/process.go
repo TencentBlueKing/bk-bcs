@@ -18,9 +18,9 @@ import (
 	"net/url"
 	"sort"
 
-	commonTypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 )
 
 func listProcess(c *utils.ClientContext) error {

@@ -16,7 +16,7 @@ package lib
 import (
 	"encoding/base64"
 
-	"bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
 func NewExtra(raw string) *ExtraField {

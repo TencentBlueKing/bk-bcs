@@ -14,8 +14,8 @@
 package option
 
 import (
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 	"fmt"
 	"os"
 	"strings"

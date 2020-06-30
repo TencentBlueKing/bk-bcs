@@ -14,8 +14,8 @@
 package util
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"fmt"
 )
 

@@ -19,10 +19,10 @@ import (
 	"strconv"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	bcsconf "bk-bcs/bcs-services/bcs-netservice/config"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"

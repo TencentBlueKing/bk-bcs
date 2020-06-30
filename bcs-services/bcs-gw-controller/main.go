@@ -14,7 +14,7 @@
 package main
 
 import (
-	"bk-bcs/bcs-services/bcs-gw-controller/cmd"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gw-controller/cmd"
 )
 
 func main() {

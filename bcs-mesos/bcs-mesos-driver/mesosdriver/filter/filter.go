@@ -14,7 +14,7 @@
 package filter
 
 import (
-	bcshttp "bk-bcs/bcs-common/common/http"
+	bcshttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/emicklei/go-restful"
 	"net/http"
 )

@@ -17,11 +17,12 @@ import (
 	"fmt"
 	"net/url"
 
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
-	kubefedClientSet "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
-	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	webhookClientSet "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	kubefedClientSet "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	webhookClientSet "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
 	extensionsClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"

@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
 )
 
 type Meta struct {

@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-gateway-discovery/register"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 )
 
 var defaultModules = []string{

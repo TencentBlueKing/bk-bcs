@@ -15,8 +15,8 @@
 package v1
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/scheme"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/scheme"
 
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"

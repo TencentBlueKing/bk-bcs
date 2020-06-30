@@ -19,9 +19,9 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 )

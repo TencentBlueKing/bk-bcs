@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"os"
 
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm/kafka/app"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm/kafka/app"
 	"github.com/elastic/beats/libbeat/beat"
 )
 

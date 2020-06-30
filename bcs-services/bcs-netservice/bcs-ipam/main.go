@@ -14,17 +14,17 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common/util"
-	"bk-bcs/bcs-services/bcs-netservice/bcs-ipam/manager"
-	bcsconf "bk-bcs/bcs-services/bcs-netservice/config"
-	nettypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/manager"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
+	nettypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"

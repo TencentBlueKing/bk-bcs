@@ -14,8 +14,8 @@
 package tcpserver
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/tcp/protocol"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/protocol"
 	"net"
 	"time"
 )

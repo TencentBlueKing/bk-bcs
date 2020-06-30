@@ -14,8 +14,8 @@
 package main
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"golang.org/x/net/context"
 )
 

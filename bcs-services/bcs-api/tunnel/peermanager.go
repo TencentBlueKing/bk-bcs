@@ -21,11 +21,11 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/websocketDialer"
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"golang.org/x/net/context"
 )
 

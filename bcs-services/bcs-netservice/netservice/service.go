@@ -14,10 +14,10 @@
 package netservice
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-services/bcs-netservice/bcstypes"
-	"bk-bcs/bcs-services/bcs-netservice/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcstypes"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 	"encoding/json"
 	"os"
 	"path/filepath"

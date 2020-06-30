@@ -21,9 +21,9 @@ import (
 	"net/url"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 )
 
 func NewHttpReverseProxy(target *url.URL, certConfig *config.CertConfig) (*httputil.ReverseProxy, error) {

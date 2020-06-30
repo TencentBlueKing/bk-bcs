@@ -15,7 +15,7 @@
 package informers
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
 	"fmt"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

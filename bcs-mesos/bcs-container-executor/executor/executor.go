@@ -14,7 +14,7 @@
 package executor
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"encoding/base64"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,10 +24,10 @@ import (
 	"sync"
 	"time"
 
-	conn "bk-bcs/bcs-mesos/bcs-container-executor/connection"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	exec "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	conn "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/connection"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	exec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/upid"

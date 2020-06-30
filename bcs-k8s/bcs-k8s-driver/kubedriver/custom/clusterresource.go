@@ -14,9 +14,9 @@
 package custom
 
 import (
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/client"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/client"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	"fmt"
 
 	restful "github.com/emicklei/go-restful"

@@ -14,7 +14,7 @@
 package store
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"time"
 )

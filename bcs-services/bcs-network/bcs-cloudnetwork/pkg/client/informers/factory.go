@@ -15,9 +15,9 @@
 package informers
 
 import (
-	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/cloud"
-	internalinterfaces "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/internalinterfaces"
-	internalclientset "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
+	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/cloud"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/internalinterfaces"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
 	reflect "reflect"
 	sync "sync"
 	time "time"

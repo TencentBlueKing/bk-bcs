@@ -17,9 +17,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-networkpolicy/options"
-	"bk-bcs/bcs-services/bcs-networkpolicy/server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-networkpolicy/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-networkpolicy/server"
 )
 
 func main() {

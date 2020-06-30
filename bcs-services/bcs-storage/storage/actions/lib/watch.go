@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	restful "github.com/emicklei/go-restful"
 )

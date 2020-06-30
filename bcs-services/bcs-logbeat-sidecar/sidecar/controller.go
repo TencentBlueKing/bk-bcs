@@ -14,10 +14,10 @@
 package sidecar
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
-	"bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
-	bkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
+	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"fmt"
 	"io/ioutil"
 	"os"

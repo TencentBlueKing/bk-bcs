@@ -14,10 +14,10 @@
 package operator
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
-	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
+	master "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"

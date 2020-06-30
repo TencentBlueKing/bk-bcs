@@ -14,11 +14,11 @@
 package netdriver
 
 import (
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-services/bcs-netservice/bcs-ipam/conf"
-	"bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"fmt"
 	"strings"
 )

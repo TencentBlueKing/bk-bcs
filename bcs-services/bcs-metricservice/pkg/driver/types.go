@@ -14,12 +14,12 @@
 package driver
 
 import (
-	btypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/route"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/types"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
+	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/route"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
 	"fmt"
 
 	simplejson "github.com/bitly/go-simplejson"

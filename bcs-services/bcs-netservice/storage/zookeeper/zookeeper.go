@@ -14,9 +14,9 @@
 package zookeeper
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-services/bcs-netservice/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 	"fmt"
 	"strings"
 	"time"

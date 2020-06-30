@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	commtypes "bk-bcs/bcs-common/common/types"
-	moduleDiscovery "bk-bcs/bcs-common/pkg/module-discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
 )
 
 type MesosDriverClient struct {

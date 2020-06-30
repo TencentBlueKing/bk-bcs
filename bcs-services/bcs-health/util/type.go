@@ -14,7 +14,7 @@
 package util
 
 import (
-	"bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
 )

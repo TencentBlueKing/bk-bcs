@@ -61,6 +61,7 @@ RUN mkdir -p /usr/local/nginx/tmp && mkdir -p /var/log/nginx
 ENV BCS_EGRESS_PORT=12345
 
 # prepare egress-controller requirements
+RUN mkdir -p /data/bcs/bcs-egress-controller/template
 COPY config/nginx.conf.template /data/bcs/bcs-egress-controller/template
 COPY config/nginx.conf /usr/local/nginx/conf/
 RUN chmod +x /data/bcs/bcs-egress-controller/container-start.sh 

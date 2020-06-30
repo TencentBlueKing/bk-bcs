@@ -13,7 +13,7 @@
 package main
 
 import (
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/eni"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/eni"
 	"runtime"
 
 	"github.com/containernetworking/cni/pkg/skel"

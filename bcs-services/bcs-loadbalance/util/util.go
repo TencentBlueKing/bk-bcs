@@ -14,7 +14,7 @@
 package util
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"crypto/md5"
 	"fmt"
 	"io"

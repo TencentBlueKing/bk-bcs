@@ -14,7 +14,7 @@
 package zookeeper
 
 import (
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 type search struct {

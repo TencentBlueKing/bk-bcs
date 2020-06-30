@@ -14,7 +14,7 @@
 package types
 
 import (
-	"bk-bcs/bcs-common/common/deepcopy"
+	"github.com/Tencent/bk-bcs/bcs-common/common/deepcopy"
 	"fmt"
 )
 

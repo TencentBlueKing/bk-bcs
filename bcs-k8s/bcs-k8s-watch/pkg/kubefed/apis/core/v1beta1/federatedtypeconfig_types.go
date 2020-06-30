@@ -20,7 +20,7 @@ import (
 	apiextv1b1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/common"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/common"
 )
 
 // FederatedTypeConfigSpec defines the desired state of FederatedTypeConfig.

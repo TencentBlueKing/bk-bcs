@@ -16,7 +16,7 @@
 package v1
 
 import (
-	internalinterfaces "bk-bcs/bmsf-mesh/pkg/client/informers/internalinterfaces"
+	internalinterfaces "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/informers/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

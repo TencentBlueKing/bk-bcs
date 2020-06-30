@@ -18,9 +18,9 @@ import (
 	"net/http"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-	"bk-bcs/bcs-services/bcs-api/tunnel"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
 )
 
 // LookupWsHandler will lookup websocket dialer in cache

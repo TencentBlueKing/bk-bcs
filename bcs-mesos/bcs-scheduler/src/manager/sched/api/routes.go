@@ -27,8 +27,8 @@ Please see the api document for details.
 package api
 
 import (
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/backend"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/backend"
 )
 
 type Router struct {

@@ -16,7 +16,7 @@ package task
 import (
 	"testing"
 
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"github.com/stretchr/testify/assert"
 )

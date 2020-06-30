@@ -14,11 +14,11 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg"
 )
 
 // BcsMetricService BcsMetricService管理器定义

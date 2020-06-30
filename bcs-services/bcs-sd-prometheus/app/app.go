@@ -14,11 +14,11 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/app/options"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/config"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/controller"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-sd-prometheus/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-sd-prometheus/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-sd-prometheus/controller"
 )
 
 //Run the prometheus controller

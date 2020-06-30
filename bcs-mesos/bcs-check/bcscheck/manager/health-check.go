@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
 
 	"golang.org/x/net/context"
 )

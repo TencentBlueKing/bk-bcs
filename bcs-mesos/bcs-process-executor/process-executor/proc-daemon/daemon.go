@@ -14,8 +14,8 @@
 package proc_daemon
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 	"fmt"
 	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json"
 )

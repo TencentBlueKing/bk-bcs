@@ -16,8 +16,8 @@
 package v1
 
 import (
-	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
-	"bk-bcs/bmsf-mesh/pkg/client/internalclientset/scheme"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset/scheme"
 
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"

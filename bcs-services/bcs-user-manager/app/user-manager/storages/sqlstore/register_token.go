@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/dchest/uniuri"
 )
 

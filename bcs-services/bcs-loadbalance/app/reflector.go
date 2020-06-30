@@ -23,12 +23,12 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/cache"
-	loadbalance "bk-bcs/bcs-common/pkg/loadbalance/v2"
-	"bk-bcs/bcs-services/bcs-loadbalance/option"
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
-	"bk-bcs/bcs-services/bcs-loadbalance/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-common/pkg/loadbalance/v2"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/option"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/util"
 
 	"github.com/samuel/go-zookeeper/zk"
 )

@@ -14,17 +14,17 @@
 package pkg
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/api"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/health"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/manager"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/route"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/health"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/route"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
 )
 
 // StorageServer is a data struct of bcs storage server

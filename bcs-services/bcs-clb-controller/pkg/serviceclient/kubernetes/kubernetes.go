@@ -29,8 +29,8 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

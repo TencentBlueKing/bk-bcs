@@ -14,8 +14,8 @@
 package output
 
 import (
-	"bk-bcs/bcs-services/bcs-exporter/app/config"
-	"bk-bcs/bcs-services/bcs-exporter/pkg"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg"
 )
 
 // PluginKey Plugin key

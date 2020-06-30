@@ -15,6 +15,6 @@ package app
 
 import (
 	//import predicate actions
-	_ "bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions/bind"
-	_ "bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions/predicate"
+	_ "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions/bind"
+	_ "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions/predicate"
 )

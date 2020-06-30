@@ -13,7 +13,7 @@
 
 package mesosdriver
 
-import "bk-bcs/bcs-common/common/types"
+import "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 type Config struct {
 	ZkAddr string

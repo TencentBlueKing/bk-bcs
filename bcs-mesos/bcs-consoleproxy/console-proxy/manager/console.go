@@ -18,8 +18,8 @@ import (
 	"io"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
 	"fmt"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/websocket"

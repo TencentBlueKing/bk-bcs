@@ -30,7 +30,7 @@ package executor
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import mesos_v1 "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+import mesos_v1 "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

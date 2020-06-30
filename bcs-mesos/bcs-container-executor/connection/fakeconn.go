@@ -28,8 +28,8 @@ import (
 
 	"io"
 
-	exe "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	exe "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 
 	"github.com/golang/protobuf/proto"
 )

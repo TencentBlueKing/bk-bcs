@@ -16,7 +16,7 @@
 package internalclientset
 
 import (
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2"
 
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"

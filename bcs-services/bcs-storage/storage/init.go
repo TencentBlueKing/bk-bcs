@@ -15,5 +15,5 @@ package bcsstorage
 
 import (
 	// trigger v1http init for register handlers to actions
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http"
 )

@@ -14,15 +14,15 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 
-	networkv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud"
 )
 
 var action string

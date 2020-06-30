@@ -14,13 +14,13 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-services/bcs-netservice/api"
-	"bk-bcs/bcs-services/bcs-netservice/netservice"
-	"bk-bcs/bcs-services/bcs-netservice/storage"
-	"bk-bcs/bcs-services/bcs-netservice/storage/zookeeper"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage/zookeeper"
 	"fmt"
 	"os"
 	"os/signal"

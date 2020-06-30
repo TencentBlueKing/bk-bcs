@@ -16,17 +16,17 @@ package resthdrs
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-api/metric"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/proxier"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/types"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/proxier"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke"
 	"github.com/emicklei/go-restful"
 	"time"
 )

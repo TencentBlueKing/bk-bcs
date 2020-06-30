@@ -14,13 +14,13 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	comconf "bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/app/options"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/api"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/manager"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	comconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/app/options"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/api"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/manager"
 	"os"
 )
 

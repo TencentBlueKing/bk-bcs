@@ -14,13 +14,13 @@
 package custom
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
-	informers "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers"
-	informermeshv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/mesh/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
-	listerv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/mesh/v1"
-	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
+	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers"
+	informermeshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/mesh/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
+	listerv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/mesh/v1"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 	"fmt"
 	"reflect"
 	"time"

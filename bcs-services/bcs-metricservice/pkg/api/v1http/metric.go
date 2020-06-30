@@ -14,12 +14,12 @@
 package v1http
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/api"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"fmt"
 	"io/ioutil"
 	"net/http"

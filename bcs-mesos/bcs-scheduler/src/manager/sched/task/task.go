@@ -14,14 +14,14 @@
 package task
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	bcstype "bk-bcs/bcs-common/common/types"
-	commtypes "bk-bcs/bcs-common/common/types"
-	offerP "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	offerP "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"

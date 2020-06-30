@@ -14,14 +14,14 @@
 package mesos
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	bcstypes "bk-bcs/bcs-common/common/types"
-	v2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	mesosinformers "bk-bcs/bcs-mesos/pkg/client/informers"
-	informerv2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
-	mesosclientset "bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	listerv2 "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
-	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	mesosinformers "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
+	informerv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
+	mesosclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	listerv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 	"fmt"
 	"reflect"
 	"strings"

@@ -14,7 +14,7 @@
 package controller
 
 import (
-	"bk-bcs/bmsf-mesh/pkg/controller/appsvc"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/pkg/controller/appsvc"
 )
 
 func init() {

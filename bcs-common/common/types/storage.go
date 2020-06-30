@@ -14,7 +14,7 @@
 package types
 
 import (
-	"bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"encoding/base64"
 	"encoding/json"
 )

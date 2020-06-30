@@ -19,10 +19,10 @@ import (
 
 	"github.com/spf13/pflag"
 
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/util/basic"
 )
 
 func main() {

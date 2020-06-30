@@ -19,11 +19,11 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-services/bcs-api/auth"
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 
 	"github.com/samuel/go-zookeeper/zk"
 	"strings"

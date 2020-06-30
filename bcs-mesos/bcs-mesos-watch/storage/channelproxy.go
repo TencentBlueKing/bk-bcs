@@ -14,8 +14,8 @@
 package storage
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 
 	"golang.org/x/net/context"
 	"time"

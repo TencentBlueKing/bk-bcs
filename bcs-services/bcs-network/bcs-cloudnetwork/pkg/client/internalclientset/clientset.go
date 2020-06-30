@@ -15,7 +15,7 @@
 package internalclientset
 
 import (
-	cloudv1 "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/typed/cloud/v1"
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/typed/cloud/v1"
 
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"

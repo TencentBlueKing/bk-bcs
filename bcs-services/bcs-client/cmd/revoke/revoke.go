@@ -14,7 +14,7 @@
 package revoke
 
 import (
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"fmt"
 	"github.com/urfave/cli"
 )

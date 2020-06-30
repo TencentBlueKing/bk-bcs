@@ -14,11 +14,11 @@
 package processor
 
 import (
-	ingressv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
-	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
-	"bk-bcs/bcs-services/bcs-gw-controller/pkg/gw"
+	ingressv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gw-controller/pkg/gw"
 	"encoding/json"
 	"reflect"
 	"testing"

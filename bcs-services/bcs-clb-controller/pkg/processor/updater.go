@@ -19,16 +19,16 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	ingressType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb"
-	qcloudlb "bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
-	listenerclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/listenerclient"
-	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	ingressType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	cloudListenerType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/clbingress"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb"
+	qcloudlb "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
+	listenerclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/listenerclient"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

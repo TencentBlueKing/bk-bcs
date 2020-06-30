@@ -14,14 +14,6 @@
 package app
 
 import (
-	pidfile "bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/queue"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery/bcs"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/rdiscover"
-	"bk-bcs/bmsf-mesh/pkg/apis"
 	"fmt"
 	"os"
 	"os/signal"
@@ -29,6 +21,16 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery/bcs"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/rdiscover"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis"
+
+	pidfile "github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
 
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"time"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-user-manager/app/metrics"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/utils"
 	"github.com/emicklei/go-restful"
 )
 

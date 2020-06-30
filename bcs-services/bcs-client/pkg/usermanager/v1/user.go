@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-services/bcs-client/pkg/types"
-	"bk-bcs/bcs-services/bcs-client/pkg/utils"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 )
 
 type UserManager interface {

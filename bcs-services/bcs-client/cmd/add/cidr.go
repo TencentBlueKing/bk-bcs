@@ -14,9 +14,9 @@
 package add
 
 import (
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	v1 "bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"

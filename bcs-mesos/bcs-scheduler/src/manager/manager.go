@@ -14,23 +14,23 @@
 package manager
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/etcd"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/etcd"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
 	"fmt"
 	"strconv"
 	"strings"
 	//"sync"
 	"os"
-	//"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/apiserver"
-	//"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/ipam"
-	//"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/ns"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/apiserver"
+	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/ipam"
+	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/ns"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 )
 
 type Manager struct {

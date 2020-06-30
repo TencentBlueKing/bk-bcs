@@ -14,9 +14,9 @@
 package master
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	bcstypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"encoding/json"
 	"fmt"
 	"sort"

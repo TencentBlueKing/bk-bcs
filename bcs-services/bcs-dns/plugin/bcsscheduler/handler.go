@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"

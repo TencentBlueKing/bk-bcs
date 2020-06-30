@@ -23,12 +23,12 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/service"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 const (

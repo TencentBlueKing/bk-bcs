@@ -23,8 +23,8 @@ import (
 	"os"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/websocketDialer"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
 )

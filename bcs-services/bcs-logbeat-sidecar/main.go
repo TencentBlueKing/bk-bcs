@@ -17,10 +17,10 @@ import (
 	"os"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-logbeat-sidecar/app"
-	"bk-bcs/bcs-services/bcs-logbeat-sidecar/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/app/options"
 )
 
 func main() {

@@ -23,13 +23,13 @@ import (
 	k8score "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"bk-bcs/bcs-common/common/blog"
-	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers"
-	cloudinformer "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/cloud/v1"
-	clientset "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
-	cloudclient "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/typed/cloud/v1"
-	cloudlister "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/lister/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers"
+	cloudinformer "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/cloud/v1"
+	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
+	cloudclient "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/typed/cloud/v1"
+	cloudlister "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/lister/cloud/v1"
 	"k8s.io/client-go/tools/cache"
 )
 

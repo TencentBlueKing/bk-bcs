@@ -14,10 +14,10 @@
 package template
 
 import (
-	"bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 
 	"github.com/urfave/cli"
 )

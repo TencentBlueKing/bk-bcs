@@ -13,7 +13,7 @@
 package eip
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"

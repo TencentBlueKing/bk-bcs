@@ -13,7 +13,7 @@
 
 package config
 
-import "bk-bcs/bcs-common/common/types"
+import "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 type Config struct {
 	//device plugin socket dir, examples: /var/lib/kubelet/device-plugins

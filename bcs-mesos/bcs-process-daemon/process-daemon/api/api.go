@@ -14,12 +14,12 @@
 package api
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/manager"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"

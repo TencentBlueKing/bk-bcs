@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/parnurzeal/gorequest"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,11 +32,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
-	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 const (

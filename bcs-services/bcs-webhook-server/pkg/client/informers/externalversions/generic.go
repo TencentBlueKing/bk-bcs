@@ -19,7 +19,7 @@ limitations under the License.
 package externalversions
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	"fmt"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

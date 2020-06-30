@@ -16,13 +16,13 @@ package app
 import (
 	"os"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/app/options"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/controller"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/metrics/resources"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/reflector"
-	"bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/scaler"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/app/options"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/controller"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/metrics/resources"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/reflector"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/scaler"
 )
 
 //Run the health check

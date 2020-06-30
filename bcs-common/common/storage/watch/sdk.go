@@ -19,10 +19,10 @@ import (
 	"io"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 // Get a new Watcher with empty WatchOptions

@@ -20,9 +20,9 @@ import (
 	"syscall"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-gateway-discovery/app"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/app"
 )
 
 //disovery now is designed for stage that bkbcs routes http/https traffics.

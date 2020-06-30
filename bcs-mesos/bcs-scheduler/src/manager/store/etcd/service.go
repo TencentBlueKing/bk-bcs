@@ -14,9 +14,9 @@
 package etcd
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -18,8 +18,8 @@ import (
 	"net"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	comtypes "bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

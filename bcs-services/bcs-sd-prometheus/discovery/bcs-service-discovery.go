@@ -18,10 +18,10 @@ import (
 	"path"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	moduleDiscovery "bk-bcs/bcs-common/pkg/module-discovery"
-	"bk-bcs/bcs-services/bcs-sd-prometheus/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-sd-prometheus/types"
 )
 
 type bcsServiceDiscovery struct {

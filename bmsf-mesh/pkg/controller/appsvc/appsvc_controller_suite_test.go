@@ -20,7 +20,7 @@ import (
 	"sync"
 	"testing"
 
-	"bk-bcs/bmsf-mesh/pkg/apis"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis"
 
 	"github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"

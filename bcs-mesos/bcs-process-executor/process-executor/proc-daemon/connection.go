@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"time"
 
-	"bk-bcs/bcs-common/common"
-	bhttp "bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"encoding/json"
 	"strings"
 )

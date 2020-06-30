@@ -14,9 +14,9 @@
 package controller
 
 import (
-	"bk-bcs/bcs-common/pkg/queue"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller/appnode"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller/appsvc"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller/appnode"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/controller/appsvc"
 
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )

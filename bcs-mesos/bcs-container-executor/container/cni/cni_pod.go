@@ -14,13 +14,13 @@
 package cni
 
 import (
-	comtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-container-executor/container"
-	device_plugin_manager "bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
-	"bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	"bk-bcs/bcs-mesos/bcs-container-executor/util"
-	bcstypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -31,7 +31,7 @@ import (
 	"time"
 
 	//"github.com/pborman/uuid"
-	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"golang.org/x/net/context"
 )

@@ -14,7 +14,7 @@
 package config
 
 import (
-	"bk-bcs/bcs-services/bcs-webhook-server/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/options"
 )
 
 //BcsWhsConfig is a configuration of bcs webhook server

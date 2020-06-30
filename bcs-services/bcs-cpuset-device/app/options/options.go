@@ -14,7 +14,7 @@
 package options
 
 import (
-	"bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
 //Option is option in flags

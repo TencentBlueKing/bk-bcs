@@ -14,9 +14,9 @@
 package dynamicPlugin
 
 import (
-	typesplugin "bk-bcs/bcs-common/common/plugin"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/config"
-	bcsplugin "bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/plugin"
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/config"
+	bcsplugin "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/plugin"
 	"fmt"
 	"plugin"
 	"time"

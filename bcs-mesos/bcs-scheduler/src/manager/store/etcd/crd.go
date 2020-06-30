@@ -14,8 +14,8 @@
 package etcd
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	"fmt"
 	"strings"
 

@@ -24,8 +24,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/vishvananda/netlink"
 
-	"bk-bcs/bcs-common/common/blog"
-	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
 )
 
 // Client client for aws eni

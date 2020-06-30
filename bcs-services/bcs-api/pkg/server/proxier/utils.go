@@ -19,7 +19,7 @@ import (
 	"net/url"
 	"strings"
 
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"fmt"
 )
 

@@ -20,7 +20,7 @@ import (
 
 	"github.com/json-iterator/go"
 
-	glog "bk-bcs/bcs-common/common/blog"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 const (

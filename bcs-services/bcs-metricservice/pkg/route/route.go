@@ -14,18 +14,18 @@
 package route
 
 import (
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/encrypt"
-	bcsHttp "bk-bcs/bcs-common/common/http"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	bcsHttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
 )
 
 const (

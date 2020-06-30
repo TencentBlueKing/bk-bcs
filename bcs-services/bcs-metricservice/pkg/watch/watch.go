@@ -14,10 +14,10 @@
 package watch
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
 	"context"
 	"sync"
 	"time"

@@ -14,8 +14,8 @@
 package config
 
 import (
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-health/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/util"
 )
 
 type Config struct {

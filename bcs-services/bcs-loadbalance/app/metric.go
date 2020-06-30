@@ -14,7 +14,7 @@
 package app
 
 import (
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

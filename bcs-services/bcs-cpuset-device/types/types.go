@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"sync"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 type CpusetNode struct {

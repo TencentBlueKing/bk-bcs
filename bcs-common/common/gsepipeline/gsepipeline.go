@@ -14,8 +14,8 @@
 package gsepipeline
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	gseclient "bk-bcs/bcs-common/common/gsepipeline/client"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	gseclient "github.com/Tencent/bk-bcs/bcs-common/common/gsepipeline/client"
 	"encoding/json"
 )
 

@@ -21,10 +21,10 @@ package main
 import (
 	"runtime"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	schedutil "bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	schedutil "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
 	"golang.org/x/net/context"
 )

@@ -16,10 +16,10 @@ package container
 import (
 	"strings"
 
-	comtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	bcstypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //BcsPort port service for container port reflection

@@ -17,9 +17,9 @@ import (
 	"encoding/json"
 	"sync"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -24,7 +24,7 @@ import (
 	"regexp"
 	"strings"
 
-	bresp "bk-bcs/bcs-common/common/http"
+	bresp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 
 	"github.com/coredns/coredns/plugin/etcd/msg"
 	etcdcv3 "github.com/coreos/etcd/clientv3"

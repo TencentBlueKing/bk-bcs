@@ -16,11 +16,11 @@ package resthdrs
 import (
 	"fmt"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-services/bcs-api/metric"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 
 	"github.com/emicklei/go-restful"
 	"time"

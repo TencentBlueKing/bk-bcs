@@ -18,10 +18,10 @@ import (
 	"strconv"
 	"strings"
 
-	"bk-bcs/bcs-common/common/deepcopy"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
+	"github.com/Tencent/bk-bcs/bcs-common/common/deepcopy"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
 )
 
 //executor or task default resources limits
