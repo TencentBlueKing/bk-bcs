@@ -11,7 +11,7 @@ spec:
   - name: bcs-driver
     image: ${kubeDriverImage}
     imagePullPolicy: IfNotPresent
-    command: ["./bcs-k8s-driver"]
+    command: ["/data/bcs/bcs-k8s-driver/bcs-k8s-driver"]
     args:
     - --address=${localIp} 
     - --host-ip=${localIp} 
