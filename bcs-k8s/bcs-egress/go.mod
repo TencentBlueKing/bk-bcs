@@ -2,7 +2,10 @@ module bcs-egress
 
 go 1.14
 
-replace k8s.io/client-go => k8s.io/client-go v0.16.7
+replace (
+	k8s.io/client-go => k8s.io/client-go v0.16.7
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.5.7
+)
 
 require (
 	github.com/operator-framework/operator-sdk v0.17.1
