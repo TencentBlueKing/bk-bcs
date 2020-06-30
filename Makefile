@@ -34,9 +34,8 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy tools gateway user-manager
-specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy tools gateway user-manager
-k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche k8s-statefulsetplus
+default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller
+k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
 allpack: svcpack k8spack mmpack mnpack
@@ -44,11 +43,11 @@ allpack: svcpack k8spack mmpack mnpack
 
 # tag for different edition compiling
 inner:
-	$(MAKE) specific bcs_edition=inner_edition
+	$(MAKE) default bcs_edition=inner_edition
 ce:
-	$(MAKE) specific bcs_edition=community_edition
+	$(MAKE) default bcs_edition=community_edition
 ee:
-	$(MAKE) specific bcs_edition=enterprise_edition
+	$(MAKE) default bcs_edition=enterprise_edition
 
 clean:
 	rm -rf ./build
@@ -98,6 +97,7 @@ dns:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-dns ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
+	mkdir -p vendor/github.com/coredns/coredns/
 	cp -r ${GOPATH}/pkg/mod/github.com/coredns/coredns\@v1.3.0/* vendor/github.com/coredns/coredns/
 	cp bcs-services/bcs-dns/plugin.cfg vendor/github.com/coredns/coredns/
 	cd vendor/github.com/coredns/coredns && make gen && cd -
@@ -227,6 +227,13 @@ gamestatefulset:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-gamestatefulset-operator ${PACKAGEPATH}/bcs-k8s-master
 	cd bcs-k8s/bcs-gamestatefulset-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
 
+egress-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-egress-controller ${PACKAGEPATH}/bcs-k8s-master
+	#copy nginx template for egress controller
+	cp -R bcs-k8s/bcs-egress/deploy/config ${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller
+	cd bcs-k8s/bcs-egress && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller/bcs-egress-controller ./cmd/bcs-egress-controller/main.go
+
 api-export:pre
 	mkdir -p ${EXPORTPATH}
 	cp ./bcs-common/common/types/meta.go ${EXPORTPATH}
@@ -235,8 +242,8 @@ api-export:pre
 	cp ./bcs-common/common/types/configmap.go ${EXPORTPATH}
 
 consoleproxy:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node
-	cp -R ./install/conf/bcs-mesos-node/bcs-consoleproxy ${PACKAGEPATH}/bcs-k8s-node
+	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-consoleproxy
+	cp -R ./install/conf/bcs-mesos-node/bcs-consoleproxy ${PACKAGEPATH}/bcs-mesos-node
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-consoleproxy/bcs-consoleproxy ./bcs-mesos/bcs-consoleproxy/main.go
 
 bmsf-mesos-adapter:pre
@@ -277,7 +284,7 @@ tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 	
 bcs-networkpolicy:pre
-	mkdir -p ${PACKAGEPATH}/bcs-networkpolicy
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-networkpolicy
 	cp -R ./install/conf/bcs-services/bcs-networkpolicy ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-networkpolicy/bcs-networkpolicy ./bcs-services/bcs-networkpolicy/main.go
 
@@ -289,6 +296,7 @@ bcs-cloud-network-agent:pre
 	cp ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni
 	
 user-manager:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
 	cp -R ./install/conf/bcs-services/bcs-user-manager ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./bcs-services/bcs-user-manager/main.go
+

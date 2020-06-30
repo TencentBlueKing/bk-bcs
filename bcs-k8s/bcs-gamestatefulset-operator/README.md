@@ -6,7 +6,9 @@ gamestatefulset-operator是针对游戏gameserver实现增强版有状态部署o
 
 * [done]本项目group重构可用
 * [done]增加InplaceUpdate策略
-* [todo]增加自动并行滚动更新
+* [done]增加自动并行滚动更新
+* [todo]集成腾讯云CLB，实现有状态端口段动态转发
+* [todo]集成BCS无损更新特性：允许不重启容器更新容器内容
 * [todo]扩展kubectl，支持kubectl gamestatefulset子命令
 * [todo]支持HPA
 
@@ -37,8 +39,6 @@ $ kubectl create -f 04-operator-deployment.yaml
 
 * 扩缩容 > kubectl scale --replicas=3 gamestatefulset/web -n test 
 * 滚动升级 > kubectl patch 
-* 回滚 > kubectl gamestatefulset rollout 
-* 状态查看 kubectl gamestatefulset get name -n test 
 
 #### 创建gamestatefulset
 

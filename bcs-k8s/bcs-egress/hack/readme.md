@@ -10,10 +10,10 @@ cd bcs-egress
 #创建bcsegress定义，用于controller
 operator-sdk add api --api-version=bkbcs.tencent.com/v1alpha1 --kind=BCSEgress
 #创建bcsEgresscontroller，用于Operator
-operator-sdk add api --api-version=bkbcs.tencent.com/v1alpha1 --kind=BCSEgressController
+#operator-sdk add api --api-version=bkbcs.tencent.com/v1alpha1 --kind=BCSEgressController
 
 #controller 代码创建
-operator-sdk add controller --api-version=bkbcs.tencent.com/v1alpha1 --kind=BCSEgress
+#operator-sdk add controller --api-version=bkbcs.tencent.com/v1alpha1 --kind=BCSEgress
 ```
 
 ## 项目更新

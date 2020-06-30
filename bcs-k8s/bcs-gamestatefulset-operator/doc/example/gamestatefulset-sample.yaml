@@ -13,10 +13,6 @@ spec:
   updateStrategy:
     type: InplaceUpdate
   replicas: 1
-  batchDeployConfig:
-    batchNum: 0
-    batchOrder: 0
-    podsToUpdate: []
   template:
     metadata:
       labels:

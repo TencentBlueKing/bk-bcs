@@ -14,7 +14,7 @@
 package apis
 
 import (
-	"bk-bcs/bcs-k8s/bcs-egress/pkg/apis/bkbcs/v1alpha1"
+	"bcs-egress/pkg/apis/bkbcs/v1alpha1"
 )
 
 func init() {

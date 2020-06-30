@@ -30,40 +30,43 @@ type ControllerRef struct {
 
 // HTTP http egress definition
 type HTTP struct {
+	//Name for http management
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
 	//Host for domain, use for acl
 	// +kubebuilder:validation:MinLength=4
 	Host string `json:"host"`
-	// +kubebuilder:default=false
-	TLS bool `json:"tls"`
-	//source & dest port use for tcp network flow control
-	SourcePort uint `json:"sourceport"`
-	DestPort   uint `json:"destport"`
+	//Destination port for remote host
+	// +kubebuilder:default=80
+	DestPort uint `json:"destport"`
 }
 
 // TCP tcp egress definition
 type TCP struct {
+	//name for tcp management
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+	//Domain for destination, domain first
+	Domain string `json:"domain"`
 	//iplist(split by comma)
-	// +kubebuilder:validation:MinLength=4
 	IPs string `json:"ips"`
 	//source & dest port use for tcp network flow control
 	// +kubebuilder:validation:Mininm=1024
 	SourcePort uint `json:"sourceport"`
 	// +kubebuilder:validation:Mininm=1
 	DestPort uint `json:"destport"`
-}
-
-//Rule is definition for forward proxy in controller
-type Rule struct {
-	HTTPS []HTTP `json:"https"`
-	TCPS  []TCP  `json:"tcps"`
+	// algorithm for specified IP list
+	// +kubebuilder:validation:Enum=roundrobin;least_conn;hash
+	// +kubebuilder:default=roundrobin
+	Algorithm string `json:"algorithm"`
 }
 
 // BCSEgressSpec defines the desired state of BCSEgress
 type BCSEgressSpec struct {
 	//Controller can be empty, we use egress-controller.bcs-system for default
 	Controller ControllerRef `json:"controller"`
-	// +kubebuilder:validation:Required
-	Rules Rule `json:"rules"`
+	HTTPS      []HTTP        `json:"https"`
+	TCPS       []TCP         `json:"tcps"`
 }
 
 const (

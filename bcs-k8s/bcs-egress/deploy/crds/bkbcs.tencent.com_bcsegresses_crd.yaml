@@ -13,8 +13,14 @@ spec:
   - JSONPath: .status.state
     name: State
     type: string
-  - JSONPath: .status.updateat
-    name: UpdateAt
+  - JSONPath: .status.httpActives
+    name: HTTPActives
+    type: uint
+  - JSONPath: .status.tcpActives
+    name: TCPActives
+    type: uint
+  - JSONPath: .status.syncedat
+    name: SyncedAt
     type: date
   group: bkbcs.tencent.com
   names:
@@ -58,52 +64,91 @@ spec:
               - name
               - namespace
               type: object
-            rules:
+            https:
               items:
-                description: Rule is definition for forward proxy in controller
+                description: HTTP http egress definition
                 properties:
                   destport:
+                    default: 80
+                    description: Destination port for remote host
                     type: integer
                   host:
-                    description: Host for domain or iplist(split by comma) when http
-                      protocol, host can use for acl
+                    description: Host for domain, use for acl
+                    minLength: 4
                     type: string
-                  protocol:
+                  name:
+                    description: Name for http management
+                    type: string
+                required:
+                - destport
+                - host
+                - name
+                type: object
+              type: array
+            tcps:
+              items:
+                description: TCP tcp egress definition
+                properties:
+                  algorithm:
+                    default: roundrobin
+                    description: algorithm for specified IP list
                     enum:
-                    - TCP
-                    - HTTP
+                    - roundrobin
+                    - least_conn
+                    - hash
+                    type: string
+                  destport:
+                    type: integer
+                  domain:
+                    description: Domain for destination, domain first
+                    type: string
+                  ips:
+                    description: iplist(split by comma)
+                    type: string
+                  name:
+                    description: name for tcp management
                     type: string
                   sourceport:
                     description: source & dest port use for tcp network flow control
                     type: integer
                 required:
+                - algorithm
                 - destport
-                - host
-                - protocol
+                - domain
+                - ips
+                - name
                 - sourceport
                 type: object
-              minItems: 1
               type: array
           required:
           - controller
-          - rules
+          - https
+          - tcps
           type: object
         status:
           description: BCSEgressStatus defines the observed state of BCSEgress
           properties:
+            httpActives:
+              type: integer
             reason:
               description: Reason when some error happened
               type: string
             state:
+              default: Pending
               description: State refference EgressState above
               type: string
-            updateat:
+            syncedat:
+              description: all egress sync timestamp
               format: date-time
               type: string
+            tcpActives:
+              type: integer
           required:
+          - httpActives
           - reason
           - state
-          - updateat
+          - syncedat
+          - tcpActives
           type: object
       type: object
   version: v1alpha1
