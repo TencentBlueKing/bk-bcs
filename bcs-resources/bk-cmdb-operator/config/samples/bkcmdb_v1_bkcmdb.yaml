@@ -1,0 +1,7 @@
+apiVersion: bkcmdb.bkbcs.tencent.com/v1
+kind: Bkcmdb
+metadata:
+  name: bkcmdb-sample
+spec:
+  # Add fields here
+  foo: bar

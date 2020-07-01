@@ -1097,9 +1097,5 @@ func GetOfferIp(offer *mesos.Offer) (string, bool) {
 		}
 	}
 
-	if !ok {
-		blog.Infof("offer(%s:%s) don't have attribute InnerIP", offer.GetId().GetValue(), offer.GetHostname())
-	}
-
 	return ip, ok
 }

@@ -2783,7 +2783,7 @@
           },
           {
             "name": "index",
-            "description": "扩展索引信息. 如节点IP等信息，以此来做扩展维度的内容索引",
+            "description": "扩展索引信息. 如GSEKit节点IP等信息，以此来做扩展维度的内容索引",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2880,6 +2880,34 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/accessserverUpdateReleaseReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/reload": {
+      "post": {
+        "summary": "Reload指定版本配置",
+        "description": "Reload指定版本配置",
+        "operationId": "Reload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverReloadResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverReloadReq"
             }
           }
         ],
@@ -5549,7 +5577,7 @@
         },
         "reuseCommitid": {
           "type": "string",
-          "description": "多配置提交出现部分配置失败时可基于指定ID差量重试. 当需要修改体骄傲时也可使用该模式进行提交修改",
+          "description": "多配置提交出现部分配置失败时可基于指定ID差量重试. 当需要修改提交时也可使用该模式进行提交修改(注意：同配置重试提交后单一配置的commitid会重新分配)",
           "title": "差量重试复用ID"
         }
       },
@@ -9318,6 +9346,82 @@
       },
       "description": "查询大区信息响应",
       "title": "QueryZoneResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverReloadReq": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278",
+        "releaseid": "879ab8f-xxxx-asdf-sdaf-525400f9927",
+        "multiReleaseid": "681gl66-xxxx-asdf-sdaf-525400f9927",
+        "operator": "melo"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "bid": {
+          "type": "string",
+          "title": "所属业务ID",
+          "maxLength": 64
+        },
+        "releaseid": {
+          "type": "string",
+          "title": "可选，指定版本ID",
+          "maxLength": 64
+        },
+        "multiReleaseid": {
+          "type": "string",
+          "title": "可选，指定组模式版本ID",
+          "maxLength": 64
+        },
+        "operator": {
+          "type": "string",
+          "title": "操作者名称",
+          "maxLength": 64
+        }
+      },
+      "description": "指定版本配置Reload请求",
+      "title": "ReloadReq",
+      "required": [
+        "seq",
+        "bid",
+        "operator"
+      ]
+    },
+    "accessserverReloadResp": {
+      "type": "object",
+      "example": {
+        "seq": 1,
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "指定版本配置Reload请求响应",
+      "title": "ReloadResp",
       "required": [
         "seq",
         "errCode",

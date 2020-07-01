@@ -1,0 +1,20 @@
+{
+    "address": "${localIp}",
+    "port": ${serviceBkcmdbSyncPort},
+    "metric_port": ${serviceBkcmdbSyncMetricPort},
+    "log_dir": "${log_dir}",
+    "v": ${log_level},
+    "zk": "${serviceZookeeper}",
+    "storage_zk": "${serviceZookeeper}",
+    "storage_ca": "${serviceBkcmdbSyncCa}",
+    "storage_key": "${serviceBkcmdbSyncKey}",
+    "storage_cert": "${serviceBkcmdbSyncCert}",
+    "cmdb_addr": "${cmdbAddr}",
+    "cmdb_supplier_id": ${cmdbSupplierID},
+    "cmdb_user": "${cmdbUser}",
+    "paas_addr": "${paasCCAddr}",
+    "paas_env": "${paasCCEnv}",
+    "paas_cluster_env": "${paasClusterEnv}",
+    "paas_app_code": "${paasAppCode}",
+    "paas_app_secret": "${paasAppSecret}"
+}

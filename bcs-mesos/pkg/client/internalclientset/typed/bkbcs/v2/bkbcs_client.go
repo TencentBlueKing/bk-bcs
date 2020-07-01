@@ -32,6 +32,7 @@ type BkbcsV2Interface interface {
 	BcsClusterAgentSettingsGetter
 	BcsCommandInfosGetter
 	BcsConfigMapsGetter
+	BcsDaemonsetsGetter
 	BcsEndpointsGetter
 	BcsSecretsGetter
 	BcsServicesGetter
@@ -75,6 +76,10 @@ func (c *BkbcsV2Client) BcsCommandInfos(namespace string) BcsCommandInfoInterfac
 
 func (c *BkbcsV2Client) BcsConfigMaps(namespace string) BcsConfigMapInterface {
 	return newBcsConfigMaps(c, namespace)
+}
+
+func (c *BkbcsV2Client) BcsDaemonsets(namespace string) BcsDaemonsetInterface {
+	return newBcsDaemonsets(c, namespace)
 }
 
 func (c *BkbcsV2Client) BcsEndpoints(namespace string) BcsEndpointInterface {

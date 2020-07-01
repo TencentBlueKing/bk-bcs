@@ -82,10 +82,8 @@ type Store interface {
 	FetchDBTaskGroup(string) (*types.TaskGroup, error)
 	// delete taskgroup by taskgroup id
 	DeleteTaskGroup(string) error
-	// delete taskgroup by appID
-	//DeleteApplicationTaskGroups(string, string) error
-	//FetchTaskgroupByIndex(string, string, int) (*types.TaskGroup, error)
-	//GetApplicationRootPath() string
+	//list mesos cluster taskgroups, include: application、deployment、daemonset...
+	ListClusterTaskgroups() ([]*types.TaskGroup, error)
 
 	// save agent
 	SaveAgent(agent *types.Agent) error
@@ -240,6 +238,16 @@ type Store interface {
 	StartStoreObjectMetrics()
 	//stop metrics
 	StopStoreMetrics()
+	//fetch daemonset
+	FetchDaemonset(namespace, name string) (*types.BcsDaemonset, error)
+	//save daemonset
+	SaveDaemonset(daemon *types.BcsDaemonset) error
+	//List all daemonsets
+	ListAllDaemonset() ([]*types.BcsDaemonset, error)
+	//delete daemonset
+	DeleteDaemonset(namespace, name string) error
+	//list daemonset't taskgroup
+	ListDaemonsetTaskGroups(namespace, name string) ([]*types.TaskGroup, error)
 }
 
 // The interface for db operations

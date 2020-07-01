@@ -45,73 +45,68 @@ func Run(config *Config) error {
 
 	// register to bcs service layer, just for health check
 	// no need to process discover event
-	config.BCSZk = strings.Replace(config.BCSZk, ";", ",", -1)
-	bcsDiscover, bcsDiscoverEvent := rdiscover.NewAdapterDiscover(
-		config.BCSZk, config.Address, config.Cluster, config.MetricPort)
-	go bcsDiscover.Start()
-	go func() {
-		for {
-			select {
-			case curEvent := <-bcsDiscoverEvent:
-				blog.Infof("found bcs service discover event %s", curEvent)
-			}
+	if len(config.BCSZk) != 0 {
+		config.BCSZk = strings.Replace(config.BCSZk, ";", ",", -1)
+		bcsDiscover, bcsDiscoverEvent, err := rdiscover.NewAdapterDiscover(
+			config.BCSZk, config.Address, config.Cluster, config.MetricPort)
+		if err != nil {
+			blog.Warnf("new bcs zookeeper %s Discover failed, err %s", config.BCSZk, err.Error())
+		} else {
+			go bcsDiscover.Start()
+			go func() {
+				for {
+					select {
+					case curEvent := <-bcsDiscoverEvent:
+						blog.Infof("found bcs service discover event %s", curEvent)
+					}
+				}
+			}()
 		}
-	}()
+
+	}
 
 	// create AdapterDiscover
 	config.Zookeeper = strings.Replace(config.Zookeeper, ";", ",", -1)
-	adapterDiscover, discoverEvent := rdiscover.NewAdapterDiscover(
+	adapterDiscover, discoverEvent, err := rdiscover.NewAdapterDiscover(
 		config.Zookeeper, config.Address, config.Cluster, config.MetricPort)
+	if err != nil {
+		blog.Errorf("new zookeeper %s Discover failed, err %s", config.Zookeeper, err.Error())
+		return fmt.Errorf("new zookeeper %s Discover failed, err %s", config.Zookeeper, err.Error())
+	}
 	go adapterDiscover.Start()
-	handleEvent(config, discoverEvent)
+
+	// create server
+	server := NewServer(config)
+	handleEvent(server, config, discoverEvent)
 	return nil
 }
 
-func handleEvent(config *Config, event <-chan rdiscover.RoleEvent) {
-	var s *Server
+func handleEvent(s *Server, config *Config, event <-chan rdiscover.RoleEvent) {
 	signalChan := make(chan os.Signal, 5)
 	signal.Notify(signalChan, syscall.SIGTRAP, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+
+	ticker := time.NewTicker(20 * time.Second)
+
 	for {
 		select {
 		case curEvent := <-event:
 			if curEvent == rdiscover.MasterToSlave {
-				if s != nil {
-					s.Stop()
-				}
+				s.isMaster = false
+				s.Stop()
 			} else if curEvent == rdiscover.SlaveToMaster {
-				s := &Server{
-					config:    config,
-					mgrStop:   make(chan struct{}),
-					svcQueue:  queue.NewQueue(),
-					nodeQueue: queue.NewQueue(),
-				}
-				//todo: init event messge Queue for Reconciler & bk-bcs cluster
-				s.mgr = settingManager(config.KubeConfig, int(config.MetricPort), s.svcQueue, s.nodeQueue)
-				//create cluster plugin
-				clusterZkHosts := strings.Split(config.Zookeeper, ",")
-				bkBcsCluster, err := bcs.NewCluster(config.Cluster, clusterZkHosts)
-				if err != nil {
-					blog.Errorf("init bk-bcs cluster failed, %s", err)
-					fmt.Printf("init bk-bcs cluster failed, %s", err.Error())
-					os.Exit(-1)
-				}
-				s.cluster = bkBcsCluster
-				go func() {
-					err = s.Run()
-					if err != nil {
-						fmt.Println(err.Error())
-						os.Exit(-1)
-					}
-				}()
-
+				s.isMaster = true
+				s.Run()
 			} else {
 				blog.Errorf("invalid event %s", curEvent)
 			}
+		case <-ticker.C:
+			if s.isMaster && !s.isRunning {
+				blog.Infof("force run server")
+				s.Run()
+			}
 		case sig := <-signalChan:
 			blog.Warnf("bmsf-mesos-adaptor was killed, signal info: %s", sig.String())
-			if s != nil {
-				s.Stop()
-			}
+			s.Stop()
 			return
 		}
 	}
@@ -154,37 +149,74 @@ type Server struct {
 	cluster   discovery.Cluster //cluster instance
 	svcQueue  queue.Queue       //queue for AppSvc
 	nodeQueue queue.Queue       //queue for AppNode
+	isRunning bool
+	isMaster  bool
 }
 
-//Run running server loop
-func (s *Server) Run() error {
+// NewServer create server object
+func NewServer(config *Config) *Server {
+	return &Server{
+		config:    config,
+		mgrStop:   make(chan struct{}),
+		svcQueue:  queue.NewQueue(),
+		nodeQueue: queue.NewQueue(),
+	}
+}
+
+// createManager create manager
+func (s *Server) createManager() error {
+
+	s.mgrStop = make(chan struct{})
+	s.mgr = settingManager(s.config.KubeConfig, int(s.config.MetricPort), s.svcQueue, s.nodeQueue)
+
 	//starting manager
 	go func() {
 		if err := s.mgr.Start(s.mgrStop); err != nil {
-			fmt.Printf("mesos-adaptor starting kubemanager failed, %s", err.Error())
-			os.Exit(1)
+			blog.Errorf("mesos-adaptor starting kubemanager failed, %s", err.Error())
+			s.mgrStop <- struct{}{}
 		}
 	}()
-	time.Sleep(time.Second * 2)
+
 	//wait for Cache ready
 	blog.Infof("mesos-adaptor is waiting for kubemanager sync all cache datas.")
 	caches := s.mgr.GetCache()
 	if ok := caches.WaitForCacheSync(s.mgrStop); !ok {
 		blog.Errorf("mesos-adaptor is waiting for cache synchronization failed, data synchronizing broken.")
+		s.mgrStop <- struct{}{}
 		return fmt.Errorf("data synchronization broken")
 	}
+
+	return nil
+}
+
+//Run running server loop
+func (s *Server) Run() {
+	// create controller manager
+	if err := s.createManager(); err != nil {
+		blog.Errorf("create controller manager failed, err %s", err.Error())
+		return
+	}
+
+	//create cluster plugin
+	clusterZkHosts := strings.Split(s.config.Zookeeper, ",")
+	bkBcsCluster, err := bcs.NewCluster(s.config.Cluster, clusterZkHosts)
+	if err != nil {
+		blog.Errorf("init bk-bcs cluster failed, %s", err)
+		return
+	}
+	s.cluster = bkBcsCluster
 	//starting cluster
 	s.cluster.AppSvcs().RegisterAppSvcQueue(s.svcQueue)
 	s.cluster.AppNodes().RegisterAppNodeQueue(s.nodeQueue)
 	s.cluster.Run()
-	<-s.mgrStop
-	return nil
+	s.isRunning = true
 }
 
 //Stop stop server
 func (s *Server) Stop() {
 	s.cluster.Stop()
+	s.mgrStop <- struct{}{}
+	s.isRunning = false
 	blog.Infof("Server is waiting 3 seconds for writing data back to kube-apiserver")
 	time.Sleep(time.Second * 3)
-	close(s.mgrStop)
 }

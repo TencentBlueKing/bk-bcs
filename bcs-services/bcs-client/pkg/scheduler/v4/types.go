@@ -20,6 +20,7 @@ const (
 	BcsSchedulerResourceSecret      = "secrets"
 	BcsSchedulerResourceService     = "services"
 	BcsSchedulerResourceDeployment  = "deployments"
+	BcsSchedulerResourceDaemonset   = "daemonset"
 
 	//AllNamespace selector
 	AllNamespace = ""

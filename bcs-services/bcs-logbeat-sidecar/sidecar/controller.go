@@ -383,6 +383,13 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		para.NonstandardPaths = logConf.Spec.LogPaths
 		para.LogTags = logConf.Spec.LogTags
 	}
+	//whether report pod labels to log tags
+	if logConf.Spec.PodLabels {
+		for k, v := range pod.Labels {
+			para.ExtMeta[k] = v
+		}
+	}
+	//custom log tags
 	for k, v := range para.LogTags {
 		para.ExtMeta[k] = v
 	}

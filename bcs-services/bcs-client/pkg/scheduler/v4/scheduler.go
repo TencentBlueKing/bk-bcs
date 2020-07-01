@@ -33,6 +33,7 @@ type Scheduler interface {
 	CreateSecret(clusterID, namespace string, data []byte) error
 	CreateService(clusterID, namespace string, data []byte) error
 	CreateDeployment(clusterID, namespace string, data []byte) error
+	CreateDaemonset(clusterID, namespace string, data []byte) error
 
 	UpdateApplication(clusterID, namespace string, data []byte, extraValue url.Values) error
 	UpdateProcess(clusterID, namespace string, data []byte, extraValue url.Values) error
@@ -47,6 +48,7 @@ type Scheduler interface {
 	DeleteSecret(clusterID, namespace, name string, enforce bool) error
 	DeleteService(clusterID, namespace, name string, enforce bool) error
 	DeleteDeployment(clusterID, namespace, name string, enforce bool) error
+	DeleteDaemonset(clusterID, namespace, name string, enforce bool) error
 
 	ScaleApplication(clusterID, namespace, name string, instance int) error
 	ScaleProcess(clusterID, namespace, name string, instance int) error

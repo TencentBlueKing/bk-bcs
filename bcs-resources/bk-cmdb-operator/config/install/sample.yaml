@@ -1,0 +1,44 @@
+apiVersion: bkcmdb.bkbcs.tencent.com/v1
+kind: Bkcmdb
+metadata:
+  name: bkcmdb-sample
+spec:
+  image: bk-cmdb:v3.6.3
+  adminserver:
+    replicas: 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  apiserver:
+    replicas: 1
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  coreservice:
+    replicas: 1
+  datacollection:
+    replicas: 1
+  eventserver:
+    replicas: 1
+  hostserver:
+    replicas: 1
+  operationserver:
+    replicas: 1
+  procserver:
+    replicas: 1
+  taskserver:
+    replicas: 1
+  tmserver:
+    replicas: 1
+  toposerver:
+    replicas: 1
+  webserver:
+    replicas: 1

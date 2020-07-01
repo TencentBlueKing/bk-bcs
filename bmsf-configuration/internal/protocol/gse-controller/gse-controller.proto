@@ -11,6 +11,7 @@ service GSEController {
     rpc Report(ReportReq) returns (ReportResp) {}
     rpc PullRelease(PullReleaseReq) returns (PullReleaseResp) {}
     rpc PullConfigSetList(PullConfigSetListReq) returns (PullConfigSetListResp) {}
+    rpc Reload(ReloadReq) returns (ReloadResp) {}
 }
 
 message PublishReleasePreReq {
@@ -102,4 +103,19 @@ message PullConfigSetListResp {
     common.ErrCode            errCode    = 2;
     string                    errMsg     = 3;
     repeated common.ConfigSet configSets = 4;
+}
+
+message ReloadReq {
+    uint64            seq            = 1;
+    string            bid            = 2;
+    string            releaseid      = 3;
+    string            multiReleaseid = 4;
+    string            operator       = 5;
+    common.ReloadSpec reloadSpec     = 6;
+}
+
+message ReloadResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
 }

@@ -15,11 +15,13 @@ package scheduler
 
 import (
 	"fmt"
+	"time"
+
 	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"time"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
 // DataChecker control message
@@ -84,11 +86,11 @@ func (mgr *DataCheckMgr) SendMsg(msg *DataCheckMsg) error {
 func DataCheckManage(mgr *DataCheckMgr, doRecover bool) {
 	blog.Info("data checker: goroutine start ...")
 
-	if doRecover {
+	/*if doRecover {
 		time.Sleep(180 * time.Second)
 		blog.Warn("data checker will set all LOST&FINISH taskgroup to RUNNING !!!!!!!")
 		mgr.doRecover()
-	}
+	}*/
 
 	for {
 		select {
@@ -142,6 +144,7 @@ func (mgr *DataCheckMgr) doCheck() {
 		return
 	}
 
+	//check application taskgroup whether lost
 	for _, runAs := range runAses {
 		blog.Info("data checker: to check runAs(%s)", runAs)
 		appIDs, err := mgr.store.ListApplicationNodes(runAs)
@@ -159,20 +162,63 @@ func (mgr *DataCheckMgr) doCheck() {
 			mgr.checkTaskgroup(runAs, appID)
 		}
 	}
+	//check daemonsets taskgroup whether lost
+	daemonsets, err := mgr.store.ListAllDaemonset()
+	if err != nil {
+		blog.Error("data checker ListAllDaemonset failed: %s", err.Error())
+		return
+	}
+	for _, daemon := range daemonsets {
+		blog.Info("data checker: to check daemonest(%s) taskgroup status", daemon.GetUuid())
+		//lock
+		util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
+		taskgroups, _ := mgr.store.ListDaemonsetTaskGroups(daemon.NameSpace, daemon.Name)
+		lostNum := mgr.checkTaskgroupWhetherLost(taskgroups, false)
+		if lostNum == 0 {
+			util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
+			continue
+		}
+		//if have new lost taskgroup, then update daemonset status
+		mgr.sched.updateDaemonsetStatus(daemon.NameSpace, daemon.Name)
+		util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
+	}
 
 	return
 }
 
 func (mgr *DataCheckMgr) checkTaskgroup(runAs, appId string) {
-
-	now := time.Now().Unix()
-
 	mgr.sched.store.LockApplication(runAs + "." + appId)
 	defer mgr.sched.store.UnLockApplication(runAs + "." + appId)
 
 	blog.Info("data checker: to check taskgroups:%s.%s ", runAs, appId)
 	taskGroups, _ := mgr.store.ListTaskGroups(runAs, appId)
+	//check taskgroup whether lost
+	lostNum := mgr.checkTaskgroupWhetherLost(taskGroups, true)
+	if lostNum == 0 {
+		return
+	}
+	//  get application data from ZK
+	app, err := mgr.sched.store.FetchApplication(runAs, appId)
+	if err != nil {
+		blog.Error("data checker: fetch application(%s.%s) failed, err:%s", runAs, appId, err.Error())
+		return
+	}
+	appStatus := app.Status
+	isUpdated, err := mgr.sched.updateApplicationStatus(app)
+	if isUpdated == true {
+		if err = mgr.sched.store.SaveApplication(app); err != nil {
+			blog.Error("data checker: save application(%s.%s) into db failed! err:%s",
+				app.RunAs, app.ID, err.Error())
+			return
+		}
+	}
+	mgr.sched.applicationStatusUpdated(app, appStatus)
+}
 
+//if taskgroup status long time no update, then show taskgroup lost
+//application't taskgroup trigger reschedule, and daemonset't taskgroup don't trigger reschedule
+func (mgr *DataCheckMgr) checkTaskgroupWhetherLost(taskGroups []*types.TaskGroup, reschedule bool) int {
+	now := time.Now().Unix()
 	lostnum := 0
 	for _, taskGroup := range taskGroups {
 		if taskGroup.LastUpdateTime == 0 ||
@@ -188,7 +234,7 @@ func (mgr *DataCheckMgr) checkTaskgroup(runAs, appId string) {
 		case types.TASKGROUP_STATUS_RUNNING, types.TASKGROUP_STATUS_STARTING:
 			updateInterval = 4 * MAX_DATA_UPDATE_INTERVAL
 		case types.TASKGROUP_STATUS_STAGING:
-			updateInterval = MAX_STAGING_UPDATE_INTERVAL
+			updateInterval = 4 * MAX_STAGING_UPDATE_INTERVAL
 		}
 
 		if taskGroup.LastUpdateTime+updateInterval < now {
@@ -213,35 +259,19 @@ func (mgr *DataCheckMgr) checkTaskgroup(runAs, appId string) {
 			taskGroup.LastStatus = taskGroup.Status
 			taskGroup.Status = types.TASKGROUP_STATUS_LOST
 			taskGroup.LastUpdateTime = now
-			mgr.sched.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
-			mgr.sched.ServiceMgr.TaskgroupUpdate(taskGroup)
+			//if reschedule==true, then trigger reschedule function
+			if reschedule {
+				mgr.sched.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
+				mgr.sched.ServiceMgr.TaskgroupUpdate(taskGroup)
+			}
 			if err := mgr.sched.store.SaveTaskGroup(taskGroup); err != nil {
-				blog.Error("data checker: save taskgroup(%s) into db failed! err:%s", taskGroup.ID, err.Error())
-				return
+				blog.Errorf("data checker: save taskgroup(%s) into db failed! err:%s", taskGroup.ID, err.Error())
+				return 0
 			}
 		}
 	}
 
-	if lostnum <= 0 {
-		return
-	}
-
-	//  get application data from ZK
-	app, err := mgr.sched.store.FetchApplication(runAs, appId)
-	if err != nil {
-		blog.Error("data checker: fetch application(%s.%s) failed, err:%s", runAs, appId, err.Error())
-		return
-	}
-	appStatus := app.Status
-	isUpdated, err := mgr.sched.updateApplicationStatus(app)
-	if isUpdated == true {
-		if err = mgr.sched.store.SaveApplication(app); err != nil {
-			blog.Error("data checker: save application(%s.%s) into db failed! err:%s",
-				app.RunAs, app.ID, err.Error())
-			return
-		}
-	}
-	mgr.sched.applicationStatusUpdated(app, appStatus)
+	return lostnum
 }
 
 //donot call this function !!!!!!!!!!!

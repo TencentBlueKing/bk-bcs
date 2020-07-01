@@ -27,6 +27,7 @@ BK-BSCP 架构设计
 * Gateway: 提供HTTP RESTful协议服务，完成HTTP到gRPC的协议转换;
 * AccessServer: 集群的入口，负责请求的接入和协议版本兼容以及相关鉴权处理;
 * BusinessServer: 业务逻辑集成服务, 完成复杂的逻辑集成；
+* Integrator: 逻辑集成器，基于yaml描述快速完成复杂逻辑处理;
 * DataManager: 数据代理服务, 提供统一的缓存、DB分片存储能力;
 * TemplateServer: 模板服务，负责配置模板的管理和内容渲染；
 * BCS-Controller: BCS容器环境的控制器，负责策略控制和版本下发；

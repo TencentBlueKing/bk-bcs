@@ -15,6 +15,7 @@ package sidecar
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -167,6 +168,11 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 //BcsLogConfig parameter ContainerName matched, increased 10 score
 //finally, the above scores will be accumulated to be the BcsLogConfig final score
 func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf *bcsv1.BcsLogConfig) int {
+	//if pod don't belong any workload
+	if len(pod.OwnerReferences) == 0 {
+		blog.Warnf("container %s pod(%s:%s) don't belong any workload, then ignore", container.ID, pod.Name, pod.Namespace)
+		return 0
+	}
 	//the default BcsLogConfig, 1 score
 	if bcsLogConf.Spec.ConfigType == bcsv1.DefaultConfigType {
 		return 1
@@ -181,17 +187,9 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	//BcsLogConfig parameter WorkloadType、WorkloadName、WorkloadNamespace matched, increased 2 score
 	//else not matched, return 0 score
 	if bcsLogConf.Spec.WorkloadType != "" {
-		//if pod don't belong any workload
-		if len(pod.OwnerReferences) == 0 {
-			blog.Warnf("container %s pod(%s:%s) not match BcsLogConfig(%s:%s) WorkloadType",
-				container.ID, pod.Name, pod.Namespace, bcsLogConf.Name, bcsLogConf.Spec.WorkloadType)
-			return 0
-		}
-
 		matched := false
 		if pod.OwnerReferences[0].Kind == "ReplicaSet" {
-			if strings.ToLower(bcsLogConf.Spec.WorkloadType) == strings.ToLower("Deployment") &&
-				strings.HasPrefix(pod.OwnerReferences[0].Name, bcsLogConf.Spec.WorkloadName) {
+			if strings.ToLower(bcsLogConf.Spec.WorkloadType) == strings.ToLower("Deployment") {
 				score += 2
 				matched = true
 			}
@@ -218,12 +216,19 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	}
 	if bcsLogConf.Spec.WorkloadName != "" {
 		matched := false
+		var workloadName string
 		if pod.OwnerReferences[0].Kind == "ReplicaSet" {
-			if strings.HasPrefix(pod.OwnerReferences[0].Name, bcsLogConf.Spec.WorkloadName) {
-				score += 2
-				matched = true
-			}
-		} else if pod.OwnerReferences[0].Name == bcsLogConf.Spec.WorkloadName {
+			index := strings.LastIndex(pod.OwnerReferences[0].Name, "-")
+			workloadName = pod.OwnerReferences[0].Name[:index]
+		} else {
+			workloadName = pod.OwnerReferences[0].Name
+		}
+		//match
+		r, err := regexp.Compile(bcsLogConf.Spec.WorkloadName)
+		if err == nil && r.MatchString(workloadName) {
+			score += 2
+			matched = true
+		} else if workloadName == bcsLogConf.Spec.WorkloadName {
 			score += 2
 			matched = true
 		}

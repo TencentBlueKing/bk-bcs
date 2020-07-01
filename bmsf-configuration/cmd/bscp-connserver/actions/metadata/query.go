@@ -105,11 +105,12 @@ func (act *QueryAction) verify() error {
 
 func (act *QueryAction) query() (pbcommon.ErrCode, string) {
 	r := &pbdatamanager.QueryAppMetadataReq{
-		Seq:          act.req.Seq,
-		BusinessName: act.req.BusinessName,
-		AppName:      act.req.AppName,
-		ClusterName:  act.req.ClusterName,
-		ZoneName:     act.req.ZoneName,
+		Seq:           act.req.Seq,
+		BusinessName:  act.req.BusinessName,
+		AppName:       act.req.AppName,
+		ClusterName:   act.req.ClusterName,
+		ZoneName:      act.req.ZoneName,
+		ClusterLabels: act.req.ClusterLabels,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))

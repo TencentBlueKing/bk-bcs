@@ -49,8 +49,6 @@ type SchedManager interface {
 
 	//fetch taskgroup
 	FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error)
-	//fetch mesos agent
-	FetchMesosAgent(innerIP string) (*types.Agent, error)
 }
 
 //OfferPool is mesos offer pool, it is responsible for the managements of the mesos's offers.

@@ -29,9 +29,12 @@ type IPAddress struct {
 
 // NetworkInterfaceAttachment attachment for network interface
 type NetworkInterfaceAttachment struct {
-	Index        int    `json:"index,omitempty"`
+	Index int `json:"index,omitempty"`
+	// for aws
 	AttachmentID string `json:"attachmentId,omitempty"`
-	InstanceID   string `json:"instanceId"`
+	// for tencent cloud
+	EniID      string `json:"eniID,omitempty"`
+	InstanceID string `json:"instanceId"`
 }
 
 // ElasticNetworkInterface status for elastic network interface

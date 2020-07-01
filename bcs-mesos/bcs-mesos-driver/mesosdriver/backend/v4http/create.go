@@ -165,12 +165,12 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+"containers and processes cannot coexist")
 		return nil, replyErr
 	}
-
-	if NumContainer > 0 {
+	//version belong to application
+	if version.Kind == "" && NumContainer > 0 {
 		version.Kind = commtypes.BcsDataType_APP
 	}
-
-	if NumProcess > 0 {
+	//version belong to process
+	if version.Kind == "" && NumProcess > 0 {
 		version.Kind = commtypes.BcsDataType_PROCESS
 	}
 

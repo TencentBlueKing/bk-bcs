@@ -1,0 +1,24 @@
+# permissions for end users to edit bkcmdbs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bkcmdb-editor-role
+rules:
+- apiGroups:
+  - bkcmdb.bkbcs.tencent.com
+  resources:
+  - bkcmdbs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bkcmdb.bkbcs.tencent.com
+  resources:
+  - bkcmdbs/status
+  verbs:
+  - get

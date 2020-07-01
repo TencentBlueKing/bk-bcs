@@ -54,6 +54,10 @@ func (c *FakeBkbcsV2) BcsConfigMaps(namespace string) v2.BcsConfigMapInterface {
 	return &FakeBcsConfigMaps{c, namespace}
 }
 
+func (c *FakeBkbcsV2) BcsDaemonsets(namespace string) v2.BcsDaemonsetInterface {
+	return &FakeBcsDaemonsets{c, namespace}
+}
+
 func (c *FakeBkbcsV2) BcsEndpoints(namespace string) v2.BcsEndpointInterface {
 	return &FakeBcsEndpoints{c, namespace}
 }

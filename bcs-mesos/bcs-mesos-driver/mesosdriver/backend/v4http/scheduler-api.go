@@ -160,8 +160,12 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("PUT", "/namespaces/{ns}/deployments/{name}/pauseupdate", nil, s.pauseupdateDeploymentHandler),
 		httpserver.NewAction("PUT", "/namespaces/{ns}/deployments/{name}/resumeupdate", nil, s.resumeupdateDeploymentHandler),
 		httpserver.NewAction("PUT", "/namespaces/{ns}/deployments/{name}/scale/{instances}", nil, s.scaleDeploymentHandler),
-
 		/*================= deployment ====================*/
+
+		/*================= daemonset ====================*/
+		httpserver.NewAction("POST", "/namespaces/{ns}/daemonset", nil, s.createDaemonsetHandler),
+		httpserver.NewAction("DELETE", "/namespaces/{ns}/daemonset/{name}", nil, s.deleteDaemonsetHandler),
+		/*================= daemonset ====================*/
 
 		/*================= agentsetting ====================*/
 		//	httpserver.NewAction("POST","/agentsetting/{IP}/disable",nil,s.disableAgentHandler),

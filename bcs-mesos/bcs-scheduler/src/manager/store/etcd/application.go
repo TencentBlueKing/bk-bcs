@@ -210,3 +210,24 @@ func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
 	}
 	return apps, nil
 }
+
+//ListTaskGroups show us all the task group on line
+func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
+	taskgroups := make([]*types.TaskGroup, 0)
+	app, err := store.FetchApplication(runAs, appID)
+	//if err!=nil, show application not found
+	//then return empty
+	if err != nil {
+		return taskgroups, nil
+	}
+
+	for _, podId := range app.Pods {
+		taskgroup, err := store.FetchTaskGroup(podId.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		taskgroups = append(taskgroups, taskgroup)
+	}
+	return taskgroups, nil
+}

@@ -71,6 +71,14 @@ type BcsConfigMapListerExpansion interface{}
 // BcsConfigMapNamespaceLister.
 type BcsConfigMapNamespaceListerExpansion interface{}
 
+// BcsDaemonsetListerExpansion allows custom methods to be added to
+// BcsDaemonsetLister.
+type BcsDaemonsetListerExpansion interface{}
+
+// BcsDaemonsetNamespaceListerExpansion allows custom methods to be added to
+// BcsDaemonsetNamespaceLister.
+type BcsDaemonsetNamespaceListerExpansion interface{}
+
 // BcsEndpointListerExpansion allows custom methods to be added to
 // BcsEndpointLister.
 type BcsEndpointListerExpansion interface{}

@@ -29,6 +29,7 @@ import (
 	multicommitaction "bk-bscp/cmd/bscp-accessserver/actions/multi-commit"
 	multireleaseaction "bk-bscp/cmd/bscp-accessserver/actions/multi-release"
 	releaseaction "bk-bscp/cmd/bscp-accessserver/actions/release"
+	reloadaction "bk-bscp/cmd/bscp-accessserver/actions/reload"
 	shardingaction "bk-bscp/cmd/bscp-accessserver/actions/sharding"
 	shardingdbaction "bk-bscp/cmd/bscp-accessserver/actions/shardingdb"
 	strategyaction "bk-bscp/cmd/bscp-accessserver/actions/strategy"
@@ -2344,6 +2345,29 @@ func (as *AccessServer) QueryVariableList(ctx context.Context, req *pb.QueryVari
 	}
 
 	action := variableaction.NewListAction(as.viper, as.templateSvrCli, req, response)
+	as.executor.Execute(action)
+
+	return response, nil
+}
+
+// Reload reloads target release or multi release.
+func (as *AccessServer) Reload(ctx context.Context, req *pb.ReloadReq) (*pb.ReloadResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("Reload[%d]| input[%+v]", req.Seq, req)
+	response := &pb.ReloadResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := as.collector.StatRequest("Reload", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("Reload[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	if errCode, errMsg := as.authCheck(ctx, req.Bid); errCode != pbcommon.ErrCode_E_OK {
+		response.ErrCode = errCode
+		response.ErrMsg = errMsg
+		return response, nil
+	}
+
+	action := reloadaction.NewReloadAction(as.viper, as.businessSvrCli, req, response)
 	as.executor.Execute(action)
 
 	return response, nil

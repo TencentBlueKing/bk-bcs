@@ -166,7 +166,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 
 			taskgroup.Taskgroup = append(taskgroup.Taskgroup, &task)
 		}
-	case commtypes.BcsDataType_APP, "":
+	case commtypes.BcsDataType_APP, "", commtypes.BcsDataType_Daemonset:
 		// build container tasks
 		for index, container := range version.Container {
 			var task types.Task
@@ -1293,6 +1293,7 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources [
 	}
 
 	if len(taskgroup.Taskgroup) <= 0 {
+		blog.Errorf("build taskgroup(%s) failed: taskgroup.Taskgroup is empty", taskgroup.ID)
 		return nil
 	}
 

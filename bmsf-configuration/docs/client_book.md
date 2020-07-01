@@ -480,7 +480,7 @@ sidecar自动注入功能需要Deployment或者Application在annotation中加入
 | BSCP_BCSSIDECAR_HANDLER_CH_TIMEOUT              | 1s                      | main处理协程管道超时时间                         |
 | BSCP_BCSSIDECAR_CFG_HANDLER_CH_SIZE             | 10000                   | 配置处理协程管道大小                             |
 | BSCP_BCSSIDECAR_CFG_HANDLER_CH_TIMEOUT          | 1s                      | 配置处理协程管道超时时间                         |
-| BSCP_BCSSIDECAR_CONNSERVER_HOSTNAME             | conn.bscp.bk.com    | 链接会话服务域名                                 |
+| BSCP_BCSSIDECAR_CONNSERVER_HOSTNAME             | conn.bscp.bk.com        | 链接会话服务域名                                 |
 | BSCP_BCSSIDECAR_CONNSERVER_PORT                 | 9516                    | 链接会话服务端口                                 |
 | BSCP_BCSSIDECAR_CONNSERVER_DIALTIMEOUT          | 3s                      | 链接会话服务建立链接超时时间                     |
 | BSCP_BCSSIDECAR_CONNSERVER_CALLTIMEOUT          | 3s                      | 链接会话服务请求超时时间                         |

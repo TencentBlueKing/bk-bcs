@@ -27,6 +27,7 @@ import (
 	multicommitaction "bk-bscp/cmd/bscp-businessserver/actions/multi-commit"
 	multireleaseaction "bk-bscp/cmd/bscp-businessserver/actions/multi-release"
 	releaseaction "bk-bscp/cmd/bscp-businessserver/actions/release"
+	reloadaction "bk-bscp/cmd/bscp-businessserver/actions/reload"
 	shardingaction "bk-bscp/cmd/bscp-businessserver/actions/sharding"
 	shardingdbaction "bk-bscp/cmd/bscp-businessserver/actions/shardingdb"
 	strategyaction "bk-bscp/cmd/bscp-businessserver/actions/strategy"
@@ -1289,6 +1290,23 @@ func (bs *BusinessServer) QueryAuditList(ctx context.Context, req *pb.QueryAudit
 	}()
 
 	action := auditaction.NewListAction(bs.viper, bs.dataMgrCli, req, response)
+	bs.executor.Execute(action)
+
+	return response, nil
+}
+
+// Reload reloads target release or multi release.
+func (bs *BusinessServer) Reload(ctx context.Context, req *pb.ReloadReq) (*pb.ReloadResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("Reload[%d]| input[%+v]", req.Seq, req)
+	response := &pb.ReloadResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := bs.collector.StatRequest("Reload", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("Reload[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := reloadaction.NewReloadAction(bs.viper, bs.dataMgrCli, bs.bcsControllerCli, bs.gseControllerCli, req, response)
 	bs.executor.Execute(action)
 
 	return response, nil

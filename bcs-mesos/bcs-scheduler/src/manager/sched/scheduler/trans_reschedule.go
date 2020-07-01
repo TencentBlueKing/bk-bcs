@@ -52,7 +52,13 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			continue
 		}
 
-		//precheck application status, add 20180620
+		//precheck application&taskgroup status
+		taskgroup, _ := s.store.FetchTaskGroup(taskGroupID)
+		if taskgroup == nil {
+			blog.Infof("transaction %s fail: fetch taskgroup(%s) return nil", transaction.ID, taskGroupID)
+			transaction.Status = types.OPERATION_STATUS_FAIL
+			break
+		}
 		runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 		app, _ := s.store.FetchApplication(runAs, appID)
 		if app == nil {
