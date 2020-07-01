@@ -144,6 +144,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890 // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
 	golang.org/x/time v0.0.0-20161028155119-f51c12702a4d // indirect
+	google.golang.org/appengine v1.4.0 // indirect
 	google.golang.org/grpc v1.24.0
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect

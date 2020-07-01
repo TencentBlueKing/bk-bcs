@@ -1,0 +1,20 @@
+# permissions for end users to view bkcmdbs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bkcmdb-viewer-role
+rules:
+- apiGroups:
+  - bkcmdb.bkbcs.tencent.com
+  resources:
+  - bkcmdbs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - bkcmdb.bkbcs.tencent.com
+  resources:
+  - bkcmdbs/status
+  verbs:
+  - get
