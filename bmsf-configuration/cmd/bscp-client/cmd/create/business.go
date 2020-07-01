@@ -39,6 +39,7 @@ func createBusinessCmd() *cobra.Command {
 		name: X-Game
 		deptID: 1201
 		creator: MrMGXXXX
+		auth: ${user}:${pwd}
 		memo: annotation
 		db:
 		#dbID sharding index,对应mysql instance

@@ -242,18 +242,21 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 				name = namespaceNameList[1]
 			}
 
-			glog.Infof("sync: %s: %s (name=%s) not on local, do delete", watcher.resourceType, key, name)
+			_, exists, err := watcher.store.GetByKey(key)
+			if !exists && err == nil {
+				glog.Infof("sync: %s: %s (name=%s) not on local, do delete", watcher.resourceType, key, name)
 
-			syncData := &action.SyncData{
-				Kind:      watcher.resourceType,
-				Namespace: namespace,
-				Name:      name,
-				Action:    action.SyncDataActionDelete,
-				Data:      "",
+				syncData := &action.SyncData{
+					Kind:      watcher.resourceType,
+					Namespace: namespace,
+					Name:      name,
+					Action:    action.SyncDataActionDelete,
+					Data:      "",
+				}
+
+				// sync delete event base on the reconciliation logic.
+				watcher.writer.Sync(syncData)
 			}
-
-			// sync delete event base on the reconciliation logic.
-			watcher.writer.Sync(syncData)
 		}
 	}
 }

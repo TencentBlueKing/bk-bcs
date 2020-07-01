@@ -137,6 +137,7 @@ func (act *QueryAction) queryApp() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Where(&database.App{Bid: act.business.Bid, Name: act.req.AppName}).
+		Where("Fstate = ?", pbcommon.AppState_AS_CREATED).
 		Last(&act.app).Error
 
 	// not found.
@@ -155,6 +156,7 @@ func (act *QueryAction) queryCluster() (pbcommon.ErrCode, string) {
 	err := act.sd.DB().
 		Where(&database.Cluster{Bid: act.business.Bid, Appid: act.app.Appid, Name: act.req.ClusterName}).
 		Where("Flabels = ?", act.req.ClusterLabels).
+		Where("Fstate = ?", pbcommon.ClusterState_CS_CREATED).
 		Last(&act.cluster).Error
 
 	// not found.
@@ -173,6 +175,7 @@ func (act *QueryAction) queryZone() (pbcommon.ErrCode, string) {
 	err := act.sd.DB().
 		Where(&database.Zone{Bid: act.business.Bid, Appid: act.app.Appid,
 			Clusterid: act.cluster.Clusterid, Name: act.req.ZoneName}).
+		Where("Fstate = ?", pbcommon.ZoneState_ZS_CREATED).
 		Last(&act.zone).Error
 
 	// not found.

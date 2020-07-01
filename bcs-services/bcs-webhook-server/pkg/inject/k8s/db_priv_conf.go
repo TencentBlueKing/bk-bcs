@@ -68,16 +68,15 @@ func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOpera
 		}
 	}
 	if matched != nil {
-		patch = append(patch, dbPrivConf.addInitContainer(matched))
+		patch = append(patch, dbPrivConf.addInitContainer(pod.Spec.InitContainers, matched))
 	}
 
 	return patch, nil
 }
 
 // addInitContainer add an init-container to pod
-func (dbPrivConf *DbPrivConfInject) addInitContainer(matched *v1.BcsDbPrivConfig) (patch PatchOperation) {
+func (dbPrivConf *DbPrivConfInject) addInitContainer(origin []corev1.Container, matched *v1.BcsDbPrivConfig) (patch PatchOperation) {
 
-	var initContainers []corev1.Container
 	var fieldPath, callType string
 
 	if dbPrivConf.Injects.DbPriv.NetworkType == "overlay" {
@@ -143,12 +142,12 @@ func (dbPrivConf *DbPrivConfInject) addInitContainer(matched *v1.BcsDbPrivConfig
 		},
 	}
 
-	initContainers = append(initContainers, initContainer)
+	patchedInitContainers := append(origin, initContainer)
 
 	patch = PatchOperation{
-		Op:    "add",
+		Op:    "replace",
 		Path:  "/spec/initContainers",
-		Value: initContainers,
+		Value: patchedInitContainers,
 	}
 	return patch
 }

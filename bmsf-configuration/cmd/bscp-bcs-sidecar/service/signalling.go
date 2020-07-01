@@ -156,6 +156,12 @@ func (sc *SignallingChannel) pinging(ctx context.Context, switchCh chan struct{}
 
 	// keep pinging.
 	for {
+		if sc.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName)) {
+			logger.Info("SignallingChannel[%s %s]| signalling stop pinging now!", sc.businessName, sc.appName)
+			switchCh <- struct{}{}
+			return nil
+		}
+
 		select {
 		case <-ctx.Done():
 			logger.Info("SignallingChannel[%s %s]| cancel pinging now.", sc.businessName, sc.appName)
@@ -185,9 +191,10 @@ func (sc *SignallingChannel) signalling(ctx context.Context, switchCh chan struc
 	}(ctx, &stopRecving)
 
 	for {
-		if stopRecving {
-			logger.Info("SignallingChannel[%s %s]| cancel recving now.", sc.businessName, sc.appName)
+		if stopRecving || sc.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName)) {
+			logger.Info("SignallingChannel[%s %s]| cancel and stop recving now.", sc.businessName, sc.appName)
 			stream.CloseSend()
+			switchCh <- struct{}{}
 			break
 		}
 
@@ -218,6 +225,10 @@ func (sc *SignallingChannel) signalling(ctx context.Context, switchCh chan struc
 		case pb.SignallingChannelCmd_SCCMD_S2C_PUSH_ROLLBACK_NOTIFICATION:
 			logger.Info("SignallingChannel[%s %s]| CMD -- recviced ROLLBACK PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, resp.CmdRollback)
 			go sc.handler.Handle(resp.CmdRollback)
+
+		case pb.SignallingChannelCmd_SCCMD_S2C_PUSH_RELOAD_NOTIFICATION:
+			logger.Info("SignallingChannel[%s %s]| CMD -- recviced RELOAD PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, resp.CmdReload)
+			go sc.handler.Handle(resp.CmdReload)
 
 		default:
 			logger.Error("SignallingChannel[%s %s]| unknow signalling channel cmd[%+v]!", sc.businessName, sc.appName, resp.Cmd)
@@ -254,6 +265,10 @@ func (sc *SignallingChannel) Setup() {
 		var stream pb.Connection_SignallingChannelClient
 
 		isSetupSuccess := false
+		if sc.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName)) {
+			logger.Info("SignallingChannel[%s %s]| signalling stop now!", sc.businessName, sc.appName)
+			return
+		}
 
 		for _, node := range nodes {
 			opts := []grpc.DialOption{
@@ -307,4 +322,10 @@ func (sc *SignallingChannel) Setup() {
 		cancel()
 		conn.Close()
 	}
+}
+
+// Close stops the signalling and handlers.
+func (sc *SignallingChannel) Close() {
+	sc.viper.Set(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName), true)
+	logger.Info("SignallingChannel[%s %s]| mark signalling stop flag done!", sc.businessName, sc.appName)
 }

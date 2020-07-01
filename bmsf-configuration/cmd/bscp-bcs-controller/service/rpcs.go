@@ -19,6 +19,7 @@ import (
 	configsetaction "bk-bscp/cmd/bscp-bcs-controller/actions/configset"
 	publishaction "bk-bscp/cmd/bscp-bcs-controller/actions/publish"
 	releaseaction "bk-bscp/cmd/bscp-bcs-controller/actions/release"
+	reloadaction "bk-bscp/cmd/bscp-bcs-controller/actions/reload"
 	reportaction "bk-bscp/cmd/bscp-bcs-controller/actions/report"
 	pb "bk-bscp/internal/protocol/bcs-controller"
 	pbcommon "bk-bscp/internal/protocol/common"
@@ -127,6 +128,23 @@ func (c *BCSController) PullConfigSetList(ctx context.Context, req *pb.PullConfi
 	}()
 
 	action := configsetaction.NewListAction(c.viper, c.dataMgrCli, req, response)
+	c.executor.Execute(action)
+
+	return response, nil
+}
+
+// Reload reloads target release or multi release.
+func (c *BCSController) Reload(ctx context.Context, req *pb.ReloadReq) (*pb.ReloadResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("Reload[%d]| input[%+v]", req.Seq, req)
+	response := &pb.ReloadResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := c.collector.StatRequest("Reload", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("Reload[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := reloadaction.NewReloadAction(c.viper, c.dataMgrCli, c.publisher, c.pubTopic, req, response)
 	c.executor.Execute(action)
 
 	return response, nil

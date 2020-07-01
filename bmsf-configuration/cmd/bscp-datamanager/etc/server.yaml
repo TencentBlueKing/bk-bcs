@@ -22,7 +22,7 @@ database:
     host: 127.0.0.1
     port: 3306
     user: root
-    passwd: ${pwd}
+    passwd: $(pwd)
 
 # 日志相关配置信息
 logger:
