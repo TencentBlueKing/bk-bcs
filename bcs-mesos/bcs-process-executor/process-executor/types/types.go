@@ -14,7 +14,7 @@
 package types
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"time"

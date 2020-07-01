@@ -18,7 +18,7 @@ import (
 	commtypes "bk-bcs/bcs-common/common/types"
 	offerP "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"errors"
 	"github.com/danwakefield/fnmatch"

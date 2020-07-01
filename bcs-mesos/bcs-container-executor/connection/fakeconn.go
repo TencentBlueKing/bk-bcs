@@ -29,7 +29,7 @@ import (
 	"io"
 
 	exe "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 
 	"github.com/golang/protobuf/proto"
 )

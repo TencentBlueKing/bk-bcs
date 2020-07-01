@@ -24,7 +24,7 @@ import (
 	cninet "bk-bcs/bcs-mesos/bcs-container-executor/network/cni"
 	cnmnet "bk-bcs/bcs-mesos/bcs-container-executor/network/cnm"
 	"bk-bcs/bcs-mesos/bcs-container-executor/util"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"encoding/json"

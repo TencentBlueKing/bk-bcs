@@ -24,8 +24,8 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/operator"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
@@ -49,7 +49,7 @@ import (
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/servermetric"
 	"reflect"
 
-	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
+	master "bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 )
 
 // Interval for update task, taskgroup, application in ZK

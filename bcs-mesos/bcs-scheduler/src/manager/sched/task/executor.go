@@ -19,7 +19,7 @@ import (
 	"bk-bcs/bcs-common/common/static"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"fmt"

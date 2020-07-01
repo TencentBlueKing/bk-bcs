@@ -15,8 +15,8 @@ package scheduler
 
 import (
 	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"encoding/json"

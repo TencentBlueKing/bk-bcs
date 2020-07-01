@@ -17,7 +17,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	proc_daemon "bk-bcs/bcs-mesos/bcs-process-executor/process-executor/proc-daemon"
 	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"context"
 	"encoding/base64"

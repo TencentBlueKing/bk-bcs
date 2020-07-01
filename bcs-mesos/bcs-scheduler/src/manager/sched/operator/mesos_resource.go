@@ -17,7 +17,7 @@ import (
 	"bk-bcs/bcs-common/common/blog"
 	commtypes "bk-bcs/bcs-common/common/types"
 	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
-	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
+	master "bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"

@@ -15,7 +15,7 @@ package app
 
 import (
 	"bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"fmt"
 	"sync"
 )

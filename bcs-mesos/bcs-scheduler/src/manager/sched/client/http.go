@@ -14,7 +14,7 @@
 package client
 
 import (
-	mesosjson "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/json"
+	mesosjson "bk-bcs/bcs-common/pkg/scheduler/mesosproto/json"
 	"bytes"
 	"encoding/json"
 	"fmt"

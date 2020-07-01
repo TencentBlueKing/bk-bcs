@@ -18,7 +18,7 @@ import (
 	"net/http"
 
 	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 )
 
 func (bs *bcsScheduler) GetOffer(clusterID string) ([]*mesos.Offer, error) {

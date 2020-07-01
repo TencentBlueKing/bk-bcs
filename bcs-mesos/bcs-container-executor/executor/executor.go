@@ -27,7 +27,7 @@ import (
 	conn "bk-bcs/bcs-mesos/bcs-container-executor/connection"
 	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	exec "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/upid"

@@ -15,7 +15,7 @@ package backend
 
 import (
 	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 )
 
 func (b *backend) GetClusterResources() (*commtypes.BcsClusterResource, error) {

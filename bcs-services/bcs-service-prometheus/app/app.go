@@ -52,4 +52,6 @@ func setConfig(conf *config.Config, op *options.PrometheusControllerOption) {
 	conf.EnableNode = op.EnableNode
 	conf.EnableService = op.EnableService
 	conf.Kubeconfig = op.Kubeconfig
+	conf.ServiceModules = op.ServiceModules
+	conf.ClusterModules = op.ClusterModules
 }
