@@ -35,9 +35,9 @@ type nodeEtcdDiscovery struct {
 	nodeExportPort int
 	module         string
 
-	eventHandler EventHandleFunc
-	nodeLister   bkbcsv2.AgentLister
-	initSuccess  bool
+	eventHandler   EventHandleFunc
+	nodeLister     bkbcsv2.AgentLister
+	initSuccess    bool
 	promFilePrefix string
 }
 

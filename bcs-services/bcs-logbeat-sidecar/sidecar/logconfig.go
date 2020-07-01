@@ -264,7 +264,7 @@ func (s *SidecarController) handleChangedBcsLogConfig(obj interface{}) {
 		blog.Errorf("cannot convert to *bcsv1.BcsLogConfig: %v", obj)
 		return
 	}
-	by,_ := json.Marshal(conf)
+	by, _ := json.Marshal(conf)
 	blog.Infof("handle kubernetes AddOrDelete event BcsLogConfig(%s:%s) data(%s)", conf.Namespace, conf.Name, string(by))
 	s.syncLogConfs()
 }
@@ -275,7 +275,7 @@ func (s *SidecarController) handleUpdatedBcsLogConfig(oldObj, newObj interface{}
 		blog.Errorf("cannot convert to *bcsv1.BcsLogConfig: %v", newObj)
 		return
 	}
-	by,_ := json.Marshal(conf)
+	by, _ := json.Marshal(conf)
 	blog.Infof("handle kubernetes Update event BcsLogConfig(%s:%s) data(%s)", conf.Namespace, conf.Name, string(by))
 	s.syncLogConfs()
 }

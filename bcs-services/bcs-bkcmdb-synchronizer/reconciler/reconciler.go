@@ -22,11 +22,11 @@ import (
 
 	jump "github.com/lithammer/go-jump-consistent-hash"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	cmdb "bk-bcs/bcs-common/pkg/esb/cmdbv3"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/storage"
 )
 
 const (

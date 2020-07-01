@@ -13,7 +13,7 @@
 package qcloud
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 func getMaxPrivateIPNumPerENI(cores, mem int) int {

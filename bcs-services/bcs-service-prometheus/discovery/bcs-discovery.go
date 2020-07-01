@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-sd-prometheus/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 )
 
 type bcsMesosDiscovery struct {
@@ -32,15 +32,15 @@ type bcsMesosDiscovery struct {
 	eventHandler    EventHandleFunc
 	moduleDiscovery moduleDiscovery.ModuleDiscovery
 	module          []string
-	promFilePrefix string
+	promFilePrefix  string
 }
 
 // new bcs module service discovery
 func NewBcsDiscovery(zkAddr string, promFilePrefix string, module []string) (Discovery, error) {
 	disc := &bcsMesosDiscovery{
-		zkAddr:     zkAddr,
+		zkAddr:         zkAddr,
 		promFilePrefix: promFilePrefix,
-		module:     module,
+		module:         module,
 	}
 
 	return disc, nil
@@ -104,14 +104,14 @@ func (disc *bcsMesosDiscovery) handleEventFunc(module string) {
 }
 
 func (disc *bcsMesosDiscovery) syncTickerPromSdConfig() {
-	for _,module :=range disc.module {
+	for _, module := range disc.module {
 		disc.eventHandler(module)
 	}
 	ticker := time.NewTicker(time.Minute * 5)
 	select {
 	case <-ticker.C:
 		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		for _,module :=range disc.module {
+		for _, module := range disc.module {
 			disc.eventHandler(module)
 		}
 	}

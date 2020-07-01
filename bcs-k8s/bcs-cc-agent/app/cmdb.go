@@ -14,14 +14,14 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io/ioutil"
 	"net/http"
 
-	"bk-bcs/bcs-k8s/bcs-cc-agent/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/config"
 )
 
 type PropertyFilter struct {

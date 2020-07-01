@@ -14,8 +14,8 @@
 package backend
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"

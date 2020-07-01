@@ -18,9 +18,9 @@ import (
 	"os"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-cc-agent/app"
-	"bk-bcs/bcs-k8s/bcs-cc-agent/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/app"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/options"
 )
 
 func main() {

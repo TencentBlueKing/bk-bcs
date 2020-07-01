@@ -15,8 +15,8 @@
 package zk
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //save agent

@@ -85,13 +85,13 @@ type NetworkController struct {
 	instanceEth string
 
 	// vm instance hostname
-	hostname    string
+	hostname string
 
 	// extra elastic network interface number
-	eniNum      int
+	eniNum int
 
 	// ip number for each extra elastic network interface
-	ipNum       int
+	ipNum int
 
 	// options for network agent
 	options *options.NetworkOption

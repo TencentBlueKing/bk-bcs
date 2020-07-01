@@ -16,15 +16,16 @@ package main
 import (
 	"flag"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	bkcmdbv1 "bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
-	"bk-bcs/bcs-resources/bk-cmdb-operator/controllers"
-	cmdbClient "bk-bcs/bcs-resources/bk-cmdb-operator/kube/client"
+	bkcmdbv1 "github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/controllers"
+	cmdbClient "github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/kube/client"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
 )
 
