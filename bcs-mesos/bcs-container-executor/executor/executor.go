@@ -14,24 +14,24 @@
 package executor
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	"encoding/base64"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/expfmt"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
-	conn "bk-bcs/bcs-mesos/bcs-container-executor/connection"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	exec "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
-	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	conn "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/connection"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	exec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/upid"
 	"github.com/pborman/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/expfmt"
 	"golang.org/x/net/context"
 	//"github.com/gogo/protobuf/test/fuzztests"
 )

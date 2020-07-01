@@ -16,7 +16,7 @@ import (
 	"math/rand"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // BackoffTimeSeries time series for back off

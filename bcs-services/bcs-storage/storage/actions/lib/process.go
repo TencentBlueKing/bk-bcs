@@ -19,9 +19,9 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-storage/storage/actions"
-	"bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 
 	restful "github.com/emicklei/go-restful"
 )

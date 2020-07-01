@@ -14,10 +14,10 @@
 package manager
 
 import (
-	"bk-bcs/bcs-common/common/util"
-	"bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
-	"bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource/localdriver"
-	"bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource/netdriver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource/localdriver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource/netdriver"
 	"net"
 )
 

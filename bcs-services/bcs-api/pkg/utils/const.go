@@ -14,7 +14,7 @@
 package utils
 
 import (
-	"bk-bcs/bcs-services/bcs-api/pkg/apis/blueking.io/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/apis/blueking.io/v1"
 )
 
 var ClusterGroupKind = v1.Kind("Cluster")

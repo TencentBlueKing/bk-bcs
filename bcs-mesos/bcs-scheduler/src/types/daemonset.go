@@ -16,7 +16,7 @@ package types
 import (
 	"fmt"
 
-	commtypes "bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 //Application for container

@@ -15,8 +15,8 @@ package paascc
 import (
 	"crypto/tls"
 
-	paasclient "bk-bcs/bcs-common/pkg/esb/client"
-	"bk-bcs/bcs-common/pkg/throttle"
+	paasclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 )
 
 // ClientInterface client interface for paas-cc

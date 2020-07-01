@@ -16,10 +16,10 @@ package main
 import (
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-user-manager/app"
-	"bk-bcs/bcs-services/bcs-user-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
 func main() {

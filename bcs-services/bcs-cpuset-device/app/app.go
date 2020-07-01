@@ -16,11 +16,11 @@ package app
 import (
 	"os"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-services/bcs-cpuset-device/app/options"
-	"bk-bcs/bcs-services/bcs-cpuset-device/config"
-	"bk-bcs/bcs-services/bcs-cpuset-device/cpuset-device"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/cpuset-device"
 )
 
 func Run(op *options.Option) error {

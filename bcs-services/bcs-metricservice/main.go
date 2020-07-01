@@ -14,11 +14,11 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/check"
-	"bk-bcs/bcs-services/bcs-metricservice/app"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/check"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
 	"runtime"
 )
 

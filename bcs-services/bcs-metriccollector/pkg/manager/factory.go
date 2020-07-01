@@ -14,7 +14,7 @@
 package manager
 
 import (
-	"bk-bcs/bcs-services/bcs-metriccollector/pkg/collector"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/collector"
 )
 
 // New create a new Manager object

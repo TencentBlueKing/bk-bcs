@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
 )
 
 func appnedFile(filepath, value string) error {

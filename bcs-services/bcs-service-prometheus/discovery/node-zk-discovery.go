@@ -18,9 +18,9 @@ import (
 	"path"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	commDiscovery "bk-bcs/bcs-common/pkg/discovery"
-	"bk-bcs/bcs-services/bcs-service-prometheus/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 )
 
 type nodeZkDiscovery struct {

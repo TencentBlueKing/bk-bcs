@@ -14,7 +14,7 @@
 package master
 
 import (
-	bcstypes "bk-bcs/bcs-common/common/types"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 //Empty for test

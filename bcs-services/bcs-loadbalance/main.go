@@ -19,10 +19,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"bk-bcs/bcs-services/bcs-loadbalance/app"
-	"bk-bcs/bcs-services/bcs-loadbalance/option"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/option"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 func main() {

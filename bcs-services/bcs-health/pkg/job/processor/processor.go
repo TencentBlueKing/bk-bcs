@@ -17,11 +17,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-health/pkg/role"
-	"bk-bcs/bcs-services/bcs-health/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/role"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/util"
 
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
 	etcdc "github.com/coreos/etcd/client"
 )
 

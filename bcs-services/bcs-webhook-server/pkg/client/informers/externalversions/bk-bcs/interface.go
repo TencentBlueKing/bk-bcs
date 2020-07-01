@@ -19,8 +19,8 @@ limitations under the License.
 package bkbcs
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/bk-bcs/v1"
-	internalinterfaces "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/internalinterfaces"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/bk-bcs/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

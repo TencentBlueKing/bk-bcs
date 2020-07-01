@@ -18,10 +18,10 @@ import (
 	"reflect"
 	"strings"
 
-	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 
-	"bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/asaskevich/govalidator"
 	"gopkg.in/go-playground/validator.v9"
 )

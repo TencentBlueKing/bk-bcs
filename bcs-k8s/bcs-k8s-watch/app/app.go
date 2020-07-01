@@ -22,20 +22,20 @@ import (
 	"syscall"
 	"time"
 
-	"bk-bcs/bcs-common/common/types"
-	bcsVersion "bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	bcsVersion "github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 
-	global "bk-bcs/bcs-common/common"
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
-	disbcs "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/bcs"
-	disreg "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
+	global "github.com/Tencent/bk-bcs/bcs-common/common"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
+	disbcs "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/bcs"
+	disreg "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
 )
 
 var globalStopChan = make(chan struct{})

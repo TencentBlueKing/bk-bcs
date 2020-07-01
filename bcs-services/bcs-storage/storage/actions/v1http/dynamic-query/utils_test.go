@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
 func TestGetQueryJson(t *testing.T) {

@@ -14,8 +14,8 @@
 package util
 
 import (
-	"bk-bcs/bcs-common/common/version"
 	goflag "flag"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"strings"
 
 	//"github.com/golang/glog"

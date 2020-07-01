@@ -14,10 +14,10 @@
 package client
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"net"
 	"time"
 )

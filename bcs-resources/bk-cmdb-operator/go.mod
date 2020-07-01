@@ -1,4 +1,4 @@
-module bk-bcs/bcs-resources/bk-cmdb-operator
+module github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator
 
 go 1.13
 

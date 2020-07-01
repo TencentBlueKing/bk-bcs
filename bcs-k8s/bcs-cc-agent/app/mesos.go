@@ -19,8 +19,8 @@ import (
 	"reflect"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-cc-agent/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/config"
 )
 
 var mesosCacheInfo *NodeInfo

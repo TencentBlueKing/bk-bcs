@@ -13,11 +13,11 @@
 package conf
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/encrypt"
-	bcsconf "bk-bcs/bcs-services/bcs-netservice/config"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
 	"io/ioutil"
 	"os"
 

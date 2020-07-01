@@ -14,9 +14,9 @@
 package ipscheduler
 
 import (
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 
 	"fmt"
 	"strings"

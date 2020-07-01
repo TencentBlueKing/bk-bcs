@@ -16,7 +16,7 @@
 package scheme
 
 import (
-	meshv1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"

@@ -25,11 +25,11 @@ import (
 
 	"github.com/ugorji/go/codec"
 
-	discovery "bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
+	discovery "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
 )
 
 // defaultJSONHandle default handle type for codec decoder

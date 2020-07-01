@@ -23,26 +23,26 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/service"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 const (
 	// defaultSyncInterval is default sync interval.
-	defaultSyncInterval = 30 * time.Second
+	defaultSyncInterval = 60 * time.Second
 
 	// defaultNetServiceTimeout is default netservice timeout.
-	defaultNetServiceTimeout = 2 * time.Second
+	defaultNetServiceTimeout = 20 * time.Second
 
 	// defaultHTTPRetryerCount is default http request retry count.
 	defaultHTTPRetryerCount = 2
 
 	// defaultHTTPRetryerTime is default http request retry time.
-	defaultHTTPRetryerTime = time.Second
+	defaultHTTPRetryerTime = 3 * time.Second
 )
 
 func reportIPPoolStaticMetrics(action, status string) {
@@ -163,7 +163,7 @@ func (w *NetServiceWatcher) queryIPResourceDetail() (*netservicetypes.NetRespons
 	return response, nil
 }
 
-// Sync syncs target ip resources to storages.
+// SyncIPResource syncs target ip resources to storages.
 func (w *NetServiceWatcher) SyncIPResource() {
 	// query resource from netservice.
 	resource, err := w.queryIPResource()
@@ -192,7 +192,7 @@ func (w *NetServiceWatcher) SyncIPResource() {
 	}
 }
 
-// Sync syncs target ip resource detail to storages.
+// SyncIPResourceDetail sync target ip resource detail to storages.
 func (w *NetServiceWatcher) SyncIPResourceDetail() {
 	// query resource detail from netservice.
 	resource, err := w.queryIPResourceDetail()

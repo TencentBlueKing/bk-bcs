@@ -16,8 +16,8 @@ import (
 	"fmt"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-networkpolicy/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-networkpolicy/options"
 
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"

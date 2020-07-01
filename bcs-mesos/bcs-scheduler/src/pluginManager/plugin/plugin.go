@@ -14,7 +14,7 @@
 package plugin
 
 import (
-	typesplugin "bk-bcs/bcs-common/common/plugin"
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 )
 
 type Plugin interface {

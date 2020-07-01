@@ -16,7 +16,7 @@ package v1
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	bluekingio "bk-bcs/bcs-services/bcs-api/pkg/apis/blueking.io"
+	bluekingio "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/apis/blueking.io"
 )
 
 var SchemeGroupVersion = schema.GroupVersion{Group: bluekingio.GroupName, Version: "v1"}

@@ -16,7 +16,7 @@ package component
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 )
 
 const (

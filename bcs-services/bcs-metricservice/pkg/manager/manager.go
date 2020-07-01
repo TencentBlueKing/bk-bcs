@@ -17,15 +17,15 @@ import (
 	"context"
 	"hash/fnv"
 
-	"bk-bcs/bcs-common/common/blog"
-	bcsMetric "bk-bcs/bcs-common/common/metric"
-	btypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/meta"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/route"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/watch"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsMetric "github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/route"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/watch"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
 )
 
 type MetricManager struct {

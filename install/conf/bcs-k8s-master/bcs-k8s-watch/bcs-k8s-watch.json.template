@@ -1,6 +1,6 @@
 {
     "default": {
-        "clusterID": "",
+        "clusterID": "${clusterId}",
         "hostIP": "${localIp}"
     },
     "bcs": {

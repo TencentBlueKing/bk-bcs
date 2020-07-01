@@ -18,9 +18,9 @@ import (
 	"strconv"
 	"strings"
 
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
-	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	mesos_master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 )
 
 //executor or task default resources limits

@@ -17,10 +17,10 @@ package v1
 import (
 	time "time"
 
-	network_v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	internalinterfaces "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/internalinterfaces"
-	internalclientset "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/network/v1"
+	network_v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/informers/internalinterfaces"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/network/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

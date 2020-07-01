@@ -16,12 +16,12 @@ package task
 import (
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
-	checkManager "bk-bcs/bcs-mesos/bcs-check/bcscheck/manager"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/task/cluster"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/task/cluster/mesos"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
+	checkManager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/task/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/task/cluster/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
 
 	"golang.org/x/net/context"
 )

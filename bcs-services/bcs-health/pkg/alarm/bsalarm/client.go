@@ -27,8 +27,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/statistic"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/statistic"
 )
 
 func NewKafkaClient(dataid, path, confFile, logdir string) (*KafkaClient, error) {

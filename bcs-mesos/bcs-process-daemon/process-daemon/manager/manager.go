@@ -14,13 +14,13 @@
 package manager
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/config"
-	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/store"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 	"bytes"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 	"io/ioutil"
 	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json"
 	"os"

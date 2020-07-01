@@ -18,11 +18,11 @@ import (
 	"path"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/pkg/client/informers"
-	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
-	"bk-bcs/bcs-services/bcs-service-prometheus/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/clientcmd"
@@ -35,9 +35,9 @@ type nodeEtcdDiscovery struct {
 	nodeExportPort int
 	module         string
 
-	eventHandler EventHandleFunc
-	nodeLister   bkbcsv2.AgentLister
-	initSuccess  bool
+	eventHandler   EventHandleFunc
+	nodeLister     bkbcsv2.AgentLister
+	initSuccess    bool
 	promFilePrefix string
 }
 

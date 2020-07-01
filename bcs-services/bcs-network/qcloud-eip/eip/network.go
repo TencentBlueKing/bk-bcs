@@ -19,7 +19,7 @@ import (
 	"os"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/vishvananda/netlink"
 )

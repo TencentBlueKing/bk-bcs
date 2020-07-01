@@ -14,8 +14,8 @@
 package zk
 
 import (
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"time"
 )
 

@@ -16,7 +16,7 @@ package metrics
 import (
 	"time"
 
-	commtypes "bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 // TaskgroupMetric contains pod metric value (the metric values are expected to be the metric as a milli-value)

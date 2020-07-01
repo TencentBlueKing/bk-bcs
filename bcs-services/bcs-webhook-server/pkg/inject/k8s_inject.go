@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/k8s"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/k8s"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

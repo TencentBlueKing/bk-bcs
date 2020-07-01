@@ -14,8 +14,8 @@
 package clbingress
 
 import (
-	ingressv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
+	ingressv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/model"
 )
 
 // IngressRegistry interface for clb ingress rule discovery

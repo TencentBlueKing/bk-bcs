@@ -17,7 +17,7 @@ import (
 	"context"
 	"reflect"
 
-	meshv1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

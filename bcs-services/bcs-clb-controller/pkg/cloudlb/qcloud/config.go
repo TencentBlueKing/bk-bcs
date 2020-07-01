@@ -19,9 +19,9 @@ import (
 	"os"
 	"strconv"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/sdk"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/sdk"
 )
 
 //CLBCfg include all config of qcloud clb

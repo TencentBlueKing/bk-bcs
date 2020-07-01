@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // NetServiceHandler handle netservice resources for storage.

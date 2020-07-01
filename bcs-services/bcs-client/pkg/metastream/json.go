@@ -22,7 +22,7 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	mesostype "bk-bcs/bcs-common/common/types"
+	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 /*

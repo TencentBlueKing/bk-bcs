@@ -14,7 +14,7 @@
 package v1
 
 import (
-	metricTypes "bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+	metricTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 )
 
 // MetricList contains the metric resource which order by namespaces

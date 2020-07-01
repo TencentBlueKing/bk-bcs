@@ -23,11 +23,11 @@ import (
 
 	"github.com/emicklei/go-restful"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-api/metric"
-	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
-	"bk-bcs/bcs-services/bcs-api/regdiscv"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
 )
 
 const (

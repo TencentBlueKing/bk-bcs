@@ -14,7 +14,7 @@
 package output
 
 import (
-	btypes "bk-bcs/bcs-common/common/types"
+	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 // Message will be sent to net

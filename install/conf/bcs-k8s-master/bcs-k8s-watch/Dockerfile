@@ -1,9 +1,13 @@
 FROM centos:latest
 
-COPY ./bcs-k8s-watch /
-RUN mkdir /cert
-ADD ./bcs-ca.crt /cert/
-ADD ./bcs-client.crt /cert/
-ADD ./bcs-client.key /cert/
+RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
+RUN mkdir -p /data/bcs/bcs-k8s-watch
 
-ENTRYPOINT ["/bcs-k8s-watch", "--config", "/config/config.json"]
+ADD bcs-k8s-watch /data/bcs/bcs-k8s-watch/
+ADD container-start.sh /data/bcs/bcs-k8s-watch/
+RUN chmod +x /data/bcs/bcs-k8s-watch/bcs-k8s-watch
+RUN chmod +x /data/bcs/bcs-k8s-watch/container-start.sh
+
+WORKDIR /data/bcs/bcs-k8s-watch/
+ENTRYPOINT ["/data/bcs/bcs-k8s-watch/container-start.sh"]
+

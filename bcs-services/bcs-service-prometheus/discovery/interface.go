@@ -13,7 +13,7 @@
 
 package discovery
 
-import "bk-bcs/bcs-services/bcs-service-prometheus/types"
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 const (
 	DefaultBcsModuleLabelKey = "bcs_module"

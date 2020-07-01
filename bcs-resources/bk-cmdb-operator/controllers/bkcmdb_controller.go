@@ -16,8 +16,8 @@ package controllers
 import (
 	"context"
 
-	bkcmdbv1 "bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
-	cmdbClient "bk-bcs/bcs-resources/bk-cmdb-operator/kube/client"
+	bkcmdbv1 "github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
+	cmdbClient "github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/kube/client"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	batchV1 "k8s.io/api/batch/v1"

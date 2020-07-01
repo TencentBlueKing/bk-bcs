@@ -16,16 +16,16 @@ import (
 	"context"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/types"
-	cmdb "bk-bcs/bcs-common/pkg/esb/cmdbv3"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/config"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/discovery"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/reconciler"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/storage"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/taskinformer"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/taskmanager"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/reconciler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/taskinformer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/taskmanager"
 )
 
 // Controller controller for controlling reconciler life cycle

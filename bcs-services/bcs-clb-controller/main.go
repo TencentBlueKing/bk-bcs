@@ -14,7 +14,7 @@
 package main
 
 import (
-	"bk-bcs/bcs-services/bcs-clb-controller/cmd"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/cmd"
 )
 
 func main() {

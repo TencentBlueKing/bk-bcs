@@ -16,8 +16,8 @@ package collector
 import (
 	"context"
 
-	"bk-bcs/bcs-services/bcs-metriccollector/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 )
 
 const (

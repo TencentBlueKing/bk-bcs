@@ -16,11 +16,11 @@
 package versioned
 
 import (
-	corev1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1alpha1"
-	corev1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1beta1"
-	multiclusterdnsv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/multiclusterdns/v1alpha1"
-	schedulingv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1"
-	typesv1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/types/v1beta1"
+	corev1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1alpha1"
+	corev1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1beta1"
+	multiclusterdnsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/multiclusterdns/v1alpha1"
+	schedulingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1"
+	typesv1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/types/v1beta1"
 
 	glog "github.com/golang/glog"
 	discovery "k8s.io/client-go/discovery"

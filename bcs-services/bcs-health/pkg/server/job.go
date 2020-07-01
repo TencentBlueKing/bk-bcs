@@ -18,8 +18,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-health/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/util"
 
 	"github.com/emicklei/go-restful"
 	"golang.org/x/net/context"

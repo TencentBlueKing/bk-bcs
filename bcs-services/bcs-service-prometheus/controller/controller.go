@@ -19,10 +19,10 @@ import (
 	"strings"
 	"sync"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-service-prometheus/config"
-	"bk-bcs/bcs-services/bcs-service-prometheus/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/discovery"
 )
 
 type PrometheusController struct {
@@ -50,10 +50,10 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 		serviceModules: []string{commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE},
 		nodeModules:    []string{discovery.CadvisorModule, discovery.NodeexportModule},
 	}
-	if len(conf.ServiceModules)>0 {
+	if len(conf.ServiceModules) > 0 {
 		prom.serviceModules = conf.ServiceModules
 	}
-	if len(conf.ClusterModules)>0 {
+	if len(conf.ClusterModules) > 0 {
 		prom.mesosModules = conf.ClusterModules
 	}
 
@@ -85,9 +85,9 @@ func (prom *PrometheusController) Start() error {
 		for _, module := range prom.nodeModules {
 			var nodeDiscovery discovery.Discovery
 			var err error
-			if prom.conf.Kubeconfig!="" {
+			if prom.conf.Kubeconfig != "" {
 				nodeDiscovery, err = discovery.NewNodeEtcdDiscovery(prom.conf.Kubeconfig, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
-			}else {
+			} else {
 				zkAddr := strings.Split(prom.conf.ClusterZk, ",")
 				nodeDiscovery, err = discovery.NewNodeZkDiscovery(zkAddr, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
 

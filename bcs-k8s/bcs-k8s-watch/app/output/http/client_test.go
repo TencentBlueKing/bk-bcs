@@ -16,7 +16,7 @@ package http
 import (
 	"testing"
 
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 )
 
 func TestGetURL(t *testing.T) {

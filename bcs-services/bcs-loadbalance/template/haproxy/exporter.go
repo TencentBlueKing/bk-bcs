@@ -14,8 +14,8 @@
 package haproxy
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 	"reflect"
 
 	"github.com/prometheus/client_golang/prometheus"

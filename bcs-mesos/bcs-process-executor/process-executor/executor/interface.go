@@ -14,8 +14,8 @@
 package executor
 
 import (
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
-	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
 type Executor interface {

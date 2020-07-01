@@ -18,7 +18,7 @@ import (
 	"encoding/binary"
 	"unsafe"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // ProtocolMagicNum 防篡改魔法数字

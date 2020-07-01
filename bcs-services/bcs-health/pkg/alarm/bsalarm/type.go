@@ -14,7 +14,7 @@
 package bsalarm
 
 import (
-	"bk-bcs/bcs-common/common/bcs-health/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/types"
 )
 
 const (

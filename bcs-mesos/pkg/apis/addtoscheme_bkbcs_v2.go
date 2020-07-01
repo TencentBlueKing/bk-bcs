@@ -14,7 +14,7 @@
 package apis
 
 import (
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 )
 
 func init() {

@@ -16,8 +16,8 @@
 package informers
 
 import (
-	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 	"fmt"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"

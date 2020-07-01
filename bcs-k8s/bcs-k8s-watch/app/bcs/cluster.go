@@ -22,11 +22,11 @@ import (
 	"github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 
-	"bk-bcs/bcs-common/common/RegisterDiscover"
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 )
 
 type ClusterKeeperResponse struct {

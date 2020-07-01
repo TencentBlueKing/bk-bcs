@@ -16,7 +16,8 @@ package controllers
 import (
 	"fmt"
 
-	bkcmdbv1 "bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
+	bkcmdbv1 "github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -16,8 +16,8 @@
 package mesh
 
 import (
-	internalinterfaces "bk-bcs/bmsf-mesh/pkg/client/informers/internalinterfaces"
-	v1 "bk-bcs/bmsf-mesh/pkg/client/informers/mesh/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/informers/internalinterfaces"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/informers/mesh/v1"
 )
 
 // Interface provides access to each of this group's versions.

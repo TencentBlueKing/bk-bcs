@@ -14,7 +14,7 @@
 package types
 
 import (
-	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	//commtypes "bcs/bmsf-mesh/pkg/datatype/bcs/common/types"
 )
 

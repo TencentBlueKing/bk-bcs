@@ -17,10 +17,10 @@ import (
 	"errors"
 	"strconv"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
-	bsMetrics "bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
+	bsMetrics "github.com/Tencent/bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"

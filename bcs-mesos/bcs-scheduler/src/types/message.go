@@ -14,11 +14,11 @@
 package types
 
 import (
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 )
 
-//Message discribe all msg from bcs scheduler to bcs executor
+//Msg_Type Message discribe all msg from bcs scheduler to bcs executor
 //Include binary file, text file, signal, env
 type Msg_Type int32
 

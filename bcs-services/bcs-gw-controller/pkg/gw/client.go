@@ -26,8 +26,8 @@ import (
 	"sync"
 	"time"
 
-	rdiscover "bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
+	rdiscover "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // ServerInfo gw server information in zk path

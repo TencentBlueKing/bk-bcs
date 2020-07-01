@@ -18,7 +18,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	typesplugin "bk-bcs/bcs-common/common/plugin"
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 )
 
 type PluginConfig struct {

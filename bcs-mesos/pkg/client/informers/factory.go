@@ -16,9 +16,9 @@
 package informers
 
 import (
-	bkbcs "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs"
-	internalinterfaces "bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
-	internalclientset "bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	bkbcs "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	reflect "reflect"
 	sync "sync"
 	time "time"

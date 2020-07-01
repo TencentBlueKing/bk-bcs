@@ -14,7 +14,7 @@
 package actions
 
 import (
-	"bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 )
 
 const (

@@ -20,7 +20,7 @@ import (
 	"net/url"
 	"os"
 
-	"bk-bcs/bcs-k8s/bcs-k8s-csi-tencentcloud/driver/cbs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-csi-tencentcloud/driver/cbs"
 	"github.com/dbdd4us/qcloudapi-sdk-go/metadata"
 	"github.com/golang/glog"
 )

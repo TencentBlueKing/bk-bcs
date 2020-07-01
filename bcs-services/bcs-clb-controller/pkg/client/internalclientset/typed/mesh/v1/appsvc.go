@@ -15,8 +15,8 @@
 package v1
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
-	scheme "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/scheme"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
+	scheme "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/scheme"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

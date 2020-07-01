@@ -14,9 +14,9 @@
 package api
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
 	"crypto/tls"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"net"
 	"net/http"
 	"strconv"

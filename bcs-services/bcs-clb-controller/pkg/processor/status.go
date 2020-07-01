@@ -14,10 +14,10 @@
 package processor
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	clbingressType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	clbingressType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	cloudListenerType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 	"github.com/emicklei/go-restful"
 )
 

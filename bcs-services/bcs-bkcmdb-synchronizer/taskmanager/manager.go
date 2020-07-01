@@ -24,11 +24,11 @@ import (
 
 	jump "github.com/lithammer/go-jump-consistent-hash"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-common/pkg/esb/apigateway/paascc"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/paascc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/discovery"
 )
 
 const (
@@ -61,7 +61,7 @@ type Manager struct {
 
 // NewManager create new task manager
 func NewManager(paasEnv, clusterEnv string,
-	checkInterval int, 
+	checkInterval int,
 	disc *discovery.Client, zk *zkclient.ZkClient, paasccClient paascc.ClientInterface) (*Manager, error) {
 
 	interval := checkInterval

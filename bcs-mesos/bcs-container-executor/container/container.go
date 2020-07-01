@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	schedTypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 const (

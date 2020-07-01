@@ -16,7 +16,7 @@
 package fake
 
 import (
-	v1 "bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1"
 
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"

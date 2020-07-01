@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"os"
 
-	"bk-bcs/bcs-mesos/bcs-container-executor/app"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/app"
 )
 
 func main() {

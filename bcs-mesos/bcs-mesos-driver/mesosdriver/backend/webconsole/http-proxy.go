@@ -21,9 +21,9 @@ import (
 	"net/url"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 )
 
 //NewHttpReverseProxy create golang library reverse proxy for normal http request

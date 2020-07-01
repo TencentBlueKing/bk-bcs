@@ -14,7 +14,7 @@
 package backend
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 func (b *backend) SaveConfigMap(configmap *commtypes.BcsConfigMap) error {

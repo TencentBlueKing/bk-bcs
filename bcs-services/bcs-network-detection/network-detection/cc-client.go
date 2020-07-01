@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/esb"
-	"bk-bcs/bcs-services/bcs-network-detection/config"
-	"bk-bcs/bcs-services/bcs-network-detection/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 )
 
 type CmdbClient struct {

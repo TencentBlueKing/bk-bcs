@@ -15,7 +15,7 @@
 package internalinterfaces
 
 import (
-	internalclientset "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

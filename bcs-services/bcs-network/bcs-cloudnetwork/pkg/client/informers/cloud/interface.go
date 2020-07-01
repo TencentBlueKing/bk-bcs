@@ -15,8 +15,8 @@
 package cloud
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/cloud/v1"
-	internalinterfaces "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/internalinterfaces"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/cloud/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

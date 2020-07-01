@@ -14,7 +14,7 @@
 package util
 
 import (
-	"bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"os"
 	"strings"
 

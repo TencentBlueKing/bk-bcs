@@ -19,11 +19,11 @@ import (
 	"net/http"
 	"sync"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/manager"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
 )
 
 // Router is api router

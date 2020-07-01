@@ -25,6 +25,6 @@ type Config struct {
 	EnableService  bool
 	EnableNode     bool
 	Kubeconfig     string
-	ServiceModules   []string
-	ClusterModules   []string
+	ServiceModules []string
+	ClusterModules []string
 }

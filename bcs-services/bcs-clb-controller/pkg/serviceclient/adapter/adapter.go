@@ -38,11 +38,11 @@ import (
 	"fmt"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
-	cussvcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/custom"
-	kubesvcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/kubernetes"
-	mesossvcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	cussvcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/custom"
+	kubesvcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/kubernetes"
+	mesossvcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient/mesos"
 
 	"k8s.io/client-go/tools/cache"
 )

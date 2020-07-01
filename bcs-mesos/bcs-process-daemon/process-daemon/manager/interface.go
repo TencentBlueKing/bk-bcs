@@ -14,8 +14,8 @@
 package manager
 
 import (
-	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/config"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
 type Manager interface {

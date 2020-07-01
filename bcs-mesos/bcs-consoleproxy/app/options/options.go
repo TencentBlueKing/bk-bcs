@@ -14,8 +14,8 @@
 package options
 
 import (
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
 )
 
 //ConsoleProxyOption is option in flags

@@ -16,10 +16,10 @@ package processor
 import (
 	"strconv"
 
-	"bk-bcs/bcs-common/common/blog"
-	ingress "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	loadbalance "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	ingress "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

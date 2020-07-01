@@ -14,10 +14,10 @@
 package lib
 
 import (
-	"bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"bk-bcs/bcs-services/bcs-storage/storage/drivers/mongodb"
-	"bk-bcs/bcs-services/bcs-storage/storage/drivers/zookeeper"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/mongodb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/zookeeper"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 func GetZookeeperTank(name string) func() operator.Tank {

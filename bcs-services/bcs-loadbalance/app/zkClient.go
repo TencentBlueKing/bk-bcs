@@ -16,7 +16,7 @@ package app
 import (
 	"time"
 
-	"bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 
 	"github.com/samuel/go-zookeeper/zk"
 )

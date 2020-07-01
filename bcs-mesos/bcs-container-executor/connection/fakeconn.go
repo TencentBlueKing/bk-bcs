@@ -14,22 +14,19 @@
 package connection
 
 import (
+	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
-	"strconv"
-
-	"os"
-
-	"io"
-
-	exe "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
-	"bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	exe "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
 
 	"github.com/golang/protobuf/proto"
 )

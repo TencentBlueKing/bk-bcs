@@ -20,9 +20,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/websocketDialer"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
 const (

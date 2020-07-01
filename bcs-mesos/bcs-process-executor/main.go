@@ -14,14 +14,13 @@
 package main
 
 import (
+	"encoding/json"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
-	"bk-bcs/bcs-mesos/bcs-process-executor/app"
-	"bk-bcs/bcs-mesos/bcs-process-executor/app/options"
-	"encoding/json"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/app"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/app/options"
 )
 
 func main() {
@@ -39,7 +38,6 @@ func main() {
 	blog.Infof("options %s", string(by))
 
 	blog.Info("init config success")
-	license.CheckLicense(op.LicenseServerConfig)
 
 	app.Run()
 

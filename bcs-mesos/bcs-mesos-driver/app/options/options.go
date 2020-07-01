@@ -14,9 +14,9 @@
 package options
 
 import (
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 )
 
 type MesosDriverOptionsOut struct {
