@@ -65,7 +65,7 @@
 
 * bcs-api-gateway与原bcs-api同时运行，给与外部平台调整时间(3-4个月)
 * 老版本bcs-client持续维护，非bug修复不做代码调整
-* 扩展bcs-client版本为bkbcsctl支持用户临时授权，webconsole
+* 扩展bcs-client命令支持用户临时授权，webconsole
 
 **相关风险**
 
@@ -318,10 +318,14 @@ pg_user = kong        # Postgres user.
 pg_password = kong    # 
 pg_database = kong    # 数据库名称
 
-client_ssl = on       # 开启客户端SSL
+q = on       # 开启客户端SSL
 client_ssl_cert = /data/bcs/cert/bcs-server.crt              
 client_ssl_cert_key = /data/bcs/cert/bcs-server.key           
 plugins = bundled,bkbcs-auth  # 加载指定插件
+proxy_access_log = /data/bcs/logs/bcs/kong-access.log
+proxy_error_log = /data/bcs/logs/bcs/kong-error.log
+admin_access_log = /data/bcs/logs/bcs/kong-admin_access.log
+admin_error_log = /data/bcs/logs/bcs/kong-admin_error.log
 ```
 
 **注意**考虑安全需求，正式环境需要将kong本身http端口关闭。
@@ -343,7 +347,7 @@ bcs-cluster-manager重构了bcs-api中关于集群和用户管理功能，计划
 
 特别配置参数bootstrap_users说明：
 * name：系统默认启动分配的初始化账号名称
-* token：32位字母+数字组成的认证admin token
+* token：32位字母+数字组成的认证admin token，例如：vAyEKvelIqnasMP9sUGWUw1naG8qLues
 
 建议是当系统首次部署初始化时进行配置，配置完成后进行常规平台运维账户管理创建和授权，之后将该参数清空重启。
 
@@ -354,7 +358,7 @@ bcs-cluster-manager重构了bcs-api中关于集群和用户管理功能，计划
 为了安全考虑，该模块必须与kong同机部署，在容器方案中，bcs-gateway-discovery和kong默认构建在一个镜像中。
 重要配置说明：
 * admin_api：kong本地默认的管理连接，默认为localhost：8081
-* auth_token：cluster-manager使用的amdin token
+* auth_token：cluster-manager使用的amdin token，例如：vAyEKvelIqnasMP9sUGWUw1naG8qLues
 
 完成配置后启动
 ```shell
@@ -367,7 +371,8 @@ cd /data/bcs/bcs-gateway-discovery
 client配置
 ```json
 {
-  "apiserver":"127.0.0.1:8000"
+  "apiserver":"127.0.0.1:8000",
+  "bcs_token":"vAyEKvelIqnasMP9sUGWUw1naG8qLues"
 }
 ```
 
@@ -423,3 +428,26 @@ users:
 ```shell
 kubectl version --kubeconfig ./localkubeconfig 
 ```
+
+### 数据清理
+
+如果存在脏数据，可以主动清理
+
+```shell
+curl -s localhost:8001/routes | python -m json.tool | grep name | awk -F'"' '{print $4}' | while read name
+do
+  curl -XDELETE localhost:8001/routes/$name
+done
+
+curl -s localhost:8001/services | python -m json.tool | grep name | awk -F'"' '{print $4}' | while read name
+do
+  curl -XDELETE localhost:8001/services/$name
+done
+
+curl -s localhost:8001/upstreams | python -m json.tool | grep name | awk -F'"' '{print $4}' | while read name
+do
+  curl -XDELETE localhost:8001/upstreams/$name
+done
+```
+
+重启bcs-gateway-discovery即可。

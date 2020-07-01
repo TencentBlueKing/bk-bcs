@@ -16,6 +16,7 @@ package controller
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -49,6 +50,12 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 		serviceModules: []string{commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE},
 		nodeModules:    []string{discovery.CadvisorModule, discovery.NodeexportModule},
 	}
+	if len(conf.ServiceModules)>0 {
+		prom.serviceModules = conf.ServiceModules
+	}
+	if len(conf.ClusterModules)>0 {
+		prom.mesosModules = conf.ClusterModules
+	}
 
 	return prom
 }
@@ -57,33 +64,41 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 func (prom *PrometheusController) Start() error {
 	//init bcs mesos module discovery
 	if prom.conf.EnableMesos {
+		dis, err := discovery.NewBcsDiscovery(prom.conf.ClusterZk, prom.promFilePrefix, prom.mesosModules)
+		if err != nil {
+			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
+			return err
+		}
+		err = dis.Start()
+		if err != nil {
+			blog.Errorf("mesosDiscovery start failed: %s", err.Error())
+		}
+		//register event handle function
+		dis.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.mesosModules {
-			dis, err := discovery.NewBcsDiscovery(prom.conf.ClusterZk, prom.promFilePrefix, module)
-			if err != nil {
-				blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
-				return err
-			}
-			err = dis.Start()
-			if err != nil {
-				blog.Errorf("mesosDiscovery start failed: %s", err.Error())
-			}
-			//register event handle function
-			dis.RegisterEventFunc(prom.handleDiscoveryEvent)
-			prom.discoverys[dis.GetDiscoveryKey()] = dis
+			prom.discoverys[module] = dis
 		}
 	}
 
 	//init node discovery
 	if prom.conf.EnableNode {
 		for _, module := range prom.nodeModules {
-			nodeDiscovery, err := discovery.NewNodeDiscovery(prom.conf.Kubeconfig, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
+			var nodeDiscovery discovery.Discovery
+			var err error
+			if prom.conf.Kubeconfig!="" {
+				nodeDiscovery, err = discovery.NewNodeEtcdDiscovery(prom.conf.Kubeconfig, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
+			}else {
+				zkAddr := strings.Split(prom.conf.ClusterZk, ",")
+				nodeDiscovery, err = discovery.NewNodeZkDiscovery(zkAddr, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
+
+			}
 			if err != nil {
 				blog.Errorf("NewNodeDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
 				return err
 			}
 			//register event handle function
 			nodeDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
-			prom.discoverys[nodeDiscovery.GetDiscoveryKey()] = nodeDiscovery
+			prom.discoverys[module] = nodeDiscovery
 			err = nodeDiscovery.Start()
 			if err != nil {
 				blog.Errorf("nodeDiscovery start failed: %s", err.Error())
@@ -93,19 +108,19 @@ func (prom *PrometheusController) Start() error {
 
 	//init bcs service module discovery
 	if prom.conf.EnableService {
+		serviceDiscovery, err := discovery.NewBcsDiscovery(prom.conf.ServiceZk, prom.promFilePrefix, prom.serviceModules)
+		if err != nil {
+			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
+			return err
+		}
+		err = serviceDiscovery.Start()
+		if err != nil {
+			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
+		}
+		//register event handle function
+		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.serviceModules {
-			serviceDiscovery, err := discovery.NewBcsDiscovery(prom.conf.ServiceZk, prom.promFilePrefix, module)
-			if err != nil {
-				blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
-				return err
-			}
-			err = serviceDiscovery.Start()
-			if err != nil {
-				blog.Errorf("serviceDiscovery start failed: %s", err.Error())
-			}
-			//register event handle function
-			serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
-			prom.discoverys[serviceDiscovery.GetDiscoveryKey()] = serviceDiscovery
+			prom.discoverys[module] = serviceDiscovery
 		}
 	}
 
@@ -123,30 +138,30 @@ func (prom *PrometheusController) handleDiscoveryEvent(discoveryKey string) {
 		return
 	}
 
-	sdConfig, err := disc.GetPrometheusSdConfig()
+	sdConfig, err := disc.GetPrometheusSdConfig(discoveryKey)
 	if err != nil {
 		blog.Errorf("discovery %s get prometheus service discovery config error %s", discoveryKey, err.Error())
 		return
 	}
 	by, _ := json.Marshal(sdConfig)
 
-	file, err := os.OpenFile(disc.GetPromSdConfigFile(), os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(disc.GetPromSdConfigFile(discoveryKey), os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		blog.Errorf("open/create file %s error %s", disc.GetPromSdConfigFile(), err.Error())
+		blog.Errorf("open/create file %s error %s", disc.GetPromSdConfigFile(discoveryKey), err.Error())
 		return
 	}
 	defer file.Close()
 
 	err = file.Truncate(0)
 	if err != nil {
-		blog.Errorf("Truncate file %s error %s", disc.GetPromSdConfigFile(), err.Error())
+		blog.Errorf("Truncate file %s error %s", disc.GetPromSdConfigFile(discoveryKey), err.Error())
 		return
 	}
 	_, err = file.Write(by)
 	if err != nil {
-		blog.Errorf("write file %s error %s", disc.GetPromSdConfigFile(), err.Error())
+		blog.Errorf("write file %s error %s", disc.GetPromSdConfigFile(discoveryKey), err.Error())
 		return
 	}
 
-	blog.Infof("discovery %s write config file %s success", discoveryKey, disc.GetPromSdConfigFile())
+	blog.Infof("discovery %s write config file %s success", discoveryKey, disc.GetPromSdConfigFile(discoveryKey))
 }

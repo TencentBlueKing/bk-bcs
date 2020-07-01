@@ -37,6 +37,8 @@ type PrometheusControllerOption struct {
 	EnableService    bool   `json:"enable_service" value:"true" usage:"enable service prometheus service discovery"`
 	EnableNode       bool   `json:"enable_node" value:"true" usage:"enable node prometheus service discovery"`
 	Kubeconfig       string `json:"kubeconfig" value:"" usage:"kubernetes kubeconfig"`
+	ServiceModules   []string `json:"service_modules" value:"" usage:"service module list"`
+	ClusterModules   []string `json:"cluster_modules" value:"" usage:"cluster module list"`
 }
 
 //NewPrometheusControllerOption create PrometheusControllerOption object

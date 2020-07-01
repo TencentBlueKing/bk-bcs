@@ -2,7 +2,7 @@
 set -e
 
 SKIP_DIR="\
-bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto \
+bk-bcs/bcs-common/pkg/scheduler/mesosproto \
 bk-bcs/bcs-mesos/bcs-container-executor/mesos \
 bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf \
 bk-bcs/bcs-mesos/pkg \

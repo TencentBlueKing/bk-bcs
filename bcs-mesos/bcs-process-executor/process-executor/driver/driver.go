@@ -18,19 +18,21 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/executor"
-	protoExec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf/executor"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"github.com/golang/protobuf/proto"
-	"github.com/mesos/mesos-go/api/v0/upid"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/executor"
+	protoExec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
+	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/mesos/mesos-go/api/v0/upid"
 )
 
 //DriverEnv The following environment variables are set by the agent that can be

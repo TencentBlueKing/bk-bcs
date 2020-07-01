@@ -15,16 +15,17 @@ package operator
 
 import (
 	"encoding/json"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	//"strconv"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	master "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"github.com/golang/protobuf/proto"
 	"net/http"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+
+	"github.com/golang/protobuf/proto"
 )
 
 // interval for synchronize agents from mesos master, seconds

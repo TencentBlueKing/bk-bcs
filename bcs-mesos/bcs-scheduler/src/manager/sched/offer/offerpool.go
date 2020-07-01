@@ -17,15 +17,16 @@ import (
 	"container/list"
 	"encoding/json"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"golang.org/x/net/context"
-	"sync"
-	"time"
 )
 
 const (

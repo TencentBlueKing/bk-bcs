@@ -13,7 +13,7 @@
 
 package util
 
-import "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+import "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 
 func GetMesosAgentInnerIP(attributes []*mesos.Attribute) (string, bool) {
 	ip := ""

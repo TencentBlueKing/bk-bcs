@@ -15,9 +15,10 @@ package app
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
 	"sync"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 )
 
 //BcsTaskInfo task info relate to Mesos TaskGroupInfo & ContainerInfo

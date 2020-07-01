@@ -15,19 +15,21 @@ package strategy
 
 import (
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	offerP "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"github.com/danwakefield/fnmatch"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	offerP "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
+	"github.com/danwakefield/fnmatch"
 )
 
-// Check whether an offer matches with the constraints for an application
+// ConstraintsFit Check whether an offer matches with the constraints for an application
 func ConstraintsFit(version *types.Version, offer *mesos.Offer, store store.Store, taskgroupID string) (bool, error) {
 	constraints := version.Constraints
 	//taints & toleration
