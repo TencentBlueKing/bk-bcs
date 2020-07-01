@@ -13,10 +13,8 @@
   "log_dir": "${log_dir}",
   "local_ip": "${localIp}",
   "pid_dir": "${pid_dir}",
-
   "verify_client_tls": false,
   "mysql_dsn": "${coreDatabaseDsn}",
-
   "bootstrap_users": [
     {
       "name": "${adminUser}",
@@ -24,7 +22,6 @@
       "token": "${adminToken}"
     }
   ],
-
   "tke": {
     "secret_id": "${tkeSecretId}",
     "secret_key": "${tkeSecretKey}",
