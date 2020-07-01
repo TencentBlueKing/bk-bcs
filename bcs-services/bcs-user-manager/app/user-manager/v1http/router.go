@@ -17,6 +17,8 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+//InitV1Routers init v1 version route,
+// it's compatable with bcs-api
 func InitV1Routers(ws *restful.WebService) {
 	initUsersRouters(ws)
 	initClustersRouters(ws)
