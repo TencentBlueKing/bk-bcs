@@ -163,5 +163,5 @@ func diff(desired, actual map[string]bool) ([]string, []string, []string) {
 			toDelete = append(toDelete, key)
 		}
 	}
-	return same, toCreate, toDelete
+	return toCreate, toDelete, same
 }
