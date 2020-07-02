@@ -22,21 +22,21 @@ import (
 	"strings"
 	"time"
 
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+
 	"github.com/parnurzeal/gorequest"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
-	netservicetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 const (
@@ -44,7 +44,7 @@ const (
 	defaultSyncInterval = 30 * time.Second
 
 	// defaultNetServiceTimeout is default netservice timeout.
-	defaultNetServiceTimeout = 2 * time.Second
+	defaultNetServiceTimeout = 20 * time.Second
 
 	// defaultHTTPRetryerCount is default http request retry count.
 	defaultHTTPRetryerCount = 2
@@ -393,7 +393,7 @@ func (w *NetServiceWatcher) queryIPResourceDetail() (*netservicetypes.NetRespons
 	return response, nil
 }
 
-// Sync syncs target ip resources to storages.
+// SyncIPResource syncs target ip resources to storages.
 func (w *NetServiceWatcher) SyncIPResource() {
 	// query resource from netservice.
 	resource, err := w.queryIPResource()
@@ -418,7 +418,7 @@ func (w *NetServiceWatcher) SyncIPResource() {
 	w.action.Update(metadata)
 }
 
-// Sync syncs target ip resource detail to storages.
+// SyncIPResourceDetail syncs target ip resource detail to storages.
 func (w *NetServiceWatcher) SyncIPResourceDetail() {
 	// query resource detail from netservice.
 	resource, err := w.queryIPResourceDetail()
@@ -446,10 +446,10 @@ func (w *NetServiceWatcher) SyncIPResourceDetail() {
 // Run starts the netservice watcher.
 func (w *NetServiceWatcher) Run(stopCh <-chan struct{}) {
 	// sync ip resource.
-	go wait.NonSlidingUntil(w.SyncIPResource, defaultSyncInterval, stopCh)
+	go wait.NonSlidingUntil(w.SyncIPResource, defaultSyncInterval*2, stopCh)
 
 	// sync ip resource detail.
-	go wait.NonSlidingUntil(w.SyncIPResourceDetail, defaultSyncInterval, stopCh)
+	go wait.NonSlidingUntil(w.SyncIPResourceDetail, defaultSyncInterval*2, stopCh)
 
 	// TODO: add more resource-sync logics here.
 }

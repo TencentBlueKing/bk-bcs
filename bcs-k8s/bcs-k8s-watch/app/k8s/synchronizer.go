@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
@@ -268,7 +268,7 @@ func (sync *Synchronizer) doRequest(namespace string, kind string) (data []inter
 
 	if serversCount == 0 {
 		// the process get address from zk not finished yet or there is no storage server on zk.
-		err = fmt.Errorf("storage server list is empty, got no address yet!")
+		err = fmt.Errorf("storage server list is empty, got no address yet")
 		glog.Errorf(err.Error())
 		return
 	}
