@@ -22,11 +22,11 @@ ENV BCS_HOME="/data/bcs"
 # bcs common
 ENV log_dir="${BCS_HOME}/logs/bcs"
 ENV pid_dir="/var/run/bcs"
-ENV caFile="${BCS_HOME}/cert/bcs/test-ca.crt"
-ENV serverCertFile="${BCS_HOME}/cert/bcs/test-server.crt"
-ENV serverKeyFile="${BCS_HOME}/cert/bcs/test-server.key"
-ENV clientCertFile="${BCS_HOME}/cert/bcs/test-client.crt"
-ENV clientKeyFile="${BCS_HOME}/cert/bcs/test-client.key"
+ENV caFile="${BCS_HOME}/cert/bcs/commutity-ca.crt"
+ENV serverCertFile="${BCS_HOME}/cert/bcs/commutity-server.crt"
+ENV serverKeyFile="${BCS_HOME}/cert/bcs/commutity-server.key"
+ENV clientCertFile="${BCS_HOME}/cert/bcs/commutity-client.crt"
+ENV clientKeyFile="${BCS_HOME}/cert/bcs/commutity-client.key"
 #!import for module discovery
 ENV localIp=127.0.0.1
 

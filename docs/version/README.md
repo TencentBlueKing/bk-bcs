@@ -1,5 +1,50 @@
 # 发布版本信息
 
+## 1.17.5
+- 发布日期：2020-07-02
+- **新增功能**
+  * [Mesos]bcs-scheduler支持污点与容忍性调度能力[#398]
+  * [Mesos]bcs-mesos支持容器CPUSet绑定特性[#407]
+  * [K8S/Mesos]bk-bcs开源分布式配置中心服务(bscp) [#443]
+  * [K8S/Mesos]bcs-api以websocket支持跨云反向注册特性，支持跨云环境中以websocket实现反向通道注册[#412]
+  * [K8S]bcs-k8s-driver支持websocket实现服务注册[#413]
+  * [K8S]bcs-kube-agent支持websocket实现服务注册[#414]
+  * [Mesos]bcs-mesos-driver支持websocket实现服务注册[#415]
+  * [K8S/Mesos]新增bcs-networkpolicy模块支持K8S、Mesos网络策略[#417]
+  * [K8S/Mesos]新增bcs-cpuset-device插件支持K8S、Mesos环境下CPU资源绑定调度[#424]
+  * [K8S/Mesos]新增bcs-cloud-network支持腾讯云、AWS环境下CNI插件自动化安装与环境初始化[#426]
+  * [K8S/Mesos]新增bcs-eni网络插件，支持腾讯云、AWS underlay方案[#426]
+  * [K8S/Mesos]新增bcs-gateway-discovery模块支持bcs-api-gateway实现服务注册[#427]
+  * [K8S/Mesos]使用kong重构bcs-api实现bcs服务网关[#427]
+  * [K8S/Mesos]新增bcs-use-manager模块实现bcs集群与用户token鉴权[#433]
+  * [Mesos]bcs-client依赖bcs-user-manager支持用户授权命令[#434]
+  * [Mesos]bcs-client在Mesos环境下支持exec命令实现远程容器访问[#452]
+  * [K8S/Mesos] bmsf-configuration配置服务支持自定义模板渲染[#454]
+  * 分布式配置中心支持reload命令下发[#469]
+- **功能优化**
+  * [Mesos]bcs-scheduler优化对mesos version对象命名长度限制[#383]
+  * [Mesos]bcs-container-executor针对Pod异常退出时保留镜像便于问题排查[#396]
+  * [Mesos]bcs-container-executor针对Pod状态增加OOM状态[#397]
+  * [Mesos]mesos-webconsole重构，通过bcs-mesos-driver实现console代理[#430]
+  * [K8S/Mesos]bk-bcs日志采集方案重构，支持非webhook方案实现采集信息注入[#432]
+  * [K8S]bcs-kube-agent支持bcs-api-gateway方式注册[#435]
+  * [K8S/Mesos]bcs-user-manager支持token有效期限定刷新[#457]
+  * [Mesos]bcs-scheduler etcd存储模式下优化对kube-apiserver限流问题[#462]
+  * [Mesos]优化bcs-scheduler访问etcd ratelimiter[#462]
+  * [K8S/Mesos]修复因为ticker没有关闭导致CPU过高问题[#478]
+  * [Mesos]优化bcs-scheduler因为DeepCopy导致CPU过高问题[#485]
+- **BUG修复**
+  * [Mesos]bcs-scheduler修复容器退出时间过长时导致的事务性超时问题[#381]
+  * [K8S/Mesos]bcs-webhook-server修复蓝鲸日志采集hook中环境变量错误覆盖问题[#400]
+  * [Mesos]bcs-container-executor修复Pod中多容器情况下容器异常退出无法上报状态的问题[#406]
+  * [K8S/Mesos]修复bcs-ipam插件回收IP资源时netns可能为空的问题[#437]
+  * [K8S/Mesos]修复bcs-loadbalance针对后端转发状态判定异常问题[#441]
+  * [K8S]bcs-api修复因为client-go缓存导致切换kube-apiserver引发异常问题[#445]
+  * [Mesos]修复bcs-messos-watch同步bcs-netservice资源超时问题[#483]
+  * [Mesos]修复bcs-messos-adapter服务发现异常问题[#491]
+  * [K8S]修复bcs-api/bcs-kube-agent websocket tunnel模式下无法执行exec的问题[#504]
+  * [K8S]修复bcs-api tunnel模式下服务发现问题[#510]
+
 ## 1.16.4
 - 发布日期：2020-05-08
 - **BUG修复**
