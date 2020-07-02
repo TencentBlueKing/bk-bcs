@@ -30,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	bkcmdbv1 "bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
+	bkcmdbv1 "github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
 	// +kubebuilder:scaffold:imports
 )
 

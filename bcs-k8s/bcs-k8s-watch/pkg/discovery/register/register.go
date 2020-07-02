@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"time"
 
-	regd "bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
+	regd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/json-iterator/go"
 	"github.com/pkg/errors"

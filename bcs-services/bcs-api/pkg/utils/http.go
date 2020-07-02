@@ -14,8 +14,8 @@
 package utils
 
 import (
-	"bk-bcs/bcs-services/bcs-api/pkg/server/types"
 	"encoding/json"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 	"net/http"
 )
 

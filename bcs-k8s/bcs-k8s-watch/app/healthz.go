@@ -21,9 +21,9 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 )
 
 type HealthChecker struct {

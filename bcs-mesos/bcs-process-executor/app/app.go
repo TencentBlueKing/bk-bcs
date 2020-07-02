@@ -20,10 +20,10 @@ import (
 	"syscall"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/driver"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/executor"
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/driver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
 func Run() {

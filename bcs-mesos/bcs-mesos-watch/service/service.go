@@ -19,10 +19,10 @@ import (
 
 	"github.com/json-iterator/go"
 
-	"bk-bcs/bcs-common/common/RegisterDiscover"
-	glog "bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 )
 
 // HTTPClientConfig is bcs inner service http client config struct.

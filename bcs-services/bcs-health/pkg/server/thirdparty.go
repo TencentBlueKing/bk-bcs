@@ -21,12 +21,12 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	bresp "bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bresp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
-	"bk-bcs/bcs-services/bcs-health/pkg/healthz"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/healthz"
 	"github.com/emicklei/go-restful"
 	"github.com/pborman/uuid"
 )

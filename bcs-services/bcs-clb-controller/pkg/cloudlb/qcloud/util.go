@@ -14,7 +14,7 @@
 package qcloud
 
 import (
-	loadbalance "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 	"strings"
 )
 

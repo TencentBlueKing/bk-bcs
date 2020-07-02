@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 
 	"github.com/gorilla/websocket"
 )

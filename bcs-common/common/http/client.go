@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
 )
 
 // HeaderSet http header set

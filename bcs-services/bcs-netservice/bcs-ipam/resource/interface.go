@@ -14,7 +14,7 @@
 package resource
 
 import (
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 //IPDriver driver for applying/releasing ip source

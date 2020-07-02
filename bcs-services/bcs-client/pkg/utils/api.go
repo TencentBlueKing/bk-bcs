@@ -14,12 +14,12 @@
 package utils
 
 import (
-	"bk-bcs/bcs-services/bcs-client/pkg/types"
 	"bufio"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/pkg/errors"
 	"io"
 	"net"
@@ -28,9 +28,9 @@ import (
 	"net/url"
 	"time"
 
-	"bk-bcs/bcs-common/common/http"
-	"bk-bcs/bcs-common/common/http/httpclient"
 	"crypto/tls"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/gorilla/websocket"
 )
 

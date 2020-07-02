@@ -16,8 +16,8 @@ package filter
 import (
 	"fmt"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 
 	"github.com/emicklei/go-restful"
 )

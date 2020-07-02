@@ -13,9 +13,9 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/server"
 )
 
 func main() {

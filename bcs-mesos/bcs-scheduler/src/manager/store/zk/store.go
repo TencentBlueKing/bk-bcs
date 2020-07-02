@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 )
 
 // Store Manager

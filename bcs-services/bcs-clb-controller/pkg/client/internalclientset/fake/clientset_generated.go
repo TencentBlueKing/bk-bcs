@@ -15,13 +15,13 @@
 package fake
 
 import (
-	clientset "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
-	clbv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
-	fakeclbv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1/fake"
-	meshv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/mesh/v1"
-	fakemeshv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/mesh/v1/fake"
-	networkv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
-	fakenetworkv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1/fake"
+	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
+	clbv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1"
+	fakeclbv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/clb/v1/fake"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/mesh/v1"
+	fakemeshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/mesh/v1/fake"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
+	fakenetworkv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

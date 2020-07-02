@@ -14,7 +14,7 @@
 package types
 
 import (
-	commtype "bk-bcs/bcs-common/common/types"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 	"golang.org/x/net/context"
 )

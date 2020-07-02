@@ -16,8 +16,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 // MesosContainerPort simplied data of mesos container por

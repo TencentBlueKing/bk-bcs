@@ -14,7 +14,7 @@
 package sqlstore
 
 import (
-	"bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 )
 
 func ListOldCredentials() []models.ClusterCredentials {

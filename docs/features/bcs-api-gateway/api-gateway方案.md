@@ -59,21 +59,21 @@
 
 ![](./gateway-solution.png)
 
-选型：
-* kong
-* caddy2
+方案选型：kong
 
 **方案上线**
 
 * bcs-api-gateway与原bcs-api同时运行，给与外部平台调整时间(3-4个月)
 * 老版本bcs-client持续维护，非bug修复不做代码调整
-* 扩展bcs-client版本为bkbcsctl支持用户临时授权，webconsole
+* 扩展bcs-client命令支持用户临时授权，webconsole
 
 **相关风险**
 
 * 返回码差异
 
-## kong服务安装
+## 方案验证性说明
+
+### kong服务安装
 
 
 ```bash
@@ -94,7 +94,7 @@ centos采用rpm安装方式，避免自行编译与组装。
 下载地址: https://docs.konghq.com/install/centos/
 
 ```bash
-rpm -ivh kong-2.0.2.el7.amd64.rpm
+rpm -ivh kong-2.0.4.el7.amd64.rpm
 ```
 
 相关配置路径：
@@ -137,6 +137,7 @@ client_ssl_cert_key = /data/bcs/bcs-api-gateway/cert/bcs.key
                                 # this value is statically defined on the
                                 # node, and currently cannot be configured on
                                 # a per-API basis.
+plugins = bundled,bkbcs-auth    # 加载bkbcs鉴权插件
 ```
 
 系统初始化
@@ -144,7 +145,9 @@ client_ssl_cert_key = /data/bcs/bcs-api-gateway/cert/bcs.key
 kong migrations bootstrap -c /etc/kong/kong.conf
 ```
 
-## 服务发现demo注册说明
+### 服务发现demo注册原理说明
+
+以下流程为通过bcs-gateway-discovery自动完成模块注册
 
 **注册storage**
 
@@ -214,33 +217,237 @@ curl -XPOST localhost:8001/upstreams/01.kube-agent.bkbcs.tencent.com/targets \
 
 ```
 
-## 服务注册kong细则
+### 服务注册kong细则
 
-### bcs服务发现扩展
+#### bcs服务发现扩展
 
 针对服务发现扩展内容
 * ipv6
 * external_ipv6
 
-### kong服务命名规范
+#### kong服务命名规范
 
 * 服务信息索引名称：
   * 非集群关联模块以内部定义模块名称为标准，例如storage，cluster等
-  * 带有集群信息则加入集群编号，例如mesosdriver和kubedriver等，为10001-mesosdriver，20027-kubedriver
+  * 带有集群信息则加入集群编号，例如mesosdriver和kubedriver等，为mesosdriver-10001，kubedriver-200001
 * 服务Host命名规则，使用域bkbcs.tencent.com
   * 非集群模块为服务信息索引 + bkbcs.tencent.com，例如storage.bkbcs.tencent.com
   * 集群模块增加集群ID进行识别，例如01.mesosdriver.bkbcs.tencent.com
 
-### bcs-gateway-discovery部署
+#### bcs-gateway-discovery部署
 
 bcs-gateway-discovery的主要用于对接BCS现有的服务发现机制，利用kong admin api完成模块服务数据注册至kong中，
 利用kong网关能力实现转发服务转发。bcs-gateway-discovery部署有以下要求：
 
 * 多实例部署，多个实例会通过bcs服务发现会完成master选择，仅有master角色会同步数据至kong中
 * 与kong实例必须同机部署，kong admin接口必须仅针对localhost开启
+* **注意**：discovery需要请求user-manager提取k8s集群信息，配置中需要有token授权
 
-## 鉴权依赖bcs-user-manager
+#### bkbcs-auth鉴权依赖bcs-user-manager
 
 启用kong作为bcs gateway，在部分受限环境中，可以开启bkbcs-auth插件对接bcs-user-manager实现token鉴权。
 可以使用bcs-client命令/接口/bk-bcs-saas等完成token申请。在使用kubectl、bcs-client、独立使用接口时
 附带对应的token实现gateway受限访问。
+
+## 正式部署参考流程
+
+以下为手动流程部署参考，实际部署已Job自动化标准任务或者蓝盾流水线为准。
+
+我们需要额外部署kong，bcs-gateway-discovery与bcs-user-manager。二进制发布包目录假设：
+
+```
+bcs-services
+|-- bcs-client
+|   |-- bcs-client
+|   `-- bcs.conf.template
+|-- bcs-gateway-discovery
+|   |-- Dockerfile
+|   |-- kong-2.0.4.el7.amd64.rpm
+|   |-- bcs-gateway-discovery
+|   |-- bcs-gateway-discovery.json.template
+|   |-- bkbcs-auth
+|   |   |-- bkbcs.lua
+|   |   |-- handler.lua
+|   |   `-- schema.lua
+|   `-- container-start.sh
+|-- bcs-user-manager
+|   |-- Dockerfile
+|   |-- bcs-user-manager
+|   |-- bcs-user-manager.json.template
+|   `-- container-start.sh
+```
+
+部署目录：/data/bcs/
+证书目录：/data/bcs/cert
+日志目录：/data/bcs/logs
+
+### 关于证书
+
+模块部署强制使用https协议，需要优先保障证书。归档至/data/bcs/cert目录下，例如：
+
+```
+|-- cert
+|   |-- bcs-ca.crt
+|   |-- bcs-client.crt
+|   |-- bcs-client.key
+|   |-- bcs-server.crt
+|   `-- bcs-server.key
+```
+
+### 部署kong
+
+BCS默认开kong db存储模式，使用postpreSQL，需要提前准备好数据库，具备建库权限。
+
+```shell
+cd $release/bcs-services/bcs-gateway-discovery
+rpm -ivh kong-2.0.4.el7.amd64.rpm
+
+#auth插件
+cp -R bkbcs-auth /usr/local/share/lua/5.1/kong/plugins/
+
+```
+
+kong配置项调整，文件路径/etc/kong/kong.conf
+
+```conf
+database = postgres   # 数据库模式
+pg_host = 127.0.0.1   # Host of the Postgres server.
+pg_port = 5432        # Port of the Postgres server.
+pg_timeout = 5000     # Defines the timeout (in ms), for connecting,
+pg_user = kong        # Postgres user.
+pg_password = kong    # 
+pg_database = kong    # 数据库名称
+
+q = on       # 开启客户端SSL
+client_ssl_cert = /data/bcs/cert/bcs-server.crt              
+client_ssl_cert_key = /data/bcs/cert/bcs-server.key           
+plugins = bundled,bkbcs-auth  # 加载指定插件
+proxy_access_log = /data/bcs/logs/bcs/kong-access.log
+proxy_error_log = /data/bcs/logs/bcs/kong-error.log
+admin_access_log = /data/bcs/logs/bcs/kong-admin_access.log
+admin_error_log = /data/bcs/logs/bcs/kong-admin_error.log
+```
+
+**注意**考虑安全需求，正式环境需要将kong本身http端口关闭。
+
+kong初始化与启动
+```shell
+kong migrations bootstrap -c /etc/kong/kong.conf
+
+kong start  -c /etc/kong/kong.conf
+```
+
+### 部署bcs-cluster-manager
+
+bcs-cluster-manager重构了bcs-api中关于集群和用户管理功能，计划在1.17.x，1.18.x，1.19.x是保持兼容的。
+所以，bcs-cluster-manager与bcs-api共享mysql数据库数据，并且bcs-api中跨云穿透代理的功能默认会合并到该模块，
+实际部署时，尽量保障bcs-cluster-manager与kong在相同可用区/同城同园区，避免网络抖动带来跨云穿透长链中断重连。
+
+配置文件模板请参照[这里](https://github.com/Tencent/bk-bcs/blob/master/install/conf/bcs-services/bcs-user-manager/bcs-user-manager.json.template)。
+
+特别配置参数bootstrap_users说明：
+* name：系统默认启动分配的初始化账号名称
+* token：32位字母+数字组成的认证admin token，例如：vAyEKvelIqnasMP9sUGWUw1naG8qLues
+
+建议是当系统首次部署初始化时进行配置，配置完成后进行常规平台运维账户管理创建和授权，之后将该参数清空重启。
+
+首次token随机生成可以使用工具生成一个 http://coolaf.com/tool/rd
+
+### 部署bcs-gateway-discovery
+
+为了安全考虑，该模块必须与kong同机部署，在容器方案中，bcs-gateway-discovery和kong默认构建在一个镜像中。
+重要配置说明：
+* admin_api：kong本地默认的管理连接，默认为localhost：8081
+* auth_token：cluster-manager使用的amdin token，例如：vAyEKvelIqnasMP9sUGWUw1naG8qLues
+
+完成配置后启动
+```shell
+cd /data/bcs/bcs-gateway-discovery
+./bcs-gateway-discovery --config bcs-gateway-discovery.json &
+```
+
+### 系统用户初始化
+
+client配置
+```json
+{
+  "apiserver":"127.0.0.1:8000",
+  "bcs_token":"vAyEKvelIqnasMP9sUGWUw1naG8qLues"
+}
+```
+
+```shell
+#client配置后
+mkdir -p /var/bcs/
+cd /data/bcs/bcs-client
+cp bcs.conf.template /var/bcs/
+
+#初始化用户进行授权，主要用于
+#* 其他系统调用bcs-api-gateway
+#* 用户通过kubectl直接管理特定集群
+bcs-client create --type=user --username=someadministrator --usertype=admin
+vAyEKvelIqnasMP9sUGWUw1naG8qLues
+#为该用户授权
+bcs-client grant -t permission -f cluster.grant.json
+#其中授权json内容为，其中role划分viewer(信息查阅),manager(管理者)
+#{
+#  "apiVersion":"v1",
+#  "kind":"permission",
+#  "metadata": {
+#     "name":"someadministrator-pemission"
+#  },
+#  "spec":{
+#     "permissions":[
+#       {"user_name":"someadministrator", "resource_type":"cluster", "resource":"BCS-K8S-001", "role":"viewer"}
+#     ]
+#  }
+#}
+```
+
+完成授权后，可以使用kubectl针对具体集群可以通过kubeconfig进行访问。相关文件可以通过bk-bcs-saas进行生成，手动编写如下：
+```yaml
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    server: https://127.0.0.1:8443/tunnels/clusters/BCS-K8S-001/
+    insecure-skip-tls-verify: true
+  name: cluster
+contexts:
+- context:
+    cluster: cluster
+    user: someadministrator
+  name: cluster
+current-context: cluster
+users:
+- name: someadministrator
+  user:
+    token: vAyEKvelIqnasMP9sUGWUw1naG8qLues
+```
+
+```shell
+kubectl version --kubeconfig ./localkubeconfig 
+```
+
+### 数据清理
+
+如果存在脏数据，可以主动清理
+
+```shell
+curl -s localhost:8001/routes | python -m json.tool | grep name | awk -F'"' '{print $4}' | while read name
+do
+  curl -XDELETE localhost:8001/routes/$name
+done
+
+curl -s localhost:8001/services | python -m json.tool | grep name | awk -F'"' '{print $4}' | while read name
+do
+  curl -XDELETE localhost:8001/services/$name
+done
+
+curl -s localhost:8001/upstreams | python -m json.tool | grep name | awk -F'"' '{print $4}' | while read name
+do
+  curl -XDELETE localhost:8001/upstreams/$name
+done
+```
+
+重启bcs-gateway-discovery即可。

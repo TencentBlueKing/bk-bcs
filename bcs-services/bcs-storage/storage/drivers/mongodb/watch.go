@@ -23,8 +23,8 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	"gopkg.in/mgo.v2/bson"
 )

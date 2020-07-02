@@ -14,7 +14,7 @@
 package manager
 
 import (
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/config"
 	"github.com/fsouza/go-dockerclient"
 	"sync"
 )

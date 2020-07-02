@@ -16,8 +16,8 @@ package discovery
 import (
 	"fmt"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 
 	"k8s.io/apimachinery/pkg/labels"
 	k8scache "k8s.io/client-go/tools/cache"

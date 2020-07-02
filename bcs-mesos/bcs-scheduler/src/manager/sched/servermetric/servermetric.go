@@ -14,7 +14,7 @@
 package servermetric
 
 import (
-	"bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
 	"sync"
 )
 

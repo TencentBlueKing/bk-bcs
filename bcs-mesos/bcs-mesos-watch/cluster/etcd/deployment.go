@@ -19,12 +19,12 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/cache"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	schedulertypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	schedulertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"golang.org/x/net/context"

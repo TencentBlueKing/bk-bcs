@@ -14,12 +14,12 @@
 package resthdrs
 
 import (
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"github.com/emicklei/go-restful"
 	"time"
 )

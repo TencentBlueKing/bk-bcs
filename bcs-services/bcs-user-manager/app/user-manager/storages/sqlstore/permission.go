@@ -14,7 +14,7 @@
 package sqlstore
 
 import (
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 func GetRole(RoleName string) *models.BcsRole {

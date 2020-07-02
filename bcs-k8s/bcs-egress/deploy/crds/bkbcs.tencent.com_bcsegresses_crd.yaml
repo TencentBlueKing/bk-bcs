@@ -1,0 +1,158 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: bcsegresses.bkbcs.tencent.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .metadata.namespace
+    name: Namespace
+    type: string
+  - JSONPath: .metadata.name
+    name: Name
+    type: string
+  - JSONPath: .status.state
+    name: State
+    type: string
+  - JSONPath: .status.httpActives
+    name: HTTPActives
+    type: uint
+  - JSONPath: .status.tcpActives
+    name: TCPActives
+    type: uint
+  - JSONPath: .status.syncedat
+    name: SyncedAt
+    type: date
+  group: bkbcs.tencent.com
+  names:
+    kind: BCSEgress
+    listKind: BCSEgressList
+    plural: bcsegresses
+    singular: bcsegress
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: BCSEgress is the Schema for the bcsegresses API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: BCSEgressSpec defines the desired state of BCSEgress
+          properties:
+            controller:
+              description: Controller can be empty, we use egress-controller.bcs-system
+                for default
+              properties:
+                name:
+                  default: egress-controller
+                  type: string
+                namespace:
+                  default: bcs-system
+                  type: string
+              required:
+              - name
+              - namespace
+              type: object
+            https:
+              items:
+                description: HTTP http egress definition
+                properties:
+                  destport:
+                    default: 80
+                    description: Destination port for remote host
+                    type: integer
+                  host:
+                    description: Host for domain, use for acl
+                    minLength: 4
+                    type: string
+                  name:
+                    description: Name for http management
+                    type: string
+                required:
+                - destport
+                - host
+                - name
+                type: object
+              type: array
+            tcps:
+              items:
+                description: TCP tcp egress definition
+                properties:
+                  algorithm:
+                    default: roundrobin
+                    description: algorithm for specified IP list
+                    enum:
+                    - roundrobin
+                    - least_conn
+                    - hash
+                    type: string
+                  destport:
+                    type: integer
+                  domain:
+                    description: Domain for destination, domain first
+                    type: string
+                  ips:
+                    description: iplist(split by comma)
+                    type: string
+                  name:
+                    description: name for tcp management
+                    type: string
+                  sourceport:
+                    description: source & dest port use for tcp network flow control
+                    type: integer
+                required:
+                - algorithm
+                - destport
+                - domain
+                - ips
+                - name
+                - sourceport
+                type: object
+              type: array
+          required:
+          - controller
+          - https
+          - tcps
+          type: object
+        status:
+          description: BCSEgressStatus defines the observed state of BCSEgress
+          properties:
+            httpActives:
+              type: integer
+            reason:
+              description: Reason when some error happened
+              type: string
+            state:
+              default: Pending
+              description: State refference EgressState above
+              type: string
+            syncedat:
+              description: all egress sync timestamp
+              format: date-time
+              type: string
+            tcpActives:
+              type: integer
+          required:
+          - httpActives
+          - reason
+          - state
+          - syncedat
+          - tcpActives
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

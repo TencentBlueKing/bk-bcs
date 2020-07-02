@@ -14,7 +14,6 @@
 package client
 
 import (
-	mesosjson "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/json"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -22,6 +21,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	mesosjson "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/json"
 )
 
 type Client struct {

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 	"golang.org/x/net/context"

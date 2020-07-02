@@ -17,7 +17,7 @@ package sqlstore
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/jinzhu/gorm"
 	// import empty mysql package
 	_ "github.com/jinzhu/gorm/dialects/mysql"

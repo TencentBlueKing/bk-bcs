@@ -22,11 +22,11 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/pkg/mesosdriver"
-	"bk-bcs/bcs-services/bcs-cpuset-device/config"
-	"bk-bcs/bcs-services/bcs-cpuset-device/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/mesosdriver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/types"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"golang.org/x/net/context"

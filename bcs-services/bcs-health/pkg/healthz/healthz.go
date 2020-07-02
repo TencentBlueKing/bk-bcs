@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 func NewHealthCtrl(client Client) (*HealthzCtrl, error) {

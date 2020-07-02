@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"text/template"
 
-	bkcmdbv1 "bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
+	bkcmdbv1 "github.com/Tencent/bk-bcs/bcs-resources/bk-cmdb-operator/api/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"

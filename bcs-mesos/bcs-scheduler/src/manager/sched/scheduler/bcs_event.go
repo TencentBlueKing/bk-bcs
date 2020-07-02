@@ -14,14 +14,14 @@
 package scheduler
 
 import (
-	rd "bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/common/static"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"encoding/json"
 	"fmt"
+	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"runtime"
 	"strconv"
 	"sync"

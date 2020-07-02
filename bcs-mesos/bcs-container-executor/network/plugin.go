@@ -14,7 +14,7 @@
 package network
 
 import (
-	"bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	"net"
 )
 

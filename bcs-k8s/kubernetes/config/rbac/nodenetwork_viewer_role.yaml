@@ -1,0 +1,20 @@
+# permissions for end users to view nodenetworks.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nodenetwork-viewer-role
+rules:
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - nodenetworks
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - nodenetworks/status
+  verbs:
+  - get

@@ -14,8 +14,8 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 )
 
 //DefaultConfig return default command line config

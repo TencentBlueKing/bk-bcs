@@ -14,10 +14,10 @@
 package rbac
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/config"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"net/url"

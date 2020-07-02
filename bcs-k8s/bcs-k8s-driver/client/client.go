@@ -14,8 +14,8 @@
 package client
 
 import (
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	urllib "net/url"
 
 	"k8s.io/client-go/kubernetes"

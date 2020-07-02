@@ -16,8 +16,8 @@ package apiserver
 import (
 	"fmt"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
 	"sync"
 )
 

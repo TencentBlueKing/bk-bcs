@@ -17,9 +17,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-api/config"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
 type CredentialBackend interface {

@@ -16,7 +16,7 @@ package bkiam
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-api/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
 )
 
 type QueryParam struct {

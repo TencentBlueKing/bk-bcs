@@ -15,15 +15,14 @@ package eni
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/sys/unix"
 	"net"
 	"strconv"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	bcsconf "bk-bcs/bcs-services/bcs-netservice/config"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
@@ -32,8 +31,10 @@ import (
 	"github.com/containernetworking/plugins/pkg/ipam"
 	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
 
+//default directory for log output
 var defaultLogDir = "./logs"
 
 // NetConf net config
@@ -44,6 +45,8 @@ type NetConf struct {
 	Args   *bcsconf.CNIArgs
 }
 
+//loadConf load specified configuration from cni configuration
+// and command line setting
 func loadConf(bytes []byte, args string) (*NetConf, string, error) {
 	conf := &NetConf{}
 	if err := json.Unmarshal(bytes, conf); err != nil {
@@ -128,6 +131,7 @@ func createVethPair(netns string, containerIfName string, mtu int) (*current.Int
 	return hostIface, containerIface, nil
 }
 
+//cleanExistedPodRoute clean specified route rule
 func cleanExistedPodRoute(routes []netlink.Route, route netlink.Route) error {
 	for _, r := range routes {
 		if r.Scope == route.Scope &&
@@ -144,6 +148,7 @@ func cleanExistedPodRoute(routes []netlink.Route, route netlink.Route) error {
 	return nil
 }
 
+//findToTableRule
 func findToTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	for _, r := range rules {
 		if r.Table == rule.Table {
@@ -157,6 +162,7 @@ func findToTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	return false
 }
 
+//findFromTableRule
 func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 	for _, r := range rules {
 		if r.Table == rule.Table {
@@ -172,13 +178,11 @@ func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 
 // configureHostNS configure host namespace
 func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) error {
-
 	// add to taskgroup route
 	hostVeth, err := netlink.LinkByName(hostIfName)
 	if err != nil {
 		return fmt.Errorf("failed to look up %s in host ns, err %s", hostIfName, err.Error())
 	}
-
 	// add route in certain route table
 	route := &netlink.Route{
 		LinkIndex: hostVeth.Attrs().Index,
@@ -186,7 +190,6 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 		Dst:       ipNet,
 		Table:     routeTableID,
 	}
-
 	// clean old route
 	existedRoutes, err := netlink.RouteListFiltered(unix.AF_INET, route,
 		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE)
@@ -219,7 +222,6 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 			return fmt.Errorf("add rule to table %s failed, err %s", ruleToTable.String(), err.Error())
 		}
 	}
-
 	//add from taskgroup rule
 	ruleFromTaskgroup := netlink.NewRule()
 	ruleFromTaskgroup.Src = ipNet
@@ -296,7 +298,9 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("load config stdindata %s, args %s failed, err %s",
 			string(args.StdinData), args.Args, err.Error())
 	}
-
+	//init inner log tool
+	//! pay more attention, CNI command line can not output log
+	//! to stderr or stdout according to cni specification
 	blog.InitLogs(conf.LogConfig{
 		LogDir: netConf.LogDir,
 		// never log to stderr
@@ -345,7 +349,7 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 		blog.Errorf("failed to get netns %q, err %s", netns, err.Error())
 		return fmt.Errorf("failed to get netns %q, err %s", netns, err.Error())
 	}
-
+	//create veth pair,
 	hostVethInfo, containerVethInfo, err := createVethPair(netns.Path(), args.IfName, netConf.MTU)
 	if err != nil {
 		blog.Errorf("create veth pair failed, err %s", err.Error())
@@ -389,6 +393,8 @@ func (e *ENI) CNIDel(args *skel.CmdArgs) error {
 	if err != nil {
 		return fmt.Errorf("load config file failed, err %s", err.Error())
 	}
+	//! pay more attention, CNI command line can not output log
+	//! to stderr or stdout according to cni specification
 	blog.InitLogs(conf.LogConfig{
 		LogDir: netConf.LogDir,
 		// never log to stderr

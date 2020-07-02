@@ -17,7 +17,7 @@ import (
 	"context"
 	"reflect"
 
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

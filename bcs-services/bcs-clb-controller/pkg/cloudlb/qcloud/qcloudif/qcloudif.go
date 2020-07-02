@@ -14,7 +14,7 @@
 package qcloudif
 
 import (
-	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	cloudListenerType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 )
 
 //ClbAdapter interface to operate clb

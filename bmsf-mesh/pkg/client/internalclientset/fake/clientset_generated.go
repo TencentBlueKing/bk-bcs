@@ -16,9 +16,9 @@
 package fake
 
 import (
-	clientset "bk-bcs/bmsf-mesh/pkg/client/internalclientset"
-	meshv1 "bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1"
-	fakemeshv1 "bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1/fake"
+	clientset "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset"
+	meshv1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1"
+	fakemeshv1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"

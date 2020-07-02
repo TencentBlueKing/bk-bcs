@@ -1,9 +1,10 @@
 FROM centos:latest
 
-RUN mkdir -p /bcs/certs && mkdir /bcs/logs && mkdir /bcs/cni && mkdir /bcs/etc
-COPY ./bcs-cloud-network-agent /bcs/bcs-cloud-network-agent
-COPY ./bcs-eni /bcs/bcs-eni
-COPY ./bcs-eni.conf /bcs/bcs-eni.conf
-COPY ./start_agent.sh /bcs/start_agent.sh
-RUN chmod +x /bcs/bcs-cloud-network-agent && chmod +x /bcs/bcs-eni && chmod +x /bcs/start_agent.sh
-WORKDIR /bcs
+RUN mkdir -p /data/bcs/cert && mkdir -p /data/bcs/logs/bcs && mkdir /bcs/cni && mkdir /bcs/etc
+RUN mkdir -p /data/bcs/bcs-cloud-network-agent /data/bcs/bcs-cni
+COPY ./bcs-cloud-network-agent /data/bcs/bcs-cloud-network-agent/
+COPY ./bcs-eni /data/bcs/bcs-cni/
+COPY ./bcs-eni.conf /data/bcs/bcs-cni/bcs-eni.conf
+COPY ./container-start.sh /data/bcs/bcs-cloud-network-agent/container-start.sh
+RUN chmod +x /data/bcs/bcs-cloud-network-agent/container-start.sh && chmod +x /data/bcs/bcs-cni/bcs-eni 
+WORKDIR /data/bcs

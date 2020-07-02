@@ -16,9 +16,9 @@
 package scheduler
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {

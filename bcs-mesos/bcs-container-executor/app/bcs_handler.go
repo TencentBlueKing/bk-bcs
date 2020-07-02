@@ -14,18 +14,18 @@
 package app
 
 import (
-	"bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
-	commtypes "bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/golang/protobuf/proto"
 )
 

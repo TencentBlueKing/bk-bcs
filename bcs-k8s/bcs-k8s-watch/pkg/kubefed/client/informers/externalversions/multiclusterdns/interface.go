@@ -16,8 +16,8 @@
 package multiclusterdns
 
 import (
-	internalinterfaces "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/informers/externalversions/multiclusterdns/v1alpha1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/informers/externalversions/multiclusterdns/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

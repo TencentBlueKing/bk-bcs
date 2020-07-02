@@ -13,11 +13,11 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-network/qcloud-eip/eip"
-	"bk-bcs/bcs-services/bcs-network/qcloud-eip/option"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/eip"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/option"
 	"runtime"
 
 	"github.com/containernetworking/cni/pkg/skel"

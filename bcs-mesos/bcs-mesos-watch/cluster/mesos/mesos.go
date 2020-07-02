@@ -23,15 +23,15 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	clusteretcd "bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/etcd"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/service"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	clusteretcd "github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/etcd"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //ZkClient interface to define zk operation

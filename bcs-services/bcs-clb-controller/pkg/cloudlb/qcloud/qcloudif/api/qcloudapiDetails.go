@@ -19,11 +19,11 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	loadbalance "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 
-	qcloud "bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
+	qcloud "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
 )
 
 func (clb *ClbAPI) waitForTaskResult(id int) error {

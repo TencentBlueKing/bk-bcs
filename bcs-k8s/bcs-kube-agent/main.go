@@ -17,10 +17,10 @@ import (
 	"fmt"
 	"os"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-k8s/bcs-kube-agent/app"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-kube-agent/app"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

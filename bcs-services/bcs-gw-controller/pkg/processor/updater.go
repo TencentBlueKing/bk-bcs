@@ -18,10 +18,10 @@ import (
 	"strconv"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
-	svcclient "bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
-	"bk-bcs/bcs-services/bcs-gw-controller/pkg/gw"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/common"
+	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gw-controller/pkg/gw"
 
 	k8scache "k8s.io/client-go/tools/cache"
 )

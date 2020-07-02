@@ -14,7 +14,7 @@
 package controller
 
 import (
-	"bk-bcs/bcs-mesos/pkg/controller/crr"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/controller/crr"
 )
 
 func init() {

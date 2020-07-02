@@ -16,10 +16,10 @@ package k8s
 import (
 	"fmt"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-webhook-server/options"
-	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/options"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"

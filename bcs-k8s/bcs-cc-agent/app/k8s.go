@@ -19,8 +19,8 @@ import (
 	"reflect"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-cc-agent/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"

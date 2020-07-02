@@ -29,10 +29,10 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-networkpolicy/datainformer"
-	"bk-bcs/bcs-services/bcs-networkpolicy/metrics"
-	"bk-bcs/bcs-services/bcs-networkpolicy/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-networkpolicy/datainformer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-networkpolicy/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-networkpolicy/options"
 
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/prometheus/client_golang/prometheus"

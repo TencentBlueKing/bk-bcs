@@ -24,10 +24,10 @@ import (
 	"github.com/parnurzeal/gorequest"
 	v1 "k8s.io/api/core/v1"
 
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 )
 
 // Client is http client for inner services.

@@ -13,7 +13,7 @@
 
 package manager
 
-import "bk-bcs/bcs-services/bcs-metriccollector/app/config"
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
 
 // Manager manager the collector life cycle
 type Manager interface {

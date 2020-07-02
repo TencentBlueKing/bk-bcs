@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1"
 
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"

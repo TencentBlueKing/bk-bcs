@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"os"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
 	"github.com/elastic/beats/libbeat/beat"
 	"github.com/elastic/beats/libbeat/common"
 	"github.com/elastic/beats/libbeat/publisher"

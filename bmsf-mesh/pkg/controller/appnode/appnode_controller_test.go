@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	meshv1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"

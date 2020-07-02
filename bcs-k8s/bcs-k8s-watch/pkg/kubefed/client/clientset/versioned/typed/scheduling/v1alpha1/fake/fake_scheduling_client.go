@@ -16,7 +16,7 @@
 package fake
 
 import (
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1"
 
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"

@@ -14,16 +14,16 @@
 package http
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/meta"
-	"bk-bcs/bcs-common/pkg/storage"
-	"bk-bcs/bcs-common/pkg/watch"
 	"bufio"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 	"io/ioutil"
 	"math/rand"
 	syshttp "net/http"

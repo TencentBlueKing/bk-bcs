@@ -14,11 +14,11 @@
 package zk
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/samuel/go-zookeeper/zk"
 )
 

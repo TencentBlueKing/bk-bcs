@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/codec"
-	commonTypes "bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 func (bs *bcsScheduler) GetApplicationDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error) {

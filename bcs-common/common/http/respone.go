@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
 // APIResponse response for api request

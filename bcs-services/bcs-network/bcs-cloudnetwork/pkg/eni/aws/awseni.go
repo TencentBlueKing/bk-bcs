@@ -18,15 +18,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/vishvananda/netlink"
-
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/encrypt"
-	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
 )
 
 // Client client for aws eni
@@ -36,22 +36,22 @@ type Client struct {
 
 	// AccessSecret access secret
 	AccessSecret string
-	
+
 	// SessionToken session token
 	SessionToken string
-	
+
 	// Region aws region
 	Region string
-	
+
 	// VpcID aws vpc id
 	VpcID string
 
 	// Instance IP
 	InstanceIP string
-	
+
 	// SecurityGroups aws security groups
 	SecurityGroups []string
-	
+
 	// SubnetIDs ids for subnet
 	SubnetIDs []string
 

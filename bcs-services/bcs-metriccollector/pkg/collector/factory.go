@@ -17,15 +17,15 @@ import (
 	"fmt"
 	"os"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-common/common/static"
-	bcsType "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-metriccollector/app/config"
-	"bk-bcs/bcs-services/bcs-metriccollector/pkg/output"
-	"bk-bcs/bcs-services/bcs-metriccollector/pkg/role"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	bcsType "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/output"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/pkg/role"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 )
 
 // New create

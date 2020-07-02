@@ -16,8 +16,8 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/pkg/throttle"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

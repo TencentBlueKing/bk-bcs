@@ -14,7 +14,7 @@
 package lib
 
 import (
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 // CopyMap return a new operator.M copy from provided by depth=1

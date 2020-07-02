@@ -19,13 +19,13 @@ import (
 	"os"
 	"time"
 
-	"bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
-	"bk-bcs/bcs-services/bcs-user-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/emicklei/go-restful"
 )
 

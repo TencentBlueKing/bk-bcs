@@ -23,10 +23,10 @@ import (
 	"os"
 	"strings"
 
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 
 	simplejson "github.com/bitly/go-simplejson"
 	"github.com/urfave/cli"

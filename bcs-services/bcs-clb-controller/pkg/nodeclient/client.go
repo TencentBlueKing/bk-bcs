@@ -19,7 +19,7 @@ import (
 
 	"k8s.io/client-go/informers"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	k8sinfcorev1 "k8s.io/client-go/informers/core/v1"

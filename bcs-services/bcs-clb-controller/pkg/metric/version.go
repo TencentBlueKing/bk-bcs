@@ -14,7 +14,7 @@
 package metric
 
 import (
-	"bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 
 	restful "github.com/emicklei/go-restful"
 )

@@ -16,11 +16,11 @@ package inject
 import (
 	"net/http"
 
-	"bk-bcs/bcs-services/bcs-webhook-server/options"
-	internalclientset "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/k8s"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/mesos"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/options"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
+	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/mesos"
 	"k8s.io/client-go/kubernetes"
 )
 

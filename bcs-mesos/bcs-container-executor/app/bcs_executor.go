@@ -14,18 +14,6 @@
 package app
 
 import (
-	"bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"bk-bcs/bcs-mesos/bcs-container-executor/container/cni"
-	"bk-bcs/bcs-mesos/bcs-container-executor/container/cnm"
-	exec "bk-bcs/bcs-mesos/bcs-container-executor/executor"
-	"bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	"bk-bcs/bcs-mesos/bcs-container-executor/network"
-	cninet "bk-bcs/bcs-mesos/bcs-container-executor/network/cni"
-	cnmnet "bk-bcs/bcs-mesos/bcs-container-executor/network/cnm"
-	"bk-bcs/bcs-mesos/bcs-container-executor/util"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	bcstype "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -37,9 +25,22 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cni"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cnm"
+	exec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network"
+	cninet "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network/cni"
+	cnmnet "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network/cnm"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
+	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
 	"github.com/golang/protobuf/proto"
 	//"github.com/pborman/uuid"
-	"bk-bcs/bcs-common/common/blog"
 	"golang.org/x/net/context"
 )
 

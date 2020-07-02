@@ -19,12 +19,12 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	storageErr "bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	"github.com/emicklei/go-restful"
 )

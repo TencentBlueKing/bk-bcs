@@ -15,7 +15,7 @@
 package fake
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/typed/cloud/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/typed/cloud/v1"
 
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"

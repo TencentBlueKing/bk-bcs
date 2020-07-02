@@ -14,7 +14,7 @@
 package manager
 
 import (
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
 )
 
 type Manager interface {

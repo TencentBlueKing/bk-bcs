@@ -16,7 +16,7 @@ package bcscustom
 import (
 	"log"
 
-	"bk-bcs/bcs-services/bcs-dns/plugin/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-dns/plugin/util"
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/request"

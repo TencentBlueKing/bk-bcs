@@ -19,10 +19,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/encrypt"
-	"bk-bcs/bcs-k8s/bcs-cc-agent/config"
-	"bk-bcs/bcs-k8s/bcs-cc-agent/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-cc-agent/options"
 )
 
 //Run bcs-cc-agent server

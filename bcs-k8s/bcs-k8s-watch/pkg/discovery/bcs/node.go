@@ -14,8 +14,8 @@
 package bcs
 
 import (
-	"bk-bcs/bcs-common/common/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/satori/go.uuid"
 )
 

@@ -16,10 +16,10 @@
 package v1alpha1
 
 import (
-	scheduling_v1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/scheduling/v1alpha1"
-	versioned "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
-	internalinterfaces "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/listers/scheduling/v1alpha1"
+	scheduling_v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/scheduling/v1alpha1"
+	versioned "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/listers/scheduling/v1alpha1"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

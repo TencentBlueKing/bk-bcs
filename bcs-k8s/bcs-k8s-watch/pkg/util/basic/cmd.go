@@ -16,7 +16,7 @@ package basic
 import (
 	"os"
 
-	"bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 
 	"github.com/spf13/pflag"
 )

@@ -19,10 +19,10 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"bk-bcs/bcs-common/common/bcs-health/api"
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 )
 
 type Alertor struct {

@@ -16,10 +16,10 @@ import (
 	"context"
 	"fmt"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	cmdb "bk-bcs/bcs-common/pkg/esb/cmdbv3"
-	"bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
+	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/common"
 )
 
 // EventType type for reconciler event

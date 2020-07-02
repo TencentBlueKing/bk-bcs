@@ -14,13 +14,14 @@
 package scheduler
 
 import (
-	alarm "bk-bcs/bcs-common/common/bcs-health/api"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"fmt"
 	"time"
+
+	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
 // DataChecker control message

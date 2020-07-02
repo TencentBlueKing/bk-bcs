@@ -14,9 +14,9 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/encrypt"
-	"bk-bcs/bcs-common/common/util"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 
 	"github.com/spf13/pflag"
 )

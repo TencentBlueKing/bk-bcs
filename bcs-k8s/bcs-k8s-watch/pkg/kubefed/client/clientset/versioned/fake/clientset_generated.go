@@ -16,17 +16,17 @@
 package fake
 
 import (
-	clientset "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
-	corev1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1alpha1"
-	fakecorev1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1alpha1/fake"
-	corev1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1beta1"
-	fakecorev1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1beta1/fake"
-	multiclusterdnsv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/multiclusterdns/v1alpha1"
-	fakemulticlusterdnsv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/multiclusterdns/v1alpha1/fake"
-	schedulingv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1"
-	fakeschedulingv1alpha1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1/fake"
-	typesv1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/types/v1beta1"
-	faketypesv1beta1 "bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/types/v1beta1/fake"
+	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned"
+	corev1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1alpha1"
+	fakecorev1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1alpha1/fake"
+	corev1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1beta1"
+	fakecorev1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/core/v1beta1/fake"
+	multiclusterdnsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/multiclusterdns/v1alpha1"
+	fakemulticlusterdnsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/multiclusterdns/v1alpha1/fake"
+	schedulingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1"
+	fakeschedulingv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/scheduling/v1alpha1/fake"
+	typesv1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/types/v1beta1"
+	faketypesv1beta1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client/clientset/versioned/typed/types/v1beta1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"

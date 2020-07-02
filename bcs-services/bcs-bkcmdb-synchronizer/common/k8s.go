@@ -16,7 +16,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

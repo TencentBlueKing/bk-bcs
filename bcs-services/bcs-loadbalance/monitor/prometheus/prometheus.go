@@ -14,8 +14,8 @@
 package prometheus
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-loadbalance/monitor"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/monitor"
 
 	"github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

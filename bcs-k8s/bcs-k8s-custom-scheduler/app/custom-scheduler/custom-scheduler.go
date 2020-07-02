@@ -14,9 +14,9 @@
 package custom_scheduler
 
 import (
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
 
 	"fmt"
 )

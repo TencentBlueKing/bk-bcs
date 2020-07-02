@@ -14,8 +14,8 @@
 package discovery
 
 import (
-	"bk-bcs/bcs-common/pkg/queue"
-	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 
 	"k8s.io/apimachinery/pkg/labels"
 )

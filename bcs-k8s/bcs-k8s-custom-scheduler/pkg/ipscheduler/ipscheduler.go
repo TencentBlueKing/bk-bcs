@@ -14,10 +14,10 @@
 package ipscheduler
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

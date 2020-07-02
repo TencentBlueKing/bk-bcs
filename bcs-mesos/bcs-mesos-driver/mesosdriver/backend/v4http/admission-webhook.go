@@ -14,9 +14,9 @@
 package v4http
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 )
 
 func (s *Scheduler) CreateAdmissionWebhook(body []byte) (string, error) {

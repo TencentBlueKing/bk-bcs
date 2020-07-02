@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	bcstypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/util"
-	dnsUtil "bk-bcs/bcs-services/bcs-dns/plugin/util"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	dnsUtil "github.com/Tencent/bk-bcs/bcs-services/bcs-dns/plugin/util"
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/etcd/msg"

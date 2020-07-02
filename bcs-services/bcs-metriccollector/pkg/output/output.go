@@ -14,12 +14,12 @@
 package output
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-metriccollector/app/config"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
 	"net/http"
 	"time"
 )

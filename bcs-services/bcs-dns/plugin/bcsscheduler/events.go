@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
-	bcstypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-dns/plugin/bcsscheduler/metrics"
 	"github.com/coredns/coredns/plugin/etcd/msg"
 )
 

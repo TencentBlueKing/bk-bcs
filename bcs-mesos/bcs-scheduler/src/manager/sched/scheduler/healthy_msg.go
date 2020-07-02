@@ -14,10 +14,10 @@
 package scheduler
 
 import (
-	alarm "bk-bcs/bcs-common/common/bcs-health/api"
-	"bk-bcs/bcs-common/common/blog"
-	bcstype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 // The goroutine function for process health check report

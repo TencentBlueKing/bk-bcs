@@ -17,7 +17,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/common"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/apis/core/common"
 )
 
 type TLSValidation string

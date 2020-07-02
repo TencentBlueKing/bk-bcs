@@ -14,14 +14,14 @@
 package backend
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	commonTypes "bk-bcs/bcs-common/common/types"
-	sched "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	sched "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 const (

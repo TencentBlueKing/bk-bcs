@@ -14,8 +14,8 @@
 package backend
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 )
 
 type backend struct {

@@ -18,9 +18,9 @@ import (
 	"strconv"
 	"strings"
 
-	commonTypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
 
 func listAgentSetting(c *utils.ClientContext) error {

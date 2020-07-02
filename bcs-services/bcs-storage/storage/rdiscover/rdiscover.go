@@ -18,11 +18,11 @@ import (
 	"os"
 	"time"
 
-	"bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-services/bcs-storage/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 
 	"golang.org/x/net/context"
 )

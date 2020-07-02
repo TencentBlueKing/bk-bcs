@@ -19,10 +19,10 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-health/pkg/zk"
-	"bk-bcs/bcs-services/bcs-health/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/zk"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/util"
 
 	"golang.org/x/net/context"
 )

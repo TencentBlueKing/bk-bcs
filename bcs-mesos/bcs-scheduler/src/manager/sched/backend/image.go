@@ -14,9 +14,9 @@
 package backend
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 func (b *backend) CommitImage(taskgroup, image, url string) (*types.BcsMessage, error) {

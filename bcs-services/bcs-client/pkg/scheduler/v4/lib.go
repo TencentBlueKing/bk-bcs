@@ -16,7 +16,7 @@ package v4
 import (
 	"fmt"
 
-	"bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http"
 
 	"github.com/bitly/go-simplejson"
 )

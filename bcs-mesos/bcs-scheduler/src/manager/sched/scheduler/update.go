@@ -14,23 +14,23 @@
 package scheduler
 
 import (
-	alarm "bk-bcs/bcs-common/common/bcs-health/api"
-	"bk-bcs/bcs-common/common/blog"
-	bcstype "bk-bcs/bcs-common/common/types"
-	containertypes "bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"encoding/json"
 	"net/http"
-	//"sort"
 	"strings"
 	"time"
+
+	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
+	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
-// The goroutine function for process task status report
+// StatusReport The goroutine function for process task status report
 // When scheduler receive a task status report messege, it will create a goroutine for process this message,
 // #lizard forgives StatusReport
 func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
@@ -753,7 +753,7 @@ func (s *Scheduler) applicationStatusUpdated(app *types.Application, originStatu
 	return
 }
 
-//current only update task status running by mesos message, if task status changed by mesos status update
+//UpdateTaskStatus current only update task status running by mesos message, if task status changed by mesos status update
 func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.BcsMessage) {
 	taskId := bcsMsg.TaskID.GetValue()
 	taskGroupID := types.GetTaskGroupID(taskId)

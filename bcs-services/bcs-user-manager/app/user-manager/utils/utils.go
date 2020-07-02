@@ -19,9 +19,9 @@ import (
 	"reflect"
 	"strings"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/asaskevich/govalidator"
 	"gopkg.in/go-playground/validator.v9"
 )

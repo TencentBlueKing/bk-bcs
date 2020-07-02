@@ -14,10 +14,10 @@
 package RegisterDiscover
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	//"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	//"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"sort"
 	"strconv"
 	"strings"

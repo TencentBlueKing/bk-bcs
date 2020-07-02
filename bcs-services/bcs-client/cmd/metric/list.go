@@ -14,12 +14,12 @@
 package metric
 
 import (
-	"bk-bcs/bcs-common/common/codec"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"sort"
 
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/metric/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/metric/v1"
 )
 
 func listMetric(c *utils.ClientContext) error {

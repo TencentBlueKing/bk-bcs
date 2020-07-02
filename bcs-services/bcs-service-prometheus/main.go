@@ -17,11 +17,10 @@ import (
 	"os"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
-	"bk-bcs/bcs-services/bcs-service-prometheus/app"
-	"bk-bcs/bcs-services/bcs-service-prometheus/app/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/app/options"
 )
 
 func main() {
@@ -32,7 +31,6 @@ func main() {
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
 	blog.Info("init logs success")
-	license.CheckLicense(op.LicenseServerConfig)
 
 	err := app.Run(op)
 	if err != nil {

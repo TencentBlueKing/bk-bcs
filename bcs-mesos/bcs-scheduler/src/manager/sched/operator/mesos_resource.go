@@ -14,17 +14,19 @@
 package operator
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
-	master "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos/master"
 	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"net/http"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
+
+	"github.com/golang/protobuf/proto"
 )
 
-// Get cluster current resource information from mesos master
+//GetMesosResource Get cluster current resource information from mesos master
 func GetMesosResource(mesosClient *client.Client) (*commtypes.BcsClusterResource, error) {
 	clusterRes := new(commtypes.BcsClusterResource)
 	blog.Info("get cluster resource from mesos master")

@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"os"
 
-	"bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 )
 
 func main() {

@@ -19,8 +19,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common/bscp"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common/bscp"
 
 	corev1 "k8s.io/api/core/v1"
 )

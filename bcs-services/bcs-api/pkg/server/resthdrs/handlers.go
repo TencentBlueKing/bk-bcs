@@ -14,7 +14,7 @@
 package resthdrs
 
 import (
-	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/filters"
 	"github.com/emicklei/go-restful"
 )
 

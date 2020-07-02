@@ -14,11 +14,11 @@
 package driver
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/codec"
-	btypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"io/ioutil"
 	"os"
 	"path/filepath"

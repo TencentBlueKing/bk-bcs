@@ -14,14 +14,14 @@
 package main
 
 import (
-	rd "bk-bcs/bcs-common/common/RegisterDiscover"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/common/plugin"
-	"bk-bcs/bcs-common/common/static"
-	commtype "bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
+	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/plugin"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/fsnotify/fsnotify"
 	"golang.org/x/net/context"
 	"io/ioutil"

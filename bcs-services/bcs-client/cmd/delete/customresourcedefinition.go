@@ -14,9 +14,9 @@
 package delete
 
 import (
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	v4 "bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
 
 func deleteCustomResourceDefinition(c *utils.ClientContext) error {

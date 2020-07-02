@@ -14,12 +14,12 @@
 package zk
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/zkclient"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
 	"strings"
 	"time"
 )

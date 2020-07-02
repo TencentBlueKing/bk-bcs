@@ -40,7 +40,7 @@ spec:
             allowPrivilegeEscalation: true
           image: ${bcsCSICBSImage}
           command:
-          - "/bin/bcs-k8s-csi-tencentcloud"
+          - "/data/bcs/bcs-k8s-csi-tencentcloud/bcs-k8s-csi-tencentcloud"
           args:
           - "--v=5"
           - "--logtostderr=true"

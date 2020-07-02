@@ -13,7 +13,7 @@
 
 package discovery
 
-import "bk-bcs/bcs-services/bcs-service-prometheus/types"
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 const (
 	DefaultBcsModuleLabelKey = "bcs_module"
@@ -29,14 +29,11 @@ type Discovery interface {
 	//start
 	Start() error
 
-	// GetDiscoveryKey
-	GetDiscoveryKey() string
-
 	// get prometheus service discovery config
-	GetPrometheusSdConfig() ([]*types.PrometheusSdConfig, error)
+	GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error)
 
 	// get prometheus sd config file path
-	GetPromSdConfigFile() string
+	GetPromSdConfigFile(module string) string
 
 	//register event handle function
 	RegisterEventFunc(handleFunc EventHandleFunc)

@@ -1,11 +1,10 @@
 FROM centos:latest
 
-USER root
-ADD ./bcs-ca.crt .
-ADD ./bcs-server.crt .
-ADD ./bcs-server.key .
-ADD bcs-k8s-driver .
+RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
+RUN mkdir -p /data/bcs/bcs-k8s-driver
 
-RUN chmod +x bcs-k8s-driver
+ADD bcs-k8s-driver /data/bcs/bcs-k8s-driver/
+RUN chmod +x /data/bcs/bcs-k8s-driver/bcs-k8s-driver
 
-ENTRYPOINT ["./bcs-k8s-driver"]
+WORKDIR /data/bcs/bcs-k8s-driver/
+ENTRYPOINT ["/data/bcs/bcs-k8s-driver/bcs-k8s-driver"]

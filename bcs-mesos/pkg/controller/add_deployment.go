@@ -14,7 +14,7 @@
 package controller
 
 import (
-	"bk-bcs/bcs-mesos/pkg/controller/deployment"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/controller/deployment"
 )
 
 func init() {

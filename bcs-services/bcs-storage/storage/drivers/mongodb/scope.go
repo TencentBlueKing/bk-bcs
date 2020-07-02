@@ -14,8 +14,8 @@
 package mongodb
 
 import (
-	storageErr "bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 	"time"
 
 	mgo "gopkg.in/mgo.v2"

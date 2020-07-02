@@ -16,13 +16,13 @@ package app
 import (
 	"os"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/encrypt"
-	"bk-bcs/bcs-services/bcs-user-manager/app/metrics"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
-	"bk-bcs/bcs-services/bcs-user-manager/config"
-	"bk-bcs/bcs-services/bcs-user-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
 // Run run app

@@ -14,9 +14,9 @@
 package haproxy
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	"bytes"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io"
 	"net"
 	"strconv"

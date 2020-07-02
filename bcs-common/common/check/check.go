@@ -18,7 +18,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 const (

@@ -14,13 +14,13 @@
 package get
 
 import (
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-	userV1 "bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	userV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"net/http"
 
 	"github.com/urfave/cli"

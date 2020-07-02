@@ -14,13 +14,12 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/license"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/app"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/app"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"os"
 	"runtime"
 )
@@ -80,14 +79,13 @@ func main() {
 	cfg = app.DefaultConfig()
 	setCfg(op)
 
-	license.CheckLicense(op.LicenseServerConfig)
-
 	if err := app.Run(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "Startting bcs-mesos-watch Err: %s", err.Error())
 		os.Exit(1)
 	}
 }
 
+//MesosWatchOptions options for mesos watch
 type MesosWatchOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig

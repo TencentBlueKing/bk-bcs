@@ -16,7 +16,7 @@
 package internalclientset
 
 import (
-	meshv1 "bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset/typed/mesh/v1"
 
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"

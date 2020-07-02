@@ -14,7 +14,7 @@
 package manager
 
 import (
-	"bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-consoleproxy/console-proxy/types"
 	"net/http"
 )
 

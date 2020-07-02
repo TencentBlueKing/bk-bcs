@@ -57,7 +57,7 @@ I0504 11:10:43.943151   19171 main.go:13] Hi, you have received a message type:I
 package main
 
 import (
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"flag"
 )
 

@@ -14,11 +14,11 @@
 package cni
 
 import (
-	"bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	"bk-bcs/bcs-mesos/bcs-container-executor/network"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network"
 	"os"
 	"path/filepath"
 	"strings"

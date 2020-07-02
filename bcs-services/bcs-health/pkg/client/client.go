@@ -14,13 +14,13 @@
 package client
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-services/bcs-health/util"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/util"
 	"io"
 	"io/ioutil"
 	"net"
