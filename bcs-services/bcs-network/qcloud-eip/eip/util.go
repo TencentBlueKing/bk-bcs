@@ -18,7 +18,43 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"golang.org/x/sys/unix"
+
+	"github.com/vishvananda/netlink"
+
+	"bk-bcs/bcs-common/common/blog"
 )
+
+func getBridgeRoutes(tableID int, bridgeName string) ([]netlink.Route, error) {
+	link, err := netlink.LinkByName(bridgeName)
+	if err != nil {
+		blog.Errorf("there is no bridge with name %s", bridgeName)
+		return nil, fmt.Errorf("there is no bridge with name %s", bridgeName)
+	}
+	addr, _, _ := getIPAddrByName(bridgeName)
+	if len(addr) == 0 {
+		blog.Errorf("get bridge %s addr failed", bridgeName)
+		return nil, fmt.Errorf("get bridge %s addr failed", bridgeName)
+	}
+	ipObj := net.ParseIP(addr)
+	if ipObj == nil {
+		blog.Errorf("parse ip %s return nil", addr)
+		return nil, fmt.Errorf("parse ip %s return nil", addr)
+	}
+	bridgeRouteRule := netlink.Route{
+		LinkIndex: link.Attrs().Index,
+		Scope:     netlink.SCOPE_LINK,
+		Src:       ipObj,
+		Table:     tableID,
+	}
+	routes, err := netlink.RouteListFiltered(unix.AF_INET, &bridgeRouteRule,
+		netlink.RT_FILTER_TABLE|netlink.RT_FILTER_SCOPE|netlink.RT_FILTER_OIF|netlink.RT_FILTER_SRC)
+	if err != nil {
+		blog.Errorf("failed to list route list with route %+v , err %s", bridgeRouteRule, err.Error())
+		return nil, err
+	}
+	return routes, nil
+}
 
 //GetIPAddrByName return eni ip address, mask, mac address
 func getIPAddrByName(name string) (string, int, string) {
