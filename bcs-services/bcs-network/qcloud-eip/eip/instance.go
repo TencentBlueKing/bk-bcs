@@ -34,6 +34,12 @@ func newInstanceClient(conf *conf.NetConf) *instanceClient {
 		conf.UUID,
 	)
 	cpf := profile.NewClientProfile()
+
+	// set tencentcloud domain
+	if len(conf.TencentCloudCVMDomain) != 0 {
+		cpf.HttpProfile.Endpoint = conf.TencentCloudCVMDomain
+	}
+
 	client, err := cvm.NewClient(credential, conf.Region, cpf)
 	if err != nil {
 		blog.Errorf("new instance client failed, err %s", err.Error())
