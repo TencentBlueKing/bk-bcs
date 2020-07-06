@@ -63,11 +63,18 @@ export localIp=127.0.0.1
 
 ```shell
 #!/bin/bash
+module="bcs-egress-controller"
 
-cd /data/bcs/bcs-storage
-cat bcs-storage.json.template | envsubst | tee bcs-storage.json 
-chmod +x bcs-storage
-./bcs-storage -f bcs-storage.json
+cd /data/bcs/${module}
+chmod +x ${module}
+
+#check configuration render
+if [ $BCS_CONFIG_TYPE == "render" ] then
+  cat ${module}.json.template | envsubst | tee ${module}.json
+fi
+
+#ready to start
+/data/bcs/${module}/${module} $@
 ```
 
 建议各模块不需要单独设置日志目录，直接将日志打印至容器输出流即可。

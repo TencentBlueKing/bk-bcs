@@ -1,9 +1,9 @@
-FROM centos:latest
+FROM centos:7
 
 LABEL Author="DeveloperJim"
 #all bcs modules in on container for testing
 
-RUN mkdir -p /data/bcs/logs /data/bcs/cert
+RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert/bcs 
 
 # bcs-service installation
 COPY ./bcs-services/* /data/bcs/

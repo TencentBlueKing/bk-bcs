@@ -1,16 +1,17 @@
-FROM centos:centos7 AS build
+FROM centos:7 AS build
 
 # install compilation tools
 RUN yum install -y make gcc perl pcre-devel zlib-devel wget readline-devel openssl-devel unzip net-tools less
 
 # install nginx with http_proxy_connect
-RUN yum groupinstall -y 'Development Tools' && yum install -y libxslt-devel gd gd-devel gperftools-devel
-RUN cd /home \
+RUN yum groupinstall -y 'Development Tools' && yum install -y libxslt-devel gd-devel gperftools-devel
+RUN cd /home && rm -rf nginx-1.16.* ngx_http_proxy_connect_module \
 && wget http://nginx.org/download/nginx-1.16.1.tar.gz \
 && git clone https://github.com/chobits/ngx_http_proxy_connect_module \
-&& tar -zxvf nginx-1.16.1.tar.gz && rm nginx-1.16.1.tar.gz && cd nginx-1.16.1 \
-&& patch -p1 < /home/ngx_http_proxy_connect_module/patch/proxy_connect.patch \
-&& ./configure \
+&& tar -zxvf nginx-1.16.1.tar.gz
+RUN  cd /home/nginx-1.16.1 \
+&& patch -p1 < /home/ngx_http_proxy_connect_module/patch/proxy_connect_rewrite_101504.patch
+RUN cd /home/nginx-1.16.1 && ./configure \
 --prefix=/usr/local/nginx \
 --add-module=/home/ngx_http_proxy_connect_module \
 --http-client-body-temp-path=/usr/local/nginx/tmp/client_body \
@@ -47,11 +48,11 @@ RUN cd /home \
 --with-google_perftools_module \
 --with-debug \
 --with-cc-opt='-O2 -g -pipe -Wall -Wno-error -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic' \
---with-ld-opt='-Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld -Wl,-E' \
-&& make && make install
+--with-ld-opt='-Wl,-z,relro -specs=/usr/lib/rpm/redhat/redhat-hardened-ld -Wl,-E' 
+RUN cd /home/nginx-1.16.1 && make && make install
 
 # STEP 2: build controller image
-FROM centos:centos7
+FROM centos:7
 
 # copy nginx file
 COPY --from=build /usr/local/nginx /usr/local/nginx
@@ -62,7 +63,9 @@ ENV BCS_EGRESS_PORT=12345
 
 # prepare egress-controller requirements
 RUN mkdir -p /data/bcs/bcs-egress-controller/template
-COPY config/nginx.conf.template /data/bcs/bcs-egress-controller/template
+COPY config/nginx-template.conf /data/bcs/bcs-egress-controller/template
 COPY config/nginx.conf /usr/local/nginx/conf/
+COPY container-start.sh /data/bcs/bcs-egress-controller/
 RUN chmod +x /data/bcs/bcs-egress-controller/container-start.sh 
 WORKDIR /data/bcs/bcs-egress-controller
+CMD [ "/data/bcs/bcs-egress-controller/container-start.sh " ]

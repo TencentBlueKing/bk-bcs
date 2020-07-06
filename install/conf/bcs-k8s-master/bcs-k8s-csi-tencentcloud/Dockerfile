@@ -1,4 +1,4 @@
-FROM centos:latest
+FROM centos:7
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-k8s-csi-tencentcloud/

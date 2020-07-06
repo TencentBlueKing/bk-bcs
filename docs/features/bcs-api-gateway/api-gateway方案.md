@@ -318,7 +318,7 @@ pg_user = kong        # Postgres user.
 pg_password = kong    # 
 pg_database = kong    # 数据库名称
 
-q = on       # 开启客户端SSL
+client_ssl = on       # 开启客户端SSL
 client_ssl_cert = /data/bcs/cert/bcs-server.crt              
 client_ssl_cert_key = /data/bcs/cert/bcs-server.key           
 plugins = bundled,bkbcs-auth  # 加载指定插件

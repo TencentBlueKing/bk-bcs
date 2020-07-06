@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
 	"golang.org/x/net/context"
 )
 
