@@ -1,4 +1,4 @@
-FROM centos:latest
+FROM centos:7
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-logbeat-sidecar
@@ -9,4 +9,3 @@ RUN chmod +x /data/bcs/bcs-logbeat-sidecar/container-start.sh
 
 WORKDIR /data/bcs/bcs-logbeat-sidecar/
 ENTRYPOINT ["/data/bcs/bcs-logbeat-sidecar/container-start.sh"]
-

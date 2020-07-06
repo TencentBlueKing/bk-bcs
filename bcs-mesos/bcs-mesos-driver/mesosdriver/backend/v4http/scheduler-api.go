@@ -14,6 +14,10 @@
 package v4http
 
 import (
+	"io/ioutil"
+	"strconv"
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
@@ -24,9 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/webconsole"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
-	"io/ioutil"
-	"strconv"
-	"sync"
 
 	restful "github.com/emicklei/go-restful"
 )

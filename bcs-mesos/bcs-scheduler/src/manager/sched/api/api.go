@@ -16,6 +16,10 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	comm "github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -25,9 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/emicklei/go-restful"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func (r *Router) queryAgentSettingList(req *restful.Request, resp *restful.Response) {

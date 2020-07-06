@@ -1,4 +1,4 @@
-FROM centos:latest
+FROM centos:7
 
 RUN mkdir -p /data/bcs/cert && mkdir -p /data/bcs/logs/bcs && mkdir /bcs/cni && mkdir /bcs/etc
 RUN mkdir -p /data/bcs/bcs-cloud-network-agent /data/bcs/bcs-cni
