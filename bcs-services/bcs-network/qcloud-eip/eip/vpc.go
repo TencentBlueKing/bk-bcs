@@ -55,6 +55,12 @@ func newVPCClient(conf *conf.NetConf, vpcID string) *vpcClient {
 		conf.UUID,
 	)
 	cpf := profile.NewClientProfile()
+
+	// set tencentcloud domain
+	if len(conf.TencentCloudVPCDomain) != 0 {
+		cpf.HttpProfile.Endpoint = conf.TencentCloudVPCDomain
+	}
+
 	client, err := vpc.NewClient(credential, conf.Region, cpf)
 	if err != nil {
 		blog.Errorf("new vpc client failed, err %s", err.Error())
