@@ -11,56 +11,80 @@
  *
  */
 
-package v2
+package v1
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// BcsEndpointSpec defines the desired state of BcsEndpoint
-type BcsEndpointSpec struct {
+// ServiceMonitorSpec defines the desired state of ServiceMonitor
+type ServiceMonitorSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	types.BcsEndpoint
+
+	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	Selector  LabelSelector `json:"selector,omitempty"`
 }
 
-// BcsEndpointStatus defines the observed state of BcsEndpoint
-type BcsEndpointStatus struct {
+type LabelSelector struct {
+	MatchLabels map[string]string `json:"matchLabels,omitempty"`
+}
+
+type Endpoint struct {
+	Port     string `json:"port,omitempty"`
+	Path     string `json:"path,omitempty"`
+	Interval string `json:"interval,omitempty"`
+	Params   map[string][]string `json:"params,omitempty"`
+}
+
+// ServiceMonitorStatus defines the observed state of ServiceMonitor
+type ServiceMonitorStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
-// BcsEndpoint is the Schema for the bcsendpoints API
-// +k8s:openapi-gen=true
-type BcsEndpoint struct {
+// ServiceMonitor is the Schema for the servicemonitors API
+type ServiceMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   BcsEndpointSpec   `json:"spec,omitempty"`
-	Status BcsEndpointStatus `json:"status,omitempty"`
+	Spec   ServiceMonitorSpec   `json:"spec,omitempty"`
+	Status ServiceMonitorStatus `json:"status,omitempty"`
 }
 
-func (e *BcsEndpoint) GetUuid()string{
-	return fmt.Sprintf("%s.%s", e.Namespace, e.Name)
+func (s *ServiceMonitor) GetUuid()string{
+	return fmt.Sprintf("%s.%s", s.Namespace,s.Name)
+}
+
+func (s *ServiceMonitor) GetSelector()labels.Requirements{
+	rms := labels.Requirements{}
+	for k,v :=range s.Spec.Selector.MatchLabels {
+		r,_ := labels.NewRequirement(k, selection.Equals, []string{v})
+		rms = append(rms, *r)
+	}
+	return rms
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
-// BcsEndpointList contains a list of BcsEndpoint
-type BcsEndpointList struct {
+// ServiceMonitorList contains a list of ServiceMonitor
+type ServiceMonitorList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []BcsEndpoint `json:"items"`
+	Items           []ServiceMonitor `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&BcsEndpoint{}, &BcsEndpointList{})
+	SchemeBuilder.Register(&ServiceMonitor{}, &ServiceMonitorList{})
 }
