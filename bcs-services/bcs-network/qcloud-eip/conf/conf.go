@@ -45,10 +45,6 @@ type NetConf struct {
 	UUID                  string `json:"uuid"`
 	SubnetID              string `json:"subnetId,omitempty"`
 	MTU                   int    `json:"mtu,omitempty"`
-	// Design: If both bridge network mode and elastic network card mode exist
-	// copy route to bridge into each eni route table, otherwise pod with eni can 
-	// not communicate with the bridge-mode pod
-	BridgeName string   `json:"bridgeName"`
 	NetService *NetArgs `json:"netservice,omitempty"`
 	Args       *bcsconf.CNIArgs
 }
