@@ -14,9 +14,7 @@ package eip
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
+
 	"net"
 	"os"
 	"strconv"
@@ -30,9 +28,9 @@ import (
 	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/vishvananda/netlink"
 
-	"bk-bcs/bcs-common/common/blog"
-	netsvc "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
-	"bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 )
 
 const (

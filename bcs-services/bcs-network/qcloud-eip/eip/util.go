@@ -14,15 +14,14 @@ package eip
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"golang.org/x/sys/unix"
 	"net"
 	"strconv"
 	"strings"
-	"golang.org/x/sys/unix"
 
 	"github.com/vishvananda/netlink"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 func getBridgeRoutes(tableID int, bridgeName string) ([]netlink.Route, error) {
