@@ -232,25 +232,6 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 			blog.Errorf("add default route %v for table %d failed, err %s", defaultRouteRule, id, err.Error())
 			os.Exit(1)
 		}
-
-		// if bridgeName is not null, copy bridge route into each eni route table
-		if len(netConf.BridgeName) != 0 {
-			// get routes in main route table about bridge
-			bridgeRoutes, err := getBridgeRoutes(mainRouteTableID, netConf.BridgeName)
-			if err != nil {
-				blog.Warnf("get bridge %s routes failed, err %s", netConf.BridgeName)
-				continue
-			}
-			for _, r := range bridgeRoutes {
-				r.Table = id
-				blog.Info("add bridge route %+v for bridge %s", r, netConf.BridgeName)
-				err = netlink.RouteAdd(&r)
-				if err != nil {
-					blog.Errorf("add bridge route failed, err %s", err.Error())
-					continue
-				}
-			}
-		}
 	}
 
 	// register ip pool for eni
@@ -456,24 +437,6 @@ func (eip *EIP) Recover(file string, eniNum int) {
 		if err != nil {
 			blog.Errorf("add default route %v for table %d failed, err %s", defaultRouteRule, id, err.Error())
 			os.Exit(1)
-		}
-
-		// if bridgeName is not null, copy bridge route into each eni route table
-		if len(netConf.BridgeName) != 0 {
-			bridgeRoutes, err := getBridgeRoutes(mainRouteTableID, netConf.BridgeName)
-			if err != nil {
-				blog.Warnf("get bridge %s routes failed, err %s", netConf.BridgeName)
-				continue
-			}
-			for _, r := range bridgeRoutes {
-				r.Table = id
-				blog.Info("add bridge route %+v for bridge %s", r, netConf.BridgeName)
-				err = netlink.RouteAdd(&r)
-				if err != nil {
-					blog.Errorf("add bridge route failed, err %s", err.Error())
-					continue
-				}
-			}
 		}
 	}
 
@@ -752,6 +715,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleToTable := netlink.NewRule()
 	ruleToTable.Dst = ipNet
 	ruleToTable.Table = routeTableID
+	ruleToTable.Priority = 2048
 	err = netlink.RuleDel(ruleToTable)
 	if err != nil {
 		blog.Warnf("clean old rule to table %s failed, err %s", ruleToTable.String(), err.Error())
@@ -765,6 +729,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleFromTaskgroup := netlink.NewRule()
 	ruleFromTaskgroup.Src = ipNet
 	ruleFromTaskgroup.Table = routeTableID
+	ruleFromTaskgroup.Priority = 2048
 	err = netlink.RuleDel(ruleFromTaskgroup)
 	if err != nil {
 		blog.Warnf("clean old rule from taskgroup %s failed, err %s", ruleToTable.String(), err.Error())
