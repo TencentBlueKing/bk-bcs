@@ -16,19 +16,24 @@ package discovery
 import (
 	"fmt"
 	"path"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	monitorInformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
+	monitorClientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
+	monitorv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/monitor/v1"
+	apismonitorv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/monitor/v1"
+	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/cache"
 )
 
-type nodeEtcdDiscovery struct {
+type serviceMonitor struct {
 	kubeconfig     string
 	sdFilePath     string
 	cadvisorPort   string
@@ -36,19 +41,28 @@ type nodeEtcdDiscovery struct {
 	module         string
 
 	eventHandler   EventHandleFunc
-	nodeLister     bkbcsv2.AgentLister
+	//endpoints
+	endpointLister bkbcsv2.BcsEndpointLister
+	endpointInformer cache.SharedIndexInformer
+	//service monitor
+	serviceMonitorLister monitorv1.ServiceMonitorLister
+	serviceMonitorInformer cache.SharedIndexInformer
 	initSuccess    bool
-	promFilePrefix string
+
+	svrMonitors map[string]*serviceEndpoint
 }
 
-// new nodeEtcdDiscovery for discovery node cadvisor targets
-func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
-	disc := &nodeEtcdDiscovery{
+type serviceEndpoint struct {
+	serviceM *apismonitorv1.ServiceMonitor
+	endpoint map[string]*apisbkbcsv2.BcsEndpoint
+}
+
+// new serviceMonitor for discovery node cadvisor targets
+func NewserviceMonitor(kubeconfig string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
+	disc := &serviceMonitor{
 		kubeconfig:     kubeconfig,
-		promFilePrefix: promFilePrefix,
-		cadvisorPort:   cadvisorPort,
-		nodeExportPort: nodeExportPort,
 		module:         module,
+		svrMonitors: make(map[string]*serviceEndpoint),
 	}
 	switch module {
 	case CadvisorModule:
@@ -64,7 +78,7 @@ func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadv
 	return disc, nil
 }
 
-func (disc *nodeEtcdDiscovery) Start() error {
+func (disc *serviceMonitor) Start() error {
 	cfg, err := clientcmd.BuildConfigFromFlags("", disc.kubeconfig)
 	if err != nil {
 		blog.Errorf("build kubeconfig %s error %s", disc.kubeconfig, err.Error())
@@ -78,19 +92,28 @@ func (disc *nodeEtcdDiscovery) Start() error {
 		return err
 	}
 	internalFactory := informers.NewSharedInformerFactory(internalClientset, 0)
-	disc.nodeLister = internalFactory.Bkbcs().V2().Agents().Lister()
+	disc.endpointLister = internalFactory.Bkbcs().V2().BcsEndpoints().Lister()
+	disc.endpointInformer = internalFactory.Bkbcs().V2().BcsEndpoints().Informer()
 	internalFactory.Start(stopCh)
 	// Wait for all caches to sync.
 	internalFactory.WaitForCacheSync(stopCh)
-	blog.Infof("build internalClientset for config %s success", disc.kubeconfig)
+	blog.Infof("build bkbcsClientset for config %s success", disc.kubeconfig)
 
-	go disc.syncTickerPromSdConfig()
+	//init monitor clientset
+	monitorClient,err := monitorClientset.NewForConfig(cfg)
+	monitorFactory := monitorInformers.NewSharedInformerFactory(monitorClient, 0)
+	disc.serviceMonitorLister = monitorFactory.Monitor().V1().ServiceMonitors().Lister()
+	disc.serviceMonitorInformer = monitorFactory.Monitor().V1().ServiceMonitors().Informer()
+	monitorFactory.Start(stopCh)
+	monitorFactory.WaitForCacheSync(stopCh)
+	blog.Infof("build monitorClientset for config %s success", disc.kubeconfig)
+
 	disc.initSuccess = true
 	disc.eventHandler(disc.module)
 	return nil
 }
 
-func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
+func (disc *serviceMonitor) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
 	nodes, err := disc.nodeLister.List(labels.Everything())
 	if err != nil {
 		return nil, err
@@ -130,15 +153,15 @@ func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.Pr
 	return promConfigs, nil
 }
 
-func (disc *nodeEtcdDiscovery) GetPromSdConfigFile(module string) string {
+func (disc *serviceMonitor) GetPromSdConfigFile(module string) string {
 	return path.Join(disc.promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName))
 }
 
-func (disc *nodeEtcdDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
+func (disc *serviceMonitor) RegisterEventFunc(handleFunc EventHandleFunc) {
 	disc.eventHandler = handleFunc
 }
 
-func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
+func (disc *serviceMonitor) OnAdd(obj interface{}) {
 	if !disc.initSuccess {
 		return
 	}
@@ -147,13 +170,13 @@ func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
 }
 
 // if on update event, then don't need to update sd config
-func (disc *nodeEtcdDiscovery) OnUpdate(old, cur interface{}) {
+func (disc *serviceMonitor) OnUpdate(old, cur interface{}) {
 	if !disc.initSuccess {
 		return
 	}
 }
 
-func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
+func (disc *serviceMonitor) OnDelete(obj interface{}) {
 	if !disc.initSuccess {
 		return
 	}
@@ -162,12 +185,34 @@ func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
 	disc.eventHandler(disc.module)
 }
 
-func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
-	ticker := time.NewTicker(time.Minute * 5)
-
-	select {
-	case <-ticker.C:
-		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		disc.eventHandler(disc.module)
+func (disc *serviceMonitor) initServiceMonitor()error{
+	svrs,err := disc.serviceMonitorLister.ServiceMonitors("").List(labels.Everything())
+	if err!=nil {
+		blog.Errorf("List ServiceMonitors failed: %s", err.Error())
+		return err
 	}
+
+	for _,svr :=range svrs {
+		o := &serviceEndpoint{
+			serviceM: svr,
+			endpoint: make(map[string]*apisbkbcsv2.BcsEndpoint),
+		}
+		rms := labels.NewSelector()
+		for _,o :=range svr.GetSelector() {
+			rms.Add(o)
+		}
+		endpoints,err := disc.endpointLister.BcsEndpoints(svr.Namespace).List(rms)
+		if err!=nil {
+			blog.Errorf("get Endpoints failed: %s", err.Error())
+			continue
+		}
+		for _,v :=range endpoints {
+			o.endpoint[v.GetUuid()] = v
+		}
+		disc.svrMonitors[svr.GetUuid()] = o
+	}
+
+	return nil
 }
+
+
