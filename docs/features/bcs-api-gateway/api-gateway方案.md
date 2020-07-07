@@ -82,6 +82,7 @@
 docker run -tid --name api-gateway-storage \
     --restart always \
     -e "POSTGRES_USER=kong" \
+    -e "POSTGRES_PASSWORD=xxx" \
     -e "POSTGRES_DB=kong" \
     -p 5432:5432 \
     -v /data/bcs/postgresql/data:/var/lib/postgresql/data \

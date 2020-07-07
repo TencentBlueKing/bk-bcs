@@ -20,4 +20,5 @@ kong migrations bootstrap -c /etc/kong/kong.conf
 kong start -c /etc/kong/kong.conf
 
 #starting module
+cd /data/bcs/${module}
 /data/bcs/${module}/${module} $@

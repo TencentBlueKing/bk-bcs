@@ -6,9 +6,9 @@
     "bcs": {
         "zk": ["${bcsZkHost_list}"],
         "tls": {
-            "ca-file": "/cert/bcs-ca.crt",
-            "cert-file": "/cert/bcs-client.crt",
-            "key-file": "/cert/bcs-client.key"
+            "ca-file": "${caFile}",
+            "cert-file": "${clientCertFile}",
+            "key-file": "${clientKeyFile}"
         },
         "is-external": ${kubeWatchExternal}
     },
