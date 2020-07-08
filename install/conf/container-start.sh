@@ -21,7 +21,7 @@ for module in $@
 do
   cd /data/bcs/$module/
   echo "starting module $module ... "
-  ./container-start.sh --config $module.json
+  ./container-start.sh -f $module.json
 done
 
 echo "waiting for signal to exit..."

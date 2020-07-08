@@ -3,6 +3,7 @@ FROM centos:7
 LABEL Author="DeveloperJim"
 #all bcs modules in on container for testing
 
+RUN yum install -y gettext
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert/bcs 
 
 # bcs-service installation

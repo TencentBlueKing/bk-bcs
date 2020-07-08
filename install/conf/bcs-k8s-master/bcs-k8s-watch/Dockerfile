@@ -1,5 +1,8 @@
 FROM centos:7
 
+#for command envsubst
+RUN yum install -y gettext
+
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-k8s-watch
 
@@ -9,5 +12,5 @@ RUN chmod +x /data/bcs/bcs-k8s-watch/bcs-k8s-watch
 RUN chmod +x /data/bcs/bcs-k8s-watch/container-start.sh
 
 WORKDIR /data/bcs/bcs-k8s-watch/
-ENTRYPOINT ["/data/bcs/bcs-k8s-watch/container-start.sh"]
+CMD ["/data/bcs/bcs-k8s-watch/container-start.sh"]
 

@@ -1,5 +1,8 @@
 FROM centos:7
 
+#for command envsubst
+RUN yum install -y gettext
+
 RUN mkdir -p /data/bcs/cert && mkdir -p /data/bcs/logs/bcs && mkdir /bcs/cni && mkdir /bcs/etc
 RUN mkdir -p /data/bcs/bcs-cloud-network-agent /data/bcs/bcs-cni
 COPY ./bcs-cloud-network-agent /data/bcs/bcs-cloud-network-agent/

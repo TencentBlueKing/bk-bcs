@@ -1,5 +1,8 @@
 FROM centos:centos7
 
+#for command envsubst
+RUN yum install -y gettext
+
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert/bcs
 RUN mkdir -p /data/bcs/bcs-gateway-discovery
 
@@ -16,5 +19,5 @@ COPY ./bkbcs-auth /usr/local/share/lua/5.1/kong/plugins/
 COPY kong.conf.template /var/kong/
 
 WORKDIR /data/bcs/bcs-gateway-discovery/
-ENTRYPOINT ["/data/bcs/bcs-gateway-discovery/container-start.sh"]
+CMD ["/data/bcs/bcs-gateway-discovery/container-start.sh"]
 

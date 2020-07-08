@@ -58,6 +58,9 @@ FROM centos:7
 COPY --from=build /usr/local/nginx /usr/local/nginx
 RUN mkdir -p /usr/local/nginx/tmp && mkdir -p /var/log/nginx
 
+#for command envsubst
+RUN yum install -y gettext
+
 # setup required ENV
 ENV BCS_EGRESS_PORT=12345
 

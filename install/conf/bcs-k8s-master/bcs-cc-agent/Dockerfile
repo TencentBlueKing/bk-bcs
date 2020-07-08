@@ -1,5 +1,8 @@
 FROM centos:7
 
+#for command envsubst
+RUN yum install -y gettext
+
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-cc-agent/
 
