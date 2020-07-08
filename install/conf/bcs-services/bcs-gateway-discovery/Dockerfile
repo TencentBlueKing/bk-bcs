@@ -7,6 +7,7 @@ RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert/bcs
 RUN mkdir -p /data/bcs/bcs-gateway-discovery
 
 ADD bcs-gateway-discovery /data/bcs/bcs-gateway-discovery/
+ADD bcs-gateway-discovery.json.template /data/bcs/bcs-gateway-discovery/
 ADD container-start.sh /data/bcs/bcs-gateway-discovery/
 ADD kong.rpm /data/bcs/bcs-gateway-discovery/
 RUN chmod +x /data/bcs/bcs-gateway-discovery/container-start.sh
