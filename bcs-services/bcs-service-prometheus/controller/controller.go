@@ -25,6 +25,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/discovery"
 )
 
+const (
+	ServiceMonitorModule = "ServiceMonitor"
+)
+
 type PrometheusController struct {
 	sync.RWMutex
 
@@ -36,6 +40,7 @@ type PrometheusController struct {
 	mesosModules   []string
 	serviceModules []string
 	nodeModules    []string
+	serviceMonitor string
 }
 
 // new prometheus controller
@@ -49,6 +54,7 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 			commtypes.BCS_MODULE_DNS, commtypes.BCS_MODULE_LOADBALANCE},
 		serviceModules: []string{commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE},
 		nodeModules:    []string{discovery.CadvisorModule, discovery.NodeexportModule},
+		serviceMonitor: ServiceMonitorModule,
 	}
 	if len(conf.ServiceModules) > 0 {
 		prom.serviceModules = conf.ServiceModules
@@ -72,6 +78,7 @@ func (prom *PrometheusController) Start() error {
 		err = dis.Start()
 		if err != nil {
 			blog.Errorf("mesosDiscovery start failed: %s", err.Error())
+			return err
 		}
 		//register event handle function
 		dis.RegisterEventFunc(prom.handleDiscoveryEvent)
@@ -116,6 +123,26 @@ func (prom *PrometheusController) Start() error {
 		err = serviceDiscovery.Start()
 		if err != nil {
 			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
+			return err
+		}
+		//register event handle function
+		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
+		for _, module := range prom.serviceModules {
+			prom.discoverys[module] = serviceDiscovery
+		}
+	}
+
+	//init taskgroup ServiceMonitor discovery
+	if prom.conf.EnableServiceMonitor {
+		serviceDiscovery, err := discovery.NewServiceMonitor(prom.conf.Kubeconfig, prom.promFilePrefix, prom.serviceMonitor)
+		if err != nil {
+			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
+			return err
+		}
+		err = serviceDiscovery.Start()
+		if err != nil {
+			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
+			return err
 		}
 		//register event handle function
 		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)

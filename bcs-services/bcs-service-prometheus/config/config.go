@@ -24,6 +24,7 @@ type Config struct {
 	EnableMesos    bool
 	EnableService  bool
 	EnableNode     bool
+	EnableServiceMonitor bool
 	Kubeconfig     string
 	ServiceModules []string
 	ClusterModules []string

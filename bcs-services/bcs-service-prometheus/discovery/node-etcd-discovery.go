@@ -31,7 +31,7 @@ import (
 type nodeEtcdDiscovery struct {
 	kubeconfig     string
 	sdFilePath     string
-	cadvisorPort   string
+	cadvisorPort   int
 	nodeExportPort int
 	module         string
 
