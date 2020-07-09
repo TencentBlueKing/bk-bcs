@@ -16,12 +16,12 @@
 package v2
 
 import (
-	bkbcs_v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	time "time"
+
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	internalinterfaces "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
-	time "time"
-
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -67,7 +67,7 @@ func NewFilteredTaskGroupInformer(client internalclientset.Interface, namespace 
 				return client.BkbcsV2().TaskGroups(namespace).Watch(options)
 			},
 		},
-		&bkbcs_v2.TaskGroup{},
+		&bkbcsv2.TaskGroup{},
 		resyncPeriod,
 		indexers,
 	)
@@ -78,7 +78,7 @@ func (f *taskGroupInformer) defaultInformer(client internalclientset.Interface, 
 }
 
 func (f *taskGroupInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&bkbcs_v2.TaskGroup{}, f.defaultInformer)
+	return f.factory.InformerFor(&bkbcsv2.TaskGroup{}, f.defaultInformer)
 }
 
 func (f *taskGroupInformer) Lister() v2.TaskGroupLister {

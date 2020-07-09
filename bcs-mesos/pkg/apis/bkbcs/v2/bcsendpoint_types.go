@@ -48,7 +48,7 @@ type BcsEndpoint struct {
 	Status BcsEndpointStatus `json:"status,omitempty"`
 }
 
-func (e *BcsEndpoint) GetUuid()string{
+func (e *BcsEndpoint) GetUuid() string {
 	return fmt.Sprintf("%s.%s", e.Namespace, e.Name)
 }
 

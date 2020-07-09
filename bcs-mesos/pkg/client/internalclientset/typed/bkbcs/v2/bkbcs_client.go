@@ -18,7 +18,6 @@ package v2
 import (
 	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/scheme"
-
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )

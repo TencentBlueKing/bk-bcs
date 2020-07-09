@@ -213,6 +213,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 
 		container.Type = c.Type
 		//Resources
+		//request
 		container.Resources = new(types.Resource)
 		container.Resources.Cpus, _ = strconv.ParseFloat(c.Resources.Requests.Cpu, 64)
 		container.Resources.Mem, _ = strconv.ParseFloat(c.Resources.Requests.Mem, 64)
