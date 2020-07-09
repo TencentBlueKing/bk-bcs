@@ -11,37 +11,22 @@
  *
  */
 
-package main
+package mesos
 
 import (
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 )
 
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+//Action restful action struct
+type Action httpserver.Action
 
-	op := &options.UserManagerOptions{}
-	conf.Parse(op)
+var apiActions = []*httpserver.Action{}
 
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
+//RegisterAction register action to actions
+func RegisterAction(action Action) {
+	apiActions = append(apiActions, httpserver.NewAction(action.Verb, action.Path, action.Params, action.Handler))
+}
 
-	app.Run(op)
-
-	// listening OS shutdown singal
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
-
-	blog.Infof("Got OS shutdown signal, shutting down bcs-user-manager server gracefully...")
-
-	return
+func GetApiAction() []*httpserver.Action {
+	return apiActions
 }

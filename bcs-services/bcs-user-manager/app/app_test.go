@@ -11,37 +11,24 @@
  *
  */
 
-package main
+package app
 
 import (
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
+	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+// TestParseConfig test the parseConfig func
+func TestParseConfig(t *testing.T) {
+	op := options.UserManagerOptions{
+		TKE: options.TKEOptions{
+			SecretId: "abcdefg",
+		},
+	}
+	_, err := parseConfig(&op)
+	if err == nil {
+		t.Error("empty EncryptionKey can't encrypt")
+	}
 
-	op := &options.UserManagerOptions{}
-	conf.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	app.Run(op)
-
-	// listening OS shutdown singal
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
-
-	blog.Infof("Got OS shutdown signal, shutting down bcs-user-manager server gracefully...")
-
-	return
 }

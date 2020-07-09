@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/asaskevich/govalidator"
 	"gopkg.in/go-playground/validator.v9"
@@ -86,7 +85,7 @@ func CreateResponeData(err error, msg string, data interface{}) string {
 		rpyErr = errors.New(bhttp.GetRespone(common.BcsSuccess, common.BcsSuccessStr, data))
 	}
 
-	blog.V(3).Infof("createRespone: %s", rpyErr.Error())
+	//blog.V(3).Infof("createRespone: %s", rpyErr.Error())
 
 	return rpyErr.Error()
 }

@@ -102,7 +102,7 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 
 	go func() {
 		for {
-			wsURL := fmt.Sprintf("wss://%s/bcsapi/v1/websocket/connect", bkeServerUrl.Host)
+			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/usermanager/v1/websocket/connect", bkeServerUrl.Host)
 			blog.Infof("Connecting to %s with token %s", wsURL, registerToken)
 
 			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto, address string) bool {

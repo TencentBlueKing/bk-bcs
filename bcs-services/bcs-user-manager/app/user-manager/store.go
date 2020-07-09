@@ -41,6 +41,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.BcsRole{},
 		&models.BcsUserResourceRole{},
 		&models.TkeCidr{},
+		&models.BcsWsClusterCredentials{},
 
 		//compatible with bcs-api to sync old data
 		&m.ClusterCredentials{},

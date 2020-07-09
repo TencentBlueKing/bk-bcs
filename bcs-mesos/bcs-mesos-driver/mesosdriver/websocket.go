@@ -92,7 +92,7 @@ func (m *MesosDriver) buildWebsocketToApi() error {
 
 	go func() {
 		for {
-			wsURL := fmt.Sprintf("wss://%s/bcsapi/v1/websocket/connect", bcsApiUrl.Host)
+			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/usermanager/v1/websocket/connect", bcsApiUrl.Host)
 			blog.Infof("Connecting to %s with token %s", wsURL, m.config.RegisterToken)
 
 			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto, address string) bool {
