@@ -15,9 +15,9 @@ RUN chmod +x /data/bcs/bcs-gateway-discovery/container-start.sh
 #install kong
 RUN yum install -y perl
 RUN rpm -ivh /data/bcs/bcs-gateway-discovery/kong.rpm
-COPY ./bkbcs-auth /usr/local/share/lua/5.1/kong/plugins/
+COPY ./bkbcs-auth /usr/local/share/lua/5.1/kong/plugins/bkbcs-auth
 #kong configuration
-COPY kong.conf.template /var/kong/
+COPY kong.conf.template /etc/kong/
 
 WORKDIR /data/bcs/bcs-gateway-discovery/
 CMD ["/data/bcs/bcs-gateway-discovery/container-start.sh"]

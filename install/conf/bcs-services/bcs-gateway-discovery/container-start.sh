@@ -16,6 +16,8 @@ if [ $BCS_CONFIG_TYPE == "render" ]; then
 fi
 
 #starting kong
+echo "waiting 5 seconds for postgresql..."
+sleep 5
 kong migrations bootstrap -c /etc/kong/kong.conf
 kong start -c /etc/kong/kong.conf
 

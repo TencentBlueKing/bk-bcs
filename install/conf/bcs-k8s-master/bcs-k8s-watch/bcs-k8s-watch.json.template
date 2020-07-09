@@ -1,5 +1,6 @@
 {
     "default": {
+        "clusterIDSource": "${clusterSource}",
         "clusterID": "${clusterId}",
         "hostIP": "${localIp}"
     },
@@ -13,7 +14,7 @@
         "is-external": ${kubeWatchExternal}
     },
     "k8s": {
-        "master": "http://127.0.0.1:8080",
+        "master": "${kubeMaster}",
         "tls": {
             "ca-file": "",
             "cert-file": "",
