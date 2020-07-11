@@ -14,7 +14,7 @@ gamestatefulset-operator是针对游戏gameserver实现增强版有状态部署o
 
 ### 特性
 
-基于CRD+Operator开发的一种自定义的K8S工作负债（GameStatefulSet），核心特性包括：
+基于CRD+Operator开发的一种自定义的K8S工作负载（GameStatefulSet），核心特性包括：
 
 * 兼容StatefulSet所有特性
 * 支持Operator高可用部署
@@ -65,6 +65,7 @@ web-2   1/1     Running   0          10s
 
 ```shell
 $ kubectl patch gamestatefulset web -n test --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value":"test.artifactory.com:8090/public/bcs/bcs-loadbalance:v1.2.0"}]'
+#或者调整yaml文件之后 kubectl apply -f gamestatefulset-sample.yml
 
 #检查Pod状态，restart增1
 $ kubectl get pod -n test

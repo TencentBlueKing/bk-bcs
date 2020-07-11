@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/kong"
 )
 
+//New create
 func New() *DiscoveryServer {
 	cxt, cfunc := context.WithCancel(context.Background())
 	s := &DiscoveryServer{
@@ -44,6 +45,7 @@ func New() *DiscoveryServer {
 	return s
 }
 
+//ModuleEvent event
 type ModuleEvent struct {
 	Module string
 	Svc    *register.Service
