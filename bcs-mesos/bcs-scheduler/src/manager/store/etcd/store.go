@@ -40,6 +40,10 @@ const (
 	DefaultNamespace = "bkbcs"
 )
 
+const (
+	ObjectVersionNotLatestError = "please apply your changes to the latest version and try again"
+)
+
 //bcs mesos custom resources list
 const (
 	CrdAdmissionWebhookConfiguration = "AdmissionWebhookConfiguration"
@@ -389,4 +393,8 @@ func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[
 		labels[k] = v
 	}
 	return labels
+}
+
+func (store *managerStore) ObjectNotLatestErr(err error)bool{
+	return strings.Contains(err.Error(), ObjectVersionNotLatestError)
 }
