@@ -14,11 +14,13 @@
 package app
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
@@ -27,11 +29,27 @@ import (
 
 // Run run app
 func Run(op *options.UserManagerOptions) {
-	conf := parseConfig(op)
-
+	conf, err := parseConfig(op)
+	if err != nil {
+		blog.Errorf("error parse config: %s", err.Error())
+		os.Exit(1)
+	}
+	if conf.ClientCert.IsSSL {
+		cliTls, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile, conf.ClientCert.CertPasswd)
+		if err != nil {
+			blog.Errorf("set client tls config error %s", err.Error())
+		} else {
+			config.CliTls = cliTls
+			blog.Infof("set client tls config success")
+		}
+	}
 	userManager := user_manager.NewUserManager(conf)
+
+	//register to zk
+	userManager.RegDiscover()
+
 	//start userManager, and http service
-	err := userManager.Start()
+	err = userManager.Start()
 	if err != nil {
 		blog.Errorf("start processor error %s, and exit", err.Error())
 		os.Exit(1)
@@ -42,13 +60,11 @@ func Run(op *options.UserManagerOptions) {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	//register to zk
-	userManager.RegDiscover()
-
 	metrics.RunMetric(conf)
 }
 
-func parseConfig(op *options.UserManagerOptions) *config.UserMgrConfig {
+// parseConfig parse the option to config
+func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) {
 	userMgrConfig := config.NewUserMgrConfig()
 
 	userMgrConfig.Address = op.Address
@@ -60,25 +76,23 @@ func parseConfig(op *options.UserManagerOptions) *config.UserMgrConfig {
 	userMgrConfig.MetricPort = op.MetricPort
 	userMgrConfig.BootStrapUsers = op.BootStrapUsers
 	userMgrConfig.TKE = op.TKE
+	userMgrConfig.PeerToken = op.PeerToken
 
 	config.Tke = op.TKE
 	secretId, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))
 	if err != nil {
-		blog.Errorf("error decrypting tke secretId and exit: %s", err.Error())
-		os.Exit(1)
+		return nil, fmt.Errorf("error decrypting tke secretId and exit: %s", err.Error())
 	}
 	config.Tke.SecretId = string(secretId)
 	secretKey, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretKey))
 	if err != nil {
-		blog.Errorf("error decrypting tke secretKey and exit: %s", err.Error())
-		os.Exit(1)
+		return nil, fmt.Errorf("error decrypting tke secretKey and exit: %s", err.Error())
 	}
 	config.Tke.SecretKey = string(secretKey)
 
 	dsn, err := encrypt.DesDecryptFromBase([]byte(op.DSN))
 	if err != nil {
-		blog.Errorf("error decrypting db config and exit: %s", err.Error())
-		os.Exit(1)
+		return nil, fmt.Errorf("error decrypting db config and exit: %s", err.Error())
 	}
 	userMgrConfig.DSN = string(dsn)
 
@@ -100,5 +114,5 @@ func parseConfig(op *options.UserManagerOptions) *config.UserMgrConfig {
 		userMgrConfig.ClientCert.IsSSL = true
 	}
 
-	return userMgrConfig
+	return userMgrConfig, nil
 }

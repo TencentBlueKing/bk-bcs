@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/emicklei/go-restful"
 )
 
@@ -50,13 +50,11 @@ func (ta *TokenAuthenticater) GetUser() (*models.BcsUser, bool) {
 
 	user, hasExpired := ta.GetUserFromToken(tokenString)
 	if user == nil {
-		blog.Warnf("No user can be found by token:%s", tokenString)
 		return user, hasExpired
 	} else if hasExpired {
 		blog.Warnf("usertoken has been expired: %s", tokenString)
 		return user, hasExpired
 	} else {
-		blog.Debug(fmt.Sprintf("User:%s found by token:%s", user.Name, tokenString))
 		return user, false
 	}
 }
