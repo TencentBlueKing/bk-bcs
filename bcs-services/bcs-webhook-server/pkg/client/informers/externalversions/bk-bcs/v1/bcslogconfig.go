@@ -19,10 +19,10 @@ limitations under the License.
 package v1
 
 import (
-	bk_bcs_v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	versioned "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	internalinterfaces "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+	bk_bcs_v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	versioned "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/internalinterfaces"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	time "time"
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -16,8 +16,8 @@
 package v2
 
 import (
-	v2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	scheme "bk-bcs/bcs-mesos/pkg/client/internalclientset/scheme"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	scheme "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/scheme"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"

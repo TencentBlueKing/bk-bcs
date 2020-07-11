@@ -24,16 +24,17 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-common/pkg/bcsapi"
-	"bk-bcs/bcs-common/pkg/master"
-	discoverys "bk-bcs/bcs-common/pkg/module-discovery"
-	"bk-bcs/bcs-services/bcs-gateway-discovery/register"
-	"bk-bcs/bcs-services/bcs-gateway-discovery/register/kong"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/master"
+	discoverys "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/kong"
 )
 
+//New create
 func New() *DiscoveryServer {
 	cxt, cfunc := context.WithCancel(context.Background())
 	s := &DiscoveryServer{
@@ -44,6 +45,7 @@ func New() *DiscoveryServer {
 	return s
 }
 
+//ModuleEvent event
 type ModuleEvent struct {
 	Module string
 	Svc    *register.Service

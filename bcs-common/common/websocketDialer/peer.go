@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/websocketDialer/metrics"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer/metrics"
 	"github.com/gorilla/websocket"
 )
 

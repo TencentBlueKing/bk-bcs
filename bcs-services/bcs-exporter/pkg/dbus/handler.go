@@ -16,9 +16,9 @@ package dbus
 import (
 	"plugin"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-exporter/app/config"
-	"bk-bcs/bcs-services/bcs-exporter/pkg/output"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg/output"
 )
 
 const (

@@ -14,7 +14,7 @@
 package mesos
 
 import (
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
 
 	"github.com/samuel/go-zookeeper/zk"
 )

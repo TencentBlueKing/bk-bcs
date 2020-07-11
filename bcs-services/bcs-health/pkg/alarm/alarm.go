@@ -16,14 +16,14 @@ package alarm
 import (
 	"fmt"
 
-	"bk-bcs/bcs-common/common/bcs-health/types"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/statistic"
-	"bk-bcs/bcs-services/bcs-health/master/app/config"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/storagealarm"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/statistic"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/master/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/storagealarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
 )
 
 func NewAlarmProxy(c config.Config) (utils.AlarmFactory, error) {

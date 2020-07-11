@@ -17,7 +17,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "bk-bcs/bcs-services/bcs-loadbalance/util"
+	. "github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/util"
 )
 
 var _ = Describe("Util", func() {

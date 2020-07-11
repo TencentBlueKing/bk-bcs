@@ -19,11 +19,11 @@ import (
 	"regexp"
 	"strings"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/auth"
-	"bk-bcs/bcs-services/bcs-api/auth/bkiam"
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth/bkiam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 
 	"github.com/emicklei/go-restful"
 )

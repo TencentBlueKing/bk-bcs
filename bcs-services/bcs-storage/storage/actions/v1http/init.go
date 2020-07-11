@@ -15,16 +15,16 @@ package v1http
 
 import (
 	// trigger all package init to register handlers to actions
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/alarms"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/cluster-config"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-k8s"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-mesos"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-query"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-watch"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/events"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/host-config"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric-watch"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watch-k8s"
-	_ "bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watch-mesos"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/alarms"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/cluster-config"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-k8s"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-mesos"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-query"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-watch"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/events"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/host-config"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric-watch"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watch-k8s"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watch-mesos"
 )

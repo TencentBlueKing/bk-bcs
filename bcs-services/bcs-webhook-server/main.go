@@ -18,9 +18,9 @@ import (
 	"os"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-webhook-server/app"
-	"bk-bcs/bcs-services/bcs-webhook-server/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/options"
 )
 
 func main() {

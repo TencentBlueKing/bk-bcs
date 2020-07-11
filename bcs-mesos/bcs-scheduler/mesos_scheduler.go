@@ -14,17 +14,19 @@
 package main
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"golang.org/x/net/context"
 )
 
+// MesosSched mesos scheduler interface
 type MesosSched struct {
 	manager *manager.Manager
 	config  util.SchedConfig
 	ctx     context.Context
 }
 
+// NewScheduler create scheduler instance
 func NewScheduler(config util.SchedConfig) (*MesosSched, error) {
 	m, err := manager.New(config)
 	if err != nil {
@@ -39,6 +41,7 @@ func NewScheduler(config util.SchedConfig) (*MesosSched, error) {
 	return sched, nil
 }
 
+// Start all mesos scheduler features
 func (s *MesosSched) Start(ctx context.Context) error {
 
 	if err := s.runManager(ctx); err != nil {

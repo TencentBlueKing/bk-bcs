@@ -14,8 +14,8 @@
 package types
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 type NodeInfo struct {

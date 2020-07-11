@@ -14,7 +14,7 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
 //Backend for mysql

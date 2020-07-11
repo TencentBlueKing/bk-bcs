@@ -14,10 +14,10 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-storage/app/options"
-	"bk-bcs/bcs-services/bcs-storage/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage"
 )
 
 // Run the bcs-storage

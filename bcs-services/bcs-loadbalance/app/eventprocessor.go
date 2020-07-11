@@ -14,22 +14,24 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	loadbalance "bk-bcs/bcs-common/pkg/loadbalance/v2"
-	"bk-bcs/bcs-services/bcs-loadbalance/clear"
-	"bk-bcs/bcs-services/bcs-loadbalance/monitor"
-	bcsprometheus "bk-bcs/bcs-services/bcs-loadbalance/monitor/prometheus"
-	"bk-bcs/bcs-services/bcs-loadbalance/monitor/status"
-	"bk-bcs/bcs-services/bcs-loadbalance/option"
-	"bk-bcs/bcs-services/bcs-loadbalance/rdiscover"
-	"bk-bcs/bcs-services/bcs-loadbalance/template"
-	"bk-bcs/bcs-services/bcs-loadbalance/template/haproxy"
-	"bk-bcs/bcs-services/bcs-loadbalance/template/nginx"
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-common/pkg/loadbalance/v2"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/clear"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/monitor"
+	bcsprometheus "github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/monitor/prometheus"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/monitor/status"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/option"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/rdiscover"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template/haproxy"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template/nginx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -107,6 +109,7 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	prometheus.Register(LoadbalanceZookeeperEventAddMetric)
 	prometheus.Register(LoadbalanceZookeeperEventUpdateMetric)
 	prometheus.Register(LoadbalanceZookeeperEventDeleteMetric)
+	prometheus.Register(LoadbalanceServiceConflictMetric)
 	LoadbalanceZookeeperStateMetric.WithLabelValues(config.Name).Set(1)
 
 	newStatusResource := status.NewStatus(processor.cfgManager.GetStatusFunction())
@@ -214,6 +217,9 @@ func (lp *LBEventProcessor) run() {
 // to generating haproxy.cfg
 func (lp *LBEventProcessor) configHandle() {
 	lp.reload = true
+	defer func() {
+		lp.reload = false
+	}()
 	//Get all data from ServiceReflector
 	tData := new(types.TemplateData)
 	tData.HTTP, tData.HTTPS, tData.TCP, tData.UDP = lp.reflector.Lister()
@@ -222,11 +228,66 @@ func (lp *LBEventProcessor) configHandle() {
 	}
 	tData.LogFlag = true
 	tData.SSLCert = ""
+
+	// find conflicts
+	if findConflict, Msg := lp.findConficts(tData); findConflict {
+		blog.Errorf("[CONFLICTS] msg: %s", Msg)
+		return
+	}
+
 	//haproxy reload
 	if !lp.doReload(tData) {
 		blog.Errorf("Do proxy reloading failed, wait for next tick")
+		return
 	}
-	lp.reload = false
+}
+
+// detectConflicts detect port conflict
+// true for conflicts found
+func (lp *LBEventProcessor) findConficts(data *types.TemplateData) (bool, string) {
+	layer7Map := make(map[string]string)
+	layer4Map := make(map[int]string)
+	for _, http := range data.HTTP {
+		domainPortStr := http.BCSVHost + "," + strconv.Itoa(http.ServicePort)
+		for _, backend := range http.Backends {
+			if serviceKey, isConflict := layer7Map[domainPortStr+","+backend.Path]; isConflict {
+				LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, http.Name).Inc()
+				return true, fmt.Sprintf("%s is conflict with %s", http.Name, serviceKey)
+			}
+			layer7Map[domainPortStr+","+backend.Path] = http.Name
+		}
+		layer4Map[http.ServicePort] = http.Name
+	}
+
+	for _, https := range data.HTTPS {
+		domainPortStr := https.BCSVHost + "," + strconv.Itoa(https.ServicePort)
+		for _, backend := range https.Backends {
+			if serviceKey, isConflict := layer7Map[domainPortStr+","+backend.Path]; isConflict {
+				LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, https.Name).Inc()
+				return true, fmt.Sprintf("%s is conflict with %s", https.Name, serviceKey)
+			}
+			layer7Map[domainPortStr+","+backend.Path] = https.Name
+		}
+		layer4Map[https.ServicePort] = https.Name
+	}
+
+	for _, tcp := range data.TCP {
+		if serviceKey, isConfict := layer4Map[tcp.ServicePort]; isConfict {
+			LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, tcp.Name).Inc()
+			return true, fmt.Sprintf("%s is conflict with %s", tcp.Name, serviceKey)
+		}
+		layer4Map[tcp.ServicePort] = tcp.Name
+	}
+
+	for _, udp := range data.UDP {
+		if serviceKey, isConflict := layer4Map[udp.ServicePort]; isConflict {
+			LoadbalanceServiceConflictMetric.WithLabelValues(lp.config.Name, udp.Name).Inc()
+			return true, fmt.Sprintf("%s is conflict with %s", udp.Name, serviceKey)
+		}
+		layer4Map[udp.ServicePort] = udp.Name
+	}
+
+	return false, ""
 }
 
 // doReload reset HAproy configuration

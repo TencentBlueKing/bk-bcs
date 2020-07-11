@@ -14,9 +14,9 @@
 package kubedriver
 
 import (
-	"bk-bcs/bcs-common/common/types"
-	bcsVersion "bk-bcs/bcs-common/common/version"
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	bcsVersion "github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 	"os"
 )
 

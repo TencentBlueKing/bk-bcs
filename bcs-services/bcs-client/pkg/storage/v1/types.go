@@ -14,9 +14,9 @@
 package v1
 
 import (
-	status "bk-bcs/bcs-common/common/types"
-	deploymentType "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	netservicetypes "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	status "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	deploymentType "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 )
 
 const (

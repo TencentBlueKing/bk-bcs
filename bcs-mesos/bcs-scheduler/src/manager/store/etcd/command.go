@@ -17,10 +17,12 @@ import (
 	"encoding/json"
 	"sync"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,7 +37,6 @@ func (store *managerStore) InitCmdLockPool() {
 }
 
 func (store *managerStore) LockCommand(cmdId string) {
-
 	cmdRWlock.RLock()
 	myLock, ok := cmdLocks[cmdId]
 	cmdRWlock.RUnlock()
@@ -70,9 +71,8 @@ func (store *managerStore) UnLockCommand(cmdId string) {
 }
 
 func (store *managerStore) CheckCommandExist(command *commtypes.BcsCommandInfo) (string, bool) {
-	client := store.BkbcsClient.BcsCommandInfos(DefaultNamespace)
-	v2Cmd, err := client.Get(command.Id, metav1.GetOptions{})
-	if err == nil {
+	v2Cmd, _ := store.FetchCommand(command.Id)
+	if v2Cmd != nil {
 		return v2Cmd.ResourceVersion, true
 	}
 
@@ -101,25 +101,52 @@ func (store *managerStore) SaveCommand(command *commtypes.BcsCommandInfo) error 
 	rv, exist := store.CheckCommandExist(command)
 	if exist {
 		v2Cmd.ResourceVersion = rv
-		_, err = client.Update(v2Cmd)
+		v2Cmd, err = client.Update(v2Cmd)
 	} else {
-		_, err = client.Create(v2Cmd)
+		v2Cmd, err = client.Create(v2Cmd)
 	}
+	if err != nil {
+		return err
+	}
+
+	command.ResourceVersion = v2Cmd.ResourceVersion
+	saveCacheCommand(command)
 	return err
 }
 
 func (store *managerStore) FetchCommand(ID string) (*commtypes.BcsCommandInfo, error) {
-	client := store.BkbcsClient.BcsCommandInfos(DefaultNamespace)
-	v2Cmd, err := client.Get(ID, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
+	cmd := getCacheCommand(ID)
+	if cmd == nil {
+		return nil, schStore.ErrNoFound
 	}
 
-	return &v2Cmd.Spec.BcsCommandInfo, nil
+	return cmd, nil
 }
 
 func (store *managerStore) DeleteCommand(ID string) error {
 	client := store.BkbcsClient.BcsCommandInfos(DefaultNamespace)
 	err := client.Delete(ID, &metav1.DeleteOptions{})
-	return err
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	deleteCacheCommand(ID)
+	return nil
+}
+
+//list all commands from etcd
+func (store *managerStore) listAllCommands() ([]*commtypes.BcsCommandInfo, error) {
+	client := store.BkbcsClient.BcsCommandInfos("")
+	v2cmd, err := client.List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	cmds := make([]*commtypes.BcsCommandInfo, 0, len(v2cmd.Items))
+	for _, cmd := range v2cmd.Items {
+		obj := cmd.Spec.BcsCommandInfo
+		obj.ResourceVersion = cmd.ResourceVersion
+		cmds = append(cmds, &obj)
+	}
+	return cmds, nil
 }

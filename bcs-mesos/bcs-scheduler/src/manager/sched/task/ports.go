@@ -13,7 +13,7 @@
 
 package task
 
-import "bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
+import "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 
 func getOfferPorts(offer *mesos.Offer) (ports []uint64) {
 	for _, resource := range offer.Resources {

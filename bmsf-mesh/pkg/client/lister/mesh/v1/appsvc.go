@@ -16,7 +16,7 @@
 package v1
 
 import (
-	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"

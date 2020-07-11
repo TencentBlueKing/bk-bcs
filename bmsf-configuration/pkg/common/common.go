@@ -477,6 +477,16 @@ func ParseFpath(fpath string) string {
 	return filepath.Clean(fmt.Sprintf("/%s", fpath))
 }
 
+// ParseClusterLabels returns cluster labels and cluster name.
+//              labels/clustername       ->  labels, clustername
+//              path/labels/clustername  ->  path/labels, clustername
+//              path/labels//clustername ->  path/labels/, clustername
+func ParseClusterLabels(cluster string) (string, string) {
+	_, clusterName := filepath.Split(cluster)
+	clusterLabels := strings.TrimSuffix(strings.TrimSuffix(cluster, clusterName), "/")
+	return clusterLabels, clusterName
+}
+
 // VerifyFpath verify file path
 func VerifyFpath(fpath string) error {
 	if len(fpath) > database.BSCPCFGSETFPATHLENLIMIT {

@@ -16,8 +16,8 @@
 package v2
 
 import (
-	v2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	"bk-bcs/bcs-mesos/pkg/client/internalclientset/scheme"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/scheme"
 
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
@@ -32,6 +32,7 @@ type BkbcsV2Interface interface {
 	BcsClusterAgentSettingsGetter
 	BcsCommandInfosGetter
 	BcsConfigMapsGetter
+	BcsDaemonsetsGetter
 	BcsEndpointsGetter
 	BcsSecretsGetter
 	BcsServicesGetter
@@ -75,6 +76,10 @@ func (c *BkbcsV2Client) BcsCommandInfos(namespace string) BcsCommandInfoInterfac
 
 func (c *BkbcsV2Client) BcsConfigMaps(namespace string) BcsConfigMapInterface {
 	return newBcsConfigMaps(c, namespace)
+}
+
+func (c *BkbcsV2Client) BcsDaemonsets(namespace string) BcsDaemonsetInterface {
+	return newBcsDaemonsets(c, namespace)
 }
 
 func (c *BkbcsV2Client) BcsEndpoints(namespace string) BcsEndpointInterface {

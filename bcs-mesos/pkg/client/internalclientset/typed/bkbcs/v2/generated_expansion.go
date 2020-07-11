@@ -29,6 +29,8 @@ type BcsCommandInfoExpansion interface{}
 
 type BcsConfigMapExpansion interface{}
 
+type BcsDaemonsetExpansion interface{}
+
 type BcsEndpointExpansion interface{}
 
 type BcsSecretExpansion interface{}

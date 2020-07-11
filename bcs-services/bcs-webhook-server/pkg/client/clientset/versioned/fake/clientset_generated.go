@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	bkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1"
-	fakebkbcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1/fake"
+	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
+	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1"
+	fakebkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/typed/bk-bcs/v1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"

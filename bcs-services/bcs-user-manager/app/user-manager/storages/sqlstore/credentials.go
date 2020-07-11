@@ -14,7 +14,7 @@
 package sqlstore
 
 import (
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 // GetCredentials query for clusterCredentials by clusterId
@@ -46,5 +46,42 @@ func ListCredentials() []models.BcsClusterCredential {
 	var credentials []models.BcsClusterCredential
 	GCoreDB.Find(&credentials)
 
+	return credentials
+}
+
+// SaveWsCredentials saves the credentials of cluster registered by websocket
+func SaveWsCredentials(serverKey, clientModule, serverAddress, caCertData, userToken string) error {
+	var credentials models.BcsWsClusterCredentials
+	// Create or update, source: https://github.com/jinzhu/gorm/issues/1307
+	dbScoped := GCoreDB.Where(models.BcsWsClusterCredentials{ServerKey: serverKey}).Assign(
+		models.BcsWsClusterCredentials{
+			ClientModule:  clientModule,
+			ServerAddress: serverAddress,
+			CaCertData:    caCertData,
+			UserToken:     userToken,
+		},
+	).FirstOrCreate(&credentials)
+	return dbScoped.Error
+}
+
+// GetWsCredentials query for clusterCredentials of cluster registered by websocket
+func GetWsCredentials(serverKey string) *models.BcsWsClusterCredentials {
+	credentials := models.BcsWsClusterCredentials{}
+	GCoreDB.Where(&models.BcsWsClusterCredentials{ServerKey: serverKey}).First(&credentials)
+	if credentials.ID != 0 {
+		return &credentials
+	}
+	return nil
+}
+
+func DelWsCredentials(serverKey string) {
+	credentials := models.BcsWsClusterCredentials{}
+	GCoreDB.Where(&models.BcsWsClusterCredentials{ServerKey: serverKey}).Delete(&credentials)
+}
+
+func GetWsCredentialsByClusterId(clusterId string) []*models.BcsWsClusterCredentials {
+	var credentials []*models.BcsWsClusterCredentials
+	query := clusterId + "-%"
+	GCoreDB.Where("server_key LIKE ?", query).Find(&credentials)
 	return credentials
 }

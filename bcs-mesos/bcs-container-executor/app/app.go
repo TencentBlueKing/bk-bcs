@@ -14,9 +14,9 @@
 package app
 
 import (
-	exec "bk-bcs/bcs-mesos/bcs-container-executor/executor"
-	"bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"fmt"
+	exec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/executor"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"os"
 	"os/signal"
 	"strings"

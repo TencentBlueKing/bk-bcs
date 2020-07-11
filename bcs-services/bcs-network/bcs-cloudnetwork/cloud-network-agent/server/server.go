@@ -21,22 +21,23 @@ import (
 	"sync"
 	"syscall"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/controller"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni"
-	eniaws "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni/aws"
-	eniqcloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni/qcloud"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/netservice"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/networkutil"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/controller"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni"
+	eniaws "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni/aws"
+	eniqcloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni/qcloud"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/networkutil"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Server server for cloud network agent
 type Server struct {
+	instanceEth   string
 	instanceIP    string
 	hostname      string
 	netutil       *networkutil.NetUtil
@@ -63,7 +64,7 @@ func (s *Server) initNetworkUtil() error {
 	// get host ip
 	ifacesStr := strings.Replace(s.opt.Ifaces, ";", ",", -1)
 	ifaces := strings.Split(ifacesStr, ",")
-	instanceIP, err := netutil.GetAvailableHostIP(ifaces)
+	instanceIP, instanceEth, err := netutil.GetAvailableHostIP(ifaces)
 	if err != nil {
 		blog.Errorf("get node ip failed, err %s", err.Error())
 		return fmt.Errorf("get node ip failed, err %s", err.Error())
@@ -76,6 +77,7 @@ func (s *Server) initNetworkUtil() error {
 	}
 
 	s.netutil = netutil
+	s.instanceEth = instanceEth
 	s.instanceIP = instanceIP
 	s.hostname = hostName
 	return nil
@@ -85,7 +87,6 @@ func (s *Server) initNetworkUtil() error {
 func (s *Server) initNodeNetworkClient() error {
 	nodeNetClient := nodenetwork.New(
 		s.opt.Kubeconfig,
-
 		s.opt.KubeResyncPeriod,
 		s.opt.KubeCacheSyncTimeout)
 
@@ -107,7 +108,7 @@ func (s *Server) initCloudClient() error {
 		client = eniaws.New(s.instanceIP)
 	case options.CloudTencent:
 		blog.Infof("create qcloud cloud client")
-		client = eniqcloud.New()
+		client = eniqcloud.New(s.instanceIP)
 	default:
 		return fmt.Errorf("invalid cloud %s", s.opt.Cloud)
 	}
@@ -152,6 +153,7 @@ func (s *Server) initMetric() error {
 // init network controller
 func (s *Server) initNetworkController() error {
 	controller := controller.New(
+		s.instanceEth,
 		s.hostname,
 		s.opt,
 		s.netsvcClient,

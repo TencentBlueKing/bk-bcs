@@ -14,7 +14,7 @@
 package v4http
 
 import (
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/webconsole"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/webconsole"
 
 	restful "github.com/emicklei/go-restful"
 )

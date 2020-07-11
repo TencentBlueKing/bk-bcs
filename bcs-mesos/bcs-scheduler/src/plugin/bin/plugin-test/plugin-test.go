@@ -14,7 +14,7 @@
 package plugin_test
 
 import (
-	"bk-bcs/bcs-common/common/plugin"
+	"github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 )
 
 // plugin must implement

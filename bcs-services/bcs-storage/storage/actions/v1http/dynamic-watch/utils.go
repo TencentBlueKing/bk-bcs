@@ -16,11 +16,11 @@ package dynamicWatch
 import (
 	"context"
 
-	"bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
-	"bk-bcs/bcs-common/common/blog"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/emicklei/go-restful"
 )
 

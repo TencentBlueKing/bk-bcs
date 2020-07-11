@@ -58,6 +58,7 @@ enum SignallingChannelCmd {
     SCCMD_S2C_PONG                       = 1;
     SCCMD_S2C_PUSH_NOTIFICATION          = 2;
     SCCMD_S2C_PUSH_ROLLBACK_NOTIFICATION = 3;
+    SCCMD_S2C_PUSH_RELOAD_NOTIFICATION   = 4;
 }
 
 message SCCMDPing {
@@ -91,6 +92,12 @@ message SCCMDPushRollbackNotification {
     string cfgsetFpath = 7;
 }
 
+message SCCMDPushReloadNotification {
+    string            bid        = 1;
+    string            appid      = 2;
+    common.ReloadSpec reloadSpec = 3;
+}
+
 message SignallingChannelDownStream {
     uint64               seq     = 1;
     SignallingChannelCmd cmd     = 2;
@@ -102,6 +109,7 @@ message SignallingChannelUpStream {
     SignallingChannelCmd          cmd         = 2;
     SCCMDPushNotification         cmdPush     = 3;
     SCCMDPushRollbackNotification cmdRollback = 4;
+    SCCMDPushReloadNotification   cmdReload   = 5;
 }
 
 message ReportReq {
@@ -155,6 +163,9 @@ message PullReleaseConfigsReq {
     string cfgsetid  = 6;
     string releaseid = 7;
     string cid       = 8;
+
+    // add fields here.
+    string IP        = 9;
 }
 
 message PullReleaseConfigsResp {

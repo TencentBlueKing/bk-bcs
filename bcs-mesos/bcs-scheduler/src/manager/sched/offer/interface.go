@@ -14,13 +14,14 @@
 package offer
 
 import (
-	typesplugin "bk-bcs/bcs-common/common/plugin"
-	commtype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"container/list"
 	"net/http"
+
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //A SchedManager is a struct Scheduler, it is responsible for interacting with struct
@@ -49,8 +50,6 @@ type SchedManager interface {
 
 	//fetch taskgroup
 	FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error)
-	//fetch mesos agent
-	FetchMesosAgent(innerIP string) (*types.Agent, error)
 }
 
 //OfferPool is mesos offer pool, it is responsible for the managements of the mesos's offers.

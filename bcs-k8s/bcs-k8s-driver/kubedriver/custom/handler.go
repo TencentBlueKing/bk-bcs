@@ -14,7 +14,7 @@
 package custom
 
 import (
-	"bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 
 	restful "github.com/emicklei/go-restful"
 )

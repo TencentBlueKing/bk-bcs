@@ -18,7 +18,7 @@ import (
 	"math"
 	"strings"
 
-	"bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
 const (

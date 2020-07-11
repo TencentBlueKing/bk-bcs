@@ -14,8 +14,8 @@
 package backend
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
 	"fmt"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 //custom resource register

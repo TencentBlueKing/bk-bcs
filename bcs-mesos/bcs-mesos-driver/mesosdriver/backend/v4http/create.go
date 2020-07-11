@@ -14,13 +14,13 @@
 package v4http
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
-	bcstype "bk-bcs/bcs-common/common/types"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	//"github.com/golang/protobuf/proto"
 	"strconv"
@@ -165,12 +165,12 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		replyErr := bhttp.InternalError(common.BcsErrMesosDriverParameterErr, common.BcsErrMesosDriverParameterErrStr+"containers and processes cannot coexist")
 		return nil, replyErr
 	}
-
-	if NumContainer > 0 {
+	//version belong to application
+	if version.Kind == "" && NumContainer > 0 {
 		version.Kind = commtypes.BcsDataType_APP
 	}
-
-	if NumProcess > 0 {
+	//version belong to process
+	if version.Kind == "" && NumProcess > 0 {
 		version.Kind = commtypes.BcsDataType_PROCESS
 	}
 

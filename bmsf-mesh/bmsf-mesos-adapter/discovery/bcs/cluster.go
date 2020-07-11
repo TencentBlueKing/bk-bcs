@@ -14,10 +14,10 @@
 package bcs
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	bcstypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/pkg/watch"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/discovery"
 )
 
 //NewCluster create cluster for bk-bcs scheduler

@@ -14,9 +14,9 @@
 package mesos
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
-	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 )
 
 // DbPrivConfInject implements MesosInject

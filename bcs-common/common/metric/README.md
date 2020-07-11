@@ -121,7 +121,7 @@ import (
     "fmt"
     "time"
 
-    "bk-bcs/bcs-common/common/metric"
+    "github.com/Tencent/bk-bcs/bcs-common/common/metric"
 )
 
 func main() {

@@ -16,10 +16,10 @@
 package v1
 
 import (
-	mesh_v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
-	internalinterfaces "bk-bcs/bmsf-mesh/pkg/client/informers/internalinterfaces"
-	internalclientset "bk-bcs/bmsf-mesh/pkg/client/internalclientset"
-	v1 "bk-bcs/bmsf-mesh/pkg/client/lister/mesh/v1"
+	mesh_v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/informers/internalinterfaces"
+	internalclientset "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/lister/mesh/v1"
 	time "time"
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

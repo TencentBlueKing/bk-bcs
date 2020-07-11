@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"

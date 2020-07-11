@@ -17,12 +17,12 @@ import (
 	"net"
 	"os"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/api"
-	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/config"
-	"bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/manager"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/api"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-daemon/process-daemon/manager"
 )
 
 //Option daemon process Option

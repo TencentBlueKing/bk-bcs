@@ -65,17 +65,17 @@ kubebuilder create api --group mesh --version v1 --kind AppNode
 ## 3. client代码生成
 
 ```shell
-client-gen --go-header-file="./hack/boilerplate.go.txt" --input="mesh/v1" --input-base="bk-bcs/bmsf-mesh/pkg/apis" --clientset-path="bk-bcs/bmsf-mesh/pkg/client"
+client-gen --go-header-file="./hack/boilerplate.go.txt" --input="mesh/v1" --input-base="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis" --clientset-path="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client"
 ```
 
 ## 4. lister代码生成
 
 ```shell
-lister-gen --go-header-file="./hack/boilerplate.go.txt" --input-dirs="bk-bcs/bmsf-mesh/pkg/apis/mesh/v1" --output-package="bk-bcs/bmsf-mesh/pkg/client/lister"
+lister-gen --go-header-file="./hack/boilerplate.go.txt" --input-dirs="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1" --output-package="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/lister"
 ```
 
 ## 5. informer代码生成
 
 ```shell
-informer-gen --go-header-file="./hack/boilerplate.go.txt" --input-dirs="bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"  --internal-clientset-package="bk-bcs/bmsf-mesh/pkg/client/internalclientset" --versioned-clientset-package="bk-bcs/bmsf-mesh/pkg/client/internalclientset" --listers-package="bk-bcs/bmsf-mesh/pkg/client/lister" --output-package="bk-bcs/bmsf-mesh/pkg/client/informers" --single-directory=true
+informer-gen --go-header-file="./hack/boilerplate.go.txt" --input-dirs="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"  --internal-clientset-package="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset" --versioned-clientset-package="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset" --listers-package="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/lister" --output-package="github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/informers" --single-directory=true
 ```

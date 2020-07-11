@@ -17,7 +17,7 @@ package internalinterfaces
 import (
 	time "time"
 
-	internalclientset "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	cache "k8s.io/client-go/tools/cache"

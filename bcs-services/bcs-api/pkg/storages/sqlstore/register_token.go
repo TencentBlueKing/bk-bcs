@@ -16,8 +16,8 @@ package sqlstore
 import (
 	"strings"
 
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"fmt"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/dchest/uniuri"
 )
 

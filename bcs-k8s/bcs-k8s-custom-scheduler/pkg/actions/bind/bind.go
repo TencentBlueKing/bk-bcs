@@ -14,9 +14,9 @@
 package bind
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
 	"github.com/emicklei/go-restful"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 )

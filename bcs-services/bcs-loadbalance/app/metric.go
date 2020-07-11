@@ -14,7 +14,7 @@
 package app
 
 import (
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -59,5 +59,15 @@ var (
 			Help:      "delete event of exported service record in zookeeper",
 		},
 		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+	)
+	// LoadbalanceServiceConflictMetric loadbalance metric for service conflict about port or [port + domain + url]
+	LoadbalanceServiceConflictMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "loadbalance",
+			Subsystem: "service",
+			Name:      "conflict_total",
+			Help:      "conflict counter of service",
+		},
+		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName},
 	)
 )

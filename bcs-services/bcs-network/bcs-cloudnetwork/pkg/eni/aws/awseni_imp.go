@@ -18,13 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // create eni
 func (c *Client) createEni(name string, ipNum int) (*ec2.NetworkInterface, error) {
 	// find available subnets, ipNum is secondary ip number
-	subnet, err := c.getAvailableSubnet(ipNum + 1)
+	subnet, err := c.getAvailableSubnet(ipNum)
 	if err != nil {
 		blog.Errorf("get available subnet when create eni")
 		return nil, err
@@ -55,6 +55,29 @@ func (c *Client) createEni(name string, ipNum int) (*ec2.NetworkInterface, error
 	}
 
 	return resp.NetworkInterface, nil
+}
+
+// modifyEniAttribute modify eni attribute
+func (c *Client) modifyEniAttribute(eniID string, securityGroups []string, sourceDestCheckFlag bool) error {
+	req := &ec2.ModifyNetworkInterfaceAttributeInput{}
+	req.SetNetworkInterfaceId(eniID)
+	if len(securityGroups) != 0 {
+		req.SetGroups(aws.StringSlice(securityGroups))
+	}
+	req.SetSourceDestCheck(&ec2.AttributeBooleanValue{
+		Value: aws.Bool(sourceDestCheckFlag),
+	})
+
+	blog.V(2).Infof("aws ModifyNetworkInterface Attribute request %+v", req)
+
+	resp, err := c.ec2client.ModifyNetworkInterfaceAttribute(req)
+	if err != nil {
+		blog.Errorf("aws ModifyNetworkInterface failed, err %s", err.Error())
+		return err
+	}
+
+	blog.V(2).Infof("aws ModifyNetworkInterface response %+v", resp)
+	return nil
 }
 
 // query eni by eni description
@@ -102,7 +125,6 @@ func (c *Client) assignIPsToEni(eniID string, ipNum int) error {
 	}
 
 	blog.V(2).Infof("aws AssignPrivateIpAddresses response %s", resp.String())
-
 	return nil
 }
 
@@ -120,7 +142,6 @@ func (c *Client) unassignIPsFromEni(eniID string, addrs []string) error {
 	}
 
 	blog.V(2).Infof("aws UnassignPrivateIpAddresses response %s", resp.String())
-
 	return nil
 }
 

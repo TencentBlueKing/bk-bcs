@@ -26,9 +26,9 @@ Package backend provides api route's backend function implements.
 package backend
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 type Backend interface {
@@ -303,4 +303,8 @@ type Backend interface {
 	DeleteAdmissionWebhook(ns, name string) error
 	FetchAllAdmissionWebhooks() ([]*commtypes.AdmissionWebhookConfiguration, error)
 	/*=========AdmissionWebhook==========*/
+	//launch daemonset
+	LaunchDaemonset(def *types.BcsDaemonsetDef) error
+	//delete daemonset
+	DeleteDaemonset(namespace, name string, force bool) error
 }

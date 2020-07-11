@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-	"bk-bcs/bcs-services/bcs-api/tunnel"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
 	"k8s.io/apimachinery/pkg/util/proxy"
 	"k8s.io/client-go/transport"
 )

@@ -18,8 +18,8 @@ import (
 	"net/http"
 	"strings"
 
-	"bk-bcs/bcs-common/common/codec"
-	commonTypes "bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 func (bs *bcsScheduler) ListAgentInfo(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentInfo, error) {

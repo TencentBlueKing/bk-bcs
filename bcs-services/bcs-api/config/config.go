@@ -14,8 +14,8 @@
 package config
 
 import (
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-services/bcs-api/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 )
 
 //CertConfig is configuration of Cert

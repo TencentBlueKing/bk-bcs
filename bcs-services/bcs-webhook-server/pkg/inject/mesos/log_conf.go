@@ -17,11 +17,11 @@ import (
 	"strconv"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	bcsv1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	listers "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
-	"bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/inject/common"
 	mapset "github.com/deckarep/golang-set"
 	"k8s.io/apimachinery/pkg/labels"
 )

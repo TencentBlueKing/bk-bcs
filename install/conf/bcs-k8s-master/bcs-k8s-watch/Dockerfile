@@ -1,9 +1,17 @@
-FROM centos:latest
+FROM centos:7
 
-COPY ./bcs-k8s-watch /
-RUN mkdir /cert
-ADD ./bcs-ca.crt /cert/
-ADD ./bcs-client.crt /cert/
-ADD ./bcs-client.key /cert/
+#for command envsubst
+RUN yum install -y gettext
 
-ENTRYPOINT ["/bcs-k8s-watch", "--config", "/config/config.json"]
+RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
+RUN mkdir -p /data/bcs/bcs-k8s-watch
+
+ADD bcs-k8s-watch /data/bcs/bcs-k8s-watch/
+ADD bcs-k8s-watch.json.template /data/bcs/bcs-k8s-watch/
+ADD container-start.sh /data/bcs/bcs-k8s-watch/
+RUN chmod +x /data/bcs/bcs-k8s-watch/bcs-k8s-watch
+RUN chmod +x /data/bcs/bcs-k8s-watch/container-start.sh
+
+WORKDIR /data/bcs/bcs-k8s-watch/
+CMD ["/data/bcs/bcs-k8s-watch/container-start.sh"]
+

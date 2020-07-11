@@ -15,7 +15,7 @@
 package fake
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

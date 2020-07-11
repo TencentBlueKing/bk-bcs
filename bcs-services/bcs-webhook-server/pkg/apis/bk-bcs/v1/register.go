@@ -18,7 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	bkbcs "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs"
+	bkbcs "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs"
 )
 
 var SchemeGroupVersion = schema.GroupVersion{Group: bkbcs.GroupName, Version: "v1"}

@@ -16,8 +16,8 @@
 package bkbcs
 
 import (
-	v2 "bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
-	internalinterfaces "bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

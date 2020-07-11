@@ -19,13 +19,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 
-	glog "bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
 
 const (
@@ -242,18 +242,21 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 				name = namespaceNameList[1]
 			}
 
-			glog.Infof("sync: %s: %s (name=%s) not on local, do delete", watcher.resourceType, key, name)
+			_, exists, err := watcher.store.GetByKey(key)
+			if !exists && err == nil {
+				glog.Infof("sync: %s: %s (name=%s) not on local, do delete", watcher.resourceType, key, name)
 
-			syncData := &action.SyncData{
-				Kind:      watcher.resourceType,
-				Namespace: namespace,
-				Name:      name,
-				Action:    action.SyncDataActionDelete,
-				Data:      "",
+				syncData := &action.SyncData{
+					Kind:      watcher.resourceType,
+					Namespace: namespace,
+					Name:      name,
+					Action:    action.SyncDataActionDelete,
+					Data:      "",
+				}
+
+				// sync delete event base on the reconciliation logic.
+				watcher.writer.Sync(syncData)
 			}
-
-			// sync delete event base on the reconciliation logic.
-			watcher.writer.Sync(syncData)
 		}
 	}
 }
@@ -265,7 +268,7 @@ func (sync *Synchronizer) doRequest(namespace string, kind string) (data []inter
 
 	if serversCount == 0 {
 		// the process get address from zk not finished yet or there is no storage server on zk.
-		err = fmt.Errorf("storage server list is empty, got no address yet!")
+		err = fmt.Errorf("storage server list is empty, got no address yet")
 		glog.Errorf(err.Error())
 		return
 	}

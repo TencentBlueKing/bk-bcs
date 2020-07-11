@@ -14,11 +14,11 @@
 package sched
 
 import (
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/api"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/backend"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/api"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/backend"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
 type Sched struct {

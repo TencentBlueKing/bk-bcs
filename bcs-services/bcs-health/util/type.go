@@ -14,9 +14,9 @@
 package util
 
 import (
-	"bk-bcs/bcs-common/common/types"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 type Server struct {

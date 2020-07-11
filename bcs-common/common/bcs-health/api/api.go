@@ -20,8 +20,8 @@ import (
 	"text/template"
 	"time"
 
-	"bk-bcs/bcs-common/common/bcs-health/types"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
 )
 
 // MessageKind type for message

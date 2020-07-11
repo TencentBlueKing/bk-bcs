@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 const (

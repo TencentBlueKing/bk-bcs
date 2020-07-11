@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"

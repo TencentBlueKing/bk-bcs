@@ -19,10 +19,10 @@ import (
 	"strconv"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -106,20 +106,14 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 }
 
 func (store *managerStore) ListVersions(runAs, versionID string) ([]string, error) {
-	var versions []*types.Version
-	var err error
-	if cacheMgr.isOK {
-		versions, _ = listCacheVersions(runAs, versionID)
-	} else {
-		versions, err = store.listVersions(runAs, versionID)
-	}
-	if err != nil {
-		return nil, err
-	}
-
+	versions, _ := listCacheVersions(runAs, versionID)
 	nodes := make([]string, 0, len(versions))
 	for _, version := range versions {
 		nodes = append(nodes, version.Name)
+	}
+	if len(nodes) == 0 {
+		blog.Warnf("fetch version(%s.%s) is empty", runAs, versionID)
+		return nil, nil
 	}
 	return nodes, nil
 }
@@ -127,6 +121,21 @@ func (store *managerStore) ListVersions(runAs, versionID string) ([]string, erro
 func (store *managerStore) listVersions(runAs, versionID string) ([]*types.Version, error) {
 	client := store.BkbcsClient.Versions(runAs)
 	v2Versions, err := client.List(metav1.ListOptions{LabelSelector: fmt.Sprintf("%s=%s", VersionIdKey, versionID)})
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]*types.Version, 0, len(v2Versions.Items))
+	for _, version := range v2Versions.Items {
+		obj := version.Spec.Version
+		nodes = append(nodes, &obj)
+	}
+	return nodes, nil
+}
+
+func (store *managerStore) listClusterVersions() ([]*types.Version, error) {
+	client := store.BkbcsClient.Versions("")
+	v2Versions, err := client.List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +203,5 @@ func (store *managerStore) GetVersion(runAs, appId string) (*types.Version, erro
 		}
 		return newestVersion, nil
 	}
-
 	return nil, nil
 }

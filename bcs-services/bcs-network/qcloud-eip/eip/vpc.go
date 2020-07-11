@@ -13,9 +13,9 @@
 package eip
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 	"time"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -55,6 +55,12 @@ func newVPCClient(conf *conf.NetConf, vpcID string) *vpcClient {
 		conf.UUID,
 	)
 	cpf := profile.NewClientProfile()
+
+	// set tencentcloud domain
+	if len(conf.TencentCloudVPCDomain) != 0 {
+		cpf.HttpProfile.Endpoint = conf.TencentCloudVPCDomain
+	}
+
 	client, err := vpc.NewClient(credential, conf.Region, cpf)
 	if err != nil {
 		blog.Errorf("new vpc client failed, err %s", err.Error())

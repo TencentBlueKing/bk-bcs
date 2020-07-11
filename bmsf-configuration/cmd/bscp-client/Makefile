@@ -17,14 +17,13 @@ GOENVPATH = $(shell go env GOPATH)
 PROTOCOL  = $(GOENVPATH)/src/bk-bscp/internal/protocol
 SCRIPTS   = $(GOENVPATH)/src/bk-bscp/scripts
 
+export GO111MODULE=on
+
 default:
 	@echo -e "\e[34;1mBuilding $(SERVER)...\033[0m"
 	go build -ldflags ${LDVersionFLAG} -gcflags "-N -l" -o $(BIN) main.go
 	@cp -r etc $(BINDIR)
 	@echo -e "\e[34;1mBuild $(SERVER) success!\n\033[0m"
-
-proto:
-	cd $(PROTOCOL) && make
 
 clean:
 	@rm -rf $(BINDIR) $(LOCALBUILD)

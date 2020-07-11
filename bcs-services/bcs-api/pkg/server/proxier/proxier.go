@@ -14,7 +14,6 @@
 package proxier
 
 import (
-	"bk-bcs/bcs-services/bcs-api/config"
 	"errors"
 	"fmt"
 	"net"
@@ -24,12 +23,15 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/metric"
-	"bk-bcs/bcs-services/bcs-api/pkg/auth"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
-	"bk-bcs/bcs-services/bcs-api/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/auth"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/credentials"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/utils"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -130,6 +132,10 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		return
 	}
 
+	// Delete the original auth header so that the original user token won't be passed to the rev-proxy request and
+	// damage the real cluster authentication process.
+	delete(req.Header, "Authorization")
+
 	var proxyHandler *ClusterHandlerInstance
 	// 先从websocket dialer缓存中查找websocket链
 	websocketHandler, found, err := lookupWsHandler(clusterId, req)
@@ -147,6 +153,9 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		proxyHandler = &ClusterHandlerInstance{
 			Handler: handlerServer,
 		}
+		credentials := sqlstore.GetWsCredentials(clusterId)
+		bearerToken := "Bearer " + credentials.UserToken
+		req.Header.Set("Authorization", bearerToken)
 	} else {
 		// Try not to initialize the handler everytime by using a map to store all the initialized handler
 		// Use RWLock to fix race condition
@@ -166,11 +175,6 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		proxyHandler = f.handlerStore[clusterId]
 		f.handlerMutateLock.Unlock()
 	}
-
-	blog.Info(req.Header.Get("Authorization"))
-	// Delete the original auth header so that the original user token won't be passed to the rev-proxy request and
-	// damage the real cluster authentication process.
-	delete(req.Header, "Authorization")
 
 	// Add the user name to Header to pass to k8s cluster, implement the user Impersonate feature
 	// Because k8s rbac doesn't allow label to contain ":", so replaced by "."

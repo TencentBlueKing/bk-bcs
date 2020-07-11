@@ -14,8 +14,8 @@
 package reflector
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 // Reflector watches a specified resource and causes all changes to be reflected in the given store.

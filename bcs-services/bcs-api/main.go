@@ -14,18 +14,17 @@
 package main
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/blog/glog"
-	"bk-bcs/bcs-common/common/license"
-	common_metric "bk-bcs/bcs-common/common/metric"
-	commtype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-api/config"
-	"bk-bcs/bcs-services/bcs-api/metric"
-	"bk-bcs/bcs-services/bcs-api/options"
-	"bk-bcs/bcs-services/bcs-api/processor"
-	"bk-bcs/bcs-services/bcs-api/regdiscv"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog/glog"
+	common_metric "github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/regdiscv"
 	"log"
 	"os"
 	"runtime"
@@ -60,7 +59,6 @@ func main() {
 	defer blog.CloseLogs()
 
 	blog.Info("init config success")
-	license.CheckLicense(op.LicenseServerConfig)
 
 	//run apiserver
 	run(op)

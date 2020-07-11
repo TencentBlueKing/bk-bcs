@@ -18,12 +18,12 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/task/cluster"
-	"bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/config"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/task/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-check/bcscheck/types"
 
-	"bk-bcs/bcs-common/common/zkclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"golang.org/x/net/context"
 )
 

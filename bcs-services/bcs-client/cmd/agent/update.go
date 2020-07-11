@@ -16,8 +16,8 @@ package agent
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
 
 func updateAgentSetting(c *utils.ClientContext) error {

@@ -14,7 +14,7 @@
 package storage
 
 import (
-	"bk-bcs/bcs-common/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"strings"
 )
 

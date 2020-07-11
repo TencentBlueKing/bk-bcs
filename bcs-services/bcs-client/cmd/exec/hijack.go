@@ -14,10 +14,10 @@
 package exec
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-client/pkg/types"
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/docker/docker/pkg/ioutils"
 	"github.com/moby/term"
 	"io"

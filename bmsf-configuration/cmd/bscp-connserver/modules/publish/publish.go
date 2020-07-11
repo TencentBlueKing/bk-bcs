@@ -88,6 +88,10 @@ func (mgr *Manager) process(msg *structs.Signalling) {
 		if err := mgr.processRollbackPublishing(msg, NewSimpleRateController()); err != nil {
 			logger.Error("process release rollback publishing, %+v", err)
 		}
+	case structs.SignallingTypeReload:
+		if err := mgr.processReloadPublishing(msg, NewSimpleRateController()); err != nil {
+			logger.Error("process release reload publishing, %+v", err)
+		}
 	default:
 		logger.Error("process publish message, unknow signalling type[%+v]", msg.Type)
 	}
@@ -190,11 +194,33 @@ func (mgr *Manager) processRollbackPublishing(msg *structs.Signalling, rateContr
 	return nil
 }
 
+// processReloadPublishing processes reload publishing event message.
+func (mgr *Manager) processReloadPublishing(msg *structs.Signalling, rateController RateController) error {
+	targets, err := mgr.getSessions(msg)
+	if err != nil {
+		return err
+	}
+	logger.Info("process reload publish notification message, final sidecar targets count[%d], %+v", len(targets), msg.Publishing)
+
+	// step-publishing.
+	rateController.Arrange(targets)
+	for {
+		targets := rateController.Next()
+		if targets == nil {
+			logger.V(3).Infof("step reload publishing done, %+v", msg.Publishing)
+			break
+		}
+
+		logger.V(3).Infof("step reload publishing, count[%d]: %+v", len(targets), msg.Publishing)
+		for _, target := range targets {
+			mgr.pushNotification(target, msg)
+		}
+	}
+	return nil
+}
+
 // pushNotification pushs publishing notification to target sidecar base on session information.
 func (mgr *Manager) pushNotification(target *session.Session, msg *structs.Signalling) {
-
-	// TODO
-
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Warn("send publish notification to channel, channel is closed and recover success, %+v", err)
@@ -224,6 +250,23 @@ func (mgr *Manager) pushNotification(target *session.Session, msg *structs.Signa
 			CfgsetFpath: msg.Publishing.CfgsetFpath,
 			Serialno:    msg.Publishing.Serialno,
 			Releaseid:   msg.Publishing.Releaseid,
+		}
+
+	case structs.SignallingTypeReload:
+		reloadSpec := &pbcommon.ReloadSpec{Info: []*pbcommon.EffectInfo{}}
+
+		if len(msg.Publishing.ReloadSpec.MultiReleaseid) != 0 {
+			reloadSpec.MultiReleaseid = msg.Publishing.ReloadSpec.MultiReleaseid
+		}
+
+		for _, eInfo := range msg.Publishing.ReloadSpec.Info {
+			reloadSpec.Info = append(reloadSpec.Info, &pbcommon.EffectInfo{Cfgsetid: eInfo.Cfgsetid, Releaseid: eInfo.Releaseid})
+		}
+
+		notification = &pb.SCCMDPushReloadNotification{
+			Bid:        msg.Publishing.Bid,
+			Appid:      msg.Publishing.Appid,
+			ReloadSpec: reloadSpec,
 		}
 
 	default:

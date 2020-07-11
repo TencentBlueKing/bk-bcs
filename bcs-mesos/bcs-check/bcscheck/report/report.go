@@ -14,7 +14,7 @@
 package report
 
 import (
-	commtype "bk-bcs/bcs-common/common/types"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 type Reporter interface {

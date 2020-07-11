@@ -14,10 +14,10 @@
 package action
 
 import (
-	glog "bk-bcs/bcs-common/common/blog"
+	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
-	"bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
 
 // StorageAction is http action of storage service.

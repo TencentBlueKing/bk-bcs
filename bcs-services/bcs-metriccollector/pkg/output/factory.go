@@ -14,10 +14,10 @@
 package output
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-services/bcs-metriccollector/app/config"
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metriccollector/app/config"
 	"time"
 )
 

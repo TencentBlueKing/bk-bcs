@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	"github.com/emicklei/go-restful"
 )

@@ -15,7 +15,7 @@
 package v1
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"

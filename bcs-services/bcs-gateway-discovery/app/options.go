@@ -17,10 +17,10 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-common/common/ssl"
-	"bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 )
 
 //NewServerOptions create default ServerOptions
@@ -28,7 +28,7 @@ func NewServerOptions() *ServerOptions {
 	return &ServerOptions{}
 }
 
-//Options command flags for gateway-discovery
+//ServerOptions command flags for gateway-discovery
 type ServerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig

@@ -21,12 +21,12 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-health/pkg/client"
-	"bk-bcs/bcs-services/bcs-health/pkg/role"
-	"bk-bcs/bcs-services/bcs-health/util"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/client"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/role"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/util"
 
-	"bk-bcs/bcs-common/common/statistic"
+	"github.com/Tencent/bk-bcs/bcs-common/common/statistic"
 	"golang.org/x/net/context"
 )
 

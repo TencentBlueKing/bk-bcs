@@ -14,16 +14,18 @@
 package scheduler
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"net/http"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
+	"github.com/golang/protobuf/proto"
 )
 
 //SendMessage send msg by scheduler to executor, msg is handled by master with MESSAGE call

@@ -16,8 +16,8 @@ package reflector
 import (
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/watch"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 
 	"golang.org/x/net/context"
 	k8scache "k8s.io/client-go/tools/cache"

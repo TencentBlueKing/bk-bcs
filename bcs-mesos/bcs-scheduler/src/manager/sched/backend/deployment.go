@@ -14,13 +14,13 @@
 package backend
 
 import (
-	comm "bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"errors"
 	"fmt"
+	comm "github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"strconv"
 	"time"
 )
@@ -32,11 +32,10 @@ func (b *backend) GetDeployment(ns string, name string) (*types.Deployment, erro
 func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, error) {
 	ns := deploymentDef.ObjectMeta.NameSpace
 	name := deploymentDef.ObjectMeta.Name
-	blog.Info("request create deployment(%s.%s) begin", ns, name)
-
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
 	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
 
+	blog.Info("request create deployment(%s.%s) begin", ns, name)
 	currDeployment, err := b.store.FetchDeployment(ns, name)
 	if err != nil && err != store.ErrNoFound {
 		blog.Error("request create deployment(%s.%s), fetch deployment err:%s",
@@ -109,6 +108,7 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 			if err1 != nil {
 				blog.Errorf("delete deployment %s:%s error %s", ns, name, err1.Error())
 			}
+			blog.Infof("delete deployment %s:%s success", ns, name)
 			return errcode, err
 		}
 

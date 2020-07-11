@@ -14,10 +14,10 @@
 package api
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-netservice/netservice"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"net/http"
 	"time"
 

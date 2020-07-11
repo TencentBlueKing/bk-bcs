@@ -16,16 +16,16 @@ package processor
 import (
 	"os"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-services/bcs-api/config"
-	"bk-bcs/bcs-services/bcs-api/filter"
-	"bk-bcs/bcs-services/bcs-api/pkg/server"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/proxier"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs"
-	"bk-bcs/bcs-services/bcs-api/processor/http/actions"
-	"bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/mesos/webconsole"
-	"bk-bcs/bcs-services/bcs-api/tunnel"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/filter"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/proxier"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/processor/http/actions/v4http/mesos/webconsole"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
 )
 
 type Processor struct {

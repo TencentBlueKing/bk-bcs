@@ -16,7 +16,7 @@
 package fake
 
 import (
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"

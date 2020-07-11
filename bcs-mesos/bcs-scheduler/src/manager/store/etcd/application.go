@@ -16,10 +16,10 @@ package etcd
 import (
 	"sync"
 
-	"bk-bcs/bcs-common/common/blog"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -209,4 +209,25 @@ func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
 		apps = append(apps, &obj)
 	}
 	return apps, nil
+}
+
+//ListTaskGroups show us all the task group on line
+func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
+	taskgroups := make([]*types.TaskGroup, 0)
+	app, err := store.FetchApplication(runAs, appID)
+	//if err!=nil, show application not found
+	//then return empty
+	if err != nil {
+		return taskgroups, nil
+	}
+
+	for _, podId := range app.Pods {
+		taskgroup, err := store.FetchTaskGroup(podId.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		taskgroups = append(taskgroups, taskgroup)
+	}
+	return taskgroups, nil
 }

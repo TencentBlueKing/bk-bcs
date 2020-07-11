@@ -14,18 +14,18 @@
 package bcs
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/pkg/meta"
-	"bk-bcs/bcs-common/pkg/queue"
-	"bk-bcs/bcs-common/pkg/reflector"
-	"bk-bcs/bcs-common/pkg/storage"
-	"bk-bcs/bcs-common/pkg/storage/zookeeper"
-	"bk-bcs/bcs-common/pkg/watch"
-	schetypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
-	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/queue"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/reflector"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage/zookeeper"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
+	schetypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/bmsf-mesos-adapter/pkg/util/str"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 	"path"
 	"reflect"
 	"strings"
@@ -114,6 +114,9 @@ type taskGroupController struct {
 }
 
 func (s *taskGroupController) run() {
+	if err := s.reflector.ListAllData(); err != nil {
+		blog.Errorf("list all bcs taskgroup failed, err %s", err.Error())
+	}
 	go s.reflector.Run()
 }
 

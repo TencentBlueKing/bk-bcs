@@ -14,12 +14,12 @@
 package haproxy
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/metric"
-	conf "bk-bcs/bcs-services/bcs-loadbalance/template"
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
-	"bk-bcs/bcs-services/bcs-loadbalance/util"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/util"
 	"html/template"
 	"math/rand"
 	"os"
@@ -267,7 +267,7 @@ func (m *Manager) convertHTTPData(HTTP types.HTTPServiceInfoList, protocol strin
 				}
 				tmpHTTPBackend.Servers[tmpServer.Key()] = tmpServer
 			}
-			tmpHTTPFrontend.Backends[back.UpstreamName] = tmpHTTPBackend
+			tmpHTTPFrontend.Backends[http.BCSVHost+"_"+back.UpstreamName] = tmpHTTPBackend
 			break
 		}
 		httpMap[http.ServicePort] = tmpHTTPFrontend
@@ -429,8 +429,8 @@ func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, nee
 		}
 	}
 	// tcp listener
-	if len(newConfig.TCPMap) > len(m.ConfigCache.TCPMap) {
-		blog.Infof("new TCP frontend list is longer than cache TCP frontend list , new length %d, old length %d", len(newConfig.TCPMap), len(m.ConfigCache.TCPMap))
+	if len(newConfig.TCPMap) != len(m.ConfigCache.TCPMap) {
+		blog.Infof("new TCP frontend list is different from cache TCP frontend list , new length %d, old length %d", len(newConfig.TCPMap), len(m.ConfigCache.TCPMap))
 		return true, false, nil
 	}
 	if len(newConfig.TCPMap) != 0 {
@@ -461,6 +461,10 @@ func checkConfigDiffBetweenTCPListener(newListener *TCPListener, oldListener *TC
 		blog.Infof("%v has different port from %v", newListener, oldListener)
 		return true, false, nil
 	}
+	if newListener.Name != oldListener.Name {
+		blog.Infof("%v has different name from %v", newListener, oldListener)
+		return true, false, nil
+	}
 	if len(newListener.Servers) > len(oldListener.Servers) {
 		blog.Infof("new listener %s has %d servers, the old only has %d servers", newListener.Name, len(newListener.Servers), len(oldListener.Servers))
 		return true, false, nil
@@ -485,13 +489,17 @@ func checkConfigDiffBetweenHTTPFrontend(newFront *HTTPFrontend, oldFront *HTTPFr
 		blog.Infof("%v has different port from %v", newFront, oldFront)
 		return true, false, nil
 	}
+	if newFront.Name != oldFront.Name {
+		blog.Infof("%v has different name from %v", newFront, oldFront)
+		return true, false, nil
+	}
 	if len(newFront.Backends) != len(oldFront.Backends) {
 		blog.Infof("different backends length for http front, new frontend %v, old frontend %v", newFront, oldFront)
 		return true, false, nil
 	}
 
-	for backendName, newFrontBackend := range newFront.Backends {
-		oldFrontBackend, ok := oldFront.Backends[backendName]
+	for backendKey, newFrontBackend := range newFront.Backends {
+		oldFrontBackend, ok := oldFront.Backends[backendKey]
 		if !ok {
 			blog.Infof("backend %v is newly added", newFrontBackend)
 			return true, false, nil

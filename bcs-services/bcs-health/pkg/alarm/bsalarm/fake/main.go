@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/conf"
-	"bk-bcs/bcs-services/bcs-health/master/app/config"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
-	"bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/master/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/bsalarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
 	"github.com/pborman/uuid"
 )
 

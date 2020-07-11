@@ -16,10 +16,10 @@ package auth
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-api/config"
-	"bk-bcs/bcs-services/bcs-api/pkg/component"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/component"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
 // VerifyAccessTokenAndCreateUser verifies the given access_token, if the token is valid, create and return the user

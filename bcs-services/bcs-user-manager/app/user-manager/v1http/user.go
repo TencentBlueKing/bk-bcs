@@ -18,16 +18,20 @@ import (
 	"strconv"
 	"time"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-user-manager/app/metrics"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
+
 	"github.com/dchest/uniuri"
 	"github.com/emicklei/go-restful"
 )
 
+//DefaultTokenLength user token default length
+// token is consisted of digital and alphabet(case sensetive)
+// we can refer to http://coolaf.com/tool/rd when testing
 const DefaultTokenLength = 32
 
 // CreateAdminUser create a admin user
@@ -48,7 +52,6 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
-
 	user.UserToken = uniuri.NewLen(DefaultTokenLength)
 	user.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
@@ -252,7 +255,8 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 
 	expireTime := time.Duration(expireDaysInt) * sqlstore.PlainUserExpiredTime
 	updatedUser := user
-	// if usertoken has been expired, refresh the usertoken, else just refresh the expiresTime
+	// if usertoken has been expired, refresh the usertoken
+	// or just refresh the expiresTime and return the same token
 	if time.Now().After(user.ExpiresAt) {
 		updatedUser.UserToken = uniuri.NewLen(DefaultTokenLength)
 		updatedUser.ExpiresAt = time.Now().Add(expireTime)
@@ -261,6 +265,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	}
 
 	// update and save to db
+	// if update failed, it's better to refresh by client
 	err = sqlstore.UpdateUser(user, updatedUser)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()
@@ -278,7 +283,7 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("user", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
-// RefreshPlainToken refresh usertoken for a saas user
+// RefreshSaasToken refresh usertoken for a saas user
 func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -299,6 +304,7 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 	updatedUser.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 
 	// update and save to db
+	// if update failed, it's better to refresh by client
 	err := sqlstore.UpdateUser(user, updatedUser)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("user", request.Request.Method).Inc()

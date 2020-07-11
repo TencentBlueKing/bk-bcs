@@ -17,12 +17,12 @@ import (
 	"fmt"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	bcsv2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	bcsfactory "bk-bcs/bcs-mesos/pkg/client/informers"
-	bcsclientset "bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	bcslister "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
-	"bk-bcs/bcs-services/bcs-networkpolicy/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	bcsfactory "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
+	bcsclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	bcslister "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-networkpolicy/options"
 
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"

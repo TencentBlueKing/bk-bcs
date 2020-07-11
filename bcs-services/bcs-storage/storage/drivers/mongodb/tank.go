@@ -17,9 +17,9 @@ import (
 	"context"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
-	storageErr "bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	mgo "gopkg.in/mgo.v2"
 )

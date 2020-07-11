@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"strings"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/containernetworking/plugins/pkg/ip"
 	"github.com/vishvananda/netlink"
@@ -29,9 +29,9 @@ import (
 // Interface defines ip rule operaions, netlink operations, iptables operations and so on
 type Interface interface {
 	// GetAvailableHostIP get available host ip by network interface names
-	GetAvailableHostIP(ifnames []string) (string, error)
+	GetAvailableHostIP(ifnames []string) (string, string, error)
 	// SetHostNetwork disable rp_filter, enable ip_forwarding
-	SetHostNetwork(routeTableIDs map[string]string) error
+	SetHostNetwork(instanceEth string, routeTableIDs map[string]string) error
 	// SetUpNetworkInterface set elastic network interface up
 	SetUpNetworkInterface(ip, cidrBlock, eniMac, eniName string, table, mtu int, rules []netlink.Rule) error
 	// SetDownNetworkInterface set elastic network interface down
@@ -50,18 +50,18 @@ type Interface interface {
 type NetUtil struct{}
 
 // GetAvailableHostIP get available host ip by network interface names
-func (nc *NetUtil) GetAvailableHostIP(ifnames []string) (string, error) {
+func (nc *NetUtil) GetAvailableHostIP(ifnames []string) (string, string, error) {
 	linkList, err := netlink.LinkList()
 	if err != nil {
 		blog.Errorf("failed to list links, err %s", err.Error())
-		return "", fmt.Errorf("failed to list links, err %s", err.Error())
+		return "", "", fmt.Errorf("failed to list links, err %s", err.Error())
 	}
 	netifMap := make(map[string]string)
 	for _, l := range linkList {
 		addrs, err := netlink.AddrList(l, unix.AF_INET)
 		if err != nil {
 			blog.Errorf("failed to list addrs for link with mac %s", l.Attrs().HardwareAddr)
-			return "", fmt.Errorf("failed to list addrs for link with mac %s", l.Attrs().HardwareAddr)
+			return "", "", fmt.Errorf("failed to list addrs for link with mac %s", l.Attrs().HardwareAddr)
 		}
 		if len(addrs) == 0 {
 			blog.V(3).Infof("skip link with mac %s", l.Attrs().HardwareAddr)
@@ -71,15 +71,40 @@ func (nc *NetUtil) GetAvailableHostIP(ifnames []string) (string, error) {
 	}
 	for _, name := range ifnames {
 		if addr, ok := netifMap[name]; ok {
-			return addr, nil
+			return addr, name, nil
 		}
 	}
-	return "", fmt.Errorf("no available ip for network interfaces %+v", ifnames)
+	return "", "", fmt.Errorf("no available ip for network interfaces %+v", ifnames)
 }
 
 // SetHostNetwork disable rp_filter, enable ip_forwarding
-func (nc *NetUtil) SetHostNetwork(routeTableIDs map[string]string) error {
+func (nc *NetUtil) SetHostNetwork(instanceEth string, routeTableIDs map[string]string) error {
 
+	// disable all rp_filter
+	allRpFilterValue, err := getRpFilter("all")
+	blog.Infof("get system all.rp_filter = %d", allRpFilterValue)
+	if err != nil {
+		return fmt.Errorf("get all.rp_filter failed, err %s", err.Error())
+	}
+	if allRpFilterValue != 0 {
+		if ok := setRpFilter("all", false); !ok {
+			blog.Warnf("set all.rp_filter to 0 failed")
+		}
+	}
+
+	// disable rp_filter to deal with asymmetric route problem
+	rpFilterValue, err := getRpFilter(instanceEth)
+	blog.Infof("get system %s.rp_filter = %d", instanceEth, rpFilterValue)
+	if err != nil {
+		return fmt.Errorf("get rpFilter failed, err %s", err.Error())
+	}
+	if rpFilterValue != 0 {
+		if ok := setRpFilter(instanceEth, false); !ok {
+			blog.Warnf("set rp_filter %s to 0 failed", instanceEth)
+		}
+	}
+
+	// set ip forward
 	ipForwardValue, err := getIPForward()
 	if err != nil {
 		return err

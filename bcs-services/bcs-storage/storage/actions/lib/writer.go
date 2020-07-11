@@ -16,9 +16,9 @@ package lib
 import (
 	"net/http"
 
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	http2 "bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	http2 "github.com/Tencent/bk-bcs/bcs-common/common/http"
 
 	"github.com/emicklei/go-restful"
 )

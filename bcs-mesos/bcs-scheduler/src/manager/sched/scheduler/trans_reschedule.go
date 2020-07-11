@@ -19,13 +19,13 @@ import (
 	"net/http"
 	"time"
 
-	alarm "bk-bcs/bcs-common/common/bcs-health/api"
-	"bk-bcs/bcs-common/common/blog"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
 // The goroutine function for reschedule taskgroup transaction
@@ -52,7 +52,13 @@ func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
 			continue
 		}
 
-		//precheck application status, add 20180620
+		//precheck application&taskgroup status
+		taskgroup, _ := s.store.FetchTaskGroup(taskGroupID)
+		if taskgroup == nil {
+			blog.Infof("transaction %s fail: fetch taskgroup(%s) return nil", transaction.ID, taskGroupID)
+			transaction.Status = types.OPERATION_STATUS_FAIL
+			break
+		}
 		runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 		app, _ := s.store.FetchApplication(runAs, appID)
 		if app == nil {

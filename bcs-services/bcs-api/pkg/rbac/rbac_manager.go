@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/pkg/rbac/template"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/rbac/template"
 
 	mapset "github.com/deckarep/golang-set"
 	rbacv1 "k8s.io/api/rbac/v1"

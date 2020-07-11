@@ -19,12 +19,12 @@ import (
 	"strings"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
 
-	loadbalance "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	"bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif"
 )
 
 //ClbAPI Clb api operator

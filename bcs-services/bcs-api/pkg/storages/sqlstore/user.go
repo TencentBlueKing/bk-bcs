@@ -14,9 +14,9 @@
 package sqlstore
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/dchest/uniuri"
 	"time"
 )

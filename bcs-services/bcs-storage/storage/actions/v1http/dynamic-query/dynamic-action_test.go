@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	"github.com/emicklei/go-restful"
 )

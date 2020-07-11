@@ -5586,10 +5586,12 @@ type QueryHistoryMultiReleasesResp struct {
 	MultiReleases []*common.MultiRelease `protobuf:"bytes,4,rep,name=multiReleases" json:"multiReleases,omitempty"`
 }
 
-func (m *QueryHistoryMultiReleasesResp) Reset()                    { *m = QueryHistoryMultiReleasesResp{} }
-func (m *QueryHistoryMultiReleasesResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryHistoryMultiReleasesResp) ProtoMessage()               {}
-func (*QueryHistoryMultiReleasesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{111} }
+func (m *QueryHistoryMultiReleasesResp) Reset()         { *m = QueryHistoryMultiReleasesResp{} }
+func (m *QueryHistoryMultiReleasesResp) String() string { return proto.CompactTextString(m) }
+func (*QueryHistoryMultiReleasesResp) ProtoMessage()    {}
+func (*QueryHistoryMultiReleasesResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{111}
+}
 
 func (m *QueryHistoryMultiReleasesResp) GetSeq() uint64 {
 	if m != nil {
@@ -6229,10 +6231,12 @@ type QueryReachableAppInstancesReq struct {
 	Limit     int32  `protobuf:"varint,7,opt,name=limit" json:"limit,omitempty"`
 }
 
-func (m *QueryReachableAppInstancesReq) Reset()                    { *m = QueryReachableAppInstancesReq{} }
-func (m *QueryReachableAppInstancesReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryReachableAppInstancesReq) ProtoMessage()               {}
-func (*QueryReachableAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{126} }
+func (m *QueryReachableAppInstancesReq) Reset()         { *m = QueryReachableAppInstancesReq{} }
+func (m *QueryReachableAppInstancesReq) String() string { return proto.CompactTextString(m) }
+func (*QueryReachableAppInstancesReq) ProtoMessage()    {}
+func (*QueryReachableAppInstancesReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{126}
+}
 
 func (m *QueryReachableAppInstancesReq) GetSeq() uint64 {
 	if m != nil {
@@ -6852,10 +6856,12 @@ type QueryEffectedAppInstancesResp struct {
 	Instances []*common.AppInstance `protobuf:"bytes,4,rep,name=instances" json:"instances,omitempty"`
 }
 
-func (m *QueryEffectedAppInstancesResp) Reset()                    { *m = QueryEffectedAppInstancesResp{} }
-func (m *QueryEffectedAppInstancesResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryEffectedAppInstancesResp) ProtoMessage()               {}
-func (*QueryEffectedAppInstancesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{137} }
+func (m *QueryEffectedAppInstancesResp) Reset()         { *m = QueryEffectedAppInstancesResp{} }
+func (m *QueryEffectedAppInstancesResp) String() string { return proto.CompactTextString(m) }
+func (*QueryEffectedAppInstancesResp) ProtoMessage()    {}
+func (*QueryEffectedAppInstancesResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{137}
+}
 
 func (m *QueryEffectedAppInstancesResp) GetSeq() uint64 {
 	if m != nil {

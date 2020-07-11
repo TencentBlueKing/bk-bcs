@@ -16,8 +16,8 @@ package inspect
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 )
 
 func inspectConfigMap(c *utils.ClientContext) error {

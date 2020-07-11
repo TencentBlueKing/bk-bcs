@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	bkbcsv2 "bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
@@ -59,6 +59,7 @@ const (
 	CrdTask                          = "Task"
 	CrdTaskGroup                     = "TaskGroup"
 	CrdVersion                       = "Version"
+	CrdBcsDaemonset                  = "BcsDaemonset"
 )
 
 const (
@@ -103,6 +104,7 @@ func (s *managerStore) initKubeCrd() error {
 		CrdTask,
 		CrdTaskGroup,
 		CrdVersion,
+		CrdBcsDaemonset,
 	}
 
 	for _, crd := range crds {
@@ -191,7 +193,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			// handle taskgroup metrics
 			taskgroups, err := s.ListTaskGroups(app.RunAs, app.Name)
 			if err != nil {
-				blog.Errorf("list all services error %s", err.Error())
+				blog.Errorf("list application(%s.%s) taskgroup error %s", app.RunAs, app.Name, err.Error())
 			}
 			for _, taskgroup := range taskgroups {
 				store.ReportTaskgroupInfoMetrics(taskgroup.RunAs, taskgroup.AppID, taskgroup.ID, taskgroup.Status)

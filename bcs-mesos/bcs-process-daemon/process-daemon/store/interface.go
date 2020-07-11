@@ -14,7 +14,7 @@
 package store
 
 import (
-	"bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
 type Store interface {

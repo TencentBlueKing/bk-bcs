@@ -14,8 +14,8 @@
 package storage
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	lbtypes "bk-bcs/bcs-common/pkg/loadbalance/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	lbtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/loadbalance/v2"
 	"time"
 )
 

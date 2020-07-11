@@ -14,9 +14,9 @@
 package api
 
 import (
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-services/bcs-metricservice/app/config"
-	"bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
 )
 
 type MetricAPIResource struct {

@@ -15,5 +15,5 @@ package pkg
 
 import (
 	// init the http API, register them into actions
-	_ "bk-bcs/bcs-services/bcs-metricservice/pkg/api/v1http"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/api/v1http"
 )

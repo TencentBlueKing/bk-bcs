@@ -17,9 +17,9 @@ package informers
 import (
 	"fmt"
 
-	v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	mesh_v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
-	network_v1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	mesh_v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
+	network_v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )

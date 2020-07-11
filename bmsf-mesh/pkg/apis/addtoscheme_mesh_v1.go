@@ -14,7 +14,7 @@
 package apis
 
 import (
-	"bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	"github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
 )
 
 func init() {

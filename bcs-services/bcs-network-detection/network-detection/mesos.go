@@ -18,13 +18,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	commtypes "bk-bcs/bcs-common/common/types"
-	moduleDiscovery "bk-bcs/bcs-common/pkg/module-discovery"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-services/bcs-network-detection/config"
-	"bk-bcs/bcs-services/bcs-network-detection/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 )
 
 type MesosPlatform struct {

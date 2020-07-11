@@ -1,3 +1,0 @@
-version: "1"
-domain: tencent.com
-repo: bk-bcs/bcs-k8s/bcs-statefulplus-controller

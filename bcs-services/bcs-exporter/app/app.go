@@ -14,15 +14,15 @@
 package app
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-common/common/metric"
-	"bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-services/bcs-exporter/app/config"
-	"bk-bcs/bcs-services/bcs-exporter/pkg/dbus"
-	"bk-bcs/bcs-services/bcs-exporter/pkg/rdiscover"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/app/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg/dbus"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-exporter/pkg/rdiscover"
 	"io/ioutil"
 	"net/http"
 	"strconv"

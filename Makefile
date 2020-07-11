@@ -15,28 +15,27 @@ GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
 WORKSPACE=$(shell pwd)
 
-LDFLAG=-ldflags "-X bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
- -X bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
- -X bk-bcs/bcs-common/common/static.EncryptionKey=${bcs_encryption_key} \
- -X bk-bcs/bcs-common/common/static.ServerCertPwd=${bcs_server_cert_pwd} \
- -X bk-bcs/bcs-common/common/static.ClientCertPwd=${bcs_client_cert_pwd} \
- -X bk-bcs/bcs-common/common/static.LicenseServerClientCertPwd=${bcs_license_server_client_cert_pwd} \
- -X bk-bcs/bcs-common/common/static.BcsDefaultUser=${bcs_registry_default_user} \
- -X bk-bcs/bcs-common/common/static.BcsDefaultPasswd=${bcs_registry_default_pwd} \
- -X bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
- -X bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
- -X bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
- -X bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
- -X bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
+LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.EncryptionKey=${bcs_encryption_key} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ServerCertPwd=${bcs_server_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ClientCertPwd=${bcs_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.LicenseServerClientCertPwd=${bcs_license_server_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultUser=${bcs_registry_default_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultPasswd=${bcs_registry_default_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
 # build path config
 PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy tools gateway
-specific:api dns health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server k8s-statefulsetplus network detection cpuset bcs-networkpolicy tools gateway
-k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche k8s-statefulsetplus
+default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer
+k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
 allpack: svcpack k8spack mmpack mnpack
@@ -44,11 +43,11 @@ allpack: svcpack k8spack mmpack mnpack
 
 # tag for different edition compiling
 inner:
-	$(MAKE) specific bcs_edition=inner_edition
+	$(MAKE) default bcs_edition=inner_edition
 ce:
-	$(MAKE) specific bcs_edition=community_edition
+	$(MAKE) default bcs_edition=community_edition
 ee:
-	$(MAKE) specific bcs_edition=enterprise_edition
+	$(MAKE) default bcs_edition=enterprise_edition
 
 clean:
 	rm -rf ./build
@@ -80,6 +79,7 @@ api:pre
 gateway:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-gateway-discovery ${PACKAGEPATH}/bcs-services
+	cp -R ./bcs-services/bcs-gateway-discovery/bkbcs-auth ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./bcs-services/bcs-gateway-discovery/main.go
 
 kube-agent:pre
@@ -97,6 +97,7 @@ dns:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-dns ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
+	mkdir -p vendor/github.com/coredns/coredns/
 	cp -r ${GOPATH}/pkg/mod/github.com/coredns/coredns\@v1.3.0/* vendor/github.com/coredns/coredns/
 	cp bcs-services/bcs-dns/plugin.cfg vendor/github.com/coredns/coredns/
 	cd vendor/github.com/coredns/coredns && make gen && cd -
@@ -208,8 +209,8 @@ sd-prometheus:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-service-prometheus-service ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-mesos-master/bcs-service-prometheus ${PACKAGEPATH}/bcs-mesos-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-service-prometheus-service/bcs-service-prometheus-service ./bcs-services/bcs-sd-prometheus/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-service-prometheus/bcs-service-prometheus ./bcs-services/bcs-sd-prometheus/main.go
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-service-prometheus-service/bcs-service-prometheus-service ./bcs-services/bcs-service-prometheus/main.go
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-service-prometheus/bcs-service-prometheus ./bcs-services/bcs-service-prometheus/main.go
 
 k8s-driver:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
@@ -221,10 +222,17 @@ k8s-watch:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-k8s-watch ${PACKAGEPATH}/bcs-k8s-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-watch/bcs-k8s-watch ./bcs-k8s/bcs-k8s-watch/main.go
 
-k8s-statefulsetplus:pre
+gamestatefulset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
-	cp -R ./install/conf/bcs-k8s-master/tkex-statefulsetplus-operator ${PACKAGEPATH}/bcs-k8s-master
-	cd bcs-k8s/tkex-statefulsetplus-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/tkex-statefulsetplus-operator/tkex-statefulsetplus-operator ./cmd/statefulsetplus-operator/main.go
+	cp -R ./install/conf/bcs-k8s-master/bcs-gamestatefulset-operator ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-gamestatefulset-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
+
+egress-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-egress-controller ${PACKAGEPATH}/bcs-k8s-master
+	#copy nginx template for egress controller
+	cp -R bcs-k8s/bcs-egress/deploy/config ${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller
+	cd bcs-k8s/bcs-egress && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller/bcs-egress-controller ./cmd/bcs-egress-controller/main.go
 
 api-export:pre
 	mkdir -p ${EXPORTPATH}
@@ -234,8 +242,8 @@ api-export:pre
 	cp ./bcs-common/common/types/configmap.go ${EXPORTPATH}
 
 consoleproxy:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node
-	cp -R ./install/conf/bcs-mesos-node/bcs-consoleproxy ${PACKAGEPATH}/bcs-k8s-node
+	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-consoleproxy
+	cp -R ./install/conf/bcs-mesos-node/bcs-consoleproxy ${PACKAGEPATH}/bcs-mesos-node
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-consoleproxy/bcs-consoleproxy ./bcs-mesos/bcs-consoleproxy/main.go
 
 bmsf-mesos-adapter:pre
@@ -276,7 +284,7 @@ tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 	
 bcs-networkpolicy:pre
-	mkdir -p ${PACKAGEPATH}/bcs-networkpolicy
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-networkpolicy
 	cp -R ./install/conf/bcs-services/bcs-networkpolicy ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-networkpolicy/bcs-networkpolicy ./bcs-services/bcs-networkpolicy/main.go
 
@@ -288,6 +296,16 @@ bcs-cloud-network-agent:pre
 	cp ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni
 	
 user-manager:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
 	cp -R ./install/conf/bcs-services/bcs-user-manager ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./bcs-services/bcs-user-manager/main.go
+
+cc-agent:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-cc-agent ${PACKAGEPATH}/bcs-k8s-master
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-cc-agent/bcs-cc-agent ./bcs-k8s/bcs-cc-agent/main.go
+
+bkcmdb-synchronizer:
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
+

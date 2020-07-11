@@ -14,17 +14,19 @@
 package task
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/encrypt"
-	"bk-bcs/bcs-common/common/static"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/base64"
 	"fmt"
-	proto "github.com/golang/protobuf/proto"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
+	proto "github.com/golang/protobuf/proto"
 )
 
 var BcsContainerExecutorPath string
@@ -65,7 +67,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 	switch version.Kind {
 	case commtypes.BcsDataType_PROCESS:
 		cmdOrUri = BcsProcessExecutorPath
-	case commtypes.BcsDataType_APP, "":
+	case commtypes.BcsDataType_APP, "", commtypes.BcsDataType_Daemonset:
 		cmdOrUri = BcsContainerExecutorPath
 	}
 
@@ -84,7 +86,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 	switch version.Kind {
 	case commtypes.BcsDataType_PROCESS:
 		execCommand = fmt.Sprintf("./%s", base)
-	case commtypes.BcsDataType_APP, "":
+	case commtypes.BcsDataType_APP, "", commtypes.BcsDataType_Daemonset:
 		var user string
 		var passwd string
 		if version.Container[0].Docker.ImagePullUser != "" {

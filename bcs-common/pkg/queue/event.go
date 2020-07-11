@@ -13,7 +13,7 @@
 
 package queue
 
-import "bk-bcs/bcs-common/pkg/watch"
+import "github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 
 //Event holding event info for data object
 type Event struct {

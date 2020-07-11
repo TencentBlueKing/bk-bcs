@@ -13,12 +13,12 @@
 package eip
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/static"
-	"bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	netsvc "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
-	"bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
+	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 	"strings"
 )
 
@@ -40,7 +40,7 @@ func NewNetSvcClient(conf *conf.NetArgs) (*NetSvcClient, error) {
 	if len(conf.PubKey) == 0 && len(conf.Key) == 0 && len(conf.Ca) == 0 {
 		client, clientErr = netservice.NewClient()
 	} else {
-		client, clientErr = netservice.NewTLSClient(conf.Ca, conf.Key, conf.PubKey, static.ServerCertPwd)
+		client, clientErr = netservice.NewTLSClient(conf.Ca, conf.Key, conf.PubKey, static.ClientCertPwd)
 	}
 	if clientErr != nil {
 		return nil, clientErr
@@ -71,6 +71,15 @@ func (c *NetSvcClient) CreateOrUpdatePool(pool *netsvc.NetPool) error {
 		return c.client.RegisterPool(pool)
 	}
 	return c.client.UpdatePool(pool)
+}
+
+// GetPool get net pool
+func (c *NetSvcClient) GetPool(pool *netsvc.NetPool) (*netsvc.NetPool, error) {
+	p, err := c.client.GetPool(pool.Cluster, pool.Net)
+	if err != nil {
+		return nil, err
+	}
+	return p[0], nil
 }
 
 // UpdateIPInstance update ip instance

@@ -20,15 +20,15 @@ import (
 	"sync"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	netsvc "bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
-	cloud "bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/netservice"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/networkutil"
-	"bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/options"
+	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/eni"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/networkutil"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
 
 	"github.com/prometheus/client_golang/prometheus"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -81,9 +81,17 @@ func reportReconcileMetric(status string) {
 
 // NetworkController controller for cloud network
 type NetworkController struct {
+	// eth name for identifying vm instance
+	instanceEth string
+
+	// vm instance hostname
 	hostname string
-	eniNum   int
-	ipNum    int
+
+	// extra elastic network interface number
+	eniNum int
+
+	// ip number for each extra elastic network interface
+	ipNum int
 
 	// options for network agent
 	options *options.NetworkOption
@@ -113,10 +121,11 @@ type NetworkController struct {
 }
 
 // New create new network controller
-func New(hostname string, op *options.NetworkOption,
+func New(instanceEth, hostname string, op *options.NetworkOption,
 	netsvcClient netservice.Interface, nodeNetClient nodenetwork.Interface,
 	eniClient eni.Interface, netUtil networkutil.Interface) *NetworkController {
 	return &NetworkController{
+		instanceEth:   instanceEth,
 		hostname:      hostname,
 		options:       op,
 		netsvcClient:  netsvcClient,
@@ -478,7 +487,7 @@ func (nc *NetworkController) Run(ctx context.Context, wg *sync.WaitGroup) {
 	reportReconcileMetric(statusSuccess)
 
 	routeIDMap := nc.getRouteIDMap()
-	if err := nc.netUtil.SetHostNetwork(routeIDMap); err != nil {
+	if err := nc.netUtil.SetHostNetwork(nc.instanceEth, routeIDMap); err != nil {
 		blog.Infof("set host network failed, err %s", err.Error())
 		return
 	}

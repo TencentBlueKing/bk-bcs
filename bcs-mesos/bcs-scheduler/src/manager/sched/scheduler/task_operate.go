@@ -14,19 +14,21 @@
 package scheduler
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	bcstype "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/strategy"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/sched"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"net/http"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/strategy"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+
+	"github.com/golang/protobuf/proto"
 )
 
 // Build an taskgroup for application:
@@ -180,27 +182,8 @@ func (s *Scheduler) KillExecutor(agentId, executerId string) (*http.Response, er
 // Delete a taskgroup:
 // the taskgroup will delete from DB, application and service
 func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.TaskGroup, reason string) error {
-
 	blog.Info("delete taskgroup %s for %s", taskGroup.ID, reason)
 	s.ServiceMgr.TaskgroupDelete(taskGroup)
-
-	err := s.store.DeleteTaskGroup(taskGroup.ID)
-	if err != nil {
-		blog.Error("delete taskgroup(%s) err: %s", taskGroup.ID, err.Error())
-		//return err
-	}
-
-	//release taskgroup's DeltaCPU, DeltaDisk, DeltaMem  20180530
-	//deltaCPU := taskGroup.CurrResource.Cpus - taskGroup.LaunchResource.Cpus
-	//deltaMem := taskGroup.CurrResource.Mem - taskGroup.LaunchResource.Mem
-	//deltaDisk := taskGroup.CurrResource.Disk - taskGroup.LaunchResource.Disk
-	//if deltaCPU != 0 || deltaMem != 0 || deltaDisk != 0 {
-	//	blog.Warnf("delete taskgroup(%s) on host(%s), release delta resources(%f | %f | %f)",
-	//				taskGroup.ID,  taskGroup.HostName, deltaCPU, deltaMem, deltaDisk)
-	blog.Infof("delete taskgroup %s hostname %s", taskGroup.ID, taskGroup.HostName)
-	s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
-	//}
-
 	//update app taskgroup index info
 	if app != nil {
 		delete := -1
@@ -216,6 +199,18 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 		app.UpdateTime = time.Now().Unix()
 		app.Pods = append(app.Pods[:delete], app.Pods[delete+1:]...)
 	}
+
+	return s.deleteTaskGroup(taskGroup)
+}
+
+// Delete a taskgroup:
+// the taskgroup will delete from DB
+func (s *Scheduler) deleteTaskGroup(taskGroup *types.TaskGroup) error {
+	err := s.store.DeleteTaskGroup(taskGroup.ID)
+	if err != nil {
+		blog.Errorf("delete taskgroup(%s) err: %s", taskGroup.ID, err.Error())
+	}
+	s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
 
 	//update agentsetting taskgroup index info
 	nodeIp := taskGroup.GetAgentIp()
@@ -254,19 +249,6 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 
 	return nil
 }
-
-// Check whether the offer is match required resource
-//func (s *Scheduler) IsResourceFit(needResource *types.Resource, offer *mesos.Offer) bool {
-//	cpus, mem, disk := s.OfferedResources(offer)
-//	if needResource.Cpus <= cpus && needResource.Mem <= mem && needResource.Disk <= disk {
-//		return true
-//	}
-//
-//	blog.V(3).Infof("offer %s resource not enough: need(%f, %f, %f), offer(%f, %f, %f)",
-//		*(offer.Id.Value), needResource.Cpus, needResource.Mem, needResource.Disk, cpus, mem, disk)
-//
-//	return false
-//}
 
 // Check whether the offer is match required resource for launching a taskgroup
 func (s *Scheduler) IsOfferResourceFitLaunch(needResource *types.Resource, outOffer *offer.Offer) bool {

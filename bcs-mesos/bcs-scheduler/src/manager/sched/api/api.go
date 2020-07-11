@@ -14,20 +14,21 @@
 package api
 
 import (
-	"bk-bcs/bcs-common/common"
-	comm "bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
-	commtypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"errors"
-	"github.com/emicklei/go-restful"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	comm "github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/emicklei/go-restful"
 )
 
 func (r *Router) queryAgentSettingList(req *restful.Request, resp *restful.Response) {
@@ -2356,5 +2357,61 @@ func (r *Router) fetchAdmissionwebhook(req *restful.Request, resp *restful.Respo
 	resp.Write([]byte(data))
 
 	blog.V(3).Info("request fetch admissions end")
+	return
+}
+
+//handle create daemonset in mesos cluster
+func (r *Router) createDaemonset(req *restful.Request, resp *restful.Response) {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
+		blog.Warn("scheduler is not master, can not process cmd")
+		return
+	}
+	var def types.BcsDaemonsetDef
+	decoder := json.NewDecoder(req.Request.Body)
+	if err := decoder.Decode(&def); err != nil {
+		blog.Error("fail to decode BcsDaemonsetDef json, err:%s", err.Error())
+		data := createResponeDataV2(comm.BcsErrCommJsonDecode, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+	blog.Info("request create daemonset(%s.%s)", def.NameSpace, def.Name)
+	if err := r.backend.LaunchDaemonset(&def); err != nil {
+		blog.Error("fail to launch daemonset(%s.%s), err:%s", def.NameSpace, def.Name, err.Error())
+		data := createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+	data := createResponeData(nil, "success", nil)
+	resp.Write([]byte(data))
+	blog.Info("request launch daemonset(%s.%s) end", def.NameSpace, def.Name)
+	return
+}
+
+//delete daemonset
+func (r *Router) deleteDaemonset(req *restful.Request, resp *restful.Response) {
+	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
+		blog.Warn("scheduler is not master, can not process cmd")
+		return
+	}
+	enforce := false
+	enforcePara := req.QueryParameter("enforce")
+	if enforcePara == "1" {
+		enforce = true
+	}
+	ns := req.PathParameter("namespace")
+	name := req.PathParameter("name")
+	blog.Infof("request force(%t) delete daemonset(%s.%s)", enforce, ns, name)
+	var data string
+	if err := r.backend.DeleteDaemonset(ns, name, enforce); err != nil {
+		blog.Error("fail to delete daemonset, err:%s", err.Error())
+		data = createResponeDataV2(comm.BcsErrMesosSchedCommon, err.Error(), nil)
+		resp.Write([]byte(data))
+		return
+	}
+
+	data = createResponeData(nil, "success", nil)
+	resp.Write([]byte(data))
+
+	blog.Info("request delete daemonset(%s.%s) end", ns, name)
 	return
 }

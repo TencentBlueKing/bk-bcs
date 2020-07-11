@@ -16,9 +16,9 @@ package listenerclient
 import (
 	"fmt"
 
-	cloudListenerType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
-	listenerClientV1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
-	listerV1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/network/v1"
+	cloudListenerType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	listenerClientV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/internalclientset/typed/network/v1"
+	listerV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/client/lister/network/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 )

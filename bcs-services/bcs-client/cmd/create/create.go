@@ -14,7 +14,7 @@
 package create
 
 import (
-	"bk-bcs/bcs-services/bcs-client/cmd/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 
 	"github.com/urfave/cli"
 )
@@ -35,7 +35,7 @@ func NewCreateCommand() cli.Command {
 			},
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Create type, value can be app/service/secret/configmap/deployment/user",
+				Usage: "Create type, value can be app/service/secret/configmap/deployment/user/daemonset",
 			},
 			cli.StringFlag{
 				Name:  "usertype",
@@ -76,6 +76,8 @@ func create(c *utils.ClientContext) error {
 		return createCustomResourceDefinition(c)
 	case "user":
 		return createUser(c)
+	case "daemonset":
+		return createDaemonset(c)
 	default:
 		//unkown type, try CustomResource
 		return createCustomResource(c)

@@ -14,7 +14,7 @@
 package options
 
 import (
-	"bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
 type UserManagerOptions struct {
@@ -31,6 +31,7 @@ type UserManagerOptions struct {
 	DSN             string          `json:"mysql_dsn" value:"" usage:"dsn for connect to mysql"`
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
 	TKE             TKEOptions      `json:"tke"`
+	PeerToken       string          `json:"peer_token" value:"" usage:"peer token to authorize with each other, only used to websocket peer"`
 }
 
 // tke api option

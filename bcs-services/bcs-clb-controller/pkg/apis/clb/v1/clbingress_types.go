@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	cloudlbType "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	cloudlbType "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

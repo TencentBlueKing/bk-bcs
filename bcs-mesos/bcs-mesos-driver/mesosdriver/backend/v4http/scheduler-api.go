@@ -14,19 +14,20 @@
 package v4http
 
 import (
-	"bk-bcs/bcs-common/common"
-	"bk-bcs/bcs-common/common/blog"
-	bhttp "bk-bcs/bcs-common/common/http"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-common/common/types"
-	commonTypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-common/common/util"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/webconsole"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 	"io/ioutil"
 	"strconv"
 	"sync"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/backend/webconsole"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 
 	restful "github.com/emicklei/go-restful"
 )
@@ -160,8 +161,12 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("PUT", "/namespaces/{ns}/deployments/{name}/pauseupdate", nil, s.pauseupdateDeploymentHandler),
 		httpserver.NewAction("PUT", "/namespaces/{ns}/deployments/{name}/resumeupdate", nil, s.resumeupdateDeploymentHandler),
 		httpserver.NewAction("PUT", "/namespaces/{ns}/deployments/{name}/scale/{instances}", nil, s.scaleDeploymentHandler),
-
 		/*================= deployment ====================*/
+
+		/*================= daemonset ====================*/
+		httpserver.NewAction("POST", "/namespaces/{ns}/daemonset", nil, s.createDaemonsetHandler),
+		httpserver.NewAction("DELETE", "/namespaces/{ns}/daemonset/{name}", nil, s.deleteDaemonsetHandler),
+		/*================= daemonset ====================*/
 
 		/*================= agentsetting ====================*/
 		//	httpserver.NewAction("POST","/agentsetting/{IP}/disable",nil,s.disableAgentHandler),

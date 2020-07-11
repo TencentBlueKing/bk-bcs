@@ -14,7 +14,7 @@
 package errors
 
 import (
-	"bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common"
 )
 
 type StorageError struct {

@@ -16,7 +16,7 @@
 package v2
 
 import (
-	internalinterfaces "bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.
@@ -35,6 +35,8 @@ type Interface interface {
 	BcsCommandInfos() BcsCommandInfoInformer
 	// BcsConfigMaps returns a BcsConfigMapInformer.
 	BcsConfigMaps() BcsConfigMapInformer
+	// BcsDaemonsets returns a BcsDaemonsetInformer.
+	BcsDaemonsets() BcsDaemonsetInformer
 	// BcsEndpoints returns a BcsEndpointInformer.
 	BcsEndpoints() BcsEndpointInformer
 	// BcsSecrets returns a BcsSecretInformer.
@@ -101,6 +103,11 @@ func (v *version) BcsCommandInfos() BcsCommandInfoInformer {
 // BcsConfigMaps returns a BcsConfigMapInformer.
 func (v *version) BcsConfigMaps() BcsConfigMapInformer {
 	return &bcsConfigMapInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// BcsDaemonsets returns a BcsDaemonsetInformer.
+func (v *version) BcsDaemonsets() BcsDaemonsetInformer {
+	return &bcsDaemonsetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // BcsEndpoints returns a BcsEndpointInformer.

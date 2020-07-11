@@ -22,12 +22,12 @@ import (
 
 	"golang.org/x/net/context"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/http/httpclient"
-	commtypes "bk-bcs/bcs-common/common/types"
-	lbtypes "bk-bcs/bcs-common/pkg/loadbalance/v2"
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	schedtypes "bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	lbtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/loadbalance/v2"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //CCResponse response struct from CC

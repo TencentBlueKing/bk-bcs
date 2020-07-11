@@ -14,14 +14,14 @@
 package server
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-api/config"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-api/pkg/rbac"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/rbac"
 
-	"bk-bcs/bcs-services/bcs-api/pkg/rbac/template"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
-	sqlutils "bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/rbac/template"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	sqlutils "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore/utils"
 )
 
 // Setup do initialize jobs for server

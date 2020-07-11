@@ -19,8 +19,8 @@ limitations under the License.
 package v1
 
 import (
-	v1 "bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	scheme "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/scheme"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
+	scheme "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned/scheme"
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"

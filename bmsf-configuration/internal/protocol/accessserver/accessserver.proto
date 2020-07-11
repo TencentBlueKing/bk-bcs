@@ -957,7 +957,16 @@ service Access {
             summary: "查询变量列表"
         };
     }
-
+    rpc Reload(ReloadReq) returns (ReloadResp) {
+        option (google.api.http) = {
+            post: "/v1/interface/reload"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Reload指定版本配置"
+            summary: "Reload指定版本配置"
+        };
+    }
 }
 
 message CreateBusinessReq {
@@ -1925,7 +1934,7 @@ message QueryReleaseConfigsReq {
 			description: "查询版本配置内容请求"
 			required: ["seq", "bid", "appid", "clusterid", "zoneid", "cfgsetid", "commitid"]
 		}
-        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "626889ba-e9c1-11e9-8c23-525400f9921221", "clusterid": "626889ba-e9c1-11e9-8c23-525400f99212", "zoneid": "626889ba-e9c1-11e9-8c23-525400f93847", "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "commitid": "1a9c2db1-e9c4-11e9-8c23-525400f99278", "abstract": false, "index": "X.X.X.1"}' }
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "626889ba-e9c1-11e9-8c23-525400f9921221", "clusterid": "626889ba-e9c1-11e9-8c23-525400f99212", "zoneid": "626889ba-e9c1-11e9-8c23-525400f93847", "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "commitid": "1a9c2db1-e9c4-11e9-8c23-525400f99278", "abstract": false, "index": "gsekit-X.X.X.1"}' }
 	};
 
     uint64 seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
@@ -1936,7 +1945,7 @@ message QueryReleaseConfigsReq {
     string cfgsetid  = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置集合ID", description: "", max_length: 64}];
     string commitid  = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标提交Commit ID", description: "", max_length: 64}];
     bool   abstract  = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否获取简略信息，即不返回数据内容只返回简略信息", description: ""}];
-    string index     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "扩展索引信息", description: "如节点IP等信息，以此来做扩展维度的内容索引", max_length: 64}];
+    string index     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "扩展索引信息", description: "如GSEKit节点IP等信息，以此来做扩展维度的内容索引", max_length: 64}];
 }
 
 message QueryReleaseConfigsResp {
@@ -2207,7 +2216,7 @@ message CreateMultiCommitReq {
     string                         operator      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
     string                         memo          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
     repeated common.CommitMetadata metadatas     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式配置提交元数据", description: ""}];
-    string                         reuseCommitid = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "差量重试复用ID", description: "多配置提交出现部分配置失败时可基于指定ID差量重试. 当需要修改体骄傲时也可使用该模式进行提交修改"}];
+    string                         reuseCommitid = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "差量重试复用ID", description: "多配置提交出现部分配置失败时可基于指定ID差量重试. 当需要修改提交时也可使用该模式进行提交修改(注意：同配置重试提交后单一配置的commitid会重新分配)"}];
 }
 
 message CreateMultiCommitResp {
@@ -4336,4 +4345,36 @@ message QueryVariableListResp {
     common.ErrCode errCode        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
     string         errMsg         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
     repeated common.Variable vars = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量列表", description: "" }];
+}
+
+message ReloadReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "ReloadReq"
+			description: "指定版本配置Reload请求"
+			required: ["seq", "bid", "operator"]
+        }
+        example: { value: '{ "seq": 1, "bid": "b879ab8f-xxxx-asdf-sdaf-525400f99278", "releaseid": "879ab8f-xxxx-asdf-sdaf-525400f9927", "multiReleaseid": "681gl66-xxxx-asdf-sdaf-525400f9927", "operator": "melo" }' }
+    };
+
+    uint64 seq            = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求" }];
+    string bid            = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "所属业务ID", description: "", max_length: 64 }];
+    string releaseid      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "可选，指定版本ID", description: "", max_length: 64 }];
+    string multiReleaseid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "可选，指定组模式版本ID", description: "", max_length: 64 }];
+    string operator       = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者名称", description: "", max_length: 64 }];
+}
+
+message ReloadResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "ReloadResp"
+			description: "指定版本配置Reload请求响应"
+			required: ["seq", "errCode", "errMsg"]
+        }
+        example: { value: '{ "seq": 1, "errCode": 0, "errMsg": "OK" }' }
+    };
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求" }];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误码", description: "" }];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "错误描述", description: "" }];
 }

@@ -14,7 +14,7 @@
 package etcd
 
 import (
-	"bk-bcs/bcs-services/bcs-netservice/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 )
 
 //NewStorage create etcd storage

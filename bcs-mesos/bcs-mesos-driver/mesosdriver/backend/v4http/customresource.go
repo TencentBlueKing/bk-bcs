@@ -14,10 +14,10 @@
 package v4http
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io"
 	"io/ioutil"
 	"net/http"

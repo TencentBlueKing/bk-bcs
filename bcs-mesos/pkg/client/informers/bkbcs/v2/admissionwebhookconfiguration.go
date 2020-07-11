@@ -16,10 +16,10 @@
 package v2
 
 import (
-	bkbcs_v2 "bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	internalinterfaces "bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
-	internalclientset "bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	v2 "bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	bkbcs_v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

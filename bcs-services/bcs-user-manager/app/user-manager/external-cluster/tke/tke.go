@@ -16,10 +16,10 @@ package tke
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/external-cluster"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/external-cluster/tke/common"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"bk-bcs/bcs-services/bcs-user-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/external-cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/external-cluster/tke/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 const (

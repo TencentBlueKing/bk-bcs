@@ -18,9 +18,9 @@ import (
 	"reflect"
 	"strconv"
 
-	"bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	loadbalance "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 )
 
 func (clb *ClbClient) addListener(ls *loadbalance.CloudListener) error {

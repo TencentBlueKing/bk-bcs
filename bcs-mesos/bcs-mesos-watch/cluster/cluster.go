@@ -14,7 +14,7 @@
 package cluster
 
 import (
-	"bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 
 	"golang.org/x/net/context"
 )

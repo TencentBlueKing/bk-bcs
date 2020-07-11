@@ -27,8 +27,8 @@ Please see the api document for details.
 package api
 
 import (
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/backend"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/backend"
 )
 
 type Router struct {
@@ -172,4 +172,9 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/admissionwebhooks", nil, r.fetchAllAdmissionwebhooks))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/admissionwebhook/{namespace}/{name}", nil, r.fetchAdmissionwebhook))
 	/*--------------admissionwebhook ----------------------*/
+
+	/*--------------daemonset ----------------------*/
+	r.actions = append(r.actions, httpserver.NewAction("POST", "/daemonsets", nil, r.createDaemonset))
+	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/daemonsets/{namespace}/{name}", nil, r.deleteDaemonset))
+	/*--------------daemonset ----------------------*/
 }

@@ -15,9 +15,9 @@
 package scheme
 
 import (
-	clbv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
-	meshv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
-	networkv1 "bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
+	clbv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/clb/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/mesh/v1"
+	networkv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

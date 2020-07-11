@@ -19,8 +19,8 @@ import (
 	"strings"
 	"testing"
 
-	"bk-bcs/bcs-services/bcs-storage/app/options"
-	"bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 
 	"github.com/emicklei/go-restful"
 )

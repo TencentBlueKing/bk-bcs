@@ -14,16 +14,16 @@
 package user_manager
 
 import (
-	"bk-bcs/bcs-common/common/blog"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"time"
 
-	"bk-bcs/bcs-common/common/encrypt"
-	m "bk-bcs/bcs-services/bcs-api/pkg/models"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-	"bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"bk-bcs/bcs-services/bcs-user-manager/config"
-	"bk-bcs/bcs-services/bcs-user-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
 // SetupStore setup db
@@ -41,6 +41,7 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.BcsRole{},
 		&models.BcsUserResourceRole{},
 		&models.TkeCidr{},
+		&models.BcsWsClusterCredentials{},
 
 		//compatible with bcs-api to sync old data
 		&m.ClusterCredentials{},

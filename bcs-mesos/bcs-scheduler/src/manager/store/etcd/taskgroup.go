@@ -14,10 +14,10 @@
 package etcd
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	schStore "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"time"
 
@@ -76,15 +76,20 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 			}
 		}
 	}
-	delay := (time.Now().UnixNano()-now)/1000/1000
-	if delay>50 {
+	delay := (time.Now().UnixNano() - now) / 1000 / 1000
+	if delay > 50 {
 		blog.Warnf("save taskgroup(%s) delay(%d)", taskGroup.ID, delay)
 	}
 	return nil
 }
 
-func (store *managerStore) listTaskgroupsInDB(runAs, appID string) ([]*types.TaskGroup, error) {
-	client := store.BkbcsClient.TaskGroups(runAs)
+//list mesos cluster taskgroups, include: application、deployment、daemonset...
+func (store *managerStore) ListClusterTaskgroups() ([]*types.TaskGroup, error) {
+	return listCacheTaskgroups()
+}
+
+func (store *managerStore) listTaskgroupsInDB() ([]*types.TaskGroup, error) {
+	client := store.BkbcsClient.TaskGroups("")
 	v2Taskgroups, err := client.List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -92,40 +97,28 @@ func (store *managerStore) listTaskgroupsInDB(runAs, appID string) ([]*types.Tas
 
 	taskgroups := make([]*types.TaskGroup, 0, len(v2Taskgroups.Items))
 	for _, taskgroup := range v2Taskgroups.Items {
-		if taskgroup.Spec.AppID == appID {
-			obj := taskgroup.Spec.TaskGroup
-			obj.ResourceVersion = taskgroup.ResourceVersion
-			//get tasks
-			taskIds := make([]string, 0, len(obj.Taskgroup))
-			for _, task := range obj.Taskgroup {
-				taskIds = append(taskIds, task.ID)
-			}
-			obj.Taskgroup = make([]*types.Task, len(taskIds))
-			for index, taskID := range taskIds {
-				task, err := store.FetchDBTask(taskID)
-				if err != nil {
-					blog.Error("fail to get task by ID(%s), err:%s", taskID, err.Error())
-					return nil, err
-				}
-
-				obj.Taskgroup[index] = task
-			}
-
-			taskgroups = append(taskgroups, &obj)
+		obj := taskgroup.Spec.TaskGroup
+		obj.ResourceVersion = taskgroup.ResourceVersion
+		//get tasks
+		taskIds := make([]string, 0, len(obj.Taskgroup))
+		for _, task := range obj.Taskgroup {
+			taskIds = append(taskIds, task.ID)
 		}
+		obj.Taskgroup = make([]*types.Task, len(taskIds))
+		for index, taskID := range taskIds {
+			task, err := store.FetchDBTask(taskID)
+			if err != nil {
+				blog.Error("fail to get task by ID(%s), err:%s", taskID, err.Error())
+				return nil, err
+			}
+
+			obj.Taskgroup[index] = task
+		}
+
+		taskgroups = append(taskgroups, &obj)
 	}
 
 	return taskgroups, nil
-}
-
-//ListTaskGroups show us all the task group on line
-func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
-	if cacheMgr.isOK {
-		cacheList, _ := listCacheTaskGroups(runAs, appID)
-		return cacheList, nil
-	}
-
-	return store.listTaskgroupsInDB(runAs, appID)
 }
 
 //DeleteTaskGroup delete a task group with executor id is taskGroupID

@@ -16,8 +16,8 @@
 package v1
 
 import (
-	v1 "bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
-	scheme "bk-bcs/bmsf-mesh/pkg/client/internalclientset/scheme"
+	v1 "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/apis/mesh/v1"
+	scheme "github.com/Tencent/bk-bcs/bmsf-mesh/pkg/client/internalclientset/scheme"
 
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"

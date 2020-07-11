@@ -14,9 +14,9 @@
 package backend
 
 import (
-	"bk-bcs/bcs-common/common/http/httpclient"
-	"bk-bcs/bcs-common/common/http/httpserver"
-	"bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 )
 
 type Scheduler interface {

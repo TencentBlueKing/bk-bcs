@@ -14,7 +14,7 @@
 package template
 
 import (
-	"bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
 	"os"
 
 	"github.com/emicklei/go-restful"

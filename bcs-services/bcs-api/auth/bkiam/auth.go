@@ -14,20 +14,20 @@
 package bkiam
 
 import (
-	"bk-bcs/bcs-services/bcs-api/options"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 	"io/ioutil"
 	"net/http"
 	"os"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-common/common/encrypt"
-	"bk-bcs/bcs-services/bcs-api/auth"
-	"bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 
 	"github.com/dgrijalva/jwt-go"
 )

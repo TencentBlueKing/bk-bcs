@@ -17,10 +17,10 @@ import (
 	"context"
 	"net/url"
 
-	commonTypes "bk-bcs/bcs-common/common/types"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/mesosproto/mesos"
-	"bk-bcs/bcs-services/bcs-client/pkg/types"
-	"bk-bcs/bcs-services/bcs-client/pkg/utils"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
@@ -33,6 +33,7 @@ type Scheduler interface {
 	CreateSecret(clusterID, namespace string, data []byte) error
 	CreateService(clusterID, namespace string, data []byte) error
 	CreateDeployment(clusterID, namespace string, data []byte) error
+	CreateDaemonset(clusterID, namespace string, data []byte) error
 
 	UpdateApplication(clusterID, namespace string, data []byte, extraValue url.Values) error
 	UpdateProcess(clusterID, namespace string, data []byte, extraValue url.Values) error
@@ -47,6 +48,7 @@ type Scheduler interface {
 	DeleteSecret(clusterID, namespace, name string, enforce bool) error
 	DeleteService(clusterID, namespace, name string, enforce bool) error
 	DeleteDeployment(clusterID, namespace, name string, enforce bool) error
+	DeleteDaemonset(clusterID, namespace, name string, enforce bool) error
 
 	ScaleApplication(clusterID, namespace, name string, instance int) error
 	ScaleProcess(clusterID, namespace, name string, instance int) error

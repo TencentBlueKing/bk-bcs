@@ -13,9 +13,9 @@
 package eip
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/qcloud-eip/conf"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
@@ -34,6 +34,12 @@ func newInstanceClient(conf *conf.NetConf) *instanceClient {
 		conf.UUID,
 	)
 	cpf := profile.NewClientProfile()
+
+	// set tencentcloud domain
+	if len(conf.TencentCloudCVMDomain) != 0 {
+		cpf.HttpProfile.Endpoint = conf.TencentCloudCVMDomain
+	}
+
 	client, err := cvm.NewClient(credential, conf.Region, cpf)
 	if err != nil {
 		blog.Errorf("new instance client failed, err %s", err.Error())

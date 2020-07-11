@@ -18,10 +18,10 @@ import (
 	"os"
 	"runtime"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/app"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/options"
-	"bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/app"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/options"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
 )
 
 func main() {

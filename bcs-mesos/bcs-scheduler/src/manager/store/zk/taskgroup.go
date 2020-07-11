@@ -14,10 +14,10 @@
 package zk
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"sort"
 	"strconv"
 	"strings"
@@ -77,19 +77,6 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 
 	return nil
 }
-
-/*
-func (store *managerStore) ListTaskGroupNodes(runAs, appID string) ([]string, error) {
-	path := getTaskGroupRootPath() + runAs + "/" + appID
-	taskGroupIds, err := store.Db.List(path)
-	if err != nil {
-		blog.Error("fail to get taskgroup ids by path(%s), err:%s", path, err.Error())
-		return nil, err
-	}
-
-	return taskGroupIds, nil
-}
-*/
 
 //ListTaskGroups show us all the task group on line
 func (store *managerStore) ListTaskGroups(runAs, appID string) ([]*types.TaskGroup, error) {
@@ -204,26 +191,6 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 	return nil
 }
 
-/*
-func (store *managerStore) FetchTaskGroupData(taskGroupID string) ([]byte, error) {
-
-	path, err := createTaskGroupPath(taskGroupID)
-	if err != nil {
-		blog.Error("fail to create taskgroup path, err:%s", err.Error())
-		return nil, err
-	}
-
-	data, err := store.Db.Fetch(path)
-	if err != nil {
-		// sometimes this is normal
-		//blog.Error("fail to get task group by ID(%s), err:%s", taskGroupID, err.Error())
-		return nil, err
-	}
-
-	return data, nil
-}
-*/
-
 //FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 
@@ -278,38 +245,21 @@ func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGrou
 	return &taskGroup, nil
 }
 
-/*
-func (store *managerStore) CleanTaskGroup(runAs, appID, taskGroupID string) error {
-
-	path := getTaskGroupRootPath() + runAs + "/" + appID + "/" + taskGroupID
-
-	taskIds, err := store.Db.List(path)
+//list mesos cluster taskgroups, include: application、deployment...
+func (store *managerStore) ListClusterTaskgroups() ([]*types.TaskGroup, error) {
+	apps, err := store.ListAllApplications()
 	if err != nil {
-		blog.Error("fail to list path:%s, err:%s", path, err.Error())
-		return err
+		return nil, err
 	}
 
-	//delete task nodes
-	if taskIds != nil {
-		for _, taskID := range taskIds {
-			taskNodePath := path + "/" + taskID
-			if err := store.Db.Delete(taskNodePath); err != nil {
-				blog.Error("fail to delete path(ID:%s), err:%s", taskNodePath, err.Error())
-				continue
-			} else {
-				blog.V(3).Infof("delete zk node(%s)", taskNodePath)
-			}
+	taskgroups := make([]*types.TaskGroup, 0)
+	for _, app := range apps {
+		taskgs, err := store.ListTaskGroups(app.RunAs, app.ID)
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	// delete task group node
-	if err = store.Db.Delete(path); err != nil {
-		blog.Error("fail to delete taskgroup node (%s), err:%s", path, err.Error())
-		return err
-	} else {
-		blog.V(3).Infof("delete zk node(%s)", path)
+		taskgroups = append(taskgroups, taskgs...)
 	}
-
-	return nil
+	return taskgroups, nil
 }
-*/

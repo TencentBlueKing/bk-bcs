@@ -17,7 +17,7 @@ import (
 	"reflect"
 	"testing"
 
-	"bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 func TestCopyMap(t *testing.T) {

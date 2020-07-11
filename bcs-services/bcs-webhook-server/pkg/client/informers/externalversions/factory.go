@@ -19,9 +19,9 @@ limitations under the License.
 package externalversions
 
 import (
-	versioned "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	bk_bcs "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/bk-bcs"
-	internalinterfaces "bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/internalinterfaces"
+	versioned "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
+	bk_bcs "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/bk-bcs"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions/internalinterfaces"
 	reflect "reflect"
 	sync "sync"
 	time "time"

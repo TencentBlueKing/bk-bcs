@@ -16,10 +16,10 @@ package tke
 import (
 	"fmt"
 
-	"bk-bcs/bcs-services/bcs-api/config"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster"
-	"bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke/common"
-	"bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
 const (

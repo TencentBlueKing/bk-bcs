@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	exe "bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
+	exe "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/mesos/executor"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mesos/mesos-go/api/v0/upid"

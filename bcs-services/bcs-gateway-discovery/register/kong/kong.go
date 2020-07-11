@@ -17,8 +17,8 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-services/bcs-gateway-discovery/register"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 
 	"github.com/DeveloperJim/gokong"
 )

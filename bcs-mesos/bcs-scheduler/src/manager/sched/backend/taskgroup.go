@@ -15,12 +15,13 @@ package backend
 
 import (
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 	"net/http"
 
-	"bk-bcs/bcs-common/common/blog"
-	commonTypes "bk-bcs/bcs-common/common/types"
-	sched "bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
-	"bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	sched "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 const (
@@ -30,51 +31,20 @@ const (
 //RescheduleTaskgroup is used to reschedule taskgroup.
 func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) error {
 	blog.Infof("reschedule taskgroup(%s)", taskgroupId)
-
 	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
-
-	app, err := b.store.FetchApplication(runAs, appID)
-	if err != nil {
-		blog.Error("reschedule taskgroup(%s) fail, fetch application(%s.%s) err:%s", taskgroupId, runAs, appID, err.Error())
-		return err
+	//check taskgroup whether belongs to daemonset
+	if b.sched.CheckPodBelongDaemonset(taskgroupId) {
+		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appID)
+		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appID)
+	} else {
+		b.store.LockApplication(runAs + "." + appID)
+		defer b.store.UnLockApplication(runAs + "." + appID)
 	}
-
-	if app == nil {
-		blog.Error("reschedule taskgroup(%s) fail, get application(%s.%s) return nil", taskgroupId, runAs, appID)
-		return errors.New("Application not found")
-	}
-	/*if app.Status == types.APP_STATUS_OPERATING {
-		blog.Warn("reschedule taskgroup(%s) fail, application(%s.%s) status(%s) err", taskgroupId, runAs, appID, app.Status)
-		return errors.New("Operation Not Allowed")
-	}
-	if app.Status == types.APP_STATUS_ROLLINGUPDATE && app.SubStatus != types.APP_SUBSTATUS_ROLLINGUPDATE_UP {
-		blog.Error("reschedule taskgroup(%s) fail, application(%s.%s) status(%s:%s) err",
-			taskgroupId, runAs, appID, app.Status, app.SubStatus)
-		return errors.New("operation Not Allowed")
-	}*/
-
-	b.store.LockApplication(runAs + "." + appID)
-	defer b.store.UnLockApplication(runAs + "." + appID)
-
-	//versions, err := b.store.ListVersions(runAs, appID)
-	//if err != nil {
-	//	blog.Error("reschedule taskgroup(%s) fail, list version(%s.%s) err:%s", taskgroupId, runAs, appID, err.Error())
-	//	return err
-	//}
-	//sort.Strings(versions)
-	//newestVersion := versions[len(versions)-1]
-	version, _ := b.store.GetVersion(runAs, appID)
-	if version == nil {
-		blog.Error("reschedule taskgroup(%s) fail, no version for application(%s.%s)", taskgroupId, runAs, appID)
-		return errors.New("application version not exist")
-	}
-
 	taskgroup, err := b.store.FetchTaskGroup(taskgroupId)
 	if err != nil {
 		blog.Errorf("reschedule taskgroup(%s) fail, fetch taskgroup err: %s", taskgroupId, err.Error())
 		return err
 	}
-
 	// here kill taskGroup
 	resp, err := b.sched.KillTaskGroup(taskgroup)
 	if err != nil {
@@ -96,7 +66,17 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 			return err
 		}
 	}
+	//if taskgroup belongs to daemonsets, then don't trigger reschedule transaction
+	if b.sched.CheckPodBelongDaemonset(taskgroupId) {
+		return nil
+	}
 
+	//trigger taskgroup reschedule
+	version, _ := b.store.GetVersion(runAs, appID)
+	if version == nil {
+		blog.Error("reschedule taskgroup(%s) fail, no version for application(%s.%s)", taskgroupId, runAs, appID)
+		return errors.New("application version not exist")
+	}
 	rescheduleTrans := sched.CreateTransaction()
 	rescheduleTrans.RunAs = runAs
 	rescheduleTrans.AppID = appID

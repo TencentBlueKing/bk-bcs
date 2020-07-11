@@ -19,9 +19,9 @@ import (
 	"net/url"
 	"strings"
 
-	"bk-bcs/bcs-common/common/codec"
-	"bk-bcs/bcs-services/bcs-client/pkg/types"
-	"bk-bcs/bcs-services/bcs-client/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 )
 
 type Storage interface {

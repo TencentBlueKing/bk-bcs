@@ -13,11 +13,11 @@
 package conf
 
 import (
-	"bk-bcs/bcs-common/common/blog"
-	"bk-bcs/bcs-common/common/encrypt"
-	bcsconf "bk-bcs/bcs-services/bcs-netservice/config"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
 	"io/ioutil"
 	"os"
 
@@ -35,16 +35,18 @@ type NetArgs struct {
 // NetConf net config
 type NetConf struct {
 	types.NetConf
-	Master     string   `json:"master"`
-	ENIPrefix  string   `json:"eniPrefix"`
-	ClusterID  string   `json:"clusterId"`
-	Region     string   `json:"region"`
-	Secret     string   `json:"secret"`
-	UUID       string   `json:"uuid"`
-	SubnetID   string   `json:"subnetId,omitempty"`
-	MTU        int      `json:"mtu,omitempty"`
-	NetService *NetArgs `json:"netservice,omitempty"`
-	Args       *bcsconf.CNIArgs
+	TencentCloudCVMDomain string   `json:"tencentcloudCVMDomain"`
+	TencentCloudVPCDomain string   `json:"tencentcloudVPCDomain"`
+	Master                string   `json:"master"`
+	ENIPrefix             string   `json:"eniPrefix"`
+	ClusterID             string   `json:"clusterId"`
+	Region                string   `json:"region"`
+	Secret                string   `json:"secret"`
+	UUID                  string   `json:"uuid"`
+	SubnetID              string   `json:"subnetId,omitempty"`
+	MTU                   int      `json:"mtu,omitempty"`
+	NetService            *NetArgs `json:"netservice,omitempty"`
+	Args                  *bcsconf.CNIArgs
 }
 
 // LoadConf load config

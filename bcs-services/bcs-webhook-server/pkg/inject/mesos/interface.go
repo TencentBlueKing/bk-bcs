@@ -14,7 +14,7 @@
 package mesos
 
 import (
-	commtypes "bk-bcs/bcs-common/common/types"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 type MesosInject interface {

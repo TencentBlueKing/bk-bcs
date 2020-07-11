@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"time"
 
-	"bk-bcs/bcs-common/common/blog"
-	protoExec "bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf/executor"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	protoExec "github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf/executor"
 
 	"github.com/golang/protobuf/proto"
 )
