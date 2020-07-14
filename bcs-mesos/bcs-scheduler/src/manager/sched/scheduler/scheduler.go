@@ -889,6 +889,10 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 	return mesosClient.GetStateFromCluster()
 }
 
+func (s *Scheduler) UpdateMesosAgents(){
+	s.oprMgr.UpdateMesosAgents()
+}
+
 //for build pod index in agent
 func (s *Scheduler) syncAgentsettingPods() error {
 	taskg, err := s.store.ListClusterTaskgroups()
