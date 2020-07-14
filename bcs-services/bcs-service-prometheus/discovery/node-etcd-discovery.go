@@ -86,7 +86,7 @@ func (disc *nodeEtcdDiscovery) Start() error {
 
 	go disc.syncTickerPromSdConfig()
 	disc.initSuccess = true
-	disc.eventHandler(disc.module)
+	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 	return nil
 }
 
@@ -143,7 +143,7 @@ func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
 		return
 	}
 
-	disc.eventHandler(disc.module)
+	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 }
 
 // if on update event, then don't need to update sd config
@@ -159,7 +159,7 @@ func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
 	}
 
 	// call event handler
-	disc.eventHandler(disc.module)
+	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 }
 
 func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
@@ -168,6 +168,6 @@ func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
 	select {
 	case <-ticker.C:
 		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		disc.eventHandler(disc.module)
+		disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 	}
 }

@@ -75,15 +75,15 @@ func (prom *PrometheusController) Start() error {
 			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
 			return err
 		}
-		err = dis.Start()
-		if err != nil {
-			blog.Errorf("mesosDiscovery start failed: %s", err.Error())
-			return err
-		}
 		//register event handle function
 		dis.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.mesosModules {
 			prom.discoverys[module] = dis
+		}
+		err = dis.Start()
+		if err != nil {
+			blog.Errorf("mesosDiscovery start failed: %s", err.Error())
+			return err
 		}
 	}
 
@@ -120,15 +120,15 @@ func (prom *PrometheusController) Start() error {
 			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
 			return err
 		}
-		err = serviceDiscovery.Start()
-		if err != nil {
-			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
-			return err
-		}
 		//register event handle function
 		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.serviceModules {
 			prom.discoverys[module] = serviceDiscovery
+		}
+		err = serviceDiscovery.Start()
+		if err != nil {
+			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
+			return err
 		}
 	}
 
@@ -139,56 +139,54 @@ func (prom *PrometheusController) Start() error {
 			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
 			return err
 		}
+		//register event handle function
+		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
+		prom.discoverys[prom.serviceMonitor] = serviceDiscovery
 		err = serviceDiscovery.Start()
 		if err != nil {
 			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
 			return err
-		}
-		//register event handle function
-		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
-		for _, module := range prom.serviceModules {
-			prom.discoverys[module] = serviceDiscovery
 		}
 	}
 
 	return nil
 }
 
-func (prom *PrometheusController) handleDiscoveryEvent(discoveryKey string) {
+func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.DiscoveryInfo) {
 	prom.Lock()
 	defer prom.Unlock()
 
-	blog.Infof("discovery %s service discovery config changed", discoveryKey)
-	disc, ok := prom.discoverys[discoveryKey]
+	blog.Infof("discovery %s service discovery config changed", dInfo.Module)
+	disc, ok := prom.discoverys[dInfo.Module]
 	if !ok {
-		blog.Errorf("not found discovery %s", discoveryKey)
+		blog.Errorf("not found discovery %s", dInfo.Module)
 		return
 	}
 
-	sdConfig, err := disc.GetPrometheusSdConfig(discoveryKey)
+	sdConfig, err := disc.GetPrometheusSdConfig(dInfo.Key)
 	if err != nil {
-		blog.Errorf("discovery %s get prometheus service discovery config error %s", discoveryKey, err.Error())
+		blog.Errorf("discovery %s get prometheus service discovery config error %s", dInfo.Key, err.Error())
 		return
 	}
 	by, _ := json.Marshal(sdConfig)
 
-	file, err := os.OpenFile(disc.GetPromSdConfigFile(discoveryKey), os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(disc.GetPromSdConfigFile(dInfo.Key), os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		blog.Errorf("open/create file %s error %s", disc.GetPromSdConfigFile(discoveryKey), err.Error())
+		blog.Errorf("open/create file %s error %s", disc.GetPromSdConfigFile(dInfo.Key), err.Error())
 		return
 	}
 	defer file.Close()
 
 	err = file.Truncate(0)
 	if err != nil {
-		blog.Errorf("Truncate file %s error %s", disc.GetPromSdConfigFile(discoveryKey), err.Error())
+		blog.Errorf("Truncate file %s error %s", disc.GetPromSdConfigFile(dInfo.Key), err.Error())
 		return
 	}
 	_, err = file.Write(by)
 	if err != nil {
-		blog.Errorf("write file %s error %s", disc.GetPromSdConfigFile(discoveryKey), err.Error())
+		blog.Errorf("write file %s error %s", disc.GetPromSdConfigFile(dInfo.Key), err.Error())
 		return
 	}
 
-	blog.Infof("discovery %s write config file %s success", discoveryKey, disc.GetPromSdConfigFile(discoveryKey))
+	blog.Infof("discovery %s write config file %s success", dInfo.Key, disc.GetPromSdConfigFile(dInfo.Key))
 }
