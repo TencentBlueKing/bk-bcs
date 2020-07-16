@@ -138,12 +138,10 @@ func (disc *serviceMonitor) Start() error {
 		return err
 	}
 	internalFactory := informers.NewSharedInformerFactory(internalClientset, 0)
-	disc.endpointLister = internalFactory.Bkbcs().V2().BcsEndpoints().Lister()
 	disc.endpointInformer = internalFactory.Bkbcs().V2().BcsEndpoints().Informer()
 	blog.Infof("build bkbcsClientset for config %s success", disc.kubeconfig)
 
 	//init monitor clientset
-	disc.serviceMonitorLister = internalFactory.Monitor().V1().ServiceMonitors().Lister()
 	disc.serviceMonitorInformer = internalFactory.Monitor().V1().ServiceMonitors().Informer()
 	internalFactory.Start(stopCh)
 	// Wait for all caches to sync.
