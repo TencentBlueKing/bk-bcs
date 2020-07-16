@@ -16,19 +16,20 @@ package discovery
 import (
 	"fmt"
 	"path"
-	"time"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
+	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/cache"
 )
 
 type nodeEtcdDiscovery struct {
+	sync.RWMutex
 	kubeconfig     string
 	sdFilePath     string
 	cadvisorPort   int
@@ -36,9 +37,10 @@ type nodeEtcdDiscovery struct {
 	module         string
 
 	eventHandler   EventHandleFunc
-	nodeLister     bkbcsv2.AgentLister
+	nodeInformer   cache.SharedIndexInformer
 	initSuccess    bool
 	promFilePrefix string
+	nodes          map[string]struct{}
 }
 
 // new nodeEtcdDiscovery for discovery node cadvisor targets
@@ -49,6 +51,7 @@ func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadv
 		cadvisorPort:   cadvisorPort,
 		nodeExportPort: nodeExportPort,
 		module:         module,
+		nodes: make(map[string]struct{}),
 	}
 	switch module {
 	case CadvisorModule:
@@ -78,36 +81,30 @@ func (disc *nodeEtcdDiscovery) Start() error {
 		return err
 	}
 	internalFactory := informers.NewSharedInformerFactory(internalClientset, 0)
-	disc.nodeLister = internalFactory.Bkbcs().V2().Agents().Lister()
+	disc.nodeInformer = internalFactory.Bkbcs().V2().Agents().Informer()
 	internalFactory.Start(stopCh)
 	// Wait for all caches to sync.
 	internalFactory.WaitForCacheSync(stopCh)
 	blog.Infof("build internalClientset for config %s success", disc.kubeconfig)
-
-	go disc.syncTickerPromSdConfig()
-	disc.initSuccess = true
-	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
+	disc.nodeInformer.AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    disc.OnAdd,
+			UpdateFunc: disc.OnUpdate,
+			DeleteFunc: disc.OnDelete,
+		},
+	)
 	return nil
 }
 
 func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
-	nodes, err := disc.nodeLister.List(labels.Everything())
-	if err != nil {
-		return nil, err
-	}
-
+	disc.Lock()
+	disc.Unlock()
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
-	for _, node := range nodes {
-		ip := node.Spec.GetAgentIP()
-		if ip == "" {
-			blog.Errorf("discovery %s node %s not found InnerIP", disc.module, node.GetName())
-			continue
-		}
-
+	for nodeIp, _ := range disc.nodes {
 		switch disc.module {
 		case CadvisorModule:
 			conf := &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", ip, disc.cadvisorPort)},
+				Targets: []string{fmt.Sprintf("%s:%d", nodeIp, disc.cadvisorPort)},
 				Labels: map[string]string{
 					DefaultBcsModuleLabelKey: disc.module,
 				},
@@ -117,7 +114,7 @@ func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.Pr
 
 		case NodeexportModule:
 			conf := &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", ip, disc.nodeExportPort)},
+				Targets: []string{fmt.Sprintf("%s:%d", nodeIp, disc.nodeExportPort)},
 				Labels: map[string]string{
 					DefaultBcsModuleLabelKey: disc.module,
 				},
@@ -139,30 +136,52 @@ func (disc *nodeEtcdDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 }
 
 func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
-	if !disc.initSuccess {
+	disc.Lock()
+	defer disc.Unlock()
+
+	agent, ok := obj.(*apisbkbcsv2.Agent)
+	if !ok {
+		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
 		return
 	}
+	blog.Infof("recieve Agent(%s) Add event", agent.Name)
+	ip := agent.Spec.GetAgentIP()
+	if ip == "" {
+		blog.Errorf("node %s not found InnerIP", agent.GetName())
+		return
+	}
+	disc.nodes[ip] = struct{}{}
 
 	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 }
 
 // if on update event, then don't need to update sd config
 func (disc *nodeEtcdDiscovery) OnUpdate(old, cur interface{}) {
-	if !disc.initSuccess {
-		return
-	}
+	//do nothing
 }
 
 func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
-	if !disc.initSuccess {
+	disc.Lock()
+	defer disc.Unlock()
+
+	agent, ok := obj.(*apisbkbcsv2.Agent)
+	if !ok {
+		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
 		return
 	}
+	blog.Infof("recieve Agent(%s) Delete event", agent.Name)
+	ip := agent.Spec.GetAgentIP()
+	if ip == "" {
+		blog.Errorf("node %s not found InnerIP", agent.GetName())
+		return
+	}
+	delete(disc.nodes, ip)
 
 	// call event handler
 	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 }
 
-func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
+/*func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
 	ticker := time.NewTicker(time.Minute * 5)
 
 	select {
@@ -170,4 +189,4 @@ func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
 		blog.V(3).Infof("ticker sync prometheus service discovery config")
 		disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 	}
-}
+}*/
