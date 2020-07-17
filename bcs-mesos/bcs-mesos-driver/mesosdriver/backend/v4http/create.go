@@ -15,6 +15,7 @@ package v4http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
@@ -272,7 +273,23 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		//env
 		container.Docker.Env = make(map[string]string)
 		for _, env := range c.Env {
-			container.Docker.Env[env.Name] = env.Value
+			if env.ValueFrom!=nil && env.ValueFrom.ResourceFieldRef!=nil && env.ValueFrom.ResourceFieldRef.Resource!="" {
+				switch env.ValueFrom.ResourceFieldRef.Resource {
+				case "requests.cpu":
+					container.Docker.Env[env.Name] = fmt.Sprintf("%f", container.Resources.Cpus*1000)
+				case "requests.memory":
+					container.Docker.Env[env.Name] = fmt.Sprintf("%f", container.Resources.Mem)
+				case "limits.cpu":
+					container.Docker.Env[env.Name] = fmt.Sprintf("%f", container.LimitResoures.Cpus*1000)
+				case "limits.memory":
+					container.Docker.Env[env.Name] = fmt.Sprintf("%f", container.LimitResoures.Mem)
+				default:
+					blog.Errorf("Deployment(%s:%s) Env(%s) ValueFrom(%s) is invalid",
+						version.ObjectMeta.NameSpace, version.ObjectMeta.Name, env.Name, env.ValueFrom.ResourceFieldRef.Resource)
+				}
+			}else {
+				container.Docker.Env[env.Name] = env.Value
+			}
 		}
 
 		//volume
