@@ -43,7 +43,7 @@ type GameStatefulSetPodControlInterface interface {
 	// storage this method is a no-op. If the Pod must be mutated to conform to the Set, it is mutated and updated.
 	// pod is an in-out parameter, and any updates made to the pod are reflected as mutations to this parameter. If
 	// the create is successful, the returned error is nil.
-	UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error
+	UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod, updateType string) error
 	// DeleteGameStatefulSetPod deletes a Pod in a StatefulSet. The pods PVCs are not deleted. If the delete is successful,
 	// the returned error is nil.
 	DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error
@@ -88,7 +88,7 @@ func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.
 	return err
 }
 
-func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
+func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod, updateType string) error {
 	attemptedUpdate := false
 	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		// assume the Pod is consistent
@@ -135,7 +135,7 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		return updateErr
 	})
 	if attemptedUpdate {
-		spc.recordPodEvent("update", set, pod, err)
+		spc.recordPodEvent(updateType, set, pod, err)
 	}
 	return err
 }

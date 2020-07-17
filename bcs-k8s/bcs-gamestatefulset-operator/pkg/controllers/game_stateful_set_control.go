@@ -509,7 +509,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		}
 		// Make a deep copy so we don't mutate the shared cache
 		replica := replicas[i].DeepCopy()
-		if err := ssc.podControl.UpdateGameStatefulSetPod(updateSet, replica); err != nil {
+		if err := ssc.podControl.UpdateGameStatefulSetPod(updateSet, replica, "update"); err != nil {
 			klog.Errorf("Update GameStatefulSet %s/%s in normal replicas iteration err, %s", updateSet.Namespace, updateSet.Name, err.Error())
 			return &status, err
 		}
@@ -573,9 +573,10 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	if set.Spec.UpdateStrategy.RollingUpdate != nil {
 		updateMin = int(*set.Spec.UpdateStrategy.RollingUpdate.Partition)
 	}
-	//(DeveloperJim): InplaceUpdate rollingupdate handle here
-	if set.Spec.UpdateStrategy.Type == stsplus.InplaceUpdateGameStatefulSetStrategyType {
 
+	switch set.Spec.UpdateStrategy.Type {
+	//(DeveloperJim): InplaceUpdate handle here
+	case stsplus.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name {
 				klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
@@ -584,7 +585,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 					set,
 					updateRevision.Name,
 					replicas[target])
-				err := ssc.podControl.UpdateGameStatefulSetPod(set, replica)
+				err := ssc.podControl.UpdateGameStatefulSetPod(set, replica, stsplus.InplaceUpdateGameStatefulSetStrategyType)
 				status.CurrentReplicas--
 				return &status, err
 			}
@@ -598,7 +599,8 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				return &status, nil
 			}
 		}
-	} else if set.Spec.UpdateStrategy.Type == stsplus.RollingUpdateGameStatefulSetStrategyType {
+	// RollingUpdate handle here
+	case stsplus.RollingUpdateGameStatefulSetStrategyType:
 		// we terminate the Pod with the largest ordinal that does not match the update revision.
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 
@@ -623,7 +625,33 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				return &status, nil
 			}
 		}
+
+	//(DeveloperBryanhe): InplaceHotPatch handle here
+	case stsplus.InplaceHotPatchGameStatefulSetStrategyType:
+		for target := len(replicas) - 1; target >= updateMin; target-- {
+			if getPodRevision(replicas[target]) != updateRevision.Name {
+				klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
+					set.Name, replicas[target].Name)
+				replica := updateVersionedGameStatefulSetPodHotPatch(
+					set,
+					updateRevision.Name,
+					replicas[target])
+				err := ssc.podControl.UpdateGameStatefulSetPod(set, replica, stsplus.InplaceHotPatchGameStatefulSetStrategyType)
+				status.CurrentReplicas--
+				return &status, err
+			}
+			//TODO(DeveloperJim): add parallel featrue for fast rolling Update
+			if !isHealthy(replicas[target]) {
+				klog.V(3).Infof(
+					"GameStatefulSet %s/%s is waiting for Pod %s healthy to InplaceUpdate",
+					set.Namespace,
+					set.Name,
+					replicas[target].Name)
+				return &status, nil
+			}
+		}
 	}
+
 	return &status, nil
 }
 

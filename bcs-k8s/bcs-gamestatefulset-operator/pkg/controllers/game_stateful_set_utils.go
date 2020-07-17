@@ -42,6 +42,11 @@ import (
 // maxUpdateRetries is the maximum number of retries used for update conflict resolution prior to failure
 const maxUpdateRetries = 10
 
+const (
+	//support hot update container in annotation
+	PodHotpatchContainerKey = "io.kubernetes.hotpatch.container"
+)
+
 // updateConflictError is the error used to indicate that the maximum number of retries against the API server have
 // been attempted and we need to back off
 var updateConflictError = fmt.Errorf("aborting update after %d attempts", maxUpdateRetries)
@@ -308,6 +313,67 @@ func updateVersionedGameStatefulSetPod(updateSet *stsplus.GameStatefulSet, updat
 	for k, v := range updateSet.Spec.Template.Annotations {
 		pod.Annotations[k] = v
 	}
+	if updateSet.Spec.Template.Spec.ActiveDeadlineSeconds != nil {
+		pod.Spec.ActiveDeadlineSeconds = updateSet.Spec.Template.Spec.ActiveDeadlineSeconds
+	}
+
+	if len(pod.Spec.InitContainers) > 0 {
+		// Deep copy initContainers
+		desiredInitContainers := make(map[string]v1.Container)
+		for _, container := range updateSet.Spec.Template.Spec.InitContainers {
+			desiredInitContainers[container.Name] = container
+		}
+		for i := range pod.Spec.InitContainers {
+			if container, ok := desiredInitContainers[pod.Spec.InitContainers[i].Name]; ok {
+				pod.Spec.InitContainers[i].Image = container.Image
+			}
+		}
+	}
+
+	// Deep copy container
+	desiredContainers := make(map[string]v1.Container)
+	for _, container := range updateSet.Spec.Template.Spec.Containers {
+		desiredContainers[container.Name] = container
+	}
+	for i := range pod.Spec.Containers {
+		if container, ok := desiredContainers[pod.Spec.Containers[i].Name]; ok {
+			pod.Spec.Containers[i].Image = container.Image
+		}
+	}
+
+	// TODO
+	// only additions to existing tolerations
+
+	setPodRevision(pod, updateRevision)
+	return pod
+}
+
+// updateVersionedGameStatefulSetPod creates a new Pod for a GameStatefulSet. currentSet is the representation of the set at the
+// current revision. updateSet is the representation of the set at the updateRevision. currentRevision is the name of
+// the current revision. updateRevision is the name of the update revision. ordinal is the ordinal of the Pod. If the
+// returned error is nil, the returned Pod is valid.
+func updateVersionedGameStatefulSetPodHotPatch(updateSet *stsplus.GameStatefulSet, updateRevision string, oldPod *v1.Pod) *v1.Pod {
+	// Make a deep copy so we don't mutate the shared cache
+	pod := oldPod.DeepCopy()
+	//copy Pod Labels & Annotations
+	if pod.Labels == nil {
+		pod.Labels = make(labels.Set)
+	}
+	for k, v := range updateSet.Spec.Template.Labels {
+		pod.Labels[k] = v
+	}
+	if pod.Annotations == nil {
+		pod.Annotations = make(labels.Set)
+	}
+	for k, v := range updateSet.Spec.Template.Annotations {
+		pod.Annotations[k] = v
+	}
+
+	_, ok := pod.Annotations[PodHotpatchContainerKey]
+	if !ok {
+		pod.Annotations[PodHotpatchContainerKey] = "true"
+	}
+
 	if updateSet.Spec.Template.Spec.ActiveDeadlineSeconds != nil {
 		pod.Spec.ActiveDeadlineSeconds = updateSet.Spec.Template.Spec.ActiveDeadlineSeconds
 	}

@@ -100,6 +100,8 @@ const (
 	// strategy, new Pods will be created from the specification version indicated
 	// by the StatefulSet's updateRevision.
 	InplaceUpdateGameStatefulSetStrategyType = "InplaceUpdate"
+	// InplaceHotPatchGameStatefulSetStrategyType indicates that pods in the GameStatefulSet will be update in-place hot patch
+	InplaceHotPatchGameStatefulSetStrategyType = "InplaceHotPatch"
 )
 
 // RollingUpdateGameStatefulSetStrategy is used to communicate parameter for RollingUpdateStatefulSetStrategyType.
