@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -78,7 +77,7 @@ type managerStore struct {
 	regkey   *regexp.Regexp
 	regvalue *regexp.Regexp
 
-	wg     sync.WaitGroup
+	//wg     sync.WaitGroup
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -153,25 +152,27 @@ func (s *managerStore) StopStoreMetrics() {
 	s.cancel()
 
 	time.Sleep(time.Second)
-	s.wg.Wait()
+//	s.wg.Wait()
 }
 
 //store metrics report prometheus
 func (s *managerStore) StartStoreObjectMetrics() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
-
 	for {
 		time.Sleep(time.Minute)
-
-		select {
-		case <-s.ctx.Done():
-			blog.Infof("stop scheduler store metrics")
-			return
-
-		default:
-			s.wg.Add(1)
-			store.ObjectResourceInfo.Reset()
+		if cacheMgr==nil || !cacheMgr.isOK {
+			continue
 		}
+		blog.Infof("start produce metrics")
+		store.ObjectResourceInfo.Reset()
+		store.TaskgroupInfo.Reset()
+		store.AgentCpuResourceRemain.Reset()
+		store.AgentCpuResourceTotal.Reset()
+		store.AgentMemoryResourceRemain.Reset()
+		store.AgentMemoryResourceTotal.Reset()
+		store.StorageOperatorFailedTotal.Reset()
+		store.StorageOperatorLatencyMs.Reset()
+		store.StorageOperatorTotal.Reset()
 
 		// handle service metrics
 		services, err := s.ListAllServices()
@@ -243,8 +244,6 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			store.ReportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
 				info.MemTotal, info.MemTotal-info.MemUsed)
 		}
-
-		s.wg.Done()
 	}
 }
 

@@ -790,7 +790,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 			s.dataChecker.SendMsg(&msg)
 			blog.Info("after close data check goroutine")
 		}
-		s.store.StopStoreMetrics()
+		//s.store.StopStoreMetrics()
 		s.store.UnInitCacheMgr()
 		//stop check and build daemonset
 		s.stopBuildDaemonset()
@@ -810,7 +810,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 	//current role is master
 	s.Role = currRole
-	//go s.store.StartStoreObjectMetrics()
+	go s.store.StartStoreObjectMetrics()
 	go s.startCheckDeployments()
 	if s.ServiceMgr != nil {
 		var msgOpen ServiceMgrMsg
