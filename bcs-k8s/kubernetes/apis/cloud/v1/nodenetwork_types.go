@@ -32,7 +32,7 @@ type IPAddress struct {
 type NetworkInterfaceAttachment struct {
 	Index int `json:"index,omitempty"`
 	// for aws
-	AttachmentID string `json:"attachmentId,omitempty"`
+	AttachmentID string `json:"attachmentID,omitempty"`
 	// for tencent cloud
 	EniID      string `json:"eniID,omitempty"`
 	InstanceID string `json:"instanceId"`
@@ -41,32 +41,45 @@ type NetworkInterfaceAttachment struct {
 // ElasticNetworkInterface status for elastic network interface
 type ElasticNetworkInterface struct {
 	Index              int                         `json:"index"`
-	EniID              string                      `json:"eniId"`
-	RouteTableID       int                         `json:"routeTableId"`
+	EniID              string                      `json:"eniID"`
+	RouteTableID       int                         `json:"routeTableID"`
 	EniName            string                      `json:"eniName,omitempty"`
 	EniIfaceName       string                      `json:"eniIfaceName"`
-	EniSubnetID        string                      `json:"eniSubnetId"`
+	EniSubnetID        string                      `json:"eniSubnetID"`
 	EniSubnetCidr      string                      `json:"eniSubnetCidr"`
 	MacAddress         string                      `json:"macAddress"`
 	Attachment         *NetworkInterfaceAttachment `json:"attachment"`
 	IPNum              int                         `json:"ipNum"`
 	Address            *IPAddress                  `json:"address"`
-	SecondaryAddresses []*IPAddress                `json:"secondaryAddresses"`
+	SecondaryAddresses []*IPAddress                `json:"secondaryAddresses,omitempty"`
+}
+
+// FloatingIPObject floating ip object
+type FloatingIPObject struct {
+	ContainerID string `json:"containerID"`
+	PodName     string `json:"podName"`
+	Namespace   string `json:"namespace"`
+	Cluster     string `json:"cluster"`
+	IP          string `json:"ip"`
 }
 
 // FloatingIPNetworkInterface status for elastic network interface used to bind floating ip
 type FloatingIPNetworkInterface struct {
-	ElasticNetworkInterface `json:",inline"`
-	IPLimit                 int `json:"ipLimit"`
+	Eni         *ElasticNetworkInterface `json:"eni"`
+	IPLimit     int                      `json:"ipLimit"`
+	FloatingIPs []*FloatingIPObject      `json:"floatingIps,omitempty"`
 }
 
 // VMInfo vm info
 type VMInfo struct {
-	NodeRegionID string `json:"regionId"`
-	NodeVpcID    string `json:"vpcId"`
-	NodeSubnetID string `json:"subnetId"`
-	InstanceID   string `json:"instanceId"`
+	NodeZone     string `json:"zone"`
+	NodeRegion   string `json:"region"`
+	NodeVpcID    string `json:"vpcID"`
+	NodeSubnetID string `json:"subnetID"`
+	InstanceID   string `json:"instanceID"`
 	InstanceIP   string `json:"instanceIP"`
+	CoreNum      int    `json:"coreNum"`
+	MemNum       int    `json:"memNum"`
 }
 
 // NodeNetworkSpec defines the desired state of NodeNetwork
@@ -85,7 +98,7 @@ type NodeNetworkSpec struct {
 type NodeNetworkStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Enis          []*ElasticNetworkInterface  `json:"enis"`
+	Enis          []*ElasticNetworkInterface  `json:"enis,omitempty"`
 	FloatingIPEni *FloatingIPNetworkInterface `json:"floatingIPEni"`
 }
 

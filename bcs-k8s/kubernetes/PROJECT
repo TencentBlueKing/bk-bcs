@@ -5,4 +5,10 @@ resources:
 - group: cloud
   kind: NodeNetwork
   version: v1
+- group: cloud
+  kind: CloudSubnet
+  version: v1
+- group: cloud
+  kind: CloudIP
+  version: v1
 version: "2"

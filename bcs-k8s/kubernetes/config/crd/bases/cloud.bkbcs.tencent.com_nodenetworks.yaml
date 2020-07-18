@@ -49,22 +49,31 @@ spec:
             vmInfo:
               description: VMInfo vm info
               properties:
+                coreNum:
+                  type: integer
+                instanceID:
+                  type: string
                 instanceIP:
                   type: string
-                instanceId:
+                memNum:
+                  type: integer
+                region:
                   type: string
-                regionId:
+                subnetID:
                   type: string
-                subnetId:
+                vpcID:
                   type: string
-                vpcId:
+                zone:
                   type: string
               required:
+              - coreNum
+              - instanceID
               - instanceIP
-              - instanceId
-              - regionId
-              - subnetId
-              - vpcId
+              - memNum
+              - region
+              - subnetID
+              - vpcID
+              - zone
               type: object
           required:
           - cluster
@@ -104,7 +113,7 @@ spec:
                     description: NetworkInterfaceAttachment attachment for network
                       interface
                     properties:
-                      attachmentId:
+                      attachmentID:
                         description: for aws
                         type: string
                       eniID:
@@ -117,7 +126,7 @@ spec:
                     required:
                     - instanceId
                     type: object
-                  eniId:
+                  eniID:
                     type: string
                   eniIfaceName:
                     type: string
@@ -125,7 +134,7 @@ spec:
                     type: string
                   eniSubnetCidr:
                     type: string
-                  eniSubnetId:
+                  eniSubnetID:
                     type: string
                   index:
                     type: integer
@@ -133,7 +142,7 @@ spec:
                     type: integer
                   macAddress:
                     type: string
-                  routeTableId:
+                  routeTableID:
                     type: integer
                   secondaryAddresses:
                     items:
@@ -156,107 +165,134 @@ spec:
                 required:
                 - address
                 - attachment
-                - eniId
+                - eniID
                 - eniIfaceName
                 - eniSubnetCidr
-                - eniSubnetId
+                - eniSubnetID
                 - index
                 - ipNum
                 - macAddress
-                - routeTableId
-                - secondaryAddresses
+                - routeTableID
                 type: object
               type: array
             floatingIPEni:
               description: FloatingIPNetworkInterface status for elastic network interface
                 used to bind floating ip
               properties:
-                address:
-                  description: IPAddress data for ip address
+                eni:
+                  description: ElasticNetworkInterface status for elastic network
+                    interface
                   properties:
-                    dnsName:
-                      type: string
-                    ip:
-                      type: string
-                    isPrimary:
-                      type: boolean
-                    test:
-                      type: string
-                  required:
-                  - ip
-                  - isPrimary
-                  - test
-                  type: object
-                attachment:
-                  description: NetworkInterfaceAttachment attachment for network interface
-                  properties:
-                    attachmentId:
-                      description: for aws
-                      type: string
+                    address:
+                      description: IPAddress data for ip address
+                      properties:
+                        dnsName:
+                          type: string
+                        ip:
+                          type: string
+                        isPrimary:
+                          type: boolean
+                        test:
+                          type: string
+                      required:
+                      - ip
+                      - isPrimary
+                      - test
+                      type: object
+                    attachment:
+                      description: NetworkInterfaceAttachment attachment for network
+                        interface
+                      properties:
+                        attachmentID:
+                          description: for aws
+                          type: string
+                        eniID:
+                          description: for tencent cloud
+                          type: string
+                        index:
+                          type: integer
+                        instanceId:
+                          type: string
+                      required:
+                      - instanceId
+                      type: object
                     eniID:
-                      description: for tencent cloud
+                      type: string
+                    eniIfaceName:
+                      type: string
+                    eniName:
+                      type: string
+                    eniSubnetCidr:
+                      type: string
+                    eniSubnetID:
                       type: string
                     index:
                       type: integer
-                    instanceId:
+                    ipNum:
+                      type: integer
+                    macAddress:
                       type: string
+                    routeTableID:
+                      type: integer
+                    secondaryAddresses:
+                      items:
+                        description: IPAddress data for ip address
+                        properties:
+                          dnsName:
+                            type: string
+                          ip:
+                            type: string
+                          isPrimary:
+                            type: boolean
+                          test:
+                            type: string
+                        required:
+                        - ip
+                        - isPrimary
+                        - test
+                        type: object
+                      type: array
                   required:
-                  - instanceId
+                  - address
+                  - attachment
+                  - eniID
+                  - eniIfaceName
+                  - eniSubnetCidr
+                  - eniSubnetID
+                  - index
+                  - ipNum
+                  - macAddress
+                  - routeTableID
                   type: object
-                eniId:
-                  type: string
-                eniIfaceName:
-                  type: string
-                eniName:
-                  type: string
-                eniSubnetCidr:
-                  type: string
-                eniSubnetId:
-                  type: string
-                index:
-                  type: integer
-                ipLimit:
-                  type: integer
-                ipNum:
-                  type: integer
-                macAddress:
-                  type: string
-                routeTableId:
-                  type: integer
-                secondaryAddresses:
+                floatingIps:
                   items:
-                    description: IPAddress data for ip address
+                    description: FloatingIPObject floating ip object
                     properties:
-                      dnsName:
+                      cluster:
+                        type: string
+                      containerID:
                         type: string
                       ip:
                         type: string
-                      isPrimary:
-                        type: boolean
-                      test:
+                      namespace:
+                        type: string
+                      podName:
                         type: string
                     required:
+                    - cluster
+                    - containerID
                     - ip
-                    - isPrimary
-                    - test
+                    - namespace
+                    - podName
                     type: object
                   type: array
+                ipLimit:
+                  type: integer
               required:
-              - address
-              - attachment
-              - eniId
-              - eniIfaceName
-              - eniSubnetCidr
-              - eniSubnetId
-              - index
+              - eni
               - ipLimit
-              - ipNum
-              - macAddress
-              - routeTableId
-              - secondaryAddresses
               type: object
           required:
-          - enis
           - floatingIPEni
           type: object
       type: object
