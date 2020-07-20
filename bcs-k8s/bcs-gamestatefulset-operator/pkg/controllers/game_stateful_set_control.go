@@ -632,7 +632,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			if getPodRevision(replicas[target]) != updateRevision.Name {
 				klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
 					set.Name, replicas[target].Name)
-				replica := updateVersionedGameStatefulSetPodHotPatch(
+				replica := hotPatchVersionedGameStatefulSetPod(
 					set,
 					updateRevision.Name,
 					replicas[target])

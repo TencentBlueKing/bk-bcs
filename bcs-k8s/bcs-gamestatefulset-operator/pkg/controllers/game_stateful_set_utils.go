@@ -348,11 +348,11 @@ func updateVersionedGameStatefulSetPod(updateSet *stsplus.GameStatefulSet, updat
 	return pod
 }
 
-// updateVersionedGameStatefulSetPod creates a new Pod for a GameStatefulSet. currentSet is the representation of the set at the
+// hotPatchVersionedGameStatefulSetPod creates a new Pod for a GameStatefulSet. currentSet is the representation of the set at the
 // current revision. updateSet is the representation of the set at the updateRevision. currentRevision is the name of
 // the current revision. updateRevision is the name of the update revision. ordinal is the ordinal of the Pod. If the
 // returned error is nil, the returned Pod is valid.
-func updateVersionedGameStatefulSetPodHotPatch(updateSet *stsplus.GameStatefulSet, updateRevision string, oldPod *v1.Pod) *v1.Pod {
+func hotPatchVersionedGameStatefulSetPod(updateSet *stsplus.GameStatefulSet, updateRevision string, oldPod *v1.Pod) *v1.Pod {
 	// Make a deep copy so we don't mutate the shared cache
 	pod := oldPod.DeepCopy()
 	//copy Pod Labels & Annotations
