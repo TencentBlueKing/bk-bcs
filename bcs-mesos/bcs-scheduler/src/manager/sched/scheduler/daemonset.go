@@ -421,6 +421,9 @@ func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
 		}
 		blog.Infof("delete daemonset(%s) version(%s) success", daemon.GetUuid(), no)
 	}
+	if err = s.store.DeleteVersionNode(daemon.NameSpace, daemon.Name); err != nil {
+		blog.Error("delete daemonset(%s) versionNode err:%s", daemon.GetUuid(), err.Error())
+	}
 	//delete daemonset
 	err = s.store.DeleteDaemonset(daemon.NameSpace, daemon.Name)
 	if err != nil {
