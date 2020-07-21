@@ -15,26 +15,32 @@ package zk
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 )
 
 // Store Manager
 type managerStore struct {
 	Db store.Dbdrvier
 
-	wg     sync.WaitGroup
 	ctx    context.Context
 	cancel context.CancelFunc
+
+	//plugin manager, ip-resources
+	pm *pluginManager.PluginManager
+	clusterId string
 }
 
 // Create a store manager by a db driver
-func NewManagerStore(dbDriver store.Dbdrvier) store.Store {
+func NewManagerStore(dbDriver store.Dbdrvier, pm *pluginManager.PluginManager, clusterId string) store.Store {
 	s := &managerStore{
 		Db: dbDriver,
+		pm: pm,
+		clusterId: clusterId,
 	}
 
 	return s
@@ -45,9 +51,8 @@ func (s *managerStore) StopStoreMetrics() {
 		return
 	}
 	s.cancel()
-
 	time.Sleep(time.Second)
-	s.wg.Wait()
+	//s.wg.Wait()
 }
 
 func (s *managerStore) StartStoreObjectMetrics() {
@@ -55,16 +60,22 @@ func (s *managerStore) StartStoreObjectMetrics() {
 
 	for {
 		time.Sleep(time.Minute)
-
-		select {
-		case <-s.ctx.Done():
-			blog.Infof("stop scheduler store metrics")
-			return
-
-		default:
-			s.wg.Add(1)
-			store.ObjectResourceInfo.Reset()
+		if cacheMgr==nil {
+			continue
 		}
+		blog.Infof("start produce metrics")
+		store.ObjectResourceInfo.Reset()
+		store.TaskgroupInfo.Reset()
+		store.AgentCpuResourceRemain.Reset()
+		store.AgentCpuResourceTotal.Reset()
+		store.AgentMemoryResourceRemain.Reset()
+		store.AgentMemoryResourceTotal.Reset()
+		store.AgentIpResourceRemain.Reset()
+		store.StorageOperatorFailedTotal.Reset()
+		store.StorageOperatorLatencyMs.Reset()
+		store.StorageOperatorTotal.Reset()
+		store.ClusterMemoryResouceRemain.Reset()
+		store.ClusterCpuResouceRemain.Reset()
 
 		// handle service metrics
 		services, err := s.ListAllServices()
@@ -120,6 +131,8 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			store.ReportObjectResourceInfoMetrics(store.ObjectResourceSecret, secret.NameSpace, secret.Name, "")
 		}
 
+		var clusterCpu float64
+		var clusterMem float64
 		// handle agents metrics
 		agents, err := s.ListAllAgents()
 		if err != nil {
@@ -132,11 +145,39 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				continue
 			}
 
-			store.ReportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
-				info.MemTotal, info.MemTotal-info.MemUsed)
-		}
+			var ipValue float64
+			if s.pm!=nil {
+				//request netservice to node container ip
+				para := &typesplugin.HostPluginParameter{
+					Ips:       []string{info.IP},
+					ClusterId: s.clusterId,
+				}
 
-		s.wg.Done()
+				outerAttri, err := s.pm.GetHostAttributes(para)
+				if err != nil {
+					blog.Errorf("Get host(%s) ip-resources failed: %s", info.IP, err.Error())
+					continue
+				}
+				attr, ok := outerAttri[info.IP]
+				if !ok {
+					blog.Errorf("host(%s) don't have ip-resources attributes", info.IP)
+					continue
+				}
+				ipAttr := attr.Attributes[0]
+				blog.Infof("Host(%s) %s Scalar(%f)", info.IP, ipAttr.Name, ipAttr.Scalar.Value)
+				ipValue = ipAttr.Scalar.Value
+			}
+
+			//if ip-resources is zero, then ignore it
+			if s.pm==nil || ipValue>0{
+				clusterCpu += info.CpuTotal-info.CpuUsed
+				clusterMem += info.MemTotal-info.MemUsed
+			}
+
+			store.ReportAgentInfoMetrics(info.IP, s.clusterId, info.CpuTotal, info.CpuTotal-info.CpuUsed,
+				info.MemTotal, info.MemTotal-info.MemUsed, ipValue)
+		}
+		store.ReportClusterInfoMetrics(s.clusterId, clusterCpu, clusterMem)
 	}
 }
 

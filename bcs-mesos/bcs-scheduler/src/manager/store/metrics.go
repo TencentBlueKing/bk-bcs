@@ -65,28 +65,49 @@ var (
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "agent_cpu_resource_total",
 		Help:      "Agent cpu resource total",
-	}, []string{"InnerIP"})
+	}, []string{"InnerIP", "clusterId"})
 
 	AgentMemoryResourceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "agent_memory_resource_total",
 		Help:      "Agent memory resource total",
-	}, []string{"InnerIP"})
+	}, []string{"InnerIP", "clusterId"})
 
 	AgentCpuResourceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "agent_cpu_resource_remain",
 		Help:      "Agent cpu resource remain",
-	}, []string{"InnerIP"})
+	}, []string{"InnerIP", "clusterId"})
 
 	AgentMemoryResourceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "agent_memory_resource_remain",
 		Help:      "Agent memory resource remain",
-	}, []string{"InnerIP"})
+	}, []string{"InnerIP", "clusterId"})
+
+	AgentIpResourceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: types.MetricsNamespaceScheduler,
+		Subsystem: types.MetricsSubsystemScheduler,
+		Name:      "agent_ip_resource_remain",
+		Help:      "Agent ip resource remain",
+	}, []string{"InnerIP", "clusterId"})
+
+	ClusterCpuResouceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: types.MetricsNamespaceScheduler,
+		Subsystem: types.MetricsSubsystemScheduler,
+		Name:      "cluster_cpu_resource_remain",
+		Help:      "Cluster cpu resource remain",
+	}, []string{"clusterId"})
+
+	ClusterMemoryResouceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: types.MetricsNamespaceScheduler,
+		Subsystem: types.MetricsSubsystemScheduler,
+		Name:      "cluster_memory_resource_remain",
+		Help:      "Cluster memory resource remain",
+	}, []string{"clusterId"})
 
 	StorageOperatorTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: types.MetricsNamespaceScheduler,
@@ -112,7 +133,8 @@ var (
 
 func init() {
 	prometheus.MustRegister(ObjectResourceInfo, TaskgroupInfo, AgentCpuResourceTotal, AgentMemoryResourceTotal,
-		StorageOperatorTotal, StorageOperatorLatencyMs, StorageOperatorFailedTotal, AgentCpuResourceRemain, AgentMemoryResourceRemain)
+		StorageOperatorTotal, StorageOperatorLatencyMs, StorageOperatorFailedTotal, AgentCpuResourceRemain, AgentMemoryResourceRemain,
+		AgentIpResourceRemain, ClusterCpuResouceRemain, ClusterMemoryResouceRemain)
 }
 
 func ReportObjectResourceInfoMetrics(resource, ns, name, status string) {
@@ -153,11 +175,17 @@ func ReportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
 	TaskgroupInfo.WithLabelValues(ns, name, taskgroupId).Set(val)
 }
 
-func ReportAgentInfoMetrics(ip string, totalCpu, remainCpu, totalMem, remainMem float64) {
-	AgentCpuResourceTotal.WithLabelValues(ip).Set(totalCpu)
-	AgentCpuResourceRemain.WithLabelValues(ip).Set(remainCpu)
-	AgentMemoryResourceTotal.WithLabelValues(ip).Set(totalMem)
-	AgentMemoryResourceRemain.WithLabelValues(ip).Set(remainMem)
+func ReportAgentInfoMetrics(ip, clusterId string, totalCpu, remainCpu, totalMem, remainMem, remainIp float64) {
+	AgentCpuResourceTotal.WithLabelValues(ip, clusterId).Set(totalCpu)
+	AgentCpuResourceRemain.WithLabelValues(ip, clusterId).Set(remainCpu)
+	AgentMemoryResourceTotal.WithLabelValues(ip, clusterId).Set(totalMem)
+	AgentMemoryResourceRemain.WithLabelValues(ip, clusterId).Set(remainMem)
+	AgentIpResourceRemain.WithLabelValues(ip, clusterId).Set(remainIp)
+}
+
+func ReportClusterInfoMetrics(clusterId string, remainCpu, remainMem float64) {
+	ClusterCpuResouceRemain.WithLabelValues(clusterId).Set(remainCpu)
+	ClusterMemoryResouceRemain.WithLabelValues(clusterId).Set(remainMem)
 }
 
 func ReportStorageOperatorMetrics(operator string, started time.Time, failed bool) {
