@@ -10,13 +10,24 @@
  * limitations under the License.
  */
 
-package common
+package utils
 
 import (
+	"testing"
 	"time"
 )
 
-// TimeSequence time sequence
-func TimeSequence() uint64 {
-	return uint64(time.Now().UnixNano() / 1e6)
+// TestParseAndFormatTime test time parse and format
+func TestParseAndFormatTime(t *testing.T) {
+	now := time.Now()
+	nowStr := FormatTime(now)
+	t.Log(nowStr)
+	now2, err := ParseTimeString(nowStr)
+	if err != nil {
+		t.Errorf("parse utc string failed, err %s", err.Error())
+	}
+	nowStr2 := FormatTime(now2)
+	if nowStr != nowStr2 {
+		t.Errorf("inconsistent time string, %s, %s", nowStr, nowStr2)
+	}
 }

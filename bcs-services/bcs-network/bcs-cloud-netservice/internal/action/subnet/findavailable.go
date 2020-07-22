@@ -109,10 +109,13 @@ func (a *FindAvailableAction) Output() error {
 func (a *FindAvailableAction) querySubnetListFromStore() (pbcommon.ErrCode, string) {
 	labelsMap := make(map[string]string)
 	if len(a.req.VpcID) != 0 {
-		labelsMap[kube.CRD_NAME_LABELS_VPCID] = a.req.VpcID
+		labelsMap[kube.CrdNameLabelsVpcID] = a.req.VpcID
 	}
 	if len(a.req.Region) != 0 {
-		labelsMap[kube.CRD_NAME_LABELS_REGION] = a.req.Region
+		labelsMap[kube.CrdNameLabelsRegion] = a.req.Region
+	}
+	if len(a.req.Zone) != 0 {
+		labelsMap[kube.CrdNameLabelsZone] = a.req.Zone
 	}
 	subnets, err := a.storeIf.ListSubnet(a.ctx, labelsMap)
 	if err != nil {

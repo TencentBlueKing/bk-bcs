@@ -32,11 +32,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/internal/grpclb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/grpclb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/internal/option"
 	cloudAPI "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/pkg/cloud"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/pkg/cloud/aws"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/pkg/cloud/qcloud"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/constant"
 )
 
 var (
@@ -105,9 +106,9 @@ func (r *NodeNetworkReconciler) initCloudNetClient() error {
 func (r *NodeNetworkReconciler) initCloud() error {
 	var cloudClient cloudAPI.Interface
 	switch r.Option.Cloud {
-	case "tencentcloud":
+	case constant.CloudTencent:
 		cloudClient = qcloud.New()
-	case "aws":
+	case constant.CloudAws:
 		cloudClient = aws.New()
 	default:
 		return fmt.Errorf("error cloud mode %s", r.Option.Cloud)
@@ -122,7 +123,6 @@ func (r *NodeNetworkReconciler) initCloud() error {
 // initProcessor
 func (r *NodeNetworkReconciler) initProcessor() error {
 	processor := NewProcessor(r, r.Option, r.cloudNetClient, r.cloudClient, r.NodeEventer)
-
 	go func() {
 		err := processor.Run(context.Background())
 		if err != nil {
@@ -153,7 +153,6 @@ func (r *NodeNetworkReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// TODO: leader election time is too long
-	// TODO: NodeWork does not trigger event
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Node{}).
 		Watches(&source.Kind{Type: &cloudv1.NodeNetwork{}}, &handler.EnqueueRequestForObject{}).

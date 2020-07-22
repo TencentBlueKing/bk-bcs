@@ -90,10 +90,10 @@ func (a *ListAction) Output() error {
 func (a *ListAction) listSubnets() (pbcommon.ErrCode, string) {
 	labelsMap := make(map[string]string)
 	if len(a.req.VpcID) != 0 {
-		labelsMap[kube.CRD_NAME_LABELS_VPCID] = a.req.VpcID
+		labelsMap[kube.CrdNameLabelsVpcID] = a.req.VpcID
 	}
 	if len(a.req.Region) != 0 {
-		labelsMap[kube.CRD_NAME_LABELS_REGION] = a.req.Region
+		labelsMap[kube.CrdNameLabelsRegion] = a.req.Region
 	}
 	subnets, err := a.storeIf.ListSubnet(a.ctx, labelsMap)
 	if err != nil {

@@ -33,10 +33,8 @@ import (
 	cloudlister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netagent/internal/networkutil"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netagent/internal/options"
-)
-
-var (
-	FINALIZER_NAME = "nodeagent.cloud.bkbcs.tencent.com"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/pkg/common"
 )
 
 // NodeNetworkInspector inspector who watches apiserver NodeNetwork, and set up network interface on node
@@ -231,18 +229,23 @@ func (nni *NodeNetworkInspector) reconcileNodeNetwork(nodenetwork *cloudv1.NodeN
 		}
 	}
 
-	nodenetwork.Finalizers = append(nodenetwork.Finalizers, FINALIZER_NAME)
-	_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+	nodenetwork.Finalizers = append(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent)
+	nodenetwork.Status.Status = cloudv1.NodeNetworkStatusReady
+	nodenetworkAfterUpdate, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())
+		return nil
 	}
 
+	nni.nodeNetworkLock.Lock()
+	nni.nodeNetwork = nodenetworkAfterUpdate
+	nni.nodeNetworkLock.Unlock()
 	return nil
 }
 
 func (nni *NodeNetworkInspector) cleanNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 
-	if containsString(nodenetwork.Finalizers, FINALIZER_NAME) {
+	if common.ContainsString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent) {
 		rules, err := nni.netUtil.RuleList()
 		if err != nil {
 			blog.Errorf("list rule failed, err %s", err.Error())
@@ -265,7 +268,7 @@ func (nni *NodeNetworkInspector) cleanNodeNetwork(nodenetwork *cloudv1.NodeNetwo
 			}
 		}
 
-		nodenetwork.Finalizers = removeString(nodenetwork.Finalizers, FINALIZER_NAME)
+		nodenetwork.Finalizers = common.RemoveString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent)
 		_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
 		if err != nil {
 			blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())

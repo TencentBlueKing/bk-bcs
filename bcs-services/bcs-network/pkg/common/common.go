@@ -10,10 +10,40 @@
  * limitations under the License.
  */
 
-package inspector
+package common
 
-// containsString to see if slice contains string
-func containsString(strs []string, str string) bool {
+import (
+	"fmt"
+	"net"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+)
+
+// TimeSequence time sequence
+func TimeSequence() uint64 {
+	return uint64(time.Now().UnixNano() / 1e6)
+}
+
+// ParseCIDR parse cidr to ip and mask
+func ParseCIDR(cidr string) (string, int, error) {
+	if _, _, err := net.ParseCIDR(cidr); err != nil {
+		blog.Errorf("parse cidr %s addr failed, err %s", cidr, err.Error())
+		return "", 0, err
+	}
+	strs := strings.Split(cidr, "/")
+	if len(strs) != 2 {
+		blog.Errorf("cidr %s format error", cidr)
+		return "", 0, fmt.Errorf("cidr %s format error", cidr)
+	}
+	mask, _ := strconv.Atoi(strs[1])
+	return strs[0], mask, nil
+}
+
+// ContainsString to see if slice contains string
+func ContainsString(strs []string, str string) bool {
 	for _, s := range strs {
 		if s == str {
 			return true
@@ -22,8 +52,8 @@ func containsString(strs []string, str string) bool {
 	return false
 }
 
-// removeString remove string from slice
-func removeString(strs []string, str string) []string {
+// RemoveString remove string from slice
+func RemoveString(strs []string, str string) []string {
 	var newSlice []string
 	for _, s := range strs {
 		if s != str {

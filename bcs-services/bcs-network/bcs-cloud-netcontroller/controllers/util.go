@@ -15,7 +15,7 @@ package controllers
 import (
 	"strconv"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/constant"
 )
 
 // genereate eni name by cvm ID and index
@@ -25,7 +25,7 @@ func generateEniName(cvmID string, index int) string {
 
 // get eni interface name
 func getEniIfaceName(index int) string {
-	return constant.ENI_PREFIX + strconv.Itoa(index)
+	return constant.EniPrefix + strconv.Itoa(index)
 }
 
 // containsString to see if slice contains string

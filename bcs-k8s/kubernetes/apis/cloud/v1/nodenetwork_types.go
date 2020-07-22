@@ -20,6 +20,13 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+const (
+	// NodeNetworkStatusNotReady node network created, but not effects on node
+	NodeNetworkStatusNotReady = "NotReady"
+	// NodeNetworkStatusReady node network created and effects on node
+	NodeNetworkStatusReady = "Ready"
+)
+
 // IPAddress data for ip address
 type IPAddress struct {
 	IP        string `json:"ip"`
@@ -54,20 +61,10 @@ type ElasticNetworkInterface struct {
 	SecondaryAddresses []*IPAddress                `json:"secondaryAddresses,omitempty"`
 }
 
-// FloatingIPObject floating ip object
-type FloatingIPObject struct {
-	ContainerID string `json:"containerID"`
-	PodName     string `json:"podName"`
-	Namespace   string `json:"namespace"`
-	Cluster     string `json:"cluster"`
-	IP          string `json:"ip"`
-}
-
 // FloatingIPNetworkInterface status for elastic network interface used to bind floating ip
 type FloatingIPNetworkInterface struct {
-	Eni         *ElasticNetworkInterface `json:"eni"`
-	IPLimit     int                      `json:"ipLimit"`
-	FloatingIPs []*FloatingIPObject      `json:"floatingIps,omitempty"`
+	Eni     *ElasticNetworkInterface `json:"eni"`
+	IPLimit int                      `json:"ipLimit"`
 }
 
 // VMInfo vm info
@@ -100,6 +97,7 @@ type NodeNetworkStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	Enis          []*ElasticNetworkInterface  `json:"enis,omitempty"`
 	FloatingIPEni *FloatingIPNetworkInterface `json:"floatingIPEni"`
+	Status        string                      `json:"status"`
 }
 
 // +genclient

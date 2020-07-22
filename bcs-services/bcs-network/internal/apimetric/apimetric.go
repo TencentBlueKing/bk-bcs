@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package metric
+package apimetric
 
 import (
 	"net/http"
@@ -43,11 +43,11 @@ func NewCollector(endpoint, path string) *Collector {
 }
 
 // Init init metrics
-func (c *Collector) Init() {
+func (c *Collector) Init(ns, subsystem string) {
 	c.reqCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "bcs_network",
-			Subsystem: "cloudnetservice",
+			Namespace: ns,
+			Subsystem: subsystem,
 			Name:      "request_total",
 			Help:      "request total counter",
 		},
@@ -56,8 +56,8 @@ func (c *Collector) Init() {
 
 	c.respTimeSummary = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Namespace: "bcs_network",
-			Subsystem: "cloudnetservice",
+			Namespace: ns,
+			Subsystem: subsystem,
 			Name:      "response_time",
 			Help:      "response time(ms) summary.",
 		},

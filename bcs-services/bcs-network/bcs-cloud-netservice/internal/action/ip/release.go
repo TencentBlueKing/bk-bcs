@@ -18,34 +18,37 @@ import (
 
 	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/utils"
 )
 
 // ReleaseAction action for release ip
 type ReleaseAction struct {
-	req  *pb.ReleaseIPReq
+	// request for releasing ip
+	req *pb.ReleaseIPReq
+	// response for releasing ip
 	resp *pb.ReleaseIPResp
 
 	ctx context.Context
 
+	// client for store ip object and subnet
 	storeIf store.Interface
 
-	cloudIf cloud.Interface
+	// ip object get from store
+	ipObj *types.IPObject
 }
 
 // NewReleaseAction create ReleaseAction
 func NewReleaseAction(ctx context.Context,
 	req *pb.ReleaseIPReq, resp *pb.ReleaseIPResp,
-	storeIf store.Interface, cloudIf cloud.Interface) *ReleaseAction {
+	storeIf store.Interface) *ReleaseAction {
 
 	action := &ReleaseAction{
 		req:     req,
 		resp:    resp,
 		ctx:     ctx,
 		storeIf: storeIf,
-		cloudIf: cloudIf,
 	}
 	action.resp.Seq = req.Seq
 	return action
@@ -118,19 +121,17 @@ func (a *ReleaseAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
 
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "container info not match"
 	}
-	return pbcommon.ErrCode_ERROR_OK, ""
-}
-
-func (a *ReleaseAction) unassignIPToEni() (pbcommon.ErrCode, string) {
-	err := a.cloudIf.UnassignIPFromEni(a.req.Address, a.req.EniID)
-	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED, err.Error()
+	if ipObj.IsFixed {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "ip is fixed, cannot be normally released"
 	}
+
+	a.ipObj = ipObj
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
-func (a *ReleaseAction) deleteIPObjectToStore() (pbcommon.ErrCode, string) {
-	err := a.storeIf.DeleteIPObject(a.ctx, a.req.Address)
+func (a *ReleaseAction) changeIPObjectToAvailable() (pbcommon.ErrCode, string) {
+	a.ipObj.Status = types.StatusIPAvailable
+	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
 	}
@@ -142,10 +143,11 @@ func (a *ReleaseAction) Do() error {
 	if errCode, errMsg := a.getIPObjectFromStore(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
-	if errCode, errMsg := a.unassignIPToEni(); errCode != pbcommon.ErrCode_ERROR_OK {
-		return a.Err(errCode, errMsg)
+	// when ip object already not active, do not need to be release
+	if a.ipObj.Status != types.StatusIPActive {
+		return nil
 	}
-	if errCode, errMsg := a.deleteIPObjectToStore(); errCode != pbcommon.ErrCode_ERROR_OK {
+	if errCode, errMsg := a.changeIPObjectToAvailable(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
 	return nil

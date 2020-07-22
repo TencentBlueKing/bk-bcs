@@ -12,6 +12,10 @@
 
 package types
 
+import (
+	"time"
+)
+
 const (
 	// StateSubnetDisabled subnet is disabled
 	StateSubnetDisabled = iota
@@ -24,6 +28,8 @@ const (
 	StatusIPActive = "active"
 	// StatusIPAvailable ip is available
 	StatusIPAvailable = "available"
+	// StatusIPDeleting ip is deleting
+	StatusIPDeleting = "deleting"
 	// LeastIPNum least ip num in a available subnet
 	LeastIPNum = 5
 )
@@ -43,23 +49,24 @@ type CloudSubnet struct {
 
 // IPObject object for allocated ip
 type IPObject struct {
-	Address      string `json:"address"`
-	VpcID        string `json:"vpcID"`
-	Region       string `json:"region"`
-	SubnetID     string `json:"subnetID"`
-	SubnetCidr   string `json:"subnetCidr"`
-	Cluster      string `json:"cluster"`
-	Namespace    string `json:"namespace"`
-	PodName      string `json:"podName"`
-	WorkloadName string `json:"workloadName"`
-	WorkloadKind string `json:"workloadKind"`
-	ContainerID  string `json:"containerID"`
-	Host         string `json:"host"`
-	EniID        string `json:"eniID"`
-	IsFixed      bool   `json:"isFixed"`
-	Status       string `json:"status"`
-	CreateTime   string `json:"createTime"`
-	UpdateTime   string `json:"updateTime"`
+	ResourceVersion string    `json:"resourceVersion"`
+	Address         string    `json:"address"`
+	VpcID           string    `json:"vpcID"`
+	Region          string    `json:"region"`
+	SubnetID        string    `json:"subnetID"`
+	SubnetCidr      string    `json:"subnetCidr"`
+	Cluster         string    `json:"cluster"`
+	Namespace       string    `json:"namespace"`
+	PodName         string    `json:"podName"`
+	WorkloadName    string    `json:"workloadName"`
+	WorkloadKind    string    `json:"workloadKind"`
+	ContainerID     string    `json:"containerID"`
+	Host            string    `json:"host"`
+	EniID           string    `json:"eniID"`
+	IsFixed         bool      `json:"isFixed"`
+	Status          string    `json:"status"`
+	CreateTime      time.Time `json:"createTime"`
+	UpdateTime      time.Time `json:"updateTime"`
 }
 
 // EniObject object for elastic network interface

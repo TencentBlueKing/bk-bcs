@@ -22,12 +22,14 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pbcloudnetservice "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/cleaner"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/cloud/aws"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/cloud/tencentcloud"
@@ -62,6 +64,9 @@ type CloudNetservice struct {
 
 	// cloud interface
 	cloudIf cloud.Interface
+
+	// ip cleaner
+	ipCleaner *cleaner.IPCleaner
 
 	// http mux
 	mux *http.ServeMux
@@ -153,6 +158,14 @@ func (cn *CloudNetservice) initMetrics() {
 	cn.metricCollector.RegisterMux(cn.mux)
 }
 
+func (cn *CloudNetservice) initIPCleaner() {
+	blog.Infof("init ip cleaner")
+	cn.ipCleaner = cleaner.NewIPCleaner(
+		time.Duration(cn.cfg.IPMaxIdleMinute)*time.Minute, time.Duration(cn.cfg.IPCleanIntervalMinute)*time.Minute,
+		cn.storeIf, cn.cloudIf)
+	go cn.ipCleaner.Run(context.TODO())
+}
+
 func (cn *CloudNetservice) initModules() {
 
 	if err := cn.initStore(); err != nil {
@@ -161,6 +174,8 @@ func (cn *CloudNetservice) initModules() {
 	if err := cn.initCloud(); err != nil {
 		blog.Fatalf("initCloud failed, err %s", err.Error())
 	}
+
+	cn.initIPCleaner()
 
 	cn.mux = http.NewServeMux()
 

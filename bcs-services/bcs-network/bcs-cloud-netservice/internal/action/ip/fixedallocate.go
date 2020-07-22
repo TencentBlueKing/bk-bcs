@@ -15,6 +15,9 @@ package ip
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math/rand"
+	"strconv"
 	"time"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,13 +34,17 @@ import (
 
 // FixedAllocateAction action for allocate fixed ip
 type FixedAllocateAction struct {
-	req  *pb.AllocateFixedIPReq
+	// request for allocating fixed ip
+	req *pb.AllocateFixedIPReq
+	// response for allocating fixed ip
 	resp *pb.AllocateFixedIPResp
 
 	ctx context.Context
 
+	// client for store ip object and subnet
 	storeIf store.Interface
 
+	// cloud interface for operate eni ip
 	cloudIf cloud.Interface
 
 	// ip already for this pod before
@@ -46,6 +53,9 @@ type FixedAllocateAction struct {
 	// isSubnetDisabled
 	isSubnetDisabled bool
 
+	// eni object
+	eni *types.EniObject
+
 	// newly added ip address
 	ipAddr string
 
@@ -53,6 +63,9 @@ type FixedAllocateAction struct {
 	subnet *types.CloudSubnet
 
 	ipObj *types.IPObject
+
+	// victim ip object
+	victimIPObj *types.IPObject
 }
 
 // NewFixedAllocateAction create FixedAllocateAction
@@ -139,8 +152,6 @@ func (a *FixedAllocateAction) Output() error {
 			Host:         a.ipObj.Host,
 			EniID:        a.ipObj.EniID,
 			IsFixed:      a.ipObj.IsFixed,
-			CreateTime:   a.ipObj.CreateTime,
-			UpdateTime:   a.ipObj.UpdateTime,
 		}
 	}
 	return nil
@@ -178,7 +189,12 @@ func (a *FixedAllocateAction) queryEniFromCloud() (pbcommon.ErrCode, string) {
 // check allocated ip
 func (a *FixedAllocateAction) checkAllocatedIP() (pbcommon.ErrCode, string) {
 	ipObjs, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CRD_NAME_LABELS_PODNAME: a.req.PodName,
+		kube.CrdNameLabelsCluster:      a.req.Cluster,
+		kube.CrdNameLabelsPodName:      a.req.PodName,
+		kube.CrdNameLabelsNamespace:    a.req.Namespace,
+		kube.CrdNameLabelsWorkloadKind: a.req.WorkloadKind,
+		kube.CrdNameLabelsWorkloadName: a.req.WorkloadName,
+		kube.CrdNameLabelsIsFixed:      strconv.FormatBool(true),
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "list ip object failed"
@@ -281,36 +297,106 @@ func (a *FixedAllocateAction) createIPObjectToStore() (pbcommon.ErrCode, string)
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
+// find available ip object applied previous
+func (a *FixedAllocateAction) findAvailableVictimIPObject() (pbcommon.ErrCode, string) {
+	victimObjects, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
+		kube.CrdNameLabelsEni:     a.req.EniID,
+		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
+		kube.CrdNameLabelsStatus:  types.StatusIPAvailable,
+	})
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
+			fmt.Sprintf("find available victim ip object failed, err %s", err.Error())
+	}
+	if len(victimObjects) == 0 {
+		a.victimIPObj = nil
+		return pbcommon.ErrCode_ERROR_OK, ""
+	}
+
+	randIndex := rand.Intn(len(victimObjects))
+	a.victimIPObj = victimObjects[randIndex]
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
+
+// update victim ip object
+func (a *FixedAllocateAction) updateVictimIPObject() (pbcommon.ErrCode, string) {
+	a.ipObj = &types.IPObject{
+		Address:         a.victimIPObj.Address,
+		VpcID:           a.victimIPObj.VpcID,
+		Region:          a.victimIPObj.Region,
+		SubnetID:        a.victimIPObj.SubnetID,
+		SubnetCidr:      a.victimIPObj.SubnetCidr,
+		Cluster:         a.req.Cluster,
+		Namespace:       a.req.Namespace,
+		PodName:         a.req.PodName,
+		WorkloadName:    a.req.WorkloadName,
+		WorkloadKind:    a.req.WorkloadKind,
+		ContainerID:     a.req.ContainerID,
+		Host:            a.req.Host,
+		EniID:           a.req.EniID,
+		IsFixed:         true,
+		Status:          types.StatusIPActive,
+		ResourceVersion: a.victimIPObj.ResourceVersion,
+	}
+	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
+			fmt.Sprintf("update victim ip object %+v failed, err %s", a.victimIPObj, err.Error())
+	}
+
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
+
+// delete victim ip object
+func (a *FixedAllocateAction) deleteVictimIPObject() (pbcommon.ErrCode, string) {
+	a.victimIPObj.Status = types.StatusIPDeleting
+	err := a.storeIf.UpdateIPObject(a.ctx, a.victimIPObj)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
+			fmt.Sprintf("trans victim ip object %+v to deleting status failed, err %s", a.victimIPObj, err.Error())
+	}
+	err = a.cloudIf.UnassignIPFromEni(a.victimIPObj.Address, a.victimIPObj.EniID)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED,
+			fmt.Sprintf("unassign ip %s from eni %s failed, err %s", a.victimIPObj.Address, a.victimIPObj.EniID, err.Error())
+	}
+	err = a.storeIf.DeleteIPObject(a.ctx, a.victimIPObj.Address)
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
+			fmt.Sprintf("delete victim ip object %s failed, err %s", a.victimIPObj.Address, err.Error())
+	}
+	return pbcommon.ErrCode_ERROR_OK, ""
+}
+
 // migrateIP
 func (a *FixedAllocateAction) migrateIP() (pbcommon.ErrCode, string) {
 	err := a.cloudIf.MigrateIP(a.allocatedIPObj.Address, a.allocatedIPObj.EniID, a.req.EniID)
 	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED, "migrate ip failed"
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED,
+			fmt.Sprintf("migrate ip %s from eni %s to eni %s failed", a.allocatedIPObj.Address, a.allocatedIPObj.EniID, a.req.EniID)
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
 // save ip
 func (a *FixedAllocateAction) updateIPObjectToStore(ip string) (pbcommon.ErrCode, string) {
-	timeNowStr := time.Now().UTC().String()
 	a.ipObj = &types.IPObject{
-		Address:      ip,
-		VpcID:        a.allocatedIPObj.VpcID,
-		Region:       a.allocatedIPObj.Region,
-		SubnetID:     a.allocatedIPObj.SubnetID,
-		SubnetCidr:   a.allocatedIPObj.SubnetCidr,
-		Cluster:      a.req.Cluster,
-		Namespace:    a.req.Namespace,
-		PodName:      a.req.PodName,
-		WorkloadName: a.req.WorkloadName,
-		WorkloadKind: a.req.WorkloadKind,
-		ContainerID:  a.req.ContainerID,
-		Host:         a.req.Host,
-		EniID:        a.req.EniID,
-		IsFixed:      a.allocatedIPObj.IsFixed,
-		Status:       types.StatusIPActive,
-		CreateTime:   a.allocatedIPObj.CreateTime,
-		UpdateTime:   timeNowStr,
+		Address:         ip,
+		VpcID:           a.allocatedIPObj.VpcID,
+		Region:          a.allocatedIPObj.Region,
+		SubnetID:        a.allocatedIPObj.SubnetID,
+		SubnetCidr:      a.allocatedIPObj.SubnetCidr,
+		Cluster:         a.req.Cluster,
+		Namespace:       a.req.Namespace,
+		PodName:         a.req.PodName,
+		WorkloadName:    a.req.WorkloadName,
+		WorkloadKind:    a.req.WorkloadKind,
+		ContainerID:     a.req.ContainerID,
+		Host:            a.req.Host,
+		EniID:           a.req.EniID,
+		IsFixed:         a.allocatedIPObj.IsFixed,
+		Status:          types.StatusIPActive,
+		ResourceVersion: a.allocatedIPObj.ResourceVersion,
 	}
 	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)
 	if err != nil {
@@ -345,22 +431,45 @@ func (a *FixedAllocateAction) Do() error {
 	if a.allocatedIPObj != nil {
 		// case: already allocated before
 		// do migrate ip
-		if errCode, errMsg := a.migrateIP(); errCode != pbcommon.ErrCode_ERROR_OK {
-			return a.Err(errCode, errMsg)
+		if a.allocatedIPObj.EniID != a.req.EniID {
+			if errCode, errMsg := a.findAvailableVictimIPObject(); errCode != pbcommon.ErrCode_ERROR_OK {
+				return a.Err(errCode, errMsg)
+			}
+			if a.victimIPObj != nil {
+				if errCode, errMsg := a.deleteVictimIPObject(); errCode != pbcommon.ErrCode_ERROR_OK {
+					return a.Err(errCode, errMsg)
+				}
+				// TODO: migrating ip may be failed after delete victim ip to cloud
+				time.Sleep(300 * time.Millisecond)
+			}
+			if errCode, errMsg := a.migrateIP(); errCode != pbcommon.ErrCode_ERROR_OK {
+				return a.Err(errCode, errMsg)
+			}
 		}
 		// update to store
 		if errCode, errMsg := a.updateIPObjectToStore(a.allocatedIPObj.Address); errCode != pbcommon.ErrCode_ERROR_OK {
 			return a.Err(errCode, errMsg)
 		}
-	} else {
-		// case: no allocated ip, apply new one and save to store
-		if errCode, errMsg := a.assignIPToEni(a.req.Address); errCode != pbcommon.ErrCode_ERROR_OK {
+		return nil
+	}
+	// first, find available non-fixed victim ip object
+	if errCode, errMsg := a.findAvailableVictimIPObject(); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if a.victimIPObj != nil {
+		if errCode, errMsg := a.updateVictimIPObject(); errCode != pbcommon.ErrCode_ERROR_OK {
 			return a.Err(errCode, errMsg)
 		}
-		// save to store
-		if errCode, errMsg := a.createIPObjectToStore(); errCode != pbcommon.ErrCode_ERROR_OK {
-			return a.Err(errCode, errMsg)
-		}
+		return nil
+	}
+
+	// case: no allocated ip, apply new one and save to store
+	if errCode, errMsg := a.assignIPToEni(a.req.Address); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	// save to store
+	if errCode, errMsg := a.createIPObjectToStore(); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
 	}
 	return nil
 }

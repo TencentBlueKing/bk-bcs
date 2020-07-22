@@ -264,36 +264,17 @@ spec:
                   - macAddress
                   - routeTableID
                   type: object
-                floatingIps:
-                  items:
-                    description: FloatingIPObject floating ip object
-                    properties:
-                      cluster:
-                        type: string
-                      containerID:
-                        type: string
-                      ip:
-                        type: string
-                      namespace:
-                        type: string
-                      podName:
-                        type: string
-                    required:
-                    - cluster
-                    - containerID
-                    - ip
-                    - namespace
-                    - podName
-                    type: object
-                  type: array
                 ipLimit:
                   type: integer
               required:
               - eni
               - ipLimit
               type: object
+            status:
+              type: string
           required:
           - floatingIPEni
+          - status
           type: object
       type: object
   version: v1

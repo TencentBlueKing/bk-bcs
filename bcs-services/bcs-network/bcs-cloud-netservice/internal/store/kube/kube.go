@@ -15,6 +15,7 @@ package kube
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -33,21 +34,41 @@ import (
 	bcsinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 	listercloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/utils"
 )
 
 const (
-	CRD_VERSION_V1        = "v1"
-	CRD_NAME_CLOUD_SUBNET = "CloudSubnet"
-	CRD_NAME_CLOUD_IP     = "CloudIP"
+	// CrdVersionV1 crd version v1
+	CrdVersionV1 = "v1"
+	// CrdNameCloudSubnet crd name for cloud subnet
+	CrdNameCloudSubnet = "CloudSubnet"
+	// CrdNameCloudIP crd name for cloud ip
+	CrdNameCloudIP = "CloudIP"
 
-	CRD_NAME_LABELS_VPCID     = "vpc.cloud.bkbcs.tencent.com"
-	CRD_NAME_LABELS_REGION    = "region.cloud.bkbcs.tencent.com"
-	CRD_NAME_LABELS_ZONE      = "zone.cloud.bkbcs.tencent.com"
-	CRD_NAME_LABELS_SUBNETID  = "subnet.cloud.bkbcs.tencent.com"
-	CRD_NAME_LABELS_CLUSTER   = "cluster.cloud.bkbcs.tencent.com"
-	CRD_NAME_LABELS_NAMESPACE = "namespace.cloud.bkbcs.tencent.com"
-	CRD_NAME_LABELS_WORKLOAD  = "workload.cloud.bkbcs.tencent.com"
-	CRD_NAME_LABELS_PODNAME   = "pod.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsVpcID crd labels name for vpc id
+	CrdNameLabelsVpcID = "vpc.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsRegion crd labels name for region
+	CrdNameLabelsRegion = "region.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsZone crd labels name for zone
+	CrdNameLabelsZone = "zone.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsSubnetID crd labels name for subent id
+	CrdNameLabelsSubnetID = "subnet.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsCluster crd labels name for cluster
+	CrdNameLabelsCluster = "cluster.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsNamespace crd labels name for namespaces
+	CrdNameLabelsNamespace = "namespace.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsWorkloadKind crd labels name for workload king
+	CrdNameLabelsWorkloadKind = "workloadkind.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsWorkloadName crd labels name for workload name
+	CrdNameLabelsWorkloadName = "workloadname.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsPodName crd labels name for pod name
+	CrdNameLabelsPodName = "pod.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsStatus crd labels name for status
+	CrdNameLabelsStatus = "status.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsIsFixed crd labels name for fixed
+	CrdNameLabelsIsFixed = "fixed.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsEni  crd labels name for eni
+	CrdNameLabelsEni = "eni.cloud.bkbcs.tencent.com"
 )
 
 // Client client for kube
@@ -171,16 +192,16 @@ func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) er
 	timeNowStr := time.Now().UTC().String()
 	newCloudSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CRD_NAME_CLOUD_SUBNET,
-			APIVersion: CRD_VERSION_V1,
+			Kind:       CrdNameCloudSubnet,
+			APIVersion: CrdVersionV1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      subnet.SubnetID,
 			Namespace: "bcs-system",
 			Labels: map[string]string{
-				CRD_NAME_LABELS_VPCID:  subnet.VpcID,
-				CRD_NAME_LABELS_REGION: subnet.Region,
-				CRD_NAME_LABELS_ZONE:   subnet.Zone,
+				CrdNameLabelsVpcID:  subnet.VpcID,
+				CrdNameLabelsRegion: subnet.Region,
+				CrdNameLabelsZone:   subnet.Zone,
 			},
 		},
 		Spec: cloudv1.CloudSubnetSpec{
@@ -235,8 +256,8 @@ func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state i
 	timeNowStr := time.Now().UTC().String()
 	updatedSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CRD_NAME_CLOUD_SUBNET,
-			APIVersion: CRD_VERSION_V1,
+			Kind:       CrdNameCloudSubnet,
+			APIVersion: CrdVersionV1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            subnet.Name,
@@ -278,8 +299,8 @@ func (c *Client) UpdateSubnetAvailableIP(ctx context.Context, subnetID string, a
 	timeNowStr := time.Now().UTC().String()
 	updatedSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CRD_NAME_CLOUD_SUBNET,
-			APIVersion: CRD_VERSION_V1,
+			Kind:       CrdNameCloudSubnet,
+			APIVersion: CrdVersionV1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            subnet.Name,
@@ -373,24 +394,27 @@ func (c *Client) GetSubnet(ctx context.Context, subnetID string) (*types.CloudSu
 
 // CreateIPObject create ip
 func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
-	timeNowStr := time.Now().UTC().String()
-
+	timeNow := time.Now()
 	newIPObj := &cloudv1.CloudIP{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CRD_NAME_CLOUD_IP,
-			APIVersion: CRD_VERSION_V1,
+			Kind:       CrdNameCloudIP,
+			APIVersion: CrdVersionV1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ip.Address,
 			Namespace: "bcs-system",
 			Labels: map[string]string{
-				CRD_NAME_LABELS_VPCID:     ip.VpcID,
-				CRD_NAME_LABELS_REGION:    ip.Region,
-				CRD_NAME_LABELS_SUBNETID:  ip.SubnetID,
-				CRD_NAME_LABELS_CLUSTER:   ip.Cluster,
-				CRD_NAME_LABELS_NAMESPACE: ip.Namespace,
-				CRD_NAME_LABELS_WORKLOAD:  ip.WorkloadName,
-				CRD_NAME_LABELS_PODNAME:   ip.PodName,
+				CrdNameLabelsVpcID:        ip.VpcID,
+				CrdNameLabelsRegion:       ip.Region,
+				CrdNameLabelsSubnetID:     ip.SubnetID,
+				CrdNameLabelsCluster:      ip.Cluster,
+				CrdNameLabelsNamespace:    ip.Namespace,
+				CrdNameLabelsWorkloadName: ip.WorkloadName,
+				CrdNameLabelsWorkloadKind: ip.WorkloadKind,
+				CrdNameLabelsPodName:      ip.PodName,
+				CrdNameLabelsStatus:       ip.Status,
+				CrdNameLabelsEni:          ip.EniID,
+				CrdNameLabelsIsFixed:      strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{
@@ -403,6 +427,7 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 			Namespace:    ip.Namespace,
 			PodName:      ip.PodName,
 			WorkloadName: ip.WorkloadName,
+			WorkloadKind: ip.WorkloadKind,
 			ContainerID:  ip.ContainerID,
 			Host:         ip.Host,
 			EniID:        ip.EniID,
@@ -410,8 +435,8 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 		},
 		Status: cloudv1.CloudIPStatus{
 			Status:     ip.Status,
-			CreateTime: timeNowStr,
-			UpdateTime: timeNowStr,
+			CreateTime: utils.FormatTime(timeNow),
+			UpdateTime: utils.FormatTime(timeNow),
 		},
 	}
 
@@ -428,54 +453,54 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) error {
 	if ip == nil {
 		return fmt.Errorf("ip object is nil")
 	}
-	ipObj, err := c.ipLister.CloudIPs("bcs-system").Get(ip.Address)
-	if err != nil {
-		blog.Errorf("get ip %s from store failed, err %s", ip.Address, err.Error())
-		return fmt.Errorf("get ip %s from store failed, err %s", ip.Address, err.Error())
-	}
-	timeNowStr := time.Now().UTC().String()
+	timeNow := time.Now()
 	newIPObj := &cloudv1.CloudIP{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CRD_NAME_CLOUD_IP,
-			APIVersion: CRD_VERSION_V1,
+			Kind:       CrdNameCloudIP,
+			APIVersion: CrdVersionV1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            ipObj.Spec.Address,
+			Name:            ip.Address,
 			Namespace:       "bcs-system",
-			ResourceVersion: ipObj.ResourceVersion,
+			ResourceVersion: ip.ResourceVersion,
 			Labels: map[string]string{
-				CRD_NAME_LABELS_VPCID:     ipObj.Spec.VpcID,
-				CRD_NAME_LABELS_REGION:    ipObj.Spec.Region,
-				CRD_NAME_LABELS_SUBNETID:  ipObj.Spec.SubnetID,
-				CRD_NAME_LABELS_CLUSTER:   ip.Cluster,
-				CRD_NAME_LABELS_NAMESPACE: ip.Namespace,
-				CRD_NAME_LABELS_WORKLOAD:  ip.WorkloadName,
-				CRD_NAME_LABELS_PODNAME:   ip.PodName,
+				CrdNameLabelsVpcID:        ip.VpcID,
+				CrdNameLabelsRegion:       ip.Region,
+				CrdNameLabelsSubnetID:     ip.SubnetID,
+				CrdNameLabelsCluster:      ip.Cluster,
+				CrdNameLabelsNamespace:    ip.Namespace,
+				CrdNameLabelsWorkloadName: ip.WorkloadName,
+				CrdNameLabelsWorkloadKind: ip.WorkloadKind,
+				CrdNameLabelsPodName:      ip.PodName,
+				CrdNameLabelsStatus:       ip.Status,
+				CrdNameLabelsEni:          ip.EniID,
+				CrdNameLabelsIsFixed:      strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{
-			Address:      ipObj.Spec.Address,
-			VpcID:        ipObj.Spec.VpcID,
-			Region:       ipObj.Spec.Region,
-			SubnetID:     ipObj.Spec.SubnetID,
-			SubnetCidr:   ipObj.Spec.SubnetCidr,
+			Address:      ip.Address,
+			VpcID:        ip.VpcID,
+			Region:       ip.Region,
+			SubnetID:     ip.SubnetID,
+			SubnetCidr:   ip.SubnetCidr,
 			Cluster:      ip.Cluster,
 			Namespace:    ip.Namespace,
 			PodName:      ip.PodName,
 			WorkloadName: ip.WorkloadName,
+			WorkloadKind: ip.WorkloadKind,
 			ContainerID:  ip.ContainerID,
 			Host:         ip.Host,
 			EniID:        ip.EniID,
-			IsFixed:      ipObj.Spec.IsFixed,
+			IsFixed:      ip.IsFixed,
 		},
 		Status: cloudv1.CloudIPStatus{
 			Status:     ip.Status,
-			CreateTime: ipObj.Status.CreateTime,
-			UpdateTime: timeNowStr,
+			CreateTime: utils.FormatTime(ip.CreateTime),
+			UpdateTime: utils.FormatTime(timeNow),
 		},
 	}
 
-	_, err = c.cloudv1Client.CloudIPs("bcs-system").Update(ctx, newIPObj, metav1.UpdateOptions{})
+	_, err := c.cloudv1Client.CloudIPs("bcs-system").Update(ctx, newIPObj, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update CloudIP to store failed, err %s", err.Error())
 		return fmt.Errorf("update CloudIP to store failed, err %s", err.Error())
@@ -502,21 +527,35 @@ func (c *Client) GetIPObject(ctx context.Context, ip string) (*types.IPObject, e
 		// just return err here, caller can use errors.IsNotFound() to check the err
 		return nil, err
 	}
+
+	createTime, err := utils.ParseTimeString(ipObj.Status.CreateTime)
+	if err != nil {
+		return nil, fmt.Errorf("parse create time failed, err %s", err.Error())
+	}
+	updateTime, err := utils.ParseTimeString(ipObj.Status.UpdateTime)
+	if err != nil {
+		return nil, fmt.Errorf("parse update time failed, err %s", err.Error())
+	}
+
 	return &types.IPObject{
-		Address:      ipObj.Spec.Address,
-		VpcID:        ipObj.Spec.VpcID,
-		Region:       ipObj.Spec.Region,
-		SubnetID:     ipObj.Spec.SubnetID,
-		SubnetCidr:   ipObj.Spec.SubnetCidr,
-		Cluster:      ipObj.Spec.Cluster,
-		Namespace:    ipObj.Spec.Namespace,
-		PodName:      ipObj.Spec.PodName,
-		WorkloadName: ipObj.Spec.WorkloadName,
-		ContainerID:  ipObj.Spec.ContainerID,
-		Host:         ipObj.Spec.Host,
-		EniID:        ipObj.Spec.EniID,
-		IsFixed:      ipObj.Spec.IsFixed,
-		Status:       ipObj.Status.Status,
+		Address:         ipObj.Spec.Address,
+		VpcID:           ipObj.Spec.VpcID,
+		Region:          ipObj.Spec.Region,
+		SubnetID:        ipObj.Spec.SubnetID,
+		SubnetCidr:      ipObj.Spec.SubnetCidr,
+		Cluster:         ipObj.Spec.Cluster,
+		Namespace:       ipObj.Spec.Namespace,
+		PodName:         ipObj.Spec.PodName,
+		WorkloadName:    ipObj.Spec.WorkloadName,
+		WorkloadKind:    ipObj.Spec.WorkloadKind,
+		ContainerID:     ipObj.Spec.ContainerID,
+		Host:            ipObj.Spec.Host,
+		EniID:           ipObj.Spec.EniID,
+		IsFixed:         ipObj.Spec.IsFixed,
+		Status:          ipObj.Status.Status,
+		ResourceVersion: ipObj.ResourceVersion,
+		CreateTime:      createTime,
+		UpdateTime:      updateTime,
 	}, nil
 }
 
@@ -544,23 +583,33 @@ func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) 
 
 	var ipList []*types.IPObject
 	for _, ip := range ips {
+		createTime, err := utils.ParseTimeString(ip.Status.CreateTime)
+		if err != nil {
+			return nil, fmt.Errorf("parse create time failed, err %s", err.Error())
+		}
+		updateTime, err := utils.ParseTimeString(ip.Status.UpdateTime)
+		if err != nil {
+			return nil, fmt.Errorf("parse update time failed, err %s", err.Error())
+		}
 		ipList = append(ipList, &types.IPObject{
-			Address:      ip.Spec.Address,
-			VpcID:        ip.Spec.VpcID,
-			Region:       ip.Spec.Region,
-			SubnetID:     ip.Spec.SubnetID,
-			SubnetCidr:   ip.Spec.SubnetCidr,
-			Cluster:      ip.Spec.Cluster,
-			Namespace:    ip.Spec.Namespace,
-			PodName:      ip.Spec.PodName,
-			WorkloadName: ip.Spec.WorkloadName,
-			ContainerID:  ip.Spec.ContainerID,
-			Host:         ip.Spec.Host,
-			EniID:        ip.Spec.EniID,
-			IsFixed:      ip.Spec.IsFixed,
-			Status:       ip.Status.Status,
-			CreateTime:   ip.Status.CreateTime,
-			UpdateTime:   ip.Status.UpdateTime,
+			Address:         ip.Spec.Address,
+			VpcID:           ip.Spec.VpcID,
+			Region:          ip.Spec.Region,
+			SubnetID:        ip.Spec.SubnetID,
+			SubnetCidr:      ip.Spec.SubnetCidr,
+			Cluster:         ip.Spec.Cluster,
+			Namespace:       ip.Spec.Namespace,
+			PodName:         ip.Spec.PodName,
+			WorkloadName:    ip.Spec.WorkloadName,
+			WorkloadKind:    ip.Spec.WorkloadKind,
+			ContainerID:     ip.Spec.ContainerID,
+			Host:            ip.Spec.Host,
+			EniID:           ip.Spec.EniID,
+			IsFixed:         ip.Spec.IsFixed,
+			Status:          ip.Status.Status,
+			ResourceVersion: ip.ResourceVersion,
+			CreateTime:      createTime,
+			UpdateTime:      updateTime,
 		})
 	}
 

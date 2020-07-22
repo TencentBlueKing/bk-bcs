@@ -120,6 +120,11 @@ func (a *FixedReleaseAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
 
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "container info not match"
 	}
+
+	if !ipObj.IsFixed {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "address is not fixed"
+	}
+
 	a.ipObj = ipObj
 	return pbcommon.ErrCode_ERROR_OK, ""
 }

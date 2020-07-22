@@ -137,7 +137,7 @@ func (cn *CloudNetservice) ReleaseIP(ctx context.Context, req *pb.ReleaseIPReq) 
 		blog.V(3).Infof("ReleaseIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
-	releaseAction := ipAction.NewReleaseAction(ctx, req, response, cn.storeIf, cn.cloudIf)
+	releaseAction := ipAction.NewReleaseAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(releaseAction)
 
 	return response, nil

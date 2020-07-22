@@ -13,23 +13,49 @@
 package app
 
 import (
+	"context"
 	"time"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetagent"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/common"
+	ipAction "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netagent/internal/action"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/actionexecutor"
 )
 
+// AllocIP allocate ip
 func (s *Server) AllocIP(ctx context.Context, req *pb.AllocIPReq) (*pb.AllocIPResp, error) {
 	rtime := time.Now()
 	blog.V(3).Infof("AllocIP seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.AllocIPResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
-	
+	defer func() {
+		cost := s.metricCollector.StatRequest("AllocIP", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("AllocIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
 
+	allocAction := ipAction.NewAllocateAction(
+		ctx, req, response,
+		s.k8sClient, s.k8sIPClient, s.cloudNetClient, s.inspector)
+	actionexecutor.NewExecutor().Execute(allocAction)
+
+	return response, nil
 }
 
-func (s *Server) ReleaseIP(context.Context, req *pb.ReleaseIPReq) (*pb.ReleaseIPResp, error) {
+// ReleaseIP release ip
+func (s *Server) ReleaseIP(ctx context.Context, req *pb.ReleaseIPReq) (*pb.ReleaseIPResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("ReleaseIP seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.ReleaseIPResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
 
+	defer func() {
+		cost := s.metricCollector.StatRequest("ReleaseIP", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("ReleaseIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	allocAction := ipAction.NewReleaseAction(
+		ctx, req, response, s.k8sIPClient, s.cloudNetClient)
+	actionexecutor.NewExecutor().Execute(allocAction)
+
+	return response, nil
 }

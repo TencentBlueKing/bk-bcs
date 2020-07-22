@@ -15,6 +15,7 @@ package utils
 import (
 	"fmt"
 	"regexp"
+	"time"
 )
 
 // ValidateIDName validate normal ID or name
@@ -35,4 +36,14 @@ func ValidateIPv4Cidr(cidr string) (bool, string) {
 		return isMatched, "subnet cidr is invalid"
 	}
 	return isMatched, ""
+}
+
+// FormatTime format time to utc string
+func FormatTime(t time.Time) string {
+	return t.Format(time.RFC3339Nano)
+}
+
+// ParseTimeString parse utc string to time object
+func ParseTimeString(s string) (time.Time, error) {
+	return time.Parse(time.RFC3339Nano, s)
 }

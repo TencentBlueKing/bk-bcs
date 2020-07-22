@@ -233,7 +233,7 @@ func (c *Client) MigrateIP(ip, srcEniID, destEniID string) error {
 	req.SourceNetworkInterfaceId = common.StringPtr(srcEniID)
 	req.DestinationNetworkInterfaceId = common.StringPtr(destEniID)
 
-	blog.V(3).Infof("MigratePrivateIpAddress req: %+v", req)
+	blog.V(3).Infof("MigratePrivateIpAddress req: %s", req.ToJsonString())
 
 	resp, err := c.vpcClient.MigratePrivateIpAddress(req)
 	if err != nil {
@@ -241,6 +241,6 @@ func (c *Client) MigrateIP(ip, srcEniID, destEniID string) error {
 		return fmt.Errorf("MigratePrivateIpAddress failed, err %s", err.Error())
 	}
 
-	blog.V(3).Infof("MigratePrivateIpAddress resp: %+v", resp)
+	blog.V(3).Infof("MigratePrivateIpAddress resp: %s", resp.ToJsonString())
 	return nil
 }

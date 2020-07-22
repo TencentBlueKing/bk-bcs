@@ -29,8 +29,8 @@ import (
 	pbcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/internal/option"
 	cloudAPI "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/pkg/cloud"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netcontroller/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/pkg/common"
 )
 
 // Processor node network processor
@@ -191,7 +191,7 @@ func (p *Processor) addNodeNetwork(node *corev1.Node) error {
 		},
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      node.GetName(),
-			Namespace: constant.CRD_NAMESPACES,
+			Namespace: constant.CloudCrdNamespace,
 		},
 		Spec: cloudv1.NodeNetworkSpec{
 			Cluster:     p.option.Cluster,
@@ -200,23 +200,21 @@ func (p *Processor) addNodeNetwork(node *corev1.Node) error {
 			VM:          nodeVMInfo,
 		},
 	}
-	newNodeNetwork.Finalizers = append(newNodeNetwork.Finalizers, constant.FINALIZER_NAME)
+	newNodeNetwork.Finalizers = append(newNodeNetwork.Finalizers, constant.FinalizerNameForNetController)
 
 	eniCrdObj, err := p.reconcileEniForDynamic(nodeVMInfo, subnetID)
 	if err != nil {
 		return err
 	}
-
 	_, ipLimit, err := p.cloudClient.GetENILimit(nodeVMInfo.InstanceIP)
 	if err != nil {
 		return err
 	}
-
 	newNodeNetwork.Status.FloatingIPEni = &cloudv1.FloatingIPNetworkInterface{
 		Eni:     eniCrdObj,
 		IPLimit: ipLimit - 1,
 	}
-
+	newNodeNetwork.Status.Status = cloudv1.NodeNetworkStatusNotReady
 	if err := p.kubeClient.Create(context.TODO(), newNodeNetwork, &client.CreateOptions{}); err != nil {
 		return err
 	}
@@ -235,17 +233,13 @@ func (p *Processor) deleteNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 		}
 		return nil
 	}
-	if containsString(nodenetwork.Finalizers, constant.NODE_FINALIZER_NAME) {
+	if containsString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent) {
 		blog.Warnf("wait for agent to clean its finalizer")
+		return nil
 	}
-	if containsString(nodenetwork.Finalizers, constant.FINALIZER_NAME) {
+	if containsString(nodenetwork.Finalizers, constant.FinalizerNameForNetController) {
 		// release eni
 		if nodenetwork.Status.FloatingIPEni != nil {
-			if len(nodenetwork.Status.FloatingIPEni.FloatingIPs) != 0 {
-				blog.Errorf("there is active ip in node %s, cannot delete", nodenetwork.GetName())
-				// TODO: set node event to warn user
-				return nil
-			}
 			fEni := nodenetwork.Status.FloatingIPEni
 			err := p.cloudClient.DetachENI(fEni.Eni.Attachment)
 			if err != nil {
@@ -259,7 +253,7 @@ func (p *Processor) deleteNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 			}
 		}
 		// real delete
-		nodenetwork.Finalizers = removeString(nodenetwork.Finalizers, constant.FINALIZER_NAME)
+		nodenetwork.Finalizers = removeString(nodenetwork.Finalizers, constant.FinalizerNameForNetController)
 		if err := p.kubeClient.Update(context.TODO(), nodenetwork, &client.UpdateOptions{}); err != nil {
 			return fmt.Errorf("delete finalizers of %s failed, err %s", nodenetwork.GetName(), err.Error())
 		}
@@ -292,8 +286,8 @@ func (p *Processor) reconcileEniForDynamic(nodeVMInfo *cloudv1.VMInfo, subnetID 
 		}
 		eniCrdObj.Attachment = attachment
 	}
-	eniCrdObj.Index = constant.ENI_FLOATING_IP_INDEX
-	eniCrdObj.EniIfaceName = getEniIfaceName(constant.ENI_FLOATING_IP_INDEX)
-	eniCrdObj.RouteTableID = constant.START_ROUTE_TABLE + constant.ENI_FLOATING_IP_INDEX
+	eniCrdObj.Index = constant.IndexForFloatingIPEni
+	eniCrdObj.EniIfaceName = getEniIfaceName(constant.IndexForFloatingIPEni)
+	eniCrdObj.RouteTableID = constant.RouteTableStartIndex + constant.IndexForFloatingIPEni
 	return eniCrdObj, nil
 }

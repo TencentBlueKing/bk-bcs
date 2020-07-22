@@ -27,17 +27,20 @@ type Config struct {
 	// Kubeconfig kubeconfig for kubernetes store
 	Kubeconfig string `json:"kubeconfig" value:"" usage:"kubeconfig for kubernetes apiserver"`
 
-	// InCluster is in kubernetes
-	InCluster bool `json:"inCluster" value:"false" usage:"if is cloud netservice is in kubernetes cluster"`
-
 	// Debug debug flag
 	Debug bool `json:"debug" value:"false" usage:"debug flag, open pprof"`
 
 	// SwaggerDir
-	SwaggerDir string `json:"swaggerDir" value:"" usage:"swagger dir"`
+	SwaggerDir string `json:"swagger_dir" value:"" usage:"swagger dir"`
 
 	// CloudMode cloud mod
-	CloudMode string `json:"cloudMode" value:"" usage:"cloud mode, option [tencentcloud, aws]"`
+	CloudMode string `json:"cloud_mode" value:"" usage:"cloud mode, option [tencentcloud, aws]"`
+
+	// IPMaxIdleMinute ip max idle time, max time for available ip before return to cloud
+	IPMaxIdleMinute int `json:"ip_max_idle_minute" value:"1600" usage:"max time for available ip before return to cloud; unit[minute]"`
+
+	// IPCleanIntervalMinute ip clean interval
+	IPCleanIntervalMinute int `json:"ip_clean_interval_minute" value:"10" usage:"interval minute for ip cleaner check interval, unit[minute]"`
 
 	conf.FileConfig
 	conf.ServiceConfig
