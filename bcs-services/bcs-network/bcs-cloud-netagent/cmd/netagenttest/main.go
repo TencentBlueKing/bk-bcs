@@ -15,6 +15,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 
 	"google.golang.org/grpc"
 
@@ -46,7 +47,7 @@ func main() {
 	agentClient := pbnetagent.NewCloudNetagentClient(conn)
 	switch action {
 	case "alloc":
-		resp, err := agentClient.AllocIP(context.TODO(), &pbnetagent.AllocIPReq{
+		resp, err := agentClient.AllocIP(context.Background(), &pbnetagent.AllocIPReq{
 			Seq:          common.TimeSequence(),
 			ContainerID:  containerID,
 			PodName:      podname,
@@ -56,9 +57,9 @@ func main() {
 		if err != nil {
 			blog.Fatalf("alloc ip failed, err %s", err.Error())
 		}
-		blog.Infof("alloc resp: %+v", resp)
+		fmt.Printf("alloc resp: %+v", resp)
 	case "release":
-		resp, err := agentClient.ReleaseIP(context.TODO(), &pbnetagent.ReleaseIPReq{
+		resp, err := agentClient.ReleaseIP(context.Background(), &pbnetagent.ReleaseIPReq{
 			Seq:          common.TimeSequence(),
 			ContainerID:  containerID,
 			PodName:      podname,
@@ -68,6 +69,6 @@ func main() {
 		if err != nil {
 			blog.Fatalf("release ip failed, err %s", err.Error())
 		}
-		blog.Infof("release resp: %+v", resp)
+		fmt.Printf("release resp: %+v", resp)
 	}
 }

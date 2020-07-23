@@ -75,8 +75,17 @@ func New(option *options.NetAgentOption) *NodeNetworkInspector {
 
 // Init init node network inspector
 func (nni *NodeNetworkInspector) Init() error {
+	// get node address
+	ifacesStr := strings.Replace(nni.option.Ifaces, ";", ",", -1)
+	ifaces := strings.Split(ifacesStr, ",")
+	instanceIP, _, err := nni.netUtil.GetAvailableHostIP(ifaces)
+	if err != nil {
+		blog.Errorf("get node ip failed, err %s", err.Error())
+		return fmt.Errorf("get node ip failed, err %s", err.Error())
+	}
+	nni.address = instanceIP
+
 	var config *rest.Config
-	var err error
 	// when out-of-cluster, kubeconfig must be
 	if len(nni.kubeconfig) != 0 {
 		config, err = clientcmd.BuildConfigFromFlags("", nni.kubeconfig)
@@ -118,16 +127,6 @@ func (nni *NodeNetworkInspector) Init() error {
 	}
 	blog.Infof("wait informer factory cache sync done")
 
-	// get node address
-	ifacesStr := strings.Replace(nni.option.Ifaces, ";", ",", -1)
-	ifaces := strings.Split(ifacesStr, ",")
-	instanceIP, _, err := nni.netUtil.GetAvailableHostIP(ifaces)
-	if err != nil {
-		blog.Errorf("get node ip failed, err %s", err.Error())
-		return fmt.Errorf("get node ip failed, err %s", err.Error())
-	}
-	nni.address = instanceIP
-
 	return nil
 }
 
@@ -147,6 +146,7 @@ func (nni *NodeNetworkInspector) OnAdd(obj interface{}) {
 	err := nni.reconcileNodeNetwork(nodenetwork)
 	if err != nil {
 		blog.Errorf("reconcile NodeNetwork failed, err %s", err.Error())
+		return
 	}
 
 	nni.nodeNetworkLock.Lock()
@@ -187,6 +187,8 @@ func (nni *NodeNetworkInspector) OnUpdate(oldObj, newObj interface{}) {
 			blog.Warnf("clean node network failed, err %s", err.Error())
 			return
 		}
+	} else {
+		// TODO: reconcile node network periodically
 	}
 }
 

@@ -145,7 +145,7 @@ func (a *AllocateAction) allocateFromCloudNetservice() (pbcommon.ErrCode, string
 			VpcID:        a.nodeNetwork.Spec.VM.NodeVpcID,
 			Region:       a.nodeNetwork.Spec.VM.NodeRegion,
 			SubnetID:     a.nodeNetwork.Status.FloatingIPEni.Eni.EniSubnetID,
-			Cluster:      a.nodeNetwork.ClusterName,
+			Cluster:      a.nodeNetwork.Spec.Cluster,
 			Namespace:    a.pod.GetNamespace(),
 			PodName:      a.pod.GetName(),
 			WorkloadName: workloadRef.Name,
@@ -174,7 +174,7 @@ func (a *AllocateAction) allocateFromCloudNetservice() (pbcommon.ErrCode, string
 		VpcID:        a.nodeNetwork.Spec.VM.NodeVpcID,
 		Region:       a.nodeNetwork.Spec.VM.NodeRegion,
 		SubnetID:     a.nodeNetwork.Status.FloatingIPEni.Eni.EniSubnetID,
-		Cluster:      a.nodeNetwork.ClusterName,
+		Cluster:      a.nodeNetwork.Spec.Cluster,
 		Namespace:    a.pod.GetNamespace(),
 		PodName:      a.pod.GetName(),
 		WorkloadName: workloadRef.Name,
@@ -267,6 +267,9 @@ func (a *AllocateAction) parseIP() (pbcommon.ErrCode, string) {
 // Do do allocate action
 func (a *AllocateAction) Do() error {
 	if errCode, errMsg := a.getPodInfo(); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
+	if errCode, errMsg := a.getNodeInfo(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
 	if errCode, errMsg := a.allocateFromCloudNetservice(); errCode != pbcommon.ErrCode_ERROR_OK {

@@ -14,6 +14,8 @@ package app
 
 import (
 	"fmt"
+	"math"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	cloudv1set "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	pbcloudagent "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetagent"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netagent/internal/inspector"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netagent/internal/options"
@@ -165,12 +168,30 @@ func (s *Server) Init() {
 // Run run server
 func (s *Server) Run() {
 
+	lis, err := net.Listen("tcp",
+		s.option.Address+":"+strconv.Itoa(int(s.option.Port)))
+	if err != nil {
+		blog.Fatalf("listen on endpoint failed, err %s", err.Error())
+	}
+
+	// run grpc server
+	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(math.MaxInt32))
+	pbcloudagent.RegisterCloudNetagentServer(grpcServer, s)
+	blog.Infof("registered cloud netservice grpc server")
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			blog.Fatalf("start grpc server with net listener failed, err %s", err.Error())
+		}
+	}()
+
 	interupt := make(chan os.Signal, 10)
 	signal.Notify(interupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM,
 		syscall.SIGUSR1, syscall.SIGUSR2)
 	for {
 		select {
 		case <-interupt:
+			grpcServer.GracefulStop()
 			blog.Infof("Get signal from system. Exit\n")
 			return
 		}

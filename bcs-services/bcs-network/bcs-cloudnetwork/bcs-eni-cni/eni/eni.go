@@ -40,9 +40,10 @@ var defaultLogDir = "./logs"
 // NetConf net config
 type NetConf struct {
 	types.NetConf
-	MTU    int    `json:"mtu,omitempty"`
-	LogDir string `json:"logDir,omitempty"`
-	Args   *bcsconf.CNIArgs
+	MTU           int    `json:"mtu,omitempty"`
+	LogDir        string `json:"logDir,omitempty"`
+	IpamdEndpoint string `json:"ipamdEndpoint,omitempty"`
+	Args          *bcsconf.CNIArgs
 }
 
 //loadConf load specified configuration from cni configuration
@@ -216,6 +217,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleToTable := netlink.NewRule()
 	ruleToTable.Dst = ipNet
 	ruleToTable.Table = routeTableID
+	ruleToTable.Priority = 2048
 	if !findToTableRule(rules, ruleToTable) {
 		err = netlink.RuleAdd(ruleToTable)
 		if err != nil {
@@ -226,6 +228,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleFromTaskgroup := netlink.NewRule()
 	ruleFromTaskgroup.Src = ipNet
 	ruleFromTaskgroup.Table = routeTableID
+	ruleFromTaskgroup.Priority = 2048
 	if !findFromTableRule(rules, ruleFromTaskgroup) {
 		err = netlink.RuleAdd(ruleFromTaskgroup)
 		if err != nil {

@@ -40,3 +40,5 @@ default: bcs-cloud-netagent
 bcs-cloud-netagent:
 	mkdir -p ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent
 	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-cloud-netagent ./cmd/netagent/main.go
+	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/netagent-client ./cmd/netagenttest/main.go
+	
