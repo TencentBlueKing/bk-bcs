@@ -206,7 +206,7 @@ func (a *AllocateAction) storeIPObjectToAPIServer() (pbcommon.ErrCode, string) {
 					APIVersion: constant.CloudCrdVersionV1,
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      a.ipFromNetService.Address,
+					Name:      a.ipFromNetService.PodName,
 					Namespace: a.ipFromNetService.Namespace,
 					Labels: map[string]string{
 						constant.PodAnnotationKeyForHost: a.ipFromNetService.Host,

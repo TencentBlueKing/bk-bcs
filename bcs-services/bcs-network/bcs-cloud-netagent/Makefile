@@ -41,4 +41,6 @@ bcs-cloud-netagent:
 	mkdir -p ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent
 	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-cloud-netagent ./cmd/netagent/main.go
 	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/netagent-client ./cmd/netagenttest/main.go
+	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-eni-cni ./cmd/bcs-eni-cni/main.go
+	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-eni-ipam ./cmd/bcs-eni-ipam/main.go
 	

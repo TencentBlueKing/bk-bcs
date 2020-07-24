@@ -99,7 +99,7 @@ func (a *ReleaseAction) Output() error {
 
 // get ip object from api server
 func (a *ReleaseAction) getIPObjectFromAPIServer() (pbcommon.ErrCode, string) {
-	ipObj, err := a.k8sIPClient.CloudIPs(a.req.PodNamespace).Get(a.ctx, a.req.IpAddr, metav1.GetOptions{})
+	ipObj, err := a.k8sIPClient.CloudIPs(a.req.PodNamespace).Get(a.ctx, a.req.PodName, metav1.GetOptions{})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED, err.Error()
 	}
