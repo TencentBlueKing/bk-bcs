@@ -15,14 +15,12 @@ package controller
 
 import (
 	"encoding/json"
-	"os"
-	"strings"
-	"sync"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/discovery"
+	"os"
+	"strings"
 )
 
 const (
@@ -30,8 +28,6 @@ const (
 )
 
 type PrometheusController struct {
-	sync.RWMutex
-
 	promFilePrefix string
 	clusterId      string
 	conf           *config.Config
@@ -153,9 +149,6 @@ func (prom *PrometheusController) Start() error {
 }
 
 func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.DiscoveryInfo) {
-	prom.Lock()
-	defer prom.Unlock()
-
 	blog.Infof("discovery %s service discovery config changed", dInfo.Module)
 	disc, ok := prom.discoverys[dInfo.Module]
 	if !ok {

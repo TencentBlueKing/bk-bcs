@@ -22,21 +22,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path"
 	"reflect"
+	"regexp"
+	"strings"
 	"sync"
 
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	apismonitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/monitor/v1"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
-	monitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/monitor/v1"
-	apismonitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/monitor/v1"
-	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type serviceMonitor struct {
@@ -51,7 +52,7 @@ type serviceMonitor struct {
 	endpointLister bkbcsv2.BcsEndpointLister
 	endpointInformer cache.SharedIndexInformer
 	//service monitor
-	serviceMonitorLister monitorv1.ServiceMonitorLister
+	//serviceMonitorLister monitorv1.ServiceMonitorLister
 	serviceMonitorInformer cache.SharedIndexInformer
 	//apiextensions clientset
 	extensionClientset *apiextensionsclient.Clientset
@@ -72,15 +73,29 @@ func (s *serviceEndpoint) getPrometheusConfigs()[]*types.PrometheusSdConfig{
 	for _,bcsEndpoint :=range s.endpoints {
 		conf := &types.PrometheusSdConfig{
 			Targets: make([]string, 0),
-			Labels: bcsEndpoint.Labels,
+			Labels: make(map[string]string),
 		}
+		for k,v :=range bcsEndpoint.Labels {
+			r,_:=regexp.Compile("[a-zA-Z_][a-zA-Z0-9_]*")
+			rk := r.FindAllString(k, 1)
+			if len(rk)!=1 || rk[0]!=k {
+				blog.Infof("BcsEndpoint(%s) Label(%s:%s) is invalid", bcsEndpoint.GetUuid(), k,v)
+				continue
+			}
+			conf.Labels[k] = v
+		}
+
 		//append ServiceMonitor Identity
 		conf.Labels["ServiceMonitor"] = s.serviceM.GetUuid()
 		//append BcsEndpoint Identity
 		conf.Labels["BcsEndpoint"] = bcsEndpoint.GetUuid()
+		//append namespace
+		conf.Labels["namespace"] = bcsEndpoint.Namespace
+		conf.Labels["job"] = fmt.Sprintf("%s/%s/0", bcsEndpoint.Namespace, s.serviceM.Name)
+		conf.Labels["name"] = s.serviceM.Name
 		for _,endpoint :=range bcsEndpoint.Spec.Endpoints {
 			for _,cPort := range endpoint.Ports {
-				portInfo,ok := s.cPorts[cPort.Name]
+				_,ok := s.cPorts[cPort.Name]
 				if !ok {
 					blog.V(3).Infof("BcsEndpoint(%s) endpoint(%s) port(%s) don't matched, and continue",
 						bcsEndpoint.GetUuid(), endpoint.ContainerIP, cPort.Name)
@@ -88,9 +103,9 @@ func (s *serviceEndpoint) getPrometheusConfigs()[]*types.PrometheusSdConfig{
 				}
 				//if container network=Host
 				if endpoint.NetworkMode=="HOST" {
-					conf.Targets = append(conf.Targets, fmt.Sprintf("%s:%d%s", endpoint.NodeIP, cPort.ContainerPort, portInfo.Path))
+					conf.Targets = append(conf.Targets, fmt.Sprintf("%s:%d", endpoint.NodeIP, cPort.ContainerPort))
 				}else {
-					conf.Targets = append(conf.Targets, fmt.Sprintf("%s:%d%s", endpoint.ContainerIP, cPort.ContainerPort, portInfo.Path))
+					conf.Targets = append(conf.Targets, fmt.Sprintf("%s:%d", endpoint.ContainerIP, cPort.ContainerPort))
 				}
 			}
 
@@ -139,6 +154,7 @@ func (disc *serviceMonitor) Start() error {
 	}
 	internalFactory := informers.NewSharedInformerFactory(internalClientset, 0)
 	disc.endpointInformer = internalFactory.Bkbcs().V2().BcsEndpoints().Informer()
+	disc.endpointLister = internalFactory.Bkbcs().V2().BcsEndpoints().Lister()
 	blog.Infof("build bkbcsClientset for config %s success", disc.kubeconfig)
 
 	//init monitor clientset
@@ -217,7 +233,7 @@ func (disc *serviceMonitor) GetPrometheusSdConfig(key string) ([]*types.Promethe
 }
 
 func (disc *serviceMonitor) GetPromSdConfigFile(key string) string {
-	return path.Join(disc.promFilePrefix, fmt.Sprintf("%s_%s%s", key, disc.module, DiscoveryFileName))
+	return strings.ToLower(path.Join(disc.promFilePrefix, fmt.Sprintf("%s_%s%s", key, disc.module, DiscoveryFileName)))
 }
 
 func (disc *serviceMonitor) RegisterEventFunc(handleFunc EventHandleFunc) {
@@ -225,9 +241,6 @@ func (disc *serviceMonitor) RegisterEventFunc(handleFunc EventHandleFunc) {
 }
 
 func (disc *serviceMonitor) OnServiceMonitorAdd(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	serviceM, ok := obj.(*apismonitorv1.ServiceMonitor)
 	if !ok {
 		blog.Errorf("cannot convert to *apismonitorv1.ServiceMonitor: %v", obj)
@@ -257,10 +270,16 @@ func (disc *serviceMonitor) OnServiceMonitorAdd(obj interface{}) {
 		return
 	}
 	for _,v :=range endpoints {
+		if !serviceM.Match(v.Labels){
+			blog.Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), v.GetUuid())
+			continue
+		}
 		o.endpoints[v.GetUuid()] = v
 		blog.Infof("ServiceMonitor(%s) add selected BcsEndpoint(%s) success", serviceM.GetUuid(), v.GetUuid())
 	}
+	disc.Lock()
 	disc.svrMonitors[serviceM.GetUuid()] = o
+	disc.Unlock()
 	blog.Infof("handle Add event ServiceMonitor(%s) success", serviceM.GetUuid())
 	go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
 }
@@ -281,9 +300,6 @@ func (disc *serviceMonitor) validateServiceMonitor(serviceM *apismonitorv1.Servi
 
 // if on update event, then don't need to update sd config
 func (disc *serviceMonitor) OnServiceMonitorUpdate(old, cur interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	serviceM, ok := cur.(*apismonitorv1.ServiceMonitor)
 	if !ok {
 		blog.Errorf("cannot convert to *apismonitorv1.ServiceMonitor: %v", cur)
@@ -313,34 +329,36 @@ func (disc *serviceMonitor) OnServiceMonitorUpdate(old, cur interface{}) {
 		return
 	}
 	for _,v :=range endpoints {
+		if !serviceM.Match(v.Labels){
+			blog.Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), v.GetUuid())
+			continue
+		}
 		o.endpoints[v.GetUuid()] = v
 		blog.Infof("ServiceMonitor(%s) add selected BcsEndpoint(%s) success", serviceM.GetUuid(), v.GetUuid())
 	}
+	disc.Lock()
 	disc.svrMonitors[serviceM.GetUuid()] = o
+	disc.Unlock()
 	blog.Infof("handle Update event ServiceMonitor(%s) success", serviceM.GetUuid())
 	go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
 }
 
 func (disc *serviceMonitor) OnServiceMonitorDelete(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-	
 	serviceM, ok := obj.(*apismonitorv1.ServiceMonitor)
 	if !ok {
 		blog.Errorf("cannot convert to *apismonitorv1.ServiceMonitor: %v", obj)
 		return
 	}
 	blog.Infof("recieve ServiceMonitor(%s) Delete event", serviceM.GetUuid())
+	disc.Lock()
 	delete(disc.svrMonitors, serviceM.GetUuid())
+	disc.Unlock()
 	blog.Infof("handle Delete event ServiceMonitor(%s) success", serviceM.GetUuid())
 	// call event handler
 	go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
 }
 
 func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-	
 	endpoint, ok := obj.(*apisbkbcsv2.BcsEndpoint)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.BcsEndpoint: %v", obj)
@@ -354,7 +372,9 @@ func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
 			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
 			continue
 		}
+		disc.Lock()
 		sm.endpoints[endpoint.GetUuid()] = endpoint
+		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) add selected BcsEndpoint(%s) success", serviceM.GetUuid(), endpoint.GetUuid())
 		// call event handler
 		go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
@@ -363,9 +383,6 @@ func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
 
 // if on update event, then don't need to update sd config
 func (disc *serviceMonitor) OnEndpointsUpdate(old, cur interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-	
 	oldEndpoint, ok := old.(*apisbkbcsv2.BcsEndpoint)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.BcsEndpoint: %v", old)
@@ -390,7 +407,9 @@ func (disc *serviceMonitor) OnEndpointsUpdate(old, cur interface{}) {
 			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), curEndpoint.GetUuid())
 			continue
 		}
+		disc.Lock()
 		sm.endpoints[curEndpoint.GetUuid()] = curEndpoint
+		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) update selected BcsEndpoint(%s) success", serviceM.GetUuid(), curEndpoint.GetUuid())
 		// call event handler
 		go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
@@ -419,9 +438,6 @@ func checkEndpointsChanged(old, cur commtypes.BcsEndpoint)bool{
 }
 
 func (disc *serviceMonitor) OnEndpointsDelete(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	endpoint, ok := obj.(*apisbkbcsv2.BcsEndpoint)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.BcsEndpoint: %v", obj)
@@ -434,7 +450,9 @@ func (disc *serviceMonitor) OnEndpointsDelete(obj interface{}) {
 			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
 			continue
 		}
+		disc.Lock()
 		delete(sm.endpoints, endpoint.GetUuid())
+		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) delete selected BcsEndpoint(%s) success", serviceM.GetUuid(), endpoint.GetUuid())
 		// call event handler
 		go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
