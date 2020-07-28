@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	cloudv1set "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	listercloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
 	pbcloudagent "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetagent"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netagent/internal/inspector"
@@ -52,13 +53,20 @@ type Server struct {
 
 	k8sIPClient cloudv1set.CloudV1Interface
 
+	k8sIPLister listercloudv1.CloudIPLister
+
 	metricCollector *apimetric.Collector
+
+	fixedIPWorkloads []string
 }
 
 // New create server
 func New(option *options.NetAgentOption) *Server {
+	option.FixedIPWorkloads = strings.Replace(option.FixedIPWorkloads, ";", ",", -1)
+	fixedIPWorkloads := strings.Split(option.FixedIPWorkloads, ",")
 	return &Server{
-		option: option,
+		option:           option,
+		fixedIPWorkloads: fixedIPWorkloads,
 	}
 }
 

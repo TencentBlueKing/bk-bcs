@@ -69,6 +69,8 @@ const (
 	CrdNameLabelsIsFixed = "fixed.cloud.bkbcs.tencent.com"
 	// CrdNameLabelsEni  crd labels name for eni
 	CrdNameLabelsEni = "eni.cloud.bkbcs.tencent.com"
+	// CrdNameLabelsHost crd labels name for host
+	CrdNameLabelsHost = "host.cloud.bkbcs.tencent.com"
 )
 
 // Client client for kube
@@ -404,17 +406,14 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 			Name:      ip.Address,
 			Namespace: "bcs-system",
 			Labels: map[string]string{
-				CrdNameLabelsVpcID:        ip.VpcID,
-				CrdNameLabelsRegion:       ip.Region,
-				CrdNameLabelsSubnetID:     ip.SubnetID,
-				CrdNameLabelsCluster:      ip.Cluster,
-				CrdNameLabelsNamespace:    ip.Namespace,
-				CrdNameLabelsWorkloadName: ip.WorkloadName,
-				CrdNameLabelsWorkloadKind: ip.WorkloadKind,
-				CrdNameLabelsPodName:      ip.PodName,
-				CrdNameLabelsStatus:       ip.Status,
-				CrdNameLabelsEni:          ip.EniID,
-				CrdNameLabelsIsFixed:      strconv.FormatBool(ip.IsFixed),
+				CrdNameLabelsVpcID:    ip.VpcID,
+				CrdNameLabelsRegion:   ip.Region,
+				CrdNameLabelsSubnetID: ip.SubnetID,
+				CrdNameLabelsCluster:  ip.Cluster,
+				CrdNameLabelsStatus:   ip.Status,
+				CrdNameLabelsEni:      ip.EniID,
+				CrdNameLabelsHost:     ip.Host,
+				CrdNameLabelsIsFixed:  strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{
@@ -464,17 +463,14 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) error {
 			Namespace:       "bcs-system",
 			ResourceVersion: ip.ResourceVersion,
 			Labels: map[string]string{
-				CrdNameLabelsVpcID:        ip.VpcID,
-				CrdNameLabelsRegion:       ip.Region,
-				CrdNameLabelsSubnetID:     ip.SubnetID,
-				CrdNameLabelsCluster:      ip.Cluster,
-				CrdNameLabelsNamespace:    ip.Namespace,
-				CrdNameLabelsWorkloadName: ip.WorkloadName,
-				CrdNameLabelsWorkloadKind: ip.WorkloadKind,
-				CrdNameLabelsPodName:      ip.PodName,
-				CrdNameLabelsStatus:       ip.Status,
-				CrdNameLabelsEni:          ip.EniID,
-				CrdNameLabelsIsFixed:      strconv.FormatBool(ip.IsFixed),
+				CrdNameLabelsVpcID:    ip.VpcID,
+				CrdNameLabelsRegion:   ip.Region,
+				CrdNameLabelsSubnetID: ip.SubnetID,
+				CrdNameLabelsCluster:  ip.Cluster,
+				CrdNameLabelsStatus:   ip.Status,
+				CrdNameLabelsEni:      ip.EniID,
+				CrdNameLabelsHost:     ip.Host,
+				CrdNameLabelsIsFixed:  strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{

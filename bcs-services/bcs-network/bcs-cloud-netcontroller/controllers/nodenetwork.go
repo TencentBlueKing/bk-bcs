@@ -15,11 +15,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -100,30 +100,36 @@ func (p *Processor) OnEvent() {
 }
 
 func (p *Processor) handle() error {
-	var nodes corev1.NodeList
-	labelSelector := labels.SelectorFromSet(labels.Set(map[string]string{"nodenetwork.bkbcs.tencent.com": "true"}))
-	if err := p.kubeClient.List(context.TODO(), &nodes, &client.ListOptions{LabelSelector: labelSelector}); err != nil {
+	nodes := &corev1.NodeList{}
+	if err := p.kubeClient.List(context.TODO(), nodes,
+		&client.MatchingLabels{constant.NodeAnnotationKeyForNodeNetwork: strconv.FormatBool(true)}); err != nil {
+
 		blog.Errorf("unable to list Nodes, err %s", err.Error())
 		return fmt.Errorf("unable to list Nodes, err %s", err.Error())
 	}
+	blog.V(5).Infof("get node list: %+v", nodes)
 	nodeNameMap := make(map[string]*corev1.Node)
-	for _, node := range nodes.Items {
-		nodeNameMap[node.GetName()] = &node
+	for idx := range nodes.Items {
+		tmpNode := nodes.Items[idx]
+		nodeNameMap[tmpNode.GetName()] = &tmpNode
 	}
 
-	var nodeNetworks cloudv1.NodeNetworkList
-	if err := p.kubeClient.List(context.TODO(), &nodeNetworks, &client.ListOptions{}); err != nil {
+	nodeNetworks := &cloudv1.NodeNetworkList{}
+	if err := p.kubeClient.List(context.TODO(), nodeNetworks, client.InNamespace(constant.CloudCrdNamespace)); err != nil {
 		blog.Errorf("unable to list NodeNetworks, err %s", err.Error())
 		return fmt.Errorf("unable to list NodeNetworks, err %s", err.Error())
 	}
+	blog.V(5).Infof("get node network list: %+v", nodeNetworks)
 	nodeNetworkMap := make(map[string]*cloudv1.NodeNetwork)
-	for _, nodeNet := range nodeNetworks.Items {
-		nodeNetworkMap[nodeNet.GetName()] = &nodeNet
+	for idx := range nodeNetworks.Items {
+		tmpNodeNet := nodeNetworks.Items[idx]
+		nodeNetworkMap[tmpNodeNet.GetName()] = &tmpNodeNet
 	}
 
 	// deal with new node
 	for nodeName, node := range nodeNameMap {
 		if _, ok := nodeNetworkMap[nodeName]; !ok {
+			blog.V(3).Infof("add node network for node %s", node.GetName())
 			if err := p.addNodeNetwork(node); err != nil {
 				return err
 			}
@@ -135,6 +141,7 @@ func (p *Processor) handle() error {
 	// deal with deleted node network
 	for nodeName, nodenetwork := range nodeNetworkMap {
 		if _, ok := nodeNameMap[nodeName]; !ok {
+			blog.V(3).Infof("delete node network %+v", nodenetwork)
 			if err := p.deleteNodeNetwork(nodenetwork); err != nil {
 				return err
 			}
@@ -219,7 +226,7 @@ func (p *Processor) addNodeNetwork(node *corev1.Node) error {
 		return err
 	}
 
-	//p.nodeEventer.Eventf(node, corev1.EventTypeNormal, "nodenetwork created", "eni info: %+v", newNodeNetwork)
+	p.nodeEventer.Eventf(node, corev1.EventTypeNormal, "nodenetwork created", "eni info: %+v", newNodeNetwork)
 
 	return nil
 }
@@ -227,6 +234,20 @@ func (p *Processor) addNodeNetwork(node *corev1.Node) error {
 // delete node network
 func (p *Processor) deleteNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 	if nodenetwork.DeletionTimestamp.IsZero() {
+		hasActiveIP, err := p.checkIPOnNode(nodenetwork)
+		if err != nil {
+			return err
+		}
+		if hasActiveIP {
+			p.nodeEventer.Eventf(nodenetwork, corev1.EventTypeWarning,
+				"nodenetwork cannot be deleted", "node still has active ip or fixed ip")
+			return fmt.Errorf("node %s has active ip, network cannot be deleted", nodenetwork.Spec.NodeAddress)
+		}
+
+		if err := p.cleanIPOnNode(nodenetwork); err != nil {
+			return err
+		}
+
 		// pre delete
 		if err := p.kubeClient.Delete(context.TODO(), nodenetwork, &client.DeleteOptions{}); err != nil {
 			return err
@@ -262,7 +283,41 @@ func (p *Processor) deleteNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 	return nil
 }
 
-func (p *Processor) reconcileEniForPreAllocate() error {
+// result true stands for there are still ips on host
+func (p *Processor) checkIPOnNode(nodenetwork *cloudv1.NodeNetwork) (bool, error) {
+	cloudips := &cloudv1.CloudIPList{}
+	if err := p.kubeClient.List(context.TODO(), cloudips,
+		&client.MatchingLabels{
+			constant.IPAnnotationKeyForHost:           nodenetwork.Spec.NodeAddress,
+			constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+		}); err != nil {
+
+		blog.Errorf("list cloud ip on node %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
+		return true, fmt.Errorf("list cloud ip on node %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
+	}
+	if len(cloudips.Items) == 0 {
+		return false, nil
+	}
+	blog.Infof("found ips: %+v on node %s", cloudips.Items, nodenetwork.Spec.NodeAddress)
+	return true, nil
+}
+
+// clean node
+func (p *Processor) cleanIPOnNode(nodenetwork *cloudv1.NodeNetwork) error {
+	resp, err := p.cloudNetClient.CleanNode(context.TODO(), &pbcloudnet.CleanNodeReq{
+		Seq:     common.TimeSequence(),
+		Region:  nodenetwork.Spec.VM.NodeRegion,
+		Cluster: nodenetwork.Spec.Cluster,
+		Host:    nodenetwork.Spec.NodeAddress,
+	})
+	if err != nil {
+		blog.Errorf("clean node ips error, err %s", err.Error())
+		return fmt.Errorf("clean node ips failed, err %s", err.Error())
+	}
+	if resp.ErrCode != pbcommon.ErrCode_ERROR_OK {
+		blog.Errorf("clean node ips failed, errCode %+v, errMsg %s", resp.ErrCode, resp.ErrMsg)
+		return fmt.Errorf("clean node ips failed, errCode %+v, errMsg %s", resp.ErrCode, resp.ErrMsg)
+	}
 	return nil
 }
 

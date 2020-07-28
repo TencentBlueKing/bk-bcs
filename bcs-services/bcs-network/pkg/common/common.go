@@ -62,3 +62,13 @@ func RemoveString(strs []string, str string) []string {
 	}
 	return newSlice
 }
+
+// FormatTime format time to utc string
+func FormatTime(t time.Time) string {
+	return t.Format(time.RFC3339Nano)
+}
+
+// ParseTimeString parse utc string to time object
+func ParseTimeString(s string) (time.Time, error) {
+	return time.Parse(time.RFC3339Nano, s)
+}

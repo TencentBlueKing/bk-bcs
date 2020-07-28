@@ -189,25 +189,28 @@ func (a *FixedAllocateAction) queryEniFromCloud() (pbcommon.ErrCode, string) {
 // check allocated ip
 func (a *FixedAllocateAction) checkAllocatedIP() (pbcommon.ErrCode, string) {
 	ipObjs, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CrdNameLabelsCluster:      a.req.Cluster,
-		kube.CrdNameLabelsPodName:      a.req.PodName,
-		kube.CrdNameLabelsNamespace:    a.req.Namespace,
-		kube.CrdNameLabelsWorkloadKind: a.req.WorkloadKind,
-		kube.CrdNameLabelsWorkloadName: a.req.WorkloadName,
-		kube.CrdNameLabelsIsFixed:      strconv.FormatBool(true),
+		kube.CrdNameLabelsCluster:  a.req.Cluster,
+		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
+		kube.CrdNameLabelsIsFixed:  strconv.FormatBool(true),
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "list ip object failed"
 	}
-	if len(ipObjs) > 1 {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "more than one allocated ip object"
+
+	var allocatedIPObj *types.IPObject
+	for _, ipObj := range ipObjs {
+		if ipObj.PodName == a.req.PodName &&
+			ipObj.Namespace == a.req.Namespace {
+
+			allocatedIPObj = ipObj
+		}
 	}
-	if len(ipObjs) == 0 {
+	if allocatedIPObj == nil {
 		blog.Infof("no allocated ip, try to allocate one")
 		return pbcommon.ErrCode_ERROR_OK, ""
 	}
 
-	a.allocatedIPObj = ipObjs[0]
+	a.allocatedIPObj = allocatedIPObj
 	// check info
 	if a.allocatedIPObj.VpcID != a.req.VpcID ||
 		a.allocatedIPObj.Region != a.req.Region ||

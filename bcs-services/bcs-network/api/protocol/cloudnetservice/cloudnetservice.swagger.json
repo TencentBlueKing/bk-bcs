@@ -154,6 +154,34 @@
         ]
       }
     },
+    "/v1/node/clean": {
+      "post": {
+        "summary": "清理节点上所有ip地址",
+        "description": "清理节点上的所有ip地址",
+        "operationId": "CleanNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCleanNodeResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCleanNodeReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
     "/v1/subnet": {
       "delete": {
         "summary": "删除云子网",
@@ -827,6 +855,74 @@
         }
       }
     },
+    "cloudnetserviceCleanNodeReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "region": "ap-shanghai",
+        "cluster": "bcs-xxxxx",
+        "host": "127.0.0.1",
+        "isForce": false
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "host": {
+          "type": "string",
+          "description": "host",
+          "title": "host"
+        },
+        "isForce": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否强制删除所有ip，【注意】强制删除会将active状态的IP删除，导致容器网络不通",
+          "title": "isForce"
+        }
+      },
+      "description": "清理一个node上所有的空闲IP地址",
+      "title": "CleanNodeReq",
+      "required": [
+        "seq",
+        "region",
+        "cluster",
+        "host"
+      ]
+    },
+    "cloudnetserviceCleanNodeResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
     "cloudnetserviceDeleteSubnetResp": {
       "type": "object",
       "properties": {
@@ -1204,10 +1300,11 @@
         "ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE",
         "ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND",
         "ERROR_CLOUD_NETAGENT_INVALID_IP_INFO",
-        "ERROR_CLOUD_NETAGENT_INVALID_PARAMS"
+        "ERROR_CLOUD_NETAGENT_INVALID_PARAMS",
+        "ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE"
       ],
       "default": "ERROR_OK",
-      "description": "- ERROR_OK: 0 Sunccess\n - ERROR_CLOUD_NETSERVICE_INVALID_PARAMS: 81000 cloud netservice, invalid parameter\n - ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED: 81001 cloud netservice, storage operation failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED: 81002 cloud netservice, call cloud api failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED: 81003 cloud netservice, assign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED: 81004 cloud netserivce, unassign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED: 81005 cloud netservice, query eni failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH: 81006 cloud netservice, eni info not match\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED: 81007 cloud netservice, query subnet from store failed\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET: 81008 cloud netservice, try to delete subent with active ip\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET: 81009 cloud netservice, try to delete enabled subnet\n - ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED: 81010 cloud netservice, subnet is disabled\n - ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP: 81011 cloud netservice, try to allocate active ip\n - ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED: 81012 cloud netservice, migrate ip failed\n - ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH: 81013 cloud netservice, allocated ip info not match request\n - ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP: 81013 cloud netservice, try to clean active ip\n - ERROR_CLOUD_NETAGENT_POD_NOT_FOUND: 82000 cloud netagent, find no pod\n - ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED: 82001 cloud netagent, get ip failed\n - ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED: 82002 cloud netagent, release ip failed\n - ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED: 82003 cloud netagent, k8s api server ops failed\n - ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE: 82004 cloud netagent, nodenetwork not available\n - ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND: 82005 cloud netagent, pod workload not found\n - ERROR_CLOUD_NETAGENT_INVALID_IP_INFO: 82006 cloud netagent, ip info invalid\n - ERROR_CLOUD_NETAGENT_INVALID_PARAMS: 82007 cloud netagent, invalid parameter",
+      "description": "- ERROR_OK: 0 Sunccess\n - ERROR_CLOUD_NETSERVICE_INVALID_PARAMS: 81000 cloud netservice, invalid parameter\n - ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED: 81001 cloud netservice, storage operation failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED: 81002 cloud netservice, call cloud api failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED: 81003 cloud netservice, assign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED: 81004 cloud netserivce, unassign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED: 81005 cloud netservice, query eni failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH: 81006 cloud netservice, eni info not match\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED: 81007 cloud netservice, query subnet from store failed\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET: 81008 cloud netservice, try to delete subent with active ip\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET: 81009 cloud netservice, try to delete enabled subnet\n - ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED: 81010 cloud netservice, subnet is disabled\n - ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP: 81011 cloud netservice, try to allocate active ip\n - ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED: 81012 cloud netservice, migrate ip failed\n - ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH: 81013 cloud netservice, allocated ip info not match request\n - ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP: 81013 cloud netservice, try to clean active ip\n - ERROR_CLOUD_NETAGENT_POD_NOT_FOUND: 82000 cloud netagent, find no pod\n - ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED: 82001 cloud netagent, get ip failed\n - ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED: 82002 cloud netagent, release ip failed\n - ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED: 82003 cloud netagent, k8s api server ops failed\n - ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE: 82004 cloud netagent, nodenetwork not available\n - ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND: 82005 cloud netagent, pod workload not found\n - ERROR_CLOUD_NETAGENT_INVALID_IP_INFO: 82006 cloud netagent, ip info invalid\n - ERROR_CLOUD_NETAGENT_INVALID_PARAMS: 82007 cloud netagent, invalid parameter\n - ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE: 82008 cloud netagent, workload not support fixed ip feature",
       "title": "ErrCode error code"
     },
     "commonIPObject": {

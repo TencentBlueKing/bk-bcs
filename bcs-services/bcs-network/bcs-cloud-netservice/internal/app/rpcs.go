@@ -194,6 +194,23 @@ func (cn *CloudNetservice) CleanFixedIP(ctx context.Context, req *pb.CleanFixedI
 	return response, nil
 }
 
+// CleanNode clean node ip
+func (cn *CloudNetservice) CleanNode(ctx context.Context, req *pb.CleanNodeReq) (*pb.CleanNodeResp, error) {
+	rtime := time.Now()
+	blog.V(3).Infof("CleanNode seq[%d] input[%+v]", req.Seq, req)
+	response := &pb.CleanNodeResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_ERROR_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := cn.metricCollector.StatRequest("CleanNode", response.ErrCode, rtime, time.Now())
+		blog.V(3).Infof("CleanNode seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	fixedCleanNodeAction := ipAction.NewCleanNodeAction(ctx, req, response, cn.storeIf, cn.cloudIf)
+	action.NewExecutor().Execute(fixedCleanNodeAction)
+
+	return response, nil
+}
+
 // ListIP list ip objects from cloud netservice
 func (cn *CloudNetservice) ListIP(ctx context.Context, req *pb.ListIPsReq) (*pb.ListIPsResp, error) {
 	return nil, nil

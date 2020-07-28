@@ -13,7 +13,9 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -52,6 +54,9 @@ func main() {
 	flag.StringVar(&opts.Cluster, "cluster", "", "clusterid for bcs cluster")
 	flag.StringVar(&cloudNetserviceEndpoints, "cloud_netservice_endpoints", "", "endpoints of cloud netservice, split by comma or semicolon")
 
+	flag.IntVar(&opts.IPCleanCheckMinute, "ipclean_check_minute", 30, "check interval minute for cleaning unused fixed ip")
+	flag.IntVar(&opts.IPCleanMaxReservedMinute, "ipclean_max_reserved_minute", 120, "max reserved minute for unused fixed ip")
+
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
 	flag.IntVar(&opts.LogMaxNum, "log_max_num", 10, "Max num of log file.")
@@ -69,12 +74,17 @@ func main() {
 	opts.CloudNetServiceEndpoints = strings.Split(cloudNetserviceEndpoints, ",")
 	opts.Verbosity = int32(verbosity)
 
+	if opts.IPCleanCheckMinute < 0 || opts.IPCleanMaxReservedMinute < 0 {
+		setupLog.Error(fmt.Errorf("invalid ip clean parameter"), "minute must be positive")
+		os.Exit(1)
+	}
+
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
-		LeaderElection:          false,
+		LeaderElection:          true,
 		LeaderElectionID:        "333fb49e.netconroller.bkbcs.tencent.com",
 		LeaderElectionNamespace: "bcs-system",
 	})
@@ -94,9 +104,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	if err = (&controllers.FixedIPReconciler{
+		Ctx:    ctx,
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("FixedIP"),
+		Option: opts,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "FixedIP")
+		os.Exit(1)
+	}
+
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
+	cancel()
 }

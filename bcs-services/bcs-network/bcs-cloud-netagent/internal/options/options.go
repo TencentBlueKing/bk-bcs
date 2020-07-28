@@ -26,9 +26,10 @@ type NetAgentOption struct {
 
 	Cluster              string `json:"cluster" value:"" usage:"cluster for bcs"`
 	Kubeconfig           string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver, Only required if out-of-cluster."`
-	KubeResyncPeriod     int    `json:"kube_resync_peried" value:"300" usage:"resync interval for informer factory in seconds; (default 300)"`
+	KubeResyncPeriod     int    `json:"kube_resync_peried" value:"1200" usage:"resync interval for informer factory in seconds; (default 300)"`
 	KubeCacheSyncTimeout int    `json:"kube_cachesync_timeout" value:"10" usage:"wait for kube cache sync timeout in seconds; (default 10)"`
-	CheckInterval        int    `json:"check_interval" value:"300" usage:"interval for checking ip rules and route tables"`
+
+	FixedIPWorkloads string `json:"fixed_ip_workloads" value:"StatefulSet,GameStatefulSet" usage:"names of workloads that support fixed ip, split by comma, default[StatefulSet,GameStatefulSet]"`
 
 	CloudNetserviceEndpoints string `json:"cloud_netservice_endpoints" value:"" usage:"cloud netservice endpoints, split by comma"`
 

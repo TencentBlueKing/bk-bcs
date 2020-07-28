@@ -16,14 +16,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	cloudv1set "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
 	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetagent"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetservice"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netagent/internal/inspector"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/constant"
 	common "github.com/Tencent/bk-bcs/bcs-services/bcs-network/pkg/common"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ReleaseAction action for releasing ip
@@ -37,6 +43,8 @@ type ReleaseAction struct {
 
 	cloudNetClient pbcloudnet.CloudNetserviceClient
 
+	inspector *inspector.NodeNetworkInspector
+
 	nodeNetwork *cloudv1.NodeNetwork
 
 	ipObj *cloudv1.CloudIP
@@ -46,7 +54,8 @@ type ReleaseAction struct {
 func NewReleaseAction(ctx context.Context,
 	req *pb.ReleaseIPReq, resp *pb.ReleaseIPResp,
 	k8sIPClient cloudv1set.CloudV1Interface,
-	cloudNetClient pbcloudnet.CloudNetserviceClient) *ReleaseAction {
+	cloudNetClient pbcloudnet.CloudNetserviceClient,
+	inspector *inspector.NodeNetworkInspector) *ReleaseAction {
 
 	action := &ReleaseAction{
 		req:            req,
@@ -54,6 +63,7 @@ func NewReleaseAction(ctx context.Context,
 		ctx:            ctx,
 		k8sIPClient:    k8sIPClient,
 		cloudNetClient: cloudNetClient,
+		inspector:      inspector,
 	}
 	action.resp.Seq = req.Seq
 	return action
@@ -77,9 +87,6 @@ func (a *ReleaseAction) validate() error {
 	if len(a.req.ContainerID) == 0 {
 		return errors.New("pod containerID cannot be empty")
 	}
-	if len(a.req.IpAddr) == 0 {
-		return errors.New("ipAddr cannot be empty")
-	}
 	return nil
 }
 
@@ -93,18 +100,43 @@ func (a *ReleaseAction) Input() error {
 
 // Output do something after Do function
 func (a *ReleaseAction) Output() error {
-
 	return nil
+}
+
+func (a *ReleaseAction) getNodeInfo() (pbcommon.ErrCode, string) {
+	nodeNetwork := a.inspector.GetNodeNetwork()
+	if nodeNetwork == nil ||
+		nodeNetwork.Status.FloatingIPEni == nil ||
+		nodeNetwork.Status.Status != cloudv1.NodeNetworkStatusReady {
+
+		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE, fmt.Sprintf("node eni not ready")
+	}
+	a.nodeNetwork = nodeNetwork
+	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
 // get ip object from api server
 func (a *ReleaseAction) getIPObjectFromAPIServer() (pbcommon.ErrCode, string) {
-	ipObj, err := a.k8sIPClient.CloudIPs(a.req.PodNamespace).Get(a.ctx, a.req.PodName, metav1.GetOptions{})
+	selector := labels.SelectorFromSet(labels.Set(map[string]string{
+		constant.IPAnnotationKeyForHost:           a.nodeNetwork.Spec.NodeAddress,
+		constant.IPAnnotationKeyForStatus:         constant.StatusIPActive,
+		constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+	}))
+	ipObjs, err := a.k8sIPClient.CloudIPs(a.req.PodNamespace).List(a.ctx, metav1.ListOptions{
+		LabelSelector: selector.String(),
+	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED, err.Error()
 	}
-	a.ipObj = ipObj
-	return pbcommon.ErrCode_ERROR_OK, ""
+	for _, ipObj := range ipObjs.Items {
+		if ipObj.Spec.ContainerID == a.req.ContainerID &&
+			ipObj.Spec.PodName == a.req.PodName {
+			a.ipObj = &ipObj
+			return pbcommon.ErrCode_ERROR_OK, ""
+		}
+	}
+	return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED,
+		fmt.Sprintf("ip for pod %s/%s container %s not found", a.req.PodName, a.req.PodNamespace, a.req.ContainerID)
 }
 
 // release ip to cloud netservice
@@ -165,12 +197,28 @@ func (a *ReleaseAction) deleteIPObjFromAPIServer() (pbcommon.ErrCode, string) {
 			return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED,
 				fmt.Sprintf("delete ip %s/%s from api server failed, err %s", a.ipObj.GetNamespace(), a.ipObj.GetName(), err.Error())
 		}
+		return pbcommon.ErrCode_ERROR_OK, ""
 	}
+
+	timeNow := time.Now()
+	a.ipObj.Labels[constant.IPAnnotationKeyForStatus] = constant.StatusIPAvailable
+	a.ipObj.Status.Status = constant.StatusIPAvailable
+	a.ipObj.Status.UpdateTime = common.FormatTime(timeNow)
+	ipObj, err := a.k8sIPClient.CloudIPs(a.ipObj.GetNamespace()).Update(a.ctx, a.ipObj, metav1.UpdateOptions{})
+	if err != nil {
+		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED,
+			fmt.Sprintf("update ip %s/%s to api server failed, err %s", a.ipObj.GetNamespace(), a.ipObj.GetName(), err.Error())
+	}
+	a.ipObj = ipObj
+
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
 // Do do release action
 func (a *ReleaseAction) Do() error {
+	if errCode, errMsg := a.getNodeInfo(); errCode != pbcommon.ErrCode_ERROR_OK {
+		return a.Err(errCode, errMsg)
+	}
 	if errCode, errMsg := a.getIPObjectFromAPIServer(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}

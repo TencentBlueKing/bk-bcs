@@ -10,37 +10,24 @@
  * limitations under the License.
  */
 
-package option
+package common
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"testing"
+	"time"
 )
 
-// ControllerOption controller option
-type ControllerOption struct {
-	// Address address for server
-	Address string
-
-	// Port port for server
-	Port int
-
-	// MetricPort port for metric server
-	MetricPort int
-
-	// CloudMod
-	Cloud string
-
-	// Cluster cluster id for bcs
-	Cluster string
-
-	// CloudNetServiceEndpoints
-	CloudNetServiceEndpoints []string
-
-	// IPCleanCheckMinute check interval for unused fixed ip
-	IPCleanCheckMinute int
-
-	// IPCleanMaxReservedMinute max reserved time for unused fixed ip
-	IPCleanMaxReservedMinute int
-
-	conf.LogConfig
+// TestParseAndFormatTime test time parse and format
+func TestParseAndFormatTime(t *testing.T) {
+	now := time.Now()
+	nowStr := FormatTime(now)
+	t.Log(nowStr)
+	now2, err := ParseTimeString(nowStr)
+	if err != nil {
+		t.Errorf("parse utc string failed, err %s", err.Error())
+	}
+	nowStr2 := FormatTime(now2)
+	if nowStr != nowStr2 {
+		t.Errorf("inconsistent time string, %s, %s", nowStr, nowStr2)
+	}
 }

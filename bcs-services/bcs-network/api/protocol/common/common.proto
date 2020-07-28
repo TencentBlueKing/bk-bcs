@@ -54,6 +54,8 @@ enum ErrCode {
     ERROR_CLOUD_NETAGENT_INVALID_IP_INFO = 82006;
     // 82007 cloud netagent, invalid parameter
     ERROR_CLOUD_NETAGENT_INVALID_PARAMS = 82007;
+    // 82008 cloud netagent, workload not support fixed ip feature
+    ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE = 82008;
 
 }
 

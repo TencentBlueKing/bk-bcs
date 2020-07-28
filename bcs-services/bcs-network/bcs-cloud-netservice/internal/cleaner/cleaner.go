@@ -55,11 +55,12 @@ func NewIPCleaner(maxIdleTime time.Duration,
 
 // Run run cleaner
 func (i *IPCleaner) Run(ctx context.Context) error {
+	blog.Infof("run ip cleaner")
 	timer := time.NewTicker(i.checkInterval)
-
 	for {
 		select {
 		case <-timer.C:
+			blog.Infof("do search and clean")
 			i.searchAndClean()
 		case <-ctx.Done():
 			blog.Infof("ip cleaner context done")

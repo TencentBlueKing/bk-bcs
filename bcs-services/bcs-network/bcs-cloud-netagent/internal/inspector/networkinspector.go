@@ -15,12 +15,13 @@ package inspector
 import (
 	"context"
 	"fmt"
-	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -54,6 +55,9 @@ type NodeNetworkInspector struct {
 	client   cloudclient.CloudV1Interface
 	lister   cloudlister.NodeNetworkLister
 	informer cloudinformer.NodeNetworkInformer
+
+	ipLister   cloudlister.CloudIPLister
+	ipInformer cloudinformer.CloudIPInformer
 
 	netUtil networkutil.Interface
 
@@ -107,9 +111,12 @@ func (nni *NodeNetworkInspector) Init() error {
 	}
 	nni.factory = factory.NewSharedInformerFactory(clientset, time.Duration(nni.kubeResyncPeriod)*time.Second)
 	nni.informer = nni.factory.Cloud().V1().NodeNetworks()
-	nni.informer.Informer().AddEventHandlerWithResyncPeriod(nni, time.Duration(nni.kubeCacheSyncTimeout)*time.Second)
+	nni.informer.Informer().AddEventHandler(nni)
 	nni.lister = nni.factory.Cloud().V1().NodeNetworks().Lister()
 	nni.client = clientset.CloudV1()
+
+	nni.ipInformer = nni.factory.Cloud().V1().CloudIPs()
+	nni.ipLister = nni.factory.Cloud().V1().CloudIPs().Lister()
 
 	// start informers
 	nni.factory.Start(nni.stopCh)
@@ -150,14 +157,13 @@ func (nni *NodeNetworkInspector) OnAdd(obj interface{}) {
 	}
 
 	nni.nodeNetworkLock.Lock()
-	nni.nodeNetwork = nodenetwork
 	nni.readyForAllocate = true
 	nni.nodeNetworkLock.Unlock()
 }
 
 // OnUpdate update event
 func (nni *NodeNetworkInspector) OnUpdate(oldObj, newObj interface{}) {
-	oldNode, okOld := oldObj.(*cloudv1.NodeNetwork)
+	_, okOld := oldObj.(*cloudv1.NodeNetwork)
 	if !okOld {
 		blog.Warnf("received invalid old obj")
 		return
@@ -172,14 +178,8 @@ func (nni *NodeNetworkInspector) OnUpdate(oldObj, newObj interface{}) {
 		return
 	}
 
-	if reflect.DeepEqual(oldNode, newNode) {
-		blog.Warnf("old and new nodenetwork are the same, no need update")
-		return
-	}
-
 	if !newNode.DeletionTimestamp.IsZero() {
 		nni.nodeNetworkLock.Lock()
-		nni.nodeNetwork = nil
 		nni.readyForAllocate = false
 		nni.nodeNetworkLock.Unlock()
 
@@ -187,9 +187,18 @@ func (nni *NodeNetworkInspector) OnUpdate(oldObj, newObj interface{}) {
 			blog.Warnf("clean node network failed, err %s", err.Error())
 			return
 		}
-	} else {
-		// TODO: reconcile node network periodically
+		return
 	}
+
+	// periodically reconcile NodeNetwork
+	err := nni.reconcileNodeNetwork(newNode)
+	if err != nil {
+		blog.Errorf("reconcile NodeNetwork failed, err %s", err.Error())
+		return
+	}
+	nni.nodeNetworkLock.Lock()
+	nni.readyForAllocate = true
+	nni.nodeNetworkLock.Unlock()
 }
 
 // OnDelete delete event
@@ -203,6 +212,14 @@ func (nni *NodeNetworkInspector) GetNodeNetwork() *cloudv1.NodeNetwork {
 	nodeNetwork := nni.nodeNetwork
 	nni.nodeNetworkLock.Unlock()
 	return nodeNetwork
+}
+
+// CanAllocate if agent can allocate ip
+func (nni *NodeNetworkInspector) CanAllocate() bool {
+	nni.nodeNetworkLock.Lock()
+	canAllocate := nni.readyForAllocate
+	nni.nodeNetworkLock.Unlock()
+	return canAllocate
 }
 
 // reconcile node network, set up eni, set route table
@@ -231,23 +248,57 @@ func (nni *NodeNetworkInspector) reconcileNodeNetwork(nodenetwork *cloudv1.NodeN
 		}
 	}
 
-	nodenetwork.Finalizers = append(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent)
-	nodenetwork.Status.Status = cloudv1.NodeNetworkStatusReady
-	nodenetworkAfterUpdate, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
-	if err != nil {
-		blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())
+	if !common.ContainsString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent) {
+		nodenetwork.Finalizers = append(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent)
+		nodenetwork.Status.Status = cloudv1.NodeNetworkStatusReady
+		nodenetworkAfterUpdate, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+		if err != nil {
+			blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())
+			return nil
+		}
+		nni.nodeNetworkLock.Lock()
+		nni.nodeNetwork = nodenetworkAfterUpdate
+		nni.nodeNetworkLock.Unlock()
 		return nil
 	}
 
 	nni.nodeNetworkLock.Lock()
-	nni.nodeNetwork = nodenetworkAfterUpdate
+	nni.nodeNetwork = nodenetwork
 	nni.nodeNetworkLock.Unlock()
 	return nil
+}
+
+// result true stands for there are still ips on host
+func (nni *NodeNetworkInspector) checkNodeIP(nodenetwork *cloudv1.NodeNetwork) (bool, error) {
+	ips, err := nni.ipLister.List(
+		k8slabels.SelectorFromSet(k8slabels.Set(map[string]string{
+			constant.IPAnnotationKeyForHost:           nodenetwork.Spec.NodeAddress,
+			constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+		})))
+	if err != nil {
+		blog.Errorf("list cloud ips on host %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
+		return true, fmt.Errorf("list cloud ips on host %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
+	}
+	if len(ips) == 0 {
+		return false, nil
+	}
+	blog.Infof("found ips: %+v", ips)
+	return true, nil
 }
 
 func (nni *NodeNetworkInspector) cleanNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 
 	if common.ContainsString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent) {
+
+		hasIP, err := nni.checkNodeIP(nodenetwork)
+		if err != nil {
+			return err
+		}
+		if hasIP {
+			blog.Errorf("cannot release node network, there is still ip on node")
+			return fmt.Errorf("cannot release node network, there is still ip on node")
+		}
+
 		rules, err := nni.netUtil.RuleList()
 		if err != nil {
 			blog.Errorf("list rule failed, err %s", err.Error())
