@@ -34,7 +34,7 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer
+default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloudnetcontroller bcs-cloudnetagent
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
@@ -305,7 +305,15 @@ cc-agent:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-cc-agent ${PACKAGEPATH}/bcs-k8s-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-cc-agent/bcs-cc-agent ./bcs-k8s/bcs-cc-agent/main.go
 
-bkcmdb-synchronizer:
+bkcmdb-synchronizer:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
 
+bcs-cloud-netservice:pre
+	cd ./bcs-services/bcs-network/bcs-cloud-netservice && make && cd -
+
+bcs-cloud-netcontroller:pre
+	cd ./bcs-services/bcs-network/bcs-cloud-netcontroller && make && cd -
+
+bcs-cloud-netagent:pre
+	cd ./bcs-services/bcs-network/bcs-cloud-netagent && make && cd -
