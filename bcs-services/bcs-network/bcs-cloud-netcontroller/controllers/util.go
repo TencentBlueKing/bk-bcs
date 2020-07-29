@@ -25,7 +25,7 @@ func generateEniName(cvmID string, index int) string {
 
 // get eni interface name
 func getEniIfaceName(index int) string {
-	return constant.EniPrefix + strconv.Itoa(index)
+	return constant.ENI_PREFIX + strconv.Itoa(index)
 }
 
 // containsString to see if slice contains string

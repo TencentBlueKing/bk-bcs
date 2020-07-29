@@ -137,7 +137,8 @@ func (a *AllocateAction) getPodInfo() (pbcommon.ErrCode, string) {
 
 func (a *AllocateAction) isNodeReadyForAllocate() (pbcommon.ErrCode, string) {
 	if !a.inspector.CanAllocate() {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE, fmt.Sprintf("agent not ready for allocating")
+		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE,
+			fmt.Sprintf("agent not ready for allocating")
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
@@ -160,8 +161,8 @@ func (a *AllocateAction) allocateFromCloudNetservice() (pbcommon.ErrCode, string
 	}
 	workloadRef := a.pod.OwnerReferences[0]
 
-	annotationValue, ok := a.pod.ObjectMeta.Annotations[constant.PodAnnotationKeyForEni]
-	if ok && annotationValue == constant.PodAnnotationValueForFixedIP {
+	annotationValue, ok := a.pod.ObjectMeta.Annotations[constant.POD_ANNOTATION_KEY_FOR_ENI]
+	if ok && annotationValue == constant.POD_ANNOTATION_VALUE_FOR_FIXED_IP {
 		if _, ok := a.fixedIPWorkloadMap[strings.ToLower(workloadRef.Kind)]; !ok {
 			return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE,
 				fmt.Sprintf("workload %s not support fixed ip feature", workloadRef.Kind)
@@ -180,13 +181,14 @@ func (a *AllocateAction) allocateFromCloudNetservice() (pbcommon.ErrCode, string
 			Host:         a.nodeNetwork.Spec.NodeAddress,
 			EniID:        a.nodeNetwork.Status.FloatingIPEni.Eni.EniID,
 		}
-		requestIP, ok := a.pod.ObjectMeta.Annotations[constant.PodAnnotationKeyForEniRequestIP]
+		requestIP, ok := a.pod.ObjectMeta.Annotations[constant.POD_ANNOTATION_KEY_FOR_ENI_REQUEST_IP]
 		if ok {
 			newReq.Address = requestIP
 		}
 		ipResult, err := a.cloudNetClient.AllocateFixedIP(a.ctx, newReq)
 		if err != nil {
-			return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED, fmt.Sprintf("call AllocateFixedIP failed, err %s", err.Error())
+			return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED,
+				fmt.Sprintf("call AllocateFixedIP failed, err %s", err.Error())
 		}
 		if ipResult.ErrCode != pbcommon.ErrCode_ERROR_OK {
 			return ipResult.ErrCode, ipResult.ErrMsg
@@ -212,7 +214,8 @@ func (a *AllocateAction) allocateFromCloudNetservice() (pbcommon.ErrCode, string
 
 	ipResult, err := a.cloudNetClient.AllocateIP(a.ctx, newReq)
 	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED, fmt.Sprintf("call AllocateIP failed, err %s", err.Error())
+		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED,
+			fmt.Sprintf("call AllocateIP failed, err %s", err.Error())
 	}
 	if ipResult.ErrCode != pbcommon.ErrCode_ERROR_OK {
 		return ipResult.ErrCode, ipResult.ErrMsg
@@ -223,24 +226,25 @@ func (a *AllocateAction) allocateFromCloudNetservice() (pbcommon.ErrCode, string
 
 // record IP object to cluster k8s apiserver, for cleaning fixed ips and scheduler
 func (a *AllocateAction) storeIPObjectToAPIServer() (pbcommon.ErrCode, string) {
-	ipObj, err := a.k8sIPClient.CloudIPs(a.ipFromNetService.Namespace).Get(a.ctx, a.ipFromNetService.Address, metav1.GetOptions{})
+	ipObj, err := a.k8sIPClient.CloudIPs(a.ipFromNetService.Namespace).
+		Get(a.ctx, a.ipFromNetService.Address, metav1.GetOptions{})
 	timeNow := time.Now()
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			newIPObj := &cloudv1.CloudIP{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       constant.CloudCrdNameIP,
-					APIVersion: constant.CloudCrdVersionV1,
+					Kind:       constant.CLOUD_CRD_NAME_CLOUD_IP,
+					APIVersion: constant.CLOUD_CRD_VERSION_V1,
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      a.ipFromNetService.Address,
 					Namespace: a.ipFromNetService.Namespace,
 					Labels: map[string]string{
-						constant.IPAnnotationKeyForWorkloadKind:   a.ipFromNetService.WorkloadKind,
-						constant.IPAnnotationKeyForHost:           a.ipFromNetService.Host,
-						constant.IPAnnotationKeyForIsFixed:        strconv.FormatBool(a.ipFromNetService.IsFixed),
-						constant.IPAnnotationKeyForStatus:         constant.StatusIPActive,
-						constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+						constant.IP_LABEL_KEY_FOR_WORKLOAD_KIND:    a.ipFromNetService.WorkloadKind,
+						constant.IP_LABEL_KEY_FOR_HOST:             a.ipFromNetService.Host,
+						constant.IP_LABEL_KEY_FOR_IS_FIXED:         strconv.FormatBool(a.ipFromNetService.IsFixed),
+						constant.IP_LABEL_KEY_FOR_STATUS:           constant.IP_STATUS_ACTIVE,
+						constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
 					},
 				},
 				Spec: cloudv1.CloudIPSpec{
@@ -260,12 +264,13 @@ func (a *AllocateAction) storeIPObjectToAPIServer() (pbcommon.ErrCode, string) {
 					IsFixed:      a.ipFromNetService.IsFixed,
 				},
 				Status: cloudv1.CloudIPStatus{
-					Status:     constant.StatusIPActive,
+					Status:     constant.IP_STATUS_ACTIVE,
 					CreateTime: common.FormatTime(timeNow),
 					UpdateTime: common.FormatTime(timeNow),
 				},
 			}
-			_, err := a.k8sIPClient.CloudIPs(a.ipFromNetService.Namespace).Create(a.ctx, newIPObj, metav1.CreateOptions{})
+			_, err := a.k8sIPClient.CloudIPs(a.ipFromNetService.Namespace).
+				Create(a.ctx, newIPObj, metav1.CreateOptions{})
 			if err != nil {
 				return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED, err.Error()
 			}
@@ -274,10 +279,10 @@ func (a *AllocateAction) storeIPObjectToAPIServer() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED, err.Error()
 	}
 
-	ipObj.Labels[constant.IPAnnotationKeyForWorkloadKind] = a.ipFromNetService.WorkloadKind
-	ipObj.Labels[constant.IPAnnotationKeyForHost] = a.ipFromNetService.Host
-	ipObj.Labels[constant.IPAnnotationKeyForIsFixed] = strconv.FormatBool(a.ipFromNetService.IsFixed)
-	ipObj.Labels[constant.IPAnnotationKeyForStatus] = constant.StatusIPActive
+	ipObj.Labels[constant.IP_LABEL_KEY_FOR_WORKLOAD_KIND] = a.ipFromNetService.WorkloadKind
+	ipObj.Labels[constant.IP_LABEL_KEY_FOR_HOST] = a.ipFromNetService.Host
+	ipObj.Labels[constant.IP_LABEL_KEY_FOR_IS_FIXED] = strconv.FormatBool(a.ipFromNetService.IsFixed)
+	ipObj.Labels[constant.IP_LABEL_KEY_FOR_STATUS] = constant.IP_STATUS_ACTIVE
 	ipObj.Spec.Address = a.ipFromNetService.Address
 	ipObj.Spec.VpcID = a.ipFromNetService.VpcID
 	ipObj.Spec.Region = a.ipFromNetService.Region
@@ -292,7 +297,7 @@ func (a *AllocateAction) storeIPObjectToAPIServer() (pbcommon.ErrCode, string) {
 	ipObj.Spec.IsFixed = a.ipFromNetService.IsFixed
 	ipObj.Spec.Host = a.ipFromNetService.Host
 	ipObj.Spec.EniID = a.ipFromNetService.EniID
-	ipObj.Status.Status = constant.StatusIPActive
+	ipObj.Status.Status = constant.IP_STATUS_ACTIVE
 	ipObj.Status.UpdateTime = common.FormatTime(timeNow)
 	_, err = a.k8sIPClient.CloudIPs(a.ipFromNetService.Namespace).Update(a.ctx, ipObj, metav1.UpdateOptions{})
 	if err != nil {

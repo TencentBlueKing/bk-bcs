@@ -97,7 +97,8 @@ func (a *ChangeAction) querySubnet() (pbcommon.ErrCode, string) {
 func (a *ChangeAction) changeSubnet() (pbcommon.ErrCode, string) {
 	err := a.storeIf.UpdateSubnetState(a.ctx, a.req.SubnetID, int32(a.req.State))
 	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, fmt.Sprintf("store CreateSubnet failed, err %s", err.Error())
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, 
+			fmt.Sprintf("store CreateSubnet failed, err %s", err.Error())
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }

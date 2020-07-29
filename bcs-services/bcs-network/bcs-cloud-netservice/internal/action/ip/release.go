@@ -130,7 +130,7 @@ func (a *ReleaseAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
 }
 
 func (a *ReleaseAction) changeIPObjectToAvailable() (pbcommon.ErrCode, string) {
-	a.ipObj.Status = types.StatusIPAvailable
+	a.ipObj.Status = types.IP_STATUS_AVAILABLE
 	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
@@ -144,7 +144,7 @@ func (a *ReleaseAction) Do() error {
 		return a.Err(errCode, errMsg)
 	}
 	// when ip object already not active, do not need to be release
-	if a.ipObj.Status != types.StatusIPActive {
+	if a.ipObj.Status != types.IP_STATUS_ACTIVE {
 		return nil
 	}
 	if errCode, errMsg := a.changeIPObjectToAvailable(); errCode != pbcommon.ErrCode_ERROR_OK {

@@ -117,12 +117,13 @@ func (a *AddAction) createSubnet() (pbcommon.ErrCode, string) {
 		Region:     a.req.Region,
 		Zone:       a.req.Zone,
 		SubnetCidr: a.req.SubnetCidr,
-		State:      types.StateSubnetDisabled,
+		State:      types.SUBNET_STATUS_DISABLED,
 	}
 
 	err := a.storeIf.CreateSubnet(a.ctx, newSubnet)
 	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, fmt.Sprintf("store CreateSubnet failed, err %s", err.Error())
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, 
+			fmt.Sprintf("store CreateSubnet failed, err %s", err.Error())
 	}
 
 	return pbcommon.ErrCode_ERROR_OK, ""

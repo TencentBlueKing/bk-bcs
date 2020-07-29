@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/store/kube"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/pkg/leaderelection"
 )
 
 // IPCleaner ip cleaner
@@ -32,6 +33,9 @@ type IPCleaner struct {
 
 	// cloud interface for operate eni ip
 	cloudIf cloud.Interface
+
+	// elector elector for leader election
+	elector *leaderelection.Client
 
 	// maxIdleTime max idle time for ip object
 	maxIdleTime time.Duration
@@ -44,10 +48,12 @@ type IPCleaner struct {
 func NewIPCleaner(maxIdleTime time.Duration,
 	checkInterval time.Duration,
 	storeIf store.Interface,
-	cloudIf cloud.Interface) *IPCleaner {
+	cloudIf cloud.Interface,
+	elector *leaderelection.Client) *IPCleaner {
 	return &IPCleaner{
 		storeIf:       storeIf,
 		cloudIf:       cloudIf,
+		elector:       elector,
 		maxIdleTime:   maxIdleTime,
 		checkInterval: checkInterval,
 	}
@@ -60,8 +66,10 @@ func (i *IPCleaner) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-timer.C:
-			blog.Infof("do search and clean")
-			i.searchAndClean()
+			if i.elector.IsMaster() {
+				blog.Infof("do search and clean")
+				i.searchAndClean()
+			}
 		case <-ctx.Done():
 			blog.Infof("ip cleaner context done")
 			return nil
@@ -71,7 +79,7 @@ func (i *IPCleaner) Run(ctx context.Context) error {
 
 func (i *IPCleaner) searchAndClean() {
 	ipObjs, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CrdNameLabelsStatus:  types.StatusIPAvailable,
+		kube.CrdNameLabelsStatus:  types.IP_STATUS_AVAILABLE,
 		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
 	})
 	if err != nil {
@@ -92,7 +100,7 @@ func (i *IPCleaner) searchAndClean() {
 
 	// clean dirty data
 	ipObjsDeleting, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CrdNameLabelsStatus:  types.StatusIPDeleting,
+		kube.CrdNameLabelsStatus:  types.IP_STATUS_DELETING,
 		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
 	})
 	if err != nil {
@@ -126,7 +134,7 @@ func (i *IPCleaner) doClean(ipObj *types.IPObject) error {
 }
 
 func (i *IPCleaner) transStatus(ipObj *types.IPObject) error {
-	ipObj.Status = types.StatusIPDeleting
+	ipObj.Status = types.IP_STATUS_DELETING
 	err := i.storeIf.UpdateIPObject(context.Background(), ipObj)
 	if err != nil {
 		blog.Errorf("change ip object %+v to deleting status failed, err %s", ipObj, err.Error())

@@ -102,7 +102,7 @@ func (p *Processor) OnEvent() {
 func (p *Processor) handle() error {
 	nodes := &corev1.NodeList{}
 	if err := p.kubeClient.List(context.TODO(), nodes,
-		&client.MatchingLabels{constant.NodeAnnotationKeyForNodeNetwork: strconv.FormatBool(true)}); err != nil {
+		&client.MatchingLabels{constant.NODE_LABEL_KEY_FOR_NODE_NETWORK: strconv.FormatBool(true)}); err != nil {
 
 		blog.Errorf("unable to list Nodes, err %s", err.Error())
 		return fmt.Errorf("unable to list Nodes, err %s", err.Error())
@@ -115,7 +115,7 @@ func (p *Processor) handle() error {
 	}
 
 	nodeNetworks := &cloudv1.NodeNetworkList{}
-	if err := p.kubeClient.List(context.TODO(), nodeNetworks, client.InNamespace(constant.CloudCrdNamespace)); err != nil {
+	if err := p.kubeClient.List(context.TODO(), nodeNetworks, client.InNamespace(constant.CLOUD_CRD_NAMESPACE_BCS_SYSTEM)); err != nil {
 		blog.Errorf("unable to list NodeNetworks, err %s", err.Error())
 		return fmt.Errorf("unable to list NodeNetworks, err %s", err.Error())
 	}
@@ -198,7 +198,7 @@ func (p *Processor) addNodeNetwork(node *corev1.Node) error {
 		},
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      node.GetName(),
-			Namespace: constant.CloudCrdNamespace,
+			Namespace: constant.CLOUD_CRD_NAMESPACE_BCS_SYSTEM,
 		},
 		Spec: cloudv1.NodeNetworkSpec{
 			Cluster:     p.option.Cluster,
@@ -207,7 +207,7 @@ func (p *Processor) addNodeNetwork(node *corev1.Node) error {
 			VM:          nodeVMInfo,
 		},
 	}
-	newNodeNetwork.Finalizers = append(newNodeNetwork.Finalizers, constant.FinalizerNameForNetController)
+	newNodeNetwork.Finalizers = append(newNodeNetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETCONTROLLER)
 
 	eniCrdObj, err := p.reconcileEniForDynamic(nodeVMInfo, subnetID)
 	if err != nil {
@@ -254,11 +254,11 @@ func (p *Processor) deleteNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 		}
 		return nil
 	}
-	if containsString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent) {
+	if containsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT) {
 		blog.Warnf("wait for agent to clean its finalizer")
 		return nil
 	}
-	if containsString(nodenetwork.Finalizers, constant.FinalizerNameForNetController) {
+	if containsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETCONTROLLER) {
 		// release eni
 		if nodenetwork.Status.FloatingIPEni != nil {
 			fEni := nodenetwork.Status.FloatingIPEni
@@ -274,7 +274,7 @@ func (p *Processor) deleteNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 			}
 		}
 		// real delete
-		nodenetwork.Finalizers = removeString(nodenetwork.Finalizers, constant.FinalizerNameForNetController)
+		nodenetwork.Finalizers = removeString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETCONTROLLER)
 		if err := p.kubeClient.Update(context.TODO(), nodenetwork, &client.UpdateOptions{}); err != nil {
 			return fmt.Errorf("delete finalizers of %s failed, err %s", nodenetwork.GetName(), err.Error())
 		}
@@ -288,8 +288,8 @@ func (p *Processor) checkIPOnNode(nodenetwork *cloudv1.NodeNetwork) (bool, error
 	cloudips := &cloudv1.CloudIPList{}
 	if err := p.kubeClient.List(context.TODO(), cloudips,
 		&client.MatchingLabels{
-			constant.IPAnnotationKeyForHost:           nodenetwork.Spec.NodeAddress,
-			constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+			constant.IP_LABEL_KEY_FOR_HOST:             nodenetwork.Spec.NodeAddress,
+			constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
 		}); err != nil {
 
 		blog.Errorf("list cloud ip on node %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
@@ -341,8 +341,8 @@ func (p *Processor) reconcileEniForDynamic(nodeVMInfo *cloudv1.VMInfo, subnetID 
 		}
 		eniCrdObj.Attachment = attachment
 	}
-	eniCrdObj.Index = constant.IndexForFloatingIPEni
-	eniCrdObj.EniIfaceName = getEniIfaceName(constant.IndexForFloatingIPEni)
-	eniCrdObj.RouteTableID = constant.RouteTableStartIndex + constant.IndexForFloatingIPEni
+	eniCrdObj.Index = constant.INDEX_FOR_FLOATING_IP_ENI
+	eniCrdObj.EniIfaceName = getEniIfaceName(constant.INDEX_FOR_FLOATING_IP_ENI)
+	eniCrdObj.RouteTableID = constant.ROUTE_TABLE_START_INDEX + constant.INDEX_FOR_FLOATING_IP_ENI
 	return eniCrdObj, nil
 }

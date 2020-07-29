@@ -96,7 +96,7 @@ func (a *FixedCleanAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, err.Error()
 	}
-	if ipObj.Status == types.StatusIPActive {
+	if ipObj.Status == types.IP_STATUS_ACTIVE {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP, "ip is active"
 	}
 	if !ipObj.IsFixed {

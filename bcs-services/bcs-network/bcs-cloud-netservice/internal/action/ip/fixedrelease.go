@@ -130,7 +130,7 @@ func (a *FixedReleaseAction) getIPObjectFromStore() (pbcommon.ErrCode, string) {
 }
 
 func (a *FixedReleaseAction) updateIPObjectToStore() (pbcommon.ErrCode, string) {
-	a.ipObj.Status = types.StatusIPAvailable
+	a.ipObj.Status = types.IP_STATUS_AVAILABLE
 	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "update ip object to available failed"

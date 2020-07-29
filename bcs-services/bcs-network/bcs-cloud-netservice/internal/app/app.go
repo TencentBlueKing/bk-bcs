@@ -26,6 +26,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pbcloudnetservice "github.com/Tencent/bk-bcs/bcs-services/bcs-network/api/protocol/cloudnetservice"
@@ -37,6 +38,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloud-netservice/internal/store/kube"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/pkg/leaderelection"
 )
 
 // CloudNetservice object for bcs cloud netservice
@@ -67,6 +69,9 @@ type CloudNetservice struct {
 
 	// ip cleaner
 	ipCleaner *cleaner.IPCleaner
+
+	// elector for leader election
+	elector *leaderelection.Client
 
 	// http mux
 	mux *http.ServeMux
@@ -112,6 +117,18 @@ func (cn *CloudNetservice) initCloud() error {
 		return fmt.Errorf("invalid cloud mode %s", cn.cfg.CloudMode)
 	}
 	cn.cloudIf = cloudIf
+	return nil
+}
+
+func (cn *CloudNetservice) initLeaderElection() error {
+	elector, err := leaderelection.New(resourcelock.LeasesResourceLock, "bcs-cloud-netservice", "bcs-system", cn.cfg.Kubeconfig,
+		15*time.Second, 10*time.Second, 2*time.Second)
+	if err != nil {
+		return err
+	}
+	go elector.RunOrDie()
+
+	cn.elector = elector
 	return nil
 }
 
@@ -162,7 +179,7 @@ func (cn *CloudNetservice) initIPCleaner() {
 	blog.Infof("init ip cleaner")
 	cn.ipCleaner = cleaner.NewIPCleaner(
 		time.Duration(cn.cfg.IPMaxIdleMinute)*time.Minute, time.Duration(cn.cfg.IPCleanIntervalMinute)*time.Minute,
-		cn.storeIf, cn.cloudIf)
+		cn.storeIf, cn.cloudIf, cn.elector)
 	go cn.ipCleaner.Run(context.TODO())
 }
 
@@ -173,6 +190,9 @@ func (cn *CloudNetservice) initModules() {
 	}
 	if err := cn.initCloud(); err != nil {
 		blog.Fatalf("initCloud failed, err %s", err.Error())
+	}
+	if err := cn.initLeaderElection(); err != nil {
+		blog.Fatalf("initLeaderElection failed, err %s", err.Error())
 	}
 
 	cn.initIPCleaner()

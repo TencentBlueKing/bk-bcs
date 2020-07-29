@@ -248,8 +248,8 @@ func (nni *NodeNetworkInspector) reconcileNodeNetwork(nodenetwork *cloudv1.NodeN
 		}
 	}
 
-	if !common.ContainsString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent) {
-		nodenetwork.Finalizers = append(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent)
+	if !common.ContainsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT) {
+		nodenetwork.Finalizers = append(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT)
 		nodenetwork.Status.Status = cloudv1.NodeNetworkStatusReady
 		nodenetworkAfterUpdate, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
 		if err != nil {
@@ -272,8 +272,8 @@ func (nni *NodeNetworkInspector) reconcileNodeNetwork(nodenetwork *cloudv1.NodeN
 func (nni *NodeNetworkInspector) checkNodeIP(nodenetwork *cloudv1.NodeNetwork) (bool, error) {
 	ips, err := nni.ipLister.List(
 		k8slabels.SelectorFromSet(k8slabels.Set(map[string]string{
-			constant.IPAnnotationKeyForHost:           nodenetwork.Spec.NodeAddress,
-			constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+			constant.IP_LABEL_KEY_FOR_HOST:             nodenetwork.Spec.NodeAddress,
+			constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
 		})))
 	if err != nil {
 		blog.Errorf("list cloud ips on host %s failed, err %s", nodenetwork.Spec.NodeAddress, err.Error())
@@ -288,7 +288,7 @@ func (nni *NodeNetworkInspector) checkNodeIP(nodenetwork *cloudv1.NodeNetwork) (
 
 func (nni *NodeNetworkInspector) cleanNodeNetwork(nodenetwork *cloudv1.NodeNetwork) error {
 
-	if common.ContainsString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent) {
+	if common.ContainsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT) {
 
 		hasIP, err := nni.checkNodeIP(nodenetwork)
 		if err != nil {
@@ -321,7 +321,7 @@ func (nni *NodeNetworkInspector) cleanNodeNetwork(nodenetwork *cloudv1.NodeNetwo
 			}
 		}
 
-		nodenetwork.Finalizers = common.RemoveString(nodenetwork.Finalizers, constant.FinalizerNameForNetAgent)
+		nodenetwork.Finalizers = common.RemoveString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT)
 		_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
 		if err != nil {
 			blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())

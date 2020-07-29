@@ -163,7 +163,7 @@ func (a *FixedAllocateAction) querySubnetFromStore() (pbcommon.ErrCode, string) 
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED, err.Error()
 	}
 	// no need to check disabled
-	if sn.State == types.StateSubnetDisabled {
+	if sn.State == types.SUBNET_STATUS_DISABLED {
 		a.isSubnetDisabled = true
 	}
 	a.subnet = sn
@@ -224,7 +224,7 @@ func (a *FixedAllocateAction) checkAllocatedIP() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH, "found allocated fixed ip, but info not match"
 	}
 	// should not happen, may be the last time release is failed
-	if a.allocatedIPObj.Status == types.StatusIPActive {
+	if a.allocatedIPObj.Status == types.IP_STATUS_ACTIVE {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP, "dirty data, request fixed ip is active"
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
@@ -256,7 +256,7 @@ func (a *FixedAllocateAction) checkIPOccupied() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH, "found allocated fixed ip, but info not match"
 	}
 	// should not happen, may be the last time release is failed
-	if existedIP.Status == types.StatusIPActive {
+	if existedIP.Status == types.IP_STATUS_ACTIVE {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP, "dirty data, request fixed ip is active"
 	}
 	a.allocatedIPObj = existedIP
@@ -288,7 +288,7 @@ func (a *FixedAllocateAction) createIPObjectToStore() (pbcommon.ErrCode, string)
 		Host:         a.req.Host,
 		EniID:        a.req.EniID,
 		IsFixed:      true,
-		Status:       types.StatusIPActive,
+		Status:       types.IP_STATUS_ACTIVE,
 	}
 
 	err := a.storeIf.CreateIPObject(a.ctx, ipObject)
@@ -305,7 +305,7 @@ func (a *FixedAllocateAction) findAvailableVictimIPObject() (pbcommon.ErrCode, s
 	victimObjects, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
 		kube.CrdNameLabelsEni:     a.req.EniID,
 		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
-		kube.CrdNameLabelsStatus:  types.StatusIPAvailable,
+		kube.CrdNameLabelsStatus:  types.IP_STATUS_AVAILABLE,
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
@@ -338,7 +338,7 @@ func (a *FixedAllocateAction) updateVictimIPObject() (pbcommon.ErrCode, string) 
 		Host:            a.req.Host,
 		EniID:           a.req.EniID,
 		IsFixed:         true,
-		Status:          types.StatusIPActive,
+		Status:          types.IP_STATUS_ACTIVE,
 		ResourceVersion: a.victimIPObj.ResourceVersion,
 	}
 	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)
@@ -352,7 +352,7 @@ func (a *FixedAllocateAction) updateVictimIPObject() (pbcommon.ErrCode, string) 
 
 // delete victim ip object
 func (a *FixedAllocateAction) deleteVictimIPObject() (pbcommon.ErrCode, string) {
-	a.victimIPObj.Status = types.StatusIPDeleting
+	a.victimIPObj.Status = types.IP_STATUS_DELETING
 	err := a.storeIf.UpdateIPObject(a.ctx, a.victimIPObj)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
@@ -398,7 +398,7 @@ func (a *FixedAllocateAction) updateIPObjectToStore(ip string) (pbcommon.ErrCode
 		Host:            a.req.Host,
 		EniID:           a.req.EniID,
 		IsFixed:         a.allocatedIPObj.IsFixed,
-		Status:          types.StatusIPActive,
+		Status:          types.IP_STATUS_ACTIVE,
 		ResourceVersion: a.allocatedIPObj.ResourceVersion,
 	}
 	err := a.storeIf.UpdateIPObject(a.ctx, a.ipObj)

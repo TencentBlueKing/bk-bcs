@@ -106,9 +106,9 @@ func (r *NodeNetworkReconciler) initCloudNetClient() error {
 func (r *NodeNetworkReconciler) initCloud() error {
 	var cloudClient cloudAPI.Interface
 	switch r.Option.Cloud {
-	case constant.CloudTencent:
+	case constant.CLOUD_KIND_TENCENT:
 		cloudClient = qcloud.New()
-	case constant.CloudAws:
+	case constant.CLOUD_KIND_AWS:
 		cloudClient = aws.New()
 	default:
 		return fmt.Errorf("error cloud mode %s", r.Option.Cloud)

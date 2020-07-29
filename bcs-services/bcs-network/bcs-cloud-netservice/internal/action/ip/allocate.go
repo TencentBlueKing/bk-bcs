@@ -147,7 +147,7 @@ func (a *AllocateAction) Output() error {
 
 func (a *AllocateAction) queryAvailableIPObjectFromStore() (pbcommon.ErrCode, string) {
 	ipObjs, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CrdNameLabelsStatus:   types.StatusIPAvailable,
+		kube.CrdNameLabelsStatus:   types.IP_STATUS_AVAILABLE,
 		kube.CrdNameLabelsIsFixed:  strconv.FormatBool(false),
 		kube.CrdNameLabelsEni:      a.req.EniID,
 		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
@@ -179,7 +179,7 @@ func (a *AllocateAction) updateIPObjectToStore() (pbcommon.ErrCode, string) {
 		Host:            a.availableIPObj.Host,
 		EniID:           a.availableIPObj.EniID,
 		IsFixed:         false,
-		Status:          types.StatusIPActive,
+		Status:          types.IP_STATUS_ACTIVE,
 		ResourceVersion: a.availableIPObj.ResourceVersion,
 	}
 	err := a.storeIf.UpdateIPObject(a.ctx, newObj)
@@ -197,7 +197,7 @@ func (a *AllocateAction) querySubnetFromStore() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED,
 			fmt.Sprintf("get subnet from store failed, err %s", err.Error())
 	}
-	if sn.State == types.StateSubnetDisabled {
+	if sn.State == types.SUBNET_STATUS_DISABLED {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED,
 			"subnet is disabled"
 	}
@@ -248,7 +248,7 @@ func (a *AllocateAction) createIPObjectToStore() (pbcommon.ErrCode, string) {
 		Host:         a.req.Host,
 		EniID:        a.req.EniID,
 		IsFixed:      false,
-		Status:       types.StatusIPActive,
+		Status:       types.IP_STATUS_ACTIVE,
 	}
 
 	err := a.storeIf.CreateIPObject(a.ctx, ipObject)

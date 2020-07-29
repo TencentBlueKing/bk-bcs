@@ -97,7 +97,7 @@ func getRouteTableIDByMac(mac, eniPrefix string) (int, error) {
 				blog.Errorf("convert %s to int failed, err %s", idString, err.Error())
 				return -1, fmt.Errorf("convert %s to int failed, err %s", idString, err.Error())
 			}
-			return id + constant.RouteTableStartIndex, nil
+			return id + constant.ROUTE_TABLE_START_INDEX, nil
 		}
 	}
 	return -1, fmt.Errorf("cannot find eni with mac %s", mac)
@@ -339,10 +339,10 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 	eniMac := result.Interfaces[0].Mac
 
 	// find eni id according to eniMac
-	routeTableID, err := getRouteTableIDByMac(eniMac, constant.EniPrefix)
+	routeTableID, err := getRouteTableIDByMac(eniMac, constant.ENI_PREFIX)
 	if err != nil {
-		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, constant.EniPrefix, err.Error())
-		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, constant.EniPrefix, err.Error())
+		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, constant.ENI_PREFIX, err.Error())
+		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, constant.ENI_PREFIX, err.Error())
 	}
 
 	// get container namespace

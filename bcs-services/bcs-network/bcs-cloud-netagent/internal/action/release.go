@@ -118,9 +118,9 @@ func (a *ReleaseAction) getNodeInfo() (pbcommon.ErrCode, string) {
 // get ip object from api server
 func (a *ReleaseAction) getIPObjectFromAPIServer() (pbcommon.ErrCode, string) {
 	selector := labels.SelectorFromSet(labels.Set(map[string]string{
-		constant.IPAnnotationKeyForHost:           a.nodeNetwork.Spec.NodeAddress,
-		constant.IPAnnotationKeyForStatus:         constant.StatusIPActive,
-		constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+		constant.IP_LABEL_KEY_FOR_HOST:            a.nodeNetwork.Spec.NodeAddress,
+		constant.IP_LABEL_KEY_FOR_STATUS:          constant.IP_STATUS_ACTIVE,
+		constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
 	}))
 	ipObjs, err := a.k8sIPClient.CloudIPs(a.req.PodNamespace).List(a.ctx, metav1.ListOptions{
 		LabelSelector: selector.String(),
@@ -201,8 +201,8 @@ func (a *ReleaseAction) deleteIPObjFromAPIServer() (pbcommon.ErrCode, string) {
 	}
 
 	timeNow := time.Now()
-	a.ipObj.Labels[constant.IPAnnotationKeyForStatus] = constant.StatusIPAvailable
-	a.ipObj.Status.Status = constant.StatusIPAvailable
+	a.ipObj.Labels[constant.IP_LABEL_KEY_FOR_STATUS] = constant.IP_STATUS_AVAILABLE
+	a.ipObj.Status.Status = constant.IP_STATUS_AVAILABLE
 	a.ipObj.Status.UpdateTime = common.FormatTime(timeNow)
 	ipObj, err := a.k8sIPClient.CloudIPs(a.ipObj.GetNamespace()).Update(a.ctx, a.ipObj, metav1.UpdateOptions{})
 	if err != nil {

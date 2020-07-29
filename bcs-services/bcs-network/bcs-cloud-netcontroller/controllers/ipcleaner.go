@@ -93,9 +93,9 @@ func (ic *IPCleaner) handle() {
 func (ic *IPCleaner) transIPStatus() {
 	cloudIPList := &cloudv1.CloudIPList{}
 	if err := ic.kubeClient.List(context.TODO(), cloudIPList, &client.MatchingLabels{
-		constant.IPAnnotationKeyForIsFixed:        strconv.FormatBool(true),
-		constant.IPAnnotationKeyForStatus:         constant.StatusIPAvailable,
-		constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+		constant.IP_LABEL_KEY_FOR_IS_FIXED:         strconv.FormatBool(true),
+		constant.IP_LABEL_KEY_FOR_STATUS:           constant.IP_STATUS_AVAILABLE,
+		constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
 	}); err != nil {
 		blog.Errorf("unable list available fixed ips, err %s", err.Error())
 		return
@@ -120,8 +120,8 @@ func (ic *IPCleaner) transIPStatus() {
 				blog.V(2).Infof("trans cloud %v to deleting status", cloudIP)
 				// set status to deleting when workload is deleted
 				timeNow := time.Now()
-				cloudIP.Labels[constant.IPAnnotationKeyForStatus] = constant.StatusIPDeleting
-				cloudIP.Status.Status = constant.StatusIPDeleting
+				cloudIP.Labels[constant.IP_LABEL_KEY_FOR_STATUS] = constant.IP_STATUS_DELETING
+				cloudIP.Status.Status = constant.IP_STATUS_DELETING
 				cloudIP.Status.UpdateTime = common.FormatTime(timeNow)
 				err = ic.kubeClient.Update(context.TODO(), &cloudIP)
 				if err != nil {
@@ -139,9 +139,9 @@ func (ic *IPCleaner) transIPStatus() {
 func (ic *IPCleaner) doClean() {
 	deletingCloudIPList := &cloudv1.CloudIPList{}
 	if err := ic.kubeClient.List(context.TODO(), deletingCloudIPList, &client.MatchingLabels{
-		constant.IPAnnotationKeyForIsFixed:        strconv.FormatBool(true),
-		constant.IPAnnotationKeyForStatus:         constant.StatusIPDeleting,
-		constant.IPAnnotationKeyForIsClusterLayer: strconv.FormatBool(true),
+		constant.IP_LABEL_KEY_FOR_IS_FIXED:         strconv.FormatBool(true),
+		constant.IP_LABEL_KEY_FOR_STATUS:           constant.IP_STATUS_DELETING,
+		constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
 	}); err != nil {
 		blog.Errorf("unable list deleted fixed ips, err %s", err.Error())
 		return

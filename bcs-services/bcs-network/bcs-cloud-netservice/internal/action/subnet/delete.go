@@ -94,7 +94,7 @@ func (a *DeleteAction) querySubnet() (pbcommon.ErrCode, string) {
 
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_INVALID_PARAMS, "vpcID or region not match"
 	}
-	if sn.State == types.StateSubnetEnabled {
+	if sn.State == types.SUBNET_STATUS_ENABLED {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET, "try delete enabled subnet"
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""

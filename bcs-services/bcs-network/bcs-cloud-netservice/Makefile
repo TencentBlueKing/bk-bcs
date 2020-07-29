@@ -40,3 +40,4 @@ default: bcs-cloud-netservice
 bcs-cloud-netservice:
 	mkdir -p ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
 	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice/bcs-cloud-netservice ./cmd/cloudnetservice/main.go
+	GOOS=linux go build ${LDFLAG} -o ../../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice/electiontest ./cmd/electiontest/main.go

@@ -17,21 +17,21 @@ import (
 )
 
 const (
-	// StateSubnetDisabled subnet is disabled
-	StateSubnetDisabled = iota
-	// StateSubnetEnabled subnet is enabled
-	StateSubnetEnabled
+	// SUBNET_STATUS_DISABLED subnet is disabled
+	SUBNET_STATUS_DISABLED = iota
+	// SUBNET_STATUS_ENABLED subnet is enabled
+	SUBNET_STATUS_ENABLED
 )
 
 const (
-	// StatusIPActive ip is active
-	StatusIPActive = "active"
-	// StatusIPAvailable ip is available
-	StatusIPAvailable = "available"
-	// StatusIPDeleting ip is deleting
-	StatusIPDeleting = "deleting"
-	// LeastIPNum least ip num in a available subnet
-	LeastIPNum = 5
+	// IP_STATUS_ACTIVE ip is active
+	IP_STATUS_ACTIVE = "active"
+	// IP_STATUS_AVAILABLE ip is available
+	IP_STATUS_AVAILABLE = "available"
+	// IP_STATUS_DELETING ip is deleting
+	IP_STATUS_DELETING = "deleting"
+	// SUBNET_LEAST_IP_NUM least ip num in a available subnet
+	SUBNET_LEAST_IP_NUM = 5
 )
 
 // CloudSubnet subnet on cloud
