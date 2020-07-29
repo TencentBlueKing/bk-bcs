@@ -21,5 +21,3 @@ spec:
         image: bcs-gamestatefulset-operator:latest
         command: ["./bcs-gamestatefulset-operator"]
         args: ["--min-resync-period=60s","--v=5"]
-        ports:
-        - containerPort: 80

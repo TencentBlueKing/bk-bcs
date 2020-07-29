@@ -1,7 +1,7 @@
 # 发布版本信息
 
 ## 1.17.5
-- 发布日期：2020-07-02
+- 发布日期：2020-07-06
 - **新增功能**
   * [Mesos]bcs-scheduler支持污点与容忍性调度能力[#398]
   * [Mesos]bcs-mesos支持容器CPUSet绑定特性[#407]
@@ -16,7 +16,7 @@
   * [K8S/Mesos]新增bcs-eni网络插件，支持腾讯云、AWS underlay方案[#426]
   * [K8S/Mesos]新增bcs-gateway-discovery模块支持bcs-api-gateway实现服务注册[#427]
   * [K8S/Mesos]使用kong重构bcs-api实现bcs服务网关[#427]
-  * [K8S/Mesos]新增bcs-use-manager模块实现bcs集群与用户token鉴权[#433]
+  * [K8S/Mesos]新增bcs-user-manager模块实现bcs集群与用户token鉴权[#433]
   * [Mesos]bcs-client依赖bcs-user-manager支持用户授权命令[#434]
   * [Mesos]bcs-client在Mesos环境下支持exec命令实现远程容器访问[#452]
   * [K8S/Mesos] bmsf-configuration配置服务支持自定义模板渲染[#454]
@@ -44,6 +44,7 @@
   * [Mesos]修复bcs-messos-adapter服务发现异常问题[#491]
   * [K8S]修复bcs-api/bcs-kube-agent websocket tunnel模式下无法执行exec的问题[#504]
   * [K8S]修复bcs-api tunnel模式下服务发现问题[#510]
+  * [K8S/Mesos]修复腾讯云网络插件qcloud-eip与全局路由方案冲突问题[#515]
 
 ## 1.16.4
 - 发布日期：2020-05-08

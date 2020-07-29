@@ -18,7 +18,6 @@ import (
 	"crypto/cipher"
 	"crypto/des"
 	"encoding/base64"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 )
 

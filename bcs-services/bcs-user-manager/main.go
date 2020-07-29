@@ -14,7 +14,10 @@
 package main
 
 import (
+	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -33,6 +36,12 @@ func main() {
 
 	app.Run(op)
 
-	ch := make(chan int)
-	<-ch
+	// listening OS shutdown singal
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	<-signalChan
+
+	blog.Infof("Got OS shutdown signal, shutting down bcs-user-manager server gracefully...")
+
+	return
 }

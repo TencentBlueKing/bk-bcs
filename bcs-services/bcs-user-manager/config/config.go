@@ -14,6 +14,8 @@
 package config
 
 import (
+	"crypto/tls"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
@@ -44,10 +46,12 @@ type UserMgrConfig struct {
 	DSN            string
 	BootStrapUsers []options.BootStrapUser
 	TKE            options.TKEOptions
+	PeerToken      string
 }
 
 var (
-	Tke options.TKEOptions
+	Tke    options.TKEOptions
+	CliTls *tls.Config
 )
 
 //NewUserMgrConfig create a config object

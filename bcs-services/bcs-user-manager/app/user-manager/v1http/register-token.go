@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/emicklei/go-restful"
 )
 
@@ -30,6 +30,16 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
 	clusterId := request.PathParameter("cluster_id")
+	clusterInDb := sqlstore.GetCluster(clusterId)
+	if clusterInDb == nil {
+		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
+		metrics.RequestErrorLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())
+		blog.Warnf("create register_token failed, cluster [%s] not exist", clusterId)
+		message := fmt.Sprintf("errcode: %d, create register_token failed, cluster [%s] not exist", common.BcsErrApiBadRequest, clusterId)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
+		return
+	}
+
 	err := sqlstore.CreateRegisterToken(clusterId)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
