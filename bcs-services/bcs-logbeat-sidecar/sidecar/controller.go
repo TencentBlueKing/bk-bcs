@@ -15,16 +15,17 @@ package sidecar
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
-	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
 
-	"github.com/fsouza/go-dockerclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
+	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+
+	docker "github.com/fsouza/go-dockerclient"
 	"gopkg.in/yaml.v2"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	corev1 "k8s.io/client-go/listers/core/v1"

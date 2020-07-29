@@ -28,7 +28,7 @@ func NewServerOptions() *ServerOptions {
 	return &ServerOptions{}
 }
 
-//Options command flags for gateway-discovery
+//ServerOptions command flags for gateway-discovery
 type ServerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig

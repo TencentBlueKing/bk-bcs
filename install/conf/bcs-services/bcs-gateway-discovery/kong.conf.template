@@ -1,0 +1,16 @@
+database = postgres   # 数据库模式
+pg_host = ${kongDatabase} # Host of the Postgres server.
+pg_port = 5432        # Port of the Postgres server.
+pg_timeout = 5000     # Defines the timeout (in ms), for connecting,
+pg_user = ${kongUser}        # Postgres user.
+pg_password = ${kongPass}    # 
+pg_database = kong    # 数据库名称
+
+client_ssl = on       # 开启客户端SSL
+client_ssl_cert = ${clientCertFile}
+client_ssl_cert_key = ${clientKeyFile}           
+plugins = bundled,bkbcs-auth  # 加载指定插件
+proxy_access_log = /data/bcs/logs/bcs/kong-access.log
+proxy_error_log = /data/bcs/logs/bcs/kong-error.log
+admin_access_log = /data/bcs/logs/bcs/kong-admin_access.log
+admin_error_log = /data/bcs/logs/bcs/kong-admin_error.log
