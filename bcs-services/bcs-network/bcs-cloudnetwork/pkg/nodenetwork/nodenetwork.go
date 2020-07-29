@@ -13,6 +13,7 @@
 package nodenetwork
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -24,12 +25,12 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers"
-	cloudinformer "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/informers/cloud/v1"
-	clientset "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset"
-	cloudclient "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/internalclientset/typed/cloud/v1"
-	cloudlister "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/client/lister/cloud/v1"
+	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	clientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
+	cloudclient "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
+	cloudinformer "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud/v1"
+	cloudlister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -121,7 +122,7 @@ func (c *Client) Run() error {
 }
 
 func (c *Client) ensureNamespace(ns string) error {
-	_, err := c.nsClient.Get(ns, metav1.GetOptions{})
+	_, err := c.nsClient.Get(context.TODO(), ns, metav1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			blog.Errorf("get ns %s failed, err %s", err.Error())
@@ -136,7 +137,7 @@ func (c *Client) ensureNamespace(ns string) error {
 				Name: ns,
 			},
 		}
-		_, err := c.nsClient.Create(newNs)
+		_, err := c.nsClient.Create(context.TODO(), newNs, metav1.CreateOptions{})
 		if err != nil {
 			blog.Errorf("create namespace %+v failed, err %s", newNs, err.Error())
 			return err
@@ -152,7 +153,7 @@ func (c *Client) Create(n *cloud.NodeNetwork) error {
 	}
 	// clean resource version when create
 	n.ResourceVersion = ""
-	_, err := c.client.NodeNetworks(n.GetNamespace()).Create(n)
+	_, err := c.client.NodeNetworks(n.GetNamespace()).Create(context.TODO(), n, metav1.CreateOptions{})
 	if err != nil {
 		blog.Errorf("create node network %+v failed, err %s", err.Error())
 		return err

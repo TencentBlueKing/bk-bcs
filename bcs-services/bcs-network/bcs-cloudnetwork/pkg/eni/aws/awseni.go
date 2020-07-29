@@ -20,7 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	cloud "github.com/Tencent/bk-bcs/bcs-services/bcs-network/bcs-cloudnetwork/pkg/apis/cloud/v1"
+	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -169,7 +169,7 @@ func (c *Client) GetVMInfo() (*cloud.VMInfo, error) {
 	subnetID := aws.StringValue(c.instance.SubnetId)
 	instanceID := aws.StringValue(c.instance.InstanceId)
 	return &cloud.VMInfo{
-		NodeRegionID: regionID,
+		NodeRegion:   regionID,
 		NodeVpcID:    vpcID,
 		NodeSubnetID: subnetID,
 		InstanceID:   instanceID,
