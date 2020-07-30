@@ -28,25 +28,25 @@ type NetAgentOption struct {
 	Cluster              string `json:"cluster" value:"" usage:"cluster for bcs"`
 	
 	// nolint
-	Kubeconfig           string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver, Only required if out-of-cluster."`
+	Kubeconfig           string `json:"kubeconfig" value:"" usage:"kubeconfig for kube-apiserver, Only required if out-of-cluster."` // nolint
 	
 	// nolint
-	KubeResyncPeriod     int    `json:"kube_resync_peried" value:"1200" usage:"resync interval for informer factory in seconds; (default 300)"`
+	KubeResyncPeriod     int    `json:"kube_resync_peried" value:"1200" usage:"resync interval for informer factory in seconds; (default 300)"` // nolint
 	
 	// nolint
-	KubeCacheSyncTimeout int    `json:"kube_cachesync_timeout" value:"10" usage:"wait for kube cache sync timeout in seconds; (default 10)"`
+	KubeCacheSyncTimeout int    `json:"kube_cachesync_timeout" value:"10" usage:"wait for kube cache sync timeout in seconds; (default 10)"` // nolint
 
 	// nolint
-	FixedIPWorkloads string `json:"fixed_ip_workloads" value:"StatefulSet,GameStatefulSet" usage:"names of workloads that support fixed ip, split by comma, default[StatefulSet,GameStatefulSet]"`
+	FixedIPWorkloads string `json:"fixed_ip_workloads" value:"StatefulSet,GameStatefulSet" usage:"names of workloads that support fixed ip, split by comma, default[StatefulSet,GameStatefulSet]"` // nolint
 
 	// nolint
-	CloudNetserviceEndpoints string `json:"cloud_netservice_endpoints" value:"" usage:"cloud netservice endpoints, split by comma"`
+	CloudNetserviceEndpoints string `json:"cloud_netservice_endpoints" value:"" usage:"cloud netservice endpoints, split by comma"` // nolint
 
 	// nolint
 	EniMTU int    `json:"eni_mtu" value:"1500" usage:"the mtu of eni"`
 	
 	// nolint
-	Ifaces string `json:"ifaces" value:"eth1" usage:"use ip of these network interfaces as node identity, split with comma or semicolon"`
+	Ifaces string `json:"ifaces" value:"eth1" usage:"use ip of these network interfaces as node identity, split with comma or semicolon"` // nolint
 }
 
 // New new option
