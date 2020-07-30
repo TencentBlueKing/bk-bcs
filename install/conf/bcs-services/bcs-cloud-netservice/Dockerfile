@@ -1,7 +1,6 @@
 FROM centos:7
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
-RUN mkdir -p /data/bcs/bcs-cloud-netservice/cni/conf /data/bcs/bcs-cloud-netservice/cni/bin
 RUN mkdir -p /data/bcs/bcs-cloud-netservice/swagger
 
 ADD bcs-cloud-netservice /data/bcs/bcs-cloud-netservice/
