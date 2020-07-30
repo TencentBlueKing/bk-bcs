@@ -5,6 +5,8 @@ RUN mkdir -p /data/bcs/bcs-cloud-netagent/cni/conf /data/bcs/bcs-cloud-netagent/
 
 ADD bcs-cloud-netagent /data/bcs/bcs-cloud-netagent/
 ADD container-start.sh /data/bcs/bcs-cloud-netagent/
+ADD bcs-eni-cni /data/bcs/bcs-cloudnetagent/cni/bin/
+ADD bcs-eni-ipam /data/bcs/bcs-cloudnetagent/cni/bin/
 
 RUN chmod +x /data/bcs/bcs-cloud-netagent/container-start.sh
 
