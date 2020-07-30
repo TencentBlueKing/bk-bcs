@@ -246,10 +246,9 @@ func (c *CpusetDevicePlugin) reportExtendedResources() error {
 	conf := &mesosdriver.Config{
 		ZkAddr:     c.conf.BcsZk,
 		ClientCert: c.conf.ClientCert,
-		ClusterId:  c.conf.ClusterId,
 	}
 
-	client, err := mesosdriver.NewMesosPlatform(conf)
+	client, err := mesosdriver.NewMesosDriverClient(conf)
 	if err != nil {
 		blog.Errorf("NewMesosPlatform failed: %s", err.Error())
 		return err
@@ -260,7 +259,7 @@ func (c *CpusetDevicePlugin) reportExtendedResources() error {
 		Capacity: float64(len(c.devices)),
 		Socket:   c.cpusetSocket,
 	}
-	err = client.UpdateAgentExtendedResources(ex)
+	err = client.UpdateAgentExtendedResources(c.conf.ClusterId, ex)
 	if err != nil {
 		blog.Errorf("Update Agent ExtendedResources failed: %s", err.Error())
 		return err

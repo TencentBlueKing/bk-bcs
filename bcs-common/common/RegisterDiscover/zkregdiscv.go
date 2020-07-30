@@ -175,34 +175,15 @@ func (zkRD *ZkRegDiscv) loopDiscover(path string, discvCtx context.Context, env 
 
 // DiscoverNodes discover by specified path
 func (zkRD *ZkRegDiscv) DiscoverNodes(path string) (*DiscoverEvent, error) {
-	discvEnv := &DiscoverEvent{
-		Err: nil,
-		Key: path,
-	}
-
 	servNodes, _, err := zkRD.zkcli.WatchChildren(path)
 	if err != nil {
-		discvEnv.Err = err
-		return discvEnv, nil
+		return &DiscoverEvent{
+			Err: err,
+			Key: path,
+		}, nil
 	}
 
-	discvEnv.Nodes = append(discvEnv.Nodes, servNodes...)
-	//sort server node
-	servNodes = zkRD.sortNode(servNodes)
-
-	//get server info
-	for _, node := range servNodes {
-		servPath := path + "/" + node
-		servInfo, err := zkRD.zkcli.Get(servPath)
-		if err != nil {
-			blog.V(3).Infof("fail to get server info from zookeeper by path(%s), err:%s", servPath, err.Error())
-			continue
-		}
-
-		discvEnv.Server = append(discvEnv.Server, servInfo)
-	}
-
-	return discvEnv, nil
+	return zkRD.discoverNodes(path, servNodes)
 }
 
 func (zkRD *ZkRegDiscv) sortNode(nodes []string) []string {
@@ -236,21 +217,25 @@ func (zkRD *ZkRegDiscv) sortNode(nodes []string) []string {
 
 // DiscoverNodes discover by specified path
 func (zkRD *ZkRegDiscv) DiscoverNodesV2(path string) (*DiscoverEvent, error) {
+	servNodes, _, err := zkRD.zkcli.GetChildrenEx(path)
+	if err != nil {
+		return &DiscoverEvent{
+			Err: err,
+			Key: path,
+		}, nil
+	}
+
+	return zkRD.discoverNodes(path, servNodes)
+}
+
+func (zkRD *ZkRegDiscv) discoverNodes(path string, servNodes []string) (*DiscoverEvent, error) {
 	discvEnv := &DiscoverEvent{
 		Err: nil,
 		Key: path,
 	}
-
-	servNodes, _, err := zkRD.zkcli.GetChildrenEx(path)
-	if err != nil {
-		discvEnv.Err = err
-		return discvEnv, nil
-	}
-
 	discvEnv.Nodes = append(discvEnv.Nodes, servNodes...)
 	//sort server node
 	servNodes = zkRD.sortNode(servNodes)
-
 	//get server info
 	for _, node := range servNodes {
 		servPath := path + "/" + node
