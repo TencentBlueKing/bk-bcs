@@ -50,6 +50,7 @@ cloud-netcontroller:
 cloud-netservice:
 	mkdir -p ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
 	cp -R ../../install/conf/bcs-services/bcs-cloud-netservice/* ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
+	cp ./api/protocol/cloudnetservice/cloudnetservice.swagger.json ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice/bcs-cloud-netservice ./bcs-cloud-netservice/cmd/cloudnetservice/main.go
 
 # qcloud-eip
