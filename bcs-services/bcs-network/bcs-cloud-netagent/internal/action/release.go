@@ -118,8 +118,8 @@ func (a *ReleaseAction) getNodeInfo() (pbcommon.ErrCode, string) {
 // get ip object from api server
 func (a *ReleaseAction) getIPObjectFromAPIServer() (pbcommon.ErrCode, string) {
 	selector := labels.SelectorFromSet(labels.Set(map[string]string{
-		constant.IP_LABEL_KEY_FOR_HOST:            a.nodeNetwork.Spec.NodeAddress,
-		constant.IP_LABEL_KEY_FOR_STATUS:          constant.IP_STATUS_ACTIVE,
+		constant.IP_LABEL_KEY_FOR_HOST:             a.nodeNetwork.Spec.NodeAddress,
+		constant.IP_LABEL_KEY_FOR_STATUS:           constant.IP_STATUS_ACTIVE,
 		constant.IP_LABEL_KEY_FOR_IS_CLUSTER_LAYER: strconv.FormatBool(true),
 	}))
 	ipObjs, err := a.k8sIPClient.CloudIPs(a.req.PodNamespace).List(a.ctx, metav1.ListOptions{
@@ -158,7 +158,8 @@ func (a *ReleaseAction) releaseToCloudNetservice() (pbcommon.ErrCode, string) {
 
 		ipResult, err := a.cloudNetClient.ReleaseFixedIP(a.ctx, newReq)
 		if err != nil {
-			return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED, fmt.Sprintf("call ReleaseFixedIP failed, err %s", err.Error())
+			return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED,
+				fmt.Sprintf("call ReleaseFixedIP failed, err %s", err.Error())
 		}
 		if ipResult.ErrCode != pbcommon.ErrCode_ERROR_OK {
 			return ipResult.ErrCode, ipResult.ErrMsg
@@ -182,7 +183,8 @@ func (a *ReleaseAction) releaseToCloudNetservice() (pbcommon.ErrCode, string) {
 
 	ipResult, err := a.cloudNetClient.ReleaseIP(a.ctx, newReq)
 	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED, fmt.Sprintf("call ReleaseIP failed, err %s", err.Error())
+		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED,
+			fmt.Sprintf("call ReleaseIP failed, err %s", err.Error())
 	}
 	if ipResult.ErrCode != pbcommon.ErrCode_ERROR_OK {
 		return ipResult.ErrCode, ipResult.ErrMsg
@@ -193,9 +195,12 @@ func (a *ReleaseAction) releaseToCloudNetservice() (pbcommon.ErrCode, string) {
 func (a *ReleaseAction) deleteIPObjFromAPIServer() (pbcommon.ErrCode, string) {
 	// only delete ip related to non-fixed ip
 	if !a.ipObj.Spec.IsFixed {
-		if err := a.k8sIPClient.CloudIPs(a.ipObj.GetNamespace()).Delete(a.ctx, a.ipObj.GetName(), metav1.DeleteOptions{}); err != nil {
+		if err := a.k8sIPClient.CloudIPs(a.ipObj.GetNamespace()).
+			Delete(a.ctx, a.ipObj.GetName(), metav1.DeleteOptions{}); err != nil {
+
 			return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED,
-				fmt.Sprintf("delete ip %s/%s from api server failed, err %s", a.ipObj.GetNamespace(), a.ipObj.GetName(), err.Error())
+				fmt.Sprintf("delete ip %s/%s from api server failed, err %s",
+					a.ipObj.GetNamespace(), a.ipObj.GetName(), err.Error())
 		}
 		return pbcommon.ErrCode_ERROR_OK, ""
 	}
@@ -207,7 +212,8 @@ func (a *ReleaseAction) deleteIPObjFromAPIServer() (pbcommon.ErrCode, string) {
 	ipObj, err := a.k8sIPClient.CloudIPs(a.ipObj.GetNamespace()).Update(a.ctx, a.ipObj, metav1.UpdateOptions{})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED,
-			fmt.Sprintf("update ip %s/%s to api server failed, err %s", a.ipObj.GetNamespace(), a.ipObj.GetName(), err.Error())
+			fmt.Sprintf("update ip %s/%s to api server failed, err %s",
+				a.ipObj.GetNamespace(), a.ipObj.GetName(), err.Error())
 	}
 	a.ipObj = ipObj
 

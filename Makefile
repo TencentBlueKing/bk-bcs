@@ -252,10 +252,7 @@ bmsf-mesos-adapter:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
 
 network:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
-	cp ./install/conf/bcs-mesos-node/qcloud-eip/* ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/qcloud-eip ./bcs-services/bcs-network/qcloud-eip/main.go
+	cd ./bcs-services/bcs-network && make network && cd -
 
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
@@ -289,11 +286,7 @@ bcs-networkpolicy:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-networkpolicy/bcs-networkpolicy ./bcs-services/bcs-networkpolicy/main.go
 
 bcs-cloud-network-agent:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent
-	cp -R ./install/conf/bcs-services/bcs-cloud-network-agent ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ./bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/main.go
-	cp ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni
+	cd ./bcs-services/bcs-network && make bcs-cloud-network-agent && cd -
 	
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
@@ -310,10 +303,10 @@ bkcmdb-synchronizer:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
 
 bcs-cloud-netservice:pre
-	cd ./bcs-services/bcs-network/bcs-cloud-netservice && make && cd -
+	cd ./bcs-services/bcs-network && make cloud-netservice && cd -
 
 bcs-cloud-netcontroller:pre
-	cd ./bcs-services/bcs-network/bcs-cloud-netcontroller && make && cd -
+	cd ./bcs-services/bcs-network && make cloud-netcontroller && cd -
 
 bcs-cloud-netagent:pre
-	cd ./bcs-services/bcs-network/bcs-cloud-netagent && make && cd -
+	cd ./bcs-services/bcs-network && make cloud-netagent && cd -

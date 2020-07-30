@@ -35,19 +35,19 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zookeeper
 # build path config
 INNER_PACKAGEPATH=build/bcs.${VERSION}
 
-bcs-cloud-netagent:
+cloud-netagent:
 	mkdir -p ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent
 	cp -R ../../install/conf/bcs-services/bcs-cloud-netagent/* ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-cloud-netagent ./bcs-cloud-netagent/cmd/netagent/main.go
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-eni-cni ./bcs-cloud-netagent/cmd/bcs-eni-cni/main.go
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-eni-ipam ./bcs-cloud-netagent/cmd/bcs-eni-ipam/main.go
 
-bcs-cloud-netcontroller:
+cloud-netcontroller:
 	mkdir -p ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netcontroller
 	cp -R ../../install/conf/bcs-services/bcs-cloud-netcontroller/* ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netcontroller
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netcontroller/bcs-cloud-netcontroller ./bcs-cloud-netcontroller/main.go
 
-bcs-cloud-netservice:
+cloud-netservice:
 	mkdir -p ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
 	cp -R ../../install/conf/bcs-services/bcs-cloud-netservice/* ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice/bcs-cloud-netservice ./bcs-cloud-netservice/cmd/cloudnetservice/main.go

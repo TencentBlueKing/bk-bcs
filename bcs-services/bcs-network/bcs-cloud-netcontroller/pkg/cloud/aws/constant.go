@@ -34,8 +34,8 @@ const (
 )
 
 const (
-	waitAttachedInterval   = 5 * time.Second
-	waitAttachedMaxRetries = 10
+	WAIT_ATTACHED_INTERVAL   = 5 * time.Second
+	WAIT_ATTACHED_MAX_RETRIES = 10
 )
 
 // EniNumLimit eni num limit

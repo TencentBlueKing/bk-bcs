@@ -52,10 +52,13 @@ func main() {
 	flag.IntVar(&opts.Port, "port", 8080, "por for controller")
 	flag.StringVar(&opts.Cloud, "cloud", "tencentcloud", "cloud mode for bcs network controller")
 	flag.StringVar(&opts.Cluster, "cluster", "", "clusterid for bcs cluster")
-	flag.StringVar(&cloudNetserviceEndpoints, "cloud_netservice_endpoints", "", "endpoints of cloud netservice, split by comma or semicolon")
+	flag.StringVar(&cloudNetserviceEndpoints, "cloud_netservice_endpoints", "", 
+		"endpoints of cloud netservice, split by comma or semicolon")
 
-	flag.IntVar(&opts.IPCleanCheckMinute, "ipclean_check_minute", 30, "check interval minute for cleaning unused fixed ip")
-	flag.IntVar(&opts.IPCleanMaxReservedMinute, "ipclean_max_reserved_minute", 120, "max reserved minute for unused fixed ip")
+	flag.IntVar(&opts.IPCleanCheckMinute, "ipclean_check_minute", 30, 
+		"check interval minute for cleaning unused fixed ip")
+	flag.IntVar(&opts.IPCleanMaxReservedMinute, "ipclean_max_reserved_minute", 120, 
+		"max reserved minute for unused fixed ip")
 
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")

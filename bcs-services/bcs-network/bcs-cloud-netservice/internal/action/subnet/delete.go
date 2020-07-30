@@ -102,7 +102,7 @@ func (a *DeleteAction) querySubnet() (pbcommon.ErrCode, string) {
 
 func (a *DeleteAction) checkIPObject() (pbcommon.ErrCode, string) {
 	ipList, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
+		kube.CRD_NAME_LABELS_SUBNETID: a.req.SubnetID,
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "check ip object failed"
@@ -115,7 +115,8 @@ func (a *DeleteAction) checkIPObject() (pbcommon.ErrCode, string) {
 
 func (a *DeleteAction) deleteSubnet() (pbcommon.ErrCode, string) {
 	if err := a.storeIf.DeleteSubnet(a.ctx, a.req.SubnetID); err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, fmt.Sprintf("store DeleteSubnet failed, err %s", err.Error())
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
+			fmt.Sprintf("store DeleteSubnet failed, err %s", err.Error())
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }

@@ -251,7 +251,8 @@ func (nni *NodeNetworkInspector) reconcileNodeNetwork(nodenetwork *cloudv1.NodeN
 	if !common.ContainsString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT) {
 		nodenetwork.Finalizers = append(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT)
 		nodenetwork.Status.Status = cloudv1.NodeNetworkStatusReady
-		nodenetworkAfterUpdate, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+		nodenetworkAfterUpdate, err := nni.client.NodeNetworks(nodenetwork.GetNamespace()).
+			Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
 		if err != nil {
 			blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())
 			return nil
@@ -322,7 +323,8 @@ func (nni *NodeNetworkInspector) cleanNodeNetwork(nodenetwork *cloudv1.NodeNetwo
 		}
 
 		nodenetwork.Finalizers = common.RemoveString(nodenetwork.Finalizers, constant.FINALIZER_NAME_FOR_NETAGENT)
-		_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
+		_, err = nni.client.NodeNetworks(nodenetwork.GetNamespace()).
+			Update(context.TODO(), nodenetwork, metav1.UpdateOptions{})
 		if err != nil {
 			blog.Errorf("add finalizer to nodenetwork failed, err %s", err.Error())
 		}

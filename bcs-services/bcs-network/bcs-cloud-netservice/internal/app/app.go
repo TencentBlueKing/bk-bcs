@@ -121,8 +121,8 @@ func (cn *CloudNetservice) initCloud() error {
 }
 
 func (cn *CloudNetservice) initLeaderElection() error {
-	elector, err := leaderelection.New(resourcelock.LeasesResourceLock, "bcs-cloud-netservice", "bcs-system", cn.cfg.Kubeconfig,
-		15*time.Second, 10*time.Second, 2*time.Second)
+	elector, err := leaderelection.New(resourcelock.LeasesResourceLock, 
+		"bcs-cloud-netservice", "bcs-system", cn.cfg.Kubeconfig, 15*time.Second, 10*time.Second, 2*time.Second)
 	if err != nil {
 		return err
 	}

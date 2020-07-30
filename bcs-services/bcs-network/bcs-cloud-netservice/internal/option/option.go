@@ -37,10 +37,10 @@ type Config struct {
 	CloudMode string `json:"cloud_mode" value:"" usage:"cloud mode, option [tencentcloud, aws]"`
 
 	// IPMaxIdleMinute ip max idle time, max time for available ip before return to cloud
-	IPMaxIdleMinute int `json:"ip_max_idle_minute" value:"1600" usage:"max time for available ip before return to cloud; unit[minute]"`
+	IPMaxIdleMinute int `json:"ip_max_idle_minute" value:"1600" usage:"max time before return to cloud; unit[minute]"`
 
 	// IPCleanIntervalMinute ip clean interval
-	IPCleanIntervalMinute int `json:"ip_clean_interval_minute" value:"10" usage:"interval minute for ip cleaner check interval, unit[minute]"`
+	IPCleanIntervalMinute int `json:"ip_clean_interval_minute" value:"10" usage:"minute for ip cleaner check interval"`
 
 	conf.FileConfig
 	conf.ServiceConfig

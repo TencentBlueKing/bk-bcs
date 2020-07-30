@@ -35,9 +35,9 @@ import (
 
 const (
 	// start eni route table id
-	startENIRouteTableID = 100
+	START_ENI_ROUTE_TABLE_ID = 100
 
-	mainRouteTableID = 254
+	MAIN_ROUTE_TABLE_ID = 254
 )
 
 // EIP object for use tencent network interface
@@ -163,14 +163,15 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 		// set up eni
 		err = setupNetworkInterface(primaryIP, *subnet.CidrBlock, eniLocalInterfaceName, *newENI.MacAddress)
 		if err != nil {
-			blog.Errorf("set up networkinterface %s with ip %s mac %s failed, err %s", eniLocalInterfaceName, primaryIP, *newENI.MacAddress, err.Error())
+			blog.Errorf("set up networkinterface %s with ip %s mac %s failed, err %s",
+				eniLocalInterfaceName, primaryIP, *newENI.MacAddress, err.Error())
 			os.Exit(1)
 		}
 		blog.Infof("set up eni with primary ip %s done", primaryIP)
 
 		// for each newly applied network interface, create a route table in later steps,
 		// here we just calculate the route table id and record it in an array
-		tableID := startENIRouteTableID + i
+		tableID := START_ENI_ROUTE_TABLE_ID + i
 		routeTableIDs = append(routeTableIDs, tableID)
 		routeTableIDMap[linkName] = tableID
 	}
@@ -366,7 +367,7 @@ func (eip *EIP) Recover(file string, eniNum int) {
 	// query each applied network interface by rule "eni-%s-%d", get primary ip address,
 	// and set up network interface by (address, mac) in query result.
 	for i := 0; i < eniNum; i++ {
-		tableID := startENIRouteTableID + i
+		tableID := START_ENI_ROUTE_TABLE_ID + i
 		routeTableIDs = append(routeTableIDs, tableID)
 		resENIName := fmt.Sprintf("eni-%s-%d", *instance.InstanceId, i)
 		blog.Infof("recover eni with name %s", resENIName)
@@ -817,7 +818,7 @@ func getRouteTableIDByMac(mac, eniPrefix string) (int, error) {
 				blog.Errorf("convert %s to int failed, err %s", idString, err.Error())
 				return -1, fmt.Errorf("convert %s to int failed, err %s", idString, err.Error())
 			}
-			return id + startENIRouteTableID, nil
+			return id + START_ENI_ROUTE_TABLE_ID, nil
 		}
 	}
 	return -1, fmt.Errorf("cannot find eni with mac %s", mac)

@@ -376,11 +376,11 @@ func (c *Client) waitForENIAttached(eniMac string) error {
 			}
 		}
 		retries = retries + 1
-		if retries > waitAttachedMaxRetries {
+		if retries > WAIT_ATTACHED_MAX_RETRIES {
 			return fmt.Errorf("wait for eni attached failed, exceed max retries")
 		}
-		blog.V(3).Infof("%s not attached, retry (%d/%d)", eniMac, retries, waitAttachedMaxRetries)
-		time.Sleep(waitAttachedInterval)
+		blog.V(3).Infof("%s not attached, retry (%d/%d)", eniMac, retries, WAIT_ATTACHED_MAX_RETRIES)
+		time.Sleep(WAIT_ATTACHED_INTERVAL)
 	}
 }
 

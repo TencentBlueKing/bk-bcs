@@ -38,39 +38,39 @@ import (
 )
 
 const (
-	// CrdVersionV1 crd version v1
-	CrdVersionV1 = "v1"
-	// CrdNameCloudSubnet crd name for cloud subnet
-	CrdNameCloudSubnet = "CloudSubnet"
-	// CrdNameCloudIP crd name for cloud ip
-	CrdNameCloudIP = "CloudIP"
+	// CRD_VERSION_V1 crd version v1
+	CRD_VERSION_V1 = "v1"
+	// CRD_NAME_CLOUD_SUBNET crd name for cloud subnet
+	CRD_NAME_CLOUD_SUBNET = "CloudSubnet"
+	// CRD_NAME_CLOUD_IP crd name for cloud ip
+	CRD_NAME_CLOUD_IP = "CloudIP"
 
-	// CrdNameLabelsVpcID crd labels name for vpc id
-	CrdNameLabelsVpcID = "vpc.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsRegion crd labels name for region
-	CrdNameLabelsRegion = "region.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsZone crd labels name for zone
-	CrdNameLabelsZone = "zone.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsSubnetID crd labels name for subent id
-	CrdNameLabelsSubnetID = "subnet.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsCluster crd labels name for cluster
-	CrdNameLabelsCluster = "cluster.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsNamespace crd labels name for namespaces
-	CrdNameLabelsNamespace = "namespace.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsWorkloadKind crd labels name for workload king
-	CrdNameLabelsWorkloadKind = "workloadkind.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsWorkloadName crd labels name for workload name
-	CrdNameLabelsWorkloadName = "workloadname.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsPodName crd labels name for pod name
-	CrdNameLabelsPodName = "pod.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsStatus crd labels name for status
-	CrdNameLabelsStatus = "status.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsIsFixed crd labels name for fixed
-	CrdNameLabelsIsFixed = "fixed.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsEni  crd labels name for eni
-	CrdNameLabelsEni = "eni.cloud.bkbcs.tencent.com"
-	// CrdNameLabelsHost crd labels name for host
-	CrdNameLabelsHost = "host.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_VPC_ID crd labels name for vpc id
+	CRD_NAME_LABELS_VPC_ID = "vpc.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_REGION crd labels name for region
+	CRD_NAME_LABELS_REGION = "region.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_ZONE crd labels name for zone
+	CRD_NAME_LABELS_ZONE = "zone.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_SUBNETID crd labels name for subent id
+	CRD_NAME_LABELS_SUBNETID = "subnet.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_CLUSTER crd labels name for cluster
+	CRD_NAME_LABELS_CLUSTER = "cluster.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_NAMESPACE crd labels name for namespaces
+	CRD_NAME_LABELS_NAMESPACE = "namespace.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_WORKLOAD_KIND crd labels name for workload king
+	CRD_NAME_LABELS_WORKLOAD_KIND = "workloadkind.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_WORKLOAD_NAME crd labels name for workload name
+	CRD_NAME_LABELS_WORKLOAD_NAME = "workloadname.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_PODNAME crd labels name for pod name
+	CRD_NAME_LABELS_PODNAME = "pod.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_STATUS crd labels name for status
+	CRD_NAME_LABELS_STATUS = "status.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_IS_FIXED crd labels name for fixed
+	CRD_NAME_LABELS_IS_FIXED = "fixed.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_ENI  crd labels name for eni
+	CRD_NAME_LABELS_ENI = "eni.cloud.bkbcs.tencent.com"
+	// CRD_NAME_LABELS_HOST crd labels name for host
+	CRD_NAME_LABELS_HOST = "host.cloud.bkbcs.tencent.com"
 )
 
 // Client client for kube
@@ -194,16 +194,16 @@ func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) er
 	timeNowStr := time.Now().UTC().String()
 	newCloudSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CrdNameCloudSubnet,
-			APIVersion: CrdVersionV1,
+			Kind:       CRD_NAME_CLOUD_SUBNET,
+			APIVersion: CRD_VERSION_V1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      subnet.SubnetID,
 			Namespace: "bcs-system",
 			Labels: map[string]string{
-				CrdNameLabelsVpcID:  subnet.VpcID,
-				CrdNameLabelsRegion: subnet.Region,
-				CrdNameLabelsZone:   subnet.Zone,
+				CRD_NAME_LABELS_VPC_ID:  subnet.VpcID,
+				CRD_NAME_LABELS_REGION: subnet.Region,
+				CRD_NAME_LABELS_ZONE:   subnet.Zone,
 			},
 		},
 		Spec: cloudv1.CloudSubnetSpec{
@@ -258,8 +258,8 @@ func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state i
 	timeNowStr := time.Now().UTC().String()
 	updatedSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CrdNameCloudSubnet,
-			APIVersion: CrdVersionV1,
+			Kind:       CRD_NAME_CLOUD_SUBNET,
+			APIVersion: CRD_VERSION_V1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            subnet.Name,
@@ -301,8 +301,8 @@ func (c *Client) UpdateSubnetAvailableIP(ctx context.Context, subnetID string, a
 	timeNowStr := time.Now().UTC().String()
 	updatedSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CrdNameCloudSubnet,
-			APIVersion: CrdVersionV1,
+			Kind:       CRD_NAME_CLOUD_SUBNET,
+			APIVersion: CRD_VERSION_V1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            subnet.Name,
@@ -399,21 +399,21 @@ func (c *Client) CreateIPObject(ctx context.Context, ip *types.IPObject) error {
 	timeNow := time.Now()
 	newIPObj := &cloudv1.CloudIP{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CrdNameCloudIP,
-			APIVersion: CrdVersionV1,
+			Kind:       CRD_NAME_CLOUD_IP,
+			APIVersion: CRD_VERSION_V1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ip.Address,
 			Namespace: "bcs-system",
 			Labels: map[string]string{
-				CrdNameLabelsVpcID:    ip.VpcID,
-				CrdNameLabelsRegion:   ip.Region,
-				CrdNameLabelsSubnetID: ip.SubnetID,
-				CrdNameLabelsCluster:  ip.Cluster,
-				CrdNameLabelsStatus:   ip.Status,
-				CrdNameLabelsEni:      ip.EniID,
-				CrdNameLabelsHost:     ip.Host,
-				CrdNameLabelsIsFixed:  strconv.FormatBool(ip.IsFixed),
+				CRD_NAME_LABELS_VPC_ID:    ip.VpcID,
+				CRD_NAME_LABELS_REGION:   ip.Region,
+				CRD_NAME_LABELS_SUBNETID: ip.SubnetID,
+				CRD_NAME_LABELS_CLUSTER:  ip.Cluster,
+				CRD_NAME_LABELS_STATUS:   ip.Status,
+				CRD_NAME_LABELS_ENI:      ip.EniID,
+				CRD_NAME_LABELS_HOST:     ip.Host,
+				CRD_NAME_LABELS_IS_FIXED:  strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{
@@ -455,22 +455,22 @@ func (c *Client) UpdateIPObject(ctx context.Context, ip *types.IPObject) error {
 	timeNow := time.Now()
 	newIPObj := &cloudv1.CloudIP{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       CrdNameCloudIP,
-			APIVersion: CrdVersionV1,
+			Kind:       CRD_NAME_CLOUD_IP,
+			APIVersion: CRD_VERSION_V1,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            ip.Address,
 			Namespace:       "bcs-system",
 			ResourceVersion: ip.ResourceVersion,
 			Labels: map[string]string{
-				CrdNameLabelsVpcID:    ip.VpcID,
-				CrdNameLabelsRegion:   ip.Region,
-				CrdNameLabelsSubnetID: ip.SubnetID,
-				CrdNameLabelsCluster:  ip.Cluster,
-				CrdNameLabelsStatus:   ip.Status,
-				CrdNameLabelsEni:      ip.EniID,
-				CrdNameLabelsHost:     ip.Host,
-				CrdNameLabelsIsFixed:  strconv.FormatBool(ip.IsFixed),
+				CRD_NAME_LABELS_VPC_ID:    ip.VpcID,
+				CRD_NAME_LABELS_REGION:   ip.Region,
+				CRD_NAME_LABELS_SUBNETID: ip.SubnetID,
+				CRD_NAME_LABELS_CLUSTER:  ip.Cluster,
+				CRD_NAME_LABELS_STATUS:   ip.Status,
+				CRD_NAME_LABELS_ENI:      ip.EniID,
+				CRD_NAME_LABELS_HOST:     ip.Host,
+				CRD_NAME_LABELS_IS_FIXED:  strconv.FormatBool(ip.IsFixed),
 			},
 		},
 		Spec: cloudv1.CloudIPSpec{

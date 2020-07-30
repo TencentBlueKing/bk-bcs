@@ -189,9 +189,9 @@ func (a *FixedAllocateAction) queryEniFromCloud() (pbcommon.ErrCode, string) {
 // check allocated ip
 func (a *FixedAllocateAction) checkAllocatedIP() (pbcommon.ErrCode, string) {
 	ipObjs, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CrdNameLabelsCluster:  a.req.Cluster,
-		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
-		kube.CrdNameLabelsIsFixed:  strconv.FormatBool(true),
+		kube.CRD_NAME_LABELS_CLUSTER:  a.req.Cluster,
+		kube.CRD_NAME_LABELS_SUBNETID: a.req.SubnetID,
+		kube.CRD_NAME_LABELS_IS_FIXED: strconv.FormatBool(true),
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "list ip object failed"
@@ -221,11 +221,13 @@ func (a *FixedAllocateAction) checkAllocatedIP() (pbcommon.ErrCode, string) {
 		a.allocatedIPObj.WorkloadName != a.req.WorkloadName ||
 		a.allocatedIPObj.WorkloadKind != a.req.WorkloadKind {
 
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH, "found allocated fixed ip, but info not match"
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH,
+			"found allocated fixed ip, but info not match"
 	}
 	// should not happen, may be the last time release is failed
 	if a.allocatedIPObj.Status == types.IP_STATUS_ACTIVE {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP, "dirty data, request fixed ip is active"
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP,
+			"dirty data, request fixed ip is active"
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
@@ -253,11 +255,13 @@ func (a *FixedAllocateAction) checkIPOccupied() (pbcommon.ErrCode, string) {
 		existedIP.WorkloadName != a.req.WorkloadName ||
 		existedIP.WorkloadKind != a.req.WorkloadKind {
 
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH, "found allocated fixed ip, but info not match"
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH,
+			"found allocated fixed ip, but info not match"
 	}
 	// should not happen, may be the last time release is failed
 	if existedIP.Status == types.IP_STATUS_ACTIVE {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP, "dirty data, request fixed ip is active"
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP,
+			"dirty data, request fixed ip is active"
 	}
 	a.allocatedIPObj = existedIP
 	return pbcommon.ErrCode_ERROR_OK, ""
@@ -303,9 +307,9 @@ func (a *FixedAllocateAction) createIPObjectToStore() (pbcommon.ErrCode, string)
 // find available ip object applied previous
 func (a *FixedAllocateAction) findAvailableVictimIPObject() (pbcommon.ErrCode, string) {
 	victimObjects, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CrdNameLabelsEni:     a.req.EniID,
-		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
-		kube.CrdNameLabelsStatus:  types.IP_STATUS_AVAILABLE,
+		kube.CRD_NAME_LABELS_ENI:      a.req.EniID,
+		kube.CRD_NAME_LABELS_IS_FIXED: strconv.FormatBool(false),
+		kube.CRD_NAME_LABELS_STATUS:   types.IP_STATUS_AVAILABLE,
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
@@ -361,7 +365,8 @@ func (a *FixedAllocateAction) deleteVictimIPObject() (pbcommon.ErrCode, string) 
 	err = a.cloudIf.UnassignIPFromEni(a.victimIPObj.Address, a.victimIPObj.EniID)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED,
-			fmt.Sprintf("unassign ip %s from eni %s failed, err %s", a.victimIPObj.Address, a.victimIPObj.EniID, err.Error())
+			fmt.Sprintf("unassign ip %s from eni %s failed, err %s",
+				a.victimIPObj.Address, a.victimIPObj.EniID, err.Error())
 	}
 	err = a.storeIf.DeleteIPObject(a.ctx, a.victimIPObj.Address)
 	if err != nil {
@@ -376,7 +381,8 @@ func (a *FixedAllocateAction) migrateIP() (pbcommon.ErrCode, string) {
 	err := a.cloudIf.MigrateIP(a.allocatedIPObj.Address, a.allocatedIPObj.EniID, a.req.EniID)
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED,
-			fmt.Sprintf("migrate ip %s from eni %s to eni %s failed", a.allocatedIPObj.Address, a.allocatedIPObj.EniID, a.req.EniID)
+			fmt.Sprintf("migrate ip %s from eni %s to eni %s failed",
+				a.allocatedIPObj.Address, a.allocatedIPObj.EniID, a.req.EniID)
 	}
 	return pbcommon.ErrCode_ERROR_OK, ""
 }

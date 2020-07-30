@@ -22,10 +22,12 @@ func NewPseudoResolver(addrs []string) naming.Resolver {
 	return &pseudoResolver{addrs}
 }
 
+// pseudoResolver is simple name resolver
 type pseudoResolver struct {
 	addrs []string
 }
 
+// Resolve resolve target
 func (r *pseudoResolver) Resolve(target string) (naming.Watcher, error) {
 	w := &pseudoWatcher{
 		updatesChan: make(chan []*naming.Update, 1),
@@ -38,10 +40,12 @@ func (r *pseudoResolver) Resolve(target string) (naming.Watcher, error) {
 	return w, nil
 }
 
+// pseudoWatcher watcher for update event
 type pseudoWatcher struct {
 	updatesChan chan []*naming.Update
 }
 
+// Next get next update event
 func (w *pseudoWatcher) Next() ([]*naming.Update, error) {
 	us, ok := <-w.updatesChan
 	if !ok {
@@ -50,6 +54,7 @@ func (w *pseudoWatcher) Next() ([]*naming.Update, error) {
 	return us, nil
 }
 
+// Close close watcher
 func (w *pseudoWatcher) Close() {
 	close(w.updatesChan)
 }

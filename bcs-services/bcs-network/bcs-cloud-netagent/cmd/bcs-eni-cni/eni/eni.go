@@ -341,8 +341,10 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 	// find eni id according to eniMac
 	routeTableID, err := getRouteTableIDByMac(eniMac, constant.ENI_PREFIX)
 	if err != nil {
-		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, constant.ENI_PREFIX, err.Error())
-		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s", eniMac, constant.ENI_PREFIX, err.Error())
+		blog.Errorf("get route table id by mac %s with eni prefix %s failed, err %s",
+			eniMac, constant.ENI_PREFIX, err.Error())
+		return fmt.Errorf("get route table id by mac %s with eni prefix %s failed, err %s",
+			eniMac, constant.ENI_PREFIX, err.Error())
 	}
 
 	// get container namespace

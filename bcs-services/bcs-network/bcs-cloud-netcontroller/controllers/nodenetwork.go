@@ -115,7 +115,9 @@ func (p *Processor) handle() error {
 	}
 
 	nodeNetworks := &cloudv1.NodeNetworkList{}
-	if err := p.kubeClient.List(context.TODO(), nodeNetworks, client.InNamespace(constant.CLOUD_CRD_NAMESPACE_BCS_SYSTEM)); err != nil {
+	if err := p.kubeClient.List(context.TODO(), nodeNetworks,
+		client.InNamespace(constant.CLOUD_CRD_NAMESPACE_BCS_SYSTEM)); err != nil {
+
 		blog.Errorf("unable to list NodeNetworks, err %s", err.Error())
 		return fmt.Errorf("unable to list NodeNetworks, err %s", err.Error())
 	}
@@ -321,7 +323,9 @@ func (p *Processor) cleanIPOnNode(nodenetwork *cloudv1.NodeNetwork) error {
 	return nil
 }
 
-func (p *Processor) reconcileEniForDynamic(nodeVMInfo *cloudv1.VMInfo, subnetID string) (*cloudv1.ElasticNetworkInterface, error) {
+func (p *Processor) reconcileEniForDynamic(
+	nodeVMInfo *cloudv1.VMInfo, subnetID string) (*cloudv1.ElasticNetworkInterface, error) {
+
 	eniCrdObj, err := p.cloudClient.CreateENI(generateEniName(nodeVMInfo.InstanceID, 99), subnetID, 0)
 	if err != nil {
 		return nil, err
