@@ -17,6 +17,7 @@ import (
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/app/options"
@@ -53,10 +54,10 @@ func setConfig(conf *config.Config, op *options.Option) {
 	conf.AppSecret = op.AppSecret
 	conf.AppCode = op.AppCode
 	conf.Template = op.Template
-	conf.ServerCert = &config.CertConfig{
+	conf.ServerCert = &types.CertConfig{
 		CertPasswd: static.ServerCertPwd,
 	}
-	conf.ClientCert = &config.CertConfig{
+	conf.ClientCert = &types.CertConfig{
 		CertPasswd: static.ClientCertPwd,
 	}
 	//server cert directoty

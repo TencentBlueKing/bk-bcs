@@ -248,40 +248,7 @@ func (disc *serviceMonitor) OnServiceMonitorAdd(obj interface{}) {
 	}
 	by,_ := json.Marshal(serviceM)
 	blog.Infof("recieve ServiceMonitor(%s) Data(%s) Add event", serviceM.GetUuid(), string(by))
-	if !disc.validateServiceMonitor(serviceM) {
-		return
-	}
-	o := &serviceEndpoint{
-		serviceM: serviceM,
-		endpoints: make(map[string]*apisbkbcsv2.BcsEndpoint),
-		cPorts: make(map[string]apismonitorv1.Endpoint),
-	}
-	for _,endpoint :=range serviceM.Spec.Endpoints {
-		o.cPorts[endpoint.Port] = endpoint
-		blog.Infof("ServiceMonitor(%s) have endpoint(%s:%s)",serviceM.GetUuid(), endpoint.Port, endpoint.Path)
-	}
-	rms := labels.NewSelector()
-	for _,o :=range serviceM.GetSelector() {
-		rms.Add(o)
-	}
-	endpoints,err := disc.endpointLister.BcsEndpoints(serviceM.Namespace).List(rms)
-	if err!=nil {
-		blog.Errorf("ServiceMonitor(%s) get Endpoints failed: %s", serviceM.GetUuid(), err.Error())
-		return
-	}
-	for _,v :=range endpoints {
-		if !serviceM.Match(v.Labels){
-			blog.Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), v.GetUuid())
-			continue
-		}
-		o.endpoints[v.GetUuid()] = v
-		blog.Infof("ServiceMonitor(%s) add selected BcsEndpoint(%s) success", serviceM.GetUuid(), v.GetUuid())
-	}
-	disc.Lock()
-	disc.svrMonitors[serviceM.GetUuid()] = o
-	disc.Unlock()
-	blog.Infof("handle Add event ServiceMonitor(%s) success", serviceM.GetUuid())
-	go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
+	disc.handlerServiceMonitorChanged(serviceM)
 }
 
 func (disc *serviceMonitor) validateServiceMonitor(serviceM *apismonitorv1.ServiceMonitor)bool{
@@ -307,6 +274,10 @@ func (disc *serviceMonitor) OnServiceMonitorUpdate(old, cur interface{}) {
 	}
 	by,_ := json.Marshal(serviceM)
 	blog.Infof("recieve ServiceMonitor(%s) Data(%s) Update event", serviceM.GetUuid(), string(by))
+	disc.handlerServiceMonitorChanged(serviceM)
+}
+
+func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1.ServiceMonitor){
 	if !disc.validateServiceMonitor(serviceM) {
 		return
 	}
