@@ -186,6 +186,8 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		store.StorageOperatorTotal.Reset()
 		store.ClusterMemoryResouceRemain.Reset()
 		store.ClusterCpuResouceRemain.Reset()
+		store.ClusterMemoryResouceTotal.Reset()
+		store.ClusterCpuResouceTotal.Reset()
 
 		// handle service metrics
 		services, err := s.ListAllServices()
@@ -246,8 +248,12 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		if err != nil {
 			blog.Errorf("list all agent error %s", err.Error())
 		}
-		var clusterCpu float64
-		var clusterMem float64
+		var (
+			clusterCpu float64
+			clusterMem float64
+			remainCpu float64
+			remainMem float64
+		)
 		for _, agent := range agents {
 			info := agent.GetAgentInfo()
 			if info.IP == "" {
@@ -280,14 +286,16 @@ func (s *managerStore) StartStoreObjectMetrics() {
 
 			//if ip-resources is zero, then ignore it
 			if s.pm==nil || ipValue>0{
-				clusterCpu += info.CpuTotal-info.CpuUsed
-				clusterMem += info.MemTotal-info.MemUsed
+				remainCpu += info.CpuTotal-info.CpuUsed
+				remainMem += info.MemTotal-info.MemUsed
 			}
+			clusterCpu += info.CpuTotal
+			clusterMem += info.MemTotal
 
 			store.ReportAgentInfoMetrics(info.IP, s.clusterId, info.CpuTotal, info.CpuTotal-info.CpuUsed,
 				info.MemTotal, info.MemTotal-info.MemUsed, ipValue)
 		}
-		store.ReportClusterInfoMetrics(s.clusterId, clusterCpu, clusterMem)
+		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, clusterCpu, remainMem, clusterMem)
 	}
 }
 

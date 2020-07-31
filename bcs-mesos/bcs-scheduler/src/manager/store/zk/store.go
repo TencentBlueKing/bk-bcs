@@ -76,6 +76,8 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		store.StorageOperatorTotal.Reset()
 		store.ClusterMemoryResouceRemain.Reset()
 		store.ClusterCpuResouceRemain.Reset()
+		store.ClusterMemoryResouceTotal.Reset()
+		store.ClusterCpuResouceTotal.Reset()
 
 		// handle service metrics
 		services, err := s.ListAllServices()
@@ -131,8 +133,12 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			store.ReportObjectResourceInfoMetrics(store.ObjectResourceSecret, secret.NameSpace, secret.Name, "")
 		}
 
-		var clusterCpu float64
-		var clusterMem float64
+		var (
+			clusterCpu float64
+			clusterMem float64
+			remainCpu float64
+			remainMem float64
+		)
 		// handle agents metrics
 		agents, err := s.ListAllAgents()
 		if err != nil {
@@ -173,11 +179,13 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				clusterCpu += info.CpuTotal-info.CpuUsed
 				clusterMem += info.MemTotal-info.MemUsed
 			}
+			clusterCpu += info.CpuTotal
+			clusterMem += info.MemTotal
 
 			store.ReportAgentInfoMetrics(info.IP, s.clusterId, info.CpuTotal, info.CpuTotal-info.CpuUsed,
 				info.MemTotal, info.MemTotal-info.MemUsed, ipValue)
 		}
-		store.ReportClusterInfoMetrics(s.clusterId, clusterCpu, clusterMem)
+		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, clusterCpu, remainMem, clusterMem)
 	}
 }
 
