@@ -65,4 +65,4 @@ bcs-cloud-network-agent:
 	mkdir -p ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent
 	cp -R ../../install/conf/bcs-services/bcs-cloud-network-agent/* ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent
 	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-cloudnetwork/cloud-network-agent/main.go
-	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni ./bcs-cloudnetwork/bcs-eni-cni/main.go
+	GOOS=linux go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni ./bcs-cloud-netagent/cmd/bcs-eni-cni/main.go
