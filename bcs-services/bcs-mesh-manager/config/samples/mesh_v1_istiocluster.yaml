@@ -1,0 +1,7 @@
+apiVersion: mesh.tencent.com/v1
+kind: IstioCluster
+metadata:
+  name: istiocluster-sample
+spec:
+  # Add fields here
+  foo: bar
