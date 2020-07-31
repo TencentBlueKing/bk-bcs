@@ -18,15 +18,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/vishvananda/netlink"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network/internal/constant"
+)
+
+const (
+	WAIT_ATTACHED_INTERVAL   = 5 * time.Second
+	WAIT_ATTACHED_MAX_RETRIES = 10
 )
 
 // Client client for aws eni
@@ -61,25 +67,25 @@ func New() *Client {
 }
 
 func (c *Client) loadEnv() error {
-	c.Region = os.Getenv(ENV_NAME_AWS_REGION)
-	c.VpcID = os.Getenv(ENV_NAME_AWS_VPC)
+	c.Region = os.Getenv(constant.ENV_NAME_AWS_REGION)
+	c.VpcID = os.Getenv(constant.ENV_NAME_AWS_VPC)
 
-	subnetsStr := os.Getenv(ENV_NAME_AWS_SUBNETS)
+	subnetsStr := os.Getenv(constant.ENV_NAME_AWS_SUBNETS)
 	if len(subnetsStr) != 0 {
 		strings.Replace(subnetsStr, ";", ",", -1)
 		subnets := strings.Split(subnetsStr, ",")
 		c.SubnetIDs = subnets
 	}
 
-	sGroupsStr := os.Getenv(ENV_NAME_AWS_SECURITY_GROUPS)
+	sGroupsStr := os.Getenv(constant.ENV_NAME_AWS_SECURITY_GROUPS)
 	if len(sGroupsStr) != 0 {
 		strings.Replace(sGroupsStr, ";", ",", -1)
 		sGroups := strings.Split(sGroupsStr, ",")
 		c.SecurityGroups = sGroups
 	}
 
-	c.AccessID = os.Getenv(ENV_NAME_AWS_ACCESS_KEY_ID)
-	accessSecret := os.Getenv(ENV_NAME_AWS_SECRET_ACCESS_KEY)
+	c.AccessID = os.Getenv(constant.ENV_NAME_AWS_ACCESS_KEY_ID)
+	accessSecret := os.Getenv(constant.ENV_NAME_AWS_SECRET_ACCESS_KEY)
 
 	decryptSecret, err := encrypt.DesDecryptFromBase([]byte(accessSecret))
 	if err != nil {
@@ -88,22 +94,22 @@ func (c *Client) loadEnv() error {
 	}
 	c.AccessSecret = string(decryptSecret)
 
-	c.SessionToken = os.Getenv(ENV_NAME_AWS_SESSION_TOKEN)
+	c.SessionToken = os.Getenv(constant.ENV_NAME_AWS_SESSION_TOKEN)
 	return nil
 }
 
 func (c *Client) validate() error {
 	if len(c.Region) == 0 {
-		return fmt.Errorf("%s cannot be empty", ENV_NAME_AWS_REGION)
+		return fmt.Errorf("%s cannot be empty", constant.ENV_NAME_AWS_REGION)
 	}
 	if len(c.VpcID) == 0 {
-		return fmt.Errorf("%s cannot be empty", ENV_NAME_AWS_VPC)
+		return fmt.Errorf("%s cannot be empty", constant.ENV_NAME_AWS_VPC)
 	}
 	if len(c.AccessID) == 0 {
-		return fmt.Errorf("%s cannot be empty", ENV_NAME_AWS_ACCESS_KEY_ID)
+		return fmt.Errorf("%s cannot be empty", constant.ENV_NAME_AWS_ACCESS_KEY_ID)
 	}
 	if len(c.AccessSecret) == 0 {
-		return fmt.Errorf("%s cannot be empty", ENV_NAME_AWS_SECRET_ACCESS_KEY)
+		return fmt.Errorf("%s cannot be empty", constant.ENV_NAME_AWS_SECRET_ACCESS_KEY)
 	}
 	return nil
 }
@@ -115,11 +121,11 @@ func (c *Client) GetENILimit(instanceIP string) (int, int, error) {
 		return -1, -1, fmt.Errorf("query instance info failed, err %s", err.Error())
 	}
 	instanceType := aws.StringValue(instance.InstanceType)
-	eniNum, ok := EniNumLimit[instanceType]
+	eniNum, ok := constant.AwsEniNumLimit[instanceType]
 	if !ok {
 		return -1, -1, fmt.Errorf("unknown instance type %s", instanceType)
 	}
-	ipNum, ok := IPNumLimit[instanceType]
+	ipNum, ok := constant.AwsIPNumLimit[instanceType]
 	if !ok {
 		return -1, -1, fmt.Errorf("unknown instance type %s", instanceType)
 	}
