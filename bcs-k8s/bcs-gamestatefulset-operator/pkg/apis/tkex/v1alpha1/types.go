@@ -74,7 +74,7 @@ type GameStatefulSetUpdateStrategy struct {
 	Type GameStatefulSetUpdateStrategyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetStrategyType"`
 	// RollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.
 	// +optional
-	RollingUpdate *RollingUpdateGameStatefulSetStrategy `json:"rollingUpdate,omitempty" protobuf:"bytes,2,opt,name=rollingUpdate"`
+	UpdateParameters *UpdateGameStatefulSetStrategy `json:"updateParameters,omitempty" protobuf:"bytes,2,opt,name=updateParameters"`
 }
 
 // GameStatefulSetUpdateStrategyType is a string enumeration type that enumerates
@@ -104,13 +104,17 @@ const (
 	InplaceHotPatchGameStatefulSetStrategyType = "InplaceHotPatch"
 )
 
-// RollingUpdateGameStatefulSetStrategy is used to communicate parameter for RollingUpdateStatefulSetStrategyType.
-type RollingUpdateGameStatefulSetStrategy struct {
+// UpdateGameStatefulSetStrategy is used to communicate parameter for GameStatefulSetUpdateStrategyType.
+type UpdateGameStatefulSetStrategy struct {
 	// Partition indicates the ordinal at which the StatefulSet should be
 	// partitioned.
 	// Default value is 0.
 	// +optional
 	Partition *int32 `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
+
+	// InplaceUpdateGracePeriodSeconds is the timespan between set Pod status to not-ready and update images in Pod spec
+	// when in-place update a Pod.
+	InplaceUpdateGracePeriodSeconds int32 `json:"inplaceUpdateGracePeriodSeconds,omitempty"`
 }
 
 // GameStatefulSetSpec A StatefulSetSpec is the specification of a StatefulSet.

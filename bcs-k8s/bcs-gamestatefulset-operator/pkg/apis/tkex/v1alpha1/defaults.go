@@ -29,10 +29,10 @@ func SetDefaults_GameStatefulSet(obj *GameStatefulSet) {
 	}
 
 	if obj.Spec.UpdateStrategy.Type == RollingUpdateGameStatefulSetStrategyType &&
-		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
-		obj.Spec.UpdateStrategy.RollingUpdate.Partition == nil {
-		obj.Spec.UpdateStrategy.RollingUpdate.Partition = new(int32)
-		*obj.Spec.UpdateStrategy.RollingUpdate.Partition = 0
+		obj.Spec.UpdateStrategy.UpdateParameters != nil &&
+		obj.Spec.UpdateStrategy.UpdateParameters.Partition == nil {
+		obj.Spec.UpdateStrategy.UpdateParameters.Partition = new(int32)
+		*obj.Spec.UpdateStrategy.UpdateParameters.Partition = 0
 	}
 
 	if obj.Spec.Replicas == nil {

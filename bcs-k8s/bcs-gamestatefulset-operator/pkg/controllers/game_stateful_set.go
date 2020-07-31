@@ -25,6 +25,7 @@ import (
 	gamestatelister "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 	"bcs-gamestatefulset-operator/pkg/util/constants"
 
+	"bcs-gamestatefulset-operator/pkg/util/inplaceupdate"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -109,6 +110,7 @@ func NewGameStatefulSetController(
 				podInformer.Lister(),
 				pvcInformer.Lister(),
 				recorder),
+			inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 			NewRealGameStatefulSetStatusUpdater(stsplusClient, setInformer.Lister()),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			recorder,

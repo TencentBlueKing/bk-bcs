@@ -34,6 +34,7 @@ require (
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
@@ -62,5 +63,6 @@ require (
 	k8s.io/kube-openapi v0.0.0-20181109181836-c59034cc13d5 // indirect
 	k8s.io/kubernetes v1.13.1
 	k8s.io/utils v0.0.0-20200124190032-861946025e34 // indirect
+	sigs.k8s.io/controller-runtime v0.1.9
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

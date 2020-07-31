@@ -282,8 +282,8 @@ func newGameStatefulSetPod(set *stsplus.GameStatefulSet, ordinal int) *v1.Pod {
 // returned error is nil, the returned Pod is valid.
 func newVersionedGameStatefulSetPod(currentSet, updateSet *stsplus.GameStatefulSet, currentRevision, updateRevision string, ordinal int) *v1.Pod {
 	if currentSet.Spec.UpdateStrategy.Type != stsplus.OnDeleteGameStatefulSetStrategyType &&
-		(currentSet.Spec.UpdateStrategy.RollingUpdate == nil && ordinal < int(currentSet.Status.CurrentReplicas)) ||
-		(currentSet.Spec.UpdateStrategy.RollingUpdate != nil && ordinal < int(*currentSet.Spec.UpdateStrategy.RollingUpdate.Partition)) {
+		(currentSet.Spec.UpdateStrategy.UpdateParameters == nil && ordinal < int(currentSet.Status.CurrentReplicas)) ||
+		(currentSet.Spec.UpdateStrategy.UpdateParameters != nil && currentSet.Spec.UpdateStrategy.UpdateParameters.Partition != nil && ordinal < int(*currentSet.Spec.UpdateStrategy.UpdateParameters.Partition)) { //nolint
 		pod := newGameStatefulSetPod(currentSet, ordinal)
 		setPodRevision(pod, currentRevision)
 		return pod
