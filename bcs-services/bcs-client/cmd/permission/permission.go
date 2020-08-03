@@ -11,7 +11,7 @@
  *
  */
 
-package revoke
+package permission
 
 import (
 	"fmt"
@@ -19,28 +19,36 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewRevokeCommand sub command revoke registration
-func NewRevokeCommand() cli.Command {
+//NewPermissionCommand sub command permission registration
+func NewPermissionCommand() cli.Command {
 	return cli.Command{
-		Name:  "revoke",
-		Usage: "revoke permission",
+		Name:  "permission",
+		Usage: "permission operation, get/grant/revoke",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "revoke type, value can be permission",
+				Usage: "operation type, value can be get/grant/revoke",
 			},
 			cli.StringFlag{
 				Name:  "from-file, f",
 				Usage: "reading with configuration `FILE`",
 			},
+			cli.StringFlag{
+				Name:  "username",
+				Usage: "user name",
+			},
+			cli.StringFlag{
+				Name:  "resourcetype",
+				Usage: "resource type, value can be cluster/storage/network-detection...",
+			},
 		},
 		Action: func(c *cli.Context) error {
-			return revoke(utils.NewClientContext(c))
+			return permission(utils.NewClientContext(c))
 		},
 	}
 }
 
-func revoke(c *utils.ClientContext) error {
+func permission(c *utils.ClientContext) error {
 	if err := c.MustSpecified(utils.OptionType); err != nil {
 		return err
 	}
@@ -48,7 +56,11 @@ func revoke(c *utils.ClientContext) error {
 	resourceType := c.String(utils.OptionType)
 
 	switch resourceType {
-	case "permission":
+	case "get":
+		return getPermission(c)
+	case "grant":
+		return grantPermission(c)
+	case "revoke":
 		return revokePermission(c)
 	default:
 		return fmt.Errorf("invalid type: %s", resourceType)
