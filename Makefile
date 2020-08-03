@@ -252,7 +252,7 @@ bmsf-mesos-adapter:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
 
 network:pre
-	cd ./bcs-services/bcs-network && make network && cd -
+	cd ./bcs-network && make network && cd -
 
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
@@ -281,12 +281,10 @@ tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 	
 bcs-networkpolicy:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-networkpolicy
-	cp -R ./install/conf/bcs-services/bcs-networkpolicy ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-networkpolicy/bcs-networkpolicy ./bcs-services/bcs-networkpolicy/main.go
+	cd ./bcs-network && make networkpolicy && cd -
 
 bcs-cloud-network-agent:pre
-	cd ./bcs-services/bcs-network && make bcs-cloud-network-agent && cd -
+	cd ./bcs-network && make bcs-cloud-network-agent && cd -
 	
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
@@ -303,10 +301,10 @@ bkcmdb-synchronizer:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
 
 bcs-cloud-netservice:pre
-	cd ./bcs-services/bcs-network && make cloud-netservice && cd -
+	cd ./bcs-network && make cloud-netservice && cd -
 
 bcs-cloud-netcontroller:pre
-	cd ./bcs-services/bcs-network && make cloud-netcontroller && cd -
+	cd ./bcs-network && make cloud-netcontroller && cd -
 
 bcs-cloud-netagent:pre
-	cd ./bcs-services/bcs-network && make cloud-netagent && cd -
+	cd ./bcs-network && make cloud-netagent && cd -
