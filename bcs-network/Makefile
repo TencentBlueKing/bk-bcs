@@ -36,22 +36,22 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zookeeper
 INNER_PACKAGEPATH=build/bcs.${VERSION}
 
 cloud-netagent:
-	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent
-	cp -R ../install/conf/bcs-services/bcs-cloud-netagent/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent
-	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-cloud-netagent ./bcs-cloud-netagent/cmd/netagent/main.go
-	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-eni-cni ./bcs-cloud-netagent/cmd/bcs-eni-cni/main.go
-	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netagent/bcs-eni-ipam ./bcs-cloud-netagent/cmd/bcs-eni-ipam/main.go
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netagent
+	cp -R ../install/conf/bcs-network/bcs-cloud-netagent/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netagent
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netagent/bcs-cloud-netagent ./bcs-cloud-netagent/cmd/netagent/main.go
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netagent/bcs-eni-cni ./bcs-cloud-netagent/cmd/bcs-eni-cni/main.go
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netagent/bcs-eni-ipam ./bcs-cloud-netagent/cmd/bcs-eni-ipam/main.go
 
 cloud-netcontroller:
-	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netcontroller
-	cp -R ../install/conf/bcs-services/bcs-cloud-netcontroller/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netcontroller
-	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netcontroller/bcs-cloud-netcontroller ./bcs-cloud-netcontroller/main.go
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netcontroller
+	cp -R ../install/conf/bcs-network/bcs-cloud-netcontroller/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netcontroller
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netcontroller/bcs-cloud-netcontroller ./bcs-cloud-netcontroller/main.go
 
 cloud-netservice:
-	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
-	cp -R ../install/conf/bcs-services/bcs-cloud-netservice/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
-	cp ./api/protocol/cloudnetservice/cloudnetservice.swagger.json ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice
-	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-netservice/bcs-cloud-netservice ./bcs-cloud-netservice/cmd/cloudnetservice/main.go
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netservice
+	cp -R ../install/conf/bcs-network/bcs-cloud-netservice/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netservice
+	cp ./api/protocol/cloudnetservice/cloudnetservice.swagger.json ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netservice
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-netservice/bcs-cloud-netservice ./bcs-cloud-netservice/cmd/cloudnetservice/main.go
 
 # qcloud-eip
 network:
@@ -62,12 +62,12 @@ network:
 
 # old version network agent
 bcs-cloud-network-agent:
-	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent
-	cp -R ../install/conf/bcs-services/bcs-cloud-network-agent/* ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent
-	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-cloudnetwork/cloud-network-agent/main.go
-	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni ./bcs-cloud-netagent/cmd/bcs-eni-cni/main.go
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-network-agent
+	cp -R ../install/conf/bcs-network/bcs-cloud-network-agent/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-network-agent
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-cloudnetwork/cloud-network-agent/main.go
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-cloud-network-agent/bcs-eni ./bcs-cloud-netagent/cmd/bcs-eni-cni/main.go
 
 networkpolicy:
-	mkdir -p ../${INNER_PACKAGEPATH}/bcs-services/bcs-networkpolicy
-	cp -R ../install/conf/bcs-services/bcs-networkpolicy ../${INNER_PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-networkpolicy/bcs-networkpolicy ./bcs-networkpolicy/main.go
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-networkpolicy
+	cp -R ../install/conf/bcs-network/bcs-networkpolicy ../${INNER_PACKAGEPATH}/bcs-network
+	go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-networkpolicy/bcs-networkpolicy ./bcs-networkpolicy/main.go
