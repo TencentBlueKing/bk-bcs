@@ -38,7 +38,7 @@ rules:
   - update
   - watch
   - delete
-- apiGroups: ["tkex"]
+- apiGroups: ["tkex.tencent.com"]
   resources:
   - gamestatefulsets
   - gamestatefulsets/status
