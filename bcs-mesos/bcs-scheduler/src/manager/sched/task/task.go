@@ -223,7 +223,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			task.Command = container.Docker.Command
 			task.Arguments = container.Docker.Arguments
 			task.DataClass = container.DataClass
-			task.DataClass.Msgs = make([]*types.BcsMessage,0)
+			task.DataClass.Msgs = make([]*types.BcsMessage, 0)
 			if err := createTaskConfigMaps(&task, container.ConfigMaps, store); err != nil {
 				return nil, err
 			}
@@ -383,10 +383,10 @@ func createTaskConfigMaps(task *types.Task, configMaps []commtypes.ConfigMap, st
 				blog.Warn("unkown configmap type:%s for task:%s", confItem.Type, task.ID)
 				continue
 			}
-			by,_ := json.Marshal(msg)
+			by, _ := json.Marshal(msg)
 			blog.Info("add task %s configmap message: %s", task.ID, string(by))
 			task.DataClass.Msgs = append(task.DataClass.Msgs, msg)
-			by,_ = json.Marshal(task.DataClass)
+			by, _ = json.Marshal(task.DataClass)
 			blog.Infof("task %s dataclass(%s)", task.ID, string(by))
 		}
 	}

@@ -889,7 +889,7 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 	return mesosClient.GetStateFromCluster()
 }
 
-func (s *Scheduler) UpdateMesosAgents(){
+func (s *Scheduler) UpdateMesosAgents() {
 	s.oprMgr.UpdateMesosAgents()
 }
 

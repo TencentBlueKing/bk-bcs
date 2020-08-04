@@ -47,9 +47,9 @@ type serviceMonitor struct {
 	module         string
 	promFilePrefix string
 
-	eventHandler   EventHandleFunc
+	eventHandler EventHandleFunc
 	//endpoints
-	endpointLister bkbcsv2.BcsEndpointLister
+	endpointLister   bkbcsv2.BcsEndpointLister
 	endpointInformer cache.SharedIndexInformer
 	//service monitor
 	//serviceMonitorLister monitorv1.ServiceMonitorLister
@@ -62,24 +62,24 @@ type serviceMonitor struct {
 }
 
 type serviceEndpoint struct {
-	serviceM *apismonitorv1.ServiceMonitor
+	serviceM  *apismonitorv1.ServiceMonitor
 	endpoints map[string]*apisbkbcsv2.BcsEndpoint
-	cPorts map[string]apismonitorv1.Endpoint
+	cPorts    map[string]apismonitorv1.Endpoint
 }
 
-func (s *serviceEndpoint) getPrometheusConfigs()[]*types.PrometheusSdConfig{
-	promConfigs := make([]*types.PrometheusSdConfig,0)
+func (s *serviceEndpoint) getPrometheusConfigs() []*types.PrometheusSdConfig {
+	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	//traverse BcsEndpoints, corresponding to a separate BcsService
-	for _,bcsEndpoint :=range s.endpoints {
+	for _, bcsEndpoint := range s.endpoints {
 		conf := &types.PrometheusSdConfig{
 			Targets: make([]string, 0),
-			Labels: make(map[string]string),
+			Labels:  make(map[string]string),
 		}
-		for k,v :=range bcsEndpoint.Labels {
-			r,_:=regexp.Compile("[a-zA-Z_][a-zA-Z0-9_]*")
+		for k, v := range bcsEndpoint.Labels {
+			r, _ := regexp.Compile("[a-zA-Z_][a-zA-Z0-9_]*")
 			rk := r.FindAllString(k, 1)
-			if len(rk)!=1 || rk[0]!=k {
-				blog.Infof("BcsEndpoint(%s) Label(%s:%s) is invalid", bcsEndpoint.GetUuid(), k,v)
+			if len(rk) != 1 || rk[0] != k {
+				blog.Infof("BcsEndpoint(%s) Label(%s:%s) is invalid", bcsEndpoint.GetUuid(), k, v)
 				continue
 			}
 			conf.Labels[k] = v
@@ -93,18 +93,18 @@ func (s *serviceEndpoint) getPrometheusConfigs()[]*types.PrometheusSdConfig{
 		conf.Labels["namespace"] = bcsEndpoint.Namespace
 		conf.Labels["job"] = fmt.Sprintf("%s/%s/0", bcsEndpoint.Namespace, s.serviceM.Name)
 		conf.Labels["name"] = s.serviceM.Name
-		for _,endpoint :=range bcsEndpoint.Spec.Endpoints {
-			for _,cPort := range endpoint.Ports {
-				_,ok := s.cPorts[cPort.Name]
+		for _, endpoint := range bcsEndpoint.Spec.Endpoints {
+			for _, cPort := range endpoint.Ports {
+				_, ok := s.cPorts[cPort.Name]
 				if !ok {
 					blog.V(3).Infof("BcsEndpoint(%s) endpoint(%s) port(%s) don't matched, and continue",
 						bcsEndpoint.GetUuid(), endpoint.ContainerIP, cPort.Name)
 					continue
 				}
 				//if container network=Host
-				if endpoint.NetworkMode=="HOST" {
+				if endpoint.NetworkMode == "HOST" {
 					conf.Targets = append(conf.Targets, fmt.Sprintf("%s:%d", endpoint.NodeIP, cPort.ContainerPort))
-				}else {
+				} else {
 					conf.Targets = append(conf.Targets, fmt.Sprintf("%s:%d", endpoint.ContainerIP, cPort.ContainerPort))
 				}
 			}
@@ -122,7 +122,7 @@ func NewServiceMonitor(kubeconfig string, promFilePrefix, module string) (Discov
 		kubeconfig:     kubeconfig,
 		module:         module,
 		promFilePrefix: promFilePrefix,
-		svrMonitors: make(map[string]*serviceEndpoint),
+		svrMonitors:    make(map[string]*serviceEndpoint),
 	}
 
 	return disc, nil
@@ -224,7 +224,7 @@ func (disc *serviceMonitor) GetPrometheusSdConfig(key string) ([]*types.Promethe
 	disc.Lock()
 	defer disc.Unlock()
 
-	svrMonitor,ok := disc.svrMonitors[key]
+	svrMonitor, ok := disc.svrMonitors[key]
 	if !ok {
 		return nil, fmt.Errorf("ServiceMonitor(%s) Not Found", key)
 	}
@@ -246,18 +246,18 @@ func (disc *serviceMonitor) OnServiceMonitorAdd(obj interface{}) {
 		blog.Errorf("cannot convert to *apismonitorv1.ServiceMonitor: %v", obj)
 		return
 	}
-	by,_ := json.Marshal(serviceM)
+	by, _ := json.Marshal(serviceM)
 	blog.Infof("recieve ServiceMonitor(%s) Data(%s) Add event", serviceM.GetUuid(), string(by))
 	disc.handlerServiceMonitorChanged(serviceM)
 }
 
-func (disc *serviceMonitor) validateServiceMonitor(serviceM *apismonitorv1.ServiceMonitor)bool{
-	if len(serviceM.Spec.Endpoints)==0 {
+func (disc *serviceMonitor) validateServiceMonitor(serviceM *apismonitorv1.ServiceMonitor) bool {
+	if len(serviceM.Spec.Endpoints) == 0 {
 		blog.Errorf("ServiceMonitor(%s) len(Endpoints)==0, then ignore it", serviceM.GetUuid())
 		return false
 	}
 
-	if len(serviceM.Spec.Selector.MatchLabels)==0 {
+	if len(serviceM.Spec.Selector.MatchLabels) == 0 {
 		blog.Errorf("ServiceMonitor(%s) len(Selector.MatchLabels)==0, then ignore it", serviceM.GetUuid())
 		return false
 	}
@@ -272,35 +272,35 @@ func (disc *serviceMonitor) OnServiceMonitorUpdate(old, cur interface{}) {
 		blog.Errorf("cannot convert to *apismonitorv1.ServiceMonitor: %v", cur)
 		return
 	}
-	by,_ := json.Marshal(serviceM)
+	by, _ := json.Marshal(serviceM)
 	blog.Infof("recieve ServiceMonitor(%s) Data(%s) Update event", serviceM.GetUuid(), string(by))
 	disc.handlerServiceMonitorChanged(serviceM)
 }
 
-func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1.ServiceMonitor){
+func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1.ServiceMonitor) {
 	if !disc.validateServiceMonitor(serviceM) {
 		return
 	}
 	o := &serviceEndpoint{
-		serviceM: serviceM,
+		serviceM:  serviceM,
 		endpoints: make(map[string]*apisbkbcsv2.BcsEndpoint),
-		cPorts: make(map[string]apismonitorv1.Endpoint),
+		cPorts:    make(map[string]apismonitorv1.Endpoint),
 	}
-	for _,endpoint :=range serviceM.Spec.Endpoints {
+	for _, endpoint := range serviceM.Spec.Endpoints {
 		o.cPorts[endpoint.Port] = endpoint
-		blog.Infof("ServiceMonitor(%s) have endpoint(%s:%s)",serviceM.GetUuid(), endpoint.Port, endpoint.Path)
+		blog.Infof("ServiceMonitor(%s) have endpoint(%s:%s)", serviceM.GetUuid(), endpoint.Port, endpoint.Path)
 	}
 	rms := labels.NewSelector()
-	for _,o :=range serviceM.GetSelector() {
+	for _, o := range serviceM.GetSelector() {
 		rms.Add(o)
 	}
-	endpoints,err := disc.endpointLister.BcsEndpoints(serviceM.Namespace).List(rms)
-	if err!=nil {
+	endpoints, err := disc.endpointLister.BcsEndpoints(serviceM.Namespace).List(rms)
+	if err != nil {
 		blog.Errorf("ServiceMonitor(%s) get Endpoints failed: %s", serviceM.GetUuid(), err.Error())
 		return
 	}
-	for _,v :=range endpoints {
-		if !serviceM.Match(v.Labels){
+	for _, v := range endpoints {
+		if !serviceM.Match(v.Labels) {
 			blog.Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), v.GetUuid())
 			continue
 		}
@@ -335,9 +335,9 @@ func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
 		blog.Errorf("cannot convert to *apisbkbcsv2.BcsEndpoint: %v", obj)
 		return
 	}
-	by,_ := json.Marshal(endpoint)
+	by, _ := json.Marshal(endpoint)
 	blog.Infof("recieve BcsEndpoint(%s) Data(%s) Add event", endpoint.GetUuid(), string(by))
-	for _,sm :=range disc.svrMonitors {
+	for _, sm := range disc.svrMonitors {
 		serviceM := sm.serviceM
 		if !serviceM.Match(endpoint.Labels) {
 			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
@@ -369,10 +369,10 @@ func (disc *serviceMonitor) OnEndpointsUpdate(old, cur interface{}) {
 		blog.V(3).Infof("OnEndpointsUpdate BcsEndpoint(%s) don't change", oldEndpoint.GetUuid())
 		return
 	}
-	by,_ := json.Marshal(curEndpoint)
+	by, _ := json.Marshal(curEndpoint)
 	blog.Infof("recieve BcsEndpoint(%s) Data(%s) Update event", curEndpoint.GetUuid(), string(by))
 
-	for _,sm :=range disc.svrMonitors {
+	for _, sm := range disc.svrMonitors {
 		serviceM := sm.serviceM
 		if !serviceM.Match(curEndpoint.Labels) {
 			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), curEndpoint.GetUuid())
@@ -387,18 +387,18 @@ func (disc *serviceMonitor) OnEndpointsUpdate(old, cur interface{}) {
 	}
 }
 
-func checkEndpointsChanged(old, cur commtypes.BcsEndpoint)bool{
-	if len(old.Endpoints)!=len(cur.Endpoints) {
+func checkEndpointsChanged(old, cur commtypes.BcsEndpoint) bool {
+	if len(old.Endpoints) != len(cur.Endpoints) {
 		return true
 	}
 	endpoints := make(map[string]bool)
-	for _,in := range old.Endpoints {
+	for _, in := range old.Endpoints {
 		endpoints[in.ContainerIP] = false
 	}
-	for _,in := range cur.Endpoints {
+	for _, in := range cur.Endpoints {
 		endpoints[in.ContainerIP] = true
 	}
-	for k,v :=range endpoints {
+	for k, v := range endpoints {
 		if !v {
 			blog.Infof("BcsEndpoint(%s) ContainerIP(%s) changed", k)
 			return true
@@ -415,7 +415,7 @@ func (disc *serviceMonitor) OnEndpointsDelete(obj interface{}) {
 		return
 	}
 	blog.Infof("recieve BcsEndpoint(%s) Delete event", endpoint.GetUuid())
-	for _,sm :=range disc.svrMonitors {
+	for _, sm := range disc.svrMonitors {
 		serviceM := sm.serviceM
 		if !serviceM.Match(endpoint.Labels) {
 			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
@@ -429,6 +429,3 @@ func (disc *serviceMonitor) OnEndpointsDelete(obj interface{}) {
 		go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
 	}
 }
-
-
-

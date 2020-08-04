@@ -102,7 +102,7 @@ func (n *NetworkDetection) Start() error {
 	}
 	//new mesos platform
 	conf := &mesosdriver.Config{
-		ZkAddr: n.conf.BcsZk,
+		ZkAddr:     n.conf.BcsZk,
 		ClientCert: n.conf.ClientCert,
 	}
 	n.platform, err = mesosdriver.NewMesosDriverClient(conf)

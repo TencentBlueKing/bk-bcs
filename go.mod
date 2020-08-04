@@ -55,7 +55,7 @@ require (
 	github.com/fsouza/go-dockerclient v1.3.1
 	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-logr/logr v0.2.0 // indirect
+	github.com/go-logr/logr v0.1.0 // indirect
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/go-openapi/analysis v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
@@ -75,7 +75,7 @@ require (
 	github.com/google/cadvisor v0.32.0
 	github.com/google/go-cmp v0.4.0
 	github.com/google/go-querystring v1.0.0
-	github.com/googleapis/gnostic v0.4.2 // indirect
+	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
@@ -161,7 +161,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.0.0-20181126155829-0cd23ebeb688
 	k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
 	k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
-	k8s.io/kube-openapi v0.0.0-20200615155156-dffdd1682719 // indirect
+	k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
 	k8s.io/kubernetes v1.14.10
 	k8s.io/utils v0.0.0-20190923111123-69764acb6e8e // indirect
 	sigs.k8s.io/controller-runtime v0.1.9
