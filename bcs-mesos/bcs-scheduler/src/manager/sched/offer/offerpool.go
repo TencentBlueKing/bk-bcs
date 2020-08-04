@@ -109,7 +109,7 @@ type innerOffer struct {
 	id       int64
 	offerId  string
 	hostname string
-	offerIp string
+	offerIp  string
 
 	isValid     bool
 	createdTime int64
@@ -439,15 +439,15 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		}
 		//calculate offer point
 		//point, (cpu-allocated/cpu)+(mem-allocated/mem)
-		offerIp,_ := p.getOfferIp(o)
+		offerIp, _ := p.getOfferIp(o)
 		var point float64
-		agent,err := p.store.FetchAgent(offerIp)
-		if err!=nil {
+		agent, err := p.store.FetchAgent(offerIp)
+		if err != nil {
 			blog.Errorf("Fetch Agent %s failed: %s, and decline offer", offerIp, err.Error())
 			p.scheduler.UpdateMesosAgents()
 			p.declineOffer(o)
 			continue
-		}else {
+		} else {
 			agentinfo := agent.GetAgentInfo()
 			point = cpu/agentinfo.CpuTotal + mem/agentinfo.MemTotal
 			blog.Infof("offer %s point=Cpu(%f/%f)+Mem(%f/%f)=%f", offerIp, cpu, agentinfo.CpuTotal, mem, agentinfo.MemTotal, point)

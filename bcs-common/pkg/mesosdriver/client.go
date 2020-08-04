@@ -85,7 +85,7 @@ func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 }
 
 //update agent external resources
-func (m *MesosDriverClient) UpdateAgentExtendedResources(clusterId string,er *commtypes.ExtendedResource) error {
+func (m *MesosDriverClient) UpdateAgentExtendedResources(clusterId string, er *commtypes.ExtendedResource) error {
 	by, _ := json.Marshal(er)
 	_, err := m.requestMesosApiserver(clusterId, http.MethodPut, "agentsettings/extendedresource", by)
 	if err != nil {
