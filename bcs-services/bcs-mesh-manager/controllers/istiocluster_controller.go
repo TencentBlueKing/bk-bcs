@@ -18,16 +18,16 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/helmclient"
 
+	"k8s.io/klog"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	restclient "k8s.io/client-go/rest"
-	corev1 "k8s.io/client-go/listers/core/v1"
-	appsv1 "k8s.io/client-go/listers/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -46,15 +46,6 @@ func NewIstioClusterReconciler()*IstioClusterReconciler{
 
 }
 
-type istioClusterManager struct {
-	istioCluster *meshv1.IstioCluster
-	kubeconfig *restclient.Config
-	//pod Lister
-	podLister corev1.PodLister
-	//deployment Lister
-	deploymentLister appsv1.DeploymentLister
-}
-
 func (r *IstioClusterReconciler) init(){
 
 }
@@ -66,7 +57,38 @@ func (r *IstioClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	_ = context.Background()
 	_ = r.Log.WithValues("istiocluster", req.NamespacedName)
 
-	// your logic here
+	istioCluster := &meshv1.IstioCluster{}
+	err := r.Client.Get(context.TODO(), req.NamespacedName, istioCluster)
+	if err!=nil {
+		if errors.IsNotFound(err) {
+			klog.Infof("IstioCluster %s is actually deleted", req.String())
+			return ctrl.Result{}, nil
+		}
+
+		klog.Errorf("Get IstioCluster %s failed: %s", req.String(), err.Error())
+		return ctrl.Result{RequeueAfter: time.Second*3}, err
+	}
+	finalizer := "istiocluster.finalizers.bkbcs.tencent.com"
+	//in deleting
+	if !istioCluster.ObjectMeta.DeletionTimestamp.IsZero() {
+		klog.Infof("IstioCluster %s in deleting, and DeletionTimestamp %s", req.String(), istioCluster.DeletionTimestamp.String())
+		if containsString(istioCluster.ObjectMeta.Finalizers, finalizer) {
+			//recovery fundpool
+			if err := r.recoveryFundPools(supply); err != nil {
+				return ctrl.Result{RequeueAfter: time.Second*3}, err
+			}
+			// delete finalizers
+			istioCluster.ObjectMeta.Finalizers = removeString(istioCluster.ObjectMeta.Finalizers, finalizer)
+			if err := r.Update(context.Background(), istioCluster); err != nil {
+				return ctrl.Result{RequeueAfter: time.Second*3}, err
+			}
+		}
+	}
+
+	//append finalizer
+	if !containsString(istioCluster.ObjectMeta.Finalizers, finalizer) {
+		istioCluster.ObjectMeta.Finalizers = append(istioCluster.ObjectMeta.Finalizers, finalizer)
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -75,4 +97,23 @@ func (r *IstioClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&meshv1.IstioCluster{}).
 		Complete(r)
+}
+
+func containsString(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+func removeString(slice []string, s string) (result []string) {
+	for _, item := range slice {
+		if item == s {
+			continue
+		}
+		result = append(result, item)
+	}
+	return
 }

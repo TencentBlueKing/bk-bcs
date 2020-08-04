@@ -38,7 +38,33 @@ type IstioClusterSpec struct {
 type IstioClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Individual status of each component controlled by the operator. The map key is the name of the component.
+	ComponentStatus      map[string]*InstallStatus_VersionStatus `json:"componentStatus,omitempty"`
 }
+
+// VersionStatus is the status and version of a component.
+type InstallStatus_VersionStatus struct {
+	Version              string               `json:"version,omitempty"`
+	Status               InstallStatus_Status `json:"status,omitempty"`
+	Error                string               `json:"error,omitempty"`
+}
+
+// Status describes the current state of a component.
+type InstallStatus_Status string
+
+const (
+	// Component is not present.
+	InstallStatus_NONE InstallStatus_Status = "NONE"
+	// Component is being updated to a different version.
+	InstallStatus_UPDATING InstallStatus_Status = "UPDATING"
+	// Controller has started but not yet completed reconciliation loop for the component.
+	InstallStatus_RECONCILING InstallStatus_Status = "RECONCILING"
+	// Component is healthy.
+	InstallStatus_HEALTHY InstallStatus_Status = "HEALTHY"
+	// Component is in an error state.
+	InstallStatus_ERROR InstallStatus_Status = "ERROR"
+)
 
 // +kubebuilder:object:root=true
 
