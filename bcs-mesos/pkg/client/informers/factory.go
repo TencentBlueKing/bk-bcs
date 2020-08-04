@@ -16,13 +16,14 @@
 package informers
 
 import (
-	bkbcs "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs"
-	internalinterfaces "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	reflect "reflect"
 	sync "sync"
 	time "time"
 
+	bkbcs "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/internalinterfaces"
+	monitor "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/monitor"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -170,8 +171,13 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Bkbcs() bkbcs.Interface
+	Monitor() monitor.Interface
 }
 
 func (f *sharedInformerFactory) Bkbcs() bkbcs.Interface {
 	return bkbcs.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Monitor() monitor.Interface {
+	return monitor.New(f, f.namespace, f.tweakListOptions)
 }
