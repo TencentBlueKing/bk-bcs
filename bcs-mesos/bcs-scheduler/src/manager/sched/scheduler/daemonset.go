@@ -99,10 +99,9 @@ func (s *Scheduler) checkDaemonsetPod(daemon *types.BcsDaemonset) {
 //if build taskgroup return true, then return false
 func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIp string) bool {
 	//if daemonset don't have any pod, return false
-	if len(daemon.Pods) <= 3 {
+	if len(daemon.Pods) <= 0 {
 		return false
 	}
-	return true
 
 	for podId, _ := range daemon.Pods {
 		pod, err := s.store.FetchTaskGroup(podId)
