@@ -19,12 +19,16 @@ package controllers
 import (
 	"context"
 
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/helmclient"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	restclient "k8s.io/client-go/rest"
+	corev1 "k8s.io/client-go/listers/core/v1"
+	appsv1 "k8s.io/client-go/listers/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	meshv1 "github.com/Tencent/bk-bcs/api/v1"
 )
 
 // IstioClusterReconciler reconciles a IstioCluster object
@@ -32,9 +36,26 @@ type IstioClusterReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+
+	//helm client
+	helm helmclient.HelmClient
+	//
 }
 
 func NewIstioClusterReconciler()*IstioClusterReconciler{
+
+}
+
+type istioClusterManager struct {
+	istioCluster *meshv1.IstioCluster
+	kubeconfig *restclient.Config
+	//pod Lister
+	podLister corev1.PodLister
+	//deployment Lister
+	deploymentLister appsv1.DeploymentLister
+}
+
+func (r *IstioClusterReconciler) init(){
 
 }
 
