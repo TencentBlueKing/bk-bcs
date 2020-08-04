@@ -19,7 +19,8 @@ import (
 	clientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2"
 	fakebkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2/fake"
-
+	monitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/monitor/v1"
+	fakemonitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/monitor/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -77,4 +78,14 @@ func (c *Clientset) BkbcsV2() bkbcsv2.BkbcsV2Interface {
 // Bkbcs retrieves the BkbcsV2Client
 func (c *Clientset) Bkbcs() bkbcsv2.BkbcsV2Interface {
 	return &fakebkbcsv2.FakeBkbcsV2{Fake: &c.Fake}
+}
+
+// MonitorV1 retrieves the MonitorV1Client
+func (c *Clientset) MonitorV1() monitorv1.MonitorV1Interface {
+	return &fakemonitorv1.FakeMonitorV1{Fake: &c.Fake}
+}
+
+// Monitor retrieves the MonitorV1Client
+func (c *Clientset) Monitor() monitorv1.MonitorV1Interface {
+	return &fakemonitorv1.FakeMonitorV1{Fake: &c.Fake}
 }

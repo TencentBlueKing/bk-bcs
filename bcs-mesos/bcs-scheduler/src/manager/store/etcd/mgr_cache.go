@@ -621,6 +621,15 @@ func listCacheVersions(runAs, versionId string) ([]*types.Version, error) {
 	return versions, nil
 }
 
+// delete version in cache
+func deleteCacheVersion(runAs, versionId string) error {
+	cacheMgr.mapLock.Lock()
+	delete(cacheMgr.Versions, fmt.Sprintf("%s.%s", runAs, versionId))
+	blog.Infof("delete cache version(%s)", fmt.Sprintf("%s.%s", runAs, versionId))
+	cacheMgr.mapLock.Unlock()
+	return nil
+}
+
 //save application in cache
 func saveCacheApplication(runAs, appID string, obj *types.Application) error {
 	app := obj.DeepCopy()
