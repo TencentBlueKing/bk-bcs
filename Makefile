@@ -92,17 +92,14 @@ client:pre
 	cp -R ./install/conf/bcs-services/bcs-client ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./bcs-services/bcs-client/cmd/main.go
 
-dns:pre
+dns:
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-dns ${PACKAGEPATH}/bcs-mesos-master
+	cp bcs-dns ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
-	mkdir -p vendor/github.com/coredns/coredns/
-	cp -r ${GOPATH}/pkg/mod/github.com/coredns/coredns\@v1.3.0/* vendor/github.com/coredns/coredns/
-	cp bcs-services/bcs-dns/plugin.cfg vendor/github.com/coredns/coredns/
-	cd vendor/github.com/coredns/coredns && make gen && cd -
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service bk-bcs/vendor/github.com/coredns/coredns
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns bk-bcs/vendor/github.com/coredns/coredns
+	cp bcs-dns ${PACKAGEPATH}/bcs-services/bcs-dns-service
+	rm -f bcs-dns
 
 health:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
