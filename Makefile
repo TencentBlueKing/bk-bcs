@@ -96,10 +96,9 @@ dns:
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-dns ${PACKAGEPATH}/bcs-mesos-master
-	cp bcs-dns ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
-	cp bcs-dns ${PACKAGEPATH}/bcs-services/bcs-dns-service
-	rm -f bcs-dns
+	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service coredns.go
+	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns coredns.go
 
 health:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
