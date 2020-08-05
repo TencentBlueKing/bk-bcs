@@ -54,4 +54,5 @@ func setConfig(conf *config.Config, op *options.PrometheusControllerOption) {
 	conf.Kubeconfig = op.Kubeconfig
 	conf.ServiceModules = op.ServiceModules
 	conf.ClusterModules = op.ClusterModules
+	conf.EnableServiceMonitor = op.EnableServiceMonitor
 }

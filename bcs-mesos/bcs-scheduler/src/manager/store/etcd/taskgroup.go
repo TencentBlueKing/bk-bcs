@@ -62,6 +62,9 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 		v2Taskgroup, err = client.Create(v2Taskgroup)
 	}
 	if err != nil {
+		if store.ObjectNotLatestErr(err) {
+			store.syncTaskgroupInCache(taskGroup.ID)
+		}
 		return err
 	}
 
@@ -81,6 +84,16 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 		blog.Warnf("save taskgroup(%s) delay(%d)", taskGroup.ID, delay)
 	}
 	return nil
+}
+
+func (store *managerStore) syncTaskgroupInCache(taskgroupId string) {
+	taskgroup, err := store.FetchDBTaskGroup(taskgroupId)
+	if err != nil {
+		blog.Errorf("fetch taskgroup(%s) in kube-apiserver failed: %s", taskgroupId, err.Error())
+		return
+	}
+
+	saveCacheTaskGroup(taskgroup)
 }
 
 //list mesos cluster taskgroups, include: application、deployment、daemonset...

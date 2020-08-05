@@ -17,8 +17,9 @@ package informers
 
 import (
 	"fmt"
-	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
 
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	v1 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/monitor/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -86,6 +87,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().TaskGroups().Informer()}, nil
 	case v2.SchemeGroupVersion.WithResource("versions"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Bkbcs().V2().Versions().Informer()}, nil
+
+		// Group=monitor.tencent.com, Version=v1
+	case v1.SchemeGroupVersion.WithResource("servicemonitors"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitor().V1().ServiceMonitors().Informer()}, nil
 
 	}
 

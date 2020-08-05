@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -26,6 +25,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	simplejson "github.com/bitly/go-simplejson"
 	restful "github.com/emicklei/go-restful"
@@ -130,6 +131,7 @@ func (proxy *kubeProxy) customResourceNamespaceValidate(req *http.Request) {
 	if req.Method != http.MethodPost {
 		return
 	}
+	//todo(DeveloperJim): fix panic when all body is empty
 	//validate namespace exist
 	allBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -145,7 +147,7 @@ func (proxy *kubeProxy) customResourceNamespaceValidate(req *http.Request) {
 	}
 	jsonObj, err := simplejson.NewJson(allBytes)
 	if err != nil {
-		blog.Errorf("Custom Resource POST data is not expected json, %s. URL: %s", err.Error(), req.URL.String())
+		blog.Errorf("Custom Resource POST data is not expected json, %s. URL: %s. origin data: %s", err.Error(), req.URL.String(), string(allBytes))
 		return
 	}
 	meta := jsonObj.Get("metadata")

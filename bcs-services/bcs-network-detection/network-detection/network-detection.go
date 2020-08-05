@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/mesosdriver"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -64,8 +65,6 @@ type NetworkDetection struct {
 type ContainerPlatform interface {
 	//get cluster all nodes
 	GetNodes(clusterid string) ([]*types.NodeInfo, error)
-	//deploy detection container in cluster
-	DeployDetectionContainer(clusterid, definition string) error
 	//deploy application
 	//deploy is defination json
 	CeateDeployment(clusterid string, deploy []byte) error
@@ -102,7 +101,11 @@ func (n *NetworkDetection) Start() error {
 		return err
 	}
 	//new mesos platform
-	n.platform, err = NewMesosPlatform(n.conf)
+	conf := &mesosdriver.Config{
+		ZkAddr:     n.conf.BcsZk,
+		ClientCert: n.conf.ClientCert,
+	}
+	n.platform, err = mesosdriver.NewMesosDriverClient(conf)
 	if err != nil {
 		return err
 	}

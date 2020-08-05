@@ -112,14 +112,7 @@ func (mgr *OperatorMgr) SendMsg(msg *OperatorMsg) error {
 }*/
 
 func (mgr *OperatorMgr) UpdateMesosAgents() {
-
-	if mgr.openCheck == false {
-		blog.Info("update agents: opencheck is false, do nothing")
-		return
-	}
-
 	blog.Info("update agents: begin")
-
 	call := &master.Call{
 		Type: master.Call_GET_AGENTS.Enum(),
 	}
@@ -148,9 +141,6 @@ func (mgr *OperatorMgr) UpdateMesosAgents() {
 		return
 	}
 
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//blog.Info("master response body:%s\n", string(body))
-
 	var response master.Response
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		blog.Error("update agents: Decode response failed: %s", err)
@@ -177,7 +167,7 @@ func (mgr *OperatorMgr) UpdateMesosAgents() {
 			continue
 		}
 
-		blog.V(3).Infof("update agents: ===>agent[%d]: name(%s), info(%s)", index, innerIP, oneAgent.String())
+		blog.Infof("update agents: ===>agent[%d]: name(%s), info(%s)", index, innerIP, oneAgent.String())
 		dbAgent, dbErr := mgr.store.FetchAgent(innerIP)
 		if dbAgent == nil && dbErr == store.ErrNoFound {
 			blog.Infof("update agents: new agent(%s) come to online", oneAgent.GetAgentInfo().GetHostname())
@@ -191,11 +181,11 @@ func (mgr *OperatorMgr) UpdateMesosAgents() {
 		if err != nil {
 			blog.Error("update agents: save agent(%s) to db err:%s", innerIP, err.Error())
 		} else {
-			blog.V(3).Infof("update agents: save agent(%s) to db succ", innerIP)
+			blog.Infof("update agents: save agent(%s) to db succ", innerIP)
 		}
 	}
 
-	agentNodes, err := mgr.store.ListAgentNodes()
+	/*agentNodes, err := mgr.store.ListAgentNodes()
 	if err != nil {
 		blog.Error("update agents: fail to list agent nodes, err:%s", err.Error())
 		return
@@ -229,8 +219,8 @@ func (mgr *OperatorMgr) UpdateMesosAgents() {
 		} else {
 			blog.V(3).Infof("update agents: agent[%d]:%s is online now", index, agentNode)
 		}
-	}
+	}*/
 
-	blog.Info("update agents: done ==> sync time(%d), mesos num(%d), DBnum(%d), offlineNum(%d) ", currTime, currSyncNum, currDBnum, offlineNum)
+	blog.Info("update agents: done ==> sync time(%d), mesos num(%d) ", currTime, currSyncNum)
 	return
 }

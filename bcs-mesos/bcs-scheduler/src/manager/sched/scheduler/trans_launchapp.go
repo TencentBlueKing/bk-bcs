@@ -42,9 +42,7 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 	startedApp := time.Now()
 	var schedulerNumber int64
 	for {
-		schedulerNumber++
 		blog.Infof("transaction %s launch(%s.%s) run check", transaction.ID, runAs, appID)
-
 		//check begin
 		if transaction.CreateTime+transaction.DelayTime > time.Now().Unix() {
 			blog.V(3).Infof("transaction %s launch(%s.%s) delaytime(%d), cannot do at now",
@@ -52,6 +50,7 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 			time.Sleep(3 * time.Second)
 			continue
 		}
+		schedulerNumber++
 
 		//check doing
 		opData := transaction.OpData.(*TransAPILaunchOpdata)
@@ -69,11 +68,10 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 			isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "") &&
 				s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 			if isFit == true {
+				//when build new taskgroup, schedulerNumber==0
+				schedulerNumber = 0
 				blog.V(3).Infof("transaction %s fit offer(%d) %s||%s ", transaction.ID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 				if s.UseOffer(curOffer) == true {
-					//when build new taskgroup, schedulerNumber==0
-					schedulerNumber = 0
-
 					blog.Info("transaction %s launch(%s.%s) use offer(%d) %s||%s", transaction.ID, runAs, appID, offerIdx, offer.GetHostname(), *(offer.Id.Value))
 					launchedNum := opData.LaunchedNum
 					s.doLaunchTrans(transaction, curOffer, startedTaskgroup)
@@ -92,14 +90,10 @@ func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
 		}
 
 		// when scheduler taskgroup number>=10, then report resources insufficient message
-		if schedulerNumber == 10 {
-			s.store.LockApplication(runAs + "." + appID)
-			app, _ := s.store.FetchApplication(runAs, appID)
-			if app != nil {
-				app.Message = "don't have fit resources to build taskgroup"
-				s.store.SaveApplication(app)
-			}
-			s.store.UnLockApplication(runAs + "." + appID)
+		if schedulerNumber >= 10 {
+			blog.Warn("transaction %s launch(%s.%s) timeout", transaction.ID, runAs, appID)
+			transaction.Status = types.OPERATION_STATUS_TIMEOUT
+			goto run_end
 		}
 
 		//check timeout
