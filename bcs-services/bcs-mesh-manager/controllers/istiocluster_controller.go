@@ -21,7 +21,6 @@ import (
 	"time"
 
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/helmclient"
 
 	"k8s.io/klog"
 	"github.com/go-logr/logr"
@@ -37,8 +36,6 @@ type IstioClusterReconciler struct {
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 
-	//helm client
-	helm helmclient.HelmClient
 	//
 }
 

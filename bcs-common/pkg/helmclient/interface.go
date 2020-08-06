@@ -15,5 +15,6 @@ package helmclient
 
 type HelmClient interface {
 	//install
-	InstallChart()error
+	//setParam --set hub=docker.io/istio tag=1.5.4
+	InstallChart(setParam map[string]string)error
 }
