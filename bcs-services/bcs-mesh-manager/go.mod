@@ -8,6 +8,7 @@ require (
 	github.com/kubernetes-client/go v0.0.0-20200222171647-9dac5e4c5400
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
+	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/apiextensions-apiserver v0.17.2
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v11.0.0+incompatible

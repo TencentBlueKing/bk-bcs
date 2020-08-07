@@ -17,14 +17,15 @@ limitations under the License.
 package v1
 
 import (
+	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// IstioClusterSpec defines the desired state of IstioCluster
-type IstioClusterSpec struct {
+// MeshClusterSpec defines the desired state of MeshCluster
+type MeshClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -32,10 +33,19 @@ type IstioClusterSpec struct {
 	Version string `json:"version,omitempty"`
 	//ClusterId
 	ClusterId string `json:"clusterId,omitempty"`
+	//MeshType, default ISTIO
+	Type MeshType `json:"type,omitempty"`
 }
 
-// IstioClusterStatus defines the observed state of IstioCluster
-type IstioClusterStatus struct {
+//mesh type: istio、tbuspp
+type MeshType string
+const (
+	MeshIstio MeshType = "ISTIO"
+	MeshTbuspp MeshType = "TBUSPP"
+)
+
+// MeshClusterStatus defines the observed state of MeshCluster
+type MeshClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -45,9 +55,10 @@ type IstioClusterStatus struct {
 
 // VersionStatus is the status and version of a component.
 type InstallStatus_VersionStatus struct {
-	Version              string               `json:"version,omitempty"`
+	Name                 string               `json:"name,omitempty"`
+	Namespace            string               `json:"namespace,omitempty"`
 	Status               InstallStatus_Status `json:"status,omitempty"`
-	Error                string               `json:"error,omitempty"`
+	Message              string               `json:"message,omitempty"`
 }
 
 // Status describes the current state of a component.
@@ -56,36 +67,42 @@ type InstallStatus_Status string
 const (
 	// Component is not present.
 	InstallStatus_NONE InstallStatus_Status = "NONE"
-	// Component is being updated to a different version.
-	InstallStatus_UPDATING InstallStatus_Status = "UPDATING"
-	// Controller has started but not yet completed reconciliation loop for the component.
-	InstallStatus_RECONCILING InstallStatus_Status = "RECONCILING"
-	// Component is healthy.
-	InstallStatus_HEALTHY InstallStatus_Status = "HEALTHY"
-	// Component is in an error state.
-	InstallStatus_ERROR InstallStatus_Status = "ERROR"
+	// Component is deploying now,
+	InstallStatus_DEPLOY InstallStatus_Status = "DEPLOY"
+	// Component is starting now,
+	InstallStatus_STARTING InstallStatus_Status = "STARTING"
+	// Component is running.
+	InstallStatus_RUNNING InstallStatus_Status = "RUNNING"
+	// Component is failed.
+	InstallStatus_FAILED InstallStatus_Status = "FAILED"
+	// Component is in updating.
+	InstallStatus_UPDATE InstallStatus_Status = "UPDATE"
 )
 
 // +kubebuilder:object:root=true
 
-// IstioCluster is the Schema for the istioclusters API
-type IstioCluster struct {
+// MeshCluster is the Schema for the MeshClusters API
+type MeshCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   IstioClusterSpec   `json:"spec,omitempty"`
-	Status IstioClusterStatus `json:"status,omitempty"`
+	Spec   MeshClusterSpec   `json:"spec,omitempty"`
+	Status MeshClusterStatus `json:"status,omitempty"`
+}
+
+func (m *MeshCluster) GetUuid()string{
+	return fmt.Sprintf("%s.%s",)
 }
 
 // +kubebuilder:object:root=true
 
-// IstioClusterList contains a list of IstioCluster
-type IstioClusterList struct {
+// MeshClusterList contains a list of MeshCluster
+type MeshClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []IstioCluster `json:"items"`
+	Items           []MeshCluster `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&IstioCluster{}, &IstioClusterList{})
+	SchemeBuilder.Register(&MeshCluster{}, &MeshClusterList{})
 }

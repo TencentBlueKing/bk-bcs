@@ -66,12 +66,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.IstioClusterReconciler{
+	if err = (&controllers.MeshClusterReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("IstioCluster"),
+		Log:    ctrl.Log.WithName("controllers").WithName("MeshCluster"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "IstioCluster")
+		setupLog.Error(err, "unable to create controller", "controller", "MeshCluster")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
