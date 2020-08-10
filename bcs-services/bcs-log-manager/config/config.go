@@ -4,9 +4,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 )
 
-type Config struct {
+type ManagerConfig struct {
 	CollectionConfigs []CollectionConfig
 	BcsApiConfig      bcsapi.Config
+	CAFile            string
 }
 
 // CollectionConfig defines some customed infomation of log collection.
@@ -18,6 +19,7 @@ type CollectionConfig struct {
 	ClusterID    string `json:"cluster_id"`
 }
 
-func NewConfig() *Config {
-	return &Config{}
+type ControllerConfig struct {
+	Credential *bcsapi.ClusterCredential
+	CAFile     string
 }

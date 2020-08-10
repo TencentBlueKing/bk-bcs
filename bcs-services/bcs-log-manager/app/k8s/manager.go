@@ -10,13 +10,15 @@ import (
 
 type LogManager struct {
 	userManagerCli *bcsapi.UserManagerCli
-	configs        *config.Config
+	configs        *config.ManagerConfig
 	controllers    map[string]*ClusterLogController
+	caFile         string
 }
 
-func NewManager(conf *config.Config) *LogManager {
+func NewManager(conf *config.ManagerConfig) *LogManager {
 	manager := &LogManager{
 		configs: conf,
+		caFile:  conf.CAFile,
 	}
 	cli := bcsapi.NewClient(&conf.BcsApiConfig)
 	manager.userManagerCli = cli.UserManager()
@@ -42,7 +44,7 @@ func (m *LogManager) run() {
 				m.controllers[cc.ClusterID].SetTick(cnt)
 				continue
 			}
-			controller, err := NewClusterLogController(cc)
+			controller, err := NewClusterLogController(&config.ControllerConfig{Credential: cc, CAFile: m.caFile})
 			if err != nil {
 				blog.Errorf("Create Cluster Log Controller failed, Cluster Id: %s, Cluster Domain: %s, error info: %s", cc.ClusterID, cc.ClusterDomain, err.Error())
 				continue

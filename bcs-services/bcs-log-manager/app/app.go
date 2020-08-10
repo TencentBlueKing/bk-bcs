@@ -1,7 +1,6 @@
 package app
 
 import (
-	"crypto/tls"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -12,7 +11,7 @@ import (
 )
 
 func Run(op *options.LogManagerOption) error {
-	conf := &config.Config{}
+	conf := &config.ManagerConfig{}
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
@@ -32,15 +31,11 @@ func Run(op *options.LogManagerOption) error {
 	return nil
 }
 
-func setManagerConfig(op *options.LogManagerOption, conf *config.Config) error {
+func setManagerConfig(op *options.LogManagerOption, conf *config.ManagerConfig) error {
 	conf.CollectionConfigs = op.CollectionConfigs
-	tlsconf, err := tls.LoadX509KeyPair(op.ClientCertFile, op.ClientKeyFile)
-	if err != nil {
-		return err
-	}
 	conf.BcsApiConfig.Host = op.BcsApiHost
 	conf.BcsApiConfig.AuthToken = op.AuthToken
 	conf.BcsApiConfig.Gateway = op.Gateway
-	conf.BcsApiConfig.TLSConfig = tlsconf
+	conf.CAFile = op.ClientCertFile
 	return nil
 }
