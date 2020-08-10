@@ -4,6 +4,7 @@ go 1.14
 
 replace (
 	github.com/Tencent/bk-bcs => ../../bk-bcs
+	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => ../bcs-k8s/kubedeprecated
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../bcs-k8s/kubernetes
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 => ../bcs-mesos/mesosv2
 	github.com/Tencent/bk-bcs/bcs-network => ./
@@ -16,6 +17,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go v1.16.11

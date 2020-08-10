@@ -1,0 +1,24 @@
+# permissions for end users to edit clbingresses.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clbingress-editor-role
+rules:
+- apiGroups:
+  - clb.bmsf.tencent.com
+  resources:
+  - clbingresses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - clb.bmsf.tencent.com
+  resources:
+  - clbingresses/status
+  verbs:
+  - get

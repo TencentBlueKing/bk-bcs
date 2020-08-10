@@ -17,7 +17,7 @@ package versioned
 import (
 	"fmt"
 
-	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/networkextension/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -25,19 +25,19 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	CloudV1() cloudv1.CloudV1Interface
+	NetworkextensionV1() networkextensionv1.NetworkextensionV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	cloudV1 *cloudv1.CloudV1Client
+	networkextensionV1 *networkextensionv1.NetworkextensionV1Client
 }
 
-// CloudV1 retrieves the CloudV1Client
-func (c *Clientset) CloudV1() cloudv1.CloudV1Interface {
-	return c.cloudV1
+// NetworkextensionV1 retrieves the NetworkextensionV1Client
+func (c *Clientset) NetworkextensionV1() networkextensionv1.NetworkextensionV1Interface {
+	return c.networkextensionV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -61,7 +61,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.cloudV1, err = cloudv1.NewForConfig(&configShallowCopy)
+	cs.networkextensionV1, err = networkextensionv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.cloudV1 = cloudv1.NewForConfigOrDie(c)
+	cs.networkextensionV1 = networkextensionv1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -86,7 +86,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.cloudV1 = cloudv1.New(c)
+	cs.networkextensionV1 = networkextensionv1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs
