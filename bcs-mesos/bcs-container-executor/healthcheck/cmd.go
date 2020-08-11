@@ -128,7 +128,7 @@ func (check *CommandChecker) ReCheck() bool {
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          false,
-		Cmd:          []string{"/bin/sh", "-c", check.cmd},
+		Cmd:          []string{check.cmd},
 		Container:    check.containerId,
 	}
 
