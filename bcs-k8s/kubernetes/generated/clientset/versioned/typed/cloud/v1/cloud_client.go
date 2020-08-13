@@ -22,12 +22,22 @@ import (
 
 type CloudV1Interface interface {
 	RESTClient() rest.Interface
+	CloudIPsGetter
+	CloudSubnetsGetter
 	NodeNetworksGetter
 }
 
 // CloudV1Client is used to interact with features provided by the cloud group.
 type CloudV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *CloudV1Client) CloudIPs(namespace string) CloudIPInterface {
+	return newCloudIPs(c, namespace)
+}
+
+func (c *CloudV1Client) CloudSubnets(namespace string) CloudSubnetInterface {
+	return newCloudSubnets(c, namespace)
 }
 
 func (c *CloudV1Client) NodeNetworks(namespace string) NodeNetworkInterface {

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+import "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common/common.proto";
+
+package cloudnetagent;
+
+service CloudNetagent {
+    rpc AllocIP(AllocIPReq) returns (AllocIPResp) {}
+    rpc ReleaseIP(ReleaseIPReq) returns (ReleaseIPResp) {}
+}
+
+message AllocIPReq {
+    uint64 seq          = 1;
+    string containerID  = 2;
+    string podName      = 3;
+    string podNamespace = 4;
+    string ipAddr       = 5;
+}
+
+message AllocIPResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+    string         ipAddr  = 4;
+    string         macAddr = 5;
+    int32          mask    = 6;
+    string         gateway = 7;
+}
+
+message ReleaseIPReq {
+    uint64 seq          = 1;
+    string containerID  = 2;
+    string podName      = 3;
+    string podNamespace = 4;
+    string ipAddr       = 5;
+}
+
+message ReleaseIPResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
