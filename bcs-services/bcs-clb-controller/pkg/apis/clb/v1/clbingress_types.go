@@ -244,9 +244,10 @@ type ClbStatefulSetHttpRule struct {
 
 // ClbStatefulSetRule rule for stateful Set
 type ClbStatefulSetRule struct {
-	StartPort  int `json:"startPort"`
-	StartIndex int `json:"startIndex,omitempty"`
-	EndIndex   int `json:"endIndex,omitempty"`
+	StartPort     int `json:"startPort"`
+	StartIndex    int `json:"startIndex,omitempty"`
+	EndIndex      int `json:"endIndex,omitempty"`
+	SegmentLength int `json:"segmentLength,omitempty"`
 	ClbRule
 }
 

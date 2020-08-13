@@ -114,11 +114,14 @@ func (act *UpdateAction) verify() error {
 		return errors.New("invalid params, template rules too long")
 	}
 
-	if len(act.req.Configs) == 0 && len(act.req.Template) == 0 {
-		return errors.New("invalid params, empty configs and template")
-	}
 	if len(act.req.Configs) != 0 && len(act.req.Template) != 0 {
 		return errors.New("invalid params, configs and template concurrence")
+	}
+	if len(act.req.Configs) != 0 && len(act.req.Templateid) != 0 {
+		return errors.New("invalid params, configs and templateid concurrence")
+	}
+	if len(act.req.Template) != 0 && len(act.req.Templateid) != 0 {
+		return errors.New("invalid params, template and templateid concurrence")
 	}
 	if len(act.req.Template) != 0 && len(act.req.TemplateRule) == 0 {
 		return errors.New("invalid params, empty template rules")

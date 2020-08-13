@@ -73,27 +73,6 @@ func (act *PreviewAction) Output() error {
 	return nil
 }
 
-func (act *PreviewAction) query() (pbcommon.ErrCode, string) {
-	r := &pbdatamanager.QueryCommitReq{
-		Seq:      act.req.Seq,
-		Bid:      act.req.Bid,
-		Commitid: act.req.Commitid,
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))
-	defer cancel()
-
-	logger.V(2).Infof("QueryCommit[%d]| request to datamanager QueryCommit, %+v", act.req.Seq, r)
-
-	resp, err := act.dataMgrCli.QueryCommit(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, fmt.Sprintf("request to datamanager QueryCommit, %+v", err)
-	}
-	act.commit = resp.Commit
-
-	return resp.ErrCode, resp.ErrMsg
-}
-
 func (act *PreviewAction) verify() error {
 	length := len(act.req.Bid)
 	if length == 0 {
@@ -121,17 +100,36 @@ func (act *PreviewAction) verify() error {
 	return nil
 }
 
+func (act *PreviewAction) query() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryCommitReq{
+		Seq:      act.req.Seq,
+		Bid:      act.req.Bid,
+		Commitid: act.req.Commitid,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))
+	defer cancel()
+
+	logger.V(2).Infof("QueryCommit[%d]| request to datamanager QueryCommit, %+v", act.req.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryCommit(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, fmt.Sprintf("request to datamanager QueryCommit, %+v", err)
+	}
+	act.commit = resp.Commit
+
+	return resp.ErrCode, resp.ErrMsg
+}
+
 func (act *PreviewAction) renderWithoutTemplate() (pbcommon.ErrCode, string) {
 	act.resp.Cfgslist = append(act.resp.Cfgslist, &pbcommon.Configs{
-		Bid:       act.commit.Bid,
-		Cfgsetid:  act.commit.Cfgsetid,
-		Commitid:  act.commit.Commitid,
-		Appid:     act.commit.Appid,
-		Clusterid: "",
-		Zoneid:    "",
-		Creator:   act.commit.Operator,
-		Cid:       common.SHA256(string(act.commit.Configs)),
-		Content:   act.commit.Configs,
+		Bid:      act.commit.Bid,
+		Cfgsetid: act.commit.Cfgsetid,
+		Commitid: act.commit.Commitid,
+		Appid:    act.commit.Appid,
+		Creator:  act.commit.Operator,
+		Cid:      common.SHA256(string(act.commit.Configs)),
+		Content:  act.commit.Configs,
 	})
 	return pbcommon.ErrCode_E_OK, "OK"
 }
@@ -160,82 +158,43 @@ func (act *PreviewAction) render() (pbcommon.ErrCode, string) {
 	return resp.ErrCode, resp.ErrMsg
 }
 
-// queryZone query target zone, and get the zoneid to create zone level configs.
-func (act *PreviewAction) queryZone(zoneid string) (string, error) {
-	r := &pbdatamanager.QueryZoneReq{
-		Seq:    act.req.Seq,
-		Bid:    act.req.Bid,
-		Appid:  act.commit.Appid,
-		Zoneid: zoneid,
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))
-	defer cancel()
-
-	logger.V(2).Infof("Preview[%d]| request to datamanager QueryZone, %+v", act.req.Seq, r)
-
-	resp, err := act.dataMgrCli.QueryZone(ctx, r)
-	if err != nil {
-		logger.Error("Preview[%d] request to datamanager QueryZone, %+v", act.req.Seq, err)
-		return "", err
-	}
-
-	if resp.ErrCode != pbcommon.ErrCode_E_OK {
-		return "", errors.New(resp.ErrMsg)
-	}
-	return resp.Zone.Name, nil
-}
-
-// queryCluster query target cluster, and get clusterid to create cluster level configs.
-func (act *PreviewAction) queryCluster(clusterid string) (string, map[string]string, error) {
-	r := &pbdatamanager.QueryClusterReq{
-		Seq:       act.req.Seq,
-		Bid:       act.req.Bid,
-		Appid:     act.commit.Appid,
-		Clusterid: clusterid,
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))
-	defer cancel()
-
-	logger.V(2).Infof("Preview[%d]| request to datamanager QueryCluster, %+v", act.req.Seq, r)
-
-	resp, err := act.dataMgrCli.QueryCluster(ctx, r)
-	if err != nil {
-		logger.Error("Preview[%d] request to datamanager QueryCluster, %+v", act.req.Seq, err)
-		return "", nil, err
-	}
-
-	if resp.ErrCode != pbcommon.ErrCode_E_OK {
-		return "", nil, errors.New(resp.ErrMsg)
-	}
-	// TODO: return cluster labels
-	return resp.Cluster.Name, nil, nil
-}
-
 func (act *PreviewAction) listConfigs() (pbcommon.ErrCode, string) {
-	req := &pbdatamanager.QueryConfigsListReq{
-		Seq:      act.req.Seq,
-		Bid:      act.req.Bid,
-		Cfgsetid: act.commit.Cfgsetid,
-		Commitid: act.commit.Commitid,
-		Index:    0,
-		Limit:    database.BSCPTEMPLATEBINDINGNUMLIMIT,
-	}
+	cfgsList := []*pbcommon.Configs{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))
-	defer cancel()
+	index := 0
+	for {
+		r := &pbdatamanager.QueryConfigsListReq{
+			Seq:      act.req.Seq,
+			Bid:      act.req.Bid,
+			Cfgsetid: act.commit.Cfgsetid,
+			Commitid: act.commit.Commitid,
+			Index:    int32(index),
+			Limit:    database.BSCPTEMPLATEBINDINGNUMLIMIT,
+		}
 
-	logger.V(2).Infof("QueryConfigsList[%d]| request to datmanager QueryConfigsList, %+v", req.Seq, req)
+		ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.calltimeout"))
+		defer cancel()
 
-	resp, err := act.dataMgrCli.QueryConfigsList(ctx, req)
-	if err != nil {
-		return pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, fmt.Sprintf("request to datmanager QueryConfigsList, %+v", err)
+		logger.V(2).Infof("QueryConfigsList[%d]| request to datmanager QueryConfigsList, %+v", r.Seq, r)
+
+		resp, err := act.dataMgrCli.QueryConfigsList(ctx, r)
+		if err != nil {
+			return pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, fmt.Sprintf("request to datmanager QueryConfigsList, %+v", err)
+		}
+		if resp.ErrCode != pbcommon.ErrCode_E_OK {
+			return resp.ErrCode, resp.ErrMsg
+		}
+		cfgsList = append(cfgsList, resp.Cfgslist...)
+
+		if len(resp.Cfgslist) < database.BSCPTEMPLATEBINDINGNUMLIMIT {
+			break
+		}
+
+		index += len(resp.Cfgslist)
 	}
-	if resp.ErrCode == pbcommon.ErrCode_E_OK {
-		act.resp.Cfgslist = resp.Cfgslist
-	}
-	return resp.ErrCode, resp.ErrMsg
+	act.resp.Cfgslist = cfgsList
+
+	return pbcommon.ErrCode_E_OK, ""
 }
 
 // Do do action

@@ -59,6 +59,9 @@ const (
 	// BSCPQUERYLIMIT is bk-bscp batch query count limit.
 	BSCPQUERYLIMIT = 100
 
+	// BSCPQUERYLIMITLB is bk-bscp batch query count limit for little batch.
+	BSCPQUERYLIMITLB = 10
+
 	// BSCPBATCHLIMIT is bk-bscp batch mode common limit.
 	BSCPBATCHLIMIT = 100
 
@@ -436,6 +439,32 @@ type Strategy struct {
 // TableName returns table name of t_strategy.
 func (s *Strategy) TableName() string {
 	return "t_strategy"
+}
+
+// ProcAttr is definition for t_proc_attr.
+type ProcAttr struct {
+	ID           uint64     `gorm:"column:Fid;primary_key;AUTO_INCREMENT"`
+	Cloudid      string     `gorm:"column:Fcloudid;type:varchar(64);not null;unique_index:uidx_attr"`
+	IP           string     `gorm:"column:Fip;type:varchar(32);not null;unique_index:uidx_attr"`
+	Bid          string     `gorm:"column:Fbid;type:varchar(64);not null;unique_index:uidx_attr"`
+	Appid        string     `gorm:"column:Fappid;type:varchar(64);not null;unique_index:uidx_attr"`
+	Clusterid    string     `gorm:"column:Fclusterid;type:varchar(64);not null"`
+	Zoneid       string     `gorm:"column:Fzoneid;type:varchar(64);not null"`
+	Dc           string     `gorm:"column:Fdc;type:varchar(64);not null"`
+	Labels       string     `gorm:"column:Flabels;type:longtext;not null"`
+	Path         string     `gorm:"column:Fpath;type:varchar(128);not null;unique_index:uidx_attr"`
+	Creator      string     `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy string     `gorm:"column:Flast_modify_by;type:varchar(64);not null"`
+	Memo         string     `gorm:"column:Fmemo;type:varchar(64);not null"`
+	State        int32      `gorm:"column:Fstate;index:idx_state"`
+	CreatedAt    time.Time  `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt    time.Time  `gorm:"column:Fupdate_time;index:idx_utime"`
+	DeletedAt    *time.Time `gorm:"column:Fdelete_time;index:idx_dtime"`
+}
+
+// TableName returns table name of t_proc_attr.
+func (p *ProcAttr) TableName() string {
+	return "t_proc_attr"
 }
 
 // Sharding is definition fot t_sharding.

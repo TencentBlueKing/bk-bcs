@@ -98,7 +98,7 @@ func (act *QueryAction) query() (pbcommon.ErrCode, string) {
 		MultiReleaseid: act.req.MultiReleaseid,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeoutLT"))
 	defer cancel()
 
 	logger.V(2).Infof("QueryMultiRelease[%d]| request to businessserver QueryMultiRelease, %+v", act.req.Seq, r)

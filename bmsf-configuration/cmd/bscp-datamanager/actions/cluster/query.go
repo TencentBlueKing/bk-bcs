@@ -75,6 +75,7 @@ func (act *QueryAction) Output() error {
 		LastModifyBy: act.cluster.LastModifyBy,
 		Memo:         act.cluster.Memo,
 		State:        act.cluster.State,
+		Labels:       act.cluster.Labels,
 		CreatedAt:    act.cluster.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:    act.cluster.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}

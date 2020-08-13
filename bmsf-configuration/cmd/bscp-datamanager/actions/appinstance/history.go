@@ -136,7 +136,7 @@ func (act *HistoryAction) queryAppInstances() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.AppInstance{Bid: act.req.Bid, Appid: act.req.Appid, Clusterid: act.req.Clusterid, Zoneid: act.req.Zoneid}).
 		Where(whereState).
 		Find(&act.appInstances).Error

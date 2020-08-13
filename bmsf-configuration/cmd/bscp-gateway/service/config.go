@@ -83,7 +83,7 @@ func (c *config) check() error {
 	}
 
 	c.viper.BindEnv("accessserver.calltimeout", c.envName("AS_CALL_TIMEOUT"))
-	c.viper.SetDefault("accessserver.calltimeout", 3*time.Second)
+	c.viper.SetDefault("accessserver.calltimeout", 120*time.Second)
 
 	c.viper.BindEnv("etcdCluster.endpoints", c.envName("ETCD_ENDPOINTS"))
 	if !c.viper.IsSet("etcdCluster.endpoints") {
