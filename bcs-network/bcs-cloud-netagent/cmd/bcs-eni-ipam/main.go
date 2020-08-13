@@ -23,7 +23,6 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/cni/pkg/version"
-	"github.com/spf13/pflag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
