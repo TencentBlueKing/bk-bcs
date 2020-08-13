@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -706,4 +707,28 @@ func VerifyUserPWD(input, setting string) bool {
 		return false
 	}
 	return true
+}
+
+// MergeVars merge
+func MergeVars(m1 map[string]interface{}, m2 map[string]interface{}) map[string]interface{} {
+	vars := make(map[string]interface{})
+	for k, v := range m1 {
+		vars[k] = v
+	}
+	for k, v := range m2 {
+		vars[k] = v
+	}
+	return vars
+}
+
+// DelayRandomMS delaies a random millisecond time.
+func DelayRandomMS(max int) {
+	rand.Seed(time.Now().UnixNano())
+	time.Sleep(time.Duration(rand.Intn(max)) * time.Millisecond)
+}
+
+// RandomMS returns a random millisecond time.
+func RandomMS(max int) time.Duration {
+	rand.Seed(time.Now().UnixNano())
+	return time.Duration(rand.Intn(max)) * time.Millisecond
 }

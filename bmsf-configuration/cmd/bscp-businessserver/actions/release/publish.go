@@ -123,7 +123,6 @@ func (act *PublishAction) publishPreBCSMode() (pbcommon.ErrCode, string) {
 	}
 
 	if resp.ErrCode == pbcommon.ErrCode_E_BCS_ALREADY_PUBLISHED {
-		act.isPublished = true
 		return pbcommon.ErrCode_E_OK, ""
 	}
 	return resp.ErrCode, resp.ErrMsg
@@ -148,7 +147,6 @@ func (act *PublishAction) publishPreGSEPluginMode() (pbcommon.ErrCode, string) {
 	}
 
 	if resp.ErrCode == pbcommon.ErrCode_E_GSE_ALREADY_PUBLISHED {
-		act.isPublished = true
 		return pbcommon.ErrCode_E_OK, ""
 	}
 	return resp.ErrCode, resp.ErrMsg
@@ -285,11 +283,6 @@ func (act *PublishAction) Do() error {
 			return act.Err(errCode, errMsg)
 		}
 
-		// already published.
-		if act.isPublished {
-			return nil
-		}
-
 		// make release data published.
 		if errCode, errMsg := act.publishData(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
@@ -299,17 +292,13 @@ func (act *PublishAction) Do() error {
 		if errCode, errMsg := act.publishBCSMode(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) {
+	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
+		act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
 		// gse plugin sidecar mode.
 
 		// gsecontroller publish pre.
 		if errCode, errMsg := act.publishPreGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
-		}
-
-		// already published.
-		if act.isPublished {
-			return nil
 		}
 
 		// make release data published.
@@ -321,9 +310,6 @@ func (act *PublishAction) Do() error {
 		if errCode, errMsg := act.publishGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-		// gse mode.
-		return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "not support deploy publish mode")
 	} else {
 		return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "unknow deploy type")
 	}

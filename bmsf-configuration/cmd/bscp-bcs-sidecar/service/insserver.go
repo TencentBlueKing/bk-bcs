@@ -104,6 +104,8 @@ func (ins *InstanceServer) Ping(ctx context.Context, req *pbsidecar.PingReq) (*p
 	mods := []*pbsidecar.ModInfo{}
 
 	for _, mod := range ins.appModMgr.AppModInfos() {
+		modKey := ModKey(mod.BusinessName, mod.AppName, mod.Path)
+
 		m := &pbsidecar.ModInfo{
 			BusinessName: mod.BusinessName,
 			AppName:      mod.AppName,
@@ -112,12 +114,12 @@ func (ins *InstanceServer) Ping(ctx context.Context, req *pbsidecar.PingReq) (*p
 			Path:         mod.Path,
 			Dc:           mod.DC,
 			IP:           ins.viper.GetString("appinfo.ip"),
-			Labels:       ins.viper.GetStringMapString(fmt.Sprintf("appmod.%s_%s.labels", mod.BusinessName, mod.AppName)),
+			Labels:       ins.viper.GetStringMapString(fmt.Sprintf("appmod.%s.labels", modKey)),
 		}
 
 		// main flag is true or app level flag is true.
 		if ins.viper.GetBool("sidecar.readyPullConfigs") ||
-			ins.viper.GetBool(fmt.Sprintf("sidecar.%s_%s.readyPullConfigs", mod.BusinessName, mod.AppName)) {
+			ins.viper.GetBool(fmt.Sprintf("sidecar.%s.readyPullConfigs", modKey)) {
 			m.IsReady = true
 		}
 
@@ -144,12 +146,13 @@ func (ins *InstanceServer) Inject(ctx context.Context, req *pbsidecar.InjectReq)
 		response.ErrMsg = err.Error()
 		return response, nil
 	}
+	modKey := ModKey(req.BusinessName, req.AppName, req.Path)
 
-	ins.viper.Set(fmt.Sprintf("appmod.%s_%s.labels", req.BusinessName, req.AppName), req.Labels)
+	ins.viper.Set(fmt.Sprintf("appmod.%s.labels", modKey), req.Labels)
 
 	// ready to pull configs now. All inner mods init coroutines would watch this flag,
 	// and pull configs until it is true.
-	ins.viper.Set(fmt.Sprintf("sidecar.%s_%s.readyPullConfigs", req.BusinessName, req.AppName), true)
+	ins.viper.Set(fmt.Sprintf("sidecar.%s.readyPullConfigs", modKey), true)
 
 	return response, nil
 }
@@ -173,12 +176,13 @@ func (ins *InstanceServer) WatchReload(req *pbsidecar.WatchReloadReq, stream pbs
 		stream.Send(&pbsidecar.WatchReloadResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_IS_PARAMS_INVALID, ErrMsg: err.Error()})
 		return nil
 	}
+	modKey := ModKey(req.BusinessName, req.AppName, req.Path)
 
 	ins.eventsMu.Lock()
-	if _, ok := ins.events[ins.eventChanKey(req.BusinessName, req.AppName)]; !ok {
-		ins.events[ins.eventChanKey(req.BusinessName, req.AppName)] = make(chan *ReloadSpec, ins.viper.GetInt("instance.reloadChanSize"))
+	if _, ok := ins.events[modKey]; !ok {
+		ins.events[modKey] = make(chan *ReloadSpec, ins.viper.GetInt("instance.reloadChanSize"))
 	}
-	ch := ins.events[ins.eventChanKey(req.BusinessName, req.AppName)]
+	ch := ins.events[modKey]
 	ins.eventsMu.Unlock()
 
 	// watch on ch.
@@ -190,7 +194,7 @@ func (ins *InstanceServer) WatchReload(req *pbsidecar.WatchReloadReq, stream pbs
 			return nil
 
 		case event := <-ch:
-			if event.BusinessName != req.BusinessName || event.AppName != req.AppName {
+			if event.BusinessName != req.BusinessName || event.AppName != req.AppName || event.Path != req.Path {
 				logger.Warn("INSTANCE-WatchReload[%d]| recv invalid business/app mod events data, %+v", req.Seq, event)
 				continue
 			}
@@ -203,7 +207,7 @@ func (ins *InstanceServer) WatchReload(req *pbsidecar.WatchReloadReq, stream pbs
 				MultiReleaseid: event.MultiReleaseid,
 				ReleaseName:    event.ReleaseName,
 				ReloadType:     event.ReloadType,
-				RootPath:       ins.viper.GetString(fmt.Sprintf("appmod.%s_%s.path", event.BusinessName, event.AppName)),
+				RootPath:       ins.viper.GetString(fmt.Sprintf("appmod.%s.path", modKey)),
 			}
 
 			metadatas := []*pbsidecar.ConfigsMetadata{}
@@ -253,9 +257,11 @@ func (ins *InstanceServer) ReportReload(ctx context.Context, req *pbsidecar.Repo
 	}
 	defer conn.Close()
 
+	modKey := ModKey(req.BusinessName, req.AppName, req.Path)
+
 	// marshal sidecar labels.
 	sidecarLabels := &strategy.SidecarLabels{
-		Labels: ins.viper.GetStringMapString(fmt.Sprintf("appmod.%s_%s.labels", req.BusinessName, req.AppName)),
+		Labels: ins.viper.GetStringMapString(fmt.Sprintf("appmod.%s.labels", modKey)),
 	}
 
 	labels, err := json.Marshal(sidecarLabels)
@@ -267,11 +273,11 @@ func (ins *InstanceServer) ReportReload(ctx context.Context, req *pbsidecar.Repo
 
 	r := &pb.ReportReq{
 		Seq:       req.Seq,
-		Bid:       ins.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", req.BusinessName, req.AppName)),
-		Appid:     ins.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", req.BusinessName, req.AppName)),
-		Clusterid: ins.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", req.BusinessName, req.AppName)),
-		Zoneid:    ins.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", req.BusinessName, req.AppName)),
-		Dc:        ins.viper.GetString(fmt.Sprintf("appmod.%s_%s.dc", req.BusinessName, req.AppName)),
+		Bid:       ins.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+		Appid:     ins.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+		Clusterid: ins.viper.GetString(fmt.Sprintf("appmod.%s.clusterid", modKey)),
+		Zoneid:    ins.viper.GetString(fmt.Sprintf("appmod.%s.zoneid", modKey)),
+		Dc:        ins.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 		IP:        ins.viper.GetString("appinfo.ip"),
 		Labels:    string(labels),
 		Infos: []*pbcommon.ReportInfo{&pbcommon.ReportInfo{
@@ -349,24 +355,22 @@ func (ins *InstanceServer) Init() error {
 	return nil
 }
 
-func (ins *InstanceServer) eventChanKey(businessName, appName string) string {
-	return fmt.Sprintf("%s_%s", businessName, appName)
-}
-
 func (ins *InstanceServer) handleReloadEvents() {
 	events := ins.reloader.EventChan()
 
 	for {
 		event := <-events
-		logger.Info("recv new reload event from reloader, %+v", event)
+		logger.Info("recv new instance server reload event from reloader, %+v", event)
 
 		ins.eventsMu.Lock()
 
-		if _, ok := ins.events[ins.eventChanKey(event.BusinessName, event.AppName)]; !ok {
-			ins.events[ins.eventChanKey(event.BusinessName, event.AppName)] = make(chan *ReloadSpec, ins.viper.GetInt("instance.reloadChanSize"))
+		modKey := ModKey(event.BusinessName, event.AppName, event.Path)
+
+		if _, ok := ins.events[modKey]; !ok {
+			ins.events[modKey] = make(chan *ReloadSpec, ins.viper.GetInt("instance.reloadChanSize"))
 		}
 
-		ch := ins.events[ins.eventChanKey(event.BusinessName, event.AppName)]
+		ch := ins.events[modKey]
 
 		select {
 		case ch <- event:

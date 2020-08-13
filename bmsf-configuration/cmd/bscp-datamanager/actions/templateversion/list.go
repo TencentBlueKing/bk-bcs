@@ -108,7 +108,7 @@ func (act *ListAction) queryTemplateVersionList() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(map[string]interface{}{
 			"Fbid":        act.req.Bid,
 			"Ftemplateid": act.req.Templateid,

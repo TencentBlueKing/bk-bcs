@@ -24,17 +24,18 @@ import (
 //deleteStrategyCmd: client update commit
 func deleteStrategyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "strategy",
-		Short: "delete release strategy",
-		Long:  "delete release strategy content",
+		Use:     "strategy",
+		Aliases: []string{"str"},
+		Short:   "Delete release strategy",
+		Long:    "Delete release strategy content",
 		Example: `
-	bscp-client delete strategy --Id xxxx
+	bk-bscp-client delete strategy --id xxxxxxxx
 		`,
 		RunE: handleDeleteStrategy,
 	}
 	//command line flags
-	cmd.Flags().String("Id", "", "strategy ID")
-	cmd.MarkFlagRequired("Id")
+	cmd.Flags().StringP("id", "i", "", "the id of strategy")
+	cmd.MarkFlagRequired("id")
 	return cmd
 }
 
@@ -44,11 +45,11 @@ func handleDeleteStrategy(cmd *cobra.Command, args []string) error {
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
 		return err
 	}
-	ID, _ := cmd.Flags().GetString("Id")
+	ID, _ := cmd.Flags().GetString("id")
 	//update Commit and check result
 	if err := operator.DeleteStrategy(context.TODO(), ID); err != nil {
 		return err
 	}
-	cmd.Printf("Delete Strategy successfully: %s\n", ID)
+	cmd.Printf("Delete Strategy successfully: %s\n\n", ID)
 	return nil
 }

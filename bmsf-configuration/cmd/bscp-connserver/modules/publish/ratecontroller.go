@@ -19,17 +19,6 @@ import (
 	"bk-bscp/cmd/bscp-connserver/modules/session"
 )
 
-const (
-	// step count.
-	stepCount = 100
-
-	// wait time between steps.
-	stepWait = 600 * time.Millisecond
-
-	// min unit size of step.
-	minStepUnitSize = 50
-)
-
 // RateController is publishing rate controller define.
 type RateController interface {
 
@@ -51,16 +40,22 @@ type SimpleRateController struct {
 	// steps slice for publishing.
 	steps []*StepPubUnit
 
+	// step count.
+	stepCount int
+
+	// min unit size of step.
+	minStepUnitSize int
+
 	// time duration to wait for next slice.
-	wait time.Duration
+	stepWait time.Duration
 
 	// steps slice index.
 	index int
 }
 
 // NewSimpleRateController creates new SimpleRateController.
-func NewSimpleRateController() *SimpleRateController {
-	return &SimpleRateController{}
+func NewSimpleRateController(stepCount, minStepUnitSize int, stepWait time.Duration) *SimpleRateController {
+	return &SimpleRateController{stepCount: stepCount, minStepUnitSize: minStepUnitSize, stepWait: stepWait}
 }
 
 func (s *SimpleRateController) arrange(targets []*session.Session, unitSize int) {
@@ -71,7 +66,7 @@ func (s *SimpleRateController) arrange(targets []*session.Session, unitSize int)
 	if len(targets) <= unitSize {
 		s.steps = append(s.steps, &StepPubUnit{targets: targets})
 	} else {
-		s.steps = append(s.steps, &StepPubUnit{targets: targets[0:unitSize], wait: stepWait})
+		s.steps = append(s.steps, &StepPubUnit{targets: targets[0:unitSize], wait: s.stepWait})
 		s.arrange(targets[unitSize:], unitSize)
 	}
 }
@@ -83,9 +78,9 @@ func (s *SimpleRateController) Arrange(targets []*session.Session) {
 	}
 
 	// 1% grain for one step.
-	unitSize := int(math.Ceil(float64(len(targets)) / float64(stepCount)))
-	if unitSize < minStepUnitSize {
-		unitSize = minStepUnitSize
+	unitSize := int(math.Ceil(float64(len(targets)) / float64(s.stepCount)))
+	if unitSize < s.minStepUnitSize {
+		unitSize = s.minStepUnitSize
 	}
 	s.arrange(targets, unitSize)
 }

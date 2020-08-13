@@ -13,18 +13,23 @@ limitations under the License.
 package publish
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/bluele/gcache"
 	"github.com/spf13/viper"
 
 	"bk-bscp/cmd/bscp-connserver/modules/metrics"
 	"bk-bscp/cmd/bscp-connserver/modules/session"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
+	pbdatamanager "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/internal/strategy"
 	"bk-bscp/internal/structs"
+	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 	"bk-bscp/pkg/natsmq"
 )
@@ -45,17 +50,25 @@ type Manager struct {
 
 	// prometheus metrics collector.
 	collector *metrics.Collector
+
+	// configs content cache.
+	configsCache gcache.Cache
+
+	// datamanager gRPC connection/client.
+	dataMgrCli pbdatamanager.DataManagerClient
 }
 
 // NewManager creates new Manager.
 func NewManager(viper *viper.Viper, subscriber *mq.Subscriber, sessionMgr *session.Manager,
-	strategyHandler *strategy.Handler, collector *metrics.Collector) *Manager {
+	strategyHandler *strategy.Handler, collector *metrics.Collector, configsCache gcache.Cache, dataMgrCli pbdatamanager.DataManagerClient) *Manager {
 	return &Manager{
 		viper:           viper,
 		subscriber:      subscriber,
 		sessionMgr:      sessionMgr,
 		strategyHandler: strategyHandler,
 		collector:       collector,
+		configsCache:    configsCache,
+		dataMgrCli:      dataMgrCli,
 	}
 }
 
@@ -81,17 +94,32 @@ func (mgr *Manager) process(msg *structs.Signalling) {
 
 	switch msg.Type {
 	case structs.SignallingTypePublish:
-		if err := mgr.processPublishing(msg, NewSimpleRateController()); err != nil {
+		if err := mgr.processPublishing(msg,
+			NewSimpleRateController(mgr.viper.GetInt("server.publishStepCount"),
+				mgr.viper.GetInt("server.publishMinUnitSize"),
+				mgr.viper.GetDuration("server.publishStepWait"))); err != nil {
+
 			logger.Error("process release publishing, %+v", err)
 		}
+
 	case structs.SignallingTypeRollback:
-		if err := mgr.processRollbackPublishing(msg, NewSimpleRateController()); err != nil {
+		if err := mgr.processRollbackPublishing(msg,
+			NewSimpleRateController(mgr.viper.GetInt("server.publishStepCount"),
+				mgr.viper.GetInt("server.publishMinUnitSize"),
+				mgr.viper.GetDuration("server.publishStepWait"))); err != nil {
+
 			logger.Error("process release rollback publishing, %+v", err)
 		}
+
 	case structs.SignallingTypeReload:
-		if err := mgr.processReloadPublishing(msg, NewSimpleRateController()); err != nil {
+		if err := mgr.processReloadPublishing(msg,
+			NewSimpleRateController(mgr.viper.GetInt("server.publishStepCount"),
+				mgr.viper.GetInt("server.publishMinUnitSize"),
+				mgr.viper.GetDuration("server.publishStepWait"))); err != nil {
+
 			logger.Error("process release reload publishing, %+v", err)
 		}
+
 	default:
 		logger.Error("process publish message, unknow signalling type[%+v]", msg.Type)
 	}
@@ -144,8 +172,81 @@ func (mgr *Manager) getSessions(msg *structs.Signalling) ([]*session.Session, er
 	return targets, nil
 }
 
+func (mgr *Manager) queryConfigsList(bid, cfgsetid, commitid string, index, limit int32) ([]*pbcommon.Configs, error) {
+	r := &pbdatamanager.QueryConfigsListReq{
+		Seq:      common.Sequence(),
+		Bid:      bid,
+		Cfgsetid: cfgsetid,
+		Commitid: commitid,
+		Index:    index,
+		Limit:    limit,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), mgr.viper.GetDuration("datamanager.calltimeoutST"))
+	defer cancel()
+
+	resp, err := mgr.dataMgrCli.QueryConfigsList(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	if resp.ErrCode != pbcommon.ErrCode_E_OK {
+		return nil, errors.New(resp.ErrMsg)
+	}
+	return resp.Cfgslist, nil
+}
+
+func (mgr *Manager) addConfigsCache(bid, releaseid string) error {
+	// query release.
+	r := &pbdatamanager.QueryReleaseReq{
+		Seq:       common.Sequence(),
+		Bid:       bid,
+		Releaseid: releaseid,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), mgr.viper.GetDuration("datamanager.calltimeoutST"))
+	defer cancel()
+
+	resp, err := mgr.dataMgrCli.QueryRelease(ctx, r)
+	if err != nil {
+		return err
+	}
+	if resp.ErrCode != pbcommon.ErrCode_E_OK {
+		return errors.New(resp.ErrMsg)
+	}
+	release := resp.Release
+
+	// query configs.
+	index := 0
+	limit := 1
+
+	for {
+		list, err := mgr.queryConfigsList(release.Bid, release.Cfgsetid, release.Commitid, int32(index), int32(limit))
+		if err != nil {
+			return err
+		}
+
+		// query success.
+		for _, cfg := range list {
+			mgr.configsCache.Set(cfg.Cid, cfg.Content)
+			logger.Info("add configs content cache in publish event, len[%d], %s", len(cfg.Content), cfg.Cid)
+		}
+
+		if len(list) < limit {
+			break
+		}
+		index += len(list)
+	}
+
+	return nil
+}
+
 // processPublishing processes publishing event message.
 func (mgr *Manager) processPublishing(msg *structs.Signalling, rateController RateController) error {
+	// add configs content cache in prev mode.
+	if err := mgr.addConfigsCache(msg.Publishing.Bid, msg.Publishing.Releaseid); err != nil {
+		logger.Warn("add configs content cache in publish event, release[%s], %+v", msg.Publishing.Releaseid, err)
+	}
+
 	targets, err := mgr.getSessions(msg)
 	if err != nil {
 		return err
@@ -253,7 +354,7 @@ func (mgr *Manager) pushNotification(target *session.Session, msg *structs.Signa
 		}
 
 	case structs.SignallingTypeReload:
-		reloadSpec := &pbcommon.ReloadSpec{Info: []*pbcommon.EffectInfo{}}
+		reloadSpec := &pbcommon.ReloadSpec{Rollback: msg.Publishing.ReloadSpec.Rollback, Info: []*pbcommon.EffectInfo{}}
 
 		if len(msg.Publishing.ReloadSpec.MultiReleaseid) != 0 {
 			reloadSpec.MultiReleaseid = msg.Publishing.ReloadSpec.MultiReleaseid

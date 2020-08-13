@@ -20,6 +20,7 @@ import (
 
 	pbcommon "bk-bscp/internal/protocol/common"
 	"bk-bscp/pkg/renderengine"
+	"bk-bscp/pkg/common"
 )
 
 type engine struct {
@@ -90,20 +91,20 @@ func (e *engine) realRender(cluster string, clusterLabels map[string]string, zon
 }
 
 func (e *engine) renderForZone(cluster string, clusterLabels map[string]string, z *renderengine.RenderInZone, vars map[string]interface{}) {
-	tmpVars := mergeVars(vars, z.Vars)
+	tmpVars := common.MergeVars(vars, z.Vars)
 	if len(z.Instances) == 0 {
 		e.wgroup.Add(1)
 		go e.realRender(cluster, clusterLabels, z.Zone, "", tmpVars)
 	}
 	for _, ins := range z.Instances {
-		insVars := mergeVars(tmpVars, ins.Vars)
+		insVars := common.MergeVars(tmpVars, ins.Vars)
 		e.wgroup.Add(1)
 		go e.realRender(cluster, clusterLabels, z.Zone, ins.Index, insVars)
 	}
 }
 
 func (e *engine) renderForCluster(c *renderengine.RenderInCluster, vars map[string]interface{}) {
-	tmpVars := mergeVars(vars, c.Vars)
+	tmpVars := common.MergeVars(vars, c.Vars)
 	if len(c.Zones) == 0 {
 		e.wgroup.Add(1)
 		go e.realRender(c.Cluster, c.ClusterLabels, "", "", tmpVars)

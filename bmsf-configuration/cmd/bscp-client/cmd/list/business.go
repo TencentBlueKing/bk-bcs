@@ -26,12 +26,11 @@ import (
 func listBusinessCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "business",
-		Aliases: []string{"bu", "bi"},
-		Long:    "list all business information",
+		Aliases: []string{"bus"},
+		Long:    "List all business information",
 		Hidden:  true,
 		Example: `
-	bscp-client list business
-	bscp-client list business
+	bk-bscp-client list business
 		 `,
 		RunE: handleListBusiness,
 	}
@@ -54,21 +53,20 @@ func handleListBusiness(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	//format output
-	utils.PrintBusiness(businesses)
+	utils.PrintBusinesses(businesses)
 	return nil
 }
 
 //listShardingDBCmd: list all shardingDB information
 func listShardingDBCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "shardingDB",
-		Aliases: []string{"DB", "db"},
-		Short:   "list shardingDB",
-		Long:    "list all shardingDB information",
+		Use:     "shardingdb",
+		Aliases: []string{"db"},
+		Short:   "List shardingDB",
+		Long:    "List all shardingDB information",
 		Hidden:  true,
 		Example: `
-	bscp-client list shardingDB
-	bscp-client list db
+	bk-bscp-client list shardingdb
 		 `,
 		RunE: handleListShardingDB,
 	}
@@ -91,6 +89,6 @@ func handleListShardingDB(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	//format output
-	utils.PrintShardingDB(dbList)
+	utils.PrintShardingDBList(dbList)
 	return nil
 }

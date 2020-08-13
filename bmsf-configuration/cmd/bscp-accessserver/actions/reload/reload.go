@@ -110,9 +110,10 @@ func (act *ReloadAction) reload() (pbcommon.ErrCode, string) {
 		Releaseid:      act.req.Releaseid,
 		MultiReleaseid: act.req.MultiReleaseid,
 		Operator:       act.req.Operator,
+		Rollback:       act.req.Rollback,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeoutLT"))
 	defer cancel()
 
 	logger.V(2).Infof("Reload[%d]| request to businessserver Reload, %+v", act.req.Seq, r)

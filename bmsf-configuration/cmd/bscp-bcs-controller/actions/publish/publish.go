@@ -164,8 +164,6 @@ func (act *PublishAction) Do() error {
 		return act.Err(pbcommon.ErrCode_E_BCS_SYSTEM_UNKONW, "can't publish the release, it's not in published state.")
 	}
 
-	// TODO handle publish message retry logic, don't send notification every time.
-
 	// publish release message.
 	if errCode, errMsg := act.publish(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)

@@ -69,18 +69,19 @@ func (act *ListAction) Output() error {
 	commits := []*pbcommon.Commit{}
 	for _, st := range act.commits {
 		commit := &pbcommon.Commit{
-			Bid:        st.Bid,
-			Commitid:   st.Commitid,
-			Appid:      st.Appid,
-			Cfgsetid:   st.Cfgsetid,
-			Op:         st.Op,
-			Operator:   st.Operator,
-			Templateid: st.Templateid,
-			Releaseid:  st.Releaseid,
-			Memo:       st.Memo,
-			State:      st.State,
-			CreatedAt:  st.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt:  st.UpdatedAt.Format("2006-01-02 15:04:05"),
+			Bid:           st.Bid,
+			Commitid:      st.Commitid,
+			Appid:         st.Appid,
+			Cfgsetid:      st.Cfgsetid,
+			Op:            st.Op,
+			Operator:      st.Operator,
+			Templateid:    st.Templateid,
+			Releaseid:     st.Releaseid,
+			MultiCommitid: st.MultiCommitid,
+			Memo:          st.Memo,
+			State:         st.State,
+			CreatedAt:     st.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:     st.UpdatedAt.Format("2006-01-02 15:04:05"),
 		}
 		commits = append(commits, commit)
 	}
@@ -144,7 +145,7 @@ func (act *ListAction) queryHistoryCommits() (pbcommon.ErrCode, string) {
 	err := act.sd.DB().
 		Select(fields).
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.Commit{Bid: act.req.Bid, Appid: act.req.Appid, Cfgsetid: act.req.Cfgsetid, Operator: act.req.Operator}).
 		Where(whereState).
 		Find(&act.commits).Error

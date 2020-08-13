@@ -27,33 +27,27 @@ func listAppCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "application",
 		Aliases: []string{"app"},
-		Short:   "list app info",
-		Long:    "list all application information under business",
-		Example: `
-	bscp-client list application --business somegame
-	bscp-client list app --business somegame
-		 `,
-		RunE: handleListApp,
+		Short:   "List application",
+		Long:    "List all application information under business",
+		RunE:    handleListApp,
 	}
 	return cmd
 }
 
 //listLogicClusterCmd: client list cluster
-func listLogicClusterCmd() *cobra.Command {
+func listClusterCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "logiccluster",
-		Aliases: []string{"cluster"},
-		Short:   "list cluster",
-		Long:    "list all logic cluster information under application",
+		Use:     "cluster",
+		Aliases: []string{"clu"},
+		Short:   "List cluster",
+		Long:    "List all logic cluster information under application",
 		Example: `
-	bscp-client list logiccluster --business somegame --app gameserver
-	bscp-client list cluster --business somegame --app gameserver
+	bscp-client list cluster
+	bscp-client list clu
 		 `,
 		RunE: handleListCluster,
 	}
 	cmd.Flags().StringP("app", "a", "", "settings app name for logic cluster")
-	cmd.MarkFlagRequired("app")
-	cmd.MarkFlagRequired("business")
 	return cmd
 }
 
@@ -61,19 +55,16 @@ func listLogicClusterCmd() *cobra.Command {
 func listZoneCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zone",
-		Short: "list zone",
-		Long:  "list all zone information under application",
+		Short: "List zone",
+		Long:  "List all zone information under application, requires parameter cluster",
 		Example: `
-	bscp-client list zone --business somegame --app gameserver --cluster logic
-	bscp-client list zone -b somegame -a gameserver -c logic
+	bscp-client list zone --cluster logic
 		`,
 		RunE: handleListZone,
 	}
 	cmd.Flags().StringP("app", "a", "", "settings app name")
-	cmd.MarkFlagRequired("app")
 	cmd.Flags().StringP("cluster", "c", "", "settings cluster name")
 	cmd.MarkFlagRequired("cluster")
-	cmd.MarkFlagRequired("business")
 	return cmd
 }
 
@@ -93,11 +84,15 @@ func handleListApp(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	//format output
-	utils.PrintApp(apps, operator.Business)
+	utils.PrintAppList(apps, operator.Business)
 	return nil
 }
 
 func handleListCluster(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create app operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
@@ -119,6 +114,10 @@ func handleListCluster(cmd *cobra.Command, args []string) error {
 }
 
 func handleListZone(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create app operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {

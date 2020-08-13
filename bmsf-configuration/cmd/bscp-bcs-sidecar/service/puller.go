@@ -16,7 +16,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -31,6 +30,11 @@ import (
 	"bk-bscp/pkg/logger"
 )
 
+var (
+	// fastAutoPullTimes is times count for fast auto pull.
+	fastAutoPullTimes uint64 = 2
+)
+
 // Puller is config puller.
 type Puller struct {
 	// viper as context here.
@@ -38,6 +42,7 @@ type Puller struct {
 
 	businessName string
 	appName      string
+	path         string
 
 	// configset id.
 	cfgsetid string
@@ -56,12 +61,13 @@ type Puller struct {
 }
 
 // NewPuller creates new Puller.
-func NewPuller(viper *viper.Viper, businessName, appName, cfgsetid string,
+func NewPuller(viper *viper.Viper, businessName, appName, path, cfgsetid string,
 	effectCache *EffectCache, contentCache *ContentCache) *Puller {
 	return &Puller{
 		viper:        viper,
 		businessName: businessName,
 		appName:      appName,
+		path:         path,
 		cfgsetid:     cfgsetid,
 		effectCache:  effectCache,
 		contentCache: contentCache,
@@ -88,7 +94,7 @@ func (p *Puller) makeConnectionClient() (pb.ConnectionClient, *grpc.ClientConn, 
 
 // sidecarLabels marshals sidecar labels to string base on strategy protocol.
 func (p *Puller) sidecarLabels() (string, error) {
-	sidecarLabels := &strategy.SidecarLabels{Labels: p.viper.GetStringMapString(fmt.Sprintf("appmod.%s_%s.labels", p.businessName, p.appName))}
+	sidecarLabels := &strategy.SidecarLabels{Labels: p.viper.GetStringMapString(fmt.Sprintf("appmod.%s.labels", ModKey(p.businessName, p.appName, p.path)))}
 	labels, err := json.Marshal(sidecarLabels)
 	if err != nil {
 		return "", err
@@ -97,7 +103,7 @@ func (p *Puller) sidecarLabels() (string, error) {
 }
 
 func (p *Puller) configSetFpath(fpath string) string {
-	return filepath.Clean(fmt.Sprintf("%s/%s", p.viper.GetString(fmt.Sprintf("appmod.%s_%s.path", p.businessName, p.appName)), fpath))
+	return filepath.Clean(fmt.Sprintf("%s/%s", p.viper.GetString(fmt.Sprintf("appmod.%s.path", ModKey(p.businessName, p.appName, p.path))), fpath))
 }
 
 // effect effects the release in notification.
@@ -105,7 +111,7 @@ func (p *Puller) effect(metadata *ReleaseMetadata) error {
 	// effect app real config.
 	if err := p.contentCache.Effect(metadata.Cid, metadata.CfgsetName, p.configSetFpath(metadata.CfgsetFpath)); err != nil {
 		if err := p.report(p.cfgsetid, metadata.Releaseid, metadata.EffectTime, err); err != nil {
-			logger.Warn("Puller[%s %s][%+v]| report configs local effect, %+v", p.businessName, p.appName, p.cfgsetid, err)
+			logger.Warn("Puller[%s %s %s][%+v]| report configs local effect, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 		}
 		return err
 	}
@@ -113,46 +119,16 @@ func (p *Puller) effect(metadata *ReleaseMetadata) error {
 	// add effect cache.
 	if err := p.effectCache.Effect(metadata); err != nil {
 		if err := p.report(p.cfgsetid, metadata.Releaseid, metadata.EffectTime, err); err != nil {
-			logger.Warn("Puller[%s %s][%+v]| report configs local effect, %+v", p.businessName, p.appName, p.cfgsetid, err)
+			logger.Warn("Puller[%s %s %s][%+v]| report configs local effect, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 		}
 		return err
 	}
 
-	// file reload mode option.
-	if err := p.fileReload(filepath.Clean(fmt.Sprintf("%s/%s", metadata.CfgsetFpath, metadata.CfgsetName))); err != nil {
-		logger.Warn("Puller[%s %s][%+v]| file reload mode, reload failed, %+v", p.businessName, p.appName, p.cfgsetid, err)
-	}
-
 	// report local effected release information right now.
 	if err := p.report(p.cfgsetid, metadata.Releaseid, metadata.EffectTime, nil); err != nil {
-		logger.Warn("Puller[%s %s][%+v]| report configs local effected, %+v", p.businessName, p.appName, p.cfgsetid, err)
+		logger.Warn("Puller[%s %s %s][%+v]| effect the release success, but report configs local effected failed, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 	}
-	logger.Warn("Puller[%s %s][%+v]| effect the release success, %+v", p.businessName, p.appName, p.cfgsetid, metadata)
-
-	return nil
-}
-
-// fileReload execs the file mode reload action.
-func (p *Puller) fileReload(configSetName string) error {
-	if !p.viper.GetBool("sidecar.fileReloadMode") {
-		return nil
-	}
-
-	// touch file to notify reload.
-	fReloadFName := fmt.Sprintf("%s/%s", p.viper.GetString(fmt.Sprintf("appmod.%s_%s.path", p.businessName, p.appName)),
-		p.viper.GetString("sidecar.fileReloadFName"))
-
-	fReload, err := os.OpenFile(fReloadFName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("touch file failed, %+v", err)
-	}
-	defer fReload.Close()
-
-	// write reload content.
-	if _, err := fReload.WriteString(fmt.Sprintf("%s\n%d", configSetName, time.Now().Unix())); err != nil {
-		return fmt.Errorf("write file content failed, %+v", err)
-	}
-	logger.Infof("Puller[%s %s][%+v]| file reload mode, notify reload success!", p.businessName, p.appName, p.cfgsetid)
+	logger.Info("Puller[%s %s %s][%+v]| effect the release success, %+v", p.businessName, p.appName, p.path, p.cfgsetid, metadata)
 
 	return nil
 }
@@ -169,6 +145,9 @@ func (p *Puller) pullNewest() (bool, *pbcommon.Release, string, string, error) {
 
 // pullRelease pulls release information from connserver.
 func (p *Puller) pullRelease(target string) (bool, *pbcommon.Release, string, string, error) {
+	// eliminate summit.
+	common.DelayRandomMS(1500)
+
 	// make connserver gRPC client now.
 	client, conn, err := p.makeConnectionClient()
 	if err != nil {
@@ -191,14 +170,15 @@ func (p *Puller) pullRelease(target string) (bool, *pbcommon.Release, string, st
 	if md == nil {
 		md = &ReleaseMetadata{}
 	}
+	modKey := ModKey(p.businessName, p.appName, p.path)
 
 	r := &pb.PullReleaseReq{
 		Seq:            common.Sequence(),
-		Bid:            p.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", p.businessName, p.appName)),
-		Appid:          p.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", p.businessName, p.appName)),
-		Clusterid:      p.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", p.businessName, p.appName)),
-		Zoneid:         p.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", p.businessName, p.appName)),
-		Dc:             p.viper.GetString(fmt.Sprintf("appmod.%s_%s.dc", p.businessName, p.appName)),
+		Bid:            p.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+		Appid:          p.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+		Clusterid:      p.viper.GetString(fmt.Sprintf("appmod.%s.clusterid", modKey)),
+		Zoneid:         p.viper.GetString(fmt.Sprintf("appmod.%s.zoneid", modKey)),
+		Dc:             p.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 		IP:             p.viper.GetString("appinfo.ip"),
 		Labels:         labels,
 		Cfgsetid:       p.cfgsetid,
@@ -209,7 +189,7 @@ func (p *Puller) pullRelease(target string) (bool, *pbcommon.Release, string, st
 	ctx, cancel := context.WithTimeout(context.Background(), p.viper.GetDuration("connserver.calltimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Puller[%s %s][%+v]| request to connserver PullRelease, %+v", p.businessName, p.appName, p.cfgsetid, r)
+	logger.V(2).Infof("Puller[%s %s %s][%+v]| request to connserver PullRelease, %+v", p.businessName, p.appName, p.path, p.cfgsetid, r)
 
 	resp, err := client.PullRelease(ctx, r)
 	if err != nil {
@@ -230,12 +210,14 @@ func (p *Puller) pullReleaseConfigs(releaseid, cfgsetid, cid string) (string, st
 	}
 	defer conn.Close()
 
+	modKey := ModKey(p.businessName, p.appName, p.path)
+
 	r := &pb.PullReleaseConfigsReq{
 		Seq:       common.Sequence(),
-		Bid:       p.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", p.businessName, p.appName)),
-		Appid:     p.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", p.businessName, p.appName)),
-		Clusterid: p.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", p.businessName, p.appName)),
-		Zoneid:    p.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", p.businessName, p.appName)),
+		Bid:       p.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+		Appid:     p.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+		Clusterid: p.viper.GetString(fmt.Sprintf("appmod.%s.clusterid", modKey)),
+		Zoneid:    p.viper.GetString(fmt.Sprintf("appmod.%s.zoneid", modKey)),
 		IP:        p.viper.GetString("appinfo.ip"),
 		Cfgsetid:  cfgsetid,
 		Releaseid: releaseid,
@@ -245,7 +227,7 @@ func (p *Puller) pullReleaseConfigs(releaseid, cfgsetid, cid string) (string, st
 	ctx, cancel := context.WithTimeout(context.Background(), p.viper.GetDuration("connserver.calltimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Puller[%s %s][%+v]| request to connserver PullReleaseConfigs, %+v", p.businessName, p.appName, cfgsetid, r)
+	logger.V(2).Infof("Puller[%s %s %s][%+v]| request to connserver PullReleaseConfigs, %+v", p.businessName, p.appName, p.path, cfgsetid, r)
 
 	resp, err := client.PullReleaseConfigs(ctx, r)
 	if err != nil {
@@ -326,11 +308,13 @@ func (p *Puller) handleNewestRelease() (*ReleaseMetadata, error) {
 
 // pulling keeps pulling configs.
 func (p *Puller) pulling() {
-	isFirstPulling := true
+	var succCount uint64
+
+	modKey := ModKey(p.businessName, p.appName, p.path)
 
 	for {
-		if p.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", p.businessName, p.appName)) {
-			logger.Info("Puller[%s %s][%+v]| stop pulling now!", p.businessName, p.appName, p.cfgsetid)
+		if p.viper.GetBool(fmt.Sprintf("appmod.%s.stop", modKey)) {
+			logger.Info("Puller[%s %s %s][%+v]| stop pulling now!", p.businessName, p.appName, p.path, p.cfgsetid)
 			return
 		}
 
@@ -340,78 +324,94 @@ func (p *Puller) pulling() {
 		needEffectWithSerialNo := true
 
 		autoPullInterval := p.viper.GetDuration("sidecar.pullConfigInterval")
-		if isFirstPulling {
-			autoPullInterval = time.Second
+
+		currentRelease, err := p.effectCache.LocalRelease(p.cfgsetid)
+		if err != nil || currentRelease == nil {
+			// eliminate summit.
+			autoPullInterval = common.RandomMS(3500)
+
+			logger.Warn("Puller[%s %s %s][%+v]-pulling| no local effeced release, auto pull now[%+v]!",
+				p.businessName, p.appName, p.path, p.cfgsetid, autoPullInterval)
+		} else {
+			// there already have local release.
+			succCount++
+
+			if succCount < fastAutoPullTimes {
+				// eliminate summit.
+				autoPullInterval = common.RandomMS(3500)
+
+				logger.Warn("Puller[%s %s %s][%+v]-pulling| have local effeced release, auto pull again now[%+v]!",
+					p.businessName, p.appName, p.path, p.cfgsetid, autoPullInterval)
+			}
 		}
 
 		select {
 		// stop pulling signal.
 		case <-p.stopCh:
-			logger.Warn("Puller[%s %s][%+v]-pulling| stop pulling now", p.businessName, p.appName, p.cfgsetid)
-			// just return, break here is shit.
+			logger.Warn("Puller[%s %s %s][%+v]-pulling| stop pulling now", p.businessName, p.appName, p.path, p.cfgsetid)
 			return
 
 		// handle publishing notifications.
 		case notification := <-p.ch:
-			isFirstPulling = false
 
 			// handle multi type notifications.
 			switch notification.(type) {
 			case *pb.SCCMDPushNotification:
+
 				// normal release publish notification.
 				pubNotification := notification.(*pb.SCCMDPushNotification)
 
 				md, err := p.handlePubNotification(pubNotification)
 				if err != nil {
-					logger.Warn("Puller[%s %s][%+v]-pulling| handle publish, %+v", p.businessName, p.appName, p.cfgsetid, err)
+					logger.Warn("Puller[%s %s %s][%+v]-pulling| handle publish, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 					continue
 				}
 				metadata = md
 
-				logger.Warn("Puller[%s %s][%+v]-pulling| recviced publishing notification, metadata %+v",
-					p.businessName, p.appName, p.cfgsetid, metadata)
+				logger.Warn("Puller[%s %s %s][%+v]-pulling| recviced publishing notification, metadata %+v",
+					p.businessName, p.appName, p.path, p.cfgsetid, metadata)
 
 			case *pb.SCCMDPushRollbackNotification:
+
 				// release rollback publishing notification.
 				rollbackNotification := notification.(*pb.SCCMDPushRollbackNotification)
 
-				logger.Info("Puller[%s %s][%+v]-pulling| recviced rollback publishing notification, %+v",
-					p.businessName, p.appName, p.cfgsetid, rollbackNotification)
+				logger.Info("Puller[%s %s %s][%+v]-pulling| recviced rollback publishing notification, %+v",
+					p.businessName, p.appName, p.path, p.cfgsetid, rollbackNotification)
 
 				// need effect without serial num(rollback event).
 				needEffectWithSerialNo = false
 
 				md, err := p.handleNewestRelease()
 				if err != nil {
-					logger.Warn("Puller[%s %s][%+v]-pulling| handle rollback publish, %+v", p.businessName, p.appName, p.cfgsetid, err)
+					logger.Warn("Puller[%s %s %s][%+v]-pulling| handle rollback publish, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 					continue
 				}
 				metadata = md
 				metadata.isRollback = true
 
-				logger.Warn("Puller[%s %s][%+v]-pulling| rollback publish, newest release, %+v",
-					p.businessName, p.appName, p.cfgsetid, metadata)
+				logger.Warn("Puller[%s %s %s][%+v]-pulling| rollback publish, newest release, %+v",
+					p.businessName, p.appName, p.path, p.cfgsetid, metadata)
 
 			default:
-				logger.Error("Puller[%s %s][%+v]-pulling| unknow notification[%+v]",
-					p.businessName, p.appName, p.cfgsetid, notification)
+				logger.Error("Puller[%s %s %s][%+v]-pulling| unknow notification[%+v]",
+					p.businessName, p.appName, p.path, p.cfgsetid, notification)
 			}
 
 		case <-time.After(autoPullInterval):
-			isFirstPulling = false
 
 			// newest logic need effect without serial num(rollback event).
 			needEffectWithSerialNo = false
 
 			md, err := p.handleNewestRelease()
 			if err != nil {
-				logger.Warn("Puller[%s %s][%+v]-pulling| handle pull newest, %+v", p.businessName, p.appName, p.cfgsetid, err)
+				logger.Warn("Puller[%s %s %s][%+v]-pulling| handle pull newest, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 				continue
 			}
 			metadata = md
 
-			logger.Warn("Puller[%s %s][%+v]-pulling| recviced newest release, %+v",
-				p.businessName, p.appName, p.cfgsetid, metadata)
+			logger.Warn("Puller[%s %s %s][%+v]-pulling| recviced newest release, %+v",
+				p.businessName, p.appName, p.path, p.cfgsetid, metadata)
 		}
 
 		// check if need to effect this release.
@@ -420,13 +420,13 @@ func (p *Puller) pulling() {
 			// compare local release serial num.
 			needEffect, err := p.effectCache.NeedEffected(metadata.Cfgsetid, metadata.Serialno)
 			if err != nil {
-				logger.Error("Puller[%s %s][%+v]-pulling| check local effect information, %+v",
-					p.businessName, p.appName, p.cfgsetid, err)
+				logger.Error("Puller[%s %s %s][%+v]-pulling| check local effect information, %+v",
+					p.businessName, p.appName, p.path, p.cfgsetid, err)
 				continue
 			}
 			if !needEffect {
-				logger.Warn("Puller[%s %s][%+v]-pulling| finally, no need to effect the release, %+v",
-					p.businessName, p.appName, p.cfgsetid, metadata)
+				logger.Warn("Puller[%s %s %s][%+v]-pulling| finally, no need to effect the release, %+v",
+					p.businessName, p.appName, p.path, p.cfgsetid, metadata)
 				continue
 			}
 		}
@@ -434,7 +434,7 @@ func (p *Puller) pulling() {
 		// mark event type.
 		lmd, err := p.effectCache.LocalRelease(metadata.Cfgsetid)
 		if err != nil {
-			logger.Warn("Puller[%s %s][%+v]-pulling| mark event type, %+v", p.businessName, p.appName, p.cfgsetid, err)
+			logger.Warn("Puller[%s %s %s][%+v]-pulling| mark event type, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 		} else {
 			if lmd != nil {
 				if metadata.isRollback || metadata.Serialno < lmd.Serialno {
@@ -446,12 +446,12 @@ func (p *Puller) pulling() {
 
 		// check local file content cache.
 		if cached, err := p.contentCache.Has(metadata.Cid); err == nil && cached {
-			logger.Warn("Puller[%s %s][%+v]-pulling| has the content cache[%+v], and effect right now.",
-				p.businessName, p.appName, p.cfgsetid, metadata.Cid)
+			logger.Warn("Puller[%s %s %s][%+v]-pulling| has the content cache[%+v], and effect right now.",
+				p.businessName, p.appName, p.path, p.cfgsetid, metadata.Cid)
 
 			if err := p.effect(metadata); err != nil {
-				logger.Error("Puller[%s %s][%+v]-pulling| after cache checking, can't effect release, %+v",
-					p.businessName, p.appName, p.cfgsetid, err)
+				logger.Error("Puller[%s %s %s][%+v]-pulling| after cache checking, can't effect release, %+v",
+					p.businessName, p.appName, p.path, p.cfgsetid, err)
 			}
 			continue
 		}
@@ -459,27 +459,30 @@ func (p *Puller) pulling() {
 		// has no cache, try to pull back.
 		cid, cfgLink, content, err := p.pullReleaseConfigs(metadata.Releaseid, p.cfgsetid, metadata.Cid)
 		if err != nil {
-			logger.Error("Puller[%s %s][%+v]-pulling| can't pull the release configs, %+v", p.businessName, p.appName, p.cfgsetid, err)
+			logger.Error("Puller[%s %s %s][%+v]-pulling| can't pull the release configs, %+v", p.businessName, p.appName, p.path, p.cfgsetid, err)
 			continue
 		}
 
 		// TODO download base on cfglink.
 
 		// add config content cache.
-		logger.Warn("Puller[%s %s][%+v]-pulling| pull release[%+v] back, add content cache now.",
-			p.businessName, p.appName, p.cfgsetid, metadata.Releaseid)
+		logger.Warn("Puller[%s %s %s][%+v]-pulling| pull release[%+v] back, add content cache now.",
+			p.businessName, p.appName, p.path, p.cfgsetid, metadata.Releaseid)
 
 		if err := p.contentCache.Add(&Content{Cid: cid, CfgLink: cfgLink, Metadata: content}); err != nil {
-			logger.Error("Puller[%s %s][%+v]-pulling| add config content cache, %+v.",
-				p.businessName, p.appName, p.cfgsetid, err)
+			logger.Error("Puller[%s %s %s][%+v]-pulling| add config content cache, %+v.",
+				p.businessName, p.appName, p.path, p.cfgsetid, err)
 			continue
 		}
 
 		// effect this release now.
 		if err := p.effect(metadata); err != nil {
-			logger.Error("Puller[%s %s][%+v]-pulling| after adding cache, can't effect release, %+v",
-				p.businessName, p.appName, p.cfgsetid, err)
+			logger.Error("Puller[%s %s %s][%+v]-pulling| after adding cache, can't effect release, %+v",
+				p.businessName, p.appName, p.path, p.cfgsetid, err)
 		}
+
+		// loop end.
+		continue
 	}
 }
 
@@ -514,14 +517,15 @@ func (p *Puller) report(cfgsetid, releaseid, effectTime string, effectErr error)
 	if err != nil {
 		return err
 	}
+	modKey := ModKey(p.businessName, p.appName, p.path)
 
 	r := &pb.ReportReq{
 		Seq:       common.Sequence(),
-		Bid:       p.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", p.businessName, p.appName)),
-		Appid:     p.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", p.businessName, p.appName)),
-		Clusterid: p.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", p.businessName, p.appName)),
-		Zoneid:    p.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", p.businessName, p.appName)),
-		Dc:        p.viper.GetString(fmt.Sprintf("appmod.%s_%s.dc", p.businessName, p.appName)),
+		Bid:       p.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+		Appid:     p.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+		Clusterid: p.viper.GetString(fmt.Sprintf("appmod.%s.clusterid", modKey)),
+		Zoneid:    p.viper.GetString(fmt.Sprintf("appmod.%s.zoneid", modKey)),
+		Dc:        p.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 		IP:        p.viper.GetString("appinfo.ip"),
 		Labels:    labels,
 		Infos:     reportInfos,
@@ -530,7 +534,7 @@ func (p *Puller) report(cfgsetid, releaseid, effectTime string, effectErr error)
 	ctx, cancel := context.WithTimeout(context.Background(), p.viper.GetDuration("connserver.calltimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Puller[%s %s][%+v]| request to connserver Report, %+v", p.businessName, p.appName, p.cfgsetid, r)
+	logger.V(2).Infof("Puller[%s %s %s][%+v]| request to connserver Report, %+v", p.businessName, p.appName, p.path, p.cfgsetid, r)
 
 	resp, err := client.Report(ctx, r)
 	if err != nil {
@@ -577,7 +581,7 @@ func (p *Puller) Stop() {
 	select {
 	case p.stopCh <- true:
 	case <-time.After(time.Second):
-		logger.Warn("Puller[%s %s][%+v]| stop puller timeout.", p.businessName, p.appName, p.cfgsetid)
+		logger.Warn("Puller[%s %s %s][%+v]| stop puller timeout.", p.businessName, p.appName, p.path, p.cfgsetid)
 	}
 }
 

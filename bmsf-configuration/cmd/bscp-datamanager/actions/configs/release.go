@@ -143,7 +143,8 @@ func (act *ReleaseConfigsAction) queryCommit() (pbcommon.ErrCode, string) {
 		commit := cache.(*pbcommon.Commit)
 
 		logger.V(3).Infof("QueryReleaseConfigs[%d]| query commit cache hit success[%s]", act.req.Seq, act.req.Commitid)
-		if len(commit.Configs) == 0 {
+
+		if len(commit.Template) != 0 || len(commit.Templateid) != 0 {
 			act.isTemplateMode = true
 		}
 	} else {
@@ -192,7 +193,7 @@ func (act *ReleaseConfigsAction) queryCommit() (pbcommon.ErrCode, string) {
 			logger.Warnf("QueryReleaseConfigs[%d]| set commit[%s] cache failed, %+v", act.req.Seq, act.req.Commitid, err)
 		}
 
-		if len(commit.Configs) == 0 {
+		if len(commit.Template) != 0 || len(commit.Templateid) != 0 {
 			act.isTemplateMode = true
 		}
 	}
