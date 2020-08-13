@@ -72,6 +72,9 @@ func (c *config) check() error {
 	c.viper.BindEnv("server.discoveryttl", c.envName("DISCOVERY_TTL"))
 	c.viper.SetDefault("server.discoveryttl", 60)
 
+	c.viper.BindEnv("server.executorLimitRate", c.envName("EXEC_LIMIT_RATE"))
+	c.viper.SetDefault("server.executorLimitRate", 0)
+
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")
 
@@ -81,6 +84,10 @@ func (c *config) check() error {
 	c.viper.BindEnv("auth.admin", c.envName("AUTH_ADMIN"))
 	if c.viper.GetBool("auth.open") && !c.viper.IsSet("auth.admin") {
 		return errors.New("config check, missing 'auth.admin'")
+	}
+	c.viper.BindEnv("auth.platform", c.envName("AUTH_PLATFORM"))
+	if c.viper.GetBool("auth.open") && !c.viper.IsSet("auth.platform") {
+		return errors.New("config check, missing 'auth.platform'")
 	}
 
 	c.viper.BindEnv("etcdCluster.endpoints", c.envName("ETCD_ENDPOINTS"))
@@ -110,6 +117,9 @@ func (c *config) check() error {
 
 	c.viper.BindEnv("businessserver.calltimeout", c.envName("BS_CALL_TIMEOUT"))
 	c.viper.SetDefault("businessserver.calltimeout", 3*time.Second)
+
+	c.viper.BindEnv("businessserver.calltimeoutLT", c.envName("BS_CALL_TIMEOUT_LT"))
+	c.viper.SetDefault("businessserver.calltimeoutLT", 120*time.Second)
 
 	c.viper.BindEnv("templateserver.servicename", c.envName("TPL_SERVICE_NAME"))
 	if !c.viper.IsSet("templateserver.servicename") {

@@ -103,7 +103,7 @@ func (act *RollbackAction) rollback() (pbcommon.ErrCode, string) {
 		Operator:       act.req.Operator,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeoutLT"))
 	defer cancel()
 
 	logger.V(2).Infof("RollbackMultiRelease[%d]| request to businessserver RollbackMultiRelease, %+v", act.req.Seq, r)

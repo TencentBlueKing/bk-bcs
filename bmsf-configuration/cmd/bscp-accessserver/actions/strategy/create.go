@@ -128,6 +128,13 @@ func (act *CreateAction) verify() error {
 		return errors.New("invalid params, labels set too large")
 	}
 
+	if act.req.LabelsAnd == nil {
+		act.req.LabelsAnd = make(map[string]string)
+	}
+	if len(act.req.LabelsAnd) > database.BSCPBATCHLIMIT {
+		return errors.New("invalid params, labelsAnd set too large")
+	}
+
 	length = len(act.req.Creator)
 	if length == 0 {
 		return errors.New("invalid params, creator missing")
@@ -155,6 +162,7 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 		Labels:     act.req.Labels,
 		Memo:       act.req.Memo,
 		Creator:    act.req.Creator,
+		LabelsAnd:  act.req.LabelsAnd,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))

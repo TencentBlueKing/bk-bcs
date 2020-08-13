@@ -14,12 +14,15 @@
 package lock
 
 import (
-	"bk-bscp/cmd/bscp-client/option"
-	"bk-bscp/cmd/bscp-client/service"
 	"context"
 	"fmt"
+	"path"
 
 	"github.com/spf13/cobra"
+
+	"bk-bscp/cmd/bscp-client/option"
+	"bk-bscp/cmd/bscp-client/service"
+	"bk-bscp/internal/protocol/common"
 )
 
 var cmdList []*cobra.Command
@@ -28,16 +31,16 @@ var cmdList []*cobra.Command
 func init() {
 	lockerCmd := &cobra.Command{
 		Use:   "lock",
-		Short: "lock resource",
-		Long:  "lock specified resource, such ConfigSet",
+		Short: "Lock resource",
+		Long:  "Lock specified resource, such ConfigSet",
 	}
 	lockerCmd.AddCommand(lockConfigSetCmd())
 	cmdList = append(cmdList, lockerCmd)
 
 	unlockCmd := &cobra.Command{
 		Use:   "unlock",
-		Short: "unlock resource",
-		Long:  "unlock specified resource, such ConfigSet",
+		Short: "Unlock resource",
+		Long:  "Unlock specified resource, such ConfigSet",
 	}
 	unlockCmd.AddCommand(unlockConfigSetCmd())
 	cmdList = append(cmdList, unlockCmd)
@@ -53,46 +56,50 @@ func lockConfigSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "configset",
 		Aliases: []string{"cfgset"},
-		Short:   "lock configset",
-		Long:    "lock ConfigSet by specified ID",
+		Short:   "Lock ConfigSet",
+		Long:    "Lock ConfigSet by specified ConfigSet ID or ConfigSet",
 		Example: `
-	bscp-client lock configset --Id specifiedID
-	or
-	bscp-client lock cfgset --name configsetname --app appName
+	bk-bscp-client lock configset --id configsetId
+	bk-bscp-client lock cfgset --cfgset /etc/server.yaml
 		`,
 		RunE: func(c *cobra.Command, args []string) error {
+			option.SetGlobalVarByName(c, "app") // not judge input
 			operator := service.NewOperator(option.GlobalOptions)
 			if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
 				return err
 			}
 			//todo(DeveloperJim): add configSet name support
-			ID, _ := c.Flags().GetString("Id")
-			if len(ID) == 0 {
-				//go by name and AppName
-				name, _ := c.Flags().GetString("name")
-				appName, _ := c.Flags().GetString("app")
-				if len(name) == 0 || len(appName) == 0 {
-					return fmt.Errorf("parameter name and app are required")
-				}
-				configset, err := operator.GetConfigSet(context.TODO(), appName, name)
-				if err != nil {
-					return err
-				}
-				if configset == nil {
-					return fmt.Errorf("No relative ConfigSet %s", name)
-				}
-				ID = configset.Cfgsetid
+			ID, _ := c.Flags().GetString("id")
+			cfgset, _ := c.Flags().GetString("cfgset")
+			appName, _ := c.Flags().GetString("app")
+			if len(appName) == 0 {
+				return fmt.Errorf("parameter are required")
 			}
+			cfgsetFpath, cfgsetName := path.Split(cfgset)
+			query := &common.ConfigSet{
+				Cfgsetid: ID,
+				Name:     cfgsetName,
+				Fpath:    cfgsetFpath,
+			}
+			configset, err := operator.GetConfigSet(context.TODO(), appName, query)
+			if err != nil {
+				return err
+			}
+			if configset == nil {
+				return fmt.Errorf("No relative ConfigSet by your parameter")
+			}
+			ID = configset.Cfgsetid
+
 			if err := operator.LockConfigSet(context.TODO(), ID); err != nil {
 				return err
 			}
-			c.Printf("Lock ConfigSet successfully: %s\n", ID)
+			c.Printf("Lock ConfigSet successfully: %s\n\n", ID)
 			return nil
 		},
 	}
 	// --Id is required
-	cmd.Flags().String("Id", "", "specified ConfigSet ID")
-	cmd.Flags().StringP("name", "n", "", "specified ConfigSet name")
+	cmd.Flags().StringP("id", "i", "", "specified ConfigSet ID")
+	cmd.Flags().StringP("cfgset", "c", "", "specified ConfigSet")
 	cmd.Flags().StringP("app", "a", "", "specified Application name for filter")
 	return cmd
 }
@@ -102,46 +109,53 @@ func unlockConfigSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "configset",
 		Aliases: []string{"cfgset"},
-		Short:   "unlock configset",
-		Long:    "lock ConfigSet by specified ID",
+		Short:   "Unlock configset",
+		Long:    "Unlock ConfigSet by specified ConfigSet ID or ConfigSet",
 		Example: `
-	bscp-client unlock configset --Id specifiedID
-	or 
-	bscp-client unlock cfgset --name cfgname --app gameserver
+	bk-bscp-client unlock configset --Id configsetId
+	bk-bscp-client unlock cfgset --cfgset /etc/server.yaml
 		`,
 		RunE: func(c *cobra.Command, args []string) error {
+			err := option.SetGlobalVarByName(c, "app")
+			if err != nil {
+				return err
+			}
 			operator := service.NewOperator(option.GlobalOptions)
 			if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
 				return err
 			}
 			//todo(DeveloperJim): add configSet name support
-			ID, _ := c.Flags().GetString("Id")
-			if len(ID) == 0 {
-				//go by name and AppName
-				name, _ := c.Flags().GetString("name")
-				appName, _ := c.Flags().GetString("app")
-				if len(name) == 0 || len(appName) == 0 {
-					return fmt.Errorf("parameter name and app are required")
-				}
-				configset, err := operator.GetConfigSet(context.TODO(), appName, name)
-				if err != nil {
-					return err
-				}
-				if configset == nil {
-					return fmt.Errorf("No relative ConfigSet %s", name)
-				}
-				ID = configset.Cfgsetid
+			ID, _ := c.Flags().GetString("id")
+			cfgset, _ := c.Flags().GetString("cfgset")
+			appName, _ := c.Flags().GetString("app")
+			if len(appName) == 0 {
+				return fmt.Errorf("parameter app are required")
 			}
+			cfgsetFpath, cfgsetName := path.Split(cfgset)
+			query := &common.ConfigSet{
+				Cfgsetid: ID,
+				Name:     cfgsetName,
+				Fpath:    cfgsetFpath,
+			}
+			configset, err := operator.GetConfigSet(context.TODO(), appName, query)
+			if err != nil {
+				return err
+			}
+			if configset == nil {
+				return fmt.Errorf("No relative ConfigSet by your parameter")
+			}
+			ID = configset.Cfgsetid
+
 			if err := operator.UnLockConfigSet(context.TODO(), ID); err != nil {
 				return err
 			}
-			c.Printf("unLock ConfigSet successfully: %s\n", ID)
+			c.Printf("unLock ConfigSet successfully: %s\n\n", ID)
 			return nil
 		},
 	}
 	// --Id is required
-	cmd.Flags().String("Id", "", "specified ConfigSet ID")
-	cmd.Flags().StringP("name", "n", "", "specified ConfigSet name")
+	cmd.Flags().StringP("id", "i", "", "specified ConfigSet ID")
+	cmd.Flags().StringP("cfgset", "c", "", "specified ConfigSet")
 	cmd.Flags().StringP("app", "a", "", "specified Application name for filter")
 	return cmd
 }

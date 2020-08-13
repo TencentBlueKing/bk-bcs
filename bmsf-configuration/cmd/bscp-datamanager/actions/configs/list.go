@@ -129,7 +129,7 @@ func (act *ListAction) queryConfigsList() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.Configs{Bid: act.req.Bid, Cfgsetid: act.req.Cfgsetid, Commitid: act.req.Commitid}).
 		Find(&act.configsList).Error
 

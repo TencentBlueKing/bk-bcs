@@ -23,6 +23,8 @@ import (
 	"bk-bscp/internal/dbsharding"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
+	"bk-bscp/pkg/common"
+	"bk-bscp/pkg/logger"
 )
 
 // PublishAction is release publish action object.
@@ -31,6 +33,7 @@ type PublishAction struct {
 	smgr  *dbsharding.ShardingManager
 
 	releaseCache gcache.Cache
+	configsCache gcache.Cache
 
 	req  *pb.PublishReleaseReq
 	resp *pb.PublishReleaseResp
@@ -43,9 +46,9 @@ type PublishAction struct {
 }
 
 // NewPublishAction creates new PublishAction.
-func NewPublishAction(viper *viper.Viper, smgr *dbsharding.ShardingManager, releaseCache gcache.Cache,
+func NewPublishAction(viper *viper.Viper, smgr *dbsharding.ShardingManager, releaseCache, configsCache gcache.Cache,
 	req *pb.PublishReleaseReq, resp *pb.PublishReleaseResp) *PublishAction {
-	action := &PublishAction{viper: viper, smgr: smgr, releaseCache: releaseCache, req: req, resp: resp}
+	action := &PublishAction{viper: viper, smgr: smgr, releaseCache: releaseCache, configsCache: configsCache, req: req, resp: resp}
 
 	action.resp.Seq = req.Seq
 	action.resp.ErrCode = pbcommon.ErrCode_E_OK
@@ -178,6 +181,73 @@ func (act *PublishAction) updateCommit() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
+func (act *PublishAction) queryConfigsList(bid, cfgsetid, commitid string, index, limit int32) ([]database.Configs, error) {
+	act.sd.AutoMigrate(&database.Configs{})
+
+	configsList := []database.Configs{}
+
+	err := act.sd.DB().
+		Offset(index).Limit(limit).
+		Order("Fupdate_time DESC, Fid DESC").
+		Where(&database.Configs{Bid: bid, Cfgsetid: cfgsetid, Commitid: commitid}).
+		Find(&configsList).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return configsList, nil
+}
+
+func (act *PublishAction) genConfigsCacheKey(bid, cfgsetid, commitid, appid, clusterid, zoneid, index string) string {
+	return common.SHA256(bid + ":" + cfgsetid + ":" + commitid + ":" + appid + ":" + clusterid + ":" + zoneid + ":" + index)
+}
+
+func (act *PublishAction) addConfigsCache() error {
+	index := 0
+	limit := 1
+
+	for {
+		list, err := act.queryConfigsList(act.release.Bid, act.release.Cfgsetid, act.release.Commitid, int32(index), int32(limit))
+		if err != nil {
+			return err
+		}
+
+		// query success.
+		for _, cfg := range list {
+			key := act.genConfigsCacheKey(cfg.Bid, cfg.Cfgsetid, cfg.Commitid, cfg.Appid, cfg.Clusterid, cfg.Zoneid, cfg.Index)
+
+			configs := &pbcommon.Configs{
+				Bid:          cfg.Bid,
+				Cfgsetid:     cfg.Cfgsetid,
+				Appid:        cfg.Appid,
+				Clusterid:    cfg.Clusterid,
+				Zoneid:       cfg.Zoneid,
+				Index:        cfg.Index,
+				Commitid:     cfg.Commitid,
+				Cid:          cfg.Cid,
+				CfgLink:      cfg.CfgLink,
+				Content:      cfg.Content,
+				Creator:      cfg.Creator,
+				LastModifyBy: cfg.LastModifyBy,
+				Memo:         cfg.Memo,
+				State:        cfg.State,
+				CreatedAt:    cfg.CreatedAt.Format("2006-01-02 15:04:05"),
+				UpdatedAt:    cfg.UpdatedAt.Format("2006-01-02 15:04:05"),
+			}
+
+			act.configsCache.Set(key, configs)
+			logger.Info("PublishRelease[%d]| add configs cache in publish event, len[%d], %s", act.req.Seq, len(configs.Content), key)
+		}
+
+		if len(list) < limit {
+			break
+		}
+		index += len(list)
+	}
+
+	return nil
+}
+
 // Do makes the workflows of this action base on input messages.
 func (act *PublishAction) Do() error {
 	// business sharding db.
@@ -213,5 +283,11 @@ func (act *PublishAction) Do() error {
 	}
 	act.tx.Commit()
 	act.releaseCache.Remove(act.req.Releaseid)
+
+	// add cache in prev mode.
+	if err := act.addConfigsCache(); err != nil {
+		logger.Warn("PublishRelease[%d]| add configs cache in publish event failed, %+v", act.req.Seq, err)
+	}
+
 	return nil
 }

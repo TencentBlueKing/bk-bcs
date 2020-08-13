@@ -25,22 +25,27 @@ import (
 //createStrategyCmd: client create strategy
 func createStrategyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "strategy",
-		Short: "create strategy",
-		Long:  "create strategy for application configuration release",
+		Use:     "strategy",
+		Aliases: []string{"str"},
+		Short:   "Create strategy",
+		Long:    "Create strategy for application configuration release",
 		Example: `
-	bscp-client create strategy --app gamesvr --json ./somefile.json --name strategyName
+	bk-bscp-client create strategy --json ./somefile.json --name strategyName
 	json template as followed:
 	{
-		"Appid":"appid",
-		"Clusterids": ["clusterid01","clusterid02","clusterid03"],
-		"Zoneids": ["zoneid01","zoneid02","zoneid03"],
+		"App":"appName",
+		"Clusters": ["cluster01","cluster02","cluster03"],
+		"Zones": ["zone01","zone02","zone03"],
 		"Dcs": ["dc01","dc02","dc03"],
 		"IPs": ["X.X.X.1","X.X.X.2","X.X.X.3"],
 		"Labels": {
 			"k1":"v1",
 			"k2":"v2",
 			"k3":"v3"
+		},
+		"LabelsAnd": {
+			"k3":"1",	 
+			"k4":"1,2,3"
 		}
 	}
 		`,
@@ -50,23 +55,40 @@ func createStrategyCmd() *cobra.Command {
 	cmd.Flags().StringP("app", "a", "", "settings application name that strategy belongs to")
 	cmd.Flags().StringP("name", "n", "", "settings strategy name.")
 	cmd.Flags().StringP("json", "j", "", "json details for strategy")
-	cmd.MarkFlagRequired("app")
+	cmd.Flags().StringP("memo", "m", "", "settings memo for strategy")
 	cmd.MarkFlagRequired("name")
 	cmd.MarkFlagRequired("json")
 	return cmd
 }
 
 func handleCreateStrategy(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create business operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
 		return err
 	}
-	appName, _ := cmd.Flags().GetString("app")
-	name, _ := cmd.Flags().GetString("name")
-	jsonFile, _ := cmd.Flags().GetString("json")
+	appName, err := cmd.Flags().GetString("app")
+	if err != nil {
+		return err
+	}
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+	jsonFile, err := cmd.Flags().GetString("json")
+	if err != nil {
+		return err
+	}
+	memo, err := cmd.Flags().GetString("memo")
+	if err != nil {
+		return err
+	}
 	//reading all details from json-file
-	cfgBytes, err := ioutil.ReadFile(jsonFile)
+	jsonBytes, err := ioutil.ReadFile(jsonFile)
 	if err != nil {
 		return err
 	}
@@ -74,63 +96,14 @@ func handleCreateStrategy(cmd *cobra.Command, args []string) error {
 	request := &service.StrategyOption{
 		Name:    name,
 		AppName: appName,
-		Content: string(cfgBytes),
+		Content: string(jsonBytes),
+		Memo:    memo,
 	}
 	//create Commit and check result
 	strategyID, err := operator.CreateStrategy(context.TODO(), request)
 	if err != nil {
 		return err
 	}
-	cmd.Printf("Create Strategy successfully: %s\n", strategyID)
-	return nil
-}
-
-//createReleaseCmd: client create strategy
-func createReleaseCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "release",
-		Aliases: []string{"rel"},
-		Short:   "create release",
-		Long:    "create release for application configuration commit",
-		Example: `
-	bscp-client create release --app gamesvr --strategy bluestrategy --name relname --commitId xxxxxxxx
-	bscp-client create rl -a game -s bluestrategy -n relname -i xxxxxxxx
-		`,
-		RunE: handleCreateRelease,
-	}
-	//command line flags
-	cmd.Flags().StringP("app", "a", "", "settings application name that release belongs to.")
-	cmd.MarkFlagRequired("app")
-	cmd.Flags().StringP("name", "n", "", "settings release name.")
-	cmd.MarkFlagRequired("name")
-	cmd.Flags().StringP("strategy", "s", "", "settings release strategy name, optional")
-	cmd.Flags().StringP("commitId", "i", "", "settings release relative CommitID")
-	cmd.MarkFlagRequired("commitId")
-	return cmd
-}
-
-func handleCreateRelease(cmd *cobra.Command, args []string) error {
-	//get global command info and create business operator
-	operator := service.NewOperator(option.GlobalOptions)
-	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
-		return err
-	}
-	appName, _ := cmd.Flags().GetString("app")
-	name, _ := cmd.Flags().GetString("name")
-	strategyName, _ := cmd.Flags().GetString("strategy")
-	commitID, _ := cmd.Flags().GetString("commitId")
-	//construct createRequest
-	request := &service.ReleaseOption{
-		Name:         name,
-		AppName:      appName,
-		StrategyName: strategyName,
-		CommitID:     commitID,
-	}
-	//create and check result
-	releaseID, err := operator.CreateRelease(context.TODO(), request)
-	if err != nil {
-		return err
-	}
-	cmd.Printf("Create Release successfully: %s\n", releaseID)
+	cmd.Printf("Create Strategy successfully: %s\n\n", strategyID)
 	return nil
 }

@@ -145,7 +145,7 @@ func (act *MatchedAction) queryReachableAppInstances(appid string) (pbcommon.Err
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.AppInstance{Bid: act.req.Bid, Appid: appid, State: int32(pbcommon.AppInstanceState_INSS_ONLINE)}).
 		Find(&act.appInstances).Error
 

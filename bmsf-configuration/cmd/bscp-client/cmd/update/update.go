@@ -23,17 +23,17 @@ var updateCmd *cobra.Command
 func init() {
 	updateCmd = &cobra.Command{
 		Use:   "update",
-		Short: "update resource",
-		Long:  "subcommand for update resources, including strategy/commit/release",
+		Short: "Update resource",
+		Long:  "Subcommand for update resources",
 	}
 }
 
-//business/app/cluster/zone is too simple
-//no update needed
-
 //InitCommands init all update commands
 func InitCommands() []*cobra.Command {
-	updateCmd.AddCommand(updateCommitCmd())
-	updateCmd.AddCommand(updateReleaseCmd())
+	updateCmd.AddCommand(updateAppCmd())
+	updateCmd.AddCommand(updateZoneCmd())
+	updateCmd.AddCommand(updateClusterCmd())
+	updateCmd.AddCommand(updateSharingDBCmd())
+	updateCmd.AddCommand(updateSharingCmd())
 	return []*cobra.Command{updateCmd}
 }

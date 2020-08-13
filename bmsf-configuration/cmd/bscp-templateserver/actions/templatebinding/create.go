@@ -327,7 +327,6 @@ func (act *CreateAction) createCommit() (pbcommon.ErrCode, string) {
 		Operator:     act.req.Creator,
 		Templateid:   act.req.Templateid,
 		TemplateRule: act.req.BindingParams,
-		Configs:      []byte(act.version.Content),
 		Changes:      "",
 		Memo:         act.version.Memo,
 	}

@@ -140,11 +140,14 @@ func (act *CreateAction) verify() error {
 			return errors.New("invalid params, template rules too long")
 		}
 
-		if len(metadata.Configs) == 0 && len(metadata.Template) == 0 {
-			return errors.New("invalid params, empty configs and template")
-		}
 		if len(metadata.Configs) != 0 && len(metadata.Template) != 0 {
 			return errors.New("invalid params, configs and template concurrence")
+		}
+		if len(metadata.Configs) != 0 && len(metadata.Templateid) != 0 {
+			return errors.New("invalid params, configs and templateid concurrence")
+		}
+		if len(metadata.Template) != 0 && len(metadata.Templateid) != 0 {
+			return errors.New("invalid params, template and templateid concurrence")
 		}
 		if len(metadata.Template) != 0 && len(metadata.TemplateRule) == 0 {
 			return errors.New("invalid params, empty template rules")
@@ -246,13 +249,14 @@ func (act *CreateAction) createCommits() (pbcommon.ErrCode, string) {
 		}
 
 		// create a new commit.
+		common.DelayRandomMS(50)
 		if errCode, errMsg := act.createCommit(newCommitid, metadata); errCode != pbcommon.ErrCode_E_OK {
 			act.failCfgsets = append(act.failCfgsets, &pbcommon.CommitResult{Cfgsetid: metadata.Cfgsetid, Result: errMsg})
 			continue
 		}
 
 		// create success.
-		act.succCfgsets = append(act.succCfgsets, &pbcommon.CommitResult{Cfgsetid: metadata.Cfgsetid, Result: "OK"})
+		act.succCfgsets = append(act.succCfgsets, &pbcommon.CommitResult{Cfgsetid: metadata.Cfgsetid, Result: "OK", Commitid: newCommitid})
 	}
 
 	return pbcommon.ErrCode_E_OK, ""
