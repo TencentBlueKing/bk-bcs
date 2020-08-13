@@ -28,12 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/manager"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netagent/cmd/bcs-eni-ipam/cloudagent"
 )
 
 var (
-	checkMode = false
 	//default directory for log output
 	defaultLogDir = "./logs"
 )
@@ -78,7 +76,6 @@ func LoadBcsIPAMConfig(bytes []byte, args string) (*NetConf, *BcsIPAMConfig, err
 }
 
 func init() {
-	pflag.CommandLine.BoolVar(&checkMode, "check-mode", checkMode, "check mode, for releasing dirty ip data in storage.")
 	util.InitFlags()
 }
 
@@ -177,9 +174,5 @@ func cmdDel(args *skel.CmdArgs) error {
 }
 
 func main() {
-	if checkMode {
-		manager.DirtyCheck()
-		return
-	}
 	skel.PluginMain(cmdAdd, cmdDel, version.PluginSupports("0.3.0"))
 }
