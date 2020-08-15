@@ -34,10 +34,10 @@ import (
 )
 
 const (
-	// start eni route table id
-	startENIRouteTableID = 100
-
-	mainRouteTableID = 254
+	// EniRouteTableStartID start eni route table id
+	EniRouteTableStartID = 100
+	// MainRouteTableID main route table id
+	MainRouteTableID = 254
 )
 
 // EIP object for use tencent network interface
@@ -170,7 +170,7 @@ func (eip *EIP) Init(file string, eniNum int, ipNum int) {
 
 		// for each newly applied network interface, create a route table in later steps,
 		// here we just calculate the route table id and record it in an array
-		tableID := startENIRouteTableID + i
+		tableID := EniRouteTableStartID + i
 		routeTableIDs = append(routeTableIDs, tableID)
 		routeTableIDMap[linkName] = tableID
 	}
@@ -366,7 +366,7 @@ func (eip *EIP) Recover(file string, eniNum int) {
 	// query each applied network interface by rule "eni-%s-%d", get primary ip address,
 	// and set up network interface by (address, mac) in query result.
 	for i := 0; i < eniNum; i++ {
-		tableID := startENIRouteTableID + i
+		tableID := EniRouteTableStartID + i
 		routeTableIDs = append(routeTableIDs, tableID)
 		resENIName := fmt.Sprintf("eni-%s-%d", *instance.InstanceId, i)
 		blog.Infof("recover eni with name %s", resENIName)
@@ -692,7 +692,7 @@ func createVethPair(netns string, containerIfName string, mtu int) (*current.Int
 }
 
 // configureHostNS configure host namespace
-func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) error {
+func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID, routeRulePriority int) error {
 
 	// add to taskgroup route
 	hostVeth, err := netlink.LinkByName(hostIfName)
@@ -716,7 +716,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleToTable := netlink.NewRule()
 	ruleToTable.Dst = ipNet
 	ruleToTable.Table = routeTableID
-	ruleToTable.Priority = 2048
+	ruleToTable.Priority = routeRulePriority - 1
 	err = netlink.RuleDel(ruleToTable)
 	if err != nil {
 		blog.Warnf("clean old rule to table %s failed, err %s", ruleToTable.String(), err.Error())
@@ -730,7 +730,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleFromTaskgroup := netlink.NewRule()
 	ruleFromTaskgroup.Src = ipNet
 	ruleFromTaskgroup.Table = routeTableID
-	ruleFromTaskgroup.Priority = 2048
+	ruleFromTaskgroup.Priority = routeRulePriority
 	err = netlink.RuleDel(ruleFromTaskgroup)
 	if err != nil {
 		blog.Warnf("clean old rule from taskgroup %s failed, err %s", ruleToTable.String(), err.Error())
@@ -817,7 +817,7 @@ func getRouteTableIDByMac(mac, eniPrefix string) (int, error) {
 				blog.Errorf("convert %s to int failed, err %s", idString, err.Error())
 				return -1, fmt.Errorf("convert %s to int failed, err %s", idString, err.Error())
 			}
-			return id + startENIRouteTableID, nil
+			return id + EniRouteTableStartID, nil
 		}
 	}
 	return -1, fmt.Errorf("cannot find eni with mac %s", mac)
@@ -892,7 +892,7 @@ func (eip *EIP) CNIAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("configure container ns network failed, err %s", err.Error())
 	}
 
-	err = configureHostNS(hostVethInfo.Name, ipNet, routeTableID)
+	err = configureHostNS(hostVethInfo.Name, ipNet, routeTableID, netConf.RouteRulePriority)
 	if err != nil {
 		blog.Errorf("configure host ns network failed, err %s", err.Error())
 		return fmt.Errorf("configure host ns network failed, err %s", err.Error())
