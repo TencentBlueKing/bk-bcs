@@ -28,6 +28,10 @@ func (c *FakeNetworkextensionV1) Ingresses(namespace string) v1.IngressInterface
 	return &FakeIngresses{c, namespace}
 }
 
+func (c *FakeNetworkextensionV1) Listeners(namespace string) v1.ListenerInterface {
+	return &FakeListeners{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeNetworkextensionV1) RESTClient() rest.Interface {

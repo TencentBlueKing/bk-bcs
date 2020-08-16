@@ -15,45 +15,60 @@ package controllers
 import (
 	"strings"
 
-	k8sappsv1 "k8s.io/api/apps/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-func findIngressesByService(service *k8scorev1.Service,
-	ingressList *networkextensionv1.IngressList) []*networkextensionv1.Ingress {
-	var retIngressList []*networkextensionv1.Ingress
-	for _, ingress := range ingressList.Items {
-		found := false
-		for _, rule := range ingress.Spec.Rules {
-			if strings.ToLower(rule.Protocol) == "tcp" || strings.ToLower(rule.Protocol) == "udp" {
-				for _, route := range rule.Services {
+func isServiceInIngress(ingress *networkextensionv1.Ingress, service *k8scorev1.Service) bool {
+	for _, rule := range ingress.Spec.Rules {
+		if strings.ToLower(rule.Protocol) == "tcp" || strings.ToLower(rule.Protocol) == "udp" {
+			for _, route := range rule.Services {
+				if service.GetName() == route.ServiceName && service.GetNamespace() == route.ServiceNamespace {
+					blog.V(2).Infof("service %s/%s found in ingress %s/%s",
+						service.GetNamespace(), service.GetName(), ingress.GetNamespace(), ingress.GetName())
+					return true
+				}
+			}
+		}
+		if strings.ToLower(rule.Protocol) == "http" || strings.ToLower(rule.Protocol) == "https" {
+			for _, httpRoute := range rule.Routes {
+				for _, route := range httpRoute.Services {
 					if service.GetName() == route.ServiceName && service.GetNamespace() == route.ServiceNamespace {
 						blog.V(2).Infof("service %s/%s found in ingress %s/%s",
 							service.GetNamespace(), service.GetName(), ingress.GetNamespace(), ingress.GetName())
-						retIngressList = append(retIngressList, &ingress)
-						found = true
+						return true
 					}
 				}
 			}
-			if found {
-				break
-			}
-			if strings.ToLower(rule.Protocol) == "http" || strings.ToLower(rule.Protocol) == "https" {
-				for _, httpRoute := range rule.Routes {
-					for _, route := range httpRoute.Services {
-						if service.GetName() == route.ServiceName && service.GetNamespace() == route.ServiceNamespace {
-							blog.V(2).Infof("service %s/%s found in ingress %s/%s",
-								service.GetNamespace(), service.GetName(), ingress.GetNamespace(), ingress.GetName())
-							retIngressList = append(retIngressList, &ingress)
-							found = true
-						}
-					}
-				}
-			}
-			if found {
+		}
+	}
+	return false
+}
+
+func findIngressesByService(service *k8scorev1.Service,
+	ingressList *networkextensionv1.IngressList) []*networkextensionv1.Ingress {
+	var retIngressList []*networkextensionv1.Ingress
+	for index, ingress := range ingressList.Items {
+		if isServiceInIngress(&ingress, service) {
+			retIngressList = append(retIngressList, &ingressList.Items[index])
+		}
+	}
+	return retIngressList
+}
+
+func findIngressesByWorkload(kind, name, ns string,
+	ingressList *networkextensionv1.IngressList) []*networkextensionv1.Ingress {
+	var retIngressList []*networkextensionv1.Ingress
+	for index, ingress := range ingressList.Items {
+		for _, mapping := range ingress.Spec.PortMappings {
+			if strings.ToLower(mapping.WorkloadKind) == strings.ToLower(kind) &&
+				mapping.WorkloadName == name &&
+				mapping.WorkloadNamespace == ns {
+				blog.V(2).Infof("workload %s/%s/%s found in ingress %s/%s",
+					kind, name, ns, ingress.GetNamespace(), ingress.GetName())
+				retIngressList = append(retIngressList, &ingressList.Items[index])
 				break
 			}
 		}
@@ -61,19 +76,14 @@ func findIngressesByService(service *k8scorev1.Service,
 	return retIngressList
 }
 
-func findIngressesByStatefulSet(sts *k8sappsv1.StatefulSet,
-	ingressList *networkextensionv1.IngressList) []*networkextensionv1.Ingress {
-	var retIngressList []*networkextensionv1.Ingress
-	for _, ingress := range ingressList.Items {
-		for _, mapping := range ingress.Spec.PortMappings {
-			if strings.ToLower(mapping.WorkloadKind) == "statefulset" &&
-				mapping.WorkloadName == sts.GetName() &&
-				mapping.WorkloadNamespace == sts.GetNamespace() {
-
-				retIngressList = append(retIngressList, &ingress)
-				break
-			}
+func deduplicateIngresses(ingresses []*networkextensionv1.Ingress) []*networkextensionv1.Ingress {
+	var retList []*networkextensionv1.Ingress
+	ingressMap := make(map[string]*networkextensionv1.Ingress)
+	for index, ingress := range ingresses {
+		if _, ok := ingressMap[ingress.GetNamespace()+"/"+ingress.GetName()]; !ok {
+			ingressMap[ingress.GetNamespace()+"/"+ingress.GetName()] = ingresses[index]
+			retList = append(retList, ingresses[index])
 		}
 	}
-	return retIngressList
+	return retList
 }

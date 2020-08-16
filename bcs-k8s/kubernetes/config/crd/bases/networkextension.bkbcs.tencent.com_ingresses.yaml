@@ -38,29 +38,6 @@ spec:
               items:
                 description: IngressPortMapping mapping of ingress
                 properties:
-                  certificates:
-                    description: IngressListenerCertificate certificate configs for
-                      listener
-                    properties:
-                      certCaId:
-                        type: string
-                      certCilentCaContent:
-                        type: string
-                      certClientCaName:
-                        type: string
-                      certId:
-                        type: string
-                      certServerContent:
-                        type: string
-                      certServerKey:
-                        type: string
-                      certServerName:
-                        type: string
-                      mode:
-                        type: string
-                    type: object
-                  domain:
-                    type: string
                   endIndex:
                     type: integer
                   ignoreHostPort:
@@ -90,27 +67,12 @@ spec:
                             type: integer
                           unHealthNum:
                             type: integer
-                        required:
-                        - enabled
-                        - healthNum
-                        - httpCheckMethod
-                        - httpCheckPath
-                        - httpCode
-                        - intervalTime
-                        - timeout
-                        - unHealthNum
                         type: object
                       lbPolicy:
                         type: string
                       sessionTime:
                         type: integer
-                    required:
-                    - healthCheck
-                    - lbPolicy
-                    - sessionTime
                     type: object
-                  path:
-                    type: string
                   protocol:
                     type: string
                   segmentLength:
@@ -126,15 +88,8 @@ spec:
                   workloadNamespace:
                     type: string
                 required:
-                - certificates
-                - domain
                 - endIndex
-                - ignoreHostPort
-                - isBackendPortFixed
-                - listenerAttribute
-                - path
                 - protocol
-                - segmentLength
                 - startIndex
                 - startPort
                 - workloadKind
@@ -146,17 +101,17 @@ spec:
               items:
                 description: IngressRule rule of ingress
                 properties:
-                  certificates:
+                  certificate:
                     description: IngressListenerCertificate certificate configs for
                       listener
                     properties:
-                      certCaId:
+                      certCaID:
                         type: string
                       certCilentCaContent:
                         type: string
                       certClientCaName:
                         type: string
-                      certId:
+                      certID:
                         type: string
                       certServerContent:
                         type: string
@@ -179,8 +134,6 @@ spec:
                           type: string
                         servicePort:
                           type: integer
-                        serviceWeight:
-                          type: integer
                         subsets:
                           items:
                             description: IngressSubset subset info
@@ -190,19 +143,29 @@ spec:
                                   type: string
                                 type: object
                               weight:
-                                type: integer
+                                description: IngressWeight ingress weight struct
+                                properties:
+                                  value:
+                                    type: integer
+                                required:
+                                - value
+                                type: object
                             required:
                             - labelSelector
-                            - weight
                             type: object
                           type: array
+                        weight:
+                          description: IngressWeight ingress weight struct
+                          properties:
+                            value:
+                              type: integer
+                          required:
+                          - value
+                          type: object
                       required:
-                      - isDirectConnect
                       - serviceName
                       - serviceNamespace
                       - servicePort
-                      - serviceWeight
-                      - subsets
                       type: object
                     type: array
                   layer7Services:
@@ -225,8 +188,6 @@ spec:
                                 type: string
                               servicePort:
                                 type: integer
-                              serviceWeight:
-                                type: integer
                               subsets:
                                 items:
                                   description: IngressSubset subset info
@@ -236,25 +197,33 @@ spec:
                                         type: string
                                       type: object
                                     weight:
-                                      type: integer
+                                      description: IngressWeight ingress weight struct
+                                      properties:
+                                        value:
+                                          type: integer
+                                      required:
+                                      - value
+                                      type: object
                                   required:
                                   - labelSelector
-                                  - weight
                                   type: object
                                 type: array
+                              weight:
+                                description: IngressWeight ingress weight struct
+                                properties:
+                                  value:
+                                    type: integer
+                                required:
+                                - value
+                                type: object
                             required:
-                            - isDirectConnect
                             - serviceName
                             - serviceNamespace
                             - servicePort
-                            - serviceWeight
-                            - subsets
                             type: object
                           type: array
                       required:
                       - domain
-                      - path
-                      - services
                       type: object
                     type: array
                   listenerAttribute:
@@ -280,41 +249,21 @@ spec:
                             type: integer
                           unHealthNum:
                             type: integer
-                        required:
-                        - enabled
-                        - healthNum
-                        - httpCheckMethod
-                        - httpCheckPath
-                        - httpCode
-                        - intervalTime
-                        - timeout
-                        - unHealthNum
                         type: object
                       lbPolicy:
                         type: string
                       sessionTime:
                         type: integer
-                    required:
-                    - healthCheck
-                    - lbPolicy
-                    - sessionTime
                     type: object
                   port:
                     type: integer
                   protocol:
                     type: string
                 required:
-                - certificates
-                - layer4Services
-                - layer7Services
-                - listenerAttribute
                 - port
                 - protocol
                 type: object
               type: array
-          required:
-          - portMappings
-          - rules
           type: object
         status:
           description: IngressStatus defines the observed state of Ingress
@@ -330,12 +279,8 @@ spec:
                     items:
                       type: string
                     type: array
-                required:
-                - ips
                 type: object
               type: array
-          required:
-          - loadbalancers
           type: object
       type: object
   version: v1

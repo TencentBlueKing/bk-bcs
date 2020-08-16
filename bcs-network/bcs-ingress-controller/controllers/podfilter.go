@@ -58,6 +58,7 @@ func (pf *PodFilter) enqueuePodRelatedIngress(pod *k8scorev1.Pod, q workqueue.Ra
 }
 
 func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []*networkextensionv1.Ingress {
+	// find ingresses of pod related services
 	svcList := &k8scorev1.ServiceList{}
 	err := pf.cli.List(context.TODO(), svcList, &client.ListOptions{Namespace: pod.GetNamespace()})
 	if err != nil {
@@ -76,6 +77,17 @@ func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []*networkextensionv1.
 			retList = append(retList, findIngressesByService(&svc, ingressList)...)
 		}
 	}
+
+	// find ingresses of pod related workloads
+	for _, owner := range pod.GetOwnerReferences() {
+		ingresses := findIngressesByWorkload(owner.Kind, owner.Name, pod.GetNamespace(), ingressList)
+		if len(ingresses) != 0 {
+			retList = append(retList, ingresses...)
+		}
+	}
+
+	// deduplicate ingresses
+	retList = deduplicateIngresses(retList)
 	return retList
 }
 

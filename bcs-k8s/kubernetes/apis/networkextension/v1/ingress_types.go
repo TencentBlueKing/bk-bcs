@@ -17,13 +17,48 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	// ProtocolHTTP name of http protocol
+	ProtocolHTTP = "http"
+	// ProtocolHTTPS name of https protocol
+	ProtocolHTTPS = "https"
+	// ProtocolTCP name of tcp protocol
+	ProtocolTCP = "tcp"
+	// ProtocolUDP name of udp protocol
+	ProtocolUDP = "udp"
+
+	// AnnotationKeyForLoadbalanceIDs annotation key for cloud lb ids
+	AnnotationKeyForLoadbalanceIDs = "networkextension.bkbcs.tencent.com/lbids"
+
+	// DefaultWeight default weight value
+	DefaultWeight = 10
+
+	// WorkloadKindStatefulset kind name of workload statefulset
+	WorkloadKindStatefulset = "statefulset"
+	// WorkloadKindGameStatefulset kind name of workload game statefulset
+	WorkloadKindGameStatefulset = "gamestatefulset"
+)
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// IngressWeight ingress weight struct
+type IngressWeight struct {
+	Value int `json:"value"`
+}
 
 // IngressSubset subset info
 type IngressSubset struct {
 	LabelSelector map[string]string `json:"labelSelector"`
-	Weight        int               `json:"weight"`
+	Weight        *IngressWeight    `json:"weight,omitempty"`
+}
+
+// GetWeight get weight of ingress subset
+func (is *IngressSubset) GetWeight() int {
+	if is.Weight == nil {
+		return DefaultWeight
+	}
+	return is.Weight.Value
 }
 
 // ServiceRoute service info
@@ -31,42 +66,50 @@ type ServiceRoute struct {
 	ServiceName      string           `json:"serviceName"`
 	ServiceNamespace string           `json:"serviceNamespace"`
 	ServicePort      int              `json:"servicePort"`
-	IsDirectConnect  bool             `json:"isDirectConnect"`
-	ServiceWeight    int              `json:"serviceWeight"`
-	Subsets          []*IngressSubset `json:"subsets"`
+	IsDirectConnect  bool             `json:"isDirectConnect,omitempty"`
+	Weight           *IngressWeight   `json:"weight,omitempty"`
+	Subsets          []*IngressSubset `json:"subsets,omitempty"`
+}
+
+// GetWeight get weight of service route
+func (sr *ServiceRoute) GetWeight() int {
+	if sr.Weight == nil {
+		return DefaultWeight
+	}
+	return sr.Weight.Value
 }
 
 // Layer7Route 7 layer route config
 type Layer7Route struct {
 	Domain   string          `json:"domain"`
-	Path     string          `json:"path"`
-	Services []*ServiceRoute `json:"services"`
+	Path     string          `json:"path,omitempty"`
+	Services []*ServiceRoute `json:"services,omitempty"`
 }
 
 // ListenerHealthCheck health check setting for listener
 type ListenerHealthCheck struct {
-	Enabled         bool   `json:"enabled"`
-	Timeout         int    `json:"timeout"`
-	IntervalTime    int    `json:"intervalTime"`
-	HealthNum       int    `json:"healthNum"`
-	UnHealthNum     int    `json:"unHealthNum"`
-	HTTPCode        int    `json:"httpCode"`
-	HTTPCheckPath   string `json:"httpCheckPath"`
-	HTTPCheckMethod string `json:"httpCheckMethod"`
+	Enabled         bool   `json:"enabled,omitempty"`
+	Timeout         int    `json:"timeout,omitempty"`
+	IntervalTime    int    `json:"intervalTime,omitempty"`
+	HealthNum       int    `json:"healthNum,omitempty"`
+	UnHealthNum     int    `json:"unHealthNum,omitempty"`
+	HTTPCode        int    `json:"httpCode,omitempty"`
+	HTTPCheckPath   string `json:"httpCheckPath,omitempty"`
+	HTTPCheckMethod string `json:"httpCheckMethod,omitempty"`
 }
 
 // IngressListenerAttribute attribute for listener
 type IngressListenerAttribute struct {
-	SessionTime int                  `json:"sessionTime"`
-	LbPolicy    string               `json:"lbPolicy"`
-	HealthCheck *ListenerHealthCheck `json:"healthCheck"`
+	SessionTime int                  `json:"sessionTime,omitempty"`
+	LbPolicy    string               `json:"lbPolicy,omitempty"`
+	HealthCheck *ListenerHealthCheck `json:"healthCheck,omitempty"`
 }
 
 // IngressListenerCertificate certificate configs for listener
 type IngressListenerCertificate struct {
 	Mode                string `json:"mode,omitempty"`
-	CertID              string `json:"certId,omitempty"`
-	CertCaID            string `json:"certCaId,omitempty"`
+	CertID              string `json:"certID,omitempty"`
+	CertCaID            string `json:"certCaID,omitempty"`
 	CertServerName      string `json:"certServerName,omitempty"`
 	CertServerKey       string `json:"certServerKey,omitempty"`
 	CertServerContent   string `json:"certServerContent,omitempty"`
@@ -78,46 +121,43 @@ type IngressListenerCertificate struct {
 type IngressRule struct {
 	Port              int                         `json:"port"`
 	Protocol          string                      `json:"protocol"`
-	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute"`
-	Certificate       *IngressListenerCertificate `json:"certificates"`
-	Services          []*ServiceRoute             `json:"layer4Services"`
-	Routes            []*Layer7Route              `json:"layer7Services"`
+	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute,omitempty"`
+	Certificate       *IngressListenerCertificate `json:"certificate,omitempty"`
+	Services          []*ServiceRoute             `json:"layer4Services,omitempty"`
+	Routes            []*Layer7Route              `json:"layer7Services,omitempty"`
 }
 
 // IngressPortMapping mapping of ingress
 type IngressPortMapping struct {
-	WorkloadKind       string                      `json:"workloadKind"`
-	WorkloadName       string                      `json:"workloadName"`
-	WorkloadNamespace  string                      `json:"workloadNamespace"`
-	StartPort          int                         `json:"startPort"`
-	StartIndex         int                         `json:"startIndex"`
-	EndIndex           int                         `json:"endIndex"`
-	SegmentLength      int                         `json:"segmentLength"`
-	Protocol           string                      `json:"protocol"`
-	Domain             string                      `json:"domain"`
-	Path               string                      `json:"path"`
-	IsBackendPortFixed bool                        `json:"isBackendPortFixed"`
-	IgnoreHostPort     bool                        `json:"ignoreHostPort"`
-	ListenerAttribute  *IngressListenerAttribute   `json:"listenerAttribute"`
-	Certificate        *IngressListenerCertificate `json:"certificates"`
+	WorkloadKind       string                    `json:"workloadKind"`
+	WorkloadName       string                    `json:"workloadName"`
+	WorkloadNamespace  string                    `json:"workloadNamespace"`
+	StartPort          int                       `json:"startPort"`
+	StartIndex         int                       `json:"startIndex"`
+	EndIndex           int                       `json:"endIndex"`
+	SegmentLength      int                       `json:"segmentLength,omitempty"`
+	Protocol           string                    `json:"protocol"`
+	IsBackendPortFixed bool                      `json:"isBackendPortFixed,omitempty"`
+	IgnoreHostPort     bool                      `json:"ignoreHostPort,omitempty"`
+	ListenerAttribute  *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 }
 
 // IngressSpec defines the desired state of Ingress
 type IngressSpec struct {
-	Rules        []*IngressRule        `json:"rules"`
-	PortMappings []*IngressPortMapping `json:"portMappings"`
+	Rules        []*IngressRule        `json:"rules,omitempty"`
+	PortMappings []*IngressPortMapping `json:"portMappings,omitempty"`
 }
 
 // IngressLoadBalancer loadbalancer for ingress
 type IngressLoadBalancer struct {
-	IPs []string `json:"ips"`
+	IPs []string `json:"ips,omitempty"`
 }
 
 // IngressStatus defines the observed state of Ingress
 type IngressStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Loadbalancers []*IngressLoadBalancer `json:"loadbalancers"`
+	Loadbalancers []*IngressLoadBalancer `json:"loadbalancers,omitempty"`
 }
 
 // +genclient

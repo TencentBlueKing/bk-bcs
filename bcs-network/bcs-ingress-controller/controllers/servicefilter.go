@@ -55,6 +55,7 @@ func (sf *ServiceFilter) enqueueServiceRelatedIngress(svc *k8scorev1.Service, q 
 			Namespace: ingress.GetNamespace(),
 		}})
 	}
+	
 }
 
 // Create implement EventFilter

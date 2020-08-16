@@ -47,7 +47,7 @@ func (sf *StatefulSetFilter) enqueueStatefulSetRelatedIngress(sts *k8sappsv1.Sta
 		blog.Warnf("list bcs ingresses failed, err %s", err.Error())
 		return
 	}
-	ingresses := findIngressesByStatefulSet(sts, ingressList)
+	ingresses := findIngressesByWorkload("statefulset", sts.GetName(), sts.GetNamespace(), ingressList)
 	for _, ingress := range ingresses {
 		q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 			Name:      ingress.GetName(),

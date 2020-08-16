@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
 )
@@ -39,12 +40,19 @@ type IngressReconciler struct {
 
 	SvcFilter *ServiceFilter
 	PodFilter *PodFilter
-	stsFilter *StatefulSetFilter
+	StsFilter *StatefulSetFilter
 }
 
 // Reconcile reconcile bcs ingress
 func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	blog.Infof("ingress %s triggered", req.NamespacedName)
 	
+	// add or update
+	
+
+	// delete
+
+
 	return ctrl.Result{}, nil
 }
 
@@ -55,6 +63,6 @@ func (ir *IngressReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&networkextensionv1.Ingress{}).
 		Watches(&source.Kind{Type: &k8scorev1.Pod{}}, ir.PodFilter).
 		Watches(&source.Kind{Type: &k8scorev1.Service{}}, ir.SvcFilter).
-		Watches(&source.Kind{Type: &k8sappsv1.StatefulSet{}}, ir.stsFilter).
+		Watches(&source.Kind{Type: &k8sappsv1.StatefulSet{}}, ir.StsFilter).
 		Complete(ir)
 }

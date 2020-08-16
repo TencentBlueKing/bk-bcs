@@ -91,6 +91,7 @@ func main() {
 		IngressEventer: mgr.GetEventRecorderFor("bcs-ingress-controller"),
 		SvcFilter:      controllers.NewServiceFilter(mgr.GetClient()),
 		PodFilter:      controllers.NewPodFilter(mgr.GetClient()),
+		StsFilter:      controllers.NewStatefulSetFilter(mgr.GetClient()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
 		os.Exit(1)

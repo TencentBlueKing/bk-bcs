@@ -1,0 +1,20 @@
+# permissions for end users to view listeners.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: listener-viewer-role
+rules:
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - listeners
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - listeners/status
+  verbs:
+  - get

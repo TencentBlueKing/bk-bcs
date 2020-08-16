@@ -21,3 +21,11 @@ type IngressListerExpansion interface{}
 // IngressNamespaceListerExpansion allows custom methods to be added to
 // IngressNamespaceLister.
 type IngressNamespaceListerExpansion interface{}
+
+// ListenerListerExpansion allows custom methods to be added to
+// ListenerLister.
+type ListenerListerExpansion interface{}
+
+// ListenerNamespaceListerExpansion allows custom methods to be added to
+// ListenerNamespaceLister.
+type ListenerNamespaceListerExpansion interface{}
