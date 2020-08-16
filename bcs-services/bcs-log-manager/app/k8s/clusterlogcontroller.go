@@ -16,22 +16,39 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/util"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions"
 	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 )
 
+const (
+	DefaultLogConfigNamespace = "default"
+)
+
+var LogConfigAPIVersion string
+var LogConfigKind string
+
 type ClusterLogController struct {
-	clusterInfo *bcsapi.ClusterCredential
-	caFile      string
-	// TODO: task info
+	AddCollectionTask    chan *config.CollectionConfig
+	DeleteCollectionTask chan string
+	UpdateCollectionTask chan *config.CollectionConfig
+
+	clusterInfo          *bcsapi.ClusterCredential
+	caFile               string
+	collectionTasks      map[string]*config.CollectionConfig
 	tick                 int64
 	extensionClientset   *apiextensionsclient.Clientset
 	bcsLogConfigLister   bkbcsv1.BcsLogConfigLister
 	bcsLogConfigInformer cache.SharedIndexInformer
 	bcsClientset         *internalclientset.Clientset
 	stopCh               chan struct{}
+}
+
+func init() {
+	LogConfigAPIVersion = fmt.Sprintf("%s/%s", bcsv1.SchemeGroupVersion.Group, bcsv1.SchemeGroupVersion.Version)
+	LogConfigKind = reflect.TypeOf(bcsv1.BcsLogConfig{}).Name()
 }
 
 func NewClusterLogController(conf *config.ControllerConfig) (*ClusterLogController, error) {
@@ -48,12 +65,21 @@ func NewClusterLogController(conf *config.ControllerConfig) (*ClusterLogControll
 	return ctlr, nil
 }
 
+func BuildBcsLogConfigKey(namespace, name string) string {
+	return fmt.Sprintf("%s/%s", namespace, name)
+}
+
+func BuildDefaultBcsLogConfigName(namespace, name string) string {
+	return fmt.Sprintf("%s/%s", namespace, name)
+}
+
 func (c *ClusterLogController) Start() {
 	err := c.initKubeConf()
 	if err != nil {
 		blog.Errorf("Initialization of LogController of Cluster %s failed: %s", c.clusterInfo.ClusterID, err.Error())
 		return
 	}
+	go c.run()
 }
 
 func (c *ClusterLogController) Stop() {
@@ -96,7 +122,13 @@ func (c *ClusterLogController) initKubeConf() error {
 		internalFactory := externalversions.NewSharedInformerFactory(c.bcsClientset, time.Hour)
 		c.bcsLogConfigLister = internalFactory.Bkbcs().V1().BcsLogConfigs().Lister()
 		c.bcsLogConfigInformer = internalFactory.Bkbcs().V1().BcsLogConfigs().Informer()
-		// TODO informer inform functions
+		c.bcsLogConfigInformer.AddEventHandler(
+			cache.ResourceEventHandlerFuncs{
+				AddFunc:    c.handleAddTask,
+				UpdateFunc: c.handleUpdateTask,
+				DeleteFunc: c.handleDeleteTask,
+			},
+		)
 		internalFactory.Start(c.stopCh)
 		internalFactory.WaitForCacheSync(c.stopCh)
 		initFlag = true
@@ -139,4 +171,79 @@ func (c *ClusterLogController) createBcsLogConfig() error {
 	}
 	blog.Infof("create BcsLogConfig Crd success")
 	return nil
+}
+
+func (c *ClusterLogController) run() {
+	for {
+		select {
+		case _, ok := <-c.stopCh:
+			if !ok {
+				return
+			}
+		case task, ok := <-c.AddCollectionTask:
+			if !ok {
+				blog.Errorf("AddCollectionTask chan of cluster %s has been closed", c.clusterInfo.ClusterID)
+				return
+			}
+			logconf := &bcsv1.BcsLogConfig{}
+			logconf.TypeMeta.Kind = LogConfigKind
+			logconf.TypeMeta.APIVersion = LogConfigAPIVersion
+			if task.ConfigName != "" {
+				task.ConfigName = fmt.Sprintf("%s-%s-%d", LogConfigKind, c.clusterInfo.ClusterID, util.GenerateID())
+			}
+			logconf.ObjectMeta.Name = task.ConfigName
+			if task.ConfigNamespace == "" {
+				task.ConfigNamespace = DefaultLogConfigNamespace
+			}
+			logconf.ObjectMeta.Namespace = task.ConfigNamespace
+			logconf.Spec = task.ConfigSpec
+			logconf.Spec.ClusterId = c.clusterInfo.ClusterID
+			_, err := c.bcsClientset.Bkbcs().BcsLogConfigs(task.ConfigNamespace).Create(logconf)
+			if err != nil {
+				blog.Errorf("Create BcsLogConfig of Cluster %s failed: %s (config info: %+v)", c.clusterInfo.ClusterID, err.Error(), logconf)
+				break
+			}
+			c.collectionTasks[BuildBcsLogConfigKey(task.ConfigNamespace, task.ConfigName)] = task
+			blog.Infof("Create BcsLogConfig of Cluster %s success. (config info: %+v)", c.clusterInfo.ClusterID, logconf)
+		case key, ok := <-c.DeleteCollectionTask:
+			if !ok {
+				blog.Errorf("DeleteCollectionTask chan of cluster %s has been closed", c.clusterInfo.ClusterID)
+				return
+			}
+			var configName, configNamespace string
+			names := strings.Split(key, "/")
+			if len(names) == 1 {
+				configNamespace = DefaultLogConfigNamespace
+				configName = names[0]
+			} else if len(names) == 2 {
+				configNamespace = names[0]
+				configName = names[1]
+			} else {
+				blog.Errorf("DeleteCollectionTask chan receive an error bcslogconfig key %s, want {namespace}/{name} or {name} in default namespace", key)
+			}
+			err := c.bcsClientset.Bkbcs().BcsLogConfigs(configNamespace).Delete(configName, nil)
+			if err != nil {
+				blog.Errorf("Delete BcsLogConfig (%s) of Cluster %s failed: %s", key, c.clusterInfo.ClusterID, err.Error())
+				break
+			}
+			delete(c.collectionTasks, key)
+			blog.Infof("Delete BcsLogConfig (%s) of Cluster %s success.", key, c.clusterInfo.ClusterID)
+		}
+	}
+}
+
+func (c *ClusterLogController) handleAddTask(obj interface{}) {
+	// conf, ok := obj.(*bcsv1.BcsLogConfig)
+	// if !ok {
+	// 	blog.Error("Cannot convert new obj to *bcsv1.BcsLogConfig %+v", obj)
+	// 	return
+	// }
+	// key := BuildBcsLogConfigKey(conf.GetNamespace(), conf.GetName())
+	// TODO
+}
+
+func (c *ClusterLogController) handleUpdateTask(oldObj interface{}, newObj interface{}) {
+}
+
+func (c *ClusterLogController) handleDeleteTask(obj interface{}) {
 }

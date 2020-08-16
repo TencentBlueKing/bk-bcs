@@ -1,28 +1,61 @@
 package k8s
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 )
+
+const (
+	KubeSystemNamespace = "kube-system"
+	BCSSystemNamespace  = "bcs-system"
+	KubePublicNamespace = "kube-public"
+)
+
+var SystemNamspaces = []string{"kube-system", "bcs-system", "kube-public"}
 
 type LogManager struct {
 	userManagerCli *bcsapi.UserManagerCli
-	configs        *config.ManagerConfig
+	config         *config.ManagerConfig
 	controllers    map[string]*ClusterLogController
-	caFile         string
 }
 
 func NewManager(conf *config.ManagerConfig) *LogManager {
 	manager := &LogManager{
-		configs: conf,
-		caFile:  conf.CAFile,
+		config: conf,
 	}
 	cli := bcsapi.NewClient(&conf.BcsApiConfig)
 	manager.userManagerCli = cli.UserManager()
+	manager.addSystemCollectionConfig()
 	return manager
+}
+
+func (m *LogManager) addSystemCollectionConfig() {
+	collectConfig := config.CollectionConfig{
+		ConfigNamespace: "default",
+		ConfigName:      "",
+		ConfigSpec: bcsv1.BcsLogConfigSpec{
+			ConfigType:        "custom",
+			Stdout:            true,
+			StdDataId:         m.config.SystemDataID,
+			WorkloadNamespace: "",
+			PodLabels:         true,
+			LogTags: map[string]string{
+				"platform": "bcs",
+			},
+		},
+		ClusterIDs: "",
+	}
+	for _, namespace := range SystemNamspaces {
+		collectConfig.ConfigName = fmt.Sprintf("%s-%s", LogConfigKind, namespace)
+		collectConfig.ConfigSpec.WorkloadNamespace = namespace
+		m.config.CollectionConfigs = append(m.config.CollectionConfigs, collectConfig)
+	}
 }
 
 func (m *LogManager) Start() {
@@ -44,7 +77,7 @@ func (m *LogManager) run() {
 				m.controllers[cc.ClusterID].SetTick(cnt)
 				continue
 			}
-			controller, err := NewClusterLogController(&config.ControllerConfig{Credential: cc, CAFile: m.caFile})
+			controller, err := NewClusterLogController(&config.ControllerConfig{Credential: cc, CAFile: m.config.CAFile})
 			if err != nil {
 				blog.Errorf("Create Cluster Log Controller failed, Cluster Id: %s, Cluster Domain: %s, error info: %s", cc.ClusterID, cc.ClusterDomain, err.Error())
 				continue
@@ -63,5 +96,23 @@ func (m *LogManager) run() {
 		m.distributeTasks()
 	WaitLabel:
 		<-time.After(time.Minute)
+	}
+}
+
+func (m *LogManager) distributeTasks() {
+	for _, logconf := range m.config.CollectionConfigs {
+		clusters := strings.Split(strings.ToLower(logconf.ClusterIDs), ",")
+		for _, clusterid := range clusters {
+			if _, ok := m.controllers[clusterid]; !ok {
+				blog.Errorf("Wrong cluster ID %s of collection config %+v", clusterid, logconf)
+				continue
+			}
+			m.controllers[clusterid].AddCollectionTask <- &logconf
+		}
+		if logconf.ClusterIDs == "" {
+			for _, ctrl := range m.controllers {
+				ctrl.AddCollectionTask <- &logconf
+			}
+		}
 	}
 }

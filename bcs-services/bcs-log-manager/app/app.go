@@ -20,11 +20,7 @@ func Run(op *options.LogManagerOption) error {
 		blog.Errorf("Parse Manager config error %s", err.Error())
 		os.Exit(1)
 	}
-	manager, err := k8s.NewManager(conf)
-	if err != nil {
-		blog.Errorf("NewManager error %s", err.Error())
-		os.Exit(1)
-	}
+	manager := k8s.NewManager(conf)
 
 	manager.Start()
 	blog.Info("Log Manager started...")
@@ -33,9 +29,10 @@ func Run(op *options.LogManagerOption) error {
 
 func setManagerConfig(op *options.LogManagerOption, conf *config.ManagerConfig) error {
 	conf.CollectionConfigs = op.CollectionConfigs
-	conf.BcsApiConfig.Host = op.BcsApiHost
+	conf.BcsApiConfig.Host = op.BcsAPIHost
 	conf.BcsApiConfig.AuthToken = op.AuthToken
 	conf.BcsApiConfig.Gateway = op.Gateway
 	conf.CAFile = op.ClientCertFile
+	conf.SystemDataID = op.SystemDataID
 	return nil
 }
