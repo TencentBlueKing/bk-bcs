@@ -1,11 +1,10 @@
 package config
 
 type Config struct {
-	IstioOperatorNs string
-	IstioOperatorName string
+	//IstioOperator Docker Hub
 	DockerHub string
-	IstioOperatorCrFile string
-	IstioOperatorCrdFile string
+	//Istio Operator Charts
+	IstioOperatorCharts string
 	//bcs api-gateway address
 	ServerAddress string
 	//api-gateway usertoken

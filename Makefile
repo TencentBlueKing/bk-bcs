@@ -198,6 +198,10 @@ logbeat-sidecar:pre
 	cp -R ./install/conf/bcs-services/bcs-logbeat-sidecar ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./bcs-services/bcs-logbeat-sidecar/main.go
 
+mesh-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager ./bcs-services/bcs-mesh-manager/main.go
+
 hpacontroller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-hpacontroller ${PACKAGEPATH}/bcs-mesos-master

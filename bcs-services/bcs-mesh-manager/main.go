@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/controllers"
 	// +kubebuilder:scaffold:imports
 )
@@ -46,10 +47,15 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+	conf := config.Config{}
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
+	flag.BoolVar(&enableLeaderElection, "enable-leader-election", true,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.StringVar(&conf.DockerHub, "istio-docker-hub", "", "istio-operator docker hub")
+	flag.StringVar(&conf.IstioOperatorCharts, "istiooperator-charts", "", "istio-operator charts")
+	flag.StringVar(&conf.ServerAddress, "apigateway-addr", "", "apigateway address")
+	flag.StringVar(&conf.UserToken, "user-token", "", "apigateway usertoken to control k8s cluster")
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
@@ -70,6 +76,8 @@ func main() {
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("MeshCluster"),
 		Scheme: mgr.GetScheme(),
+		MeshClusters: make(map[string]*controllers.MeshClusterManager),
+		Conf: conf,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MeshCluster")
 		os.Exit(1)

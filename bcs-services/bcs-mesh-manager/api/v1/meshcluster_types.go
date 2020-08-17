@@ -91,7 +91,7 @@ type MeshCluster struct {
 }
 
 func (m *MeshCluster) GetUuid()string{
-	return fmt.Sprintf("%s.%s",)
+	return fmt.Sprintf("%s.%s", m.Namespace,m.Name)
 }
 
 // +kubebuilder:object:root=true

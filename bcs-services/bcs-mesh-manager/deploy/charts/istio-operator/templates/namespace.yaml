@@ -6,3 +6,9 @@ metadata:
     istio-operator-managed: Reconcile
     istio-injection: disabled
 ---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+---

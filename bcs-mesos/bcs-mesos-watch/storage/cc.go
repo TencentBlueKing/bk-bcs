@@ -151,6 +151,7 @@ func (cc *CCStorage) init() error {
 				oper:      cc,
 				dataType:  "deployment",
 				ClusterID: cc.ClusterID,
+				DoCheckDirty: false,
 			},
 		}
 	}
@@ -208,6 +209,7 @@ func (cc *CCStorage) init() error {
 			oper:      cc,
 			dataType:  "deployment",
 			ClusterID: cc.ClusterID,
+			DoCheckDirty: true,
 		},
 	}
 

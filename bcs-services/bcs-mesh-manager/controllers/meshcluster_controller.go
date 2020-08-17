@@ -18,10 +18,10 @@ package controllers
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 	"time"
 
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 
 	"k8s.io/klog"
 	"github.com/go-logr/logr"
@@ -38,26 +38,22 @@ type MeshClusterReconciler struct {
 	Scheme *runtime.Scheme
 
 	//meshClusters
-	meshClusters map[string]*MeshClusterManager
+	MeshClusters map[string]*MeshClusterManager
 	//config
-	conf config.Config
-}
-
-func NewMeshClusterReconciler()*MeshClusterReconciler{
-
+	Conf config.Config
 }
 
 func (r *MeshClusterReconciler) getMeshClusterManager(mCluster *meshv1.MeshCluster)(*MeshClusterManager,error){
-	meshCluster,_ := r.meshClusters[mCluster.GetUuid()]
+	meshCluster,_ := r.MeshClusters[mCluster.GetUuid()]
 	if meshCluster!=nil {
 		return meshCluster, nil
 	}
-	meshCluster,err := NewMeshClusterManager(r.conf, mCluster.DeepCopy())
+	meshCluster,err := NewMeshClusterManager(r.Conf, mCluster.DeepCopy())
 	if err!=nil {
 		klog.Errorf("NewMeshClusterManager(%s) failed: %s", mCluster.GetUuid(), err.Error())
 		return nil, err
 	}
-	r.meshClusters[mCluster.GetUuid()] = meshCluster
+	r.MeshClusters[mCluster.GetUuid()] = meshCluster
 	return meshCluster, nil
 }
 
@@ -79,16 +75,22 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		klog.Errorf("Get MeshCluster %s failed: %s", req.String(), err.Error())
 		return ctrl.Result{RequeueAfter: time.Second*3}, err
 	}
+	meshManager,err := r.getMeshClusterManager(MeshCluster)
+	if err!=nil {
+		klog.Errorf("Get MeshClusterManager %s failed: %s", MeshCluster.GetUuid(), err.Error())
+		return ctrl.Result{RequeueAfter: time.Second*3}, err
+	}
+
 	finalizer := "MeshCluster.finalizers.bkbcs.tencent.com"
 	//in deleting
 	if !MeshCluster.ObjectMeta.DeletionTimestamp.IsZero() {
 		klog.Infof("MeshCluster %s in deleting, and DeletionTimestamp %s", req.String(), MeshCluster.DeletionTimestamp.String())
 		if containsString(MeshCluster.ObjectMeta.Finalizers, finalizer) {
-			//recovery fundpool
-			if err := r.recoveryFundPools(supply); err != nil {
-				return ctrl.Result{RequeueAfter: time.Second*3}, err
+			//uninstall mesh in cluster
+			if !meshManager.uninstallIstio() {
+				return ctrl.Result{RequeueAfter: time.Second*3}, nil
 			}
-			// delete finalizers
+			//delete finalizers
 			MeshCluster.ObjectMeta.Finalizers = removeString(MeshCluster.ObjectMeta.Finalizers, finalizer)
 			if err := r.Update(context.Background(), MeshCluster); err != nil {
 				return ctrl.Result{RequeueAfter: time.Second*3}, err
@@ -99,8 +101,16 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	//append finalizer
 	if !containsString(MeshCluster.ObjectMeta.Finalizers, finalizer) {
 		MeshCluster.ObjectMeta.Finalizers = append(MeshCluster.ObjectMeta.Finalizers, finalizer)
+		r.Update(context.Background(), MeshCluster, nil)
 	}
 
+	//if mesh installed
+	if meshManager.meshInstalled() {
+		klog.Infof("cluster(%s) mesh(%s) installed, then ignore", MeshCluster.Spec.ClusterId, MeshCluster.GetUuid())
+		return ctrl.Result{}, nil
+	}
+	//install mesh in cluster
+	meshManager.installIstio()
 	return ctrl.Result{}, nil
 }
 
