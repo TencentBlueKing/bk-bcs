@@ -38,10 +38,10 @@ type ListenerBackend struct {
 
 // ListenerTargetGroup backend set for listener
 type ListenerTargetGroup struct {
-	TargetGroupID       string             `json:"targetGroupID,omitempty"`
-	TargetGroupName     string             `json:"targetGroupName,omitempty"`
-	TargetGroupProtocol string             `json:"protocol,omitempty"`
-	Backends            []*ListenerBackend `json:"backends,omitempty"`
+	TargetGroupID       string            `json:"targetGroupID,omitempty"`
+	TargetGroupName     string            `json:"targetGroupName,omitempty"`
+	TargetGroupProtocol string            `json:"protocol,omitempty"`
+	Backends            []ListenerBackend `json:"backends,omitempty"`
 }
 
 // ListenerRule route rule for listener
@@ -63,7 +63,7 @@ type ListenerSpec struct {
 	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute,omitempty"`
 	Certificate       *IngressListenerCertificate `json:"certificate,omitempty"`
 	TargetGroup       *ListenerTargetGroup        `json:"targetGroup,omitempty"`
-	Rules             []*ListenerRule             `json:"rules,omitempty"`
+	Rules             []ListenerRule              `json:"rules,omitempty"`
 }
 
 // ListenerBackendHealthStatus backend health status of listener
@@ -77,14 +77,14 @@ type ListenerBackendHealthStatus struct {
 
 // ListenerRuleHealthStatus rule health status of listener
 type ListenerRuleHealthStatus struct {
-	Domain   string                         `json:"domain"`
-	URL      string                         `json:"path"`
-	Backends []*ListenerBackendHealthStatus `json:"backends,omitempty"`
+	Domain   string                        `json:"domain"`
+	URL      string                        `json:"path"`
+	Backends []ListenerBackendHealthStatus `json:"backends,omitempty"`
 }
 
 // ListenerHealthStatus health status of listener
 type ListenerHealthStatus struct {
-	RulesHealth []*ListenerRuleHealthStatus `json:"rules,omitempty"`
+	RulesHealth []ListenerRuleHealthStatus `json:"rules,omitempty"`
 }
 
 // ListenerStatus defines the observed state of Listener
@@ -106,6 +106,24 @@ type Listener struct {
 
 	Spec   ListenerSpec   `json:"spec,omitempty"`
 	Status ListenerStatus `json:"status,omitempty"`
+}
+
+// ListenerSlice slice for listener for sort
+type ListenerSlice []Listener
+
+// Len implements sort interface
+func (ls ListenerSlice) Len() int {
+	return len(ls)
+}
+
+// Less implements sort interface
+func (ls ListenerSlice) Less(i, j int) bool {
+	return ls[i].Spec.Port < ls[j].Spec.Port
+}
+
+// Swap implements sort interface
+func (ls ListenerSlice) Swap(i, j int) {
+	ls[i], ls[j] = ls[j], ls[i]
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

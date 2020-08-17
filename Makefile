@@ -308,3 +308,6 @@ bcs-cloud-netcontroller:pre
 
 bcs-cloud-netagent:pre
 	cd ./bcs-network && make cloud-netagent && cd -
+
+bcs-ingress-controller:pre
+	cd ./bcs-network && make ingress-controller && cd -

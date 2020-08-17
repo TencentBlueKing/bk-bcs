@@ -52,8 +52,8 @@ func NewRuleConverter(
 }
 
 // DoConvert do convert action
-func (rc *RuleConverter) DoConvert() ([]*networkextensionv1.Listener, error) {
-	var retListeners []*networkextensionv1.Listener
+func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
+	var retListeners []networkextensionv1.Listener
 	switch rc.rule.Protocol {
 	case networkextensionv1.ProtocolHTTP, networkextensionv1.ProtocolHTTPS:
 		for _, lbID := range rc.lbIDs {
@@ -78,8 +78,8 @@ func (rc *RuleConverter) DoConvert() ([]*networkextensionv1.Listener, error) {
 	return retListeners, nil
 }
 
-func (rc *RuleConverter) generate7LayerListener(lbID string) (*networkextensionv1.Listener, error) {
-	li := &networkextensionv1.Listener{}
+func (rc *RuleConverter) generate7LayerListener(lbID string) (networkextensionv1.Listener, error) {
+	li := networkextensionv1.Listener{}
 	li.SetName(GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
 	li.SetLabels(map[string]string{
@@ -105,12 +105,12 @@ func (rc *RuleConverter) generate7LayerListener(lbID string) (*networkextensionv
 	return li, nil
 }
 
-func (rc *RuleConverter) generateListenerRule(l7Routes []*networkextensionv1.Layer7Route) (
-	[]*networkextensionv1.ListenerRule, error) {
+func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Layer7Route) (
+	[]networkextensionv1.ListenerRule, error) {
 
-	var retListenerRules []*networkextensionv1.ListenerRule
+	var retListenerRules []networkextensionv1.ListenerRule
 	for _, l7Route := range l7Routes {
-		liRule := &networkextensionv1.ListenerRule{}
+		liRule := networkextensionv1.ListenerRule{}
 		liRule.Domain = l7Route.Domain
 		liRule.Path = l7Route.Path
 		targetGroup, err := rc.generateTargetGroup(rc.rule.Protocol, l7Route.Services)
@@ -150,7 +150,7 @@ func (rc *RuleConverter) generate4LayerListener(lbID string) (*networkextensionv
 	return li, nil
 }
 
-func (rc *RuleConverter) generateTargetGroup(protocol string, routes []*networkextensionv1.ServiceRoute) (
+func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkextensionv1.ServiceRoute) (
 	*networkextensionv1.ListenerTargetGroup, error) {
 
 	var retBackends []*networkextensionv1.ListenerBackend
@@ -168,7 +168,7 @@ func (rc *RuleConverter) generateTargetGroup(protocol string, routes []*networke
 }
 
 func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1.ServiceRoute) (
-	[]*networkextensionv1.ListenerBackend, error) {
+	[]networkextensionv1.ListenerBackend, error) {
 
 	svc := &k8scorev1.Service{}
 	err := rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
@@ -205,7 +205,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		if len(svcRoute.Subsets) == 0 {
 			return backends, nil
 		}
-		var retBackends []*networkextensionv1.ListenerBackend
+		var retBackends []networkextensionv1.ListenerBackend
 		// to pod directly and have subset
 		for _, subset := range svcRoute.Subsets {
 			subsetBackends, err := rc.getSubsetBackends(svc, subset, backends)
@@ -225,9 +225,9 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 }
 
 func mergeBackendList(
-	existedList, newList []*networkextensionv1.ListenerBackend) []*networkextensionv1.ListenerBackend {
+	existedList, newList []networkextensionv1.ListenerBackend) []networkextensionv1.ListenerBackend {
 
-	tmpMap := make(map[string]*networkextensionv1.ListenerBackend)
+	tmpMap := make(map[string]networkextensionv1.ListenerBackend)
 	for _, backend := range existedList {
 		tmpMap[backend.IP] = backend
 	}
@@ -241,7 +241,7 @@ func mergeBackendList(
 
 func (rc *RuleConverter) getServiceBackendsWithoutSubsets(
 	svcPort *k8scorev1.ServicePort, svcName, svcNamespace string, weight int) (
-	[]*networkextensionv1.ListenerBackend, error) {
+	[]networkextensionv1.ListenerBackend, error) {
 
 	eps := &k8scorev1.Endpoints{}
 	err := rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
@@ -323,7 +323,7 @@ func (rc *RuleConverter) getSubsetBackends(
 
 func (rc *RuleConverter) getNodePortBackends(
 	svc *k8scorev1.Service, svcPort *k8scorev1.ServicePort) (
-	[]*networkextensionv1.ListenerBackend, error) {
+	[]networkextensionv1.ListenerBackend, error) {
 
 	if svcPort.NodePort <= 0 {
 		blog.Warnf("get no node port of service %s/%s 's port %+v",
@@ -336,12 +336,12 @@ func (rc *RuleConverter) getNodePortBackends(
 		return nil, err
 	}
 
-	var retBackends []*networkextensionv1.ListenerBackend
+	var retBackends []networkextensionv1.ListenerBackend
 	for _, pod := range pods {
 		if len(pod.Status.HostIP) == 0 {
 			continue
 		}
-		retBackends = append(retBackends, &networkextensionv1.ListenerBackend{
+		retBackends = append(retBackends, networkextensionv1.ListenerBackend{
 			IP:     pod.Status.HostIP,
 			Port:   int(svcPort.NodePort),
 			Weight: networkextensionv1.DefaultWeight,

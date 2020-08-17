@@ -52,7 +52,7 @@ func NewMappingConverter(
 }
 
 // DoConvert do convert action
-func (mg *MappingConverter) DoConvert() ([]*networkextensionv1.Listener, error) {
+func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	pods, err := mg.getWorkloadPodMap(mg.mapping.WorkloadKind,
 		mg.mapping.WorkloadName, mg.mapping.WorkloadNamespace)
 	if err != nil {
@@ -149,9 +149,9 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 }
 
 func (mg *MappingConverter) generateListener(
-	lbID string, startPort, endPort int, pod *k8scorev1.Pod) *networkextensionv1.Listener {
+	lbID string, startPort, endPort int, pod *k8scorev1.Pod) networkextensionv1.Listener {
 
-	li := &networkextensionv1.Listener{}
+	li := networkextensionv1.Listener{}
 	var listenerName string
 	if endPort <= 0 {
 		listenerName = GetListenerName(lbID, startPort)

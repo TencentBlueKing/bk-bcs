@@ -63,12 +63,12 @@ func (is *IngressSubset) GetWeight() int {
 
 // ServiceRoute service info
 type ServiceRoute struct {
-	ServiceName      string           `json:"serviceName"`
-	ServiceNamespace string           `json:"serviceNamespace"`
-	ServicePort      int              `json:"servicePort"`
-	IsDirectConnect  bool             `json:"isDirectConnect,omitempty"`
-	Weight           *IngressWeight   `json:"weight,omitempty"`
-	Subsets          []*IngressSubset `json:"subsets,omitempty"`
+	ServiceName      string          `json:"serviceName"`
+	ServiceNamespace string          `json:"serviceNamespace"`
+	ServicePort      int             `json:"servicePort"`
+	IsDirectConnect  bool            `json:"isDirectConnect,omitempty"`
+	Weight           *IngressWeight  `json:"weight,omitempty"`
+	Subsets          []IngressSubset `json:"subsets,omitempty"`
 }
 
 // GetWeight get weight of service route
@@ -123,8 +123,8 @@ type IngressRule struct {
 	Protocol          string                      `json:"protocol"`
 	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute,omitempty"`
 	Certificate       *IngressListenerCertificate `json:"certificate,omitempty"`
-	Services          []*ServiceRoute             `json:"layer4Services,omitempty"`
-	Routes            []*Layer7Route              `json:"layer7Services,omitempty"`
+	Services          []ServiceRoute              `json:"layer4Services,omitempty"`
+	Routes            []Layer7Route               `json:"layer7Services,omitempty"`
 }
 
 // IngressPortMapping mapping of ingress
@@ -144,8 +144,8 @@ type IngressPortMapping struct {
 
 // IngressSpec defines the desired state of Ingress
 type IngressSpec struct {
-	Rules        []*IngressRule        `json:"rules,omitempty"`
-	PortMappings []*IngressPortMapping `json:"portMappings,omitempty"`
+	Rules        []IngressRule        `json:"rules,omitempty"`
+	PortMappings []IngressPortMapping `json:"portMappings,omitempty"`
 }
 
 // IngressLoadBalancer loadbalancer for ingress
@@ -157,7 +157,7 @@ type IngressLoadBalancer struct {
 type IngressStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Loadbalancers []*IngressLoadBalancer `json:"loadbalancers,omitempty"`
+	Loadbalancers []IngressLoadBalancer `json:"loadbalancers,omitempty"`
 }
 
 // +genclient
