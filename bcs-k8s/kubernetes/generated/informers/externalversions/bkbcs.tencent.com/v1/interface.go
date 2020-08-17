@@ -20,8 +20,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// NodeNetworks returns a NodeNetworkInformer.
-	NodeNetworks() NodeNetworkInformer
+	// BKDataApiConfigs returns a BKDataApiConfigInformer.
+	BKDataApiConfigs() BKDataApiConfigInformer
 }
 
 type version struct {
@@ -35,7 +35,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// NodeNetworks returns a NodeNetworkInformer.
-func (v *version) NodeNetworks() NodeNetworkInformer {
-	return &nodeNetworkInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// BKDataApiConfigs returns a BKDataApiConfigInformer.
+func (v *version) BKDataApiConfigs() BKDataApiConfigInformer {
+	return &bKDataApiConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

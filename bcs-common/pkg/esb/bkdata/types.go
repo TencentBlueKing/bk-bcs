@@ -67,3 +67,12 @@ func init() {
 func NewDefaultLogCollectionDataCleanStrategy() DataCleanStrategy {
 	return defaultStrategy
 }
+
+func (in *DataCleanStrategy) DeepCopyInto(out *DataCleanStrategy) {
+	*out = *in
+	var fields []Fields
+	for _, v := range in.Fields {
+		fields = append(fields, v)
+	}
+	out.Fields = fields
+}

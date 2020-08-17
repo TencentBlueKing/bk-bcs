@@ -18,7 +18,7 @@ for dir_group in $(ls ./apis/); do
         echo "generate client,informer,lister for $dir_group/$dir_version"
         ./vendor/k8s.io/code-generator/generate-groups.sh \
             "client,informer,lister" \
-            github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated \
+            ./generated \
             github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis \
             $dir_group:$dir_version \
             --go-header-file $(pwd)/hack/boilerplate.go.txt 

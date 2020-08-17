@@ -20,67 +20,67 @@ import (
 	time "time"
 
 	versioned "./generated/clientset/versioned"
-	v1 "./generated/listers/cloud/v1"
-	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	v1 "./generated/listers/bkbcs.tencent.com/v1"
+	bkbcstencentcomv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/bkbcs.tencent.com/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// NodeNetworkInformer provides access to a shared informer and lister for
-// NodeNetworks.
-type NodeNetworkInformer interface {
+// BKDataApiConfigInformer provides access to a shared informer and lister for
+// BKDataApiConfigs.
+type BKDataApiConfigInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.NodeNetworkLister
+	Lister() v1.BKDataApiConfigLister
 }
 
-type nodeNetworkInformer struct {
+type bKDataApiConfigInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewNodeNetworkInformer constructs a new informer for NodeNetwork type.
+// NewBKDataApiConfigInformer constructs a new informer for BKDataApiConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewNodeNetworkInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredNodeNetworkInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewBKDataApiConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredBKDataApiConfigInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredNodeNetworkInformer constructs a new informer for NodeNetwork type.
+// NewFilteredBKDataApiConfigInformer constructs a new informer for BKDataApiConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredNodeNetworkInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredBKDataApiConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CloudV1().NodeNetworks(namespace).List(context.TODO(), options)
+				return client.BkbcsV1().BKDataApiConfigs(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.CloudV1().NodeNetworks(namespace).Watch(context.TODO(), options)
+				return client.BkbcsV1().BKDataApiConfigs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&cloudv1.NodeNetwork{},
+		&bkbcstencentcomv1.BKDataApiConfig{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *nodeNetworkInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredNodeNetworkInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *bKDataApiConfigInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredBKDataApiConfigInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *nodeNetworkInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&cloudv1.NodeNetwork{}, f.defaultInformer)
+func (f *bKDataApiConfigInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&bkbcstencentcomv1.BKDataApiConfig{}, f.defaultInformer)
 }
 
-func (f *nodeNetworkInformer) Lister() v1.NodeNetworkLister {
-	return v1.NewNodeNetworkLister(f.Informer().GetIndexer())
+func (f *bKDataApiConfigInformer) Lister() v1.BKDataApiConfigLister {
+	return v1.NewBKDataApiConfigLister(f.Informer().GetIndexer())
 }

@@ -15,23 +15,22 @@
 package fake
 
 import (
-	v1 "generated/clientset/versioned/typed/cloud/v1"
-
+	v1 "generated/clientset/versioned/typed/bkbcs.tencent.com/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeCloudV1 struct {
+type FakeBkbcsV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeCloudV1) NodeNetworks(namespace string) v1.NodeNetworkInterface {
-	return &FakeNodeNetworks{c, namespace}
+func (c *FakeBkbcsV1) BKDataApiConfigs(namespace string) v1.BKDataApiConfigInterface {
+	return &FakeBKDataApiConfigs{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeCloudV1) RESTClient() rest.Interface {
+func (c *FakeBkbcsV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

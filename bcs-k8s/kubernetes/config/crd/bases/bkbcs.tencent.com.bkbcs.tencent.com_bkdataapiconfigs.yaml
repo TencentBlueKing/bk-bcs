@@ -1,0 +1,164 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: bkdataapiconfigs.bkbcs.tencent.com.bkbcs.tencent.com
+spec:
+  group: bkbcs.tencent.com.bkbcs.tencent.com
+  names:
+    kind: BKDataApiConfig
+    listKind: BKDataApiConfigList
+    plural: bkdataapiconfigs
+    singular: bkdataapiconfig
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: BKDataApiConfig is the Schema for the bkdataapiconfigs API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: BKDataApiConfigSpec defines the desired state of BKDataApiConfig
+          properties:
+            access_deploy_plan_config:
+              description: CustomAccessDeployPlanConfig is used to obtain dataid from
+                bk-data
+              properties:
+                access_raw_data:
+                  properties:
+                    data_encoding:
+                      type: string
+                    data_source:
+                      type: string
+                    description:
+                      type: string
+                    maintainer:
+                      type: string
+                    raw_data_alias:
+                      type: string
+                    raw_data_name:
+                      type: string
+                    sensitivity:
+                      type: string
+                  required:
+                  - data_encoding
+                  - data_source
+                  - description
+                  - maintainer
+                  - raw_data_alias
+                  - raw_data_name
+                  - sensitivity
+                  type: object
+                bk_biz_id:
+                  type: integer
+                data_scenario:
+                  type: string
+                description:
+                  type: string
+              required:
+              - access_raw_data
+              - bk_biz_id
+              - data_scenario
+              - description
+              type: object
+            api_name:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
+              type: string
+            data_clean_strategy_config:
+              description: DataCleanStrategy is used to create data clean strategy
+              properties:
+                bk_biz_id:
+                  type: integer
+                clean_config_name:
+                  type: string
+                description:
+                  type: string
+                fields:
+                  items:
+                    properties:
+                      field_alias:
+                        type: string
+                      field_index:
+                        type: integer
+                      field_name:
+                        type: string
+                      field_type:
+                        type: string
+                      is_dimension:
+                        type: boolean
+                    required:
+                    - field_alias
+                    - field_index
+                    - field_name
+                    - field_type
+                    - is_dimension
+                    type: object
+                  type: array
+                json_config:
+                  type: string
+                pe_config:
+                  type: string
+                raw_data_id:
+                  type: integer
+                result_table_name:
+                  type: string
+                result_table_name_alias:
+                  type: string
+              required:
+              - bk_biz_id
+              - clean_config_name
+              - description
+              - fields
+              - json_config
+              - pe_config
+              - raw_data_id
+              - result_table_name
+              - result_table_name_alias
+              type: object
+            response:
+              properties:
+                code:
+                  type: string
+                data: {}
+                errors: {}
+                message:
+                  type: string
+                result:
+                  type: boolean
+              required:
+              - code
+              - data
+              - errors
+              - message
+              - result
+              type: object
+          required:
+          - api_name
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

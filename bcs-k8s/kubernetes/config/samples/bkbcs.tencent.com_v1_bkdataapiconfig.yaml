@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com.bkbcs.tencent.com/v1
+kind: BKDataApiConfig
+metadata:
+  name: bkdataapiconfig-sample
+spec:
+  # Add fields here
+  foo: bar
