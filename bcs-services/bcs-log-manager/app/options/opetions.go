@@ -20,6 +20,7 @@ type LogManagerOption struct {
 	BcsAPIHost        string                        `json:"bcs_api_host" value:"" usage:"BcsApi Host"`
 	AuthToken         string                        `json:"api_auth_token" value:"" usage:"BcsApi authentication token"`
 	Gateway           bool                          `json:"use_gateway" value:"true" usage:"whether use api gateway"`
+	KubeConfig        string                        `json:"kubeconfig" value:"" usage:"k8s config file path"`
 	BCSSystemDataID   string                        `json:"bcs_system_dataid" value:"" usage:"DataID used to upload logs of bcs system modules with standard output"`
 	K8SSystemDataID   string                        `json:"k8s_system_dataid" value:"" usage:"DataID used to upload logs of k8s system modules with standard output"`
 }
