@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bkdata "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/bkdataapi"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
@@ -15,7 +16,13 @@ func Run(op *options.LogManagerOption) error {
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
-	err := setManagerConfig(op, conf)
+	controller := bkdata.NewBKDataController(op.KubeConfig)
+	err := controller.Start()
+	if err != nil {
+		blog.Errorf("BKDataApi controller start failed: %s", err.Error())
+		os.Exit(1)
+	}
+	err = setManagerConfig(op, conf)
 	if err != nil {
 		blog.Errorf("Parse Manager config error %s", err.Error())
 		os.Exit(1)

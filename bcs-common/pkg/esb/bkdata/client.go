@@ -33,7 +33,9 @@ func NewBKDataClient(conf BKDataClientConfig) (*BKDataClient, error) {
 // error != nil : Some error occured while obtain dataid. The situation that
 //                error != nil and  dataid != -1 is possible
 func (c *BKDataClient) ObtainDataId(conf CustomAccessDeployPlanConfig) (int64, error) {
-	conf.BKDataClientConfig = c.config
+	conf.BkAppCode = c.config.BkAppCode
+	conf.BkAppSecret = c.config.BkAppSecret
+	conf.BkUsername = c.config.BkUsername
 	jsonstr, err := json.Marshal(conf)
 	if err != nil {
 		return -1, err
@@ -58,7 +60,9 @@ func (c *BKDataClient) ObtainDataId(conf CustomAccessDeployPlanConfig) (int64, e
 }
 
 func (c *BKDataClient) SetCleanStrategy(strategy DataCleanStrategy) error {
-	strategy.BKDataClientConfig = c.config
+	strategy.BkAppCode = c.config.BkAppCode
+	strategy.BkAppSecret = c.config.BkAppSecret
+	strategy.BkUsername = c.config.BkUsername
 	payload := map[string]interface{}{}
 	jsonstr, err := json.Marshal(strategy)
 	if err != nil {

@@ -15,9 +15,7 @@
 package versioned
 
 import (
-	"fmt"
-
-	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned/typed/bkbcs.tencent.com/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -25,19 +23,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	CloudV1() cloudv1.CloudV1Interface
+	BkbcsV1() bkbcsv1.BkbcsV1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Bkbcs() bkbcsv1.BkbcsV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	cloudV1 *cloudv1.CloudV1Client
+	bkbcsV1 *bkbcsv1.BkbcsV1Client
 }
 
-// CloudV1 retrieves the CloudV1Client
-func (c *Clientset) CloudV1() cloudv1.CloudV1Interface {
-	return c.cloudV1
+// BkbcsV1 retrieves the BkbcsV1Client
+func (c *Clientset) BkbcsV1() bkbcsv1.BkbcsV1Interface {
+	return c.bkbcsV1
+}
+
+// Deprecated: Bkbcs retrieves the default version of BkbcsClient.
+// Please explicitly pick a version.
+func (c *Clientset) Bkbcs() bkbcsv1.BkbcsV1Interface {
+	return c.bkbcsV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -49,19 +55,14 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 }
 
 // NewForConfig creates a new Clientset for the given config.
-// If config's RateLimiter is not set and QPS and Burst are acceptable,
-// NewForConfig will generate a rate-limiter in configShallowCopy.
 func NewForConfig(c *rest.Config) (*Clientset, error) {
 	configShallowCopy := *c
 	if configShallowCopy.RateLimiter == nil && configShallowCopy.QPS > 0 {
-		if configShallowCopy.Burst <= 0 {
-			return nil, fmt.Errorf("burst is required to be greater than 0 when RateLimiter is not set and QPS is set to greater than 0")
-		}
 		configShallowCopy.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(configShallowCopy.QPS, configShallowCopy.Burst)
 	}
 	var cs Clientset
 	var err error
-	cs.cloudV1, err = cloudv1.NewForConfig(&configShallowCopy)
+	cs.bkbcsV1, err = bkbcsv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +78,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.cloudV1 = cloudv1.NewForConfigOrDie(c)
+	cs.bkbcsV1 = bkbcsv1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -86,7 +87,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.cloudV1 = cloudv1.New(c)
+	cs.bkbcsV1 = bkbcsv1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

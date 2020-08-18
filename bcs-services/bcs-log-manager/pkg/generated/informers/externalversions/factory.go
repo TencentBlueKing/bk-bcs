@@ -19,9 +19,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
-	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud"
-	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/internalinterfaces"
+	versioned "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
+	bkbcstencentcom "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/informers/externalversions/bkbcs.tencent.com"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -168,9 +168,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Cloud() cloud.Interface
+	Bkbcs() bkbcstencentcom.Interface
 }
 
-func (f *sharedInformerFactory) Cloud() cloud.Interface {
-	return cloud.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Bkbcs() bkbcstencentcom.Interface {
+	return bkbcstencentcom.New(f, f.namespace, f.tweakListOptions)
 }

@@ -15,27 +15,28 @@
 package v1
 
 import (
-	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
-	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/scheme"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/apis/bkbcs.tencent.com/v1"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned/scheme"
+	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
-type CloudV1Interface interface {
+type BkbcsV1Interface interface {
 	RESTClient() rest.Interface
-	NodeNetworksGetter
+	BKDataApiConfigsGetter
 }
 
-// CloudV1Client is used to interact with features provided by the cloud group.
-type CloudV1Client struct {
+// BkbcsV1Client is used to interact with features provided by the bkbcs.tencent.com group.
+type BkbcsV1Client struct {
 	restClient rest.Interface
 }
 
-func (c *CloudV1Client) NodeNetworks(namespace string) NodeNetworkInterface {
-	return newNodeNetworks(c, namespace)
+func (c *BkbcsV1Client) BKDataApiConfigs(namespace string) BKDataApiConfigInterface {
+	return newBKDataApiConfigs(c, namespace)
 }
 
-// NewForConfig creates a new CloudV1Client for the given config.
-func NewForConfig(c *rest.Config) (*CloudV1Client, error) {
+// NewForConfig creates a new BkbcsV1Client for the given config.
+func NewForConfig(c *rest.Config) (*BkbcsV1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -44,12 +45,12 @@ func NewForConfig(c *rest.Config) (*CloudV1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &CloudV1Client{client}, nil
+	return &BkbcsV1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new CloudV1Client for the given config and
+// NewForConfigOrDie creates a new BkbcsV1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *CloudV1Client {
+func NewForConfigOrDie(c *rest.Config) *BkbcsV1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -57,16 +58,16 @@ func NewForConfigOrDie(c *rest.Config) *CloudV1Client {
 	return client
 }
 
-// New creates a new CloudV1Client for the given RESTClient.
-func New(c rest.Interface) *CloudV1Client {
-	return &CloudV1Client{c}
+// New creates a new BkbcsV1Client for the given RESTClient.
+func New(c rest.Interface) *BkbcsV1Client {
+	return &BkbcsV1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
 	gv := v1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
 
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()
@@ -77,7 +78,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *CloudV1Client) RESTClient() rest.Interface {
+func (c *BkbcsV1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

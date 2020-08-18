@@ -5,21 +5,23 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/bkbcs.tencent.com/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
-	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/apis/bkbcs.tencent.com/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/informers/externalversions"
+	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/listers/bkbcs.tencent.com/v1"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 type BKDataController struct {
-	stopCh chan struct{}
-	apiextensionClientset
-	clientset
-	informer
-	lister
-	kubeConfig
+	stopCh                chan struct{}
+	apiextensionClientset *apiextensionsclient.Clientset
+	clientset             *internalclientset.Clientset
+	informer              cache.SharedIndexInformer
+	lister                listers.BKDataApiConfigLister
+	kubeConfig            string
 }
 
 func NewBKDataController(kubeConfig string) *BKDataController {
@@ -28,17 +30,17 @@ func NewBKDataController(kubeConfig string) *BKDataController {
 	}
 }
 
-func (c *BKDataController) Start() {
+func (c *BKDataController) Start() error {
 	err := c.initKubeConfig()
 	if err != nil {
 		blog.Errorf("Initialization of LogController of Cluster %s failed: %s", c.clusterInfo.ClusterID, err.Error())
-		return
+		return err
 	}
 	go c.run()
 }
 
-func (c *BKDataController) initKubeConf() error {
-	if c.KubeConfig != "" {
+func (c *BKDataController) initKubeConfig() error {
+	if c.kubeConfig != "" {
 		restConf, err := clientcmd.BuildConfigFromFlags("", c.kubeConfig)
 	} else {
 		restConf, err := rest.InClusterConfig()
@@ -64,7 +66,7 @@ func (c *BKDataController) initKubeConf() error {
 		return err
 	}
 	internalFactory := externalversions.NewSharedInformerFactory(bkDataApiConfigClientset, time.Hour)
-	c.bkDataApiConfigInformer = internalFactory.Bkbcs().V1().BcsLogConfigs().Informer()
+	c.bkDataApiConfigInformer = internalFactory.Bkbcs().V1().BKDataApiConfigs().Informer()
 	internalFactory.Start(c.stopCh)
 	// Wait for all caches to sync.
 	internalFactory.WaitForCacheSync(c.stopCh)
@@ -84,11 +86,11 @@ func (c *BKDataController) createBKDataApiConfig() error {
 	bkDataApiConfigFullName := "bkdataapiconfigs" + "." + bcsv1.SchemeGroupVersion.Group
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsLogConfigFullName,
+			Name: bkDataApiConfigFullName,
 		},
 		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   bcsv1.SchemeGroupVersion.Group,   // BcsLogConfigsGroup,
-			Version: bcsv1.SchemeGroupVersion.Version, // BcsLogConfigsVersion,
+			Group:   bcsv1.SchemeGroupVersion.Group,   // BKDataApiConfigsGroup,
+			Version: bcsv1.SchemeGroupVersion.Version, // BKDataApiConfigsVersion,
 			Scope:   apiextensionsv1beta1.NamespaceScoped,
 			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 				Plural:   bkDataApiConfigPlural,

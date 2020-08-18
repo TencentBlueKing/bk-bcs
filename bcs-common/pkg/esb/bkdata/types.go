@@ -16,7 +16,9 @@ type BKDataClientConfig struct {
 
 // CustomAccessDeployPlanConfig is used to obtain dataid from bk-data
 type CustomAccessDeployPlanConfig struct {
-	BKDataClientConfig
+	BkAppCode     string        `json:"bk_app_code"`
+	BkUsername    string        `json:"bk_username"`
+	BkAppSecret   string        `json:"bk_app_secret"`
 	DataScenario  string        `json:"data_scenario"`
 	BkBizID       int           `json:"bk_biz_id"`
 	Description   string        `json:"description"`
@@ -35,7 +37,9 @@ type AccessRawData struct {
 
 // DataCleanStrategy is used to create data clean strategy
 type DataCleanStrategy struct {
-	BKDataClientConfig
+	BkAppCode            string   `json:"bk_app_code"`
+	BkUsername           string   `json:"bk_username"`
+	BkAppSecret          string   `json:"bk_app_secret"`
 	RawDataID            int      `json:"raw_data_id"`
 	JSONConfig           string   `json:"json_config"`
 	PeConfig             string   `json:"pe_config"`

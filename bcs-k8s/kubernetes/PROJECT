@@ -5,7 +5,4 @@ resources:
 - group: cloud
   kind: NodeNetwork
   version: v1
-- group: bkbcs.tencent.com
-  kind: BKDataApiConfig
-  version: v1
 version: "2"
