@@ -10,6 +10,11 @@ type ManagerConfig struct {
 	BcsApiConfig      bcsapi.Config
 	CAFile            string
 	SystemDataID      string
+	KubeConfig        string // manager 所在集群的kubeconfig
+	BkUsername        string
+	BkAppCode         string
+	BkAppSecret       string
+	BkBizID           int
 }
 
 // CollectionConfig defines some customed infomation of log collection.

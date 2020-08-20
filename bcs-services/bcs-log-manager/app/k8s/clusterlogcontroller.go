@@ -233,12 +233,6 @@ func (c *ClusterLogController) run() {
 }
 
 func (c *ClusterLogController) handleAddTask(obj interface{}) {
-	// conf, ok := obj.(*bcsv1.BcsLogConfig)
-	// if !ok {
-	// 	blog.Error("Cannot convert new obj to *bcsv1.BcsLogConfig %+v", obj)
-	// 	return
-	// }
-	// key := BuildBcsLogConfigKey(conf.GetNamespace(), conf.GetName())
 	// TODO
 }
 

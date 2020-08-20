@@ -22,6 +22,7 @@ type CustomAccessDeployPlanConfig struct {
 	DataScenario  string        `json:"data_scenario"`
 	BkBizID       int           `json:"bk_biz_id"`
 	Description   string        `json:"description"`
+	Appenv        string        `json:"appenv"`
 	AccessRawData AccessRawData `json:"access_raw_data"`
 }
 
@@ -70,6 +71,18 @@ func init() {
 
 func NewDefaultLogCollectionDataCleanStrategy() DataCleanStrategy {
 	return defaultStrategy
+}
+
+func NewDefaultCustomAccessDeployPlanConfig() CustomAccessDeployPlanConfig {
+	return CustomAccessDeployPlanConfig{
+		Appenv:       "ieod",
+		DataScenario: "custom",
+		AccessRawData: AccessRawData{
+			DataSource:   "svr",
+			DataEncoding: "UTF-8",
+			Sensitivity:  "private",
+		},
+	}
 }
 
 func (in *DataCleanStrategy) DeepCopyInto(out *DataCleanStrategy) {

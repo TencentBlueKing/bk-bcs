@@ -21,8 +21,11 @@ type LogManagerOption struct {
 	AuthToken         string                        `json:"api_auth_token" value:"" usage:"BcsApi authentication token"`
 	Gateway           bool                          `json:"use_gateway" value:"true" usage:"whether use api gateway"`
 	KubeConfig        string                        `json:"kubeconfig" value:"" usage:"k8s config file path"`
-	BCSSystemDataID   string                        `json:"bcs_system_dataid" value:"" usage:"DataID used to upload logs of bcs system modules with standard output"`
-	K8SSystemDataID   string                        `json:"k8s_system_dataid" value:"" usage:"DataID used to upload logs of k8s system modules with standard output"`
+	SystemDataID      string                        `json:"system_dataid" value:"" usage:"DataID used to upload logs of k8s and bcs system modules with standard output"`
+	BkUsername        string                        `json:"bk_username" value:"" usage:"User to request bkdata api"`
+	BkAppCode         string                        `json:"bk_appcode" value:"" usage:"BK app code"`
+	BkAppSecret       string                        `json:"bk_appsecret" value:"" usage:"BK app secret"`
+	BkBizID           int                           `json:"bk_bizid" value:"-1" usage:"BK business id"`
 }
 
 func NewLogManagerOption() *LogManagerOption {

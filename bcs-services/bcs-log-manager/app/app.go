@@ -41,5 +41,9 @@ func setManagerConfig(op *options.LogManagerOption, conf *config.ManagerConfig) 
 	conf.BcsApiConfig.Gateway = op.Gateway
 	conf.CAFile = op.ClientCertFile
 	conf.SystemDataID = op.SystemDataID
+	conf.BkAppCode = op.BkAppCode
+	conf.BkUsername = op.BkUsername
+	conf.BkAppSecret = op.BkAppSecret
+	conf.BkBizID = op.BkBizID
 	return nil
 }
