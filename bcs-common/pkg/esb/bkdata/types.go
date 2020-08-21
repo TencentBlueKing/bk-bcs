@@ -9,21 +9,23 @@ import (
 var defaultStrategy DataCleanStrategy
 
 type BKDataClientConfig struct {
-	BkAppCode   string `json:"bk_app_code"`
-	BkUsername  string `json:"bk_username"`
-	BkAppSecret string `json:"bk_app_secret"`
+	BkAppCode                  string `json:"bk_app_code"`
+	BkUsername                 string `json:"bk_username"`
+	BkAppSecret                string `json:"bk_app_secret"`
+	BkdataAuthenticationMethod string `json:"bkdata_authentication_method"`
 }
 
 // CustomAccessDeployPlanConfig is used to obtain dataid from bk-data
 type CustomAccessDeployPlanConfig struct {
-	BkAppCode     string        `json:"bk_app_code"`
-	BkUsername    string        `json:"bk_username"`
-	BkAppSecret   string        `json:"bk_app_secret"`
-	DataScenario  string        `json:"data_scenario"`
-	BkBizID       int           `json:"bk_biz_id"`
-	Description   string        `json:"description"`
-	Appenv        string        `json:"appenv"`
-	AccessRawData AccessRawData `json:"access_raw_data"`
+	BkAppCode                  string        `json:"bk_app_code"`
+	BkUsername                 string        `json:"bk_username"`
+	BkAppSecret                string        `json:"bk_app_secret"`
+	BkdataAuthenticationMethod string        `json:"bkdata_authentication_method"`
+	DataScenario               string        `json:"data_scenario"`
+	BkBizID                    int           `json:"bk_biz_id"`
+	Description                string        `json:"description"`
+	Appenv                     string        `json:"appenv"`
+	AccessRawData              AccessRawData `json:"access_raw_data"`
 }
 
 type AccessRawData struct {
@@ -38,18 +40,19 @@ type AccessRawData struct {
 
 // DataCleanStrategy is used to create data clean strategy
 type DataCleanStrategy struct {
-	BkAppCode            string   `json:"bk_app_code"`
-	BkUsername           string   `json:"bk_username"`
-	BkAppSecret          string   `json:"bk_app_secret"`
-	RawDataID            int      `json:"raw_data_id"`
-	JSONConfig           string   `json:"json_config"`
-	PeConfig             string   `json:"pe_config"`
-	BkBizID              int      `json:"bk_biz_id"`
-	CleanConfigName      string   `json:"clean_config_name"`
-	ResultTableName      string   `json:"result_table_name"`
-	ResultTableNameAlias string   `json:"result_table_name_alias"`
-	Description          string   `json:"description"`
-	Fields               []Fields `json:"fields"`
+	BkAppCode                  string   `json:"bk_app_code"`
+	BkUsername                 string   `json:"bk_username"`
+	BkAppSecret                string   `json:"bk_app_secret"`
+	BkdataAuthenticationMethod string   `json:"bkdata_authentication_method"`
+	RawDataID                  int      `json:"raw_data_id"`
+	JSONConfig                 string   `json:"json_config"`
+	PeConfig                   string   `json:"pe_config"`
+	BkBizID                    int      `json:"bk_biz_id"`
+	CleanConfigName            string   `json:"clean_config_name"`
+	ResultTableName            string   `json:"result_table_name"`
+	ResultTableNameAlias       string   `json:"result_table_name_alias"`
+	Description                string   `json:"description"`
+	Fields                     []Fields `json:"fields"`
 }
 
 type Fields struct {

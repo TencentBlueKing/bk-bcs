@@ -22,6 +22,7 @@ func Run(op *options.LogManagerOption) error {
 		blog.Errorf("BKDataApi controller start failed: %s", err.Error())
 		os.Exit(1)
 	}
+	blog.Info("BKDataApiConfig controller started")
 	err = setManagerConfig(op, conf)
 	if err != nil {
 		blog.Errorf("Parse Manager config error %s", err.Error())
@@ -45,5 +46,6 @@ func setManagerConfig(op *options.LogManagerOption, conf *config.ManagerConfig) 
 	conf.BkUsername = op.BkUsername
 	conf.BkAppSecret = op.BkAppSecret
 	conf.BkBizID = op.BkBizID
+	conf.KubeConfig = op.KubeConfig
 	return nil
 }

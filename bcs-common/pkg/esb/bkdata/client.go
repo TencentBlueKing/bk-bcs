@@ -2,7 +2,9 @@ package bkdata
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb"
 )
 
@@ -22,6 +24,7 @@ func NewBKDataClient(conf BKDataClientConfig) (*BKDataClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	conf.BkdataAuthenticationMethod = "user"
 	return &BKDataClient{
 		esb:    esbclient,
 		config: conf,
@@ -36,10 +39,12 @@ func (c *BKDataClient) ObtainDataId(conf CustomAccessDeployPlanConfig) (int64, e
 	conf.BkAppCode = c.config.BkAppCode
 	conf.BkAppSecret = c.config.BkAppSecret
 	conf.BkUsername = c.config.BkUsername
+	conf.BkdataAuthenticationMethod = c.config.BkdataAuthenticationMethod
 	jsonstr, err := json.Marshal(conf)
 	if err != nil {
 		return -1, err
 	}
+	blog.Infof("requerst info: %s", string(jsonstr))
 	var payload map[string]interface{}
 	err = json.Unmarshal(jsonstr, &payload)
 	if err != nil {
@@ -55,7 +60,11 @@ func (c *BKDataClient) ObtainDataId(conf CustomAccessDeployPlanConfig) (int64, e
 		return -1, err
 	}
 	var dataid int64
-	dataid = res["raw_data_id"].(int64)
+	tmp, ok := res["raw_data_id"].(float64)
+	if !ok {
+		return -1, fmt.Errorf("convert return value [raw_data_id] from %+v to float64 failed: type assert failed", res)
+	}
+	dataid = int64(tmp)
 	return dataid, nil
 }
 
@@ -63,6 +72,7 @@ func (c *BKDataClient) SetCleanStrategy(strategy DataCleanStrategy) error {
 	strategy.BkAppCode = c.config.BkAppCode
 	strategy.BkAppSecret = c.config.BkAppSecret
 	strategy.BkUsername = c.config.BkUsername
+	strategy.BkdataAuthenticationMethod = c.config.BkdataAuthenticationMethod
 	payload := map[string]interface{}{}
 	jsonstr, err := json.Marshal(strategy)
 	if err != nil {

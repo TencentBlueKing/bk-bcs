@@ -53,9 +53,13 @@ func init() {
 
 func NewClusterLogController(conf *config.ControllerConfig) (*ClusterLogController, error) {
 	ctlr := &ClusterLogController{
-		clusterInfo: conf.Credential,
-		tick:        0,
-		caFile:      conf.CAFile,
+		clusterInfo:          conf.Credential,
+		tick:                 0,
+		caFile:               conf.CAFile,
+		collectionTasks:      make(map[string]*config.CollectionConfig),
+		AddCollectionTask:    make(chan *config.CollectionConfig),
+		DeleteCollectionTask: make(chan string),
+		UpdateCollectionTask: make(chan *config.CollectionConfig),
 	}
 	err := ctlr.initKubeConf()
 	if err != nil {
@@ -74,11 +78,6 @@ func BuildDefaultBcsLogConfigName(namespace, name string) string {
 }
 
 func (c *ClusterLogController) Start() {
-	err := c.initKubeConf()
-	if err != nil {
-		blog.Errorf("Initialization of LogController of Cluster %s failed: %s", c.clusterInfo.ClusterID, err.Error())
-		return
-	}
 	go c.run()
 }
 
@@ -174,10 +173,12 @@ func (c *ClusterLogController) createBcsLogConfig() error {
 }
 
 func (c *ClusterLogController) run() {
+	blog.Infof("Controller of cluster %s start working", c.clusterInfo.ClusterID)
 	for {
 		select {
 		case _, ok := <-c.stopCh:
 			if !ok {
+				blog.Errorf("Stop channel closed, stop working")
 				return
 			}
 		case task, ok := <-c.AddCollectionTask:
@@ -185,13 +186,15 @@ func (c *ClusterLogController) run() {
 				blog.Errorf("AddCollectionTask chan of cluster %s has been closed", c.clusterInfo.ClusterID)
 				return
 			}
+			blog.Infof("Receive new collectiontask: %+v", task)
 			logconf := &bcsv1.BcsLogConfig{}
 			logconf.TypeMeta.Kind = LogConfigKind
 			logconf.TypeMeta.APIVersion = LogConfigAPIVersion
-			if task.ConfigName != "" {
+			if task.ConfigName == "" {
 				task.ConfigName = fmt.Sprintf("%s-%s-%d", LogConfigKind, c.clusterInfo.ClusterID, util.GenerateID())
 			}
 			logconf.ObjectMeta.Name = task.ConfigName
+			logconf.SetName(task.ConfigName)
 			if task.ConfigNamespace == "" {
 				task.ConfigNamespace = DefaultLogConfigNamespace
 			}

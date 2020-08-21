@@ -34,7 +34,7 @@ type BKDataApiConfigSpec struct {
 type BKDataApiResponse struct {
 	Errors  string `json:"errors"`
 	Message string `json:"message"`
-	Code    string `json:"code"`
+	Code    int    `json:"code"`
 	Data    string `json:"data"`
 	Result  bool   `json:"result"`
 }
