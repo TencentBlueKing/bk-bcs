@@ -28,17 +28,18 @@ type PrometheusControllerOption struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	ClusterZk        string   `json:"cluster_zookeeper" value:"" usage:"mesos cluster zookeeper"`
-	CadvisorPort     int      `json:"cadvisor_port" value:"" usage:"node cadvisor port"`
-	NodeExporterPort int      `json:"node_exporter_port" value:"" usage:"node exporter port"`
-	ClusterId        string   `json:"clusterid" value:"" usage:"mesos clusterid"`
-	PromFilePrefix   string   `json:"prom_file_prefix" value:"" usage:"prometheus service discovery file prefix"`
-	EnableMesos      bool     `json:"enable_mesos" value:"true" usage:"enable mesos prometheus service discovery"`
-	EnableService    bool     `json:"enable_service" value:"true" usage:"enable service prometheus service discovery"`
-	EnableNode       bool     `json:"enable_node" value:"true" usage:"enable node prometheus service discovery"`
-	Kubeconfig       string   `json:"kubeconfig" value:"" usage:"kubernetes kubeconfig"`
-	ServiceModules   []string `json:"service_modules" value:"" usage:"service module list"`
-	ClusterModules   []string `json:"cluster_modules" value:"" usage:"cluster module list"`
+	ClusterZk            string   `json:"cluster_zookeeper" value:"" usage:"mesos cluster zookeeper"`
+	CadvisorPort         int      `json:"cadvisor_port" value:"" usage:"node cadvisor port"`
+	NodeExporterPort     int      `json:"node_exporter_port" value:"" usage:"node exporter port"`
+	ClusterId            string   `json:"clusterid" value:"" usage:"mesos clusterid"`
+	PromFilePrefix       string   `json:"prom_file_prefix" value:"" usage:"prometheus service discovery file prefix"`
+	EnableMesos          bool     `json:"enable_mesos" value:"true" usage:"enable mesos prometheus service discovery"`
+	EnableService        bool     `json:"enable_service" value:"true" usage:"enable service prometheus service discovery"`
+	EnableNode           bool     `json:"enable_node" value:"true" usage:"enable node prometheus service discovery"`
+	EnableServiceMonitor bool     `json:"enable_service_monitor" value:"true" usage:"enable service monitor discovery"`
+	Kubeconfig           string   `json:"kubeconfig" value:"" usage:"kubernetes kubeconfig"`
+	ServiceModules       []string `json:"service_modules" value:"" usage:"service module list"`
+	ClusterModules       []string `json:"cluster_modules" value:"" usage:"cluster module list"`
 }
 
 //NewPrometheusControllerOption create PrometheusControllerOption object

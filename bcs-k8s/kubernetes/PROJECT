@@ -5,4 +5,7 @@ resources:
 - group: cloud
   kind: NodeNetwork
   version: v1
+- group: monitor
+  kind: ServiceMonitor
+  version: v1
 version: "2"
