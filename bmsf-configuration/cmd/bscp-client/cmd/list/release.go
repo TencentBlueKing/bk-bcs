@@ -25,20 +25,22 @@ import (
 //listStrategyCmd: client list commit
 func listStrategyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "strategy",
-		Short: "list strategy",
-		Long:  "list all strategy information under specified Application",
-		Example: `
-	bscp-client list strategy --business somegame --app gameserver
-		 `,
-		RunE: handleListStrategies,
+		Use:     "strategy",
+		Aliases: []string{"str"},
+		Short:   "List strategy",
+		Long:    "List all strategy information under specified Application",
+		RunE:    handleListStrategies,
 	}
 	cmd.Flags().StringP("app", "a", "", "application name that ConfigSet belongs to")
-	cmd.MarkFlagRequired("app")
 	return cmd
 }
 
 func handleListStrategies(cmd *cobra.Command, args []string) error {
+	// level 3 read appName required
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create app operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
@@ -60,39 +62,38 @@ func handleListStrategies(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-//listReleaseCmd: client list release
-func listReleaseCmd() *cobra.Command {
+//listMultiReleaseCmd: client list release
+func listMultiReleaseCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "release",
-		Aliases: []string{"rel"},
-		Short:   "list release",
-		Long:    "list all release information specified ConfigSet",
-		Example: `
-	bscp-client list release --business somegame --app gameserver --cfgset name
-		 `,
-		RunE: handleListRelease,
+		Aliases: []string{"rl"},
+		Short:   "List release",
+		Long:    "List all release information specified Application",
+		RunE:    handleListMultiRelease,
 	}
-	cmd.Flags().String("app", "a", "application name that Release belongs to")
-	cmd.Flags().String("cfgset", "c", "application name that release belongs to")
-	cmd.MarkFlagRequired("app")
-	cmd.MarkFlagRequired("cfgset")
+	cmd.Flags().StringP("app", "a", "", "application name that Release belongs to")
+	cmd.Flags().Int32P("type", "t", 0, "the status of release, 1 is init, 2 is published, 3 is canceled, 4 is rollbacked, default 0 is all")
 	return cmd
 }
 
-func handleListRelease(cmd *cobra.Command, args []string) error {
+func handleListMultiRelease(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create app operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
 		return err
 	}
 	appName, _ := cmd.Flags().GetString("app")
-	cfgSetName, _ := cmd.Flags().GetString("cfgset")
+	queryType, _ := cmd.Flags().GetInt32("type")
 	//list all datas if exists
-	releases, err := operator.ListReleaseByApp(context.TODO(), appName, cfgSetName)
+	multiReleases, err := operator.ListMultiReleaseByApp(context.TODO(), appName, queryType)
 	if err != nil {
 		return err
 	}
-	if releases == nil {
+	if multiReleases == nil {
 		cmd.Printf("Found no Release resource.\n")
 		return nil
 	}
@@ -101,6 +102,8 @@ func handleListRelease(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	//format output
-	utils.PrintReleases(releases, business, app)
+	utils.PrintMultiReleases(operator, multiReleases, business, app)
+	cmd.Printf("\n\t(use \"bk-bscp-client get release --id <releaseid>\" to get release detail)\n")
+	cmd.Printf("\t(use \"bk-bscp-client publish --id <releaseid>\" to confrim release to publish)\n\n")
 	return nil
 }

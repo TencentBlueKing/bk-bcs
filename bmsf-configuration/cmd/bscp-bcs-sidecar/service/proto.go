@@ -42,6 +42,14 @@ func verifyProto(r interface{}) error {
 			return errors.New("invalid params, appName too long")
 		}
 
+		length = len(req.Path)
+		if length == 0 {
+			return errors.New("invalid params, path missing")
+		}
+		if length > database.BSCPCFGSETFPATHLENLIMIT {
+			return errors.New("invalid params, path too long")
+		}
+
 		if len(req.Labels) == 0 {
 			return errors.New("invalid params, labels missing")
 		}
@@ -63,6 +71,15 @@ func verifyProto(r interface{}) error {
 		if length > database.BSCPNAMELENLIMIT {
 			return errors.New("invalid params, appName too long")
 		}
+
+		length = len(req.Path)
+		if length == 0 {
+			return errors.New("invalid params, path missing")
+		}
+		if length > database.BSCPCFGSETFPATHLENLIMIT {
+			return errors.New("invalid params, path too long")
+		}
+
 	case *pbsidecar.ReportReloadReq:
 		req := r.(*pbsidecar.ReportReloadReq)
 
@@ -80,6 +97,14 @@ func verifyProto(r interface{}) error {
 		}
 		if length > database.BSCPNAMELENLIMIT {
 			return errors.New("invalid params, appName too long")
+		}
+
+		length = len(req.Path)
+		if length == 0 {
+			return errors.New("invalid params, path missing")
+		}
+		if length > database.BSCPCFGSETFPATHLENLIMIT {
+			return errors.New("invalid params, path too long")
 		}
 
 		if len(req.Releaseid) > database.BSCPIDLENLIMIT {

@@ -20,6 +20,10 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// CloudIPs returns a CloudIPInformer.
+	CloudIPs() CloudIPInformer
+	// CloudSubnets returns a CloudSubnetInformer.
+	CloudSubnets() CloudSubnetInformer
 	// NodeNetworks returns a NodeNetworkInformer.
 	NodeNetworks() NodeNetworkInformer
 }
@@ -33,6 +37,16 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// CloudIPs returns a CloudIPInformer.
+func (v *version) CloudIPs() CloudIPInformer {
+	return &cloudIPInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// CloudSubnets returns a CloudSubnetInformer.
+func (v *version) CloudSubnets() CloudSubnetInformer {
+	return &cloudSubnetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // NodeNetworks returns a NodeNetworkInformer.

@@ -11,6 +11,8 @@ require (
 	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/fatih/color v1.7.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-ini/ini v1.56.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gofrs/flock v0.7.1
@@ -40,6 +42,7 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/tidwall/gjson v1.6.0
 	github.com/ugorji/go v1.1.7 // indirect
+	go.uber.org/ratelimit v0.1.0
 	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
 	google.golang.org/genproto v0.0.0-20200507105951-43844f6eee31
 	google.golang.org/grpc v1.29.1

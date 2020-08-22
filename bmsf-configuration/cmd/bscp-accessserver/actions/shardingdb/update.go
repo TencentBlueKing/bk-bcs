@@ -77,7 +77,11 @@ func (act *UpdateAction) verify() error {
 		return errors.New("invalid params, dbid too long")
 	}
 
-	if len(act.req.Host) > database.BSCPLONGSTRLENLIMIT {
+	length = len(act.req.Host)
+	if length == 0 {
+		return errors.New("invalid params, host missing")
+	}
+	if length > database.BSCPLONGSTRLENLIMIT {
 		return errors.New("invalid params, host too long")
 	}
 
@@ -85,7 +89,11 @@ func (act *UpdateAction) verify() error {
 		return errors.New("invalid params, port missing")
 	}
 
-	if len(act.req.User) > database.BSCPNORMALSTRLENLIMIT {
+	length = len(act.req.User)
+	if length == 0 {
+		return errors.New("invalid params, user missing")
+	}
+	if length > database.BSCPNORMALSTRLENLIMIT {
 		return errors.New("invalid params, user too long")
 	}
 

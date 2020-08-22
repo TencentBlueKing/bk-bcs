@@ -107,8 +107,8 @@ func (act *UpdateAction) verify() error {
 	if len(act.req.Labels) > database.BSCPCLUSTERLABELSLENLIMIT {
 		return errors.New("invalid params, labels too long")
 	}
-
 	// TODO check cluster labels format.
+
 	return nil
 }
 

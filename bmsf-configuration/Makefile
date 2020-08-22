@@ -1,9 +1,4 @@
-ifdef HASTAG
-	GITTAG = $(shell git describe --tags)
-else
-	GITTAG = $(shell git describe --always)
-endif
-
+GITTAG    = $(shell git describe --tags)
 PRO_DIR   = $(shell pwd)
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
 GITHASH   = $(shell git rev-parse HEAD)
@@ -14,6 +9,14 @@ export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp.${VERSION}
 
 ifndef IMAGE_TAG
 	export IMAGE_TAG=dev
+endif
+
+ifndef PLUGIN_TAG
+	export PLUGIN_TAG=dev
+endif
+
+ifndef CLIENT_TAG
+	export CLIENT_TAG=dev
 endif
 
 # version for command line

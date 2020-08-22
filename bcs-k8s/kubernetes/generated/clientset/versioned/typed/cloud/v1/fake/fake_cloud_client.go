@@ -24,6 +24,14 @@ type FakeCloudV1 struct {
 	*testing.Fake
 }
 
+func (c *FakeCloudV1) CloudIPs(namespace string) v1.CloudIPInterface {
+	return &FakeCloudIPs{c, namespace}
+}
+
+func (c *FakeCloudV1) CloudSubnets(namespace string) v1.CloudSubnetInterface {
+	return &FakeCloudSubnets{c, namespace}
+}
+
 func (c *FakeCloudV1) NodeNetworks(namespace string) v1.NodeNetworkInterface {
 	return &FakeNodeNetworks{c, namespace}
 }

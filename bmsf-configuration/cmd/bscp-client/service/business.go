@@ -14,15 +14,16 @@
 package service
 
 import (
-	"bk-bscp/internal/protocol/accessserver"
-	"bk-bscp/internal/protocol/common"
-	pkgcommon "bk-bscp/pkg/common"
-	"bk-bscp/pkg/logger"
 	"context"
 	"fmt"
 
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+
+	"bk-bscp/internal/protocol/accessserver"
+	"bk-bscp/internal/protocol/common"
+	pkgcommon "bk-bscp/pkg/common"
+	"bk-bscp/pkg/logger"
 )
 
 //CreateBusinessOption all option for create business, all details
@@ -56,6 +57,10 @@ func (option *CreateBusinessOption) LoadConfig(cfg string) error {
 	if !vip.IsSet("spec.creator") {
 		logger.V(3).Infof("Loading CreateBusinessOption err, lost spec.creator in yaml")
 		return fmt.Errorf("spec.creator is required")
+	}
+	if !vip.IsSet("spec.auth") {
+		logger.V(3).Infof("Loading CreateBusinessOption err, lost spec.auth in yaml")
+		return fmt.Errorf("spec.auth is required")
 	}
 	if !vip.IsSet("spec.deptID") {
 		logger.V(3).Infof("Loading CreateBusinessOption err, lost spec.deptID in yaml")
@@ -192,8 +197,8 @@ func (operator *AccessOperator) CreateBusiness(cxt context.Context, option *Crea
 		Dbid:    option.DB.Dbid,
 		Dbname:  option.DBName,
 		Creator: option.Spec.Creator,
-		Memo:    option.Spec.Memo,
 		Auth:    option.Spec.Auth,
+		Memo:    option.Spec.Memo,
 	}
 	response, err := operator.Client.CreateBusiness(cxt, request, grpcOptions...)
 	if err != nil {
@@ -224,8 +229,9 @@ func (operator *AccessOperator) GetBusiness(cxt context.Context, name string) (*
 		Name: name,
 	}
 	grpcOptions := []grpc.CallOption{
-		grpc.WaitForReady(true),
+		//grpc.WaitForReady(true),
 	}
+
 	response, err := operator.Client.QueryBusiness(cxt, request, grpcOptions...)
 	if err != nil {
 		logger.V(3).Infof("GetBusiness %s failed, %s", name, err.Error())
@@ -324,6 +330,35 @@ func (operator *AccessOperator) GetShardingDB(cxt context.Context, DBID string) 
 		return nil, fmt.Errorf("%s", response.ErrMsg)
 	}
 	return response.ShardingDB, nil
+}
+
+//GetSharding get specified Sharding information
+//return:
+//	sharding: specified sharding, nil if not exist
+//	error: error info if that happened
+func (operator *AccessOperator) GetSharding(cxt context.Context, key string) (*common.Sharding, error) {
+	request := &accessserver.QueryShardingReq{
+		Seq: pkgcommon.Sequence(),
+		Key: key,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.QuerySharding(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("GetSharding %s failed, %s", key, err.Error())
+		return nil, err
+	}
+	//data not found
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("GetSharding %s: resource Not Found.", key)
+		return nil, nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("GetSharding %s success, but response Err, %s", key, response.ErrMsg)
+		return nil, fmt.Errorf("%s", response.ErrMsg)
+	}
+	return response.Sharding, nil
 }
 
 //ListShardingDB list all ShardingDB from BSCP, at least one shardingDB info for platform

@@ -16,18 +16,23 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"bk-bscp/cmd/bscp-client/cmd/confirm"
+	"bk-bscp/cmd/bscp-client/cmd/base"
+	"bk-bscp/cmd/bscp-client/cmd/cancel"
+	"bk-bscp/cmd/bscp-client/cmd/commit"
 	"bk-bscp/cmd/bscp-client/cmd/create"
 	"bk-bscp/cmd/bscp-client/cmd/delete"
-	"bk-bscp/cmd/bscp-client/cmd/diff"
 	"bk-bscp/cmd/bscp-client/cmd/get"
 	"bk-bscp/cmd/bscp-client/cmd/list"
 	"bk-bscp/cmd/bscp-client/cmd/lock"
+	"bk-bscp/cmd/bscp-client/cmd/publish"
+	"bk-bscp/cmd/bscp-client/cmd/release"
+	"bk-bscp/cmd/bscp-client/cmd/reload"
+	"bk-bscp/cmd/bscp-client/cmd/rollback"
 	"bk-bscp/cmd/bscp-client/cmd/update"
 )
 
 var (
-	//commandList for client sub commands
+	// commandList for client sub commands
 	commandList = []*cobra.Command{}
 )
 
@@ -39,11 +44,16 @@ func init() {
 	commandList = append(commandList, get.InitCommands()...)
 	commandList = append(commandList, list.InitCommands()...)
 	commandList = append(commandList, lock.InitCommands()...)
-	commandList = append(commandList, confirm.InitCommands()...)
-	commandList = append(commandList, diff.InitCommands()...)
+	commandList = append(commandList, publish.InitCommands()...)
+	commandList = append(commandList, release.InitCommands()...)
+	commandList = append(commandList, commit.InitCommands()...)
+	commandList = append(commandList, cancel.InitCommands()...)
+	commandList = append(commandList, rollback.InitCommands()...)
+	commandList = append(commandList, reload.InitCommands()...)
+	commandList = append(commandList, base.InitCommands()...)
 }
 
-//GetCommandList interface for client to get all register sub commands
+// GetCommandList interface for client to get all register sub commands
 func GetCommandList() []*cobra.Command {
 	return commandList
 }

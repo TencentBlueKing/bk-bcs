@@ -1,0 +1,7 @@
+apiVersion: cloud.bkbcs.tencent.com/v1
+kind: CloudSubnet
+metadata:
+  name: cloudsubnet-sample
+spec:
+  # Add fields here
+  foo: bar
