@@ -16,6 +16,7 @@ package healthcheck
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
@@ -122,16 +123,17 @@ func (check *CommandChecker) Stop() {
 
 //ReCheck ask checker to check
 func (check *CommandChecker) ReCheck() bool {
+	cmds := strings.Split(strings.TrimSpace(check.cmd), " ")
 	//create exec with command
 	createOpt := dockerclient.CreateExecOptions{
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          false,
-		Cmd:          []string{check.cmd},
+		Cmd:          cmds,
 		Container:    check.containerId,
 	}
-
+	logs.Infof("create command healthcheck(%v)", cmds)
 	exeInst, err := check.client.CreateExec(createOpt)
 	if err != nil {
 		logs.Errorf("CommandChecker CreateExec container %s command %s error %s",

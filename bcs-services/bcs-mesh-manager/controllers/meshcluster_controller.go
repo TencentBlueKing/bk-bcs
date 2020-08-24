@@ -46,9 +46,10 @@ type MeshClusterReconciler struct {
 func (r *MeshClusterReconciler) getMeshClusterManager(mCluster *meshv1.MeshCluster)(*MeshClusterManager,error){
 	meshCluster,_ := r.MeshClusters[mCluster.GetUuid()]
 	if meshCluster!=nil {
+		meshCluster.meshCluster = mCluster.DeepCopy()
 		return meshCluster, nil
 	}
-	meshCluster,err := NewMeshClusterManager(r.Conf, mCluster.DeepCopy())
+	meshCluster,err := NewMeshClusterManager(r.Conf, mCluster.DeepCopy(), r.Client)
 	if err!=nil {
 		klog.Errorf("NewMeshClusterManager(%s) failed: %s", mCluster.GetUuid(), err.Error())
 		return nil, err
@@ -95,13 +96,17 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 			if err := r.Update(context.Background(), MeshCluster); err != nil {
 				return ctrl.Result{RequeueAfter: time.Second*3}, err
 			}
+			//stop meshManager
+			delete(r.MeshClusters, MeshCluster.GetUuid())
+			klog.Infof("Delete Cluster(%s) MeshManager success", MeshCluster.Spec.ClusterId)
 		}
+		return ctrl.Result{}, nil
 	}
 
 	//append finalizer
 	if !containsString(MeshCluster.ObjectMeta.Finalizers, finalizer) {
 		MeshCluster.ObjectMeta.Finalizers = append(MeshCluster.ObjectMeta.Finalizers, finalizer)
-		r.Update(context.Background(), MeshCluster, nil)
+		r.Update(context.Background(), MeshCluster)
 	}
 
 	//if mesh installed
@@ -110,8 +115,10 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, nil
 	}
 	//install mesh in cluster
-	meshManager.installIstio()
-	return ctrl.Result{}, nil
+	if meshManager.installIstio() {
+		return ctrl.Result{}, nil
+	}
+	return ctrl.Result{RequeueAfter: time.Second*3}, nil
 }
 
 func (r *MeshClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {

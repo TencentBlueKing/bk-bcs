@@ -96,7 +96,6 @@ require (
 	github.com/google/cadvisor v0.32.0
 	github.com/google/go-cmp v0.5.0
 	github.com/google/go-querystring v1.0.0
-	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/gorilla/handlers v1.4.2 // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
@@ -203,6 +202,7 @@ require (
 	k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
 	k8s.io/gengo v0.0.0-20200413195148-3a45101e95ac // indirect
 	k8s.io/klog/v2 v2.0.0 // indirect
+	k8s.io/kube-openapi v0.0.0-20200811211545-daf3cbb84823 // indirect
 	k8s.io/kubernetes v1.14.10
 	k8s.io/utils v0.0.0-20190923111123-69764acb6e8e // indirect
 	sigs.k8s.io/controller-runtime v0.1.9

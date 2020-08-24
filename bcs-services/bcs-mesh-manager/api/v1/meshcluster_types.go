@@ -18,6 +18,7 @@ package v1
 
 import (
 	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,7 +35,7 @@ type MeshClusterSpec struct {
 	//ClusterId
 	ClusterId string `json:"clusterId,omitempty"`
 	//MeshType, default ISTIO
-	Type MeshType `json:"type,omitempty"`
+	MeshType MeshType `json:"type,omitempty"`
 }
 
 //mesh type: istio、tbuspp
@@ -59,6 +60,7 @@ type InstallStatus_VersionStatus struct {
 	Namespace            string               `json:"namespace,omitempty"`
 	Status               InstallStatus_Status `json:"status,omitempty"`
 	Message              string               `json:"message,omitempty"`
+	UpdateTime           int64                `json:"updateTime,omitempty"`
 }
 
 // Status describes the current state of a component.
