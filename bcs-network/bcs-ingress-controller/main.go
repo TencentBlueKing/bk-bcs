@@ -13,7 +13,9 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -26,8 +28,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/controllers"
+	ingressctrl "github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/ingresscontroller"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
+	listenerctrl "github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/listenercontroller"
 )
 
 var (
@@ -44,13 +51,11 @@ func init() {
 func main() {
 
 	opts := &option.ControllerOption{}
-
 	var verbosity int
 	flag.StringVar(&opts.Address, "address", "127.0.0.1", "address for controller")
 	flag.IntVar(&opts.MetricPort, "metric_port", 8081, "metric port for controller")
 	flag.IntVar(&opts.Port, "port", 8080, "por for controller")
 	flag.StringVar(&opts.Cloud, "cloud", "tencentcloud", "cloud mode for bcs network controller")
-	flag.StringVar(&opts.Cluster, "cluster", "", "clusterid for bcs cluster")
 
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
@@ -72,10 +77,26 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
+	var validater cloud.Validater
+	var lbClient cloud.LoadBalance
+	var err error
+	switch opts.Cloud {
+	case constant.CloudTencent:
+		validater = tencentcloud.NewClbValidater()
+		lbClient, err = tencentcloud.NewClb()
+		if err != nil {
+			blog.Errorf("init cloud failed, err %s", err.Error())
+			os.Exit(1)
+		}
+	case constant.CloudAWS:
+		setupLog.Error(fmt.Errorf("aws not implemented"), "aws not implemented")
+		os.Exit(1)
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
-		LeaderElection:          false,
+		LeaderElection:          true,
 		LeaderElectionID:        "33fb49e.cloudlbconroller.bkbcs.tencent.com",
 		LeaderElectionNamespace: "bcs-system",
 	})
@@ -84,16 +105,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.IngressReconciler{
-		Client:         mgr.GetClient(),
-		Log:            ctrl.Log.WithName("controllers").WithName("Ingress"),
-		Option:         opts,
-		IngressEventer: mgr.GetEventRecorderFor("bcs-ingress-controller"),
-		SvcFilter:      controllers.NewServiceFilter(mgr.GetClient()),
-		PodFilter:      controllers.NewPodFilter(mgr.GetClient()),
-		StsFilter:      controllers.NewStatefulSetFilter(mgr.GetClient()),
+	if err = (&ingressctrl.IngressReconciler{
+		Ctx:              context.Background(),
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("Ingress"),
+		Option:           opts,
+		IngressEventer:   mgr.GetEventRecorderFor("bcs-ingress-controller"),
+		SvcFilter:        ingressctrl.NewServiceFilter(mgr.GetClient()),
+		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient()),
+		StsFilter:        ingressctrl.NewStatefulSetFilter(mgr.GetClient()),
+		IngressConverter: generator.NewIngressConverter(mgr.GetClient(), validater),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
+		os.Exit(1)
+	}
+
+	listenerReconciler := listenerctrl.NewListenerReconciler()
+	listenerReconciler.Ctx = context.Background()
+	listenerReconciler.Client = mgr.GetClient()
+	listenerReconciler.CloudLb = lbClient
+	listenerReconciler.Option = opts
+	listenerReconciler.ListenerEventer = mgr.GetEventRecorderFor("bcs-ingress-controller")
+	if err = listenerReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Listener")
 		os.Exit(1)
 	}
 

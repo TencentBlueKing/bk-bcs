@@ -10,5 +10,13 @@
  * limitations under the License.
  */
 
-package worker
+package constant
 
+const (
+	// FinalizerNameBcsIngressController finalizer name of bcs ingress controller
+	FinalizerNameBcsIngressController = "ingresscontroller.bkbcs.tencent.com"
+	// CloudTencent tencent cloud
+	CloudTencent = "tencentcloud"
+	// CloudAWS aws cloud
+	CloudAWS = "aws"
+)

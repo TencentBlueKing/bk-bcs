@@ -10,13 +10,5 @@
  * limitations under the License.
  */
 
-package controllers
+package ingresscontroller
 
-import (
-	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-// EndpointFilter filter for endpoint event
-type EndpointFilter struct {
-	cli client.Client
-}

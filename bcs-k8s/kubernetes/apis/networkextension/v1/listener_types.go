@@ -14,6 +14,8 @@
 package v1
 
 import (
+	"encoding/json"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,6 +29,12 @@ const (
 	LabelValueForIngressNamespace = "ingress-namespace"
 	// LabelKeyForLoadbalanceID label key for loadbalance id
 	LabelKeyForLoadbalanceID = "ingress.bkbcs.tencent.com/lbid"
+	// LabelKeyForIsSegmentListener label key for if it is segment listener
+	LabelKeyForIsSegmentListener = "segmentlistener.bkbcs.tencent.com"
+	// LabelValueTrue label value for true
+	LabelValueTrue = "true"
+	// LabelValueFalse label value for false
+	LabelValueFalse = "false"
 )
 
 // ListenerBackend info for backend
@@ -34,6 +42,30 @@ type ListenerBackend struct {
 	IP     string `json:"IP"`
 	Port   int    `json:"port"`
 	Weight int    `json:"weight"`
+}
+
+// ListenerBackendList listener backend list
+type ListenerBackendList []ListenerBackend
+
+// Len implements sort interface
+func (lbl ListenerBackendList) Len() int {
+	return len(lbl)
+}
+
+// Swap implements sort interface
+func (lbl ListenerBackendList) Swap(i, j int) {
+	lbl[i], lbl[j] = lbl[j], lbl[i]
+}
+
+// Less implements sort interface
+func (lbl ListenerBackendList) Less(i, j int) bool {
+	if lbl[i].IP < lbl[j].IP {
+		return true
+	}
+	if lbl[i].IP == lbl[j].IP {
+		return lbl[i].Port < lbl[j].Port
+	}
+	return false
 }
 
 // ListenerTargetGroup backend set for listener
@@ -46,10 +78,35 @@ type ListenerTargetGroup struct {
 
 // ListenerRule route rule for listener
 type ListenerRule struct {
-	RuleID      string               `json:"ruleID,omitempty"`
-	Domain      string               `json:"domain,omitempty"`
-	Path        string               `json:"path,omitempty"`
-	TargetGroup *ListenerTargetGroup `json:"targetGroup,omitempty"`
+	RuleID            string                    `json:"ruleID,omitempty"`
+	Domain            string                    `json:"domain,omitempty"`
+	Path              string                    `json:"path,omitempty"`
+	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
+	TargetGroup       *ListenerTargetGroup      `json:"targetGroup,omitempty"`
+}
+
+// ListenerRuleList list of listener rule
+type ListenerRuleList []ListenerRule
+
+// Len implements sort interface
+func (lrl ListenerRuleList) Len() int {
+	return len(lrl)
+}
+
+// Less implements sort interface
+func (lrl ListenerRuleList) Less(i, j int) bool {
+	if lrl[i].Domain < lrl[j].Domain {
+		return true
+	}
+	if lrl[i].Domain == lrl[j].Domain {
+		return lrl[i].Path < lrl[j].Path
+	}
+	return false
+}
+
+// Swap implements sort interface
+func (lrl ListenerRuleList) Swap(i, j int) {
+	lrl[i], lrl[j] = lrl[j], lrl[i]
 }
 
 // ListenerSpec defines the desired state of Listener
@@ -106,6 +163,15 @@ type Listener struct {
 
 	Spec   ListenerSpec   `json:"spec,omitempty"`
 	Status ListenerStatus `json:"status,omitempty"`
+}
+
+// ToJSONString convert listener to json string
+func (l *Listener) ToJSONString() string {
+	data, err := json.Marshal(l)
+	if err != nil {
+		return ""
+	}
+	return string(data)
 }
 
 // ListenerSlice slice for listener for sort

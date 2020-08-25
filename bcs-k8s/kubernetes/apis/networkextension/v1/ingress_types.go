@@ -81,9 +81,10 @@ func (sr *ServiceRoute) GetWeight() int {
 
 // Layer7Route 7 layer route config
 type Layer7Route struct {
-	Domain   string          `json:"domain"`
-	Path     string          `json:"path,omitempty"`
-	Services []*ServiceRoute `json:"services,omitempty"`
+	Domain            string                    `json:"domain"`
+	Path              string                    `json:"path,omitempty"`
+	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
+	Services          []ServiceRoute            `json:"services,omitempty"`
 }
 
 // ListenerHealthCheck health check setting for listener
@@ -107,14 +108,9 @@ type IngressListenerAttribute struct {
 
 // IngressListenerCertificate certificate configs for listener
 type IngressListenerCertificate struct {
-	Mode                string `json:"mode,omitempty"`
-	CertID              string `json:"certID,omitempty"`
-	CertCaID            string `json:"certCaID,omitempty"`
-	CertServerName      string `json:"certServerName,omitempty"`
-	CertServerKey       string `json:"certServerKey,omitempty"`
-	CertServerContent   string `json:"certServerContent,omitempty"`
-	CertClientCaName    string `json:"certClientCaName,omitempty"`
-	CertClientCaContent string `json:"certCilentCaContent,omitempty"`
+	Mode     string `json:"mode,omitempty"`
+	CertID   string `json:"certID,omitempty"`
+	CertCaID string `json:"certCaID,omitempty"`
 }
 
 // IngressRule rule of ingress
@@ -123,8 +119,8 @@ type IngressRule struct {
 	Protocol          string                      `json:"protocol"`
 	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute,omitempty"`
 	Certificate       *IngressListenerCertificate `json:"certificate,omitempty"`
-	Services          []ServiceRoute              `json:"layer4Services,omitempty"`
-	Routes            []Layer7Route               `json:"layer7Services,omitempty"`
+	Services          []ServiceRoute              `json:"services,omitempty"`
+	Routes            []Layer7Route               `json:"layer7Routes,omitempty"`
 }
 
 // IngressPortMapping mapping of ingress
@@ -137,8 +133,7 @@ type IngressPortMapping struct {
 	EndIndex           int                       `json:"endIndex"`
 	SegmentLength      int                       `json:"segmentLength,omitempty"`
 	Protocol           string                    `json:"protocol"`
-	IsBackendPortFixed bool                      `json:"isBackendPortFixed,omitempty"`
-	IgnoreHostPort     bool                      `json:"ignoreHostPort,omitempty"`
+	IgnoreSegment      bool                      `json:"ignoreSegment,omtempty"`
 	ListenerAttribute  *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 }
 

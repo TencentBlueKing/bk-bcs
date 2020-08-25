@@ -13,7 +13,13 @@
 package generator
 
 import (
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // GetListenerName generate listener name with lb id and port number
@@ -36,6 +42,49 @@ func GetPodIndex(podName string) (int, error) {
 	podIndex, err := strconv.Atoi(podNumberStr)
 	if err != nil {
 		blog.Errorf("get stateful set pod index failed from podName %s, err %s", podName, err.Error())
-		return nil, fmt.Errorf("get stateful set pod index failed from podName %s, err %s", podName, err.Error())
+		return -1, fmt.Errorf("get stateful set pod index failed from podName %s, err %s", podName, err.Error())
 	}
+	return podIndex, nil
+}
+
+// GetDiffListeners get diff between two listener arrays
+func GetDiffListeners(existedListeners, newListeners []networkextensionv1.Listener) (
+	[]networkextensionv1.Listener, []networkextensionv1.Listener,
+	[]networkextensionv1.Listener, []networkextensionv1.Listener) {
+
+	existedListenerMap := make(map[string]networkextensionv1.Listener)
+	for _, listener := range existedListeners {
+		existedListenerMap[listener.GetName()] = listener
+	}
+	newListenerMap := make(map[string]networkextensionv1.Listener)
+	for _, listener := range newListeners {
+		newListenerMap[listener.GetName()] = listener
+	}
+
+	var adds []networkextensionv1.Listener
+	var dels []networkextensionv1.Listener
+	var olds []networkextensionv1.Listener
+	var news []networkextensionv1.Listener
+
+	for _, listener := range newListeners {
+		existedListener, ok := existedListenerMap[listener.GetName()]
+		if !ok {
+			adds = append(adds, listener)
+			continue
+		}
+		if !reflect.DeepEqual(listener.Spec, existedListener.Spec) {
+			olds = append(olds, existedListener)
+			news = append(news, listener)
+			continue
+		}
+	}
+
+	for _, listener := range existedListeners {
+		_, ok := newListenerMap[listener.GetName()]
+		if !ok {
+			dels = append(dels, listener)
+			continue
+		}
+	}
+	return adds, dels, olds, news
 }

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package controllers
+package ingresscontroller
 
 import (
 	"context"

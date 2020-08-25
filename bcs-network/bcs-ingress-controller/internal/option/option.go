@@ -27,9 +27,6 @@ type ControllerOption struct {
 	// MetricPort port for metric server
 	MetricPort int
 
-	// Cluster cluster id for bcs
-	Cluster string
-
 	// Cloud cloud mod
 	Cloud string
 
