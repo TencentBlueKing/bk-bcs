@@ -14,14 +14,15 @@
 package gamestatefulset
 
 import (
+	"fmt"
+	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	"math"
 	"sort"
 
-	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	"bcs-gamestatefulset-operator/pkg/util"
-	"bcs-gamestatefulset-operator/pkg/util/constants"
-
-	"bcs-gamestatefulset-operator/pkg/util/inplaceupdate"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,7 +55,8 @@ type GameStatefulSetControlInterface interface {
 // scenario other than testing.
 func NewDefaultGameStatefulSetControl(
 	podControl GameStatefulSetPodControlInterface,
-	inplaceControl inplaceupdate.Interface,
+	inPlaceControl inplaceupdate.Interface,
+	hotPatchControl hotpatchupdate.Interface,
 	statusUpdater GameStatefulSetStatusUpdaterInterface,
 	controllerHistory history.Interface,
 	recorder record.EventRecorder) GameStatefulSetControlInterface {
@@ -63,7 +65,8 @@ func NewDefaultGameStatefulSetControl(
 		statusUpdater,
 		controllerHistory,
 		recorder,
-		inplaceControl,
+		inPlaceControl,
+		hotPatchControl,
 	}
 }
 
@@ -72,7 +75,8 @@ type defaultGameStatefulSetControl struct {
 	statusUpdater     GameStatefulSetStatusUpdaterInterface
 	controllerHistory history.Interface
 	recorder          record.EventRecorder
-	inplaceControl    inplaceupdate.Interface
+	inPlaceControl    inplaceupdate.Interface
+	hotPatchControl   hotpatchupdate.Interface
 }
 
 // UpdateGameStatefulSet executes the core logic loop for a stateful set plus, applying the predictable and
@@ -498,10 +502,12 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		}
 
 		// Update InPlaceUpdateReady condition for pod
-		if res := ssc.inplaceControl.Refresh(replicas[i], nil); res.RefreshErr != nil {
+		if res := ssc.inPlaceControl.Refresh(replicas[i], nil); res.RefreshErr != nil {
 			klog.Errorf("StatefulSet %s/%s failed to update pod %s condition for inplace: %v",
 				set.Namespace, set.Name, replicas[i].Name, res.RefreshErr)
 			return &status, res.RefreshErr
+		} else if res.DelayDuration > 0 {
+			durationStore.Push(getGameStatefulSetKey(set), res.DelayDuration)
 		}
 
 		// If we have a Pod that has been created but is not running and ready we can not make progress.
@@ -587,30 +593,18 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 	// we compute the minimum ordinal of the target sequence for a destructive update based on the strategy.
 	updateMin := 0
-	if set.Spec.UpdateStrategy.UpdateParameters != nil && set.Spec.UpdateStrategy.UpdateParameters.Partition != nil {
-		updateMin = int(*set.Spec.UpdateStrategy.UpdateParameters.Partition)
+	if set.Spec.UpdateStrategy.RollingUpdate != nil {
+		updateMin = int(*set.Spec.UpdateStrategy.RollingUpdate.Partition)
 	}
 
 	switch set.Spec.UpdateStrategy.Type {
 	//(DeveloperJim): InplaceUpdate handle here
 	case stsplus.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
-			//if getPodRevision(replicas[target]) != updateRevision.Name {
-			//	klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
-			//		set.Name, replicas[target].Name)
-			//	replica := updateVersionedGameStatefulSetPod(
-			//		set,
-			//		updateRevision.Name,
-			//		replicas[target])
-			//	err := ssc.podControl.UpdateGameStatefulSetPod(set, replica, stsplus.InplaceUpdateGameStatefulSetStrategyType)
-			//	status.CurrentReplicas--
-			//	return &status, err
-			//}
-
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				inplaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
+				inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
 				status.CurrentReplicas--
-				return &status, inplaceUpdateErr
+				return &status, inPlaceUpdateErr
 			}
 
 			////TODO(DeveloperJim): add parallel featrue for fast rolling Update
@@ -651,16 +645,13 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		}
 
 	//(DeveloperBryan): InplaceHotPatch handle here
-	case stsplus.InplaceHotPatchGameStatefulSetStrategyType:
+	case stsplus.HotPatchGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name {
 				klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
 					set.Name, replicas[target].Name)
-				replica := hotPatchVersionedGameStatefulSetPod(
-					set,
-					updateRevision.Name,
-					replicas[target])
-				err := ssc.podControl.UpdateGameStatefulSetPod(set, replica, stsplus.InplaceHotPatchGameStatefulSetStrategyType)
+
+				err := ssc.hotPatchUpdatePod(set, replicas[target], updateRevision, revisions)
 				status.CurrentReplicas--
 				return &status, err
 			}
@@ -693,18 +684,48 @@ func (ssc *defaultGameStatefulSetControl) inPlaceUpdatePod(
 	}
 
 	opts := &inplaceupdate.UpdateOptions{}
-	if set.Spec.UpdateStrategy.UpdateParameters != nil {
-		opts.GracePeriodSeconds = set.Spec.UpdateStrategy.UpdateParameters.InplaceUpdateGracePeriodSeconds
+	if set.Spec.UpdateStrategy.InPlaceUpdateStrategy != nil {
+		opts.GracePeriodSeconds = set.Spec.UpdateStrategy.InPlaceUpdateStrategy.GracePeriodSeconds
 	}
 
-	res := ssc.inplaceControl.Update(pod, oldRevision, updateRevision, opts)
-	if res.UpdateErr == nil {
-		ssc.recorder.Eventf(set, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace", "successfully update pod %s in-place", pod.Name)
-	} else if res.UpdateErr != nil {
-		ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedUpdatePodInPlace", "failed to update pod %s in-place: %v", pod.Name, res.UpdateErr)
+	res := ssc.inPlaceControl.Update(pod, oldRevision, updateRevision, opts)
+	if res.InPlaceUpdate {
+		if res.UpdateErr == nil {
+			ssc.recorder.Eventf(set, v1.EventTypeNormal, "SuccessfulUpdatePodInPlace", "successfully update pod %s in-place", pod.Name)
+		} else {
+			ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedUpdatePodInPlace", "failed to update pod %s in-place: %v", pod.Name, res.UpdateErr)
+		}
+		if res.DelayDuration > 0 {
+			durationStore.Push(getGameStatefulSetKey(set), res.DelayDuration)
+		}
+		return res.UpdateErr
 	}
 
-	return res.UpdateErr
+	err := fmt.Errorf("find Pod %s update strategy is HotPatch, but the diff not only contains replace operation of spec.containers[x].image", pod)
+	ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedUpdatePodInPlace", "find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
+	klog.Warningf("GameStatefulSet %s/%s can not update Pod %s in-place: %v", set.Namespace, set.Name, pod.Name, err)
+	return err
+}
+
+func (ssc *defaultGameStatefulSetControl) hotPatchUpdatePod(
+	set *stsplus.GameStatefulSet, pod *v1.Pod,
+	updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
+) error {
+	var oldRevision *apps.ControllerRevision
+	for _, r := range revisions {
+		if r.Name == getPodRevision(pod) {
+			oldRevision = r
+			break
+		}
+	}
+
+	err := ssc.hotPatchControl.Update(pod, oldRevision, updateRevision)
+	if err != nil {
+		ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedUpdatePodHotPatch", "failed to update pod %s hot-patch: %v", pod.Name, err)
+		return err
+	}
+	ssc.recorder.Eventf(set, v1.EventTypeNormal, "SuccessfulUpdatePodHotPatch", "successfully update pod %s hot-patch", pod.Name)
+	return nil
 }
 
 // updateGameStatefulSetStatus updates set's Status to be equal to status. If status indicates a complete update, it is

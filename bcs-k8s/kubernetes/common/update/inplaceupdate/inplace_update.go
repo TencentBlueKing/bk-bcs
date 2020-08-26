@@ -16,23 +16,17 @@ package inplaceupdate
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
-	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	"github.com/mattbaird/jsonpatch"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog"
 )
-
-var inPlaceUpdatePatchRexp = regexp.MustCompile("^/spec/containers/([0-9]+)/image$")
 
 type UpdateOptions struct {
 	GracePeriodSeconds int32
@@ -44,6 +38,7 @@ type RefreshResult struct {
 }
 
 type UpdateResult struct {
+	InPlaceUpdate bool
 	UpdateErr     error
 	DelayDuration time.Duration
 }
@@ -54,21 +49,8 @@ type Interface interface {
 	Update(pod *v1.Pod, oldRevision, newRevision *apps.ControllerRevision, opts *UpdateOptions) UpdateResult
 }
 
-// UpdateSpec records the images of containers which need to in-place update.
-type UpdateSpec struct {
-	Revision    string            `json:"revision"`
-	Annotations map[string]string `json:"annotations,omitempty"`
-
-	ContainerImages map[string]string `json:"containerImages,omitempty"`
-	MetaDataPatch   []byte            `json:"metaDataPatch,omitempty"`
-	GraceSeconds    int32             `json:"graceSeconds,omitempty"`
-
-	OldTemplate *v1.PodTemplateSpec `json:"oldTemplate,omitempty"`
-	NewTemplate *v1.PodTemplateSpec `json:"newTemplate,omitempty"`
-}
-
 type realControl struct {
-	adp         adapter
+	adp         update.Adapter
 	revisionKey string
 
 	// just for test
@@ -76,7 +58,7 @@ type realControl struct {
 }
 
 func NewForTypedClient(c clientset.Interface, revisionKey string) Interface {
-	return &realControl{adp: &adapterTypedClient{client: c}, revisionKey: revisionKey, now: metav1.Now}
+	return &realControl{adp: &update.AdapterTypedClient{Client: c}, revisionKey: revisionKey, now: metav1.Now}
 }
 
 func (c *realControl) Refresh(pod *v1.Pod, opts *UpdateOptions) RefreshResult {
@@ -86,7 +68,7 @@ func (c *realControl) Refresh(pod *v1.Pod, opts *UpdateOptions) RefreshResult {
 
 	var delayDuration time.Duration
 	var err error
-	if pod.Annotations[stsplus.InPlaceUpdateGraceKey] != "" {
+	if pod.Annotations[InPlaceUpdateGraceKey] != "" {
 		if delayDuration, err = c.finishGracePeriod(pod, opts); err != nil {
 			return RefreshResult{RefreshErr: err}
 		}
@@ -97,7 +79,7 @@ func (c *realControl) Refresh(pod *v1.Pod, opts *UpdateOptions) RefreshResult {
 
 func (c *realControl) Update(pod *v1.Pod, oldRevision, newRevision *apps.ControllerRevision, opts *UpdateOptions) UpdateResult {
 	// 1. calculate inplace update spec
-	spec := calculateInPlaceUpdateSpec(oldRevision, newRevision)
+	spec := update.CalculateInPlaceUpdateSpec(oldRevision, newRevision)
 
 	if spec == nil {
 		return UpdateResult{}
@@ -109,26 +91,26 @@ func (c *realControl) Update(pod *v1.Pod, oldRevision, newRevision *apps.Control
 	// 2. update condition for pod with readiness-gate
 	if containsReadinessGate(pod) {
 		newCondition := v1.PodCondition{
-			Type:               stsplus.InPlaceUpdateReady,
+			Type:               InPlaceUpdateReady,
 			LastTransitionTime: c.now(),
 			Status:             v1.ConditionFalse,
 			Reason:             "StartInPlaceUpdate",
 		}
 		if err := c.updateCondition(pod, newCondition); err != nil {
-			return UpdateResult{UpdateErr: err}
+			return UpdateResult{InPlaceUpdate: true, UpdateErr: err}
 		}
 	}
 
 	// 3. update container images
 	if err := c.updatePodInPlace(pod, spec, opts); err != nil {
-		return UpdateResult{UpdateErr: err}
+		return UpdateResult{InPlaceUpdate: true, UpdateErr: err}
 	}
 
 	var delayDuration time.Duration
 	if opts != nil && opts.GracePeriodSeconds > 0 {
 		delayDuration = time.Second * time.Duration(opts.GracePeriodSeconds)
 	}
-	return UpdateResult{DelayDuration: delayDuration}
+	return UpdateResult{InPlaceUpdate: true, DelayDuration: delayDuration}
 }
 
 func (c *realControl) refreshCondition(pod *v1.Pod, opts *UpdateOptions) error {
@@ -149,7 +131,7 @@ func (c *realControl) refreshCondition(pod *v1.Pod, opts *UpdateOptions) error {
 	}
 
 	newCondition := v1.PodCondition{
-		Type:               stsplus.InPlaceUpdateReady,
+		Type:               InPlaceUpdateReady,
 		Status:             v1.ConditionTrue,
 		LastTransitionTime: c.now(),
 	}
@@ -158,27 +140,27 @@ func (c *realControl) refreshCondition(pod *v1.Pod, opts *UpdateOptions) error {
 
 func (c *realControl) updateCondition(pod *v1.Pod, condition v1.PodCondition) error {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		clone, err := c.adp.getPod(pod.Namespace, pod.Name)
+		clone, err := c.adp.GetPod(pod.Namespace, pod.Name)
 		if err != nil {
 			return err
 		}
 
 		setPodCondition(clone, condition)
 		updatePodReadyCondition(clone)
-		return c.adp.updatePodStatus(clone)
+		return c.adp.UpdatePodStatus(clone)
 	})
 }
 
 func (c *realControl) finishGracePeriod(pod *v1.Pod, opts *UpdateOptions) (time.Duration, error) {
 	var delayDuration time.Duration
 	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		clone, err := c.adp.getPod(pod.Namespace, pod.Name)
+		clone, err := c.adp.GetPod(pod.Namespace, pod.Name)
 		if err != nil {
 			return err
 		}
 
-		spec := UpdateSpec{}
-		updateSpecJSON, ok := clone.Annotations[stsplus.InPlaceUpdateGraceKey]
+		spec := update.UpdateSpec{}
+		updateSpecJSON, ok := clone.Annotations[InPlaceUpdateGraceKey]
 		if !ok {
 			return nil
 		}
@@ -187,10 +169,10 @@ func (c *realControl) finishGracePeriod(pod *v1.Pod, opts *UpdateOptions) (time.
 		}
 		graceDuration := time.Second * time.Duration(spec.GraceSeconds)
 
-		updateState := stsplus.InPlaceUpdateState{}
-		updateStateJSON, ok := clone.Annotations[stsplus.InPlaceUpdateStateKey]
+		updateState := InPlaceUpdateState{}
+		updateStateJSON, ok := clone.Annotations[InPlaceUpdateStateKey]
 		if !ok {
-			return fmt.Errorf("pod has %s but %s not found", stsplus.InPlaceUpdateGraceKey, stsplus.InPlaceUpdateStateKey)
+			return fmt.Errorf("pod has %s but %s not found", InPlaceUpdateGraceKey, InPlaceUpdateStateKey)
 		}
 		if err := json.Unmarshal([]byte(updateStateJSON), &updateState); err != nil {
 			return nil
@@ -198,28 +180,28 @@ func (c *realControl) finishGracePeriod(pod *v1.Pod, opts *UpdateOptions) (time.
 
 		if clone.Labels[c.revisionKey] != spec.Revision {
 			// If revision-hash has changed, just drop this GracePeriodSpec and go through the normal update process again.
-			delete(clone.Annotations, stsplus.InPlaceUpdateGraceKey)
+			delete(clone.Annotations, InPlaceUpdateGraceKey)
 		} else {
 			if span := time.Since(updateState.UpdateTimestamp.Time); span < graceDuration {
 				delayDuration = roundupSeconds(graceDuration - span)
 				return nil
 			}
 
-			if clone, err = patchUpdateSpecToPod(clone, &spec); err != nil {
+			if clone, err = update.PatchUpdateSpecToPod(clone, &spec); err != nil {
 				return err
 			}
-			delete(clone.Annotations, stsplus.InPlaceUpdateGraceKey)
+			delete(clone.Annotations, InPlaceUpdateGraceKey)
 		}
 
-		return c.adp.updatePod(clone)
+		return c.adp.UpdatePod(clone)
 	})
 
 	return delayDuration, err
 }
 
-func (c *realControl) updatePodInPlace(pod *v1.Pod, spec *UpdateSpec, opts *UpdateOptions) error {
+func (c *realControl) updatePodInPlace(pod *v1.Pod, spec *update.UpdateSpec, opts *UpdateOptions) error {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		clone, err := c.adp.getPod(pod.Namespace, pod.Name)
+		clone, err := c.adp.GetPod(pod.Namespace, pod.Name)
 		if err != nil {
 			return err
 		}
@@ -233,135 +215,41 @@ func (c *realControl) updatePodInPlace(pod *v1.Pod, spec *UpdateSpec, opts *Upda
 		}
 
 		// record old containerStatuses
-		inPlaceUpdateState := stsplus.InPlaceUpdateState{
+		inPlaceUpdateState := InPlaceUpdateState{
 			Revision:              spec.Revision,
 			UpdateTimestamp:       c.now(),
-			LastContainerStatuses: make(map[string]stsplus.InPlaceUpdateContainerStatus, len(spec.ContainerImages)),
+			LastContainerStatuses: make(map[string]InPlaceUpdateContainerStatus, len(spec.ContainerImages)),
 		}
 		for _, c := range clone.Status.ContainerStatuses {
 			if _, ok := spec.ContainerImages[c.Name]; ok {
-				inPlaceUpdateState.LastContainerStatuses[c.Name] = stsplus.InPlaceUpdateContainerStatus{
+				inPlaceUpdateState.LastContainerStatuses[c.Name] = InPlaceUpdateContainerStatus{
 					ImageID: c.ImageID,
 				}
 			}
 		}
 		inPlaceUpdateStateJSON, _ := json.Marshal(inPlaceUpdateState)
-		clone.Annotations[stsplus.InPlaceUpdateStateKey] = string(inPlaceUpdateStateJSON)
+		clone.Annotations[InPlaceUpdateStateKey] = string(inPlaceUpdateStateJSON)
 
 		if spec.GraceSeconds <= 0 {
-			if clone, err = patchUpdateSpecToPod(clone, spec); err != nil {
+			if clone, err = update.PatchUpdateSpecToPod(clone, spec); err != nil {
 				return err
 			}
-			delete(clone.Annotations, stsplus.InPlaceUpdateGraceKey)
+			delete(clone.Annotations, InPlaceUpdateGraceKey)
 		} else {
 			inPlaceUpdateSpecJSON, _ := json.Marshal(spec)
-			clone.Annotations[stsplus.InPlaceUpdateGraceKey] = string(inPlaceUpdateSpecJSON)
+			clone.Annotations[InPlaceUpdateGraceKey] = string(inPlaceUpdateSpecJSON)
 		}
 
-		return c.adp.updatePod(clone)
+		return c.adp.UpdatePod(clone)
 	})
-}
-
-// patchUpdateSpecToPod returns new pod that merges spec into old pod
-func patchUpdateSpecToPod(pod *v1.Pod, spec *UpdateSpec) (*v1.Pod, error) {
-	if spec.MetaDataPatch != nil {
-		cloneBytes, _ := json.Marshal(pod)
-		modified, err := strategicpatch.StrategicMergePatch(cloneBytes, spec.MetaDataPatch, &v1.Pod{})
-		if err != nil {
-			return nil, err
-		}
-		pod = &v1.Pod{}
-		if err = json.Unmarshal(modified, pod); err != nil {
-			return nil, err
-		}
-	}
-
-	for i := range pod.Spec.Containers {
-		if newImage, ok := spec.ContainerImages[pod.Spec.Containers[i].Name]; ok {
-			pod.Spec.Containers[i].Image = newImage
-		}
-	}
-	return pod, nil
-}
-
-// calculateInPlaceUpdateSpec calculates diff between old and update revisions.
-// If the diff just contains replace operation of spec.containers[x].image, it will returns an UpdateSpec.
-// Otherwise, it returns nil which means can not use in-place update.
-func calculateInPlaceUpdateSpec(oldRevision, newRevision *apps.ControllerRevision) *UpdateSpec {
-	if oldRevision == nil || newRevision == nil {
-		return nil
-	}
-
-	patches, err := jsonpatch.CreatePatch(oldRevision.Data.Raw, newRevision.Data.Raw)
-	if err != nil {
-		return nil
-	}
-
-	oldTemp, err := GetTemplateFromRevision(oldRevision)
-	if err != nil {
-		return nil
-	}
-	newTemp, err := GetTemplateFromRevision(newRevision)
-	if err != nil {
-		return nil
-	}
-
-	updateSpec := &UpdateSpec{
-		Revision:        newRevision.Name,
-		ContainerImages: make(map[string]string),
-	}
-
-	// all patches for podSpec can just update images
-	var metadataChanged bool
-	for _, jsonPatchOperation := range patches {
-		jsonPatchOperation.Path = strings.Replace(jsonPatchOperation.Path, "/spec/template", "", 1)
-
-		if !strings.HasPrefix(jsonPatchOperation.Path, "/spec/") {
-			metadataChanged = true
-			continue
-		}
-		if jsonPatchOperation.Operation != "replace" || !inPlaceUpdatePatchRexp.MatchString(jsonPatchOperation.Path) {
-			return nil
-		}
-		// for example: /spec/containers/0/image
-		words := strings.Split(jsonPatchOperation.Path, "/")
-		idx, _ := strconv.Atoi(words[3])
-		if len(oldTemp.Spec.Containers) <= idx {
-			return nil
-		}
-		updateSpec.ContainerImages[oldTemp.Spec.Containers[idx].Name] = jsonPatchOperation.Value.(string)
-	}
-	if metadataChanged {
-		oldBytes, _ := json.Marshal(v1.Pod{ObjectMeta: oldTemp.ObjectMeta})
-		newBytes, _ := json.Marshal(v1.Pod{ObjectMeta: newTemp.ObjectMeta})
-		patchBytes, err := strategicpatch.CreateTwoWayMergePatch(oldBytes, newBytes, &v1.Pod{})
-		if err != nil {
-			return nil
-		}
-		updateSpec.MetaDataPatch = patchBytes
-	}
-	return updateSpec
-}
-
-// GetTemplateFromRevision returns the pod template parsed from ControllerRevision.
-func GetTemplateFromRevision(revision *apps.ControllerRevision) (*v1.PodTemplateSpec, error) {
-	var patchObj *struct {
-		Spec struct {
-			Template v1.PodTemplateSpec `json:"template"`
-		} `json:"spec"`
-	}
-	if err := json.Unmarshal(revision.Data.Raw, &patchObj); err != nil {
-		return nil, err
-	}
-	return &patchObj.Spec.Template, nil
 }
 
 // CheckInPlaceUpdateCompleted checks whether imageID in pod status has been changed since in-place update.
 // If the imageID in containerStatuses has not been changed, we assume that kubelet has not updated
 // containers in Pod.
 func CheckInPlaceUpdateCompleted(pod *v1.Pod) error {
-	inPlaceUpdateState := stsplus.InPlaceUpdateState{}
-	if stateStr, ok := pod.Annotations[stsplus.InPlaceUpdateStateKey]; !ok {
+	inPlaceUpdateState := InPlaceUpdateState{}
+	if stateStr, ok := pod.Annotations[InPlaceUpdateStateKey]; !ok {
 		return nil
 	} else if err := json.Unmarshal([]byte(stateStr), &inPlaceUpdateState); err != nil {
 		return err
@@ -392,7 +280,7 @@ func CheckInPlaceUpdateCompleted(pod *v1.Pod) error {
 
 func containsReadinessGate(pod *v1.Pod) bool {
 	for _, r := range pod.Spec.ReadinessGates {
-		if r.ConditionType == stsplus.InPlaceUpdateReady {
+		if r.ConditionType == InPlaceUpdateReady {
 			return true
 		}
 	}
@@ -401,7 +289,7 @@ func containsReadinessGate(pod *v1.Pod) bool {
 
 // GetCondition returns the InPlaceUpdateReady condition in Pod.
 func GetCondition(pod *v1.Pod) *v1.PodCondition {
-	return getCondition(pod, stsplus.InPlaceUpdateReady)
+	return getCondition(pod, InPlaceUpdateReady)
 }
 
 func getCondition(pod *v1.Pod, cType v1.PodConditionType) *v1.PodCondition {
@@ -470,4 +358,14 @@ func roundupSeconds(d time.Duration) time.Duration {
 		return d
 	}
 	return (d/time.Second + 1) * time.Second
+}
+
+// InjectReadinessGate injects InPlaceUpdateReady into pod.spec.readinessGates
+func InjectReadinessGate(pod *v1.Pod) {
+	for _, r := range pod.Spec.ReadinessGates {
+		if r.ConditionType == InPlaceUpdateReady {
+			return
+		}
+	}
+	pod.Spec.ReadinessGates = append(pod.Spec.ReadinessGates, v1.PodReadinessGate{ConditionType: InPlaceUpdateReady})
 }

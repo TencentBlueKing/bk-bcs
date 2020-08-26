@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

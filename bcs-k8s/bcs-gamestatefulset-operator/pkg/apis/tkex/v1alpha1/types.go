@@ -14,6 +14,7 @@
 package v1alpha1
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -74,7 +75,10 @@ type GameStatefulSetUpdateStrategy struct {
 	Type GameStatefulSetUpdateStrategyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetStrategyType"`
 	// RollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.
 	// +optional
-	UpdateParameters *UpdateGameStatefulSetStrategy `json:"updateParameters,omitempty" protobuf:"bytes,2,opt,name=updateParameters"`
+	RollingUpdate *RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty" protobuf:"bytes,2,opt,name=rollingUpdate"`
+
+	// InPlaceUpdateStrategy contains strategies for in-place update.
+	InPlaceUpdateStrategy *inplaceupdate.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
 }
 
 // GameStatefulSetUpdateStrategyType is a string enumeration type that enumerates
@@ -100,21 +104,17 @@ const (
 	// strategy, new Pods will be created from the specification version indicated
 	// by the StatefulSet's updateRevision.
 	InplaceUpdateGameStatefulSetStrategyType = "InplaceUpdate"
-	// InplaceHotPatchGameStatefulSetStrategyType indicates that pods in the GameStatefulSet will be update in-place hot patch
-	InplaceHotPatchGameStatefulSetStrategyType = "InplaceHotPatch"
+	// HotPatchGameStatefulSetStrategyType indicates that pods in the GameStatefulSet will be update hot-patch
+	HotPatchGameStatefulSetStrategyType = "HotPatchUpdate"
 )
 
-// UpdateGameStatefulSetStrategy is used to communicate parameter for GameStatefulSetUpdateStrategyType.
-type UpdateGameStatefulSetStrategy struct {
+// RollingUpdateStatefulSetStrategy is used to communicate parameter for RollingUpdateStatefulSetStrategyType.
+type RollingUpdateStatefulSetStrategy struct {
 	// Partition indicates the ordinal at which the StatefulSet should be
 	// partitioned.
 	// Default value is 0.
 	// +optional
 	Partition *int32 `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
-
-	// InplaceUpdateGracePeriodSeconds is the timespan between set Pod status to not-ready and update images in Pod spec
-	// when in-place update a Pod.
-	InplaceUpdateGracePeriodSeconds int32 `json:"inplaceUpdateGracePeriodSeconds,omitempty"`
 }
 
 // GameStatefulSetSpec A StatefulSetSpec is the specification of a StatefulSet.

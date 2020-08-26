@@ -16,9 +16,9 @@
 package fake
 
 import (
-	clientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	tkexv1alpha1 "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
-	faketkexv1alpha1 "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1/fake"
+	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
+	faketkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"

@@ -22,8 +22,8 @@ import (
 	"regexp"
 	"strconv"
 
-	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	stspluslisters "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	stspluslisters "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -282,8 +282,8 @@ func newGameStatefulSetPod(set *stsplus.GameStatefulSet, ordinal int) *v1.Pod {
 // returned error is nil, the returned Pod is valid.
 func newVersionedGameStatefulSetPod(currentSet, updateSet *stsplus.GameStatefulSet, currentRevision, updateRevision string, ordinal int) *v1.Pod {
 	if currentSet.Spec.UpdateStrategy.Type != stsplus.OnDeleteGameStatefulSetStrategyType &&
-		(currentSet.Spec.UpdateStrategy.UpdateParameters == nil && ordinal < int(currentSet.Status.CurrentReplicas)) ||
-		(currentSet.Spec.UpdateStrategy.UpdateParameters != nil && currentSet.Spec.UpdateStrategy.UpdateParameters.Partition != nil && ordinal < int(*currentSet.Spec.UpdateStrategy.UpdateParameters.Partition)) { //nolint
+		(currentSet.Spec.UpdateStrategy.RollingUpdate == nil && ordinal < int(currentSet.Status.CurrentReplicas)) ||
+		(currentSet.Spec.UpdateStrategy.RollingUpdate != nil  && ordinal < int(*currentSet.Spec.UpdateStrategy.RollingUpdate.Partition)) { //nolint
 		pod := newGameStatefulSetPod(currentSet, ordinal)
 		setPodRevision(pod, currentRevision)
 		return pod
@@ -613,4 +613,8 @@ func Contain(obj interface{}, target interface{}) (bool, error) {
 func isInplaceUpdate(set *stsplus.GameStatefulSet) bool {
 	return set.Spec.UpdateStrategy.Type == stsplus.InplaceUpdateGameStatefulSetStrategyType &&
 		set.Status.CurrentRevision != set.Status.UpdateRevision
+}
+
+func getGameStatefulSetKey(o metav1.Object) string {
+	return o.GetNamespace() + "/" + o.GetName()
 }
