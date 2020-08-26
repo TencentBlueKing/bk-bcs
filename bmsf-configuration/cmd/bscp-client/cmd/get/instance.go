@@ -15,6 +15,8 @@ package get
 
 import (
 	"github.com/spf13/cobra"
+
+	"bk-bscp/cmd/bscp-client/option"
 )
 
 //getInstanceCmd: client get strategy
@@ -22,20 +24,23 @@ func getInstanceCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "instance",
 		Aliases: []string{"inst"},
-		Short:   "get instance details",
-		Long:    "get instance relative detail information",
+		Short:   "Get instance details",
+		Long:    "Get instance relative detail information",
 		Example: `
-	bscp-client get instance --business somebu --app gamesvr
+	bscp-client get instance
 		`,
 		RunE: handleGetInstance,
 	}
 	// --name is required
 	cmd.Flags().String("app", "", "the name of application")
-	cmd.MarkFlagRequired("app")
 	return cmd
 }
 
 func handleGetInstance(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create business operator
 	// operator := service.NewOperator(option.GlobalOptions)
 	// if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {

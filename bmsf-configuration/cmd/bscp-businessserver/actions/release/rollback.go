@@ -211,10 +211,8 @@ func (act *RollbackAction) publishPreBCSMode() (pbcommon.ErrCode, string) {
 	}
 
 	if resp.ErrCode == pbcommon.ErrCode_E_BCS_ALREADY_PUBLISHED {
-		act.isReleaseRePublished = true
 		return pbcommon.ErrCode_E_OK, ""
 	}
-
 	return resp.ErrCode, resp.ErrMsg
 }
 
@@ -237,10 +235,8 @@ func (act *RollbackAction) publishPreGSEPluginMode() (pbcommon.ErrCode, string) 
 	}
 
 	if resp.ErrCode == pbcommon.ErrCode_E_BCS_ALREADY_PUBLISHED {
-		act.isReleaseRePublished = true
 		return pbcommon.ErrCode_E_OK, ""
 	}
-
 	return resp.ErrCode, resp.ErrMsg
 }
 
@@ -439,14 +435,12 @@ func (act *RollbackAction) Do() error {
 		if errCode, errMsg := act.rollbackBCSMode(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) {
+	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
+		act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
 		// gsecontroller pub rololback msg.
 		if errCode, errMsg := act.rollbackGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-		// gse mode.
-		return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "not support deploy rollback mode")
 	} else {
 		return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "unknow deploy type")
 	}
@@ -481,11 +475,6 @@ func (act *RollbackAction) Do() error {
 				return act.Err(errCode, errMsg)
 			}
 
-			// already published(use in reentry mode, not now).
-			if act.isReleaseRePublished {
-				return nil
-			}
-
 			// make release data published.
 			if errCode, errMsg := act.publishData(); errCode != pbcommon.ErrCode_E_OK {
 				return act.Err(errCode, errMsg)
@@ -497,17 +486,13 @@ func (act *RollbackAction) Do() error {
 				// do not return errors to client.
 				return nil
 			}
-		} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) {
+		} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
+			act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
 			// gse plugin sidecar mode.
 
 			// gsecontroller publish pre.
 			if errCode, errMsg := act.publishPreGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
 				return act.Err(errCode, errMsg)
-			}
-
-			// already published(use in reentry mode, not now).
-			if act.isReleaseRePublished {
-				return nil
 			}
 
 			// make release data published.
@@ -521,9 +506,6 @@ func (act *RollbackAction) Do() error {
 				// do not return errors to client.
 				return nil
 			}
-		} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-			// gse mode.
-			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "not support deploy publish mode")
 		} else {
 			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "unknow deploy type")
 		}

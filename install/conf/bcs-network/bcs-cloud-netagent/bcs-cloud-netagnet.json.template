@@ -1,0 +1,11 @@
+{
+    "address": "${cloudNetagentAddress}",
+    "port": ${cloudNetagentPort},
+    "metric_port": ${cloudNetagentMetricPort},
+    "cluster": "${clusterId}",
+    "cloud_netservice_endpoints": "${cloudNetserviceEndpoints}",
+    "kubeconfig": "${kubeconfig}",
+    "log_dir": "/data/bcs/logs/bcs",
+    "alsologtostderr": true,
+    "v": 3
+}

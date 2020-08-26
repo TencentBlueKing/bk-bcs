@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# rm generated
+rm -rf ./generated
+
 # use kubebuilder generate deepcopy code
 make generate
 # use kubebuilder generate yaml configs
@@ -24,3 +27,12 @@ for dir_group in $(ls ./apis/); do
             --go-header-file $(pwd)/hack/boilerplate.go.txt 
     done
 done
+
+# when GOPATH exsited, code-generator will generate code in gopath
+if [ $GOPATH ]; then  
+  echo "done"
+else  
+  echo "cp from current dir"
+  cp -r github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated generated
+  rm -rf ./github.com
+fi 

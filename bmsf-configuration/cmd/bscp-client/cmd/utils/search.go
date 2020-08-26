@@ -39,3 +39,15 @@ func GetBusinessAndApp(operator *service.AccessOperator, businessName, appName s
 	}
 	return business, app, nil
 }
+
+//GetConfigSet fast way
+func GetConfigSet(operator *service.AccessOperator, cfgset *common.ConfigSet) (*common.ConfigSet, error) {
+	cfgset, err := operator.QueryConfigSet(context.TODO(), cfgset)
+	if err != nil {
+		return nil, err
+	}
+	if cfgset == nil {
+		return nil, fmt.Errorf("Cfgset %s resource Not Found", cfgset)
+	}
+	return cfgset, nil
+}

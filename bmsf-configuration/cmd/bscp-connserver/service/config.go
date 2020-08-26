@@ -88,7 +88,17 @@ func (c *config) check() error {
 	c.viper.SetDefault("server.pubChanTimeout", 3*time.Second)
 
 	c.viper.BindEnv("server.configsCacheSize", c.envName("CONFIGS_CACHE_SIZE"))
-	c.viper.SetDefault("server.configsCacheSize", 100)
+	c.viper.SetDefault("server.configsCacheSize", 1000)
+
+	c.viper.BindEnv("server.publishStepCount", c.envName("PUB_STEP_COUNT"))
+	c.viper.SetDefault("server.publishStepCount", 1000)
+	c.viper.BindEnv("server.publishMinUnitSize", c.envName("PUB_MIN_UNIT_SIZE"))
+	c.viper.SetDefault("server.publishMinUnitSize", 1)
+	c.viper.BindEnv("server.publishStepWait", c.envName("PUB_STEP_WAIT"))
+	c.viper.SetDefault("server.publishStepWait", time.Second)
+
+	c.viper.BindEnv("server.executorLimitRate", c.envName("EXEC_LIMIT_RATE"))
+	c.viper.SetDefault("server.executorLimitRate", 0)
 
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")
@@ -114,6 +124,9 @@ func (c *config) check() error {
 	if !c.viper.IsSet("datamanager.servicename") {
 		return errors.New("config check, missing 'datamanager.servicename'")
 	}
+
+	c.viper.BindEnv("datamanager.calltimeoutST", c.envName("DM_CALL_TIMEOUT_ST"))
+	c.viper.SetDefault("datamanager.calltimeoutST", 3*time.Second)
 
 	c.viper.BindEnv("datamanager.calltimeout", c.envName("DM_CALL_TIMEOUT"))
 	c.viper.SetDefault("datamanager.calltimeout", 3*time.Second)

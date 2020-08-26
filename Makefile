@@ -15,26 +15,26 @@ GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
 WORKSPACE=$(shell pwd)
 
-LDFLAG=-ldflags "-X bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
- -X bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
- -X bk-bcs/bcs-common/common/static.EncryptionKey=${bcs_encryption_key} \
- -X bk-bcs/bcs-common/common/static.ServerCertPwd=${bcs_server_cert_pwd} \
- -X bk-bcs/bcs-common/common/static.ClientCertPwd=${bcs_client_cert_pwd} \
- -X bk-bcs/bcs-common/common/static.LicenseServerClientCertPwd=${bcs_license_server_client_cert_pwd} \
- -X bk-bcs/bcs-common/common/static.BcsDefaultUser=${bcs_registry_default_user} \
- -X bk-bcs/bcs-common/common/static.BcsDefaultPasswd=${bcs_registry_default_pwd} \
- -X bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
- -X bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
- -X bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
- -X bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
- -X bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
+LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.EncryptionKey=${bcs_encryption_key} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ServerCertPwd=${bcs_server_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ClientCertPwd=${bcs_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.LicenseServerClientCertPwd=${bcs_license_server_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultUser=${bcs_registry_default_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultPasswd=${bcs_registry_default_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
 # build path config
 PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer
+default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
@@ -252,10 +252,7 @@ bmsf-mesos-adapter:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
 
 network:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
-	cp ./install/conf/bcs-mesos-node/qcloud-eip/* ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/qcloud-eip ./bcs-services/bcs-network/qcloud-eip/main.go
+	cd ./bcs-network && make network && cd -
 
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
@@ -284,16 +281,10 @@ tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 	
 bcs-networkpolicy:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-networkpolicy
-	cp -R ./install/conf/bcs-services/bcs-networkpolicy ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-networkpolicy/bcs-networkpolicy ./bcs-services/bcs-networkpolicy/main.go
+	cd ./bcs-network && make networkpolicy && cd -
 
 bcs-cloud-network-agent:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent
-	cp -R ./install/conf/bcs-services/bcs-cloud-network-agent ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ./bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/main.go
-	cp ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni
+	cd ./bcs-network && make bcs-cloud-network-agent && cd -
 	
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
@@ -305,7 +296,15 @@ cc-agent:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-cc-agent ${PACKAGEPATH}/bcs-k8s-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-cc-agent/bcs-cc-agent ./bcs-k8s/bcs-cc-agent/main.go
 
-bkcmdb-synchronizer:
+bkcmdb-synchronizer:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
 
+bcs-cloud-netservice:pre
+	cd ./bcs-network && make cloud-netservice && cd -
+
+bcs-cloud-netcontroller:pre
+	cd ./bcs-network && make cloud-netcontroller && cd -
+
+bcs-cloud-netagent:pre
+	cd ./bcs-network && make cloud-netagent && cd -

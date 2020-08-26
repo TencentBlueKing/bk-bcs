@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 30,
-  "iteration": 1575275947919,
+  "iteration": 1594036293989,
   "links": [],
   "panels": [
     {
@@ -28,102 +28,9 @@
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
-        "y": 0
-      },
-      "id": 6,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "(sum(bscp_datamanager_releasecache_hit)/sum(bscp_datamanager_releasecache_total))*100",
-          "legendFormat": "全局 -- 命中率",
-          "refId": "A"
-        },
-        {
-          "expr": "(bscp_datamanager_releasecache_hit/bscp_datamanager_releasecache_total)*100",
-          "legendFormat": " 单实例 -- 命中率({{instance}})",
-          "refId": "B"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "ReleaseCache命中率",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percent",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Thanos",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
         "y": 0
       },
       "id": 8,
@@ -206,6 +113,42 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0.5
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "aaaa",
+        "name": "RPC接口成功率 alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
@@ -217,7 +160,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 4
+        "y": 7
       },
       "id": 10,
       "legend": {
@@ -247,22 +190,36 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(sum(bscp_datamanager_request_total{errcode=\"0\"})/sum(bscp_datamanager_request_total)) * 100",
+          "expr": "(sum(rate(bscp_datamanager_request_total{errcode=\"0\"}[5m]))/sum(rate(bscp_datamanager_request_total[5m]))) * 100",
           "legendFormat": "全局 -- 成功率",
           "refId": "A"
         },
         {
-          "expr": "(sum(bscp_datamanager_request_total{errcode=\"0\",instance=\"$instance\"})/sum(bscp_datamanager_request_total{instance=\"$instance\"})) * 100",
+          "expr": "(sum(rate(bscp_datamanager_request_total{errcode=\"0\",instance=\"$instance\"}[5m]))/sum(rate(bscp_datamanager_request_total{instance=\"$instance\"}[5m]))) * 100",
           "legendFormat": "单实例 -- 总成功率($instance)",
           "refId": "B"
         },
         {
-          "expr": "(bscp_datamanager_request_total{errcode=\"0\",instance=\"$instance\"}/bscp_datamanager_request_total{instance=\"$instance\"}) * 100",
+          "expr": "(sum(rate(bscp_datamanager_request_total{errcode=\"0\"}[5m])) by (rpc) / sum(rate(bscp_datamanager_request_total[5m])) by (rpc)) * 100",
+          "legendFormat": "RPC接口成功率({{rpc}})",
+          "refId": "D"
+        },
+        {
+          "expr": "(sum(rate(bscp_datamanager_request_total{errcode=\"0\",instance=\"$instance\"}[5m])) by (rpc) / sum(rate(bscp_datamanager_request_total{instance=\"$instance\"}[5m])) by (rpc)) * 100",
           "legendFormat": "单实例 -- RPC接口成功率($instance  --  {{rpc}})",
           "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "gt",
+          "value": 0.5,
+          "yaxis": "left"
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -308,14 +265,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Thanos",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 15,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 15
       },
       "id": 12,
       "legend": {
@@ -345,29 +302,34 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(bscp_datamanager_request_total{errcode=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_datamanager_request_total{errcode=\"0\"}[5m])) by (job)",
           "legendFormat": "整体 -- Success[0]",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(bscp_datamanager_request_total{errcode!=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_datamanager_request_total{errcode!=\"0\"}[5m])) by (job)",
           "legendFormat": "整体 - Failed[!0]",
           "refId": "B"
         },
         {
-          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\",errcode=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\",errcode=\"0\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 整体Success[0] ($instance)",
           "refId": "C"
         },
         {
-          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\",errcode!=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\",errcode!=\"0\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 整体Failed[!0] ($instance)",
           "refId": "D"
         },
         {
-          "expr": "rate(bscp_datamanager_request_total{instance=\"$instance\"}[1h])",
-          "legendFormat": "单实例 -- RPC接口错误码[{{errcode}}] ($instance -- {{rpc}})",
+          "expr": "sum(rate(bscp_datamanager_request_total[5m])) by (rpc, errcode)",
+          "legendFormat": " RPC接口错误码[{{errcode}}] ({{rpc}})",
           "refId": "E"
+        },
+        {
+          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\"}[5m])) by (rpc, errcode)",
+          "legendFormat": "单实例 -- RPC接口错误码[{{errcode}}] ($instance -- {{rpc}})",
+          "refId": "F"
         }
       ],
       "thresholds": [],
@@ -423,7 +385,7 @@
         "h": 15,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 30
       },
       "id": 4,
       "legend": {
@@ -453,19 +415,24 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(bscp_datamanager_response_time_sum)/sum(bscp_datamanager_response_time_count)",
+          "expr": "sum(rate(bscp_datamanager_response_time_sum[5m]))/sum(rate(bscp_datamanager_response_time_count[5m]))",
           "legendFormat": "整体 -- 平均响应时间",
           "refId": "A"
         },
         {
-          "expr": "sum(bscp_datamanager_response_time_sum{instance=\"$instance\"})/sum(bscp_datamanager_response_time_count{instance=\"$instance\"})",
+          "expr": "sum(rate(bscp_datamanager_response_time_sum{instance=\"$instance\"}[5m]))/sum(rate(bscp_datamanager_response_time_count{instance=\"$instance\"}[5m]))",
           "legendFormat": "单实例 -- 整体平均响应时间($instance  [$quantile])",
           "refId": "B"
         },
         {
-          "expr": "bscp_datamanager_response_time_sum{instance=\"$instance\"}/bscp_datamanager_response_time_count{instance=\"$instance\"}",
-          "legendFormat": "单实例 -- RPC接口响应时间($instance -- {{rpc}})",
+          "expr": "sum(rate(bscp_datamanager_response_time_sum[5m])) by (rpc) /sum(rate(bscp_datamanager_response_time_count[5m])) by (rpc)",
+          "legendFormat": "RPC接口响应时间({{rpc}})",
           "refId": "D"
+        },
+        {
+          "expr": "sum(rate(bscp_datamanager_response_time_sum{instance=\"$instance\"}[5m])) by (rpc) /sum(rate(bscp_datamanager_response_time_count{instance=\"$instance\"}[5m])) by (rpc)",
+          "legendFormat": "单实例 -- RPC接口响应时间($instance -- {{rpc}})",
+          "refId": "C"
         }
       ],
       "thresholds": [],
@@ -514,14 +481,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Thanos",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 13,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 45
       },
       "id": 2,
       "legend": {
@@ -551,19 +518,24 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(bscp_datamanager_request_total[1h])) by (job)",
+          "expr": "sum(rate(bscp_datamanager_request_total[5m])) by (job)",
           "legendFormat": "整体 -- QPS",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 整体QPS($instance)",
           "refId": "B"
         },
         {
-          "expr": "rate(bscp_datamanager_request_total{instance=\"$instance\"}[1h])",
-          "legendFormat": "单实例 --  RPC接口QPS($instance -- {{rpc}})",
+          "expr": "sum(rate(bscp_datamanager_request_total[5m])) by (rpc)",
+          "legendFormat": " RPC接口QPS({{rpc}})",
           "refId": "C"
+        },
+        {
+          "expr": "sum(rate(bscp_datamanager_request_total{instance=\"$instance\"}[5m])) by (rpc)",
+          "legendFormat": "单实例 --  RPC接口QPS($instance -- {{rpc}})",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -642,7 +614,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
@@ -662,5 +634,5 @@
   "timezone": "",
   "title": "BSCP-DataManager",
   "uid": "yBt3pmtWz",
-  "version": 14
+  "version": 36
 }

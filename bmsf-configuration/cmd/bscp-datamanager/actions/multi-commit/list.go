@@ -136,7 +136,7 @@ func (act *ListAction) queryHistoryMultiCommits() (pbcommon.ErrCode, string) {
 	err := act.sd.DB().
 		Select(fields).
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.MultiCommit{Bid: act.req.Bid, Appid: act.req.Appid, Operator: act.req.Operator}).
 		Where(whereState).
 		Find(&act.multiCommits).Error

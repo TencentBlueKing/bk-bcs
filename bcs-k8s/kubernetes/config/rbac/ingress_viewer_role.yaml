@@ -1,0 +1,20 @@
+# permissions for end users to view ingresses.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ingress-viewer-role
+rules:
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networkextension.bkbcs.tencent.com
+  resources:
+  - ingresses/status
+  verbs:
+  - get

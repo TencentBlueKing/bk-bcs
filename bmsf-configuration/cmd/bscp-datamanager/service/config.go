@@ -73,13 +73,13 @@ func (c *config) check() error {
 	c.viper.SetDefault("server.discoveryttl", 60)
 
 	c.viper.BindEnv("server.commitCacheSize", c.envName("COMMIT_CACHE_SIZE"))
-	c.viper.SetDefault("server.commitCacheSize", 100)
+	c.viper.SetDefault("server.commitCacheSize", 1000)
 
 	c.viper.BindEnv("server.releaseCacheSize", c.envName("RELEASE_CACHE_SIZE"))
-	c.viper.SetDefault("server.releaseCacheSize", 100)
+	c.viper.SetDefault("server.releaseCacheSize", 1000)
 
 	c.viper.BindEnv("server.configsCacheSize", c.envName("CONFIGS_CACHE_SIZE"))
-	c.viper.SetDefault("server.configsCacheSize", 200)
+	c.viper.SetDefault("server.configsCacheSize", 1000)
 
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")
@@ -122,28 +122,28 @@ func (c *config) check() error {
 	}
 
 	c.viper.BindEnv("database.conntimeout", c.envName("CONN_TIMEOUT"))
-	c.viper.SetDefault("database.conntimeout", 3*time.Second)
+	c.viper.SetDefault("database.conntimeout", 10*time.Second)
 
 	c.viper.BindEnv("database.readtimeout", c.envName("DB_READ_TIMEOUT"))
-	c.viper.SetDefault("database.readtimeout", 3*time.Second)
+	c.viper.SetDefault("database.readtimeout", 60*time.Second)
 
 	c.viper.BindEnv("database.writetimeout", c.envName("DB_WRITE_TIMEOUT"))
-	c.viper.SetDefault("database.writetimeout", 3*time.Second)
+	c.viper.SetDefault("database.writetimeout", 60*time.Second)
 
 	c.viper.BindEnv("database.maxopenconns", c.envName("DB_MAX_OPEN_CONNS"))
-	c.viper.SetDefault("database.maxopenconns", 10)
+	c.viper.SetDefault("database.maxopenconns", 1000)
 
 	c.viper.BindEnv("database.maxidleconns", c.envName("DB_MAX_IDLE_CONNS"))
-	c.viper.SetDefault("database.maxidleconns", 5)
+	c.viper.SetDefault("database.maxidleconns", 200)
 
 	c.viper.BindEnv("database.keepalive", c.envName("DB_KEEPALIVE"))
-	c.viper.SetDefault("database.keepalive", 10*time.Minute)
+	c.viper.SetDefault("database.keepalive", 5*time.Minute)
 
 	c.viper.BindEnv("database.cachesize", c.envName("DB_CACHE_SIZE"))
-	c.viper.SetDefault("database.cachesize", 1000)
+	c.viper.SetDefault("database.cachesize", 2000)
 
 	c.viper.BindEnv("database.purgeInterval", c.envName("DB_PURGE_INTERVAL"))
-	c.viper.SetDefault("database.purgeInterval", time.Minute)
+	c.viper.SetDefault("database.purgeInterval", 30*time.Minute)
 
 	c.viper.BindEnv("logger.directory", c.envName("LOG_DIR"))
 	c.viper.SetDefault("logger.directory", "./log")

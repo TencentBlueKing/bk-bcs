@@ -17,6 +17,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path"
+
+	"google.golang.org/grpc"
 
 	global "bk-bscp/cmd/bscp-client/option"
 	"bk-bscp/internal/protocol/accessserver"
@@ -24,9 +28,17 @@ import (
 	"bk-bscp/internal/strategy"
 	pkgcommon "bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
-
-	"google.golang.org/grpc"
 )
+
+const (
+	// enter operator is all
+	AllOperator = "all"
+)
+
+// the current dir record file struct
+type ConfigFile struct {
+	State int32
+}
 
 //CreateConfigSet create new application
 //return:
@@ -61,43 +73,96 @@ func (operator *AccessOperator) CreateConfigSet(cxt context.Context, option *acc
 
 //GetConfigSet get specified configset information
 //Args:
-//	name: app name
+//	appName: app name
+//  cfgset: configSet
 //return:
 //	app: specified configset, nil if not exist
 //	error: error info if that happened
-func (operator *AccessOperator) GetConfigSet(cxt context.Context, appName, cfgSetName string) (*common.ConfigSet, error) {
+func (operator *AccessOperator) GetConfigSet(cxt context.Context, appName string, cfgset *common.ConfigSet) (*common.ConfigSet, error) {
 	//query business and app first
 	business, app, err := getBusinessAndApp(operator, operator.Business, appName)
 	if err != nil {
 		return nil, err
 	}
-	return operator.innergetConfigSet(cxt, business.Bid, app.Appid, cfgSetName)
+	cfgset.Appid = app.Appid
+	cfgset.Bid = business.Bid
+	return operator.innergetConfigSet(cxt, cfgset)
 }
 
-func (operator *AccessOperator) innergetConfigSet(cxt context.Context, businessID, AppID, cfgSetName string) (*common.ConfigSet, error) {
+func (operator *AccessOperator) GetConfigSetById(cxt context.Context, cfgset *common.ConfigSet) (*common.ConfigSet, error) {
+	//query business and app first
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return nil, err
+	}
+	cfgset.Bid = business.Bid
+	return operator.innergetConfigSet(cxt, cfgset)
+}
+
+// Query configset by bid and appid
+// Query conditions：cfgsetId、cfgsetName、cfgsetPath
+func (operator *AccessOperator) QueryConfigSet(cxt context.Context, cfgset *common.ConfigSet) (*common.ConfigSet, error) {
+	return operator.innergetConfigSet(cxt, cfgset)
+}
+
+func (operator *AccessOperator) innergetConfigSet(cxt context.Context, cfgset *common.ConfigSet) (*common.ConfigSet, error) {
 	request := &accessserver.QueryConfigSetReq{
-		Seq:   pkgcommon.Sequence(),
-		Bid:   businessID,
-		Appid: AppID,
-		Name:  cfgSetName,
+		Seq:      pkgcommon.Sequence(),
+		Bid:      cfgset.Bid,
+		Appid:    cfgset.Appid,
+		Name:     cfgset.Name,
+		Fpath:    cfgset.Fpath,
+		Cfgsetid: cfgset.Cfgsetid,
 	}
 	grpcOptions := []grpc.CallOption{
 		grpc.WaitForReady(true),
 	}
 	response, err := operator.Client.QueryConfigSet(cxt, request, grpcOptions...)
 	if err != nil {
-		logger.V(3).Infof("GetConfigSet %s failed, %s", cfgSetName, err.Error())
+		logger.V(3).Infof("GetConfigSet %s failed, %s", request, err.Error())
 		return nil, err
 	}
 	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
-		logger.V(3).Infof("GetConfigSet %s: resource Not Found.", cfgSetName)
+		logger.V(3).Infof("GetConfigSet %s: resource Not Found.", request)
 		return nil, nil
 	}
 	if response.ErrCode != common.ErrCode_E_OK {
-		logger.V(3).Infof("GetConfigSet %s successfully, but response Err, %s", cfgSetName, response.ErrMsg)
+		logger.V(3).Infof("GetConfigSet %s successfully, but response Err, %s", request, response.ErrMsg)
 		return nil, fmt.Errorf("%s", response.ErrMsg)
 	}
 	return response.ConfigSet, nil
+}
+
+// Query Application by bid
+// Query conditions：appid、appName
+func (operator *AccessOperator) QueryApplication(cxt context.Context, app *common.App) (*common.App, error) {
+	return operator.innergetApplication(cxt, app)
+}
+
+func (operator *AccessOperator) innergetApplication(cxt context.Context, app *common.App) (*common.App, error) {
+	request := &accessserver.QueryAppReq{
+		Seq:   pkgcommon.Sequence(),
+		Bid:   app.Bid,
+		Appid: app.Appid,
+		Name:  app.Name,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.QueryApp(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("GetAPP %s failed, %s", request, err.Error())
+		return nil, err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("GetAPP %s: resource Not Found.", request)
+		return nil, nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("GetAPP %s successfully, but response Err, %s", request, response.ErrMsg)
+		return nil, fmt.Errorf("%s", response.ErrMsg)
+	}
+	return response.App, nil
 }
 
 //ListConfigSetByApp list all ConfigSet information under specified application
@@ -262,29 +327,31 @@ func (operator *AccessOperator) UnLockConfigSet(cxt context.Context, cfgSetID st
 }
 
 //CreateCommitOption option for create Commit
-type CreateCommitOption struct {
+type CreateMultiCommitOption struct {
 	//AppName for app relation
 	AppName string
-	//ConfigSetName for cfgset relation
-	ConfigSetName string
-	//Content config details
-	Content []byte
-	//Changes for diff with last commit
-	Changes string
-	//Template for future use
-	Template string
-	//TemplateID index from other system
-	TemplateID string
+	// Memo
+	Memo string
+	// RecordConfigFiles
+	RecordConfigFiles map[string]ConfigFile
 }
 
-//CreateCommit create commit for ConfigSet
+type CommitMetadataJson struct {
+	Cfgset     string
+	ConfigFile string
+}
+
+//CreateCommit multicreate commit for ConfigSet
 //return:
 //	appID: when creating successfully, system will response ID
 //	error: any error if happened
-func (operator *AccessOperator) CreateCommit(cxt context.Context, option *CreateCommitOption) (string, error) {
+func (operator *AccessOperator) CreateMultiCommit(cxt context.Context, option *CreateMultiCommitOption) (string, error) {
 	if option == nil {
 		return "", fmt.Errorf("Lost create Commit info")
 	}
+
+	// read commitMetadataJson json
+	commitMetadatas := []*common.CommitMetadata{}
 	grpcOptions := []grpc.CallOption{
 		grpc.WaitForReady(true),
 	}
@@ -293,45 +360,75 @@ func (operator *AccessOperator) CreateCommit(cxt context.Context, option *Create
 	if err != nil {
 		return "", err
 	}
+	for recordMapKey, recordMapValue := range option.RecordConfigFiles {
+		var cfgsetId string
+		if recordMapValue.State != 1 {
+			continue
+		}
+		// query cfgset
+		cfgsetPath, cfgsetName := path.Split(recordMapKey)
+		cfgsetPath = path.Clean("/" + cfgsetPath)
+		query := &common.ConfigSet{
+			Fpath: cfgsetPath,
+			Name:  cfgsetName,
+		}
+		configSet, err := operator.GetConfigSet(cxt, option.AppName, query)
+		if err != nil {
+			return "", err
+		}
+		if configSet == nil {
+			request := &accessserver.CreateConfigSetReq{
+				Seq:     pkgcommon.Sequence(),
+				Bid:     business.Bid,
+				Appid:   app.Appid,
+				Name:    cfgsetName,
+				Creator: operator.User,
+				Fpath:   cfgsetPath,
+				Memo:    "",
+			}
+			createCfgsetId, err := operator.CreateConfigSet(cxt, request)
+			if err != nil {
+				return "", fmt.Errorf("create %s configset fail", recordMapKey)
+			}
+			if len(createCfgsetId) == 0 {
+				return "", fmt.Errorf("create %s configset fail", recordMapKey)
+			}
+			cfgsetId = createCfgsetId
+		} else {
+			cfgsetId = configSet.Cfgsetid
+		}
 
-	//query ConfigSet information for specified ID
-	cfgSet, err := operator.innergetConfigSet(cxt, business.Bid, app.Appid, option.ConfigSetName)
+		cfgContent, _ := ioutil.ReadFile(recordMapKey)
+		commitMetadatas = append(commitMetadatas, &common.CommitMetadata{
+			Cfgsetid: cfgsetId,
+			Configs:  cfgContent,
+		})
+	}
+	request := &accessserver.CreateMultiCommitReq{
+		Seq:       pkgcommon.Sequence(),
+		Bid:       business.Bid,
+		Appid:     app.Appid,
+		Operator:  operator.User,
+		Memo:      option.Memo,
+		Metadatas: commitMetadatas,
+	}
+	response, err := operator.Client.CreateMultiCommit(cxt, request, grpcOptions...)
 	if err != nil {
-		return "", err
-	}
-	if cfgSet == nil {
-		return "", fmt.Errorf("Found no ConfigSet info")
-	}
-
-	request := &accessserver.CreateCommitReq{
-		Seq:        pkgcommon.Sequence(),
-		Bid:        business.Bid,
-		Appid:      app.Appid,
-		Cfgsetid:   cfgSet.Cfgsetid,
-		Op:         0,
-		Operator:   operator.User,
-		Templateid: "",
-		Template:   "",
-		Configs:    option.Content,
-		Changes:    "",
-	}
-	response, err := operator.Client.CreateCommit(cxt, request, grpcOptions...)
-	if err != nil {
-		logger.V(3).Infof("CreateCommit: post new Commit for ConfigSet [%s] failed, %s", option.ConfigSetName, err.Error())
+		logger.V(3).Infof("CreateMultiCommit: post new MultiCommit for ConfigSet [%s] failed, %s", commitMetadatas, err.Error())
 		return "", err
 	}
 	if response.ErrCode != common.ErrCode_E_OK {
 		logger.V(3).Infof(
-			"CreateCommit: post new new Commit for ConfigSet [%s] successfully, but response failed: %s",
-			option.ConfigSetName, response.ErrMsg,
+			"CreateMultiCommit: post new new MultiCommit for ConfigSet [%s] successfully, but response failed: %s",
+			commitMetadatas, response.ErrMsg,
 		)
 		return "", fmt.Errorf("%s", response.ErrMsg)
 	}
-	if len(response.Commitid) == 0 {
-		logger.V(3).Infof("CreateConfigSet: BSCP system error, No CommitID response")
-		return "", fmt.Errorf("Lost CommitID from configuraiotn platform")
+	if len(response.MultiCommitid) == 0 {
+		logger.V(3).Infof("CreateMultiConfigSet: BSCP system error, No MultiCommitID response")
+		return "", fmt.Errorf("Lost MultiCommitID from configuraiotn platform")
 	}
-	return response.Commitid, nil
+	return response.MultiCommitid, nil
 }
 
 //GetCommit get specified Commit details information
@@ -375,53 +472,256 @@ func (operator *AccessOperator) GetCommit(cxt context.Context, commitID string) 
 	return response.Commit, nil
 }
 
-//ListCommitsByConfigSet list all Commits of ConfigSet information
-//return:
-//	Commits: all Commit, nil if not exist
-//	error: error info if that happened
-func (operator *AccessOperator) ListCommitsByConfigSet(cxt context.Context, appName, cfgSetName string) ([]*common.Commit, error) {
-	//query business and app first
-	business, app, err := getBusinessAndApp(operator, operator.Business, appName)
+func (operator *AccessOperator) GetEffectedInstanceList(cxt context.Context, releaseid string) ([]*common.AppInstance, error) {
+	release, err := operator.GetRelease(cxt, releaseid)
 	if err != nil {
 		return nil, err
 	}
-	return operator.ListCommitsAllByID(cxt, business.Bid, app.Appid, cfgSetName)
+	request := &accessserver.QueryEffectedAppInstancesReq{
+		Seq:       pkgcommon.Sequence(),
+		Bid:       release.Bid,
+		Cfgsetid:  release.Cfgsetid,
+		Releaseid: releaseid,
+		Index:     operator.index,
+		Limit:     operator.limit,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.QueryEffectedAppInstances(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("GetEffectedInstanceList %s details failed, %s", releaseid, err.Error())
+		return nil, err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("GetEffectedInstanceList %s: resource Not Found.", releaseid)
+		return nil, nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("GetEffectedInstanceList %s successfully, but response Err, %s", releaseid, response.ErrMsg)
+		return nil, fmt.Errorf("%s", response.ErrMsg)
+	}
+	return response.Instances, nil
+}
+
+//GetMultiCommit get specified Commit details information
+//Args:
+//	name: app name
+//return:
+//	app: specified configset, nil if not exist
+//	error: error info if that happened
+func (operator *AccessOperator) GetMultiCommit(cxt context.Context, multiCommitID string) (*common.MultiCommit, []*common.CommitMetadata, error) {
+	//query business and app first
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return nil, nil, err
+	}
+	if business == nil {
+		logger.V(3).Infof("GetMultiCommit: found no relative Business %s", operator.Business)
+		return nil, nil, fmt.Errorf("No relative Business %s", operator.Business)
+	}
+
+	request := &accessserver.QueryMultiCommitReq{
+		Seq:           pkgcommon.Sequence(),
+		Bid:           business.Bid,
+		MultiCommitid: multiCommitID,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.QueryMultiCommit(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("GetMultiCommit %s details failed, %s", multiCommitID, err.Error())
+		return nil, nil, err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("GetMultiCommit %s: resource Not Found.", multiCommitID)
+		return nil, nil, nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("GetMultiCommit %s successfully, but response Err, %s", multiCommitID, response.ErrMsg)
+		return nil, nil, fmt.Errorf("%s", response.ErrMsg)
+	}
+
+	return response.MultiCommit, response.Metadatas, nil
+}
+
+//CancelMultiCommit By multiCommitId
+func (operator *AccessOperator) CancelMultiCommitById(cxt context.Context, multiCommitID string) error {
+	//query business and app first
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return err
+	}
+	if business == nil {
+		logger.V(3).Infof("CancelMultiCommit: found no relative Business %s", operator.Business)
+		return fmt.Errorf("No relative Business %s", operator.Business)
+	}
+	request := &accessserver.CancelMultiCommitReq{
+		Seq:           pkgcommon.Sequence(),
+		Bid:           business.Bid,
+		Operator:      operator.User,
+		MultiCommitid: multiCommitID,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.CancelMultiCommit(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("CancelMultiCommit %s failed, %s", multiCommitID, err.Error())
+		return err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("CancelMultiCommit %s: resource Not Found.", multiCommitID)
+		return nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("CancelMultiCommit %s successfully, but response Err, %s", multiCommitID, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
+}
+
+//CancelMultiRelease By multiRelease
+func (operator *AccessOperator) CancelMultiReleaseById(cxt context.Context, multiReleaseID string) error {
+	//query business and app first
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return err
+	}
+	if business == nil {
+		logger.V(3).Infof("CancelMultiReleaseById: found no relative Business %s", operator.Business)
+		return fmt.Errorf("No relative Business %s", operator.Business)
+	}
+	request := &accessserver.CancelMultiReleaseReq{
+		Seq:            pkgcommon.Sequence(),
+		Bid:            business.Bid,
+		Operator:       operator.User,
+		MultiReleaseid: multiReleaseID,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.CancelMultiRelease(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("CancelMultiReleaseById %s failed, %s", multiReleaseID, err.Error())
+		return err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("CancelMultiReleaseById %s: resource Not Found.", multiReleaseID)
+		return nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("CancelMultiReleaseById %s successfully, but response Err, %s", multiReleaseID, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
+}
+
+//RollbackMultiReleaseById By multiReleaseId
+func (operator *AccessOperator) RollbackMultiReleaseById(cxt context.Context, multiReleaseID string) error {
+	//query business and app first
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return err
+	}
+	if business == nil {
+		logger.V(3).Infof("RollbackMultiReleaseById: found no relative Business %s", operator.Business)
+		return fmt.Errorf("No relative Business %s", operator.Business)
+	}
+	request := &accessserver.RollbackMultiReleaseReq{
+		Seq:            pkgcommon.Sequence(),
+		Bid:            business.Bid,
+		Operator:       operator.User,
+		MultiReleaseid: multiReleaseID,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.RollbackMultiRelease(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("RollbackMultiReleaseById %s failed, %s", multiReleaseID, err.Error())
+		return err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("RollbackMultiReleaseById %s: resource Not Found.", multiReleaseID)
+		return nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("RollbackMultiReleaseById %s successfully, but response Err, %s", multiReleaseID, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
+}
+
+//ReloadMultiReleaseById By multiReleaseId
+func (operator *AccessOperator) ReloadMultiReleaseById(cxt context.Context, multiReleaseID string) error {
+	//query business and app first
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return err
+	}
+	if business == nil {
+		logger.V(3).Infof("ReloadMultiReleaseById: found no relative Business %s", operator.Business)
+		return fmt.Errorf("No relative Business %s", operator.Business)
+	}
+	request := &accessserver.ReloadReq{
+		Seq:            pkgcommon.Sequence(),
+		Bid:            business.Bid,
+		Operator:       operator.User,
+		MultiReleaseid: multiReleaseID,
+		Rollback:       true,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.Reload(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("ReloadMultiReleaseById %s failed, %s", multiReleaseID, err.Error())
+		return err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("ReloadMultiReleaseById %s: resource Not Found.", multiReleaseID)
+		return nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("ReloadMultiReleaseById %s successfully, but response Err, %s", multiReleaseID, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
 }
 
 //ListCommitsAllByID list all Commits of ConfigSet information
 //return:
 //	Commits: all Commit, nil if not exist
 //	error: error info if that happened
-func (operator *AccessOperator) ListCommitsAllByID(cxt context.Context, bID, appID, cfgSetName string) ([]*common.Commit, error) {
-	configSet, err := operator.innergetConfigSet(cxt, bID, appID, cfgSetName)
-	if err != nil {
-		return nil, err
+func (operator *AccessOperator) ListMultiCommitsAllByAppID(cxt context.Context, bID, appID string) ([]*common.MultiCommit, error) {
+	user := ""
+	if operator.User != AllOperator {
+		user = operator.User
 	}
-	if configSet == nil {
-		return nil, nil
-	}
-
-	request := &accessserver.QueryHistoryCommitsReq{
-		Seq:      pkgcommon.Sequence(),
-		Bid:      bID,
-		Appid:    appID,
-		Cfgsetid: configSet.Cfgsetid,
-		Index:    operator.index,
-		Limit:    operator.limit,
+	request := &accessserver.QueryHistoryMultiCommitsReq{
+		Seq:       pkgcommon.Sequence(),
+		Bid:       bID,
+		Appid:     appID,
+		QueryType: 0,
+		Operator:  user,
+		Index:     operator.index,
+		Limit:     operator.limit,
 	}
 	grpcOptions := []grpc.CallOption{
 		grpc.WaitForReady(true),
 	}
-	response, err := operator.Client.QueryHistoryCommits(cxt, request, grpcOptions...)
+	response, err := operator.Client.QueryHistoryMultiCommits(cxt, request, grpcOptions...)
 	if err != nil {
-		logger.V(3).Infof("ListCommitsByConfigSet failed, %s", err.Error())
+		logger.V(3).Infof("ListMultiCommits failed, %s", err.Error())
 		return nil, err
 	}
 	if response.ErrCode != common.ErrCode_E_OK {
-		logger.V(3).Infof("ListCommitsByConfigSet all successfully, but response Err, %s", response.ErrMsg)
+		logger.V(3).Infof("ListMultiCommits all successfully, but response Err, %s", response.ErrMsg)
 		return nil, fmt.Errorf("%s", response.ErrMsg)
 	}
-	return response.Commits, nil
+	return response.MultiCommits, nil
 }
 
 //UpdateCommitOption for commit update
@@ -514,34 +814,34 @@ func (operator *AccessOperator) DeleteCommit(cxt context.Context, commitID strin
 //ConfirmCommit make commit affective or generate from templates
 //return:
 //	err: if any error happened
-func (operator *AccessOperator) ConfirmCommit(cxt context.Context, commitID string) error {
+func (operator *AccessOperator) ConfirmMultiCommit(cxt context.Context, multiCommitID string) error {
 	//query business and app first
 	business, err := operator.GetBusiness(cxt, operator.Business)
 	if err != nil {
 		return err
 	}
 	if business == nil {
-		logger.V(3).Infof("ConfirmCommit: found no relative Business %s", operator.Business)
+		logger.V(3).Infof("ConfirmMultiCommit: found no relative Business %s", operator.Business)
 		return fmt.Errorf("No relative Business %s", operator.Business)
 	}
 
 	//setting cancel commit request
-	request := &accessserver.ConfirmCommitReq{
-		Seq:      pkgcommon.Sequence(),
-		Bid:      business.Bid,
-		Commitid: commitID,
-		Operator: operator.User,
+	request := &accessserver.ConfirmMultiCommitReq{
+		Seq:           pkgcommon.Sequence(),
+		Bid:           business.Bid,
+		MultiCommitid: multiCommitID,
+		Operator:      operator.User,
 	}
 	grpcOptions := []grpc.CallOption{
 		grpc.WaitForReady(true),
 	}
-	response, err := operator.Client.ConfirmCommit(cxt, request, grpcOptions...)
+	response, err := operator.Client.ConfirmMultiCommit(cxt, request, grpcOptions...)
 	if err != nil {
-		logger.V(3).Infof("ConfirmCommit %s failed, %s", commitID, err.Error())
+		logger.V(3).Infof("ConfirmMultiCommit %s failed, %s", multiCommitID, err.Error())
 		return err
 	}
 	if response.ErrCode != common.ErrCode_E_OK {
-		logger.V(3).Infof("ConfirmCommit %s successfully, but response Err, %s", commitID, response.ErrMsg)
+		logger.V(3).Infof("ConfirmMultiCommit %s successfully, but response Err, %s", multiCommitID, response.ErrMsg)
 		return fmt.Errorf("%s", response.ErrMsg)
 	}
 	return nil
@@ -557,6 +857,21 @@ type StrategyOption struct {
 	AppName string
 	//Content strategy details, it's json data
 	Content string
+	//Memo strategy details, it's json data
+	Memo string
+}
+
+// strategy is json file struct of create strategies
+type CreateStrategy struct {
+	App      string
+	Clusters []string
+	Zones    []string
+	Dcs      []string
+	IPs      []string
+	// Labels is instance labels in strategy which control "OR".
+	Labels map[string]string
+	// LabelsAnd is instance labels in strategy which control "AND".
+	LabelsAnd map[string]string
 }
 
 //CreateStrategy create strategy for release
@@ -565,34 +880,46 @@ type StrategyOption struct {
 //	error: any error if happened
 func (operator *AccessOperator) CreateStrategy(cxt context.Context, option *StrategyOption) (string, error) {
 	if option == nil {
-		return "", fmt.Errorf("Lost create Commit info")
+		return "", fmt.Errorf("lost create Strategy info")
 	}
-	grpcOptions := []grpc.CallOption{
-		grpc.WaitForReady(true),
-	}
-	//query business and app first
+	// query business and app first
 	business, app, err := getBusinessAndApp(operator, operator.Business, option.AppName)
 	if err != nil {
 		return "", err
 	}
 
-	strategies := &strategy.Strategy{}
-	if err := json.Unmarshal([]byte(option.Content), strategies); err != nil {
+	// get strategy
+	createStrategyJson := &CreateStrategy{}
+	if err := json.Unmarshal([]byte(option.Content), createStrategyJson); err != nil {
+		return "", err
+	}
+	strategies, err := operator.getStrategyFromNameToId(cxt, createStrategyJson)
+	if err != nil {
 		return "", err
 	}
 
+	// judge flag appName == create strategy json file appName
+	if strategies.Appid != app.Appid {
+		return "", fmt.Errorf("the application of the strategy does not match the application in the json file")
+	}
+
+	logger.V(3).Infof("CreateStrategy: post new Strategy %s for Business [%s] : %s", option.Name, operator.Business, strategies)
 	request := &accessserver.CreateStrategyReq{
-		Seq: pkgcommon.Sequence(),
-		Bid: business.Bid,
-		//todo(DeveloperJim): check AppID necessity
+		Seq:        pkgcommon.Sequence(),
+		Bid:        business.Bid,
 		Appid:      app.Appid,
 		Name:       option.Name,
+		Memo:       option.Memo,
 		Clusterids: strategies.Clusterids,
 		Zoneids:    strategies.Zoneids,
 		Dcs:        strategies.Dcs,
 		IPs:        strategies.IPs,
 		Labels:     strategies.Labels,
+		LabelsAnd:  strategies.LabelsAnd,
 		Creator:    operator.User,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
 	}
 	response, err := operator.Client.CreateStrategy(cxt, request, grpcOptions...)
 	if err != nil {
@@ -613,6 +940,122 @@ func (operator *AccessOperator) CreateStrategy(cxt context.Context, option *Stra
 	return response.Strategyid, nil
 }
 
+//getStrategyFromNameToId to to convert strategy content's resource id to name
+//Args:
+// 	createStrategy:  create strategy json file content
+//return:
+// 	strategy: get strategy struct from CreateStrategy
+// 	error: error info if that happened
+func (operator *AccessOperator) getStrategyFromNameToId(cxt context.Context, createStrategy *CreateStrategy) (*strategy.Strategy, error) {
+	strategies := &strategy.Strategy{}
+
+	// query app
+	app, err := operator.GetApp(cxt, createStrategy.App)
+	if err != nil {
+		return nil, fmt.Errorf("json file error ( %s )", err)
+	}
+	if app == nil {
+		return nil, fmt.Errorf("app [%s] not found from json file", createStrategy.App)
+	}
+	strategies.Appid = app.Appid
+
+	// query cluster
+	for _, clusterName := range createStrategy.Clusters {
+		cluster, err := operator.GetLogicCluster(cxt, app.Name, clusterName)
+		if err != nil {
+			return nil, fmt.Errorf("json file error ( %s )", err)
+		}
+		if cluster == nil {
+			return nil, fmt.Errorf("cluster [%s] not found from json file", clusterName)
+		}
+		strategies.Clusterids = append(strategies.Clusterids, cluster.Clusterid)
+	}
+
+	// query zone
+	for _, zoneName := range createStrategy.Zones {
+		zone, err := operator.GetZoneByName(cxt, app.Name, zoneName)
+		if err != nil {
+			return nil, fmt.Errorf("json file error ( %s )", err)
+		}
+		if zone == nil {
+			return nil, fmt.Errorf("zone [%s] not found from json file", zoneName)
+		}
+		strategies.Zoneids = append(strategies.Zoneids, zone.Zoneid)
+	}
+
+	// labels labelsAnd
+	strategies.Dcs = createStrategy.Dcs
+	strategies.IPs = createStrategy.IPs
+	strategies.Labels = createStrategy.Labels
+	strategies.LabelsAnd = createStrategy.LabelsAnd
+
+	return strategies, nil
+}
+
+//GetStrategyJsonFromIdToName to convert strategy content's resource name to id
+//Args:
+// 	strategyJson: query strategy struct's content
+//return:
+// 	createStrategy: struct that save convert resource name to id
+// 	error: error info if that happened
+func (operator *AccessOperator) GetStrategyFromIdToName(cxt context.Context, strategy *strategy.Strategy) ([]byte, error) {
+	createStrategy := &CreateStrategy{}
+
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return nil, err
+	}
+	if business == nil {
+		return nil, fmt.Errorf("problem with the content of the strategy: business [%s] not found ", operator.Business)
+	}
+
+	// query app
+	app, err := operator.GetAppByAppID(cxt, business.Bid, strategy.Appid)
+	if err != nil {
+		return nil, err
+	}
+	if app == nil {
+		return nil, fmt.Errorf("problem with the content of the strategy: app [%s] not found", strategy.Appid)
+	}
+	createStrategy.App = app.Name
+
+	// query cluster
+	for _, clusterID := range strategy.Clusterids {
+		cluster, err := operator.GetClusterAllByID(cxt, business.Bid, app.Appid, clusterID)
+		if err != nil {
+			return nil, err
+		}
+		if cluster == nil {
+			return nil, fmt.Errorf("problem with the content of the strategy: cluster [%s] not found", clusterID)
+		}
+		createStrategy.Clusters = append(createStrategy.Clusters, cluster.Name)
+	}
+
+	// query zone
+	for _, zoneID := range strategy.Zoneids {
+		zone, err := operator.GetZoneAllByID(cxt, business.Bid, app.Appid, zoneID)
+		if err != nil {
+			return nil, err
+		}
+		if zone == nil {
+			return nil, fmt.Errorf("problem with the content of the strategy: zone [%s] not found", zoneID)
+		}
+		createStrategy.Zones = append(createStrategy.Zones, zone.Name)
+	}
+
+	// labels labelsAnd
+	createStrategy.Dcs = strategy.Dcs
+	createStrategy.IPs = strategy.IPs
+	createStrategy.Labels = strategy.Labels
+	createStrategy.LabelsAnd = strategy.LabelsAnd
+
+	strategyJson, err := json.Marshal(createStrategy)
+	if err != nil {
+		return nil, err
+	}
+	return strategyJson, nil
+}
+
 //GetStrategy get specified Strategy details information
 //Args:
 //	name: strategy name
@@ -620,21 +1063,27 @@ func (operator *AccessOperator) CreateStrategy(cxt context.Context, option *Stra
 //return:
 //	strategy: specified configset, nil if not exist
 //	error: error info if that happened
-func (operator *AccessOperator) GetStrategy(cxt context.Context, appName, name string) (*common.Strategy, error) {
+func (operator *AccessOperator) GetStrategyByName(cxt context.Context, appName, name string) (*common.Strategy, error) {
 	//query business and app first
 	business, app, err := getBusinessAndApp(operator, operator.Business, appName)
 	if err != nil {
 		return nil, err
 	}
-	return operator.innerGetStrategyByID(cxt, business.Bid, app.Appid, name)
+	return operator.innerGetStrategy(cxt, business.Bid, app.Appid, name, "")
 }
 
 func (operator *AccessOperator) innerGetStrategyByID(cxt context.Context, bID, appID, name string) (*common.Strategy, error) {
+	strategy, err := operator.innerGetStrategy(cxt, bID, appID, name, "")
+	return strategy, err
+}
+
+func (operator *AccessOperator) innerGetStrategy(cxt context.Context, bID, appID, name, strategyid string) (*common.Strategy, error) {
 	request := &accessserver.QueryStrategyReq{
-		Seq:   pkgcommon.Sequence(),
-		Bid:   bID,
-		Appid: appID,
-		Name:  name,
+		Seq:        pkgcommon.Sequence(),
+		Bid:        bID,
+		Appid:      appID,
+		Name:       name,
+		Strategyid: strategyid,
 	}
 	grpcOptions := []grpc.CallOption{
 		grpc.WaitForReady(true),
@@ -653,6 +1102,19 @@ func (operator *AccessOperator) innerGetStrategyByID(cxt context.Context, bID, a
 		return nil, fmt.Errorf("%s", response.ErrMsg)
 	}
 	return response.Strategy, nil
+}
+
+func (operator *AccessOperator) GetStrategyById(cxt context.Context, strategyid string) (*common.Strategy, error) {
+	//query business and app first
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		logger.V(3).Infof("Query relative business %s failed, %s", operator.Business, err.Error())
+		return nil, err
+	}
+	if business == nil {
+		return nil, fmt.Errorf("No relative Business %s Resource", operator.Business)
+	}
+	return operator.innerGetStrategy(cxt, business.Bid, "", "", strategyid)
 }
 
 //ListStrategyByApp list all strategy information.
@@ -723,85 +1185,6 @@ func (operator *AccessOperator) DeleteStrategy(cxt context.Context, ID string) e
 	return nil
 }
 
-//ReleaseOption for CRUD
-type ReleaseOption struct {
-	//ReleaseID for update
-	ReleaseID string
-	//Name for release
-	Name string
-	//AppName release for specified App
-	AppName string
-	//CfgSetName release for specified ConfigSet
-	CfgSetName string
-	// StrategyName release relative to strategy.
-	StrategyName string
-	//CommitID release relative to Commit
-	CommitID string
-}
-
-//CreateRelease create release for specified Commit
-//return:
-//	releaseID: when creating successfully, system will response ID
-//	error: any error if happened
-func (operator *AccessOperator) CreateRelease(cxt context.Context, option *ReleaseOption) (string, error) {
-	if option == nil {
-		return "", fmt.Errorf("Lost create Commit info")
-	}
-
-	grpcOptions := []grpc.CallOption{
-		grpc.WaitForReady(true),
-	}
-
-	// query business first.
-	business, app, err := getBusinessAndApp(operator, operator.Business, option.AppName)
-	if err != nil {
-		return "", err
-	}
-
-	request := &accessserver.CreateReleaseReq{
-		Seq:      pkgcommon.Sequence(),
-		Bid:      business.Bid,
-		Name:     option.Name,
-		Commitid: option.CommitID,
-		Creator:  operator.User,
-	}
-
-	// check strategy for this release.
-	if len(option.StrategyName) != 0 {
-		strategy, styerr := operator.innerGetStrategyByID(cxt, business.Bid, app.Appid, option.StrategyName)
-		if styerr != nil {
-			return "", styerr
-		}
-
-		if strategy == nil {
-			logger.V(3).Infof("CreateRelease: No relative Strategy %s with Release.", option.StrategyName)
-			return "", fmt.Errorf("No relative Strategy %s", option.StrategyName)
-		}
-		request.Strategyid = strategy.Strategyid
-	}
-
-	response, err := operator.Client.CreateRelease(cxt, request, grpcOptions...)
-	if err != nil {
-		logger.V(3).Infof(
-			"CreateRelease: post new Release %s for App[%s]/Cfgset[%s]/Commit %s failed, %s",
-			option.Name, option.AppName, option.CfgSetName, option.CommitID, err.Error(),
-		)
-		return "", err
-	}
-	if response.ErrCode != common.ErrCode_E_OK {
-		logger.V(3).Infof(
-			"CreateStrategy: post new Release %s for App[%s]/Cfgset[%s]/Commit %s successfully, but reponse failed: %s",
-			option.Name, option.AppName, option.CfgSetName, option.CommitID, response.ErrMsg,
-		)
-		return "", fmt.Errorf("%s", response.ErrMsg)
-	}
-	if len(response.Releaseid) == 0 {
-		logger.V(3).Infof("CreateStrategy: BSCP system error, No ReleaseID response")
-		return "", fmt.Errorf("Lost ReleaseID from configuraiotn platform")
-	}
-	return response.Releaseid, nil
-}
-
 //GetRelease get specified Release details information
 //Args:
 //	name: strategy name
@@ -848,47 +1231,169 @@ func (operator *AccessOperator) innerGetReleaseByID(cxt context.Context, bID, ID
 	return response.Release, nil
 }
 
-//ListReleaseByApp list all release information about specified App & configset
+//ReleaseOption for CRUD
+type ReleaseOption struct {
+	//ReleaseID for update
+	ReleaseID string
+	//Name for release
+	Name string
+	//AppName release for specified App
+	AppName string
+	//CfgSetName release for specified ConfigSet
+	CfgSetName string
+	// StrategyName release relative to strategy.
+	StrategyName string
+	//CommitID release relative to Commit
+	MultiCommitID string
+	//Memo release relative to Commit
+	Memo string
+}
+
+//CreateMultiRelease create multi-release for specified Commit
+//return:
+//	multi-releaseID: when creating successfully, system will response ID
+//	error: any error if happened
+func (operator *AccessOperator) CreateMultiRelease(cxt context.Context, option *ReleaseOption) (string, error) {
+	if option == nil {
+		return "", fmt.Errorf("Lost create Commit info")
+	}
+
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+
+	// query business first.
+	business, app, err := getBusinessAndApp(operator, operator.Business, option.AppName)
+	if err != nil {
+		return "", err
+	}
+
+	request := &accessserver.CreateMultiReleaseReq{
+		Seq:           pkgcommon.Sequence(),
+		Bid:           business.Bid,
+		Appid:         app.Appid,
+		Name:          option.Name,
+		MultiCommitid: option.MultiCommitID,
+		Creator:       operator.User,
+		Memo:          option.Memo,
+	}
+
+	// check strategy for this release.
+	if len(option.StrategyName) != 0 {
+		strategy, styerr := operator.innerGetStrategyByID(cxt, business.Bid, app.Appid, option.StrategyName)
+		if styerr != nil {
+			return "", styerr
+		}
+
+		if strategy == nil {
+			logger.V(3).Infof("CreateMultiRelease: No relative Strategy %s with Release.", option.StrategyName)
+			return "", fmt.Errorf("No relative Strategy[%s] under application[%s]", option.StrategyName, app.Name)
+		}
+		request.Strategyid = strategy.Strategyid
+	}
+
+	response, err := operator.Client.CreateMultiRelease(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof(
+			"CreateMultiRelease: post new Release %s for App[%s]/Cfgset[%s]/Commit %s failed, %s",
+			option.Name, option.AppName, option.CfgSetName, option.MultiCommitID, err.Error(),
+		)
+		return "", err
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof(
+			"CreateMultiRelease: post new MultiRelease %s for App[%s]/Cfgset[%s]/MultiCommit %s successfully, but reponse failed: %s",
+			option.Name, option.AppName, option.CfgSetName, option.MultiCommitID, response.ErrMsg,
+		)
+		return "", fmt.Errorf("%s", response.ErrMsg)
+	}
+	if len(response.MultiReleaseid) == 0 {
+		logger.V(3).Infof("CreateMultiRelease: BSCP system error, No ReleaseID response")
+		return "", fmt.Errorf("Lost ReleaseID from configuraiotn platform")
+	}
+	return response.MultiReleaseid, nil
+}
+
+//GetMultiRelease get specified MultiRelease details information
+//Args:
+//	name: multi-releaseID
+//return:
+//	multi-release
+func (operator *AccessOperator) GetMultiRelease(cxt context.Context, ID string) (*common.MultiRelease, []*common.ReleaseMetadata, error) {
+	//do not implemented
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return nil, nil, err
+	}
+	if business == nil {
+		logger.V(3).Infof("GetMultiRelease: found no relative Business %s", operator.Business)
+		return nil, nil, fmt.Errorf("No relative Business %s", operator.Business)
+	}
+
+	return operator.innerGetMultiReleaseByID(cxt, business.Bid, ID)
+}
+
+func (operator *AccessOperator) innerGetMultiReleaseByID(cxt context.Context, bID, ID string) (*common.MultiRelease, []*common.ReleaseMetadata, error) {
+	request := &accessserver.QueryMultiReleaseReq{
+		Seq:            pkgcommon.Sequence(),
+		Bid:            bID,
+		MultiReleaseid: ID,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.QueryMultiRelease(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("GetMultiRelease %s details failed, %s", ID, err.Error())
+		return nil, nil, err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("GetMultiRelease %s: resource Not Found.", ID)
+		return nil, nil, nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("GetMultiRelease %s successfully, but response Err, %s", ID, response.ErrMsg)
+		return nil, nil, fmt.Errorf("%s", response.ErrMsg)
+	}
+	return response.MultiRelease, response.Metadatas, nil
+}
+
+//ListMultiReleaseByApp list all release information about specified App
 //return:
 //	strategies: all strategies, nil if not exist
 //	error: error info if that happened
-func (operator *AccessOperator) ListReleaseByApp(cxt context.Context, appName, cfgsetName string) ([]*common.Release, error) {
+func (operator *AccessOperator) ListMultiReleaseByApp(cxt context.Context, appName string, queryType int32) ([]*common.MultiRelease, error) {
 	//query business and app first
 	business, app, err := getBusinessAndApp(operator, operator.Business, appName)
 	if err != nil {
 		return nil, err
 	}
-
-	configSet, err := operator.innergetConfigSet(cxt, business.Bid, app.Appid, cfgsetName)
-	if err != nil {
-		return nil, err
+	user := ""
+	if operator.User != AllOperator {
+		user = operator.User
 	}
-	if configSet == nil {
-		return nil, nil
-	}
-
-	request := &accessserver.QueryHistoryReleasesReq{
-		Seq:      pkgcommon.Sequence(),
-		Bid:      business.Bid,
-		Cfgsetid: configSet.Cfgsetid,
-		//fix: list all release
-		//Operator: operator.User,
-		Index: operator.index,
-		Limit: operator.limit,
+	request := &accessserver.QueryHistoryMultiReleasesReq{
+		Seq:       pkgcommon.Sequence(),
+		Bid:       business.Bid,
+		Appid:     app.Appid,
+		QueryType: queryType,
+		Operator:  user,
+		Index:     operator.index,
+		Limit:     operator.limit,
 	}
 	grpcOptions := []grpc.CallOption{
 		grpc.WaitForReady(true),
 	}
-	response, err := operator.Client.QueryHistoryReleases(cxt, request, grpcOptions...)
+	response, err := operator.Client.QueryHistoryMultiReleases(cxt, request, grpcOptions...)
 	if err != nil {
-		logger.V(3).Infof("ListReleaseByApp failed, %s", err.Error())
+		logger.V(3).Infof("ListMultiReleaseByApp failed, %s", err.Error())
 		return nil, err
 	}
 	if response.ErrCode != common.ErrCode_E_OK {
-		logger.V(3).Infof("ListReleaseByApp all successfully, but response Err, %s", response.ErrMsg)
+		logger.V(3).Infof("ListMultiReleaseByApp all successfully, but response Err, %s", response.ErrMsg)
 		return nil, fmt.Errorf("%s", response.ErrMsg)
 	}
-	return response.Releases, nil
+	return response.MultiReleases, nil
 }
 
 //UpdateRelease update specified Release.
@@ -925,37 +1430,35 @@ func (operator *AccessOperator) UpdateRelease(cxt context.Context, option *Relea
 
 }
 
-//ConfirmRelease make Release affective and publish to specified endpoints
+//ConfirmMultiRelease make Release affective and publish to specified endpoints
 //return:
 //	err: if any error happened
-func (operator *AccessOperator) ConfirmRelease(cxt context.Context, releaseID string) error {
+func (operator *AccessOperator) ConfirmMultiRelease(cxt context.Context, multiReleaseID string) error {
 	//query business and app first
 	business, err := operator.GetBusiness(cxt, operator.Business)
 	if err != nil {
 		return err
 	}
 	if business == nil {
-		logger.V(3).Infof("ConfirmRelease: found no relative Business %s", operator.Business)
+		logger.V(3).Infof("ConfirmMultiRelease: found no relative Business %s", operator.Business)
 		return fmt.Errorf("No relative Business %s", operator.Business)
 	}
 
 	//setting cancel commit request
-	request := &accessserver.PublishReleaseReq{
-		Seq:       pkgcommon.Sequence(),
-		Bid:       business.Bid,
-		Releaseid: releaseID,
-		Operator:  operator.User,
+	request := &accessserver.PublishMultiReleaseReq{
+		Seq:            pkgcommon.Sequence(),
+		Bid:            business.Bid,
+		MultiReleaseid: multiReleaseID,
+		Operator:       operator.User,
 	}
-	grpcOptions := []grpc.CallOption{
-		grpc.WaitForReady(true),
-	}
-	response, err := operator.Client.PublishRelease(cxt, request, grpcOptions...)
+	grpcOptions := []grpc.CallOption{}
+	response, err := operator.Client.PublishMultiRelease(cxt, request, grpcOptions...)
 	if err != nil {
-		logger.V(3).Infof("ConfirmRelease %s failed, %s", releaseID, err.Error())
+		logger.V(3).Infof("ConfirmMultiRelease %s failed, %s", multiReleaseID, err.Error())
 		return err
 	}
 	if response.ErrCode != common.ErrCode_E_OK {
-		logger.V(3).Infof("ConfirmRelease %s successfully, but response Err, %s", releaseID, response.ErrMsg)
+		logger.V(3).Infof("ConfirmMultiRelease %s successfully, but response Err, %s", multiReleaseID, response.ErrMsg)
 		return fmt.Errorf("%s", response.ErrMsg)
 	}
 	return nil

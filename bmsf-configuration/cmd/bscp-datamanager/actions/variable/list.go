@@ -171,7 +171,7 @@ func (act *ListAction) queryVariables() (pbcommon.ErrCode, string) {
 		act.sd.AutoMigrate(&database.VariableGlobal{})
 		err = act.sd.DB().
 			Offset(act.req.Index).Limit(act.req.Limit).
-			Order("Fupdate_time DESC").
+			Order("Fupdate_time DESC, Fid DESC").
 			Where(map[string]interface{}{
 				"Fbid":   act.req.Bid,
 				"Fstate": int32(pbcommon.VariableState_VS_CREATED),
@@ -182,7 +182,7 @@ func (act *ListAction) queryVariables() (pbcommon.ErrCode, string) {
 		act.sd.AutoMigrate(&database.VariableCluster{})
 		err = act.sd.DB().
 			Offset(act.req.Index).Limit(act.req.Limit).
-			Order("Fupdate_time DESC").
+			Order("Fupdate_time DESC, Fid DESC").
 			Where(map[string]interface{}{
 				"Fbid":            act.req.Bid,
 				"Fcluster":        act.req.Cluster,
@@ -195,7 +195,7 @@ func (act *ListAction) queryVariables() (pbcommon.ErrCode, string) {
 		act.sd.AutoMigrate(&database.VariableZone{})
 		err = act.sd.DB().
 			Offset(act.req.Index).Limit(act.req.Limit).
-			Order("Fupdate_time DESC").
+			Order("Fupdate_time DESC, Fid DESC").
 			Where(map[string]interface{}{
 				"Fbid":            act.req.Bid,
 				"Fcluster":        act.req.Cluster,

@@ -29,17 +29,16 @@ func createAppCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "application",
 		Aliases: []string{"app"},
-		Short:   "create application",
-		Long:    "create new application under business",
+		Short:   "Create application",
+		Long:    "Create new application under business",
 		Example: `
-	bscp-client create application --name gamesvc --type 1
-	bscp-client create app -c nobody -n gamesvc -t 0
+	bk-bscp-client create application --name gamesvc --type 1
 		`,
 		RunE: handleCreateApp,
 	}
-	//todo(DeveloperJim): --file is required
 	cmd.Flags().StringP("name", "n", "", "settings new application name")
-	cmd.Flags().Int32P("type", "t", 0, "settings new application type, 0 is container, 1 is GSE")
+	cmd.Flags().Int32P("type", "t", 0, "settings new application type, 0 is container, 1 is process")
+	cmd.Flags().StringP("memo", "m", "", "settings memo for new application")
 	cmd.MarkFlagRequired("name")
 	return cmd
 }
@@ -48,19 +47,18 @@ func logicClusterCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cluster",
 		Aliases: []string{"clu"},
-		Short:   "create cluster",
-		Long:    "create new logic cluster for application",
+		Short:   "Create cluster",
+		Long:    "Create new logic cluster for application",
 		Example: `
-	bscp-client create logiccluster --operator nobody --name defaultcluster --app gameserver
-	bscp-client create cluster -c nobody -n defaultcluster -a gameserver
+	bscp-client create cluster --name defaultcluster
 		`,
 		RunE: handleCreateLogicClucster,
 	}
 	//options
 	cmd.Flags().StringP("name", "n", "", "settings new cluster name")
-	cmd.Flags().StringP("app", "a", "", "settings app that cluster belongs to ")
+	cmd.Flags().StringP("app", "a", "", "settings app that cluster belongs to")
+	cmd.Flags().StringP("memo", "m", "", "settings new cluster memo")
 	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("app")
 	return cmd
 }
 
@@ -68,10 +66,9 @@ func clusterListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cluster-list",
 		Aliases: []string{"clu-list"},
-		Short:   "create cluster-list",
-		Long:    "create same cluster for multiple application",
+		Short:   "Create cluster-list",
+		Long:    "Create cluster \"defaultcluster\" for Application gameserver, db, proxy, new-module",
 		Example: `
-	create cluster "defaultcluster" for Application gameserver, db, proxy, new-module
 	bscp-client create cluster-list --name defaultcluster --for-apps gameserver,db,proxy --for-apps new-module
 		`,
 		RunE: handleCreateClusterList,
@@ -79,29 +76,28 @@ func clusterListCmd() *cobra.Command {
 	//options
 	cmd.Flags().StringP("name", "n", "", "settings new cluster name")
 	cmd.Flags().StringSlice("for-apps", []string{}, "settings app that cluster belongs to ")
-	cmd.MarkFlagRequired("name")
 	cmd.MarkFlagRequired("for-apps")
+	cmd.MarkFlagRequired("name")
 	return cmd
 }
 
 func createZoneCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zone",
-		Short: "create zone",
-		Long:  "create new zone for specified application",
+		Short: "Create zone",
+		Long:  "Create new zone for specified application and cluster",
 		Example: `
-	bscp-client create zone --operator nobody --cluster defaultcluster --app gameserver --name zoneName
-	bscp-client create zone -c nobody -l defaultcluster -a gameserver -n zoneName
+	bscp-client create zone --cluster defaultcluster --name zoneName --memo "this is a example"
 		`,
 		RunE: handleCreateZone,
 	}
 	//options
 	cmd.Flags().StringP("name", "n", "", "settings new zone name")
-	cmd.Flags().StringP("cluster", "l", "", "settings cluster that zone belongs to ")
+	cmd.Flags().StringP("cluster", "c", "", "settings cluster that zone belongs to ")
 	cmd.Flags().StringP("app", "a", "", "settings app that zone belongs to ")
+	cmd.Flags().StringP("memo", "m", "", "settings memo that zone belongs to ")
 	cmd.MarkFlagRequired("cluster")
 	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("app")
 	return cmd
 }
 
@@ -109,8 +105,8 @@ func createZoneListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "zone-list",
 		Aliases: []string{"z-list"},
-		Short:   "create zone-list",
-		Long:    "create same zone for multiple cluster with specified application",
+		Short:   "Create zone-list",
+		Long:    "Create same zone for multiple cluster with specified application",
 		Example: `
 create zone "myzone" for multiple app c1, c2, c3 with same cluster
   > bscp-client create zone-list --cluster shenzhen --for-apps c1,c2,c3 --name myzone
@@ -147,33 +143,44 @@ func handleCreateApp(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	memo, err := cmd.Flags().GetString("memo")
+	if err != nil {
+		return err
+	}
 	createOption := &service.CreateAppOption{
 		Name:    name,
 		Creator: option.GlobalOptions.Operator,
 		Type:    apptype,
+		Memo:    memo,
 	}
 	//create application and check result
 	appID, err := operator.CreateApp(context.TODO(), createOption)
 	if err != nil {
 		return err
 	}
-	cmd.Printf("create Application %s successfully.\n", appID)
+	cmd.Printf("Create Application successfully: %s\n\n", appID)
 	return nil
 }
 
 func handleCreateLogicClucster(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create business operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
 		return err
 	}
 	//check option
-	//cluster name
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
-	//appName from command line flags
+	memo, err := cmd.Flags().GetString("memo")
+	if err != nil {
+		return err
+	}
 	appName, err := cmd.Flags().GetString("app")
 	if err != nil {
 		return err
@@ -187,6 +194,7 @@ func handleCreateLogicClucster(cmd *cobra.Command, args []string) error {
 		Name:    name,
 		Bid:     business.Bid,
 		Appid:   app.Appid,
+		Memo:    memo,
 		Creator: option.GlobalOptions.Operator,
 	}
 	//create application and check result
@@ -194,7 +202,7 @@ func handleCreateLogicClucster(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.Printf("create Cluster %s/%s successfully.\n", clusterID, name)
+	cmd.Printf("create Cluster successfully: %s\n\n", clusterID)
 	return nil
 }
 
@@ -251,6 +259,10 @@ func handleCreateClusterList(cmd *cobra.Command, args []string) error {
 }
 
 func handleCreateZone(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create business operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
@@ -262,6 +274,10 @@ func handleCreateZone(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	clusterName, err := cmd.Flags().GetString("cluster")
+	if err != nil {
+		return err
+	}
+	memo, err := cmd.Flags().GetString("memo")
 	if err != nil {
 		return err
 	}
@@ -286,13 +302,14 @@ func handleCreateZone(cmd *cobra.Command, args []string) error {
 		Appid:     app.Appid,
 		Clusterid: cluster.Clusterid,
 		Name:      name,
+		Memo:      memo,
 		Creator:   option.GlobalOptions.Operator,
 	}
 	zoneID, err := operator.CreateZone(context.TODO(), request)
 	if err != nil {
 		return err
 	}
-	cmd.Printf("create Zone %s/%s successfully.\n", zoneID, name)
+	cmd.Printf("Create Zone successfully: %s\n\n", zoneID)
 	return nil
 }
 

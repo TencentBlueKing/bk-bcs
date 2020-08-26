@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: Agent
+metadata:
+  name: agent-sample
+spec:
+  # Add fields here
+  foo: bar

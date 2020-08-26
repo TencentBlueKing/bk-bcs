@@ -14,6 +14,78 @@
     "application/json"
   ],
   "paths": {
+    "/v1/interface/app-procattrlist": {
+      "get": {
+        "summary": "查询应用绑定的主机列表",
+        "description": "查询指定应用绑定的主机列表",
+        "operationId": "QueryAppProcAttrList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryAppProcAttrListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "bid",
+            "description": "业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appid",
+            "description": "应用ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterid",
+            "description": "集群ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "zoneid",
+            "description": "大区ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "index",
+            "description": "查询索引.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "description": "查询数量.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
     "/v1/interface/appinstance-releases": {
       "get": {
         "summary": "查询指定应用实例当前生效版本",
@@ -2272,6 +2344,127 @@
         ]
       }
     },
+    "/v1/interface/host-procattrlist": {
+      "get": {
+        "summary": "查询主机应用绑定列表",
+        "description": "查询指定主机上应用绑定列表",
+        "operationId": "QueryHostProcAttrList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryHostProcAttrListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "cloudid",
+            "description": "进程环境子网ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "IP",
+            "description": "进程环境主机IP.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "index",
+            "description": "查询索引.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "description": "查询数量.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/host-procattrs": {
+      "get": {
+        "summary": "查询主机应用绑定信息",
+        "description": "查询指定主机上的指定应用绑定信息",
+        "operationId": "QueryHostProcAttr",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverQueryHostProcAttrResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "cloudid",
+            "description": "进程环境子网ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "IP",
+            "description": "进程环境主机IP.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bid",
+            "description": "业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appid",
+            "description": "应用ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "path",
+            "description": "配置缓存路径设置.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
     "/v1/interface/integrations": {
       "post": {
         "summary": "逻辑集成接口",
@@ -2573,6 +2766,128 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/accessserverPreviewCommitReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      }
+    },
+    "/v1/interface/procattrs": {
+      "delete": {
+        "summary": "删除应用绑定",
+        "description": "删除指定主机和应用之间的绑定",
+        "operationId": "DeleteProcAttr",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverDeleteProcAttrResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "请求序列号. 调用方的请求序列号，用于指定时间内标识某次请求",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "cloudid",
+            "description": "进程环境子网ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "IP",
+            "description": "进程环境主机IP.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bid",
+            "description": "业务ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appid",
+            "description": "应用ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "path",
+            "description": "更新配置缓存路径设置.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "修改者名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "post": {
+        "summary": "创建主机应用归属信息",
+        "description": "创建进程环境主机归属信息",
+        "operationId": "CreateProcAttr",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateProcAttrResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverCreateProcAttrReq"
+            }
+          }
+        ],
+        "tags": [
+          "Access"
+        ]
+      },
+      "put": {
+        "summary": "更新应用绑定信息",
+        "description": "更新指定主机上指定应用的绑定信息",
+        "operationId": "UpdateProcAttr",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateProcAttrResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accessserverUpdateProcAttrReq"
             }
           }
         ],
@@ -5040,26 +5355,26 @@
         },
         "templateid": {
           "type": "string",
-          "description": "可选, 用于关联外部模板管理标识",
+          "description": "可选, 内部模板ID",
           "title": "配置模板ID",
           "maxLength": 64
         },
         "template": {
           "type": "string",
-          "description": "可选, 配置模板内容，基于GO Template引擎, 需进行配置渲染时传递",
+          "description": "可选, 配置模板内容，需进行配置渲染时传递",
           "title": "配置模板",
           "maxLength": 2097152
         },
         "templateRule": {
           "type": "string",
-          "description": "可选, 配置模板规则，基于GO Template引擎, 需进行配置渲染时传递",
+          "description": "可选, 配置模板规则，需进行配置渲染时传递",
           "title": "配置模板规则",
           "maxLength": 1048576
         },
         "configs": {
           "type": "string",
           "format": "byte",
-          "description": "可选，配置原始内容，非配置渲染模式时传递, base64形式",
+          "description": "可选，配置原始内容，非配置渲染模式时传递, base64形式。支持空配置提交, 空配置内容查询时返回JSON null",
           "title": "配置内容",
           "maxLength": 2097152
         },
@@ -5128,6 +5443,7 @@
         "seq": "1",
         "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
         "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+        "fpath": "/etc",
         "name": "server.yaml",
         "creator": "melo",
         "memo": "备注"
@@ -5746,6 +6062,130 @@
         "errMsg"
       ]
     },
+    "accessserverCreateProcAttrReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "cloudid": "1",
+        "IP": "127.0.0.1",
+        "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
+        "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+        "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+        "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+        "path": "/data/myconfigs_dir/",
+        "memo": "备注",
+        "creator": "melo"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "cloudid": {
+          "type": "string",
+          "title": "进程环境子网ID",
+          "maxLength": 64
+        },
+        "IP": {
+          "type": "string",
+          "title": "进程环境主机IP",
+          "maxLength": 32
+        },
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "appid": {
+          "type": "string",
+          "title": "应用ID",
+          "maxLength": 64
+        },
+        "clusterid": {
+          "type": "string",
+          "title": "集群ID",
+          "maxLength": 64
+        },
+        "zoneid": {
+          "type": "string",
+          "title": "大区ID",
+          "maxLength": 64
+        },
+        "dc": {
+          "type": "string",
+          "description": "该参数主要用于实例隔离，物理机场景下一台机器上IP相同且存在多个相同App实例，需要利用DC做虚拟的隔离使得多实例可以并行处理",
+          "title": "更新物理机房标识",
+          "maxLength": 64
+        },
+        "labels": {
+          "type": "string",
+          "description": "可选，JSON {\"k\":\"v\"}",
+          "title": "应用实例labels",
+          "maxLength": 1024
+        },
+        "path": {
+          "type": "string",
+          "title": "配置缓存路径设置",
+          "maxLength": 128
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注",
+          "maxLength": 64
+        }
+      },
+      "description": "创建应用绑定请求",
+      "title": "CreateProcAttrReq",
+      "required": [
+        "seq",
+        "cloudid",
+        "IP",
+        "bid",
+        "appid",
+        "cloudid",
+        "zoneid",
+        "path",
+        "creator"
+      ]
+    },
+    "accessserverCreateProcAttrResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "创建应用绑定响应",
+      "title": "CreateProcAttrResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
     "accessserverCreateReleaseReq": {
       "type": "object",
       "example": {
@@ -6037,6 +6477,27 @@
         "clusterids": [
           "1fe5da7b-eef5-11e9-aa0e-525400f99278"
         ],
+        "zoneids": [
+          "1fe5da7b-eef5-11e9-aa0e-525400f99278"
+        ],
+        "dcs": [
+          "dc01",
+          "dc02"
+        ],
+        "ips": [
+          "127.0.0.1",
+          "127.0.0.2"
+        ],
+        "labels": {
+          "k1": "v1",
+          "k2": "gt|v2",
+          "k3": "le|v3"
+        },
+        "labelsAnd": {
+          "k1": "ne|v1",
+          "k2": "lt|v2",
+          "k3": "ge|v3"
+        },
         "memo": "备注",
         "creator": "melo"
       },
@@ -6067,34 +6528,35 @@
           "items": {
             "type": "string"
           },
-          "title": "期望的集群ID列表"
+          "title": "期望的集群ID列表, 该维度支持多个ID，每个ID之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系"
         },
         "zoneids": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "期望的大区ID列表"
+          "title": "期望的大区ID列表, 该维度支持多个ID，每个ID之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系"
         },
         "dcs": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "期望的机房标识列表"
+          "title": "期望的机房标识列表, 该维度支持多个标识，每个标识之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系"
         },
         "IPs": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "期望的节点实例IP列表"
+          "title": "期望的节点实例IP列表, 该维度支持多个IP，每个IP之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系"
         },
         "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "期望的节点实例标签逻辑或集合, 该维度支持多个标签，每个标签之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系, 若存在逻辑与标签维度控制，则两维度需要同时满足. 格式：KV, map type / JSON KV, key为目标\n标签名称，value为标签规则表达式，格式为OP|VALUES, OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示IN(1,2,3)的语意. OP和VALUES之间用竖线分割.\n注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理."
         },
         "memo": {
           "type": "string",
@@ -6105,6 +6567,13 @@
           "type": "string",
           "title": "创建者名称",
           "maxLength": 64
+        },
+        "labelsAnd": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "add fields here.\n期望的节点实例标签逻辑与集合, 该维度支持多个标签，每个标签之间为逻辑与的关系, 与其他维度之间整体为逻辑与关系, 若存在逻辑或标签维度控制，则两维度需要同时满足. 格式：KV, map type / JSON KV, key为目标\n标签名称，value为标签规则表达式，格式为OP|VALUES, OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示IN(1,2,3)的语意. OP和VALUES之间用竖线分割.\n注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理."
         }
       },
       "description": "创建发布策略请求",
@@ -6114,7 +6583,6 @@
         "bid",
         "appid",
         "name",
-        "content",
         "creator"
       ]
     },
@@ -6644,6 +7112,37 @@
       },
       "description": "删除配置模版集合接口响应",
       "title": "DeleteConfigTemplateSetResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverDeleteProcAttrResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除主机应用绑定信息响应",
+      "title": "DeleteProcAttrReq",
       "required": [
         "seq",
         "errCode",
@@ -7249,7 +7748,7 @@
         "content": {
           "type": "string",
           "format": "byte",
-          "description": "成功查询后返回当前已生效版本对应配置内容，使用资源链接时则为空, 以base64形式返回",
+          "description": "成功查询后返回当前已生效版本对应配置内容，使用资源链接或空配置提交时则为空, 以base64形式返回",
           "title": "配置内容"
         }
       },
@@ -7308,6 +7807,62 @@
       },
       "description": "查询应用列表响应",
       "title": "QueryAppListResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverQueryAppProcAttrListResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK",
+        "procAttrs": [
+          {
+            "cloudid": "1",
+            "IP": "127.0.0.1",
+            "bid": "b6fb71da-eef5-11e9-aa0e-525400f99278",
+            "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+            "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+            "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+            "path": "/data/myconfigs_dir/",
+            "labels": "{}",
+            "memo": "test",
+            "state": 0,
+            "lastModifyBy": "melo",
+            "createdAt": "2019-07-29 11:57:20",
+            "updatedAt": "2019-07-29 11:57:20"
+          }
+        ]
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "procAttrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonProcAttr"
+          },
+          "description": "成功查询后返回目标主机上应用的绑定信息列表",
+          "title": "绑定应用信息列表"
+        }
+      },
+      "description": "查询应用绑定的主机列表响应",
+      "title": "QueryAppProcAttrListResp",
       "required": [
         "seq",
         "errCode",
@@ -7665,6 +8220,7 @@
         "configSets": [
           {
             "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278",
+            "fpath": "/etc",
             "name": "server.yaml",
             "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
             "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
@@ -7717,6 +8273,7 @@
         "errMsg": "OK",
         "configSet": {
           "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278",
+          "fpath": "/etc",
           "name": "server.yaml",
           "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
           "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
@@ -8500,6 +9057,113 @@
       },
       "description": "查询历史发布版本记录响应",
       "title": "QueryHistoryReleasesResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverQueryHostProcAttrListResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK",
+        "procAttrs": [
+          {
+            "cloudid": "1",
+            "IP": "127.0.0.1",
+            "bid": "b6fb71da-eef5-11e9-aa0e-525400f99278",
+            "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+            "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+            "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+            "path": "/data/myconfigs_dir/",
+            "labels": "{}",
+            "memo": "test",
+            "state": 0,
+            "lastModifyBy": "melo",
+            "createdAt": "2019-07-29 11:57:20",
+            "updatedAt": "2019-07-29 11:57:20"
+          }
+        ]
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "procAttrs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonProcAttr"
+          },
+          "description": "成功查询后返回目标主机上应用的绑定信息列表",
+          "title": "绑定应用信息列表"
+        }
+      },
+      "description": "查询主机应用绑定列表响应",
+      "title": "QueryHostProcAttrListResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverQueryHostProcAttrResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK",
+        "procAttr": {
+          "cloudid": "1",
+          "IP": "127.0.0.1",
+          "bid": "b6fb71da-eef5-11e9-aa0e-525400f99278",
+          "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+          "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+          "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+          "path": "/data/myconfigs_dir/",
+          "labels": "{}",
+          "memo": "test",
+          "state": 0,
+          "lastModifyBy": "melo",
+          "createdAt": "2019-07-29 11:57:20",
+          "updatedAt": "2019-07-29 11:57:20"
+        }
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "procAttr": {
+          "$ref": "#/definitions/commonProcAttr",
+          "description": "成功查询后返回目标主机上应用的绑定信息",
+          "title": "绑定信息"
+        }
+      },
+      "description": "查询主机应用绑定信息响应",
+      "title": "QueryHostProcAttrResp",
       "required": [
         "seq",
         "errCode",
@@ -9387,6 +10051,12 @@
           "type": "string",
           "title": "操作者名称",
           "maxLength": 64
+        },
+        "rollback": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "指定release或multirelease回滚后，通过该操作完成reload",
+          "title": "是否为指定版本的回滚reload操作"
         }
       },
       "description": "指定版本配置Reload请求",
@@ -10173,6 +10843,7 @@
         "seq": "1",
         "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
         "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278",
+        "fpath": "/new_path",
         "name": "new name",
         "memo": "备注",
         "state": 0,
@@ -10614,6 +11285,129 @@
       },
       "description": "更新发布版本信息响应(组模式)",
       "title": "UpdateMultiReleaseResp",
+      "required": [
+        "seq",
+        "errCode",
+        "errMsg"
+      ]
+    },
+    "accessserverUpdateProcAttrReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "cloudid": "1",
+        "IP": "127.0.0.1",
+        "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278",
+        "appid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+        "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+        "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278",
+        "path": "/data/myconfigs_dir/",
+        "memo": "备注",
+        "operator": "melo"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "调用方的请求序列号，用于指定时间内标识某次请求",
+          "title": "请求序列号"
+        },
+        "cloudid": {
+          "type": "string",
+          "title": "进程环境子网ID",
+          "maxLength": 64
+        },
+        "IP": {
+          "type": "string",
+          "title": "进程环境主机IP",
+          "maxLength": 32
+        },
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "appid": {
+          "type": "string",
+          "title": "应用ID",
+          "maxLength": 64
+        },
+        "clusterid": {
+          "type": "string",
+          "title": "更新集群ID",
+          "maxLength": 64
+        },
+        "zoneid": {
+          "type": "string",
+          "title": "更新大区ID",
+          "maxLength": 64
+        },
+        "dc": {
+          "type": "string",
+          "description": "该参数主要用于实例隔离，物理机场景下一台机器上IP相同且存在多个相同App实例，需要利用DC做虚拟的隔离使得多实例可以并行处理",
+          "title": "更新物理机房标识",
+          "maxLength": 64
+        },
+        "labels": {
+          "type": "string",
+          "title": "更新应用实例labels",
+          "maxLength": 1024
+        },
+        "path": {
+          "type": "string",
+          "title": "更新配置缓存路径设置",
+          "maxLength": 128
+        },
+        "memo": {
+          "type": "string",
+          "title": "更新备注",
+          "maxLength": 64
+        },
+        "operator": {
+          "type": "string",
+          "title": "修改者名称",
+          "maxLength": 64
+        }
+      },
+      "description": "更新主机应用绑定信息请求",
+      "title": "UpdateProcAttrReq ",
+      "required": [
+        "seq",
+        "cloudid",
+        "IP",
+        "bid",
+        "appid",
+        "clusterid",
+        "zoneid",
+        "path",
+        "operator"
+      ]
+    },
+    "accessserverUpdateProcAttrResp": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "errCode": 0,
+        "errMsg": "OK"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求",
+          "title": "响应序列号"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "errMsg": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "更新主机应用绑定信息响应",
+      "title": "UpdateProcAttrResp",
       "required": [
         "seq",
         "errCode",
@@ -11670,6 +12464,7 @@
         },
         "commitid": {
           "type": "string",
+          "description": "查询时返回的字段",
           "title": "配置提交ID",
           "maxLength": 64
         }
@@ -11696,6 +12491,12 @@
         "result": {
           "type": "string",
           "title": "操作错误信息"
+        },
+        "commitid": {
+          "type": "string",
+          "description": "成功时返回的字段",
+          "title": "配置提交ID",
+          "maxLength": 64
         }
       },
       "description": "配置提交结果(用于组模式提交)",
@@ -12132,12 +12933,14 @@
         "E_GSE_PUBLISH_RELEASE_FAILED",
         "E_GSE_ALREADY_PUBLISHED",
         "E_GSE_ALREADY_CANCELED",
+        "E_GSE_ALREADY_ROLLBACKED",
         "E_BCS_SYSTEM_UNKONW",
         "E_BCS_PARAMS_INVALID",
         "E_BCS_MARSHAL_PUBLISHING_FAILED",
         "E_BCS_PUBLISH_RELEASE_FAILED",
         "E_BCS_ALREADY_PUBLISHED",
         "E_BCS_ALREADY_CANCELED",
+        "E_BCS_ALREADY_ROLLBACKED",
         "E_CONNS_SYSTEM_UNKONW",
         "E_CONNS_PARAMS_INVALID",
         "E_CONNS_SCHEDULE_RES_FAILED",
@@ -12156,7 +12959,7 @@
         "E_IS_PARAMS_INVALID"
       ],
       "default": "E_OK",
-      "description": "- E_OK: 0 成功\n - E_GW_SYSTEM_UNKONW: 1000 网关服务, 节点调用失败\n - E_AS_SYSTEM_UNKONW: 2000 接入服务, 节点调用失败\n - E_AS_PARAMS_INVALID: 2001 接入服务, 参数校验失败\n - E_AS_AUTH_FAILED: 2002 接入服务, 认证校验失败\n - E_AS_NOT_AUTHED: 2003 接入服务, 未授权的操作\n - E_TPL_SYSTEM_UNKONW: 3000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 3001 模板服务, 参数校验失败\n - E_TPL_RENDER_CHECK_ERROR: 3002 模板服务, 渲染前置检查失败，检查模板和模板规则内容是否正确\n - E_TPL_INVALID_TEMPLATE_RULE: 3003 模板服务, 渲染规则非法\n - E_TPL_INVALID_TEMPLATE_RULE_TYPE: 3004 模板服务, 渲染规则类型非法\n - E_TPL_RENDER_FAILED: 3005 模板服务, 渲染失败\n - E_TPL_NO_CLUSTER_TO_RENDER: 3006 模板服务, 预览渲染失败, 集群信息未知\n - E_TPL_NO_ZONE_TO_RENDER: 3007 模板服务, 预览渲染失败, 大区信息未知\n - E_TPL_NO_TEMPLATE_TO_BIND: 3008 模版服务, 创建绑定失败, 模版信息未知\n - E_TPL_NO_VERSION_TO_BIND: 3009 模版服务, 创建绑定失败, 模版版本信息未知\n - E_TPL_NO_APP_TO_BIND: 3010 模版服务, 创建绑定失败, App信息未知\n - E_TPL_NO_CLUSTER_TO_BIND: 3011 模版服务, 创建绑定失败, 集群信息未知\n - E_TPL_NO_ZONE_TO_BIND: 3012 模版服务, 创建绑定失败, 大区信息未知\n - E_TPL_CREATE_CFGSET_FAILED: 3013 模版服务, 创建绑定失败，创建configSet失败\n - E_TPL_CREATE_COMMIT_FAILED: 3014 模版服务, 创建绑定失败, 创建commit失败\n - E_TPL_NO_CFGSET_TO_SYNC: 3015 模版服务, 更新绑定失败, configSet信息未知\n - E_TPL_GET_VARS_FAILED: 3016 模版服务, 获取变量失败\n - E_BS_SYSTEM_UNKONW: 4000 业务逻辑服务, 节点调用失败\n - E_BS_PARAMS_INVALID: 4001 业务逻辑服务, 参数校验失败\n - E_BS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4002 业务逻辑服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_BS_COMMIT_ALREADY_CANCELED: 4003 业务逻辑服务, 该Commit已撤销，无法再进行Confirm操作\n - E_BS_ALREADY_EXISTS: 4004 业务逻辑服务, 目标资源已存在无法重复创建\n - E_BS_ROLLBACK_UNPUBLISHED_RELEASE: 4005 业务逻辑服务, 无法回滚一个未发布的版本\n - E_DM_SYSTEM_UNKONW: 5000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 5001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 5002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 5003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 5004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 5005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 5006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 5007 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 5008 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 5009 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 5010 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 5011 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONFIGS_NOT_FOUND: 5012 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKONW: 6000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 6001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 6002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 6003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 6004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 6005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_BCS_SYSTEM_UNKONW: 7000 BCS控制器, 节点调用失败\n - E_BCS_PARAMS_INVALID: 7001 BCS控制器, 参数校验失败\n - E_BCS_MARSHAL_PUBLISHING_FAILED: 7002 BCS控制器, 配置版本发布消息解析失败\n - E_BCS_PUBLISH_RELEASE_FAILED: 7003 BCS控制器, 广播配置版本发布消息失败\n - E_BCS_ALREADY_PUBLISHED: 7004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_BCS_ALREADY_CANCELED: 7005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_CONNS_SYSTEM_UNKONW: 8000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 8001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 8002 会话链接服务, BCS sidecar接入调度失败\n - E_ITG_SYSTEM_UNKONW: 9000 逻辑集成服务, 节点调用失败\n - E_ITG_PARAMS_INVALID: 9001 逻辑集成服务, 参数校验失败\n - E_ITG_METADATA_INVALID: 9002 逻辑集成服务, 操作集合描述文件解析失败\n - E_ITG_UNKNOW_METADATA_KIND: 9003 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_UNKNOW_METADATA_OP: 9004 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_CREATE_STRATEGY_FAILED: 9005 逻辑集成服务, 创建版本发布策略失败\n - E_ITG_CONSTRUCT_CLUSTER_FAILED: 9006 逻辑集成服务, 创建集群结构失败\n - E_ITG_CONSTRUCT_ZONE_FAILED: 9007 逻辑集成服务, 创建大区结构失败\n - E_TS_SYSTEM_UNKONW: 10000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 10001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 10002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKONW: 11000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 11001 实例服务, 参数校验失败",
+      "description": "- E_OK: 0 成功\n - E_GW_SYSTEM_UNKONW: 1000 网关服务, 节点调用失败\n - E_AS_SYSTEM_UNKONW: 2000 接入服务, 节点调用失败\n - E_AS_PARAMS_INVALID: 2001 接入服务, 参数校验失败\n - E_AS_AUTH_FAILED: 2002 接入服务, 认证校验失败\n - E_AS_NOT_AUTHED: 2003 接入服务, 未授权的操作\n - E_TPL_SYSTEM_UNKONW: 3000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 3001 模板服务, 参数校验失败\n - E_TPL_RENDER_CHECK_ERROR: 3002 模板服务, 渲染前置检查失败，检查模板和模板规则内容是否正确\n - E_TPL_INVALID_TEMPLATE_RULE: 3003 模板服务, 渲染规则非法\n - E_TPL_INVALID_TEMPLATE_RULE_TYPE: 3004 模板服务, 渲染规则类型非法\n - E_TPL_RENDER_FAILED: 3005 模板服务, 渲染失败\n - E_TPL_NO_CLUSTER_TO_RENDER: 3006 模板服务, 预览渲染失败, 集群信息未知\n - E_TPL_NO_ZONE_TO_RENDER: 3007 模板服务, 预览渲染失败, 大区信息未知\n - E_TPL_NO_TEMPLATE_TO_BIND: 3008 模版服务, 创建绑定失败, 模版信息未知\n - E_TPL_NO_VERSION_TO_BIND: 3009 模版服务, 创建绑定失败, 模版版本信息未知\n - E_TPL_NO_APP_TO_BIND: 3010 模版服务, 创建绑定失败, App信息未知\n - E_TPL_NO_CLUSTER_TO_BIND: 3011 模版服务, 创建绑定失败, 集群信息未知\n - E_TPL_NO_ZONE_TO_BIND: 3012 模版服务, 创建绑定失败, 大区信息未知\n - E_TPL_CREATE_CFGSET_FAILED: 3013 模版服务, 创建绑定失败，创建configSet失败\n - E_TPL_CREATE_COMMIT_FAILED: 3014 模版服务, 创建绑定失败, 创建commit失败\n - E_TPL_NO_CFGSET_TO_SYNC: 3015 模版服务, 更新绑定失败, configSet信息未知\n - E_TPL_GET_VARS_FAILED: 3016 模版服务, 获取变量失败\n - E_BS_SYSTEM_UNKONW: 4000 业务逻辑服务, 节点调用失败\n - E_BS_PARAMS_INVALID: 4001 业务逻辑服务, 参数校验失败\n - E_BS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4002 业务逻辑服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_BS_COMMIT_ALREADY_CANCELED: 4003 业务逻辑服务, 该Commit已撤销，无法再进行Confirm操作\n - E_BS_ALREADY_EXISTS: 4004 业务逻辑服务, 目标资源已存在无法重复创建\n - E_BS_ROLLBACK_UNPUBLISHED_RELEASE: 4005 业务逻辑服务, 无法回滚一个未发布的版本\n - E_DM_SYSTEM_UNKONW: 5000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 5001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 5002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 5003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 5004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 5005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 5006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 5007 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 5008 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 5009 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 5010 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 5011 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONFIGS_NOT_FOUND: 5012 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKONW: 6000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 6001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 6002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 6003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 6004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 6005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_GSE_ALREADY_ROLLBACKED: 6006 BCS控制器, 配置版本已回滚\n - E_BCS_SYSTEM_UNKONW: 7000 BCS控制器, 节点调用失败\n - E_BCS_PARAMS_INVALID: 7001 BCS控制器, 参数校验失败\n - E_BCS_MARSHAL_PUBLISHING_FAILED: 7002 BCS控制器, 配置版本发布消息解析失败\n - E_BCS_PUBLISH_RELEASE_FAILED: 7003 BCS控制器, 广播配置版本发布消息失败\n - E_BCS_ALREADY_PUBLISHED: 7004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_BCS_ALREADY_CANCELED: 7005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_BCS_ALREADY_ROLLBACKED: 7006 BCS控制器, 配置版本已回滚\n - E_CONNS_SYSTEM_UNKONW: 8000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 8001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 8002 会话链接服务, BCS sidecar接入调度失败\n - E_ITG_SYSTEM_UNKONW: 9000 逻辑集成服务, 节点调用失败\n - E_ITG_PARAMS_INVALID: 9001 逻辑集成服务, 参数校验失败\n - E_ITG_METADATA_INVALID: 9002 逻辑集成服务, 操作集合描述文件解析失败\n - E_ITG_UNKNOW_METADATA_KIND: 9003 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_UNKNOW_METADATA_OP: 9004 逻辑集成服务, 未知操作集合描述类型\n - E_ITG_CREATE_STRATEGY_FAILED: 9005 逻辑集成服务, 创建版本发布策略失败\n - E_ITG_CONSTRUCT_CLUSTER_FAILED: 9006 逻辑集成服务, 创建集群结构失败\n - E_ITG_CONSTRUCT_ZONE_FAILED: 9007 逻辑集成服务, 创建大区结构失败\n - E_TS_SYSTEM_UNKONW: 10000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 10001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 10002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKONW: 11000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 11001 实例服务, 参数校验失败",
       "title": "ErrCode 错误码"
     },
     "commonMultiCommit": {
@@ -12291,6 +13094,110 @@
       },
       "description": "发布版本(组模式)",
       "title": "MultiRelease"
+    },
+    "commonProcAttr": {
+      "type": "object",
+      "properties": {
+        "cloudid": {
+          "type": "string",
+          "title": "进程环境子网ID",
+          "maxLength": 64
+        },
+        "IP": {
+          "type": "string",
+          "title": "进程环境主机IP",
+          "maxLength": 32
+        },
+        "bid": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "appid": {
+          "type": "string",
+          "title": "应用ID",
+          "maxLength": 64
+        },
+        "clusterid": {
+          "type": "string",
+          "title": "集群ID",
+          "maxLength": 64
+        },
+        "zoneid": {
+          "type": "string",
+          "title": "大区ID",
+          "maxLength": 64
+        },
+        "dc": {
+          "type": "string",
+          "title": "物理机房标识",
+          "maxLength": 64
+        },
+        "labels": {
+          "type": "string",
+          "title": "应用实例labels",
+          "maxLength": 1024
+        },
+        "path": {
+          "type": "string",
+          "title": "配置缓存路径设置",
+          "maxLength": 128
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者名称",
+          "maxLength": 64
+        },
+        "lastModifyBy": {
+          "type": "string",
+          "title": "最近一次修改者名称",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "description": "默认0：正常",
+          "title": "状态",
+          "maximum": 1
+        },
+        "businessName": {
+          "type": "string",
+          "title": "业务",
+          "maxLength": 64
+        },
+        "appName": {
+          "type": "string",
+          "title": "应用名称",
+          "maxLength": 64
+        },
+        "clusterName": {
+          "type": "string",
+          "title": "集群名称",
+          "maxLength": 64
+        },
+        "zoneName": {
+          "type": "string",
+          "title": "大区名称",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "进程环境应用归属信息",
+      "title": "ProcAttr"
     },
     "commonRelease": {
       "type": "object",

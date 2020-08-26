@@ -6,7 +6,7 @@ cd /data/bcs/${module}
 chmod +x ${module}
 
 #check configuration render
-if [ $BCS_CONFIG_TYPE == "render" ] then
+if [ $BCS_CONFIG_TYPE == "render" ]; then
   cd /data/bcs/${module}
   cat ${module}.json.template | envsubst | tee ${module}.json
 
@@ -16,8 +16,11 @@ if [ $BCS_CONFIG_TYPE == "render" ] then
 fi
 
 #starting kong
+echo "waiting 5 seconds for postgresql..."
+sleep 5
 kong migrations bootstrap -c /etc/kong/kong.conf
 kong start -c /etc/kong/kong.conf
 
 #starting module
+cd /data/bcs/${module}
 /data/bcs/${module}/${module} $@
