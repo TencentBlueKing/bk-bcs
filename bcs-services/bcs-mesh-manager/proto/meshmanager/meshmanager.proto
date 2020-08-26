@@ -30,7 +30,7 @@ enum ErrCode {
 service MeshManager {
     rpc CreateMeshCluster(CreateMeshClusterReq) returns (CreateMeshClusterResp) {
         option (google.api.http) = {
-            post: "/meshmanager/v1/meshcluster"
+            post: "/bcs-mesh-manager/v1/meshcluster"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -73,6 +73,8 @@ message CreateMeshClusterReq {
     string version    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "version", description: "version"}];
     string clusterid  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterid", description: "clusterid"}];
     string meshtype   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "meshtype", description: "meshtype"}];
+    string name       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "name", description: "name"}];
+    string namespace  = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "namespace", description: "namespace"}];
 }
 
 message CreateMeshClusterResp {
