@@ -631,7 +631,7 @@ func (executor *BcsExecutor) monitorPod() {
 						taskRunning = false
 					}
 
-					if reporting%30 == 0 || changed || healthyChanged || message != nil || !taskRunning {
+					if reporting%300 == 0 || changed || healthyChanged || message != nil || !taskRunning {
 						//report data every 30 seconds or pod healthy status changed
 						executor.status = ExecutorStatus_RUNNING
 						logs.Infof("all task is Running, healthy: %t, isChecked: %t, ConsecutiveFailureTimes: %d"+
