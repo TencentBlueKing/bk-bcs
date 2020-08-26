@@ -82,6 +82,7 @@
 docker run -tid --name api-gateway-storage \
     --restart always \
     -e "POSTGRES_USER=kong" \
+    -e "POSTGRES_PASSWORD=xxx" \
     -e "POSTGRES_DB=kong" \
     -p 5432:5432 \
     -v /data/bcs/postgresql/data:/var/lib/postgresql/data \
@@ -214,7 +215,6 @@ curl -XPOST localhost:8001/upstreams -d"name=01.kube-agent.bkbcs.tencent.com" \
 curl -XPOST localhost:8001/upstreams/01.kube-agent.bkbcs.tencent.com/targets \
   -d"target=127.0.0.1:8080" -d"weight=100" -d"tags[]=BCS-K8S-01" \
   -d"tags[]=kubeagent" -d"tags[]=bcs-k8s"
-
 ```
 
 ### 服务注册kong细则
@@ -248,6 +248,55 @@ bcs-gateway-discovery的主要用于对接BCS现有的服务发现机制，利�
 启用kong作为bcs gateway，在部分受限环境中，可以开启bkbcs-auth插件对接bcs-user-manager实现token鉴权。
 可以使用bcs-client命令/接口/bk-bcs-saas等完成token申请。在使用kubectl、bcs-client、独立使用接口时
 附带对应的token实现gateway受限访问。
+
+#### 基于websocket tunnel的跨云扩展
+
+bcs-user-manager承担了bcs-api所有集群管理能力，包括用于跨云穿透的websocket tunnel。
+
+以下为bcs-mesos-driver的穿透规则
+
+```bash
+#mesosdriver service
+curl -XPOST localhost:8001/services \
+  -d"name=mesosdriver-tunnel" -d"url=https://usermanager.bkbcs.tencent.com/mesosdriver/v4/" \
+  -d"tags[]=mesosdriver" -d"tags[]=bcs-mesos"
+#mesosdriver header plugin
+curl -XPOST localhost:8001/services/mesosdriver-tunnel/plugins \
+  -d"name=request-transformer" -d"config.remove.headers=Authorization" -d"config.add.headers=Authorization: Bearer xxxxxxxxxxxxxxxxxxxxxx"
+#mesosdriver route
+curl -XPOST localhost:8001/services/mesosdriver-tunnel/routes \
+  -d"name=mesosdriver-tunnel" -d"protocols[]=http" -d"protocols[]=https" \
+  -d"paths[]=/bcsapi/v4/scheduler/mesos/" -d"paths[]=/bcsapi/v1/" \
+  -d"strip_path=true" \
+  -d"tags[]=mesosdriver" -d"tags[]=bcs-mesos"
+#route plugin for auth
+curl -XPOST localhost:8001/routes/mesosdriver-tunnel/plugins/ \
+  -d"name=bkbcs-auth" -d"config.bkbcs_auth_endpoints=https://usermanager.bkbcs.tencent.com" \
+  -d"config.keepalive=60000" -d"config.module=mesosdriver" -d"config.retry_count=1" -d"config.timeout=3000" \
+  -d"config.token=xxxxxxxxxxxxxxxxxxxxxx"
+#no upstream & target, reuse usermanager upstreams
+```
+
+以下为bcs-kube-agent的穿透规则
+
+```bash
+#kubeagent service
+curl -XPOST localhost:8001/services \
+  -d"name=kube-agent-tunnel" -d"url=https://usermanager.bkbcs.tencent.com/tunnels/clusters/" \
+  -d"tags[]=kubeagent" -d"tags[]=bcs-k8s"
+#kubeagent header plugin
+curl -XPOST localhost:8001/services/kube-agent-tunnel/plugins \
+  -d"name=request-transformer" -d"config.remove.headers=Authorization" -d"config.add.headers=Authorization: Bearer xxxxxxxxxxxxxxxxxxxxxx"
+#kubeagent route
+curl -XPOST localhost:8001/services/kube-agent-tunnel/routes \
+  -d"name=kube-agent-tunnel" -d"protocols[]=http" -d"protocols[]=https" -d"paths[]=/tunnels/clusters/" \
+  -d"strip_path=true" -d"tags[]=kubeagent" -d"tags[]=bcs-k8s"
+#route plugins
+curl -XPOST localhost:8001/routes/kube-agent-tunnel/plugins \
+  -d"name=bkbcs-auth" -d"config.bkbcs_auth_endpoints=https://usermanager.bkbcs.tencent.com" \
+  -d"config.keepalive=60000" -d"config.module=kubeagent" -d"config.retry_count=1" -d"config.timeout=3000" \
+  -d"config.token=xxxxxxxxxxxxxxxxxxxxxx"
+```
 
 ## 正式部署参考流程
 

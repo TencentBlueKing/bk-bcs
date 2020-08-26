@@ -162,7 +162,7 @@ func (act *QueryReleaseAction) queryAppInstanceRelease() (pbcommon.ErrCode, stri
 
 	err := act.sd.DB().
 		Limit(1).
-		Order("Feffect_time DESC").
+		Order("Feffect_time DESC, Fid DESC").
 		Where(&database.AppInstanceRelease{Instanceid: act.appInstance.ID, Cfgsetid: act.req.Cfgsetid}).
 		Find(&sts).Error
 
@@ -199,13 +199,77 @@ func (act *QueryReleaseAction) queryRelease() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *QueryReleaseAction) genConfigsCacheKey(bid, cfgsetid, commitid, appid, clusterid, zoneid string) string {
-	return common.SHA256(bid + ":" + cfgsetid + ":" + commitid + ":" + appid + ":" + clusterid + ":" + zoneid)
+func (act *QueryReleaseAction) genConfigsCacheKey(bid, cfgsetid, commitid, appid, clusterid, zoneid, index string) string {
+	return common.SHA256(bid + ":" + cfgsetid + ":" + commitid + ":" + appid + ":" + clusterid + ":" + zoneid + ":" + index)
+}
+
+func (act *QueryReleaseAction) queryIndexLevelConfigs() (pbcommon.ErrCode, string) {
+	key := act.genConfigsCacheKey(act.req.Bid, act.req.Cfgsetid, act.release.Commitid,
+		act.req.Appid, act.req.Clusterid, act.req.Zoneid, act.req.IP)
+
+	if cache, err := act.configsCache.Get(key); err == nil && cache != nil {
+		act.collector.StatConfigsCache(true)
+		configs := cache.(*pbcommon.Configs)
+
+		logger.V(3).Infof("QueryAppInstanceRelease[%d]| query configs cache hit[%d] success(index-level)", act.req.Seq, len(configs.Content))
+		act.resp.Cid = configs.Cid
+		act.resp.CfgLink = configs.CfgLink
+		act.resp.Content = configs.Content
+		return pbcommon.ErrCode_E_OK, ""
+	}
+	act.collector.StatConfigsCache(false)
+
+	var st database.Configs
+
+	err := act.sd.DB().
+		Where(&database.Configs{Bid: act.req.Bid, Cfgsetid: act.req.Cfgsetid, Commitid: act.release.Commitid}).
+		Where("Fappid = ?", act.req.Appid).
+		Where("Fclusterid = ?", act.req.Clusterid).
+		Where("Fzoneid = ?", act.req.Zoneid).
+		Where("Findex = ?", act.req.IP).
+		Last(&st).Error
+
+	if err != nil {
+		if err != dbsharding.RECORDNOTFOUND {
+			return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
+		}
+		return pbcommon.ErrCode_E_DM_NOT_FOUND, "can't find index level content for this configset!"
+	}
+
+	configs := &pbcommon.Configs{
+		Bid:          st.Bid,
+		Cfgsetid:     st.Cfgsetid,
+		Appid:        st.Appid,
+		Clusterid:    st.Clusterid,
+		Zoneid:       st.Zoneid,
+		Index:        st.Index,
+		Commitid:     st.Commitid,
+		Cid:          st.Cid,
+		CfgLink:      st.CfgLink,
+		Content:      st.Content,
+		Creator:      st.Creator,
+		LastModifyBy: st.LastModifyBy,
+		Memo:         st.Memo,
+		State:        st.State,
+		CreatedAt:    st.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:    st.UpdatedAt.Format("2006-01-02 15:04:05"),
+	}
+
+	newCachekey := act.genConfigsCacheKey(st.Bid, st.Cfgsetid, st.Commitid, st.Appid, st.Clusterid, st.Zoneid, st.Index)
+
+	if err := act.configsCache.Set(newCachekey, configs); err != nil {
+		logger.Warn("QueryAppInstanceRelease[%d]| update local configs cache, %+v", act.req.Seq, err)
+	}
+	act.resp.Cid = configs.Cid
+	act.resp.CfgLink = configs.CfgLink
+	act.resp.Content = configs.Content
+
+	return pbcommon.ErrCode_E_OK, ""
 }
 
 func (act *QueryReleaseAction) queryZoneLevelConfigs() (pbcommon.ErrCode, string) {
 	key := act.genConfigsCacheKey(act.req.Bid, act.req.Cfgsetid, act.release.Commitid,
-		act.req.Appid, act.req.Clusterid, act.req.Zoneid)
+		act.req.Appid, act.req.Clusterid, act.req.Zoneid, "")
 
 	if cache, err := act.configsCache.Get(key); err == nil && cache != nil {
 		act.collector.StatConfigsCache(true)
@@ -226,6 +290,7 @@ func (act *QueryReleaseAction) queryZoneLevelConfigs() (pbcommon.ErrCode, string
 		Where("Fappid = ?", act.req.Appid).
 		Where("Fclusterid = ?", act.req.Clusterid).
 		Where("Fzoneid = ?", act.req.Zoneid).
+		Where("Findex = ''").
 		Last(&st).Error
 
 	if err != nil {
@@ -241,6 +306,7 @@ func (act *QueryReleaseAction) queryZoneLevelConfigs() (pbcommon.ErrCode, string
 		Appid:        st.Appid,
 		Clusterid:    st.Clusterid,
 		Zoneid:       st.Zoneid,
+		Index:        st.Index,
 		Commitid:     st.Commitid,
 		Cid:          st.Cid,
 		CfgLink:      st.CfgLink,
@@ -253,7 +319,7 @@ func (act *QueryReleaseAction) queryZoneLevelConfigs() (pbcommon.ErrCode, string
 		UpdatedAt:    st.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
-	newCachekey := act.genConfigsCacheKey(st.Bid, st.Cfgsetid, st.Commitid, st.Appid, st.Clusterid, st.Zoneid)
+	newCachekey := act.genConfigsCacheKey(st.Bid, st.Cfgsetid, st.Commitid, st.Appid, st.Clusterid, st.Zoneid, st.Index)
 
 	if err := act.configsCache.Set(newCachekey, configs); err != nil {
 		logger.Warn("QueryAppInstanceRelease[%d]| update local configs cache, %+v", act.req.Seq, err)
@@ -267,7 +333,7 @@ func (act *QueryReleaseAction) queryZoneLevelConfigs() (pbcommon.ErrCode, string
 
 func (act *QueryReleaseAction) queryClusterLevelConfigs() (pbcommon.ErrCode, string) {
 	key := act.genConfigsCacheKey(act.req.Bid, act.req.Cfgsetid, act.release.Commitid,
-		act.req.Appid, act.req.Clusterid, "")
+		act.req.Appid, act.req.Clusterid, "", "")
 
 	if cache, err := act.configsCache.Get(key); err == nil && cache != nil {
 		act.collector.StatConfigsCache(true)
@@ -288,6 +354,7 @@ func (act *QueryReleaseAction) queryClusterLevelConfigs() (pbcommon.ErrCode, str
 		Where("Fappid = ?", act.req.Appid).
 		Where("Fclusterid = ?", act.req.Clusterid).
 		Where("Fzoneid = ''").
+		Where("Findex = ''").
 		Last(&st).Error
 
 	if err != nil {
@@ -303,6 +370,7 @@ func (act *QueryReleaseAction) queryClusterLevelConfigs() (pbcommon.ErrCode, str
 		Appid:        st.Appid,
 		Clusterid:    st.Clusterid,
 		Zoneid:       st.Zoneid,
+		Index:        st.Index,
 		Commitid:     st.Commitid,
 		Cid:          st.Cid,
 		CfgLink:      st.CfgLink,
@@ -315,7 +383,7 @@ func (act *QueryReleaseAction) queryClusterLevelConfigs() (pbcommon.ErrCode, str
 		UpdatedAt:    st.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
-	newCachekey := act.genConfigsCacheKey(st.Bid, st.Cfgsetid, st.Commitid, st.Appid, st.Clusterid, st.Zoneid)
+	newCachekey := act.genConfigsCacheKey(st.Bid, st.Cfgsetid, st.Commitid, st.Appid, st.Clusterid, st.Zoneid, st.Index)
 
 	if err := act.configsCache.Set(newCachekey, configs); err != nil {
 		logger.Warn("QueryAppInstanceRelease[%d]| update local configs cache, %+v", act.req.Seq, err)
@@ -328,7 +396,7 @@ func (act *QueryReleaseAction) queryClusterLevelConfigs() (pbcommon.ErrCode, str
 }
 
 func (act *QueryReleaseAction) queryAppLevelConfigs() (pbcommon.ErrCode, string) {
-	key := act.genConfigsCacheKey(act.req.Bid, act.req.Cfgsetid, act.release.Commitid, act.req.Appid, "", "")
+	key := act.genConfigsCacheKey(act.req.Bid, act.req.Cfgsetid, act.release.Commitid, act.req.Appid, "", "", "")
 
 	if cache, err := act.configsCache.Get(key); err == nil && cache != nil {
 		act.collector.StatConfigsCache(true)
@@ -349,6 +417,7 @@ func (act *QueryReleaseAction) queryAppLevelConfigs() (pbcommon.ErrCode, string)
 		Where("Fappid = ?", act.req.Appid).
 		Where("Fclusterid = ''").
 		Where("Fzoneid = ''").
+		Where("Findex = ''").
 		Last(&st).Error
 
 	if err != nil {
@@ -364,6 +433,7 @@ func (act *QueryReleaseAction) queryAppLevelConfigs() (pbcommon.ErrCode, string)
 		Appid:        st.Appid,
 		Clusterid:    st.Clusterid,
 		Zoneid:       st.Zoneid,
+		Index:        st.Index,
 		Commitid:     st.Commitid,
 		Cid:          st.Cid,
 		CfgLink:      st.CfgLink,
@@ -376,7 +446,7 @@ func (act *QueryReleaseAction) queryAppLevelConfigs() (pbcommon.ErrCode, string)
 		UpdatedAt:    st.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
-	newCachekey := act.genConfigsCacheKey(st.Bid, st.Cfgsetid, st.Commitid, st.Appid, st.Clusterid, st.Zoneid)
+	newCachekey := act.genConfigsCacheKey(st.Bid, st.Cfgsetid, st.Commitid, st.Appid, st.Clusterid, st.Zoneid, st.Index)
 
 	if err := act.configsCache.Set(newCachekey, configs); err != nil {
 		logger.Warn("QueryAppInstanceRelease[%d]| update local configs cache, %+v", act.req.Seq, err)
@@ -389,6 +459,16 @@ func (act *QueryReleaseAction) queryAppLevelConfigs() (pbcommon.ErrCode, string)
 }
 
 func (act *QueryReleaseAction) queryConfigs() (pbcommon.ErrCode, string) {
+	if len(act.req.IP) != 0 {
+		errCode, errMsg := act.queryIndexLevelConfigs()
+		if errCode == pbcommon.ErrCode_E_OK {
+			return pbcommon.ErrCode_E_OK, ""
+		}
+		if errCode != pbcommon.ErrCode_E_DM_NOT_FOUND {
+			return errCode, errMsg
+		}
+	}
+
 	errCode, errMsg := act.queryZoneLevelConfigs()
 	if errCode == pbcommon.ErrCode_E_OK {
 		return pbcommon.ErrCode_E_OK, ""

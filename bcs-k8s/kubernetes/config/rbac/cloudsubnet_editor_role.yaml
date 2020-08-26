@@ -1,0 +1,24 @@
+# permissions for end users to edit cloudsubnets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudsubnet-editor-role
+rules:
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - cloudsubnets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - cloudsubnets/status
+  verbs:
+  - get

@@ -14,14 +14,15 @@
 package service
 
 import (
-	"bk-bscp/internal/protocol/accessserver"
-	"bk-bscp/internal/protocol/common"
-	pkgcommon "bk-bscp/pkg/common"
-	"bk-bscp/pkg/logger"
 	"context"
 	"fmt"
 
 	"google.golang.org/grpc"
+
+	"bk-bscp/internal/protocol/accessserver"
+	"bk-bscp/internal/protocol/common"
+	pkgcommon "bk-bscp/pkg/common"
+	"bk-bscp/pkg/logger"
 )
 
 //CreateAppOption all option for create application, all details
@@ -39,6 +40,8 @@ type CreateAppOption struct {
 	Type int32
 	//Creator of operation
 	Creator string
+	//Memo
+	Memo string
 }
 
 //Valid check option is valid at least information
@@ -83,6 +86,7 @@ func (operator *AccessOperator) CreateApp(cxt context.Context, option *CreateApp
 		Name:       option.Name,
 		DeployType: option.Type,
 		Creator:    option.Creator,
+		Memo:       option.Memo,
 	}
 	response, err := operator.Client.CreateApp(cxt, request, grpcOptions...)
 	if err != nil {
@@ -242,21 +246,62 @@ func (operator *AccessOperator) ListApps(cxt context.Context) ([]*common.App, er
 	return response.Apps, nil
 }
 
+//UpdateAppOption all option for update application, all details
+// information for yaml
+type UpdateAppOption struct {
+	//Name app name
+	Name string
+	//Type deployType, 0 is ontainer, 1 is GSE
+	Type int32
+	//Type deployType, 0 is Affectived, 1 is deleted
+	Status int32
+	//Creator of operation
+	Memo string
+}
+
 //UpdateApp update specified application information
 //Args:
 //	appID: specified AppID
 //	option: updated information[now only name, DeployType]
 //return:
 //	error: error info if that happened
-func (operator *AccessOperator) UpdateApp(cxt context.Context, appID string, option *CreateAppOption) error {
+func (operator *AccessOperator) UpdateApp(cxt context.Context, appID string, option *UpdateAppOption) error {
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return err
+	}
+	if business == nil {
+		return fmt.Errorf("no business resource")
+	}
+	app, err := operator.GetAppByAppID(cxt, business.Bid, appID)
+	if err != nil {
+		return err
+	}
+	if app == nil {
+		return fmt.Errorf("no application was found through the id you entered")
+	}
 	request := &accessserver.UpdateAppReq{
 		Seq:        pkgcommon.Sequence(),
-		Bid:        operator.Business,
+		Bid:        business.Bid,
 		Appid:      appID,
-		Name:       option.Name,
-		DeployType: option.Type,
-		Operator:   option.Creator,
+		Operator:   operator.User,
+		Name:       app.Name,
+		Memo:       app.Memo,
+		DeployType: app.DeployType,
+		State:      app.State,
 	}
+	if option.Name != "" {
+		request.Name = option.Name
+	}
+	if option.Memo != "" {
+		request.Memo = option.Memo
+	}
+	if option.Type != -1 {
+		request.DeployType = option.Type
+	}
+	//if option.Status != -1 {
+	//	request.State = option.Status
+	//}
 	grpcOptions := []grpc.CallOption{
 		grpc.WaitForReady(true),
 	}
@@ -267,6 +312,305 @@ func (operator *AccessOperator) UpdateApp(cxt context.Context, appID string, opt
 	}
 	if response.ErrCode != common.ErrCode_E_OK {
 		logger.V(3).Infof("UpdateApp %s success, but response Err, %s", appID, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
+}
+
+//UpdateZoneOption all option for update zone, all details
+// information for yaml
+type UpdateZoneOption struct {
+	//Name app name
+	Name string
+	//Status deployType, 0 is Affectived, 1 is deleted
+	Status int32
+	//Creator of operation
+	Memo string
+}
+
+func (operator *AccessOperator) UpdateZone(cxt context.Context, zoneId string, option *UpdateZoneOption) error {
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return err
+	}
+	if business == nil {
+		return fmt.Errorf("no business resource")
+	}
+	zone, err := operator.innerGetZone(cxt, business.Bid, "", zoneId, "")
+	if err != nil {
+		return err
+	}
+	if zone == nil {
+		return fmt.Errorf("no zone was found through the id you entered")
+	}
+	request := &accessserver.UpdateZoneReq{
+		Seq:      pkgcommon.Sequence(),
+		Bid:      business.Bid,
+		Zoneid:   zoneId,
+		Operator: operator.User,
+		Name:     zone.Name,
+		Memo:     zone.Memo,
+		State:    zone.State,
+	}
+	if option.Name != "" {
+		request.Name = option.Name
+	}
+	if option.Memo != "" {
+		request.Memo = option.Memo
+	}
+	//if option.Status != -1 {
+	//	request.State = option.Status
+	//}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.UpdateZone(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("UpdateZone %s failed, %s", zoneId, err.Error())
+		return err
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("UpdateZone %s success, but response Err, %s", zoneId, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
+}
+
+//UpdateClusterOption all option for update cluster, all details
+// information for yaml
+type UpdateClusterOption struct {
+	//Name app name
+	Name string
+	//Status deployType, 0 is Affectived, 1 is deleted
+	Status int32
+	//Memo
+	Memo string
+}
+
+func (operator *AccessOperator) UpdateCluster(cxt context.Context, clusterId string, option *UpdateClusterOption) error {
+	business, err := operator.GetBusiness(cxt, operator.Business)
+	if err != nil {
+		return err
+	}
+	if business == nil {
+		return fmt.Errorf("no business resource")
+	}
+	cluster, err := operator.GetClusterAllByID(cxt, business.Bid, "", clusterId)
+	if err != nil {
+		return err
+	}
+	if cluster == nil {
+		return fmt.Errorf("no cluster was found through the id you entered")
+	}
+	request := &accessserver.UpdateClusterReq{
+		Seq:       pkgcommon.Sequence(),
+		Bid:       business.Bid,
+		Clusterid: clusterId,
+		Operator:  operator.User,
+		Name:      cluster.Name,
+		Memo:      cluster.Memo,
+		State:     cluster.State,
+	}
+	if option.Name != "" {
+		request.Name = option.Name
+	}
+	if option.Memo != "" {
+		request.Memo = option.Memo
+	}
+	//if option.Status != -1 {
+	//	request.State = option.Status
+	//}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.UpdateCluster(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("UpdateCluster %s failed, %s", clusterId, err.Error())
+		return err
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("UpdateCluster %s success, but response Err, %s", clusterId, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
+}
+
+// UpdateShardingOption all option for update sharding, all details
+// information for yaml
+type ShardingOption struct {
+	DBID   string
+	Key    string
+	DbName string
+	Memo   string
+}
+
+// CreateSharding to create sharding
+func (operator *AccessOperator) CreateSharding(cxt context.Context, option *ShardingOption) error {
+	if option == nil {
+		return fmt.Errorf("create resources content not exist")
+	}
+
+	// create param
+	request := &accessserver.CreateShardingReq{
+		Seq:    pkgcommon.Sequence(),
+		Dbid:   option.DBID,
+		Key:    option.Key,
+		Dbname: option.DbName,
+		Memo:   option.Memo,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.CreateSharding(cxt, request, grpcOptions...)
+	// check result
+	if err != nil {
+		logger.V(3).Infof("CreateSharding %s failed, %s", request, err.Error())
+		return err
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("CreateSharding %s success, but response Err, %s", request, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return err
+}
+
+// UpdateSharding to update sharding by key
+func (operator *AccessOperator) UpdateSharding(cxt context.Context, key string, option *ShardingOption) error {
+	if option == nil {
+		return fmt.Errorf("update resources content not exist")
+	}
+	sharding, err := operator.GetSharding(cxt, key)
+	if err != nil {
+		return err
+	}
+	if sharding == nil {
+		return fmt.Errorf("sharding no exist by you enter key")
+	}
+
+	// create param
+	request := &accessserver.UpdateShardingReq{
+		Seq:    pkgcommon.Sequence(),
+		Dbid:   sharding.Dbid,
+		Key:    key,
+		Dbname: sharding.Dbname,
+		Memo:   sharding.Memo,
+	}
+	if option.DBID != "" {
+		request.Dbid = option.DBID
+	}
+	if option.DbName != "" {
+		request.Dbname = option.DbName
+	}
+	if option.Memo != "" {
+		request.Memo = option.Memo
+	}
+
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.UpdateSharding(cxt, request, grpcOptions...)
+	// check result
+	if err != nil {
+		logger.V(3).Infof("UpdateSharding %s failed, %s", key, err.Error())
+		return err
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("UpdateSharding %s success, but response Err, %s", key, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return err
+}
+
+// UpdateShardingDBOption all option for update shardingdb, all details
+// information for yaml
+type ShardingDBOption struct {
+	Host     string
+	Port     int32
+	User     string
+	Password string
+	Memo     string
+}
+
+// UpdateShardingDB to update shardingdb
+func (operator *AccessOperator) UpdateShardingDB(cxt context.Context, dbid string, option *ShardingDBOption) error {
+	if option == nil {
+		return fmt.Errorf("update resources content not exist")
+	}
+	shardingDB, err := operator.GetShardingDB(cxt, dbid)
+	if err != nil {
+		return err
+	}
+	if shardingDB == nil {
+		return fmt.Errorf("shardingDB no exist by you enter dbid")
+	}
+	// update param
+	request := &accessserver.UpdateShardingDBReq{
+		Seq:      pkgcommon.Sequence(),
+		Dbid:     dbid,
+		Host:     shardingDB.Host,
+		Port:     shardingDB.Port,
+		User:     shardingDB.User,
+		Password: shardingDB.Password,
+		Memo:     shardingDB.Memo,
+	}
+
+	// check update content
+	if option.Host != "" {
+		request.Host = option.Host
+	}
+	if option.Port != 0 {
+		request.Port = option.Port
+	}
+	if option.User != "" {
+		request.User = option.User
+	}
+	if option.Password != "" {
+		request.Password = option.Password
+	}
+	if option.Memo != "" {
+		request.Memo = option.Memo
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.UpdateShardingDB(cxt, request, grpcOptions...)
+	// check result
+	if err != nil {
+		logger.V(3).Infof("UpdateShardingDB %s failed, %s", dbid, err.Error())
+		return err
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("UpdateShardingDB %s success, but response Err, %s", dbid, response.ErrMsg)
+		return fmt.Errorf("%s", response.ErrMsg)
+	}
+	return nil
+}
+
+// CreateShardingDB to create shardingdb
+func (operator *AccessOperator) CreateShardingDB(cxt context.Context, dbid string, option *ShardingDBOption) error {
+	if option == nil {
+		return fmt.Errorf("create resources content not exist")
+	}
+	// create param
+	request := &accessserver.CreateShardingDBReq{
+		Seq:      pkgcommon.Sequence(),
+		Dbid:     dbid,
+		Host:     option.Host,
+		Port:     option.Port,
+		User:     option.User,
+		Password: option.Password,
+		Memo:     option.Memo,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.CreateShardingDB(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("CreateShardingDB %s failed, %s", dbid, err.Error())
+		return err
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("CreateShardingDB %s success, but response Err, %s", dbid, response.ErrMsg)
 		return fmt.Errorf("%s", response.ErrMsg)
 	}
 	return nil
@@ -502,9 +846,40 @@ func (operator *AccessOperator) CreateZone(cxt context.Context, option *accessse
 //return:
 //	cluster: specified logic cluster, nil if not exist
 //	error: error info if that happened
-func (operator *AccessOperator) GetZone(cxt context.Context, appName, clusterName, zoneName string) (*common.Zone, error) {
+func (operator *AccessOperator) GetZoneByName(cxt context.Context, appName, zoneName string) (*common.Zone, error) {
 	//do not supported
-	return nil, nil
+	business, app, err := getBusinessAndApp(operator, operator.Business, appName)
+	if err != nil {
+		return nil, err
+	}
+	return operator.innerGetZone(cxt, business.Bid, app.Appid, "", zoneName)
+}
+
+func (operator *AccessOperator) innerGetZone(cxt context.Context, bID, appID, zoneID, zoneName string) (*common.Zone, error) {
+	request := &accessserver.QueryZoneReq{
+		Seq:    pkgcommon.Sequence(),
+		Bid:    bID,
+		Appid:  appID,
+		Zoneid: zoneID,
+		Name:   zoneName,
+	}
+	grpcOptions := []grpc.CallOption{
+		grpc.WaitForReady(true),
+	}
+	response, err := operator.Client.QueryZone(cxt, request, grpcOptions...)
+	if err != nil {
+		logger.V(3).Infof("GetZone failed, %s", err.Error())
+		return nil, err
+	}
+	if response.ErrCode == common.ErrCode_E_DM_NOT_FOUND {
+		logger.V(3).Infof("GetZone, no relative Zone %s", zoneID)
+		return nil, nil
+	}
+	if response.ErrCode != common.ErrCode_E_OK {
+		logger.V(3).Infof("GetZone successfully, but response Err, %s", response.ErrMsg)
+		return nil, fmt.Errorf("%s", response.ErrMsg)
+	}
+	return response.Zone, nil
 }
 
 //GetZoneAllByID get specified zone information

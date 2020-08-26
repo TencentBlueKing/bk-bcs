@@ -2,6 +2,8 @@ module github.com/Tencent/bk-bcs/bcs-k8s/kubernetes
 
 go 1.14
 
+replace github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ./
+
 require (
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/go-logr/logr v0.2.0

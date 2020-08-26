@@ -78,7 +78,7 @@ func (c *config) check() error {
 	c.viper.SetDefault("metrics.endpoint", ":9100")
 
 	c.viper.BindEnv("server.queryNewestLimit", c.envName("NEWEST_LIMIT"))
-	c.viper.SetDefault("server.queryNewestLimit", database.BSCPQUERYLIMIT)
+	c.viper.SetDefault("server.queryNewestLimit", database.BSCPQUERYLIMITLB)
 
 	c.viper.BindEnv("etcdCluster.endpoints", c.envName("ETCD_ENDPOINTS"))
 	if !c.viper.IsSet("etcdCluster.endpoints") {

@@ -23,8 +23,8 @@ var getCmd *cobra.Command
 func init() {
 	getCmd = &cobra.Command{
 		Use:   "get",
-		Short: "get specified resource",
-		Long:  "subcommand for getting all resources, including app/cluster/zone/configset/commit/release",
+		Short: "Get specified resource detail",
+		Long:  "Get specified resource detail",
 	}
 }
 
@@ -32,9 +32,15 @@ func init() {
 func InitCommands() []*cobra.Command {
 	//init all sub resource command
 	getCmd.AddCommand(getBusinessCmd())
-	getCmd.AddCommand(getCommitCmd())
+	getCmd.AddCommand(getShardingDBCmd())
+	getCmd.AddCommand(getShardingCmd())
+	getCmd.AddCommand(getApplicationCmd())
+	getCmd.AddCommand(getClusterCmd())
+	getCmd.AddCommand(getZoneCmd())
+	getCmd.AddCommand(getConfigSetCmd())
+	getCmd.AddCommand(getMultiCommitCmd())
 	getCmd.AddCommand(getStrategyCmd())
-	getCmd.AddCommand(getReleaseCmd())
+	getCmd.AddCommand(getMultiReleaseCmd())
 	getCmd.AddCommand(getInstanceCmd())
 	return []*cobra.Command{getCmd}
 }
