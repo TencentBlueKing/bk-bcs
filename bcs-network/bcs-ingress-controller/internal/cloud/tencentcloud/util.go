@@ -147,8 +147,8 @@ func transIngressCertificate(tc *networkextensionv1.IngressListenerCertificate) 
 	return certInput
 }
 
-func getIPPortKey(IP string, port int) string {
-	return IP + ":" + strconv.Itoa(port)
+func getIPPortKey(ip string, port int) string {
+	return ip + ":" + strconv.Itoa(port)
 }
 
 func getTargets(tg *networkextensionv1.ListenerTargetGroup) []*tclb.Target {
