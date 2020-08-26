@@ -504,7 +504,9 @@ func init() {
 	proto.RegisterType((*IPClaim)(nil), "common.IPClaim")
 }
 
-func init() { proto.RegisterFile("common.proto", fileDescriptor_555bd8c177793206) }
+func init() {
+	proto.RegisterFile("common.proto", fileDescriptor_555bd8c177793206)
+}
 
 var fileDescriptor_555bd8c177793206 = []byte{
 	// 885 bytes of a gzipped FileDescriptorProto

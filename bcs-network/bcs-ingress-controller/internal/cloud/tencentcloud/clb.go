@@ -88,13 +88,16 @@ func (c *Clb) DescribeLoadBalancer(lbID string) (*cloud.LoadBalanceObject, error
 // EnsureListener ensure listener to cloud, and get listener info
 func (c *Clb) EnsureListener(listener *networkextensionv1.Listener) (string, error) {
 	cloudListener, err := c.getListenerInfoByPort(listener.Spec.LoadbalancerID, listener.Spec.Port)
-	if errors.Is(err, cloud.ErrListenerNotFound) {
-		// to create listener
-		listenerID, err := c.createListner(listener)
-		if err != nil {
-			return "", err
+	if err != nil {
+		if errors.Is(err, cloud.ErrListenerNotFound) {
+			// to create listener
+			listenerID, err := c.createListner(listener)
+			if err != nil {
+				return "", err
+			}
+			return listenerID, nil
 		}
-		return listenerID, nil
+		return "", err
 	}
 
 	blog.V(5).Infof("new listener %+v", listener)
@@ -128,13 +131,16 @@ func (c *Clb) DeleteListener(listener *networkextensionv1.Listener) error {
 // EnsureSegmentListener ensure listener with port segment
 func (c *Clb) EnsureSegmentListener(listener *networkextensionv1.Listener) (string, error) {
 	cloudListener, err := c.getSegmentListenerInfoByPort(listener.Spec.LoadbalancerID, listener.Spec.Port)
-	if errors.Is(err, cloud.ErrListenerNotFound) {
-		// to create listener
-		listenerID, err := c.createSegmentListener(listener)
-		if err != nil {
-			return "", err
+	if err != nil {
+		if errors.Is(err, cloud.ErrListenerNotFound) {
+			// to create listener
+			listenerID, err := c.createSegmentListener(listener)
+			if err != nil {
+				return "", err
+			}
+			return listenerID, nil
 		}
-		return listenerID, nil
+		return "", nil
 	}
 
 	blog.V(5).Infof("new listener %+v", listener)

@@ -126,7 +126,16 @@ service CloudNetservice {
             summary: "清理节点上所有ip地址"
         };
     }
-    rpc ListIP(ListIPsReq) returns (ListIPsResp) {}
+    rpc ListIP(ListIPsReq) returns (ListIPsResp) {
+        option (google.api.http) = {
+            post: "/v1/ip/list"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询ip列表"
+            summary: "查询ip列表"
+        };
+    }
 }
 
 message AddSubnetReq {
