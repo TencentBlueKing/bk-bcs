@@ -115,8 +115,16 @@ message ListMeshClusterReq {
 }
 
 message MeshCluster {
-    string spec = 1;
-    string status = 2;
+    string version   = 1;
+    string clusterid = 2;
+    map<string, InstallStatus> components = 3;
+}
+
+message InstallStatus {
+    string name      = 1;
+    string namespace = 2;
+    string status    = 3;
+    string message   = 4;
 }
 
 message ListMeshClusterResp {

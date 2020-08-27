@@ -307,7 +307,7 @@ func RegisterMeshManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_MeshManager_CreateMeshCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"meshmanager", "v1", "meshcluster"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_MeshManager_CreateMeshCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcs-mesh-manager", "v1", "meshcluster"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_MeshManager_DeleteMeshCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"meshmanager", "v1", "meshcluster"}, "", runtime.AssumeColonVerbOpt(true)))
 

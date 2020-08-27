@@ -25,6 +25,7 @@ import (
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/controllers"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -97,7 +98,7 @@ func main() {
 		}
 	}()
 
-	/*// New Service
+	// New Service
 	service := micro.NewService(
 		micro.Name("meshmanager.bkbcs.tencent.com"),
 		micro.Version("latest"),
@@ -115,5 +116,5 @@ func main() {
 	// Run service
 	if err := service.Run(); err != nil {
 		log.Fatal(err)
-	}*/
+	}
 }
