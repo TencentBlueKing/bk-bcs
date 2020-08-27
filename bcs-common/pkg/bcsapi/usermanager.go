@@ -16,14 +16,33 @@ package bcsapi
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 )
 
 const (
 	usermanagerPrefix = types.BCS_MODULE_USERMANAGER + "/v1"
 )
+
+// UserManager http API SDK difinition
+type UserManager interface {
+	// ListAllClusters get all registed kubernetes api-server
+	ListAllClusters() ([]*ClusterCredential, error)
+}
+
+// NewUserManager create UserManager SDK implementation
+func NewUserManager(config *Config) UserManager {
+	c := &UserManagerCli{
+		Config: config,
+	}
+	if config.TLSConfig != nil {
+		c.Client = restclient.NewRESTClientWithTLS(config.TLSConfig)
+	} else {
+		c.Client = restclient.NewRESTClient()
+	}
+	return c
+}
 
 //ClusterCredential holds one kubernetes api-server connection credential
 type ClusterCredential struct {
@@ -37,6 +56,7 @@ type ClusterCredential struct {
 //UserManagerCli client for bcs-user-manager
 type UserManagerCli struct {
 	Config *Config
+	Client restclient.RESTClient
 }
 
 func (cli *UserManagerCli) getRequestPath() string {
@@ -47,27 +67,24 @@ func (cli *UserManagerCli) getRequestPath() string {
 	return fmt.Sprintf("/%s/", usermanagerPrefix)
 }
 
-//ListClusters get all registed kubernetes api-server
+// ListAllClusters get all registed kubernetes api-server
 func (cli *UserManagerCli) ListAllClusters() ([]*ClusterCredential, error) {
-	prefix := cli.getRequestPath()
-	req := fmt.Sprintf("%s%s%s", cli.Config.Host, prefix, "clusters/credentials")
-	agent := newGet(cli.Config, req)
-	res, body, errs := agent.Query(nil).End()
-	if errs != nil {
-		return nil, errs[0]
-	}
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s", res.Status)
-	}
-	var basic BasicResponse
-	if err := json.Unmarshal([]byte(body), &basic); err != nil {
+	var response BasicResponse
+	err := bkbcsSetting(c.Client.Get(), c.Config).
+		WithEndpoints([]string{c.Config.Host}).
+		WithBasePath(c.getRequestPath()).
+		SubPathf("/clusters/credentials").
+		Do().
+		Into(&response)
+	if err != nil {
 		return nil, err
 	}
-	if !basic.Result {
-		return nil, fmt.Errorf("%s", basic.Message)
+	if !response.Result {
+		return nil, fmt.Errorf(response.Message)
 	}
+	//decode specified cluster credentials
 	clusterMap := make(map[string]*ClusterCredential)
-	if err := json.Unmarshal(basic.Data, &clusterMap); err != nil {
+	if err := json.Unmarshal(response.Data, &clusterMap); err != nil {
 		return nil, fmt.Errorf("cluster data decode err: %s", err.Error())
 	}
 	if len(clusterMap) == 0 {
