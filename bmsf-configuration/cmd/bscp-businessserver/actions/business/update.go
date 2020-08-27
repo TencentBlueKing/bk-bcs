@@ -86,7 +86,11 @@ func (act *UpdateAction) verify() error {
 		return errors.New("invalid params, operator too long")
 	}
 
-	if len(act.req.Name) > database.BSCPNAMELENLIMIT {
+	length = len(act.req.Name)
+	if length == 0 {
+		return errors.New("invalid params, name missing")
+	}
+	if length > database.BSCPNAMELENLIMIT {
 		return errors.New("invalid params, name too long")
 	}
 

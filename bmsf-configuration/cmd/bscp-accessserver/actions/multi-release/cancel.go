@@ -103,7 +103,7 @@ func (act *CancelAction) cancel() (pbcommon.ErrCode, string) {
 		Operator:       act.req.Operator,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeoutLT"))
 	defer cancel()
 
 	logger.V(2).Infof("CancelMultiRelease[%d]| request to businessserver CancelMultiRelease, %+v", act.req.Seq, r)

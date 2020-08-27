@@ -37,17 +37,19 @@ type SignallingChannel struct {
 
 	businessName string
 	appName      string
+	path         string
 
 	// config handler.
 	handler *Handler
 }
 
 // NewSignallingChannel creates new SignallingChannel.
-func NewSignallingChannel(viper *viper.Viper, businessName, appName string, handler *Handler) *SignallingChannel {
+func NewSignallingChannel(viper *viper.Viper, businessName, appName, path string, handler *Handler) *SignallingChannel {
 	return &SignallingChannel{
 		viper:        viper,
 		businessName: businessName,
 		appName:      appName,
+		path:         path,
 		handler:      handler,
 	}
 }
@@ -75,7 +77,9 @@ func (sc *SignallingChannel) access() ([]string, error) {
 	}
 	defer c.Close()
 
-	sidecarLabels := &strategy.SidecarLabels{Labels: sc.viper.GetStringMapString(fmt.Sprintf("appmod.%s_%s.labels", sc.businessName, sc.appName))}
+	modKey := ModKey(sc.businessName, sc.appName, sc.path)
+
+	sidecarLabels := &strategy.SidecarLabels{Labels: sc.viper.GetStringMapString(fmt.Sprintf("appmod.%s.labels", modKey))}
 	labels, err := json.Marshal(sidecarLabels)
 	if err != nil {
 		return nil, err
@@ -83,11 +87,11 @@ func (sc *SignallingChannel) access() ([]string, error) {
 
 	r := &pb.AccessReq{
 		Seq:       common.Sequence(),
-		Bid:       sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", sc.businessName, sc.appName)),
-		Appid:     sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", sc.businessName, sc.appName)),
-		Clusterid: sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", sc.businessName, sc.appName)),
-		Zoneid:    sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", sc.businessName, sc.appName)),
-		Dc:        sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.dc", sc.businessName, sc.appName)),
+		Bid:       sc.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+		Appid:     sc.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+		Clusterid: sc.viper.GetString(fmt.Sprintf("appmod.%s.clusterid", modKey)),
+		Zoneid:    sc.viper.GetString(fmt.Sprintf("appmod.%s.zoneid", modKey)),
+		Dc:        sc.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 		IP:        sc.viper.GetString("appinfo.ip"),
 		Labels:    string(labels),
 	}
@@ -95,7 +99,7 @@ func (sc *SignallingChannel) access() ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), sc.viper.GetDuration("connserver.calltimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("SignallingChannel[%s %s]| request to connserver Access, %+v", sc.businessName, sc.appName, r)
+	logger.V(2).Infof("SignallingChannel[%s %s %s]| request to connserver Access, %+v", sc.businessName, sc.appName, sc.path, r)
 
 	resp, err := client.Access(ctx, r)
 	if err != nil {
@@ -116,8 +120,10 @@ func (sc *SignallingChannel) access() ([]string, error) {
 }
 
 func (sc *SignallingChannel) ping(stream pb.Connection_SignallingChannelClient) error {
+	modKey := ModKey(sc.businessName, sc.appName, sc.path)
+
 	// sidecar labels.
-	sidecarLabels := &strategy.SidecarLabels{Labels: sc.viper.GetStringMapString(fmt.Sprintf("appmod.%s_%s.labels", sc.businessName, sc.appName))}
+	sidecarLabels := &strategy.SidecarLabels{Labels: sc.viper.GetStringMapString(fmt.Sprintf("appmod.%s.labels", modKey))}
 	labels, err := json.Marshal(sidecarLabels)
 	if err != nil {
 		return err
@@ -132,11 +138,11 @@ func (sc *SignallingChannel) ping(stream pb.Connection_SignallingChannelClient) 
 		Seq: common.Sequence(),
 		Cmd: pb.SignallingChannelCmd_SCCMD_C2S_PING,
 		CmdPing: &pb.SCCMDPing{
-			Bid:       sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", sc.businessName, sc.appName)),
-			Appid:     sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", sc.businessName, sc.appName)),
-			Clusterid: sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", sc.businessName, sc.appName)),
-			Zoneid:    sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", sc.businessName, sc.appName)),
-			Dc:        sc.viper.GetString(fmt.Sprintf("appmod.%s_%s.dc", sc.businessName, sc.appName)),
+			Bid:       sc.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+			Appid:     sc.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+			Clusterid: sc.viper.GetString(fmt.Sprintf("appmod.%s.clusterid", modKey)),
+			Zoneid:    sc.viper.GetString(fmt.Sprintf("appmod.%s.zoneid", modKey)),
+			Dc:        sc.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 			IP:        sc.viper.GetString("appinfo.ip"),
 			Labels:    string(labels),
 			Timeout:   sessionTimeout,
@@ -149,31 +155,31 @@ func (sc *SignallingChannel) ping(stream pb.Connection_SignallingChannelClient) 
 func (sc *SignallingChannel) pinging(ctx context.Context, switchCh chan struct{}, stream pb.Connection_SignallingChannelClient) error {
 	// ping at first.
 	if err := sc.ping(stream); err != nil {
-		logger.Error("SignallingChannel[%s %s]| pinging failed at first, switch stream, %+v", sc.businessName, sc.appName, err)
+		logger.Error("SignallingChannel[%s %s %s]| pinging failed at first, switch stream, %+v", sc.businessName, sc.appName, sc.path, err)
 		switchCh <- struct{}{}
 		return err
 	}
 
 	// keep pinging.
 	for {
-		if sc.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName)) {
-			logger.Info("SignallingChannel[%s %s]| signalling stop pinging now!", sc.businessName, sc.appName)
+		if sc.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(sc.businessName, sc.appName, sc.path))) {
+			logger.Info("SignallingChannel[%s %s %s]| signalling stop pinging now!", sc.businessName, sc.appName, sc.path)
 			switchCh <- struct{}{}
 			return nil
 		}
 
 		select {
 		case <-ctx.Done():
-			logger.Info("SignallingChannel[%s %s]| cancel pinging now.", sc.businessName, sc.appName)
+			logger.Info("SignallingChannel[%s %s %s]| cancel pinging now.", sc.businessName, sc.appName, sc.path)
 			return nil
 
 		case <-time.After(sc.viper.GetDuration("sidecar.sessionTimeout")):
 			if err := sc.ping(stream); err != nil {
-				logger.Error("SignallingChannel[%s %s]| pinging failed, switch stream, %+v", sc.businessName, sc.appName, err)
+				logger.Error("SignallingChannel[%s %s %s]| pinging failed, switch stream, %+v", sc.businessName, sc.appName, sc.path, err)
 				switchCh <- struct{}{}
 				return err
 			}
-			logger.Info("SignallingChannel[%s %s]| CMD -- sent PING.", sc.businessName, sc.appName)
+			logger.Info("SignallingChannel[%s %s %s]| CMD -- sent PING.", sc.businessName, sc.appName, sc.path)
 		}
 	}
 }
@@ -191,8 +197,8 @@ func (sc *SignallingChannel) signalling(ctx context.Context, switchCh chan struc
 	}(ctx, &stopRecving)
 
 	for {
-		if stopRecving || sc.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName)) {
-			logger.Info("SignallingChannel[%s %s]| cancel and stop recving now.", sc.businessName, sc.appName)
+		if stopRecving || sc.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(sc.businessName, sc.appName, sc.path))) {
+			logger.Info("SignallingChannel[%s %s %s]| cancel and stop recving now.", sc.businessName, sc.appName, sc.path)
 			stream.CloseSend()
 			switchCh <- struct{}{}
 			break
@@ -201,14 +207,14 @@ func (sc *SignallingChannel) signalling(ctx context.Context, switchCh chan struc
 		// TODO cancel quiet stream.
 		resp, err := stream.Recv()
 		if err == io.EOF {
-			logger.Info("SignallingChannel[%s %s]| stream recv closing now.", sc.businessName, sc.appName)
+			logger.Info("SignallingChannel[%s %s %s]| stream recv closing now.", sc.businessName, sc.appName, sc.path)
 			stream.CloseSend()
 			switchCh <- struct{}{}
 			break
 		}
 
 		if err != nil {
-			logger.Info("SignallingChannel[%s %s]| stream recv %+v.", sc.businessName, sc.appName, err)
+			logger.Info("SignallingChannel[%s %s %s]| stream recv %+v.", sc.businessName, sc.appName, sc.path, err)
 			switchCh <- struct{}{}
 			return err
 		}
@@ -216,22 +222,22 @@ func (sc *SignallingChannel) signalling(ctx context.Context, switchCh chan struc
 		// process commands from connserver.
 		switch resp.Cmd {
 		case pb.SignallingChannelCmd_SCCMD_S2C_PONG:
-			logger.Info("SignallingChannel[%s %s]| CMD -- recviced PONG.", sc.businessName, sc.appName)
+			logger.Info("SignallingChannel[%s %s %s]| CMD -- recviced PONG.", sc.businessName, sc.appName, sc.path)
 
 		case pb.SignallingChannelCmd_SCCMD_S2C_PUSH_NOTIFICATION:
-			logger.Info("SignallingChannel[%s %s]| CMD -- recviced PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, resp.CmdPush)
+			logger.Info("SignallingChannel[%s %s %s]| CMD -- recviced PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, sc.path, resp.CmdPush)
 			go sc.handler.Handle(resp.CmdPush)
 
 		case pb.SignallingChannelCmd_SCCMD_S2C_PUSH_ROLLBACK_NOTIFICATION:
-			logger.Info("SignallingChannel[%s %s]| CMD -- recviced ROLLBACK PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, resp.CmdRollback)
+			logger.Info("SignallingChannel[%s %s %s]| CMD -- recviced ROLLBACK PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, sc.path, resp.CmdRollback)
 			go sc.handler.Handle(resp.CmdRollback)
 
 		case pb.SignallingChannelCmd_SCCMD_S2C_PUSH_RELOAD_NOTIFICATION:
-			logger.Info("SignallingChannel[%s %s]| CMD -- recviced RELOAD PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, resp.CmdReload)
+			logger.Info("SignallingChannel[%s %s %s]| CMD -- recviced RELOAD PUBLISH NOTIFICATION, %+v", sc.businessName, sc.appName, sc.path, resp.CmdReload)
 			go sc.handler.Handle(resp.CmdReload)
 
 		default:
-			logger.Error("SignallingChannel[%s %s]| unknow signalling channel cmd[%+v]!", sc.businessName, sc.appName, resp.Cmd)
+			logger.Error("SignallingChannel[%s %s %s]| unknow signalling channel cmd[%+v]!", sc.businessName, sc.appName, sc.path, resp.Cmd)
 		}
 	}
 
@@ -255,7 +261,7 @@ func (sc *SignallingChannel) Setup() {
 		// access now.
 		nodes, err := sc.access()
 		if err != nil {
-			logger.Error("SignallingChannel[%s %s]| access, %+v", sc.businessName, sc.appName, err)
+			logger.Error("SignallingChannel[%s %s %s]| access, %+v", sc.businessName, sc.appName, sc.path, err)
 			continue
 		}
 
@@ -265,8 +271,8 @@ func (sc *SignallingChannel) Setup() {
 		var stream pb.Connection_SignallingChannelClient
 
 		isSetupSuccess := false
-		if sc.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName)) {
-			logger.Info("SignallingChannel[%s %s]| signalling stop now!", sc.businessName, sc.appName)
+		if sc.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(sc.businessName, sc.appName, sc.path))) {
+			logger.Info("SignallingChannel[%s %s %s]| signalling stop now!", sc.businessName, sc.appName, sc.path)
 			return
 		}
 
@@ -279,7 +285,7 @@ func (sc *SignallingChannel) Setup() {
 			// dial a new connection with the node.
 			c, err := grpc.Dial(node, opts...)
 			if err != nil {
-				logger.Error("SignallingChannel[%s %s]| can't dial connserver node[%+v], %+v, try next now.", sc.businessName, sc.appName, node, err)
+				logger.Error("SignallingChannel[%s %s %s]| can't dial connserver node[%+v], %+v, try next now.", sc.businessName, sc.appName, sc.path, node, err)
 				continue
 			}
 			conn = c
@@ -288,11 +294,11 @@ func (sc *SignallingChannel) Setup() {
 			// setup a signalling channel stream now.
 			s, err := client.SignallingChannel(context.Background())
 			if err != nil {
-				logger.Error("SignallingChannel[%s %s]| can't setup a signalling channel with node[%+v], %+v", sc.businessName, sc.appName, node, err)
+				logger.Error("SignallingChannel[%s %s %s]| can't setup a signalling channel with node[%+v], %+v", sc.businessName, sc.appName, sc.path, node, err)
 				conn.Close()
 				continue
 			}
-			logger.Info("SignallingChannel[%s %s]| setup a new signalling channel with node[%+v] success.", sc.businessName, sc.appName, node)
+			logger.Info("SignallingChannel[%s %s %s]| setup a new signalling channel with node[%+v] success.", sc.businessName, sc.appName, sc.path, node)
 
 			// setup stream success.
 			stream = s
@@ -301,7 +307,7 @@ func (sc *SignallingChannel) Setup() {
 		}
 
 		if !isSetupSuccess {
-			logger.Error("SignallingChannel[%s %s]| can't setup a signalling channel finally, try again later.", sc.businessName, sc.appName)
+			logger.Error("SignallingChannel[%s %s %s]| can't setup a signalling channel finally, try again later.", sc.businessName, sc.appName, sc.path)
 			continue
 		}
 
@@ -316,7 +322,7 @@ func (sc *SignallingChannel) Setup() {
 
 		// stream error, switch now.
 		<-switchCh
-		logger.Info("SignallingChannel[%s %s]| cancel signalling gCoroutines and switch stream now.", sc.businessName, sc.appName)
+		logger.Info("SignallingChannel[%s %s %s]| cancel signalling gCoroutines and switch stream now.", sc.businessName, sc.appName, sc.path)
 
 		// cancel signalling gCoroutines.
 		cancel()
@@ -326,6 +332,6 @@ func (sc *SignallingChannel) Setup() {
 
 // Close stops the signalling and handlers.
 func (sc *SignallingChannel) Close() {
-	sc.viper.Set(fmt.Sprintf("appmod.%s_%s.stop", sc.businessName, sc.appName), true)
-	logger.Info("SignallingChannel[%s %s]| mark signalling stop flag done!", sc.businessName, sc.appName)
+	sc.viper.Set(fmt.Sprintf("appmod.%s.stop", ModKey(sc.businessName, sc.appName, sc.path)), true)
+	logger.Info("SignallingChannel[%s %s %s]| mark signalling stop flag done!", sc.businessName, sc.appName, sc.path)
 }

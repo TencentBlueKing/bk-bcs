@@ -126,7 +126,7 @@ message InjectReq {
 		json_schema: {
 			title: "InjectReq"
 			description: "实例标签信息注入请求"
-			required: ["seq", "businessName", "appName", "labels"]
+			required: ["seq", "businessName", "appName", "path", "labels"]
 		}
         example: { value: '{ "seq": "1", "businessName": "business", "appName": "app", "labels": {"k1": "v1", "k2": "v2"}}' }
 	};
@@ -134,7 +134,8 @@ message InjectReq {
     uint64              seq          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
     string              businessName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
     string              appName      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
-    map<string, string> labels       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望注入的实例标签集合", description: "JSON序列化总长度限制为1024"}];
+    string              path         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
+    map<string, string> labels       = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望注入的实例标签集合", description: "JSON序列化总长度限制为1024"}];
 }
 
 message InjectResp {
@@ -157,7 +158,7 @@ message WatchReloadReq {
 		json_schema: {
 			title: "WatchReloadReq"
 			description: "订阅Reload事件请求"
-			required: ["seq", "businessName", "appName"]
+			required: ["seq", "businessName", "appName", "path"]
 		}
         example: { value: '{ "seq": "1", "businessName": "business", "appName": "app"}' }
 	};
@@ -165,6 +166,7 @@ message WatchReloadReq {
     uint64 seq          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
     string businessName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
     string appName      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
+    string path         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
 }
 
 message WatchReloadResp {
@@ -193,7 +195,7 @@ message ReportReloadReq {
 		json_schema: {
 			title: "ReportReloadReq"
 			description: "Reload执行上报请求"
-			required: ["seq", "businessName", "appName", "reloadTime", "reloadCode" "reloadMsg"]
+			required: ["seq", "businessName", "appName", "path", "reloadTime", "reloadCode" "reloadMsg"]
 		}
         example: { value: '{ "seq": "1", "businessName": "business", "appName": "app", "releaseid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "multiReleaseid": "0b67a798-e9c1-11e9-8c23-525400f99278", "reloadTime": "2019-08-29 17:18:22", "reloadCode": 0, "reloadMsg":"SUCCESS"}' }
 	};
@@ -201,11 +203,12 @@ message ReportReloadReq {
     uint64 seq            = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
     string businessName   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
     string appName        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
-    string releaseid      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
-    string multiReleaseid = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID(组模式)", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
-    string reloadTime     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本Reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
-    int32  reloadCode     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误码", description: ""}];
-    string reloadMsg      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误信息", description: ""}];
+    string path           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
+    string releaseid      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
+    string multiReleaseid = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID(组模式)", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
+    string reloadTime     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本Reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
+    int32  reloadCode     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误码", description: ""}];
+    string reloadMsg      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误信息", description: ""}];
 }
 
 message ReportReloadResp {

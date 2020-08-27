@@ -308,7 +308,8 @@ func (act *RollbackAction) Do() error {
 			if errCode, errMsg := act.rollbackBCSMode(releaseid); errCode != pbcommon.ErrCode_E_OK {
 				return act.Err(errCode, errMsg)
 			}
-		} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) {
+		} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
+			act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
 			// gse plugin sidecar mode.
 
 			// rollback current release, mark ROLLBACKED in data level.
@@ -320,9 +321,6 @@ func (act *RollbackAction) Do() error {
 			if errCode, errMsg := act.rollbackGSEPluginMode(releaseid); errCode != pbcommon.ErrCode_E_OK {
 				return act.Err(errCode, errMsg)
 			}
-		} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-			// gse mode.
-			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "not support deploy publish mode")
 		} else {
 			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "unknow deploy type")
 		}

@@ -14,12 +14,13 @@
 package list
 
 import (
-	"bk-bscp/cmd/bscp-client/cmd/utils"
-	"bk-bscp/cmd/bscp-client/option"
-	"bk-bscp/cmd/bscp-client/service"
 	"context"
 
 	"github.com/spf13/cobra"
+
+	"bk-bscp/cmd/bscp-client/cmd/utils"
+	"bk-bscp/cmd/bscp-client/option"
+	"bk-bscp/cmd/bscp-client/service"
 )
 
 //listLogicClusterCmd: client list cluster
@@ -27,40 +28,32 @@ func listConfigSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "configset",
 		Aliases: []string{"cfgset"},
-		Short:   "list configset",
-		Long:    "list all ConfigSet information under application",
-		Example: `
-	bscp-client list configset --business somegame --app gameserver
-	bscp-client list cfgset --business somegame --app gameserver
-		 `,
-		RunE: handleListConfigSet,
+		Short:   "List configset",
+		Long:    "List all ConfigSet information under application",
+		RunE:    handleListConfigSet,
 	}
 	cmd.Flags().StringP("app", "a", "", "application name that ConfigSet belongs to")
-	cmd.MarkFlagRequired("app")
 	return cmd
 }
 
-//listCommitCmd: client list commit
-func listCommitCmd() *cobra.Command {
+//listMultiCommitCmd: client list commit
+func listMultiCommitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "commit",
 		Aliases: []string{"ci"},
-		Short:   "list commit",
-		Long:    "list all Commit information under specified ConfigSet",
-		Example: `
-	bscp-client list commit --business somegame --app gameserver --cfgset some
-	bscp-client list ci --business somegame -a gameserver -c some
-		 `,
-		RunE: handleListCommits,
+		Short:   "List commit",
+		Long:    "List all Commit information under specified Application",
+		RunE:    handleListMultiCommits,
 	}
-	cmd.Flags().StringP("app", "a", "", "application name that ConfigSet belongs to")
-	cmd.Flags().StringP("cfgset", "c", "", "ConfigSet name that Commits belongs to")
-	cmd.MarkFlagRequired("app")
-	cmd.MarkFlagRequired("cfgset")
+	cmd.Flags().StringP("app", "a", "", "application name that commit belongs to")
 	return cmd
 }
 
-func handleListCommits(cmd *cobra.Command, args []string) error {
+func handleListMultiCommits(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create app operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {
@@ -70,38 +63,32 @@ func handleListCommits(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cfgSetName, err := cmd.Flags().GetString("cfgset")
-	if err != nil {
-		return err
-	}
 	business, app, err := utils.GetBusinessAndApp(operator, operator.Business, appName)
 	if err != nil {
 		return err
 	}
-	configSet, err := operator.GetConfigSet(context.TODO(), appName, cfgSetName)
-	if err != nil {
-		return err
-	}
-	if configSet == nil {
-		cmd.Printf("Found no ConfigSet resource.\n")
-		return nil
-	}
-
 	//list all datas if exists
-	commits, err := operator.ListCommitsAllByID(context.TODO(), business.Bid, app.Appid, cfgSetName)
+	multiCommits, err := operator.ListMultiCommitsAllByAppID(context.TODO(), business.Bid, app.Appid)
 	if err != nil {
 		return err
 	}
-	if commits == nil {
+	if multiCommits == nil {
 		cmd.Printf("Found no Commit resource.\n")
 		return nil
 	}
 	//format output
-	utils.PrintCommits(commits, business, app, configSet)
+	utils.PrintMultiCommits(multiCommits, business, app)
+	cmd.Println()
+	cmd.Printf("\t(use \"bk-bscp-client get commit --id <commitid>\" to get commit detail)\n")
+	cmd.Printf("\t(use \"bk-bscp-client release --name <releaseName> --commitid <commitid> --strategy <strategyName> --memo \"this is a example\"\" to create release to publish)\n\n")
 	return nil
 }
 
 func handleListConfigSet(cmd *cobra.Command, args []string) error {
+	err := option.SetGlobalVarByName(cmd, "app")
+	if err != nil {
+		return err
+	}
 	//get global command info and create app operator
 	operator := service.NewOperator(option.GlobalOptions)
 	if err := operator.Init(option.GlobalOptions.ConfigFile); err != nil {

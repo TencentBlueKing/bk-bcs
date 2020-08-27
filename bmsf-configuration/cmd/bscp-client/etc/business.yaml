@@ -1,20 +1,21 @@
 kind: bscp-business
 version: 0.1.1
 spec:
-    name: X-Game
+  name: lolgame
   deptID: bking
-  creator: MrMGXXXX
+  creator: melo
+  auth: guohuliu:admin
   memo: annotation
 db:
   # 数据库实例, 对应MySQL sharding db instance ID
   dbID: bscp-main-shardingdb
 
   # 对应MySQL中不同database
-  dbName: bscp_xgame
+  dbName: bscp_lolgame
 
   # 如果有以下信息说明是新建shareding db
   host: 127.0.0.1
   port: 3306
   user: root
-  password: $(pwd)
+  password: ${pwd}
   memo: information

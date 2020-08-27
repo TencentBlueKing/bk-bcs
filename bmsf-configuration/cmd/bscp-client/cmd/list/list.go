@@ -25,8 +25,8 @@ var listCmd *cobra.Command
 func init() {
 	listCmd = &cobra.Command{
 		Use:   "list",
-		Short: "list resources",
-		Long:  "subcommand for list all resources, including app/cluster/zone/configset/commit/release",
+		Short: "List resources",
+		Long:  "Subcommand for list all resources",
 	}
 	listCmd.PersistentFlags().Int32Var(&option.GlobalOptions.Index, "index", 0, "index for list ")
 	listCmd.PersistentFlags().Int32Var(&option.GlobalOptions.Limit, "limit", 100, "limit for one list command")
@@ -38,12 +38,12 @@ func InitCommands() []*cobra.Command {
 	listCmd.AddCommand(listBusinessCmd())
 	listCmd.AddCommand(listShardingDBCmd())
 	listCmd.AddCommand(listAppCmd())
-	listCmd.AddCommand(listLogicClusterCmd())
+	listCmd.AddCommand(listClusterCmd())
 	listCmd.AddCommand(listZoneCmd())
 	listCmd.AddCommand(listConfigSetCmd())
-	listCmd.AddCommand(listCommitCmd())
+	listCmd.AddCommand(listMultiCommitCmd())
 	listCmd.AddCommand(listStrategyCmd())
-	listCmd.AddCommand(listReleaseCmd())
+	listCmd.AddCommand(listMultiReleaseCmd())
 	listCmd.AddCommand(listAppInstCmd())
 	return []*cobra.Command{listCmd}
 }

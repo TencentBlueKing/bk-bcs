@@ -131,11 +131,14 @@ func (act *CreateAction) verify() error {
 			return errors.New("invalid params, template rules too long")
 		}
 
-		if len(metadata.Configs) == 0 && len(metadata.Template) == 0 {
-			return errors.New("invalid params, empty configs and template")
-		}
 		if len(metadata.Configs) != 0 && len(metadata.Template) != 0 {
 			return errors.New("invalid params, configs and template concurrence")
+		}
+		if len(metadata.Configs) != 0 && len(metadata.Templateid) != 0 {
+			return errors.New("invalid params, configs and templateid concurrence")
+		}
+		if len(metadata.Template) != 0 && len(metadata.Templateid) != 0 {
+			return errors.New("invalid params, template and templateid concurrence")
 		}
 		if len(metadata.Template) != 0 && len(metadata.TemplateRule) == 0 {
 			return errors.New("invalid params, empty template rules")
@@ -159,7 +162,7 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 		ReuseCommitid: act.req.ReuseCommitid,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeoutLT"))
 	defer cancel()
 
 	logger.V(2).Infof("CreateMultiCommit[%d]| request to businessserver CreateMultiCommit, %+v", act.req.Seq, r)

@@ -109,7 +109,7 @@ func (act *ListAction) queryAppList() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.App{Bid: act.req.Bid}).
 		Where("Fstate = ?", pbcommon.AppState_AS_CREATED).
 		Find(&act.apps).Error

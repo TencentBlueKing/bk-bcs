@@ -140,7 +140,7 @@ func (act *ListAction) queryHistoryMultiReleases() (pbcommon.ErrCode, string) {
 
 	orderType := "Fid DESC"
 	if act.req.OrderType == 1 {
-		orderType = "Fupdate_time DESC"
+		orderType = "Fupdate_time DESC, Fid DESC"
 	}
 
 	err := act.sd.DB().
