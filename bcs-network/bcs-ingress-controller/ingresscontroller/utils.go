@@ -15,19 +15,17 @@ package ingresscontroller
 import (
 	"strings"
 
-	k8scorev1 "k8s.io/api/core/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-func isServiceInIngress(ingress *networkextensionv1.Ingress, service *k8scorev1.Service) bool {
+func isServiceInIngress(ingress *networkextensionv1.Ingress, svcName, svcNamespace string) bool {
 	for _, rule := range ingress.Spec.Rules {
 		if strings.ToLower(rule.Protocol) == "tcp" || strings.ToLower(rule.Protocol) == "udp" {
 			for _, route := range rule.Services {
-				if service.GetName() == route.ServiceName && service.GetNamespace() == route.ServiceNamespace {
+				if svcName == route.ServiceName && svcNamespace == route.ServiceNamespace {
 					blog.V(2).Infof("service %s/%s found in ingress %s/%s",
-						service.GetNamespace(), service.GetName(), ingress.GetNamespace(), ingress.GetName())
+						svcNamespace, svcName, ingress.GetNamespace(), ingress.GetName())
 					return true
 				}
 			}
@@ -35,9 +33,9 @@ func isServiceInIngress(ingress *networkextensionv1.Ingress, service *k8scorev1.
 		if strings.ToLower(rule.Protocol) == "http" || strings.ToLower(rule.Protocol) == "https" {
 			for _, httpRoute := range rule.Routes {
 				for _, route := range httpRoute.Services {
-					if service.GetName() == route.ServiceName && service.GetNamespace() == route.ServiceNamespace {
+					if svcName == route.ServiceName && svcNamespace == route.ServiceNamespace {
 						blog.V(2).Infof("service %s/%s found in ingress %s/%s",
-							service.GetNamespace(), service.GetName(), ingress.GetNamespace(), ingress.GetName())
+							svcNamespace, svcName, ingress.GetNamespace(), ingress.GetName())
 						return true
 					}
 				}
@@ -47,11 +45,11 @@ func isServiceInIngress(ingress *networkextensionv1.Ingress, service *k8scorev1.
 	return false
 }
 
-func findIngressesByService(service *k8scorev1.Service,
+func findIngressesByService(svcName, svcNamespace string,
 	ingressList *networkextensionv1.IngressList) []*networkextensionv1.Ingress {
 	var retIngressList []*networkextensionv1.Ingress
 	for index, ingress := range ingressList.Items {
-		if isServiceInIngress(&ingress, service) {
+		if isServiceInIngress(&ingress, svcName, svcNamespace) {
 			retIngressList = append(retIngressList, &ingressList.Items[index])
 		}
 	}

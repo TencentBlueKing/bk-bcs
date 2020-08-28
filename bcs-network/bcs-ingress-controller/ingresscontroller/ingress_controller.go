@@ -45,6 +45,7 @@ type IngressReconciler struct {
 	IngressEventer record.EventRecorder
 
 	SvcFilter *ServiceFilter
+	EpsFilter *EndpointsFilter
 	PodFilter *PodFilter
 	StsFilter *StatefulSetFilter
 
@@ -58,7 +59,7 @@ func getIngressPredicate() predicate.Predicate {
 			newIngress, okNew := e.ObjectNew.(*networkextensionv1.Ingress)
 			oldIngress, okOld := e.ObjectOld.(*networkextensionv1.Ingress)
 			if !okNew || !okOld {
-				return false
+				return true
 			}
 			if reflect.DeepEqual(newIngress.Spec, oldIngress.Spec) &&
 				reflect.DeepEqual(newIngress.Annotations, oldIngress.Annotations) {
@@ -115,6 +116,7 @@ func (ir *IngressReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&networkextensionv1.Ingress{}).
 		Watches(&source.Kind{Type: &k8scorev1.Pod{}}, ir.PodFilter).
 		Watches(&source.Kind{Type: &k8scorev1.Service{}}, ir.SvcFilter).
+		Watches(&source.Kind{Type: &k8scorev1.Endpoints{}}, ir.EpsFilter).
 		Watches(&source.Kind{Type: &k8sappsv1.StatefulSet{}}, ir.StsFilter).
 		WithEventFilter(getIngressPredicate()).
 		Complete(ir)

@@ -14,6 +14,7 @@ package listenercontroller
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -75,6 +76,30 @@ func NewListenerReconciler() *ListenerReconciler {
 	}
 }
 
+func (lc *ListenerReconciler) getListenerEventHandler(listener *networkextensionv1.Listener) (
+	*worker.EventHandler, error) {
+	region, ok := listener.Labels[networkextensionv1.LabelKeyForLoadbalanceRegion]
+	if !ok {
+		blog.Errorf("listener %s/%s lost key %s in labels",
+			listener.GetNamespace(), listener.GetName(), networkextensionv1.LabelKeyForLoadbalanceRegion)
+		return nil, fmt.Errorf("listener %s/%s lost key %s in labels",
+			listener.GetNamespace(), listener.GetName(), networkextensionv1.LabelKeyForLoadbalanceRegion)
+	}
+	ehandler, ok := lc.WorkerMap[listener.Spec.LoadbalancerID]
+	if !ok {
+		newHandler := worker.NewEventHandler(
+			region,
+			listener.Spec.LoadbalancerID,
+			lc.CloudLb,
+			lc.Client,
+		)
+		go newHandler.Run()
+		lc.WorkerMap[listener.Spec.LoadbalancerID] = newHandler
+		ehandler = newHandler
+	}
+	return ehandler, nil
+}
+
 // Reconcile reconclie listener
 func (lc *ListenerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	blog.V(2).Infof("listener %+v triggered", req.NamespacedName)
@@ -92,16 +117,12 @@ func (lc *ListenerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}, nil
 	}
 
-	ehandler, ok := lc.WorkerMap[listener.Spec.LoadbalancerID]
-	if !ok {
-		newHandler := worker.NewEventHandler(
-			listener.Spec.LoadbalancerID,
-			lc.CloudLb,
-			lc.Client,
-		)
-		go newHandler.Run()
-		lc.WorkerMap[listener.Spec.LoadbalancerID] = newHandler
-		ehandler = newHandler
+	ehandler, err := lc.getListenerEventHandler(listener)
+	if err != nil {
+		return ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: 5 * time.Second,
+		}, nil
 	}
 	if listener.DeletionTimestamp != nil {
 		listener.Finalizers = common.RemoveString(listener.Finalizers, constant.FinalizerNameBcsIngressController)

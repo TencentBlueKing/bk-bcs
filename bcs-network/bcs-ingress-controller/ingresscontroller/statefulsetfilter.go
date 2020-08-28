@@ -89,7 +89,7 @@ func (sf *StatefulSetFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitin
 // Generic implement EventFilter
 func (sf *StatefulSetFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
 	if e.Meta == nil {
-		blog.Infof("GenericEvent received with no metadata, event +v", e)
+		blog.Infof("GenericEvent received with no metadata, event %+v", e)
 		return
 	}
 }

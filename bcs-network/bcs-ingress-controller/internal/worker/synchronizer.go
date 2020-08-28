@@ -30,7 +30,8 @@ import (
 type EventHandler struct {
 	ctx context.Context
 
-	lbID string
+	lbID   string
+	region string
 
 	lbClient cloud.LoadBalance
 
@@ -44,10 +45,11 @@ type EventHandler struct {
 }
 
 // NewEventHandler create event handler
-func NewEventHandler(lbID string, lbClient cloud.LoadBalance, k8sCli client.Client) *EventHandler {
+func NewEventHandler(region, lbID string, lbClient cloud.LoadBalance, k8sCli client.Client) *EventHandler {
 	return &EventHandler{
 		ctx:             context.Background(),
 		lbID:            lbID,
+		region:          region,
 		lbClient:        lbClient,
 		k8sCli:          k8sCli,
 		eventRecvCache:  NewEventCache(),
@@ -72,7 +74,11 @@ func (h *EventHandler) Run() {
 			}
 			h.needHandle = false
 			h.isDoing = true
-			h.doHandle()
+			// if has error
+			if h.doHandle() {
+				h.needHandle = true
+				time.Sleep(2 * time.Second)
+			}
 			h.isDoing = false
 		case <-h.ctx.Done():
 			blog.Infof("EventHandler for %s run loop exit", h.lbID)
@@ -81,9 +87,9 @@ func (h *EventHandler) Run() {
 	}
 }
 
-func (h *EventHandler) doHandle() {
+func (h *EventHandler) doHandle() bool {
 	h.eventRecvCache.Drain(h.eventDoingCache)
-
+	hasError := false
 	for _, event := range h.eventDoingCache.List() {
 		blog.Infof("[worker %s] eventType: %s, listener: %s/%s",
 			h.lbID, event.Type, event.Listener.GetName(), event.Listener.GetNamespace())
@@ -92,6 +98,7 @@ func (h *EventHandler) doHandle() {
 			err := h.ensureListener(&event)
 			if err != nil {
 				blog.Warnf("ensureListener listener event %s failed", event)
+				hasError = true
 				continue
 			}
 			h.eventDoingCache.Delete(event.Key())
@@ -99,6 +106,7 @@ func (h *EventHandler) doHandle() {
 			err := h.deleteListener(&event)
 			if err != nil {
 				blog.Warnf("deleteListener listener event %s failed", event)
+				hasError = true
 				continue
 			}
 			h.eventDoingCache.Delete(event.Key())
@@ -107,19 +115,20 @@ func (h *EventHandler) doHandle() {
 				h.lbID, event.Type, event.Listener.GetName(), event.Listener.GetNamespace())
 		}
 	}
+	return hasError
 }
 
 func (h *EventHandler) ensureListener(e *ListenerEvent) error {
 	var listenerID string
 	var err error
 	if e.Listener.Spec.EndPort > 0 {
-		listenerID, err = h.lbClient.EnsureSegmentListener(&e.Listener)
+		listenerID, err = h.lbClient.EnsureSegmentListener(h.region, &e.Listener)
 		if err != nil {
 			blog.Errorf("cloud lb client EnsureSegmentListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client EnsureSegmentListener failed, err %s", err.Error())
 		}
 	} else {
-		listenerID, err = h.lbClient.EnsureListener(&e.Listener)
+		listenerID, err = h.lbClient.EnsureListener(h.region, &e.Listener)
 		if err != nil {
 			blog.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
@@ -144,13 +153,13 @@ func (h *EventHandler) ensureListener(e *ListenerEvent) error {
 func (h *EventHandler) deleteListener(e *ListenerEvent) error {
 	var err error
 	if e.Listener.Spec.EndPort > 0 {
-		err = h.lbClient.DeleteSegmentListener(&e.Listener)
+		err = h.lbClient.DeleteSegmentListener(h.region, &e.Listener)
 		if err != nil {
 			blog.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
 		}
 	} else {
-		err = h.lbClient.DeleteListener(&e.Listener)
+		err = h.lbClient.DeleteListener(h.region, &e.Listener)
 		if err != nil {
 			blog.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())

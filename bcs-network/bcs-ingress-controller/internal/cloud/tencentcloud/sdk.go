@@ -51,7 +51,7 @@ const (
 
 var (
 	maxLatency  = 120 * time.Millisecond
-	maxRetry    = 5
+	maxRetry    = 25
 	throttleQPS = 300
 	bucketSize  = 300
 
@@ -62,14 +62,15 @@ var (
 type SdkWrapper struct {
 	domain string
 
-	region string
-
 	secretID string
 
 	secretKey string
 
+	cpf        *tprofile.ClientProfile
+	credential *tcommon.Credential
+
 	throttler throttle.RateLimiter
-	clbCli    *tclb.Client
+	clbCliMap map[string]*tclb.Client
 }
 
 // NewSdkWrapper create sdk wrapper
@@ -88,27 +89,38 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	if len(sw.domain) != 0 {
 		cpf.HttpProfile.Endpoint = sw.domain
 	}
-	client, err := tclb.NewClient(credential, sw.region, cpf)
-	if err != nil {
-		blog.Errorf("new clb client failed, err %s", err.Error())
-		return nil, fmt.Errorf("new clb client failed, err %s", err.Error())
-	}
+	sw.credential = credential
+	sw.cpf = cpf
+	sw.clbCliMap = make(map[string]*tclb.Client)
+
 	sw.throttler = throttle.NewTokenBucket(int64(throttleQPS), int64(bucketSize))
-	sw.clbCli = client
 	return sw, nil
 }
 
 func (sw *SdkWrapper) loadEnv() error {
 	clbDomain := os.Getenv(EnvNameTencentCloudClbDomain)
-	region := os.Getenv(EnvNameTencentCloudRegion)
 	secretID := os.Getenv(EnvNameTencentCloudAccessKeyID)
 	secretKey := os.Getenv(EnvNameTencentCloudAccessKey)
 
 	sw.domain = clbDomain
-	sw.region = region
 	sw.secretID = secretID
 	sw.secretKey = secretKey
 	return nil
+}
+
+// getRegionClient create region client
+func (sw *SdkWrapper) getRegionClient(region string) (*tclb.Client, error) {
+	cli, ok := sw.clbCliMap[region]
+	if !ok {
+		newCli, err := tclb.NewClient(sw.credential, region, sw.cpf)
+		if err != nil {
+			blog.Errorf("create clb client for region %s failed, err %s", region, err.Error())
+			return nil, fmt.Errorf("create clb client for region %s failed, err %s", region, err.Error())
+		}
+		sw.clbCliMap[region] = newCli
+		return newCli, nil
+	}
+	return cli, nil
 }
 
 // checkErrCode common method for check tencent cloud sdk err
@@ -133,7 +145,7 @@ func (sw *SdkWrapper) tryThrottle() {
 }
 
 // waitTaskDone wait asynchronous task done
-func (sw *SdkWrapper) waitTaskDone(taskID string) error {
+func (sw *SdkWrapper) waitTaskDone(region, taskID string) error {
 	blog.V(3).Infof("start waiting for task %s", taskID)
 	request := tclb.NewDescribeTaskStatusRequest()
 	request.TaskId = tcommon.StringPtr(taskID)
@@ -141,7 +153,11 @@ func (sw *SdkWrapper) waitTaskDone(taskID string) error {
 	for counter := 0; counter < maxRetry; counter++ {
 		// it may exceed limit when describe task result
 		sw.tryThrottle()
-		response, err := sw.clbCli.DescribeTaskStatus(request)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		response, err := clbCli.DescribeTaskStatus(request)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -174,17 +190,20 @@ func (sw *SdkWrapper) waitTaskDone(taskID string) error {
 }
 
 // DescribeLoadBalancers wrap DescribeLoadBalancers
-func (sw *SdkWrapper) DescribeLoadBalancers(req *tclb.DescribeLoadBalancersRequest) (
+func (sw *SdkWrapper) DescribeLoadBalancers(region string, req *tclb.DescribeLoadBalancersRequest) (
 	*tclb.DescribeLoadBalancersResponse, error) {
 
 	blog.V(3).Infof("DescribeLoadBalancers request: %s", req.ToJsonString())
-	var err error
 	var resp *tclb.DescribeLoadBalancersResponse
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DescribeLoadBalancers try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.DescribeLoadBalancers(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return nil, err
+		}
+		resp, err = clbCli.DescribeLoadBalancers(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -206,7 +225,7 @@ func (sw *SdkWrapper) DescribeLoadBalancers(req *tclb.DescribeLoadBalancersReque
 }
 
 // CreateListener wrap CreateListener
-func (sw *SdkWrapper) CreateListener(req *tclb.CreateListenerRequest) (string, error) {
+func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequest) (string, error) {
 	blog.V(3).Infof("CreateListener request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.CreateListenerResponse
@@ -214,7 +233,11 @@ func (sw *SdkWrapper) CreateListener(req *tclb.CreateListenerRequest) (string, e
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("CreateListener try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.CreateListener(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return "", err
+		}
+		resp, err = clbCli.CreateListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -236,7 +259,7 @@ func (sw *SdkWrapper) CreateListener(req *tclb.CreateListenerRequest) (string, e
 		blog.Errorf("CreateListener out of maxRetry %d", maxRetry)
 		return "", fmt.Errorf("CreateListener out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return "", err
 	}
@@ -244,17 +267,20 @@ func (sw *SdkWrapper) CreateListener(req *tclb.CreateListenerRequest) (string, e
 }
 
 // DescribeListeners wrap DescribeListeners
-func (sw *SdkWrapper) DescribeListeners(req *tclb.DescribeListenersRequest) (
+func (sw *SdkWrapper) DescribeListeners(region string, req *tclb.DescribeListenersRequest) (
 	*tclb.DescribeListenersResponse, error) {
 
 	blog.V(3).Infof("DescribeListeners request: %s", req.ToJsonString())
-	var err error
 	var resp *tclb.DescribeListenersResponse
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DescribeListeners try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.DescribeListeners(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return nil, err
+		}
+		resp, err = clbCli.DescribeListeners(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -276,17 +302,20 @@ func (sw *SdkWrapper) DescribeListeners(req *tclb.DescribeListenersRequest) (
 }
 
 // DescribeTargets wrap DescribeTargets
-func (sw *SdkWrapper) DescribeTargets(req *tclb.DescribeTargetsRequest) (
+func (sw *SdkWrapper) DescribeTargets(region string, req *tclb.DescribeTargetsRequest) (
 	*tclb.DescribeTargetsResponse, error) {
 
 	blog.V(3).Infof("DescribeTargets request: %s", req.ToJsonString())
-	var err error
 	var resp *tclb.DescribeTargetsResponse
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DescribeTargets try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.DescribeTargets(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return nil, err
+		}
+		resp, err = clbCli.DescribeTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -308,7 +337,7 @@ func (sw *SdkWrapper) DescribeTargets(req *tclb.DescribeTargetsRequest) (
 }
 
 // DeleteListener wrap DeleteListener
-func (sw *SdkWrapper) DeleteListener(req *tclb.DeleteListenerRequest) error {
+func (sw *SdkWrapper) DeleteListener(region string, req *tclb.DeleteListenerRequest) error {
 	blog.V(3).Infof("DeleteListener request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.DeleteListenerResponse
@@ -316,7 +345,11 @@ func (sw *SdkWrapper) DeleteListener(req *tclb.DeleteListenerRequest) error {
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DeleteListener try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.DeleteListener(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.DeleteListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -334,7 +367,7 @@ func (sw *SdkWrapper) DeleteListener(req *tclb.DeleteListenerRequest) error {
 		blog.Errorf("DeleteListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("DeleteListener out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}
@@ -342,7 +375,7 @@ func (sw *SdkWrapper) DeleteListener(req *tclb.DeleteListenerRequest) error {
 }
 
 // CreateRule wrap CreateRule
-func (sw *SdkWrapper) CreateRule(req *tclb.CreateRuleRequest) error {
+func (sw *SdkWrapper) CreateRule(region string, req *tclb.CreateRuleRequest) error {
 	blog.V(3).Infof("CreateRule request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.CreateRuleResponse
@@ -350,7 +383,11 @@ func (sw *SdkWrapper) CreateRule(req *tclb.CreateRuleRequest) error {
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("CreateRule try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.CreateRule(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.CreateRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -368,7 +405,7 @@ func (sw *SdkWrapper) CreateRule(req *tclb.CreateRuleRequest) error {
 		blog.Errorf("CreateRule out of maxRetry %d", maxRetry)
 		return fmt.Errorf("CreateRule out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}
@@ -376,7 +413,7 @@ func (sw *SdkWrapper) CreateRule(req *tclb.CreateRuleRequest) error {
 }
 
 // DeleteRule wrap DeleteRule
-func (sw *SdkWrapper) DeleteRule(req *tclb.DeleteRuleRequest) error {
+func (sw *SdkWrapper) DeleteRule(region string, req *tclb.DeleteRuleRequest) error {
 	blog.V(3).Infof("DeleteRule request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.DeleteRuleResponse
@@ -384,7 +421,11 @@ func (sw *SdkWrapper) DeleteRule(req *tclb.DeleteRuleRequest) error {
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DeleteRule try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.DeleteRule(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.DeleteRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -402,7 +443,7 @@ func (sw *SdkWrapper) DeleteRule(req *tclb.DeleteRuleRequest) error {
 		blog.Errorf("DeleteRule out of maxRetry %d", maxRetry)
 		return fmt.Errorf("DeleteRule out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}
@@ -410,7 +451,7 @@ func (sw *SdkWrapper) DeleteRule(req *tclb.DeleteRuleRequest) error {
 }
 
 // ModifyRule wrap ModifyRule
-func (sw *SdkWrapper) ModifyRule(req *tclb.ModifyRuleRequest) error {
+func (sw *SdkWrapper) ModifyRule(region string, req *tclb.ModifyRuleRequest) error {
 	blog.V(3).Infof("ModifyRule request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.ModifyRuleResponse
@@ -418,7 +459,11 @@ func (sw *SdkWrapper) ModifyRule(req *tclb.ModifyRuleRequest) error {
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("ModifyRule try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.ModifyRule(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.ModifyRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -436,7 +481,7 @@ func (sw *SdkWrapper) ModifyRule(req *tclb.ModifyRuleRequest) error {
 		blog.Errorf("ModifyRule out of maxRetry %d", maxRetry)
 		return fmt.Errorf("ModifyRule out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}
@@ -444,7 +489,7 @@ func (sw *SdkWrapper) ModifyRule(req *tclb.ModifyRuleRequest) error {
 }
 
 // ModifyListener wrap ModifyListener
-func (sw *SdkWrapper) ModifyListener(req *tclb.ModifyListenerRequest) error {
+func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequest) error {
 	blog.V(3).Infof("ModifyListener request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.ModifyListenerResponse
@@ -452,7 +497,11 @@ func (sw *SdkWrapper) ModifyListener(req *tclb.ModifyListenerRequest) error {
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("ModifyListener try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.ModifyListener(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.ModifyListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -470,7 +519,7 @@ func (sw *SdkWrapper) ModifyListener(req *tclb.ModifyListenerRequest) error {
 		blog.Errorf("ModifyListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("ModifyListener out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}
@@ -478,7 +527,7 @@ func (sw *SdkWrapper) ModifyListener(req *tclb.ModifyListenerRequest) error {
 }
 
 // DeregisterTargets wrap DeregisterTargets
-func (sw *SdkWrapper) DeregisterTargets(req *tclb.DeregisterTargetsRequest) error {
+func (sw *SdkWrapper) DeregisterTargets(region string, req *tclb.DeregisterTargetsRequest) error {
 	blog.V(3).Infof("DeregisterTargets request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.DeregisterTargetsResponse
@@ -486,7 +535,11 @@ func (sw *SdkWrapper) DeregisterTargets(req *tclb.DeregisterTargetsRequest) erro
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DeregisterTargets try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.DeregisterTargets(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.DeregisterTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -504,7 +557,7 @@ func (sw *SdkWrapper) DeregisterTargets(req *tclb.DeregisterTargetsRequest) erro
 		blog.Errorf("DeregisterTargets out of maxRetry %d", maxRetry)
 		return fmt.Errorf("DeregisterTargets out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}
@@ -512,7 +565,7 @@ func (sw *SdkWrapper) DeregisterTargets(req *tclb.DeregisterTargetsRequest) erro
 }
 
 // RegisterTargets wrap RegisterTargets
-func (sw *SdkWrapper) RegisterTargets(req *tclb.RegisterTargetsRequest) error {
+func (sw *SdkWrapper) RegisterTargets(region string, req *tclb.RegisterTargetsRequest) error {
 	blog.V(3).Infof("RegisterTargets request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.RegisterTargetsResponse
@@ -520,7 +573,11 @@ func (sw *SdkWrapper) RegisterTargets(req *tclb.RegisterTargetsRequest) error {
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("RegisterTargets try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.RegisterTargets(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.RegisterTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -538,7 +595,7 @@ func (sw *SdkWrapper) RegisterTargets(req *tclb.RegisterTargetsRequest) error {
 		blog.Errorf("RegisterTargets out of maxRetry %d", maxRetry)
 		return fmt.Errorf("RegisterTargets out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}
@@ -546,7 +603,7 @@ func (sw *SdkWrapper) RegisterTargets(req *tclb.RegisterTargetsRequest) error {
 }
 
 // ModifyTargetWeight wrap ModifyTargetWeight
-func (sw *SdkWrapper) ModifyTargetWeight(req *tclb.ModifyTargetWeightRequest) error {
+func (sw *SdkWrapper) ModifyTargetWeight(region string, req *tclb.ModifyTargetWeightRequest) error {
 	blog.V(3).Infof("ModifyTargetWeight request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.ModifyTargetWeightResponse
@@ -554,7 +611,11 @@ func (sw *SdkWrapper) ModifyTargetWeight(req *tclb.ModifyTargetWeightRequest) er
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("ModifyTargetWeight try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
-		resp, err = sw.clbCli.ModifyTargetWeight(req)
+		clbCli, err := sw.getRegionClient(region)
+		if err != nil {
+			return err
+		}
+		resp, err = clbCli.ModifyTargetWeight(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
 				sw.checkErrCode(terr)
@@ -572,7 +633,7 @@ func (sw *SdkWrapper) ModifyTargetWeight(req *tclb.ModifyTargetWeightRequest) er
 		blog.Errorf("ModifyTargetWeight out of maxRetry %d", maxRetry)
 		return fmt.Errorf("ModifyTargetWeight out of maxRetry %d", maxRetry)
 	}
-	err = sw.waitTaskDone(*resp.Response.RequestId)
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
 		return err
 	}

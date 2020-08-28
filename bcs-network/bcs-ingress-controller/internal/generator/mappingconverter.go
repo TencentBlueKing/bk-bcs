@@ -27,13 +27,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 )
 
 // MappingConverter mapping generator
 type MappingConverter struct {
 	cli              client.Client
-	lbIDs            []string
+	lbs              []*cloud.LoadBalanceObject
 	ingressName      string
 	ingressNamespace string
 	mapping          *networkextensionv1.IngressPortMapping
@@ -41,13 +42,12 @@ type MappingConverter struct {
 
 // NewMappingConverter create mapping generator
 func NewMappingConverter(
-	cli client.Client,
-	lbIDs []string, ingressName, ingressNamespace string,
+	cli client.Client, lbs []*cloud.LoadBalanceObject, ingressName, ingressNamespace string,
 	mapping *networkextensionv1.IngressPortMapping) *MappingConverter {
 
 	return &MappingConverter{
 		cli:              cli,
-		lbIDs:            lbIDs,
+		lbs:              lbs,
 		ingressName:      ingressName,
 		ingressNamespace: ingressNamespace,
 		mapping:          mapping,
@@ -68,12 +68,12 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	}
 
 	var retListeners []networkextensionv1.Listener
-	for _, lbID := range mg.lbIDs {
+	for _, lb := range mg.lbs {
 		for i := mg.mapping.StartIndex; i < mg.mapping.EndIndex; i++ {
 			startPort := mg.mapping.StartPort + i*segmentLength
 			endPort := mg.mapping.StartPort + (i+1)*segmentLength - 1
 			pod := pods[i]
-			listeners := mg.generateSegmentListeners(lbID, startPort, endPort, pod)
+			listeners := mg.generateSegmentListeners(lb.Region, lb.LbID, startPort, endPort, pod)
 			retListeners = append(retListeners, listeners...)
 		}
 	}
@@ -136,26 +136,24 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 }
 
 func (mg *MappingConverter) generateSegmentListeners(
-	lbID string, startPort, endPort int, pod *k8scorev1.Pod) []networkextensionv1.Listener {
+	region, lbID string, startPort, endPort int, pod *k8scorev1.Pod) []networkextensionv1.Listener {
 
 	var retListeners []networkextensionv1.Listener
-	// if not use segment mapping feature
-	if !mg.mapping.IgnoreSegment {
-		listener := mg.generateListener(lbID, startPort, endPort, pod)
+	if !mg.mapping.IgnoreSegment && mg.mapping.SegmentLength != 0 && mg.mapping.SegmentLength != 1 {
+		listener := mg.generateListener(region, lbID, startPort, endPort, pod)
 		retListeners = append(retListeners, listener)
 		return retListeners
 	}
-
+	// if not use segment mapping feature
 	for j := startPort; j <= endPort; j++ {
-		listener := mg.generateListener(lbID, startPort, 0, pod)
+		listener := mg.generateListener(region, lbID, startPort, 0, pod)
 		retListeners = append(retListeners, listener)
-
 	}
 	return retListeners
 }
 
 func (mg *MappingConverter) generateListener(
-	lbID string, startPort, endPort int, pod *k8scorev1.Pod) networkextensionv1.Listener {
+	region, lbID string, startPort, endPort int, pod *k8scorev1.Pod) networkextensionv1.Listener {
 
 	segLabelValue := networkextensionv1.LabelValueTrue
 	if endPort == 0 {
@@ -172,6 +170,7 @@ func (mg *MappingConverter) generateListener(
 		mg.ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
 		networkextensionv1.LabelKeyForIsSegmentListener: segLabelValue,
 		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
+		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = startPort
@@ -183,6 +182,7 @@ func (mg *MappingConverter) generateListener(
 		TargetGroupProtocol: mg.mapping.Protocol,
 	}
 	if pod == nil || len(pod.Status.PodIP) == 0 {
+		li.Spec.TargetGroup = targetGroup
 		return li
 	}
 	targetGroup.Backends = append(targetGroup.Backends, networkextensionv1.ListenerBackend{

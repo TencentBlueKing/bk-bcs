@@ -55,7 +55,8 @@ func main() {
 	flag.StringVar(&opts.Address, "address", "127.0.0.1", "address for controller")
 	flag.IntVar(&opts.MetricPort, "metric_port", 8081, "metric port for controller")
 	flag.IntVar(&opts.Port, "port", 8080, "por for controller")
-	flag.StringVar(&opts.Cloud, "cloud", "tencentcloud", "cloud mode for bcs network controller")
+	flag.StringVar(&opts.Cloud, "cloud", "tencentcloud", "cloud mode for controller")
+	flag.StringVar(&opts.Region, "region", "", "default cloud region for controller")
 
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
@@ -93,6 +94,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if len(opts.Region) == 0 {
+		blog.Errorf("region cannot be empty")
+		os.Exit(1)
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
@@ -112,9 +118,10 @@ func main() {
 		Option:           opts,
 		IngressEventer:   mgr.GetEventRecorderFor("bcs-ingress-controller"),
 		SvcFilter:        ingressctrl.NewServiceFilter(mgr.GetClient()),
+		EpsFilter:        ingressctrl.NewEndpointsFilter(mgr.GetClient()),
 		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient()),
 		StsFilter:        ingressctrl.NewStatefulSetFilter(mgr.GetClient()),
-		IngressConverter: generator.NewIngressConverter(mgr.GetClient(), validater),
+		IngressConverter: generator.NewIngressConverter(opts.Region, mgr.GetClient(), validater, lbClient),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
 		os.Exit(1)

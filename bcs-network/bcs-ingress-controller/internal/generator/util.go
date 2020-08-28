@@ -22,6 +22,18 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
+// SplitRegionLBID get region and lbid from regionLBID
+func SplitRegionLBID(regionLBID string) (string, string, error) {
+	strs := strings.Split(regionLBID, ":")
+	if len(strs) == 1 {
+		return "", strs[0], nil
+	}
+	if len(strs) == 2 {
+		return strs[0], strs[1], nil
+	}
+	return "", "", fmt.Errorf("regionLBID %s invalid", regionLBID)
+}
+
 // GetListenerName generate listener name with lb id and port number
 func GetListenerName(lbID string, port int) string {
 	return lbID + "-" + strconv.Itoa(port)

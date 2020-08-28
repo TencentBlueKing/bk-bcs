@@ -26,13 +26,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 )
 
 // RuleConverter rule converter
 type RuleConverter struct {
 	cli              client.Client
-	lbIDs            []string
+	lbs              []*cloud.LoadBalanceObject
 	ingressName      string
 	ingressNamespace string
 	rule             *networkextensionv1.IngressRule
@@ -41,14 +42,14 @@ type RuleConverter struct {
 // NewRuleConverter create rule converter
 func NewRuleConverter(
 	cli client.Client,
-	lbIDs []string,
+	lbs []*cloud.LoadBalanceObject,
 	ingressName string,
 	ingressNamespace string,
 	rule *networkextensionv1.IngressRule) *RuleConverter {
 
 	return &RuleConverter{
 		cli:              cli,
-		lbIDs:            lbIDs,
+		lbs:              lbs,
 		ingressName:      ingressName,
 		ingressNamespace: ingressNamespace,
 		rule:             rule,
@@ -60,16 +61,16 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	var retListeners []networkextensionv1.Listener
 	switch strings.ToLower(rc.rule.Protocol) {
 	case networkextensionv1.ProtocolHTTP, networkextensionv1.ProtocolHTTPS:
-		for _, lbID := range rc.lbIDs {
-			listener, err := rc.generate7LayerListener(lbID)
+		for _, lb := range rc.lbs {
+			listener, err := rc.generate7LayerListener(lb.Region, lb.LbID)
 			if err != nil {
 				return nil, err
 			}
 			retListeners = append(retListeners, *listener)
 		}
 	case networkextensionv1.ProtocolTCP, networkextensionv1.ProtocolUDP:
-		for _, lbID := range rc.lbIDs {
-			listener, err := rc.generate4LayerListener(lbID)
+		for _, lb := range rc.lbs {
+			listener, err := rc.generate4LayerListener(lb.Region, lb.LbID)
 			if err != nil {
 				return nil, err
 			}
@@ -82,7 +83,7 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	return retListeners, nil
 }
 
-func (rc *RuleConverter) generate7LayerListener(lbID string) (*networkextensionv1.Listener, error) {
+func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
 	li.SetName(GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
@@ -91,6 +92,7 @@ func (rc *RuleConverter) generate7LayerListener(lbID string) (*networkextensionv
 		rc.ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
+		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = rc.rule.Port
@@ -128,7 +130,7 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 	return retListenerRules, nil
 }
 
-func (rc *RuleConverter) generate4LayerListener(lbID string) (*networkextensionv1.Listener, error) {
+func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
 	li.SetName(GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
@@ -137,6 +139,7 @@ func (rc *RuleConverter) generate4LayerListener(lbID string) (*networkextensionv
 		rc.ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
+		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = rc.rule.Port

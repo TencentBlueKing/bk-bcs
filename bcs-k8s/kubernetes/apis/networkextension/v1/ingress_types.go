@@ -30,6 +30,9 @@ const (
 	// AnnotationKeyForLoadbalanceIDs annotation key for cloud lb ids
 	AnnotationKeyForLoadbalanceIDs = "networkextension.bkbcs.tencent.com/lbids"
 
+	// AnnotationKeyForLoadbalanceNames annotation key for cloud lb names
+	AnnotationKeyForLoadbalanceNames = "networkextension.bkbcs.tencent.com/lbnames"
+
 	// DefaultWeight default weight value
 	DefaultWeight = 10
 
@@ -125,16 +128,16 @@ type IngressRule struct {
 
 // IngressPortMapping mapping of ingress
 type IngressPortMapping struct {
-	WorkloadKind       string                    `json:"workloadKind"`
-	WorkloadName       string                    `json:"workloadName"`
-	WorkloadNamespace  string                    `json:"workloadNamespace"`
-	StartPort          int                       `json:"startPort"`
-	StartIndex         int                       `json:"startIndex"`
-	EndIndex           int                       `json:"endIndex"`
-	SegmentLength      int                       `json:"segmentLength,omitempty"`
-	Protocol           string                    `json:"protocol"`
-	IgnoreSegment      bool                      `json:"ignoreSegment,omtempty"`
-	ListenerAttribute  *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
+	WorkloadKind      string                    `json:"workloadKind"`
+	WorkloadName      string                    `json:"workloadName"`
+	WorkloadNamespace string                    `json:"workloadNamespace"`
+	StartPort         int                       `json:"startPort"`
+	StartIndex        int                       `json:"startIndex"`
+	EndIndex          int                       `json:"endIndex"`
+	SegmentLength     int                       `json:"segmentLength,omitempty"`
+	Protocol          string                    `json:"protocol"`
+	IgnoreSegment     bool                      `json:"ignoreSegment,omitempty"`
+	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 }
 
 // IngressSpec defines the desired state of Ingress

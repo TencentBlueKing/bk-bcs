@@ -43,11 +43,12 @@ func getKeyByValue(m map[string]string, value string) string {
 	return ""
 }
 
-func isRuleConflict(ingressName, ingressNamespace string,
+func isRuleConflict(lbID, ingressName, ingressNamespace string,
 	rule networkextensionv1.IngressRule,
-	existedListenerMap map[int]networkextensionv1.Listener) (bool, string) {
+	existedListenerMap map[string]networkextensionv1.Listener) (bool, string) {
 
-	existedListener, ok := existedListenerMap[rule.Port]
+	tmpKey := GetListenerName(lbID, rule.Port)
+	existedListener, ok := existedListenerMap[tmpKey]
 	if !ok {
 		return false, ""
 	}
@@ -69,12 +70,17 @@ func isRuleConflict(ingressName, ingressNamespace string,
 	return false, ""
 }
 
-func isMappingConflict(ingressName, ingressNamespace string,
+func isMappingConflict(lbID, ingressName, ingressNamespace string,
 	mapping networkextensionv1.IngressPortMapping,
-	existedListenerMap map[int]networkextensionv1.Listener) (bool, string) {
+	existedListenerMap map[string]networkextensionv1.Listener) (bool, string) {
 
-	for i := mapping.StartIndex; i < mapping.EndIndex; i++ {
-		existedListener, ok := existedListenerMap[mapping.StartPort+i]
+	segmentLen := mapping.SegmentLength
+	if segmentLen == 0 {
+		segmentLen = 1
+	}
+	for i := (mapping.StartPort + mapping.StartIndex*segmentLen); i < (mapping.StartPort + mapping.EndIndex*segmentLen); i++ {
+		tmpKey := GetListenerName(lbID, i)
+		existedListener, ok := existedListenerMap[tmpKey]
 		if !ok {
 			continue
 		}
@@ -94,7 +100,7 @@ func isMappingConflict(ingressName, ingressNamespace string,
 	return false, ""
 }
 
-func (g *IngressConverter) checkConflicts(ingress *networkextensionv1.Ingress) (bool, error) {
+func (g *IngressConverter) checkConflicts(lbID string, ingress *networkextensionv1.Ingress) (bool, error) {
 	existedListeners := &networkextensionv1.ListenerList{}
 	err := g.cli.List(context.TODO(), existedListeners, &client.ListOptions{})
 	if err != nil {
@@ -102,34 +108,35 @@ func (g *IngressConverter) checkConflicts(ingress *networkextensionv1.Ingress) (
 		return false, fmt.Errorf("failed list existed Listeners err %s", err.Error())
 	}
 
-	// use map
-	existedListenerMap := make(map[int]networkextensionv1.Listener)
+	// use lbid-port as key of map for check conflicts
+	existedListenerMap := make(map[string]networkextensionv1.Listener)
 	for index, listener := range existedListeners.Items {
 		// listener for port segment
 		if listener.Spec.EndPort > 0 {
 			for i := listener.Spec.Port; i <= listener.Spec.EndPort; i++ {
-				existedListenerMap[i] = existedListeners.Items[index]
+				tmpKey := GetListenerName(listener.Spec.LoadbalancerID, i)
+				existedListenerMap[tmpKey] = existedListeners.Items[index]
 			}
 			continue
 		}
-		existedListenerMap[listener.Spec.Port] = existedListeners.Items[index]
+		tmpKey := GetListenerName(listener.Spec.LoadbalancerID, listener.Spec.Port)
+		existedListenerMap[tmpKey] = existedListeners.Items[index]
 	}
 
 	for _, rule := range ingress.Spec.Rules {
-		isConflict, _ := isRuleConflict(ingress.GetName(), ingress.GetNamespace(), rule, existedListenerMap)
+		isConflict, _ := isRuleConflict(lbID, ingress.GetName(), ingress.GetNamespace(), rule, existedListenerMap)
 		if isConflict {
 			return true, nil
 		}
 	}
 	for _, mapping := range ingress.Spec.PortMappings {
-		isConflict, _ := isMappingConflict(ingress.GetName(), ingress.GetNamespace(), mapping, existedListenerMap)
+		isConflict, _ := isMappingConflict(lbID, ingress.GetName(), ingress.GetNamespace(), mapping, existedListenerMap)
 		if isConflict {
 			return true, nil
 		}
 	}
 	return false, nil
 }
-
 
 func checkConflictsInIngress(ingress *networkextensionv1.Ingress) (bool, string) {
 	ruleMap := make(map[int]networkextensionv1.IngressRule)

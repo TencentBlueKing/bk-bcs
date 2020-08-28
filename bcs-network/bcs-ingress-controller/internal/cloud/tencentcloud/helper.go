@@ -27,19 +27,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
 )
 
-func (c *Clb) createListner(listener *networkextensionv1.Listener) (string, error) {
+func (c *Clb) createListner(region string, listener *networkextensionv1.Listener) (string, error) {
 	switch listener.Spec.Protocol {
 	case ClbProtocolHTTP, ClbProtocolHTTPS:
-		return c.create7LayerListener(listener)
+		return c.create7LayerListener(region, listener)
 	case ClbProtocolTCP, ClbProtocolUDP:
-		return c.create4LayerListener(listener)
+		return c.create4LayerListener(region, listener)
 	default:
 		blog.Errorf("invalid protocol %s", listener.Spec.Protocol)
 		return "", fmt.Errorf("invalid protocol %s", listener.Spec.Protocol)
 	}
 }
 
-func (c *Clb) create4LayerListener(listener *networkextensionv1.Listener) (string, error) {
+func (c *Clb) create4LayerListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	req := tclb.NewCreateListenerRequest()
 	req.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadbalancerID)
 	req.Ports = []*int64{
@@ -58,7 +58,7 @@ func (c *Clb) create4LayerListener(listener *networkextensionv1.Listener) (strin
 	}
 
 	ctime := time.Now()
-	listenerID, err := c.sdkWrapper.CreateListener(req)
+	listenerID, err := c.sdkWrapper.CreateListener(region, req)
 	if err != nil {
 		cloud.StatRequest("CreateListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return "", err
@@ -79,7 +79,7 @@ func (c *Clb) create4LayerListener(listener *networkextensionv1.Listener) (strin
 		req.ListenerId = tcommon.StringPtr(listenerID)
 		req.Targets = tgs
 		ctime := time.Now()
-		err := c.sdkWrapper.RegisterTargets(req)
+		err := c.sdkWrapper.RegisterTargets(region, req)
 		if err != nil {
 			cloud.StatRequest("RegisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return "", err
@@ -89,7 +89,7 @@ func (c *Clb) create4LayerListener(listener *networkextensionv1.Listener) (strin
 	return listenerID, nil
 }
 
-func (c *Clb) create7LayerListener(listener *networkextensionv1.Listener) (string, error) {
+func (c *Clb) create7LayerListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	req := tclb.NewCreateListenerRequest()
 	req.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadbalancerID)
 	req.Ports = []*int64{
@@ -100,7 +100,7 @@ func (c *Clb) create7LayerListener(listener *networkextensionv1.Listener) (strin
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
 
 	ctime := time.Now()
-	listenerID, err := c.sdkWrapper.CreateListener(req)
+	listenerID, err := c.sdkWrapper.CreateListener(region, req)
 	if err != nil {
 		cloud.StatRequest("CreateListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return "", err
@@ -108,7 +108,7 @@ func (c *Clb) create7LayerListener(listener *networkextensionv1.Listener) (strin
 	cloud.StatRequest("CreateListener", cloud.MetricAPISuccess, ctime, time.Now())
 
 	for _, rule := range listener.Spec.Rules {
-		err := c.addListenerRule(listener.Spec.LoadbalancerID, listenerID, rule)
+		err := c.addListenerRule(region, listener.Spec.LoadbalancerID, listenerID, rule)
 		if err != nil {
 			return "", err
 		}
@@ -116,13 +116,13 @@ func (c *Clb) create7LayerListener(listener *networkextensionv1.Listener) (strin
 	return listenerID, nil
 }
 
-func (c *Clb) getListenerInfoByPort(lbID string, port int) (*networkextensionv1.Listener, error) {
+func (c *Clb) getListenerInfoByPort(region, lbID string, port int) (*networkextensionv1.Listener, error) {
 	req := tclb.NewDescribeListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.Port = tcommon.Int64Ptr(int64(port))
 
 	ctime := time.Now()
-	resp, err := c.sdkWrapper.DescribeListeners(req)
+	resp, err := c.sdkWrapper.DescribeListeners(region, req)
 	if err != nil {
 		cloud.StatRequest("DescribeListeners", cloud.MetricAPIFailed, ctime, time.Now())
 		return nil, err
@@ -148,7 +148,7 @@ func (c *Clb) getListenerInfoByPort(lbID string, port int) (*networkextensionv1.
 	li.Spec.Certificate = convertCertificate(respListener.Certificate)
 	li.Spec.ListenerAttribute = convertListenerAttribute(respListener)
 
-	rules, tg, err := c.getListenerBackendsByPort(lbID, port)
+	rules, tg, err := c.getListenerBackendsByPort(region, lbID, port)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (c *Clb) getListenerInfoByPort(lbID string, port int) (*networkextensionv1.
 	return li, nil
 }
 
-func (c *Clb) getListenerBackendsByPort(lbID string, port int) (
+func (c *Clb) getListenerBackendsByPort(region, lbID string, port int) (
 	[]networkextensionv1.ListenerRule, *networkextensionv1.ListenerTargetGroup, error) {
 
 	req := tclb.NewDescribeTargetsRequest()
@@ -166,7 +166,7 @@ func (c *Clb) getListenerBackendsByPort(lbID string, port int) (
 	req.Port = tcommon.Int64Ptr(int64(port))
 
 	ctime := time.Now()
-	resp, err := c.sdkWrapper.DescribeTargets(req)
+	resp, err := c.sdkWrapper.DescribeTargets(region, req)
 	if err != nil {
 		cloud.StatRequest("DescribeTargets", cloud.MetricAPIFailed, ctime, time.Now())
 		return nil, nil, err
@@ -207,13 +207,13 @@ func (c *Clb) getListenerBackendsByPort(lbID string, port int) (
 	}
 }
 
-func (c *Clb) deleteListener(lbID string, port int) error {
+func (c *Clb) deleteListener(region, lbID string, port int) error {
 	req := tclb.NewDescribeListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.Port = tcommon.Int64Ptr(int64(port))
 
 	ctime := time.Now()
-	resp, err := c.sdkWrapper.DescribeListeners(req)
+	resp, err := c.sdkWrapper.DescribeListeners(region, req)
 	if err != nil {
 		cloud.StatRequest("DescribeListeners", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -233,7 +233,7 @@ func (c *Clb) deleteListener(lbID string, port int) error {
 	delreq.ListenerId = resp.Response.Listeners[0].ListenerId
 
 	ctime = time.Now()
-	err = c.sdkWrapper.DeleteListener(delreq)
+	err = c.sdkWrapper.DeleteListener(region, delreq)
 	if err != nil {
 		cloud.StatRequest("DeleteListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -242,14 +242,14 @@ func (c *Clb) deleteListener(lbID string, port int) error {
 	return nil
 }
 
-func (c *Clb) updateListener(ingressListener, cloudListener *networkextensionv1.Listener) error {
+func (c *Clb) updateListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
 	switch ingressListener.Spec.Protocol {
 	case ClbProtocolHTTP, ClbProtocolHTTPS:
-		if err := c.updateHTTPListener(ingressListener, cloudListener); err != nil {
+		if err := c.updateHTTPListener(region, ingressListener, cloudListener); err != nil {
 			return err
 		}
 	case ClbProtocolTCP, ClbProtocolUDP:
-		if err := c.update4LayerListener(ingressListener, cloudListener); err != nil {
+		if err := c.update4LayerListener(region, ingressListener, cloudListener); err != nil {
 			return err
 		}
 	default:
@@ -259,11 +259,11 @@ func (c *Clb) updateListener(ingressListener, cloudListener *networkextensionv1.
 	return nil
 }
 
-func (c *Clb) updateHTTPListener(ingressListener, cloudListener *networkextensionv1.Listener) error {
+func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
 	if ingressListener.Spec.ListenerAttribute != nil &&
 		(!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) ||
 			!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) {
-		err := c.updateListenerAttrAndCerts(ingressListener)
+		err := c.updateListenerAttrAndCerts(region, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
 			return fmt.Errorf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
@@ -271,19 +271,19 @@ func (c *Clb) updateHTTPListener(ingressListener, cloudListener *networkextensio
 	}
 	addRules, delRules, updateOldRules, updateRules := getDiffBetweenListenerRule(cloudListener, ingressListener)
 	for _, rule := range delRules {
-		err := c.deleteListenerRule(cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
+		err := c.deleteListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
 		if err != nil {
 			return err
 		}
 	}
 	for _, rule := range addRules {
-		err := c.addListenerRule(cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
+		err := c.addListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
 		if err != nil {
 			return err
 		}
 	}
 	for index, rule := range updateRules {
-		err := c.updateListenerRule(cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID,
+		err := c.updateListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID,
 			updateOldRules[index], rule)
 		if err != nil {
 			return err
@@ -292,10 +292,10 @@ func (c *Clb) updateHTTPListener(ingressListener, cloudListener *networkextensio
 	return nil
 }
 
-func (c *Clb) update4LayerListener(ingressListener, cloudListener *networkextensionv1.Listener) error {
+func (c *Clb) update4LayerListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
 	if ingressListener.Spec.ListenerAttribute != nil &&
 		!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) {
-		err := c.updateListenerAttrAndCerts(ingressListener)
+		err := c.updateListenerAttrAndCerts(region, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in update4LayerListener failed, err %s", err.Error())
 			return fmt.Errorf("updateListenerAttrAndCerts in update4LayerListener failed, err %s", err.Error())
@@ -310,7 +310,7 @@ func (c *Clb) update4LayerListener(ingressListener, cloudListener *networkextens
 		req.ListenerId = tcommon.StringPtr(cloudListener.Status.ListenerID)
 		req.Targets = delTargets
 		ctime := time.Now()
-		if err := c.sdkWrapper.DeregisterTargets(req); err != nil {
+		if err := c.sdkWrapper.DeregisterTargets(region, req); err != nil {
 			cloud.StatRequest("DeregisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -323,7 +323,7 @@ func (c *Clb) update4LayerListener(ingressListener, cloudListener *networkextens
 		req.ListenerId = tcommon.StringPtr(cloudListener.Status.ListenerID)
 		req.Targets = addTargets
 		ctime := time.Now()
-		if err := c.sdkWrapper.RegisterTargets(req); err != nil {
+		if err := c.sdkWrapper.RegisterTargets(region, req); err != nil {
 			cloud.StatRequest("RegisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -336,7 +336,7 @@ func (c *Clb) update4LayerListener(ingressListener, cloudListener *networkextens
 		req.ListenerId = tcommon.StringPtr(cloudListener.Status.ListenerID)
 		req.Targets = updateWeightTargets
 		ctime := time.Now()
-		if err := c.sdkWrapper.ModifyTargetWeight(req); err != nil {
+		if err := c.sdkWrapper.ModifyTargetWeight(region, req); err != nil {
 			cloud.StatRequest("ModifyTargetWeight", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -345,7 +345,7 @@ func (c *Clb) update4LayerListener(ingressListener, cloudListener *networkextens
 	return nil
 }
 
-func (c *Clb) updateListenerAttrAndCerts(listener *networkextensionv1.Listener) error {
+func (c *Clb) updateListenerAttrAndCerts(region string, listener *networkextensionv1.Listener) error {
 	if listener.Spec.ListenerAttribute == nil && listener.Spec.Certificate == nil {
 		return nil
 	}
@@ -363,7 +363,7 @@ func (c *Clb) updateListenerAttrAndCerts(listener *networkextensionv1.Listener) 
 	certs := listener.Spec.Certificate
 	req.Certificate = transIngressCertificate(certs)
 	ctime := time.Now()
-	err := c.sdkWrapper.ModifyListener(req)
+	err := c.sdkWrapper.ModifyListener(region, req)
 	if err != nil {
 		cloud.StatRequest("ModifyListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -372,7 +372,7 @@ func (c *Clb) updateListenerAttrAndCerts(listener *networkextensionv1.Listener) 
 	return nil
 }
 
-func (c *Clb) updateRuleAttr(lbID, listenerID, locationID string, rule networkextensionv1.ListenerRule) error {
+func (c *Clb) updateRuleAttr(region, lbID, listenerID, locationID string, rule networkextensionv1.ListenerRule) error {
 	if rule.ListenerAttribute == nil {
 		return nil
 	}
@@ -390,7 +390,7 @@ func (c *Clb) updateRuleAttr(lbID, listenerID, locationID string, rule networkex
 	req.HealthCheck = transIngressHealtchCheck(attr.HealthCheck)
 
 	ctime := time.Now()
-	err := c.sdkWrapper.ModifyRule(req)
+	err := c.sdkWrapper.ModifyRule(region, req)
 	if err != nil {
 		cloud.StatRequest("ModifyListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -399,11 +399,11 @@ func (c *Clb) updateRuleAttr(lbID, listenerID, locationID string, rule networkex
 	return nil
 }
 
-func (c *Clb) updateListenerRule(lbID, listenerID string,
+func (c *Clb) updateListenerRule(region, lbID, listenerID string,
 	existedRule, newRule networkextensionv1.ListenerRule) error {
 
 	if !reflect.DeepEqual(newRule.ListenerAttribute, existedRule.ListenerAttribute) {
-		err := c.updateRuleAttr(lbID, listenerID, existedRule.RuleID, newRule)
+		err := c.updateRuleAttr(region, lbID, listenerID, existedRule.RuleID, newRule)
 		if err != nil {
 			return err
 		}
@@ -420,7 +420,7 @@ func (c *Clb) updateListenerRule(lbID, listenerID string,
 		req.Url = tcommon.StringPtr(newRule.Path)
 		req.Targets = delTargets
 		ctime := time.Now()
-		if err := c.sdkWrapper.DeregisterTargets(req); err != nil {
+		if err := c.sdkWrapper.DeregisterTargets(region, req); err != nil {
 			cloud.StatRequest("DeregisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -435,7 +435,7 @@ func (c *Clb) updateListenerRule(lbID, listenerID string,
 		req.Url = tcommon.StringPtr(newRule.Path)
 		req.Targets = addTargets
 		ctime := time.Now()
-		if err := c.sdkWrapper.RegisterTargets(req); err != nil {
+		if err := c.sdkWrapper.RegisterTargets(region, req); err != nil {
 			cloud.StatRequest("RegisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -450,7 +450,7 @@ func (c *Clb) updateListenerRule(lbID, listenerID string,
 		req.Url = tcommon.StringPtr(newRule.Path)
 		req.Targets = updateWeightTargets
 		ctime := time.Now()
-		if err := c.sdkWrapper.ModifyTargetWeight(req); err != nil {
+		if err := c.sdkWrapper.ModifyTargetWeight(region, req); err != nil {
 			cloud.StatRequest("ModifyTargetWeight", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -459,7 +459,7 @@ func (c *Clb) updateListenerRule(lbID, listenerID string,
 	return nil
 }
 
-func (c *Clb) addListenerRule(lbID, listenerID string, rule networkextensionv1.ListenerRule) error {
+func (c *Clb) addListenerRule(region, lbID, listenerID string, rule networkextensionv1.ListenerRule) error {
 	req := tclb.NewCreateRuleRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.ListenerId = tcommon.StringPtr(listenerID)
@@ -478,7 +478,7 @@ func (c *Clb) addListenerRule(lbID, listenerID string, rule networkextensionv1.L
 	}
 	req.Rules = append(req.Rules, ruleInput)
 	ctime := time.Now()
-	err := c.sdkWrapper.CreateRule(req)
+	err := c.sdkWrapper.CreateRule(region, req)
 	if err != nil {
 		cloud.StatRequest("CreateRule", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -493,7 +493,7 @@ func (c *Clb) addListenerRule(lbID, listenerID string, rule networkextensionv1.L
 		req.Url = tcommon.StringPtr(rule.Path)
 		req.Targets = getTargets(rule.TargetGroup)
 		ctime := time.Now()
-		if err := c.sdkWrapper.RegisterTargets(req); err != nil {
+		if err := c.sdkWrapper.RegisterTargets(region, req); err != nil {
 			cloud.StatRequest("RegisterTargets", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -502,13 +502,13 @@ func (c *Clb) addListenerRule(lbID, listenerID string, rule networkextensionv1.L
 	return nil
 }
 
-func (c *Clb) deleteListenerRule(lbID, listenerID string, rule networkextensionv1.ListenerRule) error {
+func (c *Clb) deleteListenerRule(region, lbID, listenerID string, rule networkextensionv1.ListenerRule) error {
 	req := tclb.NewDeleteRuleRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	req.ListenerId = tcommon.StringPtr(listenerID)
 	req.LocationIds = tcommon.StringPtrs([]string{rule.RuleID})
 	ctime := time.Now()
-	err := c.sdkWrapper.DeleteRule(req)
+	err := c.sdkWrapper.DeleteRule(region, req)
 	if err != nil {
 		cloud.StatRequest("DeleteRule", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -517,7 +517,7 @@ func (c *Clb) deleteListenerRule(lbID, listenerID string, rule networkextensionv
 	return nil
 }
 
-func (c *Clb) createSegmentListener(listener *networkextensionv1.Listener) (string, error) {
+func (c *Clb) createSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	req := new(qcloud.CreateForwardLBFourthLayerListenersInput)
 	req.LoadBalanceID = listener.Spec.LoadbalancerID
 	req.ListenersLoadBalancerPort = listener.Spec.Port
@@ -559,21 +559,23 @@ func (c *Clb) createSegmentListener(listener *networkextensionv1.Listener) (stri
 		}
 	}
 	ctime := time.Now()
-	listenerID, err := c.apiWrapper.Create4LayerListener(req)
+	listenerID, err := c.apiWrapper.Create4LayerListener(region, req)
 	if err != nil {
 		cloud.StatRequest("Create4LayerListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return "", err
 	}
 	cloud.StatRequest("Create4LayerListener", cloud.MetricAPISuccess, ctime, time.Now())
 
-	err = c.registerSegmentListenerTarget(listener.Spec.LoadbalancerID, listenerID, listener.Spec.TargetGroup)
-	if err != nil {
-		return "", err
+	if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
+		err = c.registerSegmentListenerTarget(region, listener.Spec.LoadbalancerID, listenerID, listener.Spec.TargetGroup)
+		if err != nil {
+			return "", err
+		}
 	}
 	return listenerID, nil
 }
 
-func (c *Clb) updateSegmentListener(ingressListener, cloudListener *networkextensionv1.Listener) error {
+func (c *Clb) updateSegmentListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
 	addTargets, delTargets, _ := getDiffBetweenTargetGroup(
 		cloudListener.Spec.TargetGroup, ingressListener.Spec.TargetGroup)
 	// deregister targets
@@ -588,7 +590,7 @@ func (c *Clb) updateSegmentListener(ingressListener, cloudListener *networkexten
 			})
 		}
 		ctime := time.Now()
-		if err := c.apiWrapper.DeRegInstancesWith4LayerListener(req); err != nil {
+		if err := c.apiWrapper.DeRegInstancesWith4LayerListener(region, req); err != nil {
 			cloud.StatRequest("DeRegInstancesWith4LayerListener", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -607,7 +609,7 @@ func (c *Clb) updateSegmentListener(ingressListener, cloudListener *networkexten
 			})
 		}
 		ctime := time.Now()
-		if err := c.apiWrapper.RegInstancesWith4LayerListener(req); err != nil {
+		if err := c.apiWrapper.RegInstancesWith4LayerListener(region, req); err != nil {
 			cloud.StatRequest("RegInstancesWith4LayerListener", cloud.MetricAPIFailed, ctime, time.Now())
 			return err
 		}
@@ -616,7 +618,7 @@ func (c *Clb) updateSegmentListener(ingressListener, cloudListener *networkexten
 	return nil
 }
 
-func (c *Clb) registerSegmentListenerTarget(
+func (c *Clb) registerSegmentListenerTarget(region string,
 	lbID, listenerID string, target *networkextensionv1.ListenerTargetGroup) error {
 	req := new(qcloud.RegisterInstancesWithForwardLBFourthListenerInput)
 	req.LoadBalanceID = lbID
@@ -632,7 +634,7 @@ func (c *Clb) registerSegmentListenerTarget(
 	}
 	req.Backends = backends
 	ctime := time.Now()
-	err := c.apiWrapper.RegInstancesWith4LayerListener(req)
+	err := c.apiWrapper.RegInstancesWith4LayerListener(region, req)
 	if err != nil {
 		cloud.StatRequest("RegInstancesWith4LayerListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -641,12 +643,12 @@ func (c *Clb) registerSegmentListenerTarget(
 	return nil
 }
 
-func (c *Clb) getSegmentListenerInfoByPort(lbID string, port int) (*networkextensionv1.Listener, error) {
+func (c *Clb) getSegmentListenerInfoByPort(region, lbID string, port int) (*networkextensionv1.Listener, error) {
 	req := new(qcloud.DescribeForwardLBListenersInput)
 	req.LoadBalanceID = lbID
 	req.LoadBalancerPort = port
 	ctime := time.Now()
-	resp, err := c.apiWrapper.DescribeForwardLBListeners(req)
+	resp, err := c.apiWrapper.DescribeForwardLBListeners(region, req)
 	if err != nil {
 		cloud.StatRequest("DescribeForwardLBListeners", cloud.MetricAPIFailed, ctime, time.Now())
 		return nil, err
@@ -668,7 +670,7 @@ func (c *Clb) getSegmentListenerInfoByPort(lbID string, port int) (*networkexten
 	li.Spec.Port = port
 	li.Spec.Protocol = respListener.ProtocolType
 
-	tg, err := c.getSegmentListenerBackendsByPort(lbID, port)
+	tg, err := c.getSegmentListenerBackendsByPort(region, lbID, port)
 	if err != nil {
 		return nil, err
 	}
@@ -677,14 +679,14 @@ func (c *Clb) getSegmentListenerInfoByPort(lbID string, port int) (*networkexten
 	return li, nil
 }
 
-func (c *Clb) getSegmentListenerBackendsByPort(lbID string, port int) (
+func (c *Clb) getSegmentListenerBackendsByPort(region, lbID string, port int) (
 	*networkextensionv1.ListenerTargetGroup, error) {
 
 	req := new(qcloud.DescribeForwardLBBackendsInput)
 	req.LoadBalanceID = lbID
 	req.LoadBalancerPort = port
 	ctime := time.Now()
-	resp, err := c.apiWrapper.DescribeForwardLBBackends(req)
+	resp, err := c.apiWrapper.DescribeForwardLBBackends(region, req)
 	if err != nil {
 		cloud.StatRequest("DescribeForwardLBBackends", cloud.MetricAPIFailed, ctime, time.Now())
 		return nil, err
@@ -712,12 +714,12 @@ func (c *Clb) getSegmentListenerBackendsByPort(lbID string, port int) (
 	return tg, nil
 }
 
-func (c *Clb) deleteSegmentListener(lbID string, port int) error {
+func (c *Clb) deleteSegmentListener(region, lbID string, port int) error {
 	req := new(qcloud.DescribeForwardLBListenersInput)
 	req.LoadBalanceID = lbID
 	req.LoadBalancerPort = port
 	ctime := time.Now()
-	resp, err := c.apiWrapper.DescribeForwardLBListeners(req)
+	resp, err := c.apiWrapper.DescribeForwardLBListeners(region, req)
 	if err != nil {
 		cloud.StatRequest("DescribeForwardLBListeners", cloud.MetricAPIFailed, ctime, time.Now())
 		return err
@@ -736,7 +738,7 @@ func (c *Clb) deleteSegmentListener(lbID string, port int) error {
 	reqDel.LoadBalanceID = lbID
 	reqDel.ListenerID = respListener.ListenerID
 	ctime = time.Now()
-	err = c.apiWrapper.DeleteListener(reqDel)
+	err = c.apiWrapper.DeleteListener(region, reqDel)
 	if err != nil {
 		cloud.StatRequest("DeleteListener", cloud.MetricAPIFailed, ctime, time.Now())
 		return err

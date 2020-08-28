@@ -39,9 +39,6 @@ type APIWrapper struct {
 	// domain clb domain
 	domain string
 
-	// region for clb
-	region string
-
 	// secretID for tencent cloud
 	secretID string
 
@@ -79,11 +76,9 @@ func (a *APIWrapper) checkErrCode(errCode int) {
 }
 
 func (a *APIWrapper) loadEnv() error {
-	region := os.Getenv(EnvNameTencentCloudRegion)
 	secretID := os.Getenv(EnvNameTencentCloudAccessKeyID)
 	secretKey := os.Getenv(EnvNameTencentCloudAccessKey)
 	a.domain = DefaultTencentCloudClbV2Domain
-	a.region = region
 	a.secretID = secretID
 	a.secretKey = secretKey
 	return nil
@@ -99,9 +94,9 @@ func (a *APIWrapper) tryThrottle() {
 	}
 }
 
-func (a *APIWrapper) waitTaskDone(taskID int) error {
+func (a *APIWrapper) waitTaskDone(region string, taskID int) error {
 	for counter := 0; counter <= maxRetry; counter++ {
-		resp, err := a.describeLoadBalancersTaskResult(taskID)
+		resp, err := a.describeLoadBalancersTaskResult(region, taskID)
 		if err != nil {
 			blog.Errorf("describe task %d result failed, err %s", taskID, err.Error())
 			return fmt.Errorf("describe task %d result failed, err %s", taskID, err.Error())
@@ -123,11 +118,11 @@ func (a *APIWrapper) waitTaskDone(taskID int) error {
 	return fmt.Errorf("wait for task %d result timeout", taskID)
 }
 
-func (a *APIWrapper) describeLoadBalancersTaskResult(requestID int) (
+func (a *APIWrapper) describeLoadBalancersTaskResult(region string, requestID int) (
 	*qcloud.DescribeLoadBalancersTaskResultOutput, error) {
 	req := new(qcloud.DescribeLoadBalancersTaskResultInput)
 	req.Action = "DescribeLoadBalancersTaskResult"
-	req.Region = a.region
+	req.Region = region
 	req.SecretID = a.secretID
 	req.RequestID = requestID
 
@@ -161,11 +156,11 @@ func (a *APIWrapper) describeLoadBalancersTaskResult(requestID int) (
 }
 
 // Create4LayerListener create 4 layer listener
-func (a *APIWrapper) Create4LayerListener(req *qcloud.CreateForwardLBFourthLayerListenersInput) (
+func (a *APIWrapper) Create4LayerListener(region string, req *qcloud.CreateForwardLBFourthLayerListenersInput) (
 	string, error) {
 	req.Action = "CreateForwardLBFourthLayerListeners"
 	req.Nonce = uint(rand.Uint32())
-	req.Region = a.region
+	req.Region = region
 	req.SecretID = a.secretID
 	req.Timestamp = uint(time.Now().Unix())
 
@@ -195,7 +190,7 @@ func (a *APIWrapper) Create4LayerListener(req *qcloud.CreateForwardLBFourthLayer
 		blog.Errorf("CreateForwardLBFourthLayerListeners out of maxRetry %d", maxRetry)
 		return "", fmt.Errorf("CreateForwardLBFourthLayerListeners out of maxRetry %d", maxRetry)
 	}
-	err = a.waitTaskDone(resp.RequestID)
+	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
 		return "", err
 	}
@@ -203,12 +198,12 @@ func (a *APIWrapper) Create4LayerListener(req *qcloud.CreateForwardLBFourthLayer
 }
 
 // DescribeForwardLBListeners describe forward lb listeners
-func (a *APIWrapper) DescribeForwardLBListeners(req *qcloud.DescribeForwardLBListenersInput) (
+func (a *APIWrapper) DescribeForwardLBListeners(region string, req *qcloud.DescribeForwardLBListenersInput) (
 	*qcloud.DescribeForwardLBListenersOutput, error) {
 
 	req.Action = "DescribeForwardLBListeners"
 	req.Nonce = uint(rand.Uint32())
-	req.Region = a.region
+	req.Region = region
 	req.SecretID = a.secretID
 	req.Timestamp = uint(time.Now().Unix())
 
@@ -242,12 +237,12 @@ func (a *APIWrapper) DescribeForwardLBListeners(req *qcloud.DescribeForwardLBLis
 }
 
 // DescribeForwardLBBackends wrap DescribeForwardLBBackends
-func (a *APIWrapper) DescribeForwardLBBackends(req *qcloud.DescribeForwardLBBackendsInput) (
+func (a *APIWrapper) DescribeForwardLBBackends(region string, req *qcloud.DescribeForwardLBBackendsInput) (
 	*qcloud.DescribeForwardLBBackendsOutput, error) {
 
 	req.Action = "DescribeForwardLBBackends"
 	req.Nonce = uint(rand.Uint32())
-	req.Region = a.region
+	req.Region = region
 	req.SecretID = a.secretID
 	req.Timestamp = uint(time.Now().Unix())
 
@@ -281,12 +276,12 @@ func (a *APIWrapper) DescribeForwardLBBackends(req *qcloud.DescribeForwardLBBack
 }
 
 // RegInstancesWith4LayerListener register instance with 4 layer listener
-func (a *APIWrapper) RegInstancesWith4LayerListener(
+func (a *APIWrapper) RegInstancesWith4LayerListener(region string,
 	req *qcloud.RegisterInstancesWithForwardLBFourthListenerInput) error {
 
 	req.Action = "RegisterInstancesWithForwardLBFourthListener"
 	req.Nonce = uint(rand.Uint32())
-	req.Region = a.region
+	req.Region = region
 	req.SecretID = a.secretID
 	req.Timestamp = uint(time.Now().Unix())
 
@@ -316,7 +311,7 @@ func (a *APIWrapper) RegInstancesWith4LayerListener(
 		blog.Errorf("RegisterInstancesWithForwardLBFourthListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("RegisterInstancesWithForwardLBFourthListener out of maxRetry %d", maxRetry)
 	}
-	err = a.waitTaskDone(resp.RequestID)
+	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
 		return err
 	}
@@ -324,12 +319,12 @@ func (a *APIWrapper) RegInstancesWith4LayerListener(
 }
 
 // DeRegInstancesWith4LayerListener deregister instance with 4 layer listener
-func (a *APIWrapper) DeRegInstancesWith4LayerListener(
+func (a *APIWrapper) DeRegInstancesWith4LayerListener(region string,
 	req *qcloud.DeregisterInstancesFromForwardLBFourthListenerInput) error {
 
 	req.Action = "DeregisterInstancesFromForwardLBFourthListener"
 	req.Nonce = uint(rand.Uint32())
-	req.Region = a.region
+	req.Region = region
 	req.SecretID = a.secretID
 	req.Timestamp = uint(time.Now().Unix())
 
@@ -359,7 +354,7 @@ func (a *APIWrapper) DeRegInstancesWith4LayerListener(
 		blog.Errorf("DeregisterInstancesFromForwardLBFourthListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("DeregisterInstancesFromForwardLBFourthListener out of maxRetry %d", maxRetry)
 	}
-	err = a.waitTaskDone(resp.RequestID)
+	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
 		return err
 	}
@@ -367,10 +362,10 @@ func (a *APIWrapper) DeRegInstancesWith4LayerListener(
 }
 
 // DeleteListener wrapper DeleteListener
-func (a *APIWrapper) DeleteListener(req *qcloud.DeleteForwardLBListenerInput) error {
+func (a *APIWrapper) DeleteListener(region string, req *qcloud.DeleteForwardLBListenerInput) error {
 	req.Action = "DeleteForwardLBListener"
 	req.Nonce = uint(rand.Uint32())
-	req.Region = a.region
+	req.Region = region
 	req.SecretID = a.secretID
 	req.Timestamp = uint(time.Now().Unix())
 
@@ -400,7 +395,7 @@ func (a *APIWrapper) DeleteListener(req *qcloud.DeleteForwardLBListenerInput) er
 		blog.Errorf("DeleteForwardLBListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("DeleteForwardLBListener out of maxRetry %d", maxRetry)
 	}
-	err = a.waitTaskDone(resp.RequestID)
+	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
 		return err
 	}

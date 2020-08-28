@@ -47,7 +47,7 @@ func isServiceMatchesPod(svc *k8scorev1.Service, pod *k8scorev1.Pod) bool {
 func (pf *PodFilter) enqueuePodRelatedIngress(pod *k8scorev1.Pod, q workqueue.RateLimitingInterface) {
 	ingresses := pf.findPodIngresses(pod)
 	if len(ingresses) == 0 {
-		blog.V(3).Infof("pod %s/%s not found in any ingress", pod.GetNamespace(), pod.GetName())
+		return
 	}
 	for _, ingress := range ingresses {
 		q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
@@ -74,7 +74,7 @@ func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []*networkextensionv1.
 	var retList []*networkextensionv1.Ingress
 	for _, svc := range svcList.Items {
 		if isServiceMatchesPod(&svc, pod) {
-			retList = append(retList, findIngressesByService(&svc, ingressList)...)
+			retList = append(retList, findIngressesByService(svc.GetName(), svc.GetNamespace(), ingressList)...)
 		}
 	}
 
@@ -123,8 +123,10 @@ func (pf *PodFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterfa
 
 // Generic implement EventFilter
 func (pf *PodFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
-	if e.Meta == nil {
-		blog.Infof("GenericEvent received with no metadata, event +v", e)
+	pod, ok := e.Object.(*k8scorev1.Pod)
+	if !ok {
+		blog.Warnf("recv generic object is not Pod, event %+v", e)
 		return
 	}
+	pf.enqueuePodRelatedIngress(pod, q)
 }

@@ -48,7 +48,7 @@ if [ $GOPATH ]; then
         echo "mv from ${GOPATH}/src/github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated"
         mv ${GOPATH}/src/github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated generated
     fi
-else  
+else
   echo "cp from current dir"
   cp -r github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated generated
   rm -rf ./github.com

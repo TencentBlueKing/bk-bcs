@@ -29,6 +29,8 @@ const (
 	LabelValueForIngressNamespace = "ingress-namespace"
 	// LabelKeyForLoadbalanceID label key for loadbalance id
 	LabelKeyForLoadbalanceID = "ingress.bkbcs.tencent.com/lbid"
+	// LabelKeyForLoadbalanceRegion label key for loadbalance region
+	LabelKeyForLoadbalanceRegion = "ingress.bkbcs.tencent.com/lbregion"
 	// LabelKeyForIsSegmentListener label key for if it is segment listener
 	LabelKeyForIsSegmentListener = "segmentlistener.bkbcs.tencent.com"
 	// LabelValueTrue label value for true

@@ -30,6 +30,9 @@ type ControllerOption struct {
 	// Cloud cloud mod
 	Cloud string
 
+	// Region cloud region
+	Region string
+
 	// LogConfig for blog
 	conf.LogConfig
 }

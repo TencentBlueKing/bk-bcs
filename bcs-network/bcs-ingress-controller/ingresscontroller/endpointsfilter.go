@@ -26,26 +26,26 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-// ServiceFilter filter for service event
-type ServiceFilter struct {
+// EndpointsFilter filter for endpoints event
+type EndpointsFilter struct {
 	cli client.Client
 }
 
-// NewServiceFilter create service filter
-func NewServiceFilter(cli client.Client) *ServiceFilter {
-	return &ServiceFilter{
+// NewEndpointsFilter create endpoints filter
+func NewEndpointsFilter(cli client.Client) *EndpointsFilter {
+	return &EndpointsFilter{
 		cli: cli,
 	}
 }
 
-func (sf *ServiceFilter) enqueueServiceRelatedIngress(svc *k8scorev1.Service, q workqueue.RateLimitingInterface) {
+func (ef *EndpointsFilter) enqueueEndpointsRelatedIngress(eps *k8scorev1.Endpoints, q workqueue.RateLimitingInterface) {
 	ingressList := &networkextensionv1.IngressList{}
-	err := sf.cli.List(context.TODO(), ingressList, &client.ListOptions{})
+	err := ef.cli.List(context.TODO(), ingressList, &client.ListOptions{})
 	if err != nil {
 		blog.Warnf("list bcs ingresses failed, err %s", err.Error())
 		return
 	}
-	ingresses := findIngressesByService(svc.GetName(), svc.GetNamespace(), ingressList)
+	ingresses := findIngressesByService(eps.GetName(), eps.GetNamespace(), ingressList)
 	if len(ingresses) == 0 {
 		return
 	}
@@ -58,39 +58,41 @@ func (sf *ServiceFilter) enqueueServiceRelatedIngress(svc *k8scorev1.Service, q 
 }
 
 // Create implement EventFilter
-func (sf *ServiceFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
-	svc, ok := e.Object.(*k8scorev1.Service)
+func (ef *EndpointsFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	eps, ok := e.Object.(*k8scorev1.Endpoints)
 	if !ok {
-		blog.Warnf("recv create object is not Service, event %+v", e)
+		blog.Warnf("recv create object is not Endpoints, event %+v", e)
 		return
 	}
-	sf.enqueueServiceRelatedIngress(svc, q)
+	ef.enqueueEndpointsRelatedIngress(eps, q)
 }
 
 // Update implement EventFilter
-func (sf *ServiceFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	svc, ok := e.ObjectNew.(*k8scorev1.Service)
+func (ef *EndpointsFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	eps, ok := e.ObjectNew.(*k8scorev1.Endpoints)
 	if !ok {
-		blog.Warnf("recv update object is not Service, event %+v", e)
+		blog.Warnf("recv update object is not Endpoints, event %+v", e)
 		return
 	}
-	sf.enqueueServiceRelatedIngress(svc, q)
+	ef.enqueueEndpointsRelatedIngress(eps, q)
 }
 
 // Delete implement EventFilter
-func (sf *ServiceFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	svc, ok := e.Object.(*k8scorev1.Service)
+func (ef *EndpointsFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+	eps, ok := e.Object.(*k8scorev1.Endpoints)
 	if !ok {
-		blog.Warnf("recv delete object is not Service, event %+v", e)
+		blog.Warnf("recv delete object is not Endpoints, event %+v", e)
 		return
 	}
-	sf.enqueueServiceRelatedIngress(svc, q)
+	ef.enqueueEndpointsRelatedIngress(eps, q)
 }
 
-// Generic implement EventFilter
-func (sf *ServiceFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
-	if e.Meta == nil {
-		blog.Infof("GenericEvent received with no metadata, event %+v", e)
+// Generic impliment EventFilter
+func (ef *EndpointsFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
+	eps, ok := e.Object.(*k8scorev1.Endpoints)
+	if !ok {
+		blog.Warnf("recv generic object is not Endpoints, event %+v", e)
 		return
 	}
+	ef.enqueueEndpointsRelatedIngress(eps, q)
 }

@@ -87,7 +87,6 @@ spec:
                     type: string
                 required:
                 - endIndex
-                - ignoreSegment
                 - protocol
                 - startIndex
                 - startPort

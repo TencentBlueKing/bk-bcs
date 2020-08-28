@@ -49,13 +49,18 @@ func NewClb() (*Clb, error) {
 }
 
 // DescribeLoadBalancer get loadbalancer object by id
-func (c *Clb) DescribeLoadBalancer(lbID string) (*cloud.LoadBalanceObject, error) {
+func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
 	req := tclb.NewDescribeLoadBalancersRequest()
-	req.LoadBalancerIds = tcommon.StringPtrs([]string{lbID})
+	if len(lbID) != 0 {
+		req.LoadBalancerIds = tcommon.StringPtrs([]string{lbID})
+	}
+	if len(name) != 0 {
+		req.LoadBalancerName = tcommon.StringPtr(name)
+	}
 	req.Forward = tcommon.Int64Ptr(1)
 
 	ctime := time.Now()
-	resp, err := c.sdkWrapper.DescribeLoadBalancers(req)
+	resp, err := c.sdkWrapper.DescribeLoadBalancers(region, req)
 	if err != nil {
 		blog.Errorf("DescribeLoadBalancers failed, err %s", err.Error())
 		cloud.StatRequest("DescribeLoadBalancers", cloud.MetricAPIFailed, ctime, time.Now())
@@ -71,7 +76,9 @@ func (c *Clb) DescribeLoadBalancer(lbID string) (*cloud.LoadBalanceObject, error
 		return nil, fmt.Errorf("DescribeLoadBalancers response invalid, more than one lb, resp %s", resp.ToJsonString())
 	}
 	resplb := resp.Response.LoadBalancerSet[0]
-	retlb := &cloud.LoadBalanceObject{}
+	retlb := &cloud.LoadBalanceObject{
+		Region: region,
+	}
 	if resplb.LoadBalancerId != nil {
 		retlb.LbID = *resplb.LoadBalancerId
 	}
@@ -86,12 +93,12 @@ func (c *Clb) DescribeLoadBalancer(lbID string) (*cloud.LoadBalanceObject, error
 }
 
 // EnsureListener ensure listener to cloud, and get listener info
-func (c *Clb) EnsureListener(listener *networkextensionv1.Listener) (string, error) {
-	cloudListener, err := c.getListenerInfoByPort(listener.Spec.LoadbalancerID, listener.Spec.Port)
+func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listener) (string, error) {
+	cloudListener, err := c.getListenerInfoByPort(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
 	if err != nil {
 		if errors.Is(err, cloud.ErrListenerNotFound) {
 			// to create listener
-			listenerID, err := c.createListner(listener)
+			listenerID, err := c.createListner(region, listener)
 			if err != nil {
 				return "", err
 			}
@@ -105,36 +112,36 @@ func (c *Clb) EnsureListener(listener *networkextensionv1.Listener) (string, err
 
 	if strings.ToLower(listener.Spec.Protocol) != strings.ToLower(cloudListener.Spec.Protocol) {
 		// delete listener
-		err := c.deleteListener(listener.Spec.LoadbalancerID, listener.Spec.Port)
+		err := c.deleteListener(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
 		if err != nil {
 			return "", err
 		}
 		// create listener
-		listenerID, err := c.createListner(listener)
+		listenerID, err := c.createListner(region, listener)
 		if err != nil {
 			return "", err
 		}
 		return listenerID, nil
 	}
 
-	if err := c.updateListener(listener, cloudListener); err != nil {
+	if err := c.updateListener(region, listener, cloudListener); err != nil {
 		return "", err
 	}
 	return cloudListener.Status.ListenerID, nil
 }
 
 // DeleteListener delete listener by name
-func (c *Clb) DeleteListener(listener *networkextensionv1.Listener) error {
-	return c.deleteListener(listener.Spec.LoadbalancerID, listener.Spec.Port)
+func (c *Clb) DeleteListener(region string, listener *networkextensionv1.Listener) error {
+	return c.deleteListener(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
 }
 
 // EnsureSegmentListener ensure listener with port segment
-func (c *Clb) EnsureSegmentListener(listener *networkextensionv1.Listener) (string, error) {
-	cloudListener, err := c.getSegmentListenerInfoByPort(listener.Spec.LoadbalancerID, listener.Spec.Port)
+func (c *Clb) EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
+	cloudListener, err := c.getSegmentListenerInfoByPort(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
 	if err != nil {
 		if errors.Is(err, cloud.ErrListenerNotFound) {
 			// to create listener
-			listenerID, err := c.createSegmentListener(listener)
+			listenerID, err := c.createSegmentListener(region, listener)
 			if err != nil {
 				return "", err
 			}
@@ -148,25 +155,25 @@ func (c *Clb) EnsureSegmentListener(listener *networkextensionv1.Listener) (stri
 
 	if strings.ToLower(listener.Spec.Protocol) != strings.ToLower(cloudListener.Spec.Protocol) {
 		// delete listener
-		err := c.deleteSegmentListener(listener.Spec.LoadbalancerID, listener.Spec.Port)
+		err := c.deleteSegmentListener(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
 		if err != nil {
 			return "", err
 		}
 		// create listener
-		listenerID, err := c.createSegmentListener(listener)
+		listenerID, err := c.createSegmentListener(region, listener)
 		if err != nil {
 			return "", err
 		}
 		return listenerID, nil
 	}
 
-	if err := c.updateSegmentListener(listener, cloudListener); err != nil {
+	if err := c.updateSegmentListener(region, listener, cloudListener); err != nil {
 		return "", err
 	}
 	return cloudListener.Status.ListenerID, nil
 }
 
 // DeleteSegmentListener delete segment listener
-func (c *Clb) DeleteSegmentListener(listener *networkextensionv1.Listener) error {
-	return c.deleteSegmentListener(listener.Spec.LoadbalancerID, listener.Spec.Port)
+func (c *Clb) DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error {
+	return c.deleteSegmentListener(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
 }
