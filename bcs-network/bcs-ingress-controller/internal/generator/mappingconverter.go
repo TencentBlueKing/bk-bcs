@@ -146,7 +146,7 @@ func (mg *MappingConverter) generateSegmentListeners(
 	}
 	// if not use segment mapping feature
 	for j := startPort; j <= endPort; j++ {
-		listener := mg.generateListener(region, lbID, startPort, 0, pod)
+		listener := mg.generateListener(region, lbID, j, 0, pod)
 		retListeners = append(retListeners, listener)
 	}
 	return retListeners

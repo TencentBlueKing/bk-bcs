@@ -33,6 +33,9 @@ type ControllerOption struct {
 	// Region cloud region
 	Region string
 
+	// ElectionNamespace election namespace
+	ElectionNamespace string
+
 	// LogConfig for blog
 	conf.LogConfig
 }

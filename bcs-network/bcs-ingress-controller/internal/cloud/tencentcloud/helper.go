@@ -485,7 +485,7 @@ func (c *Clb) addListenerRule(region, lbID, listenerID string, rule networkexten
 	}
 	cloud.StatRequest("CreateRule", cloud.MetricAPISuccess, ctime, time.Now())
 
-	if rule.TargetGroup != nil {
+	if rule.TargetGroup != nil && len(rule.TargetGroup.Backends) != 0 {
 		req := tclb.NewRegisterTargetsRequest()
 		req.LoadBalancerId = tcommon.StringPtr(lbID)
 		req.ListenerId = tcommon.StringPtr(listenerID)

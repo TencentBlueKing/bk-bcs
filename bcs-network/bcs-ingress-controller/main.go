@@ -57,6 +57,7 @@ func main() {
 	flag.IntVar(&opts.Port, "port", 8080, "por for controller")
 	flag.StringVar(&opts.Cloud, "cloud", "tencentcloud", "cloud mode for controller")
 	flag.StringVar(&opts.Region, "region", "", "default cloud region for controller")
+	flag.StringVar(&opts.ElectionNamespace, "election_namespace", "bcs-system", "namespace for leader election")
 
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
@@ -104,7 +105,7 @@ func main() {
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
 		LeaderElection:          true,
 		LeaderElectionID:        "33fb49e.cloudlbconroller.bkbcs.tencent.com",
-		LeaderElectionNamespace: "bcs-system",
+		LeaderElectionNamespace: opts.ElectionNamespace,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

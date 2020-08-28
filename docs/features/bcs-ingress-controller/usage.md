@@ -26,6 +26,10 @@ export TENCENTCLOUD_ACESS_KEY="AppSecretKeyExamplewerdsafasdf"
 ./bcs-ingress-controller \
   # 云厂商, [tencentcloud, aws(coming soon)]
   --cloud tencentcloud \
+  # 默认云区域
+  --region ap-xxxxx \
+  # 选注configmap所在namespace
+  --election_namespace bcs-sytem \
   # kubeconfig文件路径, 不指定即使用InCluster模式
   --kubeconfig /root/.kube/config \
   # address，bcs-ingress-controller服务监听地址
@@ -256,8 +260,11 @@ metadata:
   # ingress的命名空间
   namespace: test
   annotations:
-    # 通过此annotation来关联多个的clb实例，value的形式为"lb1-xxxxx,lb2-xxxxx"
+    # 可以通过id和name来关联clb实例，优先匹配id，以下annotation二选一
+    # 通过此annotation来关联多个clb实例，value的形式为"lb1-xxxxx,lb2-xxxxx,ap-xxxx:lb3-xxxxx"
     networkextension.bkbcs.tencent.com/lbids: lb-xxxxxx
+    # 通过此annotation来关联多个clb实例，value的形式为"name1,name2,ap-xxx:name3"
+    networkextension.bkbcs.tencent.com/lbnames: name1
 spec:
   # rules是一个数组，每个数组元素定义单个端口到一个或者多个Service的映射
   rules:
