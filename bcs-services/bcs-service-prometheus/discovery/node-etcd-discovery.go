@@ -97,8 +97,6 @@ func (disc *nodeEtcdDiscovery) Start() error {
 }
 
 func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
-	disc.Lock()
-	disc.Unlock()
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	for nodeIp, _ := range disc.nodes {
 		switch disc.module {
@@ -136,9 +134,6 @@ func (disc *nodeEtcdDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 }
 
 func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
@@ -161,9 +156,6 @@ func (disc *nodeEtcdDiscovery) OnUpdate(old, cur interface{}) {
 }
 
 func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
