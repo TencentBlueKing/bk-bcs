@@ -344,3 +344,14 @@ spec:
         weight:
           value: 10
 ```
+
+## 如何从bcs-clb-controller升级至bcs-ingress-controller
+
+* 1. 删除clb-controller
+  * 确保期间与clb-controller控制的workload相关的pod不发生漂移
+* 2. 将旧版的clbingress的内容转换成ingress.networkextension.bkbcs.tencent.com的内容
+  * 应用新版的ingress
+* 3. 启动bcs-ingress-controller
+
+说明：bcs-ingress-controller在同步监听器数据的时候，不会删除已有监听器，而是在已有监听器的基础上做修改。
+所以不需要提前进行listener数据的转换。
