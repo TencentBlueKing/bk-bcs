@@ -9,9 +9,10 @@ import (
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
-	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
+	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmicro"
 
 	"k8s.io/klog"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	kubeclient "github.com/kubernetes-client/go/kubernetes/client"
 )
 
@@ -20,11 +21,14 @@ type MeshHandler struct{
 	conf config.Config
 	//kubernetes api client
 	kubeApiClient *kubeclient.APIClient
+	//kubeclient
+	client client.Client
 }
 
-func NewMeshHandler (conf config.Config)*MeshHandler{
+func NewMeshHandler (conf config.Config, client client.Client)*MeshHandler{
 	m := &MeshHandler{
 		conf: conf,
+		client: client,
 	}
 	//kubernetes api client for create IstioOperator Object
 	cfg := kubeclient.NewConfiguration()
@@ -37,25 +41,23 @@ func NewMeshHandler (conf config.Config)*MeshHandler{
 }
 
 // CreateMeshCluster is a single request handler called via client.Call or the generated client code
-func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.CreateMeshClusterReq) (*meshmanager.CreateMeshClusterResp, error) {
+func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.CreateMeshClusterReq,resp *meshmanager.CreateMeshClusterResp)error{
 	klog.Infof("Received MeshManager.CreateMeshCluster request(%s)", req.String())
-	resp := &meshmanager.CreateMeshClusterResp{
-		ErrCode: meshmanager.ErrCode_ERROR_OK,
-	}
+	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
 	//check MeshCluster whether exist
 	mCluster,err := e.getMeshClusterByClusterId(req.Clusterid)
 	if err!=nil {
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
 		resp.ErrMsg = err.Error()
-		return resp, nil
+		return err
 	}
 	if mCluster!=nil {
-		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
+		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_EXIST
 		resp.ErrMsg = fmt.Sprintf("Cluster(%s) MeshCluster already exist", req.Clusterid)
-		return resp, nil
+		return nil
 	}
 
-	meshCluster := meshv1.MeshCluster{
+	meshCluster := &meshv1.MeshCluster{
 		TypeMeta: metav1.TypeMeta{
 			Kind: reflect.TypeOf(meshv1.MeshCluster{}).Name(),
 			APIVersion: meshv1.GroupVersion.String(),
@@ -71,64 +73,61 @@ func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.Cr
 		},
 	}
 
-	_,_,err = e.kubeApiClient.CustomObjectsApi.CreateNamespacedCustomObject(context.Background(), meshv1.GroupVersion.Group,
-		meshv1.GroupVersion.Version, meshCluster.Namespace, "meshclusters", meshCluster, nil)
+	err = e.client.Create(context.TODO(), meshCluster)
 	if err!=nil {
 		klog.Errorf("Create MeshCluster(%s) error %s", req.String(), err.Error())
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
 		resp.ErrMsg = err.Error()
 	}
 	klog.Infof("Create Cluster(%s) MeshCluster success", req.Clusterid)
-	return resp, nil
+	return err
 }
 
 // DeleteMeshCluster is a server side stream handler called via client.DeleteMeshCluster or the generated client code
-func (e *MeshHandler) DeleteMeshCluster(ctx context.Context, req *meshmanager.DeleteMeshClusterReq) (*meshmanager.DeleteMeshClusterResp, error) {
+func (e *MeshHandler) DeleteMeshCluster(ctx context.Context, req *meshmanager.DeleteMeshClusterReq, resp *meshmanager.DeleteMeshClusterResp)error{
 	klog.Infof("Received meshmanager.DeleteMeshCluster request(%s)", req.String())
-
-	resp := &meshmanager.DeleteMeshClusterResp{
-		ErrCode: meshmanager.ErrCode_ERROR_OK,
-	}
+	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
 	mCluster,err := e.getMeshClusterByClusterId(req.Clusterid)
 	if err!=nil {
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
 		resp.ErrMsg = err.Error()
-		return resp, nil
+		return err
 	}
 	if mCluster==nil {
-		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
+		resp.ErrCode = meshmanager.ErrCode_ERROR_NOT_FOUND
 		resp.ErrMsg = fmt.Sprintf("Cluster(%s) MeshCluster NotFound", req.Clusterid)
-		return resp, nil
+		return nil
 	}
 
-	_,_,err = e.kubeApiClient.CustomObjectsApi.DeleteNamespacedCustomObject(context.Background(), meshv1.GroupVersion.Group,
-		meshv1.GroupVersion.Version, "bcs-system", "meshclusters", mCluster.Name, kubeclient.V1DeleteOptions{},nil)
+	err = e.client.Delete(context.TODO(), mCluster)
 	if err!=nil {
 		klog.Errorf("Create MeshCluster(%s) error %s", req.String(), err.Error())
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
 		resp.ErrMsg = err.Error()
 	}
 	klog.Infof("Delete Cluster(%s) MeshCluster success", req.Clusterid)
-	return resp, nil
+	return err
 }
 
 // ListMeshCluster is a bidirectional stream handler called via client.ListMeshCluster or the generated client code
-func (e *MeshHandler) ListMeshCluster(ctx context.Context, req *meshmanager.ListMeshClusterReq) (*meshmanager.ListMeshClusterResp, error) {
+func (e *MeshHandler) ListMeshCluster(ctx context.Context, req *meshmanager.ListMeshClusterReq, resp *meshmanager.ListMeshClusterResp)error{
 	klog.Infof("Received meshmanager.ListMeshCluster request with count: %d", req.String())
-	resp := &meshmanager.ListMeshClusterResp{
-		ErrCode: meshmanager.ErrCode_ERROR_OK,
-		MeshClusters: make([]*meshmanager.MeshCluster, 0),
-	}
+	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
+	resp.MeshClusters = make([]*meshmanager.MeshCluster, 0)
 	mClusterList,err := e.listMeshClusters()
 	if err!=nil {
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
 		resp.ErrMsg = err.Error()
-		return resp, nil
+		return err
 	}
 	if len(mClusterList.Items)==0 {
-		return resp, nil
+		return nil
 	}
 	for _,in :=range mClusterList.Items {
+		if req.Clusterid!="" && in.Spec.ClusterId!=req.Clusterid {
+			continue
+		}
+
 		mCluster := &meshmanager.MeshCluster{
 			Version: in.Spec.Version,
 			Clusterid: in.Spec.ClusterId,
@@ -145,7 +144,7 @@ func (e *MeshHandler) ListMeshCluster(ctx context.Context, req *meshmanager.List
 		resp.MeshClusters = append(resp.MeshClusters, mCluster)
 	}
 
-	return resp, nil
+	return nil
 }
 
 func (e *MeshHandler) getMeshClusterByClusterId(clusterId string)(*meshv1.MeshCluster,error){
@@ -163,22 +162,8 @@ func (e *MeshHandler) getMeshClusterByClusterId(clusterId string)(*meshv1.MeshCl
 }
 
 //list all meshclusters
-func (e *MeshHandler) listMeshClusters()(meshv1.MeshClusterList, error){
-	mClusterList := meshv1.MeshClusterList{}
-	object,_,err := e.kubeApiClient.CustomObjectsApi.ListNamespacedCustomObject(context.Background(), meshv1.GroupVersion.Group,
-		meshv1.GroupVersion.Version, "bcs-system", "meshclusters",nil)
-	if err!=nil {
-		klog.Errorf("ListNamespacedCustomObject failed: %s", err.Error())
-		return mClusterList, err
-	}
-	by,_ := json.Marshal(object)
-	klog.Infof(string(by))
-
-	mClusterList,ok := object.(meshv1.MeshClusterList)
-	if !ok {
-		err = fmt.Errorf("interface to meshv1.MeshClusterList failed")
-		return mClusterList, err
-	}
-
-	return mClusterList, nil
+func (e *MeshHandler) listMeshClusters()(*meshv1.MeshClusterList, error){
+	mClusterList := &meshv1.MeshClusterList{}
+	err := e.client.List(context.TODO(), mClusterList)
+	return mClusterList, err
 }

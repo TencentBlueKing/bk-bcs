@@ -23,8 +23,14 @@ enum ErrCode {
     // 0 Sunccess
     ERROR_OK = 0;
 
+    // 404 Not Found
+    ERROR_NOT_FOUND = 404;
+
     // 91000 mesh cluster failed
     ERROR_MESH_CLUSTER_FAILED = 91000;
+
+    //91001 MeshCluster already exist
+    ERROR_MESH_CLUSTER_EXIST = 91001;
 }
 
 service MeshManager {
@@ -41,7 +47,7 @@ service MeshManager {
 
     rpc DeleteMeshCluster(DeleteMeshClusterReq) returns (DeleteMeshClusterResp) {
         option (google.api.http) = {
-            delete: "/meshmanager/v1/meshcluster"
+            delete: "/bcs-mesh-manager/v1/meshcluster"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "删除k8s集群mesh服务"
@@ -51,7 +57,7 @@ service MeshManager {
 
     rpc ListMeshCluster(ListMeshClusterReq) returns (ListMeshClusterResp) {
         option (google.api.http) = {
-          get: "/meshmanager/v1/meshcluster"
+          get: "/bcs-mesh-manager/v1/meshcluster"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
           description: "获取k8s集群mesh服务状态"
