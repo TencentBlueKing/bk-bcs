@@ -11,46 +11,40 @@
  *
  */
 
-package grant
+package permission
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"github.com/urfave/cli"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
 )
 
-//NewGrantCommand sub command grant registration
-func NewGrantCommand() cli.Command {
-	return cli.Command{
-		Name:  "grant",
-		Usage: "grant permission",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "type, t",
-				Usage: "grant type, value can be permission",
-			},
-			cli.StringFlag{
-				Name:  "from-file, f",
-				Usage: "reading with configuration `FILE`",
-			},
-		},
-		Action: func(c *cli.Context) error {
-			return grant(utils.NewClientContext(c))
-		},
+func grantPermission(c *utils.ClientContext) error {
+	var data []byte
+	var err error
+	if !c.IsSet(utils.OptionFile) {
+		//reading all data from stdin
+		data, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		data, err = c.FileData()
 	}
-}
-
-func grant(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionType); err != nil {
+	if err != nil {
 		return err
 	}
-
-	resourceType := c.String(utils.OptionType)
-
-	switch resourceType {
-	case "permission":
-		return grantPermission(c)
-	default:
-		return fmt.Errorf("invalid type: %s", resourceType)
+	if len(data) == 0 {
+		return fmt.Errorf("failed to grant: no available resource datas")
 	}
+
+	userManager := v1.NewBcsUserManager(utils.GetClientOption())
+	err = userManager.GrantOrRevokePermission(http.MethodPost, data)
+	if err != nil {
+		return fmt.Errorf("failed to grant permission: %v", err)
+	}
+
+	fmt.Printf("success to grant permission\n")
+	return nil
 }
