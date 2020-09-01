@@ -14,7 +14,6 @@
 package etcd
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"time"
@@ -52,9 +51,6 @@ func (store *managerStore) SaveVersion(version *types.Version) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      version.Name,
 			Namespace: runAs,
-			Labels: map[string]string{
-				VersionIdKey: version.ID,
-			},
 		},
 		Spec: v2.VersionSpec{
 			Version: *version,
@@ -88,9 +84,6 @@ func (store *managerStore) UpdateVersion(version *types.Version) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      version.Name,
 			Namespace: runAs,
-			Labels: map[string]string{
-				VersionIdKey: version.ID,
-			},
 		},
 		Spec: v2.VersionSpec{
 			Version: *version,
@@ -118,21 +111,6 @@ func (store *managerStore) ListVersions(runAs, versionID string) ([]string, erro
 	return nodes, nil
 }
 
-func (store *managerStore) listVersions(runAs, versionID string) ([]*types.Version, error) {
-	client := store.BkbcsClient.Versions(runAs)
-	v2Versions, err := client.List(metav1.ListOptions{LabelSelector: fmt.Sprintf("%s=%s", VersionIdKey, versionID)})
-	if err != nil {
-		return nil, err
-	}
-
-	nodes := make([]*types.Version, 0, len(v2Versions.Items))
-	for _, version := range v2Versions.Items {
-		obj := version.Spec.Version
-		nodes = append(nodes, &obj)
-	}
-	return nodes, nil
-}
-
 func (store *managerStore) listClusterVersions() ([]*types.Version, error) {
 	client := store.BkbcsClient.Versions("")
 	v2Versions, err := client.List(metav1.ListOptions{})
@@ -149,20 +127,11 @@ func (store *managerStore) listClusterVersions() ([]*types.Version, error) {
 }
 
 func (store *managerStore) FetchVersion(runAs, versionId, versionNo string) (*types.Version, error) {
-	if cacheMgr.isOK {
-		version, _ := getCacheVersion(runAs, versionId, versionNo)
-		if version == nil {
-			return nil, schStore.ErrNoFound
-		}
-		return version, nil
+	version, _ := getCacheVersion(runAs, versionId, versionNo)
+	if version == nil {
+		return nil, schStore.ErrNoFound
 	}
-
-	client := store.BkbcsClient.Versions(runAs)
-	v2Version, err := client.Get(versionNo, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return &v2Version.Spec.Version, nil
+	return version, nil
 }
 
 func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) error {
@@ -174,14 +143,13 @@ func (store *managerStore) DeleteVersion(runAs, versionId, versionNo string) err
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
-
 	return nil
 }
 
 //zk stores this method by removing the version path, and etcd stores in order to be consistent
 //with the store interface, this method does not implement anything
 func (store *managerStore) DeleteVersionNode(runAs, versionId string) error {
-	//do nothing
+	deleteCacheVersion(runAs, versionId)
 	return nil
 }
 

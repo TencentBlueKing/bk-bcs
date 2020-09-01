@@ -1,5 +1,45 @@
 # 发布版本信息
 
+## 1.18.3
+- 发布日期：2020-08-04
+- **新增功能**
+  * [Mesos]bcs-scheduler支持Daemonset特性[#207]
+  * [Mesos]bcs-service-prometheus支持etcd存储模式[#473]
+  * 新增模块bcs-bkcmdb-synchronizer，支持容器数据收录至蓝鲸cmdb[#476]
+  * [K8S]新增模块bcs-cc-agent，为容器同步主机节点属性信息[#496]
+  * [K8S/Mesos]bcs-cloudnetwork-agent支持腾讯云underlay方案初始化[#499]
+  * [K8S/Mesos]开源bcs-egress-controller模块[#501]
+  * [K8S]开源bk-cmdb-operator模块[#503]
+  * [Mesos] Mesos方案支持prometheus ServiceMonitor[#514]
+  * [K8S/Mesos] qcloud-eip插件支持在线扩容并兼容bridge模式[#515]
+  * [K8S/Mesos] bcs-user-manager支持websocket tunnel模式实现集群托管[#521]
+  * [Mesos] 支持机器异构场景下均匀调度容器[#25]
+  * [Mesos] bcs-scheduler支持环境变量数据引用[#533]
+- **功能优化**
+  * [K8S/Mesos]容器日志采集方案支持采集路径模糊匹配，上报Label开关[#472]
+  * 清理所有模块中对蓝鲸license服务依赖[#474]
+  * [Mesos] bcs-scheduler支持mesos方案下容器corefile目录权限[#481]
+  * [K8S/Mesos] bcs-loadbalance增强proxy转发规则冲突检测能力[#482]
+  * [K8S/Mesos] bcs-datawatch优化同步netservice underlay资源超时问题[#483]
+  * [Mesos] bcs-scheduler优化deepcopy导致CPU消耗过高问题[#485]
+  * [K8S/Mesos]针对AWS网络方案中使用到的secret进行加密[#490]
+  * [K8S]StatefulSetPlus更名为GameStatefulSet[#498]
+  * 全模块容器化配置统一调整[#508]
+  * [Mesos] 优化bcs-scheduler metrics数据[#532]
+- **BUG修复**
+  * 修复所有模块中ticker未关闭问题[#478]
+  * [K8S]修复bcs-k8s-watch同步数据至bcs-storage数据不一致问题[#488]
+  * [K8S/Mesos]修复AWS弹性网卡方案无法联通问题[#489]
+  * [Mesos]修复bcs-mesos-adatper因为zookeeper异常时导致服务发现异常问题[#491]
+  * [K8S/Mesos]修复bcs-loadbalance更新转发规则异常问题[#493]
+  * [K8S/Mesos]修复bcs-webhook-server覆盖用户init-container的问题[#495]
+  * [K8S]修复bcs-api因为权限问题无法使用kubectl exec与webconsole问题[#504]
+  * [K8S]修复bcs-api websocket tunnel异常问题[#510]
+  * [K8S/Mesos]修复腾讯云网络插件qcloud-eip与全局路由方案冲突问题[#515]
+  * [Mesos] bcs-scheduler修复taskgroup因为自定义数据过大导致数据重复问题[#523]
+  * [Mesos] bcs-scheduler修复etcd存储模式下taskgroup数据保存超时问题[#525]
+  * [Mesos] bcs-scheduler优化scale up超时问题[#527]
+
 ## 1.17.5
 - 发布日期：2020-07-06
 - **新增功能**
