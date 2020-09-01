@@ -60,6 +60,7 @@ func CreateRestContainer(pathPrefix string) *restful.Container {
 	ws.Route(AddSuperUserAuthF(ws.POST("/clusters/cidr/add_cidr")).To(AddTkeCidr))
 	ws.Route(AddAuthF(ws.POST("/clusters/cidr/apply_cidr")).To(ApplyTkeCidr))
 	ws.Route(AddAuthF(ws.POST("/clusters/cidr/release_cidr")).To(ReleaseTkeCidr))
+	ws.Route(AddAuthF(ws.GET("/clusters/cidr/list_count")).To(ListTkeCidr))
 
 	// Basic handlers
 	ws.Route(AddAuthF(ws.POST("/clusters/")).To(CreatePlainCluster))

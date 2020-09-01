@@ -16,9 +16,9 @@
 package informers
 
 import (
-	internalclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	internalinterfaces "bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
-	tkex "bcs-gamestatefulset-operator/pkg/informers/tkex"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
+	tkex "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/tkex"
 	reflect "reflect"
 	sync "sync"
 	time "time"

@@ -11,7 +11,7 @@
  *
  */
 
-package revoke
+package permission
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ import (
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
 )
 
 func revokePermission(c *utils.ClientContext) error {
