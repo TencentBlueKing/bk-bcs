@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -26,6 +25,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	simplejson "github.com/bitly/go-simplejson"
 	restful "github.com/emicklei/go-restful"
@@ -136,6 +137,10 @@ func (proxy *kubeProxy) customResourceNamespaceValidate(req *http.Request) {
 		blog.Errorf("Reading custom resource Request for namespace validation failed, %s. URL: %s", err.Error(), req.URL.String())
 		return
 	}
+	if len(allBytes) == 0 {
+		blog.Errorf("bcs-mesos-driver get empty body when in POST or PUT request, URL: %s, Method: %s", req.URL.String(), req.Method)
+		return
+	}
 	buffer := bytes.NewBuffer(allBytes)
 	req.Body = ioutil.NopCloser(buffer)
 	req.ContentLength = int64(buffer.Len())
@@ -145,11 +150,21 @@ func (proxy *kubeProxy) customResourceNamespaceValidate(req *http.Request) {
 	}
 	jsonObj, err := simplejson.NewJson(allBytes)
 	if err != nil {
-		blog.Errorf("Custom Resource POST data is not expected json, %s. URL: %s", err.Error(), req.URL.String())
+		blog.Errorf("Custom Resource POST data is not expected json, %s. URL: %s. origin data: %s", err.Error(), req.URL.String(), string(allBytes))
 		return
 	}
-	meta := jsonObj.Get("metadata")
-	namespace, _ := meta.Get("namespace").String()
+	//fix when namespace is empty
+	meta, ok := jsonObj.CheckGet("metadata")
+	if !ok {
+		blog.Errorf("Custom Resource Post to %s lost meta data", req.URL.String())
+		return
+	}
+	ns, ok := meta.CheckGet("namespace")
+	if !ok {
+		blog.Errorf("Custom Resource Post to %s lost namespace data", req.URL.String())
+		return
+	}
+	namespace, _ := ns.String()
 	if len(namespace) == 0 {
 		blog.Errorf("Custom Resource POST to %s lost Namespace. %s", req.URL.String(), err.Error())
 		return

@@ -15,6 +15,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -128,12 +129,19 @@ func (mgr *AppModManager) dynamicLoad() {
 
 		// init new app mods.
 		for _, mod := range dynamicAppMods {
-			currentAppModMap[fmt.Sprintf("%s_%s", mod.BusinessName, mod.AppName)] = mod
+			// must clean path at first.
+			mod.Path = filepath.Clean(mod.Path)
+
+			// mod key.
+			modKey := ModKey(mod.BusinessName, mod.AppName, mod.Path)
+
+			// record current app mod.
+			currentAppModMap[modKey] = mod
 
 			// can't re-init the mod that is already inited before, the way to update
 			// target app mod is just delete it and re-init it.
 			mgr.duplicateCheckMapMu.RLock()
-			if _, isExist := mgr.duplicateCheckMap[fmt.Sprintf("%s_%s", mod.BusinessName, mod.AppName)]; isExist {
+			if _, isExist := mgr.duplicateCheckMap[modKey]; isExist {
 				mgr.duplicateCheckMapMu.RUnlock()
 				continue
 			}
@@ -148,30 +156,30 @@ func (mgr *AppModManager) dynamicLoad() {
 			}
 
 			// set configs cache path.
-			mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.path", mod.BusinessName, mod.AppName), mod.Path)
+			mgr.viper.Set(fmt.Sprintf("appmod.%s.path", modKey), mod.Path)
 
 			// set app mod cluster name.
 			if len(mod.ClusterName) == 0 {
 				mod.ClusterName = defaultCluster
 			}
 			clusterLabels, clusterName := common.ParseClusterLabels(mod.ClusterName)
-			mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.cluster", mod.BusinessName, mod.AppName), clusterName)
-			mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.clusterLabels", mod.BusinessName, mod.AppName), clusterLabels)
+			mgr.viper.Set(fmt.Sprintf("appmod.%s.cluster", modKey), clusterName)
+			mgr.viper.Set(fmt.Sprintf("appmod.%s.clusterLabels", modKey), clusterLabels)
 
 			// set app mod zone name.
 			if len(mod.ZoneName) == 0 {
 				mod.ZoneName = defaultZone
 			}
-			mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.zone", mod.BusinessName, mod.AppName), mod.ZoneName)
+			mgr.viper.Set(fmt.Sprintf("appmod.%s.zone", modKey), mod.ZoneName)
 
 			// set dc tag, maybe empty.
 			if len(mod.DC) == 0 {
 				mod.DC = defaultDC
 			}
-			mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.dc", mod.BusinessName, mod.AppName), mod.DC)
+			mgr.viper.Set(fmt.Sprintf("appmod.%s.dc", modKey), mod.DC)
 
 			// set labels, maybe empty.
-			mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.labels", mod.BusinessName, mod.AppName), mod.Labels)
+			mgr.viper.Set(fmt.Sprintf("appmod.%s.labels", modKey), mod.Labels)
 
 			// setup the new app mod.
 			mgr.setupAppMod(mod)
@@ -183,7 +191,7 @@ func (mgr *AppModManager) dynamicLoad() {
 }
 
 // initialize single appinfo.
-func (mgr *AppModManager) initSingleAppinfo(businessName, appName, clusterName, zoneName string) error {
+func (mgr *AppModManager) initSingleAppinfo(businessName, appName, clusterName, zoneName, path string) error {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithTimeout(mgr.viper.GetDuration("connserver.dialtimeout")),
@@ -205,7 +213,7 @@ func (mgr *AppModManager) initSingleAppinfo(businessName, appName, clusterName, 
 		AppName:       appName,
 		ClusterName:   clusterName,
 		ZoneName:      zoneName,
-		ClusterLabels: mgr.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterLabels", businessName, appName)),
+		ClusterLabels: mgr.viper.GetString(fmt.Sprintf("appmod.%s.clusterLabels", ModKey(businessName, appName, path))),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), mgr.viper.GetDuration("connserver.calltimeout"))
@@ -222,29 +230,30 @@ func (mgr *AppModManager) initSingleAppinfo(businessName, appName, clusterName, 
 	}
 
 	// query success, save metadata to local.
-	mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.bid", businessName, appName), resp.Bid)
-	mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.appid", businessName, appName), resp.Appid)
-	mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.clusterid", businessName, appName), resp.Clusterid)
-	mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.zoneid", businessName, appName), resp.Zoneid)
+	mgr.viper.Set(fmt.Sprintf("appmod.%s.bid", ModKey(businessName, appName, path)), resp.Bid)
+	mgr.viper.Set(fmt.Sprintf("appmod.%s.appid", ModKey(businessName, appName, path)), resp.Appid)
+	mgr.viper.Set(fmt.Sprintf("appmod.%s.clusterid", ModKey(businessName, appName, path)), resp.Clusterid)
+	mgr.viper.Set(fmt.Sprintf("appmod.%s.zoneid", ModKey(businessName, appName, path)), resp.Zoneid)
 
-	logger.Info("AppModManager| init new appinfo success[%s %s %s %s], bid[%+v] appid[%+v] clusterid[%+v] zoneid[%+v]",
-		businessName, appName, clusterName, zoneName, resp.Bid, resp.Appid, resp.Clusterid, resp.Zoneid)
+	logger.Info("AppModManager| init new appinfo success[%s %s %s %s %s], bid[%+v] appid[%+v] clusterid[%+v] zoneid[%+v]",
+		businessName, appName, clusterName, zoneName, path, resp.Bid, resp.Appid, resp.Clusterid, resp.Zoneid)
 
 	return nil
 }
 
 // initialize config cache.
-func (mgr *AppModManager) initCache(businessName, appName string) (*EffectCache, *ContentCache) {
-	// config release effect cache, "filepath(etc)/businessName/appName".
-	effectCache := NewEffectCache(fmt.Sprintf("%s/%s/%s",
-		mgr.viper.GetString("cache.fileCachePath"), businessName, appName), businessName, appName)
+func (mgr *AppModManager) initCache(businessName, appName, path string) (*EffectCache, *ContentCache) {
+	// config release effect cache, "filepath(etc)/businessName/appName/path".
+	effectCache := NewEffectCache(fmt.Sprintf("%s/%s/%s/%s",
+		mgr.viper.GetString("cache.fileCachePath"), businessName, appName, path), businessName, appName, path)
 
 	// content cache.
 	contentCache := NewContentCache(
 		mgr.viper,
-		fmt.Sprintf("%s/%s/%s", mgr.viper.GetString("cache.contentCachePath"), businessName, appName),
+		mgr.viper.GetString("cache.contentCachePath"),
 		businessName,
 		appName,
+		path,
 		mgr.viper.GetInt("cache.contentMCacheSize"),
 		mgr.viper.GetString("cache.contentExpiredCachePath"),
 		mgr.viper.GetDuration("cache.mcacheExpiration"),
@@ -253,24 +262,26 @@ func (mgr *AppModManager) initCache(businessName, appName string) (*EffectCache,
 	)
 	go contentCache.Setup()
 
-	logger.Info("AppModManager| init single[%s %s] effect/content cache success.", businessName, appName)
+	logger.Info("AppModManager| init single[%s %s %s] effect/content cache success.", businessName, appName, path)
 	return effectCache, contentCache
 }
 
 // initialize sidecar config handler.
-func (mgr *AppModManager) initHandler(businessName, appName string, effectCache *EffectCache, contentCache *ContentCache) *Handler {
+func (mgr *AppModManager) initHandler(businessName, appName, path string, effectCache *EffectCache, contentCache *ContentCache) *Handler {
 	// config handler.
-	configHandler := NewConfigHandler(mgr.viper, businessName, appName, effectCache, contentCache, mgr.reloader)
+	configHandler := NewConfigHandler(mgr.viper, businessName, appName, path, effectCache, contentCache, mgr.reloader)
 
 	// handler.
-	handler := NewHandler(mgr.viper, businessName, appName, configHandler)
+	handler := NewHandler(mgr.viper, businessName, appName, path, configHandler)
 
-	logger.Info("AppModManager| init single[%s %s] sidecar handler success.", businessName, appName)
+	logger.Info("AppModManager| init single[%s %s %s] sidecar handler success.", businessName, appName, path)
 	return handler
 }
 
 // initInnerMods initialize the inner modules for target app.
-func (mgr *AppModManager) initInnerMods(businessName, appName string) {
+func (mgr *AppModManager) initInnerMods(businessName, appName, path string) {
+	modKey := ModKey(businessName, appName, path)
+
 	// wait for ready to pull configs.
 	for {
 		// main flag to control all mods.
@@ -279,44 +290,47 @@ func (mgr *AppModManager) initInnerMods(businessName, appName string) {
 		}
 
 		// app mod level flags.
-		if mgr.viper.GetBool(fmt.Sprintf("sidecar.%s_%s.readyPullConfigs", businessName, appName)) {
+		if mgr.viper.GetBool(fmt.Sprintf("sidecar.%s.readyPullConfigs", modKey)) {
 			break
 		}
-		logger.Warn("AppModManager| [%s %s] waiting for pulling configs until flag mark ready", businessName, appName)
+		logger.Warn("AppModManager| [%s %s %s] waiting for pulling configs until flag mark ready", businessName, appName, path)
 
 		time.Sleep(defaultInitInnerModsWaitTime)
 	}
-	logger.Info("AppModManager| init inner mods for [%s %s] right now!", businessName, appName)
+	logger.Info("AppModManager| init inner mods for [%s %s %s] right now!", businessName, appName, path)
+
+	// eliminate summit.
+	common.DelayRandomMS(2500)
 
 	// update app mod stop flag to false.
-	mgr.viper.Set(fmt.Sprintf("appmod.%s_%s.stop", businessName, appName), false)
+	mgr.viper.Set(fmt.Sprintf("appmod.%s.stop", modKey), false)
 
 	// initialize cache.
-	effectCache, contentCache := mgr.initCache(businessName, appName)
+	effectCache, contentCache := mgr.initCache(businessName, appName, path)
 
 	// initialize handler.
-	handler := mgr.initHandler(businessName, appName, effectCache, contentCache)
+	handler := mgr.initHandler(businessName, appName, path, effectCache, contentCache)
 
 	// initialize signalling channel.
-	signalling := NewSignallingChannel(mgr.viper, businessName, appName, handler)
+	signalling := NewSignallingChannel(mgr.viper, businessName, appName, path, handler)
 
 	// run sidecar config handler.
 	handler.Run()
-	logger.Info("AppModManager| new sidecar config handler[%s %s] run success.", businessName, appName)
+	logger.Info("AppModManager| new sidecar config handler[%s %s %s] run success.", businessName, appName, path)
 
 	// setup signalling channel.
 	go signalling.Setup()
 
 	// check target app mod exists or not this moment, and add new signalling for it.
 	mgr.duplicateCheckMapMu.RLock()
-	if _, isExist := mgr.duplicateCheckMap[fmt.Sprintf("%s_%s", businessName, appName)]; isExist {
+	if _, isExist := mgr.duplicateCheckMap[modKey]; isExist {
 		// mark and save new signalling, only lock for safely, the signalling of target
 		// mod would not be duplicated here.
 		mgr.signallingsMu.Lock()
-		mgr.signallings[fmt.Sprintf("%s_%s", businessName, appName)] = signalling
+		mgr.signallings[modKey] = signalling
 		mgr.signallingsMu.Unlock()
 
-		logger.Info("AppModManager| new sidecar signallingChannel[%s %s] run success.", businessName, appName)
+		logger.Info("AppModManager| new sidecar signallingChannel[%s %s %s] run success.", businessName, appName, path)
 	} else {
 		signalling.Close()
 	}
@@ -349,7 +363,7 @@ func (mgr *AppModManager) setupAppMod(mod *AppModInfo) {
 
 	// call connserver and init app mod info with retry action.
 	for i := 0; i <= retryTimes; i++ {
-		if err := mgr.initSingleAppinfo(mod.BusinessName, mod.AppName, mod.ClusterName, mod.ZoneName); err != nil {
+		if err := mgr.initSingleAppinfo(mod.BusinessName, mod.AppName, mod.ClusterName, mod.ZoneName, mod.Path); err != nil {
 			logger.Warn("AppModManager| init app mod[%+v] failed[%d], %+v", mod, i, err)
 
 			// retry.
@@ -360,11 +374,11 @@ func (mgr *AppModManager) setupAppMod(mod *AppModInfo) {
 		logger.Info("AppModManager| init app mod[%+v][%d] success!", mod, i)
 
 		mgr.duplicateCheckMapMu.Lock()
-		mgr.duplicateCheckMap[fmt.Sprintf("%s_%s", mod.BusinessName, mod.AppName)] = mod
+		mgr.duplicateCheckMap[ModKey(mod.BusinessName, mod.AppName, mod.Path)] = mod
 		mgr.duplicateCheckMapMu.Unlock()
 
 		// init inner mods in another coroutine.
-		go mgr.initInnerMods(mod.BusinessName, mod.AppName)
+		go mgr.initInnerMods(mod.BusinessName, mod.AppName, mod.Path)
 
 		isInitSucc = true
 		break

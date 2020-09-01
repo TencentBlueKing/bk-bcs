@@ -28,6 +28,7 @@ import (
 	itgaction "bk-bscp/cmd/bscp-accessserver/actions/integration"
 	multicommitaction "bk-bscp/cmd/bscp-accessserver/actions/multi-commit"
 	multireleaseaction "bk-bscp/cmd/bscp-accessserver/actions/multi-release"
+	procattraction "bk-bscp/cmd/bscp-accessserver/actions/procattr"
 	releaseaction "bk-bscp/cmd/bscp-accessserver/actions/release"
 	reloadaction "bk-bscp/cmd/bscp-accessserver/actions/reload"
 	shardingaction "bk-bscp/cmd/bscp-accessserver/actions/sharding"
@@ -80,6 +81,23 @@ func (as *AccessServer) authCheck(ctx context.Context, bid string) (pbcommon.Err
 
 	if !common.VerifyUserPWD(token, auth) {
 		return pbcommon.ErrCode_E_AS_NOT_AUTHED, fmt.Sprintf("request op on business[%s] not authed", bid)
+	}
+	return pbcommon.ErrCode_E_OK, ""
+}
+
+// check auth platform.
+func (as *AccessServer) authPlatformCheck(ctx context.Context) (pbcommon.ErrCode, string) {
+	if !as.viper.GetBool("auth.open") {
+		logger.Warn("platform request auth check not open")
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
+	token, err := common.ParseHTTPBasicAuth(ctx)
+	if err != nil {
+		return pbcommon.ErrCode_E_AS_AUTH_FAILED, err.Error()
+	}
+	if !common.VerifyUserPWD(token, as.viper.GetString("auth.platform")) {
+		return pbcommon.ErrCode_E_AS_NOT_AUTHED, "platform request op not authed"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -1567,6 +1585,144 @@ func (as *AccessServer) DeleteStrategy(ctx context.Context, req *pb.DeleteStrate
 	}
 
 	action := strategyaction.NewDeleteAction(as.viper, as.businessSvrCli, req, response)
+	as.executor.Execute(action)
+
+	return response, nil
+}
+
+// CreateProcAttr creates new ProcAttr.
+func (as *AccessServer) CreateProcAttr(ctx context.Context, req *pb.CreateProcAttrReq) (*pb.CreateProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("CreateProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.CreateProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := as.collector.StatRequest("CreateProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("CreateProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	if errCode, errMsg := as.authPlatformCheck(ctx); errCode != pbcommon.ErrCode_E_OK {
+		response.ErrCode = errCode
+		response.ErrMsg = errMsg
+		return response, nil
+	}
+
+	action := procattraction.NewCreateAction(as.viper, as.businessSvrCli, req, response)
+	as.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryHostProcAttr returns ProcAttr of target app on the host.
+func (as *AccessServer) QueryHostProcAttr(ctx context.Context, req *pb.QueryHostProcAttrReq) (*pb.QueryHostProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryHostProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryHostProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := as.collector.StatRequest("QueryHostProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryHostProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	if errCode, errMsg := as.authPlatformCheck(ctx); errCode != pbcommon.ErrCode_E_OK {
+		response.ErrCode = errCode
+		response.ErrMsg = errMsg
+		return response, nil
+	}
+
+	action := procattraction.NewQueryAction(as.viper, as.businessSvrCli, req, response)
+	as.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryHostProcAttrList returns ProcAttr list on target host.
+func (as *AccessServer) QueryHostProcAttrList(ctx context.Context, req *pb.QueryHostProcAttrListReq) (*pb.QueryHostProcAttrListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryHostProcAttrList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryHostProcAttrListResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := as.collector.StatRequest("QueryHostProcAttrList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryHostProcAttrList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	if errCode, errMsg := as.authPlatformCheck(ctx); errCode != pbcommon.ErrCode_E_OK {
+		response.ErrCode = errCode
+		response.ErrMsg = errMsg
+		return response, nil
+	}
+
+	action := procattraction.NewHostListAction(as.viper, as.businessSvrCli, req, response)
+	as.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryAppProcAttrList returns ProcAttr list of target app.
+func (as *AccessServer) QueryAppProcAttrList(ctx context.Context, req *pb.QueryAppProcAttrListReq) (*pb.QueryAppProcAttrListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryAppProcAttrList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryAppProcAttrListResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := as.collector.StatRequest("QueryAppProcAttrList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryAppProcAttrList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	if errCode, errMsg := as.authPlatformCheck(ctx); errCode != pbcommon.ErrCode_E_OK {
+		response.ErrCode = errCode
+		response.ErrMsg = errMsg
+		return response, nil
+	}
+
+	action := procattraction.NewAppListAction(as.viper, as.businessSvrCli, req, response)
+	as.executor.Execute(action)
+
+	return response, nil
+}
+
+// UpdateProcAttr updates target app ProcAttr on the host.
+func (as *AccessServer) UpdateProcAttr(ctx context.Context, req *pb.UpdateProcAttrReq) (*pb.UpdateProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("UpdateProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.UpdateProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := as.collector.StatRequest("UpdateProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("UpdateProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	if errCode, errMsg := as.authPlatformCheck(ctx); errCode != pbcommon.ErrCode_E_OK {
+		response.ErrCode = errCode
+		response.ErrMsg = errMsg
+		return response, nil
+	}
+
+	action := procattraction.NewUpdateAction(as.viper, as.businessSvrCli, req, response)
+	as.executor.Execute(action)
+
+	return response, nil
+}
+
+// DeleteProcAttr deletes target app ProcAttr on the host.
+func (as *AccessServer) DeleteProcAttr(ctx context.Context, req *pb.DeleteProcAttrReq) (*pb.DeleteProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("DeleteProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.DeleteProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := as.collector.StatRequest("DeleteProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("DeleteProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	if errCode, errMsg := as.authPlatformCheck(ctx); errCode != pbcommon.ErrCode_E_OK {
+		response.ErrCode = errCode
+		response.ErrMsg = errMsg
+		return response, nil
+	}
+
+	action := procattraction.NewDeleteAction(as.viper, as.businessSvrCli, req, response)
 	as.executor.Execute(action)
 
 	return response, nil

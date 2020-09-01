@@ -6,6 +6,9 @@ if [[ -n ${BSCP_BCSSIDECAR_LOG_DIR} ]]; then
     install -dv ${BSCP_BCSSIDECAR_LOG_DIR}
 fi
 
+# handle sigs.
+trap 'exit' SIGTERM
+
 # monitor bk-bscp-bcs-sidecar
 while true
 do

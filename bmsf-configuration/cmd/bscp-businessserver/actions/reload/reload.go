@@ -165,7 +165,7 @@ func (act *ReloadAction) genReloadSpec() {
 	if len(act.req.Releaseid) != 0 {
 		effectInfo := &pbcommon.EffectInfo{Cfgsetid: act.release.Cfgsetid, Releaseid: act.release.Releaseid}
 
-		reloadSpec := &pbcommon.ReloadSpec{Info: []*pbcommon.EffectInfo{effectInfo}}
+		reloadSpec := &pbcommon.ReloadSpec{Rollback: act.req.Rollback, Info: []*pbcommon.EffectInfo{effectInfo}}
 		act.reloadSpec = reloadSpec
 	} else {
 		info := []*pbcommon.EffectInfo{}
@@ -173,7 +173,7 @@ func (act *ReloadAction) genReloadSpec() {
 			info = append(info, &pbcommon.EffectInfo{Cfgsetid: md.Cfgsetid, Releaseid: md.Releaseid})
 		}
 
-		reloadSpec := &pbcommon.ReloadSpec{MultiReleaseid: act.req.MultiReleaseid, Info: info}
+		reloadSpec := &pbcommon.ReloadSpec{Rollback: act.req.Rollback, MultiReleaseid: act.req.MultiReleaseid, Info: info}
 		act.reloadSpec = reloadSpec
 	}
 }
@@ -289,8 +289,8 @@ func (act *ReloadAction) Do() error {
 			return act.Err(errCode, errMsg)
 		}
 
-		if release.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
-			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "target release not in published state")
+		if release.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) && release.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
+			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "target release not in published/rollbacked state")
 		}
 		act.release = release
 
@@ -305,8 +305,8 @@ func (act *ReloadAction) Do() error {
 			return act.Err(errCode, errMsg)
 		}
 
-		if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
-			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "target multi release not in published state")
+		if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) && act.multiRelease.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
+			return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "target multi release not in published/rollbacked state")
 		}
 
 		// query multi release sub release list.
@@ -336,16 +336,14 @@ func (act *ReloadAction) Do() error {
 		if errCode, errMsg := act.reloadBCSMode(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) {
+	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
+		act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
 		// gse plugin sidecar mode.
 
 		// gsecontroller publish.
 		if errCode, errMsg := act.reloadGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
 		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-		// gse mode.
-		return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "not support deploy publish mode")
 	} else {
 		return act.Err(pbcommon.ErrCode_E_BS_SYSTEM_UNKONW, "unknow deploy type")
 	}

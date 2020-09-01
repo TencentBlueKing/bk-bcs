@@ -69,6 +69,7 @@ func initTkeRouters(ws *restful.WebService) {
 	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/add_cidr")).To(AddTkeCidr))
 	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/apply_cidr")).To(ApplyTkeCidr))
 	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/release_cidr")).To(ReleaseTkeCidr))
+	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/cidr/list_count")).To(ListTkeCidr))
 
 	ws.Route(AdminAuthFunc(ws.POST("/v1/tke/{cluster_id}/sync_credentials")).To(SyncTkeClusterCredentials))
 }

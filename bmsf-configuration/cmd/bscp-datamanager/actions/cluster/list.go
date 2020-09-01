@@ -72,6 +72,7 @@ func (act *ListAction) Output() error {
 			Appid:        st.Appid,
 			Clusterid:    st.Clusterid,
 			Name:         st.Name,
+			Labels:       st.Labels,
 			RClusterid:   st.RClusterid,
 			Creator:      st.Creator,
 			LastModifyBy: st.LastModifyBy,
@@ -145,7 +146,7 @@ func (act *ListAction) queryClusterList() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.Cluster{Bid: act.req.Bid, Appid: act.req.Appid}).
 		Where("Fstate = ?", pbcommon.ClusterState_CS_CREATED).
 		Find(&act.clusters).Error

@@ -39,4 +39,14 @@ type Discovery interface {
 	RegisterEventFunc(handleFunc EventHandleFunc)
 }
 
-type EventHandleFunc func(discoveryKey string)
+type EventHandleFunc func(dInfo DiscoveryInfo)
+
+type DiscoveryInfo struct {
+	//mesosModules: commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH ...
+	//serviceModules: commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE ...
+	//nodeModules: discovery.CadvisorModule, discovery.NodeexportModule
+	//serviceMonitor: ServiceMonitor
+	Module string
+	//changed key
+	Key string
+}

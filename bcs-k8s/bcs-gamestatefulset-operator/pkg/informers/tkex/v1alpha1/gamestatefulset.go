@@ -16,10 +16,10 @@
 package v1alpha1
 
 import (
-	tkexv1alpha1 "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	internalclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	internalinterfaces "bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
-	v1alpha1 "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

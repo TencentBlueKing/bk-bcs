@@ -167,6 +167,38 @@ bcs application实现Pod的含义，并与k8s的RC，Mesos的app概念等价。
                         {
                             "name": "http-port",
                             "value": "${bcs.ports.http_port}"
+                        },
+                        {
+                            "name": "requests.cpu",
+                            "valueFrom": {
+                              "resourceFieldRef": {
+                                  "resource": "requests.cpu"
+                              }
+                            }
+                        },
+                        {
+                            "name": "requests.memory",
+                            "valueFrom": {
+                              "resourceFieldRef": {
+                                  "resource": "requests.memory"
+                              }
+                            }
+                        },
+                        {
+                            "name": "limits.cpu",
+                            "valueFrom": {
+                              "resourceFieldRef": {
+                                  "resource": "limits.cpu"
+                              }
+                            }
+                        },
+                        {
+                            "name": "limits.memory",
+                            "valueFrom": {
+                              "resourceFieldRef": {
+                                  "resource": "limits.memory"
+                              }
+                            }
                         }
 					],
 					"image": "docker.hub.com/nfsol/log:92763",

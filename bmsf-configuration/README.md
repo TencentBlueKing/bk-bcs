@@ -67,15 +67,10 @@ release R-85a74cc6-d14b-11e9-a11f-5254000ea971 confirm to publish successfully
 ## Documents
 
 [客户端手册](docs/client_book.md)
-
 [系统对接指南](api/api.md)
-
 [逻辑集成功能介绍](docs/integrator.md)
-
 [模板渲染介绍](docs/template.md)
-
 [配置发布策略](docs/strategy.md)
-
 [设计文档](docs/arch.md)
-
 [项目规范](docs/standard.md)
+[部署安装教程](docs/install.md)

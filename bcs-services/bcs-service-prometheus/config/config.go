@@ -15,16 +15,17 @@ package config
 
 // sd prometheus config
 type Config struct {
-	ClusterZk      string
-	CadvisorPort   int
-	NodeExportPort int
-	ClusterId      string
-	PromFilePrefix string
-	ServiceZk      string
-	EnableMesos    bool
-	EnableService  bool
-	EnableNode     bool
-	Kubeconfig     string
-	ServiceModules []string
-	ClusterModules []string
+	ClusterZk            string
+	CadvisorPort         int
+	NodeExportPort       int
+	ClusterId            string
+	PromFilePrefix       string
+	ServiceZk            string
+	EnableMesos          bool
+	EnableService        bool
+	EnableNode           bool
+	EnableServiceMonitor bool
+	Kubeconfig           string
+	ServiceModules       []string
+	ClusterModules       []string
 }

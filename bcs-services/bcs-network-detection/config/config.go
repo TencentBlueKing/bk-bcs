@@ -13,14 +13,7 @@
 
 package config
 
-//CertConfig is configuration of Cert
-type CertConfig struct {
-	CAFile     string
-	CertFile   string
-	KeyFile    string
-	CertPasswd string
-	IsSSL      bool
-}
+import "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 type Config struct {
 	//address, exmaple: 127.0.0.1
@@ -43,9 +36,9 @@ type Config struct {
 	//cmdb app id
 	AppId int
 	//http client cert config
-	ClientCert *CertConfig
+	ClientCert *types.CertConfig
 	//http server cert config
-	ServerCert *CertConfig
+	ServerCert *types.CertConfig
 	//deployment template json file path
 	Template string
 }

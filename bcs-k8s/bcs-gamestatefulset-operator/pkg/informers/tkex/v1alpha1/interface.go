@@ -16,7 +16,7 @@
 package v1alpha1
 
 import (
-	internalinterfaces "bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

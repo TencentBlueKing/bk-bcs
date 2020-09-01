@@ -99,9 +99,14 @@ func (act *UpdateAction) verify() error {
 		return errors.New("invalid params, unknow deployType, 0:bcs  1:gse")
 	}
 
-	if len(act.req.Name) > database.BSCPNAMELENLIMIT {
+	length = len(act.req.Name)
+	if length == 0 {
+		return errors.New("invalid params, name missing")
+	}
+	if length > database.BSCPNAMELENLIMIT {
 		return errors.New("invalid params, name too long")
 	}
+
 	if len(act.req.Memo) > database.BSCPLONGSTRLENLIMIT {
 		return errors.New("invalid params, memo too long")
 	}

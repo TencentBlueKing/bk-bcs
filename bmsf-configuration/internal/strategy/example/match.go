@@ -25,8 +25,19 @@ func main() {
 	match := handler.Matcher()
 
 	labels := make(map[string]string)
-	labels["k1"] = "v1"
-	labels["k2"] = "v2"
+	labels["k1"] = "lt|2,3"
+	labels["k2"] = "ge|2"
+
+	labelsAnd := make(map[string]string)
+	labelsAnd["k3"] = "le|3,4"
+	labelsAnd["k4"] = "ne|3,5"
+
+	if err := strategy.ValidateLabels(labels); err != nil {
+		panic(err)
+	}
+	if err := strategy.ValidateLabels(labelsAnd); err != nil {
+		panic(err)
+	}
 
 	newStrategy := &strategy.Strategy{
 		Appid:      "appid01",
@@ -35,6 +46,7 @@ func main() {
 		Dcs:        []string{"dc01"},
 		IPs:        []string{"127.0.0.1"},
 		Labels:     labels,
+		LabelsAnd:  labelsAnd,
 	}
 
 	ins := &pbcommon.AppInstance{
@@ -43,7 +55,7 @@ func main() {
 		Zoneid:    "zoneid01",
 		Dc:        "dc01",
 		IP:        "127.0.0.1",
-		Labels:    "{\"Labels\":{\"k1\":\"v1\", \"k2\":\"v2\"}}",
+		Labels:    "{\"Labels\":{\"k1\":\"1\", \"k2\":\"2\", \"k3\":\"3\", \"k4\":\"4\"}}",
 	}
 
 	if match(newStrategy, ins) {

@@ -27,6 +27,7 @@ import (
 	metadataaction "bk-bscp/cmd/bscp-datamanager/actions/metadata"
 	multicommitaction "bk-bscp/cmd/bscp-datamanager/actions/multi-commit"
 	multireleaseaction "bk-bscp/cmd/bscp-datamanager/actions/multi-release"
+	procattraction "bk-bscp/cmd/bscp-datamanager/actions/procattr"
 	releaseaction "bk-bscp/cmd/bscp-datamanager/actions/release"
 	shardingaction "bk-bscp/cmd/bscp-datamanager/actions/sharding"
 	shardingdbaction "bk-bscp/cmd/bscp-datamanager/actions/shardingdb"
@@ -937,7 +938,7 @@ func (dm *DataManager) PublishRelease(ctx context.Context, req *pb.PublishReleas
 		logger.V(2).Infof("PublishRelease[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
 
-	action := releaseaction.NewPublishAction(dm.viper, dm.smgr, dm.releaseCache, req, response)
+	action := releaseaction.NewPublishAction(dm.viper, dm.smgr, dm.releaseCache, dm.configsCache, req, response)
 	dm.executor.Execute(action)
 
 	return response, nil
@@ -1278,6 +1279,108 @@ func (dm *DataManager) DeleteStrategy(ctx context.Context, req *pb.DeleteStrateg
 	}()
 
 	action := strategyaction.NewDeleteAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// CreateProcAttr creates new ProcAttr.
+func (dm *DataManager) CreateProcAttr(ctx context.Context, req *pb.CreateProcAttrReq) (*pb.CreateProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("CreateProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.CreateProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := dm.collector.StatRequest("CreateProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("CreateProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := procattraction.NewCreateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryHostProcAttr returns ProcAttr of target app on the host.
+func (dm *DataManager) QueryHostProcAttr(ctx context.Context, req *pb.QueryHostProcAttrReq) (*pb.QueryHostProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryHostProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryHostProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryHostProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryHostProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := procattraction.NewQueryAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryHostProcAttrList returns ProcAttr list on target host.
+func (dm *DataManager) QueryHostProcAttrList(ctx context.Context, req *pb.QueryHostProcAttrListReq) (*pb.QueryHostProcAttrListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryHostProcAttrList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryHostProcAttrListResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryHostProcAttrList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryHostProcAttrList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := procattraction.NewHostListAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// QueryAppProcAttrList returns ProcAttr list of target app.
+func (dm *DataManager) QueryAppProcAttrList(ctx context.Context, req *pb.QueryAppProcAttrListReq) (*pb.QueryAppProcAttrListResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("QueryAppProcAttrList[%d]| input[%+v]", req.Seq, req)
+	response := &pb.QueryAppProcAttrListResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := dm.collector.StatRequest("QueryAppProcAttrList", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("QueryAppProcAttrList[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := procattraction.NewAppListAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// UpdateProcAttr updates target app ProcAttr on the host.
+func (dm *DataManager) UpdateProcAttr(ctx context.Context, req *pb.UpdateProcAttrReq) (*pb.UpdateProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("UpdateProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.UpdateProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := dm.collector.StatRequest("UpdateProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("UpdateProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := procattraction.NewUpdateAction(dm.viper, dm.smgr, req, response)
+	dm.executor.Execute(action)
+
+	return response, nil
+}
+
+// DeleteProcAttr deletes target app ProcAttr on the host.
+func (dm *DataManager) DeleteProcAttr(ctx context.Context, req *pb.DeleteProcAttrReq) (*pb.DeleteProcAttrResp, error) {
+	rtime := time.Now()
+	logger.V(2).Infof("DeleteProcAttr[%d]| input[%+v]", req.Seq, req)
+	response := &pb.DeleteProcAttrResp{Seq: req.Seq, ErrCode: pbcommon.ErrCode_E_OK, ErrMsg: "OK"}
+
+	defer func() {
+		cost := dm.collector.StatRequest("DeleteProcAttr", response.ErrCode, rtime, time.Now())
+		logger.V(2).Infof("DeleteProcAttr[%d]| output[%dms][%+v]", req.Seq, cost, response)
+	}()
+
+	action := procattraction.NewDeleteAction(dm.viper, dm.smgr, req, response)
 	dm.executor.Execute(action)
 
 	return response, nil

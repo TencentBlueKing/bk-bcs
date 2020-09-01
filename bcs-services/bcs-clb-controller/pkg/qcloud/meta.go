@@ -78,7 +78,7 @@ func (l GroupList) EncodeValues(key string, urlv *url.Values) error {
 //param method: http method, GET or POST
 //param url: qcloud request url
 //param obj: object to encode,
-//example data before hamcSHA1 : "GETcvm.api.qcloud.com/v2/index.php?Action=DescribeInstances&InstanceIds.0=ins-xxxxxxxx&Nonce=11111&Region=ap-guangzhou&SecretId=xxxxxxxxxxxxxxxxxxxxxxxxxx&SignatureMethod=HmacSHA1&Timestamp=1465185768"
+//example data before hamcSHA1 : "GETcvm.api.qcloud.com/v2/index.php?Action=DescribeInstances&InstanceIds.0=ins-09dx96dg&Nonce=11886&Region=ap-guangzhou&SecretId=xxxxxxxxxx&SignatureMethod=HmacSHA1&Timestamp=1465185768"
 func Signature(key, method, url string, obj interface{}) (string, error) {
 	if obj == nil {
 		return "", fmt.Errorf("Can not signature nil object")
