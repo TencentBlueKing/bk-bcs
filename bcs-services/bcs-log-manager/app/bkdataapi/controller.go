@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package bkdataapi
 
 import (
@@ -15,13 +28,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/bkdata"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/apis/bkbcs.tencent.com/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/informers/externalversions"
 	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/listers/bkbcs.tencent.com/v1"
 )
 
+// BKDataController control bkdataapiconfig CRD
 type BKDataController struct {
 	stopCh                   chan struct{}
 	apiextensionClientset    *apiextensionsclient.Clientset
@@ -29,14 +43,19 @@ type BKDataController struct {
 	bkDataApiConfigInformer  cache.SharedIndexInformer
 	bkDataApiConfigLister    listers.BKDataApiConfigLister
 	kubeConfig               string
+	apiHost                  string
 }
 
-func NewBKDataController(kubeConfig string) *BKDataController {
+// NewBKDataController create BKDataController
+func NewBKDataController(stopCh chan struct{}, kubeConfig, apiHost string) *BKDataController {
 	return &BKDataController{
+		stopCh:     stopCh,
 		kubeConfig: kubeConfig,
+		apiHost:    apiHost,
 	}
 }
 
+// Start starts BKDataController
 func (c *BKDataController) Start() error {
 	err := c.initKubeConfig()
 	if err != nil {
@@ -133,17 +152,14 @@ func (c *BKDataController) handleAddBKDataApiConfig(obj interface{}) {
 	// get api method
 	switch bkDataApiConfig.Spec.ApiName {
 	case "v3_access_deploy_plan_post":
-		client, err := bkdata.NewBKDataClient(bkdata.BKDataClientConfig{
-			BkAppCode:   bkDataApiConfig.Spec.AccessDeployPlanConfig.BkAppCode,
-			BkAppSecret: bkDataApiConfig.Spec.AccessDeployPlanConfig.BkAppSecret,
-			BkUsername:  bkDataApiConfig.Spec.AccessDeployPlanConfig.BkUsername,
+		client := bkdata.NewClientInterface(bkdata.BKDataClientConfig{
+			BkAppCode:                  bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppCode,
+			BkAppSecret:                bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
+			BkUsername:                 bkDataApiConfig.Spec.DataCleanStrategyConfig.BkUsername,
+			BkdataAuthenticationMethod: "user",
+			Host:                       c.apiHost,
 		})
-		if err != nil {
-			blog.Errorf("Initializing bkdata api client error: %s", err.Error())
-			c.respondFailed(bkDataApiConfig, err)
-			break
-		}
-		dataid, err := client.ObtainDataId(bkDataApiConfig.Spec.AccessDeployPlanConfig)
+		dataid, err := client.ObtainDataID(bkDataApiConfig.Spec.AccessDeployPlanConfig)
 		if err != nil {
 			blog.Errorf("Application for dataid failed: %s", err)
 			c.respondFailed(bkDataApiConfig, err)
@@ -159,17 +175,14 @@ func (c *BKDataController) handleAddBKDataApiConfig(obj interface{}) {
 		}
 		c.respondOK(bkDataApiConfig, string(jsonstr))
 	case "v3_databus_cleans_post":
-		client, err := bkdata.NewBKDataClient(bkdata.BKDataClientConfig{
-			BkAppCode:   bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppCode,
-			BkAppSecret: bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
-			BkUsername:  bkDataApiConfig.Spec.DataCleanStrategyConfig.BkUsername,
+		client := bkdata.NewClientInterface(bkdata.BKDataClientConfig{
+			BkAppCode:                  bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppCode,
+			BkAppSecret:                bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
+			BkUsername:                 bkDataApiConfig.Spec.DataCleanStrategyConfig.BkUsername,
+			BkdataAuthenticationMethod: "user",
+			Host:                       c.apiHost,
 		})
-		if err != nil {
-			blog.Errorf("Initializing bkdata api client error: %s", err.Error())
-			c.respondFailed(bkDataApiConfig, err)
-			break
-		}
-		err = client.SetCleanStrategy(bkDataApiConfig.Spec.DataCleanStrategyConfig)
+		err := client.SetCleanStrategy(bkDataApiConfig.Spec.DataCleanStrategyConfig)
 		if err != nil {
 			blog.Errorf("Application for dataid failed: %s", err)
 			c.respondFailed(bkDataApiConfig, err)

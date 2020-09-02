@@ -14,7 +14,7 @@
 package v1
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/bkdata"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

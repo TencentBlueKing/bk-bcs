@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package logmanager;
+package bcslogmanager;
 
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 
-option go_package = "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto";
+option go_package = "proto/bcs-log-manager;bcslogmanager";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
     info: {
@@ -28,9 +28,9 @@ enum ErrCode {
 }
 
 service LogManager {
-    rpc ObtainDataid(ObtainDataidReq) ObtainDataidResp{
+    rpc ObtainDataid(ObtainDataidReq) returns (ObtainDataidResp) {
         option (google.api.http) = {
-            post: "/logmanager/v1/dataid"
+            post: "/bcs-log-manager/v1/dataid"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -39,9 +39,9 @@ service LogManager {
         };
     }
 
-    rpc CreateCleanStrategy(CreateCleanStrategyReq) CommonResp {
+    rpc CreateCleanStrategy(CreateCleanStrategyReq) returns (CommonResp) {
         option (google.api.http) = {
-            post: "/logmanager/v1/dataclean"
+            post: "/bcs-log-manager/v1/dataclean"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -50,9 +50,9 @@ service LogManager {
         };
     }
 
-    rpc ListLogCollectionTask(ListLogCollectionTaskReq) ListLogCollectionTaskResp{
+    rpc ListLogCollectionTask(ListLogCollectionTaskReq) returns (ListLogCollectionTaskResp) {
         option (google.api.http) = {
-            get: "/logmanager/v1/logcollectiontask"
+            get: "/bcs-log-manager/v1/logcollectiontask"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询日志采集任务列表"
@@ -61,9 +61,9 @@ service LogManager {
 
     }
 
-    rpc CreateLogCollectionTask(CreateLogCollectionTaskReq) CommonResp{
+    rpc CreateLogCollectionTask(CreateLogCollectionTaskReq) returns (CommonResp) {
         option (google.api.http) = {
-            post: "/logmanager/v1/logcollectiontask"
+            post: "/bcs-log-manager/v1/logcollectiontask"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -72,9 +72,9 @@ service LogManager {
         };
     }
 
-    rpc DeleteLogCollectionTask(DeleteLogCollectionTaskReq) CommonResp{
+    rpc DeleteLogCollectionTask(DeleteLogCollectionTaskReq) returns (CommonResp) {
         option (google.api.http) = {
-            delete: "/logmanager/v1/logcollectiontask"
+            delete: "/bcs-log-manager/v1/logcollectiontask"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "删除日志采集任务"
@@ -88,8 +88,8 @@ message ObtainDataidReq {
         json_schema: {
           title: "ObtainDataidReq"
           description: "申请DataID"
+          required: ["appCode", "appSecret", "userName", "bizID", "dataName"]
         }
-        required: ["appCode", "appSecret", "userName", "bizID", "dataName"]
         example: { value: '{"appCode": "bcs", "appSecret": "xxx", "userName": "xxx", "bizID": 123, "dataName": "bcs_log_test", "maintainers": "xiaoming,xiaohuang,xiaowang,xiaohong"}' }
     };
 
@@ -112,8 +112,8 @@ message CreateCleanStrategyReq {
         json_schema: {
           title: "CreateCleanStrategyReq"
           description: "新增数据清洗策略"
+          required: ["default", "appCode", "appSecret", "userName", "bizID", "dataID"]
         }
-        required: ["default", "appCode", "appSecret", "userName", "bizID", "dataID"]
     };
 
     bool default = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "default", description: "使用默认容器日志清洗策略"}];
@@ -150,6 +150,8 @@ message ListLogCollectionTaskReq {
     };
 
     string clusterIDs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterIDs", description: "集群ID，逗号分隔多个集群ID，不指定默认为所有集群"}];
+    string configName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configName", description: "日志采集任务名称"}];
+    string configNamespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configNamespace", description: "日志采集任务Namespace，不填默认为default"}];
 }
 
 message ListLogCollectionTaskResp {
@@ -199,8 +201,8 @@ message CreateLogCollectionTaskReq {
         json_schema: {
           title: "CreateLogCollectionTaskReq"
           description: "新增日志采集任务"
+          required: ["clusterIDs", "config"]
         }
-        required: ["clusterIDs", "config"]
     };
 
     string clusterIDs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterIDs", description: "集群ID，逗号分隔多个集群ID，不指定默认为所有集群"}];
@@ -212,8 +214,8 @@ message DeleteLogCollectionTaskReq {
         json_schema: {
           title: "CreateLogCollectionTaskReq"
           description: "新增日志采集任务"
+          required: ["clusterIDs", "configName"]
         }
-        required: ["clusterIDs", "configName"]
     };
 
     string clusterIDs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterIDs", description: "集群ID，逗号分隔多个集群ID，不指定默认为所有集群"}];

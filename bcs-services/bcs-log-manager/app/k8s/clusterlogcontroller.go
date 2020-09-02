@@ -1,9 +1,23 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package k8s
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -24,20 +38,31 @@ import (
 )
 
 const (
+	// DefaultLogConfigNamespace is default namespace for bcslogconfigs CRD
 	DefaultLogConfigNamespace = "default"
 )
 
+// LogConfigAPIVersion is api version of bcslogconfigs
 var LogConfigAPIVersion string
+
+// LogConfigKind is crd name of bcslogconfigs
 var LogConfigKind string
 
+// ClusterLogController is controller for single cluster of bcslogconfigs
 type ClusterLogController struct {
-	AddCollectionTask    chan *config.CollectionConfig
-	DeleteCollectionTask chan string
-	UpdateCollectionTask chan *config.CollectionConfig
+	// AddCollectionTask is used to inform this instance to create bcslogconfigs
+	AddCollectionTask chan config.CollectionConfig
+
+	// DeleteCollectionTask is used to inform this instance to delete bcslogconfigs
+	DeleteCollectionTask chan *config.CollectionFilterConfig
+
+	// DeleteCollectionTask is used to inform this instance to update bcslogconfigs
+	UpdateCollectionTask chan config.CollectionConfig
 
 	clusterInfo          *bcsapi.ClusterCredential
 	caFile               string
 	collectionTasks      map[string]*config.CollectionConfig
+	taskLock             sync.Mutex
 	tick                 int64
 	extensionClientset   *apiextensionsclient.Clientset
 	bcsLogConfigLister   bkbcsv1.BcsLogConfigLister
@@ -51,15 +76,17 @@ func init() {
 	LogConfigKind = reflect.TypeOf(bcsv1.BcsLogConfig{}).Name()
 }
 
+// NewClusterLogController create ClusterLogController instance
 func NewClusterLogController(conf *config.ControllerConfig) (*ClusterLogController, error) {
 	ctlr := &ClusterLogController{
 		clusterInfo:          conf.Credential,
 		tick:                 0,
 		caFile:               conf.CAFile,
 		collectionTasks:      make(map[string]*config.CollectionConfig),
-		AddCollectionTask:    make(chan *config.CollectionConfig),
-		DeleteCollectionTask: make(chan string),
-		UpdateCollectionTask: make(chan *config.CollectionConfig),
+		AddCollectionTask:    make(chan config.CollectionConfig),
+		DeleteCollectionTask: make(chan *config.CollectionFilterConfig),
+		UpdateCollectionTask: make(chan config.CollectionConfig),
+		stopCh:               make(chan struct{}),
 	}
 	err := ctlr.initKubeConf()
 	if err != nil {
@@ -69,26 +96,27 @@ func NewClusterLogController(conf *config.ControllerConfig) (*ClusterLogControll
 	return ctlr, nil
 }
 
+// BuildBcsLogConfigKey build namespace/name key string
 func BuildBcsLogConfigKey(namespace, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
 }
 
-func BuildDefaultBcsLogConfigName(namespace, name string) string {
-	return fmt.Sprintf("%s/%s", namespace, name)
-}
-
+// Start start the controller
 func (c *ClusterLogController) Start() {
 	go c.run()
 }
 
+// Stop stop the controller
 func (c *ClusterLogController) Stop() {
 	close(c.stopCh)
 }
 
+// SetTick is used to judge whether this cluster has been destroyed since last syncing cluster info
 func (c *ClusterLogController) SetTick(tick int64) {
 	c.tick = tick
 }
 
+// GetTick GetTick
 func (c *ClusterLogController) GetTick() int64 {
 	return c.tick
 }
@@ -101,18 +129,22 @@ func (c *ClusterLogController) initKubeConf() error {
 	for _, url := range urls {
 		restConf.Host = url
 		restConf.BearerToken = c.clusterInfo.UserToken
-		restConf.CAFile = c.caFile
-
+		// restConf.CAFile = c.caFile
+		// TODO tsl secure
+		restConf.TLSClientConfig.Insecure = true
+		// create CRD clientset
 		c.extensionClientset, err = apiextensionsclient.NewForConfig(restConf)
 		if err != nil {
 			blog.Errorf("APIExtensionClientset initialization failed: server %s, cluster %s, %s", url, c.clusterInfo.ClusterID, err.Error())
 			continue
 		}
+		// create bcslogconfigs CRD
 		err = c.createBcsLogConfig()
 		if err != nil {
 			continue
 		}
 
+		// create bcslogconfigs clientset
 		c.bcsClientset, err = internalclientset.NewForConfig(restConf)
 		if err != nil {
 			blog.Errorf("Clientset initialization failed: server %s, cluster %s, %s", url, c.clusterInfo.ClusterID, err.Error())
@@ -178,9 +210,10 @@ func (c *ClusterLogController) run() {
 		select {
 		case _, ok := <-c.stopCh:
 			if !ok {
-				blog.Errorf("Stop channel closed, stop working")
+				blog.Errorf("Stop channel closed, cluster controller of %s stop working", c.clusterInfo.ClusterID)
 				return
 			}
+		// create new bcslogconfigs CRD
 		case task, ok := <-c.AddCollectionTask:
 			if !ok {
 				blog.Errorf("AddCollectionTask chan of cluster %s has been closed", c.clusterInfo.ClusterID)
@@ -199,48 +232,135 @@ func (c *ClusterLogController) run() {
 				task.ConfigNamespace = DefaultLogConfigNamespace
 			}
 			logconf.ObjectMeta.Namespace = task.ConfigNamespace
+			task.ConfigSpec.ClusterId = c.clusterInfo.ClusterID
 			logconf.Spec = task.ConfigSpec
-			logconf.Spec.ClusterId = c.clusterInfo.ClusterID
 			_, err := c.bcsClientset.Bkbcs().BcsLogConfigs(task.ConfigNamespace).Create(logconf)
 			if err != nil {
-				blog.Errorf("Create BcsLogConfig of Cluster %s failed: %s (config info: %+v)", c.clusterInfo.ClusterID, err.Error(), logconf)
+				blog.Warnf("Create BcsLogConfig of Cluster %s failed: %s (config info: %+v)", c.clusterInfo.ClusterID, err.Error(), logconf)
 				break
 			}
-			c.collectionTasks[BuildBcsLogConfigKey(task.ConfigNamespace, task.ConfigName)] = task
+			c.taskLock.Lock()
+			c.collectionTasks[BuildBcsLogConfigKey(task.ConfigNamespace, task.ConfigName)] = &task
+			c.taskLock.Unlock()
 			blog.Infof("Create BcsLogConfig of Cluster %s success. (config info: %+v)", c.clusterInfo.ClusterID, logconf)
-		case key, ok := <-c.DeleteCollectionTask:
+		case conf, ok := <-c.DeleteCollectionTask:
 			if !ok {
 				blog.Errorf("DeleteCollectionTask chan of cluster %s has been closed", c.clusterInfo.ClusterID)
 				return
 			}
-			var configName, configNamespace string
-			names := strings.Split(key, "/")
-			if len(names) == 1 {
-				configNamespace = DefaultLogConfigNamespace
-				configName = names[0]
-			} else if len(names) == 2 {
-				configNamespace = names[0]
-				configName = names[1]
-			} else {
-				blog.Errorf("DeleteCollectionTask chan receive an error bcslogconfig key %s, want {namespace}/{name} or {name} in default namespace", key)
+			blog.Infof("Receive delete collection task: %+v", conf)
+			tasks := make(map[string]*config.CollectionConfig)
+			// extract matched configs
+			c.taskLock.Lock()
+			for key, task := range c.collectionTasks {
+				if task.ConfigName == conf.ConfigName || conf.ConfigName == "" {
+					if task.ConfigNamespace == conf.ConfigNamespace || conf.ConfigNamespace == "" {
+						tasks[key] = task
+					}
+				}
 			}
-			err := c.bcsClientset.Bkbcs().BcsLogConfigs(configNamespace).Delete(configName, nil)
-			if err != nil {
-				blog.Errorf("Delete BcsLogConfig (%s) of Cluster %s failed: %s", key, c.clusterInfo.ClusterID, err.Error())
-				break
+			c.taskLock.Unlock()
+			blog.Infof("deleted tasks: %+v", tasks)
+			// delete configs
+			for key, task := range tasks {
+				err := c.bcsClientset.Bkbcs().BcsLogConfigs(task.ConfigNamespace).Delete(task.ConfigName, nil)
+				if err != nil {
+					blog.Errorf("Delete BcsLogConfig (%s) of Cluster %s failed: %s", key, c.clusterInfo.ClusterID, err.Error())
+					delete(tasks, key)
+					continue
+				}
+				blog.Infof("Delete BcsLogConfig (%s) of Cluster %s success.", key, c.clusterInfo.ClusterID)
 			}
-			delete(c.collectionTasks, key)
-			blog.Infof("Delete BcsLogConfig (%s) of Cluster %s success.", key, c.clusterInfo.ClusterID)
+			// delete configs from config map
+			c.taskLock.Lock()
+			for key, _ := range tasks {
+				delete(c.collectionTasks, key)
+			}
+			c.taskLock.Unlock()
 		}
 	}
 }
 
+func (c *ClusterLogController) getLogCollectionTaskByFilter(filter *config.CollectionFilterConfig) []config.CollectionConfig {
+	c.taskLock.Lock()
+	ret := make([]config.CollectionConfig, 0, len(c.collectionTasks))
+	for _, task := range c.collectionTasks {
+		if task.ConfigName == filter.ConfigName || filter.ConfigName == "" {
+			if task.ConfigNamespace == filter.ConfigNamespace || filter.ConfigNamespace == "" {
+				ret = append(ret, *task)
+			}
+		}
+	}
+	c.taskLock.Unlock()
+	return ret
+}
+
 func (c *ClusterLogController) handleAddTask(obj interface{}) {
-	// TODO
+	conf, ok := obj.(*bcsv1.BcsLogConfig)
+	if !ok {
+		blog.Errorf("Parse obj to *BcsLogConfig failed: obj(%+v)", obj)
+		return
+	}
+	blog.Debug("Handle bcslogconfigs crd created: %+v", conf)
+	task := &config.CollectionConfig{
+		ConfigName:      conf.GetName(),
+		ConfigNamespace: conf.GetNamespace(),
+		ClusterIDs:      conf.Spec.ClusterId,
+		ConfigSpec:      *conf.Spec.DeepCopy(),
+	}
+	key := BuildBcsLogConfigKey(task.ConfigNamespace, task.ConfigName)
+	c.taskLock.Lock()
+	if _, ok := c.collectionTasks[key]; !ok {
+		c.collectionTasks[key] = task
+		blog.Debug("Added bcslogconfigs to cluster controller's collectionTasks map, config value (%+v)", task)
+	}
+	blog.Debug("config already exist (%+v)", conf)
+	c.taskLock.Unlock()
 }
 
 func (c *ClusterLogController) handleUpdateTask(oldObj interface{}, newObj interface{}) {
+	oldConf, ok := oldObj.(*bcsv1.BcsLogConfig)
+	if !ok {
+		blog.Errorf("Parse obj to *BcsLogConfig failed: obj(%+v)", oldObj)
+		return
+	}
+	newConf, ok := newObj.(*bcsv1.BcsLogConfig)
+	if !ok {
+		blog.Errorf("Parse obj to *BcsLogConfig failed: obj(%+v)", newObj)
+		return
+	}
+	blog.Debug("Handle bcslogconfigs crd created: old(%+v), new(%+v)", oldConf, newConf)
+	task := &config.CollectionConfig{
+		ConfigName:      newConf.GetName(),
+		ConfigNamespace: newConf.GetNamespace(),
+		ClusterIDs:      newConf.Spec.ClusterId,
+		ConfigSpec:      *newConf.Spec.DeepCopy(),
+	}
+	oldKey := BuildBcsLogConfigKey(oldConf.GetNamespace(), oldConf.GetName())
+	newKey := BuildBcsLogConfigKey(newConf.GetNamespace(), newConf.GetName())
+	c.taskLock.Lock()
+	if _, ok := c.collectionTasks[oldKey]; ok {
+		delete(c.collectionTasks, oldKey)
+		blog.Debug("deleted old bcslogconfigs from cluster controller's collectionTasks map, config value (%+v)", oldConf)
+	}
+	c.collectionTasks[newKey] = task
+	blog.Debug("add new bcslogconfigs to cluster controller's collectionTasks map, config value (%+v)", newConf)
+	c.taskLock.Unlock()
 }
 
 func (c *ClusterLogController) handleDeleteTask(obj interface{}) {
+	conf, ok := obj.(*bcsv1.BcsLogConfig)
+	if !ok {
+		blog.Errorf("Parse obj to *BcsLogConfig failed: obj(%+v)", obj)
+		return
+	}
+	blog.Debug("Handle bcslogconfigs crd deleted: %+v", conf)
+	key := BuildBcsLogConfigKey(conf.GetNamespace(), conf.GetName())
+	c.taskLock.Lock()
+	if _, ok := c.collectionTasks[key]; ok {
+		delete(c.collectionTasks, key)
+		blog.Debug("deleted bcslogconfigs to cluster controller's collectionTasks map, config value (%+v)", conf)
+	}
+	blog.Debug("config already deleted (%+v)", conf)
+	c.taskLock.Unlock()
 }

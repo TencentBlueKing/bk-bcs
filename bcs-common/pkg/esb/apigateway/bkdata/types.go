@@ -1,6 +1,20 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package bkdata
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -8,11 +22,14 @@ import (
 
 var defaultStrategy DataCleanStrategy
 
+// BKDataClientConfig bkdata client config
 type BKDataClientConfig struct {
-	BkAppCode                  string `json:"bk_app_code"`
-	BkUsername                 string `json:"bk_username"`
-	BkAppSecret                string `json:"bk_app_secret"`
-	BkdataAuthenticationMethod string `json:"bkdata_authentication_method"`
+	BkAppCode                  string
+	BkUsername                 string
+	BkAppSecret                string
+	BkdataAuthenticationMethod string
+	Host                       string
+	TLSConf                    *tls.Config
 }
 
 // CustomAccessDeployPlanConfig is used to obtain dataid from bk-data
@@ -28,6 +45,7 @@ type CustomAccessDeployPlanConfig struct {
 	AccessRawData              AccessRawData `json:"access_raw_data"`
 }
 
+// AccessRawData is part of CustomAccessDeployPlanConfig
 type AccessRawData struct {
 	RawDataName  string `json:"raw_data_name"`
 	Maintainer   string `json:"maintainer"`
@@ -55,6 +73,7 @@ type DataCleanStrategy struct {
 	Fields                     []Fields `json:"fields"`
 }
 
+// Fields defines result table column info of log clean strategy
 type Fields struct {
 	FieldName   string `json:"field_name"`
 	FieldAlias  string `json:"field_alias"`
@@ -72,10 +91,14 @@ func init() {
 	}
 }
 
+// NewDefaultLogCollectionDataCleanStrategy returns default log clean strategy
+// [RawDataID BkBizID] required as "MUST HAVE"
 func NewDefaultLogCollectionDataCleanStrategy() DataCleanStrategy {
 	return defaultStrategy
 }
 
+// NewDefaultCustomAccessDeployPlanConfig returns default config for obtain dataid
+// [BkBizID RawDataName RawDataAlias Maintainer] required as "MUST HAVE"
 func NewDefaultCustomAccessDeployPlanConfig() CustomAccessDeployPlanConfig {
 	return CustomAccessDeployPlanConfig{
 		Appenv:       "ieod",
@@ -88,6 +111,7 @@ func NewDefaultCustomAccessDeployPlanConfig() CustomAccessDeployPlanConfig {
 	}
 }
 
+// DeepCopyInto deep copy method of DataCleanStrategy
 func (in *DataCleanStrategy) DeepCopyInto(out *DataCleanStrategy) {
 	*out = *in
 	var fields []Fields
