@@ -1140,7 +1140,8 @@ func (s *Scheduler) produceEvent(object interface{}) error {
 		return fmt.Errorf("object type %s is invalid", btype.Name())
 	}
 
-	return s.eventManager.syncEvent(event)
+	go s.eventManager.syncEvent(event)
+	return nil
 }
 
 func (s *Scheduler) newTaskEvent(task *types.Task) *commtype.BcsStorageEventIf {
