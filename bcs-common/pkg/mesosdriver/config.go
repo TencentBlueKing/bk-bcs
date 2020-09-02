@@ -19,6 +19,4 @@ type Config struct {
 	ZkAddr string
 	//http client cert config
 	ClientCert *types.CertConfig
-	//clusterid
-	ClusterId string
 }

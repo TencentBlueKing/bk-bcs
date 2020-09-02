@@ -1,0 +1,24 @@
+# permissions for end users to edit servicemonitors.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: servicemonitor-editor-role
+rules:
+- apiGroups:
+  - monitor.bkbcs.tencent.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitor.bkbcs.tencent.com
+  resources:
+  - servicemonitors/status
+  verbs:
+  - get

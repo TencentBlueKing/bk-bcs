@@ -30,8 +30,8 @@ type BcsDaemonset struct {
 	LastUpdateTime       int64
 	//force delete daemonset
 	ForceDeleting bool
-	//taskgroup id list
-	Pods []*commtypes.BcsPodIndex
+	//key = taskgroup.ID
+	Pods map[string]struct{}
 	// Populated by the system.
 	// Read-only.
 	// Value must be treated as opaque by clients and .
@@ -56,13 +56,9 @@ func (in *BcsDaemonset) DeepCopyInto(out *BcsDaemonset) {
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
 	if in.Pods != nil {
 		in, out := &in.Pods, &out.Pods
-		*out = make([]*commtypes.BcsPodIndex, len(*in))
-		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(commtypes.BcsPodIndex)
-				**out = **in
-			}
+		*out = make(map[string]struct{}, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
 		}
 	}
 

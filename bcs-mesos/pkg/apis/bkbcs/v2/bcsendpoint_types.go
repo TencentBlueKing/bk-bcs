@@ -14,6 +14,7 @@
 package v2
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -45,6 +46,10 @@ type BcsEndpoint struct {
 
 	Spec   BcsEndpointSpec   `json:"spec,omitempty"`
 	Status BcsEndpointStatus `json:"status,omitempty"`
+}
+
+func (e *BcsEndpoint) GetUuid() string {
+	return fmt.Sprintf("%s.%s", e.Namespace, e.Name)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

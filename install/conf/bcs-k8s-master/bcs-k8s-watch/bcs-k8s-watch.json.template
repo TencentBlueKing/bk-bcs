@@ -11,7 +11,10 @@
             "cert-file": "${clientCertFile}",
             "key-file": "${clientKeyFile}"
         },
-        "is-external": ${kubeWatchExternal}
+        "is-external": ${kubeWatchExternal},
+        "netservice-zookeepers": ["$customNetServiceZK"],
+        "custom-storage-endpoints": ["${customStorage}"],
+        "custom-netservice-endpoints": ["${customNetService}"]
     },
     "k8s": {
         "master": "${kubeMaster}",

@@ -14,13 +14,11 @@
 package get
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	userV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"net/http"
 
 	"github.com/urfave/cli"
@@ -29,11 +27,11 @@ import (
 func NewGetCommand() cli.Command {
 	return cli.Command{
 		Name:  "get",
-		Usage: "get the original definition of application/process/deployment/ippoolstatic/ippoolstatic-detail/user/permission",
+		Usage: "get the original definition of application/process/deployment/ippoolstatic/ippoolstatic-detail/user",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Get type, application(app)/process/deployment(deploy)/ippoolstatic(ipps)/ippoolstatic-detail(ippsd)/user/permission",
+				Usage: "Get type, application(app)/process/deployment(deploy)/ippoolstatic(ipps)/ippoolstatic-detail(ippsd)/user",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -90,8 +88,6 @@ func get(c *utils.ClientContext) error {
 		return getIPPoolStaticDetail(c)
 	case "user":
 		return getUser(c)
-	case "permission":
-		return getPermission(c)
 	default:
 		return fmt.Errorf("invalid type: %s", resourceType)
 	}
@@ -189,28 +185,6 @@ func getUser(c *utils.ClientContext) error {
 	}
 
 	return printGet(user)
-}
-
-func getPermission(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionUserName, utils.OptionResourceType); err != nil {
-		return err
-	}
-
-	userManager := userV1.NewBcsUserManager(utils.GetClientOption())
-	pf := v1http.GetPermissionForm{
-		UserName:     c.String(utils.OptionUserName),
-		ResourceType: c.String(utils.OptionResourceType),
-	}
-	data, err := json.Marshal(pf)
-	if err != nil {
-		return err
-	}
-	permissions, err := userManager.GetPermission(http.MethodGet, data)
-	if err != nil {
-		return fmt.Errorf("failed to grant permission: %v", err)
-	}
-
-	return printGet(permissions)
 }
 
 func printGet(single interface{}) error {

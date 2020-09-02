@@ -298,9 +298,70 @@ curl -XPOST localhost:8001/routes/kube-agent-tunnel/plugins \
   -d"config.token=xxxxxxxxxxxxxxxxxxxxxx"
 ```
 
+### openresty支持spdy
+
+kubectl exec命令使用spdy协议，kong仅默认支持http2，需要重编openresty, kong
+
+版本信息：
+* kong：2.0.4
+* openresty：1.15.8.3
+
+编译依赖：
+* 外网访问
+* docker
+* docker-compose
+* nginx-1.15.8-http2-spdy.patch
+
+编译工具：
+* github.com/Kong/kong-build-tools.git，`4.8.1`
+* github.com/Kong/kong，`2.0.4`
+
+```shell
+export http_proxy=http://someproxy.com
+export https_proxy=http://someproxy.com
+
+yum install docker-compose
+
+#准备资源
+cd ~
+git clone github.com/Kong/kong-build-tools
+cd ~/kong-build-tools && git checkout 4.8.1
+git clone github.com/Kong/kong
+cd ~/kong && git checkout 2.0.4
+
+#spdy patch
+cp $GOPATH/src/bk-bcs/install/patch/nginx-1.15.8-http2-spdy.patch ~/kong-build-tools/openresty-patches/patches/1.15.8.3
+cd ~/kong-build-tools/openresty-build-tools
+sed -i '434a\          "--with-http_spdy_module"' kong-ngx-build
+```
+
+额外说明：如果需要http_proxy才能访问外网，需要调整kong-build-tools/Makefile中docker build参数，
+增加--build-arg http_proxy=http://someproxy.com 等参数。
+
+编译kong时需要依赖一些lua组件，部分组件是使用git协议下载的，不支持http_proxy设置。需要调整为http协议，为build-kong.sh增加
+```shell
+git config --global url."https://github.com/".insteadOf git@github.com:
+git config --global url."https://".insteadOf git://
+```
+
+使用centos:7镜像构建kong rpm包
+```shell
+cd ~/kong-build-tools
+make package-kong RESTY_IMAGE_BASE=centos RESTY_IMAGE_TAG=7 PACKAGE_TYPE=rpm
+...
+...
+...
+#编译通过后输出在output目录下
+ls -lhrt ./output/
+total 25M
+-rw-r--r-- 1 root root 25M Jul 22 17:43 kong-2.0.4.el7.amd64.rpm
+```
+
+
+
 ## 正式部署参考流程
 
-以下为手动流程部署参考，实际部署已Job自动化标准任务或者蓝盾流水线为准。
+以下为手动流程部署参考，实际部署以Job自动化标准任务或者蓝盾流水线为准。
 
 我们需要额外部署kong，bcs-gateway-discovery与bcs-user-manager。二进制发布包目录假设：
 
@@ -386,11 +447,11 @@ kong migrations bootstrap -c /etc/kong/kong.conf
 kong start  -c /etc/kong/kong.conf
 ```
 
-### 部署bcs-cluster-manager
+### 部署bcs-user-manager
 
-bcs-cluster-manager重构了bcs-api中关于集群和用户管理功能，计划在1.17.x，1.18.x，1.19.x是保持兼容的。
-所以，bcs-cluster-manager与bcs-api共享mysql数据库数据，并且bcs-api中跨云穿透代理的功能默认会合并到该模块，
-实际部署时，尽量保障bcs-cluster-manager与kong在相同可用区/同城同园区，避免网络抖动带来跨云穿透长链中断重连。
+bcs-user-manager重构了bcs-api中关于集群和用户管理功能，计划在1.17.x，1.18.x，1.19.x是保持兼容的。
+所以，bcs-user-manager与bcs-api共享mysql数据库数据，并且bcs-api中跨云穿透代理的功能默认会合并到该模块，
+实际部署时，尽量保障bcs-user-manager与kong在相同可用区/同城同园区，避免网络抖动带来跨云穿透长链中断重连。
 
 配置文件模板请参照[这里](https://github.com/Tencent/bk-bcs/blob/master/install/conf/bcs-services/bcs-user-manager/bcs-user-manager.json.template)。
 
@@ -429,7 +490,7 @@ client配置
 #client配置后
 mkdir -p /var/bcs/
 cd /data/bcs/bcs-client
-cp bcs.conf.template /var/bcs/
+cp bcs.conf.template /var/bcs/bcs.conf
 
 #初始化用户进行授权，主要用于
 #* 其他系统调用bcs-api-gateway

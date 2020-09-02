@@ -7,9 +7,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - cloud.bkbcs.tencent.com
+  - monitor.bkbcs.tencent.com
   resources:
-  - nodenetworks
+  - servicemonitors
   verbs:
   - create
   - delete
@@ -19,9 +19,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - cloud.bkbcs.tencent.com
+  - monitor.bkbcs.tencent.com
   resources:
-  - nodenetworks/status
+  - servicemonitors/status
   verbs:
   - get
   - patch

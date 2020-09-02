@@ -29,16 +29,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/env"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/exec"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/get"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/grant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/inspect"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/list"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/offer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/refresh"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/revoke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/update"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-
 	"github.com/urfave/cli"
 )
 
@@ -72,10 +70,9 @@ func main() {
 		batch.NewApplyCommand(),
 		batch.NewCleanCommand(),
 		refresh.NewRefreshCommand(),
-		grant.NewGrantCommand(),
-		revoke.NewRevokeCommand(),
 		add.NewAddCommand(),
 		exec.NewExecCommand(),
+		permission.NewPermissionCommand(),
 	}
 
 	if err := utils.InitCfg(); err != nil {
