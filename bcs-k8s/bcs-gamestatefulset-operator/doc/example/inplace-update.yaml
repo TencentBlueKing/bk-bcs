@@ -1,0 +1,30 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: GameStatefulSet
+metadata:
+  name: test-gamestatefulset
+spec:
+  serviceName: "test"
+  replicas: 5
+  selector:
+    matchLabels:
+      app: test
+  updateStrategy:
+    type: InplaceUpdate
+    rollingUpdate:
+      partition: 3
+    inPlaceUpdateStrategy:
+      gracePeriodSeconds: 30
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+        - name: python
+          image: python:3.5
+          imagePullPolicy: IfNotPresent
+          command: ["python"]
+          args: ["-m", "http.server", "8000" ]
+          ports:
+            - name: http
+              containerPort: 8000
