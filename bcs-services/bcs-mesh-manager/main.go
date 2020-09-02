@@ -81,12 +81,12 @@ func main() {
 	flag.Parse()
 	by,_ := json.Marshal(conf)
 	klog.Infof("MeshManager config(%s)", string(by))
-	conf.ServerAddress = "http://9.143.0.40:31000/tunnels/clusters/BCS-K8S-15091/"
+	/*conf.ServerAddress = "http://9.143.0.40:31000/tunnels/clusters/BCS-K8S-15091/"
 	conf.UserToken = "mCdfmlzonNPiAeWhANX1nj91ouBeQckQ"
 	conf.IstioOperatorCharts = "./istio-operator"
 	conf.EtcdCertFile = "/data/bcs/cert/k8s/bcs-etcd.pem"
 	conf.EtcdCaFile = "/data/bcs/cert/k8s/etcd-ca.pem"
-	conf.EtcdKeyFile = "/data/bcs/cert/k8s/bcs-etcd-key.pem"
+	conf.EtcdKeyFile = "/data/bcs/cert/k8s/bcs-etcd-key.pem"*/
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{

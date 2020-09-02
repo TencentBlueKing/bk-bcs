@@ -16,11 +16,7 @@ import (
 
 func main(){
 	conf := config.Config{}
-	conf.CertFile = "/data/bcs/cert/k8s/bcs-etcd.pem"
-	conf.CaFile = "/data/bcs/cert/k8s/etcd-ca.pem"
-	conf.KeyFile = "/data/bcs/cert/k8s/bcs-etcd-key.pem"
-
-	tlsConf,err := ssl.ClientTslConfVerity(conf.CaFile, conf.CertFile, conf.KeyFile, "")
+	tlsConf,err := ssl.ClientTslConfVerity(conf.EtcdCaFile, conf.EtcdCertFile, conf.EtcdKeyFile, "")
 	if err!=nil {
 		klog.Errorf("new client tsl conf failed: %s", err.Error())
 		return
