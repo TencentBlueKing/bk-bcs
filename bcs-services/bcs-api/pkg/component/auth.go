@@ -57,7 +57,7 @@ func (a *PaaSAuth) VerifyAccessTokenForIeod(accessToken string) (bool, map[strin
 
 func (a *PaaSAuth) VerifyAccessTokenForEe(accessToken string) (bool, map[string]interface{}, error) {
 
-	url := fmt.Sprintf("%s/bkiam/api/v1/auth/access-tokens/verify", a.host)
+	url := fmt.Sprintf("%s/api/v1/auth/access-tokens/verify", a.host)
 
 	data := map[string]interface{}{
 		"access_token": accessToken,
