@@ -34,6 +34,31 @@ import (
 // When scheduler receive a task status report messege, it will create a goroutine for process this message,
 // #lizard forgives StatusReport
 func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
+	blog.Infof("receive status(uuid:%s) report: task(%s) status(%s)",
+		status.GetUuid(), status.GetTaskId().GetValue(), status.GetState().String())
+	//ack mesos master the task status report
+	if status.GetUuid() != nil {
+		call := &sched.Call{
+			FrameworkId: s.framework.GetId(),
+			Type:        sched.Call_ACKNOWLEDGE.Enum(),
+			Acknowledge: &sched.Call_Acknowledge{
+				AgentId: status.GetAgentId(),
+				TaskId:  status.GetTaskId(),
+				Uuid:    status.GetUuid(),
+			},
+		}
+		// send call
+		resp, err := s.send(call)
+		if err != nil {
+			blog.Error("status report: Unable to send Acknowledge Call: %s ", err)
+			return
+		}
+		if resp.StatusCode != http.StatusAccepted {
+			blog.Error("status report: Acknowledge call returned unexpected status: %d", resp.StatusCode)
+			return
+		}
+		blog.Infof("send status(uuid:%s) task(%s) report acknowledge success", status.GetUuid(), status.GetTaskId().GetValue())
+	}
 
 	taskId := status.TaskId.GetValue()
 	taskGroupID := types.GetTaskGroupID(taskId)
@@ -50,6 +75,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		s.store.LockApplication(runAs + "." + appId)
 		defer s.store.UnLockApplication(runAs + "." + appId)
 	}
+	blog.Infof("status(uuid:%s) task(%s) Lock Appliation(%s.%s)", status.GetUuid(), taskId, runAs, appId)
 
 	// ack and check
 	if s.preCheckTaskStatusReport(status) == false {
@@ -93,7 +119,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		reportStatus = types.TASK_STATUS_FAIL
 		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
 		if taskGroup != nil {
-			s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" fail, message:"+status.GetMessage(), taskGroup.RunAs+"."+taskGroup.Name+"-task", &alarmTimeval)
+			go s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" fail, message:"+status.GetMessage(), taskGroup.RunAs+"."+taskGroup.Name+"-task", &alarmTimeval)
 		}
 	case mesos.TaskState_TASK_KILLING:
 		blog.Info("status report: Task(%s) Killing, message: %s", taskId, status.GetMessage())
@@ -110,7 +136,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 				//s.addLostSlave(taskGroup.HostName)
 				s.offerPool.AddLostSlave(taskGroup.HostName)
 			}
-			s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" lost, message:"+status.GetMessage(), taskGroup.RunAs+"."+taskGroup.Name+"-task", &alarmTimeval)
+			go s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" lost, message:"+status.GetMessage(), taskGroup.RunAs+"."+taskGroup.Name+"-task", &alarmTimeval)
 		}
 	case mesos.TaskState_TASK_ERROR:
 		blog.Info("status report: Task(%s) Error, message: %s", taskId, status.GetMessage())
@@ -325,29 +351,6 @@ func (s *Scheduler) checkApplicationChange(runAs, appId, taskGroupStatus string,
 }
 
 func (s *Scheduler) preCheckTaskStatusReport(status *mesos.TaskStatus) bool {
-	//ack mesos master the task status report
-	if status.GetUuid() != nil {
-		call := &sched.Call{
-			FrameworkId: s.framework.GetId(),
-			Type:        sched.Call_ACKNOWLEDGE.Enum(),
-			Acknowledge: &sched.Call_Acknowledge{
-				AgentId: status.GetAgentId(),
-				TaskId:  status.GetTaskId(),
-				Uuid:    status.GetUuid(),
-			},
-		}
-		// send call
-		resp, err := s.send(call)
-		if err != nil {
-			blog.Error("status report: Unable to send Acknowledge Call: %s ", err)
-			return false
-		}
-		if resp.StatusCode != http.StatusAccepted {
-			blog.Error("status report: Acknowledge call returned unexpected status: %d", resp.StatusCode)
-			return false
-		}
-	}
-
 	taskId := status.TaskId.GetValue()
 	state := status.GetState()
 	executorID := status.GetExecutorId()
