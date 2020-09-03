@@ -1,14 +1,8 @@
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: gamestatefulset-operator
-  namespace: bcs-system
----
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: gamestatefulset-operator
+  name: gamedeployment-operator
 rules:
 - apiGroups: [""]
   resources:
@@ -19,7 +13,6 @@ rules:
   - configmaps
   - endpoints
   - events
-  - statefulsets
   - persistentvolumeclaims
   verbs:
   - create
@@ -41,8 +34,8 @@ rules:
   - delete
 - apiGroups: ["tkex.tencent.com"]
   resources:
-  - gamestatefulsets
-  - gamestatefulsets/status
+  - gamedeployments
+  - gamedeployments/status
   verbs:
   - create
   - get
@@ -55,12 +48,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind:  ClusterRoleBinding
 metadata:
-  name: gamestatefulset-operator
+  name: gamedeployment-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: gamestatefulset-operator
+  name: gamedeployment-operator
 subjects:
   - kind: ServiceAccount
-    name: gamestatefulset-operator
+    name: gamedeployment-operator
     namespace: bcs-system
+---

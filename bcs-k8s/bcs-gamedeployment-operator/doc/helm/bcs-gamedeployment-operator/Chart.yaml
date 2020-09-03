@@ -1,6 +1,10 @@
 apiVersion: v2
-name: gamestatefulset-operator
-description: A Helm chart for deployment gamestatefulset operator
+name: bcs-gamedeployment-operator
+description: |
+  A Helm chart for game deployment of BlueKing Container Service(BCS).
+  Main features of GameDeployment supported:
+    * InplaceUpdate/InplaceHotPatch
+    * HPA feature
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -14,8 +18,8 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.1.0
+version: 0.5.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-appVersion: 1.16.1
+appVersion: latest

@@ -1,29 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "gamestatefulset-operator.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "bcs-gamedeployment-operator.fullname" . }}
+  namespace: bcs-system
   labels:
-    {{- include "gamestatefulset-operator.labels" . | nindent 4 }}
+    {{- include "bcs-gamedeployment-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "gamestatefulset-operator.selectorLabels" . | nindent 6 }}
+      {{- include "bcs-gamedeployment-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "gamestatefulset-operator.selectorLabels" . | nindent 8 }}
+        {{- include "bcs-gamedeployment-operator.selectorLabels" . | nindent 8 }}
     spec:
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      serviceAccountName: {{ include "gamestatefulset-operator.serviceAccountName" . }}
+      serviceAccountName: gamedeployment-operator
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-gamedeployment-operator/container-start.sh"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

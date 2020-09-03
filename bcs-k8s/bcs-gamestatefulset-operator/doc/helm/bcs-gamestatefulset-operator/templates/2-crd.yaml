@@ -5,17 +5,6 @@ metadata:
     release: gamestatefulset
   name: gamestatefulsets.tkex.tencent.com
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.replicas
-    name: Replicas
-    type: integer
-  - JSONPath: .status.readyReplicas
-    name: ReadyReplicas
-    type: integer
-  - JSONPath: .metadata.creationTimestamp
-    description: Age of the gamestatefulset
-    name: Age
-    type: date
   group: tkex.tencent.com
   additionalPrinterColumns:
   - JSONPath: .spec.replicas
