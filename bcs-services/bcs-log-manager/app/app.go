@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/util"
 )
 
+// Run run the bcs-log-manager module
 func Run(ctx context.Context, stopCh chan struct{}, op *options.LogManagerOption) error {
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())

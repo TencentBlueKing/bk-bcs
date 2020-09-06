@@ -19,6 +19,7 @@ import (
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 )
 
+// ManagerConfig is config of k8s.LogManager
 type ManagerConfig struct {
 	CollectionConfigs []CollectionConfig
 	BcsApiConfig      bcsapi.Config
@@ -43,17 +44,20 @@ type CollectionConfig struct {
 	ClusterIDs string `json:"cluster_ids"`
 }
 
+// CollectionFilterConfig is filter of getting and deleting bcslogconfigs
 type CollectionFilterConfig struct {
 	ConfigName      string
 	ConfigNamespace string
 	ClusterIDs      string
 }
 
+// ControllerConfig is config for cluster specified bcslogconfigs controller
 type ControllerConfig struct {
 	Credential *bcsapi.ClusterCredential
 	CAFile     string
 }
 
+// APIServerConfig is config for APIServer of bcs-log-manager
 type APIServerConfig struct {
 	conf.ZkConfig
 	APICerts      conf.CertConfig

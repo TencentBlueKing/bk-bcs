@@ -1,0 +1,23 @@
+{
+    "bcs_api_host": "${bcsAPIHost}",
+    "api_auth_token": "${bcsAPIToken}",
+    "use_gateway": true,
+    "kubeconfig": "${kubeConfig}",
+    "system_dataid": "${systemDataid}",
+    "bkdata_api_host": "${bkdataAPIHost}",
+    "bk_username": "${bkUsername}",
+    "bk_appcode": "${bkAppcode}",
+    "bk_appsecret": "${bkAppsecret}",
+    "bk_bizid": ${bkBizID},
+    "address": "${localIp}",
+    "port": "${logmanagerPort}",
+    "logmanager_ca_file": "${caFile}",
+    "logmanager_cert_file": "${serverCertFile}",
+    "logmanager_key_file": "${serverKeyFile}",
+    "etcd_hosts": "${etcdHosts}",
+    "etcd_ca_file": "${etcdCAFile}",
+    "etcd_cert_file": "${etcdCertFile}",
+    "etcd_key_file": "${etcdKeyFile}",
+    "log_dir": "${log_dir}",
+    "collection_configs": []
+}

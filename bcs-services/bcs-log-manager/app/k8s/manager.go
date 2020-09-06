@@ -52,11 +52,15 @@ var (
 	BKDataApiConfigGroupVersion string
 )
 
+// RequestMessage is structure of information extrange between goroutines
+// Data is request data
+// RespCh is response data channel
 type RequestMessage struct {
 	Data   interface{}
 	RespCh chan interface{}
 }
 
+// LogManager contains the log-manager module's main funcations
 type LogManager struct {
 	GetLogCollectionTask    chan *RequestMessage
 	AddLogCollectionTask    chan *RequestMessage
@@ -77,6 +81,7 @@ func init() {
 	BKDataApiConfigGroupVersion = fmt.Sprintf("%s/%s", bkdatav1.SchemeGroupVersion.Group, bkdatav1.SchemeGroupVersion.Version)
 }
 
+// NewManager returns a new log manager
 func NewManager(conf *config.ManagerConfig) *LogManager {
 	manager := &LogManager{
 		stopCh:                  conf.StopCh,
@@ -124,7 +129,7 @@ func NewManager(conf *config.ManagerConfig) *LogManager {
 
 func (m *LogManager) addSystemCollectionConfig() {
 	if m.config.SystemDataID == "" {
-		dataid, ok := m.ObtainDataId(bkdata.BKDataClientConfig{
+		dataid, ok := m.ObtainDataID(bkdata.BKDataClientConfig{
 			BkAppCode:   m.config.BkAppCode,
 			BkAppSecret: m.config.BkAppSecret,
 			BkUsername:  m.config.BkUsername,
@@ -156,13 +161,14 @@ func (m *LogManager) addSystemCollectionConfig() {
 	blog.Infof("System log configs ready to create")
 }
 
-func (m *LogManager) ObtainDataId(clientconf bkdata.BKDataClientConfig, bizid int, dataname string) (string, bool) {
+// ObtainDataID is used to obtain dataid for unspecified system log dataid
+func (m *LogManager) ObtainDataID(clientconf bkdata.BKDataClientConfig, bizid int, dataname string) (string, bool) {
 	dataname = strings.ToLower(dataname)
 	if _, ok := m.dataidChMap[dataname]; ok {
 		blog.Errorf("Dataname %s already existed.", dataname)
 		return "", false
 	}
-	deployconfig := bkdata.NewDefaultCustomAccessDeployPlanConfig()
+	deployconfig := bkdata.NewDefaultAccessDeployPlanConfig()
 	deployconfig.BkAppCode = clientconf.BkAppCode
 	deployconfig.BkAppSecret = clientconf.BkAppSecret
 	deployconfig.BkUsername = clientconf.BkUsername
@@ -198,11 +204,13 @@ func (m *LogManager) ObtainDataId(clientconf bkdata.BKDataClientConfig, bizid in
 	return dataid, true
 }
 
+// Start start the log manager
 func (m *LogManager) Start() {
 	go m.run()
 	go m.apiService()
 }
 
+// start log manager
 func (m *LogManager) run() {
 	var cnt int64
 	cnt = 0
@@ -262,6 +270,7 @@ func (m *LogManager) run() {
 	}
 }
 
+// apiService serve the request for BcsLogConfigs CRD CRUD
 func (m *LogManager) apiService() {
 	for {
 		select {
@@ -319,6 +328,7 @@ func (m *LogManager) apiService() {
 	}
 }
 
+// distribute add task
 func (m *LogManager) distributeTasks(newClusters map[string]*ClusterLogController, confs []config.CollectionConfig) {
 	blog.Infof("Start distribute log configs to clusters")
 	blog.Infof("log config list: %+v", confs)
@@ -343,6 +353,7 @@ func (m *LogManager) distributeTasks(newClusters map[string]*ClusterLogControlle
 	}
 }
 
+// get bcslogconfigs from clusters
 func (m *LogManager) getLogCollectionTaskByFilter(filter *config.CollectionFilterConfig) [][]config.CollectionConfig {
 	var ret [][]config.CollectionConfig
 	if filter.ClusterIDs == "" {
@@ -368,6 +379,7 @@ func (m *LogManager) getLogCollectionTaskByFilter(filter *config.CollectionFilte
 	return ret
 }
 
+// distribute delete task
 func (m *LogManager) distributeDeleteTasks(filter *config.CollectionFilterConfig) {
 	if filter.ClusterIDs == "" {
 		for _, ctl := range m.controllers {
@@ -386,6 +398,7 @@ func (m *LogManager) distributeDeleteTasks(filter *config.CollectionFilterConfig
 	}
 }
 
+// get dataid from crd
 func (m *LogManager) handleUpdatedBKDataApiConfig(oldobj, newobj interface{}) {
 	config, ok := newobj.(*bkdatav1.BKDataApiConfig)
 	if !ok {
@@ -432,9 +445,10 @@ func (m *LogManager) handleUpdatedBKDataApiConfig(oldobj, newobj interface{}) {
 	}
 }
 
+// create new dataclean strategy for system log dataid
 func (m *LogManager) newDataCleanStrategy(config *bkdatav1.BKDataApiConfig, dataid int) {
 	// new data clean strategy crd
-	strategy := bkdata.NewDefaultLogCollectionDataCleanStrategy()
+	strategy := bkdata.NewDefaultCleanStrategy()
 	strategy.BkAppCode = config.Spec.AccessDeployPlanConfig.BkAppCode
 	strategy.BkAppSecret = config.Spec.AccessDeployPlanConfig.BkAppSecret
 	strategy.BkUsername = config.Spec.AccessDeployPlanConfig.BkUsername

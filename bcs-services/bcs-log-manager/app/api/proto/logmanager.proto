@@ -28,9 +28,9 @@ enum ErrCode {
 }
 
 service LogManager {
-    rpc ObtainDataid(ObtainDataidReq) returns (ObtainDataidResp) {
+    rpc ObtainDataID(ObtainDataidReq) returns (ObtainDataidResp) {
         option (google.api.http) = {
-            post: "/bcs-log-manager/v1/dataid"
+            post: "/logmanager/v1/dataid"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -41,7 +41,7 @@ service LogManager {
 
     rpc CreateCleanStrategy(CreateCleanStrategyReq) returns (CommonResp) {
         option (google.api.http) = {
-            post: "/bcs-log-manager/v1/dataclean"
+            post: "/logmanager/v1/dataclean"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -52,7 +52,7 @@ service LogManager {
 
     rpc ListLogCollectionTask(ListLogCollectionTaskReq) returns (ListLogCollectionTaskResp) {
         option (google.api.http) = {
-            get: "/bcs-log-manager/v1/logcollectiontask"
+            get: "/logmanager/v1/logcollectiontask"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "查询日志采集任务列表"
@@ -63,7 +63,7 @@ service LogManager {
 
     rpc CreateLogCollectionTask(CreateLogCollectionTaskReq) returns (CommonResp) {
         option (google.api.http) = {
-            post: "/bcs-log-manager/v1/logcollectiontask"
+            post: "/logmanager/v1/logcollectiontask"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -74,7 +74,7 @@ service LogManager {
 
     rpc DeleteLogCollectionTask(DeleteLogCollectionTaskReq) returns (CommonResp) {
         option (google.api.http) = {
-            delete: "/bcs-log-manager/v1/logcollectiontask"
+            delete: "/logmanager/v1/logcollectiontask"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "删除日志采集任务"

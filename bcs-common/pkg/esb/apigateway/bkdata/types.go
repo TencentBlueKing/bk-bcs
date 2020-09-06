@@ -93,13 +93,13 @@ func init() {
 
 // NewDefaultLogCollectionDataCleanStrategy returns default log clean strategy
 // [RawDataID BkBizID] required as "MUST HAVE"
-func NewDefaultLogCollectionDataCleanStrategy() DataCleanStrategy {
+func NewDefaultCleanStrategy() DataCleanStrategy {
 	return defaultStrategy
 }
 
 // NewDefaultCustomAccessDeployPlanConfig returns default config for obtain dataid
 // [BkBizID RawDataName RawDataAlias Maintainer] required as "MUST HAVE"
-func NewDefaultCustomAccessDeployPlanConfig() CustomAccessDeployPlanConfig {
+func NewDefaultAccessDeployPlanConfig() CustomAccessDeployPlanConfig {
 	return CustomAccessDeployPlanConfig{
 		Appenv:       "ieod",
 		DataScenario: "custom",

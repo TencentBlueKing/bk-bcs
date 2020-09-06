@@ -56,6 +56,7 @@ type LogManagerOption struct {
 	BkBizID      int    `json:"bk_bizid" value:"-1" usage:"BK business id"`
 }
 
+// NewLogManagerOption create new manager operation object
 func NewLogManagerOption() *LogManagerOption {
 	return &LogManagerOption{}
 }

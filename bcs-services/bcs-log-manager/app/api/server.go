@@ -31,7 +31,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/bcslogmanager"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/util"

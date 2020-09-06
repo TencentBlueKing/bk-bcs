@@ -2,11 +2,11 @@
 // source: logmanager.proto
 
 /*
-Package bcslogmanager is a reverse proxy.
+Package logmanager is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package bcslogmanager
+package logmanager
 
 import (
 	"context"
@@ -31,7 +31,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
-func request_LogManager_ObtainDataid_0(ctx context.Context, marshaler runtime.Marshaler, client LogManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_LogManager_ObtainDataID_0(ctx context.Context, marshaler runtime.Marshaler, client LogManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ObtainDataidReq
 	var metadata runtime.ServerMetadata
 
@@ -43,12 +43,12 @@ func request_LogManager_ObtainDataid_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ObtainDataid(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ObtainDataID(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_LogManager_ObtainDataid_0(ctx context.Context, marshaler runtime.Marshaler, server LogManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_LogManager_ObtainDataID_0(ctx context.Context, marshaler runtime.Marshaler, server LogManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ObtainDataidReq
 	var metadata runtime.ServerMetadata
 
@@ -60,7 +60,7 @@ func local_request_LogManager_ObtainDataid_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ObtainDataid(ctx, &protoReq)
+	msg, err := server.ObtainDataID(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -210,7 +210,7 @@ func local_request_LogManager_DeleteLogCollectionTask_0(ctx context.Context, mar
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 func RegisterLogManagerGwServer(ctx context.Context, mux *runtime.ServeMux, server LogManagerServer) error {
 
-	mux.Handle("POST", pattern_LogManager_ObtainDataid_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_LogManager_ObtainDataID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -219,14 +219,14 @@ func RegisterLogManagerGwServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_LogManager_ObtainDataid_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_LogManager_ObtainDataID_0(rctx, inboundMarshaler, server, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_LogManager_ObtainDataid_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_LogManager_ObtainDataID_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -351,7 +351,7 @@ func RegisterLogManagerGw(ctx context.Context, mux *runtime.ServeMux, conn *grpc
 // "LogManagerClient" to call the correct interceptors.
 func RegisterLogManagerGwClient(ctx context.Context, mux *runtime.ServeMux, client LogManagerClient) error {
 
-	mux.Handle("POST", pattern_LogManager_ObtainDataid_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_LogManager_ObtainDataID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -360,14 +360,14 @@ func RegisterLogManagerGwClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_LogManager_ObtainDataid_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_LogManager_ObtainDataID_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_LogManager_ObtainDataid_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_LogManager_ObtainDataID_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -455,19 +455,19 @@ func RegisterLogManagerGwClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_LogManager_ObtainDataid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcs-log-manager", "v1", "dataid"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_LogManager_ObtainDataID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"logmanager", "v1", "dataid"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_LogManager_CreateCleanStrategy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcs-log-manager", "v1", "dataclean"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_LogManager_CreateCleanStrategy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"logmanager", "v1", "dataclean"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_LogManager_ListLogCollectionTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcs-log-manager", "v1", "logcollectiontask"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_LogManager_ListLogCollectionTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"logmanager", "v1", "logcollectiontask"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_LogManager_CreateLogCollectionTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcs-log-manager", "v1", "logcollectiontask"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_LogManager_CreateLogCollectionTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"logmanager", "v1", "logcollectiontask"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_LogManager_DeleteLogCollectionTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcs-log-manager", "v1", "logcollectiontask"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_LogManager_DeleteLogCollectionTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"logmanager", "v1", "logcollectiontask"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
-	forward_LogManager_ObtainDataid_0 = runtime.ForwardResponseMessage
+	forward_LogManager_ObtainDataID_0 = runtime.ForwardResponseMessage
 
 	forward_LogManager_CreateCleanStrategy_0 = runtime.ForwardResponseMessage
 

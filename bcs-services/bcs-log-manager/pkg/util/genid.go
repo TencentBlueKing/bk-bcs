@@ -18,6 +18,7 @@ import "sync"
 var id int64
 var mutex sync.Mutex
 
+// GenerateID generate and return self-increased id for crd name
 func GenerateID() int64 {
 	var ret int64
 	mutex.Lock()

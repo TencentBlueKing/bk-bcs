@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/bcslogmanager"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
@@ -31,8 +31,8 @@ type LogManagerServerImpl struct {
 	apiHost    string
 }
 
-// ObtainDataid ObtainDataid
-func (l *LogManagerServerImpl) ObtainDataid(ctx context.Context, req *proto.ObtainDataidReq, resp *proto.ObtainDataidResp) error {
+// ObtainDataID ObtainDataid
+func (l *LogManagerServerImpl) ObtainDataID(ctx context.Context, req *proto.ObtainDataidReq, resp *proto.ObtainDataidResp) error {
 	// bkdata api esb client
 	client := bkdata.NewClientInterface(bkdata.BKDataClientConfig{
 		BkAppCode:                  req.AppCode,
@@ -41,7 +41,7 @@ func (l *LogManagerServerImpl) ObtainDataid(ctx context.Context, req *proto.Obta
 		BkdataAuthenticationMethod: "user",
 		Host:                       l.apiHost,
 	})
-	config := bkdata.NewDefaultCustomAccessDeployPlanConfig()
+	config := bkdata.NewDefaultAccessDeployPlanConfig()
 	config.BkBizID = int(req.BizID)
 	config.AccessRawData.RawDataName = req.DataName
 	config.AccessRawData.RawDataAlias = req.DataName
@@ -76,7 +76,7 @@ func (l *LogManagerServerImpl) CreateCleanStrategy(ctx context.Context, req *pro
 	var config bkdata.DataCleanStrategy
 	// whether to use default clean strategy
 	if !req.Default {
-		config = bkdata.NewDefaultLogCollectionDataCleanStrategy()
+		config = bkdata.NewDefaultCleanStrategy()
 		config.RawDataID = int(req.DataID)
 		config.BkBizID = int(req.BizID)
 	} else {
