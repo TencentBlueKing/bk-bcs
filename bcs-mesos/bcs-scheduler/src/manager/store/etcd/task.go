@@ -24,7 +24,7 @@ import (
 )
 
 func (store *managerStore) CheckTaskExist(task *types.Task) (string, bool) {
-	obj, err := store.FetchTask(task.ID)
+	obj, err := store.FetchDBTask(task.ID)
 	if err == nil {
 		return obj.ResourceVersion, true
 	}
@@ -111,15 +111,11 @@ func (store *managerStore) DeleteTask(taskId string) error {
 }
 
 func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
-	if cacheMgr.isOK {
-		cacheTask, _ := fetchCacheTask(taskId)
-		if cacheTask == nil {
-			return nil, mstore.ErrNoFound
-		}
-		return cacheTask, nil
+	cacheTask, _ := fetchCacheTask(taskId)
+	if cacheTask == nil {
+		return nil, mstore.ErrNoFound
 	}
-
-	return store.FetchDBTask(taskId)
+	return cacheTask, nil
 }
 
 func (store *managerStore) FetchDBTask(taskId string) (*types.Task, error) {

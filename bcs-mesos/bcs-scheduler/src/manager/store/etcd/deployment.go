@@ -70,7 +70,7 @@ func (store *managerStore) UnLockDeployment(deploymentName string) {
 }
 
 func (store *managerStore) CheckDeploymentExist(deployment *types.Deployment) (string, bool) {
-	obj, _ := store.FetchDeployment(deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name)
+	obj, _ := store.fetchDeploymentInDB(deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name)
 	if obj != nil {
 		return obj.ObjectMeta.ResourceVersion, true
 	}
@@ -118,13 +118,14 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 }
 
 func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, error) {
-	if cacheMgr.isOK {
-		dep := getCacheDeployment(ns, name)
-		if dep == nil {
-			return nil, schStore.ErrNoFound
-		}
+	dep := getCacheDeployment(ns, name)
+	if dep == nil {
+		return nil, schStore.ErrNoFound
 	}
+	return dep, nil
+}
 
+func (store *managerStore) fetchDeploymentInDB(ns, name string) (*types.Deployment, error) {
 	client := store.BkbcsClient.Deployments(ns)
 	v2Dep, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
