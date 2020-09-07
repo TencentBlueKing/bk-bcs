@@ -83,6 +83,8 @@ func list(c *utils.ClientContext) error {
 		return listAgent(c)
 	case "crd", "customresourcedefinition":
 		return listCustomResourceDefinition(c)
+	case "logcollectiontask":
+		return listLogCollectionTask(c)
 	default:
 		//unkown type, try custom resource
 		return listCustomResource(c)

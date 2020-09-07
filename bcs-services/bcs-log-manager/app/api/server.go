@@ -39,7 +39,7 @@ import (
 
 const (
 	// LogManagerServiceName service name
-	LogManagerServiceName = "bcs-log-manager.bkbcs.tencent.com"
+	LogManagerServiceName = "logmanager.bkbcs.tencent.com"
 )
 
 // Server bcslogmanager apiserver

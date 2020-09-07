@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package bcslogmanager;
+package logmanager;
 
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 
-option go_package = "proto/bcs-log-manager;bcslogmanager";
+option go_package = "proto/log-manager;logmanager";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
     info: {

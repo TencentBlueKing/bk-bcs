@@ -75,10 +75,12 @@ func (l *LogManagerServerImpl) CreateCleanStrategy(ctx context.Context, req *pro
 	})
 	var config bkdata.DataCleanStrategy
 	// whether to use default clean strategy
-	if !req.Default {
+	if req.Default {
 		config = bkdata.NewDefaultCleanStrategy()
 		config.RawDataID = int(req.DataID)
 		config.BkBizID = int(req.BizID)
+		config.ResultTableName = req.ResultTableName
+		config.ResultTableNameAlias = req.ResultTableName
 	} else {
 		config = bkdata.DataCleanStrategy{}
 		config.BkBizID = int(req.BizID)
