@@ -23,7 +23,7 @@ import (
 )
 
 func (store *managerStore) CheckConfigMapExist(configmap *commtypes.BcsConfigMap) (string, bool) {
-	v2Cfg, err := store.FetchConfigMap(configmap.NameSpace, configmap.Name)
+	v2Cfg, err := store.fetchConfigMapInDB(configmap.NameSpace, configmap.Name)
 	if err == nil {
 		return v2Cfg.ResourceVersion, true
 	}
@@ -71,14 +71,14 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 }
 
 func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfigMap, error) {
-	if cacheMgr.isOK {
-		cfg := getCacheConfigmap(ns, name)
-		if cfg == nil {
-			return nil, schStore.ErrNoFound
-		}
-		return cfg, nil
+	cfg := getCacheConfigmap(ns, name)
+	if cfg == nil {
+		return nil, schStore.ErrNoFound
 	}
+	return cfg, nil
+}
 
+func (store *managerStore) fetchConfigMapInDB(ns, name string) (*commtypes.BcsConfigMap, error) {
 	client := store.BkbcsClient.BcsConfigMaps(ns)
 	v2Cfg, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
