@@ -1185,13 +1185,13 @@ SCREENSHOT:
 
 
 
-## grant ##
+## permission ##
 
 ### grant permission
 
 EXAMPLE:
 
-    ./bcs-client grant --type=permission --from-file=crd_permission.json
+    ./bcs-client permission --type=grant --from-file=crd_permission.json
 
 crd_permission.json
 
@@ -1211,19 +1211,12 @@ crd_permission.json
 }
 ```
 
-SCREENSHOT:
-
-![img](picture/grant-permission.png)
-
-
-
-## revoke ##
 
 ### revoke permission
 
 EXAMPLE:
 
-    ./bcs-client revoke --type=permission --from-file=crd_permission.json
+    ./bcs-client permission --type=revoke --from-file=crd_permission.json
 
 crd_permission.json
 
@@ -1243,9 +1236,11 @@ crd_permission.json
 }
 ```
 
-SCREENSHOT:
 
-![img](picture/revoke-permission.png)
+### get permission
+EXAMPLE:
+
+    ./bcs-client permission --type=get --username=xx --resourcetype=cluster
 
 
 

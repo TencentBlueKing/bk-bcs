@@ -279,7 +279,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 		//env
 		container.Docker.Env = make(map[string]string)
 		for _, env := range c.Env {
-			if env.ValueFrom!=nil && env.ValueFrom.ResourceFieldRef!=nil && env.ValueFrom.ResourceFieldRef.Resource!="" {
+			if env.ValueFrom != nil && env.ValueFrom.ResourceFieldRef != nil && env.ValueFrom.ResourceFieldRef.Resource != "" {
 				switch env.ValueFrom.ResourceFieldRef.Resource {
 				case "requests.cpu":
 					container.Docker.Env[env.Name] = fmt.Sprintf("%f", container.Resources.Cpus*1000)
@@ -293,7 +293,7 @@ func (s *Scheduler) setVersionWithPodSpec(version *types.Version, spec *bcstype.
 					blog.Errorf("Deployment(%s:%s) Env(%s) ValueFrom(%s) is invalid",
 						version.ObjectMeta.NameSpace, version.ObjectMeta.Name, env.Name, env.ValueFrom.ResourceFieldRef.Resource)
 				}
-			}else {
+			} else {
 				container.Docker.Env[env.Name] = env.Value
 			}
 		}

@@ -16,13 +16,13 @@ package mesosdriver
 import (
 	"encoding/json"
 	"fmt"
-	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
 )
 
@@ -85,7 +85,7 @@ func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 }
 
 //update agent external resources
-func (m *MesosDriverClient) UpdateAgentExtendedResources(clusterId string,er *commtypes.ExtendedResource) error {
+func (m *MesosDriverClient) UpdateAgentExtendedResources(clusterId string, er *commtypes.ExtendedResource) error {
 	by, _ := json.Marshal(er)
 	_, err := m.requestMesosApiserver(clusterId, http.MethodPut, "agentsettings/extendedresource", by)
 	if err != nil {

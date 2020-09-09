@@ -31,15 +31,15 @@ type managerStore struct {
 	cancel context.CancelFunc
 
 	//plugin manager, ip-resources
-	pm *pluginManager.PluginManager
+	pm        *pluginManager.PluginManager
 	clusterId string
 }
 
 // Create a store manager by a db driver
 func NewManagerStore(dbDriver store.Dbdrvier, pm *pluginManager.PluginManager, clusterId string) store.Store {
 	s := &managerStore{
-		Db: dbDriver,
-		pm: pm,
+		Db:        dbDriver,
+		pm:        pm,
 		clusterId: clusterId,
 	}
 
@@ -60,7 +60,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 
 	for {
 		time.Sleep(time.Minute)
-		if cacheMgr==nil {
+		if cacheMgr == nil {
 			continue
 		}
 		blog.Infof("start produce metrics")
@@ -136,8 +136,8 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		var (
 			clusterCpu float64
 			clusterMem float64
-			remainCpu float64
-			remainMem float64
+			remainCpu  float64
+			remainMem  float64
 		)
 		// handle agents metrics
 		agents, err := s.ListAllAgents()
@@ -152,7 +152,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			}
 
 			var ipValue float64
-			if s.pm!=nil {
+			if s.pm != nil {
 				//request netservice to node container ip
 				para := &typesplugin.HostPluginParameter{
 					Ips:       []string{info.IP},
@@ -175,9 +175,9 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			}
 
 			//if ip-resources is zero, then ignore it
-			if s.pm==nil || ipValue>0{
-				clusterCpu += info.CpuTotal-info.CpuUsed
-				clusterMem += info.MemTotal-info.MemUsed
+			if s.pm == nil || ipValue > 0 {
+				clusterCpu += info.CpuTotal - info.CpuUsed
+				clusterMem += info.MemTotal - info.MemUsed
 			}
 			clusterCpu += info.CpuTotal
 			clusterMem += info.MemTotal

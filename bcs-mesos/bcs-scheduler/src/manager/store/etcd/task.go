@@ -69,9 +69,9 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 	return nil
 }
 
-func (store *managerStore) syncTaskInCache(taskId string){
-	task,err := store.FetchDBTask(taskId)
-	if err!=nil {
+func (store *managerStore) syncTaskInCache(taskId string) {
+	task, err := store.FetchDBTask(taskId)
+	if err != nil {
 		blog.Errorf("fetch task(%s) in kube-apiserver failed: %s", taskId, err.Error())
 		return
 	}

@@ -386,8 +386,8 @@ func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
 			} else {
 				blog.Info("delete daemonset(%s): taskGroup(%s) not end status(%s) at current", daemon.GetUuid(), taskgroup.ID, taskgroup.Status)
 			}
-		}else {
-			blog.Infof("delete daemonset(%s): taskGroup(%s) in end status(%s)",daemon.GetUuid(), taskgroup.ID, taskgroup.Status)
+		} else {
+			blog.Infof("delete daemonset(%s): taskGroup(%s) in end status(%s)", daemon.GetUuid(), taskgroup.ID, taskgroup.Status)
 		}
 	}
 
@@ -435,7 +435,7 @@ func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
 
 // Delete a taskgroup:
 // the taskgroup will delete from DB, application and service
-func (s *Scheduler) DeleteDaemonsetTaskGroup(daemon *types.BcsDaemonset, taskGroup *types.TaskGroup){
+func (s *Scheduler) DeleteDaemonsetTaskGroup(daemon *types.BcsDaemonset, taskGroup *types.TaskGroup) {
 	//delete daemonset pods index
 	delete(daemon.Pods, taskGroup.ID)
 	s.deleteTaskGroup(taskGroup)

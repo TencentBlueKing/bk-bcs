@@ -56,10 +56,10 @@ func (s *ServiceMonitor) GetSelector() labels.Requirements {
 	return rms
 }
 
-func (s *ServiceMonitor) Match(labels map[string]string)bool{
-	for k,v :=range s.Spec.Selector.MatchLabels {
-		val,ok := labels[k]
-		if !ok || val!=v {
+func (s *ServiceMonitor) Match(labels map[string]string) bool {
+	for k, v := range s.Spec.Selector.MatchLabels {
+		val, ok := labels[k]
+		if !ok || val != v {
 			return false
 		}
 	}

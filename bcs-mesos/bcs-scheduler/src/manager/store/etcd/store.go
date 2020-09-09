@@ -21,10 +21,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
-	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2"
 
 	corev1 "k8s.io/api/core/v1"
@@ -88,7 +88,7 @@ type managerStore struct {
 	cancel context.CancelFunc
 
 	//plugin manager, ip-resources
-	pm *pluginManager.PluginManager
+	pm        *pluginManager.PluginManager
 	clusterId string
 }
 
@@ -162,7 +162,7 @@ func (s *managerStore) StopStoreMetrics() {
 	s.cancel()
 
 	time.Sleep(time.Second)
-//	s.wg.Wait()
+	//	s.wg.Wait()
 }
 
 //store metrics report prometheus
@@ -170,7 +170,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	for {
 		time.Sleep(time.Minute)
-		if cacheMgr==nil || !cacheMgr.isOK {
+		if cacheMgr == nil || !cacheMgr.isOK {
 			continue
 		}
 		blog.Infof("start produce metrics")
@@ -251,8 +251,8 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		var (
 			clusterCpu float64
 			clusterMem float64
-			remainCpu float64
-			remainMem float64
+			remainCpu  float64
+			remainMem  float64
 		)
 		for _, agent := range agents {
 			info := agent.GetAgentInfo()
@@ -262,7 +262,7 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			}
 
 			var ipValue float64
-			if s.pm!=nil {
+			if s.pm != nil {
 				//request netservice to node container ip
 				para := &typesplugin.HostPluginParameter{
 					Ips:       []string{info.IP},
@@ -285,9 +285,9 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			}
 
 			//if ip-resources is zero, then ignore it
-			if s.pm==nil || ipValue>0{
-				remainCpu += info.CpuTotal-info.CpuUsed
-				remainMem += info.MemTotal-info.MemUsed
+			if s.pm == nil || ipValue > 0 {
+				remainCpu += info.CpuTotal - info.CpuUsed
+				remainMem += info.MemTotal - info.MemUsed
 			}
 			clusterCpu += info.CpuTotal
 			clusterMem += info.MemTotal
@@ -334,8 +334,8 @@ func NewEtcdStore(kubeconfig string, pm *pluginManager.PluginManager, clusterId 
 		BkbcsClient:     clientset.BkbcsV2(),
 		k8sClient:       k8sClientset,
 		extensionClient: extensionClient,
-		pm: pm,
-		clusterId: clusterId,
+		pm:              pm,
+		clusterId:       clusterId,
 	}
 
 	//fetch application
@@ -444,6 +444,6 @@ func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[
 	return labels
 }
 
-func (store *managerStore) ObjectNotLatestErr(err error)bool{
+func (store *managerStore) ObjectNotLatestErr(err error) bool {
 	return strings.Contains(err.Error(), ObjectVersionNotLatestError)
 }

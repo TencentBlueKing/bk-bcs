@@ -86,9 +86,9 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 	return nil
 }
 
-func (store *managerStore) syncTaskgroupInCache(taskgroupId string){
-	taskgroup,err := store.FetchDBTaskGroup(taskgroupId)
-	if err!=nil {
+func (store *managerStore) syncTaskgroupInCache(taskgroupId string) {
+	taskgroup, err := store.FetchDBTaskGroup(taskgroupId)
+	if err != nil {
 		blog.Errorf("fetch taskgroup(%s) in kube-apiserver failed: %s", taskgroupId, err.Error())
 		return
 	}

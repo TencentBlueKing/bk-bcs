@@ -15,6 +15,7 @@ package v1http
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -265,4 +266,16 @@ func SyncTkeClusterCredentials(request *restful.Request, response *restful.Respo
 
 	metrics.RequestCount.WithLabelValues("tke", request.Request.Method).Inc()
 	metrics.RequestLatency.WithLabelValues("tke", request.Request.Method).Observe(time.Since(start).Seconds())
+}
+
+// ListTkeCidr list cidr count group by vpc
+func ListTkeCidr(request *restful.Request, response *restful.Response) {
+	// support prometheus metrics
+	start := time.Now()
+
+	cidrCounts := sqlstore.CountTkeCidr()
+	response.WriteEntity(cidrCounts)
+
+	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
+	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }

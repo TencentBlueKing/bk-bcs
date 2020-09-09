@@ -15,8 +15,8 @@ package types
 
 //EnvVar represents an environment variable present in a Container
 type EnvVar struct {
-	Name  string `json:"name"`
-	Value string `json:"value,omitempty"`
+	Name      string        `json:"name"`
+	Value     string        `json:"value,omitempty"`
 	ValueFrom *EnvVarSource `json:"valueFrom,omitempty"`
 }
 

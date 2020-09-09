@@ -19,13 +19,13 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
 	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type nodeEtcdDiscovery struct {
@@ -51,7 +51,7 @@ func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadv
 		cadvisorPort:   cadvisorPort,
 		nodeExportPort: nodeExportPort,
 		module:         module,
-		nodes: make(map[string]struct{}),
+		nodes:          make(map[string]struct{}),
 	}
 	switch module {
 	case CadvisorModule:
@@ -97,6 +97,8 @@ func (disc *nodeEtcdDiscovery) Start() error {
 }
 
 func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
+	disc.Lock()
+	disc.Unlock()
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	for nodeIp, _ := range disc.nodes {
 		switch disc.module {
@@ -134,6 +136,9 @@ func (disc *nodeEtcdDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 }
 
 func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
+	disc.Lock()
+	defer disc.Unlock()
+
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
@@ -156,6 +161,9 @@ func (disc *nodeEtcdDiscovery) OnUpdate(old, cur interface{}) {
 }
 
 func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
+	disc.Lock()
+	defer disc.Unlock()
+
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)

@@ -16,8 +16,8 @@
 package tkex
 
 import (
-	internalinterfaces "bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
-	v1alpha1 "bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
+	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/internalinterfaces"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.
