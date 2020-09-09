@@ -11,7 +11,7 @@
  *
  */
 
-package kong
+package apisix
 
 import (
 	"crypto/tls"
@@ -38,15 +38,15 @@ func New(addr []string, config *tls.Config) (register.Register, error) {
 		HostAddress: addr[0],
 	}
 
-	reg := &kRegister{
+	reg := &apiRegister{
 		kAddrs:  addr,
 		kClient: gokong.NewClient(kcfg),
 	}
 	return reg, nil
 }
 
-//kRegister kong register implementation
-type kRegister struct {
+//apiRegister apisix register implementation
+type apiRegister struct {
 	kAddrs  []string
 	kClient *gokong.KongAdminClient
 }
@@ -60,7 +60,7 @@ type kRegister struct {
 // we authenticate in stage of route, then post to service when authentication success.
 // in stage of service, we clean original Authorization information and switch to inner
 // authentication token for different bkbcs modules
-func (r *kRegister) CreateService(svc *register.Service) error {
+func (r *apiRegister) CreateService(svc *register.Service) error {
 	var err error
 	kreq := kongServiceRequestConvert(svc)
 	// 1. create specified service information
@@ -136,12 +136,12 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 }
 
 //UpdateService update specifed Service, if service does not exist, return error
-func (r *kRegister) UpdateService(svc *register.Service) error {
+func (r *apiRegister) UpdateService(svc *register.Service) error {
 	return fmt.Errorf("not implemented")
 }
 
 //GetService get specified service by name, if no service, return nil
-func (r *kRegister) GetService(svc string) (*register.Service, error) {
+func (r *apiRegister) GetService(svc string) (*register.Service, error) {
 	kSvc, err := r.kClient.Services().GetServiceByName(svc)
 	if err != nil {
 		blog.Errorf("kong register get service %s failed, %s", svc, err.Error())
@@ -157,7 +157,7 @@ func (r *kRegister) GetService(svc string) (*register.Service, error) {
 
 //DeleteService delete specified service, success even if no such service
 // @param service: at least setting Name & Host for deletion
-func (r *kRegister) DeleteService(svc *register.Service) error {
+func (r *apiRegister) DeleteService(svc *register.Service) error {
 	if svc.Host == "" || svc.Name == "" {
 		return fmt.Errorf("service lost Name or Host")
 	}
@@ -184,7 +184,7 @@ func (r *kRegister) DeleteService(svc *register.Service) error {
 }
 
 //ListServices get all existence services
-func (r *kRegister) ListServices() ([]*register.Service, error) {
+func (r *apiRegister) ListServices() ([]*register.Service, error) {
 	query := &gokong.ServiceQueryString{
 		Size: 200,
 	}
@@ -206,7 +206,7 @@ func (r *kRegister) ListServices() ([]*register.Service, error) {
 }
 
 //GetTargetByService get service relative backends
-func (r *kRegister) GetTargetByService(svc *register.Service) ([]register.Backend, error) {
+func (r *apiRegister) GetTargetByService(svc *register.Service) ([]register.Backend, error) {
 	if svc == nil || len(svc.Host) == 0 {
 		return nil, fmt.Errorf("neccessary service info lost")
 	}
@@ -228,7 +228,7 @@ func (r *kRegister) GetTargetByService(svc *register.Service) ([]register.Backen
 
 //ReplaceTargetByService replace specified service backend list
 // so we don't care what original backend list are
-func (r *kRegister) ReplaceTargetByService(svc *register.Service, backends []register.Backend) error {
+func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []register.Backend) error {
 	//get original targets
 	if svc.Name == "" || svc.Host == "" {
 		return fmt.Errorf("service info lost Name or Host")
@@ -282,11 +282,11 @@ func (r *kRegister) ReplaceTargetByService(svc *register.Service, backends []reg
 }
 
 //DeleteTargetByService clean all backend list for service
-func (r *kRegister) DeleteTargetByService(svc *register.Service) error {
+func (r *apiRegister) DeleteTargetByService(svc *register.Service) error {
 	return fmt.Errorf("not implemented")
 }
 
-func (r *kRegister) deletePlugins(resource string, plugins []*gokong.Plugin) error {
+func (r *apiRegister) deletePlugins(resource string, plugins []*gokong.Plugin) error {
 	for _, plugin := range plugins {
 		if err := r.kClient.Plugins().DeleteById(plugin.Id); err != nil {
 			blog.Errorf("kong register delete resource %s plugin %s[%s] failed, %s", resource, plugin.Name, plugin.Id, err.Error())

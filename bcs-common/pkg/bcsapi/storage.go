@@ -49,7 +49,7 @@ func NewStorage(config *Config) Storage {
 // StorageCli bcsf-storage client implementation
 type StorageCli struct {
 	Config *Config
-	Client restclient.RESTClient
+	Client *restclient.RESTClient
 }
 
 // getRequestPath get storage query URL prefix
@@ -77,7 +77,7 @@ func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, 
 		return nil, fmt.Errorf(response.Message)
 	}
 	var taskgroups []*storage.Taskgroup
-	if err := json.Unmarshal(basic.Data, &taskgroups); err != nil {
+	if err := json.Unmarshal(response.Data, &taskgroups); err != nil {
 		return nil, fmt.Errorf("taskgroup slice decode err: %s", err.Error())
 	}
 	if len(taskgroups) == 0 {
@@ -108,7 +108,7 @@ func (c *StorageCli) QueryK8SPod(cluster string) ([]*storage.Pod, error) {
 	}
 	//decode destination object
 	var pods []*storage.Pod
-	if err := json.Unmarshal(response.Data, &pod); err != nil {
+	if err := json.Unmarshal(response.Data, &pods); err != nil {
 		return nil, fmt.Errorf("pod slice decode err: %s", err.Error())
 	}
 	if len(pods) == 0 {

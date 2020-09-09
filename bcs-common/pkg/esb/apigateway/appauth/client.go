@@ -80,17 +80,18 @@ func (c *authClient) GetAccessToken(env string) (string, error) {
 	if !(env == PaasOAuthEnvProd || env == PaasOAuthEnvTest) {
 		return "", fmt.Errorf("Error Environment")
 	}
-	request := &OAuthRequest{
-		AppCode:   c.config.AppCode,
-		AppSecret: c.config.AppSecret,
-		EnvName:   env,
-		GrantType: PaasGrantTypeClient,
+	request := map[string]interface{}{
+		"env_name":   env,
+		"app_code":   c.config.AppCode,
+		"app_secret": c.config.AppSecret,
+		"grant_type": PaasGrantTypeClient,
 	}
 	var response OAuthResponse
 	err := c.client.Post().
 		WithEndpoints(c.config.Hosts).
 		WithBasePath("/").
 		SubPathf("/auth_api/token/").
+		Body(request).
 		Do().
 		Into(&response)
 	if err != nil {

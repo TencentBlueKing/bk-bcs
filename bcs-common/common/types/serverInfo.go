@@ -57,6 +57,7 @@ const (
 )
 
 var (
+	// BCS_PROC_LIST module list information
 	BCS_PROC_LIST = []string{
 		BCS_MODULE_APISERVER,
 		BCS_MODULE_CCAPI,
@@ -64,7 +65,6 @@ var (
 		BCS_MODULE_KUBEDATAWATCH,
 		BCS_MODULE_MESOSDRIVER,
 		BCS_MODULE_KUBERNETEDRIVER,
-		BCS_MODULE_SADRIVER,
 		BCS_MODULE_SCHEDULER,
 		BCS_MODULE_CLUSTERKEEPER,
 		BCS_MODULE_HEALTH,
@@ -101,6 +101,7 @@ type ServerInfo struct {
 	IP           string `json:"ip"`
 	IPv6         string `json:"ipv6"`
 	Port         uint   `json:"port"`
+	GrpcPort     uint   `json:"grpc_port"`
 	MetricPort   uint   `json:"metric_port"`
 	HostName     string `json:"hostname"`
 	Scheme       string `json:"scheme"` //http, https
@@ -256,7 +257,7 @@ type DataExporterInfo struct {
 	ServerInfo
 }
 
-//ContainerWareInfo
+// ContainerWareInfo for container ware
 type ContainerWareInfo struct {
 	ServerInfo
 }
@@ -271,15 +272,17 @@ type QcloudCLBInfo struct {
 	ServerInfo
 }
 
+// IPServiceInfo for module ipservice
 type IPServiceInfo struct {
 	ServerInfo
 }
 
+// ProxyInfo for proxy module
 type ProxyInfo struct {
 	ServerInfo
 }
 
-//ConsoleManagerInfo
+//ConsoleManagerInfo for console manager
 type ConsoleManagerInfo struct {
 	ServerInfo
 }
