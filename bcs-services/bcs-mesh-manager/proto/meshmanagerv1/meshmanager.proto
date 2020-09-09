@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package meshmicro;
+package meshmanagerv1;
 
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 
-option go_package = "proto/meshmicro;meshmicro";
+option go_package = "proto/meshmanagerv1;meshmanagerv1";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
     info: {
@@ -20,8 +20,9 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 
 // ErrCode error code
 enum ErrCode {
+    ERROR_NO = 0;
     // 0 Sunccess
-    ERROR_OK = 0;
+    ERROR_OK = 100;
 
     // 404 Not Found
     ERROR_NOT_FOUND = 404;
@@ -36,7 +37,7 @@ enum ErrCode {
 service MeshManager {
     rpc CreateMeshCluster(CreateMeshClusterReq) returns (CreateMeshClusterResp) {
         option (google.api.http) = {
-            post: "/bcs-mesh-manager/v1/meshcluster"
+            post: "/meshmanager/v1/meshcluster"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -47,7 +48,7 @@ service MeshManager {
 
     rpc DeleteMeshCluster(DeleteMeshClusterReq) returns (DeleteMeshClusterResp) {
         option (google.api.http) = {
-            delete: "/bcs-mesh-manager/v1/meshcluster"
+            delete: "/meshmanager/v1/meshcluster"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
             description: "删除k8s集群mesh服务"
@@ -57,7 +58,7 @@ service MeshManager {
 
     rpc ListMeshCluster(ListMeshClusterReq) returns (ListMeshClusterResp) {
         option (google.api.http) = {
-          get: "/bcs-mesh-manager/v1/meshcluster"
+          get: "/meshmanager/v1/meshcluster"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
           description: "获取k8s集群mesh服务状态"
@@ -123,7 +124,8 @@ message ListMeshClusterReq {
 message MeshCluster {
     string version   = 1;
     string clusterid = 2;
-    map<string, InstallStatus> components = 3;
+    bool   deletion  = 3;
+    map<string, InstallStatus> components = 4;
 }
 
 message InstallStatus {

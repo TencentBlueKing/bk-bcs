@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package controllers
 
 import (
@@ -46,6 +59,10 @@ type MeshClusterManager struct {
 	conf config.Config
 	//MeshCluster Status Client
 	meshClusterClient client.Client
+	//kube-apiserver address
+	kubeAddr string
+	//kube Bearer token
+	kubeToken string
 
 	//apiextensions clientset
 	extensionClientset *apiextensionsclient.Clientset
@@ -67,6 +84,8 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, 
 		},
 		stopCh: make(chan struct{}),
 		stopped: true,
+		kubeAddr: fmt.Sprintf("%s/%s", conf.ServerAddress, meshCluster.Spec.ClusterId),
+		kubeToken: conf.UserToken,
 	}
 	if m.meshCluster.Status.ComponentStatus==nil {
 		m.meshCluster.Status.ComponentStatus = make(map[string]*meshv1.InstallStatus_VersionStatus)
@@ -84,12 +103,12 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, 
 		}
 	}
 	m.kubeconfig = &restclient.Config{
-		Host: conf.ServerAddress,
-		BearerToken: conf.UserToken,
+		Host: m.kubeAddr,
+		BearerToken: m.kubeToken,
 		QPS: 1e3,
 		Burst: 2e3,
 	}
-	klog.Infof("build kubeconfig Host(%s) BearerToken(%s)", conf.ServerAddress, conf.UserToken)
+	klog.Infof("build kubeconfig Host(%s) BearerToken(%s)", m.kubeAddr, m.kubeToken)
 	//kubernetes clientset
 	var err error
 	m.kubeclientset, err = kubernetes.NewForConfig(m.kubeconfig)
@@ -115,8 +134,8 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, 
 
 	//kubernetes api client for create IstioOperator Object
 	cfg := kubeclient.NewConfiguration()
-	cfg.BasePath = "http://9.143.0.40:31000/tunnels/clusters/BCS-K8S-15091"
-	cfg.DefaultHeader["authorization"] = fmt.Sprintf("Bearer %s", conf.UserToken)
+	cfg.BasePath = m.kubeAddr
+	cfg.DefaultHeader["authorization"] = fmt.Sprintf("Bearer %s", m.kubeToken)
 	by,_ := json.Marshal(cfg)
 	m.kubeApiClient = kubeclient.NewAPIClient(cfg)
 	klog.Infof("build kubeapiclient for config %s success", string(by))

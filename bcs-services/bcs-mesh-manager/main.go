@@ -1,19 +1,16 @@
 /*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-
-limitations under the License.
-*/
 package main
 
 import (
@@ -24,27 +21,30 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/controllers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmicro"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanagerv1"
 
-	"k8s.io/klog"
-	rawgrpc "google.golang.org/grpc"
 	grpcruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	"github.com/micro/go-micro/v2/service"
 	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/micro/go-micro/v2/server"
 	"github.com/micro/go-micro/v2/service/grpc"
+	rawgrpc "google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/klog"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
@@ -63,37 +63,39 @@ func init() {
 }
 
 func main() {
-	var enableLeaderElection bool
 	conf := config.Config{}
-	flag.StringVar(&conf.MetricsPort, "metrics-addr", ":9443", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", true,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
+	flag.StringVar(&conf.MetricsPort, "metric-port", "9443", "The address the metric endpoint binds to.")
 	flag.StringVar(&conf.DockerHub, "istio-docker-hub", "", "istio-operator docker hub")
 	flag.StringVar(&conf.IstioOperatorCharts, "istiooperator-charts", "", "istio-operator charts")
 	flag.StringVar(&conf.ServerAddress, "apigateway-addr", "", "apigateway address")
 	flag.StringVar(&conf.UserToken, "user-token", "", "apigateway usertoken to control k8s cluster")
 	flag.StringVar(&conf.Address, "address", "127.0.0.1", "server address")
-	flag.IntVar(&conf.Port, "port", 8899, "server port")
+	flag.IntVar(&conf.Port, "port", 8899, "grpc server port")
 	flag.StringVar(&conf.EtcdCaFile, "etcd-cafile", "", "SSL Certificate Authority file used to secure etcd communication")
 	flag.StringVar(&conf.EtcdCertFile, "etcd-certfile", "", "SSL certification file used to secure etcd communication")
 	flag.StringVar(&conf.EtcdKeyFile, "etcd-keyfile", "", "SSL key file used to secure etcd communication")
+	flag.StringVar(&conf.EtcdServers, "etcd-servers", "", "List of etcd servers to connect with (scheme://ip:port), comma separated")
+	flag.StringVar(&conf.ServerCaFile, "client-ca-file", "", "If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.")
+	flag.StringVar(&conf.ServerCertFile, "tls-cert-file", "", "File containing the default x509 Certificate for HTTPS.")
+	flag.StringVar(&conf.ServerKeyFile, "tls-private-key-file", "", "File containing the default x509 private key matching")
 	flag.Parse()
 	by,_ := json.Marshal(conf)
 	klog.Infof("MeshManager config(%s)", string(by))
-	/*conf.ServerAddress = "http://9.143.0.40:31000/tunnels/clusters/BCS-K8S-15091/"
-	conf.UserToken = "mCdfmlzonNPiAeWhANX1nj91ouBeQckQ"
-	conf.IstioOperatorCharts = "./istio-operator"
-	conf.EtcdCertFile = "/data/bcs/cert/k8s/bcs-etcd.pem"
-	conf.EtcdCaFile = "/data/bcs/cert/k8s/etcd-ca.pem"
-	conf.EtcdKeyFile = "/data/bcs/cert/k8s/bcs-etcd-key.pem"*/
-
+	if conf.ServerCaFile!="" && conf.ServerCertFile!="" && conf.ServerKeyFile!="" {
+		conf.IsSsl = true
+		tlsConf,err := ssl.ServerTslConf(conf.ServerCaFile, conf.ServerCertFile, conf.ServerKeyFile, static.ServerCertPwd)
+		if err!=nil {
+			klog.Errorf("ServerTslConf failed: %s", err.Error())
+			os.Exit(1)
+		}
+		conf.TlsConf = tlsConf
+	}
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: fmt.Sprintf("%s:%s", conf.Address, conf.MetricsPort),
-		LeaderElection:     true,
-		LeaderElectionID:   "meshmanager.bkbcs.tencent.com",
+		/*LeaderElection:     true,
+		LeaderElectionID:   "meshmanager.bkbcs.tencent.com",*/
 	})
 	if err != nil {
 		klog.Errorf("start manager failed: %s", err.Error())
@@ -122,10 +124,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go signalWatch(cancel)
 	//http server
-	endpoint := fmt.Sprintf("%s:%d", conf.Address, conf.Port)
+	grpcAddr := fmt.Sprintf("%s:%d", conf.Address, conf.Port)
 	grpcmux := grpcruntime.NewServeMux()
 	opts := []rawgrpc.DialOption{rawgrpc.WithInsecure()}
-	if err := meshmanager.RegisterMeshManagerHandlerFromEndpoint(ctx, grpcmux, endpoint, opts); err != nil {
+	if err := meshmanagerv1.RegisterMeshManagerHandlerFromEndpoint(ctx, grpcmux, grpcAddr, opts); err != nil {
 		klog.Errorf("register grpc-gateway failed, %s", err.Error())
 		os.Exit(1)
 	}
@@ -133,9 +135,16 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcmux)
 	go func(){
-		klog.Infof("starting manager")
-		if err := http.ListenAndServe(fmt.Sprintf("%s:%d", conf.Address, conf.Port+1), mux); err != nil {
-			klog.Errorf("running manager failed: %s", err.Error())
+		httpserver := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.Address, conf.Port-1), Handler: mux}
+		var err error
+		if conf.IsSsl {
+			httpserver.TLSConfig = conf.TlsConf
+			err = httpserver.ListenAndServeTLS("", "")
+		}else {
+			err = httpserver.ListenAndServe()
+		}
+		if err!=nil {
+			klog.Errorf("ListenAndServe %s failed: %s", httpserver.Addr, err.Error())
 			os.Exit(1)
 		}
 	}()
@@ -147,28 +156,30 @@ func main() {
 	}
 	// New Service
 	regOption := func(e *registry.Options){
-		e.Addrs = []string{"https://127.0.0.1:2379"}
+		e.Addrs = strings.Split(conf.EtcdServers, ",")
 		e.TLSConfig = tlsConf
 	}
-	grpcSvr := grpc.NewService(
-		service.Name("bcs-mesh-manager.bkbcs.tencent.com"),
-		service.Version("1.18.2-alpha"),
-		service.Context(ctx),
-		service.Address(endpoint),
-		service.Registry(etcd.NewRegistry(regOption)),
-	)
-	grpc.NewService()
+	sevOption := func(o *server.Options){
+		o.TLSConfig = conf.TlsConf
+		o.Name = "meshmanager.bkbcs.tencent.com"
+		o.Version = version.GetVersion()
+		o.Context = ctx
+		o.Address = grpcAddr
+		o.Registry = etcd.NewRegistry(regOption)
+	}
+	grpcSvr := grpc.NewService()
+	grpcSvr.Server().Init(sevOption)
 	// Initialise service
 	grpcSvr.Init()
 	// Register Handler, if we need more options control
 	// try formation like: handler.BcsDataManager(CustomOption)
 	meshHandler := handler.NewMeshHandler(conf, mgr.GetClient())
-	err = meshmicro.RegisterMeshManagerHandler(grpcSvr.Server(), meshHandler)
+	err = meshmanager.RegisterMeshManagerHandler(grpcSvr.Server(), meshHandler)
 	if err!=nil {
 		klog.Errorf("RegisterMeshManagerHandler failed: %s", err.Error())
 	}
 	// Run service
-	klog.Infof("Listen grpc/http server on endpoint(%s)", endpoint)
+	klog.Infof("Listen grpc server on endpoint(%s)", grpcAddr)
 	if err := grpcSvr.Run(); err != nil {
 		klog.Errorf("run grpc server failed: %s", err.Error())
 		os.Exit(1)

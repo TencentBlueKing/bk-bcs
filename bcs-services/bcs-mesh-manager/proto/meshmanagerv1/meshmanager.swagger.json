@@ -23,7 +23,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/meshmanagerListMeshClusterResp"
+              "$ref": "#/definitions/meshmanagerv1ListMeshClusterResp"
             }
           },
           "default": {
@@ -54,7 +54,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/meshmanagerDeleteMeshClusterResp"
+              "$ref": "#/definitions/meshmanagerv1DeleteMeshClusterResp"
             }
           },
           "default": {
@@ -85,7 +85,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/meshmanagerCreateMeshClusterResp"
+              "$ref": "#/definitions/meshmanagerv1CreateMeshClusterResp"
             }
           },
           "default": {
@@ -101,7 +101,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/meshmanagerCreateMeshClusterReq"
+              "$ref": "#/definitions/meshmanagerv1CreateMeshClusterReq"
             }
           }
         ],
@@ -112,7 +112,7 @@
     }
   },
   "definitions": {
-    "meshmanagerCreateMeshClusterReq": {
+    "meshmanagerv1CreateMeshClusterReq": {
       "type": "object",
       "example": {
         "version": "1.5.4",
@@ -134,6 +134,16 @@
           "type": "string",
           "description": "meshtype",
           "title": "meshtype"
+        },
+        "name": {
+          "type": "string",
+          "description": "name",
+          "title": "name"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace",
+          "title": "namespace"
         }
       },
       "description": "创建k8s集群mesh服务",
@@ -144,7 +154,7 @@
         "meshtype"
       ]
     },
-    "meshmanagerCreateMeshClusterResp": {
+    "meshmanagerv1CreateMeshClusterResp": {
       "type": "object",
       "properties": {
         "seq": {
@@ -154,7 +164,7 @@
           "title": "seq"
         },
         "errCode": {
-          "$ref": "#/definitions/meshmanagerErrCode",
+          "$ref": "#/definitions/meshmanagerv1ErrCode",
           "description": "errCode",
           "title": "errCode"
         },
@@ -165,7 +175,7 @@
         }
       }
     },
-    "meshmanagerDeleteMeshClusterResp": {
+    "meshmanagerv1DeleteMeshClusterResp": {
       "type": "object",
       "properties": {
         "seq": {
@@ -175,7 +185,7 @@
           "title": "seq"
         },
         "errCode": {
-          "$ref": "#/definitions/meshmanagerErrCode",
+          "$ref": "#/definitions/meshmanagerv1ErrCode",
           "description": "errCode",
           "title": "errCode"
         },
@@ -186,17 +196,37 @@
         }
       }
     },
-    "meshmanagerErrCode": {
+    "meshmanagerv1ErrCode": {
       "type": "string",
       "enum": [
+        "ERROR_NO",
         "ERROR_OK",
-        "ERROR_MESH_CLUSTER_FAILED"
+        "ERROR_NOT_FOUND",
+        "ERROR_MESH_CLUSTER_FAILED",
+        "ERROR_MESH_CLUSTER_EXIST"
       ],
-      "default": "ERROR_OK",
-      "description": "- ERROR_OK: 0 Sunccess\n - ERROR_MESH_CLUSTER_FAILED: 91000 mesh cluster failed",
+      "default": "ERROR_NO",
+      "description": "- ERROR_OK: 0 Sunccess\n - ERROR_NOT_FOUND: 404 Not Found\n - ERROR_MESH_CLUSTER_FAILED: 91000 mesh cluster failed\n - ERROR_MESH_CLUSTER_EXIST: 91001 MeshCluster already exist",
       "title": "ErrCode error code"
     },
-    "meshmanagerListMeshClusterResp": {
+    "meshmanagerv1InstallStatus": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "meshmanagerv1ListMeshClusterResp": {
       "type": "object",
       "properties": {
         "seq": {
@@ -206,7 +236,7 @@
           "title": "seq"
         },
         "errCode": {
-          "$ref": "#/definitions/meshmanagerErrCode",
+          "$ref": "#/definitions/meshmanagerv1ErrCode",
           "description": "errCode",
           "title": "errCode"
         },
@@ -218,21 +248,31 @@
         "meshClusters": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/meshmanagerMeshCluster"
+            "$ref": "#/definitions/meshmanagerv1MeshCluster"
           },
           "description": "meshClusters",
           "title": "meshClusters"
         }
       }
     },
-    "meshmanagerMeshCluster": {
+    "meshmanagerv1MeshCluster": {
       "type": "object",
       "properties": {
-        "spec": {
+        "version": {
           "type": "string"
         },
-        "status": {
+        "clusterid": {
           "type": "string"
+        },
+        "deletion": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerv1InstallStatus"
+          }
         }
       }
     },
