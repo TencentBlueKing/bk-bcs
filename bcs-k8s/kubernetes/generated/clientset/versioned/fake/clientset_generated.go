@@ -16,8 +16,8 @@ package fake
 
 import (
 	clientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
-	monitorv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/monitor/v1"
-	fakemonitorv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/monitor/v1/fake"
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	fakecloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -72,7 +72,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// MonitorV1 retrieves the MonitorV1Client
-func (c *Clientset) MonitorV1() monitorv1.MonitorV1Interface {
-	return &fakemonitorv1.FakeMonitorV1{Fake: &c.Fake}
+// CloudV1 retrieves the CloudV1Client
+func (c *Clientset) CloudV1() cloudv1.CloudV1Interface {
+	return &fakecloudv1.FakeCloudV1{Fake: &c.Fake}
 }
