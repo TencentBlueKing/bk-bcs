@@ -194,7 +194,7 @@ func (c *realControl) updatePod(deploy *tkexv1alpha1.GameDeployment, coreControl
 		c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace", "find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
 		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: v%", deploy.Namespace, deploy.Name, pod.Name, err)
 		return res.DelayDuration, err
-	case tkexv1alpha1.RecreateGameDeploymentUpdateStrategyType:
+	case tkexv1alpha1.RollingGameDeploymentUpdateStrategyType:
 		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s", deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
 
 		c.scaleExp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
