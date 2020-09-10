@@ -37,8 +37,9 @@ type MeshClusterSpec struct {
 
 //mesh type: istio、tbuspp
 type MeshType string
+
 const (
-	MeshIstio MeshType = "ISTIO"
+	MeshIstio  MeshType = "ISTIO"
 	MeshTbuspp MeshType = "TBUSPP"
 )
 
@@ -48,16 +49,16 @@ type MeshClusterStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Individual status of each component controlled by the operator. The map key is the name of the component.
-	ComponentStatus      map[string]*InstallStatus_VersionStatus `json:"componentStatus,omitempty"`
+	ComponentStatus map[string]*InstallStatus_VersionStatus `json:"componentStatus,omitempty"`
 }
 
 // VersionStatus is the status and version of a component.
 type InstallStatus_VersionStatus struct {
-	Name                 string               `json:"name,omitempty"`
-	Namespace            string               `json:"namespace,omitempty"`
-	Status               InstallStatus_Status `json:"status,omitempty"`
-	Message              string               `json:"message,omitempty"`
-	UpdateTime           int64                `json:"updateTime,omitempty"`
+	Name       string               `json:"name,omitempty"`
+	Namespace  string               `json:"namespace,omitempty"`
+	Status     InstallStatus_Status `json:"status,omitempty"`
+	Message    string               `json:"message,omitempty"`
+	UpdateTime int64                `json:"updateTime,omitempty"`
 }
 
 // Status describes the current state of a component.
@@ -89,8 +90,8 @@ type MeshCluster struct {
 	Status MeshClusterStatus `json:"status,omitempty"`
 }
 
-func (m *MeshCluster) GetUuid()string{
-	return fmt.Sprintf("%s.%s", m.Namespace,m.Name)
+func (m *MeshCluster) GetUuid() string {
+	return fmt.Sprintf("%s.%s", m.Namespace, m.Name)
 }
 
 // +kubebuilder:object:root=true

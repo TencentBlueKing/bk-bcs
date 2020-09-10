@@ -79,12 +79,12 @@ func main() {
 	flag.StringVar(&conf.ServerCertFile, "tls-cert-file", "", "File containing the default x509 Certificate for HTTPS.")
 	flag.StringVar(&conf.ServerKeyFile, "tls-private-key-file", "", "File containing the default x509 private key matching")
 	flag.Parse()
-	by,_ := json.Marshal(conf)
+	by, _ := json.Marshal(conf)
 	klog.Infof("MeshManager config(%s)", string(by))
-	if conf.ServerCaFile!="" && conf.ServerCertFile!="" && conf.ServerKeyFile!="" {
+	if conf.ServerCaFile != "" && conf.ServerCertFile != "" && conf.ServerKeyFile != "" {
 		conf.IsSsl = true
-		tlsConf,err := ssl.ServerTslConf(conf.ServerCaFile, conf.ServerCertFile, conf.ServerKeyFile, static.ServerCertPwd)
-		if err!=nil {
+		tlsConf, err := ssl.ServerTslConf(conf.ServerCaFile, conf.ServerCertFile, conf.ServerKeyFile, static.ServerCertPwd)
+		if err != nil {
 			klog.Errorf("ServerTslConf failed: %s", err.Error())
 			os.Exit(1)
 		}
@@ -102,18 +102,18 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.MeshClusterReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("MeshCluster"),
-		Scheme: mgr.GetScheme(),
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName("controllers").WithName("MeshCluster"),
+		Scheme:       mgr.GetScheme(),
 		MeshClusters: make(map[string]*controllers.MeshClusterManager),
-		Conf: conf,
+		Conf:         conf,
 	}).SetupWithManager(mgr); err != nil {
 		klog.Errorf("create MeshManager controller failed: %s", err.Error())
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
 
-	go func(){
+	go func() {
 		klog.Infof("starting manager")
 		if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 			klog.Errorf("running manager failed: %s", err.Error())
@@ -134,32 +134,32 @@ func main() {
 	// http mux
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcmux)
-	go func(){
+	go func() {
 		httpserver := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.Address, conf.Port-1), Handler: mux}
 		var err error
 		if conf.IsSsl {
 			httpserver.TLSConfig = conf.TlsConf
 			err = httpserver.ListenAndServeTLS("", "")
-		}else {
+		} else {
 			err = httpserver.ListenAndServe()
 		}
-		if err!=nil {
+		if err != nil {
 			klog.Errorf("ListenAndServe %s failed: %s", httpserver.Addr, err.Error())
 			os.Exit(1)
 		}
 	}()
 	//tls
-	tlsConf,err := ssl.ClientTslConfVerity(conf.EtcdCaFile, conf.EtcdCertFile, conf.EtcdKeyFile, "")
-	if err!=nil {
+	tlsConf, err := ssl.ClientTslConfVerity(conf.EtcdCaFile, conf.EtcdCertFile, conf.EtcdKeyFile, "")
+	if err != nil {
 		klog.Errorf("new client tsl conf failed: %s", err.Error())
 		os.Exit(1)
 	}
 	// New Service
-	regOption := func(e *registry.Options){
+	regOption := func(e *registry.Options) {
 		e.Addrs = strings.Split(conf.EtcdServers, ",")
 		e.TLSConfig = tlsConf
 	}
-	sevOption := func(o *server.Options){
+	sevOption := func(o *server.Options) {
 		o.TLSConfig = conf.TlsConf
 		o.Name = "meshmanager.bkbcs.tencent.com"
 		o.Version = version.GetVersion()
@@ -175,7 +175,7 @@ func main() {
 	// try formation like: handler.BcsDataManager(CustomOption)
 	meshHandler := handler.NewMeshHandler(conf, mgr.GetClient())
 	err = meshmanager.RegisterMeshManagerHandler(grpcSvr.Server(), meshHandler)
-	if err!=nil {
+	if err != nil {
 		klog.Errorf("RegisterMeshManagerHandler failed: %s", err.Error())
 	}
 	// Run service

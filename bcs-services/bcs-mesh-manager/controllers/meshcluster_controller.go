@@ -20,11 +20,11 @@ import (
 	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 
-	"k8s.io/klog"
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -40,14 +40,14 @@ type MeshClusterReconciler struct {
 	Conf config.Config
 }
 
-func (r *MeshClusterReconciler) getMeshClusterManager(mCluster *meshv1.MeshCluster)(*MeshClusterManager,error){
-	meshCluster,_ := r.MeshClusters[mCluster.GetUuid()]
-	if meshCluster!=nil {
+func (r *MeshClusterReconciler) getMeshClusterManager(mCluster *meshv1.MeshCluster) (*MeshClusterManager, error) {
+	meshCluster, _ := r.MeshClusters[mCluster.GetUuid()]
+	if meshCluster != nil {
 		meshCluster.meshCluster = mCluster.DeepCopy()
 		return meshCluster, nil
 	}
-	meshCluster,err := NewMeshClusterManager(r.Conf, mCluster.DeepCopy(), r.Client)
-	if err!=nil {
+	meshCluster, err := NewMeshClusterManager(r.Conf, mCluster.DeepCopy(), r.Client)
+	if err != nil {
 		klog.Errorf("NewMeshClusterManager(%s) failed: %s", mCluster.GetUuid(), err.Error())
 		return nil, err
 	}
@@ -64,19 +64,19 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 	MeshCluster := &meshv1.MeshCluster{}
 	err := r.Client.Get(context.TODO(), req.NamespacedName, MeshCluster)
-	if err!=nil {
+	if err != nil {
 		if errors.IsNotFound(err) {
 			klog.Infof("MeshCluster %s is actually deleted", req.String())
 			return ctrl.Result{}, nil
 		}
 
 		klog.Errorf("Get MeshCluster %s failed: %s", req.String(), err.Error())
-		return ctrl.Result{RequeueAfter: time.Second*3}, err
+		return ctrl.Result{RequeueAfter: time.Second * 3}, err
 	}
-	meshManager,err := r.getMeshClusterManager(MeshCluster)
-	if err!=nil {
+	meshManager, err := r.getMeshClusterManager(MeshCluster)
+	if err != nil {
 		klog.Errorf("Get MeshClusterManager %s failed: %s", MeshCluster.GetUuid(), err.Error())
-		return ctrl.Result{RequeueAfter: time.Second*3}, err
+		return ctrl.Result{RequeueAfter: time.Second * 3}, err
 	}
 
 	finalizer := "MeshCluster.finalizers.bkbcs.tencent.com"
@@ -86,12 +86,12 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if containsString(MeshCluster.ObjectMeta.Finalizers, finalizer) {
 			//uninstall mesh in cluster
 			if !meshManager.uninstallIstio() {
-				return ctrl.Result{RequeueAfter: time.Second*3}, nil
+				return ctrl.Result{RequeueAfter: time.Second * 3}, nil
 			}
 			//delete finalizers
 			MeshCluster.ObjectMeta.Finalizers = removeString(MeshCluster.ObjectMeta.Finalizers, finalizer)
 			if err := r.Update(context.Background(), MeshCluster); err != nil {
-				return ctrl.Result{RequeueAfter: time.Second*3}, err
+				return ctrl.Result{RequeueAfter: time.Second * 3}, err
 			}
 			//stop meshManager
 			delete(r.MeshClusters, MeshCluster.GetUuid())
@@ -115,7 +115,7 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	if meshManager.installIstio() {
 		return ctrl.Result{}, nil
 	}
-	return ctrl.Result{RequeueAfter: time.Second*3}, nil
+	return ctrl.Result{RequeueAfter: time.Second * 3}, nil
 }
 
 func (r *MeshClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {

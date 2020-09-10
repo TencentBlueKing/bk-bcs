@@ -4,4 +4,4 @@ metadata:
   name: istio
   namespace: default
 spec:
-  clusterId: BCS-K8S-15091
+  clusterId: xxxxxxxxxx
