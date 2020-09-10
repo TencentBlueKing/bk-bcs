@@ -101,9 +101,9 @@ type GameDeploymentUpdateStrategy struct {
 type GameDeploymentUpdateStrategyType string
 
 const (
-	// RecreateGameDeploymentUpdateStrategyType indicates that we always delete Pod and create new Pod
+	// RollingGameDeploymentUpdateStrategyType indicates that we always delete Pod and create new Pod
 	// during Pod update, which is the default behavior.
-	RecreateGameDeploymentUpdateStrategyType GameDeploymentUpdateStrategyType = "RollingUpdate"
+	RollingGameDeploymentUpdateStrategyType GameDeploymentUpdateStrategyType = "RollingUpdate"
 
 	// InPlaceGameDeploymentUpdateStrategyType indicates that we will in-place update Pod instead of
 	// recreating pod. Currently we only allow image update for pod spec. Any other changes to the pod spec will be
