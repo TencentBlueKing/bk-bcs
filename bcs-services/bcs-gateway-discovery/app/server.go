@@ -178,7 +178,9 @@ func (s *DiscoveryServer) Run() error {
 func (s *DiscoveryServer) Stop() {
 	s.bcsRegister.Clean()
 	s.bcsRegister.Finit()
-	s.microDiscovery.Stop()
+	if s.option.Etcd.Feature {
+		s.microDiscovery.Stop()
+	}
 	s.exitCancel()
 }
 
