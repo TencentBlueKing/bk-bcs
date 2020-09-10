@@ -55,7 +55,7 @@ type ServerOptions struct {
 	Modules   []string `json:"modules" usage:"new standard moduels that discovery serve for" mapstructure:"modules" `
 	AuthToken string   `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
 
-	Etcd *EtcdRegistry `json:"etcdRegistry"`
+	Etcd EtcdRegistry `json:"etcdRegistry"`
 }
 
 //Valid check if necessary paramter is setting correctly
@@ -66,7 +66,7 @@ func (opt *ServerOptions) Valid() error {
 	if len(opt.ZkConfig.BCSZk) == 0 {
 		return fmt.Errorf("Lost bk-bcs zookeeper setting")
 	}
-	if opt.Etcd != nil && opt.Etcd.Feature {
+	if opt.Etcd.Feature {
 		if len(opt.Etcd.Address) == 0 {
 			return fmt.Errorf("Lost etcd address information")
 		}

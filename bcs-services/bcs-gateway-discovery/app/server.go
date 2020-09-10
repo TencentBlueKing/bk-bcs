@@ -117,7 +117,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 	s.discovery.RegisterEventFunc(s.moduleEventNotifycation)
 
 	//init etcd registry feature with modulediscovery base on micro.Registry
-	if option.Etcd != nil && option.Etcd.Feature {
+	if option.Etcd.Feature {
 		blog.Infof("gateway-discovery check etcd registry feature turn on, try to initialize etcd registry")
 		etcdTLSConfig, err := option.GetEtcdRegistryTLS()
 		if err != nil {
@@ -256,7 +256,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 	}
 	//* module step 2: check etcd registry feature, if feature is on,
 	// get all module information from etcd disocvery
-	if s.option.Etcd != nil && s.option.Etcd.Feature {
+	if s.option.Etcd.Feature {
 		etcdModules, err := s.formatMultiEtcdService()
 		if err != nil {
 			blog.Errorf("discovery format etcd service info when in Synchronization, %s", err.Error())
