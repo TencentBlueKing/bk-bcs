@@ -5,6 +5,8 @@ resources:
 - group: cloud
   kind: NodeNetwork
   version: v1
+- group: monitor
+  kind: ServiceMonitor
 - group: cloud
   kind: CloudSubnet
   version: v1

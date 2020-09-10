@@ -23,7 +23,7 @@ import (
 )
 
 func (store *managerStore) CheckSecretExist(secret *commtypes.BcsSecret) (string, bool) {
-	v2Sec, err := store.FetchSecret(secret.NameSpace, secret.Name)
+	v2Sec, err := store.fetchSecretInDB(secret.NameSpace, secret.Name)
 	if err == nil {
 		return v2Sec.ResourceVersion, true
 	}
@@ -71,14 +71,14 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 }
 
 func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, error) {
-	if cacheMgr.isOK {
-		secret := getCacheSecret(ns, name)
-		if secret == nil {
-			return nil, schStore.ErrNoFound
-		}
-		return secret, nil
+	secret := getCacheSecret(ns, name)
+	if secret == nil {
+		return nil, schStore.ErrNoFound
 	}
+	return secret, nil
+}
 
+func (store *managerStore) fetchSecretInDB(ns, name string) (*commtypes.BcsSecret, error) {
 	client := store.BkbcsClient.BcsSecrets(ns)
 	v2Sec, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
