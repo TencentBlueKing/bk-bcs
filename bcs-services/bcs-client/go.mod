@@ -1,4 +1,4 @@
-module bk-bcs/bcs-services/bcs-client
+module github.com/Tencent/bk-bcs/bcs-services/bcs-client
 
 go 1.14
 
