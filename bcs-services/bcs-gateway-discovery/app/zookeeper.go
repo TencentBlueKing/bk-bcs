@@ -145,7 +145,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	}
 	//ready to get kube-apiserver list from bcs-user-manager
 	config := &bcsapi.Config{
-		Host:      fmt.Sprintf("%s://%s:%d", svc.Scheme, svc.IP, svc.Port),
+		Hosts:     []string{fmt.Sprintf("%s:%d", svc.IP, svc.Port)},
 		AuthToken: s.option.AuthToken,
 		Gateway:   false,
 	}
@@ -153,7 +153,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	apiCli := bcsapi.NewClient(config)
 	clusters, err := apiCli.UserManager().ListAllClusters()
 	if err != nil {
-		blog.Errorf("request all kube-apiserver cluster info from bcs-user-manager %s failed, %s", config.Host, err.Error())
+		blog.Errorf("request all kube-apiserver cluster info from bcs-user-manager %+v failed, %s", config.Hosts, err.Error())
 		return nil, err
 	}
 	if len(clusters) == 0 {

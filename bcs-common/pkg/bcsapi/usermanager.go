@@ -71,7 +71,7 @@ func (cli *UserManagerCli) getRequestPath() string {
 func (cli *UserManagerCli) ListAllClusters() ([]*ClusterCredential, error) {
 	var response BasicResponse
 	err := bkbcsSetting(cli.Client.Get(), cli.Config).
-		WithEndpoints([]string{cli.Config.Host}).
+		WithEndpoints(cli.Config.Hosts).
 		WithBasePath(cli.getRequestPath()).
 		SubPathf("/clusters/credentials").
 		Do().

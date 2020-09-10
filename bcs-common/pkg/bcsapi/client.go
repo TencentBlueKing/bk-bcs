@@ -31,7 +31,7 @@ const (
 type Config struct {
 	//bcsapi host, available like 127.0.0.1:8080
 	//todo(DeveloperJim): make it slice when discovery mechanism change to etcd
-	Host string
+	Hosts []string
 	//tls configuratio
 	TLSConfig *tls.Config
 	//AuthToken for permission verification

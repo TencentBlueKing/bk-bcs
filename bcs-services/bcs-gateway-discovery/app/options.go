@@ -25,7 +25,11 @@ import (
 
 //NewServerOptions create default ServerOptions
 func NewServerOptions() *ServerOptions {
-	return &ServerOptions{}
+	return &ServerOptions{
+		Etcd: EtcdRegistry{
+			Feature: false,
+		},
+	}
 }
 
 // EtcdRegistry config item for etcd discovery

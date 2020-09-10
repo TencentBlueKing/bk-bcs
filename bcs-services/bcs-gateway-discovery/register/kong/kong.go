@@ -304,7 +304,10 @@ func innerServiceConvert(ksvc *gokong.Service) *register.Service {
 		Protocol: *ksvc.Protocol,
 		Host:     *ksvc.Host,
 		Port:     uint(*ksvc.Port),
-		Path:     *ksvc.Path,
+	}
+	//path will be empty when rewrite feature turns off
+	if ksvc.Path != nil {
+		svc.Path = *ksvc.Path
 	}
 	return svc
 }

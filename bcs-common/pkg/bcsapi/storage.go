@@ -65,7 +65,7 @@ func (c *StorageCli) getRequestPath() string {
 func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, error) {
 	var response BasicResponse
 	err := bkbcsSetting(c.Client.Get(), c.Config).
-		WithEndpoints([]string{c.Config.Host}).
+		WithEndpoints(c.Config.Hosts).
 		WithBasePath(c.getRequestPath()).
 		SubPathf("/query/mesos/dynamic/clusters/%s/taskgroup", cluster).
 		Do().
@@ -95,7 +95,7 @@ func (c *StorageCli) QueryK8SPod(cluster string) ([]*storage.Pod, error) {
 	}
 	var response BasicResponse
 	err := bkbcsSetting(c.Client.Get(), c.Config).
-		WithEndpoints([]string{c.Config.Host}).
+		WithEndpoints(c.Config.Hosts).
 		WithBasePath(c.getRequestPath()).
 		SubPathf("/query/k8s/dynamic/clusters/%s/pod", cluster).
 		Do().
@@ -126,7 +126,7 @@ func (c *StorageCli) GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, e
 	}
 	var response BasicResponse
 	err := bkbcsSetting(c.Client.Get(), c.Config).
-		WithEndpoints([]string{c.Config.Host}).
+		WithEndpoints(c.Config.Hosts).
 		WithBasePath(c.getRequestPath()).
 		SubPathf("/query/mesos/dynamic/clusters/%s/ippoolstaticdetail", clusterID).
 		Do().
