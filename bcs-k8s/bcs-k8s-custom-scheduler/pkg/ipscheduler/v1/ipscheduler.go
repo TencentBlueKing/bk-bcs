@@ -11,9 +11,15 @@
  *
  */
 
-package ipscheduler
+package v1
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
@@ -23,30 +29,26 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
-
-	"fmt"
-	"os"
-	"strings"
-	"time"
 )
 
-type Ipscheduler struct {
-	Cluster    string
-	netClient  netservice.Client
-	NetPools   []*types.NetPool
-	KubeClient *kubernetes.Clientset
+type IpScheduler struct {
+	Cluster      string
+	UpdatePeriod uint
+	netClient    netservice.Client
+	NetPools     []*types.NetPool
+	KubeClient   *kubernetes.Clientset
 }
 
-var DefaultIpScheduler *Ipscheduler
+var DefaultIpScheduler *IpScheduler
 
-func NewIpscheduler() *Ipscheduler {
-	netClit, err := createNetSvcClient()
+func NewIpScheduler(conf *config.CustomSchedulerConfig) *IpScheduler {
+	netClit, err := createNetSvcClient(conf)
 	if err != nil {
 		fmt.Printf("error create default ipScheduler: %v\n", err)
 		os.Exit(1)
 	}
 
-	cfg, err := clientcmd.BuildConfigFromFlags(config.KubeMaster, config.Kubeconfig)
+	cfg, err := clientcmd.BuildConfigFromFlags(conf.KubeMaster, conf.KubeConfig)
 	if err != nil {
 		fmt.Printf("error building kube config: %v\n", err)
 		os.Exit(1)
@@ -58,15 +60,16 @@ func NewIpscheduler() *Ipscheduler {
 		os.Exit(1)
 	}
 
-	return &Ipscheduler{
-		Cluster:    config.Cluster,
-		netClient:  netClit,
-		KubeClient: kubeClient,
+	return &IpScheduler{
+		UpdatePeriod: conf.UpdatePeriod,
+		Cluster:      conf.Cluster,
+		netClient:    netClit,
+		KubeClient:   kubeClient,
 	}
 }
 
-func (i *Ipscheduler) UpdateNetPoolsPeriodically() {
-	updatePeriod := config.UpdatePeriod
+func (i *IpScheduler) UpdateNetPoolsPeriodically() {
+	updatePeriod := i.UpdatePeriod
 	ticker := time.NewTicker(time.Duration(updatePeriod) * time.Second)
 	for {
 		blog.Info("starting to update netpool...")
@@ -84,7 +87,10 @@ func (i *Ipscheduler) UpdateNetPoolsPeriodically() {
 	}
 }
 
-func HandleIpschedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedulerapi.ExtenderFilterResult, error) {
+func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedulerapi.ExtenderFilterResult, error) {
+	if DefaultIpScheduler == nil {
+		return nil, fmt.Errorf("invalid type of custom scheduler, please check the custome scheduler config")
+	}
 	canSchedule := make([]v1.Node, 0, len(extenderArgs.Nodes.Items))
 	canNotSchedule := make(map[string]string)
 
@@ -96,13 +102,11 @@ func HandleIpschedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	} else {
 		blog.Infof("starting to predicate for pod %s", extenderArgs.Pod.Name)
 		for _, node := range extenderArgs.Nodes.Items {
-			result, err := DefaultIpScheduler.checkSchedulable(node)
-			if err != nil || !result {
+			err := DefaultIpScheduler.checkSchedulable(node)
+			if err != nil {
 				canNotSchedule[node.Name] = err.Error()
 			} else {
-				if result {
-					canSchedule = append(canSchedule, node)
-				}
+				canSchedule = append(canSchedule, node)
 			}
 		}
 	}
@@ -119,9 +123,11 @@ func HandleIpschedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	return &scheduleResult, nil
 }
 
-func HandleIpschedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingArgs) error {
-
-	pod, err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Get(extenderBindingArgs.PodName, metav1.GetOptions{})
+func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingArgs) error {
+	if DefaultIpScheduler == nil {
+		return fmt.Errorf("invalid type of custom scheduler, please check the custome scheduler config")
+	}
+	pod, err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Get(context.Background(), extenderBindingArgs.PodName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("error when getting pod from cluster: %s", err.Error())
 	}
@@ -142,7 +148,7 @@ func HandleIpschedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 					blog.Info("%d", len(DefaultIpScheduler.NetPools[i].Available))
 				} else {
 					blog.Warnf("no available ip in node %s for pod %s, delete it and reschedule... ", netPool.Net, extenderBindingArgs.PodName)
-					err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Delete(extenderBindingArgs.PodName, &metav1.DeleteOptions{})
+					err := DefaultIpScheduler.KubeClient.CoreV1().Pods(extenderBindingArgs.PodNamespace).Delete(context.Background(), extenderBindingArgs.PodName, metav1.DeleteOptions{})
 					if err != nil {
 						return fmt.Errorf("error when deleting pod %s, failed to reschedule: %s", extenderBindingArgs.PodName, err.Error())
 					}
@@ -164,7 +170,7 @@ func HandleIpschedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 		},
 	}
 
-	err = DefaultIpScheduler.KubeClient.CoreV1().Pods(bind.Namespace).Bind(bind)
+	err = DefaultIpScheduler.KubeClient.CoreV1().Pods(bind.Namespace).Bind(context.Background(), bind, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("error when binding pod to node: %s", err.Error())
 	}
@@ -172,7 +178,7 @@ func HandleIpschedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingAr
 	return nil
 }
 
-func (i *Ipscheduler) checkSchedulable(node v1.Node) (bool, error) {
+func (i *IpScheduler) checkSchedulable(node v1.Node) error {
 	var nodeIp string
 	for _, nodeAddress := range node.Status.Addresses {
 		if nodeAddress.Type == "InternalIP" {
@@ -181,7 +187,7 @@ func (i *Ipscheduler) checkSchedulable(node v1.Node) (bool, error) {
 		}
 	}
 	if nodeIp == "" {
-		return false, fmt.Errorf("cant't find node ip")
+		return fmt.Errorf("cant't find node ip")
 	}
 
 	var matchedNetPool *types.NetPool
@@ -199,12 +205,12 @@ func (i *Ipscheduler) checkSchedulable(node v1.Node) (bool, error) {
 		}
 	}
 	if matchedNetPool == nil {
-		return false, fmt.Errorf("can't find netPool, cluster: %s, node: %s", i.Cluster, nodeIp)
+		return fmt.Errorf("can't find netPool, cluster: %s, node: %s", i.Cluster, nodeIp)
 	}
 
 	if len(matchedNetPool.Available) == 0 {
-		return false, fmt.Errorf("no available ip address anymore")
+		return fmt.Errorf("no available ip address anymore")
 	} else {
-		return true, nil
+		return nil
 	}
 }
