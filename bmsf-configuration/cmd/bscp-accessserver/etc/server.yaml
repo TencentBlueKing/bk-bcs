@@ -13,6 +13,8 @@ server:
 auth:
     # 是否启用授权检查
     open: false
+    # platform权限
+    platform: "platform:pwd"
     # admin权限
     admin: "admin:pwd"
 

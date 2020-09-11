@@ -1,0 +1,24 @@
+# permissions for end users to edit cloudips.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudip-editor-role
+rules:
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - cloudips
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - cloudips/status
+  verbs:
+  - get

@@ -21,10 +21,9 @@ import (
 	"os"
 	"time"
 
-	clientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	gamestatefulset "bcs-gamestatefulset-operator/pkg/controllers"
-	informers "bcs-gamestatefulset-operator/pkg/informers"
-
+	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	gamestatefulset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/controllers"
+	informers "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers"
 	api "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/server"

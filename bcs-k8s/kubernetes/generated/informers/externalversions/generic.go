@@ -17,7 +17,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/monitor/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -51,6 +51,13 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=monitor, Version=v1
 	case v1.SchemeGroupVersion.WithResource("servicemonitors"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitor().V1().ServiceMonitors().Informer()}, nil
+	// Group=cloud, Version=v1
+	case v1.SchemeGroupVersion.WithResource("cloudips"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().CloudIPs().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("cloudsubnets"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().CloudSubnets().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("nodenetworks"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Cloud().V1().NodeNetworks().Informer()}, nil
 
 	}
 

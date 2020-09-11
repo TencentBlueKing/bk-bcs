@@ -16,7 +16,7 @@
 package internalinterfaces
 
 import (
-	internalclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

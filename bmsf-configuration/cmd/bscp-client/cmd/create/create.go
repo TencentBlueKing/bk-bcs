@@ -24,8 +24,8 @@ func init() {
 	createCmd = &cobra.Command{
 		Use:     "create",
 		Aliases: []string{"ct"},
-		Short:   "create new resource",
-		Long:    "subcommand for creating all resources, including app/cluster/zone/configset/commit/release",
+		Short:   "Create new resource",
+		Long:    "Subcommand for creating all resources, including app/cluster/zone/configset/commit/release/strategy",
 	}
 }
 
@@ -33,14 +33,14 @@ func init() {
 func InitCommands() []*cobra.Command {
 	//init all sub resource command
 	createCmd.AddCommand(createBusinessCmd())
+	createCmd.AddCommand(createShardingDBCmd())
+	createCmd.AddCommand(createShardingCmd())
 	createCmd.AddCommand(createAppCmd())
 	createCmd.AddCommand(logicClusterCmd())
 	createCmd.AddCommand(clusterListCmd())
 	createCmd.AddCommand(createZoneCmd())
 	createCmd.AddCommand(createZoneListCmd())
 	createCmd.AddCommand(createConfigSetCmd())
-	createCmd.AddCommand(createCommitCmd())
 	createCmd.AddCommand(createStrategyCmd())
-	createCmd.AddCommand(createReleaseCmd())
 	return []*cobra.Command{createCmd}
 }

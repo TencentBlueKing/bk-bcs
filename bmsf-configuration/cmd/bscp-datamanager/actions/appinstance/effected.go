@@ -134,7 +134,7 @@ func (act *EffectedAction) queryAppInstances() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.AppInstanceRelease{Bid: act.req.Bid, Cfgsetid: act.req.Cfgsetid, Releaseid: act.req.Releaseid}).
 		Find(&act.appInstanceReleases).Error
 

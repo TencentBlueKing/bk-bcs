@@ -72,6 +72,7 @@ func main() {
 		tables = append(tables, &database.Audit{})
 		tables = append(tables, &database.MultiCommit{})
 		tables = append(tables, &database.MultiRelease{})
+		tables = append(tables, &database.ProcAttr{})
 	}
 
 	db, err := gorm.Open("mysql",

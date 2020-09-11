@@ -145,7 +145,7 @@ func (act *ListAction) queryConfigSetList() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.ConfigSet{Bid: act.req.Bid, Appid: act.req.Appid}).
 		Where("Fstate = ?", pbcommon.ConfigSetState_CSS_CREATED).
 		Find(&act.configSets).Error

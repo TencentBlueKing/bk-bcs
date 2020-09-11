@@ -69,23 +69,24 @@ func (act *ListAction) Output() error {
 	releases := []*pbcommon.Release{}
 	for _, st := range act.releases {
 		release := &pbcommon.Release{
-			ID:           st.ID,
-			Bid:          st.Bid,
-			Releaseid:    st.Releaseid,
-			Name:         st.Name,
-			Appid:        st.Appid,
-			Cfgsetid:     st.Cfgsetid,
-			CfgsetName:   st.CfgsetName,
-			CfgsetFpath:  st.CfgsetFpath,
-			Commitid:     st.Commitid,
-			Strategyid:   st.Strategyid,
-			Strategies:   st.Strategies,
-			Creator:      st.Creator,
-			Memo:         st.Memo,
-			State:        st.State,
-			LastModifyBy: st.LastModifyBy,
-			CreatedAt:    st.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt:    st.UpdatedAt.Format("2006-01-02 15:04:05"),
+			ID:             st.ID,
+			Bid:            st.Bid,
+			Releaseid:      st.Releaseid,
+			Name:           st.Name,
+			Appid:          st.Appid,
+			Cfgsetid:       st.Cfgsetid,
+			CfgsetName:     st.CfgsetName,
+			CfgsetFpath:    st.CfgsetFpath,
+			Commitid:       st.Commitid,
+			MultiReleaseid: st.MultiReleaseid,
+			Strategyid:     st.Strategyid,
+			Strategies:     st.Strategies,
+			Creator:        st.Creator,
+			Memo:           st.Memo,
+			State:          st.State,
+			LastModifyBy:   st.LastModifyBy,
+			CreatedAt:      st.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:      st.UpdatedAt.Format("2006-01-02 15:04:05"),
 		}
 		releases = append(releases, release)
 	}
@@ -143,7 +144,7 @@ func (act *ListAction) queryHistoryReleases() (pbcommon.ErrCode, string) {
 
 	orderType := "Fid DESC"
 	if act.req.OrderType == 1 {
-		orderType = "Fupdate_time DESC"
+		orderType = "Fupdate_time DESC, Fid DESC"
 	}
 
 	err := act.sd.DB().

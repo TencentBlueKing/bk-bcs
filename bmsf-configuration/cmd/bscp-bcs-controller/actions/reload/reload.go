@@ -169,7 +169,7 @@ func (act *ReloadAction) reload() (pbcommon.ErrCode, string) {
 		publishing.Strategies = act.multiRelease.Strategies
 	}
 
-	reloadSpec := structs.ReloadSpec{Info: []structs.EffectInfo{}}
+	reloadSpec := structs.ReloadSpec{Rollback: act.req.ReloadSpec.Rollback, Info: []structs.EffectInfo{}}
 
 	if len(act.req.ReloadSpec.MultiReleaseid) != 0 {
 		reloadSpec.MultiReleaseid = act.req.ReloadSpec.MultiReleaseid
@@ -205,8 +205,8 @@ func (act *ReloadAction) Do() error {
 			return act.Err(errCode, errMsg)
 		}
 
-		if act.release.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
-			return act.Err(pbcommon.ErrCode_E_BCS_SYSTEM_UNKONW, "can't reload the release, it's not in published state.")
+		if act.release.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) && act.release.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
+			return act.Err(pbcommon.ErrCode_E_BCS_SYSTEM_UNKONW, "can't reload the release, it's not in published/rollbacked state.")
 		}
 	} else {
 		// query multi release.
@@ -214,8 +214,8 @@ func (act *ReloadAction) Do() error {
 			return act.Err(errCode, errMsg)
 		}
 
-		if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
-			return act.Err(pbcommon.ErrCode_E_BCS_SYSTEM_UNKONW, "can't reload the multi release, it's not in published state")
+		if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) && act.multiRelease.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
+			return act.Err(pbcommon.ErrCode_E_BCS_SYSTEM_UNKONW, "can't reload the multi release, it's not in published/rollbacked state")
 		}
 	}
 

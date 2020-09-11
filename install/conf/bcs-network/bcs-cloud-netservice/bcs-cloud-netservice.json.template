@@ -1,0 +1,13 @@
+{
+    "address": "${cloudNetserviceAddress}",
+    "port": ${cloudNetservicePort},
+    "metric_port": ${cloudNetserviceMetricPort},
+    "swagger_dir": "${cloudNetserviceSwaggerDir}",
+    "kubeconfig": "${kubeconfig}",
+    "cloud_mode": "tencentcloud",
+    "ip_max_idle_minute": 100,
+    "ip_clean_interval_minute": 20,
+    "log_dir": "/data/bcs/logs/bcs",
+    "logs": "./logs",
+    "v": 3,
+}

@@ -92,6 +92,13 @@ service DataManager {
     rpc QueryStrategyList(QueryStrategyListReq) returns (QueryStrategyListResp) {}
     rpc DeleteStrategy(DeleteStrategyReq) returns (DeleteStrategyResp) {}
 
+    rpc CreateProcAttr(CreateProcAttrReq) returns (CreateProcAttrResp) {}
+    rpc QueryHostProcAttr(QueryHostProcAttrReq) returns (QueryHostProcAttrResp) {}
+    rpc QueryHostProcAttrList(QueryHostProcAttrListReq) returns (QueryHostProcAttrListResp) {}
+    rpc QueryAppProcAttrList(QueryAppProcAttrListReq) returns (QueryAppProcAttrListResp) {}
+    rpc UpdateProcAttr(UpdateProcAttrReq) returns (UpdateProcAttrResp) {}
+    rpc DeleteProcAttr(DeleteProcAttrReq) returns (DeleteProcAttrResp) {}
+
     rpc CreateShardingDB(CreateShardingDBReq) returns (CreateShardingDBResp) {}
     rpc QueryShardingDB(QueryShardingDBReq) returns (QueryShardingDBResp) {}
     rpc QueryShardingDBList(QueryShardingDBListReq) returns (QueryShardingDBListResp) {}
@@ -1304,6 +1311,112 @@ message DeleteStrategyReq {
 }
 
 message DeleteStrategyResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message CreateProcAttrReq {
+    uint64 seq       = 1;
+    string cloudid   = 2;
+    string IP        = 3;
+    string bid       = 4;
+    string appid     = 5;
+    string clusterid = 6;
+    string zoneid    = 7;
+    string dc        = 8;
+    string labels    = 9;
+    string path      = 10;
+    string creator   = 11;
+    string memo      = 12;
+}
+
+message CreateProcAttrResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message QueryHostProcAttrReq {
+    uint64 seq     = 1;
+    string cloudid = 2;
+    string IP      = 3;
+    string bid     = 4;
+    string appid   = 5;
+    string path    = 6;
+}
+
+message QueryHostProcAttrResp {
+    uint64          seq      = 1;
+    common.ErrCode  errCode  = 2;
+    string          errMsg   = 3;
+    common.ProcAttr procAttr = 4;
+}
+
+message QueryHostProcAttrListReq {
+    uint64 seq     = 1;
+    string cloudid = 2;
+    string IP      = 3;
+    int32  index   = 4;
+    int32  limit   = 5;
+}
+
+message QueryHostProcAttrListResp {
+    uint64                   seq       = 1;
+    common.ErrCode           errCode   = 2;
+    string                   errMsg    = 3;
+    repeated common.ProcAttr procAttrs = 4;
+}
+
+message QueryAppProcAttrListReq {
+    uint64 seq       = 1;
+    string bid       = 2;
+    string appid     = 3;
+    string clusterid = 4;
+    string zoneid    = 5;
+    int32  index     = 6;
+    int32  limit     = 7;
+}
+
+message QueryAppProcAttrListResp {
+    uint64                   seq       = 1;
+    common.ErrCode           errCode   = 2;
+    string                   errMsg    = 3;
+    repeated common.ProcAttr procAttrs = 4;
+}
+
+message UpdateProcAttrReq {
+    uint64 seq       = 1;
+    string cloudid   = 2;
+    string IP        = 3;
+    string bid       = 4;
+    string appid     = 5;
+    string clusterid = 6;
+    string zoneid    = 7;
+    string dc        = 8;
+    string labels    = 9;
+    string path      = 10;
+    string memo      = 11;
+    string operator  = 12;
+}
+
+message UpdateProcAttrResp {
+    uint64         seq     = 1;
+    common.ErrCode errCode = 2;
+    string         errMsg  = 3;
+}
+
+message DeleteProcAttrReq {
+    uint64 seq      = 1;
+    string cloudid  = 2;
+    string IP       = 3;
+    string bid      = 4;
+    string appid    = 5;
+    string path     = 6;
+    string operator = 7;
+}
+
+message DeleteProcAttrResp {
     uint64         seq     = 1;
     common.ErrCode errCode = 2;
     string         errMsg  = 3;

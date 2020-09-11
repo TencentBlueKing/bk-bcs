@@ -77,11 +77,19 @@ func (act *UpdateAction) verify() error {
 		return errors.New("invalid params, key too long")
 	}
 
-	if len(act.req.Dbid) > database.BSCPLONGSTRLENLIMIT {
+	length = len(act.req.Dbid)
+	if length == 0 {
+		return errors.New("invalid params, dbid missing")
+	}
+	if length > database.BSCPLONGSTRLENLIMIT {
 		return errors.New("invalid params, dbid too long")
 	}
 
-	if len(act.req.Dbname) > database.BSCPLONGSTRLENLIMIT {
+	length = len(act.req.Dbname)
+	if length == 0 {
+		return errors.New("invalid params, dbname missing")
+	}
+	if length > database.BSCPLONGSTRLENLIMIT {
 		return errors.New("invalid params, dbname too long")
 	}
 

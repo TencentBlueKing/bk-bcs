@@ -58,6 +58,9 @@ type ReloadSpec struct {
 
 	// Info is effect infos for reload action.
 	Info []EffectInfo
+
+	// Rollback is rollback reload flag.
+	Rollback bool
 }
 
 // Publishing notification content.
@@ -115,6 +118,9 @@ type ConnServer struct {
 			"cluster": "cluster1",
 			"clusterLabels": {
 				"environment": "test"
+			},
+			"vars": {
+				"clusterVar": "cluster var 1"
 			}
 		},
 		{
@@ -124,10 +130,16 @@ type ConnServer struct {
 			},
 			"zones": [
 				{
-					"zone": "zone1"
+					"zone": "zone1",
+					"vars": {
+						"zoneVar": "zone var 1"
+					}
 				},
 				{
-					"zone": "zone2"
+					"zone": "zone2",
+					"vars": {
+						"zoneVar": "zone var 2"
+					}
 				}
 			]
 		},
@@ -136,9 +148,15 @@ type ConnServer struct {
 			"clusterLabels": {
 				"environment": "test"
 			},
+			"vars": {
+				"clusterVar": "cluster var 2"
+			}
 			"zones": [
 				{
 					"zone": "zone1",
+					"vars": {
+						"zoneVar": "zone var 3"
+					}
 					"instances": [
 						{
 							"index": "127.0.0.1"
@@ -168,6 +186,7 @@ type ConnServer struct {
 type RuleInstance struct {
 	// Index is index of config instance of centain zone
 	Index string `json:"index"`
+
 	// Variables is template rendering variables.
 	Variables map[string]interface{} `json:"vars"`
 }
@@ -176,8 +195,12 @@ type RuleInstance struct {
 type RuleZone struct {
 	// Zone zone name
 	Zone string `json:"zone"`
+
 	// Instances rule instances
 	Instances []*RuleInstance `json:"instances"`
+
+	// Variables is extra Zone variables
+	Variables map[string]interface{} `json:"vars"`
 }
 
 // Rule is bscp config template rule, template server would renders configs
@@ -190,6 +213,9 @@ type Rule struct {
 
 	// Zone zone name.
 	Zones []*RuleZone `json:"zones"`
+
+	// Variables is extra Cluster variables
+	Variables map[string]interface{} `json:"vars"`
 }
 
 // RuleList is bscp configs template rule list.
@@ -210,6 +236,9 @@ const (
 
 	// IntegrationMetadataKindEffect is integration metadata kind for effect.
 	IntegrationMetadataKindEffect = "effect"
+
+	// IntegrationMetadataKindReload is integration metadata kind for reload.
+	IntegrationMetadataKindReload = "reload"
 )
 
 const (
@@ -227,6 +256,9 @@ const (
 
 	// IntegrationMetadataOpRollback is integration metadata op type for rollback.
 	IntegrationMetadataOpRollback = "rollback"
+
+	// IntegrationMetadataOpReload is integration metadata op type for reload.
+	IntegrationMetadataOpReload = "reload"
 )
 
 // IntegrationMetadataZone is struct for create zone in construction mode.
@@ -311,6 +343,12 @@ type IntegrationMetadata struct {
 		// Releaseid is inner id of target release, used to rollback target release.
 		Releaseid string `yaml:"releaseid"`
 
+		// MultiReleaseid is inner id of target multi release, used for target release actions.
+		MultiReleaseid string `yaml:"multiReleaseid"`
+
+		// Rollback reload flag.
+		Rollback bool `yaml:"rollback"`
+
 		// NewReleaseid is inner id of target new release wanted to rollback.
 		NewReleaseid string `yaml:"newReleaseid"`
 
@@ -331,8 +369,11 @@ type IntegrationMetadata struct {
 			// IPs is ip list used for release publishing strategy match.
 			IPs []string `yaml:"ips"`
 
-			// Labels is label list used for release publishing strategy match.
+			// Labels is OR label list used for release publishing strategy match.
 			Labels map[string]string `yaml:"labels"`
+
+			// LabelsAnd is AND label list used for release publishing strategy match.
+			LabelsAnd map[string]string `yaml:"labelsAnd"`
 		} `yaml:"strategy"`
 	} `yaml:"release"`
 

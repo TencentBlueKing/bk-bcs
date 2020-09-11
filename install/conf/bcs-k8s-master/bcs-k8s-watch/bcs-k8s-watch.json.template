@@ -12,8 +12,9 @@
             "key-file": "${clientKeyFile}"
         },
         "is-external": ${kubeWatchExternal},
-        "custom-storage-endpoints": "${customStorage}",
-        "custom-netservice-endpoints": "${customNetService}"
+        "netservice-zookeepers": ["$customNetServiceZK"],
+        "custom-storage-endpoints": ["${customStorage}"],
+        "custom-netservice-endpoints": ["${customNetService}"]
     },
     "k8s": {
         "master": "${kubeMaster}",

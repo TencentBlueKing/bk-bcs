@@ -1,0 +1,7 @@
+apiVersion: networkextension.bkbcs.tencent.com/v1
+kind: Ingress
+metadata:
+  name: ingress-sample
+spec:
+  # Add fields here
+  foo: bar
