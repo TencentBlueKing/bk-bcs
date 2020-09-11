@@ -44,6 +44,7 @@ type CmdConfig struct {
 	ApplicationThreadNum   int
 	TaskgroupThreadNum     int
 	ExportserviceThreadNum int
+	DeploymentThreadNum    int
 
 	MetricPort uint
 
@@ -68,4 +69,5 @@ const (
 	TaskgroupChannelPrefix = "TaskGroup_"
 	//ExportserviceChannelPrefix prefix for event post channel
 	ExportserviceChannelPrefix = "Exportservice_"
+	DeploymentChannelPrefix = "Deployment_"
 )

@@ -20,8 +20,8 @@ import (
 	time "time"
 
 	versioned "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
+	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud"
 	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/internalinterfaces"
-	monitor "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/monitor"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -168,9 +168,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Monitor() monitor.Interface
+	Cloud() cloud.Interface
 }
 
-func (f *sharedInformerFactory) Monitor() monitor.Interface {
-	return monitor.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Cloud() cloud.Interface {
+	return cloud.New(f, f.namespace, f.tweakListOptions)
 }

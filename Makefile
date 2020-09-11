@@ -34,7 +34,7 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent log-manager
+default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent mesh-manager log-manager
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
@@ -200,6 +200,11 @@ log-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-log-manager ${PACKAGEPATH}/bcs-services
 	cd ./bcs-services/bcs-log-manager && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-log-manager/bcs-log-manager ./main.go && cd -
+
+mesh-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cp -R ./install/conf/bcs-services/bcs-mesh-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-mesh-manager && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager ./main.go
 
 hpacontroller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master

@@ -23,7 +23,7 @@ import (
 )
 
 func (store *managerStore) CheckServiceExist(service *commtypes.BcsService) (string, bool) {
-	svc, _ := store.FetchService(service.NameSpace, service.Name)
+	svc, _ := store.fetchServiceInDB(service.NameSpace, service.Name)
 	if svc != nil {
 		return svc.ResourceVersion, true
 	}
@@ -71,13 +71,14 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 }
 
 func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService, error) {
-	if cacheMgr.isOK {
-		svc := getCacheService(ns, name)
-		if svc == nil {
-			return svc, schStore.ErrNoFound
-		}
+	svc := getCacheService(ns, name)
+	if svc == nil {
+		return svc, schStore.ErrNoFound
 	}
+	return svc,  nil
+}
 
+func (store *managerStore) fetchServiceInDB(ns, name string) (*commtypes.BcsService, error) {
 	client := store.BkbcsClient.BcsServices(ns)
 	v2Svc, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
