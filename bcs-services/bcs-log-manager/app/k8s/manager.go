@@ -371,8 +371,6 @@ func (m *LogManager) getLogCollectionTaskByFilter(filter *config.CollectionFilte
 				continue
 			} else {
 				ret = append(ret, ctl.getLogCollectionTaskByFilter(filter))
-				// to be deleted
-				blog.Errorf("get log collection configs: %+v", ctl.getLogCollectionTaskByFilter(filter))
 			}
 		}
 	}
@@ -382,18 +380,15 @@ func (m *LogManager) getLogCollectionTaskByFilter(filter *config.CollectionFilte
 // distribute delete task
 func (m *LogManager) distributeDeleteTasks(filter *config.CollectionFilterConfig) {
 	if filter.ClusterIDs == "" {
-		for _, ctl := range m.controllers {
+		return
+	}
+	clusters := strings.Split(filter.ClusterIDs, ",")
+	for _, id := range clusters {
+		if ctl, ok := m.controllers[id]; !ok {
+			blog.Warnf("No cluster id (%s)", id)
+			continue
+		} else {
 			ctl.DeleteCollectionTask <- filter
-		}
-	} else {
-		clusters := strings.Split(filter.ClusterIDs, ",")
-		for _, id := range clusters {
-			if ctl, ok := m.controllers[id]; !ok {
-				blog.Warnf("No cluster id (%s)", id)
-				continue
-			} else {
-				ctl.DeleteCollectionTask <- filter
-			}
 		}
 	}
 }

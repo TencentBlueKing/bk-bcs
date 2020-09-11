@@ -129,7 +129,6 @@ func (c *ClusterLogController) initKubeConf() error {
 	for _, url := range urls {
 		restConf.Host = url
 		restConf.BearerToken = c.clusterInfo.UserToken
-		// restConf.CAFile = c.caFile
 		// TODO tsl secure
 		restConf.TLSClientConfig.Insecure = true
 		// create CRD clientset
@@ -253,10 +252,8 @@ func (c *ClusterLogController) run() {
 			// extract matched configs
 			c.taskLock.Lock()
 			for key, task := range c.collectionTasks {
-				if task.ConfigName == conf.ConfigName || conf.ConfigName == "" {
-					if task.ConfigNamespace == conf.ConfigNamespace || conf.ConfigNamespace == "" {
-						tasks[key] = task
-					}
+				if task.ConfigName == conf.ConfigName && task.ConfigNamespace == conf.ConfigNamespace {
+					tasks[key] = task
 				}
 			}
 			c.taskLock.Unlock()
@@ -285,8 +282,8 @@ func (c *ClusterLogController) getLogCollectionTaskByFilter(filter *config.Colle
 	c.taskLock.Lock()
 	ret := make([]config.CollectionConfig, 0, len(c.collectionTasks))
 	for _, task := range c.collectionTasks {
-		if task.ConfigName == filter.ConfigName || filter.ConfigName == "" {
-			if task.ConfigNamespace == filter.ConfigNamespace || filter.ConfigNamespace == "" {
+		if strings.Contains(task.ConfigName, filter.ConfigName) {
+			if strings.Contains(task.ConfigNamespace, filter.ConfigNamespace) {
 				ret = append(ret, *task)
 			}
 		}

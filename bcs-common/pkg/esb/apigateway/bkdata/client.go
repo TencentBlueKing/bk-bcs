@@ -36,38 +36,24 @@ type ClientInterface interface {
 	SetCleanStrategy(strategy DataCleanStrategy) error
 }
 
-// Client is instance of ClientInterface
+// ClientCreatorInterface specified bkdata api client creator method
+type ClientCreatorInterface interface {
+	NewClientFromConfig(BKDataClientConfig) ClientInterface
+}
+
+// Client is implementation of ClientInterface
 type Client struct {
 	client *client.RESTClient
 	config BKDataClientConfig
 }
 
-// NewClientInterface create bkdata client
-func NewClientInterface(conf BKDataClientConfig) ClientInterface {
-	// bkgateway auth required
-	conf.BkdataAuthenticationMethod = "user"
+// ClientCreator is implementation of ClientCreatorInterface
+type ClientCreator struct {
+}
 
-	var cli *client.RESTClient
-	if conf.TLSConf != nil {
-		cli = client.NewRESTClientWithTLS(conf.TLSConf).
-			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
-			WithCredential(map[string]interface{}{
-				"app_code":   conf.BkAppCode,
-				"app_secret": conf.BkAppSecret,
-			})
-	} else {
-		cli = client.NewRESTClient().
-			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
-			WithCredential(map[string]interface{}{
-				"app_code":   conf.BkAppCode,
-				"app_secret": conf.BkAppSecret,
-			})
-	}
-
-	return &Client{
-		client: cli,
-		config: conf,
-	}
+// NewClientCreator create bkdata client creator
+func NewClientCreator() ClientCreatorInterface {
+	return &ClientCreator{}
 }
 
 // ObtainDataID obtain a new dataid from bk-data
@@ -154,4 +140,31 @@ func (c *Client) SetCleanStrategy(strategy DataCleanStrategy) error {
 		return fmt.Errorf("Set clean strategy failed: %+v", res["message"])
 	}
 	return nil
+}
+
+// NewClientFromConfig set config of BKDataApiClient
+func (c *ClientCreator) NewClientFromConfig(conf BKDataClientConfig) ClientInterface {
+	// bkgateway auth required
+	conf.BkdataAuthenticationMethod = "user"
+
+	var cli *client.RESTClient
+	if conf.TLSConf != nil {
+		cli = client.NewRESTClientWithTLS(conf.TLSConf).
+			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
+			WithCredential(map[string]interface{}{
+				"app_code":   conf.BkAppCode,
+				"app_secret": conf.BkAppSecret,
+			})
+	} else {
+		cli = client.NewRESTClient().
+			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
+			WithCredential(map[string]interface{}{
+				"app_code":   conf.BkAppCode,
+				"app_secret": conf.BkAppSecret,
+			})
+	}
+	return &Client{
+		client: cli,
+		config: conf,
+	}
 }

@@ -213,12 +213,11 @@ message DeleteLogCollectionTaskReq {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema: {
           title: "CreateLogCollectionTaskReq"
-          description: "新增日志采集任务"
-          required: ["clusterIDs", "configName"]
+          description: "删除日志采集任务"
         }
     };
 
-    string clusterIDs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterIDs", description: "集群ID，逗号分隔多个集群ID，不指定默认为所有集群"}];
+    string clusterIDs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterIDs", description: "集群ID，逗号分隔多个集群ID，不指定默认无动作"}];
     string configName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configName", description: "日志采集任务名称"}];
-    string configNamespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configNamespace", description: "日志采集任务Namespace，不填默认为default"}];
+    string configNamespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configNamespace", description: "日志采集任务Namespace，不填默认无动作"}];
 }

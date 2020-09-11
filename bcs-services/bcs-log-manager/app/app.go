@@ -24,6 +24,7 @@ import (
 	commonconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api"
 	bkdata "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/bkdataapi"
+	bkdataCli "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
@@ -36,7 +37,13 @@ func Run(ctx context.Context, stopCh chan struct{}, op *options.LogManagerOption
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	controller := bkdata.NewBKDataController(stopCh, op.KubeConfig, op.BKDataAPIHost)
+	// controller := bkdata.NewBKDataController(stopCh, op.KubeConfig, op.BKDataAPIHost)
+	controller := &bkdata.BKDataController{
+		StopCh:        stopCh,
+		KubeConfig:    op.KubeConfig,
+		ApiHost:       op.BKDataAPIHost,
+		ClientCreator: bkdataCli.NewClientCreator(),
+	}
 	err := controller.Start()
 	if err != nil {
 		blog.Errorf("BKDataApi controller start failed: %s", err.Error())

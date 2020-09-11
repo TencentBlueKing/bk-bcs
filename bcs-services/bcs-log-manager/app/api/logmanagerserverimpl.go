@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
+	bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
@@ -27,14 +27,15 @@ import (
 
 // LogManagerServerImpl is grpc Server
 type LogManagerServerImpl struct {
-	logManager *k8s.LogManager
-	apiHost    string
+	logManager          *k8s.LogManager
+	apiHost             string
+	bkdataClientCreator bkdata.ClientCreatorInterface
 }
 
 // ObtainDataID ObtainDataid
 func (l *LogManagerServerImpl) ObtainDataID(ctx context.Context, req *proto.ObtainDataidReq, resp *proto.ObtainDataidResp) error {
 	// bkdata api esb client
-	client := bkdata.NewClientInterface(bkdata.BKDataClientConfig{
+	client := l.bkdataClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
 		BkAppCode:                  req.AppCode,
 		BkUsername:                 req.UserName,
 		BkAppSecret:                req.AppSecret,
@@ -66,7 +67,7 @@ func (l *LogManagerServerImpl) ObtainDataID(ctx context.Context, req *proto.Obta
 
 // CreateCleanStrategy CreateCleanStrategy
 func (l *LogManagerServerImpl) CreateCleanStrategy(ctx context.Context, req *proto.CreateCleanStrategyReq, resp *proto.CommonResp) error {
-	client := bkdata.NewClientInterface(bkdata.BKDataClientConfig{
+	client := l.bkdataClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
 		BkAppCode:                  req.AppCode,
 		BkUsername:                 req.UserName,
 		BkAppSecret:                req.AppSecret,
@@ -125,7 +126,6 @@ func (l *LogManagerServerImpl) ListLogCollectionTask(ctx context.Context, req *p
 	}
 	// send message to manager
 	recvCh := make(chan interface{})
-	defer close(recvCh)
 	message := k8s.RequestMessage{
 		Data:   filter,
 		RespCh: recvCh,
@@ -146,6 +146,7 @@ func (l *LogManagerServerImpl) ListLogCollectionTask(ctx context.Context, req *p
 			case error:
 				resp.ErrCode = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
 				resp.Message = v.Error()
+				close(recvCh)
 				return v
 			case string:
 				if v == "termination" {
@@ -172,6 +173,7 @@ exit:
 		resp.Data = append(resp.Data, &respItem)
 	}
 	resp.ErrCode = proto.ErrCode_ERROR_OK
+	close(recvCh)
 	return nil
 }
 
@@ -179,9 +181,14 @@ exit:
 func (l *LogManagerServerImpl) CreateLogCollectionTask(ctx context.Context, req *proto.CreateLogCollectionTaskReq, resp *proto.CommonResp) error {
 	blog.Infof("reqest: %+v", req)
 	config := l.buildLogCollectionTaskConfig(req)
+	if config == nil {
+		err := fmt.Errorf("Error in CreateLogCollectionTask: no LogCollectionConfig specified")
+		resp.ErrCode = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
+		resp.Message = err.Error()
+		return err
+	}
 	// send message to manager
 	recvCh := make(chan interface{})
-	defer close(recvCh)
 	message := k8s.RequestMessage{
 		Data:   config,
 		RespCh: recvCh,
@@ -195,6 +202,7 @@ func (l *LogManagerServerImpl) CreateLogCollectionTask(ctx context.Context, req 
 		resp.Message = err.Error()
 		return err
 	}
+	defer close(recvCh)
 	switch v := data.(type) {
 	case error:
 		resp.ErrCode = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
@@ -222,7 +230,6 @@ func (l *LogManagerServerImpl) DeleteLogCollectionTask(ctx context.Context, req 
 	}
 	// send message to manager
 	recvCh := make(chan interface{})
-	defer close(recvCh)
 	message := k8s.RequestMessage{
 		Data:   filter,
 		RespCh: recvCh,
@@ -236,6 +243,7 @@ func (l *LogManagerServerImpl) DeleteLogCollectionTask(ctx context.Context, req 
 		resp.Message = err.Error()
 		return err
 	}
+	defer close(recvCh)
 	switch v := data.(type) {
 	case error:
 		resp.ErrCode = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
@@ -290,6 +298,9 @@ func (l *LogManagerServerImpl) buildProtoLogCollectionTaskConfig(conf config.Col
 
 // buildLogCollectionTaskConfig convert log config message from protobuf struct type to CollectionConfig
 func (l *LogManagerServerImpl) buildLogCollectionTaskConfig(conf *proto.CreateLogCollectionTaskReq) *config.CollectionConfig {
+	if conf.Config == nil || conf.Config.Config == nil {
+		return nil
+	}
 	ret := &config.CollectionConfig{
 		ClusterIDs:      conf.ClusterIDs,
 		ConfigName:      conf.Config.ConfigName,

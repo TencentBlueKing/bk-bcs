@@ -17,13 +17,13 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/micro/go-micro/v2/server"
 	"github.com/micro/go-micro/v2/service"
 	microgrpc "github.com/micro/go-micro/v2/service/grpc"
 	"google.golang.org/grpc"
@@ -31,6 +31,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
@@ -48,12 +51,13 @@ type Server struct {
 	grpcEndpoint string
 	httpEndpoint string
 	ctx          context.Context
-	lis          net.Listener
 	grpcServer   *grpc.Server
 	mux          *http.ServeMux
 	gwmux        *runtime.ServeMux
 	apiImpl      *LogManagerServerImpl
 	microSvr     service.Service
+	etcdTLS      *tls.Config
+	serverTLS    *tls.Config
 }
 
 // NewAPIServer creates Server instance
@@ -62,36 +66,20 @@ func NewAPIServer(ctx context.Context, conf *config.APIServerConfig, logManager 
 		conf: conf,
 		ctx:  ctx,
 		apiImpl: &LogManagerServerImpl{
-			logManager: logManager,
-			apiHost:    conf.BKDataAPIHost,
+			logManager:          logManager,
+			apiHost:             conf.BKDataAPIHost,
+			bkdataClientCreator: bkdata.NewClientCreator(),
 		},
 	}
-}
-
-// init tcp listener
-func (s *Server) initListener() error {
-	var err error
-	s.grpcEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port)
-	s.httpEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port-1)
-	s.lis, err = net.Listen("tcp", s.httpEndpoint)
-	if err != nil {
-		blog.Infof("listen tcp failed: %s", err.Error())
-		return err
-	}
-	return nil
 }
 
 // init http gateway(with TLS) of grpc server(with TLS)
 func (s *Server) startGateway() error {
 	var opts []grpc.DialOption
 	var err error
-	if s.conf.APICerts.ServerCertFile != "" {
-		crds, err := credentials.NewClientTLSFromFile(s.conf.APICerts.ServerCertFile, "")
-		if err != nil {
-			blog.Errorf("Build credential from server cert(%s)/key(%s) file failed: %s", s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile, err.Error())
-			return err
-		}
-		opts = append(opts, grpc.WithTransportCredentials(crds))
+	if s.conf.EtcdCerts.CAFile != "" && s.conf.EtcdCerts.ClientCertFile != "" && s.conf.EtcdCerts.ClientKeyFile != "" {
+		s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(s.etcdTLS)))
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
@@ -114,7 +102,7 @@ func (s *Server) startGateway() error {
 	// whether to use transport layer secuerity
 	if s.conf.APICerts.ServerCertFile != "" && s.conf.APICerts.ServerKeyFile != "" {
 		// TODO
-		tlsConfig, err := ssl.ServerTslConf(s.conf.APICerts.CAFile, s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile, "")
+		s.serverTLS, err = ssl.ServerTslConf(s.conf.APICerts.CAFile, s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile, static.ServerCertPwd)
 		if err != nil {
 			blog.Errorf("ServerTslConf of api gateway failed: %s", err.Error())
 			return err
@@ -122,11 +110,11 @@ func (s *Server) startGateway() error {
 		server = http.Server{
 			Addr:      s.httpEndpoint,
 			Handler:   mux,
-			TLSConfig: tlsConfig,
+			TLSConfig: s.serverTLS,
 		}
 		workFunc = func() {
 			blog.Info("starting logmanager gateway api server...")
-			if err := server.ServeTLS(s.lis, s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile); err != nil {
+			if err := server.ListenAndServeTLS("", ""); err != nil {
 				blog.Errorf("start grpc server with net listener failed, err %s", err.Error())
 				util.SendTermSignal()
 			}
@@ -138,7 +126,7 @@ func (s *Server) startGateway() error {
 		}
 		workFunc = func() {
 			blog.Info("starting logmanager gateway api server...")
-			if err := server.Serve(s.lis); err != nil {
+			if err := server.ListenAndServe(); err != nil {
 				blog.Errorf("start grpc server with net listener failed, err %s", err.Error())
 				util.SendTermSignal()
 			}
@@ -149,48 +137,40 @@ func (s *Server) startGateway() error {
 }
 
 func (s *Server) startMicroService() error {
-	var opts []service.Option
-	var etcdTlsConf *tls.Config
 	var err error
 	if s.conf.EtcdCerts.CAFile != "" && s.conf.EtcdCerts.ClientCertFile != "" && s.conf.EtcdCerts.ClientKeyFile != "" {
-		etcdTlsConf, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
+		s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
 		if err != nil {
 			blog.Errorf("Build etcd tlsconf failed: %s", err.Error())
 			return err
 		}
 	} else {
-		etcdTlsConf = nil
+		s.etcdTLS = nil
 	}
 
 	// etcd registry options
 	regOption := func(e *registry.Options) {
-		blog.Errorf("%+v", s.conf.EtcdHosts)
 		e.Addrs = s.conf.EtcdHosts
-		if etcdTlsConf != nil {
-			e.TLSConfig = etcdTlsConf
+		if s.etcdTLS != nil {
+			e.TLSConfig = s.etcdTLS
 			e.Secure = true
 		} else {
 			e.Secure = false
 		}
 	}
-	opts = append(opts, service.Name(LogManagerServiceName))
-	opts = append(opts, service.Version("1.19.x"))
-	opts = append(opts, service.Context(s.ctx))
-	opts = append(opts, service.Address(s.grpcEndpoint))
-	opts = append(opts, service.RegisterInterval(time.Second*30))
-	opts = append(opts, service.RegisterTTL(time.Second*30))
-	opts = append(opts, service.Registry(etcd.NewRegistry(regOption)))
-	// whether to use transport layer secuerity
-	if s.conf.APICerts.ServerCertFile != "" && s.conf.APICerts.ServerKeyFile != "" {
-		apiTLSConf, err := ssl.ServerTslConfVerity(s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile, "")
-		if err != nil {
-			blog.Errorf("Build logmanager tlsconf failed: %s", err.Error())
-			return err
-		}
-		opts = append(opts, microgrpc.WithTLS(apiTLSConf))
+	sevOption := func(o *server.Options) {
+		o.TLSConfig = s.serverTLS
+		o.Name = LogManagerServiceName
+		o.Version = version.GetVersion()
+		o.Context = s.ctx
+		o.Address = s.grpcEndpoint
+		o.RegisterInterval = time.Second * 30
+		o.RegisterTTL = time.Second * 30
+		o.Registry = etcd.NewRegistry(regOption)
 	}
 
-	s.microSvr = microgrpc.NewService(opts...)
+	s.microSvr = microgrpc.NewService()
+	s.microSvr.Server().Init(sevOption)
 	s.microSvr.Init()
 	err = proto.RegisterLogManagerHandler(s.microSvr.Server(), s.apiImpl)
 	if err != nil {
@@ -211,12 +191,11 @@ func (s *Server) startMicroService() error {
 
 // Run runs the api server
 func (s *Server) Run() error {
-	err := s.initListener()
-	if err != nil {
-		return err
-	}
+	s.grpcEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port)
+	s.httpEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port-1)
+
 	// s.initGRPCServer()
-	err = s.startGateway()
+	err := s.startGateway()
 	if err != nil {
 		return err
 	}
