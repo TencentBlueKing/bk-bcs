@@ -81,7 +81,7 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 
 	var url string
 	// 先从websocket dialer缓存中查找websocket链
-	serverAddr, tp, found := utils.LookupWsHandler(cluster)
+	serverAddr, tp, found := utils.DefaultWsTunnelDispatcher.LookupWsHandler(cluster)
 	if found {
 		url = fmt.Sprintf("%s/k8sdriver/v4/%s", serverAddr, uri)
 		if strings.HasPrefix(serverAddr, "https") {
