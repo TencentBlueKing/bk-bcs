@@ -54,32 +54,6 @@ func NewMappingConverter(
 	}
 }
 
-// DoConvert do convert action
-func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
-	pods, err := mg.getWorkloadPodMap(mg.mapping.WorkloadKind,
-		mg.mapping.WorkloadName, mg.mapping.WorkloadNamespace)
-	if err != nil {
-		return nil, err
-	}
-
-	segmentLength := mg.mapping.SegmentLength
-	if segmentLength == 0 {
-		segmentLength = 1
-	}
-
-	var retListeners []networkextensionv1.Listener
-	for _, lb := range mg.lbs {
-		for i := mg.mapping.StartIndex; i < mg.mapping.EndIndex; i++ {
-			startPort := mg.mapping.StartPort + i*segmentLength
-			endPort := mg.mapping.StartPort + (i+1)*segmentLength - 1
-			pod := pods[i]
-			listeners := mg.generateSegmentListeners(lb.Region, lb.LbID, startPort, endPort, pod)
-			retListeners = append(retListeners, listeners...)
-		}
-	}
-	return retListeners, nil
-}
-
 // get workload pods map
 func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, workloadNamespace string) (
 	map[int]*k8scorev1.Pod, error) {
@@ -135,59 +109,117 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 	return retPods, nil
 }
 
-func (mg *MappingConverter) generateSegmentListeners(
-	region, lbID string, startPort, endPort int, pod *k8scorev1.Pod) []networkextensionv1.Listener {
+// DoConvert do convert action
+func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
+	pods, err := mg.getWorkloadPodMap(mg.mapping.WorkloadKind,
+		mg.mapping.WorkloadName, mg.mapping.WorkloadNamespace)
+	if err != nil {
+		return nil, err
+	}
+
+	segmentLength := mg.mapping.SegmentLength
+	if segmentLength == 0 {
+		segmentLength = 1
+	}
 
 	var retListeners []networkextensionv1.Listener
-	if !mg.mapping.IgnoreSegment && mg.mapping.SegmentLength != 0 && mg.mapping.SegmentLength != 1 {
-		listener := mg.generateListener(region, lbID, startPort, endPort, pod)
+	for _, lb := range mg.lbs {
+		for i := mg.mapping.StartIndex; i < mg.mapping.EndIndex; i++ {
+			startPort := mg.mapping.StartPort + i*segmentLength
+			endPort := mg.mapping.StartPort + (i+1)*segmentLength - 1
+			rsStartPort := mg.mapping.StartPort
+			if !mg.mapping.IsRsPortFixed {
+				rsStartPort = startPort
+				if mg.mapping.RsStartPort > 0 {
+					rsStartPort = mg.mapping.RsStartPort + i*segmentLength
+				}
+			}
+
+			pod := pods[i]
+
+			// contruct converter for every single segment listener
+			newSegConverter := &segmentListenerConverter{
+				ingressName:      mg.ingressName,
+				ingressNamespace: mg.ingressNamespace,
+				protocol:         mg.mapping.Protocol,
+				region:           lb.Region,
+				lbID:             lb.LbID,
+				startPort:        startPort,
+				endPort:          endPort,
+				rsStartPort:      rsStartPort,
+				ignoreSegment:    mg.mapping.IgnoreSegment,
+				segmentLength:    mg.mapping.SegmentLength,
+				pod:              pod,
+			}
+			listeners := newSegConverter.generateSegmentListener()
+			retListeners = append(retListeners, listeners...)
+		}
+	}
+	return retListeners, nil
+}
+
+type segmentListenerConverter struct {
+	ingressName      string
+	ingressNamespace string
+	protocol         string
+	region           string
+	lbID             string
+	startPort        int
+	endPort          int
+	rsStartPort      int
+	ignoreSegment    bool
+	segmentLength    int
+	pod              *k8scorev1.Pod
+}
+
+func (slc *segmentListenerConverter) generateSegmentListener() []networkextensionv1.Listener {
+	var retListeners []networkextensionv1.Listener
+	if !slc.ignoreSegment && slc.segmentLength != 0 && slc.segmentLength != 1 {
+		listener := slc.generateListener(slc.startPort, slc.endPort, slc.rsStartPort)
 		retListeners = append(retListeners, listener)
 		return retListeners
 	}
 	// if not use segment mapping feature
-	for j := startPort; j <= endPort; j++ {
-		listener := mg.generateListener(region, lbID, j, 0, pod)
+	for j, rs := slc.startPort, slc.rsStartPort; j <= slc.endPort; j, rs = j+1, rs+1 {
+		listener := slc.generateListener(j, 0, rs)
 		retListeners = append(retListeners, listener)
 	}
 	return retListeners
 }
 
-func (mg *MappingConverter) generateListener(
-	region, lbID string, startPort, endPort int, pod *k8scorev1.Pod) networkextensionv1.Listener {
-
+func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) networkextensionv1.Listener {
 	segLabelValue := networkextensionv1.LabelValueTrue
-	if endPort == 0 {
+	if end == 0 {
 		segLabelValue = networkextensionv1.LabelValueFalse
 	}
 
 	li := networkextensionv1.Listener{}
 	var listenerName string
-	listenerName = GetSegmentListenerName(lbID, startPort, endPort)
+	listenerName = GetSegmentListenerName(slc.lbID, start, end)
 	li.SetName(listenerName)
-	li.SetNamespace(mg.ingressNamespace)
+	li.SetNamespace(slc.ingressNamespace)
 	li.SetLabels(map[string]string{
-		mg.ingressName:      networkextensionv1.LabelValueForIngressName,
-		mg.ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
+		slc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: segLabelValue,
-		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
-		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
+		networkextensionv1.LabelKeyForLoadbalanceID:     slc.lbID,
+		networkextensionv1.LabelKeyForLoadbalanceRegion: slc.region,
 	})
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
-	li.Spec.Port = startPort
-	li.Spec.EndPort = endPort
-	li.Spec.Protocol = mg.mapping.Protocol
-	li.Spec.LoadbalancerID = lbID
+	li.Spec.Port = start
+	li.Spec.EndPort = end
+	li.Spec.Protocol = slc.protocol
+	li.Spec.LoadbalancerID = slc.lbID
 
 	targetGroup := &networkextensionv1.ListenerTargetGroup{
-		TargetGroupProtocol: mg.mapping.Protocol,
+		TargetGroupProtocol: slc.protocol,
 	}
-	if pod == nil || len(pod.Status.PodIP) == 0 {
+	if slc.pod == nil || len(slc.pod.Status.PodIP) == 0 {
 		li.Spec.TargetGroup = targetGroup
 		return li
 	}
 	targetGroup.Backends = append(targetGroup.Backends, networkextensionv1.ListenerBackend{
-		IP:     pod.Status.PodIP,
-		Port:   startPort,
+		IP:     slc.pod.Status.PodIP,
+		Port:   rsStart,
 		Weight: networkextensionv1.DefaultWeight,
 	})
 	li.Spec.TargetGroup = targetGroup

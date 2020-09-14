@@ -25,8 +25,6 @@ import (
 const (
 	// LabelValueForIngressName label value for ingress name
 	LabelValueForIngressName = "ingress-name"
-	// LabelValueForIngressNamespace label value for ingress namespace
-	LabelValueForIngressNamespace = "ingress-namespace"
 	// LabelKeyForLoadbalanceID label key for loadbalance id
 	LabelKeyForLoadbalanceID = "ingress.bkbcs.tencent.com/lbid"
 	// LabelKeyForLoadbalanceRegion label key for loadbalance region

@@ -239,8 +239,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace string) error {
 	listener := &networkextensionv1.Listener{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName:      networkextensionv1.LabelValueForIngressName,
-		ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
+		ingressName: networkextensionv1.LabelValueForIngressName,
 	})))
 	if err != nil {
 		blog.Errorf("get selector for deleted ingress %s/%s failed, err %s",
@@ -266,11 +265,12 @@ func (g *IngressConverter) getListeners(ingressName, ingressNamespace string) (
 	[]networkextensionv1.Listener, error) {
 	existedListenerList := &networkextensionv1.ListenerList{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName:      networkextensionv1.LabelValueForIngressName,
-		ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
+		ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 	})))
-	err = g.cli.List(context.TODO(), existedListenerList, &client.ListOptions{LabelSelector: selector})
+	err = g.cli.List(context.TODO(), existedListenerList, &client.ListOptions{
+		Namespace:     ingressNamespace,
+		LabelSelector: selector})
 	if err != nil {
 		blog.Errorf("list listeners ingress %s/%s failed, err %s",
 			ingressName, ingressNamespace, err.Error())
@@ -284,11 +284,12 @@ func (g *IngressConverter) getSegmentListeners(ingressName, ingressNamespace str
 	[]networkextensionv1.Listener, error) {
 	existedListenerList := &networkextensionv1.ListenerList{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName:      networkextensionv1.LabelValueForIngressName,
-		ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
+		ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueTrue,
 	})))
-	err = g.cli.List(context.TODO(), existedListenerList, &client.ListOptions{LabelSelector: selector})
+	err = g.cli.List(context.TODO(), existedListenerList, &client.ListOptions{
+		Namespace:     ingressNamespace,
+		LabelSelector: selector})
 	if err != nil {
 		blog.Errorf("list segment listeners ingress %s/%s failed, err %s",
 			ingressName, ingressNamespace, err.Error())

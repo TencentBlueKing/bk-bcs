@@ -42,6 +42,8 @@ spec:
                     type: integer
                   ignoreSegment:
                     type: boolean
+                  isRsPortFixed:
+                    type: boolean
                   listenerAttribute:
                     description: IngressListenerAttribute attribute for listener
                     properties:
@@ -73,6 +75,8 @@ spec:
                     type: object
                   protocol:
                     type: string
+                  rsStartPort:
+                    type: integer
                   segmentLength:
                     type: integer
                   startIndex:

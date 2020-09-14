@@ -88,8 +88,7 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 	li.SetName(GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
 	li.SetLabels(map[string]string{
-		rc.ingressName:      networkextensionv1.LabelValueForIngressName,
-		rc.ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
+		rc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
@@ -135,8 +134,7 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li.SetName(GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
 	li.SetLabels(map[string]string{
-		rc.ingressName:      networkextensionv1.LabelValueForIngressName,
-		rc.ingressNamespace: networkextensionv1.LabelValueForIngressNamespace,
+		rc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     lbID,
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,

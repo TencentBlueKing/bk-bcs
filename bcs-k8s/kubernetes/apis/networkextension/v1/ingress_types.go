@@ -132,10 +132,12 @@ type IngressPortMapping struct {
 	WorkloadName      string                    `json:"workloadName"`
 	WorkloadNamespace string                    `json:"workloadNamespace"`
 	StartPort         int                       `json:"startPort"`
+	RsStartPort       int                       `json:"rsStartPort,omitempty"`
 	StartIndex        int                       `json:"startIndex"`
 	EndIndex          int                       `json:"endIndex"`
 	SegmentLength     int                       `json:"segmentLength,omitempty"`
 	Protocol          string                    `json:"protocol"`
+	IsRsPortFixed     bool                      `json:"isRsPortFixed,omitempty"`
 	IgnoreSegment     bool                      `json:"ignoreSegment,omitempty"`
 	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 }

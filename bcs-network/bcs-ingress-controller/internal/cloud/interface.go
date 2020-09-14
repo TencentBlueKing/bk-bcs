@@ -10,6 +10,8 @@
  * limitations under the License.
  */
 
+//go:generate mockgen -package mock -destination mock/mockcloud.go github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud LoadBalance
+
 package cloud
 
 import (

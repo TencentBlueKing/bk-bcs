@@ -26,12 +26,12 @@ require (
 	github.com/coreos/go-iptables v0.4.3
 	github.com/emicklei/go-restful v2.9.5+incompatible
 	github.com/go-logr/logr v0.2.0
+	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/imdario/mergo v0.3.10 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.0.0
-	github.com/spf13/pflag v1.0.5
 	github.com/tencentcloud/tencentcloud-sdk-go v3.0.114+incompatible
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
