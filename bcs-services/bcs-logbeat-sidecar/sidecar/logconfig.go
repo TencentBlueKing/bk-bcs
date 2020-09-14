@@ -14,7 +14,6 @@
 package sidecar
 
 import (
-	"k8s.io/apimachinery/pkg/util/json"
 	"reflect"
 	"regexp"
 	"strings"
@@ -36,6 +35,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 //connect to kube-apiserver, and init BcsLogConfig crd controller

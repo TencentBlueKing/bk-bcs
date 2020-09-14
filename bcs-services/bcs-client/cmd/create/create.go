@@ -23,7 +23,7 @@ import (
 func NewCreateCommand() cli.Command {
 	return cli.Command{
 		Name:  "create",
-		Usage: "create new application/process/service/secret/configmap/deployment/user",
+		Usage: "create new application/process/service/secret/configmap/deployment/user/meshcluster",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "from-file, f",
@@ -78,6 +78,8 @@ func create(c *utils.ClientContext) error {
 		return createUser(c)
 	case "daemonset":
 		return createDaemonset(c)
+	case "meshcluster":
+		return createMeshCluster(c)
 	default:
 		//unkown type, try CustomResource
 		return createCustomResource(c)

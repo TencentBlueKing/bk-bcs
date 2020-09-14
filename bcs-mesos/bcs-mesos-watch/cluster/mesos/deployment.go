@@ -17,6 +17,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
+	"strconv"
 
 	//schedulertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"encoding/json"
@@ -230,7 +232,7 @@ func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 	blog.Info("EVENT:: Add Event for Deployment %s.%s", deploymentData.ObjectMeta.NameSpace, deploymentData.ObjectMeta.Name)
 
 	data := &types.BcsSyncData{
-		DataType: "Deployment",
+		DataType: watch.GetDeploymentChannel(deploymentData),
 		Action:   "Add",
 		Item:     obj,
 	}
@@ -251,7 +253,7 @@ func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 	blog.Info("EVENT:: Delete Event for Deployment %s.%s", deploymentData.ObjectMeta.NameSpace, deploymentData.ObjectMeta.Name)
 	//report to cluster
 	data := &types.BcsSyncData{
-		DataType: "Deployment",
+		DataType: watch.GetDeploymentChannel(deploymentData),
 		Action:   "Delete",
 		Item:     obj,
 	}
@@ -274,7 +276,7 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 
 	//report to cluster
 	data := &types.BcsSyncData{
-		DataType: "Deployment",
+		DataType: watch.GetDeploymentChannel(deploymentData),
 		Action:   "Update",
 		Item:     cur,
 	}
@@ -283,4 +285,10 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 	} else {
 		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncSuccess).Inc()
 	}
+}
+
+func (watch *DeploymentWatch) GetDeploymentChannel(deployment *schedulertypes.Deployment) string {
+	index := util.GetHashId(deployment.ObjectMeta.Name, DeploymentThreadNum)
+
+	return types.DeploymentChannelPrefix + strconv.Itoa(index)
 }
