@@ -16,9 +16,9 @@
 package internalclientset
 
 import (
-	tkexv1alpha1 "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
 	"fmt"
 
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/typed/tkex/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

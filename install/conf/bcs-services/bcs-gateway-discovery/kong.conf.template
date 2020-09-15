@@ -6,6 +6,8 @@ pg_user = ${kongUser}        # Postgres user.
 pg_password = ${kongPass}    # 
 pg_database = kong    # 数据库名称
 
+ssl_cert = ${apiCertFile}
+ssl_cert_key = ${apiKeyFile}
 client_ssl = on       # 开启客户端SSL
 client_ssl_cert = ${clientCertFile}
 client_ssl_cert_key = ${clientKeyFile}           

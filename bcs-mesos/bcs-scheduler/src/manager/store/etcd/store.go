@@ -18,12 +18,13 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset/typed/bkbcs/v2"
 
 	corev1 "k8s.io/api/core/v1"
@@ -38,6 +39,10 @@ import (
 const (
 	ApiversionV2     = "v2"
 	DefaultNamespace = "bkbcs"
+)
+
+const (
+	ObjectVersionNotLatestError = "please apply your changes to the latest version and try again"
 )
 
 //bcs mesos custom resources list
@@ -78,9 +83,13 @@ type managerStore struct {
 	regkey   *regexp.Regexp
 	regvalue *regexp.Regexp
 
-	wg     sync.WaitGroup
+	//wg     sync.WaitGroup
 	ctx    context.Context
 	cancel context.CancelFunc
+
+	//plugin manager, ip-resources
+	pm        *pluginManager.PluginManager
+	clusterId string
 }
 
 //init bcs mesos custom resources
@@ -153,25 +162,32 @@ func (s *managerStore) StopStoreMetrics() {
 	s.cancel()
 
 	time.Sleep(time.Second)
-	s.wg.Wait()
+	//	s.wg.Wait()
 }
 
 //store metrics report prometheus
 func (s *managerStore) StartStoreObjectMetrics() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
-
 	for {
 		time.Sleep(time.Minute)
-
-		select {
-		case <-s.ctx.Done():
-			blog.Infof("stop scheduler store metrics")
-			return
-
-		default:
-			s.wg.Add(1)
-			store.ObjectResourceInfo.Reset()
+		if cacheMgr == nil || !cacheMgr.isOK {
+			continue
 		}
+		blog.Infof("start produce metrics")
+		store.ObjectResourceInfo.Reset()
+		store.TaskgroupInfo.Reset()
+		store.AgentCpuResourceRemain.Reset()
+		store.AgentCpuResourceTotal.Reset()
+		store.AgentMemoryResourceRemain.Reset()
+		store.AgentMemoryResourceTotal.Reset()
+		store.AgentIpResourceRemain.Reset()
+		store.StorageOperatorFailedTotal.Reset()
+		store.StorageOperatorLatencyMs.Reset()
+		store.StorageOperatorTotal.Reset()
+		store.ClusterMemoryResouceRemain.Reset()
+		store.ClusterCpuResouceRemain.Reset()
+		store.ClusterMemoryResouceTotal.Reset()
+		store.ClusterCpuResouceTotal.Reset()
 
 		// handle service metrics
 		services, err := s.ListAllServices()
@@ -232,7 +248,12 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		if err != nil {
 			blog.Errorf("list all agent error %s", err.Error())
 		}
-
+		var (
+			clusterCpu float64
+			clusterMem float64
+			remainCpu  float64
+			remainMem  float64
+		)
 		for _, agent := range agents {
 			info := agent.GetAgentInfo()
 			if info.IP == "" {
@@ -240,16 +261,46 @@ func (s *managerStore) StartStoreObjectMetrics() {
 				continue
 			}
 
-			store.ReportAgentInfoMetrics(info.IP, info.CpuTotal, info.CpuTotal-info.CpuUsed,
-				info.MemTotal, info.MemTotal-info.MemUsed)
-		}
+			var ipValue float64
+			if s.pm != nil {
+				//request netservice to node container ip
+				para := &typesplugin.HostPluginParameter{
+					Ips:       []string{info.IP},
+					ClusterId: s.clusterId,
+				}
 
-		s.wg.Done()
+				outerAttri, err := s.pm.GetHostAttributes(para)
+				if err != nil {
+					blog.Errorf("Get host(%s) ip-resources failed: %s", info.IP, err.Error())
+					continue
+				}
+				attr, ok := outerAttri[info.IP]
+				if !ok {
+					blog.Errorf("host(%s) don't have ip-resources attributes", info.IP)
+					continue
+				}
+				ipAttr := attr.Attributes[0]
+				blog.Infof("Host(%s) %s Scalar(%f)", info.IP, ipAttr.Name, ipAttr.Scalar.Value)
+				ipValue = ipAttr.Scalar.Value
+			}
+
+			//if ip-resources is zero, then ignore it
+			if s.pm == nil || ipValue > 0 {
+				remainCpu += info.CpuTotal - info.CpuUsed
+				remainMem += info.MemTotal - info.MemUsed
+			}
+			clusterCpu += info.CpuTotal
+			clusterMem += info.MemTotal
+
+			store.ReportAgentInfoMetrics(info.IP, s.clusterId, info.CpuTotal, info.CpuTotal-info.CpuUsed,
+				info.MemTotal, info.MemTotal-info.MemUsed, ipValue)
+		}
+		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, clusterCpu, remainMem, clusterMem)
 	}
 }
 
 //etcd store, based on kube-apiserver
-func NewEtcdStore(kubeconfig string) (store.Store, error) {
+func NewEtcdStore(kubeconfig string, pm *pluginManager.PluginManager, clusterId string) (store.Store, error) {
 	//build kube-apiserver config
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -283,6 +334,8 @@ func NewEtcdStore(kubeconfig string) (store.Store, error) {
 		BkbcsClient:     clientset.BkbcsV2(),
 		k8sClient:       k8sClientset,
 		extensionClient: extensionClient,
+		pm:              pm,
+		clusterId:       clusterId,
 	}
 
 	//fetch application
@@ -389,4 +442,8 @@ func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[
 		labels[k] = v
 	}
 	return labels
+}
+
+func (store *managerStore) ObjectNotLatestErr(err error) bool {
+	return strings.Contains(err.Error(), ObjectVersionNotLatestError)
 }

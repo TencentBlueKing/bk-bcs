@@ -34,7 +34,7 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent
+default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent mesh-manager
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
@@ -92,17 +92,13 @@ client:pre
 	cp -R ./install/conf/bcs-services/bcs-client ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./bcs-services/bcs-client/cmd/main.go
 
-dns:pre
+dns:
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-mesos-master/bcs-dns ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
-	mkdir -p vendor/github.com/coredns/coredns/
-	cp -r ${GOPATH}/pkg/mod/github.com/coredns/coredns\@v1.3.0/* vendor/github.com/coredns/coredns/
-	cp bcs-services/bcs-dns/plugin.cfg vendor/github.com/coredns/coredns/
-	cd vendor/github.com/coredns/coredns && make gen && cd -
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service bk-bcs/vendor/github.com/coredns/coredns
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns bk-bcs/vendor/github.com/coredns/coredns
+	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service coredns.go
+	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns coredns.go
 
 health:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -199,6 +195,11 @@ logbeat-sidecar:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-logbeat-sidecar ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./bcs-services/bcs-logbeat-sidecar/main.go
+
+mesh-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cp -R ./install/conf/bcs-services/bcs-mesh-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-mesh-manager && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager ./main.go
 
 hpacontroller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master

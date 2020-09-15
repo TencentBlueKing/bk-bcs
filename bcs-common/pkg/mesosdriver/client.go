@@ -21,6 +21,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
 )
 
@@ -33,8 +35,8 @@ type MesosDriverClient struct {
 	cli *httpclient.HttpClient
 }
 
-// new MesosPlatform object
-func NewMesosPlatform(conf *Config) (*MesosDriverClient, error) {
+// new MesosDriverClient object
+func NewMesosDriverClient(conf *Config) (*MesosDriverClient, error) {
 	m := &MesosDriverClient{
 		conf: conf,
 	}
@@ -83,15 +85,79 @@ func (m *MesosDriverClient) getModuleAddr(clusterid string) (string, error) {
 }
 
 //update agent external resources
-func (m *MesosDriverClient) UpdateAgentExtendedResources(er *commtypes.ExtendedResource) error {
+func (m *MesosDriverClient) UpdateAgentExtendedResources(clusterId string, er *commtypes.ExtendedResource) error {
 	by, _ := json.Marshal(er)
-	_, err := m.requestMesosApiserver(m.conf.ClusterId, http.MethodPut, "agentsettings/extendedresource", by)
+	_, err := m.requestMesosApiserver(clusterId, http.MethodPut, "agentsettings/extendedresource", by)
 	if err != nil {
 		blog.Errorf("update agent %s external resources error %s", er.InnerIP, err.Error())
 		return err
 	}
 	blog.Infof("update agent %s external resources %s success", er.InnerIP, er.Name)
 	return nil
+}
+
+//get cluster all nodes
+func (m *MesosDriverClient) GetNodes(clusterid string) ([]*types.NodeInfo, error) {
+	by, err := m.requestMesosApiserver(clusterid, http.MethodGet, "cluster/resources", nil)
+	if err != nil {
+		blog.Errorf("Get cluster %s nodes error %s", clusterid, err.Error())
+		return nil, err
+	}
+
+	//Unmarshal BcsClusterResource
+	var resource *commtypes.BcsClusterResource
+	err = json.Unmarshal(by, &resource)
+	if err != nil {
+		blog.Errorf("Unmarshal body(%s) to commtypes.BcsClusterResource failed: %s", string(by), err.Error())
+		return nil, err
+	}
+
+	//create NodeInfo Object
+	nodes := make([]*types.NodeInfo, 0)
+	for _, agent := range resource.Agents {
+		node := &types.NodeInfo{
+			Ip:        agent.IP,
+			Clusterid: clusterid,
+		}
+		nodes = append(nodes, node)
+	}
+	return nodes, nil
+}
+
+//deploy application
+func (m *MesosDriverClient) CeateDeployment(clusterid string, deploy []byte) error {
+	_, err := m.requestMesosApiserver(clusterid, http.MethodPost, "namespaces/bcs-system/deployments", deploy)
+
+	return err
+}
+
+//fetch application
+func (m *MesosDriverClient) FetchDeployment(deploy *types.DeployDetection) (interface{}, error) {
+	by, err := m.requestMesosApiserver(deploy.Clusterid, http.MethodGet,
+		fmt.Sprintf("/namespaces/bcs-system/applications"), nil)
+
+	var apps []*schedtypes.Application
+	err = json.Unmarshal(by, &apps)
+	if err != nil {
+		return nil, fmt.Errorf("Unmarshal body(%s) to schedtypes.Application failed: %s", string(by), err.Error())
+	}
+	for _, app := range apps {
+		if app.ObjectMeta.Annotations == nil {
+			continue
+		}
+		if app.ObjectMeta.Annotations["idc"] == deploy.Idc {
+			return app, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Not found")
+}
+
+//fetch application't pods
+func (m *MesosDriverClient) FetchPods(clusterid, ns, name string) ([]byte, error) {
+	by, err := m.requestMesosApiserver(clusterid, http.MethodGet,
+		fmt.Sprintf("/namespaces/%s/applications/%s/taskgroups", ns, name), nil)
+	return by, err
 }
 
 //method=http.method: POST、GET、PUT、DELETE

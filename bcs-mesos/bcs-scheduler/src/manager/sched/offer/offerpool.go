@@ -109,6 +109,7 @@ type innerOffer struct {
 	id       int64
 	offerId  string
 	hostname string
+	offerIp  string
 
 	isValid     bool
 	createdTime int64
@@ -118,6 +119,9 @@ type innerOffer struct {
 	deltaCPU  float64
 	deltaMem  float64
 	deltaDisk float64
+
+	//point, (cpu-allocated/cpu)+(mem-allocated/mem)
+	point float64
 }
 
 func (p *offerPool) start() {
@@ -414,7 +418,6 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 	//sort.Sort(offerSorter(offers))
 	for _, o := range offers {
 		cpu, mem, disk, port := p.offeredResources(o)
-
 		blog.Infof("add offer(%s:%s) cpu %f mem %f disk %f port %s",
 			o.GetId().GetValue(), o.GetHostname(), cpu, mem, disk, port)
 
@@ -434,34 +437,50 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		} else {
 			blog.V(3).Infof("validateOffer offer(%s:%s) is ok", o.GetId().GetValue(), o.GetHostname())
 		}
+		//calculate offer point
+		//point, (cpu-allocated/cpu)+(mem-allocated/mem)
+		offerIp, _ := p.getOfferIp(o)
+		var point float64
+		agent, err := p.store.FetchAgent(offerIp)
+		if err != nil {
+			blog.Errorf("Fetch Agent %s failed: %s, and decline offer", offerIp, err.Error())
+			p.scheduler.UpdateMesosAgents()
+			p.declineOffer(o)
+			continue
+		} else {
+			agentinfo := agent.GetAgentInfo()
+			point = cpu/agentinfo.CpuTotal + mem/agentinfo.MemTotal
+			blog.Infof("offer %s point=Cpu(%f/%f)+Mem(%f/%f)=%f", offerIp, cpu, agentinfo.CpuTotal, mem, agentinfo.MemTotal, point)
+		}
 		//set offer attributes
 		p.setOffersAttributes([]*mesos.Offer{o})
 		//print offer info
 		p.printOffer(o)
 		//add agent deltaXXX 20180530
-		agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
+		/*agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
 		if err != nil {
 			blog.Errorf("get agent(%s) err(%s), offer can not added", o.GetHostname(), err.Error())
 			continue
-		}
+		}*/
 		agentDeltaCPU := 0.0
 		agentDeltaMem := 0.0
 		agentDeltaDisk := 0.0
-		if agentSchedInfo != nil {
+		/*if agentSchedInfo != nil {
 			agentDeltaCPU = agentSchedInfo.DeltaCPU
 			agentDeltaMem = agentSchedInfo.DeltaMem
 			agentDeltaDisk = agentSchedInfo.DeltaDisk
 			blog.V(3).Infof("get agent(%s) delta(cpu: %f | mem: %f | disk: %f)",
 				o.GetHostname(), agentDeltaCPU, agentDeltaMem, agentDeltaDisk)
-		}
-
+		}*/
 		off := &innerOffer{
 			id:          p.autoIncrementId,
 			offerId:     o.GetId().GetValue(),
 			hostname:    o.GetHostname(),
+			offerIp:     offerIp,
 			isValid:     true,
 			createdTime: time.Now().Unix(),
 			offer:       o,
+			point:       point,
 			deltaCPU:    agentDeltaCPU,
 			deltaMem:    agentDeltaMem,
 			deltaDisk:   agentDeltaDisk,
@@ -482,8 +501,6 @@ func (p *offerPool) pushOfferBySort(offer *innerOffer) {
 		p.offerList.PushBack(offer)
 		return
 	}
-	cpu, _, _, _ := p.offeredResources(offer.offer)
-
 	cur := p.offerList.Front()
 	for {
 		if cur == nil {
@@ -492,9 +509,7 @@ func (p *offerPool) pushOfferBySort(offer *innerOffer) {
 		}
 
 		curOffer := cur.Value.(*innerOffer)
-		curCpu, _, _, _ := p.offeredResources(curOffer.offer)
-
-		if curCpu < cpu {
+		if curOffer.point < offer.point {
 			p.offerList.InsertBefore(offer, cur)
 			return
 		}

@@ -16,8 +16,8 @@
 package v1alpha1
 
 import (
-	v1alpha1 "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	"bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
+	v1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
 
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"

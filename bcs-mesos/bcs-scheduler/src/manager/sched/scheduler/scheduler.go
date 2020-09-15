@@ -56,7 +56,7 @@ import (
 const MAX_DATA_UPDATE_INTERVAL = 180
 
 // Interval for checking ZK data
-const DATA_CHECK_INTERVAL = 600
+const DATA_CHECK_INTERVAL = 1200
 
 // HeartBeat timeout between scheduler and mesos master
 const MESOS_HEARTBEAT_TIMEOUT = 120
@@ -790,7 +790,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 			s.dataChecker.SendMsg(&msg)
 			blog.Info("after close data check goroutine")
 		}
-		s.store.StopStoreMetrics()
+		//s.store.StopStoreMetrics()
 		s.store.UnInitCacheMgr()
 		//stop check and build daemonset
 		s.stopBuildDaemonset()
@@ -810,7 +810,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 	}
 	//current role is master
 	s.Role = currRole
-	//go s.store.StartStoreObjectMetrics()
+	go s.store.StartStoreObjectMetrics()
 	go s.startCheckDeployments()
 	if s.ServiceMgr != nil {
 		var msgOpen ServiceMgrMsg
@@ -887,6 +887,10 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 
 	mesosClient := megos.NewClient(masterUrls, nil)
 	return mesosClient.GetStateFromCluster()
+}
+
+func (s *Scheduler) UpdateMesosAgents() {
+	s.oprMgr.UpdateMesosAgents()
 }
 
 //for build pod index in agent
@@ -1136,7 +1140,8 @@ func (s *Scheduler) produceEvent(object interface{}) error {
 		return fmt.Errorf("object type %s is invalid", btype.Name())
 	}
 
-	return s.eventManager.syncEvent(event)
+	go s.eventManager.syncEvent(event)
+	return nil
 }
 
 func (s *Scheduler) newTaskEvent(task *types.Task) *commtype.BcsStorageEventIf {

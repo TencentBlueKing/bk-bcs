@@ -12,6 +12,10 @@ spec:
   revisionHistoryLimit: 10
   updateStrategy:
     type: InplaceUpdate
+    rollingUpdate:
+    partition: 1
+    inPlaceUpdateStrategy:
+      gracePeriodSeconds: 30
   replicas: 1
   template:
     metadata:

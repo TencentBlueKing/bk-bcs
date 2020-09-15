@@ -59,7 +59,7 @@ func (b *backend) LaunchDaemonset(def *types.BcsDaemonsetDef) error {
 		},
 		Status:  types.Daemonset_Status_Starting,
 		Created: time.Now().Unix(),
-		Pods:    make([]*commtypes.BcsPodIndex, 0),
+		Pods:    make(map[string]struct{}, 0),
 	}
 	err = b.store.SaveDaemonset(daemonset)
 	if err != nil {
@@ -85,11 +85,11 @@ func (b *backend) DeleteDaemonset(namespace, name string, force bool) error {
 	if err == store.ErrNoFound {
 		return nil
 	}
-	for _, podId := range daemonset.Pods {
-		pod, err := b.store.FetchTaskGroup(podId.Name)
+	for podId, _ := range daemonset.Pods {
+		pod, err := b.store.FetchTaskGroup(podId)
 		if err != nil {
 			blog.Errorf("delete daemonset(%s:%s), but FetchTaskGroup(%s) failed:",
-				daemonset.NameSpace, daemonset.Name, podId.Name, err.Error())
+				daemonset.NameSpace, daemonset.Name, podId, err.Error())
 			continue
 		}
 		if pod.Status == types.TASKGROUP_STATUS_FINISH || pod.Status == types.TASKGROUP_STATUS_FAIL {

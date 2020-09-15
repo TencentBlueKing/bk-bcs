@@ -624,7 +624,7 @@ func (b *backend) DeleteDeployment(ns string, name string, enforce bool) (int, e
 
 func (b *backend) CheckDeleteDeployment(ns string, name string) {
 
-	blog.V(3).Infof("check delete deployment(%s.%s)", ns, name)
+	blog.Infof("check delete deployment(%s.%s)", ns, name)
 
 	b.store.LockDeployment(fmt.Sprintf("%s.%s", ns, name))
 	defer b.store.UnLockDeployment(fmt.Sprintf("%s.%s", ns, name))
@@ -645,7 +645,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 		if err == store.ErrNoFound {
 			deployment.Application = nil
 		} else {
-			blog.V(3).Infof("check delete deployment(%s.%s), application(%s) not deleted",
+			blog.Infof("check delete deployment(%s.%s), application(%s) not deleted",
 				ns, name, deployment.Application.ApplicationName)
 			deployment.Message = "application still not deleted: " + deployment.Application.ApplicationName
 		}
@@ -656,7 +656,7 @@ func (b *backend) CheckDeleteDeployment(ns string, name string) {
 		if err == store.ErrNoFound {
 			deployment.ApplicationExt = nil
 		} else {
-			blog.V(3).Infof("check delete deployment(%s.%s), application(%s) not deleted",
+			blog.Infof("check delete deployment(%s.%s), application(%s) not deleted",
 				ns, name, deployment.ApplicationExt.ApplicationName)
 			deployment.Message = "application still not deleted: " + deployment.ApplicationExt.ApplicationName
 		}

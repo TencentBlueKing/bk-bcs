@@ -21,7 +21,7 @@ func addDefaultingFuncs(scheme *runtime.Scheme) error {
 
 func SetDefaults_GameStatefulSet(obj *GameStatefulSet) {
 	if len(obj.Spec.PodManagementPolicy) == 0 {
-		obj.Spec.PodManagementPolicy = ParallelPodManagement
+		obj.Spec.PodManagementPolicy = OrderedReadyPodManagement
 	}
 
 	if obj.Spec.UpdateStrategy.Type == "" {

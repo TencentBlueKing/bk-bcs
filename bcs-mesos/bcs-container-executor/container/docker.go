@@ -276,7 +276,7 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		PortBindings:    make(map[dockerclient.Port][]dockerclient.PortBinding),
 		Privileged:      containerTask.Privileged,
 		PublishAllPorts: containerTask.PublishAllPorts,
-		OOMKillDisable:  containerTask.OOMKillDisabled,
+		OOMKillDisable:  &containerTask.OOMKillDisabled,
 		ShmSize:         containerTask.ShmSize,
 		IpcMode:         containerTask.Ipc,
 	}
