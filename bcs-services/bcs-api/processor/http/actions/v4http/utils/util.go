@@ -16,6 +16,7 @@ package utils
 import (
 	"math/rand"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -23,8 +24,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
 )
 
+type WsTunnelDispatcher struct {
+	wsTunnelStore      map[string]map[string]*WsTunnel
+	wsTunnelMutateLock sync.RWMutex
+}
+
+type WsTunnel struct {
+	httpTransport *http.Transport
+	serverAddress string
+}
+
+func NewWsTunnelDispatcher() *WsTunnelDispatcher {
+	return &WsTunnelDispatcher{
+		wsTunnelStore: make(map[string]map[string]*WsTunnel),
+	}
+}
+
+var DefaultWsTunnelDispatcher = NewWsTunnelDispatcher()
+
 // LookupWsHandler will lookup websocket dialer in cache
-func LookupWsHandler(clusterId string) (string, *http.Transport, bool) {
+func (w *WsTunnelDispatcher) LookupWsHandler(clusterId string) (string, *http.Transport, bool) {
 	cluster := sqlstore.GetClusterByBCSInfo("", clusterId)
 	if cluster == nil {
 		return "", nil, false
@@ -34,17 +53,9 @@ func LookupWsHandler(clusterId string) (string, *http.Transport, bool) {
 		return "", nil, false
 	}
 
-	for _, credential := range credentials {
-		blog.Info(credential.ServerKey)
-	}
-
 	rand.Shuffle(len(credentials), func(i, j int) {
 		credentials[i], credentials[j] = credentials[j], credentials[i]
 	})
-
-	for _, credential := range credentials {
-		blog.Info(credential.ServerKey)
-	}
 
 	tunnelServer := tunnel.DefaultTunnelServer
 	for _, credential := range credentials {
@@ -52,11 +63,34 @@ func LookupWsHandler(clusterId string) (string, *http.Transport, bool) {
 		serverAddress := credential.ServerAddress
 		if tunnelServer.HasSession(clientKey) {
 			blog.Infof("found sesseion: %s", clientKey)
-			tp := &http.Transport{}
+			w.wsTunnelMutateLock.Lock()
+			wsTunnel := w.wsTunnelStore[clusterId][clientKey]
+			if wsTunnel != nil && !w.serverAddressChanged(wsTunnel.serverAddress, serverAddress) {
+				w.wsTunnelMutateLock.Unlock()
+				return serverAddress, wsTunnel.httpTransport, true
+			}
+			tp := &http.Transport{
+				MaxIdleConnsPerHost: 10,
+			}
 			cd := tunnelServer.Dialer(clientKey, 15*time.Second)
 			tp.Dial = cd
+			if wsTunnel != nil {
+				wsTunnel.httpTransport.CloseIdleConnections()
+			}
+			if w.wsTunnelStore[clusterId] == nil {
+				w.wsTunnelStore[clusterId] = make(map[string]*WsTunnel)
+			}
+			w.wsTunnelStore[clusterId][clientKey] = &WsTunnel{
+				httpTransport: tp,
+				serverAddress: serverAddress,
+			}
+			w.wsTunnelMutateLock.Unlock()
 			return serverAddress, tp, true
 		}
 	}
 	return "", nil, false
+}
+
+func (w *WsTunnelDispatcher) serverAddressChanged(oldAddress, newAddress string) bool {
+	return oldAddress != newAddress
 }
