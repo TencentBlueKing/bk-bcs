@@ -96,13 +96,13 @@ func (a *CleanNodeAction) getNodeIPs() (pbcommon.ErrCode, string) {
 	var availableIPLabels map[string]string
 	if a.req.IsForce {
 		availableIPLabels = map[string]string{
-			kube.CRD_NAME_LABELS_HOST: a.req.Host,
+			kube.CrdNameLabelsHost: a.req.Host,
 		}
 	} else {
 		availableIPLabels = map[string]string{
-			kube.CRD_NAME_LABELS_HOST:     a.req.Host,
-			kube.CRD_NAME_LABELS_IS_FIXED: strconv.FormatBool(false),
-			kube.CRD_NAME_LABELS_STATUS:   types.IP_STATUS_AVAILABLE,
+			kube.CrdNameLabelsHost:     a.req.Host,
+			kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
+			kube.CrdNameLabelsStatus:   types.IP_STATUS_AVAILABLE,
 		}
 	}
 	existedObjects, err := a.storeIf.ListIPObject(a.ctx, availableIPLabels)

@@ -1,0 +1,243 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: listeners.networkextension.bkbcs.tencent.com
+spec:
+  group: networkextension.bkbcs.tencent.com
+  names:
+    kind: Listener
+    listKind: ListenerList
+    plural: listeners
+    singular: listener
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: Listener is the Schema for the listeners API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ListenerSpec defines the desired state of Listener
+          properties:
+            certificate:
+              description: IngressListenerCertificate certificate configs for listener
+              properties:
+                certCaID:
+                  type: string
+                certID:
+                  type: string
+                mode:
+                  type: string
+              type: object
+            endPort:
+              type: integer
+            listenerAttribute:
+              description: IngressListenerAttribute attribute for listener
+              properties:
+                healthCheck:
+                  description: ListenerHealthCheck health check setting for listener
+                  properties:
+                    enabled:
+                      type: boolean
+                    healthNum:
+                      type: integer
+                    httpCheckMethod:
+                      type: string
+                    httpCheckPath:
+                      type: string
+                    httpCode:
+                      type: integer
+                    intervalTime:
+                      type: integer
+                    timeout:
+                      type: integer
+                    unHealthNum:
+                      type: integer
+                  type: object
+                lbPolicy:
+                  type: string
+                sessionTime:
+                  type: integer
+              type: object
+            loadbalancerID:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
+              type: string
+            port:
+              type: integer
+            protocol:
+              type: string
+            rules:
+              items:
+                description: ListenerRule route rule for listener
+                properties:
+                  domain:
+                    type: string
+                  listenerAttribute:
+                    description: IngressListenerAttribute attribute for listener
+                    properties:
+                      healthCheck:
+                        description: ListenerHealthCheck health check setting for
+                          listener
+                        properties:
+                          enabled:
+                            type: boolean
+                          healthNum:
+                            type: integer
+                          httpCheckMethod:
+                            type: string
+                          httpCheckPath:
+                            type: string
+                          httpCode:
+                            type: integer
+                          intervalTime:
+                            type: integer
+                          timeout:
+                            type: integer
+                          unHealthNum:
+                            type: integer
+                        type: object
+                      lbPolicy:
+                        type: string
+                      sessionTime:
+                        type: integer
+                    type: object
+                  path:
+                    type: string
+                  ruleID:
+                    type: string
+                  targetGroup:
+                    description: ListenerTargetGroup backend set for listener
+                    properties:
+                      backends:
+                        items:
+                          description: ListenerBackend info for backend
+                          properties:
+                            IP:
+                              type: string
+                            port:
+                              type: integer
+                            weight:
+                              type: integer
+                          required:
+                          - IP
+                          - port
+                          - weight
+                          type: object
+                        type: array
+                      protocol:
+                        type: string
+                      targetGroupID:
+                        type: string
+                      targetGroupName:
+                        type: string
+                    type: object
+                type: object
+              type: array
+            targetGroup:
+              description: ListenerTargetGroup backend set for listener
+              properties:
+                backends:
+                  items:
+                    description: ListenerBackend info for backend
+                    properties:
+                      IP:
+                        type: string
+                      port:
+                        type: integer
+                      weight:
+                        type: integer
+                    required:
+                    - IP
+                    - port
+                    - weight
+                    type: object
+                  type: array
+                protocol:
+                  type: string
+                targetGroupID:
+                  type: string
+                targetGroupName:
+                  type: string
+              type: object
+          required:
+          - loadbalancerID
+          - port
+          - protocol
+          type: object
+        status:
+          description: ListenerStatus defines the observed state of Listener
+          properties:
+            healthStatus:
+              description: ListenerHealthStatus health status of listener
+              properties:
+                rules:
+                  items:
+                    description: ListenerRuleHealthStatus rule health status of listener
+                    properties:
+                      backends:
+                        items:
+                          description: ListenerBackendHealthStatus backend health
+                            status of listener
+                          properties:
+                            healthStatus:
+                              type: boolean
+                            healthStatusDetail:
+                              type: string
+                            ip:
+                              type: string
+                            port:
+                              type: integer
+                            targetID:
+                              type: string
+                          required:
+                          - healthStatus
+                          - healthStatusDetail
+                          - ip
+                          - port
+                          - targetID
+                          type: object
+                        type: array
+                      domain:
+                        type: string
+                      path:
+                        type: string
+                    required:
+                    - domain
+                    - path
+                    type: object
+                  type: array
+              type: object
+            listenerID:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

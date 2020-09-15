@@ -36,7 +36,7 @@ echo "generate client,informer,lister for ${group_version_pair}"
     "client,informer,lister" \
     github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated \
     github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis \
-    ${group_version_pair} \
+    "${group_version_pair}" \
     --go-header-file $(pwd)/hack/boilerplate.go.txt 
 
 # when GOPATH exsited, code-generator will generate code in gopath

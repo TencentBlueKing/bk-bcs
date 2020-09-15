@@ -28,6 +28,10 @@ go mod vendor
 
 # 创建CRD
 kubebuilder create api --group test --version v1alpha --kind TestCrd
+Create Resource [y/n]
+y
+Create Controller [y/n]
+n
 ```
 
 **注意**: 创建CRD时，会报以下错误，因为删除了kubebuilder生成测main.go。请忽略

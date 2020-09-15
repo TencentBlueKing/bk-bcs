@@ -1,0 +1,20 @@
+# permissions for end users to view clbingresses.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clbingress-viewer-role
+rules:
+- apiGroups:
+  - clb.bmsf.tencent.com
+  resources:
+  - clbingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - clb.bmsf.tencent.com
+  resources:
+  - clbingresses/status
+  verbs:
+  - get

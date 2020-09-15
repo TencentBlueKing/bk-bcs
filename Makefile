@@ -34,7 +34,7 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent mesh-manager
+default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent mesh-manager bcs-ingress-controller
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
@@ -309,3 +309,6 @@ bcs-cloud-netcontroller:pre
 
 bcs-cloud-netagent:pre
 	cd ./bcs-network && make cloud-netagent && cd -
+
+bcs-ingress-controller:pre
+	cd ./bcs-network && make ingress-controller && cd -

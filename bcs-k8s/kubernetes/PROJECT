@@ -16,4 +16,7 @@ resources:
 - group: networkextension
   kind: Ingress
   version: v1
+- group: networkextension
+  kind: Listener
+  version: v1
 version: "2"
