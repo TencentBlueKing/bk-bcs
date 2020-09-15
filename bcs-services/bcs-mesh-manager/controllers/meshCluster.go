@@ -243,7 +243,8 @@ func (m *MeshClusterManager) installIstio() bool {
 		Name:  fmt.Sprintf("istio-%d", time.Now().Unix()),
 	}
 	glf := kubehelm.GlobalFlags{
-		Kubeconfig: "kubeconfig",
+		KubeApiserver: m.kubeAddr,
+		KubeToken: m.kubeToken,
 	}
 	//clear istio resources
 	if !m.clearIstioOperatorResources() {

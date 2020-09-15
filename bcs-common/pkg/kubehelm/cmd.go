@@ -24,13 +24,18 @@ import (
 
 type cmdHelm struct {}
 
+//new cmd helm struct, the object requires helm command-line tool
 func NewCmdHelm()KubeHelm{
 	return &cmdHelm{}
 }
 
-//helm install --name xxxx chart-dir --set k1=v1 --set k2=v2 --kube-apiserver=xxxx --kube-token=xxxxx
+//helm install --name xxxx chart-dir --set k1=v1 --set k2=v2 --kube-apiserver=xxxx --kube-token=xxxxx --kubeconfig kubeconfig
 func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
-	parameters := inf.ParseParameters() + glf.ParseParameters()
+	gPara,err := glf.ParseParameters()
+	if err != nil {
+		return err
+	}
+	parameters := inf.ParseParameters() + gPara
 	klog.Infof("helm install%s", parameters)
 	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
