@@ -369,6 +369,9 @@ func (rc *RuleConverter) getNodePortBackends(
 }
 
 func (rc *RuleConverter) getPodsByLabels(ns string, labels map[string]string) ([]*k8scorev1.Pod, error) {
+	if len(labels) == 0 {
+		return nil, nil
+	}
 	podList := &k8scorev1.PodList{}
 	err := rc.cli.List(context.TODO(), podList, client.MatchingLabels(labels), &client.ListOptions{Namespace: ns})
 	if err != nil {
