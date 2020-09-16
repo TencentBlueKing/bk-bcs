@@ -22,9 +22,9 @@ import (
 	"k8s.io/klog"
 )
 
-type cmdHelm struct {}
+type cmdHelm struct{}
 
-func NewCmdHelm()KubeHelm{
+func NewCmdHelm() KubeHelm {
 	return &cmdHelm{}
 }
 
@@ -46,7 +46,7 @@ func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("/bin/bash","-c","./install.sh")
+	cmd := exec.Command("/bin/bash", "-c", "./install.sh")
 	buf := bytes.NewBuffer(make([]byte, 1024))
 	cmd.Stderr = buf
 	err = cmd.Run()

@@ -34,7 +34,7 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent mesh-manager bcs-ingress-controller
+default:api client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector k8s-watch kube-agent k8s-driver netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent mesh-manager bcs-ingress-controller
 k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
 mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
 
@@ -90,7 +90,8 @@ kube-agent:pre
 client:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-client ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./bcs-services/bcs-client/cmd/main.go
+	#go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./bcs-services/bcs-client/cmd/main.go
+	cd ./bcs-services/bcs-client && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./cmd/main.go
 
 dns:
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -99,13 +100,6 @@ dns:
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service coredns.go
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns coredns.go
-
-health:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-health-master ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-health-slave ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-health-master/bcs-health-master ./bcs-services/bcs-health/master/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-health-slave/bcs-health-slave ./bcs-services/bcs-health/slave/main.go
 
 metricservice:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -116,13 +110,6 @@ metriccollector:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-node
 	cp -R ./install/conf/bcs-mesos-node/bcs-metriccollector ${PACKAGEPATH}/bcs-mesos-node
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-metriccollector/bcs-metriccollector ./bcs-services/bcs-metriccollector/main.go
-
-exporter:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-exporter ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-exporter/bcs-exporter ./bcs-services/bcs-exporter/main.go
-	go build ${LDFLAG} -buildmode=plugin -o ${PACKAGEPATH}/bcs-services/bcs-exporter/default_exporter.so ./bcs-services/bcs-exporter/pkg/output/plugins/default_exporter/default_exporter.go
-	go build ${LDFLAG} -buildmode=plugin -o ${PACKAGEPATH}/bcs-services/bcs-exporter/bkdata_exporter.so ./bcs-services/bcs-exporter/pkg/output/plugins/bkdata_exporter/
 
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -234,13 +221,6 @@ egress-controller:pre
 	#copy nginx template for egress controller
 	cp -R bcs-k8s/bcs-egress/deploy/config ${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller
 	cd bcs-k8s/bcs-egress && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller/bcs-egress-controller ./cmd/bcs-egress-controller/main.go
-
-api-export:pre
-	mkdir -p ${EXPORTPATH}
-	cp ./bcs-common/common/types/meta.go ${EXPORTPATH}
-	cp ./bcs-common/common/types/status.go ${EXPORTPATH}
-	cp ./bcs-common/common/types/secret.go ${EXPORTPATH}
-	cp ./bcs-common/common/types/configmap.go ${EXPORTPATH}
 
 consoleproxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-consoleproxy
