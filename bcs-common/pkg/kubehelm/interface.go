@@ -17,19 +17,19 @@ import "fmt"
 
 type GlobalFlags struct {
 	KubeApiserver string
-	KubeToken string
-	Kubeconfig string
+	KubeToken     string
+	Kubeconfig    string
 }
 
-func (f *GlobalFlags) ParseParameters()string{
+func (f *GlobalFlags) ParseParameters() string {
 	var parameters string
-	if f.KubeApiserver!="" {
+	if f.KubeApiserver != "" {
 		parameters += fmt.Sprintf(" --kube-apiserver %s", f.KubeApiserver)
 	}
-	if f.KubeToken!="" {
+	if f.KubeToken != "" {
 		parameters += fmt.Sprintf(" --kube-token %s", f.KubeToken)
 	}
-	if f.Kubeconfig!="" {
+	if f.Kubeconfig != "" {
 		parameters += fmt.Sprintf(" --kubeconfig %s", f.Kubeconfig)
 	}
 	return parameters
@@ -38,20 +38,20 @@ func (f *GlobalFlags) ParseParameters()string{
 type InstallFlags struct {
 	//setParam --set hub=docker.io/istio tag=1.5.4
 	SetParam map[string]string
-	Chart string
-	Name string
+	Chart    string
+	Name     string
 }
 
-func (f *InstallFlags) ParseParameters()string{
+func (f *InstallFlags) ParseParameters() string {
 	var parameters string
-	if f.Name!="" {
+	if f.Name != "" {
 		parameters += fmt.Sprintf(" %s", f.Name)
 	}
-	if f.Chart!="" {
+	if f.Chart != "" {
 		parameters += fmt.Sprintf(" %s", f.Chart)
 	}
-	for k,v :=range f.SetParam {
-		parameters += fmt.Sprintf(" --set %s=%s", k,v)
+	for k, v := range f.SetParam {
+		parameters += fmt.Sprintf(" --set %s=%s", k, v)
 	}
 
 	return parameters
@@ -60,5 +60,5 @@ func (f *InstallFlags) ParseParameters()string{
 type KubeHelm interface {
 	//install
 	//setParam --set hub=docker.io/istio tag=1.5.4
-	InstallChart(inf InstallFlags, glf GlobalFlags)error
+	InstallChart(inf InstallFlags, glf GlobalFlags) error
 }

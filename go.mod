@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs
 go 1.14
 
 replace (
+	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )
@@ -70,7 +71,7 @@ require (
 	github.com/fsouza/go-dockerclient v1.6.0
 	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-logr/logr v0.2.0 // indirect
+	github.com/go-logr/logr v0.1.0 // indirect
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/go-openapi/analysis v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
@@ -129,15 +130,14 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mesos/mesos-go v0.0.10
 	github.com/mholt/caddy v0.11.1
-	github.com/micro/go-micro/v2 v2.9.1
 	github.com/micro/cli/v2 v2.1.2 // indirect
+	github.com/micro/go-micro/v2 v2.9.1
 	github.com/miekg/dns v1.1.27
 	github.com/mitchellh/hashstructure v1.0.0 // indirect
 	github.com/moby/term v0.0.0-20200507201656-73f35e472e8f // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
-	github.com/nats-io/nats-server/v2 v2.1.4 // indirect
 	github.com/nats-io/nats.go v1.9.2 // indirect
 	github.com/netdata/go-orchestrator v0.0.0-20190905093727-c793edba0e8f // indirect
 	github.com/nlopes/slack v0.6.1-0.20191106133607-d06c2a2b3249 // indirect
@@ -164,7 +164,7 @@ require (
 	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.3.1
+	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.5.1
 	github.com/stripe/stripe-go/v71 v71.28.0 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
@@ -183,7 +183,7 @@ require (
 	go4.org v0.0.0-20190313082347-94abd6928b1d
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
 	golang.org/x/sys v0.0.0-20200523222454-059865788121
-	google.golang.org/grpc v1.26.0
+	google.golang.org/grpc v1.29.1
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect

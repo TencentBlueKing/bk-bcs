@@ -90,7 +90,8 @@ kube-agent:pre
 client:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-client ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./bcs-services/bcs-client/cmd/main.go
+	#go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./bcs-services/bcs-client/cmd/main.go
+	cd ./bcs-services/bcs-client && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./cmd/main.go
 
 dns:
 	mkdir -p ${PACKAGEPATH}/bcs-services
