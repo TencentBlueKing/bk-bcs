@@ -22,6 +22,8 @@ import (
 type Interface interface {
 	// Ingresses returns a IngressInformer.
 	Ingresses() IngressInformer
+	// Listeners returns a ListenerInformer.
+	Listeners() ListenerInformer
 }
 
 type version struct {
@@ -38,4 +40,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Ingresses returns a IngressInformer.
 func (v *version) Ingresses() IngressInformer {
 	return &ingressInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Listeners returns a ListenerInformer.
+func (v *version) Listeners() ListenerInformer {
+	return &listenerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

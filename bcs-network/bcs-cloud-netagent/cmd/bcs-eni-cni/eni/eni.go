@@ -30,8 +30,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
 	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
+)
+
+const (
+	// DefaultRouteRulePriority default priority of route rule
+	DefaultRouteRulePriority = 2048
 )
 
 //default directory for log output
@@ -40,9 +45,10 @@ var defaultLogDir = "./logs"
 // NetConf net config
 type NetConf struct {
 	types.NetConf
-	MTU    int    `json:"mtu,omitempty"`
-	LogDir string `json:"logDir,omitempty"`
-	Args   *bcsconf.CNIArgs
+	MTU               int    `json:"mtu,omitempty"`
+	LogDir            string `json:"logDir,omitempty"`
+	RouteRulePriority int    `json:"routeRulePriority,omitempty"`
+	Args              *bcsconf.CNIArgs
 }
 
 //loadConf load specified configuration from cni configuration
@@ -59,6 +65,12 @@ func loadConf(bytes []byte, args string) (*NetConf, string, error) {
 	if len(conf.LogDir) == 0 {
 		blog.Errorf("log dir is empty, use default log dir './logs'")
 		conf.LogDir = defaultLogDir
+	}
+	if conf.RouteRulePriority < 256 && conf.RouteRulePriority != 0 {
+		return nil, "", fmt.Errorf("invalid route rule priority %d", conf.RouteRulePriority)
+	}
+	if conf.RouteRulePriority == 0 {
+		conf.RouteRulePriority = DefaultRouteRulePriority
 	}
 	if args != "" {
 		conf.Args = &bcsconf.CNIArgs{}
@@ -177,7 +189,7 @@ func findFromTableRule(rules []netlink.Rule, rule *netlink.Rule) bool {
 }
 
 // configureHostNS configure host namespace
-func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) error {
+func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID, routeRulePriority int) error {
 	// add to taskgroup route
 	hostVeth, err := netlink.LinkByName(hostIfName)
 	if err != nil {
@@ -216,7 +228,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleToTable := netlink.NewRule()
 	ruleToTable.Dst = ipNet
 	ruleToTable.Table = routeTableID
-	ruleToTable.Priority = 2048
+	ruleToTable.Priority = routeRulePriority - 1
 	if !findToTableRule(rules, ruleToTable) {
 		err = netlink.RuleAdd(ruleToTable)
 		if err != nil {
@@ -227,7 +239,7 @@ func configureHostNS(hostIfName string, ipNet *net.IPNet, routeTableID int) erro
 	ruleFromTaskgroup := netlink.NewRule()
 	ruleFromTaskgroup.Src = ipNet
 	ruleFromTaskgroup.Table = routeTableID
-	ruleFromTaskgroup.Priority = 2048
+	ruleFromTaskgroup.Priority = routeRulePriority
 	if !findFromTableRule(rules, ruleFromTaskgroup) {
 		err = netlink.RuleAdd(ruleFromTaskgroup)
 		if err != nil {
@@ -367,7 +379,7 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("configure container ns network failed, err %s", err.Error())
 	}
 
-	err = configureHostNS(hostVethInfo.Name, ipNet, routeTableID)
+	err = configureHostNS(hostVethInfo.Name, ipNet, routeTableID, netConf.RouteRulePriority)
 	if err != nil {
 		blog.Errorf("configure host ns network failed, err %s", err.Error())
 		return fmt.Errorf("configure host ns network failed, err %s", err.Error())

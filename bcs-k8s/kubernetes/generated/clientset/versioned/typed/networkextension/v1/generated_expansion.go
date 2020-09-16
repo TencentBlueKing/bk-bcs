@@ -15,3 +15,5 @@
 package v1
 
 type IngressExpansion interface{}
+
+type ListenerExpansion interface{}
