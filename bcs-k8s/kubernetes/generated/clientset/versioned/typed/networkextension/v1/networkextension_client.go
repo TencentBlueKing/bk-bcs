@@ -23,6 +23,7 @@ import (
 type NetworkextensionV1Interface interface {
 	RESTClient() rest.Interface
 	IngressesGetter
+	ListenersGetter
 }
 
 // NetworkextensionV1Client is used to interact with features provided by the networkextension group.
@@ -32,6 +33,10 @@ type NetworkextensionV1Client struct {
 
 func (c *NetworkextensionV1Client) Ingresses(namespace string) IngressInterface {
 	return newIngresses(c, namespace)
+}
+
+func (c *NetworkextensionV1Client) Listeners(namespace string) ListenerInterface {
+	return newListeners(c, namespace)
 }
 
 // NewForConfig creates a new NetworkextensionV1Client for the given config.

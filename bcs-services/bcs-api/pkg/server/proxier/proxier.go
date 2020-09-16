@@ -55,6 +55,9 @@ type ReverseProxyDispatcher struct {
 	credentialBackends []credentials.CredentialBackend
 
 	availableSrvStore map[string]*UpstreamServer
+
+	wsTunnelStore      map[string]*WsTunnel
+	wsTunnelMutateLock sync.RWMutex
 }
 
 type ClusterHandlerInstance struct {
@@ -68,6 +71,7 @@ func NewReverseProxyDispatcher(clusterVarName, subPathVarName string) *ReversePr
 		SubPathVarName:    subPathVarName,
 		handlerStore:      make(map[string]*ClusterHandlerInstance),
 		availableSrvStore: make(map[string]*UpstreamServer),
+		wsTunnelStore:     make(map[string]*WsTunnel),
 	}
 }
 
@@ -138,7 +142,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 
 	var proxyHandler *ClusterHandlerInstance
 	// 先从websocket dialer缓存中查找websocket链
-	websocketHandler, found, err := lookupWsHandler(clusterId, req)
+	websocketHandler, found, err := f.lookupWsHandler(clusterId, req)
 	if err != nil {
 		blog.Errorf("error when lookup websocket conn: %s", err.Error())
 		err := fmt.Errorf("error when lookup websocket conn: %s", err.Error())
