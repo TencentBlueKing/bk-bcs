@@ -56,7 +56,7 @@ func (s *Scheduler) BuildTaskGroup(version *types.Version, app *types.Applicatio
 	app.Pods = append(app.Pods, podIndex)
 	app.UpdateTime = time.Now().Unix()
 	if ID == "" {
-		app.Instances++
+		app.Instances = uint64(len(app.Pods))
 	}
 
 	// add events
