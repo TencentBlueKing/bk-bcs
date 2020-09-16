@@ -11,10 +11,16 @@
  *
  */
 
-package actions
+package v2
 
 const (
-	BcsCustomSchedulerPrefix = "/bcs/custom/scheduler/k8s/"
-	IpSchedulerV1            = "v1"
-	IpSchedulerV2            = "v2"
+	CniAnnotationKey       = "tke.cloud.tencent.com/networks"
+	FixedIpAnnotationKey   = "eni.cloud.bkbcs.tencent.com"
+	CniAnnotationValue     = "bcs-eni-cni"
+	FixedIpAnnotationValue = "fixed"
+	BcsSystem              = "bcs-system"
+	// IP_LABEL_KEY_FOR_HOST key in ip annotations for host, used to search cloud ip
+	IP_LABEL_KEY_FOR_HOST = "host.cloud.bkbcs.tencent.com"
+	// IP_LABEL_KEY_FOR_IS_FIXED key in ip annotations for if it is fixed
+	IP_LABEL_KEY_FOR_IS_FIXED = "fixed.cloud.bkbcs.tencent.com"
 )

@@ -14,19 +14,16 @@
 package app
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common"
+	"os"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/app/custom-scheduler"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/options"
-	"os"
 )
 
-//Run the ipscheduler
-func Run(op *options.ServerOption) {
-
-	conf := parseConfig(op)
-
+//Run the customScheduler
+func Run(conf *config.CustomSchedulerConfig) {
 	customSched := custom_scheduler.NewCustomScheduler(conf)
 	//start customSched, and http service
 	err := customSched.Start()
@@ -35,47 +32,41 @@ func Run(op *options.ServerOption) {
 		os.Exit(1)
 	}
 
-	//pid
-	if err := common.SavePid(op.ProcessConfig); err != nil {
-		blog.Error("fail to save pid: err:%s", err.Error())
-	}
-
 	return
 }
 
-func parseConfig(op *options.ServerOption) *config.IpschedulerConfig {
-	ipschedulerConfig := config.NewIpschedulerConfig()
+func ParseConfig(op *options.ServerOption) *config.CustomSchedulerConfig {
+	customSchedulerConfig := config.NewCustomSchedulerConfig()
 
-	ipschedulerConfig.Address = op.Address
-	ipschedulerConfig.Port = op.Port
-	ipschedulerConfig.InsecureAddress = op.InsecureAddress
-	ipschedulerConfig.InsecurePort = op.InsecurePort
-	ipschedulerConfig.ZkHosts = op.BCSZk
-	ipschedulerConfig.VerifyClientTLS = op.VerifyClientTLS
-
-	config.ZkHosts = op.BCSZk
-	config.Cluster = op.Cluster
-	config.Kubeconfig = op.Kubeconfig
-	config.KubeMaster = op.KubeMaster
-	config.UpdatePeriod = op.UpdatePeriod
+	customSchedulerConfig.Address = op.Address
+	customSchedulerConfig.Port = op.Port
+	customSchedulerConfig.InsecureAddress = op.InsecureAddress
+	customSchedulerConfig.InsecurePort = op.InsecurePort
+	customSchedulerConfig.ZkHosts = op.BCSZk
+	customSchedulerConfig.VerifyClientTLS = op.VerifyClientTLS
+	customSchedulerConfig.CustomSchedulerType = op.CustomSchedulerType
+	customSchedulerConfig.KubeConfig = op.Kubeconfig
+	customSchedulerConfig.KubeMaster = op.KubeMaster
+	customSchedulerConfig.UpdatePeriod = op.UpdatePeriod
+	customSchedulerConfig.Cluster = op.Cluster
+	customSchedulerConfig.CniAnnotationKey = op.CniAnnotationKey
+	customSchedulerConfig.FixedIpAnnotationKey = op.FixedIpAnnotationKey
 
 	//server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {
-		ipschedulerConfig.ServCert.CertFile = op.CertConfig.ServerCertFile
-		ipschedulerConfig.ServCert.KeyFile = op.CertConfig.ServerKeyFile
-		ipschedulerConfig.ServCert.CAFile = op.CertConfig.CAFile
-		ipschedulerConfig.ServCert.IsSSL = true
+		customSchedulerConfig.ServCert.CertFile = op.CertConfig.ServerCertFile
+		customSchedulerConfig.ServCert.KeyFile = op.CertConfig.ServerKeyFile
+		customSchedulerConfig.ServCert.CAFile = op.CertConfig.CAFile
+		customSchedulerConfig.ServCert.IsSSL = true
 	}
 
 	//client cert directory
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.ClientKeyFile != "" {
-		ipschedulerConfig.ClientCert.CertFile = op.CertConfig.ClientCertFile
-		ipschedulerConfig.ClientCert.KeyFile = op.CertConfig.ClientKeyFile
-		ipschedulerConfig.ClientCert.CAFile = op.CertConfig.CAFile
-		ipschedulerConfig.ClientCert.IsSSL = true
+		customSchedulerConfig.ClientCert.CertFile = op.CertConfig.ClientCertFile
+		customSchedulerConfig.ClientCert.KeyFile = op.CertConfig.ClientKeyFile
+		customSchedulerConfig.ClientCert.CAFile = op.CertConfig.CAFile
+		customSchedulerConfig.ClientCert.IsSSL = true
 	}
 
-	config.ClientCert = ipschedulerConfig.ClientCert
-
-	return ipschedulerConfig
+	return customSchedulerConfig
 }

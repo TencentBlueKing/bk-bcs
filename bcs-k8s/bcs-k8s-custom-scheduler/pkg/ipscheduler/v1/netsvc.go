@@ -11,7 +11,7 @@
  *
  */
 
-package ipscheduler
+package v1
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
@@ -29,37 +29,37 @@ type BcsConfig struct {
 	Interval int            `json:"interval,omitempty"`
 }
 
-func createNetSvcClient() (netservice.Client, error) {
-	conf := newConf()
+func createNetSvcClient(conf *config.CustomSchedulerConfig) (netservice.Client, error) {
+	bcsConf := newBcsConf(conf)
 
 	var client netservice.Client
 	var clientErr error
-	if conf.TLS == nil {
+	if bcsConf.TLS == nil {
 		client, clientErr = netservice.NewClient()
 	} else {
-		client, clientErr = netservice.NewTLSClient(conf.TLS.CACert, conf.TLS.Key, conf.TLS.PubKey, conf.TLS.Passwd)
+		client, clientErr = netservice.NewTLSClient(bcsConf.TLS.CACert, bcsConf.TLS.Key, bcsConf.TLS.PubKey, bcsConf.TLS.Passwd)
 	}
 	if clientErr != nil {
 		return nil, clientErr
 	}
 	//client get bcs-netservice info
-	hosts := strings.Split(conf.ZkHost, ";")
+	hosts := strings.Split(bcsConf.ZkHost, ";")
 	if err := client.GetNetService(hosts); err != nil {
 		return nil, fmt.Errorf("get netservice failed, %s", err.Error())
 	}
 	return client, nil
 }
 
-func newConf() BcsConfig {
-	conf := BcsConfig{
-		ZkHost: config.ZkHosts,
+func newBcsConf(conf *config.CustomSchedulerConfig) BcsConfig {
+	bcsConf := BcsConfig{
+		ZkHost: conf.ZkHosts,
 		TLS: &types.SSLInfo{
-			CACert: config.ClientCert.CAFile,
-			Key:    config.ClientCert.KeyFile,
-			PubKey: config.ClientCert.CertFile,
-			Passwd: config.ClientCert.CertPasswd,
+			CACert: conf.ClientCert.CAFile,
+			Key:    conf.ClientCert.KeyFile,
+			PubKey: conf.ClientCert.CertFile,
+			Passwd: conf.ClientCert.CertPasswd,
 		},
 	}
 
-	return conf
+	return bcsConf
 }
