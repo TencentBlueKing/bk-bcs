@@ -34,4 +34,5 @@ replace (
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	istio.io/istio => istio.io/istio v0.0.0-20200807215558-ae959de3c67a
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
+	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20181204163529-d75b2dcb6bc8
 )

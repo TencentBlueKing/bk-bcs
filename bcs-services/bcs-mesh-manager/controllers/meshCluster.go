@@ -15,10 +15,11 @@ package controllers
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"reflect"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -30,7 +31,7 @@ import (
 
 	kubeclient "github.com/kubernetes-client/go/kubernetes/client"
 	istiov1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -105,6 +106,9 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, 
 	m.kubeconfig = &restclient.Config{
 		Host:        m.kubeAddr,
 		BearerToken: m.kubeToken,
+		TLSClientConfig: restclient.TLSClientConfig{
+			Insecure: true,
+		},
 		QPS:         1e3,
 		Burst:       2e3,
 	}
@@ -131,9 +135,16 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, 
 	if err!=nil {
 		return nil, err
 	}*/
-
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
 	//kubernetes api client for create IstioOperator Object
 	cfg := kubeclient.NewConfiguration()
+	cfg.HTTPClient = &http.Client{
+		Transport: transport,
+	}
 	cfg.BasePath = m.kubeAddr
 	cfg.DefaultHeader["authorization"] = fmt.Sprintf("Bearer %s", m.kubeToken)
 	by, _ := json.Marshal(cfg)
@@ -227,10 +238,10 @@ func (m *MeshClusterManager) installIstio() bool {
 	m.Lock()
 	m.Unlock()
 	//create IstioOperator Crds
-	/*err := m.createIstioOperatorCrds()
+	err := m.createIstioOperatorCrds()
 	if err!=nil {
 		return false
-	}*/
+	}
 
 	//check deployment istio-operator whether installed
 	if m.istioOperatorInstalled() {
@@ -258,7 +269,7 @@ func (m *MeshClusterManager) installIstio() bool {
 			Name: "istio-system",
 		},
 	}
-	_, _, err := m.kubeApiClient.CoreV1Api.CreateNamespace(context.Background(), istiosystem, nil)
+	_, _, err = m.kubeApiClient.CoreV1Api.CreateNamespace(context.Background(), istiosystem, nil)
 	if err != nil && !strings.Contains(err.Error(), "404 Not Found") {
 		klog.Errorf("Create Cluster(%s) Namespace(istio-system) error %s", m.meshCluster.Spec.ClusterId, err.Error())
 		return false
@@ -433,19 +444,16 @@ func (m *MeshClusterManager) getComponentStatus(status *meshv1.InstallStatus_Ver
 func (m *MeshClusterManager) createIstioOperatorCrds() error {
 	istiooperatorPlural := types.IstioOperatorPlural
 	istiooperatorFullName := istiooperatorPlural + "." + types.IstioOperatorGroup
-	crd := &apiextensionsv1.CustomResourceDefinition{
+	crd := &apiextensionsv1beta1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: istiooperatorFullName,
 		},
-		Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
 			Group: types.IstioOperatorGroup, // BcsLogConfigsGroup,
-			Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
-				apiextensionsv1.CustomResourceDefinitionVersion{
-					Name: types.IstioOperatorVersion,
-				},
-			}, // BcsLogConfigsVersion,
-			Scope: apiextensionsv1.NamespaceScoped,
-			Names: apiextensionsv1.CustomResourceDefinitionNames{
+			// BcsLogConfigsVersion,
+			Version: types.IstioOperatorVersion,
+			Scope: apiextensionsv1beta1.NamespaceScoped,
+			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
 				Plural:   istiooperatorPlural,
 				Kind:     types.IstioOperatorKind,
 				ListKind: types.IstioOperatorListKind,
@@ -453,7 +461,7 @@ func (m *MeshClusterManager) createIstioOperatorCrds() error {
 		},
 	}
 	//create IstioOperator Crd
-	_, err := m.extensionClientset.ApiextensionsV1().CustomResourceDefinitions().Create(context.Background(),
+	_, err := m.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(),
 		crd, metav1.CreateOptions{})
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		klog.Errorf("create IstioOperator Crd error %s", err.Error())
@@ -493,7 +501,7 @@ func (m *MeshClusterManager) createIstioOperatorCrds() error {
 }
 
 // create crd of MeshCluster
-func (m *MeshClusterManager) createMeshClusterCrd() error {
+/*func (m *MeshClusterManager) createMeshClusterCrd() error {
 	meshclusterPlural := "meshclusters"
 	meshclusterFullName := "meshclusters" + "." + meshv1.GroupVersion.Group
 	crd := &apiextensionsv1.CustomResourceDefinition{
@@ -528,4 +536,4 @@ func (m *MeshClusterManager) createMeshClusterCrd() error {
 	}
 	klog.Infof("create MeshCluster Crd success")
 	return nil
-}
+}*/
