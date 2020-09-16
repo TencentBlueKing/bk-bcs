@@ -66,7 +66,7 @@ var (
 	TaskgroupThreadNum int
 	//ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
-	DeploymentThreadNum int
+	DeploymentThreadNum    int
 )
 
 //NewMesosCluster create mesos cluster

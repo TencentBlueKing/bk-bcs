@@ -75,7 +75,7 @@ func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService,
 	if svc == nil {
 		return svc, schStore.ErrNoFound
 	}
-	return svc,  nil
+	return svc, nil
 }
 
 func (store *managerStore) fetchServiceInDB(ns, name string) (*commtypes.BcsService, error) {
