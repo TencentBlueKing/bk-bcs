@@ -248,7 +248,7 @@ curl -XPOST localhost:8001/upstreams -d"name=meshmanager.bkbcs.tencent.com" \
   -d"algorithm=round-robin"
 #kubeagent upstream target
 curl -XPOST localhost:8001/upstreams/meshmanager.bkbcs.tencent.com/targets \
-  -d"target=9.146.124.46:8899" -d"weight=100"
+  -d"target=xxxxxxxxxxxx" -d"weight=100"
 ```
 
 ### 服务注册kong细则
