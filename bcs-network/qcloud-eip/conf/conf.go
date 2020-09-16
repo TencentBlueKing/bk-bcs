@@ -24,6 +24,11 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 )
 
+const (
+	// DefaultRouteRulePriority default priority of route rule
+	DefaultRouteRulePriority = 2048
+)
+
 // NetArgs cni net args
 type NetArgs struct {
 	Zookeeper string `json:"zookeeper"`
@@ -45,6 +50,7 @@ type NetConf struct {
 	UUID                  string   `json:"uuid"`
 	SubnetID              string   `json:"subnetId,omitempty"`
 	MTU                   int      `json:"mtu,omitempty"`
+	RouteRulePriority     int      `json:"routeRulePriority,omitempty"`
 	NetService            *NetArgs `json:"netservice,omitempty"`
 	Args                  *bcsconf.CNIArgs
 }
@@ -66,6 +72,12 @@ func LoadConf(bytes []byte, args string) (*NetConf, string, error) {
 	}
 	if n.UUID == "" {
 		return nil, "", fmt.Errorf("Lost Encrypted UUID")
+	}
+	if n.RouteRulePriority < 256 && n.RouteRulePriority != 0 {
+		return nil, "", fmt.Errorf("invalid route rule priority %d", n.RouteRulePriority)
+	}
+	if n.RouteRulePriority == 0 {
+		n.RouteRulePriority = DefaultRouteRulePriority
 	}
 	if args != "" {
 		n.Args = &bcsconf.CNIArgs{}

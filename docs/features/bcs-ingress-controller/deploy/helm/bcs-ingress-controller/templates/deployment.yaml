@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bcs-ingress-controller
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: bcs-ingress-controller
+  template:
+    metadata:
+      labels:
+        app: bcs-ingress-controller
+    spec:
+      serviceAccountName:
+      containers:
+      - name: ingress-controller
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: metric-port
+          containerPort: 8081
+          protocol: TCP
+        args:
+        - --cloud
+        - tencentcloud
+        - --v
+        - "3"
+        - --alsologtostderr
+        resources:
+        {{- toYaml .Values.resources | nindent 10 }}
+        env:
+        - name: TENCENTCLOUD_CLB_DOMAIN
+          value: {{ .Values.tencentcloudClbDomain }}
+        - name: TENCENTCLOUD_REGION
+          value: {{ .Values.tencentcloudRegion }}
+        - name: TENCENTCLOUD_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: secretID
+        - name: TENCENTCLOUD_ACESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: secretKey

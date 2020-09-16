@@ -71,3 +71,8 @@ networkpolicy:
 	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-networkpolicy
 	cp -R ../install/conf/bcs-network/bcs-networkpolicy ../${INNER_PACKAGEPATH}/bcs-network
 	go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-networkpolicy/bcs-networkpolicy ./bcs-networkpolicy/main.go
+
+ingress-controller:
+	mkdir -p ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller
+	cp -R ../install/conf/bcs-network/bcs-ingress-controller/* ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller
+	GOOS=linux go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-network/bcs-ingress-controller/bcs-ingress-controller ./bcs-ingress-controller/main.go
