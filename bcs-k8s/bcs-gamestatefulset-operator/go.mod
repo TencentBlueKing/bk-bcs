@@ -2,7 +2,10 @@ module bcs-gamestatefulset-operator
 
 go 1.13
 
-replace github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4
+replace (
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4
+	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
+)
 
 require (
 	bitbucket.org/ww/goautoneg v0.0.0-20120707110453-75cd24fc2f2c // indirect
