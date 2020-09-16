@@ -42,6 +42,7 @@ type peerManager struct {
 	peers     map[string]bool
 }
 
+// PeerRDiscover tunnel peer discovery
 type PeerRDiscover struct {
 	rd      *RegisterDiscover.RegDiscover
 	rootCxt context.Context
