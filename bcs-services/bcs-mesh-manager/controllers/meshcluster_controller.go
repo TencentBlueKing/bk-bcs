@@ -41,23 +41,23 @@ type MeshClusterReconciler struct {
 }
 
 func (r *MeshClusterReconciler) getMeshClusterManager(mCluster *meshv1.MeshCluster) (*MeshClusterManager, error) {
-	meshCluster, _ := r.MeshClusters[mCluster.GetUuid()]
+	meshCluster, _ := r.MeshClusters[mCluster.GetUUID()]
 	if meshCluster != nil {
 		meshCluster.meshCluster = mCluster.DeepCopy()
 		return meshCluster, nil
 	}
 	meshCluster, err := NewMeshClusterManager(r.Conf, mCluster.DeepCopy(), r.Client)
 	if err != nil {
-		klog.Errorf("NewMeshClusterManager(%s) failed: %s", mCluster.GetUuid(), err.Error())
+		klog.Errorf("NewMeshClusterManager(%s) failed: %s", mCluster.GetUUID(), err.Error())
 		return nil, err
 	}
-	r.MeshClusters[mCluster.GetUuid()] = meshCluster
+	r.MeshClusters[mCluster.GetUUID()] = meshCluster
 	return meshCluster, nil
 }
 
+// Reconcile entry point for MeshCluster control
 // +kubebuilder:rbac:groups=mesh.tencent.com,resources=MeshClusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=mesh.tencent.com,resources=MeshClusters/status,verbs=get;update;patch
-
 func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("MeshCluster", req.NamespacedName)
@@ -75,7 +75,7 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	}
 	meshManager, err := r.getMeshClusterManager(MeshCluster)
 	if err != nil {
-		klog.Errorf("Get MeshClusterManager %s failed: %s", MeshCluster.GetUuid(), err.Error())
+		klog.Errorf("Get MeshClusterManager %s failed: %s", MeshCluster.GetUUID(), err.Error())
 		return ctrl.Result{RequeueAfter: time.Second * 3}, err
 	}
 
@@ -94,8 +94,8 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 				return ctrl.Result{RequeueAfter: time.Second * 3}, err
 			}
 			//stop meshManager
-			delete(r.MeshClusters, MeshCluster.GetUuid())
-			klog.Infof("Delete Cluster(%s) MeshManager success", MeshCluster.Spec.ClusterId)
+			delete(r.MeshClusters, MeshCluster.GetUUID())
+			klog.Infof("Delete Cluster(%s) MeshManager success", MeshCluster.Spec.ClusterID)
 		}
 		return ctrl.Result{}, nil
 	}
@@ -108,7 +108,7 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 	//if mesh installed
 	if meshManager.meshInstalled() {
-		klog.Infof("cluster(%s) mesh(%s) installed, then ignore", MeshCluster.Spec.ClusterId, MeshCluster.GetUuid())
+		klog.Infof("cluster(%s) mesh(%s) installed, then ignore", MeshCluster.Spec.ClusterID, MeshCluster.GetUUID())
 		return ctrl.Result{}, nil
 	}
 	//install mesh in cluster
@@ -118,6 +118,7 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	return ctrl.Result{RequeueAfter: time.Second * 3}, nil
 }
 
+// SetupWithManager setup reconciler with manager
 func (r *MeshClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&meshv1.MeshCluster{}).
