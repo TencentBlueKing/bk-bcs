@@ -421,14 +421,14 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 }
 
 //kongBKBCSAuthConvert convert inner service request plugin to request-transformer
-func kongBKBCSAuthConvert(option *register.BCSAuthOption, ID string, tys string) *gokong.PluginRequest {
+func kongBKBCSAuthConvert(option *register.BCSAuthOption, id string, tys string) *gokong.PluginRequest {
 	pr := &gokong.PluginRequest{
 		Name: option.Name,
 	}
 	if tys == "service" {
-		pr.ServiceId = gokong.ToId(ID)
+		pr.ServiceId = gokong.ToId(id)
 	} else {
-		pr.RouteId = gokong.ToId(ID)
+		pr.RouteId = gokong.ToId(id)
 	}
 	pr.Config = make(map[string]interface{})
 	//setting clean operation
@@ -438,6 +438,7 @@ func kongBKBCSAuthConvert(option *register.BCSAuthOption, ID string, tys string)
 	return pr
 }
 
+// httpTransformer holder for http plugins
 type httpTransformer struct {
 	Body     []*string `json:"body" yaml:"body"`
 	Headers  []*string `json:"headers" yaml:"headers"`

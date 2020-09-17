@@ -29,17 +29,19 @@ type MeshClusterSpec struct {
 
 	//version, istio version
 	Version string `json:"version,omitempty"`
-	//ClusterId
-	ClusterId string `json:"clusterId,omitempty"`
+	//ClusterID
+	ClusterID string `json:"clusterId,omitempty"`
 	//MeshType, default ISTIO
 	MeshType MeshType `json:"type,omitempty"`
 }
 
-//mesh type: istio、tbuspp
+//MeshType mesh type: istio、tbuspp
 type MeshType string
 
 const (
-	MeshIstio  MeshType = "ISTIO"
+	// MeshIstio istio type, now this is default
+	MeshIstio MeshType = "ISTIO"
+	// MeshTbuspp tbus type, feature support in future
 	MeshTbuspp MeshType = "TBUSPP"
 )
 
@@ -49,34 +51,34 @@ type MeshClusterStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Individual status of each component controlled by the operator. The map key is the name of the component.
-	ComponentStatus map[string]*InstallStatus_VersionStatus `json:"componentStatus,omitempty"`
+	ComponentStatus map[string]*ComponentState `json:"componentStatus,omitempty"`
 }
 
-// VersionStatus is the status and version of a component.
-type InstallStatus_VersionStatus struct {
-	Name       string               `json:"name,omitempty"`
-	Namespace  string               `json:"namespace,omitempty"`
-	Status     InstallStatus_Status `json:"status,omitempty"`
-	Message    string               `json:"message,omitempty"`
-	UpdateTime int64                `json:"updateTime,omitempty"`
+// ComponentState VersionStatus is the status and version of a component.
+type ComponentState struct {
+	Name       string        `json:"name,omitempty"`
+	Namespace  string        `json:"namespace,omitempty"`
+	Status     InstallStatus `json:"status,omitempty"`
+	Message    string        `json:"message,omitempty"`
+	UpdateTime int64         `json:"updateTime,omitempty"`
 }
 
-// Status describes the current state of a component.
-type InstallStatus_Status string
+// InstallStatus Status describes the current state of a component.
+type InstallStatus string
 
 const (
-	// Component is not present.
-	InstallStatus_NONE InstallStatus_Status = "NONE"
-	// Component is deploying now,
-	InstallStatus_DEPLOY InstallStatus_Status = "DEPLOY"
-	// Component is starting now,
-	InstallStatus_STARTING InstallStatus_Status = "STARTING"
-	// Component is running.
-	InstallStatus_RUNNING InstallStatus_Status = "RUNNING"
-	// Component is failed.
-	InstallStatus_FAILED InstallStatus_Status = "FAILED"
-	// Component is in updating.
-	InstallStatus_UPDATE InstallStatus_Status = "UPDATE"
+	// InstallStatusNONE Component is not present.
+	InstallStatusNONE InstallStatus = "NONE"
+	// InstallStatusDEPLOY Component is deploying now,
+	InstallStatusDEPLOY InstallStatus = "DEPLOY"
+	// InstallStatusSTARTING Component is starting now,
+	InstallStatusSTARTING InstallStatus = "STARTING"
+	// InstallStatusRUNNING Component is running.
+	InstallStatusRUNNING InstallStatus = "RUNNING"
+	// InstallStatusFAILED Component is failed.
+	InstallStatusFAILED InstallStatus = "FAILED"
+	// InstallStatusUPDATE Component is in updating.
+	InstallStatusUPDATE InstallStatus = "UPDATE"
 )
 
 // +kubebuilder:object:root=true
@@ -90,7 +92,8 @@ type MeshCluster struct {
 	Status MeshClusterStatus `json:"status,omitempty"`
 }
 
-func (m *MeshCluster) GetUuid() string {
+// GetUUID GetUuid
+func (m *MeshCluster) GetUUID() string {
 	return fmt.Sprintf("%s.%s", m.Namespace, m.Name)
 }
 
