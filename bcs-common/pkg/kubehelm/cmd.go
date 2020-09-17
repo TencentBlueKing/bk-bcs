@@ -24,7 +24,7 @@ import (
 
 type cmdHelm struct{}
 
-//new cmd helm struct, the object requires helm command-line tool
+// NewCmdHelm new cmd helm struct, the object requires helm command-line tool
 func NewCmdHelm() KubeHelm {
 	return &cmdHelm{}
 }

@@ -21,14 +21,14 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api/v1"
 )
 
-//helm parameters
+//GlobalFlags helm parameters
 type GlobalFlags struct {
 	KubeApiserver string
 	KubeToken     string
 	Kubeconfig    string
 }
 
-//parse helm parameters
+//ParseParameters parse helm parameters
 func (f *GlobalFlags) ParseParameters() (string, error) {
 	var parameters string
 	if f.KubeApiserver != "" && f.KubeToken != "" {
@@ -44,7 +44,7 @@ func (f *GlobalFlags) ParseParameters() (string, error) {
 			Kind:       "Config",
 			Clusters:   make([]clientcmdapi.NamedCluster, 0),
 			AuthInfos:  make([]clientcmdapi.NamedAuthInfo, 0),
-			Contexts: make([]clientcmdapi.NamedContext, 0),
+			Contexts:   make([]clientcmdapi.NamedContext, 0),
 		}
 		cluster := clientcmdapi.NamedCluster{
 			Name: "cluster",
@@ -64,7 +64,7 @@ func (f *GlobalFlags) ParseParameters() (string, error) {
 		context := clientcmdapi.NamedContext{
 			Name: "cluster-context",
 			Context: clientcmdapi.Context{
-				Cluster: cluster.Name,
+				Cluster:  cluster.Name,
 				AuthInfo: authInfo.Name,
 			},
 		}
@@ -82,7 +82,7 @@ func (f *GlobalFlags) ParseParameters() (string, error) {
 	return parameters, nil
 }
 
-//chart parameters
+//InstallFlags chart parameters
 type InstallFlags struct {
 	//setParam --set hub=docker.io/istio tag=1.5.4
 	SetParam map[string]string
@@ -90,7 +90,7 @@ type InstallFlags struct {
 	Name     string
 }
 
-//parse chart parameters
+//ParseParameters parse chart parameters
 func (f *InstallFlags) ParseParameters() string {
 	var parameters string
 	if f.Name != "" {
@@ -106,7 +106,7 @@ func (f *InstallFlags) ParseParameters() string {
 	return parameters
 }
 
-// kube helm interface
+// KubeHelm kube helm interface
 type KubeHelm interface {
 	//install
 	//setParam --set hub=docker.io/istio tag=1.5.4

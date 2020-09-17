@@ -15,6 +15,7 @@ package config
 
 import "crypto/tls"
 
+// Config all config item for bcs-mesh-manager
 type Config struct {
 	//IstioOperator Docker Hub
 	DockerHub string

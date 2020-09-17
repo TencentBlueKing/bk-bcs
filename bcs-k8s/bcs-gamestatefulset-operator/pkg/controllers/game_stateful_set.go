@@ -56,7 +56,6 @@ var (
 	durationStore = requeueduration.DurationStore{}
 )
 
-
 // GameStatefulSetController controls statefulsets.
 type GameStatefulSetController struct {
 	// client interface

@@ -6,25 +6,25 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//new meshmanager options to parse command-line parameters
+//MeshManagerOptions new meshmanager options to parse command-line parameters
 type MeshManagerOptions struct {
 	conf.FileConfig
 	conf.MetricConfig
 	conf.ServiceConfig
 	conf.CertConfig
 
-	DockerHub string `json:"istio-docker-hub" value:"" usage:"istio-operator docker hub"`
+	DockerHub           string `json:"istio-docker-hub" value:"" usage:"istio-operator docker hub"`
 	IstioOperatorCharts string `json:"istiooperator-charts" value:"" usage:"istio-operator charts"`
-	ServerAddress string `json:"apigateway-addr" value:"" usage:"bcs apigateway address"`
-	UserToken string `json:"user-token" value:"" usage:"bcs apigateway usertoken to control k8s cluster"`
-	Kubeconfig string `json:"kubeconfig" value:"" usage:"kube-apiserver kubeconfig"`
-	EtcdCaFile string `json:"etcd-cafile" value:"" usage:"SSL Certificate Authority file used to secure etcd communication"`
-	EtcdCertFile string `json:"etcd-certfile" value:"" usage:"SSL certification file used to secure etcd communication"`
-	EtcdKeyFile string `json:"etcd-keyfile" value:"" usage:"SSL key file used to secure etcd communication"`
-	EtcdServers string `json:"etcd-servers" value:"" usage:"List of etcd servers to connect with (scheme://ip:port), comma separated"`
+	ServerAddress       string `json:"apigateway-addr" value:"" usage:"bcs apigateway address"`
+	UserToken           string `json:"user-token" value:"" usage:"bcs apigateway usertoken to control k8s cluster"`
+	Kubeconfig          string `json:"kubeconfig" value:"" usage:"kube-apiserver kubeconfig"`
+	EtcdCaFile          string `json:"etcd-cafile" value:"" usage:"SSL Certificate Authority file used to secure etcd communication"`
+	EtcdCertFile        string `json:"etcd-certfile" value:"" usage:"SSL certification file used to secure etcd communication"`
+	EtcdKeyFile         string `json:"etcd-keyfile" value:"" usage:"SSL key file used to secure etcd communication"`
+	EtcdServers         string `json:"etcd-servers" value:"" usage:"List of etcd servers to connect with (scheme://ip:port), comma separated"`
 }
 
-//parse command-line parameters to mesh-manager config struct
+//ParseConfig parse command-line parameters to mesh-manager config struct
 func ParseConfig() Config {
 	op := &MeshManagerOptions{}
 	conf.Parse(op)

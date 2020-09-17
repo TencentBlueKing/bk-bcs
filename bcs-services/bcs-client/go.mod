@@ -4,7 +4,6 @@ go 1.14
 
 replace (
 	github.com/Tencent/bk-bcs => ../../
-	github.com/Tencent/bk-bcs/bcs-services/bcs-client => ./
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager => ../bcs-mesh-manager
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20180801171038-322a19404e37
