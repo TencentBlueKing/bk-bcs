@@ -1,0 +1,7 @@
+apiVersion: clb.bmsf.tencent.com/v1
+kind: ClbIngress
+metadata:
+  name: clbingress-sample
+spec:
+  # Add fields here
+  foo: bar

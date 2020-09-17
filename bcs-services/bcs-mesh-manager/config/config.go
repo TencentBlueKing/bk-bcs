@@ -29,7 +29,7 @@ type Config struct {
 	//address
 	Address string
 	//port, grpc port, http port +1
-	Port int
+	Port uint
 	//metrics port
 	MetricsPort string
 	//etcd servers
@@ -50,4 +50,6 @@ type Config struct {
 	IsSsl bool
 	//tls config
 	TlsConf *tls.Config
+	//kubeconfig
+	Kubeconfig string
 }

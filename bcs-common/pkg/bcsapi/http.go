@@ -15,6 +15,9 @@ package bcsapi
 
 import (
 	"fmt"
+	"net/http"
+
+	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 
 	"github.com/parnurzeal/gorequest"
 )
@@ -47,4 +50,15 @@ func newPost(config *Config, address string) *gorequest.SuperAgent {
 func newDelete(config *Config, address string) *gorequest.SuperAgent {
 	r := gorequest.New().Delete(address)
 	return configureRequest(r, config)
+}
+
+func bkbcsSetting(req *restclient.Request, config *Config) *restclient.Request {
+	header := make(http.Header)
+	if config.AuthToken != "" {
+		header.Add("Authorization", fmt.Sprintf("Bearer %s", config.AuthToken))
+	}
+	if config.ClusterID != "" {
+		header.Add(clusterIDHeader, config.ClusterID)
+	}
+	return req.WithHeaders(header)
 }

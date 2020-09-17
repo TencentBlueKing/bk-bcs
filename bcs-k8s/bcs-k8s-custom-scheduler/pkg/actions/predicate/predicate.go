@@ -16,7 +16,9 @@ package predicate
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
+	v1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
+	v2 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler/v2"
+
 	"github.com/emicklei/go-restful"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 )
@@ -26,11 +28,11 @@ const (
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: actions.BcsCustomSchedulerPrefix + "/" + "ipscheduler" + "/" + PredicatePrefix, Params: nil, Handler: handleIpschedulerPredicate})
-
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: actions.BcsCustomSchedulerPrefix + "ipscheduler/" + "{version}/" + PredicatePrefix,
+		Params: nil, Handler: handleIpSchedulerPredicate})
 }
 
-func handleIpschedulerPredicate(req *restful.Request, resp *restful.Response) {
+func handleIpSchedulerPredicate(req *restful.Request, resp *restful.Response) {
 
 	var extenderArgs schedulerapi.ExtenderArgs
 	var extenderFilterResult *schedulerapi.ExtenderFilterResult
@@ -46,7 +48,19 @@ func handleIpschedulerPredicate(req *restful.Request, resp *restful.Response) {
 		resp.WriteEntity(extenderFilterResult)
 		return
 	}
-	extenderFilterResult, err = ipscheduler.HandleIpschedulerPredicate(extenderArgs)
+
+	ipSchedulerVersion := req.PathParameter("version")
+	if ipSchedulerVersion == actions.IpSchedulerV1 {
+		extenderFilterResult, err = v1.HandleIpSchedulerPredicate(extenderArgs)
+	} else if ipSchedulerVersion == actions.IpSchedulerV2 {
+		extenderFilterResult, err = v2.HandleIpSchedulerPredicate(extenderArgs)
+	} else {
+		extenderFilterResult = &schedulerapi.ExtenderFilterResult{
+			Nodes:       nil,
+			FailedNodes: nil,
+			Error:       "invalid IpScheduler version",
+		}
+	}
 	if err != nil {
 		extenderFilterResult = &schedulerapi.ExtenderFilterResult{
 			Nodes:       nil,

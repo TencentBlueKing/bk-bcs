@@ -23,6 +23,14 @@ import (
 	"github.com/DeveloperJim/gokong"
 )
 
+const (
+	protocolHTTP = "http"
+	protocolGRPC = "grpc"
+
+	protocolHTTPS = "https"
+	protocolGRPCS = "grpcs"
+)
+
 //New create Register implementation for kong
 // return empty
 func New(addr []string, config *tls.Config) (register.Register, error) {
@@ -296,7 +304,10 @@ func innerServiceConvert(ksvc *gokong.Service) *register.Service {
 		Protocol: *ksvc.Protocol,
 		Host:     *ksvc.Host,
 		Port:     uint(*ksvc.Port),
-		Path:     *ksvc.Path,
+	}
+	//path will be empty when rewrite feature turns off
+	if ksvc.Path != nil {
+		svc.Path = *ksvc.Path
 	}
 	return svc
 }
@@ -318,12 +329,18 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 	return ksvc
 }
 
-//kongRouteConvert convert inner service to kong Route
+//kongRouteConvert convert inner service to kong Route, tls feature supported in default.
 //args: inner route definition; kong service Id
 func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
+	var protocols []*string
+	if route.Protocol == protocolHTTP {
+		protocols = []*string{gokong.String(protocolHTTP), gokong.String(protocolHTTPS)}
+	} else if route.Protocol == protocolGRPC {
+		protocols = []*string{gokong.String(protocolGRPC), gokong.String(protocolGRPCS)}
+	}
 	kr := &gokong.RouteRequest{
 		Name:      &route.Name,
-		Protocols: []*string{gokong.String("https"), gokong.String("http")},
+		Protocols: protocols,
 		Paths:     gokong.StringSlice(route.Paths),
 		StripPath: gokong.Bool(route.PathRewrite),
 	}

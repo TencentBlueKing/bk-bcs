@@ -82,7 +82,7 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 	httpcli.SetHeader("Accept", "application/json")
 
 	// 先从websocket dialer缓存中查找websocket链
-	serverAddr, tp, found := LookupWsTransport(cluster)
+	serverAddr, tp, found := DefaultWsTunnelDispatcher.LookupWsTransport(cluster)
 	if found {
 		url := fmt.Sprintf("%s%s", serverAddr, uri)
 		if strings.HasPrefix(serverAddr, "https") {
