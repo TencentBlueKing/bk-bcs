@@ -173,7 +173,7 @@ func (i *IpScheduler) checkSchedulable(pod *v1.Pod, node v1.Node) error {
 			} else if existedCloudIp.Spec.Host != nodeNetwork.Name && nodeNetwork.Status.FloatingIPEni.IPLimit-len(cloudIpsOnThisNode) > 0 {
 				return nil
 			} else {
-				return fmt.Errorf("no availabe eni ip anymore ")
+				return fmt.Errorf("no available eni ip anymore")
 			}
 		} else {
 			return fmt.Errorf("subnetId unmatched for fixed ip request, pod: %s, node: %s", pod.Name, nodeNetwork.Name)
