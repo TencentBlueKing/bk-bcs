@@ -78,13 +78,10 @@ func deleteF(c *utils.ClientContext) error {
 		return deleteCustomResourceDefinition(c)
 	case "daemonset":
 		return deleteDaemonset(c)
-<<<<<<< HEAD
 	case "logcollectiontask":
 		return deleteLogCollectionTask(c)
-=======
 	case "meshcluster":
 		return deleteMeshCluster(c)
->>>>>>> 57d72c3ad1886e2e7c2c19aef5f2ed21d8214ac2
 	default:
 		//unkown type, try Custom Resource
 		return deleteCustomResource(c)
