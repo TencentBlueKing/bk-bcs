@@ -122,7 +122,7 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIp
 					daemon.NameSpace, daemon.Name, podId)
 				util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
 				indaemon, err := s.store.FetchDaemonset(daemon.NameSpace, daemon.Name)
-				if indaemon!=nil {
+				if indaemon != nil {
 					//delete daemonset pods index
 					delete(indaemon.Pods, podId)
 					err = s.store.SaveDaemonset(indaemon)
