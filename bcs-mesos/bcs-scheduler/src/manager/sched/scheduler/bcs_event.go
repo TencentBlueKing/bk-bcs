@@ -94,7 +94,7 @@ func (e *bcsEventManager) initCli() {
 // Send Event
 func (e *bcsEventManager) syncEvent(event *commtypes.BcsStorageEventIf) error {
 	queue := len(e.eventQueue)
-	if queue>1024 {
+	if queue > 1024 {
 		blog.Infof("bcsEventManager syncEvent %v queue(%d)", event, len(e.eventQueue))
 	}
 	e.eventQueue <- event

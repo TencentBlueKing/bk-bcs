@@ -16,7 +16,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -28,13 +27,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/controllers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanagerv1"
 
+	"k8s.io/klog"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"k8s.io/client-go/tools/clientcmd"
 	grpcruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
@@ -44,9 +47,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"k8s.io/klog"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -63,8 +63,8 @@ func init() {
 }
 
 func main() {
-	conf := config.Config{}
-	flag.StringVar(&conf.MetricsPort, "metric-port", "9443", "The address the metric endpoint binds to.")
+	//conf := config.Config{}
+	/*flag.StringVar(&conf.MetricsPort, "metric-port", "9443", "The address the metric endpoint binds to.")
 	flag.StringVar(&conf.DockerHub, "istio-docker-hub", "", "istio-operator docker hub")
 	flag.StringVar(&conf.IstioOperatorCharts, "istiooperator-charts", "", "istio-operator charts")
 	flag.StringVar(&conf.ServerAddress, "apigateway-addr", "", "apigateway address")
@@ -75,10 +75,11 @@ func main() {
 	flag.StringVar(&conf.EtcdCertFile, "etcd-certfile", "", "SSL certification file used to secure etcd communication")
 	flag.StringVar(&conf.EtcdKeyFile, "etcd-keyfile", "", "SSL key file used to secure etcd communication")
 	flag.StringVar(&conf.EtcdServers, "etcd-servers", "", "List of etcd servers to connect with (scheme://ip:port), comma separated")
-	flag.StringVar(&conf.ServerCaFile, "client-ca-file", "", "If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.")
+	flag.StringVar(&conf.ServerCaFile, "ca-file", "", "If set, any request presenting a certificate signed by one of the authorities in the ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.")
 	flag.StringVar(&conf.ServerCertFile, "tls-cert-file", "", "File containing the default x509 Certificate for HTTPS.")
-	flag.StringVar(&conf.ServerKeyFile, "tls-private-key-file", "", "File containing the default x509 private key matching")
-	flag.Parse()
+	flag.StringVar(&conf.ServerKeyFile, "tls-private-key-file", "", "File containing the default x509 private key matching")*/
+	//flag.Parse()
+	conf := config.ParseConfig()
 	by, _ := json.Marshal(conf)
 	klog.Infof("MeshManager config(%s)", string(by))
 	if conf.ServerCaFile != "" && conf.ServerCertFile != "" && conf.ServerKeyFile != "" {
@@ -90,8 +91,13 @@ func main() {
 		}
 		conf.TlsConf = tlsConf
 	}
+	kubecfg, err := clientcmd.BuildConfigFromFlags("", conf.Kubeconfig)
+	if err != nil {
+		klog.Errorf("build kubeconfig %s error %s", conf.Kubeconfig, err.Error())
+		os.Exit(1)
+	}
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrl.NewManager(kubecfg, ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: fmt.Sprintf("%s:%s", conf.Address, conf.MetricsPort),
 		/*LeaderElection:     true,

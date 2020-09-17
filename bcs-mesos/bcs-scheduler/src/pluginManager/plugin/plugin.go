@@ -17,6 +17,7 @@ import (
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 )
 
+// Plugin interface definition for bcs-scheduler
 type Plugin interface {
 
 	// outer scheduler function

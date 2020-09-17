@@ -1,0 +1,848 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: clbingresses.clb.bmsf.tencent.com
+spec:
+  group: clb.bmsf.tencent.com
+  names:
+    kind: ClbIngress
+    listKind: ClbIngressList
+    plural: clbingresses
+    singular: clbingress
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: ClbIngress is the Schema for the clbingresses API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ClbIngressSpec defines the desired state of ClbIngress
+          properties:
+            http:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
+              items:
+                properties:
+                  clbPort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  healthCheck:
+                    properties:
+                      enabled:
+                        type: boolean
+                      healthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                      httpCheckPath:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      httpCode:
+                        maximum: 31
+                        minimum: 1
+                        type: integer
+                      intervalTime:
+                        maximum: 300
+                        minimum: 5
+                        type: integer
+                      timeout:
+                        maximum: 60
+                        minimum: 2
+                        type: integer
+                      unHealthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                    type: object
+                  host:
+                    maxLength: 80
+                    minLength: 1
+                    type: string
+                  lbPolicy:
+                    properties:
+                      backendWeights:
+                        items:
+                          properties:
+                            labelSelector:
+                              additionalProperties:
+                                type: string
+                              type: object
+                            weight:
+                              maximum: 100
+                              minimum: 0
+                              type: integer
+                          required:
+                          - labelSelector
+                          - weight
+                          type: object
+                        type: array
+                      strategy:
+                        type: string
+                    required:
+                    - strategy
+                    type: object
+                  namespace:
+                    type: string
+                  path:
+                    maxLength: 80
+                    minLength: 1
+                    type: string
+                  serviceName:
+                    type: string
+                  servicePort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  sessionTime:
+                    maximum: 3600
+                    minimum: 30
+                    type: integer
+                  tls:
+                    properties:
+                      certCaId:
+                        type: string
+                      certCilentCaContent:
+                        type: string
+                      certClientCaName:
+                        type: string
+                      certId:
+                        type: string
+                      certServerContent:
+                        type: string
+                      certServerKey:
+                        type: string
+                      certServerName:
+                        type: string
+                      mode:
+                        type: string
+                    type: object
+                required:
+                - clbPort
+                - host
+                - namespace
+                - path
+                - serviceName
+                - servicePort
+                type: object
+              type: array
+            https:
+              items:
+                properties:
+                  clbPort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  healthCheck:
+                    properties:
+                      enabled:
+                        type: boolean
+                      healthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                      httpCheckPath:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      httpCode:
+                        maximum: 31
+                        minimum: 1
+                        type: integer
+                      intervalTime:
+                        maximum: 300
+                        minimum: 5
+                        type: integer
+                      timeout:
+                        maximum: 60
+                        minimum: 2
+                        type: integer
+                      unHealthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                    type: object
+                  host:
+                    maxLength: 80
+                    minLength: 1
+                    type: string
+                  lbPolicy:
+                    properties:
+                      backendWeights:
+                        items:
+                          properties:
+                            labelSelector:
+                              additionalProperties:
+                                type: string
+                              type: object
+                            weight:
+                              maximum: 100
+                              minimum: 0
+                              type: integer
+                          required:
+                          - labelSelector
+                          - weight
+                          type: object
+                        type: array
+                      strategy:
+                        type: string
+                    required:
+                    - strategy
+                    type: object
+                  namespace:
+                    type: string
+                  path:
+                    maxLength: 80
+                    minLength: 1
+                    type: string
+                  serviceName:
+                    type: string
+                  servicePort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  sessionTime:
+                    maximum: 3600
+                    minimum: 30
+                    type: integer
+                  tls:
+                    properties:
+                      certCaId:
+                        type: string
+                      certCilentCaContent:
+                        type: string
+                      certClientCaName:
+                        type: string
+                      certId:
+                        type: string
+                      certServerContent:
+                        type: string
+                      certServerKey:
+                        type: string
+                      certServerName:
+                        type: string
+                      mode:
+                        type: string
+                    type: object
+                required:
+                - clbPort
+                - host
+                - namespace
+                - path
+                - serviceName
+                - servicePort
+                type: object
+              type: array
+            statefulset:
+              description: ClbStatefulSet ingress for Stateful Set
+              properties:
+                http:
+                  items:
+                    description: ClbStatefulSetHttPRule http rule for stateful set
+                    properties:
+                      clbPort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      endIndex:
+                        type: integer
+                      healthCheck:
+                        properties:
+                          enabled:
+                            type: boolean
+                          healthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                          httpCheckPath:
+                            maxLength: 80
+                            minLength: 1
+                            type: string
+                          httpCode:
+                            maximum: 31
+                            minimum: 1
+                            type: integer
+                          intervalTime:
+                            maximum: 300
+                            minimum: 5
+                            type: integer
+                          timeout:
+                            maximum: 60
+                            minimum: 2
+                            type: integer
+                          unHealthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                        type: object
+                      host:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      lbPolicy:
+                        properties:
+                          backendWeights:
+                            items:
+                              properties:
+                                labelSelector:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                weight:
+                                  maximum: 100
+                                  minimum: 0
+                                  type: integer
+                              required:
+                              - labelSelector
+                              - weight
+                              type: object
+                            type: array
+                          strategy:
+                            type: string
+                        required:
+                        - strategy
+                        type: object
+                      namespace:
+                        type: string
+                      path:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      serviceName:
+                        type: string
+                      servicePort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      sessionTime:
+                        maximum: 3600
+                        minimum: 30
+                        type: integer
+                      startIndex:
+                        type: integer
+                      startPort:
+                        type: integer
+                      tls:
+                        properties:
+                          certCaId:
+                            type: string
+                          certCilentCaContent:
+                            type: string
+                          certClientCaName:
+                            type: string
+                          certId:
+                            type: string
+                          certServerContent:
+                            type: string
+                          certServerKey:
+                            type: string
+                          certServerName:
+                            type: string
+                          mode:
+                            type: string
+                        type: object
+                    required:
+                    - clbPort
+                    - host
+                    - namespace
+                    - path
+                    - serviceName
+                    - servicePort
+                    - startPort
+                    type: object
+                  type: array
+                https:
+                  items:
+                    description: ClbStatefulSetHttPRule http rule for stateful set
+                    properties:
+                      clbPort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      endIndex:
+                        type: integer
+                      healthCheck:
+                        properties:
+                          enabled:
+                            type: boolean
+                          healthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                          httpCheckPath:
+                            maxLength: 80
+                            minLength: 1
+                            type: string
+                          httpCode:
+                            maximum: 31
+                            minimum: 1
+                            type: integer
+                          intervalTime:
+                            maximum: 300
+                            minimum: 5
+                            type: integer
+                          timeout:
+                            maximum: 60
+                            minimum: 2
+                            type: integer
+                          unHealthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                        type: object
+                      host:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      lbPolicy:
+                        properties:
+                          backendWeights:
+                            items:
+                              properties:
+                                labelSelector:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                weight:
+                                  maximum: 100
+                                  minimum: 0
+                                  type: integer
+                              required:
+                              - labelSelector
+                              - weight
+                              type: object
+                            type: array
+                          strategy:
+                            type: string
+                        required:
+                        - strategy
+                        type: object
+                      namespace:
+                        type: string
+                      path:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      serviceName:
+                        type: string
+                      servicePort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      sessionTime:
+                        maximum: 3600
+                        minimum: 30
+                        type: integer
+                      startIndex:
+                        type: integer
+                      startPort:
+                        type: integer
+                      tls:
+                        properties:
+                          certCaId:
+                            type: string
+                          certCilentCaContent:
+                            type: string
+                          certClientCaName:
+                            type: string
+                          certId:
+                            type: string
+                          certServerContent:
+                            type: string
+                          certServerKey:
+                            type: string
+                          certServerName:
+                            type: string
+                          mode:
+                            type: string
+                        type: object
+                    required:
+                    - clbPort
+                    - host
+                    - namespace
+                    - path
+                    - serviceName
+                    - servicePort
+                    - startPort
+                    type: object
+                  type: array
+                tcp:
+                  items:
+                    description: ClbStatefulSetRule rule for stateful Set
+                    properties:
+                      clbPort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      endIndex:
+                        type: integer
+                      healthCheck:
+                        properties:
+                          enabled:
+                            type: boolean
+                          healthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                          httpCheckPath:
+                            maxLength: 80
+                            minLength: 1
+                            type: string
+                          httpCode:
+                            maximum: 31
+                            minimum: 1
+                            type: integer
+                          intervalTime:
+                            maximum: 300
+                            minimum: 5
+                            type: integer
+                          timeout:
+                            maximum: 60
+                            minimum: 2
+                            type: integer
+                          unHealthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                        type: object
+                      lbPolicy:
+                        properties:
+                          backendWeights:
+                            items:
+                              properties:
+                                labelSelector:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                weight:
+                                  maximum: 100
+                                  minimum: 0
+                                  type: integer
+                              required:
+                              - labelSelector
+                              - weight
+                              type: object
+                            type: array
+                          strategy:
+                            type: string
+                        required:
+                        - strategy
+                        type: object
+                      namespace:
+                        type: string
+                      segmentLength:
+                        type: integer
+                      serviceName:
+                        type: string
+                      servicePort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      sessionTime:
+                        maximum: 3600
+                        minimum: 30
+                        type: integer
+                      startIndex:
+                        type: integer
+                      startPort:
+                        type: integer
+                    required:
+                    - clbPort
+                    - namespace
+                    - serviceName
+                    - servicePort
+                    - startPort
+                    type: object
+                  type: array
+                udp:
+                  items:
+                    description: ClbStatefulSetRule rule for stateful Set
+                    properties:
+                      clbPort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      endIndex:
+                        type: integer
+                      healthCheck:
+                        properties:
+                          enabled:
+                            type: boolean
+                          healthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                          httpCheckPath:
+                            maxLength: 80
+                            minLength: 1
+                            type: string
+                          httpCode:
+                            maximum: 31
+                            minimum: 1
+                            type: integer
+                          intervalTime:
+                            maximum: 300
+                            minimum: 5
+                            type: integer
+                          timeout:
+                            maximum: 60
+                            minimum: 2
+                            type: integer
+                          unHealthNum:
+                            maximum: 10
+                            minimum: 2
+                            type: integer
+                        type: object
+                      lbPolicy:
+                        properties:
+                          backendWeights:
+                            items:
+                              properties:
+                                labelSelector:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                weight:
+                                  maximum: 100
+                                  minimum: 0
+                                  type: integer
+                              required:
+                              - labelSelector
+                              - weight
+                              type: object
+                            type: array
+                          strategy:
+                            type: string
+                        required:
+                        - strategy
+                        type: object
+                      namespace:
+                        type: string
+                      segmentLength:
+                        type: integer
+                      serviceName:
+                        type: string
+                      servicePort:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      sessionTime:
+                        maximum: 3600
+                        minimum: 30
+                        type: integer
+                      startIndex:
+                        type: integer
+                      startPort:
+                        type: integer
+                    required:
+                    - clbPort
+                    - namespace
+                    - serviceName
+                    - servicePort
+                    - startPort
+                    type: object
+                  type: array
+              type: object
+            tcp:
+              items:
+                properties:
+                  clbPort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  healthCheck:
+                    properties:
+                      enabled:
+                        type: boolean
+                      healthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                      httpCheckPath:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      httpCode:
+                        maximum: 31
+                        minimum: 1
+                        type: integer
+                      intervalTime:
+                        maximum: 300
+                        minimum: 5
+                        type: integer
+                      timeout:
+                        maximum: 60
+                        minimum: 2
+                        type: integer
+                      unHealthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                    type: object
+                  lbPolicy:
+                    properties:
+                      backendWeights:
+                        items:
+                          properties:
+                            labelSelector:
+                              additionalProperties:
+                                type: string
+                              type: object
+                            weight:
+                              maximum: 100
+                              minimum: 0
+                              type: integer
+                          required:
+                          - labelSelector
+                          - weight
+                          type: object
+                        type: array
+                      strategy:
+                        type: string
+                    required:
+                    - strategy
+                    type: object
+                  namespace:
+                    type: string
+                  serviceName:
+                    type: string
+                  servicePort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  sessionTime:
+                    maximum: 3600
+                    minimum: 30
+                    type: integer
+                required:
+                - clbPort
+                - namespace
+                - serviceName
+                - servicePort
+                type: object
+              type: array
+            udp:
+              items:
+                properties:
+                  clbPort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  healthCheck:
+                    properties:
+                      enabled:
+                        type: boolean
+                      healthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                      httpCheckPath:
+                        maxLength: 80
+                        minLength: 1
+                        type: string
+                      httpCode:
+                        maximum: 31
+                        minimum: 1
+                        type: integer
+                      intervalTime:
+                        maximum: 300
+                        minimum: 5
+                        type: integer
+                      timeout:
+                        maximum: 60
+                        minimum: 2
+                        type: integer
+                      unHealthNum:
+                        maximum: 10
+                        minimum: 2
+                        type: integer
+                    type: object
+                  lbPolicy:
+                    properties:
+                      backendWeights:
+                        items:
+                          properties:
+                            labelSelector:
+                              additionalProperties:
+                                type: string
+                              type: object
+                            weight:
+                              maximum: 100
+                              minimum: 0
+                              type: integer
+                          required:
+                          - labelSelector
+                          - weight
+                          type: object
+                        type: array
+                      strategy:
+                        type: string
+                    required:
+                    - strategy
+                    type: object
+                  namespace:
+                    type: string
+                  serviceName:
+                    type: string
+                  servicePort:
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  sessionTime:
+                    maximum: 3600
+                    minimum: 30
+                    type: integer
+                required:
+                - clbPort
+                - namespace
+                - serviceName
+                - servicePort
+                type: object
+              type: array
+          type: object
+        status:
+          description: ClbIngressStatus defines the observed state of ClbIngress
+          properties:
+            lastUpdateTime:
+              format: date-time
+              type: string
+            message:
+              type: string
+            status:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              type: string
+          required:
+          - message
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

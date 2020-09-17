@@ -75,20 +75,20 @@ RUN cd /home \
 && make && make install
 
 # copy bcs-statistic
-COPY ./bcs-statistic /bcs-lb/bcs-statistic
+COPY ./bcs-statistic /data/bcs/bcs-lb/bcs-statistic
 
-RUN mkdir -p /bcs-lb/backup /bcs-lb/generate /bcs-lb/logs /bcs-lb/template
-COPY bcs-loadbalance /bcs-lb
-COPY start.sh /bcs-lb
-COPY config/haproxy.cfg.template /bcs-lb/template
-COPY config/nginx.conf.template /bcs-lb/template
+RUN mkdir -p /data/bcs/bcs-lb/backup /data/bcs/bcs-lb/generate \
+/data/bcs/bcs-lb/logs /data/bcs/bcs-lb/template /data/bcs/bcs-lb/cert
+COPY bcs-loadbalance /data/bcs/bcs-lb
+COPY start.sh /data/bcs/bcs-lb
+COPY config/haproxy.cfg.template /data/bcs/bcs-lb/template
+COPY config/nginx.conf.template /data/bcs/bcs-lb/template
 COPY config/haproxy.cfg /etc/haproxy/
 COPY config/nginx.conf /usr/local/nginx/conf/
-COPY ./cert /bcs-lb/cert
 
 # STEP 2: build loadbalance image
 FROM centos:centos7
-COPY --from=build /bcs-lb /bcs-lb
+COPY --from=build /data/bcs/bcs-lb /data/bcs/bcs-lb
 # copy haproxy file
 COPY --from=build /etc/haproxy /etc/haproxy
 COPY --from=build /usr/local/lib /usr/local/lib
@@ -112,5 +112,5 @@ ENV LB_SESSION_TIMEOUT 90
 ENV BCS_PROXY_MODULE=haproxy
 
 # chmod start.sh
-RUN chmod +x /bcs-lb/start.sh /bcs-lb/bcs-loadbalance
-WORKDIR /bcs-lb
+RUN chmod +x /data/bcs/bcs-lb/start.sh /data/bcs/bcs-lb/bcs-loadbalance
+WORKDIR /data/bcs/bcs-lb

@@ -33,11 +33,15 @@ import (
 )
 
 const (
+	// ContainerLabelK8sContainerName container name key in containers labels
 	ContainerLabelK8sContainerName = "io.kubernetes.container.name"
-	ContainerLabelK8sPodName       = "io.kubernetes.pod.name"
-	ContainerLabelK8sPodNameSpace  = "io.kubernetes.pod.namespace"
+	// ContainerLabelK8sPodName pod name key in containers labels
+	ContainerLabelK8sPodName = "io.kubernetes.pod.name"
+	// ContainerLabelK8sPodNameSpace pod namespace key in containers labels
+	ContainerLabelK8sPodNameSpace = "io.kubernetes.pod.namespace"
 )
 
+// SidecarController controls the behaviour of BcsLogConfig CRD
 type SidecarController struct {
 	sync.RWMutex
 
@@ -57,16 +61,18 @@ type SidecarController struct {
 	bcsLogConfigInformer cache.SharedIndexInformer
 }
 
+// ContainerLogConf record the log config for container
 type ContainerLogConf struct {
 	confPath string
 	data     []byte
 }
 
+// LogConfParameter is no longer used
 type LogConfParameter struct {
 	LogFile     string
-	DataId      string
-	ContainerId string
-	ClusterId   string
+	DataID      string
+	ContainerID string
+	ClusterID   string
 	Namespace   string
 	//application or deployment't name
 	ServerName string
@@ -79,6 +85,7 @@ type LogConfParameter struct {
 	nonstandardLog string
 }
 
+// NewSidecarController returns a new bcslogconfigs controller
 func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	var err error
 	s := &SidecarController{
@@ -109,6 +116,7 @@ func NewSidecarController(conf *config.Config) (*SidecarController, error) {
 	return s, nil
 }
 
+// Start starts the controller
 func (s *SidecarController) Start() {
 	go s.listenerDockerEvent()
 	//go s.tickerSyncContainerLogConfs()
@@ -299,8 +307,8 @@ func (s *SidecarController) initLogConfigs() {
 	}
 }
 
-func (s *SidecarController) getContainerLogConfKey(containerId string) string {
-	return fmt.Sprintf("%s/%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, []byte(containerId)[:12])
+func (s *SidecarController) getContainerLogConfKey(containerID string) string {
+	return fmt.Sprintf("%s/%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, []byte(containerID)[:12])
 }
 
 func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
@@ -325,9 +333,8 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		if string(by) == string(logConf.data) {
 			blog.Infof("container %s log config %s not changed", c.ID, logConf.confPath)
 			return
-		} else {
-			blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
 		}
+		blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
 	} else {
 		blog.Infof("container %s log config %s will created, and LogConfig(%s)", c.ID, key, string(by))
 	}
@@ -355,11 +362,11 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	return
 }
 
-func (s *SidecarController) deleteContainerLogConf(containerId string) {
-	key := s.getContainerLogConfKey(containerId)
+func (s *SidecarController) deleteContainerLogConf(containerID string) {
+	key := s.getContainerLogConfKey(containerID)
 	logConf, ok := s.logConfs[key]
 	if !ok {
-		blog.Infof("container %s don't have LogConfig, then ignore", containerId)
+		blog.Infof("container %s don't have LogConfig, then ignore", containerID)
 		return
 	}
 	err := os.Remove(logConf.confPath)
@@ -368,7 +375,7 @@ func (s *SidecarController) deleteContainerLogConf(containerId string) {
 		return
 	}
 	delete(s.logConfs, key)
-	blog.Infof("delete container %s log config success", containerId)
+	blog.Infof("delete container %s log config success", containerID)
 }
 
 // if need to collect the container logs, return true

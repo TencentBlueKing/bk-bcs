@@ -69,9 +69,25 @@ type DescribeListenerOutput struct {
 	Listeners []ListenerInfo `json:"listenerSet"`
 }
 
+// DescribeForwardLBListenersInput input for query forward lb listeners
+type DescribeForwardLBListenersInput struct {
+	APIMeta          `url:",inline"`
+	ListenerID       string `url:"listenerIds.0,omitempty"`
+	LoadBalanceID    string `url:"loadBalancerId,omitempty"`
+	LoadBalancerPort int    `url:"loadBalancerPort,omitempty"`
+	Protocol         int    `url:"protocol,omitempty"`
+}
+
+// DescribeForwardLBListenersOutput output for query forward lb listeners
+type DescribeForwardLBListenersOutput struct {
+	Response  `json:",inline"`
+	Listeners []ListenerInfo `json:"listenerSet"`
+}
+
 //ListenerInfo sub info of DescribeListenerResp
 type ListenerInfo struct {
 	LoadBalancerPort int        `json:"loadBalancerPort"`
+	EndPort          int        `json:"endPort"`
 	Protocol         int        `json:"protocol"`
 	ProtocolType     string     `json:"protocolType"`
 	ListenerID       string     `json:"listenerId"`
@@ -148,6 +164,7 @@ type CreateForwardLBFourthLayerListenersInput struct {
 	APIMeta                   `url:",inline"`
 	ListenersListenerName     string `url:"listeners.0.listenerName"`
 	ListenersLoadBalancerPort int    `url:"listeners.0.loadBalancerPort"`
+	EndPort                   int    `url:"listeners.0.endPort"`
 	ListenersProtocol         int    `url:"listeners.0.protocol"`
 	ListenerExpireTime        int    `url:"listeners.0.sessionExpire,omitempty"`
 	ListenerHealthSwitch      int    `url:"listeners.0.healthSwitch"`

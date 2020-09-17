@@ -18,6 +18,8 @@ import (
 	"fmt"
 
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/cloud/v1"
+	monitorv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/monitor/v1"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/typed/networkextension/v1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -26,18 +28,32 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	CloudV1() cloudv1.CloudV1Interface
+	MonitorV1() monitorv1.MonitorV1Interface
+	NetworkextensionV1() networkextensionv1.NetworkextensionV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	cloudV1 *cloudv1.CloudV1Client
+	cloudV1            *cloudv1.CloudV1Client
+	monitorV1          *monitorv1.MonitorV1Client
+	networkextensionV1 *networkextensionv1.NetworkextensionV1Client
 }
 
 // CloudV1 retrieves the CloudV1Client
 func (c *Clientset) CloudV1() cloudv1.CloudV1Interface {
 	return c.cloudV1
+}
+
+// MonitorV1 retrieves the MonitorV1Client
+func (c *Clientset) MonitorV1() monitorv1.MonitorV1Interface {
+	return c.monitorV1
+}
+
+// NetworkextensionV1 retrieves the NetworkextensionV1Client
+func (c *Clientset) NetworkextensionV1() networkextensionv1.NetworkextensionV1Interface {
+	return c.networkextensionV1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -65,6 +81,14 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.monitorV1, err = monitorv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.networkextensionV1, err = networkextensionv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -78,6 +102,8 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.cloudV1 = cloudv1.NewForConfigOrDie(c)
+	cs.monitorV1 = monitorv1.NewForConfigOrDie(c)
+	cs.networkextensionV1 = networkextensionv1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -87,6 +113,8 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.cloudV1 = cloudv1.New(c)
+	cs.monitorV1 = monitorv1.New(c)
+	cs.networkextensionV1 = networkextensionv1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

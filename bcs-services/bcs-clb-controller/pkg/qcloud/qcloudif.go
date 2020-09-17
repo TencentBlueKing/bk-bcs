@@ -27,6 +27,8 @@ type APIInterface interface {
 	Create7LayerListener(input *CreateSeventhLayerListenerInput) (*CreateSeventhLayerListenerOutput, error)
 	Create4LayerListener(input *CreateForwardLBFourthLayerListenersInput) (*CreateForwardLBFourthLayerListenersOutput, error)
 	DescribeListener(input *DescribeListenerInput) (*DescribeListenerOutput, error)
+	DescribeForwardLBListeners(input *DescribeForwardLBListenersInput) (*DescribeForwardLBListenersOutput, error)
+	DescribeForwardLBBackends(input *DescribeForwardLBBackendsInput) (*DescribeForwardLBBackendsOutput, error)
 	DeleteListener(input *DeleteForwardLBListenerInput) (*DeleteForwardLBListenerOutput, error)
 	Modify7LayerListener(input *ModifyForwardLBSeventhListenerInput) (*ModifyForwardLBSeventhListenerOutput, error)
 	Modify4LayerListener(input *ModifyForwardLBFourthListenerInput) (*ModifyForwardLBFourthListenerOutput, error)
@@ -138,6 +140,36 @@ func (api *API) DescribeListener(input *DescribeListenerInput) (*DescribeListene
 		return nil, fmt.Errorf("GetRequest failed, err %s", err.Error())
 	}
 	output := &DescribeListenerOutput{}
+	if err := json.Unmarshal(dataBytes, output); err != nil {
+		return nil, fmt.Errorf("parse response failed, err %s", err.Error())
+	}
+	return output, nil
+}
+
+// DescribeForwardLBListeners describe forward loadbalancer listener info
+func (api *API) DescribeForwardLBListeners(input *DescribeForwardLBListenersInput) (
+	*DescribeForwardLBListenersOutput, error) {
+
+	dataBytes, err := api.LBClient.GetRequest(input)
+	if err != nil {
+		return nil, fmt.Errorf("GetRequest failed, err %s", err.Error())
+	}
+	output := &DescribeForwardLBListenersOutput{}
+	if err := json.Unmarshal(dataBytes, output); err != nil {
+		return nil, fmt.Errorf("parse response failed, err %s", err.Error())
+	}
+	return output, nil
+}
+
+// DescribeForwardLBBackends describe forward loadbalancer listener backends
+func (api *API) DescribeForwardLBBackends(input *DescribeForwardLBBackendsInput) (
+	*DescribeForwardLBBackendsOutput, error) {
+
+	dataBytes, err := api.LBClient.GetRequest(input)
+	if err != nil {
+		return nil, fmt.Errorf("GetRequest failed, err %s", err.Error())
+	}
+	output := &DescribeForwardLBBackendsOutput{}
 	if err := json.Unmarshal(dataBytes, output); err != nil {
 		return nil, fmt.Errorf("parse response failed, err %s", err.Error())
 	}

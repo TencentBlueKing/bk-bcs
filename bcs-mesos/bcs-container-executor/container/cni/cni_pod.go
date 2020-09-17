@@ -666,7 +666,7 @@ func (p *CNIPod) containerCheck() error {
 					//health check starting when Status become RUNNING
 					logs.Infof("container [%s] is running, healthy status unkown, starting HealthyChecker with ip: %s\n", task.RuntimeConf.Name, p.cniIPAddr)
 					if task.HealthCheck.Name() == healthcheck.CommandHealthcheck {
-						task.HealthCheck.SetHost(p.GetContainerID())
+						task.HealthCheck.SetHost(task.RuntimeConf.ID)
 					} else {
 						task.HealthCheck.SetHost(p.cniIPAddr)
 					}

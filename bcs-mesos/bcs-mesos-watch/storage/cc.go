@@ -148,9 +148,9 @@ func (cc *CCStorage) init() error {
 		cc.handlers[deploymentChannel] = &ChannelProxy{
 			dataQueue: make(chan *types.BcsSyncData, 10240),
 			actionHandler: &DeploymentHandler{
-				oper:      cc,
-				dataType:  "deployment",
-				ClusterID: cc.ClusterID,
+				oper:         cc,
+				dataType:     "deployment",
+				ClusterID:    cc.ClusterID,
 				DoCheckDirty: false,
 			},
 		}
@@ -206,9 +206,9 @@ func (cc *CCStorage) init() error {
 	cc.handlers["Deployment"] = &ChannelProxy{
 		dataQueue: make(chan *types.BcsSyncData, 1024),
 		actionHandler: &DeploymentHandler{
-			oper:      cc,
-			dataType:  "deployment",
-			ClusterID: cc.ClusterID,
+			oper:         cc,
+			dataType:     "deployment",
+			ClusterID:    cc.ClusterID,
 			DoCheckDirty: true,
 		},
 	}

@@ -13,52 +13,102 @@
 
 package kubehelm
 
-import "fmt"
+import (
+	"fmt"
+	"io/ioutil"
 
+	"github.com/ghodss/yaml"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api/v1"
+)
+
+//helm parameters
 type GlobalFlags struct {
 	KubeApiserver string
-	KubeToken string
-	Kubeconfig string
+	KubeToken     string
+	Kubeconfig    string
 }
 
-func (f *GlobalFlags) ParseParameters()string{
+//parse helm parameters
+func (f *GlobalFlags) ParseParameters() (string, error) {
 	var parameters string
-	if f.KubeApiserver!="" {
-		parameters += fmt.Sprintf(" --kube-apiserver %s", f.KubeApiserver)
+	if f.KubeApiserver != "" && f.KubeToken != "" {
+		file, err := ioutil.TempFile("/tmp", "kubeconfig")
+		if err != nil {
+			return "", nil
+		}
+		defer file.Close()
+
+		f.Kubeconfig = file.Name()
+		config := clientcmdapi.Config{
+			APIVersion: "v1",
+			Kind:       "Config",
+			Clusters:   make([]clientcmdapi.NamedCluster, 0),
+			AuthInfos:  make([]clientcmdapi.NamedAuthInfo, 0),
+			Contexts: make([]clientcmdapi.NamedContext, 0),
+		}
+		cluster := clientcmdapi.NamedCluster{
+			Name: "cluster",
+			Cluster: clientcmdapi.Cluster{
+				Server:                f.KubeApiserver,
+				InsecureSkipTLSVerify: true,
+			},
+		}
+		config.Clusters = append(config.Clusters, cluster)
+		authInfo := clientcmdapi.NamedAuthInfo{
+			Name: "helm",
+			AuthInfo: clientcmdapi.AuthInfo{
+				Token: f.KubeToken,
+			},
+		}
+		config.AuthInfos = append(config.AuthInfos, authInfo)
+		context := clientcmdapi.NamedContext{
+			Name: "cluster-context",
+			Context: clientcmdapi.Context{
+				Cluster: cluster.Name,
+				AuthInfo: authInfo.Name,
+			},
+		}
+		config.Contexts = append(config.Contexts, context)
+		config.CurrentContext = context.Name
+		by, _ := yaml.Marshal(config)
+		_, err = file.Write(by)
+		if err != nil {
+			return "", err
+		}
 	}
-	if f.KubeToken!="" {
-		parameters += fmt.Sprintf(" --kube-token %s", f.KubeToken)
-	}
-	if f.Kubeconfig!="" {
+	if f.Kubeconfig != "" {
 		parameters += fmt.Sprintf(" --kubeconfig %s", f.Kubeconfig)
 	}
-	return parameters
+	return parameters, nil
 }
 
+//chart parameters
 type InstallFlags struct {
 	//setParam --set hub=docker.io/istio tag=1.5.4
 	SetParam map[string]string
-	Chart string
-	Name string
+	Chart    string
+	Name     string
 }
 
-func (f *InstallFlags) ParseParameters()string{
+//parse chart parameters
+func (f *InstallFlags) ParseParameters() string {
 	var parameters string
-	if f.Name!="" {
+	if f.Name != "" {
 		parameters += fmt.Sprintf(" %s", f.Name)
 	}
-	if f.Chart!="" {
+	if f.Chart != "" {
 		parameters += fmt.Sprintf(" %s", f.Chart)
 	}
-	for k,v :=range f.SetParam {
-		parameters += fmt.Sprintf(" --set %s=%s", k,v)
+	for k, v := range f.SetParam {
+		parameters += fmt.Sprintf(" --set %s=%s", k, v)
 	}
 
 	return parameters
 }
 
+// kube helm interface
 type KubeHelm interface {
 	//install
 	//setParam --set hub=docker.io/istio tag=1.5.4
-	InstallChart(inf InstallFlags, glf GlobalFlags)error
+	InstallChart(inf InstallFlags, glf GlobalFlags) error
 }

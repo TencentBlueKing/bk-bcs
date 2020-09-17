@@ -22,6 +22,8 @@ import (
 	versioned "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	cloud "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/cloud"
 	internalinterfaces "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/internalinterfaces"
+	monitor "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/monitor"
+	networkextension "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions/networkextension"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -169,8 +171,18 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Cloud() cloud.Interface
+	Monitor() monitor.Interface
+	Networkextension() networkextension.Interface
 }
 
 func (f *sharedInformerFactory) Cloud() cloud.Interface {
 	return cloud.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Monitor() monitor.Interface {
+	return monitor.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Networkextension() networkextension.Interface {
+	return networkextension.New(f, f.namespace, f.tweakListOptions)
 }

@@ -11,8 +11,9 @@
  *
  */
 
-package module_discovery
+package modulediscovery
 
+// ModuleDiscovery bkbcs module discovery interface difinition
 type ModuleDiscovery interface {
 	// module: types.BCS_MODULE_SCHEDULER...
 	// list all servers
@@ -25,8 +26,11 @@ type ModuleDiscovery interface {
 
 	// register event handle function
 	RegisterEventFunc(handleFunc EventHandleFunc)
+
+	// Stop close discovery
+	Stop()
 }
 
-// module: types.BCS_MODULE_SCHEDULER...
+// EventHandleFunc module: types.BCS_MODULE_SCHEDULER...
 // if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 type EventHandleFunc func(module string)
