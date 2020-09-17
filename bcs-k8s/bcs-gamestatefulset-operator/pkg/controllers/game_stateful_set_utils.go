@@ -43,7 +43,7 @@ import (
 const maxUpdateRetries = 10
 
 const (
-	//support hot update container in annotation
+	//PodHotpatchContainerKey support hot update container in annotation
 	PodHotpatchContainerKey = "io.kubernetes.hotpatch.container"
 )
 
@@ -56,10 +56,13 @@ var patchCodec = scheme.Codecs.LegacyCodec(stsplus.SchemeGroupVersion)
 // Generally used to tie break between GameStatefulSetes that have overlapping selectors.
 type overlappingGameStatefulSetes []*stsplus.GameStatefulSet
 
+// Len sort interface implementation
 func (o overlappingGameStatefulSetes) Len() int { return len(o) }
 
+// Swap sort interface implementation
 func (o overlappingGameStatefulSetes) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
 
+// Less sort interface implementation
 func (o overlappingGameStatefulSetes) Less(i, j int) bool {
 	if o[i].CreationTimestamp.Equal(&o[j].CreationTimestamp) {
 		return o[i].Name < o[j].Name
@@ -283,7 +286,7 @@ func newGameStatefulSetPod(set *stsplus.GameStatefulSet, ordinal int) *v1.Pod {
 func newVersionedGameStatefulSetPod(currentSet, updateSet *stsplus.GameStatefulSet, currentRevision, updateRevision string, ordinal int) *v1.Pod {
 	if currentSet.Spec.UpdateStrategy.Type != stsplus.OnDeleteGameStatefulSetStrategyType &&
 		(currentSet.Spec.UpdateStrategy.RollingUpdate == nil && ordinal < int(currentSet.Status.CurrentReplicas)) ||
-		(currentSet.Spec.UpdateStrategy.RollingUpdate != nil  && ordinal < int(*currentSet.Spec.UpdateStrategy.RollingUpdate.Partition)) { //nolint
+		(currentSet.Spec.UpdateStrategy.RollingUpdate != nil && ordinal < int(*currentSet.Spec.UpdateStrategy.RollingUpdate.Partition)) { //nolint
 		pod := newGameStatefulSetPod(currentSet, ordinal)
 		setPodRevision(pod, currentRevision)
 		return pod
@@ -523,14 +526,17 @@ func completeRollingUpdate(set *stsplus.GameStatefulSet, status *stsplus.GameSta
 // to the front of the list.
 type ascendingOrdinal []*v1.Pod
 
+// Len sort interface implementation
 func (ao ascendingOrdinal) Len() int {
 	return len(ao)
 }
 
+// Swap sort interface implementation
 func (ao ascendingOrdinal) Swap(i, j int) {
 	ao[i], ao[j] = ao[j], ao[i]
 }
 
+// Less sort interface implementation
 func (ao ascendingOrdinal) Less(i, j int) bool {
 	return getOrdinal(ao[i]) < getOrdinal(ao[j])
 }

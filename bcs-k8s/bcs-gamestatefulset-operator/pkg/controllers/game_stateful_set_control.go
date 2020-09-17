@@ -15,13 +15,14 @@ package gamestatefulset
 
 import (
 	"fmt"
+	"math"
+	"sort"
+
 	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/constants"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
-	"math"
-	"sort"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -137,6 +138,7 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *stsplus.Gam
 	return ssc.truncateHistory(set, pods, revisions, currentRevision, updateRevision)
 }
 
+// ListRevisions list all revisions of gamestatefulset
 func (ssc *defaultGameStatefulSetControl) ListRevisions(set *stsplus.GameStatefulSet) ([]*apps.ControllerRevision, error) {
 	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
 	if err != nil {
@@ -145,6 +147,7 @@ func (ssc *defaultGameStatefulSetControl) ListRevisions(set *stsplus.GameStatefu
 	return ssc.controllerHistory.ListControllerRevisions(set, selector)
 }
 
+// AdoptOrphanRevisions adopt orphan history revision of gamestatefulset
 func (ssc *defaultGameStatefulSetControl) AdoptOrphanRevisions(
 	set *stsplus.GameStatefulSet,
 	revisions []*apps.ControllerRevision) error {
