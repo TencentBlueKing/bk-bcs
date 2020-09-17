@@ -92,10 +92,10 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, 
 		kubeToken: conf.UserToken,
 	}
 	if m.meshCluster.Status.ComponentStatus == nil {
-		m.meshCluster.Status.ComponentStatus = make(map[string]*meshv1.InstallStatus_VersionStatus)
+		m.meshCluster.Status.ComponentStatus = make(map[string]*meshv1.ComponentState)
 		//init mesh components status
 		for _, component := range MeshComponents {
-			status := &meshv1.InstallStatus_VersionStatus{
+			status := &meshv1.ComponentState{
 				Name:      component,
 				Namespace: "istio-system",
 				Status:    meshv1.InstallStatusNONE,
@@ -378,7 +378,7 @@ func (m *MeshClusterManager) istioOperatorCrdInstalled() bool {
 	return true
 }
 
-func (m *MeshClusterManager) getComponentStatus(status *meshv1.InstallStatus_VersionStatus) (changed bool) {
+func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (changed bool) {
 	oldStatus := status.Status
 	defer func() {
 		changed = false
