@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	IpSchedulerV1Type = "IpSchedulerV1"
-	IpSchedulerV2Type = "IpSchedulerV2"
+	ipSchedulerV1Type = "IpSchedulerV1"
+	ipSchedulerV2Type = "IpSchedulerV2"
 )
 
 func main() {
@@ -53,10 +53,10 @@ func main() {
 	}
 
 	switch conf.CustomSchedulerType {
-	case IpSchedulerV1Type:
+	case ipSchedulerV1Type:
 		v1.DefaultIpScheduler = v1.NewIpScheduler(conf)
 		v1.DefaultIpScheduler.UpdateNetPoolsPeriodically()
-	case IpSchedulerV2Type:
+	case ipSchedulerV2Type:
 		defaultIpScheduler, err := v2.NewIpScheduler(conf)
 		if err != nil {
 			blog.Errorf("failed to build IpSchedulerV2: %s", err.Error())

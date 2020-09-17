@@ -24,7 +24,7 @@ import (
 	networkclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned"
 	networkinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 	networklisters "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/listers/cloud/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	clientGoCache "k8s.io/client-go/tools/cache"
@@ -42,6 +42,7 @@ type IpScheduler struct {
 	FixedIpAnnotationKey string
 }
 
+// DefaultIpScheduler default v2 IP scheduler
 var DefaultIpScheduler *IpScheduler
 
 // NewIpScheduler create a v2 IpScheduler
@@ -80,12 +81,12 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) (*IpScheduler, error) {
 	factory := networkinformers.NewSharedInformerFactory(networkClientSet, 0)
 	nodeNetworkInformer := factory.Cloud().V1().NodeNetworks()
 	ipScheduler.NodeNetworkLister = nodeNetworkInformer.Lister()
-	cloudIpInformer := factory.Cloud().V1().CloudIPs()
-	ipScheduler.CloudIpLister = cloudIpInformer.Lister()
+	cloudIPInformer := factory.Cloud().V1().CloudIPs()
+	ipScheduler.CloudIpLister = cloudIPInformer.Lister()
 
 	go factory.Start(stopCh)
 	blog.Infof("Waiting for informer caches to sync")
-	if ok := clientGoCache.WaitForCacheSync(stopCh, nodeNetworkInformer.Informer().HasSynced, cloudIpInformer.Informer().HasSynced); !ok {
+	if ok := clientGoCache.WaitForCacheSync(stopCh, nodeNetworkInformer.Informer().HasSynced, cloudIPInformer.Informer().HasSynced); !ok {
 		return nil, fmt.Errorf("failed to wait for caches to sync")
 	}
 
@@ -136,22 +137,22 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 // checkSchedulable check whether a node is schedulable
 func (i *IpScheduler) checkSchedulable(pod *v1.Pod, node v1.Node) error {
 	// get the node ip
-	var nodeIp string
+	var nodeIP string
 	for _, nodeAddress := range node.Status.Addresses {
 		if nodeAddress.Type == "InternalIP" {
-			nodeIp = nodeAddress.Address
+			nodeIP = nodeAddress.Address
 			break
 		}
 	}
 
 	// get NodeNetwork
-	nodeNetwork, err := i.NodeNetworkLister.NodeNetworks(BcsSystem).Get(nodeIp)
+	nodeNetwork, err := i.NodeNetworkLister.NodeNetworks(BcsSystem).Get(nodeIP)
 	if err != nil {
 		return fmt.Errorf("failed to get NodeNetwork from cluster: %s", err.Error())
 	}
 
 	// get all CloudIp on this node
-	cloudIpsOnThisNode, err := i.getCloudIpsOnNode(nodeIp)
+	cloudIpsOnThisNode, err := i.getCloudIpsOnNode(nodeIP)
 	if err != nil {
 		return err
 	}
@@ -203,10 +204,10 @@ func (i *IpScheduler) getExistedFixedCloudIp(pod *v1.Pod) (bool, *cloudv1.CloudI
 	if err != nil {
 		return found, existedCloudIp, fmt.Errorf("failed to get all fixed CloudIp in namespace %s of pod %s", pod.Namespace, pod.Name)
 	}
-	for _, cloudIp := range namespacedFixedCloudIps {
-		if cloudIp.Spec.PodName == pod.Name && cloudIp.Spec.IsFixed {
+	for _, cloudIP := range namespacedFixedCloudIps {
+		if cloudIP.Spec.PodName == pod.Name && cloudIP.Spec.IsFixed {
 			found = true
-			existedCloudIp = cloudIp
+			existedCloudIp = cloudIP
 			break
 		}
 	}
@@ -214,19 +215,19 @@ func (i *IpScheduler) getExistedFixedCloudIp(pod *v1.Pod) (bool, *cloudv1.CloudI
 	return found, existedCloudIp, nil
 }
 
-func (i *IpScheduler) getCloudIpsOnNode(nodeIp string) ([]*cloudv1.CloudIP, error) {
-	var cloudIps []*cloudv1.CloudIP
+func (i *IpScheduler) getCloudIpsOnNode(nodeIP string) ([]*cloudv1.CloudIP, error) {
+	var cloudIPs []*cloudv1.CloudIP
 	labelSelector := &metav1.LabelSelector{
-		MatchLabels: map[string]string{IP_LABEL_KEY_FOR_HOST: nodeIp},
+		MatchLabels: map[string]string{IP_LABEL_KEY_FOR_HOST: nodeIP},
 	}
 	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
-		return cloudIps, fmt.Errorf("failed to build label selector: %s", err.Error())
+		return cloudIPs, fmt.Errorf("failed to build label selector: %s", err.Error())
 	}
-	cloudIps, err = i.CloudIpLister.List(selector)
+	cloudIPs, err = i.CloudIpLister.List(selector)
 	if err != nil {
-		return cloudIps, fmt.Errorf("failed to get CloudIp on node: %s", nodeIp)
+		return cloudIPs, fmt.Errorf("failed to get CloudIp on node: %s", nodeIP)
 	}
 
-	return cloudIps, nil
+	return cloudIPs, nil
 }
