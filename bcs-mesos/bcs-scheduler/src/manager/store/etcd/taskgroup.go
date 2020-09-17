@@ -25,7 +25,7 @@ import (
 )
 
 func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) (string, bool) {
-	obj, err := store.FetchTaskGroup(taskGroup.ID)
+	obj, err := store.FetchDBTaskGroup(taskGroup.ID)
 	if err == nil {
 		return obj.ResourceVersion, true
 	}
@@ -62,6 +62,9 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 		v2Taskgroup, err = client.Create(v2Taskgroup)
 	}
 	if err != nil {
+		if store.ObjectNotLatestErr(err) {
+			store.syncTaskgroupInCache(taskGroup.ID)
+		}
 		return err
 	}
 
@@ -81,6 +84,16 @@ func (store *managerStore) SaveTaskGroup(taskGroup *types.TaskGroup) error {
 		blog.Warnf("save taskgroup(%s) delay(%d)", taskGroup.ID, delay)
 	}
 	return nil
+}
+
+func (store *managerStore) syncTaskgroupInCache(taskgroupId string) {
+	taskgroup, err := store.FetchDBTaskGroup(taskgroupId)
+	if err != nil {
+		blog.Errorf("fetch taskgroup(%s) in kube-apiserver failed: %s", taskgroupId, err.Error())
+		return
+	}
+
+	saveCacheTaskGroup(taskgroup)
 }
 
 //list mesos cluster taskgroups, include: application、deployment、daemonset...
@@ -154,15 +167,11 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 
 //FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
-	if cacheMgr.isOK {
-		cacheTaskgroup, _ := fetchCacheTaskGroup(taskGroupID)
-		if cacheTaskgroup == nil {
-			return nil, schStore.ErrNoFound
-		}
-		return cacheTaskgroup, nil
+	cacheTaskgroup, _ := fetchCacheTaskGroup(taskGroupID)
+	if cacheTaskgroup == nil {
+		return nil, schStore.ErrNoFound
 	}
-
-	return store.FetchDBTaskGroup(taskGroupID)
+	return cacheTaskgroup, nil
 }
 
 //FetchTaskGroup fetch a types.TaskGroup

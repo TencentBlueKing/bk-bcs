@@ -23,9 +23,10 @@ import (
 
 //DeploymentHandler event handler for Deployment
 type DeploymentHandler struct {
-	oper      DataOperator
-	dataType  string
-	ClusterID string
+	oper         DataOperator
+	dataType     string
+	ClusterID    string
+	DoCheckDirty bool
 }
 
 //GetType implementation
@@ -35,9 +36,13 @@ func (handler *DeploymentHandler) GetType() string {
 
 //CheckDirty clean dirty data in remote bcs-storage
 func (handler *DeploymentHandler) CheckDirty() error {
-	started := time.Now()
-	blog.Info("check dirty data for type: %s", handler.dataType)
+	if handler.DoCheckDirty {
+		blog.Info("check dirty data for type: %s", handler.dataType)
+	} else {
+		return nil
+	}
 
+	started := time.Now()
 	conditionData := &commtypes.BcsStorageDynamicBatchDeleteIf{
 		UpdateTimeBegin: 0,
 		UpdateTimeEnd:   time.Now().Unix() - 600,

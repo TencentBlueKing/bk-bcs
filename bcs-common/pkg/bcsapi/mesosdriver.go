@@ -13,7 +13,14 @@
 
 package bcsapi
 
+import restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
+
+// MesosDriver http API SDK definition
+type MesosDriver interface {
+}
+
 //MesosDriverCli client implementation for bcs-mesos-driver
 type MesosDriverCli struct {
 	Config *Config
+	Client restclient.RESTClient
 }

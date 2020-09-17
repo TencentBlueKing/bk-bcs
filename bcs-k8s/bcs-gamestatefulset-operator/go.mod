@@ -3,9 +3,11 @@ module github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator
 go 1.13
 
 replace (
+	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/Tencent/bk-bcs => ../../../bk-bcs
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../../bcs-k8s/kubernetes
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4
+	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.0.0-20181213150558-05914d821849
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20181213153335-0fe22c71c476 // indirect
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93

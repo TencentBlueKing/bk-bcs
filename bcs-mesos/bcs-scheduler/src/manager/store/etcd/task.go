@@ -14,6 +14,7 @@
 package etcd
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	mstore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
@@ -23,7 +24,7 @@ import (
 )
 
 func (store *managerStore) CheckTaskExist(task *types.Task) (string, bool) {
-	obj, err := store.FetchTask(task.ID)
+	obj, err := store.FetchDBTask(task.ID)
 	if err == nil {
 		return obj.ResourceVersion, true
 	}
@@ -57,12 +58,25 @@ func (store *managerStore) SaveTask(task *types.Task) error {
 		v2Task, err = client.Create(v2Task)
 	}
 	if err != nil {
+		if store.ObjectNotLatestErr(err) {
+			store.syncTaskInCache(task.ID)
+		}
 		return err
 	}
 
 	task.ResourceVersion = v2Task.ResourceVersion
 	saveCacheTask(task)
 	return nil
+}
+
+func (store *managerStore) syncTaskInCache(taskId string) {
+	task, err := store.FetchDBTask(taskId)
+	if err != nil {
+		blog.Errorf("fetch task(%s) in kube-apiserver failed: %s", taskId, err.Error())
+		return
+	}
+
+	saveCacheTask(task)
 }
 
 /*func (store *managerStore) ListTasks(runAs, appID string) ([]*types.Task, error) {
@@ -97,15 +111,11 @@ func (store *managerStore) DeleteTask(taskId string) error {
 }
 
 func (store *managerStore) FetchTask(taskId string) (*types.Task, error) {
-	if cacheMgr.isOK {
-		cacheTask, _ := fetchCacheTask(taskId)
-		if cacheTask == nil {
-			return nil, mstore.ErrNoFound
-		}
-		return cacheTask, nil
+	cacheTask, _ := fetchCacheTask(taskId)
+	if cacheTask == nil {
+		return nil, mstore.ErrNoFound
 	}
-
-	return store.FetchDBTask(taskId)
+	return cacheTask, nil
 }
 
 func (store *managerStore) FetchDBTask(taskId string) (*types.Task, error) {

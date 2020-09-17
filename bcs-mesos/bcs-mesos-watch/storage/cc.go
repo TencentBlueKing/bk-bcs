@@ -57,6 +57,7 @@ func NewCCStorage(config *types.CmdConfig) (Storage, error) {
 		applicationThreadNum:   config.ApplicationThreadNum,
 		taskgroupThreadNum:     config.TaskgroupThreadNum,
 		exportserviceThreadNum: config.ExportserviceThreadNum,
+		deploymentThreadNum:    config.DeploymentThreadNum,
 	}
 	if err := ccStorage.init(); err != nil {
 		return nil, err
@@ -87,6 +88,7 @@ type CCStorage struct {
 	applicationThreadNum   int
 	taskgroupThreadNum     int
 	exportserviceThreadNum int
+	deploymentThreadNum    int
 	client                 *httpclient.HttpClient // http client to do with request.
 }
 
@@ -141,6 +143,19 @@ func (cc *CCStorage) init() error {
 		}
 	}
 
+	for i := 0; i == 0 || i < cc.deploymentThreadNum; i++ {
+		deploymentChannel := types.DeploymentChannelPrefix + strconv.Itoa(i)
+		cc.handlers[deploymentChannel] = &ChannelProxy{
+			dataQueue: make(chan *types.BcsSyncData, 10240),
+			actionHandler: &DeploymentHandler{
+				oper:         cc,
+				dataType:     "deployment",
+				ClusterID:    cc.ClusterID,
+				DoCheckDirty: false,
+			},
+		}
+	}
+
 	cc.handlers["TaskGroup"] = &ChannelProxy{
 		dataQueue: make(chan *types.BcsSyncData, 10240),
 		actionHandler: &TaskGroupHandler{
@@ -191,9 +206,10 @@ func (cc *CCStorage) init() error {
 	cc.handlers["Deployment"] = &ChannelProxy{
 		dataQueue: make(chan *types.BcsSyncData, 1024),
 		actionHandler: &DeploymentHandler{
-			oper:      cc,
-			dataType:  "deployment",
-			ClusterID: cc.ClusterID,
+			oper:         cc,
+			dataType:     "deployment",
+			ClusterID:    cc.ClusterID,
+			DoCheckDirty: true,
 		},
 	}
 

@@ -40,9 +40,9 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 
 	startedTaskgroup := time.Now()
 	startedApp := time.Now()
+	var schedulerNumber int64
 	for {
 		blog.Infof("transaction %s scale(%s.%s) run check", transaction.ID, runAs, appID)
-
 		//check begin
 		if transaction.CreateTime+transaction.DelayTime > time.Now().Unix() {
 			blog.Infof("transaction %s scale(%s.%s) delaytime(%d), cannot do now",
@@ -50,7 +50,6 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 			time.Sleep(3 * time.Second)
 			continue
 		}
-
 		opData := transaction.OpData.(*TransAPIScaleOpdata)
 		version := opData.Version
 
@@ -61,6 +60,7 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 				goto run_end
 			}
 		} else {
+			schedulerNumber++
 			offerOut := s.GetFirstOffer()
 			for offerOut != nil {
 				offer := offerOut.Offer
@@ -71,6 +71,8 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 				isFit := s.IsOfferResourceFitLaunch(opData.NeedResource, curOffer) && s.IsConstraintsFit(version, offer, "") &&
 					s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), curOffer)
 				if isFit == true {
+					//when build new taskgroup, schedulerNumber==0
+					schedulerNumber = 0
 					blog.V(3).Infof("transaction %s fit offer %s||%s ", transaction.ID, offer.GetHostname(), *(offer.Id.Value))
 					if s.UseOffer(curOffer) == true {
 						blog.Info("transaction %s scale(%s.%s) use offer %s||%s", transaction.ID, runAs, appID, offer.GetHostname(), *(offer.Id.Value))
@@ -90,6 +92,13 @@ func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
 				}
 
 			}
+		}
+
+		// when scheduler taskgroup number>=10, then report resources insufficient message
+		if schedulerNumber >= 10 {
+			blog.Warn("transaction %s scale(%s.%s) timeout", transaction.ID, runAs, appID)
+			transaction.Status = types.OPERATION_STATUS_TIMEOUT
+			goto run_end
 		}
 
 		//check timeout
@@ -374,7 +383,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 
 	for _, taskGroup := range taskGroups {
 		if taskGroup.InstanceID >= opData.Instances {
-			app.Instances--
+			//app.Instances--
 			if err = s.DeleteTaskGroup(app, taskGroup, "scale down application"); err != nil {
 				blog.Error("transaction %s delete taskgroup(%s) failed: %s", trans.ID, taskGroup.ID, err.Error())
 			} else {
@@ -382,6 +391,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 			}
 		}
 	}
+	app.Instances = opData.Instances
 
 	if isInner == false {
 		app.LastStatus = app.Status

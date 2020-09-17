@@ -121,7 +121,7 @@ admin 用户的 usertoken 才有权限调用。
 
     curl -X PUT -H "Authorization: Bearer {admin-usertoken or saas-user-token}" http://0.0.0.0:8080/bcsapi/v4/usermanager/v1/users/plain/xxxx/refresh/2
 
-返回同上。    
+返回同上。
 
 ## clusters
 

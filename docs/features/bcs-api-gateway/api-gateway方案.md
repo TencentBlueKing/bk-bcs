@@ -36,45 +36,46 @@
 * 管理特性功能(/rest)，常规转发
 * k8s原生api转发(/tunnels/clusters/{cluster_identifier}/sub), reverse_proxy
 
-## 解决方案 
+## 解决方案
 
-**方案说明**
+方案说明
+
 * 引入开源apigateway插件，构建api-gateway层
 * URL转发规则规范化，转发规则需要明确差异版本支持
 * 配置化完成各模块反向代理功能，集成bcs当前服务发现能力实现转发动态化
-* 新增熔断和限流保护，开启https保护
+* 新增熔断和限流保护，开启https/grpcs保护
 * 扩展鉴权插件，定向完成权限中心与自定义权限对接
 * 扩展临时token授权能力，针对bcs-client、kubectl实现cmd使用临时授权
 * bcs-client集成webconsole能力
 
-**实现计划**
-  * 构建bcs-api-gateway，部分兼容转发模式，扩展服务注册
-  * 规范化部分转发模式，如k8s原生转发，mesos console转发
-  * 从bcs-api剥离用户授权管理单独模块，api-gateway进行反向代理，实现权限模型同步，并兼容当前token管理模式
-  * 从bcs-api剥离tke集群管理模块，api-gateway进行反向代理，实现tke管理能力插件化
-  * 扩展插件权限计算模块，优先对接openPolicy，实现对外平台与临时授权计算
-  * 扩展对接蓝鲸权限中心V3插件，用于实现各平台鉴权
+实现计划
 
-**方案结构**
+* 构建bcs-api-gateway，部分兼容转发模式，扩展服务注册
+* 规范化部分转发模式，如k8s原生转发，mesos console转发
+* 从bcs-api剥离用户授权管理单独模块，api-gateway进行反向代理，实现权限模型同步，并兼容当前token管理模式
+* 从bcs-api剥离tke集群管理模块，api-gateway进行反向代理，实现tke管理能力插件化
+* 基于模块访问构建授权能力
+* 支持grpc转发注册
 
-![](./gateway-solution.png)
+方案结构
 
-方案选型：kong
+![架构图](./gateway-solution.png)
 
-**方案上线**
+方案选型：kong/apisix
+
+方案上线
 
 * bcs-api-gateway与原bcs-api同时运行，给与外部平台调整时间(3-4个月)
 * 老版本bcs-client持续维护，非bug修复不做代码调整
 * 扩展bcs-client命令支持用户临时授权，webconsole
 
-**相关风险**
+相关风险
 
 * 返回码差异
 
 ## 方案验证性说明
 
 ### kong服务安装
-
 
 ```bash
 #!/bin/bash
@@ -89,16 +90,17 @@ docker run -tid --name api-gateway-storage \
     postgres:alpine
 ```
 
-**安装kong**
+安装kong
 
 centos采用rpm安装方式，避免自行编译与组装。
-下载地址: https://docs.konghq.com/install/centos/
+[下载地址](https://docs.konghq.com/install/centos/)
 
 ```bash
 rpm -ivh kong-2.0.4.el7.amd64.rpm
 ```
 
 相关配置路径：
+
 * openresty, kong源码目录: /usr/local/share/lua/5.1
 * nginx,openresty执行工具：/usr/local/openresty
 * kong项目目录：/usr/local/kong
@@ -107,6 +109,7 @@ rpm -ivh kong-2.0.4.el7.amd64.rpm
 * kong的服务转发配置，位置任意，在kong.conf配置中，如启用数据库，该配置忽略
 
 kong.conf配置调整
+
 ```conf
 database = postgres             # Determines which of PostgreSQL or Cassandra
                                 # this node will use as its datastore.
@@ -120,18 +123,18 @@ pg_timeout = 5000               # Defines the timeout (in ms), for connecting,
 
 pg_user = kong                  # Postgres user.
 pg_password =                   # Postgres user's password.
-pg_database = kong 
+pg_database = kong
 
 client_ssl = on                 # Determines if Nginx should send client-side
                                 # SSL certificates when proxying requests.
-client_ssl_cert = /data/bcs/bcs-api-gateway/cert/bcs.crt              
+client_ssl_cert = /data/bcs/bcs-api-gateway/cert/bcs.crt
                                 # If `client_ssl` is enabled, the absolute
                                 # path to the client SSL certificate for the
                                 # `proxy_ssl_certificate` directive. Note that
                                 # this value is statically defined on the
                                 # node, and currently cannot be configured on
                                 # a per-API basis.
-client_ssl_cert_key = /data/bcs/bcs-api-gateway/cert/bcs.key           
+client_ssl_cert_key = /data/bcs/bcs-api-gateway/cert/bcs.key
                                 # If `client_ssl` is enabled, the absolute
                                 # path to the client SSL key for the
                                 # `proxy_ssl_certificate_key` address. Note
@@ -142,6 +145,7 @@ plugins = bundled,bkbcs-auth    # 加载bkbcs鉴权插件
 ```
 
 系统初始化
+
 ```shell
 kong migrations bootstrap -c /etc/kong/kong.conf
 ```
@@ -150,9 +154,10 @@ kong migrations bootstrap -c /etc/kong/kong.conf
 
 以下流程为通过bcs-gateway-discovery自动完成模块注册
 
-**注册storage**
+#### 注册storage
 
 其中service中通过host与upstream关联
+
 ```bash
 #storage service
 curl -XPOST localhost:8001/services \
@@ -170,7 +175,7 @@ curl -XPUT localhost:8001/upstreams/storage.bkbcs.tencent.com/targets \
   -d"target=127.0.0.3:8080" -d"weight=100" -d"tags[]=storage" -d"tags[]=bcs-service"
 ```
 
-**注册mesos-driver**
+#### 注册mesos-driver
 
 ```bash
 #mesosdriver service
@@ -192,7 +197,7 @@ curl -XPOST localhost:8001/upstreams/01.mesosdriver.bkbcs.tencent.com/targets \
   -d"tags[]=mesosdriver" -d"tags[]=bcs-mesos"
 ```
 
-**注册kube-agent**
+#### 注册kube-agent
 
 ```bash
 #kubeagent service
@@ -201,7 +206,7 @@ curl -XPOST localhost:8001/services \
   -d"tags[]=kubeagent" -d"tags[]=bcs-k8s" -d"tags[]=BCS-K8S-01"
 #kubeagent header plugin
 curl -XPOST localhost:8001/services/01.kube-agent/plugins \
-  -d"name=request-transformer" -d"config.remove.headers=Authorization" 
+  -d"name=request-transformer" -d"config.remove.headers=Authorization"
 #kubeagent route
 curl -XPOST localhost:8001/services/01.kube-agent/routes \
   -d"name=01.kube-agent" -d"protocols[]=http" -d"paths[]=/tunnels/clusters/BCS-K8S-01" \
@@ -217,11 +222,41 @@ curl -XPOST localhost:8001/upstreams/01.kube-agent.bkbcs.tencent.com/targets \
   -d"tags[]=kubeagent" -d"tags[]=bcs-k8s"
 ```
 
+#### bcs-mesh-manager注册
+
+`注意`：在api-gateway转发特性中，bcs-mesh-manager需要同时提供玩http与grpc转发支持。
+其中：
+
+* http接口用于向蓝鲸PaaS企业总线注册，为所有SaaS提供相关特性
+* grpc接口用于内部模块、bcs-client使用
+
+```shell
+#mesh service
+curl -XPOST localhost:8001/services \
+  -d"name=meshmanager" -d"protocol=grpcs" -d"host=meshmanager.bkbcs.tencent.com"
+#mesh header plugin
+curl -XPOST localhost:8001/services/meshmanager/plugins \
+  -d"name=request-transformer" -d"config.remove.headers=Authorization"
+#mesh route
+curl -XPOST localhost:8001/services/meshmanager/routes \
+  -d"name=bcs-mesh-manager" -d"protocols[]=grpc" -d"protocols[]=grpcs" -d"paths[]=/meshmanager.MeshManager/"
+
+curl -XDELETE localhost:8001/services/meshmanager/routes/meshmanager
+
+#mesh upstream
+curl -XPOST localhost:8001/upstreams -d"name=meshmanager.bkbcs.tencent.com" \
+  -d"algorithm=round-robin"
+#kubeagent upstream target
+curl -XPOST localhost:8001/upstreams/meshmanager.bkbcs.tencent.com/targets \
+  -d"target=xxxxxxxxxxxx" -d"weight=100"
+```
+
 ### 服务注册kong细则
 
 #### bcs服务发现扩展
 
 针对服务发现扩展内容
+
 * ipv6
 * external_ipv6
 
@@ -298,13 +333,77 @@ curl -XPOST localhost:8001/routes/kube-agent-tunnel/plugins \
   -d"config.token=xxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-## 正式部署参考流程
+### openresty支持spdy
 
-以下为手动流程部署参考，实际部署已Job自动化标准任务或者蓝盾流水线为准。
+kubectl exec命令使用spdy协议，kong仅默认支持http2，需要重编openresty, kong
+
+版本信息：
+
+* kong：2.0.4
+* openresty：1.15.8.3
+
+编译依赖：
+
+* 外网访问
+* docker
+* docker-compose
+* nginx-1.15.8-http2-spdy.patch
+
+编译工具：
+
+* github.com/Kong/kong-build-tools.git，`4.8.1`
+* github.com/Kong/kong，`2.0.4`
+
+```shell
+export http_proxy=http://someproxy.com
+export https_proxy=http://someproxy.com
+
+yum install docker-compose
+
+#准备资源
+cd ~
+git clone github.com/Kong/kong-build-tools
+cd ~/kong-build-tools && git checkout 4.8.1
+git clone github.com/Kong/kong
+cd ~/kong && git checkout 2.0.4
+
+#spdy patch
+cp $GOPATH/src/bk-bcs/install/patch/nginx-1.15.8-http2-spdy.patch ~/kong-build-tools/openresty-patches/patches/1.15.8.3
+cd ~/kong-build-tools/openresty-build-tools
+sed -i '434a\          "--with-http_spdy_module"' kong-ngx-build
+```
+
+额外说明：如果需要http_proxy才能访问外网，需要调整kong-build-tools/Makefile中docker build参数，
+增加--build-arg http_proxy=http://someproxy.com 等参数。
+
+编译kong时需要依赖一些lua组件，部分组件是使用git协议下载的，不支持http_proxy设置。需要调整为http协议，为build-kong.sh增加
+
+```shell
+git config --global url."https://github.com/".insteadOf git@github.com:
+git config --global url."https://".insteadOf git://
+```
+
+使用centos:7镜像构建kong rpm包
+
+```shell
+cd ~/kong-build-tools
+make package-kong RESTY_IMAGE_BASE=centos RESTY_IMAGE_TAG=7 PACKAGE_TYPE=rpm
+...
+...
+...
+#编译通过后输出在output目录下
+ls -lhrt ./output/
+total 25M
+-rw-r--r-- 1 root root 25M Jul 22 17:43 kong-2.0.4.el7.amd64.rpm
+```
+
+## kong方式部署参考流程
+
+以下为手动流程部署参考，实际部署以Job自动化标准任务或者蓝盾流水线为准。
 
 我们需要额外部署kong，bcs-gateway-discovery与bcs-user-manager。二进制发布包目录假设：
 
-```
+```text
 bcs-services
 |-- bcs-client
 |   |-- bcs-client
@@ -334,7 +433,7 @@ bcs-services
 
 模块部署强制使用https协议，需要优先保障证书。归档至/data/bcs/cert目录下，例如：
 
-```
+```text
 |-- cert
 |   |-- bcs-ca.crt
 |   |-- bcs-client.crt
@@ -364,12 +463,12 @@ pg_host = 127.0.0.1   # Host of the Postgres server.
 pg_port = 5432        # Port of the Postgres server.
 pg_timeout = 5000     # Defines the timeout (in ms), for connecting,
 pg_user = kong        # Postgres user.
-pg_password = kong    # 
+pg_password = kong    #
 pg_database = kong    # 数据库名称
 
 client_ssl = on       # 开启客户端SSL
-client_ssl_cert = /data/bcs/cert/bcs-server.crt              
-client_ssl_cert_key = /data/bcs/cert/bcs-server.key           
+client_ssl_cert = /data/bcs/cert/bcs-server.crt
+client_ssl_cert_key = /data/bcs/cert/bcs-server.key
 plugins = bundled,bkbcs-auth  # 加载指定插件
 proxy_access_log = /data/bcs/logs/bcs/kong-access.log
 proxy_error_log = /data/bcs/logs/bcs/kong-error.log
@@ -380,21 +479,23 @@ admin_error_log = /data/bcs/logs/bcs/kong-admin_error.log
 **注意**考虑安全需求，正式环境需要将kong本身http端口关闭。
 
 kong初始化与启动
+
 ```shell
 kong migrations bootstrap -c /etc/kong/kong.conf
 
 kong start  -c /etc/kong/kong.conf
 ```
 
-### 部署bcs-cluster-manager
+### 部署bcs-user-manager
 
-bcs-cluster-manager重构了bcs-api中关于集群和用户管理功能，计划在1.17.x，1.18.x，1.19.x是保持兼容的。
-所以，bcs-cluster-manager与bcs-api共享mysql数据库数据，并且bcs-api中跨云穿透代理的功能默认会合并到该模块，
-实际部署时，尽量保障bcs-cluster-manager与kong在相同可用区/同城同园区，避免网络抖动带来跨云穿透长链中断重连。
+bcs-user-manager重构了bcs-api中关于集群和用户管理功能，计划在1.17.x，1.18.x，1.19.x是保持兼容的。
+所以，bcs-user-manager与bcs-api共享mysql数据库数据，并且bcs-api中跨云穿透代理的功能默认会合并到该模块，
+实际部署时，尽量保障bcs-user-manager与kong在相同可用区/同城同园区，避免网络抖动带来跨云穿透长链中断重连。
 
 配置文件模板请参照[这里](https://github.com/Tencent/bk-bcs/blob/master/install/conf/bcs-services/bcs-user-manager/bcs-user-manager.json.template)。
 
 特别配置参数bootstrap_users说明：
+
 * name：系统默认启动分配的初始化账号名称
 * token：32位字母+数字组成的认证admin token，例如：vAyEKvelIqnasMP9sUGWUw1naG8qLues
 
@@ -406,10 +507,12 @@ bcs-cluster-manager重构了bcs-api中关于集群和用户管理功能，计划
 
 为了安全考虑，该模块必须与kong同机部署，在容器方案中，bcs-gateway-discovery和kong默认构建在一个镜像中。
 重要配置说明：
+
 * admin_api：kong本地默认的管理连接，默认为localhost：8081
 * auth_token：cluster-manager使用的amdin token，例如：vAyEKvelIqnasMP9sUGWUw1naG8qLues
 
 完成配置后启动
+
 ```shell
 cd /data/bcs/bcs-gateway-discovery
 ./bcs-gateway-discovery --config bcs-gateway-discovery.json &
@@ -418,6 +521,7 @@ cd /data/bcs/bcs-gateway-discovery
 ### 系统用户初始化
 
 client配置
+
 ```json
 {
   "apiserver":"127.0.0.1:8000",
@@ -429,7 +533,7 @@ client配置
 #client配置后
 mkdir -p /var/bcs/
 cd /data/bcs/bcs-client
-cp bcs.conf.template /var/bcs/
+cp bcs.conf.template /var/bcs/bcs.conf
 
 #初始化用户进行授权，主要用于
 #* 其他系统调用bcs-api-gateway
@@ -454,6 +558,7 @@ bcs-client grant -t permission -f cluster.grant.json
 ```
 
 完成授权后，可以使用kubectl针对具体集群可以通过kubeconfig进行访问。相关文件可以通过bk-bcs-saas进行生成，手动编写如下：
+
 ```yaml
 apiVersion: v1
 kind: Config
@@ -475,7 +580,7 @@ users:
 ```
 
 ```shell
-kubectl version --kubeconfig ./localkubeconfig 
+kubectl version --kubeconfig ./localkubeconfig
 ```
 
 ### 数据清理
@@ -500,3 +605,7 @@ done
 ```
 
 重启bcs-gateway-discovery即可。
+
+## apisix方式部署参考流程
+
+待补充。

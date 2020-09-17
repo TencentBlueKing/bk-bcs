@@ -189,9 +189,9 @@ func (a *FixedAllocateAction) queryEniFromCloud() (pbcommon.ErrCode, string) {
 // check allocated ip
 func (a *FixedAllocateAction) checkAllocatedIP() (pbcommon.ErrCode, string) {
 	ipObjs, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CRD_NAME_LABELS_CLUSTER:  a.req.Cluster,
-		kube.CRD_NAME_LABELS_SUBNETID: a.req.SubnetID,
-		kube.CRD_NAME_LABELS_IS_FIXED: strconv.FormatBool(true),
+		kube.CrdNameLabelsCluster:  a.req.Cluster,
+		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
+		kube.CrdNameLabelsIsFixed: strconv.FormatBool(true),
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, "list ip object failed"
@@ -307,9 +307,9 @@ func (a *FixedAllocateAction) createIPObjectToStore() (pbcommon.ErrCode, string)
 // find available ip object applied previous
 func (a *FixedAllocateAction) findAvailableVictimIPObject() (pbcommon.ErrCode, string) {
 	victimObjects, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
-		kube.CRD_NAME_LABELS_ENI:      a.req.EniID,
-		kube.CRD_NAME_LABELS_IS_FIXED: strconv.FormatBool(false),
-		kube.CRD_NAME_LABELS_STATUS:   types.IP_STATUS_AVAILABLE,
+		kube.CrdNameLabelsEni:      a.req.EniID,
+		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
+		kube.CrdNameLabelsStatus:   types.IP_STATUS_AVAILABLE,
 	})
 	if err != nil {
 		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,

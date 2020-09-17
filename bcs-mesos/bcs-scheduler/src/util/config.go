@@ -46,6 +46,7 @@ type SchedulerOptions struct {
 	NetImage          string `json:"net_image" value:"" usage:"the network image"`
 	Kubeconfig        string `json:"kubeconfig" value:"" usage:"kubeconfig, when store_driver is etcd"`
 	StoreDriver       string `json:"store_driver" value:"zookeeper" usage:"the store driver, enum: zookeeper, etcd"`
+	DebugMode         bool   `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 }
 
 type SchedConfig struct {
@@ -84,6 +85,9 @@ type Scheduler struct {
 
 	Kubeconfig  string
 	StoreDriver string
+
+	//whether use pprof
+	DebugMode bool
 }
 
 type HttpListener struct {
@@ -170,6 +174,7 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 
 	config.Scheduler.Kubeconfig = op.Kubeconfig
 	config.Scheduler.StoreDriver = op.StoreDriver
+	config.Scheduler.DebugMode = op.DebugMode
 }
 
 func hostname() string {

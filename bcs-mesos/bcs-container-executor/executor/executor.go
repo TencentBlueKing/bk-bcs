@@ -476,7 +476,7 @@ func (driver *BcsExecutorDriver) SendStatusUpdate(taskStatus *mesos.TaskStatus) 
 //best effort; do not expect a framework message to be
 //retransmitted in any reliable fashion.
 func (driver *BcsExecutorDriver) SendFrameworkMessage(data string) (mesos.Status, error) {
-	fmt.Fprintf(os.Stdout, "Sending Framework message: %s\n", data)
+	logs.Infof("Sending Framework message: %s", data)
 	if driver.status != mesos.Status_DRIVER_RUNNING {
 		fmt.Fprintf(os.Stderr, "Unable to SendFramworkMessage, expecting status %s, but Got %s\n", mesos.Status_DRIVER_RUNNING, driver.status)
 		return driver.status, fmt.Errorf("ExecutorDriver is Not Running")
