@@ -54,6 +54,8 @@ var defaultServiceTag = "bkbcs-service"
 var defaultPluginName = "bkbcs-auth"
 
 //Handler for module automatic reflection
+//@param: module, bkbcs module name, like usermanager, logmanager
+//@param: svcs, bkbcs service instance definition
 type Handler func(module string, svcs []*types.ServerInfo) (*register.Service, error)
 
 //NewAdapter create service data convertion
@@ -90,6 +92,8 @@ func (adp *Adapter) GetService(module string, svcs []*types.ServerInfo) (*regist
 }
 
 //GetGrpcService interface for go-micro grpc module data convertion
+//@param: module, all kind module name, such as logmanager, usermanager
+//@param: svc, go-micro service definition, came form etcd registry
 func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*register.Service, error) {
 	//get grpc Service Interface name
 	interfaceName, ok := defaultGrpcModules[module]
