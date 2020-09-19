@@ -150,9 +150,11 @@ func main() {
 	sevOption := func(o *server.Options) {
 		o.TLSConfig = conf.TLSConf
 		o.Name = "meshmanager.bkbcs.tencent.com"
-		o.Version = version.GetVersion()
+		o.Version = version.BcsVersion
 		o.Context = ctx
 		o.Address = grpcAddr
+		o.RegisterInterval = time.Second * 30
+		o.RegisterTTL = time.Second * 30
 		o.Registry = etcd.NewRegistry(regOption)
 	}
 	grpcSvr := grpc.NewService()
