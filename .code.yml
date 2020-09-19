@@ -17,6 +17,11 @@
 .*/bcs-network/api/.*
 .*/bcs-services/bcs-clb-controller/apis/.*
 .*/bcs-services/bcs-clb-controller/client/.*
+.*/bcs-services/bcs-log-manager/app/api/proto/.*
+.*/bcs-services/bcs-log-manager/pkg/apis/.*
+.*/bcs-services/bcs-log-manager/pkg/controllers/.*
+.*/bcs-services/bcs-log-manager/pkg/generated/.*
+.*/bcs-services/bcs-log-manager/pkg/mock/.*
 .*/bcs-services/bcs-mesh-manager/api/.*
 .*/bcs-services/bcs-mesh-manager/proto/.*
 .*/bcs-services/bcs-mesh-manager/third_party/.*
