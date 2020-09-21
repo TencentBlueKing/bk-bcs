@@ -37,7 +37,7 @@ import (
 	grpcruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
-	"github.com/micro/go-micro/v2/server"
+	"github.com/micro/go-micro/v2/service"
 	"github.com/micro/go-micro/v2/service/grpc"
 	rawgrpc "google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -100,17 +100,17 @@ func main() {
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
-
+	managerStop := make(chan struct{})
 	go func() {
 		klog.Infof("starting manager")
-		if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		if err := mgr.Start(managerStop); err != nil {
 			klog.Errorf("running manager failed: %s", err.Error())
 			os.Exit(1)
 		}
 	}()
-	//context for grpc gateway & go-micro
+	//context for grpc gateway, go-micro and controllerManager
 	ctx, cancel := context.WithCancel(context.Background())
-	go signalWatch(cancel)
+
 	//http server
 	grpcAddr := fmt.Sprintf("%s:%d", conf.Address, conf.Port)
 	grpcmux := grpcruntime.NewServeMux()
@@ -119,11 +119,9 @@ func main() {
 		klog.Errorf("register grpc-gateway failed, %s", err.Error())
 		os.Exit(1)
 	}
-	// http mux
-	mux := http.NewServeMux()
-	mux.Handle("/", grpcmux)
+	httpserver := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.Address, conf.Port-1), Handler: grpcmux}
+	// http backgroup listen
 	go func() {
-		httpserver := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.Address, conf.Port-1), Handler: mux}
 		var err error
 		if conf.IsSsl {
 			httpserver.TLSConfig = conf.TLSConf
@@ -133,10 +131,15 @@ func main() {
 		}
 		if err != nil {
 			klog.Errorf("ListenAndServe %s failed: %s", httpserver.Addr, err.Error())
+			//when httpserver shutdown, wait for resource clean
+			time.Sleep(time.Second * 3)
 			os.Exit(1)
 		}
 	}()
-	//tls
+
+	go signalWatch(cancel, managerStop, httpserver)
+
+	//grpc server setting
 	tlsConf, err := ssl.ClientTslConfVerity(conf.EtcdCaFile, conf.EtcdCertFile, conf.EtcdKeyFile, "")
 	if err != nil {
 		klog.Errorf("new client tsl conf failed: %s", err.Error())
@@ -147,40 +150,40 @@ func main() {
 		e.Addrs = strings.Split(conf.EtcdServers, ",")
 		e.TLSConfig = tlsConf
 	}
-	sevOption := func(o *server.Options) {
-		o.TLSConfig = conf.TLSConf
-		o.Name = "meshmanager.bkbcs.tencent.com"
-		o.Version = version.BcsVersion
-		o.Context = ctx
-		o.Address = grpcAddr
-		o.RegisterInterval = time.Second * 30
-		o.RegisterTTL = time.Second * 30
-		o.Registry = etcd.NewRegistry(regOption)
-	}
-	grpcSvr := grpc.NewService()
-	grpcSvr.Server().Init(sevOption)
+	grpcSvc := grpc.NewService(
+		service.Context(ctx),
+		service.Name("meshmanager.bkbcs.tencent.com"),
+		service.Version(version.BcsVersion),
+		service.Address(grpcAddr),
+		service.Registry(etcd.NewRegistry(regOption)),
+		grpc.WithTLS(conf.TLSConf),
+		service.RegisterInterval(time.Second*30),
+		service.RegisterTTL(time.Second*35),
+	)
 	// Initialise service
-	grpcSvr.Init()
+	grpcSvc.Init()
 	// Register Handler, if we need more options control
 	// try formation like: handler.BcsDataManager(CustomOption)
 	meshHandler := handler.NewMeshHandler(conf, mgr.GetClient())
-	err = meshmanager.RegisterMeshManagerHandler(grpcSvr.Server(), meshHandler)
+	err = meshmanager.RegisterMeshManagerHandler(grpcSvc.Server(), meshHandler)
 	if err != nil {
 		klog.Errorf("RegisterMeshManagerHandler failed: %s", err.Error())
 	}
 	// Run service
 	klog.Infof("Listen grpc server on endpoint(%s)", grpcAddr)
-	if err := grpcSvr.Run(); err != nil {
+	if err := grpcSvc.Run(); err != nil {
 		klog.Errorf("run grpc server failed: %s", err.Error())
 		os.Exit(1)
 	}
 }
 
-func signalWatch(stop context.CancelFunc) {
-	close := make(chan os.Signal, 10)
-	signal.Notify(close, syscall.SIGINT, syscall.SIGTERM)
-	<-close
+func signalWatch(stop context.CancelFunc, manager chan struct{}, htpSvr *http.Server) {
+	signalCh := make(chan os.Signal, 2)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	<-signalCh
 	fmt.Printf("bcs-gateway-dicovery catch exit signal, exit in 3 seconds...\n")
+	close(manager)
 	stop()
+	htpSvr.Shutdown(context.Background())
 	time.Sleep(time.Second * 3)
 }
