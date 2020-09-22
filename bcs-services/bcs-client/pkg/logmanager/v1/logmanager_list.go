@@ -25,7 +25,7 @@ func (m *LogManager) ListLogCollectionTask(req *proto.ListLogCollectionTaskReq) 
 	if err != nil {
 		return nil, err
 	}
-	if resp.ErrCode != proto.ErrCode_ERROR_OK {
+	if resp.ErrName != proto.ErrCode_ERROR_OK {
 		return nil, fmt.Errorf(resp.Message)
 	}
 	return resp.Data, nil

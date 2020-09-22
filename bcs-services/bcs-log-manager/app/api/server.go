@@ -84,7 +84,7 @@ func (s *Server) startGateway() error {
 		opts = append(opts, grpc.WithInsecure())
 	}
 	// init http gateway
-	s.gwmux = runtime.NewServeMux()
+	s.gwmux = runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}))
 	err = proto.RegisterLogManagerGwFromEndpoint(s.ctx, s.gwmux, s.grpcEndpoint, opts)
 	if err != nil {
 		blog.Errorf("register logmanager gateway failed, err %s", err.Error())

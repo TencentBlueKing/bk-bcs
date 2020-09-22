@@ -25,6 +25,11 @@ enum ErrCode {
 
     // 101000 log manager failed
     ERROR_LOG_MANAGER_FAILED = 101000;
+    ERROR_LOG_MANAGER_PARTIALLY_FAILED = 101001;
+    ERROR_NO_SUCH_CLUSTER = 101002;
+    ERROR_CLUSTER_ID_REQUIRED = 101003;
+    ERROR_CLUSTER_OPERATION_ERROR = 101004;
+    ERROR_LOG_MANAGER_INTERNAL_ERROR = 101005;
 }
 
 service LogManager {
@@ -61,7 +66,7 @@ service LogManager {
 
     }
 
-    rpc CreateLogCollectionTask(CreateLogCollectionTaskReq) returns (CommonResp) {
+    rpc CreateLogCollectionTask(CreateLogCollectionTaskReq) returns (CollectionTaskCommonResp) {
         option (google.api.http) = {
             post: "/logmanager/v1/logcollectiontask"
             body: "*"
@@ -72,7 +77,7 @@ service LogManager {
         };
     }
 
-    rpc DeleteLogCollectionTask(DeleteLogCollectionTaskReq) returns (CommonResp) {
+    rpc DeleteLogCollectionTask(DeleteLogCollectionTaskReq) returns (CollectionTaskCommonResp) {
         option (google.api.http) = {
             delete: "/logmanager/v1/logcollectiontask"
         };
@@ -102,9 +107,10 @@ message ObtainDataidReq {
 }
 
 message ObtainDataidResp {
-    ErrCode errCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
-    string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
-    int32 dataID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "dataID", description: "dataID"}];
+    int32 errCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
+    ErrCode errName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errName", description: "错误名称"}];
+    string message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
+    int32 dataID = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "dataID", description: "dataID"}];
 }
 
 message CreateCleanStrategyReq {
@@ -137,8 +143,9 @@ message CleanStrategyFields {
 }
 
 message CommonResp {
-    ErrCode errCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
-    string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
+    int32 errCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
+    ErrCode errName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errName", description: "错误名称"}];
+    string message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
 }
 
 message ListLogCollectionTaskReq {
@@ -155,9 +162,10 @@ message ListLogCollectionTaskReq {
 }
 
 message ListLogCollectionTaskResp {
-    ErrCode errCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
-    string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
-    repeated ListLogCollectionTaskRespItem data = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "data", description: "日志采集任务列表"}];
+    int32 errCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
+    ErrCode errName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errName", description: "错误名称"}];
+    string message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
+    repeated ListLogCollectionTaskRespItem data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "data", description: "日志采集任务列表"}];
 }
 
 message ListLogCollectionTaskRespItem {
@@ -184,7 +192,8 @@ message LogCollectionTaskConfigSpec {
 	string workloadName = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "workloadName", description: "workloadName"}];
 	string workloadNamespace = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "workloadNamespace", description: "workloadNamespace"}];
 	repeated ContainerConf containerConfs = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "containerConfs", description: "容器日志采集配置"}];
-	bool podLabels = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "podLabels", description: "是否上报pod label"}];
+    bool podLabels = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "podLabels", description: "是否上报pod label"}];
+    PodSelector selector = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "selector", description: "pod selector"}];
 }
 
 message ContainerConf {
@@ -194,6 +203,17 @@ message ContainerConf {
 	string nonStdDataId = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "nonStdDataId", description: "非标准输出采集dataid"}];
 	repeated string logPaths = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "logPaths", description: "日志文件所在目录，对应非标准输出"}];
 	map<string, string> logTags = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "logTags", description: "上报自定义附加数据"}];
+}
+
+message PodSelector {
+    map<string, string> matchLabels = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "matchLabels", description: "Key Value 形式的 label 匹配"}];
+    repeated SelectorExpression matchExpressions = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "matchExpressions", description: "表达式形式的label匹配"}];
+}
+
+message SelectorExpression {
+    string key = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "key", description: "Label Key"}];
+    string operator = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "operator", description: "匹配操作类型"}];
+    repeated string values = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "key", description: "Label Values"}];
 }
 
 message CreateLogCollectionTaskReq {
@@ -220,4 +240,18 @@ message DeleteLogCollectionTaskReq {
     string clusterIDs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterIDs", description: "集群ID，逗号分隔多个集群ID，不指定默认无动作"}];
     string configName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configName", description: "日志采集任务名称"}];
     string configNamespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configNamespace", description: "日志采集任务Namespace，不填默认无动作"}];
+}
+
+message CollectionTaskCommonResp {
+    int32 errCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
+    ErrCode errName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errName", description: "错误名称"}];
+    string message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
+    repeated ClusterDimensionalResp errResult = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errResult", description: "集群维度的错误信息"}];
+}
+
+message ClusterDimensionalResp {
+    string clusterID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "clusterID", description: "集群id"}];
+    int32 errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errCode", description: "错误码"}];
+    ErrCode errName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "errName", description: "错误名称"}];
+    string message = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "message", description: "错误信息"}];
 }

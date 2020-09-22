@@ -40,13 +40,13 @@ type BKDataController struct {
 	StopCh                         chan struct{}
 	ClientCreator                  bkdata.ClientCreatorInterface
 	ApiextensionClientset          apiextensionsclient.Interface
-	BkDataApiConfigInformerFactory externalversions.SharedInformerFactory
-	BkDataApiConfigClientset       internalclientset.Interface
-	BkDataApiConfigInformer        cache.SharedIndexInformer
-	BkDataApiConfigLister          listers.BKDataApiConfigLister
+	BkDataAPIConfigInformerFactory externalversions.SharedInformerFactory
+	BkDataAPIConfigClientset       internalclientset.Interface
+	BkDataAPIConfigInformer        cache.SharedIndexInformer
+	BkDataAPIConfigLister          listers.BKDataApiConfigLister
 	RestConfig                     *rest.Config
 	KubeConfig                     string
-	ApiHost                        string
+	APIHost                        string
 }
 
 // NewBKDataController create BKDataController
@@ -54,7 +54,7 @@ func NewBKDataController(stopCh chan struct{}, kubeConfig, apiHost string) *BKDa
 	return &BKDataController{
 		StopCh:        stopCh,
 		KubeConfig:    kubeConfig,
-		ApiHost:       apiHost,
+		APIHost:       apiHost,
 		ClientCreator: bkdata.NewClientCreator(),
 	}
 }
@@ -90,50 +90,49 @@ func (c *BKDataController) initKubeConfig() error {
 			return err
 		}
 	}
-	err = c.createBKDataApiConfig()
+	err = c.createBKDataAPIConfig()
 	if err != nil {
 		return err
 	}
 
 	//internal clientset for informer BKDataApiConfig Crd
-	if c.BkDataApiConfigClientset == nil {
-		c.BkDataApiConfigClientset, err = internalclientset.NewForConfig(restConf)
+	if c.BkDataAPIConfigClientset == nil {
+		c.BkDataAPIConfigClientset, err = internalclientset.NewForConfig(restConf)
 		if err != nil {
 			blog.Errorf("build BKDataApiConfig clientset by kubeconfig %s error %s", c.KubeConfig, err.Error())
 			return err
 		}
 	}
-	if c.BkDataApiConfigInformerFactory == nil {
-		c.BkDataApiConfigInformerFactory = externalversions.NewSharedInformerFactory(c.BkDataApiConfigClientset, time.Hour)
+	if c.BkDataAPIConfigInformerFactory == nil {
+		c.BkDataAPIConfigInformerFactory = externalversions.NewSharedInformerFactory(c.BkDataAPIConfigClientset, time.Hour)
 	}
-	c.BkDataApiConfigInformer = c.BkDataApiConfigInformerFactory.Bkbcs().V1().BKDataApiConfigs().Informer()
-	c.BkDataApiConfigInformerFactory.Start(c.StopCh)
+	c.BkDataAPIConfigInformer = c.BkDataAPIConfigInformerFactory.Bkbcs().V1().BKDataApiConfigs().Informer()
+	c.BkDataAPIConfigInformerFactory.Start(c.StopCh)
 	// Wait for all caches to sync.
-	c.BkDataApiConfigInformerFactory.WaitForCacheSync(c.StopCh)
+	c.BkDataAPIConfigInformerFactory.WaitForCacheSync(c.StopCh)
 	//add k8s resources event handler functions
-	c.BkDataApiConfigInformer.AddEventHandler(
+	c.BkDataAPIConfigInformer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
-			AddFunc:    c.handleAddBKDataApiConfig,
-			UpdateFunc: c.handleUpdatedBKDataApiConfig,
+			AddFunc: c.handleAddBKDataAPIConfig,
 		},
 	)
 	blog.Infof("build BKDataApiConfigClientset for config %s success", c.KubeConfig)
 	return nil
 }
 
-func (c *BKDataController) createBKDataApiConfig() error {
-	bkDataApiConfigPlural := "bkdataapiconfigs"
-	bkDataApiConfigFullName := "bkdataapiconfigs" + "." + bcsv1.SchemeGroupVersion.Group
+func (c *BKDataController) createBKDataAPIConfig() error {
+	bkDataAPIConfigPlural := "bkdataapiconfigs"
+	bkDataAPIConfigFullName := "bkdataapiconfigs" + "." + bcsv1.SchemeGroupVersion.Group
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: bkDataApiConfigFullName,
+			Name: bkDataAPIConfigFullName,
 		},
 		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
 			Group:   bcsv1.SchemeGroupVersion.Group,   // BKDataApiConfigsGroup,
 			Version: bcsv1.SchemeGroupVersion.Version, // BKDataApiConfigsVersion,
 			Scope:   apiextensionsv1beta1.NamespaceScoped,
 			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-				Plural:   bkDataApiConfigPlural,
+				Plural:   bkDataAPIConfigPlural,
 				Kind:     reflect.TypeOf(bcsv1.BKDataApiConfig{}).Name(),
 				ListKind: reflect.TypeOf(bcsv1.BKDataApiConfigList{}).Name(),
 			},
@@ -153,28 +152,28 @@ func (c *BKDataController) createBKDataApiConfig() error {
 	return nil
 }
 
-func (c *BKDataController) handleAddBKDataApiConfig(obj interface{}) {
+func (c *BKDataController) handleAddBKDataAPIConfig(obj interface{}) {
 	// get BKDataClientConfig from crd
 	conf, ok := obj.(*bcsv1.BKDataApiConfig)
 	if !ok {
 		blog.Errorf("Conver new object to BKDataApiConfig struct failed")
 		return
 	}
-	bkDataApiConfig := conf.DeepCopy()
+	bkDataAPIConfig := conf.DeepCopy()
 	// get api method
-	switch bkDataApiConfig.Spec.ApiName {
+	switch bkDataAPIConfig.Spec.ApiName {
 	case "v3_access_deploy_plan_post":
 		client := c.ClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
-			BkAppCode:                  bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppCode,
-			BkAppSecret:                bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
-			BkUsername:                 bkDataApiConfig.Spec.DataCleanStrategyConfig.BkUsername,
+			BkAppCode:                  bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkAppCode,
+			BkAppSecret:                bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
+			BkUsername:                 bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkUsername,
 			BkdataAuthenticationMethod: "user",
-			Host:                       c.ApiHost,
+			Host:                       c.APIHost,
 		})
-		dataid, err := client.ObtainDataID(bkDataApiConfig.Spec.AccessDeployPlanConfig)
+		dataid, err := client.ObtainDataID(bkDataAPIConfig.Spec.AccessDeployPlanConfig)
 		if err != nil {
 			blog.Errorf("Application for dataid failed: %s", err)
-			c.respondFailed(bkDataApiConfig, err)
+			c.respondFailed(bkDataAPIConfig, err)
 			break
 		}
 		jsonstr, err := json.Marshal(map[string]interface{}{
@@ -182,37 +181,33 @@ func (c *BKDataController) handleAddBKDataApiConfig(obj interface{}) {
 		})
 		if err != nil {
 			blog.Errorf("Convert dataid struct to jsonstr error: %s", err.Error())
-			c.respondFailed(bkDataApiConfig, err)
+			c.respondFailed(bkDataAPIConfig, err)
 			break
 		}
-		c.respondOK(bkDataApiConfig, string(jsonstr))
+		c.respondOK(bkDataAPIConfig, string(jsonstr))
 	case "v3_databus_cleans_post":
 		client := c.ClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
-			BkAppCode:                  bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppCode,
-			BkAppSecret:                bkDataApiConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
-			BkUsername:                 bkDataApiConfig.Spec.DataCleanStrategyConfig.BkUsername,
+			BkAppCode:                  bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkAppCode,
+			BkAppSecret:                bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
+			BkUsername:                 bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkUsername,
 			BkdataAuthenticationMethod: "user",
-			Host:                       c.ApiHost,
+			Host:                       c.APIHost,
 		})
-		err := client.SetCleanStrategy(bkDataApiConfig.Spec.DataCleanStrategyConfig)
+		err := client.SetCleanStrategy(bkDataAPIConfig.Spec.DataCleanStrategyConfig)
 		if err != nil {
 			blog.Errorf("Application for dataid failed: %s", err)
-			c.respondFailed(bkDataApiConfig, err)
+			c.respondFailed(bkDataAPIConfig, err)
 			break
 		}
 		if err != nil {
 			blog.Errorf("Convert dataid struct to jsonstr error: %s", err.Error())
-			c.respondFailed(bkDataApiConfig, err)
+			c.respondFailed(bkDataAPIConfig, err)
 			break
 		}
-		c.respondOK(bkDataApiConfig, "")
+		c.respondOK(bkDataAPIConfig, "")
 	default:
-		c.respondFailed(bkDataApiConfig, fmt.Errorf("Invalid API name"))
+		c.respondFailed(bkDataAPIConfig, fmt.Errorf("Invalid API name"))
 	}
-}
-
-func (c *BKDataController) handleUpdatedBKDataApiConfig(oldobj, newobj interface{}) {
-	//TODO
 }
 
 func (c *BKDataController) respondFailed(conf *bcsv1.BKDataApiConfig, errin error) {
@@ -223,7 +218,7 @@ func (c *BKDataController) respondFailed(conf *bcsv1.BKDataApiConfig, errin erro
 		Message: errin.Error(),
 	}
 	conf.Spec.Response = resp
-	_, err := c.BkDataApiConfigClientset.BkbcsV1().BKDataApiConfigs(conf.GetNamespace()).Update(conf)
+	_, err := c.BkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(conf.GetNamespace()).Update(conf)
 	if err != nil {
 		blog.Errorf("Update BKDataApiConfig failed: %s, crd info: %+v, bkdataapi return value: %s", err.Error(), *conf, errin.Error())
 	}
@@ -236,7 +231,7 @@ func (c *BKDataController) respondOK(conf *bcsv1.BKDataApiConfig, retstr string)
 		Data:    retstr,
 	}
 	conf.Spec.Response = resp
-	_, err := c.BkDataApiConfigClientset.BkbcsV1().BKDataApiConfigs(conf.GetNamespace()).Update(conf)
+	_, err := c.BkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(conf.GetNamespace()).Update(conf)
 	if err != nil {
 		blog.Errorf("Update BKDataApiConfig failed: %s, crd info: %+v, bkdataapi return value: %s", err.Error(), *conf, retstr)
 	}

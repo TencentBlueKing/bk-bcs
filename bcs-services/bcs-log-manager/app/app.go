@@ -17,14 +17,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commonconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	bkdataCli "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api"
 	bkdata "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/bkdataapi"
-	bkdataCli "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
@@ -41,7 +40,7 @@ func Run(ctx context.Context, stopCh chan struct{}, op *options.LogManagerOption
 	controller := &bkdata.BKDataController{
 		StopCh:        stopCh,
 		KubeConfig:    op.KubeConfig,
-		ApiHost:       op.BKDataAPIHost,
+		APIHost:       op.BKDataAPIHost,
 		ClientCreator: bkdataCli.NewClientCreator(),
 	}
 	err := controller.Start()
@@ -72,16 +71,20 @@ func Run(ctx context.Context, stopCh chan struct{}, op *options.LogManagerOption
 
 func setManagerConfig(op *options.LogManagerOption, conf *config.ManagerConfig) {
 	conf.CollectionConfigs = op.CollectionConfigs
-	conf.BcsApiConfig.Host = op.BcsAPIHost
-	conf.BcsApiConfig.AuthToken = op.AuthToken
-	conf.BcsApiConfig.Gateway = op.Gateway
-	// TODO
+	for op.BcsAPIHost[len(op.BcsAPIHost)-1] == '/' {
+		op.BcsAPIHost = strings.TrimSuffix(op.BcsAPIHost, "/")
+	}
+	conf.BcsAPIConfig.Hosts = []string{op.BcsAPIHost}
+	conf.BcsAPIConfig.AuthToken = op.AuthToken
+	conf.BcsAPIConfig.Gateway = op.Gateway
+	// TODO tls security
+	// conf.BcsAPIConfig.TLSConfig = ssl.ClientTslConfNoVerity()
 	if op.BcsAPICAFile != "" {
 		var err error
-		conf.BcsApiConfig.TLSConfig, err = ssl.ClientTslConfVerity(op.BcsAPICAFile, op.BcsAPICertFile, op.BcsAPIKeyFile, "")
+		conf.BcsAPIConfig.TLSConfig, err = ssl.ClientTslConfVerity(op.BcsAPICAFile, op.BcsAPICertFile, op.BcsAPIKeyFile, "")
 		if err != nil {
 			blog.Errorf("ClientTslConfVerity of bcsapi failed: %s", err.Error())
-			conf.BcsApiConfig.TLSConfig = nil
+			conf.BcsAPIConfig.TLSConfig = ssl.ClientTslConfNoVerity()
 		}
 	}
 	conf.CAFile = op.ClientCertFile

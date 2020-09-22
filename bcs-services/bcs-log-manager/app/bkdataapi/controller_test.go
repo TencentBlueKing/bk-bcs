@@ -52,34 +52,34 @@ func TestObtainDataid(t *testing.T) {
 	mockApiextensionClientsetV1beta1I := apiextensionclientsetv1beta1.NewMockCustomResourceDefinitionInterface(ctrl)
 
 	// bkdataapiconfig clientset
-	mockBkDataApiConfigClientset := bkdataclientset.NewMockInterface(ctrl)
+	mockBkDataAPIConfigClientset := bkdataclientset.NewMockInterface(ctrl)
 	mockBkdataclientsetBV1 := bkdataclientsetv1.NewMockBkbcsV1Interface(ctrl)
 	mockBkdataclientsetBV1I := bkdataclientsetv1.NewMockBKDataApiConfigInterface(ctrl)
 
 	// bkdataapiconfig informer factory
-	mockBkDataApiConfigInformerFactory := bkdatainformerf.NewMockSharedInformerFactory(ctrl)
+	mockBkDataAPIConfigInformerFactory := bkdatainformerf.NewMockSharedInformerFactory(ctrl)
 	mockBkdataInformerFB := bkdatainformerfb.NewMockInterface(ctrl)
 	mockBkdataInformerFBV1 := bkdatainformerfbv1.NewMockInterface(ctrl)
 	mockBkdataInformerFBV1I := bkdatainformerfbv1.NewMockBKDataApiConfigInformer(ctrl)
 
 	// bkdataapiconfig informer
-	mockBkDataApiConfigInformer := informer.NewMockSharedIndexInformer(ctrl)
+	mockBkDataAPIConfigInformer := informer.NewMockSharedIndexInformer(ctrl)
 
 	// bkdataapiconfig lister
 	// mockBkDataApiConfigLister := lister.NewMockBKDataApiConfigLister(ctrl)
 
 	// bkdata informer initialization
 	var handlerFuncs cache.ResourceEventHandlerFuncs
-	mockBkDataApiConfigInformer.EXPECT().AddEventHandler(gomock.Any()).Do(func(funcs cache.ResourceEventHandlerFuncs) {
+	mockBkDataAPIConfigInformer.EXPECT().AddEventHandler(gomock.Any()).Do(func(funcs cache.ResourceEventHandlerFuncs) {
 		handlerFuncs = funcs
 	}).Times(2)
-	mockBkdataInformerFBV1I.EXPECT().Informer().Return(mockBkDataApiConfigInformer).Times(2)
+	mockBkdataInformerFBV1I.EXPECT().Informer().Return(mockBkDataAPIConfigInformer).Times(2)
 	// mockBkdataInformerFBV1I.EXPECT().Lister().Return(mockBkDataApiConfigLister).Times(2)
 	mockBkdataInformerFBV1.EXPECT().BKDataApiConfigs().Return(mockBkdataInformerFBV1I).Times(2)
 	mockBkdataInformerFB.EXPECT().V1().Return(mockBkdataInformerFBV1).Times(2)
-	mockBkDataApiConfigInformerFactory.EXPECT().Bkbcs().Return(mockBkdataInformerFB).Times(2)
-	mockBkDataApiConfigInformerFactory.EXPECT().Start(gomock.Any()).Return().Times(2)
-	mockBkDataApiConfigInformerFactory.EXPECT().WaitForCacheSync(gomock.Any()).Return(nil).Times(2)
+	mockBkDataAPIConfigInformerFactory.EXPECT().Bkbcs().Return(mockBkdataInformerFB).Times(2)
+	mockBkDataAPIConfigInformerFactory.EXPECT().Start(gomock.Any()).Return().Times(2)
+	mockBkDataAPIConfigInformerFactory.EXPECT().WaitForCacheSync(gomock.Any()).Return(nil).Times(2)
 
 	// apiextension clientset initialization
 	// already exist
@@ -115,14 +115,14 @@ func TestObtainDataid(t *testing.T) {
 		return nil, nil
 	}).Times(3)
 	mockBkdataclientsetBV1.EXPECT().BKDataApiConfigs(gomock.Any()).Return(mockBkdataclientsetBV1I).Times(3)
-	mockBkDataApiConfigClientset.EXPECT().BkbcsV1().Return(mockBkdataclientsetBV1).Times(3)
+	mockBkDataAPIConfigClientset.EXPECT().BkbcsV1().Return(mockBkdataclientsetBV1).Times(3)
 
 	controller := &BKDataController{
 		StopCh:                         make(chan struct{}),
 		ClientCreator:                  mockCreator,
 		ApiextensionClientset:          mockApiextensionClientset,
-		BkDataApiConfigInformerFactory: mockBkDataApiConfigInformerFactory,
-		BkDataApiConfigClientset:       mockBkDataApiConfigClientset,
+		BkDataAPIConfigInformerFactory: mockBkDataAPIConfigInformerFactory,
+		BkDataAPIConfigClientset:       mockBkDataAPIConfigClientset,
 		KubeConfig:                     "test",
 		RestConfig:                     &rest.Config{},
 	}
@@ -171,34 +171,34 @@ func TestSetCleanStrategy(t *testing.T) {
 	mockApiextensionClientsetV1beta1I := apiextensionclientsetv1beta1.NewMockCustomResourceDefinitionInterface(ctrl)
 
 	// bkdataapiconfig clientset
-	mockBkDataApiConfigClientset := bkdataclientset.NewMockInterface(ctrl)
+	mockBkDataAPIConfigClientset := bkdataclientset.NewMockInterface(ctrl)
 	mockBkdataclientsetBV1 := bkdataclientsetv1.NewMockBkbcsV1Interface(ctrl)
 	mockBkdataclientsetBV1I := bkdataclientsetv1.NewMockBKDataApiConfigInterface(ctrl)
 
 	// bkdataapiconfig informer factory
-	mockBkDataApiConfigInformerFactory := bkdatainformerf.NewMockSharedInformerFactory(ctrl)
+	mockBkDataAPIConfigInformerFactory := bkdatainformerf.NewMockSharedInformerFactory(ctrl)
 	mockBkdataInformerFB := bkdatainformerfb.NewMockInterface(ctrl)
 	mockBkdataInformerFBV1 := bkdatainformerfbv1.NewMockInterface(ctrl)
 	mockBkdataInformerFBV1I := bkdatainformerfbv1.NewMockBKDataApiConfigInformer(ctrl)
 
 	// bkdataapiconfig informer
-	mockBkDataApiConfigInformer := informer.NewMockSharedIndexInformer(ctrl)
+	mockBkDataAPIConfigInformer := informer.NewMockSharedIndexInformer(ctrl)
 
 	// bkdataapiconfig lister
 	// mockBkDataApiConfigLister := lister.NewMockBKDataApiConfigLister(ctrl)
 
 	// bkdata informer initialization
 	var handlerFuncs cache.ResourceEventHandlerFuncs
-	mockBkDataApiConfigInformer.EXPECT().AddEventHandler(gomock.Any()).Do(func(funcs cache.ResourceEventHandlerFuncs) {
+	mockBkDataAPIConfigInformer.EXPECT().AddEventHandler(gomock.Any()).Do(func(funcs cache.ResourceEventHandlerFuncs) {
 		handlerFuncs = funcs
 	}).Times(2)
-	mockBkdataInformerFBV1I.EXPECT().Informer().Return(mockBkDataApiConfigInformer).Times(2)
+	mockBkdataInformerFBV1I.EXPECT().Informer().Return(mockBkDataAPIConfigInformer).Times(2)
 	// mockBkdataInformerFBV1I.EXPECT().Lister().Return(mockBkDataApiConfigLister).Times(2)
 	mockBkdataInformerFBV1.EXPECT().BKDataApiConfigs().Return(mockBkdataInformerFBV1I).Times(2)
 	mockBkdataInformerFB.EXPECT().V1().Return(mockBkdataInformerFBV1).Times(2)
-	mockBkDataApiConfigInformerFactory.EXPECT().Bkbcs().Return(mockBkdataInformerFB).Times(2)
-	mockBkDataApiConfigInformerFactory.EXPECT().Start(gomock.Any()).Return().Times(2)
-	mockBkDataApiConfigInformerFactory.EXPECT().WaitForCacheSync(gomock.Any()).Return(nil).Times(2)
+	mockBkDataAPIConfigInformerFactory.EXPECT().Bkbcs().Return(mockBkdataInformerFB).Times(2)
+	mockBkDataAPIConfigInformerFactory.EXPECT().Start(gomock.Any()).Return().Times(2)
+	mockBkDataAPIConfigInformerFactory.EXPECT().WaitForCacheSync(gomock.Any()).Return(nil).Times(2)
 
 	// apiextension clientset initialization
 	// already exist
@@ -234,14 +234,14 @@ func TestSetCleanStrategy(t *testing.T) {
 		return nil, nil
 	}).Times(3)
 	mockBkdataclientsetBV1.EXPECT().BKDataApiConfigs(gomock.Any()).Return(mockBkdataclientsetBV1I).Times(3)
-	mockBkDataApiConfigClientset.EXPECT().BkbcsV1().Return(mockBkdataclientsetBV1).Times(3)
+	mockBkDataAPIConfigClientset.EXPECT().BkbcsV1().Return(mockBkdataclientsetBV1).Times(3)
 
 	controller := &BKDataController{
 		StopCh:                         make(chan struct{}),
 		ClientCreator:                  mockCreator,
 		ApiextensionClientset:          mockApiextensionClientset,
-		BkDataApiConfigInformerFactory: mockBkDataApiConfigInformerFactory,
-		BkDataApiConfigClientset:       mockBkDataApiConfigClientset,
+		BkDataAPIConfigInformerFactory: mockBkDataAPIConfigInformerFactory,
+		BkDataAPIConfigClientset:       mockBkDataAPIConfigClientset,
 		KubeConfig:                     "test",
 		RestConfig:                     &rest.Config{},
 	}

@@ -38,61 +38,61 @@ import (
 )
 
 const (
+	// KubeSystemNamespace is k8s system namespace
 	KubeSystemNamespace = "kube-system"
-	BCSSystemNamespace  = "bcs-system"
+	// BCSSystemNamespace is bcs system namespace
+	BCSSystemNamespace = "bcs-system"
+	// KubePublicNamespace is k8s public namespace
 	KubePublicNamespace = "kube-public"
-	RawDataName         = "bcs_k8s_system_log" // dataname use _ instead of -
-	DeployAPIName       = "v3_access_deploy_plan_post"
-	DataCleanAPIName    = "v3_databus_cleans_post"
+	// RawDataName is data name of bcs/k8s system log in bkdata
+	RawDataName = "bcs_k8s_system_log" // dataname use _ instead of -
+	// DeployAPIName is api name for deploy new data access in bkdata
+	DeployAPIName = "v3_access_deploy_plan_post"
+	// DataCleanAPIName is api name for creat new data clean strategy in bkdata
+	DataCleanAPIName = "v3_databus_cleans_post"
+	// APIGatewayClusterTunnel is subpath of api-gateway for accessing cluster info
+	APIGatewayClusterTunnel = "/tunnels/clusters/"
+	// SchemaHTTP http schema
+	SchemaHTTP = "http://"
+	// SchemaHTTPS https schema
+	SchemaHTTPS = "https://"
+	// DefaultLogConfigNamespace is default namespace for bcslogconfigs CRD
+	DefaultLogConfigNamespace = "default"
 )
 
 var (
-	SystemNamspaces             = []string{"kube-system", "bcs-system", "kube-public"}
-	BKDataApiConfigKind         string
-	BKDataApiConfigGroupVersion string
+	// SystemNamspaces includes namespaces described above
+	SystemNamspaces = []string{"kube-system", "bcs-system", "kube-public"}
+	// BKDataAPIConfigKind is resource name of BkDataAPIConfig
+	BKDataAPIConfigKind string
+	// BKDataAPIConfigGroupVersion is resouce name of BkDataAPIConfig
+	BKDataAPIConfigGroupVersion string
+	// LogConfigKind is crd name of bcslogconfigs
+	LogConfigKind string
+	// LogConfigAPIVersion is api version of bcslogconfigs
+	LogConfigAPIVersion = "bkbcs.tencent.com/v1"
 )
 
-// RequestMessage is structure of information extrange between goroutines
-// Data is request data
-// RespCh is response data channel
-type RequestMessage struct {
-	Data   interface{}
-	RespCh chan interface{}
-}
-
-// LogManager contains the log-manager module's main funcations
-type LogManager struct {
-	GetLogCollectionTask    chan *RequestMessage
-	AddLogCollectionTask    chan *RequestMessage
-	DeleteLogCollectionTask chan *RequestMessage
-
-	userManagerCli           *bcsapi.UserManagerCli
-	config                   *config.ManagerConfig
-	controllers              map[string]*ClusterLogController
-	dataidChMap              map[string]chan string
-	currCollectionConfigInd  int
-	bkDataApiConfigClientset *internalclientset.Clientset
-	bkDataApiConfigInformer  cache.SharedIndexInformer
-	stopCh                   chan struct{}
-}
-
 func init() {
-	BKDataApiConfigKind = reflect.TypeOf(bkdatav1.BKDataApiConfig{}).Name()
-	BKDataApiConfigGroupVersion = fmt.Sprintf("%s/%s", bkdatav1.SchemeGroupVersion.Group, bkdatav1.SchemeGroupVersion.Version)
+	BKDataAPIConfigKind = reflect.TypeOf(bkdatav1.BKDataApiConfig{}).Name()
+	BKDataAPIConfigGroupVersion = fmt.Sprintf("%s/%s", bkdatav1.SchemeGroupVersion.Group, bkdatav1.SchemeGroupVersion.Version)
+	LogConfigKind = reflect.TypeOf(bcsv1.BcsLogConfig{}).Name()
+	LogConfigAPIVersion = fmt.Sprintf("%s/%s", bcsv1.SchemeGroupVersion.Group, bcsv1.SchemeGroupVersion.Version)
 }
 
 // NewManager returns a new log manager
 func NewManager(conf *config.ManagerConfig) *LogManager {
 	manager := &LogManager{
-		stopCh:                  conf.StopCh,
-		config:                  conf,
-		controllers:             make(map[string]*ClusterLogController),
+		stopCh:     conf.StopCh,
+		config:     conf,
+		logClients: make(map[string]*LogClient),
+		// controllers:             make(map[string]*ClusterLogController),
 		dataidChMap:             make(map[string]chan string),
 		GetLogCollectionTask:    make(chan *RequestMessage),
 		AddLogCollectionTask:    make(chan *RequestMessage),
 		DeleteLogCollectionTask: make(chan *RequestMessage),
 	}
-	cli := bcsapi.NewClient(&conf.BcsApiConfig)
+	cli := bcsapi.NewClient(&conf.BcsAPIConfig)
 	manager.userManagerCli = cli.UserManager()
 
 	var restConf *rest.Config
@@ -108,20 +108,20 @@ func NewManager(conf *config.ManagerConfig) *LogManager {
 	}
 
 	//internal clientset for informer BKDataApiConfig Crd
-	manager.bkDataApiConfigClientset, err = internalclientset.NewForConfig(restConf)
+	manager.bkDataAPIConfigClientset, err = internalclientset.NewForConfig(restConf)
 	if err != nil {
 		blog.Errorf("build BKDataApiConfig clientset by kubeconfig %s error %s", conf.KubeConfig, err.Error())
 		return nil
 	}
-	internalFactory := externalversions.NewSharedInformerFactory(manager.bkDataApiConfigClientset, time.Hour)
-	manager.bkDataApiConfigInformer = internalFactory.Bkbcs().V1().BKDataApiConfigs().Informer()
+	internalFactory := externalversions.NewSharedInformerFactory(manager.bkDataAPIConfigClientset, time.Hour)
+	manager.bkDataAPIConfigInformer = internalFactory.Bkbcs().V1().BKDataApiConfigs().Informer()
 	internalFactory.Start(conf.StopCh)
 	// Wait for all caches to sync.
 	internalFactory.WaitForCacheSync(conf.StopCh)
 	//add k8s resources event handler functions
-	manager.bkDataApiConfigInformer.AddEventHandler(
+	manager.bkDataAPIConfigInformer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
-			UpdateFunc: manager.handleUpdatedBKDataApiConfig,
+			UpdateFunc: manager.handleUpdatedBKDataAPIConfig,
 		},
 	)
 	return manager
@@ -182,14 +182,14 @@ func (m *LogManager) ObtainDataID(clientconf bkdata.BKDataClientConfig, bizid in
 
 	// create BKDataApiConfig crd
 	bkdataapiconfig := &bkdatav1.BKDataApiConfig{}
-	bkdataapiconfig.TypeMeta.APIVersion = BKDataApiConfigGroupVersion
-	bkdataapiconfig.TypeMeta.Kind = BKDataApiConfigKind
+	bkdataapiconfig.TypeMeta.APIVersion = BKDataAPIConfigGroupVersion
+	bkdataapiconfig.TypeMeta.Kind = BKDataAPIConfigKind
 	bkdataapiconfig.SetName(strings.ReplaceAll(dataname, "_", "-"))
 	bkdataapiconfig.SetNamespace("default")
 	bkdataapiconfig.Spec.ApiName = DeployAPIName
 	bkdataapiconfig.Spec.AccessDeployPlanConfig = deployconfig
 	blog.Infof("Apply for dataid with bkdataapiconfig : %+v, waitting for response...", *bkdataapiconfig)
-	_, err := m.bkDataApiConfigClientset.BkbcsV1().BKDataApiConfigs(bkdataapiconfig.GetNamespace()).Create(bkdataapiconfig)
+	_, err := m.bkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(bkdataapiconfig.GetNamespace()).Create(bkdataapiconfig)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		blog.Errorf("Create BKDataApiConfig crd failed: %s, crd info: %+v", err.Error(), *bkdataapiconfig)
 		return "", false
@@ -212,8 +212,6 @@ func (m *LogManager) Start() {
 
 // start log manager
 func (m *LogManager) run() {
-	var cnt int64
-	cnt = 0
 	m.addSystemCollectionConfig()
 	for {
 		select {
@@ -235,166 +233,66 @@ func (m *LogManager) run() {
 		}
 		blog.Infof("Clusters: %+v", ccinfo)
 		blog.Infof("ListAllClusters success")
-		cnt++
-		newClusters := make(map[string]*ClusterLogController)
+		var schema string
+		if m.config.BcsAPIConfig.TLSConfig != nil {
+			schema = SchemaHTTPS
+		} else {
+			schema = SchemaHTTP
+		}
+		newClusters := make(map[string]*LogClient)
 		// find new clusters and deleted clusters
+		m.clientRWMutex.Lock()
 		for _, cc := range ccinfo {
-			if _, ok := m.controllers[cc.ClusterID]; ok {
-				m.controllers[cc.ClusterID].SetTick(cnt)
+			id := strings.ToLower(cc.ClusterID)
+			if _, ok := m.logClients[id]; ok {
 				continue
 			}
 			// new cluster
 			blog.Infof("New cluster: %+v", cc)
-			controller, err := NewClusterLogController(&config.ControllerConfig{Credential: cc, CAFile: m.config.CAFile})
+			restConf := &rest.Config{
+				Host:        fmt.Sprintf("%s%s%s%s", schema, m.config.BcsAPIConfig.Hosts[0], APIGatewayClusterTunnel, cc.ClusterID),
+				BearerToken: m.config.BcsAPIConfig.AuthToken,
+				// TODO TLS security
+				TLSClientConfig: rest.TLSClientConfig{
+					Insecure: true,
+				},
+			}
+			clientset, err := internalclientset.NewForConfig(restConf)
 			if err != nil {
-				blog.Errorf("Create Cluster Log Controller failed, Cluster Id: %s, Cluster Domain: %s, error info: %s", cc.ClusterID, cc.ClusterDomain, err.Error())
+				blog.Errorf("Clientset initialization failed: server %s, cluster %s, %s", restConf.Host, cc.ClusterID, err.Error())
 				continue
+			}
+			m.logClients[id] = &LogClient{
+				ClusterInfo: cc,
+				Client:      clientset.BkbcsV1().RESTClient(),
 			}
 			blog.Infof("Create cluster bcslogconfig controller success")
-			controller.SetTick(cnt)
-			m.controllers[cc.ClusterID] = controller
-			newClusters[cc.ClusterID] = controller
-			controller.Start()
+			newClusters[id] = m.logClients[id]
 		}
+		m.clientRWMutex.Unlock()
+		m.distributeAddTasks(newClusters, m.config.CollectionConfigs)
 		// delete invalid clusters
-		for k, v := range m.controllers {
-			if v.GetTick() == cnt {
-				continue
-			}
-			m.controllers[k].Stop()
-			blog.Infof("Stop deleted cluster (%s) controller", k)
-			delete(m.controllers, k)
+		deletedClusters := make(map[string]struct{})
+		m.clientRWMutex.RLock()
+		for id := range m.logClients {
+			deletedClusters[id] = struct{}{}
 		}
-		m.distributeTasks(newClusters, m.config.CollectionConfigs)
+		m.clientRWMutex.RUnlock()
+		for _, cc := range ccinfo {
+			delete(deletedClusters, strings.ToLower(cc.ClusterID))
+		}
+		m.clientRWMutex.Lock()
+		for id := range deletedClusters {
+			blog.Infof("Delete deleted cluster (%s)", id)
+			delete(m.logClients, id)
+		}
+		m.clientRWMutex.Unlock()
 		<-time.After(time.Minute)
 	}
 }
 
-// apiService serve the request for BcsLogConfigs CRD CRUD
-func (m *LogManager) apiService() {
-	for {
-		select {
-		// get log configs
-		case msg, ok := <-m.GetLogCollectionTask:
-			if !ok {
-				blog.Errorf("Get request data from api server failed, API service crashed")
-				return
-			}
-			switch conf := msg.Data.(type) {
-			case *config.CollectionFilterConfig:
-				blog.Infof("Get CollectionFilterConfig for GetLogCollectionTask: %+v", conf)
-				confsList := m.getLogCollectionTaskByFilter(conf)
-				for _, confs := range confsList {
-					for _, c := range confs {
-						msg.RespCh <- c
-					}
-				}
-				msg.RespCh <- "termination"
-			default:
-				blog.Errorf("Unrecognized data type received from api server while get log collection tasks, data value (%+v)", conf)
-				msg.RespCh <- fmt.Errorf("Unrecognized data type received from api server while get log collection tasks, data value (%+v)", conf)
-			}
-		// create log config
-		case msg, ok := <-m.AddLogCollectionTask:
-			if !ok {
-				blog.Errorf("Get request data from api server failed, API service crashed")
-				return
-			}
-			switch conf := msg.Data.(type) {
-			case *config.CollectionConfig:
-				blog.Infof("Get CollectionConfig for AddLogCollectionTask: %+v", conf)
-				m.distributeTasks(m.controllers, []config.CollectionConfig{*conf})
-				msg.RespCh <- "termination"
-			default:
-				blog.Errorf("Unrecognized data type received from api server while get log collection tasks, data value (%+v)", conf)
-				msg.RespCh <- fmt.Errorf("Unrecognized data type received from api server while get log collection tasks, data value (%+v)", conf)
-			}
-		// delete log config
-		case msg, ok := <-m.DeleteLogCollectionTask:
-			if !ok {
-				blog.Errorf("Get request data from api server failed, API service crashed")
-				return
-			}
-			switch conf := msg.Data.(type) {
-			case *config.CollectionFilterConfig:
-				blog.Infof("Get CollectionFilterConfig for DeleteLogCollectionTask: %+v", conf)
-				m.distributeDeleteTasks(conf)
-				msg.RespCh <- "termination"
-			default:
-				blog.Errorf("Unrecognized data type received from api server while get log collection tasks, data value (%+v)", conf)
-				msg.RespCh <- fmt.Errorf("Unrecognized data type received from api server while get log collection tasks, data value (%+v)", conf)
-			}
-		}
-	}
-}
-
-// distribute add task
-func (m *LogManager) distributeTasks(newClusters map[string]*ClusterLogController, confs []config.CollectionConfig) {
-	blog.Infof("Start distribute log configs to clusters")
-	blog.Infof("log config list: %+v", confs)
-	for _, logconf := range confs {
-		blog.Infof("distribute config : %+v", logconf)
-		if logconf.ClusterIDs == "" {
-			for k, ctrl := range newClusters {
-				ctrl.AddCollectionTask <- logconf
-				blog.Infof("Send logconf to cluster %s", k)
-			}
-			continue
-		}
-		clusters := strings.Split(strings.ToLower(logconf.ClusterIDs), ",")
-		for _, clusterid := range clusters {
-			if _, ok := newClusters[clusterid]; !ok {
-				blog.Errorf("Wrong cluster ID %s of collection config %+v", clusterid, logconf)
-				continue
-			}
-			newClusters[clusterid].AddCollectionTask <- logconf
-			blog.Infof("Send logconf to cluster %s", clusterid)
-		}
-	}
-}
-
-// get bcslogconfigs from clusters
-func (m *LogManager) getLogCollectionTaskByFilter(filter *config.CollectionFilterConfig) [][]config.CollectionConfig {
-	var ret [][]config.CollectionConfig
-	if filter.ClusterIDs == "" {
-		ret = make([][]config.CollectionConfig, len(m.controllers))
-		var i = 0
-		for _, ctl := range m.controllers {
-			ret[i] = ctl.getLogCollectionTaskByFilter(filter)
-			i++
-		}
-	} else {
-		clusters := strings.Split(filter.ClusterIDs, ",")
-		for _, id := range clusters {
-			if ctl, ok := m.controllers[id]; !ok {
-				blog.Warnf("No cluster id (%s)", id)
-				continue
-			} else {
-				ret = append(ret, ctl.getLogCollectionTaskByFilter(filter))
-			}
-		}
-	}
-	return ret
-}
-
-// distribute delete task
-func (m *LogManager) distributeDeleteTasks(filter *config.CollectionFilterConfig) {
-	if filter.ClusterIDs == "" {
-		return
-	}
-	clusters := strings.Split(filter.ClusterIDs, ",")
-	for _, id := range clusters {
-		if ctl, ok := m.controllers[id]; !ok {
-			blog.Warnf("No cluster id (%s)", id)
-			continue
-		} else {
-			ctl.DeleteCollectionTask <- filter
-		}
-	}
-}
-
 // get dataid from crd
-func (m *LogManager) handleUpdatedBKDataApiConfig(oldobj, newobj interface{}) {
+func (m *LogManager) handleUpdatedBKDataAPIConfig(oldobj, newobj interface{}) {
 	config, ok := newobj.(*bkdatav1.BKDataApiConfig)
 	if !ok {
 		blog.Errorf("Convert object to BKDataApiConfig failed")
@@ -456,10 +354,20 @@ func (m *LogManager) newDataCleanStrategy(config *bkdatav1.BKDataApiConfig, data
 	bkdataapiconfig.SetNamespace("default")
 	bkdataapiconfig.Spec.DataCleanStrategyConfig = strategy
 	// delete successful obtain dataid crd
-	m.bkDataApiConfigClientset.BkbcsV1().BKDataApiConfigs(config.GetNamespace()).Delete(config.GetName(), &metav1.DeleteOptions{})
+	m.bkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(config.GetNamespace()).Delete(config.GetName(), &metav1.DeleteOptions{})
 	// apply data clean strategy
-	_, err := m.bkDataApiConfigClientset.BkbcsV1().BKDataApiConfigs(bkdataapiconfig.GetNamespace()).Create(bkdataapiconfig)
+	_, err := m.bkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(bkdataapiconfig.GetNamespace()).Create(bkdataapiconfig)
 	if err != nil {
 		blog.Errorf("Create BKDataApiConfig crd failed: %s, crd info: %+v", err.Error(), *bkdataapiconfig)
 	}
+}
+
+func (m *LogManager) getLogClients() map[string]*LogClient {
+	ret := make(map[string]*LogClient)
+	m.clientRWMutex.RLock()
+	for k, v := range m.logClients {
+		ret[k] = v
+	}
+	m.clientRWMutex.RUnlock()
+	return ret
 }

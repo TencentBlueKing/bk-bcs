@@ -43,7 +43,7 @@ func main() {
 	err := app.Run(ctx, stopCh, op)
 	if err != nil {
 		blog.Errorf(err.Error())
-		os.Exit(1)
+		terminateProcess(cancel, stopCh)
 	}
 
 	notifySignal(cancel, stopCh)

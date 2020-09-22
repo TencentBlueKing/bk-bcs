@@ -25,7 +25,7 @@ func (m *LogManager) DeleteLogCollectionTask(req *proto.DeleteLogCollectionTaskR
 	if err != nil {
 		return err
 	}
-	if resp.ErrCode != proto.ErrCode_ERROR_OK {
+	if resp.ErrName != proto.ErrCode_ERROR_OK {
 		return fmt.Errorf(resp.Message)
 	}
 	return nil

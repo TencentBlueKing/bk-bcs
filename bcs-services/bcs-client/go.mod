@@ -4,6 +4,7 @@ go 1.14
 
 replace (
 	github.com/Tencent/bk-bcs => ../../
+	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager => ../bcs-log-manager
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager => ../bcs-mesh-manager
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20180801171038-322a19404e37
@@ -23,6 +24,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.1.0 // indirect
 	github.com/Masterminds/squirrel v1.2.0 // indirect
 	github.com/Tencent/bk-bcs v0.0.0-20200805130634-8a6c639f4a4c
+	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go v1.33.11 // indirect
 	github.com/bitly/go-simplejson v0.5.0

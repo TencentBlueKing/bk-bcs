@@ -82,8 +82,8 @@ type LogManagerService interface {
 	ObtainDataID(ctx context.Context, in *ObtainDataidReq, opts ...client.CallOption) (*ObtainDataidResp, error)
 	CreateCleanStrategy(ctx context.Context, in *CreateCleanStrategyReq, opts ...client.CallOption) (*CommonResp, error)
 	ListLogCollectionTask(ctx context.Context, in *ListLogCollectionTaskReq, opts ...client.CallOption) (*ListLogCollectionTaskResp, error)
-	CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, opts ...client.CallOption) (*CommonResp, error)
-	DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, opts ...client.CallOption) (*CollectionTaskCommonResp, error)
+	DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, opts ...client.CallOption) (*CollectionTaskCommonResp, error)
 }
 
 type logManagerService struct {
@@ -128,9 +128,9 @@ func (c *logManagerService) ListLogCollectionTask(ctx context.Context, in *ListL
 	return out, nil
 }
 
-func (c *logManagerService) CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *logManagerService) CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, opts ...client.CallOption) (*CollectionTaskCommonResp, error) {
 	req := c.c.NewRequest(c.name, "LogManager.CreateLogCollectionTask", in)
-	out := new(CommonResp)
+	out := new(CollectionTaskCommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -138,9 +138,9 @@ func (c *logManagerService) CreateLogCollectionTask(ctx context.Context, in *Cre
 	return out, nil
 }
 
-func (c *logManagerService) DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *logManagerService) DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, opts ...client.CallOption) (*CollectionTaskCommonResp, error) {
 	req := c.c.NewRequest(c.name, "LogManager.DeleteLogCollectionTask", in)
-	out := new(CommonResp)
+	out := new(CollectionTaskCommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -154,8 +154,8 @@ type LogManagerHandler interface {
 	ObtainDataID(context.Context, *ObtainDataidReq, *ObtainDataidResp) error
 	CreateCleanStrategy(context.Context, *CreateCleanStrategyReq, *CommonResp) error
 	ListLogCollectionTask(context.Context, *ListLogCollectionTaskReq, *ListLogCollectionTaskResp) error
-	CreateLogCollectionTask(context.Context, *CreateLogCollectionTaskReq, *CommonResp) error
-	DeleteLogCollectionTask(context.Context, *DeleteLogCollectionTaskReq, *CommonResp) error
+	CreateLogCollectionTask(context.Context, *CreateLogCollectionTaskReq, *CollectionTaskCommonResp) error
+	DeleteLogCollectionTask(context.Context, *DeleteLogCollectionTaskReq, *CollectionTaskCommonResp) error
 }
 
 func RegisterLogManagerHandler(s server.Server, hdlr LogManagerHandler, opts ...server.HandlerOption) error {
@@ -163,8 +163,8 @@ func RegisterLogManagerHandler(s server.Server, hdlr LogManagerHandler, opts ...
 		ObtainDataID(ctx context.Context, in *ObtainDataidReq, out *ObtainDataidResp) error
 		CreateCleanStrategy(ctx context.Context, in *CreateCleanStrategyReq, out *CommonResp) error
 		ListLogCollectionTask(ctx context.Context, in *ListLogCollectionTaskReq, out *ListLogCollectionTaskResp) error
-		CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, out *CommonResp) error
-		DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, out *CommonResp) error
+		CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, out *CollectionTaskCommonResp) error
+		DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, out *CollectionTaskCommonResp) error
 	}
 	type LogManager struct {
 		logManager
@@ -223,10 +223,10 @@ func (h *logManagerHandler) ListLogCollectionTask(ctx context.Context, in *ListL
 	return h.LogManagerHandler.ListLogCollectionTask(ctx, in, out)
 }
 
-func (h *logManagerHandler) CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, out *CommonResp) error {
+func (h *logManagerHandler) CreateLogCollectionTask(ctx context.Context, in *CreateLogCollectionTaskReq, out *CollectionTaskCommonResp) error {
 	return h.LogManagerHandler.CreateLogCollectionTask(ctx, in, out)
 }
 
-func (h *logManagerHandler) DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, out *CommonResp) error {
+func (h *logManagerHandler) DeleteLogCollectionTask(ctx context.Context, in *DeleteLogCollectionTaskReq, out *CollectionTaskCommonResp) error {
 	return h.LogManagerHandler.DeleteLogCollectionTask(ctx, in, out)
 }

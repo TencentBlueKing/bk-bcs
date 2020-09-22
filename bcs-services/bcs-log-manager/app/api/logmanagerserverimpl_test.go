@@ -90,7 +90,7 @@ func TestCreateLogCollectionTask(t *testing.T) {
 	server := &LogManagerServerImpl{
 		logManager: logManager,
 	}
-	resp := proto.CommonResp{}
+	resp := proto.CollectionTaskCommonResp{}
 	emptyReq := &proto.CreateLogCollectionTaskReq{}
 	normalReq := &proto.CreateLogCollectionTaskReq{
 		Config: &proto.LogCollectionTaskConfig{
@@ -127,7 +127,7 @@ func TestDeleteLogCollectionTask(t *testing.T) {
 	server := &LogManagerServerImpl{
 		logManager: logManager,
 	}
-	resp := proto.CommonResp{}
+	resp := proto.CollectionTaskCommonResp{}
 	err := server.DeleteLogCollectionTask(context.Background(), &proto.DeleteLogCollectionTaskReq{}, &resp)
 	if err != nil {
 		t.Errorf("LogManagerServerImpl.DeleteLogCollectionTask returns error(%+v), expect error(%+v)", err, nil)

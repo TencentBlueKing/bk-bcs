@@ -22,7 +22,7 @@ import (
 // ManagerConfig is config of k8s.LogManager
 type ManagerConfig struct {
 	CollectionConfigs []CollectionConfig
-	BcsApiConfig      bcsapi.Config
+	BcsAPIConfig      bcsapi.Config
 	CAFile            string
 	SystemDataID      string
 	KubeConfig        string // manager 所在集群的kubeconfig
@@ -53,8 +53,10 @@ type CollectionFilterConfig struct {
 
 // ControllerConfig is config for cluster specified bcslogconfigs controller
 type ControllerConfig struct {
-	Credential *bcsapi.ClusterCredential
-	CAFile     string
+	Credential      *bcsapi.ClusterCredential
+	CAFile          string
+	BcsAPIHost      string
+	BcsAPIAuthToken string
 }
 
 // APIServerConfig is config for APIServer of bcs-log-manager

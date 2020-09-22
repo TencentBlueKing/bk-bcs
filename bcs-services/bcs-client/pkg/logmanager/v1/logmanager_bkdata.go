@@ -25,7 +25,7 @@ func (m *LogManager) ObtainDataID(req *proto.ObtainDataidReq) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	if resp.ErrCode != proto.ErrCode_ERROR_OK {
+	if resp.ErrName != proto.ErrCode_ERROR_OK {
 		return -1, fmt.Errorf(resp.Message)
 	}
 	return int(resp.DataID), nil
@@ -37,7 +37,7 @@ func (m *LogManager) CreateCleanStrategy(req *proto.CreateCleanStrategyReq) erro
 	if err != nil {
 		return err
 	}
-	if resp.ErrCode != proto.ErrCode_ERROR_OK {
+	if resp.ErrName != proto.ErrCode_ERROR_OK {
 		return fmt.Errorf(resp.Message)
 	}
 	return nil
