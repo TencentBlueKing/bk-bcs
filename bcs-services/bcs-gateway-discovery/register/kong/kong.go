@@ -318,8 +318,10 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 		Name:     &svc.Name,
 		Protocol: &svc.Protocol,
 		Host:     &svc.Host,
-		Path:     &svc.Path,
 		Retries:  gokong.Int(svc.Retries),
+	}
+	if len(svc.Path) != 0 {
+		ksvc.Path = &svc.Path
 	}
 	if len(svc.Labels) != 0 {
 		for _, v := range svc.Labels {

@@ -118,7 +118,8 @@ func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*regis
 		Name:     actualName,
 		Protocol: "grpc",
 		//grpc path proxy rule likes /logmanager.LogManager/
-		Paths: []string{requestPath},
+		Paths:       []string{requestPath},
+		PathRewrite: false,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
