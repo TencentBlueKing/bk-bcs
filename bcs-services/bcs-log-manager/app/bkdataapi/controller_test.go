@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/mock/informer"
 )
 
+// TestObtainDataid test obtain dataid method
 func TestObtainDataid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -154,6 +155,7 @@ func TestObtainDataid(t *testing.T) {
 	handlerFuncs.AddFunc(&bcsv1.BKDataApiConfig{})
 }
 
+// TestSetCleanStrategy test create data clean stategy method
 func TestSetCleanStrategy(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

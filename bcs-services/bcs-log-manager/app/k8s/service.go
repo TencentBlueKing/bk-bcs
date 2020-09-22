@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package k8s
 
 import (
@@ -42,6 +55,7 @@ func (m *LogManager) apiService() {
 	}
 }
 
+// handleListLogCollectionTask deal with listing log collection task
 func (m *LogManager) handleListLogCollectionTask(msg *RequestMessage) {
 	switch conf := msg.Data.(type) {
 	case *config.CollectionFilterConfig:
@@ -59,6 +73,7 @@ func (m *LogManager) handleListLogCollectionTask(msg *RequestMessage) {
 	}
 }
 
+// handleListLogCollectionTask deal with adding log collection task
 func (m *LogManager) handleAddLogCollectionTask(msg *RequestMessage) {
 	switch conf := msg.Data.(type) {
 	case *config.CollectionConfig:
@@ -71,6 +86,7 @@ func (m *LogManager) handleAddLogCollectionTask(msg *RequestMessage) {
 	}
 }
 
+// handleListLogCollectionTask deal with deleting log collection task
 func (m *LogManager) handleDeleteLogCollectionTask(msg *RequestMessage) {
 	switch conf := msg.Data.(type) {
 	case *config.CollectionFilterConfig:
@@ -88,6 +104,7 @@ func (m *LogManager) getLogCollectionTaskByFilter(filter *config.CollectionFilte
 	var wg sync.WaitGroup
 	respCh := make(chan interface{}, 1)
 	logClients := m.getLogClients()
+	// get tasks from specified clusters
 	if filter.ClusterIDs == "" {
 		for _, ctl := range logClients {
 			wg.Add(1)
@@ -111,10 +128,12 @@ func (m *LogManager) getLogCollectionTaskByFilter(filter *config.CollectionFilte
 			}
 		}
 	}
+	// wait for get tasks finished
 	go func() {
 		wg.Wait()
 		respCh <- "termination"
 	}()
+	// construct resp data
 	for {
 		select {
 		case resp := <-respCh:
@@ -141,6 +160,7 @@ func (m *LogManager) distributeAddTasks(newClusters map[string]*LogClient, confs
 		ErrResult: make([]*proto.ClusterDimensionalResp, 0),
 	}
 	respCh := make(chan interface{}, 1)
+	// add tasks to specified clusters
 	for _, logconf := range confs {
 		blog.Infof("distribute config : %+v", logconf)
 		if logconf.ClusterIDs == "" {
@@ -177,10 +197,12 @@ func (m *LogManager) distributeAddTasks(newClusters map[string]*LogClient, confs
 			blog.Infof("Send logconf to cluster %s", client.ClusterInfo.ClusterID)
 		}
 	}
+	// wait for job finished
 	go func() {
 		wg.Wait()
 		respCh <- "termination"
 	}()
+	// construct resp message
 	for {
 		select {
 		case resp := <-respCh:
@@ -215,6 +237,7 @@ func (m *LogManager) distributeDeleteTasks(filter *config.CollectionFilterConfig
 	respCh := make(chan interface{}, 1)
 	logClients := m.getLogClients()
 	clusters := strings.Split(filter.ClusterIDs, ",")
+	// delete tasks from specified clusters
 	for _, id := range clusters {
 		if client, ok := logClients[id]; !ok {
 			blog.Warnf("No cluster id (%s)", id)
@@ -235,10 +258,12 @@ func (m *LogManager) distributeDeleteTasks(filter *config.CollectionFilterConfig
 			})
 		}
 	}
+	// wait for jobs finishing
 	go func() {
 		wg.Wait()
 		respCh <- "termination"
 	}()
+	// construct resp message
 	for {
 		select {
 		case resp := <-respCh:
@@ -259,6 +284,7 @@ func (m *LogManager) distributeDeleteTasks(filter *config.CollectionFilterConfig
 
 // msg.Data is *config.CollectionConfig, msg.RespCh is error return channel
 func (m *LogManager) addTaskToCluster(client *LogClient, wg *sync.WaitGroup, msg *RequestMessage) {
+	defer wg.Done()
 	task, ok := msg.Data.(config.CollectionConfig)
 	if !ok {
 		blog.Errorf("addTaskToCluster convert msg.Data to *config.CollectionConfig failed. msg.Data: (%+v)", msg.Data)
@@ -268,7 +294,6 @@ func (m *LogManager) addTaskToCluster(client *LogClient, wg *sync.WaitGroup, msg
 			ErrName:   proto.ErrCode_ERROR_LOG_MANAGER_INTERNAL_ERROR,
 			Message:   "log manager internal error",
 		}
-		wg.Done()
 		return
 	}
 	// construct BcsLogConfig
@@ -301,21 +326,19 @@ func (m *LogManager) addTaskToCluster(client *LogClient, wg *sync.WaitGroup, msg
 			ErrName:   proto.ErrCode_ERROR_CLUSTER_OPERATION_ERROR,
 			Message:   err.Error(),
 		}
-		wg.Done()
 		return
 	}
-	wg.Done()
 	blog.Infof("Create BcsLogConfig of Cluster %s success. (config info: %+v)", client.ClusterInfo.ClusterID, logconf)
 }
 
 // msg.Data is *config.CollectionFilterConfig, msg.RespCh is error return channel
 func (m *LogManager) getTaskFromCluster(client *LogClient, wg *sync.WaitGroup, msg *RequestMessage) {
+	defer wg.Done()
 	filter, ok := msg.Data.(*config.CollectionFilterConfig)
 	// TODO error return
 	if !ok {
 		blog.Errorf("getTaskFromCluster convert msg.Data to *config.CollectionFilterConfig failed. msg.Data: (%+v)", msg.Data)
 		msg.RespCh <- client.ClusterInfo.ClusterID
-		wg.Done()
 		return
 	}
 	// rest request
@@ -327,14 +350,12 @@ func (m *LogManager) getTaskFromCluster(client *LogClient, wg *sync.WaitGroup, m
 	if result.Error() != nil {
 		blog.Errorf("Get BcsLogConfig from Cluster %s failed: %s", client.ClusterInfo.ClusterID, result.Error().Error())
 		msg.RespCh <- client.ClusterInfo.ClusterID
-		wg.Done()
 		return
 	}
 	raw, err := result.Raw()
 	if err != nil {
 		blog.Errorf("Get raw data from Cluster %s response failed: %s", client.ClusterInfo.ClusterID, err.Error())
 		msg.RespCh <- client.ClusterInfo.ClusterID
-		wg.Done()
 		return
 	}
 	// parse result to BcsLogConfig slice
@@ -346,7 +367,6 @@ func (m *LogManager) getTaskFromCluster(client *LogClient, wg *sync.WaitGroup, m
 			blog.Errorf("Convert raw data to BcsLogConfig failed: %s, raw(%s), Cluster(%s)",
 				client.ClusterInfo.ClusterID, err.Error(), string(raw), client.ClusterInfo.ClusterID)
 			msg.RespCh <- client.ClusterInfo.ClusterID
-			wg.Done()
 			return
 		}
 		respSlice = append(respSlice, conf)
@@ -357,19 +377,18 @@ func (m *LogManager) getTaskFromCluster(client *LogClient, wg *sync.WaitGroup, m
 			blog.Errorf("Convert raw data to BcsLogConfigList failed: %s, raw(%s), Cluster(%s)",
 				client.ClusterInfo.ClusterID, err.Error(), string(raw), client.ClusterInfo.ClusterID)
 			msg.RespCh <- client.ClusterInfo.ClusterID
-			wg.Done()
 			return
 		}
 		respSlice = conf.Items
 	}
 	msg.RespCh <- m.convert(respSlice)
-	wg.Done()
 	blog.Infof("Get BcsLogConfig from Cluster %s success.", client.ClusterInfo.ClusterID)
 }
 
 func (m *LogManager) deleteTaskFromCluster(client *LogClient, wg *sync.WaitGroup, msg *RequestMessage) {
+	defer wg.Done()
 	filter, ok := msg.Data.(*config.CollectionFilterConfig)
-	// TODO error return
+	// return error
 	if !ok {
 		blog.Errorf("getTaskFromCluster convert msg.Data to *config.CollectionFilterConfig failed. msg.Data: (%+v)", msg.Data)
 		msg.RespCh <- &proto.ClusterDimensionalResp{
@@ -378,7 +397,6 @@ func (m *LogManager) deleteTaskFromCluster(client *LogClient, wg *sync.WaitGroup
 			ErrName:   proto.ErrCode_ERROR_LOG_MANAGER_INTERNAL_ERROR,
 			Message:   "log manager internal error",
 		}
-		wg.Done()
 		return
 	}
 	// rest request
@@ -397,13 +415,12 @@ func (m *LogManager) deleteTaskFromCluster(client *LogClient, wg *sync.WaitGroup
 			ErrName:   proto.ErrCode_ERROR_CLUSTER_OPERATION_ERROR,
 			Message:   err.Error(),
 		}
-		wg.Done()
 		return
 	}
-	wg.Done()
 	blog.Infof("Delete BcsLogConfig(%s/%s) from Cluster %s success.", filter.ConfigNamespace, filter.ConfigName, client.ClusterInfo.ClusterID)
 }
 
+// convert converts BcsLogConfig CRD to CollectionConfig representation
 func (m *LogManager) convert(in []bcsv1.BcsLogConfig) *[]config.CollectionConfig {
 	ret := make([]config.CollectionConfig, len(in))
 	for i := range in {

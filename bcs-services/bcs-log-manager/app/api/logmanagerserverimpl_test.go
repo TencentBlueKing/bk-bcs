@@ -27,6 +27,7 @@ import (
 
 type MockLogManager = k8s.LogManager
 
+// TestObtainDataID test obtain dataid method
 func TestObtainDataID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -54,6 +55,7 @@ func TestObtainDataID(t *testing.T) {
 	}
 }
 
+// TestSetCleanStrategy test create data clean stategy method
 func TestSetCleanStrategy(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -81,6 +83,7 @@ func TestSetCleanStrategy(t *testing.T) {
 	}
 }
 
+// TestCreateLogCollectionTask test create log collection task method
 func TestCreateLogCollectionTask(t *testing.T) {
 	logManager := &k8s.LogManager{
 		AddLogCollectionTask: make(chan *k8s.RequestMessage),
@@ -118,6 +121,7 @@ func TestCreateLogCollectionTask(t *testing.T) {
 	}
 }
 
+// TestDeleteLogCollectionTask test delete log collection task method
 func TestDeleteLogCollectionTask(t *testing.T) {
 	logManager := &k8s.LogManager{
 		DeleteLogCollectionTask: make(chan *k8s.RequestMessage),
@@ -144,6 +148,7 @@ func TestDeleteLogCollectionTask(t *testing.T) {
 	}
 }
 
+// TestListLogCollectionTask test list log collection task method
 func TestListLogCollectionTask(t *testing.T) {
 	logManager := &k8s.LogManager{
 		GetLogCollectionTask: make(chan *k8s.RequestMessage),
