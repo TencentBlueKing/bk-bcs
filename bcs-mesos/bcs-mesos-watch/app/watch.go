@@ -514,7 +514,7 @@ func registerZkEndpoints(rdCxt context.Context, cfg *types.CmdConfig) (bool, err
 	regInfo.ServerInfo.Scheme = cfg.ServerSchem
 	regInfo.ServerInfo.Pid = os.Getpid()
 	regInfo.ServerInfo.Version = version.GetVersion()
-	data, err := json.Marshal(regInfo)
+	data, _ := json.Marshal(regInfo)
 	key := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDATAWATCH + "/" + cfg.Address
 	discvPath := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDATAWATCH
 

@@ -259,6 +259,10 @@ func (e *bcsExecutor) innerShutdown() {
 
 			oldStatus := task.Status
 			task.Status, err = e.getTaskStatusFromProcessStatus(status.Status)
+			if err != nil {
+				blog.Errorf("get task(%s) status error %s", taskid, err.Error())
+				continue
+			}
 
 			if oldStatus != task.Status {
 				e.updateTaskStatus(taskid, task.Status, status.Message)
