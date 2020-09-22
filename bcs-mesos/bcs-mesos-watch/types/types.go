@@ -69,5 +69,5 @@ const (
 	TaskgroupChannelPrefix = "TaskGroup_"
 	//ExportserviceChannelPrefix prefix for event post channel
 	ExportserviceChannelPrefix = "Exportservice_"
-	DeploymentChannelPrefix = "Deployment_"
+	DeploymentChannelPrefix    = "Deployment_"
 )

@@ -27,14 +27,14 @@ func testAuthorize(req *http.Request) (string, bool, error) {
 }
 
 func TestGetTransport(t *testing.T) {
-	clusterId := "k8s-001"
+	clusterID := "k8s-001"
 	wsCred := models.BcsWsClusterCredentials{
 		ServerKey:     "k8s-001",
 		ServerAddress: "https://127.0.0.1:443",
 	}
 
 	tunnel.DefaultTunnelServer = websocketDialer.New(testAuthorize, websocketDialer.DefaultErrorWriter, testCleanCredentials)
-	tp := getTransport(clusterId, &wsCred)
+	tp := DefaultTunnelProxyDispatcher.getTransport(clusterID, &wsCred)
 	if tp != nil {
 		t.Error("should have no tunnel session and return nil transport")
 	}

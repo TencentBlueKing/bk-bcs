@@ -210,7 +210,7 @@ func (s *Scheduler) deleteTaskGroup(taskGroup *types.TaskGroup) error {
 	if err != nil {
 		blog.Errorf("delete taskgroup(%s) err: %s", taskGroup.ID, err.Error())
 	}
-	s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
+	//s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
 
 	//update agentsetting taskgroup index info
 	nodeIp := taskGroup.GetAgentIp()
