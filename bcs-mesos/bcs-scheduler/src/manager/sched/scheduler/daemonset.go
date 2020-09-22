@@ -113,11 +113,10 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIp
 		//if taskgroup failed or finished, then delete it
 		if pod.Status == types.TASKGROUP_STATUS_FINISH || pod.Status == types.TASKGROUP_STATUS_FAIL {
 			util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
-			defer util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
-
 			indaemon, err := s.store.FetchDaemonset(daemon.NameSpace, daemon.Name)
 			if err != nil {
 				blog.Errorf("Fetch Daemonset(%s) failed: %s", daemon.GetUuid(), err.Error())
+				util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
 				continue
 			}
 			s.DeleteDaemonsetTaskGroup(indaemon, pod)
@@ -128,6 +127,7 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIp
 			} else {
 				blog.Infof("daemonset(%s) TaskGroup(%s) status(%s), and delete it success", daemon.GetUuid(), podId, pod.Status)
 			}
+			util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
 			//if pod.AgentIp == hostIp, show the offer have builded the daemonset taskgroup
 		} else if hostIp == pod.GetAgentIp() {
 			blog.V(3).Infof("daemonset(%s) have taskgroup(%s) in agent(%s)", daemon.GetUuid(), podId, hostIp)
