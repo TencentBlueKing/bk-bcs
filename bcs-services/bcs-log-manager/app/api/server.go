@@ -79,7 +79,11 @@ func (s *Server) startGateway() error {
 	var err error
 	if s.conf.EtcdCerts.CAFile != "" && s.conf.EtcdCerts.ClientCertFile != "" && s.conf.EtcdCerts.ClientKeyFile != "" {
 		s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(s.etcdTLS)))
+		if err != nil {
+			opts = append(opts, grpc.WithInsecure())
+		} else {
+			opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(s.etcdTLS)))
+		}
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
