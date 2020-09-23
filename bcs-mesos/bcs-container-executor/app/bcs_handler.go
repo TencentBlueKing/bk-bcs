@@ -68,7 +68,7 @@ func (executor *BcsExecutor) frameworkMessageEnvironmentUpdate(taskID string, en
 
 	for _, ID := range containerList {
 		if runErr := executor.container.RunCommand(ID, command); runErr != nil {
-			err = fmt.Errorf("Update Environment %s failed: %s", envshell, err.Error())
+			err = fmt.Errorf("Update Environment %s failed: %s", envshell, runErr.Error())
 		}
 	}
 
@@ -155,7 +155,7 @@ func (executor *BcsExecutor) frameworkMessageSignalExecute(taskID string, singal
 	for _, ID := range containerList {
 		logs.Infof("execute shell command ##%s## in container %s", command, ID)
 		if runErr := executor.container.RunCommand(ID, command); runErr != nil {
-			err = fmt.Errorf("Sending  %s failed: %s", command, err.Error())
+			err = fmt.Errorf("Sending  %s failed: %s", command, runErr.Error())
 		}
 	}
 
