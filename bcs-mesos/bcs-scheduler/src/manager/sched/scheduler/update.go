@@ -781,14 +781,14 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 
 	now := time.Now().Unix()
 	updateTime := now - MAX_DATA_UPDATE_INTERVAL
-	task, err := s.store.FetchTask(taskId)
+	task, _ := s.store.FetchTask(taskId)
 	if task == nil {
 		blog.Warn("message status report: fetch task(%s) return nil", taskId)
 		return
 	}
 
 	var taskInfo *containertypes.BcsContainerInfo
-	err = json.Unmarshal(bcsMsg.TaskStatus, &taskInfo)
+	err := json.Unmarshal(bcsMsg.TaskStatus, &taskInfo)
 	if err != nil {
 		blog.Errorf("message Unmarshal data(%s) to types.BcsMessage error %s", string(bcsMsg.TaskStatus), err.Error())
 		return
