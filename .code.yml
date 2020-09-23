@@ -28,4 +28,4 @@
 .*/bmsf-configuration/internal/protocol/.*
 .*/bmsf-mesh/pkg/.*
 .*/innerdocs/.*
-.*/install/conf/bcs-services/bcs-cloud-netservice/swagger-ui/.*
+.*/install/conf/bcs-network/bcs-cloud-netservice/swagger-ui/.*
