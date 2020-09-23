@@ -6,6 +6,11 @@ replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
+	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20181126155829-0cd23ebeb688
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.1.9
 )
 
 require (
@@ -86,7 +91,6 @@ require (
 	github.com/gobwas/pool v0.2.0 // indirect
 	github.com/gobwas/ws v1.0.3 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
-	github.com/gogo/protobuf v1.2.2-0.20190723190241-65acae22fc9d // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.2
@@ -136,15 +140,14 @@ require (
 	github.com/mitchellh/hashstructure v1.0.0 // indirect
 	github.com/moby/term v0.0.0-20200507201656-73f35e472e8f // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
-	github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/nats-io/nats.go v1.9.2 // indirect
 	github.com/netdata/go-orchestrator v0.0.0-20190905093727-c793edba0e8f // indirect
 	github.com/nlopes/slack v0.6.1-0.20191106133607-d06c2a2b3249 // indirect
 	github.com/nranchev/go-libGeoIP v0.0.0-20170629073846-d6d4a9a4c7e8 // indirect
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
-	github.com/onsi/ginkgo v1.8.0
-	github.com/onsi/gomega v1.5.0
+	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/gomega v1.10.1
 	github.com/opencontainers/runc v1.0.0-rc6.0.20181203215513-96ec2177ae84 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/parnurzeal/gorequest v0.2.16
@@ -154,7 +157,7 @@ require (
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.1.0
-	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
+	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.6.0
 	github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec
 	github.com/satori/go.uuid v1.2.0
@@ -195,16 +198,14 @@ require (
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	gopkg.in/telegram-bot-api.v4 v4.6.4 // indirect
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.0.0-20181126151915-b503174bad59
-	k8s.io/apiextensions-apiserver v0.0.0-20181126155829-0cd23ebeb688
-	k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
-	k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
-	k8s.io/klog v0.3.0
+	k8s.io/api v0.18.6
+	k8s.io/apiextensions-apiserver v0.18.6
+	k8s.io/apimachinery v0.18.6
+	k8s.io/client-go v0.18.6
+	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
 	k8s.io/kubernetes v1.14.10
-	k8s.io/utils v0.0.0-20190923111123-69764acb6e8e // indirect
-	sigs.k8s.io/controller-runtime v0.1.9
-	sigs.k8s.io/structured-merge-diff/v3 v3.0.0-20200116222232-67a7b8c61874 // indirect
+	k8s.io/utils v0.0.0-20200912215256-4140de9c8800 // indirect
+	sigs.k8s.io/controller-runtime v0.6.3
 	sigs.k8s.io/testing_frameworks v0.1.1 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )

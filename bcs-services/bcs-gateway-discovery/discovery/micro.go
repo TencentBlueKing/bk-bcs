@@ -42,6 +42,7 @@ func init() {
 func NewDiscovery(modules []string, handler EventHandler, r registry.Registry) Discovery {
 	md := &MicroDiscovery{
 		modules:       make(map[string]*registry.Service),
+		ctlFunc:       make(map[string]context.CancelFunc),
 		microRegistry: r,
 		eventHandler:  handler,
 	}
@@ -64,6 +65,7 @@ type MicroDiscovery struct {
 	ctx      context.Context
 	stopFunc context.CancelFunc
 	// all modules information from micro registry
+	// modules cache key is fullName, for example 30002.mesosdriver.bkbcs.tencent.com, storage.bkbcs.tencent.com
 	modules map[string]*registry.Service
 	ctlFunc map[string]context.CancelFunc
 	//event callback
@@ -72,7 +74,7 @@ type MicroDiscovery struct {
 }
 
 // GetModuleServer module: types.BCS_MODULE_SCHEDULER...
-//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver
+//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver, storage
 func (d *MicroDiscovery) GetModuleServer(module string) (*registry.Service, error) {
 	fullName := fmt.Sprintf("%s%s", module, defaultDomain)
 	d.RLock()
@@ -86,7 +88,7 @@ func (d *MicroDiscovery) GetModuleServer(module string) (*registry.Service, erro
 }
 
 // GetRandomServerInstance get random one instance of server
-//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver
+//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver, storage
 func (d *MicroDiscovery) GetRandomServerInstance(module string) (*registry.Node, error) {
 	fullName := fmt.Sprintf("%s%s", module, defaultDomain)
 	d.RLock()
@@ -165,6 +167,32 @@ func (d *MicroDiscovery) Stop() {
 // @param ctx, context for exit control
 // @param module, full name for module, likes usermanager.bkbcs.tencent.com
 func (d *MicroDiscovery) worker(ctx context.Context, module string) {
+	//first, get details into cache
+	svcs, err := d.microRegistry.GetService(module)
+	if err != nil && err != registry.ErrNotFound {
+		blog.Errorf("discovery get specified module %s failed, %s. try next tick", module, err.Error())
+		<-time.After(time.Second * 3)
+		select {
+		case <-ctx.Done():
+			blog.Infof("discovery for module %s is already done, exit", module)
+			return
+		default:
+			go d.worker(ctx, module)
+		}
+		return
+	}
+	if len(svcs) > 0 {
+		blog.Infof("discovery merge module %s different version instance and sort in cache", module)
+		for _, svc := range svcs[1:] {
+			svcs[0].Nodes = append(svcs[0].Nodes, svc.Nodes...)
+		}
+		sort.Slice(svcs[0].Nodes, func(i, j int) bool {
+			return svcs[0].Nodes[i].Address < svcs[0].Nodes[j].Address
+		})
+		d.Lock()
+		d.modules[module] = svcs[0]
+		d.Unlock()
+	}
 	blog.V(3).Infof("discovery begin watch module %s", module)
 	watcher, err := d.microRegistry.Watch(registry.WatchService(module))
 	if err != nil {

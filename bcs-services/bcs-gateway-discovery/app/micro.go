@@ -117,7 +117,8 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 	for name := range defaultGrpcModules {
 		svc, err := s.formatEtcdInfo(name, false)
 		if err != nil {
-			return nil, err
+			blog.Errorf("format multiple etcd grpc module failed, %s, try next time", err.Error())
+			continue
 		}
 		allServices = append(allServices, svc)
 	}
@@ -126,7 +127,8 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 	for _, name := range defaultHTTPModules {
 		svc, err := s.formatEtcdInfo(name, true)
 		if err != nil {
-			return nil, err
+			blog.Errorf("format multiple etcd http module failed, %s, try next time", err.Error())
+			continue
 		}
 		allServices = append(allServices, svc)
 	}

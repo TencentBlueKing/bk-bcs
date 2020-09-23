@@ -134,7 +134,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 			blog.Errorf("gateway init etcd registry feature failed, %s", err.Error())
 			return err
 		}
-		modules := strings.Split(option.Etcd.GrpcModules, ",")
+		modules := strings.Split(strings.ToLower(option.Etcd.GrpcModules), ",")
 		s.microDiscovery = modulediscovery.NewDiscovery(modules, s.microModuleEvent, mregistry)
 		blog.Infof("gateway init etcd registry success, try to init bkbcs module watch")
 	}

@@ -318,8 +318,10 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 		Name:     &svc.Name,
 		Protocol: &svc.Protocol,
 		Host:     &svc.Host,
-		Path:     &svc.Path,
 		Retries:  gokong.Int(svc.Retries),
+	}
+	if len(svc.Path) != 0 {
+		ksvc.Path = &svc.Path
 	}
 	if len(svc.Labels) != 0 {
 		for _, v := range svc.Labels {
@@ -333,9 +335,11 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 //args: inner route definition; kong service Id
 func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
 	var protocols []*string
-	if route.Protocol == protocolHTTP {
+	//no matter what protocol it is, service only support tls
+	//route supports double protocols
+	if route.Protocol == protocolHTTP || route.Protocol == protocolHTTPS {
 		protocols = []*string{gokong.String(protocolHTTP), gokong.String(protocolHTTPS)}
-	} else if route.Protocol == protocolGRPC {
+	} else if route.Protocol == protocolGRPC || route.Protocol == protocolGRPCS {
 		protocols = []*string{gokong.String(protocolGRPC), gokong.String(protocolGRPCS)}
 	}
 	kr := &gokong.RouteRequest{
