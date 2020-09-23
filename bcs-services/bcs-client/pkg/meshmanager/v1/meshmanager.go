@@ -15,7 +15,7 @@ package v1
 
 import (
 	"context"
-	"strings"
+	"regexp"
 
 	clientmeshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/meshmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
@@ -43,8 +43,10 @@ func NewMeshManager(options types.ClientOptions) clientmeshmanager.MeshManager {
 
 func (m *meshManager) dialGrpc() error {
 	var err error
-	addr := strings.TrimLeft(m.clientOption.BcsApiAddress, "http://")
-	addr = strings.TrimLeft(m.clientOption.BcsApiAddress, "https://")
+	//https://127.0.0.1:80 -> 127.0.0.1:80
+	re := regexp.MustCompile("https?://")
+	s := re.Split(m.clientOption.BcsApiAddress, 2)
+	addr := s[len(s)-1]
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
