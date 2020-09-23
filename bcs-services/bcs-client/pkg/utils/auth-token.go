@@ -18,6 +18,13 @@ import (
 	"fmt"
 )
 
+// NewTokenAuth impelmentation of grpc credentials interface
+func NewTokenAuth(t string) *GrpcTokenAuth {
+	return &GrpcTokenAuth{
+		Token: t,
+	}
+}
+
 // GrpcTokenAuth grpc token
 type GrpcTokenAuth struct {
 	Token string
@@ -32,5 +39,5 @@ func (t GrpcTokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (ma
 
 // RequireTransportSecurity RequireTransportSecurity
 func (GrpcTokenAuth) RequireTransportSecurity() bool {
-	return true
+	return false
 }
