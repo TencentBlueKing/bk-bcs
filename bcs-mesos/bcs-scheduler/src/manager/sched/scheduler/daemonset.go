@@ -121,8 +121,8 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIp
 				blog.Infof("check daemonset(%s:%s) whether build offer, fetch taskgroup(%s) Not Found, then delete it",
 					daemon.NameSpace, daemon.Name, podId)
 				util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
-				indaemon, err := s.store.FetchDaemonset(daemon.NameSpace, daemon.Name)
-				if indaemon!=nil {
+				indaemon, _ := s.store.FetchDaemonset(daemon.NameSpace, daemon.Name)
+				if indaemon != nil {
 					//delete daemonset pods index
 					delete(indaemon.Pods, podId)
 					err = s.store.SaveDaemonset(indaemon)

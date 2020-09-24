@@ -68,6 +68,7 @@ func NewApplyCommand() cli.Command {
 type createFunc func(string, string, []byte) error
 type updateFunc func(string, string, []byte, url.Values) error
 
+// metaInfo holder for resource
 type metaInfo struct {
 	clusterID  string
 	apiVersion string

@@ -14,11 +14,18 @@
 package types
 
 const (
-	IstioOperatorKind      string = "IstioOperator"
-	IstioOperatorGroup     string = "install.istio.io"
-	IstioOperatorVersion   string = "v1alpha1"
-	IstioOperatorName      string = "istiocontrolplane"
+	// IstioOperatorKind CRD kind for istio operator
+	IstioOperatorKind string = "IstioOperator"
+	// IstioOperatorGroup CRD group info
+	IstioOperatorGroup string = "install.istio.io"
+	// IstioOperatorVersion version for CRD
+	IstioOperatorVersion string = "v1alpha1"
+	// IstioOperatorName stable name for istio
+	IstioOperatorName string = "istiocontrolplane"
+	// IstioOperatorNamespace namespace for istio install
 	IstioOperatorNamespace string = "istio-system"
-	IstioOperatorPlural    string = "istiooperators"
-	IstioOperatorListKind  string = "IstioOperatorList"
+	// IstioOperatorPlural plural info for meshManager request with API
+	IstioOperatorPlural string = "istiooperators"
+	// IstioOperatorListKind list kind for operator
+	IstioOperatorListKind string = "IstioOperatorList"
 )

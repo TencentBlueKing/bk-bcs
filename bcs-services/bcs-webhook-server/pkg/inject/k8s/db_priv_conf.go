@@ -15,6 +15,7 @@ package k8s
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/options"
@@ -53,8 +54,9 @@ func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOpera
 		return nil, err
 	}
 
-	var matched *v1.BcsDbPrivConfig
+	var matchedBdpcs []*v1.BcsDbPrivConfig
 	for _, d := range bcsDbPrivConfs {
+
 		labelSelector := &metav1.LabelSelector{
 			MatchLabels: d.Spec.PodSelector,
 		}
@@ -63,20 +65,26 @@ func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOpera
 			return nil, fmt.Errorf("invalid label selector: %s", err.Error())
 		}
 		if selector.Matches(labels.Set(pod.Labels)) {
-			matched = d
-			break
+			matchedBdpcs = append(matchedBdpcs, d)
 		}
 	}
-	if matched != nil {
-		patch = append(patch, dbPrivConf.addInitContainer(pod.Spec.InitContainers, matched))
+	if len(matchedBdpcs) > 0 {
+		initContainers := pod.Spec.InitContainers
+		for i, matched := range matchedBdpcs {
+			initContainers = append(initContainers, dbPrivConf.generateInitContainer(i, matched))
+		}
+		patch = append(patch, PatchOperation{
+			Op:    "replace",
+			Path:  "/spec/initContainers",
+			Value: initContainers,
+		})
 	}
 
 	return patch, nil
 }
 
-// addInitContainer add an init-container to pod
-func (dbPrivConf *DbPrivConfInject) addInitContainer(origin []corev1.Container, matched *v1.BcsDbPrivConfig) (patch PatchOperation) {
-
+// generateInitContainer generate an init-container with BcsDbPrivConfig
+func (dbPrivConf *DbPrivConfInject) generateInitContainer(i int, matched *v1.BcsDbPrivConfig) corev1.Container {
 	var fieldPath, callType string
 
 	if dbPrivConf.Injects.DbPriv.NetworkType == "overlay" {
@@ -92,7 +100,7 @@ func (dbPrivConf *DbPrivConfInject) addInitContainer(origin []corev1.Container, 
 	}
 
 	initContainer := corev1.Container{
-		Name:  "db-privilege",
+		Name:  "db-privilege" + "-" + strconv.Itoa(i),
 		Image: dbPrivConf.Injects.DbPriv.InitContainerImage,
 		Env: []corev1.EnvVar{
 			{
@@ -142,12 +150,5 @@ func (dbPrivConf *DbPrivConfInject) addInitContainer(origin []corev1.Container, 
 		},
 	}
 
-	patchedInitContainers := append(origin, initContainer)
-
-	patch = PatchOperation{
-		Op:    "replace",
-		Path:  "/spec/initContainers",
-		Value: patchedInitContainers,
-	}
-	return patch
+	return initContainer
 }

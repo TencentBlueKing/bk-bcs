@@ -29,10 +29,13 @@ import (
 )
 
 const (
+	// BcsClusterIDHeaderKey key for http header
 	BcsClusterIDHeaderKey = "BCS-ClusterID"
-	ApiPrefix             = `/bcsapi/[^/]+/[^/]+`
+	// ApiPrefix bcs-api prefix
+	ApiPrefix = `/bcsapi/[^/]+/[^/]+`
 )
 
+// NewAuthFilter filter creator
 func NewAuthFilter(conf *config.ApiServConfig) (RequestFilterFunction, error) {
 	myAuth, err := bkiam.NewAuth(conf)
 	if err != nil {
@@ -45,11 +48,13 @@ func NewAuthFilter(conf *config.ApiServConfig) (RequestFilterFunction, error) {
 	}, nil
 }
 
+// AuthFilter auth filter for all bcs-api request
 type AuthFilter struct {
 	conf *config.ApiServConfig
 	auth auth.BcsAuth
 }
 
+// Execute check authorization
 func (af *AuthFilter) Execute(req *restful.Request) (errCode int, err error) {
 	token, err := af.auth.GetToken(req.Request.Header)
 	if err != nil {
@@ -60,7 +65,7 @@ func (af *AuthFilter) Execute(req *restful.Request) (errCode int, err error) {
 	method := req.Request.Method
 	uri := req.Request.URL.Path
 
-	authRuleList := make([]*AuthURLRule, 0)
+	var authRuleList []*AuthURLRule
 
 	switch AuthRuleRegex.ReplaceAllString(uri, "$1") {
 	case "storage":
@@ -102,10 +107,13 @@ func (af *AuthFilter) Execute(req *restful.Request) (errCode int, err error) {
 }
 
 const (
+	// ClusterIDSignTag tag for bkbcs cluster ID
 	ClusterIDSignTag = "{clusterId}"
+	// NamespaceSignTag tag for bkbcs namespace in URL
 	NamespaceSignTag = "{namespace}"
 )
 
+// AuthURLRule URL rule for dispatch
 type AuthURLRule struct {
 	Rule   string
 	Method string
@@ -141,6 +149,7 @@ func (aur *AuthURLRule) init() {
 	aur.regex = regexp.MustCompile(raw)
 }
 
+// Match request match for module
 func (aur *AuthURLRule) Match(clusterID, namespace, uri, method string) (match bool, action auth.Action, resource auth.Resource) {
 	if aur.Method != method {
 		return
@@ -169,8 +178,9 @@ func (aur *AuthURLRule) Match(clusterID, namespace, uri, method string) (match b
 }
 
 var (
+	// AuthRuleRegex regex for rule match
 	AuthRuleRegex = regexp.MustCompile(`^/bcsapi/[^/]+/([^/]+)/([^/]+).*`)
-
+	// StorageAuthRule rule for module bkbcs storage
 	StorageAuthRule = []*AuthURLRule{
 		// storage dynamic query
 		{Rule: `/query/(?:mesos|k8s)/dynamic/clusters/{clusterId}/[^/]+`, Method: "GET", Action: auth.ActionRead},
@@ -189,7 +199,7 @@ var (
 		{Rule: `/metric/clusters/{clusterId}/namespaces/{namespace}/[^/]+/[^/]+`, Method: "DELETE", Action: auth.ActionManage},
 		{Rule: `/metric/clusters/{clusterId}`, Method: "GET", Action: auth.ActionRead},
 	}
-
+	// MetricAuthRule rule for metric
 	MetricAuthRule = []*AuthURLRule{
 		// metric
 		{Rule: `/metric/clustertype/[^/]+/clusters/{clusterId}/namespaces/{namespace}/metrics`, Method: "DELETE", Action: auth.ActionManage},
@@ -200,7 +210,7 @@ var (
 		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "PUT", Action: auth.ActionManage},
 		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "DELETE", Action: auth.ActionManage},
 	}
-
+	// MesosAuthRule mesosdriver rule
 	MesosAuthRule = []*AuthURLRule{
 		// application and process
 		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)`, Method: "POST", Action: auth.ActionManage},

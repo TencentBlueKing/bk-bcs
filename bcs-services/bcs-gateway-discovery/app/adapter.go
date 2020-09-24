@@ -15,11 +15,14 @@ package app
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
+
+	"github.com/micro/go-micro/v2/registry"
 )
 
 var defaultModules = []string{
@@ -29,6 +32,16 @@ var defaultModules = []string{
 	types.BCS_MODULE_NETWORKDETECTION,
 	types.BCS_MODULE_USERMANAGER,
 	types.BCS_MODULE_KUBEAGENT,
+}
+
+var defaultGrpcModules = map[string]string{
+	"logmanager":  "LogManager",
+	"meshmanager": "MeshManager",
+}
+
+var defaultHTTPModules = []string{
+	"logmanager",
+	"meshmanager",
 }
 
 var defaultDomain = "bkbcs.tencent.com"
@@ -41,6 +54,8 @@ var defaultServiceTag = "bkbcs-service"
 var defaultPluginName = "bkbcs-auth"
 
 //Handler for module automatic reflection
+//@param: module, bkbcs module name, like usermanager, logmanager
+//@param: svcs, bkbcs service instance definition
 type Handler func(module string, svcs []*types.ServerInfo) (*register.Service, error)
 
 //NewAdapter create service data convertion
@@ -74,6 +89,129 @@ func (adp *Adapter) GetService(module string, svcs []*types.ServerInfo) (*regist
 		return nil, fmt.Errorf("handle for %s not registe", module)
 	}
 	return handler(module, svcs)
+}
+
+//GetGrpcService interface for go-micro grpc module data convertion
+//@param: module, all kind module name, such as logmanager, usermanager
+//@param: svc, go-micro service definition, came form etcd registry
+func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*register.Service, error) {
+	//get grpc Service Interface name
+	interfaceName, ok := defaultGrpcModules[module]
+	if !ok {
+		return nil, fmt.Errorf("module %s do not registe", module)
+	}
+	// actual registed name & grpc proxy path
+	actualName := fmt.Sprintf("%s-grpc", module)
+	requestPath := fmt.Sprintf("/%s.%s/", module, interfaceName)
+	hostName := fmt.Sprintf("%s.%s", actualName, defaultDomain)
+	labels := make(map[string]string)
+	labels["module"] = module
+	regSvc := &register.Service{
+		Name:     actualName,
+		Protocol: "grpcs",
+		Host:     hostName,
+		Retries:  1,
+		Labels:   labels,
+	}
+	//setting route information
+	rt := register.Route{
+		Name:     actualName,
+		Protocol: "grpc",
+		//grpc path proxy rule likes /logmanager.LogManager/
+		Paths:       []string{requestPath},
+		PathRewrite: false,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: defaultPluginName,
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+				Module:        module,
+			},
+		},
+		Service: actualName,
+		Labels:  labels,
+	}
+	regSvc.Routes = append(regSvc.Routes, rt)
+	//setting upstream backend information
+	bcks := adp.constructUpstreamTarget(svc.Nodes)
+	regSvc.Backends = append(regSvc.Backends, bcks...)
+	return regSvc, nil
+}
+
+//GetHTTPService interface for go-micro http module data convertion
+// only support standard new module api registration
+func (adp *Adapter) GetHTTPService(module string, svc *registry.Service) (*register.Service, error) {
+	found := false
+	for _, info := range defaultHTTPModules {
+		if module == info {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, fmt.Errorf("go-micro http module %s do not registe", module)
+	}
+	// actual registed name & grpc proxy path
+	actualName := fmt.Sprintf("%s-http", module)
+	//route path
+	requestPath := fmt.Sprintf("/%s/", module)
+	gatewayPath := fmt.Sprintf("/bcsapi/v4/%s/", module)
+	hostName := fmt.Sprintf("%s.%s", actualName, defaultDomain)
+	labels := make(map[string]string)
+	labels["module"] = module
+	regSvc := &register.Service{
+		Name:     actualName,
+		Protocol: "https",
+		Host:     hostName,
+		Path:     requestPath,
+		Retries:  1,
+		Labels:   labels,
+	}
+	//setting route information
+	rt := register.Route{
+		Name:        actualName,
+		Protocol:    "http",
+		Paths:       []string{gatewayPath},
+		PathRewrite: true,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: defaultPluginName,
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("https://%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+				Module:        module,
+			},
+		},
+		Service: actualName,
+		Labels:  labels,
+	}
+	regSvc.Routes = append(regSvc.Routes, rt)
+	//setting upstream backend information
+	var httpNodes []*registry.Node
+	for _, node := range svc.Nodes {
+		hostport := strings.Split(node.Address, ":")
+		if len(hostport) != 2 {
+			blog.Errorf("standard http module %s address formation error, mis-match with ip:port(%s), ID: %s", actualName, node.Address, node.Id)
+			return nil, fmt.Errorf("node ip:port formation error")
+		}
+		grpcport, err := strconv.Atoi(hostport[1])
+		if err != nil {
+			blog.Errorf("http module %s node %s port is not integer. original %s", actualName, node.Id, node.Address)
+			return nil, fmt.Errorf("node port is not integer")
+		}
+		//go-micro http port definition
+		httpport := grpcport - 1
+		newNode := &registry.Node{
+			Id:       node.Id,
+			Address:  fmt.Sprintf("%s:%d", hostport[0], httpport),
+			Metadata: node.Metadata,
+		}
+		httpNodes = append(httpNodes, newNode)
+	}
+	bcks := adp.constructUpstreamTarget(httpNodes)
+	regSvc.Backends = append(regSvc.Backends, bcks...)
+	return regSvc, nil
 }
 
 //initDefaultModules init original proxy rule, it's better compatible with originals
@@ -110,7 +248,8 @@ func (adp *Adapter) initAdditionalModules() error {
 // to custom service definition. this is compatible with original bcs-api proxy
 func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		//if all service instances down, just keep it what it used to be
+		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
 	resources := strings.Split(module, "/")
@@ -173,7 +312,8 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 // to custom service definition. this is compatible with original bcs-api proxy
 func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		//if all service instances down, just keep it what it used to be
+		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
 	resources := strings.Split(module, "/")
@@ -234,7 +374,8 @@ func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo)
 // to custom service definition. this is compatible with original bcs-api proxy
 func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		//if all service instances down, just keep it what it used to be
+		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
 	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_STORAGE, defaultDomain)
@@ -279,7 +420,8 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 //! @param svc instance plays a trick, it's field HostName holding token from kubeagent
 func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		//if all service instances down, just keep it what it used to be
+		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
 	resources := strings.Split(module, "/")
@@ -348,7 +490,8 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 // and further more, api-gateway defines new standard proxy rule for it
 func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		//if all service instances down, just keep it what it used to be
+		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
 	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_USERMANAGER, defaultDomain)
@@ -384,7 +527,8 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 // and further more, api-gateway defines new standard proxy rule for it
 func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		//if all service instances down, just keep it what it used to be
+		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
 	hostName := fmt.Sprintf("%s.%s", types.BCS_MODULE_NETWORKDETECTION, defaultDomain)
@@ -429,7 +573,8 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 // /bcsapi/v4/{module}/ ==> /{module}/
 func (adp *Adapter) constructStandardProxy(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	if len(svcs) == 0 {
-		//todo(DeveloperJim): if all service instances down, shall we update proxy rules?
+		//if all service instances down, just keep it what it used to be
+		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
 	hostName := fmt.Sprintf("%s.%s", module, defaultDomain)
@@ -474,7 +619,6 @@ func (adp *Adapter) constructBackends(svcs []*types.ServerInfo) []register.Backe
 	var backends []register.Backend
 	for _, svc := range svcs {
 		var target string
-		//todo(DeveloperJim): support ipv6 feature
 		if svc.ExternalIp != "" && svc.ExternalPort != 0 {
 			target = fmt.Sprintf("%s:%d", svc.ExternalIp, svc.ExternalPort)
 		} else {
@@ -483,6 +627,18 @@ func (adp *Adapter) constructBackends(svcs []*types.ServerInfo) []register.Backe
 		}
 		back := register.Backend{
 			Target: target,
+			Weight: 100,
+		}
+		backends = append(backends, back)
+	}
+	return backends
+}
+
+func (adp *Adapter) constructUpstreamTarget(nodes []*registry.Node) []register.Backend {
+	var backends []register.Backend
+	for _, node := range nodes {
+		back := register.Backend{
+			Target: node.Address,
 			Weight: 100,
 		}
 		backends = append(backends, back)

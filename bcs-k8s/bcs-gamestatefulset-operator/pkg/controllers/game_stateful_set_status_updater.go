@@ -41,11 +41,13 @@ func NewRealGameStatefulSetStatusUpdater(
 	return &realGameStatefulSetStatusUpdater{tkexClient, setLister}
 }
 
+// realGameStatefulSetStatusUpdater updater implementation
 type realGameStatefulSetStatusUpdater struct {
 	tkexClient tkexclientset.Interface
 	setLister  stspluslisters.GameStatefulSetLister
 }
 
+// UpdateGameStatefulSetStatus update gamesatefulset status
 func (ssu *realGameStatefulSetStatusUpdater) UpdateGameStatefulSetStatus(
 	set *stsplus.GameStatefulSet,
 	status *stsplus.GameStatefulSetStatus) error {

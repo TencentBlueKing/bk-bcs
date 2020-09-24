@@ -10,7 +10,7 @@ bk-bcs/bcs-common/pkg/scheduler/mesosproto \
 bk-bcs/bcs-mesos/bcs-process-executor/process-executor/protobuf \
 bk-bcs/bcs-services/bcs-webhook-server/pkg/client \
 bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/kubefed/client \
-bk-bcs/bcs-k8s/tkex-statefulsetplus-operator \
+bk-bcs/bcs-k8s/bcs-egress \
 bk-bcs/bcs-mesos/bcs-container-executor/mesos \
 bk-bcs/bmsf-configuration"
 

@@ -15,6 +15,7 @@ package custom
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 	uuid "github.com/satori/go.uuid"
@@ -23,6 +24,7 @@ import (
 // ServiceNode is node info for bcs services.
 type ServiceNode types.ServerInfo
 
+// NewServiceNode create kubedriver service node
 func NewServiceNode(info types.ServerInfo) ServiceNode {
 	return ServiceNode{
 		IP:           info.IP,
@@ -38,15 +40,18 @@ func NewServiceNode(info types.ServerInfo) ServiceNode {
 	}
 }
 
+// PrimaryKey key for indexer
 func (n *ServiceNode) PrimaryKey() string {
 	return fmt.Sprintf("%s", uuid.NewV4())
 }
 
+// Payload content length
 func (n *ServiceNode) Payload() []byte {
 	result, _ := json.Marshal(n)
 	return result
 }
 
+// OwnsPayload xxxx
 func (n *ServiceNode) OwnsPayload(payload []byte) bool {
 	return true
 }

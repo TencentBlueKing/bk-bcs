@@ -23,6 +23,14 @@ import (
 	"github.com/DeveloperJim/gokong"
 )
 
+const (
+	protocolHTTP = "http"
+	protocolGRPC = "grpc"
+
+	protocolHTTPS = "https"
+	protocolGRPCS = "grpcs"
+)
+
 //New create Register implementation for kong
 // return empty
 func New(addr []string, config *tls.Config) (register.Register, error) {
@@ -296,7 +304,10 @@ func innerServiceConvert(ksvc *gokong.Service) *register.Service {
 		Protocol: *ksvc.Protocol,
 		Host:     *ksvc.Host,
 		Port:     uint(*ksvc.Port),
-		Path:     *ksvc.Path,
+	}
+	//path will be empty when rewrite feature turns off
+	if ksvc.Path != nil {
+		svc.Path = *ksvc.Path
 	}
 	return svc
 }
@@ -307,8 +318,10 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 		Name:     &svc.Name,
 		Protocol: &svc.Protocol,
 		Host:     &svc.Host,
-		Path:     &svc.Path,
 		Retries:  gokong.Int(svc.Retries),
+	}
+	if len(svc.Path) != 0 {
+		ksvc.Path = &svc.Path
 	}
 	if len(svc.Labels) != 0 {
 		for _, v := range svc.Labels {
@@ -318,12 +331,20 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 	return ksvc
 }
 
-//kongRouteConvert convert inner service to kong Route
+//kongRouteConvert convert inner service to kong Route, tls feature supported in default.
 //args: inner route definition; kong service Id
 func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
+	var protocols []*string
+	//no matter what protocol it is, service only support tls
+	//route supports double protocols
+	if route.Protocol == protocolHTTP || route.Protocol == protocolHTTPS {
+		protocols = []*string{gokong.String(protocolHTTP), gokong.String(protocolHTTPS)}
+	} else if route.Protocol == protocolGRPC || route.Protocol == protocolGRPCS {
+		protocols = []*string{gokong.String(protocolGRPC), gokong.String(protocolGRPCS)}
+	}
 	kr := &gokong.RouteRequest{
 		Name:      &route.Name,
-		Protocols: []*string{gokong.String("https"), gokong.String("http")},
+		Protocols: protocols,
 		Paths:     gokong.StringSlice(route.Paths),
 		StripPath: gokong.Bool(route.PathRewrite),
 	}
@@ -407,14 +428,14 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 }
 
 //kongBKBCSAuthConvert convert inner service request plugin to request-transformer
-func kongBKBCSAuthConvert(option *register.BCSAuthOption, ID string, tys string) *gokong.PluginRequest {
+func kongBKBCSAuthConvert(option *register.BCSAuthOption, id string, tys string) *gokong.PluginRequest {
 	pr := &gokong.PluginRequest{
 		Name: option.Name,
 	}
 	if tys == "service" {
-		pr.ServiceId = gokong.ToId(ID)
+		pr.ServiceId = gokong.ToId(id)
 	} else {
-		pr.RouteId = gokong.ToId(ID)
+		pr.RouteId = gokong.ToId(id)
 	}
 	pr.Config = make(map[string]interface{})
 	//setting clean operation
@@ -424,6 +445,7 @@ func kongBKBCSAuthConvert(option *register.BCSAuthOption, ID string, tys string)
 	return pr
 }
 
+// httpTransformer holder for http plugins
 type httpTransformer struct {
 	Body     []*string `json:"body" yaml:"body"`
 	Headers  []*string `json:"headers" yaml:"headers"`
