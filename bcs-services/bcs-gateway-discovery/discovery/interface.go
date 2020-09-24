@@ -35,6 +35,8 @@ type Discovery interface {
 	ListAllServer() ([]*registry.Service, error)
 	// AddModuleWatch add new watch for specified module, Discovery will cache watched module info
 	AddModuleWatch(module string) error
+	// DeleteModuleWatch clean watch for specified module
+	DeleteModuleWatch(module string) error
 	// RegisterEventFunc register event handle function
 	RegisterEventFunc(handleFunc EventHandler)
 	// Stop close module discovery
