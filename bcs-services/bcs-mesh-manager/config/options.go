@@ -14,7 +14,7 @@ type MeshManagerOptions struct {
 	conf.CertConfig
 
 	DockerHub           string `json:"istio-docker-hub" value:"" usage:"istio-operator docker hub"`
-	IstioOperatorCharts string `json:"istiooperator-charts" value:"" usage:"istio-operator charts"`
+	IstioOperatorCharts string `json:"istiooperator-charts" value:"./istio-operator" usage:"istio-operator charts"`
 	ServerAddress       string `json:"apigateway-addr" value:"" usage:"bcs apigateway address"`
 	UserToken           string `json:"user-token" value:"" usage:"bcs apigateway usertoken to control k8s cluster"`
 	Kubeconfig          string `json:"kubeconfig" value:"" usage:"kube-apiserver kubeconfig"`
@@ -48,4 +48,10 @@ func ParseConfig() Config {
 		conf.ServerCaFile = op.CertConfig.CAFile
 	}
 	return conf
+}
+
+// ValidateConfig check nessacessry
+func ValidateConfig() error {
+	//! for config item safety
+	return nil
 }
