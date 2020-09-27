@@ -64,6 +64,7 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 	}
 	blog.V(5).Infof("get module %s string detail: %+v", module, originals)
 	var svcs []*types.ServerInfo
+	skip := false
 	for _, info := range originals {
 		data := info.(string)
 		svc := new(types.ServerInfo)
@@ -71,9 +72,16 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 			blog.Errorf("handle module %s json %s unmarshal failed, %s", module, data, err.Error())
 			continue
 		}
+		//! compatible code here, when mesos driver already start etcd registry feature
+		//! discovery stop adopt zookeeper registry information
+		if s.isClusterRestriction(svc.Cluster) {
+			blog.Warnf("discovery check that cluster %s[%s] mesosdriver change to etcd registry, skip", svc.Cluster, svc.IP)
+			skip = true
+			continue
+		}
 		svcs = append(svcs, svc)
 	}
-	if len(svcs) == 0 {
+	if len(svcs) == 0 && !skip {
 		blog.Errorf("convert module %s all json info failed, pay more attention", module)
 		return nil, fmt.Errorf("module %s all json err", module)
 	}
@@ -103,6 +111,12 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 		}
 		if len(svc.Cluster) == 0 {
 			blog.Errorf("find driver %s node lost cluster information. detail: %s", module, data)
+			continue
+		}
+		//! compatible code here, when mesos driver already start etcd registry feature
+		//! discovery stop adopt zookeeper registry information
+		if s.isClusterRestriction(svc.Cluster) {
+			blog.Warnf("discovery check that cluster %s[%s] mesosdriver change to etcd registry, skip", svc.Cluster, svc.IP)
 			continue
 		}
 		key := fmt.Sprintf("%s/%s", module, svc.Cluster)
