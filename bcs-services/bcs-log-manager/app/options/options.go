@@ -31,20 +31,12 @@ type LogManagerOption struct {
 
 	CollectionConfigs []logmanager.CollectionConfig `json:"collection_configs" usage:"Custom configs of log collections"`
 	BKDataAPIHost     string                        `json:"bkdata_api_host" value:"" usage:"bk-data api gateway host"`
-
-	BcsAPIHost     string `json:"bcs_api_host" value:"" usage:"BcsApi Host"`
-	BcsAPICertFile string `json:"bcs_api_cert_file" usage:"BCS API cert file"`
-	BcsAPIKeyFile  string `json:"bcs_api_key_file" usage:"BCS API key file"`
-	BcsAPICAFile   string `json:"bcs_api_ca_file" usage:"BCS API ca file"`
+	BcsAPIHost        string                        `json:"bcs_api_host" value:"" usage:"BcsApi Host"`
 
 	EtcdHosts    string `json:"etcd_hosts" value:"" usage:"etcd host"`
 	EtcdCertFile string `json:"etcd_cert_file" value:"" usage:"etcd cert file"`
 	EtcdKeyFile  string `json:"etcd_key_file" value:"" usage:"etcd key file"`
 	EtcdCAFile   string `json:"etcd_ca_file" value:"" usage:"etcd ca file"`
-
-	LogManagerCertFile string `json:"logmanager_cert_file" value:"" usage:"Log Manager cert config"`
-	LogManagerKeyFile  string `json:"logmanager_key_file" value:"" usage:"Log Manager key config"`
-	LogManagerCAFile   string `json:"logmanager_ca_file" value:"" usage:"Log Manager ca config"`
 
 	AuthToken    string `json:"api_auth_token" value:"" usage:"BcsApi authentication token"`
 	Gateway      bool   `json:"use_gateway" value:"true" usage:"whether use api gateway"`

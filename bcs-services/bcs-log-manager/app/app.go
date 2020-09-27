@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commonconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	bkdataCli "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api"
 	bkdata "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/bkdataapi"
@@ -79,15 +80,15 @@ func setManagerConfig(op *options.LogManagerOption, conf *config.ManagerConfig) 
 	conf.BcsAPIConfig.Gateway = op.Gateway
 	// TODO tls security
 	// conf.BcsAPIConfig.TLSConfig = ssl.ClientTslConfNoVerity()
-	if op.BcsAPICAFile != "" {
+	if op.CAFile != "" {
 		var err error
-		conf.BcsAPIConfig.TLSConfig, err = ssl.ClientTslConfVerity(op.BcsAPICAFile, op.BcsAPICertFile, op.BcsAPIKeyFile, "")
+		conf.BcsAPIConfig.TLSConfig, err = ssl.ClientTslConfVerity(op.CAFile, op.ClientCertFile, op.ClientKeyFile, static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("ClientTslConfVerity of bcsapi failed: %s", err.Error())
 			conf.BcsAPIConfig.TLSConfig = ssl.ClientTslConfNoVerity()
 		}
 	}
-	conf.CAFile = op.ClientCertFile
+	conf.CAFile = op.CAFile
 	conf.SystemDataID = op.SystemDataID
 	conf.BkAppCode = op.BkAppCode
 	conf.BkUsername = op.BkUsername
@@ -106,10 +107,6 @@ func setAPIServerConfig(op *options.LogManagerOption, conf *config.APIServerConf
 		ClientCertFile: op.EtcdCertFile,
 		ClientKeyFile:  op.EtcdKeyFile,
 	}
-	conf.APICerts = commonconf.CertConfig{
-		CAFile:         op.LogManagerCAFile,
-		ServerCertFile: op.LogManagerCertFile,
-		ServerKeyFile:  op.LogManagerKeyFile,
-	}
+	conf.APICerts = op.CertConfig
 	conf.ZkConfig = op.ZkConfig
 }

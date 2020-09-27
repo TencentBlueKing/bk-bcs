@@ -58,6 +58,7 @@ type Server struct {
 	microSvr     service.Service
 	etcdTLS      *tls.Config
 	serverTLS    *tls.Config
+	clientTLS    *tls.Config
 }
 
 // NewAPIServer creates Server instance
@@ -77,13 +78,8 @@ func NewAPIServer(ctx context.Context, conf *config.APIServerConfig, logManager 
 func (s *Server) startGateway() error {
 	var opts []grpc.DialOption
 	var err error
-	if s.conf.EtcdCerts.CAFile != "" && s.conf.EtcdCerts.ClientCertFile != "" && s.conf.EtcdCerts.ClientKeyFile != "" {
-		s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
-		if err != nil {
-			opts = append(opts, grpc.WithInsecure())
-		} else {
-			opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(s.etcdTLS)))
-		}
+	if s.clientTLS != nil {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(s.clientTLS)))
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
@@ -104,13 +100,7 @@ func (s *Server) startGateway() error {
 	var workFunc func()
 	var server http.Server
 	// whether to use transport layer secuerity
-	if s.conf.APICerts.ServerCertFile != "" && s.conf.APICerts.ServerKeyFile != "" {
-		// TODO
-		s.serverTLS, err = ssl.ServerTslConf(s.conf.APICerts.CAFile, s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile, static.ServerCertPwd)
-		if err != nil {
-			blog.Errorf("ServerTslConf of api gateway failed: %s", err.Error())
-			return err
-		}
+	if s.serverTLS != nil {
 		server = http.Server{
 			Addr:      s.httpEndpoint,
 			Handler:   mux,
@@ -142,15 +132,6 @@ func (s *Server) startGateway() error {
 
 func (s *Server) startMicroService() error {
 	var err error
-	if s.conf.EtcdCerts.CAFile != "" && s.conf.EtcdCerts.ClientCertFile != "" && s.conf.EtcdCerts.ClientKeyFile != "" {
-		s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
-		if err != nil {
-			blog.Errorf("Build etcd tlsconf failed: %s", err.Error())
-			return err
-		}
-	} else {
-		s.etcdTLS = nil
-	}
 
 	// etcd registry options
 	regOption := func(e *registry.Options) {
@@ -163,9 +144,11 @@ func (s *Server) startMicroService() error {
 		}
 	}
 	sevOption := func(o *server.Options) {
-		o.TLSConfig = s.serverTLS
+		if s.serverTLS != nil {
+			o.TLSConfig = s.serverTLS
+		}
 		o.Name = LogManagerServiceName
-		o.Version = version.GetVersion()
+		o.Version = version.BcsVersion
 		o.Context = s.ctx
 		o.Address = s.grpcEndpoint
 		o.RegisterInterval = time.Second * 30
@@ -195,11 +178,26 @@ func (s *Server) startMicroService() error {
 
 // Run runs the api server
 func (s *Server) Run() error {
+	var err error
 	s.grpcEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port)
 	s.httpEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port-1)
-
+	s.clientTLS, err = ssl.ClientTslConfVerity(s.conf.APICerts.CAFile, s.conf.APICerts.ClientCertFile, s.conf.APICerts.ClientKeyFile, static.ClientCertPwd)
+	if err != nil {
+		blog.Warnf("parse client TLS config failed: %s", err.Error())
+		s.clientTLS = nil
+	}
+	s.serverTLS, err = ssl.ServerTslConf(s.conf.APICerts.CAFile, s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile, static.ServerCertPwd)
+	if err != nil {
+		blog.Warnf("parse server TLS config failed: %s", err.Error())
+		s.serverTLS = nil
+	}
+	s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
+	if err != nil {
+		blog.Warnf("parse etcd client TLS config failed: %s", err.Error())
+		s.etcdTLS = nil
+	}
 	// s.initGRPCServer()
-	err := s.startGateway()
+	err = s.startGateway()
 	if err != nil {
 		return err
 	}

@@ -15,6 +15,9 @@ package v1
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/gogo/protobuf/jsonpb"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 )
@@ -26,7 +29,10 @@ func (m *LogManager) DeleteLogCollectionTask(req *proto.DeleteLogCollectionTaskR
 		return err
 	}
 	if resp.ErrName != proto.ErrCode_ERROR_OK {
-		return fmt.Errorf(resp.Message)
+		m := jsonpb.Marshaler{EmitDefaults: true}
+		var sb strings.Builder
+		m.Marshal(&sb, resp)
+		return fmt.Errorf(sb.String())
 	}
 	return nil
 }

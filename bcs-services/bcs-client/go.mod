@@ -40,6 +40,7 @@ require (
 	github.com/envoyproxy/go-control-plane v0.9.7-0.20200811182123-112a4904c4b0 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/ghodss/yaml v1.0.0
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/gorilla/mux v1.7.4 // indirect

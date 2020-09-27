@@ -16,14 +16,15 @@ package v1
 import (
 	"context"
 	"fmt"
-	"strings"
-
-	"google.golang.org/grpc/credentials"
+	"regexp"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 )
 
@@ -46,15 +47,24 @@ type LogManager struct {
 
 // NewLogManager returns a LogManager grpc client interface
 func NewLogManager(ctx context.Context, options types.ClientOptions) (LogManagerInterface, error) {
+	re := regexp.MustCompile("https?://")
+	s := re.Split(options.BcsApiAddress, 2)
+	addr := s[len(s)-1]
+	header := map[string]string{
+		"x-content-type": "application/grpc+proto",
+		"Content-Type":   "application/grpc",
+		"authorization":  fmt.Sprintf("Bearer %s", options.BcsToken),
+	}
+	md := metadata.New(header)
 	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
+	opts = append(opts, grpc.WithPerRPCCredentials(utils.NewTokenAuth(options.BcsToken)))
 	if options.ClientSSL != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(options.ClientSSL)))
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
-	segs := strings.Split(options.BcsApiAddress, "/")
-	endpoint := segs[len(segs)-1]
-	conn, err := grpc.Dial(endpoint, opts...)
+	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("Create log manager grpc client error: %s", err.Error())
 	}
@@ -64,6 +74,6 @@ func NewLogManager(ctx context.Context, options types.ClientOptions) (LogManager
 		ctx:       ctx,
 		bcsOption: options,
 		client:    client,
-		endpoint:  endpoint,
+		endpoint:  addr,
 	}, nil
 }
