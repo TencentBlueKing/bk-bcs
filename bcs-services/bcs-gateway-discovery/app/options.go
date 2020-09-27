@@ -56,8 +56,16 @@ type ServerOptions struct {
 	//gateway admin api info
 	AdminAPI string `json:"admin_api" value:"127.0.0.1:8001" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed. custom cert/key comes from client_cert_file/client_key_file" mapstructure:"admin_api" `
 	//new standard modules
-	Modules   []string `json:"modules" usage:"new standard moduels that discovery serve for" mapstructure:"modules" `
-	AuthToken string   `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
+	/*
+		types.BCS_MODULE_STORAGE,
+		types.BCS_MODULE_MESOSDRIVER,
+		types.BCS_MODULE_KUBERNETEDRIVER,
+		types.BCS_MODULE_NETWORKDETECTION,
+		types.BCS_MODULE_USERMANAGER,
+		types.BCS_MODULE_KUBEAGENT,
+	*/
+	Modules   string `json:"modules" values:"storage,mesosdriver,kubernetesdriver,detection,usermanager,kubeagent" usage:"new standard moduels that discovery serve for" mapstructure:"modules" `
+	AuthToken string `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
 
 	Etcd EtcdRegistry `json:"etcdRegistry"`
 }
@@ -78,6 +86,9 @@ func (opt *ServerOptions) Valid() error {
 		if len(opt.Etcd.Cert) == 0 || len(opt.Etcd.CA) == 0 ||
 			len(opt.Etcd.Key) == 0 {
 			return fmt.Errorf("Lost etcd tls config when enable etcd registry feature")
+		}
+		if len(opt.Etcd.GrpcModules) == 0 || len(opt.Etcd.HTTPModules) == 0 {
+			return fmt.Errorf("lost etcd watch module info")
 		}
 	}
 	return nil

@@ -15,6 +15,7 @@ package v1
 
 import (
 	"context"
+	"strings"
 	"regexp"
 
 	clientmeshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/meshmanager"
