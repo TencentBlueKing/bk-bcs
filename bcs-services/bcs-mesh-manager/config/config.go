@@ -22,7 +22,7 @@ type Config struct {
 	//Istio Operator Charts
 	IstioOperatorCharts string
 	//IstioOperator cr
-	IstioOperatorCr string
+	IstioConfiguration string
 	//bcs api-gateway address
 	ServerAddress string
 	//api-gateway usertoken

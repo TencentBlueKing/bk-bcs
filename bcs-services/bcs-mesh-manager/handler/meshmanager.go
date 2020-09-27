@@ -77,6 +77,18 @@ func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.Cr
 			MeshType:  meshv1.MeshType(req.Meshtype),
 		},
 	}
+	//proxy
+	if req.Proxy!=nil && req.Proxy.Resources!=nil {
+		resources := req.Proxy.Resources
+		if resources.Limits!=nil {
+			meshCluster.Spec.Proxy.Resources.Limits.Cpu = resources.Limits.Cpu
+			meshCluster.Spec.Proxy.Resources.Limits.Memory = resources.Limits.Memory
+		}
+		if resources.Requests!=nil {
+			meshCluster.Spec.Proxy.Resources.Requests.Cpu = resources.Requests.Cpu
+			meshCluster.Spec.Proxy.Resources.Requests.Memory = resources.Requests.Memory
+		}
+	}
 
 	err = e.client.Create(context.TODO(), meshCluster)
 	if err != nil {

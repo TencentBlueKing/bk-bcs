@@ -144,6 +144,11 @@
           "type": "string",
           "description": "namespace",
           "title": "namespace"
+        },
+        "proxy": {
+          "$ref": "#/definitions/meshmanagerv1Proxy",
+          "description": "proxy",
+          "title": "proxy"
         }
       },
       "description": "创建k8s集群mesh服务",
@@ -226,6 +231,17 @@
         }
       }
     },
+    "meshmanagerv1Limit": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "string"
+        }
+      }
+    },
     "meshmanagerv1ListMeshClusterResp": {
       "type": "object",
       "properties": {
@@ -273,6 +289,36 @@
           "additionalProperties": {
             "$ref": "#/definitions/meshmanagerv1InstallStatus"
           }
+        }
+      }
+    },
+    "meshmanagerv1Proxy": {
+      "type": "object",
+      "properties": {
+        "resources": {
+          "$ref": "#/definitions/meshmanagerv1Resource"
+        }
+      }
+    },
+    "meshmanagerv1Request": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "string"
+        }
+      }
+    },
+    "meshmanagerv1Resource": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "$ref": "#/definitions/meshmanagerv1Limit"
+        },
+        "requests": {
+          "$ref": "#/definitions/meshmanagerv1Request"
         }
       }
     },

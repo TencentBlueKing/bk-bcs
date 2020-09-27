@@ -63,22 +63,6 @@ func init() {
 }
 
 func main() {
-	//conf := config.Config{}
-	/*flag.StringVar(&conf.MetricsPort, "metric-port", "9443", "The address the metric endpoint binds to.")
-	flag.StringVar(&conf.DockerHub, "istio-docker-hub", "", "istio-operator docker hub")
-	flag.StringVar(&conf.IstioOperatorCharts, "istiooperator-charts", "", "istio-operator charts")
-	flag.StringVar(&conf.ServerAddress, "apigateway-addr", "", "apigateway address")
-	flag.StringVar(&conf.UserToken, "user-token", "", "apigateway usertoken to control k8s cluster")
-	flag.StringVar(&conf.Address, "address", "127.0.0.1", "server address")
-	flag.IntVar(&conf.Port, "port", 8899, "grpc server port")
-	flag.StringVar(&conf.EtcdCaFile, "etcd-cafile", "", "SSL Certificate Authority file used to secure etcd communication")
-	flag.StringVar(&conf.EtcdCertFile, "etcd-certfile", "", "SSL certification file used to secure etcd communication")
-	flag.StringVar(&conf.EtcdKeyFile, "etcd-keyfile", "", "SSL key file used to secure etcd communication")
-	flag.StringVar(&conf.EtcdServers, "etcd-servers", "", "List of etcd servers to connect with (scheme://ip:port), comma separated")
-	flag.StringVar(&conf.ServerCaFile, "ca-file", "", "If set, any request presenting a certificate signed by one of the authorities in the ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.")
-	flag.StringVar(&conf.ServerCertFile, "tls-cert-file", "", "File containing the default x509 Certificate for HTTPS.")
-	flag.StringVar(&conf.ServerKeyFile, "tls-private-key-file", "", "File containing the default x509 private key matching")*/
-	//flag.Parse()
 	conf := config.ParseConfig()
 	by, _ := json.Marshal(conf)
 	klog.Infof("MeshManager config(%s)", string(by))

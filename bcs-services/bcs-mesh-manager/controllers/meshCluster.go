@@ -284,6 +284,10 @@ func (m *MeshClusterManager) installIstio() bool {
 		klog.Errorf("Install cluster(%s) istio-operator failed: %s", m.meshCluster.Spec.ClusterID, err.Error())
 		return false
 	}
+	err = m.applyIstioConfiguration()
+	if err != nil {
+		return false
+	}
 	klog.Infof("Install cluster(%s) istio-operator done", m.meshCluster.Spec.ClusterID)
 	//update MeshCluster.Status in kube-apiserver
 	m.updateComponentStatus()
@@ -350,19 +354,19 @@ func (m *MeshClusterManager) istioOperatorInstalled() bool {
 }
 
 //check deployment istio-operator whether installed
-func (m *MeshClusterManager) istioOperatorCrdInstalled() bool {
+func (m *MeshClusterManager) applyIstioConfiguration() error {
 	//read IstioOperator CR definition
-	by, err := ioutil.ReadFile(m.conf.IstioOperatorCr)
+	by, err := ioutil.ReadFile(m.conf.IstioConfiguration)
 	if err != nil {
-		klog.Errorf("read IstioOperator CR definition(%s) error %s", m.conf.IstioOperatorCr, err.Error())
-		return false
+		klog.Errorf("read IstioOperator CR definition(%s) error %s", m.conf.IstioConfiguration, err.Error())
+		return err
 	}
 	var istioOperator *istiov1alpha1.IstioOperator
 	err = yaml.Unmarshal(by, &istioOperator)
 	if err != nil {
 		klog.Errorf("Unmarshal IstioOperator CR definition(%s) to types.IstioOperator error %s",
 			string(by), err.Error())
-		return false
+		return err
 	}
 	by, _ = json.Marshal(istioOperator)
 	klog.Infof("istioOperator %s", string(by))
@@ -371,11 +375,11 @@ func (m *MeshClusterManager) istioOperatorCrdInstalled() bool {
 	_, _, err = m.kubeAPIClient.CustomObjectsApi.GetNamespacedCustomObject(context.Background(), group,
 		apiVersion, istioOperator.Namespace, types.IstioOperatorPlural, istioOperator.Name)
 	if err != nil {
-		klog.Errorf("Get IstioOperator(%s:%s) error %s",
+		klog.Errorf("apply IstioOperator(%s:%s) error %s",
 			istioOperator.Namespace, istioOperator.Name, err.Error())
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (changed bool) {
