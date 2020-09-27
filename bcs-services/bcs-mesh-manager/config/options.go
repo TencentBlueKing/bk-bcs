@@ -51,3 +51,9 @@ func ParseConfig() Config {
 	}
 	return conf
 }
+
+// ValidateConfig check nessacessry
+func ValidateConfig() error {
+	//! for config item safety
+	return nil
+}

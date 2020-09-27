@@ -1,4 +1,4 @@
-apiVersion: mesh.tencent.com/v1
+apiVersion: mesh.bkbcs.tencent.com/v1
 kind: MeshCluster
 metadata:
   name: istio

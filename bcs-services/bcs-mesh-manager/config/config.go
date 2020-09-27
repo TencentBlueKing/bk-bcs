@@ -50,7 +50,7 @@ type Config struct {
 	//is ssl
 	IsSsl bool
 	//tls config
-	TlsConf *tls.Config
+	TLSConf *tls.Config
 	//kubeconfig
 	Kubeconfig string
 }

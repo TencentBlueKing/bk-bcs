@@ -501,7 +501,7 @@ bcs-user-manager重构了bcs-api中关于集群和用户管理功能，计划在
 
 建议是当系统首次部署初始化时进行配置，配置完成后进行常规平台运维账户管理创建和授权，之后将该参数清空重启。
 
-首次token随机生成可以使用工具生成一个 http://coolaf.com/tool/rd
+首次token随机生成可以使用工具生成一个 [http://coolaf.com/tool/rd](http://coolaf.com/tool/rd)
 
 ### 部署bcs-gateway-discovery
 

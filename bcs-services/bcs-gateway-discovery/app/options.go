@@ -35,8 +35,8 @@ func NewServerOptions() *ServerOptions {
 // EtcdRegistry config item for etcd discovery
 type EtcdRegistry struct {
 	Feature     bool   `json:"etcd_feature" value:"false" usage:"switch that turn on etcd registry feature"`
-	GrpcModules string `json:"etcd_grpc_modules" value:"" usage:"modules that support grpc interface, 'LogManager,MeshManager' is in default"`
-	HTTPModules string `json:"etcd_http_modules" value:"" usage:"modules that support http interface, 'LogManager,MeshManager' is in default"`
+	GrpcModules string `json:"etcd_grpc_modules" value:"MeshManager,LogManager" usage:"modules that support grpc interface, 'LogManager,MeshManager' is in default"`
+	HTTPModules string `json:"etcd_http_modules" value:"MeshManager,LogManager" usage:"modules that support http interface, 'LogManager,MeshManager' is in default"`
 	Address     string `json:"etcd_address" value:"127.0.0.1:2379" usage:"etcd registry feature, multiple ip addresses splited by comma"`
 	CA          string `json:"etcd_ca" value:"" usage:"etcd registry CA"`
 	Cert        string `json:"etcd_cert" value:"" usage:"etcd registry tls cert file"`
