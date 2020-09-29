@@ -23,6 +23,7 @@ import (
 type ClientInterface interface {
 	ListProjects(env string) (*ListProjectsResult, error)
 	ListProjectClusters(env, projectID string) (*ListProjectClustersResult, error)
+	GetProject(env, projectid string) (*GetProjectResult, error)
 }
 
 // NewClientInterface create client interface
@@ -64,6 +65,21 @@ func (c *Client) ListProjects(env string) (*ListProjectsResult, error) {
 		WithBasePath("/").
 		SubPathf("%s/projects/", env).
 		WithParam("desire_all_data", "1").
+		Do().
+		Into(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// GetProject get project
+func (c *Client) GetProject(env, projectid string) (*GetProjectResult, error) {
+	result := &GetProjectResult{}
+	err := c.client.Get().
+		WithEndpoints([]string{c.host}).
+		WithBasePath("/").
+		SubPathf("%s/projects/%s", env, projectid).
 		Do().
 		Into(result)
 	if err != nil {

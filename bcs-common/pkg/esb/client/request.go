@@ -25,7 +25,9 @@ import (
 )
 
 const (
-	SchemeHTTP  = "http://"
+	// SchemeHTTP HTTP scheme prefix
+	SchemeHTTP = "http://"
+	// SchemeHTTPS HTTPS scheme prefix
 	SchemeHTTPS = "https://"
 )
 
@@ -196,15 +198,15 @@ func (r *Request) tryThrottle(url string) {
 func (r *Request) Do() *Result {
 	result := new(Result)
 
-	if r.client.requestInflight != nil {
-		r.client.requestInflight.Inc()
-		defer r.client.requestInflight.Dec()
+	if requestInflight != nil {
+		requestInflight.Inc()
+		defer requestInflight.Dec()
 	}
-	if r.client.requestDuration != nil {
+	if requestDuration != nil {
 		startTime := time.Now()
 		defer func() {
-			r.client.requestDuration.WithLabelValues(r.subPath, strconv.Itoa(result.StatusCode)).Observe(
-				float64(int64(time.Since(startTime) / time.Microsecond)))
+			requestDuration.WithLabelValues(r.subPath, strconv.Itoa(result.StatusCode)).Observe(
+				float64(time.Since(startTime).Milliseconds()))
 		}()
 	}
 

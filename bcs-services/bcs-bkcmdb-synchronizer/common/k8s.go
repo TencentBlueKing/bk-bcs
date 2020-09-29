@@ -15,6 +15,7 @@ package common
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
@@ -69,9 +70,20 @@ type K8SPodStatus struct {
 
 // K8SPod k8s pod in storage
 type K8SPod struct {
+	ID                   string `json:"id"`
 	k8smetav1.ObjectMeta `json:"metadata"`
 	Spec                 K8SPodSpec   `json:"spec"`
 	Status               K8SPodStatus `json:"status"`
+}
+
+// GetCreationTimestamp get creation timestamp
+func (kp *K8SPod) GetCreationTimestamp() time.Time {
+	return kp.ObjectMeta.CreationTimestamp.Time
+}
+
+// SetCreationTimestamp set creation timestamp
+func (kp *K8SPod) SetCreationTimestamp(t time.Time) {
+	kp.ObjectMeta.CreationTimestamp.Time = t
 }
 
 func convertK8STime(k8sTime string) string {

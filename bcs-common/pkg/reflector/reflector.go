@@ -16,15 +16,18 @@ package reflector
 import (
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
-
 	"golang.org/x/net/context"
 	k8scache "k8s.io/client-go/tools/cache"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 )
 
 //NewReflector create new reflector
-func NewReflector(name string, store k8scache.Indexer, lw ListerWatcher, fullSyncPeriod time.Duration, handler EventInterface) *Reflector {
+func NewReflector(name string, store k8scache.Indexer,
+	lw ListerWatcher, fullSyncPeriod time.Duration, handler EventInterface) *Reflector {
+
 	cxt, stopfn := context.WithCancel(context.Background())
 	return &Reflector{
 		name:       name,
@@ -49,6 +52,14 @@ type Reflector struct {
 	store      k8scache.Indexer //memory store for all data object
 	handler    EventInterface   //event callback when processing store data
 	underWatch bool             //flag for watch handler
+
+	// used for delete object in ListAllData
+	keyFunc k8scache.KeyFunc
+}
+
+// SetKeyFunc set key function used for delete object in ListAllData
+func (r *Reflector) SetKeyFunc(keyFunc k8scache.KeyFunc) {
+	r.keyFunc = keyFunc
 }
 
 //Run running reflector, list all data in period and create stable watcher for
@@ -91,8 +102,10 @@ func (r *Reflector) Stop() {
 	r.stopFn()
 }
 
+// ListAllData list all data from listwatcher
 func (r *Reflector) ListAllData() error {
 	blog.V(3).Infof("%s begins to list all data...", r.name)
+	objMap := make(map[string]meta.Object)
 	objs, err := r.listWatch.List()
 	if err != nil {
 		//some err response, wait for next resync ticker
@@ -101,6 +114,15 @@ func (r *Reflector) ListAllData() error {
 	}
 	blog.V(3).Infof("%s list all data success, objects number %d", r.name, len(objs))
 	for _, obj := range objs {
+		if r.keyFunc != nil {
+			key, err := r.keyFunc(obj)
+			if err != nil {
+				blog.Errorf("%s gets obj key failed, err %s", r.name, err)
+				continue
+			}
+			objMap[key] = obj
+		}
+
 		oldObj, exist, err := r.store.Get(obj)
 		if err != nil {
 			blog.Errorf("%s gets local store err under List, %s, discard data", r.name, err)
@@ -118,6 +140,15 @@ func (r *Reflector) ListAllData() error {
 				r.handler.OnAdd(obj)
 			}
 			blog.V(5).Infof("%s add %s/%s notify succes in Lister.", r.name, obj.GetNamespace(), obj.GetName())
+		}
+	}
+
+	if r.keyFunc != nil {
+		cacheObjKeys := r.store.ListKeys()
+		for _, key := range cacheObjKeys {
+			if obj, ok := objMap[key]; !ok {
+				r.handler.OnDelete(obj)
+			}
 		}
 	}
 
@@ -195,18 +226,23 @@ func (r *Reflector) processDeletion(event *watch.Event) {
 	}
 	if exist {
 		r.store.Delete(event.Data)
-		if event.Data.GetAnnotations() != nil && event.Data.GetAnnotations()["bk-bcs-inner-storage"] == "bkbcs-zookeeper" {
+		if event.Data.GetAnnotations() != nil &&
+			event.Data.GetAnnotations()["bk-bcs-inner-storage"] == "bkbcs-zookeeper" {
+
 			//tricky here, zookeeper can't get creation time when deletion
 			if r.handler != nil {
 				r.handler.OnDelete(oldObj)
 			}
-			blog.V(5).Infof("reflector %s invoke Delete tricky callback func for %s/%s.", r.name, event.Data.GetNamespace(), event.Data.GetName())
+			blog.V(5).Infof("reflector %s invoke Delete tricky callback func for %s/%s.",
+				r.name, event.Data.GetNamespace(), event.Data.GetName())
 		} else {
 			if r.handler != nil {
 				r.handler.OnDelete(event.Data)
 			}
-			blog.V(5).Infof("reflector %s invoke Delete callback for %s/%s.", r.name, event.Data.GetNamespace(), event.Data.GetName())
+			blog.V(5).Infof("reflector %s invoke Delete callback for %s/%s.",
+				r.name, event.Data.GetNamespace(), event.Data.GetName())
 		}
+		return
 	}
 	//local cache do not exist, nothing happens
 	blog.V(3).Infof("reflector %s lost local cache for %s/%s", r.name, event.Data.GetNamespace(), event.Data.GetName())
