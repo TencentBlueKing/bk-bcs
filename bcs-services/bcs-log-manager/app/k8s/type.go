@@ -37,6 +37,7 @@ type RequestMessage struct {
 	RespCh chan interface{}
 }
 
+// LogManagerInterface defines the interface of log manager service
 type LogManagerInterface interface {
 	Start()
 	HandleListLogCollectionTask(context.Context, *config.CollectionFilterConfig) map[string][]config.CollectionConfig

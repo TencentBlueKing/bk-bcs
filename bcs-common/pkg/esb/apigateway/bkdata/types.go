@@ -90,13 +90,13 @@ func init() {
 	}
 }
 
-// NewDefaultLogCollectionDataCleanStrategy returns default log clean strategy
+// NewDefaultCleanStrategy returns default log clean strategy
 // [RawDataID BkBizID] required as "MUST HAVE"
 func NewDefaultCleanStrategy() DataCleanStrategy {
 	return defaultStrategy
 }
 
-// NewDefaultCustomAccessDeployPlanConfig returns default config for obtain dataid
+// NewDefaultAccessDeployPlanConfig returns default config for obtain dataid
 // [BkBizID RawDataName RawDataAlias Maintainer] required as "MUST HAVE"
 func NewDefaultAccessDeployPlanConfig() CustomAccessDeployPlanConfig {
 	return CustomAccessDeployPlanConfig{

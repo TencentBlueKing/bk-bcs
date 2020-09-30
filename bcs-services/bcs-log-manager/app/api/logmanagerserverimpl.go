@@ -321,6 +321,7 @@ func (l *LogManagerServerImpl) buildProtoLogCollectionTaskConfig(conf config.Col
 			},
 		},
 	}
+	// resolve containerconf
 	containerconf := make([]*proto.ContainerConf, len(conf.ConfigSpec.ContainerConfs))
 	for i, v := range conf.ConfigSpec.ContainerConfs {
 		containerconf[i] = &proto.ContainerConf{
@@ -333,6 +334,7 @@ func (l *LogManagerServerImpl) buildProtoLogCollectionTaskConfig(conf config.Col
 		}
 	}
 	ret.Config.ContainerConfs = containerconf
+	// resolve podselector match expression field
 	matchExpressions := make([]*proto.SelectorExpression, len(conf.ConfigSpec.Selector.MatchExpressions))
 	for i, v := range conf.ConfigSpec.Selector.MatchExpressions {
 		matchExpressions[i] = &proto.SelectorExpression{
@@ -374,6 +376,7 @@ func (l *LogManagerServerImpl) buildLogCollectionTaskConfig(conf *proto.CreateLo
 			PodLabels:         conf.Config.Config.PodLabels,
 		},
 	}
+	// resolve containerconf
 	if conf.Config.Config.ContainerConfs != nil {
 		containerconf := make([]bcsv1.ContainerConf, len(conf.Config.Config.ContainerConfs))
 		for i, v := range conf.Config.Config.ContainerConfs {
@@ -388,6 +391,7 @@ func (l *LogManagerServerImpl) buildLogCollectionTaskConfig(conf *proto.CreateLo
 		}
 		ret.ConfigSpec.ContainerConfs = containerconf
 	}
+	// resolve podselector match expression field
 	if conf.Config.Config.Selector != nil {
 		matchExpressions := make([]bcsv1.SelectorExpression, len(conf.Config.Config.Selector.MatchExpressions))
 		for i, v := range conf.Config.Config.Selector.MatchExpressions {
@@ -395,7 +399,6 @@ func (l *LogManagerServerImpl) buildLogCollectionTaskConfig(conf *proto.CreateLo
 				Key:      v.Key,
 				Operator: v.Operator,
 			}
-			blog.Infof("no%d:%+v", i, matchExpressions[i])
 			var newValues []string
 			if len(v.Values) != 0 {
 				newValues = make([]string, len(v.Values))
