@@ -62,7 +62,7 @@ type Server struct {
 }
 
 // NewAPIServer creates Server instance
-func NewAPIServer(ctx context.Context, conf *config.APIServerConfig, logManager *k8s.LogManager) *Server {
+func NewAPIServer(ctx context.Context, conf *config.APIServerConfig, logManager k8s.LogManagerInterface) *Server {
 	return &Server{
 		conf: conf,
 		ctx:  ctx,
@@ -152,7 +152,7 @@ func (s *Server) startMicroService() error {
 		o.Context = s.ctx
 		o.Address = s.grpcEndpoint
 		o.RegisterInterval = time.Second * 30
-		o.RegisterTTL = time.Second * 30
+		o.RegisterTTL = time.Second * 40
 		o.Registry = etcd.NewRegistry(regOption)
 	}
 

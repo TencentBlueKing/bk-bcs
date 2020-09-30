@@ -54,6 +54,7 @@ func Run(ctx context.Context, stopCh chan struct{}, op *options.LogManagerOption
 	conf := &config.ManagerConfig{}
 	setManagerConfig(op, conf)
 	conf.StopCh = stopCh
+	conf.Ctx = ctx
 	manager := k8s.NewManager(conf)
 	manager.Start()
 	blog.Info("Log Manager started")

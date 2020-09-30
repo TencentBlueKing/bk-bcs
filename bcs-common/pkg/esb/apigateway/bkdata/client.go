@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
@@ -81,6 +82,7 @@ func (c *Client) ObtainDataID(conf CustomAccessDeployPlanConfig) (int64, error) 
 			"Content-Type": []string{"application/json"},
 		}).
 		Body(payload).
+		WithTimeout(time.Second * 10).
 		Do()
 	if result.StatusCode != 200 {
 		return -1, fmt.Errorf("Obtain dataid failed: %s", result.Status)
@@ -127,6 +129,7 @@ func (c *Client) SetCleanStrategy(strategy DataCleanStrategy) error {
 			"Content-Type": []string{"application/json"},
 		}).
 		Body(payload).
+		WithTimeout(time.Second * 10).
 		Do()
 	if result.StatusCode != 200 {
 		return fmt.Errorf("Set clean strategy failed: %s", result.Status)

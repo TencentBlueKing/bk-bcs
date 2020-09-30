@@ -2,6 +2,7 @@ mkdir -p bkdataapiconfig/clientset/v1
 mkdir -p bkdataapiconfig/informer/factory/bkbcs/v1
 mkdir -p informer
 mkdir -p apiextension/clientset/v1beta1
+mkdir -p manager
 
 # bkdataapiconfig clientset
 mockgen -destination ./bkdataapiconfig/clientset/bkdataapiconfigclientset_mock.go -package clientset -copyright_file ../copyright/copyright github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned Interface
@@ -21,3 +22,6 @@ mockgen -destination ./bkdataapiconfig/lister/bkdataapiconfiglister_mock.go -pac
 # crd clientset
 mockgen -destination ./apiextension/clientset/apiextensionclientset_mock.go -package clientset -copyright_file ../copyright/copyright k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset Interface
 mockgen -destination ./apiextension/clientset/v1beta1/apiextensionv1beta_mock.go -package v1beta1 -copyright_file ../copyright/copyright k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1 ApiextensionsV1beta1Interface,CustomResourceDefinitionInterface
+
+# log manager
+mockgen -destination ./manager/manager_mock.go -package k8s -copyright_file ../copyright/copyright github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/k8s LogManagerInterface

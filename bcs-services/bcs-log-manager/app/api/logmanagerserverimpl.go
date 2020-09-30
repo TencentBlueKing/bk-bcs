@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bkdata "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/apigateway/bkdata"
@@ -26,9 +27,11 @@ import (
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 )
 
+const timeout = time.Second * 10
+
 // LogManagerServerImpl is grpc Server
 type LogManagerServerImpl struct {
-	logManager          *k8s.LogManager
+	logManager          k8s.LogManagerInterface
 	apiHost             string
 	bkdataClientCreator bkdata.ClientCreatorInterface
 }
@@ -61,10 +64,21 @@ func (l *LogManagerServerImpl) ObtainDataID(ctx context.Context, req *proto.Obta
 		resp.Message = err.Error()
 		return err
 	}
+	// create default data clean strategy
+	strategy := bkdata.NewDefaultCleanStrategy()
+	strategy.RawDataID = int(dataid)
+	strategy.BkBizID = int(req.BizID)
+	tableName := fmt.Sprintf("container_log_clean_strategy_%d", dataid)
+	strategy.ResultTableName = tableName
+	strategy.ResultTableNameAlias = tableName
+	err = client.SetCleanStrategy(strategy)
 	// return
 	resp.ErrCode = int32(proto.ErrCode_ERROR_OK)
 	resp.ErrName = proto.ErrCode_ERROR_OK
 	resp.DataID = int32(dataid)
+	if err != nil {
+		resp.Message = fmt.Sprintf("Create default clean strategy failed: %s", err.Error())
+	}
 	return nil
 }
 
@@ -129,60 +143,52 @@ func (l *LogManagerServerImpl) ListLogCollectionTask(ctx context.Context, req *p
 		ConfigName:      req.ConfigName,
 		ConfigNamespace: req.ConfigNamespace,
 	}
-	// send message to manager
-	recvCh := make(chan interface{})
-	message := k8s.RequestMessage{
-		Data:   filter,
-		RespCh: recvCh,
-	}
-	l.logManager.GetLogCollectionTask <- &message
-	result := make(map[string][]config.CollectionConfig)
-	// receive data from manager
-	for {
-		select {
-		case conf, ok := <-recvCh:
-			if !ok {
-				resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
-				resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
-				err := fmt.Errorf("error receiving response data from log manager")
-				resp.Message = err.Error()
-				return err
+	resultCh := make(chan map[string][]config.CollectionConfig)
+	go func() {
+		// send message to manager
+		result := l.logManager.HandleListLogCollectionTask(ctx, filter)
+		resultCh <- result
+		close(resultCh)
+	}()
+	var result map[string][]config.CollectionConfig
+	select {
+	// cancel
+	case <-ctx.Done():
+		blog.Warnf("LogManagerServerImpl ListLogCollectionTask canceled: %s", ctx.Err().Error())
+		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
+		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
+		resp.Message = ctx.Err().Error()
+		return ctx.Err()
+	// timeout
+	case <-time.After(timeout):
+		blog.Warnf("LogManagerServerImpl ListLogCollectionTask timeout")
+		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
+		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
+		resp.Message = "LogManagerServerImpl ListLogCollectionTask timeout"
+		return fmt.Errorf("LogManagerServerImpl ListLogCollectionTask timeout")
+	// get result
+	case result = <-resultCh:
+		if result == nil {
+			resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
+			resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
+			resp.Message = "Log Mnagaer internal error"
+			return fmt.Errorf("Log Manager internal error")
+		}
+		// PARSE []logconfigs TO clusterid => []logconfigs
+		for k, v := range result {
+			respItem := proto.ListLogCollectionTaskRespItem{
+				ClusterID: k,
+				Configs:   make([]*proto.LogCollectionTaskConfig, len(v)),
 			}
-			switch v := conf.(type) {
-			case error:
-				resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
-				resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
-				resp.Message = v.Error()
-				close(recvCh)
-				return v
-			case string:
-				if v == "termination" {
-					goto exit
-				}
-				blog.Warnf("Unexpected string value (%s) while listing log collection configs", v)
-			case config.CollectionConfig:
-				result[v.ConfigSpec.ClusterId] = append(result[v.ConfigSpec.ClusterId], v)
-			default:
-				blog.Warnf("Unrecognized type of value (%+v) while receving data from manager", v)
+			for i, conf := range v {
+				respItem.Configs[i] = l.buildProtoLogCollectionTaskConfig(conf)
 			}
+			resp.Data = append(resp.Data, &respItem)
 		}
+		resp.ErrCode = int32(proto.ErrCode_ERROR_OK)
+		resp.ErrName = proto.ErrCode_ERROR_OK
+		return nil
 	}
-exit:
-	// PARSE []logconfigs TO clusterid => []logconfigs
-	for k, v := range result {
-		respItem := proto.ListLogCollectionTaskRespItem{
-			ClusterID: k,
-			Configs:   make([]*proto.LogCollectionTaskConfig, len(v)),
-		}
-		for i, conf := range v {
-			respItem.Configs[i] = l.buildProtoLogCollectionTaskConfig(conf)
-		}
-		resp.Data = append(resp.Data, &respItem)
-	}
-	resp.ErrCode = int32(proto.ErrCode_ERROR_OK)
-	resp.ErrName = proto.ErrCode_ERROR_OK
-	close(recvCh)
-	return nil
 }
 
 // CreateLogCollectionTask CreateLogCollectionTask
@@ -196,43 +202,48 @@ func (l *LogManagerServerImpl) CreateLogCollectionTask(ctx context.Context, req 
 		resp.Message = err.Error()
 		return err
 	}
-	// send message to manager
-	recvCh := make(chan interface{})
-	message := k8s.RequestMessage{
-		Data:   config,
-		RespCh: recvCh,
-	}
-	l.logManager.AddLogCollectionTask <- &message
-	// receive data from manager
-	data, ok := <-recvCh
-	if !ok {
+	resultCh := make(chan *proto.CollectionTaskCommonResp)
+	go func() {
+		// send message to manager
+		result := l.logManager.HandleAddLogCollectionTask(ctx, config)
+		resultCh <- result
+		close(resultCh)
+	}()
+	var result *proto.CollectionTaskCommonResp
+	select {
+	// cancel
+	case <-ctx.Done():
+		blog.Warnf("LogManagerServerImpl CreateLogCollectionTask canceled: %s", ctx.Err().Error())
 		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
 		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
-		err := fmt.Errorf("error receiving response data from log manager")
-		resp.Message = err.Error()
-		return err
-	}
-	defer close(recvCh)
-	switch v := data.(type) {
-	case error:
+		resp.Message = ctx.Err().Error()
+		return ctx.Err()
+	// timeout
+	case <-time.After(timeout):
+		blog.Warnf("LogManagerServerImpl CreateLogCollectionTask timeout")
 		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
 		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
-		resp.Message = v.Error()
-		return v
-	case *proto.CollectionTaskCommonResp:
-		*resp = *v
-	default:
-		blog.Warnf("Unrecognized type of value (%+v) while receving data from manager", v)
+		resp.Message = "LogManagerServerImpl CreateLogCollectionTask timeout"
+		return fmt.Errorf("LogManagerServerImpl CreateLogCollectionTask timeout")
+	// get result
+	case result = <-resultCh:
+		if result == nil {
+			resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
+			resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
+			resp.Message = "Log Mnagaer internal error"
+			return fmt.Errorf("Log Manager internal error")
+		}
+		*resp = *result
+		if len(resp.ErrResult) != 0 {
+			resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED)
+			resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED
+			resp.Message = "log collection task operation failed partially"
+		} else {
+			resp.ErrCode = int32(proto.ErrCode_ERROR_OK)
+			resp.ErrName = proto.ErrCode_ERROR_OK
+		}
+		return nil
 	}
-	if len(resp.ErrResult) != 0 {
-		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED)
-		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED
-		resp.Message = "log collection task operation failed partially"
-	} else {
-		resp.ErrCode = int32(proto.ErrCode_ERROR_OK)
-		resp.ErrName = proto.ErrCode_ERROR_OK
-	}
-	return nil
 }
 
 // DeleteLogCollectionTask DeleteLogCollectionTask
@@ -243,43 +254,48 @@ func (l *LogManagerServerImpl) DeleteLogCollectionTask(ctx context.Context, req 
 		ConfigName:      req.ConfigName,
 		ConfigNamespace: req.ConfigNamespace,
 	}
-	// send message to manager
-	recvCh := make(chan interface{})
-	message := k8s.RequestMessage{
-		Data:   filter,
-		RespCh: recvCh,
-	}
-	l.logManager.DeleteLogCollectionTask <- &message
-	// receive data from manager
-	data, ok := <-recvCh
-	if !ok {
+	resultCh := make(chan *proto.CollectionTaskCommonResp)
+	go func() {
+		// send message to manager
+		result := l.logManager.HandleDeleteLogCollectionTask(ctx, filter)
+		resultCh <- result
+		close(resultCh)
+	}()
+	var result *proto.CollectionTaskCommonResp
+	select {
+	// cancel
+	case <-ctx.Done():
+		blog.Warnf("LogManagerServerImpl DeleteLogCollectionTask canceled: %s", ctx.Err().Error())
 		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
 		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
-		err := fmt.Errorf("error receiving response data from log manager")
-		resp.Message = err.Error()
-		return err
-	}
-	defer close(recvCh)
-	switch v := data.(type) {
-	case error:
+		resp.Message = ctx.Err().Error()
+		return ctx.Err()
+	// timeout
+	case <-time.After(timeout):
+		blog.Warnf("LogManagerServerImpl DeleteLogCollectionTask timeout")
 		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
 		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
-		resp.Message = v.Error()
-		return v
-	case *proto.CollectionTaskCommonResp:
-		*resp = *v
-	default:
-		blog.Warnf("Unrecognized type of value (%+v) while receving data from manager", v)
+		resp.Message = "LogManagerServerImpl DeleteLogCollectionTask timeout"
+		return fmt.Errorf("LogManagerServerImpl DeleteLogCollectionTask timeout")
+	// get result
+	case result = <-resultCh:
+		if result == nil {
+			resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_FAILED)
+			resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_FAILED
+			resp.Message = "Log Mnagaer internal error"
+			return fmt.Errorf("Log Manager internal error")
+		}
+		*resp = *result
+		if len(resp.ErrResult) != 0 {
+			resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED)
+			resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED
+			resp.Message = "log collection task operation failed partially"
+		} else {
+			resp.ErrCode = int32(proto.ErrCode_ERROR_OK)
+			resp.ErrName = proto.ErrCode_ERROR_OK
+		}
+		return nil
 	}
-	if len(resp.ErrResult) != 0 {
-		resp.ErrCode = int32(proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED)
-		resp.ErrName = proto.ErrCode_ERROR_LOG_MANAGER_PARTIALLY_FAILED
-		resp.Message = "log collection task operation failed partially"
-	} else {
-		resp.ErrCode = int32(proto.ErrCode_ERROR_OK)
-		resp.ErrName = proto.ErrCode_ERROR_OK
-	}
-	return nil
 }
 
 // buildProtoLogCollectionTaskConfig convert log config message from CollectionConfig to protobuf struct type
@@ -356,38 +372,39 @@ func (l *LogManagerServerImpl) buildLogCollectionTaskConfig(conf *proto.CreateLo
 			WorkloadName:      conf.Config.Config.WorkloadName,
 			WorkloadNamespace: conf.Config.Config.WorkloadNamespace,
 			PodLabels:         conf.Config.Config.PodLabels,
-			Selector: bcsv1.PodSelector{
-				MatchLabels: conf.Config.Config.Selector.MatchLabels,
-			},
 		},
 	}
-	containerconf := make([]bcsv1.ContainerConf, len(conf.Config.Config.ContainerConfs))
-	for i, v := range conf.Config.Config.ContainerConfs {
-		containerconf[i] = bcsv1.ContainerConf{
-			ContainerName: v.ContainerName,
-			Stdout:        v.Stdout,
-			StdDataId:     v.StdDataId,
-			NonStdDataId:  v.NonStdDataId,
-			LogPaths:      v.LogPaths,
-			LogTags:       v.LogTags,
+	if conf.Config.Config.ContainerConfs != nil {
+		containerconf := make([]bcsv1.ContainerConf, len(conf.Config.Config.ContainerConfs))
+		for i, v := range conf.Config.Config.ContainerConfs {
+			containerconf[i] = bcsv1.ContainerConf{
+				ContainerName: v.ContainerName,
+				Stdout:        v.Stdout,
+				StdDataId:     v.StdDataId,
+				NonStdDataId:  v.NonStdDataId,
+				LogPaths:      v.LogPaths,
+				LogTags:       v.LogTags,
+			}
 		}
+		ret.ConfigSpec.ContainerConfs = containerconf
 	}
-	ret.ConfigSpec.ContainerConfs = containerconf
-	matchExpressions := make([]bcsv1.SelectorExpression, len(conf.Config.Config.Selector.MatchExpressions))
-	for i, v := range conf.Config.Config.Selector.MatchExpressions {
-		matchExpressions[i] = bcsv1.SelectorExpression{
-			Key:      v.Key,
-			Operator: v.Operator,
+	if conf.Config.Config.Selector != nil {
+		matchExpressions := make([]bcsv1.SelectorExpression, len(conf.Config.Config.Selector.MatchExpressions))
+		for i, v := range conf.Config.Config.Selector.MatchExpressions {
+			matchExpressions[i] = bcsv1.SelectorExpression{
+				Key:      v.Key,
+				Operator: v.Operator,
+			}
+			blog.Infof("no%d:%+v", i, matchExpressions[i])
+			var newValues []string
+			if len(v.Values) != 0 {
+				newValues = make([]string, len(v.Values))
+				copy(newValues, v.Values)
+				matchExpressions[i].Values = newValues
+			}
 		}
-		blog.Infof("no%d:%+v", i, matchExpressions[i])
-		var newValues []string
-		if len(v.Values) != 0 {
-			newValues = make([]string, len(v.Values))
-			copy(newValues, v.Values)
-			matchExpressions[i].Values = newValues
-		}
+		ret.ConfigSpec.Selector.MatchLabels = conf.Config.Config.Selector.MatchLabels
+		ret.ConfigSpec.Selector.MatchExpressions = matchExpressions
 	}
-	blog.Infof("hello:%+v", matchExpressions)
-	ret.ConfigSpec.Selector.MatchExpressions = matchExpressions
 	return ret
 }

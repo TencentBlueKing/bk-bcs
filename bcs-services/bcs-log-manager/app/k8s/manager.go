@@ -22,7 +22,6 @@ import (
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
@@ -81,9 +80,10 @@ func init() {
 }
 
 // NewManager returns a new log manager
-func NewManager(conf *config.ManagerConfig) *LogManager {
+func NewManager(conf *config.ManagerConfig) LogManagerInterface {
 	manager := &LogManager{
 		stopCh:     conf.StopCh,
+		ctx:        conf.Ctx,
 		config:     conf,
 		logClients: make(map[string]*LogClient),
 		// controllers:             make(map[string]*ClusterLogController),
@@ -129,7 +129,7 @@ func NewManager(conf *config.ManagerConfig) *LogManager {
 
 func (m *LogManager) addSystemCollectionConfig() {
 	if m.config.SystemDataID == "" {
-		dataid, ok := m.ObtainDataID(bkdata.BKDataClientConfig{
+		dataid, ok := m.obtainDataID(bkdata.BKDataClientConfig{
 			BkAppCode:   m.config.BkAppCode,
 			BkAppSecret: m.config.BkAppSecret,
 			BkUsername:  m.config.BkUsername,
@@ -161,8 +161,8 @@ func (m *LogManager) addSystemCollectionConfig() {
 	blog.Infof("System log configs ready to create")
 }
 
-// ObtainDataID is used to obtain dataid for unspecified system log dataid
-func (m *LogManager) ObtainDataID(clientconf bkdata.BKDataClientConfig, bizid int, dataname string) (string, bool) {
+// obtainDataID is used to obtain dataid for unspecified system log dataid
+func (m *LogManager) obtainDataID(clientconf bkdata.BKDataClientConfig, bizid int, dataname string) (string, bool) {
 	dataname = strings.ToLower(dataname)
 	if _, ok := m.dataidChMap[dataname]; ok {
 		blog.Errorf("Dataname %s already existed.", dataname)
@@ -194,20 +194,24 @@ func (m *LogManager) ObtainDataID(clientconf bkdata.BKDataClientConfig, bizid in
 		blog.Errorf("Create BKDataApiConfig crd failed: %s, crd info: %+v", err.Error(), *bkdataapiconfig)
 		return "", false
 	}
-	dataid, ok := <-dataidCh
-	if !ok {
-		blog.Errorf("Obtain dataid failed for system log dataid before create BKDataApiConfig crd")
+	select {
+	case dataid, ok := <-dataidCh:
+		if !ok {
+			blog.Errorf("Obtain dataid failed for system log dataid before create BKDataApiConfig crd")
+			return "", false
+		}
+		blog.Infof("Get response with dataid [%s], crdinfo: %+v", dataid, *bkdataapiconfig)
+		close(dataidCh)
+		return dataid, true
+	case <-time.After(time.Second * 10):
+		blog.Errorf("Obtain dataid failed for system log dataid: timeout")
 		return "", false
 	}
-	blog.Infof("Get response with dataid [%s], crdinfo: %+v", dataid, *bkdataapiconfig)
-	close(dataidCh)
-	return dataid, true
 }
 
 // Start start the log manager
 func (m *LogManager) Start() {
 	go m.run()
-	go m.apiService()
 }
 
 // start log manager
@@ -231,7 +235,7 @@ func (m *LogManager) run() {
 			<-time.After(time.Minute)
 			continue
 		}
-		blog.Infof("Clusters: %+v", ccinfo)
+		blog.Infof("Total Clusters: %n", len(ccinfo))
 		blog.Infof("ListAllClusters success")
 		var schema string
 		if m.config.BcsAPIConfig.TLSConfig != nil {
@@ -248,7 +252,7 @@ func (m *LogManager) run() {
 				continue
 			}
 			// new cluster
-			blog.Infof("New cluster: %+v", cc)
+			blog.V(3).Infof("New cluster: %+v", cc)
 			restConf := &rest.Config{
 				Host:        fmt.Sprintf("%s%s%s%s", schema, m.config.BcsAPIConfig.Hosts[0], APIGatewayClusterTunnel, cc.ClusterID),
 				BearerToken: m.config.BcsAPIConfig.AuthToken,
@@ -256,6 +260,7 @@ func (m *LogManager) run() {
 				TLSClientConfig: rest.TLSClientConfig{
 					Insecure: true,
 				},
+				Timeout: time.Second * 10,
 			}
 			clientset, err := internalclientset.NewForConfig(restConf)
 			if err != nil {
@@ -270,7 +275,7 @@ func (m *LogManager) run() {
 			newClusters[id] = m.logClients[id]
 		}
 		m.clientRWMutex.Unlock()
-		m.distributeAddTasks(newClusters, m.config.CollectionConfigs)
+		m.distributeAddTasks(m.ctx, newClusters, m.config.CollectionConfigs)
 		// delete invalid clusters
 		deletedClusters := make(map[string]struct{})
 		m.clientRWMutex.RLock()
@@ -330,35 +335,10 @@ func (m *LogManager) handleUpdatedBKDataAPIConfig(oldobj, newobj interface{}) {
 		dataid := int(dataidf)
 		blog.Info("Obtain dataid [%d] success of dataname: %s", dataid, name)
 		m.dataidChMap[name] <- strconv.Itoa(dataid)
-		m.newDataCleanStrategy(config, dataid)
 	} else {
 		blog.Errorf("Obtain dataid failed")
 		close(m.dataidChMap[name])
 		return
-	}
-}
-
-// create new dataclean strategy for system log dataid
-func (m *LogManager) newDataCleanStrategy(config *bkdatav1.BKDataApiConfig, dataid int) {
-	// new data clean strategy crd
-	strategy := bkdata.NewDefaultCleanStrategy()
-	strategy.BkAppCode = config.Spec.AccessDeployPlanConfig.BkAppCode
-	strategy.BkAppSecret = config.Spec.AccessDeployPlanConfig.BkAppSecret
-	strategy.BkUsername = config.Spec.AccessDeployPlanConfig.BkUsername
-	strategy.BkBizID = config.Spec.AccessDeployPlanConfig.BkBizID
-	strategy.RawDataID = int(dataid)
-
-	bkdataapiconfig := &bkdatav1.BKDataApiConfig{}
-	bkdataapiconfig.Spec.ApiName = DataCleanAPIName
-	bkdataapiconfig.SetName(fmt.Sprintf("%s-data-clean-strategy", config.GetName()))
-	bkdataapiconfig.SetNamespace("default")
-	bkdataapiconfig.Spec.DataCleanStrategyConfig = strategy
-	// delete successful obtain dataid crd
-	m.bkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(config.GetNamespace()).Delete(config.GetName(), &metav1.DeleteOptions{})
-	// apply data clean strategy
-	_, err := m.bkDataAPIConfigClientset.BkbcsV1().BKDataApiConfigs(bkdataapiconfig.GetNamespace()).Create(bkdataapiconfig)
-	if err != nil {
-		blog.Errorf("Create BKDataApiConfig crd failed: %s, crd info: %+v", err.Error(), *bkdataapiconfig)
 	}
 }
 

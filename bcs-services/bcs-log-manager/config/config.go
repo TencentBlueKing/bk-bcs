@@ -14,6 +14,8 @@
 package config
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
@@ -31,6 +33,7 @@ type ManagerConfig struct {
 	BkAppSecret       string
 	BkBizID           int
 	StopCh            chan struct{}
+	Ctx               context.Context
 }
 
 // CollectionConfig defines some customed infomation of log collection.

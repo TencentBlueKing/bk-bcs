@@ -14,6 +14,7 @@
 package k8s
 
 import (
+	"context"
 	"sync"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,6 +24,7 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/app/api/proto/logmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/pkg/generated/clientset/versioned"
 )
@@ -33,6 +35,13 @@ import (
 type RequestMessage struct {
 	Data   interface{}
 	RespCh chan interface{}
+}
+
+type LogManagerInterface interface {
+	Start()
+	HandleListLogCollectionTask(context.Context, *config.CollectionFilterConfig) map[string][]config.CollectionConfig
+	HandleAddLogCollectionTask(context.Context, *config.CollectionConfig) *proto.CollectionTaskCommonResp
+	HandleDeleteLogCollectionTask(context.Context, *config.CollectionFilterConfig) *proto.CollectionTaskCommonResp
 }
 
 // LogManager contains the log-manager module's main funcations
@@ -51,6 +60,7 @@ type LogManager struct {
 	bkDataAPIConfigClientset *internalclientset.Clientset
 	bkDataAPIConfigInformer  cache.SharedIndexInformer
 	stopCh                   chan struct{}
+	ctx                      context.Context
 }
 
 // LogClient is client for BcsLogConfigs operation of single cluster

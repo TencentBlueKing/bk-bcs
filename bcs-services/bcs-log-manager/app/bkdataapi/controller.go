@@ -152,6 +152,7 @@ func (c *BKDataController) createBKDataAPIConfig() error {
 	return nil
 }
 
+// TODO: 资源销毁
 func (c *BKDataController) handleAddBKDataAPIConfig(obj interface{}) {
 	// get BKDataClientConfig from crd
 	conf, ok := obj.(*bcsv1.BKDataApiConfig)
@@ -164,9 +165,9 @@ func (c *BKDataController) handleAddBKDataAPIConfig(obj interface{}) {
 	switch bkDataAPIConfig.Spec.ApiName {
 	case "v3_access_deploy_plan_post":
 		client := c.ClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
-			BkAppCode:                  bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkAppCode,
-			BkAppSecret:                bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkAppSecret,
-			BkUsername:                 bkDataAPIConfig.Spec.DataCleanStrategyConfig.BkUsername,
+			BkAppCode:                  bkDataAPIConfig.Spec.AccessDeployPlanConfig.BkAppCode,
+			BkAppSecret:                bkDataAPIConfig.Spec.AccessDeployPlanConfig.BkAppSecret,
+			BkUsername:                 bkDataAPIConfig.Spec.AccessDeployPlanConfig.BkUsername,
 			BkdataAuthenticationMethod: "user",
 			Host:                       c.APIHost,
 		})
@@ -184,6 +185,15 @@ func (c *BKDataController) handleAddBKDataAPIConfig(obj interface{}) {
 			c.respondFailed(bkDataAPIConfig, err)
 			break
 		}
+		// create default data clean strategy
+		strategy := bkdata.NewDefaultCleanStrategy()
+		strategy.RawDataID = int(dataid)
+		strategy.BkBizID = int(bkDataAPIConfig.Spec.AccessDeployPlanConfig.BkBizID)
+		tableName := fmt.Sprintf("container_log_clean_strategy_%d", dataid)
+		strategy.ResultTableName = tableName
+		strategy.ResultTableNameAlias = tableName
+		client.SetCleanStrategy(strategy)
+		// response
 		c.respondOK(bkDataAPIConfig, string(jsonstr))
 	case "v3_databus_cleans_post":
 		client := c.ClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
