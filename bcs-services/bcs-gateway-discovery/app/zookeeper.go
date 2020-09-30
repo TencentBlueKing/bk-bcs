@@ -55,6 +55,8 @@ func (s *DiscoveryServer) handleModuleChange(event *ModuleEvent) error {
 	return nil
 }
 
+// formatBCSServerInfo format bcs zookeeper server info according to event module name
+//@param: module, mesosdriver/cluster-xxxx, storage
 func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service, error) {
 	originals, err := s.discovery.GetModuleServers(module)
 	if err != nil {
@@ -94,6 +96,8 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 	return rSvcs, nil
 }
 
+//formatDriverServerInfo format mesosdriver & kubernetedriver server information
+//@param: module, module info with clusterID, mesosdriver/BCS-MESOS-10032
 func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Service, error) {
 	originals, err := s.discovery.GetModuleServers(module)
 	if err != nil {

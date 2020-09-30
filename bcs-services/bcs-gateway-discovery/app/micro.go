@@ -93,7 +93,7 @@ func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 			return
 		}
 	}
-	blog.Warnf("module %s in not under ")
+	blog.Warnf("module %s in not expected", module)
 }
 
 // formatEtcdInfo format internal service info according module info
@@ -125,14 +125,14 @@ func (s *DiscoveryServer) formatEtcdInfo(module string, http bool) (*register.Se
 		//data structure conversion
 		rSvcs, err = s.adapter.GetHTTPService(bkbcsName, service)
 		if err != nil {
-			blog.Errorf("converts micro grpc module %s registry to api-gateway info failed, %s", service.Name, err.Error())
+			blog.Errorf("converts micro http module %s registry to api-gateway info failed, %s", service.Name, err.Error())
 			return nil, err
 		}
 	} else {
 		//grpc data structure conversion
 		rSvcs, err = s.adapter.GetGrpcService(bkbcsName, service)
 		if err != nil {
-			blog.Errorf("converts micro http module %s registry to api-gateway info failed, %s", service.Name, err.Error())
+			blog.Errorf("converts micro grpc module %s registry to api-gateway info failed, %s", service.Name, err.Error())
 			return nil, err
 		}
 
@@ -148,6 +148,7 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 		return nil, fmt.Errorf("list all micro registry service err")
 	}
 	if len(svcs) == 0 {
+		blog.Warnf("no module in etcd registry...")
 		return nil, nil
 	}
 	var allServices []*register.Service
@@ -161,6 +162,7 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 				continue
 			}
 			allServices = append(allServices, rsvc)
+			blog.V(5).Infof("etcd registry module %s[%s] grpc conversion successfully", svc.Name, module)
 		}
 		//check http route rules convertion
 		//! pay more attention, modules that don't support grpc must be compatible in http conversion
@@ -182,6 +184,7 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 					s.clusterRestricted(id)
 				}
 			}
+			blog.V(5).Infof("etcd registry module %s http conversion successfully", svc.Name)
 		}
 	}
 	return allServices, nil

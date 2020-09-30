@@ -36,7 +36,7 @@ func init() {
 }
 
 // NewDiscovery create micro discovery implementation
-// @param modules, bkbcs modules define in common/types, meshmanager, logmanager, 30001.mesosdriver and etc.
+// @param modules, bkbcs modules define in common/types, meshmanager, logmanager, mesosdriver and etc.
 // @param handler, event callback
 // @param r, go-micro registry implementation
 func NewDiscovery(modules []string, handler EventHandler, r registry.Registry) Discovery {
@@ -77,9 +77,13 @@ func (d *MicroDiscovery) Start() error {
 		blog.Errorf("MicroDiscovery list all service failed, %s", err.Error())
 		return err
 	}
+	if len(svcs) == 0 {
+		blog.Warnf("etcd registry list all service in starting, found no data")
+	}
 	d.Lock()
 	defer d.Unlock()
 	for _, svc := range svcs {
+		blog.Infof("start to init etcd registry info, %s", svc.Name)
 		d.modules[svc.Name] = svc
 	}
 	go d.worker(d.ctx)
@@ -110,7 +114,7 @@ func (d *MicroDiscovery) innerGetService(module string) (*registry.Service, erro
 	//first, get details from registry
 	svcs, err := d.microRegistry.GetService(module)
 	if err == registry.ErrNotFound {
-		blog.Warnf("discovery found no module %s under registry", module)
+		blog.Warnf("discovery found no module %s under registry, clean local cache.", module)
 		d.Lock()
 		delete(d.modules, module)
 		d.Unlock()
@@ -119,6 +123,10 @@ func (d *MicroDiscovery) innerGetService(module string) (*registry.Service, erro
 	if err != nil {
 		blog.Errorf("discovery get specified module %s failed, %s", module, err.Error())
 		return nil, err
+	}
+	if len(svcs) == 0 {
+		blog.Warnf("etcd registry no module %s information", module)
+		return nil, nil
 	}
 	// merge all version instance to one service
 	if len(svcs) > 1 {
@@ -192,6 +200,7 @@ func (d *MicroDiscovery) ListAllServer() ([]*registry.Service, error) {
 			})
 			continue
 		}
+		blog.V(3).Infof("etcd registry list service %s", svc.Name)
 		svcMap[svc.Name] = svc
 	}
 	var svcs []*registry.Service
@@ -275,7 +284,7 @@ func (d *MicroDiscovery) worker(ctx context.Context) {
 				blog.Warnf("discovery watch got empty service information in event stream, keep watching...")
 				continue
 			}
-			blog.V(5).Infof("discovery watch information: module %s, details [%s] %+v", r.Service.Name, r.Action, r.Service)
+			blog.Infof("discovery watch information: module %s, details [%s] %+v", r.Service.Name, r.Action, r.Service)
 			d.handleEvent(r)
 		}
 	}
@@ -295,7 +304,7 @@ func (d *MicroDiscovery) handleEvent(r *registry.Result) {
 	shortName := strings.ReplaceAll(fullName, defaultDomain, "")
 	bkbcsName := strings.Split(shortName, ".")
 	d.RLock()
-	defer d.Unlock()
+	defer d.RUnlock()
 	if _, ok := d.moduleFilter[bkbcsName[len(bkbcsName)-1]]; !ok {
 		blog.Warnf("discovery do not expect module %s[%s] event, skip", fullName, shortName)
 		return

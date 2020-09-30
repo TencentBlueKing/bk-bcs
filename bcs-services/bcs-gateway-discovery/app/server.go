@@ -118,7 +118,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 		}
 	}
 
-	defaultModules := append(defaultModules, strings.Split(option.Modules, ",")...)
+	defaultModules = append(defaultModules, strings.Split(option.Modules, ",")...)
 	//init service data adapter
 	s.adapter = NewAdapter(option, defaultModules)
 	//init module disovery
@@ -363,7 +363,7 @@ func (s *DiscoveryServer) isClusterRestriction(clusterID string) bool {
 		cluster = items[len(items)-1]
 	}
 	s.clusterLock.RLock()
-	defer s.clusterLock.Unlock()
+	defer s.clusterLock.RUnlock()
 	if _, ok := s.clusterID[cluster]; ok {
 		return true
 	}
