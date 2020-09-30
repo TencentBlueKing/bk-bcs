@@ -15,6 +15,7 @@ package mesosdriver
 
 import "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
+// Config client configuration
 type Config struct {
 	ZkAddr string
 	//http client cert config
