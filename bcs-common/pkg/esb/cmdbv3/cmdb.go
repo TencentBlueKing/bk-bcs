@@ -28,9 +28,17 @@ type ClientInterface interface {
 	UpdatePod(bizID int64, data *UpdatePod) (*UpdatedOptionResult, error)
 	DeletePod(bizID int64, data *DeletePod) (*DeletedOptionResult, error)
 	ListClusterPods(bizID int64, clusterID string) (*ListPodsResult, error)
-
 	// topo server
 	SearchBusinessTopoWithStatistics(bizID int64) (*SearchBusinessTopoWithStatisticsResult, error)
+
+	// interfaces through esb
+	// 如果是通过ESB的请求，所有的参数都在post请求体中
+	ESBSearchBusiness(username string, condition map[string]interface{}) (*ESBSearchBusinessResult, error)
+	ESBSearchBizInstTopo(username string, bizID int64) (*ESBSearchBizInstTopoResult, error)
+	ESBTransferHostInBizModule(username string, bizID int64, hostIDs, moduleIDs []int64) (
+		*ESBTransferHostModuleResult, error)
+	ESBListHostsWithoutBiz(username string, req *ESBListHostsWitoutBizRequest) (*ESBListHostsWitoutBizResult, error)
+	ESBGetBizLocation(username string, bizIDs []int64) (*ESBGetBizLocationResult, error)
 }
 
 // NewClientInterface create client interface
@@ -45,8 +53,9 @@ func NewClientInterface(host string, tlsConf *tls.Config) *Client {
 	}
 
 	return &Client{
-		host:   host,
-		client: cli,
+		host:    host,
+		client:  cli,
+		baseReq: make(map[string]interface{}),
 	}
 }
 
@@ -55,11 +64,19 @@ type Client struct {
 	host          string
 	defaultHeader http.Header
 	client        *paasclient.RESTClient
+	baseReq       map[string]interface{}
 }
 
 // SetDefaultHeader set default headers
 func (c *Client) SetDefaultHeader(h http.Header) {
 	c.defaultHeader = h
+}
+
+// SetCommonReq set base req
+func (c *Client) SetCommonReq(args map[string]interface{}) {
+	for k, v := range args {
+		c.baseReq[k] = v
+	}
 }
 
 // CreatePod create pod

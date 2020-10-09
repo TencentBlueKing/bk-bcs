@@ -64,6 +64,12 @@ type ListProjectsResult struct {
 	Data []*Project `json:"data"`
 }
 
+// GetProjectResult GetProject result
+type GetProjectResult struct {
+	BaseResp
+	Data Project `json:"data"`
+}
+
 // Cluster cluster info
 type Cluster struct {
 	AreaID            int64     `json:"area_id"`
