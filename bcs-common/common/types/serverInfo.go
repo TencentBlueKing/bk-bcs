@@ -17,14 +17,11 @@ const (
 	BCS_SERV_BASEPATH          = "/bcs/services/endpoints"
 	BCS_MODULE_APISERVER       = "apiserver"
 	BCS_MODULE_USERMGR         = "usermanager"
-	BCS_MODULE_ROUTE           = "route"
-	BCS_MODULE_AUTH            = "auth"
 	BCS_MODULE_CCAPI           = "ccapi"
 	BCS_MODULE_MESOSDATAWATCH  = "mesosdatawatch"
 	BCS_MODULE_KUBEDATAWATCH   = "kubedatawatch"
 	BCS_MODULE_MESOSDRIVER     = "mesosdriver"
 	BCS_MODULE_KUBERNETEDRIVER = "kubernetedriver"
-	BCS_MODULE_SADRIVER        = "sadriver"
 	BCS_MODULE_SCHEDULER       = "scheduler"
 	BCS_MODULE_CLUSTERKEEPER   = "clusterkeeper"
 	BCS_MODULE_HEALTH          = "health"
@@ -39,7 +36,6 @@ const (
 	BCS_MODULE_EXPORTER        = "exporter"
 	BCS_MODULE_DCSERVER        = "dcserver"
 	BCS_MODULE_DCCLINET        = "dcclient"
-	BCS_MODULE_AWSELB          = "awselb"
 	BCS_MODULE_QCLOUDCLB       = "qcloudclb"
 	BCS_MODULE_MESOSSLAVE      = "mesosslave"
 	BCS_MODULE_IPSERVICE       = "ipservice"
@@ -61,16 +57,14 @@ const (
 )
 
 var (
+	// BCS_PROC_LIST module list information
 	BCS_PROC_LIST = []string{
 		BCS_MODULE_APISERVER,
-		BCS_MODULE_ROUTE,
-		BCS_MODULE_AUTH,
 		BCS_MODULE_CCAPI,
 		BCS_MODULE_MESOSDATAWATCH,
 		BCS_MODULE_KUBEDATAWATCH,
 		BCS_MODULE_MESOSDRIVER,
 		BCS_MODULE_KUBERNETEDRIVER,
-		BCS_MODULE_SADRIVER,
 		BCS_MODULE_SCHEDULER,
 		BCS_MODULE_CLUSTERKEEPER,
 		BCS_MODULE_HEALTH,
@@ -85,7 +79,6 @@ var (
 		BCS_MODULE_EXPORTER,
 		BCS_MODULE_DCSERVER,
 		BCS_MODULE_DCCLINET,
-		BCS_MODULE_AWSELB,
 		BCS_MODULE_QCLOUDCLB,
 		BCS_MODULE_MESOSSLAVE,
 		BCS_MODULE_IPSERVICE,
@@ -108,6 +101,7 @@ type ServerInfo struct {
 	IP           string `json:"ip"`
 	IPv6         string `json:"ipv6"`
 	Port         uint   `json:"port"`
+	GrpcPort     uint   `json:"grpc_port"`
 	MetricPort   uint   `json:"metric_port"`
 	HostName     string `json:"hostname"`
 	Scheme       string `json:"scheme"` //http, https
@@ -263,7 +257,7 @@ type DataExporterInfo struct {
 	ServerInfo
 }
 
-//ContainerWareInfo
+// ContainerWareInfo for container ware
 type ContainerWareInfo struct {
 	ServerInfo
 }
@@ -278,15 +272,17 @@ type QcloudCLBInfo struct {
 	ServerInfo
 }
 
+// IPServiceInfo for module ipservice
 type IPServiceInfo struct {
 	ServerInfo
 }
 
+// ProxyInfo for proxy module
 type ProxyInfo struct {
 	ServerInfo
 }
 
-//ConsoleManagerInfo
+//ConsoleManagerInfo for console manager
 type ConsoleManagerInfo struct {
 	ServerInfo
 }

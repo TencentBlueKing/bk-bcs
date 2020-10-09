@@ -26,8 +26,8 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
-//ApiServConfig is a configuration of apiserver
-type IpschedulerConfig struct {
+//CustomSchedulerConfig is a configuration of CustomScheduler
+type CustomSchedulerConfig struct {
 	Address         string
 	Port            uint
 	InsecureAddress string
@@ -37,21 +37,20 @@ type IpschedulerConfig struct {
 	ZkHosts         string
 	ServCert        *CertConfig
 	ClientCert      *CertConfig
-	VerifyClientTLS bool
+
+	Cluster              string
+	KubeConfig           string
+	KubeMaster           string
+	UpdatePeriod         uint
+	CustomSchedulerType  string
+	VerifyClientTLS      bool
+	CniAnnotationKey     string
+	FixedIpAnnotationKey string
 }
 
-var (
-	ZkHosts           = ""
-	Cluster           = ""
-	Kubeconfig        = ""
-	KubeMaster        = ""
-	UpdatePeriod uint = 0
-	ClientCert   *CertConfig
-)
-
-//NewIpschedulerConfig create a config object
-func NewIpschedulerConfig() *IpschedulerConfig {
-	return &IpschedulerConfig{
+//NewCustomeSchedulerConfig create a config object
+func NewCustomSchedulerConfig() *CustomSchedulerConfig {
+	return &CustomSchedulerConfig{
 		Address: "127.0.0.1",
 		Port:    80,
 		ServCert: &CertConfig{

@@ -71,8 +71,8 @@ func (store *managerStore) UnLockApplication(appID string) {
 }
 
 func (store *managerStore) CheckApplicationExist(application *types.Application) (string, bool) {
-	app,_ := store.fetchApplicationInDB(application.RunAs, application.ID)
-	if app!=nil {
+	app, _ := store.fetchApplicationInDB(application.RunAs, application.ID)
+	if app != nil {
 		return app.ResourceVersion, true
 	}
 

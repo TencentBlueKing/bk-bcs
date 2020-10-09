@@ -25,7 +25,22 @@ import (
 
 //NewServerOptions create default ServerOptions
 func NewServerOptions() *ServerOptions {
-	return &ServerOptions{}
+	return &ServerOptions{
+		Etcd: EtcdRegistry{
+			Feature: false,
+		},
+	}
+}
+
+// EtcdRegistry config item for etcd discovery
+type EtcdRegistry struct {
+	Feature     bool   `json:"etcd_feature" value:"false" usage:"switch that turn on etcd registry feature"`
+	GrpcModules string `json:"etcd_grpc_modules" value:"MeshManager,LogManager" usage:"modules that support grpc interface, 'LogManager,MeshManager' is in default"`
+	HTTPModules string `json:"etcd_http_modules" value:"MeshManager,LogManager" usage:"modules that support http interface, 'LogManager,MeshManager' is in default"`
+	Address     string `json:"etcd_address" value:"127.0.0.1:2379" usage:"etcd registry feature, multiple ip addresses splited by comma"`
+	CA          string `json:"etcd_ca" value:"" usage:"etcd registry CA"`
+	Cert        string `json:"etcd_cert" value:"" usage:"etcd registry tls cert file"`
+	Key         string `json:"etcd_key" value:"" usage:"etcd registry tls key file"`
 }
 
 //ServerOptions command flags for gateway-discovery
@@ -35,7 +50,6 @@ type ServerOptions struct {
 	conf.MetricConfig
 	conf.ZkConfig
 	conf.CertConfig
-	conf.LicenseServerConfig
 	conf.LogConfig
 	conf.ProcessConfig
 	IPv6Mode bool `json:"ipv6_mode" value:"false" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed." mapstructure:"ipv6_mode"`
@@ -44,6 +58,8 @@ type ServerOptions struct {
 	//new standard modules
 	Modules   []string `json:"modules" usage:"new standard moduels that discovery serve for" mapstructure:"modules" `
 	AuthToken string   `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
+
+	Etcd EtcdRegistry `json:"etcdRegistry"`
 }
 
 //Valid check if necessary paramter is setting correctly
@@ -54,7 +70,28 @@ func (opt *ServerOptions) Valid() error {
 	if len(opt.ZkConfig.BCSZk) == 0 {
 		return fmt.Errorf("Lost bk-bcs zookeeper setting")
 	}
+	if opt.Etcd.Feature {
+		if len(opt.Etcd.Address) == 0 {
+			return fmt.Errorf("Lost etcd address information")
+		}
+		//enable etcd registry feature, we have to ensure tls config
+		if len(opt.Etcd.Cert) == 0 || len(opt.Etcd.CA) == 0 ||
+			len(opt.Etcd.Key) == 0 {
+			return fmt.Errorf("Lost etcd tls config when enable etcd registry feature")
+		}
+	}
 	return nil
+}
+
+// GetEtcdRegistryTLS get specified etcd registry tls config
+func (opt *ServerOptions) GetEtcdRegistryTLS() (*tls.Config, error) {
+	config, err := ssl.ClientTslConfVerity(opt.Etcd.CA, opt.Etcd.Cert,
+		opt.Etcd.Key, "")
+	if err != nil {
+		blog.Errorf("gateway-discovery etcd TLSConfig with CA/Cert/Key failed, %s", err.Error())
+		return nil, err
+	}
+	return config, nil
 }
 
 //GetClientTLS construct client tls configuration

@@ -4,11 +4,15 @@ go 1.14
 
 replace (
 	github.com/Tencent/bk-bcs => ../../
-	github.com/Tencent/bk-bcs/bcs-services/bcs-client => ./
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager => ../bcs-mesh-manager
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	github.com/openshift/api => github.com/openshift/api v0.0.0-20180801171038-322a19404e37
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20181204163529-d75b2dcb6bc8
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
+	google.golang.org/grpc => google.golang.org/grpc v1.26.0
+	istio.io/istio => istio.io/istio v0.0.0-20200812220246-25bea56c0eb0
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
+	k8s.io/kubectl => k8s.io/kubectl v0.16.15
 )
 
 require (
@@ -19,7 +23,6 @@ require (
 	github.com/Masterminds/sprig/v3 v3.1.0 // indirect
 	github.com/Masterminds/squirrel v1.2.0 // indirect
 	github.com/Tencent/bk-bcs v0.0.0-20200805130634-8a6c639f4a4c
-	github.com/Tencent/bk-bcs/bcs-services/bcs-client v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go v1.33.11 // indirect
 	github.com/bitly/go-simplejson v0.5.0
@@ -54,10 +57,8 @@ require (
 	github.com/moby/term v0.0.0-20200611042045-63b9a826fb74
 	github.com/natefinch/lumberjack v2.0.0+incompatible // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
-	github.com/openshift/api v0.0.0-20200713203337-b2494ecb17dd // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/prom2json v1.1.0 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rubenv/sql-migrate v0.0.0-20200212082348-64f95ea68aa3 // indirect
 	github.com/sirupsen/logrus v1.6.0
@@ -80,10 +81,7 @@ require (
 	istio.io/api v0.0.0-20200819225923-c78f387f78a2 // indirect
 	istio.io/client-go v0.0.0-20200812230733-f5504d568313 // indirect
 	istio.io/gogo-genproto v0.0.0-20200720193312-b523a30fe746 // indirect
-	k8s.io/apiextensions-apiserver v0.19.0-alpha.3
-	k8s.io/apiserver v0.19.0 // indirect
+	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/code-generator v0.19.0 // indirect
-	k8s.io/kubectl v0.18.8 // indirect
-	sigs.k8s.io/controller-runtime v0.6.1 // indirect
 	sigs.k8s.io/service-apis v0.0.0-20200731055707-56154e7bfde5 // indirect
 )

@@ -22,6 +22,8 @@ local BKUserCli = Object:extend()
 local KUBEAGENT = "kubeagent"
 local MESOSDRIVER = "mesosdriver"
 local KUBEDRIVER = "kubernetedriver"
+local MESHMANAGER = "meshmanager"
+local LOGMANAGER = "logmanager"
 local STORAGE = "storage"
 local NETWORKDETECTION = "networkdetection"
 local CLUSTER_HEADER = "BCS-ClusterID"
@@ -37,9 +39,19 @@ local userTarget = {
   try_count = 0,
 }
 
+local function is_cluster_resource(mod)
+  return mod == KUBEAGENT or mod == MESOSDRIVER or mod == KUBEDRIVER
+end
+
+local function is_no_cluster_header(mod)
+  return mod == MESHMANAGER or 
+  mod == LOGMANAGER or mod == KUBEAGENT or 
+  mod == NETWORKDETECTION
+end
+
 -- Parse user-manager url
---* @param `endpoints` http(s)://host:port/url
---* @return `parsed_url` a table with host details: scheme, host, port, path, query, userinfo
+-- @param `endpoints` http(s)://host:port/url
+-- @return `parsed_url` a table with host details: scheme, host, port, path, query, userinfo
 local function parse_url(endpoints)
   local parsed_url = url.parse(endpoints)
   if not parsed_url.host then
@@ -63,7 +75,7 @@ function BKUserCli:new(name)
 end
 
 -- get ring balancer instance from local global cache
---* @return: ip, port, error if happened
+--@return: ip, port, error if happened
 function BKUserCli:instance_balancer(key)
   if key then
     userTarget.host = key
@@ -77,7 +89,7 @@ function BKUserCli:instance_balancer(key)
 end
 
 -- init http client according kong balancer setting
---* @param endpoints: comes from plugin configuration
+-- @param endpoints: comes from plugin configuration
 function BKUserCli:init(config)
   -- parse endpoint for request details
   local parsed_url = parse_url(config.bkbcs_auth_endpoints)
@@ -104,10 +116,10 @@ function BKUserCli:init(config)
 end
 
 -- contruct identity information for authentication
---* @param conf: bkbcs-auth plugin configuration
---* @param request: http request
---* @return: a table that use for `bkbcs_user_cli:authentication`
---*        and error string if error happened
+-- @param conf: bkbcs-auth plugin configuration
+-- @param request: http request
+-- @return: a table that use for `bkbcs_user_cli:authentication`
+--        and error string if error happened
 function BKUserCli:construct_identity(conf, request)
   if not conf or not request then
     return nil, "lost conf or request"
@@ -119,9 +131,7 @@ function BKUserCli:construct_identity(conf, request)
     action = "",
   }
   auth.action = request.get_method()
-  if conf.module == KUBEAGENT or
-  conf.module == MESOSDRIVER or
-  conf.module == KUBEDRIVER then
+  if is_cluster_resource(conf.module) then
     auth.resource_type = "cluster"
   else
     auth.resource_type = conf.module
@@ -129,7 +139,7 @@ function BKUserCli:construct_identity(conf, request)
   -- kubeagent & networkdetection has no ClusterId
   local cluster_id = request.get_header(CLUSTER_HEADER)
   if not cluster_id and 
-  not (conf.module == KUBEAGENT or conf.module == NETWORKDETECTION) then
+  not is_no_cluster_header(conf.module) then
     kong.log.err(" user_cli get no BCS-ClusterID from request ", request.get_path())
     return nil, "lost BCS-ClusterID in header"
   end

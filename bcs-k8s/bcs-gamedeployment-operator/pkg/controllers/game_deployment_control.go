@@ -286,7 +286,7 @@ func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *tkexv1alph
 
 	newDeploy := deploy.DeepCopy()
 	newDeploy.Spec.ScaleStrategy.PodsToDelete = newPodsToDelete
-	_, updateErr := gdc.client.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(deploy)
+	_, updateErr := gdc.client.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
 	return updateErr
 }
 

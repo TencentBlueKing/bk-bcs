@@ -55,6 +55,9 @@ func NewClientInterface(host, appcode, appsecret string, tlsConf *tls.Config) Cl
 type Client struct {
 	host   string
 	client *paasclient.RESTClient
+	//reserved for BK PaaS AppToken, setting formation in http header:
+	//X-Bkapi-Authorization: '{"access_token": "xxxxxxxxxxxxxxxxxxxx"}'
+	accessToken string
 }
 
 // ListProjects list projects

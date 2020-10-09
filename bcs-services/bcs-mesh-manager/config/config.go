@@ -15,6 +15,7 @@ package config
 
 import "crypto/tls"
 
+// Config all config item for bcs-mesh-manager
 type Config struct {
 	//IstioOperator Docker Hub
 	DockerHub string
@@ -29,7 +30,7 @@ type Config struct {
 	//address
 	Address string
 	//port, grpc port, http port +1
-	Port int
+	Port uint
 	//metrics port
 	MetricsPort string
 	//etcd servers
@@ -49,5 +50,7 @@ type Config struct {
 	//is ssl
 	IsSsl bool
 	//tls config
-	TlsConf *tls.Config
+	TLSConf *tls.Config
+	//kubeconfig
+	Kubeconfig string
 }

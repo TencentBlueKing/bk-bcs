@@ -16,20 +16,20 @@ package list
 import (
 	"fmt"
 
-	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/meshmanager/v1"
+	meshv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/meshmanager"
 )
 
 func listMeshCluster(c *utils.ClientContext) error {
 	meshManager := v1.NewMeshManager(utils.GetClientOption())
-	resp,err := meshManager.ListMeshCluster(&meshmanager.ListMeshClusterReq{})
-	if err!=nil {
+	resp, err := meshManager.ListMeshCluster(&meshmanager.ListMeshClusterReq{})
+	if err != nil {
 		fmt.Println("error", err.Error())
 		return err
 	}
-	if resp.ErrCode!=meshmanager.ErrCode_ERROR_OK {
+	if resp.ErrCode != meshmanager.ErrCode_ERROR_OK {
 		return fmt.Errorf("failed to list meshclusters: %s", resp.ErrMsg)
 	}
 	if len(resp.MeshClusters) == 0 {
@@ -42,12 +42,12 @@ func listMeshCluster(c *utils.ClientContext) error {
 		"MESSAGE")
 
 	for _, mCluster := range resp.MeshClusters {
-		var status,message string
+		var status, message string
 		if mCluster.Deletion {
 			status = "DELETING"
 			message = "istio is deleting now"
-		}else {
-			status,message = getMeshClusterStatus(mCluster)
+		} else {
+			status, message = getMeshClusterStatus(mCluster)
 		}
 		fmt.Printf("%-15s %-10s %-10s %-25s\n",
 			mCluster.Clusterid,
@@ -59,27 +59,27 @@ func listMeshCluster(c *utils.ClientContext) error {
 }
 
 //return status、message
-func getMeshClusterStatus(mCluster *meshmanager.MeshCluster)(string,string){
+func getMeshClusterStatus(mCluster *meshmanager.MeshCluster) (string, string) {
 	var deploy, running, failed int
 	var message string
-	for _,component :=range mCluster.Components {
+	for _, component := range mCluster.Components {
 		switch component.Status {
-		case string(meshv1.InstallStatus_NONE), string(meshv1.InstallStatus_DEPLOY), string(meshv1.InstallStatus_STARTING):
-			deploy += 1
-		case string(meshv1.InstallStatus_RUNNING):
-			running += 1
-		case string(meshv1.InstallStatus_FAILED):
-			failed += 1
+		case string(meshv1.InstallStatusNONE), string(meshv1.InstallStatusDEPLOY), string(meshv1.InstallStatusSTARTING):
+			deploy++
+		case string(meshv1.InstallStatusRUNNING):
+			running++
+		case string(meshv1.InstallStatusFAILED):
+			failed++
 			message = component.Message
 		}
 	}
 	//failed
-	if failed>0 {
-		return string(meshv1.InstallStatus_FAILED), message
+	if failed > 0 {
+		return string(meshv1.InstallStatusFAILED), message
 	}
 	//running
-	if len(mCluster.Components)==running {
-		return string(meshv1.InstallStatus_RUNNING), "istio is running now"
+	if len(mCluster.Components) == running {
+		return string(meshv1.InstallStatusRUNNING), "istio is running now"
 	}
-	return string(meshv1.InstallStatus_DEPLOY), "istio is deploying now"
+	return string(meshv1.InstallStatusDEPLOY), "istio is deploying now"
 }

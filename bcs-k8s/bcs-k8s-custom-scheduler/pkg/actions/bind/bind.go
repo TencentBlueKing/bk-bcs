@@ -14,9 +14,10 @@
 package bind
 
 import (
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/ipscheduler/v1"
 	"github.com/emicklei/go-restful"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 )
@@ -26,10 +27,11 @@ const (
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: actions.BcsCustomSchedulerPrefix + "/" + "ipscheduler" + "/" + BindPrefix, Params: nil, Handler: handleIpschedulerBind})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: actions.BcsCustomSchedulerPrefix + "ipscheduler/" + "{version}/" + BindPrefix,
+		Params: nil, Handler: handleIpSchedulerBind})
 }
 
-func handleIpschedulerBind(req *restful.Request, resp *restful.Response) {
+func handleIpSchedulerBind(req *restful.Request, resp *restful.Response) {
 
 	var extenderBindingArgs schedulerapi.ExtenderBindingArgs
 	var extenderBindingResult *schedulerapi.ExtenderBindingResult
@@ -45,7 +47,12 @@ func handleIpschedulerBind(req *restful.Request, resp *restful.Response) {
 		return
 	}
 
-	err = ipscheduler.HandleIpschedulerBinding(extenderBindingArgs)
+	ipSchedulerVersion := req.PathParameter("version")
+	if ipSchedulerVersion == actions.IpSchedulerV1 {
+		err = v1.HandleIpSchedulerBinding(extenderBindingArgs)
+	} else {
+		err = fmt.Errorf("invalid IpScheduler version")
+	}
 	if err != nil {
 		blog.Errorf("error handling extender binding: %s", err.Error())
 		extenderBindingResult = &schedulerapi.ExtenderBindingResult{

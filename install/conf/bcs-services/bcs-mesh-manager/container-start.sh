@@ -1,6 +1,6 @@
 #!/bin/bash
 
-module="bcs-logbeat-sidecar"
+module="bcs-mesh-manager"
 
 cd /data/bcs/${module}
 chmod +x ${module}

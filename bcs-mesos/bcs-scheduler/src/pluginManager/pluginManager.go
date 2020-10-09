@@ -15,17 +15,18 @@ package pluginManager
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/config"
 	bcsplugin "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/plugin"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager/plugin/dynamicPlugin"
-	"os"
-	"path/filepath"
-	"sync"
 )
 
-//plugin manager
+//PluginManager plugin manager
 type PluginManager struct {
 	lock sync.RWMutex
 
@@ -36,6 +37,7 @@ type PluginManager struct {
 	plugins map[string]bcsplugin.Plugin
 }
 
+// NewPluginManager create plugin manager
 func NewPluginManager(pluginNames []string, pluginDir string) (*PluginManager, error) {
 	var err error
 	dir := pluginDir
@@ -133,7 +135,7 @@ func (p *PluginManager) initPlugins() {
 	blog.Infof("initPlugins done")
 }
 
-//get mesos slave dynamic attributes
+// GetHostAttributes get mesos slave dynamic attributes
 func (p *PluginManager) GetHostAttributes(para *typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes, error) {
 
 	hosts := make(map[string]*typesplugin.HostAttributes)

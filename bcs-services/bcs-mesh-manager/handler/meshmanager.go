@@ -50,7 +50,7 @@ func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.Cr
 	klog.Infof("Received MeshManager.CreateMeshCluster request(%s)", req.String())
 	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
 	//check MeshCluster whether exist
-	mCluster, err := e.getMeshClusterByClusterId(req.Clusterid)
+	mCluster, err := e.getMeshClusterByClusterID(req.Clusterid)
 	if err != nil {
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
 		resp.ErrMsg = err.Error()
@@ -73,7 +73,7 @@ func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.Cr
 		},
 		Spec: meshv1.MeshClusterSpec{
 			Version:   req.Version,
-			ClusterId: req.Clusterid,
+			ClusterID: req.Clusterid,
 			MeshType:  meshv1.MeshType(req.Meshtype),
 		},
 	}
@@ -92,7 +92,7 @@ func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.Cr
 func (e *MeshHandler) DeleteMeshCluster(ctx context.Context, req *meshmanager.DeleteMeshClusterReq, resp *meshmanager.DeleteMeshClusterResp) error {
 	klog.Infof("Received meshmanager.DeleteMeshCluster request(%s)", req.String())
 	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
-	mCluster, err := e.getMeshClusterByClusterId(req.Clusterid)
+	mCluster, err := e.getMeshClusterByClusterID(req.Clusterid)
 	if err != nil {
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
 		resp.ErrMsg = err.Error()
@@ -130,13 +130,13 @@ func (e *MeshHandler) ListMeshCluster(ctx context.Context, req *meshmanager.List
 		return nil
 	}
 	for _, in := range mClusterList.Items {
-		if req.Clusterid != "" && in.Spec.ClusterId != req.Clusterid {
+		if req.Clusterid != "" && in.Spec.ClusterID != req.Clusterid {
 			continue
 		}
 
 		mCluster := &meshmanager.MeshCluster{
 			Version:    in.Spec.Version,
-			Clusterid:  in.Spec.ClusterId,
+			Clusterid:  in.Spec.ClusterID,
 			Deletion:   !in.ObjectMeta.DeletionTimestamp.IsZero(),
 			Components: make(map[string]*meshmanager.InstallStatus),
 		}
@@ -155,14 +155,14 @@ func (e *MeshHandler) ListMeshCluster(ctx context.Context, req *meshmanager.List
 	return nil
 }
 
-func (e *MeshHandler) getMeshClusterByClusterId(clusterId string) (*meshv1.MeshCluster, error) {
+func (e *MeshHandler) getMeshClusterByClusterID(clusterId string) (*meshv1.MeshCluster, error) {
 	mClusterList, err := e.listMeshClusters()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, in := range mClusterList.Items {
-		if in.Spec.ClusterId == clusterId {
+		if in.Spec.ClusterID == clusterId {
 			return &in, nil
 		}
 	}

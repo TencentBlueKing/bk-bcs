@@ -23,9 +23,9 @@ import (
 
 //DeploymentHandler event handler for Deployment
 type DeploymentHandler struct {
-	oper      DataOperator
-	dataType  string
-	ClusterID string
+	oper         DataOperator
+	dataType     string
+	ClusterID    string
 	DoCheckDirty bool
 }
 
