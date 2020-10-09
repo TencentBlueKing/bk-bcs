@@ -1,11 +1,11 @@
 # Bcs Log Manager
 
-bcs-log-manager 结合 bcs-logbeat-sidecar 及其所定义的 BcsLogConfigs 自定义资源，对所有集群的日志配置进行管理，包括日志配置的获取、下发和删除，并提供接口便捷申请 IEG 数据平台 dataid 与配置数据清洗规则，仅需少量步骤即可快速将日志接入 IEG 数据平台。
+bcs-log-manager 结合 bcs-logbeat-sidecar 及其所定义的 BcsLogConfigs 自定义资源，对所有集群的日志配置进行管理，包括日志配置的获取、下发和删除，并提供接口便捷申请蓝鲸数据平台 dataid 与配置数据清洗规则，仅需少量步骤即可快速将日志接入蓝鲸数据平台。
 
 ## 特性
 
 - 通过 API Gateway 对集群日志配置进行批量管理操作
-- 对接 IEG 数据平台，通过 API Gateway 或自定义资源 BKDataApiConfig 进行dataid申请与数据清洗策略配置操作
+- 对接蓝鲸数据平台，通过 API Gateway 或自定义资源 BKDataApiConfig 进行dataid申请与数据清洗策略配置操作
 
 ## 资源定义
 
@@ -15,7 +15,7 @@ bcs-log-manager 结合 bcs-logbeat-sidecar 及其所定义的 BcsLogConfigs 自�
 
 ### BKDataApiConfig
 
-对接 IEG 数据平台的申请 dataid、配置数据清洗策略的功能型资源，通过创建资源以发出请求，等待资源更新，获取请求的返回结果。
+对接蓝鲸数据平台的申请 dataid、配置数据清洗策略的功能型资源，通过创建资源以发出请求，等待资源更新，获取请求的返回结果。
 
 ```yaml
 apiVersion: bkbcs.tencent.com/v1
