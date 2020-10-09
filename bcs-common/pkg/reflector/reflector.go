@@ -146,7 +146,9 @@ func (r *Reflector) ListAllData() error {
 	if r.keyFunc != nil {
 		cacheObjKeys := r.store.ListKeys()
 		for _, key := range cacheObjKeys {
-			if obj, ok := objMap[key]; !ok {
+			if _, ok := objMap[key]; !ok {
+				obj, _, _ := r.store.GetByKey(key)
+				r.store.Delete(obj)
 				r.handler.OnDelete(obj)
 			}
 		}
