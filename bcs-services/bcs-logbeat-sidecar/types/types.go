@@ -13,14 +13,21 @@
 
 package types
 
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
+)
+
+// Yaml is the structure viewed of log config file, contains metric info
 type Yaml struct {
-	Local []Local `yaml:"local"`
+	Local  []Local                 `yaml:"local"`
+	Metric *metric.LogFileInfoType `yaml:"-"`
 }
 
+// Local is a single log collection task with single dataid
 type Local struct {
-	DataId  int               `yaml:"dataid"`
+	DataID  int               `yaml:"dataid"`
 	Paths   []string          `yaml:"paths"`
-	ToJson  bool              `yaml:"to_json"`
+	ToJSON  bool              `yaml:"to_json"`
 	ExtMeta map[string]string `yaml:"ext_meta"`
 
 	//stdout dataid
