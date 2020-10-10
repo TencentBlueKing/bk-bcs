@@ -16,9 +16,11 @@ package options
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 )
 
+// MesosDriverOptionsOut mesos driver command line options
 type MesosDriverOptionsOut struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -37,8 +39,10 @@ type MesosDriverOptionsOut struct {
 	// websocket register
 	RegisterWithWebsocket bool   `json:"register-with-websocket" value:"false" usage:"whether register to bcs-api with websocket"`
 	RegisterToken         string `json:"register-token" value:"" usage:"register token to register to bcs-api"`
-	RegisterUrl           string `json:"register-url" value:"" usage:"bcs-api url to register"`
+	RegisterURL           string `json:"register-url" value:"" usage:"bcs-api url to register"`
 	InsecureSkipVerify    bool   `json:"insecure-skip-verify" value:"false" usage:"whether insecure skip verify"`
+
+	Etcd registry.CMDOptions `json:"etcdRegistry"`
 }
 
 //MesosDriverOption is option in flags
@@ -79,8 +83,9 @@ func NewMesosDriverOption(opOut *MesosDriverOptionsOut) *MesosDriverOption {
 			},
 			RegisterWithWebsocket: opOut.RegisterWithWebsocket,
 			RegisterToken:         opOut.RegisterToken,
-			RegisterUrl:           opOut.RegisterUrl,
+			RegisterURL:           opOut.RegisterURL,
 			InsecureSkipVerify:    opOut.InsecureSkipVerify,
+			Etcd:                  &opOut.Etcd,
 		},
 	}
 }

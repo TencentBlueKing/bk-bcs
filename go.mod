@@ -99,6 +99,7 @@ require (
 	github.com/google/cadvisor v0.32.0
 	github.com/google/go-cmp v0.5.0
 	github.com/google/go-querystring v1.0.0
+	github.com/google/uuid v1.1.1
 	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
