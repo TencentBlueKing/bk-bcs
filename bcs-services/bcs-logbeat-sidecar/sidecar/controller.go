@@ -453,7 +453,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	if para.NonstandardDataid != "" && len(para.NonstandardPaths) > 0 {
 		inLocal := para
 		for _, f := range para.NonstandardPaths {
-			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s", container.State.Pid, f))
+			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("%s%s", s.getContainerRootPath(container), f))
 		}
 		i, _ := strconv.Atoi(para.NonstandardDataid)
 		inLocal.DataId = i
@@ -461,4 +461,17 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	}
 
 	return y, true
+}
+
+// getContainerRootPath return the root path of the container
+// Usually it begins with /data/bcs/lib/docker/overlay2/{hashid}/merged
+// If the container does not use OverlayFS, it will return /proc/{procid}/root
+func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
+	switch container.Driver {
+	case "overlay2":
+		return container.GraphDriver.Data["MergedDir"]
+	default:
+		blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
+		return fmt.Sprintf("/proc/%d/root", container.State.Pid)
+	}
 }
