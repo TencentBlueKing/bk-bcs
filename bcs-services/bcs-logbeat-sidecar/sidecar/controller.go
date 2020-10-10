@@ -18,10 +18,12 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
 	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 
@@ -65,6 +67,7 @@ type SidecarController struct {
 type ContainerLogConf struct {
 	confPath string
 	data     []byte
+	yamlData *types.Yaml
 }
 
 // LogConfParameter is no longer used
@@ -211,79 +214,6 @@ func (s *SidecarController) removeInvalidLogConfigFile() {
 	}
 }
 
-/*// if need to collect the container logs, return true
-// else return false
-func produceLogConfParameter(container *docker.Container) (*types.Yaml, bool) {
-	para := types.Local{
-		ExtMeta: make(map[string]string),
-	}
-	for _, env := range container.Config.Env {
-		key, val := strings.Split(env, "=")[0], strings.Split(env, "=")[1]
-		switch key {
-		case EnvLogInfoStdoutDataid:
-			para.StdoutDataid = val
-		case EnvLogInfoNonstandardDataid:
-			para.NonstandardDataid = val
-		case EnvLogInfoLogCluster:
-			para.ExtMeta["io_tencent_bcs_cluster"] = val
-		case EnvLogInfoLogNamepsace:
-			para.ExtMeta["io_tencent_bcs_namespace"] = val
-		case EnvLogInfoLogPath:
-			para.NonstandardPaths = val
-		case EnvLogInfoLogServerName:
-			para.ExtMeta["io_tencent_bcs_server_name"] = val
-		case EnvLogInfoLogType:
-			para.ExtMeta["io_tencent_bcs_type"] = val
-		case EnvLogInfoLogLabel:
-			array := strings.Split(val, ",")
-			for _, o := range array {
-				kvs := strings.Split(o, ":")
-				if len(kvs) != 2 {
-					blog.Infof("container %s env %s value %s is invalid", container.ID, EnvLogInfoLogLabel, val)
-					continue
-				}
-				para.ExtMeta[kvs[0]] = kvs[1]
-			}
-		}
-	}
-
-	//if DataId, Namespace, ClusterId == nil, don't need collect the container log
-	if para.StdoutDataid == "" && para.NonstandardDataid == "" {
-		blog.Warnf("container %s don't contain %s or %s env",
-			container.ID, EnvLogInfoStdoutDataid, EnvLogInfoNonstandardDataid)
-		return nil, false
-	}
-	//container id
-	para.ExtMeta["container_id"] = container.ID
-	para.ToJson = true
-	y := &types.Yaml{Local: make([]types.Local, 0)}
-	//if stdout container log
-	if para.StdoutDataid != "" {
-		inLocal := para
-		inLocal.Paths = []string{container.LogPath}
-		i, _ := strconv.Atoi(para.StdoutDataid)
-		inLocal.DataId = i
-		y.Local = append(y.Local, inLocal)
-	}
-	//if nonstandard Log
-	if para.NonstandardDataid != "" {
-		array := strings.Split(para.NonstandardPaths, ",")
-		inLocal := para
-		for _, f := range array {
-			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s", container.State.Pid, f))
-		}
-		i, _ := strconv.Atoi(para.NonstandardDataid)
-		inLocal.DataId = i
-		y.Local = append(y.Local, inLocal)
-	}
-	//if len(files)==0, then invalid
-	if len(y.Local) == 0 {
-		blog.Warnf("container %s env(%s, %s) is invalid", container.ID, EnvLogInfoStdout, EnvLogInfoLogPath)
-		return nil, false
-	}
-	return y, true
-}*/
-
 func (s *SidecarController) initLogConfigs() {
 	fileList, err := ioutil.ReadDir(s.conf.LogbeatDir)
 	if err != nil {
@@ -328,10 +258,18 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		return
 	}
 	//if log config exist, and not changed
+	s.RLock()
 	logConf, _ := s.logConfs[key]
+	s.RUnlock()
 	if logConf != nil {
 		if string(by) == string(logConf.data) {
 			blog.Infof("container %s log config %s not changed", c.ID, logConf.confPath)
+			if logConf.yamlData == nil {
+				logConf.yamlData = y
+				if err := y.Metric.Renew(); err != nil {
+					blog.Errorf("Renew metric with label (%+v) failed: %s", *y.Metric, err.Error())
+				}
+			}
 			return
 		}
 		blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
@@ -339,13 +277,14 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		blog.Infof("container %s log config %s will created, and LogConfig(%s)", c.ID, key, string(by))
 	}
 
-	logConf = &ContainerLogConf{
+	newlogConf := &ContainerLogConf{
 		confPath: key,
 		data:     by,
+		yamlData: y,
 	}
-	f, err := os.Create(logConf.confPath)
+	f, err := os.Create(newlogConf.confPath)
 	if err != nil {
-		blog.Errorf("container %s open file %s failed: %s", c.ID, logConf.confPath, err.Error())
+		blog.Errorf("container %s open file %s failed: %s", c.ID, newlogConf.confPath, err.Error())
 		return
 	}
 	defer f.Close()
@@ -355,9 +294,21 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		blog.Errorf("container %s tempalte execute failed: %s", c.ID, err.Error())
 		return
 	}
-	blog.Infof("produce container %s log config %s success", c.ID, logConf.confPath)
+	blog.Infof("produce container %s log config %s success", c.ID, newlogConf.confPath)
+	// Set/Update metric
+	if logConf == nil || logConf.yamlData == nil {
+		err := y.Metric.Set(1)
+		if err != nil {
+			blog.Errorf("Set metric with label (%+v) with value (1) failed: %s", *logConf.yamlData.Metric, err.Error())
+		}
+	} else {
+		err := logConf.yamlData.Metric.Update(y.Metric)
+		if err != nil {
+			blog.Errorf("Update metric from label (%+v) to label (%+v) failed: %s", *logConf.yamlData.Metric, *y.Metric, err.Error())
+		}
+	}
 	s.Lock()
-	s.logConfs[key] = logConf
+	s.logConfs[key] = newlogConf
 	s.Unlock()
 	return
 }
@@ -373,6 +324,9 @@ func (s *SidecarController) deleteContainerLogConf(containerID string) {
 	if err != nil {
 		blog.Errorf("remove log config %s error %s", logConf.confPath, err.Error())
 		return
+	}
+	if logConf.yamlData != nil {
+		logConf.yamlData.Metric.Delete()
 	}
 	delete(s.logConfs, key)
 	blog.Infof("delete container %s log config success", containerID)
@@ -412,7 +366,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	para.ExtMeta["io_tencent_bcs_projectid"] = pod.Labels["io.tencent.paas.projectid"]
 	para.ExtMeta["container_id"] = container.ID
 	para.ExtMeta["container_hostname"] = container.Config.Hostname
-	para.ToJson = true
+	para.ToJSON = true
 	if len(logConf.Spec.ContainerConfs) > 0 {
 		for _, conf := range logConf.Spec.ContainerConfs {
 			if conf.ContainerName == name {
@@ -446,19 +400,46 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		inLocal := para
 		inLocal.Paths = []string{container.LogPath}
 		i, _ := strconv.Atoi(para.StdoutDataid)
-		inLocal.DataId = i
+		inLocal.DataID = i
 		y.Local = append(y.Local, inLocal)
 	}
 	//if nonstandard Log
 	if para.NonstandardDataid != "" && len(para.NonstandardPaths) > 0 {
 		inLocal := para
 		for _, f := range para.NonstandardPaths {
-			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("/proc/%d/root%s", container.State.Pid, f))
+			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("%s%s", s.getContainerRootPath(container), f))
 		}
 		i, _ := strconv.Atoi(para.NonstandardDataid)
-		inLocal.DataId = i
+		inLocal.DataID = i
 		y.Local = append(y.Local, inLocal)
 	}
 
+	// construct log file metric info
+	y.Metric = &metric.LogFileInfoType{
+		ClusterID:         strings.ToLower(logConf.Spec.ClusterId),
+		CRDName:           logConf.GetName(),
+		CRDNamespace:      logConf.GetNamespace(),
+		HostIP:            pod.Status.HostIP,
+		ContainerID:       container.ID,
+		PodName:           pod.GetName(),
+		PodNamespace:      pod.GetNamespace(),
+		WorkloadType:      pod.OwnerReferences[0].Kind,
+		WorkloadName:      pod.OwnerReferences[0].Name,
+		WorkloadNamespace: pod.GetNamespace(),
+	}
+
 	return y, true
+}
+
+// getContainerRootPath return the root path of the container
+// Usually it begins with /data/bcs/lib/docker/overlay2/{hashid}/merged
+// If the container does not use OverlayFS, it will return /proc/{procid}/root
+func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
+	switch container.Driver {
+	case "overlay2":
+		return container.GraphDriver.Data["MergedDir"]
+	default:
+		blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
+		return fmt.Sprintf("/proc/%d/root", container.State.Pid)
+	}
 }
