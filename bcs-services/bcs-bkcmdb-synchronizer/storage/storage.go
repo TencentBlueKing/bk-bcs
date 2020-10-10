@@ -36,8 +36,10 @@ import (
 var defaultJSONHandle = codec.JsonHandle{MapKeyAsString: true}
 
 const (
-	BCS_STORAGE_DYNAMIC_ALL_RESOURCE_URI   = "/bcsstorage/v1/%s/dynamic/all_resources/clusters/%s/%s"
-	BCS_STORAGE_DYNAMIC_WATCH_RESOURCE_URI = "/bcsstorage/v1/dynamic/watch/%s/%s"
+	// BcsStorageDynamicAllResourceURI uri for query dynamic resource by bcs storage
+	BcsStorageDynamicAllResourceURI = "/bcsstorage/v1/%s/dynamic/all_resources/clusters/%s/%s"
+	// BcsStorageDynamicWatchResourceURI uri for watch dynamic resource by bcs storage
+	BcsStorageDynamicWatchResourceURI = "/bcsstorage/v1/dynamic/watch/%s/%s"
 )
 
 // Interface interface for storage
@@ -142,7 +144,8 @@ func (sc *StorageClient) getRandomServer() (*types.ServerInfo, error) {
 }
 
 // ListResources list resources
-func (sc *StorageClient) ListResources(clusterType, clusterID, resourceType string) (*common.ListStorageResourceResult, error) {
+func (sc *StorageClient) ListResources(clusterType, clusterID, resourceType string) (
+	*common.ListStorageResourceResult, error) {
 	return sc.doQueryClusterResources(clusterType, clusterID, resourceType)
 }
 
@@ -172,12 +175,13 @@ func (sc *StorageClient) getStorageURL() (string, error) {
 	return url, nil
 }
 
-func (sc *StorageClient) doQueryClusterResources(clusterType, clusterID, resourceType string) (*common.ListStorageResourceResult, error) {
+func (sc *StorageClient) doQueryClusterResources(clusterType, clusterID, resourceType string) (
+	*common.ListStorageResourceResult, error) {
 	url, err := sc.getStorageURL()
 	if err != nil {
 		return nil, err
 	}
-	realURL := url + fmt.Sprintf(BCS_STORAGE_DYNAMIC_ALL_RESOURCE_URI, clusterType, clusterID, resourceType)
+	realURL := url + fmt.Sprintf(BcsStorageDynamicAllResourceURI, clusterType, clusterID, resourceType)
 
 	blog.Infof("do list storage %s", realURL)
 
@@ -205,7 +209,7 @@ func (sc *StorageClient) doWatchClusterResources(clusterID, resourceType string)
 	if err != nil {
 		return nil, err
 	}
-	realURL := url + fmt.Sprintf(BCS_STORAGE_DYNAMIC_WATCH_RESOURCE_URI, clusterID, resourceType)
+	realURL := url + fmt.Sprintf(BcsStorageDynamicWatchResourceURI, clusterID, resourceType)
 
 	blog.Infof("do watch storage %s", realURL)
 
