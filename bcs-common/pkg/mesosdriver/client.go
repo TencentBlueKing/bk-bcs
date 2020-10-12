@@ -135,7 +135,7 @@ func (m *MesosDriverClient) CeateDeployment(clusterid string, deploy []byte) err
 func (m *MesosDriverClient) FetchDeployment(deploy *types.DeployDetection) (interface{}, error) {
 	by, err := m.requestMesosApiserver(deploy.Clusterid, http.MethodGet,
 		fmt.Sprintf("/namespaces/bcs-system/applications"), nil)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
