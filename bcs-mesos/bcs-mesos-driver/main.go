@@ -14,15 +14,15 @@
 package main
 
 import (
+	"fmt"
+	"os"
+	"runtime"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/app"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-driver/app/options"
-
-	"fmt"
-	"os"
-	"runtime"
 )
 
 func main() {

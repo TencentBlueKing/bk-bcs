@@ -32,7 +32,8 @@ type MeshClusterSpec struct {
 	//ClusterID
 	ClusterID string `json:"clusterId,omitempty"`
 	//MeshType, default ISTIO
-	MeshType MeshType `json:"type,omitempty"`
+	MeshType      MeshType `json:"type,omitempty"`
+	Configuration []string `json:"configuration,omitempty"`
 }
 
 //MeshType mesh type: istio、tbuspp
