@@ -1470,6 +1470,20 @@ func CheckVersion(version *types.Version, store store.Store) error {
 				}
 			}
 		}
+
+		//check image pull secret
+		//"imagePullUser": "secret::imagesecret||user"
+		//"imagePullPasswd": "secret::imagesecret||pwd"
+		err := checkImageSecret(store, version.RunAs, container.Docker.ImagePullUser)
+		if err!=nil {
+			blog.Errorf(err.Error())
+			return err
+		}
+		err = checkImageSecret(store, version.RunAs, container.Docker.ImagePullPasswd)
+		if err!=nil {
+			blog.Errorf(err.Error())
+			return err
+		}
 	}
 
 	//check requestIP labels "io.tencent.bcs.netsvc.requestip.*"
@@ -1487,6 +1501,34 @@ func CheckVersion(version *types.Version, store store.Store) error {
 		return fmt.Errorf("label netsvc.requestip count(%d) < version.Instances(%d)", requestIpLabelNum, version.Instances)
 	}
 
+	return nil
+}
+func checkImageSecret(store store.Store, ns, secret string )error{
+	if strings.HasPrefix(secret, "secret::") {
+		secretSplit := strings.Split(secret, "::")
+		if len(secretSplit) != 2 {
+			return fmt.Errorf("image secret(%s) format is invalid", secret)
+		}
+		userSplit := strings.Split(secretSplit[1], "||")
+		if len(userSplit) != 2 {
+			return fmt.Errorf("image secret(%s) format is invalid", secret)
+		}
+
+		secretName := strings.TrimSpace(userSplit[0])
+		secretKey := strings.TrimSpace(userSplit[1])
+		blog.Infof("to get user from secret(%s.%s::%s)", ns, secretName, secretKey)
+		bcsSecret, err := store.FetchSecret(ns, secretName)
+		if err != nil {
+			return fmt.Errorf("get bcssecret(%s.%s) err: %s", ns, secretName, err.Error())
+		}
+		if bcsSecret == nil {
+			return fmt.Errorf("bcssecret(%s.%s) not exist", ns, secretName)
+		}
+		_, ok := bcsSecret.Data[secretKey]
+		if ok == false {
+			return fmt.Errorf("bcssecret item(key:%s) not exist in bcssecret(%s.%s)", secretKey, ns, secretName)
+		}
+	}
 	return nil
 }
 
