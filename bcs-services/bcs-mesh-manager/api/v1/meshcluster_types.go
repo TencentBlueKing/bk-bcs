@@ -32,23 +32,8 @@ type MeshClusterSpec struct {
 	//ClusterID
 	ClusterID string `json:"clusterId,omitempty"`
 	//MeshType, default ISTIO
-	MeshType MeshType `json:"type,omitempty"`
-	Proxy Proxy `json:"proxy,omitempty"`
-}
-
-type Proxy struct {
-	Resources Resource `json:"resources,omitempty"`
-}
-
-type Resource struct {
-	Limits struct{
-		Cpu string `json:"cpu,omitempty"`
-		Memory string `json:"memory,omitempty"`
-	}
-	Requests struct{
-		Cpu string `json:"cpu,omitempty"`
-		Memory string `json:"memory,omitempty"`
-	}
+	MeshType      MeshType `json:"type,omitempty"`
+	Configuration []string `json:"configuration,omitempty"`
 }
 
 //MeshType mesh type: istio、tbuspp

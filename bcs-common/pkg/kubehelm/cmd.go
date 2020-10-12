@@ -39,7 +39,8 @@ func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
 
 	parameters := inf.ParseParameters() + gPara
 	klog.Infof("helm install%s", parameters)
-	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0644)
+	os.Remove("install.sh")
+	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
 		return err
 	}

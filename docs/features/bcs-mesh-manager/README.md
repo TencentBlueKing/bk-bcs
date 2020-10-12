@@ -113,3 +113,20 @@ bcs-client create -t meshcluster -f meshcluster.json
 # bcs-client delete -t meshcluster --clusterid=BCS-K8S-xxxxxxxx
 success to delete meshcluster
 ```
+
+## meshcluster高级配置说明
+通过meshcluster的configurations字段可以细粒度的调整istio的配置
+1. 调整proxy(envoy)的resources
+```
+{
+  "clusterid": "BCS-K8S-xxxxxx",
+  "configurations": ["{\"spec\":{\"values\":{\"global\":{\"proxy\":{\"resources\":{\"limits\":{\"cpu\":\"4000m\",\"memory\":\"1024Mi\"},\"requests\":{\"cpu\":\"200m\",\"memory\":\"128Mi\"}}}}}}}"]
+}
+```
+2. 开启tracing链路追踪
+```
+{
+  "clusterid": "BCS-K8S-xxxxxx",
+  "configurations": ["{\"spec\":{\"addonComponents\":{\"tracing\":{\"enabled\":{\"value\":true}}}}}"]
+}
+```

@@ -82,26 +82,7 @@ message CreateMeshClusterReq {
     string meshtype   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "meshtype", description: "meshtype"}];
     string name       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "name", description: "name"}];
     string namespace  = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "namespace", description: "namespace"}];
-    Proxy  proxy      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "proxy", description: "proxy"}];
-}
-
-message Limit {
-    string cpu   = 1;
-    string memory = 2;
-}
-
-message Request {
-    string cpu   = 1;
-    string memory = 2;
-}
-
-message Resource {
-    Limit limits   = 1;
-    Request requests = 2;
-}
-
-message Proxy {
-    Resource resources = 1;
+    repeated string  configurations = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configurations", description: "configurations"}];
 }
 
 message CreateMeshClusterResp {

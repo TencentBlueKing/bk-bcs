@@ -61,7 +61,7 @@ require (
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/ef-ds/deque v1.0.4-0.20190904040645-54cb57c252a1 // indirect
-	github.com/elastic/beats v5.6.14+incompatible
+	github.com/elastic/beats v5.6.14+incompatible // indirect
 	github.com/elastic/go-lumber v0.1.0 // indirect
 	github.com/elastic/go-ucfg v0.8.3 // indirect
 	github.com/elazarl/goproxy v0.0.0-20200426045556-49ad98f6dac1 // indirect
@@ -185,7 +185,7 @@ require (
 	go.uber.org/zap v1.13.0 // indirect
 	go4.org v0.0.0-20190313082347-94abd6928b1d
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
-	golang.org/x/sys v0.0.0-20200523222454-059865788121
+	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	google.golang.org/grpc v1.29.1
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
