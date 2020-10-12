@@ -349,16 +349,18 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		return nil, false
 	}
 
-	para := types.Local{
-		ExtMeta: make(map[string]string),
-	}
 	logConf := s.getPodLogConfigCrd(container, pod)
 	//if logConf==nil, container not match BcsLogConfig
 	if logConf == nil {
 		return nil, false
 	}
 
+	para := types.Local{
+		ExtMeta:          make(map[string]string),
+		NonstandardPaths: make([]string, len(logConf.Spec.LogPaths), len(logConf.Spec.LogPaths)+len(logConf.Spec.HostPaths)),
+	}
 	para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
+	para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
 	para.ExtMeta["io_tencent_bcs_namespace"] = pod.Namespace
 	para.ExtMeta["io_tencent_bcs_server_name"] = pod.OwnerReferences[0].Name
 	para.ExtMeta["io_tencent_bcs_type"] = pod.OwnerReferences[0].Kind
@@ -367,12 +369,16 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	para.ExtMeta["container_id"] = container.ID
 	para.ExtMeta["container_hostname"] = container.Config.Hostname
 	para.ToJSON = true
+	containerRootPath := s.getContainerRootPath(container)
 	if len(logConf.Spec.ContainerConfs) > 0 {
 		for _, conf := range logConf.Spec.ContainerConfs {
 			if conf.ContainerName == name {
 				para.StdoutDataid = conf.StdDataId
 				para.NonstandardDataid = conf.NonStdDataId
-				para.NonstandardPaths = conf.LogPaths
+				for i, f := range conf.LogPaths {
+					para.NonstandardPaths[i] = fmt.Sprintf("%s%s", containerRootPath, f)
+				}
+				para.NonstandardPaths = append(para.NonstandardPaths, conf.HostPaths...)
 				para.LogTags = conf.LogTags
 				break
 			}
@@ -380,7 +386,10 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	} else {
 		para.StdoutDataid = logConf.Spec.StdDataId
 		para.NonstandardDataid = logConf.Spec.NonStdDataId
-		para.NonstandardPaths = logConf.Spec.LogPaths
+		for i, f := range logConf.Spec.LogPaths {
+			para.NonstandardPaths[i] = fmt.Sprintf("%s%s", containerRootPath, f)
+		}
+		para.NonstandardPaths = append(para.NonstandardPaths, logConf.Spec.HostPaths...)
 		para.LogTags = logConf.Spec.LogTags
 	}
 	//whether report pod labels to log tags
@@ -406,9 +415,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	//if nonstandard Log
 	if para.NonstandardDataid != "" && len(para.NonstandardPaths) > 0 {
 		inLocal := para
-		for _, f := range para.NonstandardPaths {
-			inLocal.Paths = append(inLocal.Paths, fmt.Sprintf("%s%s", s.getContainerRootPath(container), f))
-		}
+		inLocal.Paths = para.NonstandardPaths
 		i, _ := strconv.Atoi(para.NonstandardDataid)
 		inLocal.DataID = i
 		y.Local = append(y.Local, inLocal)
