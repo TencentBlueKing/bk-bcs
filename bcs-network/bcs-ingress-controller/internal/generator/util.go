@@ -13,10 +13,13 @@
 package generator
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -99,4 +102,37 @@ func GetDiffListeners(existedListeners, newListeners []networkextensionv1.Listen
 		}
 	}
 	return adds, dels, olds, news
+}
+
+// GetSpecLabelSelectorFromMap get spec.selector from k8s runtime.Object
+func GetSpecLabelSelectorFromMap(m map[string]interface{}) *k8smetav1.LabelSelector {
+	spec, ok := m["spec"]
+	if !ok {
+		blog.Warnf("no spec")
+		return nil
+	}
+	specMap, ok := spec.(map[string]interface{})
+	if !ok {
+		blog.Warnf("spec is not map[string]interface")
+		return nil
+	}
+	selector, ok := specMap["selector"]
+	if !ok {
+		blog.Warnf("has no selector")
+		return nil
+	}
+
+	selectorBytes, err := json.Marshal(selector)
+	if err != nil {
+		blog.Warnf("json mashal %+v failed, err %s", selector, err.Error())
+		return nil
+	}
+
+	selectorObj := &k8smetav1.LabelSelector{}
+	err = json.Unmarshal(selectorBytes, selectorObj)
+	if err != nil {
+		blog.Warnf("json unmashal %s to LabelSelector failed, err %s", selectorObj, err.Error())
+		return nil
+	}
+	return selectorObj
 }
