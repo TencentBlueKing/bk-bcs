@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
 )
 
@@ -166,6 +167,14 @@ func (a *APIWrapper) Create4LayerListener(region string, req *qcloud.CreateForwa
 
 	var err error
 	var resp *qcloud.CreateForwardLBFourthLayerListenersOutput
+
+	startTime := time.Now()
+	result := metrics.LibCallStatusOK
+	defer metrics.ReportLibRequestMetric(
+		SystemNameInMetricTencentCloud,
+		HandlerNameInMetricTencentCloudAPI,
+		req.Action, result, startTime)
+
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		a.tryThrottle()
@@ -173,6 +182,7 @@ func (a *APIWrapper) Create4LayerListener(region string, req *qcloud.CreateForwa
 		req.Timestamp = uint(time.Now().Unix())
 		resp, err = a.apiCli.Create4LayerListener(req)
 		if err != nil {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("CreateForwardLBFourthLayerListeners failed, err %s", err.Error())
 			return "", fmt.Errorf("CreateForwardLBFourthLayerListeners failed, err %s", err.Error())
 		}
@@ -181,17 +191,20 @@ func (a *APIWrapper) Create4LayerListener(region string, req *qcloud.CreateForwa
 			continue
 		}
 		if resp.Code != 0 {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("CreateForwardLBFourthLayerListeners falied, errcode %d", resp.Code)
 			return "", fmt.Errorf("CreateForwardLBFourthLayerListeners falied, errcode %d", resp.Code)
 		}
 		break
 	}
 	if counter > maxRetry {
+		result = metrics.LibCallStatusErr
 		blog.Errorf("CreateForwardLBFourthLayerListeners out of maxRetry %d", maxRetry)
 		return "", fmt.Errorf("CreateForwardLBFourthLayerListeners out of maxRetry %d", maxRetry)
 	}
 	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
+		result = metrics.LibCallStatusErr
 		return "", err
 	}
 	return resp.ListenerIds[0], nil
@@ -209,6 +222,14 @@ func (a *APIWrapper) DescribeForwardLBListeners(region string, req *qcloud.Descr
 
 	var err error
 	var resp *qcloud.DescribeForwardLBListenersOutput
+
+	startTime := time.Now()
+	result := metrics.LibCallStatusOK
+	defer metrics.ReportLibRequestMetric(
+		SystemNameInMetricTencentCloud,
+		HandlerNameInMetricTencentCloudAPI,
+		req.Action, result, startTime)
+
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		a.tryThrottle()
@@ -216,6 +237,7 @@ func (a *APIWrapper) DescribeForwardLBListeners(region string, req *qcloud.Descr
 		req.Timestamp = uint(time.Now().Unix())
 		resp, err = a.apiCli.DescribeForwardLBListeners(req)
 		if err != nil {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DescribeForwardLBListeners failed, err %s", err.Error())
 			return nil, fmt.Errorf("DescribeForwardLBListeners failed, err %s", err.Error())
 		}
@@ -224,12 +246,14 @@ func (a *APIWrapper) DescribeForwardLBListeners(region string, req *qcloud.Descr
 			continue
 		}
 		if resp.Code != 0 {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DescribeForwardLBListeners falied, errcode %d", resp.Code)
 			return nil, fmt.Errorf("DescribeForwardLBListeners falied, errcode %d", resp.Code)
 		}
 		break
 	}
 	if counter > maxRetry {
+		result = metrics.LibCallStatusErr
 		blog.Errorf("DescribeForwardLBListeners out of maxRetry %d", maxRetry)
 		return nil, fmt.Errorf("DescribeForwardLBListeners out of maxRetry %d", maxRetry)
 	}
@@ -248,6 +272,14 @@ func (a *APIWrapper) DescribeForwardLBBackends(region string, req *qcloud.Descri
 
 	var err error
 	var resp *qcloud.DescribeForwardLBBackendsOutput
+
+	startTime := time.Now()
+	result := metrics.LibCallStatusOK
+	defer metrics.ReportLibRequestMetric(
+		SystemNameInMetricTencentCloud,
+		HandlerNameInMetricTencentCloudAPI,
+		req.Action, result, startTime)
+
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		a.tryThrottle()
@@ -255,6 +287,7 @@ func (a *APIWrapper) DescribeForwardLBBackends(region string, req *qcloud.Descri
 		req.Timestamp = uint(time.Now().Unix())
 		resp, err = a.apiCli.DescribeForwardLBBackends(req)
 		if err != nil {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DescribeForwardLBBackends failed, err %s", err.Error())
 			return nil, fmt.Errorf("DescribeForwardLBBackends failed, err %s", err.Error())
 		}
@@ -263,12 +296,14 @@ func (a *APIWrapper) DescribeForwardLBBackends(region string, req *qcloud.Descri
 			continue
 		}
 		if resp.Code != 0 {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DescribeForwardLBBackends falied, errcode %d", resp.Code)
 			return nil, fmt.Errorf("DescribeForwardLBBackends falied, errcode %d", resp.Code)
 		}
 		break
 	}
 	if counter > maxRetry {
+		result = metrics.LibCallStatusErr
 		blog.Errorf("DescribeForwardLBBackends out of maxRetry %d", maxRetry)
 		return nil, fmt.Errorf("DescribeForwardLBBackends out of maxRetry %d", maxRetry)
 	}
@@ -287,6 +322,14 @@ func (a *APIWrapper) RegInstancesWith4LayerListener(region string,
 
 	var err error
 	var resp *qcloud.RegisterInstancesWithForwardLBFourthListenerOutput
+
+	startTime := time.Now()
+	result := metrics.LibCallStatusOK
+	defer metrics.ReportLibRequestMetric(
+		SystemNameInMetricTencentCloud,
+		HandlerNameInMetricTencentCloudAPI,
+		req.Action, result, startTime)
+
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		a.tryThrottle()
@@ -294,6 +337,7 @@ func (a *APIWrapper) RegInstancesWith4LayerListener(region string,
 		req.Timestamp = uint(time.Now().Unix())
 		resp, err = a.apiCli.RegInstancesWith4LayerListener(req)
 		if err != nil {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("RegisterInstancesWithForwardLBFourthListener failed, err %s", err.Error())
 			return fmt.Errorf("RegisterInstancesWithForwardLBFourthListener failed, err %s", err.Error())
 		}
@@ -302,17 +346,20 @@ func (a *APIWrapper) RegInstancesWith4LayerListener(region string,
 			continue
 		}
 		if resp.Code != 0 {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("RegisterInstancesWithForwardLBFourthListener falied, errcode %d", resp.Code)
 			return fmt.Errorf("RegisterInstancesWithForwardLBFourthListener falied, errcode %d", resp.Code)
 		}
 		break
 	}
 	if counter > maxRetry {
+		result = metrics.LibCallStatusErr
 		blog.Errorf("RegisterInstancesWithForwardLBFourthListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("RegisterInstancesWithForwardLBFourthListener out of maxRetry %d", maxRetry)
 	}
 	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
+		result = metrics.LibCallStatusErr
 		return err
 	}
 	return nil
@@ -330,6 +377,14 @@ func (a *APIWrapper) DeRegInstancesWith4LayerListener(region string,
 
 	var err error
 	var resp *qcloud.DeregisterInstancesFromForwardLBFourthListenerOutput
+
+	startTime := time.Now()
+	result := metrics.LibCallStatusOK
+	defer metrics.ReportLibRequestMetric(
+		SystemNameInMetricTencentCloud,
+		HandlerNameInMetricTencentCloudAPI,
+		req.Action, result, startTime)
+
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		a.tryThrottle()
@@ -337,6 +392,7 @@ func (a *APIWrapper) DeRegInstancesWith4LayerListener(region string,
 		req.Timestamp = uint(time.Now().Unix())
 		resp, err = a.apiCli.DeRegInstancesWith4LayerListener(req)
 		if err != nil {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DeregisterInstancesFromForwardLBFourthListener failed, err %s", err.Error())
 			return fmt.Errorf("DeregisterInstancesFromForwardLBFourthListener failed, err %s", err.Error())
 		}
@@ -345,17 +401,20 @@ func (a *APIWrapper) DeRegInstancesWith4LayerListener(region string,
 			continue
 		}
 		if resp.Code != 0 {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DeregisterInstancesFromForwardLBFourthListener falied, errcode %d", resp.Code)
 			return fmt.Errorf("DeregisterInstancesFromForwardLBFourthListener falied, errcode %d", resp.Code)
 		}
 		break
 	}
 	if counter > maxRetry {
+		result = metrics.LibCallStatusErr
 		blog.Errorf("DeregisterInstancesFromForwardLBFourthListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("DeregisterInstancesFromForwardLBFourthListener out of maxRetry %d", maxRetry)
 	}
 	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
+		result = metrics.LibCallStatusErr
 		return err
 	}
 	return nil
@@ -371,6 +430,14 @@ func (a *APIWrapper) DeleteListener(region string, req *qcloud.DeleteForwardLBLi
 
 	var err error
 	var resp *qcloud.DeleteForwardLBListenerOutput
+
+	startTime := time.Now()
+	result := metrics.LibCallStatusOK
+	defer metrics.ReportLibRequestMetric(
+		SystemNameInMetricTencentCloud,
+		HandlerNameInMetricTencentCloudAPI,
+		req.Action, result, startTime)
+
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
 		a.tryThrottle()
@@ -378,6 +445,7 @@ func (a *APIWrapper) DeleteListener(region string, req *qcloud.DeleteForwardLBLi
 		req.Timestamp = uint(time.Now().Unix())
 		resp, err = a.apiCli.DeleteListener(req)
 		if err != nil {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DeleteForwardLBListener failed, err %s", err.Error())
 			return fmt.Errorf("DeleteForwardLBListener failed, err %s", err.Error())
 		}
@@ -386,17 +454,20 @@ func (a *APIWrapper) DeleteListener(region string, req *qcloud.DeleteForwardLBLi
 			continue
 		}
 		if resp.Code != 0 {
+			result = metrics.LibCallStatusErr
 			blog.Errorf("DeleteForwardLBListener falied, errcode %d", resp.Code)
 			return fmt.Errorf("DeleteForwardLBListener falied, errcode %d", resp.Code)
 		}
 		break
 	}
 	if counter > maxRetry {
+		result = metrics.LibCallStatusErr
 		blog.Errorf("DeleteForwardLBListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("DeleteForwardLBListener out of maxRetry %d", maxRetry)
 	}
 	err = a.waitTaskDone(region, resp.RequestID)
 	if err != nil {
+		result = metrics.LibCallStatusErr
 		return err
 	}
 	return nil

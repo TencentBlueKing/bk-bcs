@@ -25,17 +25,20 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
 // PodFilter filter for pod event
 type PodFilter struct {
-	cli client.Client
+	filterName string
+	cli        client.Client
 }
 
 // NewPodFilter create pod filter
 func NewPodFilter(cli client.Client) *PodFilter {
 	return &PodFilter{
-		cli: cli,
+		filterName: "pod",
+		cli:        cli,
 	}
 }
 
@@ -93,6 +96,8 @@ func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []*networkextensionv1.
 
 // Create implement EventFilter
 func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeAdd)
+
 	pod, ok := e.Object.(*k8scorev1.Pod)
 	if !ok {
 		blog.Warnf("recv create object is not Pod, event %+v", e)
@@ -103,6 +108,8 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 
 // Update implement EventFilter
 func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeUpdate)
+
 	newPod, ok := e.ObjectNew.(*k8scorev1.Pod)
 	if !ok {
 		blog.Warnf("recv update object is not Pod, event %+v", e)
@@ -113,6 +120,8 @@ func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterfa
 
 // Delete implement EventFilter
 func (pf *PodFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeDelete)
+
 	pod, ok := e.Object.(*k8scorev1.Pod)
 	if !ok {
 		blog.Warnf("recv delete object is not Pod, event %+v", e)
@@ -123,6 +132,8 @@ func (pf *PodFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterfa
 
 // Generic implement EventFilter
 func (pf *PodFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeUnknown)
+
 	pod, ok := e.Object.(*k8scorev1.Pod)
 	if !ok {
 		blog.Warnf("recv generic object is not Pod, event %+v", e)
