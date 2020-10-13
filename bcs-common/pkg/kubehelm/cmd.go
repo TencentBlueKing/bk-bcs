@@ -22,6 +22,7 @@ import (
 	"k8s.io/klog"
 )
 
+//command to use helm struct
 type cmdHelm struct{}
 
 // NewCmdHelm new cmd helm struct, the object requires helm command-line tool
