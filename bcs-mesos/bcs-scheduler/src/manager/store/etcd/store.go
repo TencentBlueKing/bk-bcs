@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -286,17 +287,22 @@ func (s *managerStore) StartStoreObjectMetrics() {
 
 			//if ip-resources is zero, then ignore it
 			if s.pm == nil || ipValue > 0 {
-				remainCpu += info.CpuTotal - info.CpuUsed
-				remainMem += info.MemTotal - info.MemUsed
+				remainCpu += Float2Float(info.CpuTotal - info.CpuUsed)
+				remainMem += Float2Float(info.MemTotal - info.MemUsed)
 			}
-			clusterCpu += info.CpuTotal
-			clusterMem += info.MemTotal
+			clusterCpu += Float2Float(info.CpuTotal)
+			clusterMem += Float2Float(info.MemTotal)
 
 			store.ReportAgentInfoMetrics(info.IP, s.clusterId, info.CpuTotal, info.CpuTotal-info.CpuUsed,
 				info.MemTotal, info.MemTotal-info.MemUsed, ipValue)
 		}
 		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, clusterCpu, remainMem, clusterMem)
 	}
+}
+
+func Float2Float(num float64) float64 {
+	float_num, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", num), 64)
+	return float_num
 }
 
 //etcd store, based on kube-apiserver
