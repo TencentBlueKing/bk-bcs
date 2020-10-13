@@ -21,7 +21,9 @@ import (
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sunstruct "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -54,9 +56,9 @@ func NewMappingConverter(
 	}
 }
 
-// get workload pods map
-func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, workloadNamespace string) (
-	map[int]*k8scorev1.Pod, error) {
+// get selector by workload
+func (mg *MappingConverter) getWorkloadSelector(workloadKind, workloadName, workloadNamespace string) (
+	k8slabels.Selector, error) {
 
 	var podLabelSelector k8slabels.Selector
 	switch strings.ToLower(workloadKind) {
@@ -82,22 +84,67 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 		}
 
 	case networkextensionv1.WorkloadKindGameStatefulset:
-		blog.Errorf("unimplemented workload kind %s", workloadKind)
-		return nil, fmt.Errorf("unimplemented workload kind %s", workloadKind)
+		gsts := &k8sunstruct.Unstructured{}
+		gsts.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   "tkex.tencent.com",
+			Version: "v1alpha1",
+			Kind:    "GameStatefulSet",
+		})
+		err := mg.cli.Get(context.TODO(), k8stypes.NamespacedName{
+			Namespace: workloadNamespace,
+			Name:      workloadName,
+		}, gsts)
+
+		if err != nil {
+			if k8serrors.IsNotFound(err) {
+				return nil, nil
+			}
+			blog.Errorf("get game statefulset %s/%s failed, err %s",
+				workloadName, workloadNamespace, err.Error())
+			return nil, fmt.Errorf("get game statefulset %s/%s failed, err %s",
+				workloadName, workloadNamespace, err.Error())
+		}
+		selectorObj := GetSpecLabelSelectorFromMap(gsts.Object)
+		if selectorObj == nil {
+			blog.Warnf("found no selector in game statefulset %s/%s", workloadName, workloadNamespace)
+			return nil, nil
+		}
+		podLabelSelector, err = k8smetav1.LabelSelectorAsSelector(selectorObj)
+		if err != nil {
+			blog.Errorf("convert labelselector %+v to selector failed, err %s", selectorObj, err.Error())
+			return nil, fmt.Errorf("convert labelselector %+v to selector failed, err %s", selectorObj, err.Error())
+		}
 
 	default:
 		blog.Errorf("unsupported workload kind %s", workloadKind)
 		return nil, fmt.Errorf("unsupported workload kind %s", workloadKind)
 	}
 
+	return podLabelSelector, nil
+}
+
+// get workload pods map
+func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, workloadNamespace string) (
+	map[int]*k8scorev1.Pod, error) {
+
+	podLabelSelector, err := mg.getWorkloadSelector(workloadKind, workloadName, workloadNamespace)
+	if err != nil {
+		return nil, err
+	}
+	retPods := make(map[int]*k8scorev1.Pod)
+
+	if podLabelSelector == nil {
+		return retPods, nil
+	}
+
 	podList := &k8scorev1.PodList{}
-	err := mg.cli.List(context.TODO(), podList, client.MatchingLabelsSelector{Selector: podLabelSelector},
+	err = mg.cli.List(context.TODO(), podList, client.MatchingLabelsSelector{Selector: podLabelSelector},
 		&client.ListOptions{Namespace: workloadNamespace})
 	if err != nil {
 		blog.Errorf("list pods with selector %+v failed, err %s", podLabelSelector, err.Error())
 		return nil, fmt.Errorf("list pods with selector %+v failed, err %s", podLabelSelector, err.Error())
 	}
-	retPods := make(map[int]*k8scorev1.Pod)
+
 	for index, pod := range podList.Items {
 		podIndex, err := GetPodIndex(pod.GetName())
 		if err != nil {

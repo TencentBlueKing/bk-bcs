@@ -3,7 +3,9 @@ module github.com/Tencent/bk-bcs/bcs-network
 go 1.14
 
 replace (
+	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/Tencent/bk-bcs => ../../bk-bcs
+	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../bcs-k8s/bcs-gamestatefulset-operator
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => ../bcs-k8s/kubedeprecated
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../bcs-k8s/kubernetes
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 => ../bcs-mesos/mesosv2
@@ -17,6 +19,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 v0.0.0-00010101000000-000000000000
@@ -31,7 +34,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.1.0
-	github.com/spf13/pflag v1.0.5
 	github.com/tencentcloud/tencentcloud-sdk-go v3.0.114+incompatible
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
