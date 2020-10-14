@@ -4,6 +4,8 @@ go 1.14
 
 require (
 	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
+	github.com/evanphx/json-patch v4.9.0+incompatible
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.2.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.2
@@ -15,7 +17,8 @@ require (
 	github.com/onsi/gomega v1.10.1
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98
 	google.golang.org/grpc v1.29.1
-	istio.io/istio v0.0.0-20200812220246-25bea56c0eb0
+	gopkg.in/yaml.v2 v2.3.0 // indirect
+	istio.io/istio v0.0.0-20200812220246-25bea56c0eb0 // indirect
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v0.18.6
@@ -24,7 +27,7 @@ require (
 	k8s.io/kubernetes v1.14.10
 	sigs.k8s.io/controller-runtime v0.6.3
 	sigs.k8s.io/structured-merge-diff v1.0.2 // indirect
-	sigs.k8s.io/yaml v1.2.0
+	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
 replace (

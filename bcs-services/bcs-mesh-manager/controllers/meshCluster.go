@@ -29,8 +29,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/types"
 
+	"github.com/ghodss/yaml"
 	kubeclient "github.com/kubernetes-client/go/kubernetes/client"
-	istiov1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -39,9 +39,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog"
+	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -77,6 +77,14 @@ type MeshClusterManager struct {
 
 // NewMeshClusterManager create ClusterManager according to clusterID
 func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, client client.Client) (*MeshClusterManager, error) {
+	//set istio version
+	if meshCluster.Spec.Configuration==nil {
+		meshCluster.Spec.Configuration = make([]string, 0)
+	}
+	if meshCluster.Spec.Version!="" {
+		tag := fmt.Sprintf("{\\\"spec\\\":{\\\"tag\\\":\\\"%s\\\"}}", meshCluster.Spec.Version)
+		meshCluster.Spec.Configuration = append(meshCluster.Spec.Configuration, tag)
+	}
 	m := &MeshClusterManager{
 		meshCluster:       meshCluster,
 		conf:              conf,
@@ -284,6 +292,10 @@ func (m *MeshClusterManager) installIstio() bool {
 		klog.Errorf("Install cluster(%s) istio-operator failed: %s", m.meshCluster.Spec.ClusterID, err.Error())
 		return false
 	}
+	err = m.applyIstioConfiguration()
+	if err != nil {
+		return false
+	}
 	klog.Infof("Install cluster(%s) istio-operator done", m.meshCluster.Spec.ClusterID)
 	//update MeshCluster.Status in kube-apiserver
 	m.updateComponentStatus()
@@ -350,32 +362,26 @@ func (m *MeshClusterManager) istioOperatorInstalled() bool {
 }
 
 //check deployment istio-operator whether installed
-func (m *MeshClusterManager) istioOperatorCrdInstalled() bool {
+func (m *MeshClusterManager) applyIstioConfiguration() error {
 	//read IstioOperator CR definition
-	by, err := ioutil.ReadFile(m.conf.IstioOperatorCr)
+	by, err := ioutil.ReadFile(m.conf.IstioConfiguration)
 	if err != nil {
-		klog.Errorf("read IstioOperator CR definition(%s) error %s", m.conf.IstioOperatorCr, err.Error())
-		return false
+		klog.Errorf("read IstioOperator CR definition(%s) error %s", m.conf.IstioConfiguration, err.Error())
+		return err
 	}
-	var istioOperator *istiov1alpha1.IstioOperator
-	err = yaml.Unmarshal(by, &istioOperator)
+	by,err = yaml.YAMLToJSON(by)
 	if err != nil {
-		klog.Errorf("Unmarshal IstioOperator CR definition(%s) to types.IstioOperator error %s",
-			string(by), err.Error())
-		return false
+		klog.Errorf("IstioOperator CR definition(%s) convert to json failed: %s", m.conf.IstioConfiguration, err.Error())
+		return err
 	}
-	by, _ = json.Marshal(istioOperator)
-	klog.Infof("istioOperator %s", string(by))
-	group := strings.Split(istioOperator.APIVersion, "/")[0]
-	apiVersion := strings.Split(istioOperator.APIVersion, "/")[1]
-	_, _, err = m.kubeAPIClient.CustomObjectsApi.GetNamespacedCustomObject(context.Background(), group,
-		apiVersion, istioOperator.Namespace, types.IstioOperatorPlural, istioOperator.Name)
+	target := m.patchIstioConfiguration(by)
+	klog.Infof("cluster(%s) istiooperator configuration(%s)", m.meshCluster.Spec.ClusterID, string(target))
+	_,_,err = m.kubeAPIClient.CustomObjectsApi.CreateNamespacedCustomObject(context.Background(), types.IstioOperatorGroup,
+		types.IstioOperatorVersion, types.IstioOperatorNamespace, types.IstioOperatorPlural, string(target), nil)
 	if err != nil {
-		klog.Errorf("Get IstioOperator(%s:%s) error %s",
-			istioOperator.Namespace, istioOperator.Name, err.Error())
-		return false
+		klog.Errorf("apply IstioOperator error %s", err.Error())
 	}
-	return true
+	return nil
 }
 
 func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (changed bool) {
@@ -472,4 +478,18 @@ func (m *MeshClusterManager) createIstioOperatorCrds() error {
 	}
 	klog.Infof("create IstioOperator Crd success")
 	return nil
+}
+
+func (m *MeshClusterManager) patchIstioConfiguration(origin []byte)[]byte{
+	target := origin
+	for _,patch :=range m.meshCluster.Spec.Configuration {
+		tmp, err := jsonpatch.MergePatch(target, []byte(patch))
+		if err != nil {
+			klog.Errorf("cluster(%s) patch(%s) istiooperator configuration failed: %s",
+				m.meshCluster.Spec.ClusterID, patch, err.Error())
+			continue
+		}
+		target = tmp
+	}
+	return target
 }
