@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -376,6 +377,10 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 				para.StdoutDataid = conf.StdDataId
 				para.NonstandardDataid = conf.NonStdDataId
 				for i, f := range conf.LogPaths {
+					if !filepath.IsAbs(f) {
+						blog.Errorf("log path specified as \"%s\" is not an absolute path", f)
+						continue
+					}
 					para.NonstandardPaths[i] = fmt.Sprintf("%s%s", containerRootPath, f)
 				}
 				para.NonstandardPaths = append(para.NonstandardPaths, conf.HostPaths...)
@@ -387,6 +392,10 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		para.StdoutDataid = logConf.Spec.StdDataId
 		para.NonstandardDataid = logConf.Spec.NonStdDataId
 		for i, f := range logConf.Spec.LogPaths {
+			if !filepath.IsAbs(f) {
+				blog.Errorf("log path specified as \"%s\" is not an absolute path", f)
+				continue
+			}
 			para.NonstandardPaths[i] = fmt.Sprintf("%s%s", containerRootPath, f)
 		}
 		para.NonstandardPaths = append(para.NonstandardPaths, logConf.Spec.HostPaths...)
@@ -443,10 +452,10 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 // If the container does not use OverlayFS, it will return /proc/{procid}/root
 func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
 	switch container.Driver {
-	case "overlay2":
-		return container.GraphDriver.Data["MergedDir"]
+	// case "overlay2":
+	// 	return container.GraphDriver.Data["MergedDir"]
 	default:
-		blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
+		// blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
 		return fmt.Sprintf("/proc/%d/root", container.State.Pid)
 	}
 }
