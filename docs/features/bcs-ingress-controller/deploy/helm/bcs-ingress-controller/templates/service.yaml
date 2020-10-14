@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: bcs-ingress-controller
+    release: po
 spec:
   type: ClusterIP
   ports:

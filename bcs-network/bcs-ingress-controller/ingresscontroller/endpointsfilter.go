@@ -24,17 +24,20 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
 // EndpointsFilter filter for endpoints event
 type EndpointsFilter struct {
-	cli client.Client
+	filterName string
+	cli        client.Client
 }
 
 // NewEndpointsFilter create endpoints filter
 func NewEndpointsFilter(cli client.Client) *EndpointsFilter {
 	return &EndpointsFilter{
-		cli: cli,
+		filterName: "endpoints",
+		cli:        cli,
 	}
 }
 
@@ -59,6 +62,8 @@ func (ef *EndpointsFilter) enqueueEndpointsRelatedIngress(eps *k8scorev1.Endpoin
 
 // Create implement EventFilter
 func (ef *EndpointsFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(ef.filterName, metrics.EventTypeAdd)
+
 	eps, ok := e.Object.(*k8scorev1.Endpoints)
 	if !ok {
 		blog.Warnf("recv create object is not Endpoints, event %+v", e)
@@ -69,6 +74,8 @@ func (ef *EndpointsFilter) Create(e event.CreateEvent, q workqueue.RateLimitingI
 
 // Update implement EventFilter
 func (ef *EndpointsFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(ef.filterName, metrics.EventTypeUpdate)
+
 	eps, ok := e.ObjectNew.(*k8scorev1.Endpoints)
 	if !ok {
 		blog.Warnf("recv update object is not Endpoints, event %+v", e)
@@ -79,6 +86,8 @@ func (ef *EndpointsFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingI
 
 // Delete implement EventFilter
 func (ef *EndpointsFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(ef.filterName, metrics.EventTypeDelete)
+
 	eps, ok := e.Object.(*k8scorev1.Endpoints)
 	if !ok {
 		blog.Warnf("recv delete object is not Endpoints, event %+v", e)
@@ -89,6 +98,8 @@ func (ef *EndpointsFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingI
 
 // Generic impliment EventFilter
 func (ef *EndpointsFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(ef.filterName, metrics.EventTypeUnknown)
+
 	eps, ok := e.Object.(*k8scorev1.Endpoints)
 	if !ok {
 		blog.Warnf("recv generic object is not Endpoints, event %+v", e)

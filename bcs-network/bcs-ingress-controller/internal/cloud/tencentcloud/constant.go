@@ -47,6 +47,14 @@ const (
 	DefaultHealthCheckHealthNum = 3
 	// DefaultHealthCheckUnhealthNum default value for healtch check unhealthy num
 	DefaultHealthCheckUnhealthNum = 3
+
+
+	// SystemNameInMetricTencentCloud system name in metric for tencent cloud
+	SystemNameInMetricTencentCloud = "tencentcloud"
+	// HandlerNameInMetricTencentCloudAPI handler name in metric for tencent cloud api
+	HandlerNameInMetricTencentCloudAPI = "api"
+	// HandlerNameInMetricTencentCloudSDK handler name in metric for tencent cloud sdk
+	HandlerNameInMetricTencentCloudSDK = "sdk"
 )
 
 var (

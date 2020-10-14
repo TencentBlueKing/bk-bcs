@@ -29,6 +29,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/worker"
 	"github.com/Tencent/bk-bcs/bcs-network/pkg/common"
@@ -95,6 +96,7 @@ func (lc *ListenerReconciler) getListenerEventHandler(listener *networkextension
 		)
 		go newHandler.Run()
 		lc.WorkerMap[listener.Spec.LoadbalancerID] = newHandler
+		workerTotal.WithLabelValues(listener.Spec.LoadbalancerID).Set(1)
 		ehandler = newHandler
 	}
 	return ehandler, nil
@@ -102,6 +104,8 @@ func (lc *ListenerReconciler) getListenerEventHandler(listener *networkextension
 
 // Reconcile reconclie listener
 func (lc *ListenerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	metrics.IncreaseEventCounter("listener", metrics.EventTypeUnknown)
+
 	blog.V(2).Infof("listener %+v triggered", req.NamespacedName)
 
 	listener := &networkextensionv1.Listener{}
