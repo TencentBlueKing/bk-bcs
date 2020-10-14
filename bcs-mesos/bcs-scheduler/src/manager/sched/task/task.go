@@ -1475,12 +1475,12 @@ func CheckVersion(version *types.Version, store store.Store) error {
 		//"imagePullUser": "secret::imagesecret||user"
 		//"imagePullPasswd": "secret::imagesecret||pwd"
 		err := checkImageSecret(store, version.RunAs, container.Docker.ImagePullUser)
-		if err!=nil {
+		if err != nil {
 			blog.Errorf(err.Error())
 			return err
 		}
 		err = checkImageSecret(store, version.RunAs, container.Docker.ImagePullPasswd)
-		if err!=nil {
+		if err != nil {
 			blog.Errorf(err.Error())
 			return err
 		}
@@ -1503,7 +1503,7 @@ func CheckVersion(version *types.Version, store store.Store) error {
 
 	return nil
 }
-func checkImageSecret(store store.Store, ns, secret string )error{
+func checkImageSecret(store store.Store, ns, secret string) error {
 	if strings.HasPrefix(secret, "secret::") {
 		secretSplit := strings.Split(secret, "::")
 		if len(secretSplit) != 2 {
