@@ -37,6 +37,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// UserManager http interface of user-manager
 type UserManager struct {
 	config   *config.UserMgrConfig
 	httpServ *httpserver.HttpServer
@@ -58,6 +59,7 @@ func NewUserManager(conf *config.UserMgrConfig) *UserManager {
 	return userManager
 }
 
+// Start entry point for user-manager
 func (u *UserManager) Start() error {
 	err := SetupStore(u.config)
 	if err != nil {

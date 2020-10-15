@@ -204,7 +204,7 @@ func (mgr *DataCheckMgr) checkTaskgroup(runAs, appId string) {
 		return
 	}
 	appStatus := app.Status
-	isUpdated, err := mgr.sched.updateApplicationStatus(app)
+	isUpdated, _ := mgr.sched.updateApplicationStatus(app)
 	if isUpdated == true {
 		if err = mgr.sched.store.SaveApplication(app); err != nil {
 			blog.Error("data checker: save application(%s.%s) into db failed! err:%s",

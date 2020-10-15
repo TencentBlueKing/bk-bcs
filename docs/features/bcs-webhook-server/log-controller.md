@@ -98,7 +98,7 @@ spec:
 
 #### 自定义的日志采集
 
-如果一个业务集群中除了标准的日志采集配置外，还有某些容器需要配置特殊的日志采集规则，此时，可由用户从 bk-bcs-saas 层创建特定的类型为 custom 的日志采集配置 BcsLogConfig , 在 BcsLogConfig 中指定需要使用这种规则的 workloads 类型(如 Deployment, Statefulset)、workload，如下所示：    
+如果一个业务集群中除了标准的日志采集配置外，还有某些容器需要配置特殊的日志采集规则，此时，可由用户从 bk-bcs-saas 层创建特定的类型为 custom 的日志采集配置 BcsLogConfig , 在 BcsLogConfig 中指定需要使用这种规则的 workloads 类型(如 Deployment, Statefulset)、workload。Controller 首先会按照 BcsLogConfig 中的 `selector` 对 Pod 进行匹配，仅当 `selector` 中的所有条件均通过匹配时，Pod 才会通过匹配，进行后续关于 workload、container 的匹配。若不指定 `selector` 则默认通过匹配。`selector` 中的 `operator` 仅支持 `In`、`NotIn`、`Exists`、`DoesNotExist`。BcsLogConfig 示例配置如下所示：
 ```
 apiVersion: bkbcs.tencent.com/v1
 kind: BcsLogConfig
@@ -120,6 +120,23 @@ spec:
   logTags:(自定义的日志tag)
     app: python
     platform: bcs
+  selector:
+    matchLabels: (key-value 形式的 label 匹配)
+      labelname1: value1
+      labelname2: value2
+    matchExpressions: (表达式形式的 label 匹配)
+      - key: label1
+        operator: In (包含运算符)
+        values: [value1, value2]
+      - key: label2
+        operator: Notin (不包含运算符)
+        values: [value1, value2]
+      - key: label3
+        operator: Exists (存在运算符，检查对应的 label 是否存在)
+        values: []
+      - key: label4
+        operator: DoesNotExist
+        values: []
   podLabels: false(是否上报对应pod的labels到日志采集)
 ```
 此配置指定某一个具体的应用，此应用下面的所有容器都按照上面的规则来采集。

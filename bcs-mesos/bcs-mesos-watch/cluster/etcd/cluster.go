@@ -41,6 +41,7 @@ var (
 	TaskgroupThreadNum int
 	//ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
+	DeploymentThreadNum    int
 )
 
 //NewEtcdCluster create mesos cluster
@@ -50,6 +51,7 @@ func NewEtcdCluster(cfg *types.CmdConfig, st storage.Storage, netservice *servic
 	ApplicationThreadNum = cfg.ApplicationThreadNum
 	TaskgroupThreadNum = cfg.TaskgroupThreadNum
 	ExportserviceThreadNum = cfg.ExportserviceThreadNum
+	DeploymentThreadNum = cfg.DeploymentThreadNum
 
 	mesos := &EtcdCluster{
 		kubeconfig:     cfg.KubeConfig,
@@ -126,6 +128,10 @@ func (ms *EtcdCluster) registerReportHandler() error {
 	ms.reportCallback["Secret"] = ms.reportSecret
 
 	ms.reportCallback["Deployment"] = ms.reportDeployment
+	for i := 0; i == 0 || i < DeploymentThreadNum; i++ {
+		deploymentChannel := types.DeploymentChannelPrefix + strconv.Itoa(i)
+		ms.reportCallback[deploymentChannel] = ms.reportDeployment
+	}
 
 	ms.reportCallback["Endpoint"] = ms.reportEndpoint
 

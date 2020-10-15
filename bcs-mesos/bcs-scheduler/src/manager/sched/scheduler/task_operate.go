@@ -56,7 +56,7 @@ func (s *Scheduler) BuildTaskGroup(version *types.Version, app *types.Applicatio
 	app.Pods = append(app.Pods, podIndex)
 	app.UpdateTime = time.Now().Unix()
 	if ID == "" {
-		app.Instances++
+		app.Instances = uint64(len(app.Pods))
 	}
 
 	// add events
@@ -193,11 +193,10 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 				break
 			}
 		}
-		if delete == -1 {
-			return nil
+		if delete != -1 {
+			app.UpdateTime = time.Now().Unix()
+			app.Pods = append(app.Pods[:delete], app.Pods[delete+1:]...)
 		}
-		app.UpdateTime = time.Now().Unix()
-		app.Pods = append(app.Pods[:delete], app.Pods[delete+1:]...)
 	}
 
 	return s.deleteTaskGroup(taskGroup)
@@ -206,11 +205,12 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 // Delete a taskgroup:
 // the taskgroup will delete from DB
 func (s *Scheduler) deleteTaskGroup(taskGroup *types.TaskGroup) error {
+	blog.Infof("delete taskgroup(%s) in store", taskGroup.ID)
 	err := s.store.DeleteTaskGroup(taskGroup.ID)
 	if err != nil {
 		blog.Errorf("delete taskgroup(%s) err: %s", taskGroup.ID, err.Error())
 	}
-	s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
+	//s.UpdateAgentSchedInfo(taskGroup.HostName, taskGroup.ID, nil)
 
 	//update agentsetting taskgroup index info
 	nodeIp := taskGroup.GetAgentIp()

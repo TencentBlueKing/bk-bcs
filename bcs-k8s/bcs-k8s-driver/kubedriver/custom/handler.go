@@ -19,6 +19,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+// APIHandler http API interface for info request
 type APIHandler interface {
 	Handler(request *restful.Request, response *restful.Response)
 	Config(KubeMasterURL string, TLSConfig options.TLSConfig) error

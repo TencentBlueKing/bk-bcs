@@ -17,15 +17,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+
 	"github.com/golang/protobuf/proto"
 )
 
@@ -66,8 +67,8 @@ func (executor *BcsExecutor) frameworkMessageEnvironmentUpdate(taskID string, en
 	command = append(command, envshell)
 
 	for _, ID := range containerList {
-		if err := executor.container.RunCommand(ID, command); err != nil {
-			err = fmt.Errorf("Update Environment %s failed: %s", envshell, err.Error())
+		if runErr := executor.container.RunCommand(ID, command); runErr != nil {
+			err = fmt.Errorf("Update Environment %s failed: %s", envshell, runErr.Error())
 		}
 	}
 
@@ -153,8 +154,8 @@ func (executor *BcsExecutor) frameworkMessageSignalExecute(taskID string, singal
 
 	for _, ID := range containerList {
 		logs.Infof("execute shell command ##%s## in container %s", command, ID)
-		if err := executor.container.RunCommand(ID, command); err != nil {
-			err = fmt.Errorf("Sending  %s failed: %s", command, err.Error())
+		if runErr := executor.container.RunCommand(ID, command); runErr != nil {
+			err = fmt.Errorf("Sending  %s failed: %s", command, runErr.Error())
 		}
 	}
 

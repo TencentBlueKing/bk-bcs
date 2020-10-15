@@ -333,13 +333,17 @@ spec:
     tcp:
     - serviceName: tcp-test
       namespace: test
-      # clb实际监听的端口段为 [startPort+startIndex, startPort+endIndex]
+      # clb实际监听的端口段为 [startPort+startIndex*segmentLength, startPort+(endIndex+1)*segmentLength-1]
+      #   举例: startPort:3000, startIndex:0, endIndex:9, segmentLength:10时
+      #   pod0 -->[3000--3009], pod1 -->[3010--3019], ..., pod9 -->[3090--3099], 总映射了[3000--3099], 监听器端口和容器内端口保持一致
       # 端口映射的启动端口
       startPort: 3000
       # 当前clb实例管理的启动端口段起始位置
       startIndex: 0
       # 当前clb实例管理的映射端口段结束位置
       endIndex: 100
+      # 每个pod所占端口段长度(default=1)
+      segmentLength: 10
       sessionTime: 90
       lbPolicy:
         strategy: wrr
@@ -355,6 +359,7 @@ spec:
       startPort: 40000
       startIndex: 100
       endIndex: 200
+      segmentLength: 2
       ...
     http:
     - ...

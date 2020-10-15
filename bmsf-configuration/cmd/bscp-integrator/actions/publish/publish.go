@@ -270,6 +270,7 @@ func (act *PublishAction) createStrategy() error {
 		Labels:     act.md.Release.Strategy.Labels,
 		Memo:       act.md.Spec.Memo,
 		Creator:    act.req.Operator,
+		LabelsAnd:  act.md.Release.Strategy.LabelsAnd,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))

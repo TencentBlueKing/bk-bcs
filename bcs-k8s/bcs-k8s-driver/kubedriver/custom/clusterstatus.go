@@ -15,6 +15,7 @@ package custom
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/client"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
 
@@ -23,10 +24,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// ClusterStatusAPIHandler cluster node http api implementation
 type ClusterStatusAPIHandler struct {
 	clientSet *kubernetes.Clientset
 }
 
+// Handler http implementation
 func (csh *ClusterStatusAPIHandler) Handler(request *restful.Request, response *restful.Response) {
 	nodes, err := csh.clientSet.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
@@ -44,6 +47,7 @@ OutLoop:
 	}
 }
 
+// Config config kube clientset
 func (csh *ClusterStatusAPIHandler) Config(KubeMasterURL string, TLSConfig options.TLSConfig) error {
 	csh.clientSet = client.NewClientSet(KubeMasterURL, TLSConfig)
 	if csh.clientSet == nil {

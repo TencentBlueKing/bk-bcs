@@ -138,6 +138,7 @@ const (
 type EffectCache struct {
 	businessName string
 	appName      string
+	path         string
 
 	// config sets metadatas, cfgsetid -> ConfigSet.
 	configSets map[string]*ConfigSet
@@ -150,11 +151,12 @@ type EffectCache struct {
 }
 
 // NewEffectCache creates new EffectCache.
-func NewEffectCache(fileCachePath, businessName, appName string) *EffectCache {
+func NewEffectCache(fileCachePath, businessName, appName, path string) *EffectCache {
 	return &EffectCache{
 		fileCachePath: fileCachePath,
 		businessName:  businessName,
 		appName:       appName,
+		path:          path,
 		configSets:    make(map[string]*ConfigSet),
 	}
 }
@@ -340,8 +342,8 @@ func (c *EffectCache) LocalRelease(cfgsetid string) (*ReleaseMetadata, error) {
 
 	md, err := c.readDetails(cfgsetid)
 	if err != nil {
-		logger.Warn("EffectCache[%s %s]| suppose no effected release of cfgsetid[%+v], [suppose base on detail info[%+v]]",
-			c.businessName, c.appName, cfgsetid, err)
+		logger.Warn("EffectCache[%s %s %s]| suppose no effected release of cfgsetid[%+v], [suppose base on detail info[%+v]]",
+			c.businessName, c.appName, c.path, cfgsetid, err)
 		return nil, nil
 	}
 
@@ -431,9 +433,10 @@ type ContentCache struct {
 
 	businessName string
 	appName      string
+	path         string
 
 	// content file cache path.
-	path string
+	contentFilePath string
 
 	// memory LRU content information cache.
 	mcache gcache.Cache
@@ -452,13 +455,14 @@ type ContentCache struct {
 }
 
 // NewContentCache creates a new ContentCache.
-func NewContentCache(viper *viper.Viper, path, businessName, appName string, mcacheSize int, expiredPath string,
+func NewContentCache(viper *viper.Viper, contentFilePath, businessName, appName, path string, mcacheSize int, expiredPath string,
 	mcacheExpiration, contentCacheExpiration, purgeInterval time.Duration) *ContentCache {
 	return &ContentCache{
 		viper:                  viper,
-		path:                   path,
 		businessName:           businessName,
 		appName:                appName,
+		path:                   path,
+		contentFilePath:        contentFilePath,
 		expiredPath:            expiredPath,
 		mcacheExpiration:       mcacheExpiration,
 		contentCacheExpiration: contentCacheExpiration,
@@ -468,7 +472,7 @@ func NewContentCache(viper *viper.Viper, path, businessName, appName string, mca
 }
 
 func (c *ContentCache) contentPath(cid string) string {
-	return fmt.Sprintf("%s/%s", c.path, cid)
+	return fmt.Sprintf("%s/%s", c.contentFilePath, cid)
 }
 
 func (c *ContentCache) expiredFile(cid string) string {
@@ -478,15 +482,15 @@ func (c *ContentCache) expiredFile(cid string) string {
 }
 
 func (c *ContentCache) contentInfoFile(cid string) string {
-	return fmt.Sprintf("%s/%s/%s", c.path, cid, contentCacheInfoFileName)
+	return fmt.Sprintf("%s/%s/%s", c.contentFilePath, cid, contentCacheInfoFileName)
 }
 
 func (c *ContentCache) lockFile(cid string) string {
-	return fmt.Sprintf("%s/%s/.%s", c.path, cid, contentLockFile)
+	return fmt.Sprintf("%s/%s/.%s", c.contentFilePath, cid, contentLockFile)
 }
 
 func (c *ContentCache) contentFile(cid string) string {
-	return fmt.Sprintf("%s/%s/%s", c.path, cid, configsFileName)
+	return fmt.Sprintf("%s/%s/%s", c.contentFilePath, cid, configsFileName)
 }
 
 func (c *ContentCache) contentPreFile(path, cid string) string {
@@ -494,7 +498,7 @@ func (c *ContentCache) contentPreFile(path, cid string) string {
 }
 
 func (c *ContentCache) contentTempFile(cid string) string {
-	return fmt.Sprintf("%s/%s/%s.tmp", c.path, cid, configsFileName)
+	return fmt.Sprintf("%s/%s/%s.tmp", c.contentFilePath, cid, configsFileName)
 }
 
 // Add adds a new config effected release content to cache.
@@ -565,7 +569,7 @@ func (c *ContentCache) Add(content *Content) error {
 
 	// set memory LRU information cache.
 	c.mcache.SetWithExpire(content.Cid, true, c.mcacheExpiration)
-	logger.Info("ContentCache[%s %s]| add new content cache success, %+v", c.businessName, c.appName, content.Cid)
+	logger.Info("ContentCache[%s %s %s]| add new content cache success, %+v", c.businessName, c.appName, c.path, content.Cid)
 
 	return nil
 }
@@ -622,7 +626,7 @@ func (c *ContentCache) has(cid string) (bool, error) {
 	}
 
 	if fileCid != cid {
-		logger.Warn("ContentCache[%s %s]| has, inconsistent cid[%+v][%+v]", c.businessName, c.appName, cid, fileCid)
+		logger.Warn("ContentCache[%s %s %s]| has, inconsistent cid[%+v][%+v]", c.businessName, c.appName, c.path, cid, fileCid)
 		return false, nil
 	}
 
@@ -704,7 +708,8 @@ func (c *ContentCache) Effect(cid, name, path string) error {
 	if err != nil {
 		return err
 	}
-	logger.Warn("ContentCache[%s %s]| Effect the real configs now, configName[%s] preFile[%s]", c.businessName, c.appName, configName, preFile)
+	logger.Warn("ContentCache[%s %s %s]| Effect the real configs now, configName[%s] preFile[%s]",
+		c.businessName, c.appName, c.path, configName, preFile)
 
 	// rename pre-file to real app config file.
 	if err := os.Rename(preFile, configName); err != nil {
@@ -718,12 +723,12 @@ func (c *ContentCache) purge() error {
 	if err := os.MkdirAll(c.expiredPath, os.ModePerm); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(c.path, os.ModePerm); err != nil {
+	if err := os.MkdirAll(c.contentFilePath, os.ModePerm); err != nil {
 		return err
 	}
 
 	// range all content cache.
-	root, err := ioutil.ReadDir(c.path)
+	root, err := ioutil.ReadDir(c.contentFilePath)
 	if err != nil {
 		return err
 	}
@@ -736,7 +741,7 @@ func (c *ContentCache) purge() error {
 		fl := flock.New(c.lockFile(fContent.Name()))
 		locked, err := fl.TryLock()
 		if err != nil {
-			logger.Warn("ContentCache[%s %s]| content cache purge, flock %+v", c.businessName, c.appName, err)
+			logger.Warn("ContentCache[%s %s %s]| content cache purge, flock %+v", c.businessName, c.appName, c.path, err)
 			continue
 		}
 
@@ -747,7 +752,7 @@ func (c *ContentCache) purge() error {
 		// get file stat information.
 		fInfo, err := os.Stat(c.contentPath(fContent.Name()))
 		if err != nil {
-			logger.Warn("ContentCache[%s %s]| content cache purge, fstat %+v", c.businessName, c.appName, err)
+			logger.Warn("ContentCache[%s %s %s]| content cache purge, fstat %+v", c.businessName, c.appName, c.path, err)
 			fl.Unlock()
 			continue
 		}
@@ -762,13 +767,13 @@ func (c *ContentCache) purge() error {
 			// content checking.
 			fileCid, err := common.FileSHA256(c.contentFile(fContent.Name()))
 			if err != nil {
-				logger.Warn("ContentCache[%s %s]| can't cal content cid in purge, %+v", c.businessName, c.appName, err)
+				logger.Warn("ContentCache[%s %s %s]| can't cal content cid in purge, %+v", c.businessName, c.appName, c.path, err)
 				fl.Unlock()
 				continue
 			}
 
 			if fileCid != fContent.Name() {
-				logger.Warn("ContentCache[%s %s]| find invalid cid[%+v]-[%+v] in purge.", c.businessName, c.appName, fContent.Name, fileCid)
+				logger.Warn("ContentCache[%s %s %s]| find invalid cid[%+v]-[%+v] in purge.", c.businessName, c.appName, c.path, fContent.Name, fileCid)
 				isNeedPurge = true
 			}
 		}
@@ -783,12 +788,12 @@ func (c *ContentCache) purge() error {
 
 		// rename the invalid cache to tmp.
 		if err := os.Rename(c.contentPath(fContent.Name()), c.expiredFile(fContent.Name())); err != nil {
-			logger.Warn("ContentCache[%s %s]| content cache purge, remove invalid cid, %+v", c.businessName, c.appName, err)
+			logger.Warn("ContentCache[%s %s %s]| content cache purge, remove invalid cid, %+v", c.businessName, c.appName, c.path, err)
 			fl.Unlock()
 			continue
 		}
 
-		logger.Warn("ContentCache[%s %s]| content cache purge, purge cid[%+v] success", c.businessName, c.appName, fContent.Name())
+		logger.Warn("ContentCache[%s %s %s]| content cache purge, purge cid[%+v] success", c.businessName, c.appName, c.path, fContent.Name())
 		fl.Unlock()
 	}
 	return nil
@@ -801,7 +806,7 @@ func (c *ContentCache) Setup() {
 	defer ticker.Stop()
 
 	for {
-		if c.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", c.businessName, c.appName)) {
+		if c.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(c.businessName, c.appName, c.path))) {
 			return
 		}
 

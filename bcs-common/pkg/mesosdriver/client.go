@@ -16,14 +16,14 @@ package mesosdriver
 import (
 	"encoding/json"
 	"fmt"
-	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	moduleDiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 )
 
 type MesosDriverClient struct {
@@ -135,6 +135,9 @@ func (m *MesosDriverClient) CeateDeployment(clusterid string, deploy []byte) err
 func (m *MesosDriverClient) FetchDeployment(deploy *types.DeployDetection) (interface{}, error) {
 	by, err := m.requestMesosApiserver(deploy.Clusterid, http.MethodGet,
 		fmt.Sprintf("/namespaces/bcs-system/applications"), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	var apps []*schedtypes.Application
 	err = json.Unmarshal(by, &apps)

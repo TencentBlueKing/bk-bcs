@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v2
+kind: TaskGroup
+metadata:
+  name: taskgroup-sample
+spec:
+  # Add fields here
+  foo: bar

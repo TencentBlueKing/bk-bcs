@@ -71,8 +71,8 @@ func (store *managerStore) UnLockApplication(appID string) {
 }
 
 func (store *managerStore) CheckApplicationExist(application *types.Application) (string, bool) {
-	app, err := store.FetchApplication(application.RunAs, application.ID)
-	if err == nil {
+	app, _ := store.fetchApplicationInDB(application.RunAs, application.ID)
+	if app != nil {
 		return app.ResourceVersion, true
 	}
 
@@ -135,15 +135,15 @@ func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) 
 
 //FetchApplication is used to fetch application by appID
 func (store *managerStore) FetchApplication(runAs, appID string) (*types.Application, error) {
-	if cacheMgr.isOK {
-		cacheApp, _ := getCacheApplication(runAs, appID)
-		if cacheApp == nil {
-			return nil, schStore.ErrNoFound
-		}
-
-		return cacheApp, nil
+	cacheApp, _ := getCacheApplication(runAs, appID)
+	if cacheApp == nil {
+		return nil, schStore.ErrNoFound
 	}
 
+	return cacheApp, nil
+}
+
+func (store *managerStore) fetchApplicationInDB(runAs, appID string) (*types.Application, error) {
 	client := store.BkbcsClient.Applications(runAs)
 	v2App, err := client.Get(appID, metav1.GetOptions{})
 	if err != nil {

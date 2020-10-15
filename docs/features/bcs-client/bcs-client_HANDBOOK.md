@@ -52,14 +52,14 @@
     - [reschedule taskgroup by name](#reschedule-taskgroup-by-name)
     - [reschedule taskgroup by ip](#reschedule-taskgroup-by-ip)
   - [refresh](#refresh)
-    - [refresh plain user](#refresh-plain-usertoken)
-    - [refresh saas user](#refresh-saas-usertoken)
-  - [grant](#grant)
+    - [refresh plain usertoken](#refresh-plain-usertoken)
+    - [refresh saas usertoken](#refresh-saas-usertoken)
+  - [permission](#permission)
     - [grant permission](#grant-permission)
-  - [revoke](#revoke)
     - [revoke permission](#revoke-permission)
+    - [get permission](#get-permission)
   - [exec](#exec)
-    - [exec into taskgroup](#exec-into-taskgroup)      
+    - [exec into taskgroup](#exec-into-taskgroup)
   - [export](#export)
     - [export env](#export-env)
   - [env](#env)
@@ -1185,13 +1185,13 @@ SCREENSHOT:
 
 
 
-## grant ##
+## permission ##
 
 ### grant permission
 
 EXAMPLE:
 
-    ./bcs-client grant --type=permission --from-file=crd_permission.json
+    ./bcs-client permission --type=grant --from-file=crd_permission.json
 
 crd_permission.json
 
@@ -1211,19 +1211,12 @@ crd_permission.json
 }
 ```
 
-SCREENSHOT:
-
-![img](picture/grant-permission.png)
-
-
-
-## revoke ##
 
 ### revoke permission
 
 EXAMPLE:
 
-    ./bcs-client revoke --type=permission --from-file=crd_permission.json
+    ./bcs-client permission --type=revoke --from-file=crd_permission.json
 
 crd_permission.json
 
@@ -1243,9 +1236,11 @@ crd_permission.json
 }
 ```
 
-SCREENSHOT:
 
-![img](picture/revoke-permission.png)
+### get permission
+EXAMPLE:
+
+    ./bcs-client permission --type=get --username=xx --resourcetype=cluster
 
 
 

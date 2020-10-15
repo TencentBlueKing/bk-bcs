@@ -200,7 +200,8 @@ func (cs *ConnServer) initSubscriber() {
 
 // create publish manager, receive notification from message queue.
 func (cs *ConnServer) initPublishManager() {
-	cs.publishMgr = publish.NewManager(cs.viper, cs.subscriber, cs.sessionMgr, cs.strategyHandler, cs.collector)
+	cs.publishMgr = publish.NewManager(cs.viper, cs.subscriber, cs.sessionMgr, cs.strategyHandler,
+		cs.collector, cs.configsCache, cs.dataMgrCli)
 
 	if err := cs.publishMgr.Init(); err != nil {
 		logger.Fatal("init publish manager, %+v", err)
@@ -282,7 +283,7 @@ func (cs *ConnServer) initMetricsCollector() {
 
 // initializes action executor.
 func (cs *ConnServer) initExecutor() {
-	cs.executor = executor.NewExecutor()
+	cs.executor = executor.NewRateLimitExecutor(cs.viper.GetInt("server.executorLimitRate"))
 	logger.Info("create action executor success.")
 }
 
@@ -306,9 +307,6 @@ func (cs *ConnServer) initMods() {
 	// initialize metrics collector.
 	cs.initMetricsCollector()
 
-	// initialize publish manager.
-	cs.initPublishManager()
-
 	// initialize configs cache.
 	cs.initConfigsCache()
 
@@ -317,6 +315,9 @@ func (cs *ConnServer) initMods() {
 
 	// create datamanager gRPC client.
 	cs.initDataManagerClient()
+
+	// initialize publish manager.
+	cs.initPublishManager()
 
 	// initialize action executor.
 	cs.initExecutor()

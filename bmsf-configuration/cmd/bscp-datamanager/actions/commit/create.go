@@ -129,11 +129,14 @@ func (act *CreateAction) verify() error {
 		return errors.New("invalid params, template rules too long")
 	}
 
-	if len(act.req.Configs) == 0 && len(act.req.Template) == 0 {
-		return errors.New("invalid params, empty configs and template")
-	}
 	if len(act.req.Configs) != 0 && len(act.req.Template) != 0 {
 		return errors.New("invalid params, configs and template concurrence")
+	}
+	if len(act.req.Configs) != 0 && len(act.req.Templateid) != 0 {
+		return errors.New("invalid params, configs and templateid concurrence")
+	}
+	if len(act.req.Template) != 0 && len(act.req.Templateid) != 0 {
+		return errors.New("invalid params, template and templateid concurrence")
 	}
 	if len(act.req.Template) != 0 && len(act.req.TemplateRule) == 0 {
 		return errors.New("invalid params, empty template rules")
@@ -185,7 +188,7 @@ func (act *CreateAction) createCommit() (pbcommon.ErrCode, string) {
 func (act *CreateAction) createCommitMultiMode() (pbcommon.ErrCode, string) {
 	act.sd.AutoMigrate(&database.Commit{})
 
-	commit := &database.Commit{
+	commit := database.Commit{
 		Bid:           act.req.Bid,
 		Appid:         act.req.Appid,
 		Cfgsetid:      act.req.Cfgsetid,

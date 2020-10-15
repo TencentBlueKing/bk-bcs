@@ -14,6 +14,22 @@
 
 package v1
 
+// CloudIPListerExpansion allows custom methods to be added to
+// CloudIPLister.
+type CloudIPListerExpansion interface{}
+
+// CloudIPNamespaceListerExpansion allows custom methods to be added to
+// CloudIPNamespaceLister.
+type CloudIPNamespaceListerExpansion interface{}
+
+// CloudSubnetListerExpansion allows custom methods to be added to
+// CloudSubnetLister.
+type CloudSubnetListerExpansion interface{}
+
+// CloudSubnetNamespaceListerExpansion allows custom methods to be added to
+// CloudSubnetNamespaceLister.
+type CloudSubnetNamespaceListerExpansion interface{}
+
 // NodeNetworkListerExpansion allows custom methods to be added to
 // NodeNetworkLister.
 type NodeNetworkListerExpansion interface{}

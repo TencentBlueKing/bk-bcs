@@ -1,0 +1,38 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    release: gamestatefulset
+  name: gamestatefulsets.tkex.tencent.com
+spec:
+  group: tkex.tencent.com
+  additionalPrinterColumns:
+  - JSONPath: .spec.replicas
+    name: Replicas
+    type: integer
+  - JSONPath: .status.readyReplicas
+    name: ReadyReplicas
+    type: integer
+  - JSONPath: .status.currentReplicas
+    name: CurrentReplicas
+    type: integer
+  - JSONPath: .status.updatedReplicas
+    name: UpdatedReplicas
+    type: integer
+  - JSONPath: .metadata.creationTimestamp
+    description: Age of the gamestatefulset
+    name: Age
+    type: date
+  names:
+    kind: GameStatefulSet
+    listKind: GameStatefulSetList
+    plural: gamestatefulsets
+    singular: gamestatefulset
+  scope: Namespaced
+  version: v1alpha1
+  subresources:
+    status: {}
+    scale:
+      specReplicasPath: .spec.replicas
+      statusReplicasPath: .status.replicas
+      labelSelectorPath: .status.labelSelector

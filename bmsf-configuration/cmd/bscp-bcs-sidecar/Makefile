@@ -6,6 +6,9 @@ PWD         = $(shell pwd)
 LOCALBUILD  = $(PWD)/build
 OUTPUT_DIR ?= $(LOCALBUILD)
 
+# 1.0.4 -> bcs/bscp-bcs-sidecar:1.0.4
+IMAGE_TAG ?=debug
+
 # debug version
 LDVersionFLAG ?= "-X bk-bscp/internal/version.VERSION=DEBUG \
 	-X bk-bscp/internal/version.BUILDTIME=DEBUG \
@@ -36,4 +39,4 @@ clean:
 	@rm -rf $(BINDIR) $(LOCALBUILD)
 
 image: default
-	cd $(BINDIR) && docker build -t bcs/bscp-bcs-sidecar:$(IMAGE_TAG) -f etc/image/Dockerfile .
+	cd $(BINDIR) && docker build -t bcs/bscp-bcs-sidecar:$(IMAGE_TAG) -f etc/image/Dockerfile . && docker save -o bscp-bcs-sidecar-$(IMAGE_TAG).tar bcs/bscp-bcs-sidecar:$(IMAGE_TAG)

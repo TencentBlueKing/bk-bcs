@@ -1,0 +1,1533 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Cloud Netservice API Doc",
+    "version": "0.0.1"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/ip/allocate": {
+      "post": {
+        "summary": "分配ip地址",
+        "description": "分配ip地址",
+        "operationId": "AllocateIP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceAllocateIPResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceAllocateIPReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/ip/fixed/allocate": {
+      "post": {
+        "summary": "分配固定ip地址",
+        "description": "分配固定ip地址",
+        "operationId": "AllocateFixedIP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceAllocateFixedIPResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceAllocateFixedIPReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/ip/fixed/clean": {
+      "post": {
+        "summary": "清理固定ip地址",
+        "description": "清理固定ip地址",
+        "operationId": "CleanFixedIP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCleanFixedIPResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCleanFixedIPReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/ip/fixed/release": {
+      "post": {
+        "summary": "释放固定ip地址",
+        "description": "释放固定ip地址",
+        "operationId": "ReleaseFixedIP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceReleaseFixedIPResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceReleaseFixedIPReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/ip/list": {
+      "post": {
+        "summary": "查询ip列表",
+        "description": "查询ip列表",
+        "operationId": "ListIP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceListIPsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceListIPsReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/ip/release": {
+      "post": {
+        "summary": "释放ip地址",
+        "description": "释放ip地址",
+        "operationId": "ReleaseIP",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceReleaseIPResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceReleaseIPReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/node/clean": {
+      "post": {
+        "summary": "清理节点上所有ip地址",
+        "description": "清理节点上的所有ip地址",
+        "operationId": "CleanNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCleanNodeResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceCleanNodeReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/subnet": {
+      "delete": {
+        "summary": "删除云子网",
+        "description": "删除云子网",
+        "operationId": "DeleteSubnet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceDeleteSubnetResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "seq. seq",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. vpcID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. region",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "zone",
+            "description": "zone. zone",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subnetID",
+            "description": "subnetID. subnetID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      },
+      "post": {
+        "summary": "创建云子网",
+        "description": "创建云子网",
+        "operationId": "AddSubnet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceAddSubnetResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceAddSubnetReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/subnet/findavailable": {
+      "get": {
+        "summary": "获取可用子网",
+        "description": "获取可用子网",
+        "operationId": "GetAvailableSubnet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceGetAvailableSubnetResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "seq. seq",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. vpcID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. region",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "zone",
+            "description": "zone. zone",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/subnet/list": {
+      "get": {
+        "summary": "list云子网",
+        "description": "list云子网",
+        "operationId": "ListSubnet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceListSubnetResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "seq",
+            "description": "seq. seq",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. vpcID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. region",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "subnetID",
+            "description": "subnetID. subnetID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    },
+    "/v1/subnet/op": {
+      "post": {
+        "summary": "更改Subnet",
+        "description": "更改Subnet",
+        "operationId": "ChangeSubnet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceChangeSubnetResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cloudnetserviceChangeSubnetReq"
+            }
+          }
+        ],
+        "tags": [
+          "CloudNetservice"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "cloudnetserviceAddSubnetReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "vpcID": "vpc-xxxxx",
+        "region": "ap-shanghai",
+        "zone": "",
+        "subnetID": "subnet-xxxxx",
+        "subnetCidr": "127.0.0.0/24"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID",
+          "title": "vpcID"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "zone": {
+          "type": "string",
+          "description": "zone",
+          "title": "zone"
+        },
+        "subnetID": {
+          "type": "string",
+          "description": "subnetID",
+          "title": "subnetID"
+        },
+        "subnetCidr": {
+          "type": "string",
+          "description": "subnetCidr",
+          "title": "subnetCidr"
+        }
+      },
+      "description": "创建云子网请求",
+      "title": "AddSubnetReq",
+      "required": [
+        "seq",
+        "vpcID",
+        "region",
+        "subnetID",
+        "subnetCidr"
+      ]
+    },
+    "cloudnetserviceAddSubnetResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
+    "cloudnetserviceAllocateFixedIPReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "vpcID": "vpc-xxxxx",
+        "region": "ap-shanghai",
+        "subnetID": "subnet-xxxx",
+        "cluster": "bcs-xxxxx",
+        "namespace": "ns",
+        "podName": "test-xxx-xxx",
+        "worloadName": "test",
+        "host": "127.0.0.1",
+        "eniID": "eni-xxxx",
+        "containerID": "SADFKLSDAJFLKSAJDFASLKDJFSAFDLJ",
+        "address": "127.0.0.2"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID",
+          "title": "vpcID"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "subnetID": {
+          "type": "string",
+          "description": "subnetID",
+          "title": "subnetID"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace",
+          "title": "namespace"
+        },
+        "podName": {
+          "type": "string",
+          "description": "podName",
+          "title": "podName"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "workloadName",
+          "title": "workloadName"
+        },
+        "workloadKind": {
+          "type": "string",
+          "description": "workloadKind",
+          "title": "workloadKind"
+        },
+        "containerID": {
+          "type": "string",
+          "description": "containerID",
+          "title": "containerID"
+        },
+        "host": {
+          "type": "string",
+          "description": "host",
+          "title": "host"
+        },
+        "eniID": {
+          "type": "string",
+          "description": "eniID",
+          "title": "eniID"
+        },
+        "address": {
+          "type": "string",
+          "description": "address",
+          "title": "address"
+        }
+      },
+      "description": "分配固定IP",
+      "title": "AllocateFixedIPReq",
+      "required": [
+        "seq",
+        "vpcID",
+        "region",
+        "subnetID",
+        "cluster",
+        "namespace",
+        "podName",
+        "workloadName",
+        "host",
+        "eniID",
+        "containerID",
+        "address"
+      ]
+    },
+    "cloudnetserviceAllocateFixedIPResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        },
+        "ip": {
+          "$ref": "#/definitions/commonIPObject",
+          "description": "ip object",
+          "title": "ip"
+        }
+      }
+    },
+    "cloudnetserviceAllocateIPReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "vpcID": "vpc-xxxxx",
+        "region": "ap-shanghai",
+        "subnetID": "subnet-xxxx",
+        "cluster": "bcs-xxxxx",
+        "namespace": "ns",
+        "podName": "test-xxx-xxx",
+        "worloadName": "test",
+        "host": "127.0.0.1",
+        "eniID": "eni-xxxx",
+        "containerID": "SADFKLSDAJFLKSAJDFASLKDJFSAFDLJ"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID",
+          "title": "vpcID"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "subnetID": {
+          "type": "string",
+          "description": "subnetID",
+          "title": "subnetID"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace",
+          "title": "namespace"
+        },
+        "podName": {
+          "type": "string",
+          "description": "podName",
+          "title": "podName"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "workloadName",
+          "title": "workloadName"
+        },
+        "workloadKind": {
+          "type": "string",
+          "description": "workloadKind",
+          "title": "workloadKind"
+        },
+        "containerID": {
+          "type": "string",
+          "description": "containerID",
+          "title": "containerID"
+        },
+        "host": {
+          "type": "string",
+          "description": "host",
+          "title": "host"
+        },
+        "eniID": {
+          "type": "string",
+          "description": "eniID",
+          "title": "eniID"
+        }
+      },
+      "description": "非指定方式分配IP",
+      "title": "AllocateIPReq",
+      "required": [
+        "seq",
+        "vpcID",
+        "region",
+        "subnetID",
+        "cluster",
+        "namespace",
+        "podName",
+        "workloadName",
+        "host",
+        "eniID",
+        "containerID"
+      ]
+    },
+    "cloudnetserviceAllocateIPResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        },
+        "ip": {
+          "$ref": "#/definitions/commonIPObject",
+          "description": "ip object",
+          "title": "ip"
+        }
+      }
+    },
+    "cloudnetserviceChangeSubnetReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "vpcID": "vpc-xxxxx",
+        "region": "ap-shanghai",
+        "state": 0
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID",
+          "title": "vpcID"
+        },
+        "subnetID": {
+          "type": "string",
+          "description": "subnetID",
+          "title": "subnetID"
+        },
+        "state": {
+          "type": "integer",
+          "format": "int64",
+          "description": "state",
+          "title": "state"
+        }
+      },
+      "description": "更改子网状态",
+      "title": "ChangeSubnetReq",
+      "required": [
+        "seq",
+        "vpcID",
+        "subnetID",
+        "state"
+      ]
+    },
+    "cloudnetserviceChangeSubnetResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
+    "cloudnetserviceCleanFixedIPReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "region": "ap-shanghai",
+        "cluster": "bcs-xxxxx",
+        "namespace": "ns",
+        "workloadName": "pod-statefulset",
+        "address": "127.0.0.1"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace",
+          "title": "namespace"
+        },
+        "workloadName": {
+          "type": "string",
+          "description": "workloadName",
+          "title": "workloadName"
+        },
+        "workloadKind": {
+          "type": "string",
+          "description": "workloadKind",
+          "title": "workloadKind"
+        },
+        "address": {
+          "type": "string",
+          "description": "address",
+          "title": "address"
+        }
+      },
+      "description": "清理分配的固定IP对象",
+      "title": "CleanFixedIPReq",
+      "required": [
+        "seq",
+        "region",
+        "cluster",
+        "namespace",
+        "workloadName",
+        "address"
+      ]
+    },
+    "cloudnetserviceCleanFixedIPResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
+    "cloudnetserviceCleanNodeReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "region": "ap-shanghai",
+        "cluster": "bcs-xxxxx",
+        "host": "127.0.0.1",
+        "isForce": false
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "host": {
+          "type": "string",
+          "description": "host",
+          "title": "host"
+        },
+        "isForce": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否强制删除所有ip，【注意】强制删除会将active状态的IP删除，导致容器网络不通",
+          "title": "isForce"
+        }
+      },
+      "description": "清理一个node上所有的空闲IP地址",
+      "title": "CleanNodeReq",
+      "required": [
+        "seq",
+        "region",
+        "cluster",
+        "host"
+      ]
+    },
+    "cloudnetserviceCleanNodeResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
+    "cloudnetserviceDeleteSubnetResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
+    "cloudnetserviceGetAvailableSubnetResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        },
+        "subnet": {
+          "$ref": "#/definitions/commonCloudSubnet",
+          "description": "subnet",
+          "title": "subnet"
+        }
+      }
+    },
+    "cloudnetserviceListIPsReq": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "offset": {
+          "type": "string",
+          "format": "int64"
+        },
+        "limit": {
+          "type": "string",
+          "format": "int64"
+        },
+        "vpcID": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "subnetID": {
+          "type": "string"
+        },
+        "cluster": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        }
+      }
+    },
+    "cloudnetserviceListIPsResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode"
+        },
+        "errMsg": {
+          "type": "string"
+        },
+        "ips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonIPObject"
+          }
+        }
+      }
+    },
+    "cloudnetserviceListSubnetResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        },
+        "subnets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonCloudSubnet"
+          },
+          "description": "subnets",
+          "title": "subnets"
+        }
+      }
+    },
+    "cloudnetserviceReleaseFixedIPReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "vpcID": "vpc-xxxxx",
+        "region": "ap-shanghai",
+        "subnetID": "subnet-xxxx",
+        "cluster": "bcs-xxxxx",
+        "namespace": "ns",
+        "podName": "test-xxx-xxx",
+        "containerID": "SADFKLSDAJFLKSAJDFASLKDJFSAFDLJ",
+        "host": "127.0.0.1",
+        "eniID": "eni-xxxx",
+        "address": "127.0.0.2"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID",
+          "title": "vpcID"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "subnetID": {
+          "type": "string",
+          "description": "subnetID",
+          "title": "subnetID"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace",
+          "title": "namespace"
+        },
+        "podName": {
+          "type": "string",
+          "description": "podName",
+          "title": "podName"
+        },
+        "containerID": {
+          "type": "string",
+          "description": "containerID",
+          "title": "containerID"
+        },
+        "eniID": {
+          "type": "string",
+          "description": "eniID",
+          "title": "eniID"
+        },
+        "host": {
+          "type": "string",
+          "description": "host",
+          "title": "host"
+        },
+        "address": {
+          "type": "string",
+          "description": "address",
+          "title": "address"
+        }
+      },
+      "description": "临时释放分配的固定IP",
+      "title": "ReleaseFixedIPReq",
+      "required": [
+        "seq",
+        "vpcID",
+        "region",
+        "subnetID",
+        "cluster",
+        "namespace",
+        "podName",
+        "containerID",
+        "eniID",
+        "host",
+        "addrees"
+      ]
+    },
+    "cloudnetserviceReleaseFixedIPResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
+    "cloudnetserviceReleaseIPReq": {
+      "type": "object",
+      "example": {
+        "seq": "1",
+        "vpcID": "vpc-xxxxx",
+        "region": "ap-shanghai",
+        "subnetID": "subnet-xxxx",
+        "cluster": "bcs-xxxxx",
+        "namespace": "ns",
+        "podName": "test-xxx-xxx",
+        "containerID": "SADFKLSDAJFLKSAJDFASLKDJFSAFDLJ",
+        "host": "127.0.0.1",
+        "eniID": "eni-xxxx",
+        "address": "127.0.0.2"
+      },
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID",
+          "title": "vpcID"
+        },
+        "region": {
+          "type": "string",
+          "description": "region",
+          "title": "region"
+        },
+        "subnetID": {
+          "type": "string",
+          "description": "subnetID",
+          "title": "subnetID"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace",
+          "title": "namespace"
+        },
+        "podName": {
+          "type": "string",
+          "description": "podName",
+          "title": "podName"
+        },
+        "containerID": {
+          "type": "string",
+          "description": "containerID",
+          "title": "containerID"
+        },
+        "eniID": {
+          "type": "string",
+          "description": "eniID",
+          "title": "eniID"
+        },
+        "host": {
+          "type": "string",
+          "description": "host",
+          "title": "host"
+        },
+        "address": {
+          "type": "string",
+          "description": "address",
+          "title": "address"
+        }
+      },
+      "description": "释放非指定方式分配的IP",
+      "title": "ReleaseIPReq",
+      "required": [
+        "seq",
+        "vpcID",
+        "region",
+        "subnetID",
+        "cluster",
+        "namespace",
+        "podName",
+        "containerID",
+        "eniID",
+        "host",
+        "addrees"
+      ]
+    },
+    "cloudnetserviceReleaseIPResp": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "string",
+          "format": "uint64",
+          "description": "seq",
+          "title": "seq"
+        },
+        "errCode": {
+          "$ref": "#/definitions/commonErrCode",
+          "description": "errCode",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "errMsg",
+          "title": "errMsg"
+        }
+      }
+    },
+    "commonCloudSubnet": {
+      "type": "object",
+      "properties": {
+        "vpcID": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "zone": {
+          "type": "string"
+        },
+        "subnetID": {
+          "type": "string"
+        },
+        "subnetCidr": {
+          "type": "string"
+        },
+        "availableIPNum": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "createTime": {
+          "type": "string"
+        },
+        "updateTime": {
+          "type": "string"
+        }
+      }
+    },
+    "commonErrCode": {
+      "type": "string",
+      "enum": [
+        "ERROR_OK",
+        "ERROR_CLOUD_NETSERVICE_INVALID_PARAMS",
+        "ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED",
+        "ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED",
+        "ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED",
+        "ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED",
+        "ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED",
+        "ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH",
+        "ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED",
+        "ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET",
+        "ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET",
+        "ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED",
+        "ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP",
+        "ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED",
+        "ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH",
+        "ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP",
+        "ERROR_CLOUD_NETAGENT_POD_NOT_FOUND",
+        "ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED",
+        "ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED",
+        "ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED",
+        "ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE",
+        "ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND",
+        "ERROR_CLOUD_NETAGENT_INVALID_IP_INFO",
+        "ERROR_CLOUD_NETAGENT_INVALID_PARAMS",
+        "ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE"
+      ],
+      "default": "ERROR_OK",
+      "description": "- ERROR_OK: 0 Sunccess\n - ERROR_CLOUD_NETSERVICE_INVALID_PARAMS: 81000 cloud netservice, invalid parameter\n - ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED: 81001 cloud netservice, storage operation failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_FAILED: 81002 cloud netservice, call cloud api failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ASSIGNIP_FAILED: 81003 cloud netservice, assign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_UNASSIGNIP_FAILED: 81004 cloud netserivce, unassign ip failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_ENI_FAILED: 81005 cloud netservice, query eni failed\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_ENI_INFO_NOTMATCH: 81006 cloud netservice, eni info not match\n - ERROR_CLOUD_NETSERVICE_CLOUDAPI_QUERY_SUBNET_FROM_STORE_FAILED: 81007 cloud netservice, query subnet from store failed\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ACTIVE_SUBNET: 81008 cloud netservice, try to delete subent with active ip\n - ERROR_CLOUD_NETSERVICE_TRY_TO_DELETE_ENABLED_SUBNET: 81009 cloud netservice, try to delete enabled subnet\n - ERROR_CLOUD_NETSERVICE_SUBNET_IS_DISABLED: 81010 cloud netservice, subnet is disabled\n - ERROR_CLOUD_NETSERVICE_TRY_TO_ALLOCATE_ACTIVE_IP: 81011 cloud netservice, try to allocate active ip\n - ERROR_CLOUD_NETSERVICE_MIGRATE_IP_FAILED: 81012 cloud netservice, migrate ip failed\n - ERROR_CLOUD_NETSERVICE_ALLOCATE_IP_NOT_MATCH: 81013 cloud netservice, allocated ip info not match request\n - ERROR_CLOUD_NETSERVICE_TRY_TO_CLEAN_ACTIVE_IP: 81013 cloud netservice, try to clean active ip\n - ERROR_CLOUD_NETAGENT_POD_NOT_FOUND: 82000 cloud netagent, find no pod\n - ERROR_CLOUD_NETAGENT_ALLOCATE_IP_FAILED: 82001 cloud netagent, get ip failed\n - ERROR_CLOUD_NETAGENT_RELEASE_IP_FAILED: 82002 cloud netagent, release ip failed\n - ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED: 82003 cloud netagent, k8s api server ops failed\n - ERROR_CLOUD_NETAGENT_NODENETWORK_NOT_AVAILABLE: 82004 cloud netagent, nodenetwork not available\n - ERROR_CLOUD_NETAGENT_POD_WORKLOAD_NOT_FOUND: 82005 cloud netagent, pod workload not found\n - ERROR_CLOUD_NETAGENT_INVALID_IP_INFO: 82006 cloud netagent, ip info invalid\n - ERROR_CLOUD_NETAGENT_INVALID_PARAMS: 82007 cloud netagent, invalid parameter\n - ERROR_CLOUD_NETAGENT_WORKLOAD_NOT_SUPPORT_FIXED_IP_FEATURE: 82008 cloud netagent, workload not support fixed ip feature",
+      "title": "ErrCode error code"
+    },
+    "commonIPObject": {
+      "type": "object",
+      "properties": {
+        "vpcID": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "subnetID": {
+          "type": "string"
+        },
+        "subnetCidr": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "cluster": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "podName": {
+          "type": "string"
+        },
+        "workloadName": {
+          "type": "string"
+        },
+        "workloadKind": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "containerID": {
+          "type": "string"
+        },
+        "eniID": {
+          "type": "string"
+        },
+        "createTime": {
+          "type": "string"
+        },
+        "updateTime": {
+          "type": "string"
+        },
+        "isFixed": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

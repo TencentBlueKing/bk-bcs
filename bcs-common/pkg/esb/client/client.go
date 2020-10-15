@@ -22,6 +22,25 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+var (
+	requestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "bcs_esb_requests_duration_millisecond",
+		Help:    "esb api request duration millisecond",
+		Buckets: []float64{10, 20, 40, 100, 150, 200, 400, 1000, 2000, 5000, 10000},
+	}, []string{"handler", "status_code"})
+
+	requestInflight = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "bcs_esb_requests_in_flight",
+		Help: "esb api request number in flight",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(requestDuration)
+	prometheus.MustRegister(requestInflight)
+}
+
+// Credential credential to be filled in post body
 type Credential map[string]interface{}
 
 // RESTClient client with metrics, ratelimit and
@@ -41,7 +60,6 @@ func NewRESTClient() *RESTClient {
 	client := &RESTClient{
 		httpCli: httpclient.NewHttpClient(),
 	}
-	client.initMetrics()
 	return client
 }
 
@@ -69,20 +87,6 @@ func (r *RESTClient) WithCredential(c Credential) *RESTClient {
 		r.credential = c
 	}
 	return r
-}
-
-func (r *RESTClient) initMetrics() {
-	r.requestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "bcs_paas_requests_duration_millisecond",
-		Help: "third party api request duration millisecond",
-	}, []string{"handler", "status_code"})
-	prometheus.Register(r.requestDuration)
-
-	r.requestInflight = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "bcs_requests_in_flight",
-		Help: "third party api request number in flight",
-	})
-	prometheus.Register(r.requestInflight)
 }
 
 // Post create post request

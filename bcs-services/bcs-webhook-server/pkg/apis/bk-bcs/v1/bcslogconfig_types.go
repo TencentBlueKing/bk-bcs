@@ -22,20 +22,22 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 const (
-	// default log config type
+	// DefaultConfigType default log config type
 	DefaultConfigType = "default"
-	// bcs system log config type
+	// BcsSystemConfigType bcs system log config type
 	BcsSystemConfigType = "bcs-system"
-	// custom log config type
+	// CustomConfigType custom log config type
 	CustomConfigType = "custom"
 )
 
+// BcsLogConfig defines BcsLogConfig CRD format
 type BcsLogConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 	Spec              BcsLogConfigSpec `json:"spec"`
 }
 
+// BcsLogConfigSpec defines the content of BcsLogConfig CRD
 type BcsLogConfigSpec struct {
 	ConfigType        string            `json:"configType"`
 	AppId             string            `json:"appId"`
@@ -44,25 +46,43 @@ type BcsLogConfigSpec struct {
 	StdDataId         string            `json:"stdDataId"`
 	NonStdDataId      string            `json:"nonStdDataId"`
 	LogPaths          []string          `json:"logPaths"`
+	HostPaths         []string          `json:"hostPaths"`
 	LogTags           map[string]string `json:"logTags"`
 	WorkloadType      string            `json:"workloadType"`
 	WorkloadName      string            `json:"workloadName"`
 	WorkloadNamespace string            `json:"workloadNamespace"`
 	ContainerConfs    []ContainerConf   `json:"containerConfs"`
 	PodLabels         bool              `json:"podLabels"`
+	Selector          PodSelector       `json:"selector"`
 }
 
+// ContainerConf defines log config for containers
 type ContainerConf struct {
 	ContainerName string            `json:"containerName"`
 	Stdout        bool              `json:"stdout"`
 	StdDataId     string            `json:"stdDataId"`
 	NonStdDataId  string            `json:"nonStdDataId"`
+	HostPaths     []string          `json:"hostPaths"`
 	LogPaths      []string          `json:"logPaths"`
 	LogTags       map[string]string `json:"logTags"`
 }
 
+// PodSelector defines selector format for BcsLogConfig CRD
+type PodSelector struct {
+	MatchLabels      map[string]string    `json:"matchLabels"`
+	MatchExpressions []SelectorExpression `json:"matchExpressions"`
+}
+
+// SelectorExpression is universal expression for selector
+type SelectorExpression struct {
+	Key      string   `json:"key"`
+	Operator string   `json:"operator"`
+	Values   []string `json:"values"`
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// BcsLogConfigList is the list expression of BcsLogConfig CRD
 type BcsLogConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`

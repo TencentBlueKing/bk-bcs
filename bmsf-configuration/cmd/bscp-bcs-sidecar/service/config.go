@@ -60,7 +60,7 @@ func (c *config) envName(bindKey string) string {
 func (c *config) check() error {
 	// sidecar base configs.
 	c.viper.BindEnv("sidecar.pullConfigInterval", c.envName("PULL_CFG_INTERVAL"))
-	c.viper.SetDefault("sidecar.pullConfigInterval", 30*time.Second)
+	c.viper.SetDefault("sidecar.pullConfigInterval", 10*time.Minute)
 
 	c.viper.BindEnv("sidecar.syncConfigsetListInterval", c.envName("SYNC_CFGSETLIST_INTERVAL"))
 	c.viper.SetDefault("sidecar.syncConfigsetListInterval", 10*time.Minute)
@@ -109,10 +109,10 @@ func (c *config) check() error {
 	c.viper.SetDefault("connserver.port", 9516)
 
 	c.viper.BindEnv("connserver.dialtimeout", c.envName("CONNSERVER_DIAL_TIMEOUT"))
-	c.viper.SetDefault("connserver.dialtimeout", 5*time.Second)
+	c.viper.SetDefault("connserver.dialtimeout", 10*time.Second)
 
 	c.viper.BindEnv("connserver.calltimeout", c.envName("CONNSERVER_CALL_TIMEOUT"))
-	c.viper.SetDefault("connserver.calltimeout", 5*time.Second)
+	c.viper.SetDefault("connserver.calltimeout", 60*time.Second)
 
 	c.viper.BindEnv("connserver.retry", c.envName("CONNSERVER_RETRY"))
 	c.viper.SetDefault("connserver.retry", 5)
@@ -121,12 +121,14 @@ func (c *config) check() error {
 	c.viper.BindEnv("appinfo.ipeth", c.envName("APPINFO_IP_ETH"))
 	c.viper.SetDefault("appinfo.ipeth", "eth1")
 
-	ipnet, err := common.GetEthAddr(c.viper.GetString("appinfo.ipeth"))
-	if err != nil || ipnet == "" {
-		return errors.New("config check, missing 'appinfo.ip', and can't get local ETH address")
+	ipnet, _ := common.GetEthAddr(c.viper.GetString("appinfo.ipeth"))
+	podIP := common.GetenvCfg("BCS_CONTAINER_IP", ipnet)
+	if len(podIP) == 0 {
+		return errors.New("config check, missing podip / ipnet")
 	}
+
 	c.viper.BindEnv("appinfo.ip", c.envName("APPINFO_IP"))
-	c.viper.SetDefault("appinfo.ip", ipnet)
+	c.viper.SetDefault("appinfo.ip", podIP)
 
 	// instance http server.
 	c.viper.BindEnv("instance.open", c.envName("INS_OPEN"))
@@ -155,6 +157,11 @@ func (c *config) check() error {
 
 	c.viper.BindEnv("instance.calltimeout", c.envName("INS_CALLTIMEOUT"))
 	c.viper.SetDefault("instance.calltimeout", 3*time.Second)
+
+	// check reload modes.
+	if c.viper.GetBool("sidecar.fileReloadMode") && c.viper.GetBool("instance.open") {
+		return errors.New("config check, can't open filereload mode and instance server in the same time")
+	}
 
 	// env settings compatibility.
 	singleAppCfgPathVal := common.GetenvCfg(c.envName("APPCFG_PATH"), "")

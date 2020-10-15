@@ -26,21 +26,29 @@ import (
 )
 
 const (
-	Module        = "BCS-API-Tunnel-Module"
+	// Module http tunnel header
+	Module = "BCS-API-Tunnel-Module"
+	// RegisterToken http tunnel header
 	RegisterToken = "BCS-API-Tunnel-Token"
-	Params        = "BCS-API-Tunnel-Params"
-	Cluster       = "BCS-API-Tunnel-ClusterId"
-
-	KubeAgentModule   = "kube-agent"
-	K8sDriverModule   = "k8s-driver"
+	// Params http tunnel header
+	Params = "BCS-API-Tunnel-Params"
+	// Cluster http tunnel header
+	Cluster = "BCS-API-Tunnel-ClusterId"
+	// KubeAgentModule http tunnel header
+	KubeAgentModule = "kube-agent"
+	// K8sDriverModule http tunnel header
+	K8sDriverModule = "k8s-driver"
+	// MesosDriverModule http tunnel header
 	MesosDriverModule = "mesos-driver"
 )
 
 var (
+	// DefaultTunnelServer default server implementation
 	DefaultTunnelServer *websocketDialer.Server
 	errFailedAuth       = errors.New("failed authentication")
 )
 
+// RegisterCluster definition of tunnel cluster info
 type RegisterCluster struct {
 	Address   string `json:"address"`
 	UserToken string `json:"userToken"`
@@ -60,9 +68,9 @@ func authorizeTunnel(req *http.Request) (string, bool, error) {
 		return "", false, errors.New("registerToken empty")
 	}
 
-	clusterId := req.Header.Get(Cluster)
-	if clusterId == "" {
-		return "", false, errors.New("clusterId empty")
+	clusterID := req.Header.Get(Cluster)
+	if clusterID == "" {
+		return "", false, errors.New("clusterID empty")
 	}
 
 	var registerCluster RegisterCluster
@@ -92,14 +100,14 @@ func authorizeTunnel(req *http.Request) (string, bool, error) {
 	if registerCluster.CACert != "" {
 		certBytes, err := base64.StdEncoding.DecodeString(registerCluster.CACert)
 		if err != nil {
-			blog.Errorf("error when decode cluster [%s] cacert registered by websocket: %s", clusterId, err.Error())
+			blog.Errorf("error when decode cluster [%s] cacert registered by websocket: %s", clusterID, err.Error())
 			return "", false, err
 		}
 		caCert = string(certBytes)
 	}
 
 	// validate if the registerToken is correct
-	token := sqlstore.GetRegisterToken(clusterId)
+	token := sqlstore.GetRegisterToken(clusterID)
 	if token == nil {
 		blog.Info("haha")
 		return "", false, nil
@@ -110,20 +118,20 @@ func authorizeTunnel(req *http.Request) (string, bool, error) {
 
 	if moduleName == KubeAgentModule {
 		// for k8s, the registerCluster.Address is kubernetes service url, just save to db
-		err = sqlstore.SaveWsCredentials(clusterId, moduleName, registerCluster.Address, caCert, registerCluster.UserToken)
+		err = sqlstore.SaveWsCredentials(clusterID, moduleName, registerCluster.Address, caCert, registerCluster.UserToken)
 		if err != nil {
 			blog.Errorf("error when save websocket credentials: %s", err.Error())
 			return "", false, err
 		}
-		return clusterId, true, nil
+		return clusterID, true, nil
 	} else if moduleName == MesosDriverModule || moduleName == K8sDriverModule {
 		// for mesos, the registerCluster.Address is mesos-driver url. one mesos cluster may have 3 or more mesos-driver,
-		// so we should distinguish them, so use {clusterId}-{ip:port} as serverKey
+		// so we should distinguish them, so use {clusterID}-{ip:port} as serverKey
 		url, err := url.Parse(registerCluster.Address)
 		if err != nil {
 			return "", false, nil
 		}
-		serverKey := clusterId + "-" + url.Host
+		serverKey := clusterID + "-" + url.Host
 		err = sqlstore.SaveWsCredentials(serverKey, moduleName, registerCluster.Address, caCert, registerCluster.UserToken)
 		if err != nil {
 			blog.Errorf("error when save websocket credentials: %s", err.Error())

@@ -23,6 +23,7 @@ import (
 	commitaction "bk-bscp/cmd/bscp-integrator/actions/commit"
 	constructionaction "bk-bscp/cmd/bscp-integrator/actions/construction"
 	pubaction "bk-bscp/cmd/bscp-integrator/actions/publish"
+	reloadaction "bk-bscp/cmd/bscp-integrator/actions/reload"
 	rollbackaction "bk-bscp/cmd/bscp-integrator/actions/rollback"
 	"bk-bscp/internal/database"
 	pbcommon "bk-bscp/internal/protocol/common"
@@ -86,6 +87,9 @@ func (itg *Integrator) Integrate(ctx context.Context, req *pb.IntegrateReq) (*pb
 
 	case structs.IntegrationMetadataKindPublish:
 		itg.handleKindPublish(md, req, response)
+
+	case structs.IntegrationMetadataKindReload:
+		itg.handleKindReload(md, req, response)
 
 	default:
 		response.ErrCode = pbcommon.ErrCode_E_ITG_UNKNOW_METADATA_KIND
@@ -151,6 +155,20 @@ func (itg *Integrator) handleKindPublish(md *structs.IntegrationMetadata, req *p
 	default:
 		resp.ErrCode = pbcommon.ErrCode_E_ITG_UNKNOW_METADATA_OP
 		resp.ErrMsg = fmt.Sprintf("unknow publish kind metadata op[%+v]", md.Op)
+		return
+	}
+}
+
+func (itg *Integrator) handleKindReload(md *structs.IntegrationMetadata, req *pb.IntegrateReq, resp *pb.IntegrateResp) {
+	switch md.Op {
+	case structs.IntegrationMetadataOpReload:
+		action := reloadaction.NewReloadAction(itg.viper, itg.businessSvrCli, md, req, resp)
+		itg.executor.Execute(action)
+		return
+
+	default:
+		resp.ErrCode = pbcommon.ErrCode_E_ITG_UNKNOW_METADATA_OP
+		resp.ErrMsg = fmt.Sprintf("unknow reload kind metadata op[%+v]", md.Op)
 		return
 	}
 }

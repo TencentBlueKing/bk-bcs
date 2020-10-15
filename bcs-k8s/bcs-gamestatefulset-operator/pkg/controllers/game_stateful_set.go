@@ -18,12 +18,15 @@ import (
 	"reflect"
 	"time"
 
-	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	tkexclientset "bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	tkexscheme "bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
-	gamestateinformers "bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
-	gamestatelister "bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
-	"bcs-gamestatefulset-operator/pkg/util/constants"
+	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	tkexscheme "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset/scheme"
+	gamestateinformers "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/informers/tkex/v1alpha1"
+	gamestatelister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/constants"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/requeueduration"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -46,15 +49,12 @@ import (
 	"k8s.io/kubernetes/pkg/controller/history"
 )
 
-const (
-	// period to relist statefulsets and verify pets
-	statefulSetResyncPeriod = 30 * time.Second
+var (
+	// controllerKind contains the schema.GroupVersionKind for this controller type.
+	controllerKind = stsplus.SchemeGroupVersion.WithKind("GameStatefulSet")
 
-	//AnnotationUpgradeContainerInPlaceKey = "tkex/upgrade-in-place"
+	durationStore = requeueduration.DurationStore{}
 )
-
-// controllerKind contains the schema.GroupVersionKind for this controller type.
-var controllerKind = apps.SchemeGroupVersion.WithKind("GameStatefulSet")
 
 // GameStatefulSetController controls statefulsets.
 type GameStatefulSetController struct {
@@ -109,6 +109,8 @@ func NewGameStatefulSetController(
 				podInformer.Lister(),
 				pvcInformer.Lister(),
 				recorder),
+			inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
+			hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 			NewRealGameStatefulSetStatusUpdater(stsplusClient, setInformer.Lister()),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			recorder,
@@ -130,7 +132,7 @@ func NewGameStatefulSetController(
 	ssc.podLister = podInformer.Lister()
 	ssc.podListerSynced = podInformer.Informer().HasSynced
 
-	setInformer.Informer().AddEventHandlerWithResyncPeriod(
+	setInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: ssc.enqueueGameStatefulSet,
 			UpdateFunc: func(old, cur interface{}) {
@@ -143,7 +145,6 @@ func NewGameStatefulSetController(
 			},
 			DeleteFunc: ssc.enqueueGameStatefulSet,
 		},
-		statefulSetResyncPeriod,
 	)
 	ssc.setLister = setInformer.Lister()
 	ssc.setListerSynced = setInformer.Informer().HasSynced
@@ -471,11 +472,28 @@ func (ssc *GameStatefulSetController) sync(key string) error {
 	return ssc.syncGameStatefulSet(set, pods)
 }
 
+// obj could be an GameStatefulSet, or a DeletionFinalStateUnknown marker item.
+func (ssc *GameStatefulSetController) enqueueReplicaSetAfter(obj interface{}, after time.Duration) {
+	key, err := controller.KeyFunc(obj)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %+v: %v", obj, err))
+		return
+	}
+	ssc.queue.AddAfter(key, after)
+}
+
 // syncGameStatefulSet syncs a tuple of (statefulset, []*v1.Pod).
 func (ssc *GameStatefulSetController) syncGameStatefulSet(set *stsplus.GameStatefulSet, pods []*v1.Pod) error {
 	//klog.Infof("Syncing GameStatefulSet %s/%s with %d pods", set.Namespace, set.Name, len(pods))
 	// TODO: investigate where we mutate the set during the update as it is not obvious.
-	if err := ssc.control.UpdateGameStatefulSet(set.DeepCopy(), pods); err != nil {
+	err := ssc.control.UpdateGameStatefulSet(set.DeepCopy(), pods)
+
+	delayDuration := durationStore.Pop(getGameStatefulSetKey(set))
+	if delayDuration > 0 {
+		ssc.enqueueReplicaSetAfter(set, delayDuration)
+	}
+
+	if err != nil {
 		return err
 	}
 	klog.Infof("Successfully synced GameStatefulSet %s/%s successful, pod length: %d", set.Namespace, set.Name, len(pods))

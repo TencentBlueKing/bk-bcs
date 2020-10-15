@@ -24,8 +24,8 @@ func init() {
 	deleteCmd = &cobra.Command{
 		Use:     "delete",
 		Aliases: []string{"del"},
-		Short:   "delete resource",
-		Long:    "subcommand for delete all resources, including commit/release",
+		Short:   "Delete resource",
+		Long:    "Subcommand for delete all resources, including strategy",
 	}
 }
 
@@ -34,7 +34,6 @@ func init() {
 
 //InitCommands init all update commands
 func InitCommands() []*cobra.Command {
-	deleteCmd.AddCommand(deleteCommitCmd())
 	deleteCmd.AddCommand(deleteStrategyCmd())
 	return []*cobra.Command{deleteCmd}
 }

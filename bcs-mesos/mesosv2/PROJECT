@@ -1,0 +1,11 @@
+domain: tencent.com
+multigroup: true
+repo: github.com/Tencent/bk-bcs/bcs-mesos/mesosv2
+resources:
+- group: bkbcs
+  kind: Agent
+  version: v2
+- group: bkbcs
+  kind: TaskGroup
+  version: v2
+version: "2"

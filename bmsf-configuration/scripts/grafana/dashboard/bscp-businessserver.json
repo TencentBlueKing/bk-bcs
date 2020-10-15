@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 35,
-  "iteration": 1575275908941,
+  "iteration": 1594091924863,
   "links": [],
   "panels": [
     {
@@ -61,19 +61,24 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(sum(bscp_businessserver_request_total{errcode=\"0\"})/sum(bscp_businessserver_request_total)) * 100",
+          "expr": "(sum(rate(bscp_businessserver_request_total{errcode=\"0\"}[5m]))/sum(rate(bscp_businessserver_request_total[5m]))) * 100",
           "legendFormat": "全局 -- 成功率",
           "refId": "A"
         },
         {
-          "expr": "(sum(bscp_businessserver_request_total{errcode=\"0\",instance=\"$instance\"})/sum(bscp_businessserver_request_total{instance=\"$instance\"})) * 100",
+          "expr": "(sum(rate(bscp_businessserver_request_total{errcode=\"0\",instance=\"$instance\"}[5m]))/sum(rate(bscp_businessserver_request_total{instance=\"$instance\"}[5m]))) * 100",
           "legendFormat": "单实例 -- 总成功率($instance)",
           "refId": "B"
         },
         {
-          "expr": "(bscp_businessserver_request_total{errcode=\"0\",instance=\"$instance\"}/bscp_businessserver_request_total{instance=\"$instance\"}) * 100",
-          "legendFormat": "单实例 -- RPC接口成功率($instance  --  {{rpc}})",
+          "expr": "(sum(rate(bscp_businessserver_request_total{errcode=\"0\"}[5m])) by (rpc) / sum(rate(bscp_businessserver_request_total[5m])) by (rpc)) * 100",
+          "legendFormat": "RPC接口成功率({{rpc}})",
           "refId": "C"
+        },
+        {
+          "expr": "(sum(rate(bscp_businessserver_request_total{errcode=\"0\",instance=\"$instance\"}[5m])) by (rpc) / sum(rate(bscp_businessserver_request_total{instance=\"$instance\"}[5m])) by (rpc)) * 100",
+          "legendFormat": "单实例 -- RPC接口成功率($instance  --  {{rpc}})",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -159,29 +164,34 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(bscp_businessserver_request_total{errcode=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_businessserver_request_total{errcode=\"0\"}[5m])) by (job)",
           "legendFormat": "整体 -- Success[0]",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(bscp_businessserver_request_total{errcode!=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_businessserver_request_total{errcode!=\"0\"}[5m])) by (job)",
           "legendFormat": "整体 - Failed[!0]",
           "refId": "B"
         },
         {
-          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\",errcode=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\",errcode=\"0\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 整体Success[0] ($instance)",
           "refId": "C"
         },
         {
-          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\",errcode!=\"0\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\",errcode!=\"0\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 整体Failed[!0] ($instance)",
           "refId": "D"
         },
         {
-          "expr": "rate(bscp_businessserver_request_total{instance=\"$instance\"}[1h])",
-          "legendFormat": "单实例 -- RPC接口错误码[{{errcode}}] ($instance -- {{rpc}})",
+          "expr": "sum(rate(bscp_businessserver_request_total[5m])) by (rpc, errcode)",
+          "legendFormat": " RPC接口错误码[{{errcode}}] ({{rpc}})",
           "refId": "E"
+        },
+        {
+          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\"}[5m])) by (rpc, errcode)",
+          "legendFormat": "单实例 -- RPC接口错误码[{{errcode}}] ($instance -- {{rpc}})",
+          "refId": "F"
         }
       ],
       "thresholds": [],
@@ -268,19 +278,24 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(bscp_businessserver_response_time_sum)/sum(bscp_businessserver_response_time_count)",
+          "expr": "sum(rate(bscp_businessserver_response_time_sum[5m]))/sum(rate(bscp_businessserver_response_time_count[5m]))",
           "legendFormat": "整体 -- 平均响应时间",
           "refId": "A"
         },
         {
-          "expr": "sum(bscp_businessserver_response_time_sum{instance=\"$instance\"})/sum(bscp_businessserver_response_time_count{instance=\"$instance\"})",
+          "expr": "sum(rate(bscp_businessserver_response_time_sum{instance=\"$instance\"}[5m]))/sum(rate(bscp_businessserver_response_time_count{instance=\"$instance\"}[5m]))",
           "legendFormat": "单实例 -- 整体平均响应时间($instance  [$quantile])",
           "refId": "B"
         },
         {
-          "expr": "bscp_businessserver_response_time_sum{instance=\"$instance\"}/bscp_businessserver_response_time_count{instance=\"$instance\"}",
-          "legendFormat": "单实例 -- RPC接口响应时间($instance -- {{rpc}})",
+          "expr": "sum(rate(bscp_businessserver_response_time_sum[5m])) by (rpc) /sum(rate(bscp_businessserver_response_time_count[5m])) by (rpc)",
+          "legendFormat": "RPC接口响应时间({{rpc}})",
           "refId": "D"
+        },
+        {
+          "expr": "sum(rate(bscp_businessserver_response_time_sum{instance=\"$instance\"}[5m])) by (rpc) /sum(rate(bscp_businessserver_response_time_count{instance=\"$instance\"}[5m])) by (rpc)",
+          "legendFormat": "单实例 -- RPC接口响应时间($instance -- {{rpc}})",
+          "refId": "C"
         }
       ],
       "thresholds": [],
@@ -366,19 +381,24 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(bscp_businessserver_request_total[1h])) by (job)",
+          "expr": "sum(rate(bscp_businessserver_request_total[5m])) by (job)",
           "legendFormat": "整体 -- QPS",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\"}[1h])) by (job)",
+          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\"}[5m])) by (job)",
           "legendFormat": "单实例 -- 整体QPS($instance)",
           "refId": "B"
         },
         {
-          "expr": "rate(bscp_businessserver_request_total{instance=\"$instance\"}[1h])",
-          "legendFormat": "单实例 --  RPC接口QPS($instance -- {{rpc}})",
+          "expr": "sum(rate(bscp_businessserver_request_total[5m])) by (rpc)",
+          "legendFormat": " RPC接口QPS({{rpc}})",
           "refId": "C"
+        },
+        {
+          "expr": "sum(rate(bscp_businessserver_request_total{instance=\"$instance\"}[5m])) by (rpc)",
+          "legendFormat": "单实例 --  RPC接口QPS($instance -- {{rpc}})",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -476,5 +496,5 @@
   "timezone": "",
   "title": "BSCP-BusinessServer",
   "uid": "1VsD6RxZz",
-  "version": 17
+  "version": 22
 }

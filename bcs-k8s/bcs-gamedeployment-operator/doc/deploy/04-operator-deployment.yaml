@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bcs-gamedeployment-operator
+  namespace: bcs-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bcs-gamedeployment-operator
+      platform: bk-bcs
+  template:
+    metadata:
+      labels:
+        app: bcs-gamedeployment-operator
+        platform: bk-bcs
+    spec:
+      serviceAccountName: gamedeployment-operator
+      containers:
+      - name: bcs-gamedeployment-operator
+        image: bcs-gamedeployment-operator:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/data/bcs/bcs-gamedeployment-operator/container-start.sh"]
