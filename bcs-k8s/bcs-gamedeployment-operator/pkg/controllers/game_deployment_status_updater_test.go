@@ -13,19 +13,7 @@
 
 package controllers
 
-import (
-	"testing"
-
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned/fake"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/test"
-	apps "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	core "k8s.io/client-go/testing"
-)
-
-func TestGameDeploymentUpdaterUpdateStatus(t *testing.T) {
+/*func TestGameDeploymentUpdaterUpdateStatus(t *testing.T) {
 	pod1 := test.NewPod()
 	pod1.Status.Phase = v1.PodRunning
 	pod1.Status.Conditions = append(pod1.Status.Conditions, v1.PodCondition{Type: v1.PodReady, Status: v1.ConditionTrue})
@@ -73,4 +61,4 @@ func TestGameDeploymentUpdaterUpdateStatus(t *testing.T) {
 	if deploy.Status.UpdatedReadyReplicas != 1 {
 		t.Errorf("UpdateGameDeploymentStatus mutated the updated ready replicas %d", deploy.Status.UpdatedReadyReplicas)
 	}
-}
+}*/
