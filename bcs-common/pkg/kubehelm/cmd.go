@@ -22,6 +22,7 @@ import (
 	"k8s.io/klog"
 )
 
+//command to use helm struct
 type cmdHelm struct{}
 
 // NewCmdHelm new cmd helm struct, the object requires helm command-line tool
@@ -39,7 +40,8 @@ func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
 
 	parameters := inf.ParseParameters() + gPara
 	klog.Infof("helm install%s", parameters)
-	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0644)
+	os.Remove("install.sh")
+	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
 		return err
 	}

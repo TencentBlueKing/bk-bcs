@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/generator"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/option"
 )
 
@@ -73,6 +74,8 @@ func getIngressPredicate() predicate.Predicate {
 
 // Reconcile reconcile bcs ingress
 func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	metrics.IncreaseEventCounter("ingress", metrics.EventTypeUnknown)
+
 	blog.V(3).Infof("ingress %+v triggered", req.NamespacedName)
 	ingress := &networkextensionv1.Ingress{}
 	err := ir.Client.Get(ir.Ctx, req.NamespacedName, ingress)

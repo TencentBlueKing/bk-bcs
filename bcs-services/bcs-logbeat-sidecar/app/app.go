@@ -14,12 +14,15 @@
 package app
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/sidecar"
-	"os"
 )
 
 func Run(op *options.SidecarOption) error {
@@ -30,6 +33,9 @@ func Run(op *options.SidecarOption) error {
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
+
+	metric.NewMetricClient(op.Address, strconv.Itoa(int(op.MetricPort))).Start()
+	blog.Info("app start Metric client on %s:%s", op.Address, strconv.Itoa(int(op.MetricPort)))
 
 	controller, err := sidecar.NewSidecarController(conf)
 	if err != nil {

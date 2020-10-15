@@ -24,17 +24,20 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
 // StatefulSetFilter filter for pod event
 type StatefulSetFilter struct {
-	cli client.Client
+	filterName string
+	cli        client.Client
 }
 
 // NewStatefulSetFilter create statefulset filter
 func NewStatefulSetFilter(cli client.Client) *StatefulSetFilter {
 	return &StatefulSetFilter{
-		cli: cli,
+		filterName: "statefulset",
+		cli:        cli,
 	}
 }
 
@@ -58,6 +61,8 @@ func (sf *StatefulSetFilter) enqueueStatefulSetRelatedIngress(sts *k8sappsv1.Sta
 
 // Create implement EventFilter
 func (sf *StatefulSetFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeAdd)
+
 	sts, ok := e.Object.(*k8sappsv1.StatefulSet)
 	if !ok {
 		blog.Warnf("recv create object is not StatefulSet, event %+v", e)
@@ -68,6 +73,8 @@ func (sf *StatefulSetFilter) Create(e event.CreateEvent, q workqueue.RateLimitin
 
 // Update implement EventFilter
 func (sf *StatefulSetFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeUpdate)
+
 	sts, ok := e.ObjectNew.(*k8sappsv1.StatefulSet)
 	if !ok {
 		blog.Warnf("recv update object is not StatefulSet, event %+v", e)
@@ -78,6 +85,8 @@ func (sf *StatefulSetFilter) Update(e event.UpdateEvent, q workqueue.RateLimitin
 
 // Delete implement EventFilter
 func (sf *StatefulSetFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeDelete)
+
 	sts, ok := e.Object.(*k8sappsv1.StatefulSet)
 	if !ok {
 		blog.Warnf("recv delete object is not StatefulSet, event %+v", e)
@@ -88,6 +97,8 @@ func (sf *StatefulSetFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitin
 
 // Generic implement EventFilter
 func (sf *StatefulSetFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeUnknown)
+
 	if e.Meta == nil {
 		blog.Infof("GenericEvent received with no metadata, event %+v", e)
 		return

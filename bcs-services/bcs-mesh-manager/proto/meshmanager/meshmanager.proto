@@ -58,11 +58,11 @@ service MeshManager {
 
     rpc ListMeshCluster(ListMeshClusterReq) returns (ListMeshClusterResp) {
         option (google.api.http) = {
-          get: "/meshmanager/v1/meshcluster"
+            get: "/meshmanager/v1/meshcluster"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-          description: "获取k8s集群mesh服务状态"
-          summary: "获取k8s集群mesh服务状态"
+            description: "获取k8s集群mesh服务状态"
+            summary: "获取k8s集群mesh服务状态"
         };
     }
 }
@@ -70,9 +70,9 @@ service MeshManager {
 message CreateMeshClusterReq {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema: {
-          title: "CreateMeshClusterReq"
-          description: "创建k8s集群mesh服务"
-          required: ["version", "clusterid", "meshtype"]
+            title: "CreateMeshClusterReq"
+            description: "创建k8s集群mesh服务"
+            required: ["version", "clusterid", "meshtype"]
         }
         example: { value: '{ "version": "1.5.4", "clusterid": "BCS-MESOS-10032", "meshtype": "istio"}' }
     };
@@ -82,6 +82,7 @@ message CreateMeshClusterReq {
     string meshtype   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "meshtype", description: "meshtype"}];
     string name       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "name", description: "name"}];
     string namespace  = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "namespace", description: "namespace"}];
+    repeated string  configurations = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "configurations", description: "configurations"}];
 }
 
 message CreateMeshClusterResp {
@@ -93,9 +94,9 @@ message CreateMeshClusterResp {
 message DeleteMeshClusterReq {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema: {
-          title: "DeleteMeshClusterReq"
-          description: "删除k8s集群mesh服务"
-          required: ["clusterid"]
+            title: "DeleteMeshClusterReq"
+            description: "删除k8s集群mesh服务"
+            required: ["clusterid"]
         }
         example: { value: '{"clusterid": "BCS-MESOS-10032"}' }
     };
@@ -112,8 +113,8 @@ message DeleteMeshClusterResp {
 message ListMeshClusterReq {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema: {
-          title: "ListMeshClusterrReq"
-          description: "获取k8s集群mesh服务状态，如果clusterid为空则返回所有集群"
+            title: "ListMeshClusterrReq"
+            description: "获取k8s集群mesh服务状态，如果clusterid为空则返回所有集群"
         }
         example: { value: '{"clusterid": "BCS-MESOS-10032"}' }
     };

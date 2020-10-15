@@ -10,5 +10,11 @@
  * limitations under the License.
  */
 
-package ingresscontroller
+package common
 
+// MergeMap merge addtion map into src map
+func MergeMap(src map[string]interface{}, addtion map[string]interface{}) {
+	for k, v := range addtion {
+		src[k] = v
+	}
+}
