@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
 	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -357,7 +359,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 
 	para := types.Local{
 		ExtMeta:          make(map[string]string),
-		NonstandardPaths: make([]string, len(logConf.Spec.LogPaths), len(logConf.Spec.LogPaths)+len(logConf.Spec.HostPaths)),
+		NonstandardPaths: make([]string, 0),
 	}
 	para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 	para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
@@ -370,28 +372,39 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	para.ExtMeta["container_hostname"] = container.Config.Hostname
 	para.ToJSON = true
 	containerRootPath := s.getContainerRootPath(container)
+	var matchedLogConfig bcsv1.ContainerConf
 	if len(logConf.Spec.ContainerConfs) > 0 {
 		for _, conf := range logConf.Spec.ContainerConfs {
 			if conf.ContainerName == name {
-				para.StdoutDataid = conf.StdDataId
-				para.NonstandardDataid = conf.NonStdDataId
-				for i, f := range conf.LogPaths {
-					para.NonstandardPaths[i] = fmt.Sprintf("%s%s", containerRootPath, f)
-				}
-				para.NonstandardPaths = append(para.NonstandardPaths, conf.HostPaths...)
-				para.LogTags = conf.LogTags
+				conf.DeepCopyInto(&matchedLogConfig)
 				break
 			}
 		}
 	} else {
-		para.StdoutDataid = logConf.Spec.StdDataId
-		para.NonstandardDataid = logConf.Spec.NonStdDataId
-		for i, f := range logConf.Spec.LogPaths {
-			para.NonstandardPaths[i] = fmt.Sprintf("%s%s", containerRootPath, f)
-		}
-		para.NonstandardPaths = append(para.NonstandardPaths, logConf.Spec.HostPaths...)
-		para.LogTags = logConf.Spec.LogTags
+		matchedLogConfig.StdDataId = logConf.Spec.StdDataId
+		matchedLogConfig.NonStdDataId = logConf.Spec.NonStdDataId
+		matchedLogConfig.LogPaths = logConf.Spec.LogPaths
+		matchedLogConfig.HostPaths = logConf.Spec.HostPaths
+		matchedLogConfig.LogTags = logConf.Spec.LogTags
 	}
+	// generate intermediate config
+	para.StdoutDataid = matchedLogConfig.StdDataId
+	para.NonstandardDataid = matchedLogConfig.NonStdDataId
+	for _, f := range matchedLogConfig.LogPaths {
+		if !filepath.IsAbs(f) {
+			blog.Errorf("log path specified as \"%s\" is not an absolute path", f)
+			continue
+		}
+		para.NonstandardPaths = append(para.NonstandardPaths, fmt.Sprintf("%s%s", containerRootPath, f))
+	}
+	for _, f := range matchedLogConfig.HostPaths {
+		if !filepath.IsAbs(f) {
+			blog.Errorf("host path specified as \"%s\" is not an absolute path", f)
+			continue
+		}
+		para.NonstandardPaths = append(para.NonstandardPaths, f)
+	}
+	para.LogTags = matchedLogConfig.LogTags
 	//whether report pod labels to log tags
 	if logConf.Spec.PodLabels {
 		for k, v := range pod.Labels {
@@ -443,10 +456,10 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 // If the container does not use OverlayFS, it will return /proc/{procid}/root
 func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
 	switch container.Driver {
-	case "overlay2":
-		return container.GraphDriver.Data["MergedDir"]
+	// case "overlay2":
+	// 	return container.GraphDriver.Data["MergedDir"]
 	default:
-		blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
+		// blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
 		return fmt.Sprintf("/proc/%d/root", container.State.Pid)
 	}
 }
