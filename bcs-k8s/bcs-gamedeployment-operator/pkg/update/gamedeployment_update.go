@@ -98,7 +98,7 @@ func (c *realControl) Manage(deploy *tkexv1alpha1.GameDeployment,
 	waitUpdateIndexes = sortUpdateIndexes(coreControl, deploy.Spec.UpdateStrategy, pods, waitUpdateIndexes)
 
 	// 3. calculate max count of pods can update
-	needToUpdateCount := calculateUpdateCount(coreControl, deploy.Spec.UpdateStrategy, deploy.Spec.MinReadySeconds, int(*deploy.Spec.Replicas), waitUpdateIndexes, pods)
+	needToUpdateCount := calculateUpdateCount(deploy, coreControl, deploy.Spec.UpdateStrategy, deploy.Spec.MinReadySeconds, int(*deploy.Spec.Replicas), waitUpdateIndexes, pods)
 	if needToUpdateCount < len(waitUpdateIndexes) {
 		waitUpdateIndexes = waitUpdateIndexes[:needToUpdateCount]
 	}
@@ -122,16 +122,18 @@ func sortUpdateIndexes(coreControl gdcore.Control, strategy tkexv1alpha1.GameDep
 	return waitUpdateIndexes
 }
 
-func calculateUpdateCount(coreControl gdcore.Control, strategy tkexv1alpha1.GameDeploymentUpdateStrategy, minReadySeconds int32, totalReplicas int, waitUpdateIndexes []int, pods []*v1.Pod) int {
-	partition := 0
-	if strategy.Partition != nil {
-		partition = int(*strategy.Partition)
-	}
+func calculateUpdateCount(deploy *tkexv1alpha1.GameDeployment, coreControl gdcore.Control, strategy tkexv1alpha1.GameDeploymentUpdateStrategy,
+	minReadySeconds int32, totalReplicas int, waitUpdateIndexes []int, pods []*v1.Pod) int {
+	//partition := 0
+	//if strategy.Partition != nil {
+	//	partition = int(*strategy.Partition)
+	//}
+	currentPartition := util.GetCurrentPartition(deploy)
 
-	if len(waitUpdateIndexes)-partition <= 0 {
+	if len(waitUpdateIndexes)-int(currentPartition) <= 0 {
 		return 0
 	}
-	waitUpdateIndexes = waitUpdateIndexes[:(len(waitUpdateIndexes) - partition)]
+	waitUpdateIndexes = waitUpdateIndexes[:(len(waitUpdateIndexes) - int(currentPartition))]
 
 	roundUp := true
 	if strategy.MaxSurge != nil {

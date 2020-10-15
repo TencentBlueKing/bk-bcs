@@ -114,7 +114,7 @@ func main() {
 func init() {
 	flag.StringVar(&kubeConfig, "kubeConfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
-	flag.DurationVar(&MinResyncPeriod.Duration, "min-resync-period", MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
+	flag.DurationVar(&MinResyncPeriod.Duration, "min-resync-period", 10*time.Minute, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
 	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
 	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&LockName, "leader-elect-name", "gamedeployment", "The resourcelock name")
@@ -156,8 +156,10 @@ func run() {
 		klog.Fatalf("Error building gamedeployment clientset: %s", err.Error())
 	}
 	fmt.Println("Operator builds tkex client success...")
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(MinResyncPeriod)())
-	gameDeploymentInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(MinResyncPeriod)())
+	//kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(MinResyncPeriod)())
+	//gameDeploymentInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(MinResyncPeriod)())
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, 0)
+	gameDeploymentInformerFactory := informers.NewSharedInformerFactory(tkexClient, 0)
 
 	gdController := gamedeploy.NewGameDeploymentController(
 		kubeInformerFactory.Core().V1().Pods(),
