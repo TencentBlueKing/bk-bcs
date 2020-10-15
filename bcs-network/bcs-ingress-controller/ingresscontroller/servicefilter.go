@@ -24,17 +24,20 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
 // ServiceFilter filter for service event
 type ServiceFilter struct {
-	cli client.Client
+	filterName string
+	cli        client.Client
 }
 
 // NewServiceFilter create service filter
 func NewServiceFilter(cli client.Client) *ServiceFilter {
 	return &ServiceFilter{
-		cli: cli,
+		filterName: "service",
+		cli:        cli,
 	}
 }
 
@@ -59,6 +62,8 @@ func (sf *ServiceFilter) enqueueServiceRelatedIngress(svc *k8scorev1.Service, q 
 
 // Create implement EventFilter
 func (sf *ServiceFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeAdd)
+
 	svc, ok := e.Object.(*k8scorev1.Service)
 	if !ok {
 		blog.Warnf("recv create object is not Service, event %+v", e)
@@ -69,6 +74,8 @@ func (sf *ServiceFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInt
 
 // Update implement EventFilter
 func (sf *ServiceFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeUpdate)
+
 	svc, ok := e.ObjectNew.(*k8scorev1.Service)
 	if !ok {
 		blog.Warnf("recv update object is not Service, event %+v", e)
@@ -79,6 +86,8 @@ func (sf *ServiceFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInt
 
 // Delete implement EventFilter
 func (sf *ServiceFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeDelete)
+
 	svc, ok := e.Object.(*k8scorev1.Service)
 	if !ok {
 		blog.Warnf("recv delete object is not Service, event %+v", e)
@@ -89,6 +98,8 @@ func (sf *ServiceFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInt
 
 // Generic implement EventFilter
 func (sf *ServiceFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
+	metrics.IncreaseEventCounter(sf.filterName, metrics.EventTypeUnknown)
+
 	if e.Meta == nil {
 		blog.Infof("GenericEvent received with no metadata, event %+v", e)
 		return
