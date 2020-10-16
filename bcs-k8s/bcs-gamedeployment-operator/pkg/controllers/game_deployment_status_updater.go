@@ -59,12 +59,11 @@ func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
 	newStatus *tkexv1alpha1.GameDeploymentStatus,
 	pods []*v1.Pod) error {
 	r.calculateStatus(deploy, newStatus, pods)
-	//if !r.inconsistentStatus(deploy, newStatus) {
-	//	return nil
-	//}
 	currentStep, currentStepIndex := util.GetCurrentCanaryStep(deploy)
 	newStatus.Canary.Revision = deploy.Status.Canary.Revision
-	newStatus.CurrentStepHash = util.ComputeStepHash(deploy)
+	if deploy.Spec.UpdateStrategy.CanaryStrategy != nil {
+		newStatus.CurrentStepHash = util.ComputeStepHash(deploy)
+	}
 	var stepCount int32
 	if deploy.Spec.UpdateStrategy.CanaryStrategy != nil {
 		stepCount = int32(len(deploy.Spec.UpdateStrategy.CanaryStrategy.Steps))
@@ -95,6 +94,9 @@ func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
 	}
 
 	if deploy.Status.Canary.Revision == "" {
+		if deploy.Spec.UpdateStrategy.CanaryStrategy == nil {
+			return r.updateStatus(deploy, newStatus, pointer.BoolPtr(false))
+		}
 		newStatus.Canary.Revision = newStatus.UpdateRevision
 		if stepCount > 0 {
 			if stepCount != *currentStepIndex {

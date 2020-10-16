@@ -40,6 +40,9 @@ func GetCurrentCanaryStep(deploy *v1alpha1.GameDeployment) (*v1alpha1.CanaryStep
 func GetCurrentPartition(deploy *v1alpha1.GameDeployment) int32 {
 	currentStep, currentStepIndex := GetCurrentCanaryStep(deploy)
 	if currentStep == nil {
+		if deploy.Spec.UpdateStrategy.Partition != nil {
+			return *deploy.Spec.UpdateStrategy.Partition
+		}
 		return 0
 	}
 
