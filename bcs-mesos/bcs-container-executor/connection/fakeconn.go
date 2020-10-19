@@ -83,6 +83,7 @@ func (httpConn *FakeConnection) slaveSimulation() {
 	//send Shutdown in 10 second
 	//send KillTask in 10 second ?
 	tick := time.NewTicker(1 * time.Second)
+	defer tick.Stop()
 	fmt.Fprintln(os.Stdout, "enter slave message sending loop")
 	i := 0
 	for {

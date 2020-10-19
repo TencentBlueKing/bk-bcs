@@ -185,7 +185,9 @@ func (lp *LBEventProcessor) Start() error {
 // run main loop
 func (lp *LBEventProcessor) run() {
 	updateTick := time.NewTicker(time.Second * time.Duration(int64(lp.config.CfgCheckPeriod)))
+	defer updateTick.Stop()
 	syncTick := time.NewTicker(time.Second * time.Duration(int64(lp.config.SyncPeriod)))
+	defer syncTick.Stop()
 	for {
 		select {
 		case <-lp.exit:
