@@ -297,6 +297,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 	disk := new(cbs.Disk)
 
 	ticker := time.NewTicker(time.Second * 5)
+	defer ticker.Stop()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
 	defer cancel()

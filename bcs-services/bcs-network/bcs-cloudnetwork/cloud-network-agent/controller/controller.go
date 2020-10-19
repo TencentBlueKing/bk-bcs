@@ -493,6 +493,7 @@ func (nc *NetworkController) Run(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	tick := time.NewTicker(time.Duration(nc.options.CheckInterval) * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

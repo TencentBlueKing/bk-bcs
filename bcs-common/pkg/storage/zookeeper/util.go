@@ -115,6 +115,7 @@ func (n *Node) Run() {
 		go n.childrenLoop()
 	}
 	tick := time.NewTicker(time.Second * 3)
+	defer tick.Stop()
 	for {
 		if n.isStopped {
 			return
@@ -208,6 +209,7 @@ func (n *Node) selfLoop() {
 	}
 	//wait for next event
 	forceTick := time.NewTicker(time.Second * 300)
+	defer forceTick.Stop()
 	for {
 		select {
 		case <-n.watchCxt.Done():

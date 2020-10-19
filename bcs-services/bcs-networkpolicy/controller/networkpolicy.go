@@ -150,6 +150,7 @@ type namedPort2eps map[string]protocol2eps
 func (npc *NetworkPolicyController) Run(stopCh <-chan struct{}, wg *sync.WaitGroup) {
 	t := time.NewTicker(npc.syncPeriod)
 	defer t.Stop()
+	defer t.Stop()
 	defer wg.Done()
 
 	blog.Info("Starting network policy controller")

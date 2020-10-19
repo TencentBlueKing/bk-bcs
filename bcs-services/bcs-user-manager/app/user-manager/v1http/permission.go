@@ -104,6 +104,7 @@ func initCache() {
 	mutex = new(sync.RWMutex)
 	var ura []UserResourceAction
 	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
 	for {
 		sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select("bcs_user_resource_roles.user_id, bcs_user_resource_roles.resource_type, bcs_user_resource_roles.resource, bcs_roles.actions").
 			Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id").Scan(&ura)
