@@ -93,7 +93,6 @@ func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 			return
 		}
 	}
-	blog.Warnf("module %s in not expected", module)
 }
 
 // formatEtcdInfo format internal service info according module info

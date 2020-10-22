@@ -61,6 +61,7 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 	if s.conf.Etcd.Feature {
 		tlsCfg, err := s.conf.Etcd.GetTLSConfig()
 		if err != nil {
+			blog.Errorf("storage loading etcd registry tls config failed, %s", err.Error())
 			return nil, err
 		}
 		// init go-micro registry
@@ -71,6 +72,7 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 			RegAddr:      fmt.Sprintf("%s:%d", s.conf.Address, s.conf.Port),
 			Config:       tlsCfg,
 		}
+		blog.Infof("#############storage turn on etcd registry feature, options %+v ###############", eoption)
 		s.etcdRegistry = registry.NewEtcdRegistry(eoption)
 	}
 

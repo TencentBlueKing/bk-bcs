@@ -34,7 +34,7 @@ func main() {
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
 
-	blog.Infof("driver options: %v", op)
+	blog.Infof("driver options: %+v", op)
 
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())

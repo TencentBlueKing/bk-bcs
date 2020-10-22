@@ -105,6 +105,9 @@ func (m *MesosDriver) RunMetric() {
 
 // NewMesosDriverServer create mesosdriver according config
 func NewMesosDriverServer(conf *config.MesosDriverConfig) (*MesosDriver, error) {
+
+	blog.Infof("mesos-driver loading configuration: %+v", conf)
+
 	m := &MesosDriver{}
 
 	//config
@@ -207,6 +210,7 @@ func (m *MesosDriver) Filter(req *restful.Request, resp *restful.Response, filte
 
 func (m *MesosDriver) etcdRegistryFeature() error {
 	if m.config.Etcd.Feature {
+		blog.Infof("etcd registry information: %+v", m.config.Etcd)
 		tlsCfg, err := m.config.Etcd.GetTLSConfig()
 		if err != nil {
 			blog.Errorf("turn on etcd registry feature but configuration not correct, %s", err.Error())

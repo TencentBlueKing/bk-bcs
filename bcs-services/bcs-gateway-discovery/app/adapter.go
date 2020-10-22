@@ -30,6 +30,7 @@ var notStandardRouteModules = map[string]string{
 	types.BCS_MODULE_MESOSDRIVER:      "mesosdriver",
 	types.BCS_MODULE_NETWORKDETECTION: "detection",
 	types.BCS_MODULE_KUBEAGENT:        "kubeagent",
+	types.BCS_MODULE_USERMANAGER:      "usermanager",
 }
 
 var defaultModules = []string{}
@@ -639,8 +640,9 @@ func (adp *Adapter) microMesosDriver(module string, svc *registry.Service) (*reg
 	labels["module"] = module
 	labels["service"] = defaultClusterName
 	labels["scheduler"] = "mesos"
+	labels["cluster"] = fmt.Sprintf("BCS-MESOS-%s", items[0])
 	regSvc := &register.Service{
-		Name:     module,
+		Name:     name,
 		Protocol: "https",
 		Host:     hostName,
 		Path:     "/mesosdriver/v4/",
@@ -734,6 +736,46 @@ func (adp *Adapter) microUserMgr(module string, svc *registry.Service) (*registe
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,
+	}
+	regSvc.Routes = append(regSvc.Routes, rt)
+	//setting upstream backend information
+	bcks := adp.constructUpstreamTarget(svc.Nodes)
+	regSvc.Backends = append(regSvc.Backends, bcks...)
+	return regSvc, nil
+}
+
+//microNetworkDetection convert bcs-network-detection service information
+// to custom service definition. this is compatible with original bcs-api proxy.
+// and further more, api-gateway defines new standard proxy rule for it
+func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) (*register.Service, error) {
+	labels := make(map[string]string)
+	labels["module"] = types.BCS_MODULE_NETWORKDETECTION
+	labels["service"] = defaultServiceTag
+	regSvc := &register.Service{
+		Name:     module,
+		Protocol: "https",
+		Host:     svc.Name,
+		Path:     "/detection/v4/",
+		Retries:  1,
+		Labels:   labels,
+	}
+	//setting route information
+	rt := register.Route{
+		Name:        module,
+		Protocol:    "http",
+		Paths:       []string{"/bcsapi/v4/detection/"},
+		PathRewrite: true,
+		Plugin: &register.Plugins{
+			AuthOption: &register.BCSAuthOption{
+				Name: defaultPluginName,
+				//sending auth request to usermanager.bkbcs.tencent.com
+				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthToken:     adp.admintoken,
+				Module:        types.BCS_MODULE_NETWORKDETECTION,
+			},
+		},
+		Service: module,
+		Labels:  labels,
 	}
 	regSvc.Routes = append(regSvc.Routes, rt)
 	//setting upstream backend information

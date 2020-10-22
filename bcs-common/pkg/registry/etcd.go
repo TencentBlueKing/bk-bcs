@@ -115,6 +115,8 @@ func (e *etcdRegister) innerRegister() error {
 		); err != nil {
 			//try again until max failed
 			rerr = err
+			roption := e.etcdregistry.Options()
+			blog.Errorf("etcd registry register err, %s, options: %+v\n", err.Error(), roption)
 			time.Sleep(backoff.Do(i + 1))
 			continue
 		}
