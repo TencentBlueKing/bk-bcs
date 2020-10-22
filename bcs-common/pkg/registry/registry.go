@@ -22,7 +22,7 @@ import (
 type Options struct {
 	//UUID for registry
 	id string
-	//Registry address
+	//Registry address, formation like ip:port
 	RegistryAddr []string
 	//register name, like $module.bkbcs.tencent.com
 	Name string
