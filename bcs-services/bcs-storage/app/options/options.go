@@ -16,6 +16,7 @@ package options
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
 //CertConfig is configuration of Cert
@@ -39,6 +40,7 @@ type StorageOptions struct {
 	conf.ProcessConfig
 
 	ServerCert *CertConfig
+	Etcd       registry.CMDOptions `json:"etcdRegistry"`
 
 	DBConfig     string `json:"database_config_file" value:"storage-database.conf" usage:"Config file for database."`
 	EventMaxTime int64  `json:"event_max_day" value:"15" usage:"Max day for holding events data."`
@@ -59,5 +61,6 @@ func NewStorageOptions() *StorageOptions {
 			CertPwd: static.ServerCertPwd,
 			IsSSL:   false,
 		},
+		Etcd: registry.CMDOptions{},
 	}
 }
