@@ -36,7 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	appsinformers "k8s.io/client-go/informers/apps/v1"
 	coreinformers "k8s.io/client-go/informers/core/v1"
@@ -107,7 +106,7 @@ func NewGameDeploymentController(
 			gdClient,
 			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations),
 			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations),
-			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister()),
+			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			revisioncontrol.NewRevisionControl(),
 			recorder,
@@ -500,32 +499,4 @@ func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *tkexv1alph
 
 	cm := controller.NewPodControllerRefManager(gdc.podControl, deploy, selector, gdc.GroupVersionKind, canAdoptFunc)
 	return cm.ClaimPods(pods, filter)
-}
-
-// truncatePodsToDelete truncates any non-live pod names in spec.scaleStrategy.podsToDelete.
-func (gdc *GameDeploymentController) truncatePodsToDelete(deploy *tkexv1alpha1.GameDeployment, pods []*v1.Pod) error {
-	if len(deploy.Spec.ScaleStrategy.PodsToDelete) == 0 {
-		return nil
-	}
-
-	existingPods := sets.NewString()
-	for _, p := range pods {
-		existingPods.Insert(p.Name)
-	}
-
-	var newPodsToDelete []string
-	for _, podName := range deploy.Spec.ScaleStrategy.PodsToDelete {
-		if existingPods.Has(podName) {
-			newPodsToDelete = append(newPodsToDelete, podName)
-		}
-	}
-
-	if len(newPodsToDelete) == len(deploy.Spec.ScaleStrategy.PodsToDelete) {
-		return nil
-	}
-
-	newDeploy := deploy.DeepCopy()
-	newDeploy.Spec.ScaleStrategy.PodsToDelete = newPodsToDelete
-	_, updateErr := gdc.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(deploy)
-	return updateErr
 }

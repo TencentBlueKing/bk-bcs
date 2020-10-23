@@ -17,6 +17,7 @@ import (
 	"sort"
 
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -71,9 +72,13 @@ func calculateDiffs(deploy *tkexv1alpha1.GameDeployment, revConsistent bool, tot
 	var maxSurge int
 
 	if !revConsistent {
-		if deploy.Spec.UpdateStrategy.Partition != nil {
-			currentRevDiff = notUpdatedPods - integer.IntMin(int(*deploy.Spec.UpdateStrategy.Partition), int(*deploy.Spec.Replicas))
+		currentPartition := util.GetCurrentPartition(deploy)
+		if currentPartition != 0 {
+			currentRevDiff = notUpdatedPods - integer.IntMin(int(currentPartition), int(*deploy.Spec.Replicas))
 		}
+		//if deploy.Spec.UpdateStrategy.Partition != nil {
+		//	currentRevDiff = notUpdatedPods - integer.IntMin(int(*deploy.Spec.UpdateStrategy.Partition), int(*deploy.Spec.Replicas))
+		//}
 
 		// Use maxSurge only if partition has not satisfied
 		if currentRevDiff > 0 {

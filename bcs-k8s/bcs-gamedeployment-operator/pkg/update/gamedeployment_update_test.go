@@ -13,20 +13,11 @@
 
 package update
 
-import (
-	"testing"
-
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	gdcore "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/core"
-	"k8s.io/api/core/v1"
-	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
-)
-
 func getInt32Pointer(i int32) *int32 {
 	return &i
 }
 
-func TestCalculateUpdateCount(t *testing.T) {
+/*func TestCalculateUpdateCount(t *testing.T) {
 	readyPod := func() *v1.Pod {
 		return &v1.Pod{Status: v1.PodStatus{Phase: v1.PodRunning, Conditions: []v1.PodCondition{{Type: v1.PodReady, Status: v1.ConditionTrue}}}}
 	}
@@ -110,4 +101,4 @@ func TestCalculateUpdateCount(t *testing.T) {
 			t.Fatalf("case #%d failed, expected %d, got %d", i, tc.expectedResult, res)
 		}
 	}
-}
+}*/
