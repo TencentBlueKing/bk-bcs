@@ -562,7 +562,8 @@ func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *ty
 		//	continue
 		//}
 
-		var nodeAddress string
+		//agent ip
+		nodeAddress := oneTask.AgentIPAddress
 		// added  20180815, process task do not have the statusData upload by executor, because process executor
 		// do not have the hostIP and port information. So we make NodeIP, ContainerIP, HostIP directly with AgentIPAddress
 		// which is got from offer
@@ -570,9 +571,9 @@ func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *ty
 		switch oneTask.Kind {
 		case commtypes.BcsDataType_PROCESS:
 			podEndpoint.NetworkMode = oneTask.Network
-			podEndpoint.NodeIP = oneTask.AgentIPAddress
-			podEndpoint.ContainerIP = oneTask.AgentIPAddress
-			nodeAddress = oneTask.AgentIPAddress
+			podEndpoint.NodeIP = nodeAddress
+			podEndpoint.ContainerIP = nodeAddress
+			//nodeAddress = oneTask.AgentIPAddress
 		case commtypes.BcsDataType_APP, "":
 			if len(oneTask.StatusData) == 0 {
 				blog.Warn("ServiceMgr: buildEndpoint, but task %s StatusData is empty", oneTask.ID)
@@ -586,13 +587,11 @@ func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *ty
 			}
 
 			podEndpoint.NetworkMode = oneTask.Network
-			if bcsInfo.NodeAddress != "" {
-				podEndpoint.NodeIP = bcsInfo.NodeAddress
-			}
+			podEndpoint.NodeIP = nodeAddress
 			if bcsInfo.IPAddress != "" {
 				podEndpoint.ContainerIP = bcsInfo.IPAddress
 			}
-			nodeAddress = bcsInfo.NodeAddress
+			//nodeAddress = bcsInfo.NodeAddress
 		default:
 			continue
 		}

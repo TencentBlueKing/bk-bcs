@@ -158,6 +158,11 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Discovery
 
 	sdConfig, err := disc.GetPrometheusSdConfig(dInfo.Key)
 	if err != nil {
+		//if serviceMonitor Not Found, then delete the specify config file
+		if strings.Contains(err.Error(), "Not Found") {
+			prom.deletePrometheusConfigFile(dInfo)
+			return
+		}
 		blog.Errorf("discovery %s get prometheus service discovery config error %s", dInfo.Key, err.Error())
 		return
 	}
@@ -182,4 +187,19 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Discovery
 	}
 
 	blog.Infof("discovery %s write config file %s success", dInfo.Key, disc.GetPromSdConfigFile(dInfo.Key))
+}
+
+func (prom *PrometheusController) deletePrometheusConfigFile(dInfo discovery.DiscoveryInfo) {
+	disc, ok := prom.discoverys[dInfo.Module]
+	if !ok {
+		blog.Errorf("not found discovery %s", dInfo.Module)
+		return
+	}
+	cFile := disc.GetPromSdConfigFile(dInfo.Key)
+	err := os.Remove(cFile)
+	if err!=nil {
+		blog.Errorf("remove config file(%s) error %s", cFile, err.Error())
+		return
+	}
+	blog.Errorf("remove config file(%s) success", cFile)
 }
