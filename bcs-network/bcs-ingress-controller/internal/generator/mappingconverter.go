@@ -174,11 +174,17 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 		for i := mg.mapping.StartIndex; i < mg.mapping.EndIndex; i++ {
 			startPort := mg.mapping.StartPort + i*segmentLength
 			endPort := mg.mapping.StartPort + (i+1)*segmentLength - 1
-			rsStartPort := mg.mapping.StartPort
-			if !mg.mapping.IsRsPortFixed {
-				rsStartPort = startPort
+			
+			rsStartPort := startPort
+			if mg.mapping.RsStartPort > 0 {
+				rsStartPort = mg.mapping.RsStartPort + i*segmentLength
+			}
+
+			// if rs port fixed
+			if mg.mapping.IsRsPortFixed {
+				rsStartPort = mg.mapping.StartPort
 				if mg.mapping.RsStartPort > 0 {
-					rsStartPort = mg.mapping.RsStartPort + i*segmentLength
+					rsStartPort = mg.mapping.RsStartPort
 				}
 			}
 
