@@ -21,12 +21,14 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
+// Response common response for bk
 type Response struct {
 	Code    int                    `json:"code"`
 	Data    map[string]interface{} `json:"data"`
 	Message string                 `json:"message"`
 }
 
+// QueryResp response from bk iam
 type QueryResp struct {
 	RequestID  string    `json:"request_id"`
 	Result     bool      `json:"result"`
@@ -35,11 +37,13 @@ type QueryResp struct {
 	Data       QueryData `json:"data"`
 }
 
+// QueryData query data
 type QueryData struct {
 	Identity map[string]interface{} `json:"identity"`
 }
 
-func HttpGet(url string, params map[string]string) (Response, error) {
+// HTTPGet for bk iam get request
+func HTTPGet(url string, params map[string]string) (Response, error) {
 	var result Response
 
 	req := gorequest.New().Get(url)
@@ -78,7 +82,8 @@ func HttpGet(url string, params map[string]string) (Response, error) {
 	return result, nil
 }
 
-func HttpPostToBkIamAuth(url string, data map[string]interface{}, header map[string]string) (QueryResp, error) {
+//HTTPPostToBkIamAuth bk iam post
+func HTTPPostToBkIamAuth(url string, data map[string]interface{}, header map[string]string) (QueryResp, error) {
 	var result QueryResp
 
 	req := gorequest.New().Post(url)

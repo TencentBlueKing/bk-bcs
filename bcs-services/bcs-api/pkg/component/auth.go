@@ -24,12 +24,15 @@ const (
 	appSecretKey = "X-BK-APP-SECRET"
 )
 
+// PaaSAuth auth configuration for bk-app
 type PaaSAuth struct {
 	host      string
 	appCode   string
 	appSecret string
+	version   string
 }
 
+// NewPaaSAuth construct Auth according configuration file/command line option
 func NewPaaSAuth() *PaaSAuth {
 	bKIamAuth := config.BKIamAuth
 	return &PaaSAuth{
@@ -39,6 +42,7 @@ func NewPaaSAuth() *PaaSAuth {
 	}
 }
 
+// VerifyAccessTokenForIeod refresh access token
 func (a *PaaSAuth) VerifyAccessTokenForIeod(accessToken string) (bool, map[string]interface{}, error) {
 
 	url := fmt.Sprintf("%s/oauth/token", a.host)
@@ -47,7 +51,7 @@ func (a *PaaSAuth) VerifyAccessTokenForIeod(accessToken string) (bool, map[strin
 		"access_token": accessToken,
 	}
 
-	result, err := HttpGet(url, params)
+	result, err := HTTPGet(url, params)
 	if err != nil {
 		return false, nil, err
 	}
@@ -55,9 +59,14 @@ func (a *PaaSAuth) VerifyAccessTokenForIeod(accessToken string) (bool, map[strin
 	return true, result.Data, nil
 }
 
+// VerifyAccessTokenForEe verify access token according bk app info
 func (a *PaaSAuth) VerifyAccessTokenForEe(accessToken string) (bool, map[string]interface{}, error) {
-
-	url := fmt.Sprintf("%s/api/v1/auth/access-tokens/verify", a.host)
+	var url string
+	if a.version == "3" {
+		url = fmt.Sprintf("%s/api/v1/auth/access-tokens/verify", a.host)
+	} else {
+		url = fmt.Sprintf("%s/bkiam/api/v1/auth/access-tokens/verify", a.host)
+	}
 
 	data := map[string]interface{}{
 		"access_token": accessToken,
@@ -68,7 +77,7 @@ func (a *PaaSAuth) VerifyAccessTokenForEe(accessToken string) (bool, map[string]
 		appSecretKey: a.appSecret,
 	}
 
-	result, err := HttpPostToBkIamAuth(url, data, header)
+	result, err := HTTPPostToBkIamAuth(url, data, header)
 	if err != nil {
 		return false, nil, err
 	}
