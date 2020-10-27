@@ -13,12 +13,12 @@
 
 package config
 
-// sd prometheus config
+// Config sd prometheus config
 type Config struct {
 	ClusterZk            string
 	CadvisorPort         int
 	NodeExportPort       int
-	ClusterId            string
+	ClusterID            string
 	PromFilePrefix       string
 	ServiceZk            string
 	EnableMesos          bool
