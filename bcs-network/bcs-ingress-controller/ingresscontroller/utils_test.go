@@ -111,6 +111,7 @@ var testIngress3 = networkextensionv1.Ingress{
 	},
 }
 
+// TestIsServiceIngress test isServiceInIngress function
 func TestIsServiceIngress(t *testing.T) {
 
 	testSvcs := []struct {
@@ -142,6 +143,7 @@ func TestIsServiceIngress(t *testing.T) {
 	}
 }
 
+// TestFindIngressesByService test that find ingress by service
 func TestFindIngressesByService(t *testing.T) {
 	testSvcs := []struct {
 		ServiceName      string
@@ -178,6 +180,7 @@ func TestFindIngressesByService(t *testing.T) {
 	}
 }
 
+// TestFindIngressesByWorkload test that find ingress by workload info
 func TestFindIngressesByWorkload(t *testing.T) {
 	testWorkloads := []struct {
 		WorkloadKind      string
@@ -209,6 +212,7 @@ func TestFindIngressesByWorkload(t *testing.T) {
 	}
 }
 
+// TestDeduplicateIngress test function that deduplicate ingress
 func TestDeduplicateIngress(t *testing.T) {
 	before := []*networkextensionv1.Ingress{
 		&testIngress1,

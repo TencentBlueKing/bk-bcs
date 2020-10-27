@@ -51,26 +51,34 @@ const (
 )
 
 var (
+	// If the delay caused by the frequency limit exceeds this value, it is recorded in the log
 	maxLatency  = 120 * time.Millisecond
+	// the maximum number of retries caused by server error or API overrun
 	maxRetry    = 25
+	// qps for rate limit
 	throttleQPS = 300
+	// bucket size for rate limit
 	bucketSize  = 300
-
+	// wait seconds when tencent cloud api is busy
 	waitPeriodLBDealing = 2
 )
 
 // SdkWrapper wrapper for tencentcloud sdk
 type SdkWrapper struct {
+	// domain for tencent cloud clb service
 	domain string
-
+	// secret id for tencent cloud account
 	secretID string
-
+	// secret key for tencent cloud account
 	secretKey string
-
+	// client profile for tencent cloud sdk
 	cpf        *tprofile.ClientProfile
+	// credential for tencent cloud sdk
 	credential *tcommon.Credential
-
+	// rate limiter for calling sdk
 	throttler throttle.RateLimiter
+	// map of client for different region
+	// for ingress controller, it may control different cloud loadbalancer in different regions
 	clbCliMap map[string]*tclb.Client
 }
 
@@ -98,6 +106,7 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	return sw, nil
 }
 
+// load config for environment variables
 func (sw *SdkWrapper) loadEnv() error {
 	clbDomain := os.Getenv(EnvNameTencentCloudClbDomain)
 	secretID := os.Getenv(EnvNameTencentCloudAccessKeyID)
@@ -135,6 +144,7 @@ func (sw *SdkWrapper) checkErrCode(err *terrors.TencentCloudSDKError) {
 	}
 }
 
+// call tryThrottle before each api call
 func (sw *SdkWrapper) tryThrottle() {
 	now := time.Now()
 	sw.throttler.Accept()
@@ -208,6 +218,7 @@ func (sw *SdkWrapper) DescribeLoadBalancers(region string, req *tclb.DescribeLoa
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DescribeLoadBalancers try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -253,6 +264,7 @@ func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequ
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("CreateListener try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -309,6 +321,7 @@ func (sw *SdkWrapper) DescribeListeners(region string, req *tclb.DescribeListene
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DescribeListeners try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -355,6 +368,7 @@ func (sw *SdkWrapper) DescribeTargets(region string, req *tclb.DescribeTargetsRe
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DescribeTargets try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			return nil, err
@@ -399,6 +413,7 @@ func (sw *SdkWrapper) DeleteListener(region string, req *tclb.DeleteListenerRequ
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DeleteListener try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -449,6 +464,7 @@ func (sw *SdkWrapper) CreateRule(region string, req *tclb.CreateRuleRequest) err
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("CreateRule try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -499,6 +515,7 @@ func (sw *SdkWrapper) DeleteRule(region string, req *tclb.DeleteRuleRequest) err
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DeleteRule try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -549,6 +566,7 @@ func (sw *SdkWrapper) ModifyRule(region string, req *tclb.ModifyRuleRequest) err
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("ModifyRule try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -598,6 +616,7 @@ func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequ
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("ModifyListener try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -631,8 +650,36 @@ func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequ
 	return nil
 }
 
-// DeregisterTargets wrap DeregisterTargets
+// DeregisterTargets deregister targets
+// the max number target for each operation is 20
+// when receving a big request, just split it to multiple small request
 func (sw *SdkWrapper) DeregisterTargets(region string, req *tclb.DeregisterTargetsRequest) error {
+	rounds := len(req.Targets) / MaxTargetForRegisterEachTime
+	remains := len(req.Targets) % MaxTargetForRegisterEachTime
+
+	index := 0
+	for ; index <= rounds; index++ {
+		start := index * MaxTargetForRegisterEachTime
+		end := (index + 1) * MaxTargetForRegisterEachTime
+		if index == rounds {
+			end = start + remains
+		}
+		blog.V(3).Infof("DeregisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
+		newReq := tclb.NewDeregisterTargetsRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.ListenerId = req.ListenerId
+		newReq.Domain = req.Domain
+		newReq.Url = req.Url
+		newReq.Targets = req.Targets[start:end]
+		if err := sw.doDeregisterTargets(region, newReq); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// doDeregisterTargets wrap DeregisterTargets
+func (sw *SdkWrapper) doDeregisterTargets(region string, req *tclb.DeregisterTargetsRequest) error {
 	blog.V(3).Infof("DeregisterTargets request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.DeregisterTargetsResponse
@@ -648,6 +695,7 @@ func (sw *SdkWrapper) DeregisterTargets(region string, req *tclb.DeregisterTarge
 	for ; counter <= maxRetry; counter++ {
 		blog.V(3).Infof("DeregisterTargets try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
+		// get client by region
 		clbCli, err := sw.getRegionClient(region)
 		if err != nil {
 			result = metrics.LibCallStatusErr
@@ -681,8 +729,36 @@ func (sw *SdkWrapper) DeregisterTargets(region string, req *tclb.DeregisterTarge
 	return nil
 }
 
-// RegisterTargets wrap RegisterTargets
+// RegisterTargets register targets
+// the max number target for each operation is 20
+// when receving a big request, just split it to multiple small request
 func (sw *SdkWrapper) RegisterTargets(region string, req *tclb.RegisterTargetsRequest) error {
+	rounds := len(req.Targets) / MaxTargetForRegisterEachTime
+	remains := len(req.Targets) % MaxTargetForRegisterEachTime
+
+	index := 0
+	for ; index <= rounds; index++ {
+		start := index * MaxTargetForRegisterEachTime
+		end := (index + 1) * MaxTargetForRegisterEachTime
+		if index == rounds {
+			end = start + remains
+		}
+		blog.V(3).Infof("RegisterTargets (%d,%d)/%d", start, end-1, len(req.Targets))
+		newReq := tclb.NewRegisterTargetsRequest()
+		newReq.LoadBalancerId = req.LoadBalancerId
+		newReq.ListenerId = req.ListenerId
+		newReq.Domain = req.Domain
+		newReq.Url = req.Url
+		newReq.Targets = req.Targets[start:end]
+		if err := sw.doRegisterTargets(region, newReq); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// doRegisterTargets wrap RegisterTargets
+func (sw *SdkWrapper) doRegisterTargets(region string, req *tclb.RegisterTargetsRequest) error {
 	blog.V(3).Infof("RegisterTargets request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.RegisterTargetsResponse
