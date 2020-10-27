@@ -148,7 +148,7 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 	for index, pod := range podList.Items {
 		podIndex, err := GetPodIndex(pod.GetName())
 		if err != nil {
-			blog.Errorf("get pod %s index failed, err %s", pod.GetName())
+			blog.Errorf("get pod %s index failed, err %s", pod.GetName(), err.Error())
 			return nil, fmt.Errorf("get pod %s index failed, err %s", pod.GetName(), err.Error())
 		}
 		retPods[podIndex] = &podList.Items[index]

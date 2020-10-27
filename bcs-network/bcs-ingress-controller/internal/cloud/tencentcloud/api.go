@@ -118,7 +118,7 @@ func (a *APIWrapper) waitTaskDone(region string, taskID int) error {
 			time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 			continue
 		} else if resp.Data.Status == TaskStatusFailed {
-			blog.Errorf("task %s is failed", taskID)
+			blog.Errorf("task %d is failed", taskID)
 			return fmt.Errorf("task %d is failed", taskID)
 		} else if resp.Data.Status == TaskStatusSucceed {
 			blog.Infof("task %d is done", taskID)
@@ -231,7 +231,6 @@ func (a *APIWrapper) Create4LayerListener(region string, req *qcloud.CreateForwa
 // DescribeForwardLBListeners describe forward lb listeners
 func (a *APIWrapper) DescribeForwardLBListeners(region string, req *qcloud.DescribeForwardLBListenersInput) (
 	*qcloud.DescribeForwardLBListenersOutput, error) {
-
 	req.Action = "DescribeForwardLBListeners"
 	req.Nonce = uint(rand.Uint32())
 	req.Region = region
