@@ -101,7 +101,7 @@ type AuthOption struct {
 	RemoteCheck   bool `json:"remote_check" value:"false" usage:"check auth in remote host or not" mapstructure:"remote_check"`
 	SkipNoneToken bool `json:"skip_none_token" value:"false" usage:"skip auth check when token no specified" mapstructure:"skip_none_token"`
 
-	Version string `json:"version" value:"3" usage:"bkiam version, " mapstructure:"version"`
+	Version string `json:"version" value:"3" usage:"bkiam version, 2 or 3." mapstructure:"version"`
 
 	ApiGwRsaFile string `json:"apigw_rsa_file" value:"" usage:"apigw rsa public key file" mapstructure:"apigw_rsa_file"`
 
