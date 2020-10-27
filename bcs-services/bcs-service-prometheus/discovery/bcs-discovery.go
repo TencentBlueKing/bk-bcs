@@ -35,7 +35,7 @@ type bcsMesosDiscovery struct {
 	promFilePrefix  string
 }
 
-// new bcs module service discovery
+// NewBcsDiscovery new bcs module service discovery
 func NewBcsDiscovery(zkAddr string, promFilePrefix string, module []string) (Discovery, error) {
 	disc := &bcsMesosDiscovery{
 		zkAddr:         zkAddr,
@@ -100,19 +100,19 @@ func (disc *bcsMesosDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 
 func (disc *bcsMesosDiscovery) handleEventFunc(module string) {
 	blog.Infof("discovery %s handle module %s event", disc.module, module)
-	disc.eventHandler(DiscoveryInfo{Module: module, Key: module})
+	disc.eventHandler(Info{Module: module, Key: module})
 }
 
 func (disc *bcsMesosDiscovery) syncTickerPromSdConfig() {
 	for _, module := range disc.module {
-		disc.eventHandler(DiscoveryInfo{Module: module, Key: module})
+		disc.eventHandler(Info{Module: module, Key: module})
 	}
 	ticker := time.NewTicker(time.Minute * 5)
 	select {
 	case <-ticker.C:
 		blog.V(3).Infof("ticker sync prometheus service discovery config")
 		for _, module := range disc.module {
-			disc.eventHandler(DiscoveryInfo{Module: module, Key: module})
+			disc.eventHandler(Info{Module: module, Key: module})
 		}
 	}
 }
