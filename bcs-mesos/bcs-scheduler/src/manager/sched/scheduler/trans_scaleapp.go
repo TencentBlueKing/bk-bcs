@@ -383,7 +383,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 
 	for _, taskGroup := range taskGroups {
 		if taskGroup.InstanceID >= opData.Instances {
-			app.Instances--
+			//app.Instances--
 			if err = s.DeleteTaskGroup(app, taskGroup, "scale down application"); err != nil {
 				blog.Error("transaction %s delete taskgroup(%s) failed: %s", trans.ID, taskGroup.ID, err.Error())
 			} else {
@@ -391,6 +391,7 @@ func (s *Scheduler) doScaleDownAppTrans(trans *Transaction, isInner bool) {
 			}
 		}
 	}
+	app.Instances = opData.Instances
 
 	if isInner == false {
 		app.LastStatus = app.Status

@@ -79,8 +79,8 @@ func (i *IPCleaner) Run(ctx context.Context) error {
 
 func (i *IPCleaner) searchAndClean() {
 	ipObjs, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CRD_NAME_LABELS_STATUS:   types.IP_STATUS_AVAILABLE,
-		kube.CRD_NAME_LABELS_IS_FIXED: strconv.FormatBool(false),
+		kube.CrdNameLabelsStatus:   types.IP_STATUS_AVAILABLE,
+		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
 	})
 	if err != nil {
 		blog.Warnf("list available non-fixed ip objects failed, err %s", err.Error())
@@ -100,8 +100,8 @@ func (i *IPCleaner) searchAndClean() {
 
 	// clean dirty data
 	ipObjsDeleting, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CRD_NAME_LABELS_STATUS:   types.IP_STATUS_DELETING,
-		kube.CRD_NAME_LABELS_IS_FIXED: strconv.FormatBool(false),
+		kube.CrdNameLabelsStatus:   types.IP_STATUS_DELETING,
+		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
 	})
 	if err != nil {
 		blog.Warnf("list deleting non-fixed ip objects failed, err %s", err.Error())

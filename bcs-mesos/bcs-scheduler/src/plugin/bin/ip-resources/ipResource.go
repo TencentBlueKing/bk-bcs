@@ -16,6 +16,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"time"
+
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
@@ -24,10 +29,6 @@ import (
 	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/fsnotify/fsnotify"
 	"golang.org/x/net/context"
-	"io/ioutil"
-	"os"
-	"strconv"
-	"time"
 )
 
 // plugin must implement
@@ -58,7 +59,7 @@ type config struct {
 }
 
 const (
-	defaultIpResouces = 1
+	defaultIPResouces = 1
 )
 
 var (
@@ -72,6 +73,7 @@ var (
 	cancel  context.CancelFunc
 )
 
+// Init init ip-resource plugin
 func Init(para *plugin.InitPluginParameter) error { //nolint
 	initPara = para
 
@@ -98,6 +100,7 @@ func initPlugin(p string) error {
 	return nil
 }
 
+// Uninit release ip-resource plugin
 func Uninit() error { //nolint
 	stop()
 	return nil
@@ -149,6 +152,7 @@ func watchConfig() {
 	blog.Infof("plugin ip-resources watch %s done", initPara.ConfPath)
 }
 
+// GetHostAttributes plugin interface implementation
 func GetHostAttributes(para *plugin.HostPluginParameter) (map[string]*plugin.HostAttributes, error) { //nolint
 	atrrs := make(map[string]*plugin.HostAttributes)
 
@@ -156,7 +160,7 @@ func GetHostAttributes(para *plugin.HostPluginParameter) (map[string]*plugin.Hos
 		return nil, fmt.Errorf("plugin ip-resources is not ready")
 	}
 
-	resp, err := getHostIpResources(para)
+	resp, err := getHostIPResources(para)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +179,7 @@ func GetHostAttributes(para *plugin.HostPluginParameter) (map[string]*plugin.Hos
 		var ok bool
 
 		if number, ok = resp.Resource[ip]; !ok || number < 0 {
-			number = defaultIpResouces
+			number = defaultIPResouces
 		}
 
 		atrri := &plugin.Attribute{
@@ -267,6 +271,7 @@ func discvNetservice() {
 	blog.Infof("plugin ipResources watch netservice under (%s: %s)", conf.BcsZk, discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-cxt.Done():
@@ -312,7 +317,7 @@ func discvNetservice() {
 	} // for
 }
 
-func getHostIpResources(para *plugin.HostPluginParameter) (*responseBody, error) {
+func getHostIPResources(para *plugin.HostPluginParameter) (*responseBody, error) {
 	req := requestPara{
 		Cluster: para.ClusterId,
 		Hosts:   para.Ips,

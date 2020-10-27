@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: bcs-ingress-controller
+    release: po
+spec:
+  type: ClusterIP
+  ports:
+    - port: 18081
+      targetPort: metric-port
+      protocol: TCP
+      name: metric
+  selector:
+    app: bcs-ingress-controller

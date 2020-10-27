@@ -29,7 +29,7 @@ func NewInspectCommand() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Inspect type, application(app)/process/taskgroup/service/configmap/secret/deployment(deploy)/endpoint/customresourcedefinition(crd)",
+				Usage: "Inspect type, application(app)/process/taskgroup/service/configmap/secret/deployment(deploy)/endpoint/customresourcedefinition(crd)/meshcluster",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -77,6 +77,8 @@ func inspect(c *utils.ClientContext) error {
 		return inspectEndpoint(c)
 	case "crd", "customresourcedefinition":
 		return inspectCustomResourceDefinition(c)
+	case "meshcluster":
+		return inspectMeshCluster(c)
 	default:
 		//unkown type, try Custom Resource
 		return inspectCustomResource(c)

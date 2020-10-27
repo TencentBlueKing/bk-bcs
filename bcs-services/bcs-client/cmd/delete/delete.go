@@ -23,11 +23,11 @@ import (
 func NewDeleteCommand() cli.Command {
 	return cli.Command{
 		Name:  "delete",
-		Usage: "delete app/process/taskgroup/configmap/service/secret/deployment",
+		Usage: "delete app/process/taskgroup/configmap/service/secret/deployment/crd/daemonset/meshcluster/logcollectiontask",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment/crd/daemonset",
+				Usage: "Delete type, app/taskgroup/configmap/service/secret/deployment/crd/daemonset/meshcluster/logcollectiontask",
 			},
 			cli.StringFlag{
 				Name:  "name, n",
@@ -78,6 +78,10 @@ func deleteF(c *utils.ClientContext) error {
 		return deleteCustomResourceDefinition(c)
 	case "daemonset":
 		return deleteDaemonset(c)
+	case "logcollectiontask":
+		return deleteLogCollectionTask(c)
+	case "meshcluster":
+		return deleteMeshCluster(c)
 	default:
 		//unkown type, try Custom Resource
 		return deleteCustomResource(c)

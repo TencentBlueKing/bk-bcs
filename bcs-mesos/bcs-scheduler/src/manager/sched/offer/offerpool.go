@@ -457,21 +457,21 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		//print offer info
 		p.printOffer(o)
 		//add agent deltaXXX 20180530
-		agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
+		/*agentSchedInfo, err := p.scheduler.FetchAgentSchedInfo(o.GetHostname())
 		if err != nil {
 			blog.Errorf("get agent(%s) err(%s), offer can not added", o.GetHostname(), err.Error())
 			continue
-		}
+		}*/
 		agentDeltaCPU := 0.0
 		agentDeltaMem := 0.0
 		agentDeltaDisk := 0.0
-		if agentSchedInfo != nil {
+		/*if agentSchedInfo != nil {
 			agentDeltaCPU = agentSchedInfo.DeltaCPU
 			agentDeltaMem = agentSchedInfo.DeltaMem
 			agentDeltaDisk = agentSchedInfo.DeltaDisk
 			blog.V(3).Infof("get agent(%s) delta(cpu: %f | mem: %f | disk: %f)",
 				o.GetHostname(), agentDeltaCPU, agentDeltaMem, agentDeltaDisk)
-		}
+		}*/
 		off := &innerOffer{
 			id:          p.autoIncrementId,
 			offerId:     o.GetId().GetValue(),
@@ -609,6 +609,7 @@ func (p *offerPool) setInnerOffersAttributes(offers []*mesos.Offer) {
 
 func (p *offerPool) checkOffers() {
 	tick := time.NewTicker(1 * time.Second)
+	defer tick.Stop()
 
 	for {
 		select {

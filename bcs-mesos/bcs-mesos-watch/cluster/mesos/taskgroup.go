@@ -130,6 +130,7 @@ func (task *TaskGroupWatch) pathWatch(cxt context.Context, path string) {
 
 	//watch children node event
 	tick := time.NewTicker(240 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -208,6 +209,7 @@ func (task *TaskGroupWatch) taskGroupNodeWatch(cxt context.Context, taskpath str
 
 	ID := path.Base(taskpath)
 	tick := time.NewTicker(240 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

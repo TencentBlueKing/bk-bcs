@@ -23,11 +23,11 @@ import (
 func NewListCommand() cli.Command {
 	return cli.Command{
 		Name:  "list",
-		Usage: "list brief information of application, taskgroup, agent, cluster, customresource and etc.",
+		Usage: "list brief information of application, taskgroup, agent, cluster, customresource, meshcluster and etc.",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type, t",
-				Usage: "List type, ns/application(app)/process/taskgroup/service/configmap/secret/deployment/endpoint/agent/customresourcedefintion(crd)",
+				Usage: "List type, ns/application(app)/process/taskgroup/service/configmap/secret/deployment/endpoint/agent/customresourcedefintion(crd)/meshcluster/logcollectiontask",
 			},
 			cli.StringFlag{
 				Name:  "clusterid",
@@ -83,6 +83,10 @@ func list(c *utils.ClientContext) error {
 		return listAgent(c)
 	case "crd", "customresourcedefinition":
 		return listCustomResourceDefinition(c)
+	case "logcollectiontask":
+		return listLogCollectionTask(c)
+	case "meshcluster":
+		return listMeshCluster(c)
 	default:
 		//unkown type, try custom resource
 		return listCustomResource(c)

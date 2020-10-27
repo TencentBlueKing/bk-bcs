@@ -46,7 +46,7 @@ var (
 	kubeConfig string
 	masterURL  string
 	//MinResyncPeriod period definition
-	MinResyncPeriod metav1.Duration
+	minResyncPeriod metav1.Duration
 )
 
 // leader-election config options
@@ -114,7 +114,7 @@ func main() {
 func init() {
 	flag.StringVar(&kubeConfig, "kubeConfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
-	flag.DurationVar(&MinResyncPeriod.Duration, "min-resync-period", MinResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
+	flag.DurationVar(&minResyncPeriod.Duration, "min-resync-period", minResyncPeriod.Duration, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
 	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
 	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&LockName, "leader-elect-name", "gamestatefulset", "The resourcelock name")
@@ -126,10 +126,10 @@ func init() {
 
 // resyncPeriod computes the time interval a shared informer waits before
 // resyncing with the api server.
-func resyncPeriod(MinResyncPeriod metav1.Duration) func() time.Duration {
+func resyncPeriod(minResyncPeriod metav1.Duration) func() time.Duration {
 	return func() time.Duration {
 		factor := rand.Float64() + 1
-		return time.Duration(float64(MinResyncPeriod.Nanoseconds()) * factor)
+		return time.Duration(float64(minResyncPeriod.Nanoseconds()) * factor)
 	}
 }
 
@@ -156,8 +156,8 @@ func run() {
 		klog.Fatalf("Error building gamestatefulset clientset: %s", err.Error())
 	}
 	fmt.Println("Operator builds tkex client success...")
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(MinResyncPeriod)())
-	gamestatefulsetInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(MinResyncPeriod)())
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(minResyncPeriod)())
+	gamestatefulsetInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(minResyncPeriod)())
 
 	stsplusController := gamestatefulset.NewGameStatefulSetController(
 		kubeInformerFactory.Core().V1().Pods(),

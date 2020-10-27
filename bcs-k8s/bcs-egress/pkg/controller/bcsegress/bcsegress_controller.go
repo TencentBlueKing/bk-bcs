@@ -259,6 +259,7 @@ func (r *ReconcileBCSEgress) Stop() {
 //! interrupt long connection that maintained by proxy without expectation
 func (r *ReconcileBCSEgress) synchronizationAllRules() error {
 	//all datas changed Egress were in update channel
+	klog.V(5).Infof("BCSEgress ready to sync all rules")
 	return nil
 }
 

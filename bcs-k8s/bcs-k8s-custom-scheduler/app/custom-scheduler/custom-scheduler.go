@@ -14,20 +14,20 @@
 package custom_scheduler
 
 import (
+	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/pkg/actions"
-
-	"fmt"
 )
 
 type CustomScheduler struct {
-	config   *config.IpschedulerConfig
+	config   *config.CustomSchedulerConfig
 	httpServ *httpserver.HttpServer
 }
 
 // NewCustomScheduler creates an CustomScheduler object
-func NewCustomScheduler(conf *config.IpschedulerConfig) *CustomScheduler {
+func NewCustomScheduler(conf *config.CustomSchedulerConfig) *CustomScheduler {
 	customSched := &CustomScheduler{
 		config:   conf,
 		httpServ: httpserver.NewHttpServer(conf.Port, conf.Address, conf.Sock),

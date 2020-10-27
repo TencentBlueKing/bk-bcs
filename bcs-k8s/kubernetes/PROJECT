@@ -5,6 +5,8 @@ resources:
 - group: cloud
   kind: NodeNetwork
   version: v1
+- group: monitor
+  kind: ServiceMonitor
 - group: cloud
   kind: CloudSubnet
   version: v1
@@ -13,5 +15,8 @@ resources:
   version: v1
 - group: networkextension
   kind: Ingress
+  version: v1
+- group: networkextension
+  kind: Listener
   version: v1
 version: "2"

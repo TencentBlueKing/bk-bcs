@@ -12,5 +12,12 @@
   "server_key_file": "${serverKeyFile}",
   "sched_regdiscv": "${mesosZkHost}",
   "kubeconfig": "${schedulerKubeConfig}",
-  "cluster": "${clusterId}"
+  "cluster": "${clusterId}",
+  "etcdRegistry": {
+    "etcd_feature": ${etcdFeature},
+    "etcd_address": "${etcdAddress}",
+    "etcd_ca": "${etcdCAFile}",
+    "etcd_cert": "${etcdCertFile}",
+    "etcd_key": "${etcdKeyFile}"
+  }
 }

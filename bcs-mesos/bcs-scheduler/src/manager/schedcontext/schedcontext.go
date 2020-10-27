@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
+// SchedContext context for scheduler
 type SchedContext struct {
 	Store store.Store
 

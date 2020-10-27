@@ -13,6 +13,10 @@
 
 package types
 
+import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+)
+
 const (
 	//ActionAdd add event
 	ActionAdd = "Add"
@@ -44,6 +48,7 @@ type CmdConfig struct {
 	ApplicationThreadNum   int
 	TaskgroupThreadNum     int
 	ExportserviceThreadNum int
+	DeploymentThreadNum    int
 
 	MetricPort uint
 
@@ -59,6 +64,8 @@ type CmdConfig struct {
 	// NetServiceZK is zookeeper address config for netservice discovery,
 	// reuse RegDiscvSvr by default.
 	NetServiceZK string
+
+	Etcd registry.CMDOptions
 }
 
 const (
@@ -68,4 +75,5 @@ const (
 	TaskgroupChannelPrefix = "TaskGroup_"
 	//ExportserviceChannelPrefix prefix for event post channel
 	ExportserviceChannelPrefix = "Exportservice_"
+	DeploymentChannelPrefix    = "Deployment_"
 )

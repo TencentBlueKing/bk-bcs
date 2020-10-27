@@ -25,7 +25,7 @@ import (
 
 //check agent whether exist
 func (store *managerStore) CheckAgentExist(agent *types.Agent) (string, bool) {
-	obj, _ := store.FetchAgent(agent.Key)
+	obj, _ := store.fetchAgentInDB(agent.Key)
 	if obj != nil {
 		return obj.ResourceVersion, true
 	}
@@ -75,14 +75,14 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 //fetch agent for agent InnerIP
 func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
 	//fetch agent in cache
-	if cacheMgr.isOK {
-		agent := getCacheAgent(Key)
-		if agent == nil {
-			return nil, schStore.ErrNoFound
-		}
-		return agent, nil
+	agent := getCacheAgent(Key)
+	if agent == nil {
+		return nil, schStore.ErrNoFound
 	}
+	return agent, nil
+}
 
+func (store *managerStore) fetchAgentInDB(Key string) (*types.Agent, error) {
 	client := store.BkbcsClient.Agents(DefaultNamespace)
 	//fetch agent in kube-apiserver
 	v2Agent, err := client.Get(Key, metav1.GetOptions{})
@@ -148,7 +148,7 @@ func (store *managerStore) DeleteAgent(key string) error {
 
 //check agentsetting exist
 func (store *managerStore) CheckAgentSettingExist(agent *commtypes.BcsClusterAgentSetting) (string, bool) {
-	obj, _ := store.FetchAgentSetting(agent.InnerIP)
+	obj, _ := store.fetchAgentSettingInDB(agent.InnerIP)
 	if obj != nil {
 		return obj.ResourceVersion, true
 	}
@@ -192,10 +192,11 @@ func (store *managerStore) SaveAgentSetting(agent *commtypes.BcsClusterAgentSett
 
 //fetch agentsetting for innerip
 func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
-	if cacheMgr.isOK {
-		return getCacheAgentsetting(InnerIP), nil
-	}
+	return getCacheAgentsetting(InnerIP), nil
+}
 
+//fetch agentsetting for innerip
+func (store *managerStore) fetchAgentSettingInDB(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)
 	v2Agent, err := client.Get(InnerIP, metav1.GetOptions{})
 	if err != nil {

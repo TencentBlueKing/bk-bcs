@@ -11,7 +11,7 @@
  *
  */
 
-package module_discovery
+package modulediscovery
 
 import (
 	"crypto/tls"
@@ -29,13 +29,14 @@ import (
 	"golang.org/x/net/context"
 )
 
-//DiscoveryV2  discover bcs module, examples: bcs-api、bcs-scheduler、bcs-mesos-driver ...
+//DiscoveryV2  discover bcs module, examples: bcs-api、bcs-scheduler、bcs-mesos-driver
+// base on bkbcs zookeeper discovery mechanism
 type DiscoveryV2 struct {
 	sync.RWMutex
 
 	//discover bcs endpoints client
 	rd     *RegisterDiscover.RegDiscover
-	cliTls *tls.Config
+	cliTLS *tls.Config
 
 	//context
 	rootCxt context.Context
@@ -75,7 +76,7 @@ func NewDiscoveryV2(zkserv string, modules []string) (ModuleDiscovery, error) {
 	return rd, nil
 }
 
-// module: types.BCS_MODULE_SCHEDULER...
+// GetModuleServers module: types.BCS_MODULE_SCHEDULER...
 // list all servers
 //if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 func (r *DiscoveryV2) GetModuleServers(moduleName string) ([]interface{}, error) {
@@ -95,7 +96,7 @@ func (r *DiscoveryV2) GetModuleServers(moduleName string) ([]interface{}, error)
 	return servs, nil
 }
 
-// get random one server
+// GetRandModuleServer get random one server
 func (r *DiscoveryV2) GetRandModuleServer(moduleName string) (interface{}, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -115,7 +116,7 @@ func (r *DiscoveryV2) GetRandModuleServer(moduleName string) (interface{}, error
 	return serv, nil
 }
 
-// register event handle function
+// RegisterEventFunc register event handle function
 func (r *DiscoveryV2) RegisterEventFunc(handleFunc EventHandleFunc) {
 	r.eventHandler = handleFunc
 }
@@ -228,8 +229,7 @@ func (r *DiscoveryV2) discoverModules(key string, init bool) {
 }
 
 //Stop the DiscoveryV2
-func (r *DiscoveryV2) stop() error {
+func (r *DiscoveryV2) Stop() {
 	r.cancel()
 	r.rd.Stop()
-	return nil
 }

@@ -25,7 +25,7 @@ import (
 )
 
 func (store *managerStore) CheckTaskGroupExist(taskGroup *types.TaskGroup) (string, bool) {
-	obj, err := store.FetchTaskGroup(taskGroup.ID)
+	obj, err := store.FetchDBTaskGroup(taskGroup.ID)
 	if err == nil {
 		return obj.ResourceVersion, true
 	}
@@ -117,12 +117,12 @@ func (store *managerStore) listTaskgroupsInDB() ([]*types.TaskGroup, error) {
 		for _, task := range obj.Taskgroup {
 			taskIds = append(taskIds, task.ID)
 		}
-		obj.Taskgroup = make([]*types.Task, len(taskIds))
+		//obj.Taskgroup = make([]*types.Task, len(taskIds))
 		for index, taskID := range taskIds {
 			task, err := store.FetchDBTask(taskID)
 			if err != nil {
-				blog.Error("fail to get task by ID(%s), err:%s", taskID, err.Error())
-				return nil, err
+				blog.Errorf("fail to get task by ID(%s), err:%s", taskID, err.Error())
+				continue
 			}
 
 			obj.Taskgroup[index] = task
@@ -167,15 +167,11 @@ func (store *managerStore) DeleteTaskGroup(taskGroupID string) error {
 
 //FetchTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
-	if cacheMgr.isOK {
-		cacheTaskgroup, _ := fetchCacheTaskGroup(taskGroupID)
-		if cacheTaskgroup == nil {
-			return nil, schStore.ErrNoFound
-		}
-		return cacheTaskgroup, nil
+	cacheTaskgroup, _ := fetchCacheTaskGroup(taskGroupID)
+	if cacheTaskgroup == nil {
+		return nil, schStore.ErrNoFound
 	}
-
-	return store.FetchDBTaskGroup(taskGroupID)
+	return cacheTaskgroup, nil
 }
 
 //FetchTaskGroup fetch a types.TaskGroup

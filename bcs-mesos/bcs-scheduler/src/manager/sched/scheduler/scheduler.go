@@ -56,7 +56,7 @@ import (
 const MAX_DATA_UPDATE_INTERVAL = 180
 
 // Interval for checking ZK data
-const DATA_CHECK_INTERVAL = 600
+const DATA_CHECK_INTERVAL = 1200
 
 // HeartBeat timeout between scheduler and mesos master
 const MESOS_HEARTBEAT_TIMEOUT = 120
@@ -358,6 +358,7 @@ func (s *Scheduler) discvMesos() {
 	blog.Info("watch mesos master under (%s: %s)", MesosDiscv, discvPath)
 
 	tick := time.NewTicker(120 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		//case <-rdCxt.Done():
@@ -585,6 +586,7 @@ func (s *Scheduler) regDiscove() {
 	blog.Info("scheduler DiscoverService(%s:%s) succ", s.config.RegDiscvSvr, discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -715,6 +717,7 @@ func (s *Scheduler) registerBCS() {
 	blog.Info("BCS register discove path(%s) succ", discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -1140,7 +1143,8 @@ func (s *Scheduler) produceEvent(object interface{}) error {
 		return fmt.Errorf("object type %s is invalid", btype.Name())
 	}
 
-	return s.eventManager.syncEvent(event)
+	go s.eventManager.syncEvent(event)
+	return nil
 }
 
 func (s *Scheduler) newTaskEvent(task *types.Task) *commtype.BcsStorageEventIf {

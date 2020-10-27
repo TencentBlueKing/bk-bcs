@@ -49,7 +49,7 @@ func NewStorage(config *Config) Storage {
 // StorageCli bcsf-storage client implementation
 type StorageCli struct {
 	Config *Config
-	Client restclient.RESTClient
+	Client *restclient.RESTClient
 }
 
 // getRequestPath get storage query URL prefix
@@ -65,7 +65,7 @@ func (c *StorageCli) getRequestPath() string {
 func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, error) {
 	var response BasicResponse
 	err := bkbcsSetting(c.Client.Get(), c.Config).
-		WithEndpoints([]string{c.Config.Host}).
+		WithEndpoints(c.Config.Hosts).
 		WithBasePath(c.getRequestPath()).
 		SubPathf("/query/mesos/dynamic/clusters/%s/taskgroup", cluster).
 		Do().
@@ -77,7 +77,7 @@ func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, 
 		return nil, fmt.Errorf(response.Message)
 	}
 	var taskgroups []*storage.Taskgroup
-	if err := json.Unmarshal(basic.Data, &taskgroups); err != nil {
+	if err := json.Unmarshal(response.Data, &taskgroups); err != nil {
 		return nil, fmt.Errorf("taskgroup slice decode err: %s", err.Error())
 	}
 	if len(taskgroups) == 0 {
@@ -95,7 +95,7 @@ func (c *StorageCli) QueryK8SPod(cluster string) ([]*storage.Pod, error) {
 	}
 	var response BasicResponse
 	err := bkbcsSetting(c.Client.Get(), c.Config).
-		WithEndpoints([]string{c.Config.Host}).
+		WithEndpoints(c.Config.Hosts).
 		WithBasePath(c.getRequestPath()).
 		SubPathf("/query/k8s/dynamic/clusters/%s/pod", cluster).
 		Do().
@@ -108,7 +108,7 @@ func (c *StorageCli) QueryK8SPod(cluster string) ([]*storage.Pod, error) {
 	}
 	//decode destination object
 	var pods []*storage.Pod
-	if err := json.Unmarshal(response.Data, &pod); err != nil {
+	if err := json.Unmarshal(response.Data, &pods); err != nil {
 		return nil, fmt.Errorf("pod slice decode err: %s", err.Error())
 	}
 	if len(pods) == 0 {
@@ -126,7 +126,7 @@ func (c *StorageCli) GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, e
 	}
 	var response BasicResponse
 	err := bkbcsSetting(c.Client.Get(), c.Config).
-		WithEndpoints([]string{c.Config.Host}).
+		WithEndpoints(c.Config.Hosts).
 		WithBasePath(c.getRequestPath()).
 		SubPathf("/query/mesos/dynamic/clusters/%s/ippoolstaticdetail", clusterID).
 		Do().

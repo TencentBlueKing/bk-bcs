@@ -228,6 +228,7 @@ func (zks *zkStorage) RegisterAndWatch(path string, data []byte) error {
 
 	go func() {
 		tick := time.NewTicker(20 * time.Second)
+		defer tick.Stop()
 		for {
 			select {
 			case <-tick.C:

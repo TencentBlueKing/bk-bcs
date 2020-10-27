@@ -14,18 +14,37 @@
 package mesos
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	"math/rand"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tunnel"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 )
 
+type WsTunnelDispatcher struct {
+	wsTunnelStore      map[string]map[string]*WsTunnel
+	wsTunnelMutateLock sync.RWMutex
+}
+
+type WsTunnel struct {
+	httpTransport *http.Transport
+	serverAddress string
+}
+
+func NewWsTunnelDispatcher() *WsTunnelDispatcher {
+	return &WsTunnelDispatcher{
+		wsTunnelStore: make(map[string]map[string]*WsTunnel),
+	}
+}
+
+var DefaultWsTunnelDispatcher = NewWsTunnelDispatcher()
+
 // LookupWsTransport will lookup websocket dialer in cache and generate transport
-func LookupWsTransport(clusterId string) (string, *http.Transport, bool) {
+func (w *WsTunnelDispatcher) LookupWsTransport(clusterId string) (string, *http.Transport, bool) {
 	credentials := sqlstore.GetWsCredentialsByClusterId(clusterId)
 	if len(credentials) == 0 {
 		return "", nil, false
@@ -40,14 +59,37 @@ func LookupWsTransport(clusterId string) (string, *http.Transport, bool) {
 		clientKey := credential.ServerKey
 		serverAddress := credential.ServerAddress
 		if tunnelServer.HasSession(clientKey) {
-			blog.Infof("found sesseion for mesos: %s", clientKey)
-			tp := &http.Transport{}
+			blog.Infof("found sesseion: %s", clientKey)
+			w.wsTunnelMutateLock.Lock()
+			wsTunnel := w.wsTunnelStore[clusterId][clientKey]
+			if wsTunnel != nil && !w.serverAddressChanged(wsTunnel.serverAddress, serverAddress) {
+				w.wsTunnelMutateLock.Unlock()
+				return serverAddress, wsTunnel.httpTransport, true
+			}
+			tp := &http.Transport{
+				MaxIdleConnsPerHost: 10,
+			}
 			cd := tunnelServer.Dialer(clientKey, 15*time.Second)
 			tp.Dial = cd
+			if wsTunnel != nil {
+				wsTunnel.httpTransport.CloseIdleConnections()
+			}
+			if w.wsTunnelStore[clusterId] == nil {
+				w.wsTunnelStore[clusterId] = make(map[string]*WsTunnel)
+			}
+			w.wsTunnelStore[clusterId][clientKey] = &WsTunnel{
+				httpTransport: tp,
+				serverAddress: serverAddress,
+			}
+			w.wsTunnelMutateLock.Unlock()
 			return serverAddress, tp, true
 		}
 	}
 	return "", nil, false
+}
+
+func (w *WsTunnelDispatcher) serverAddressChanged(oldAddress, newAddress string) bool {
+	return oldAddress != newAddress
 }
 
 // LookupWsDialer will lookup websocket dialer in cache

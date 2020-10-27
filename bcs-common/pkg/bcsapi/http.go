@@ -53,7 +53,7 @@ func newDelete(config *Config, address string) *gorequest.SuperAgent {
 }
 
 func bkbcsSetting(req *restclient.Request, config *Config) *restclient.Request {
-	header := new(http.Header)
+	header := make(http.Header)
 	if config.AuthToken != "" {
 		header.Add("Authorization", fmt.Sprintf("Bearer %s", config.AuthToken))
 	}

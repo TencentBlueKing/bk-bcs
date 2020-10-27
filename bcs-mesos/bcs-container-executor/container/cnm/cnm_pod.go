@@ -569,6 +569,7 @@ func (p *DockerPod) containersWatch(cxt context.Context) {
 	}
 
 	tick := time.NewTicker(defaultPodWatchInterval * time.Second)
+	defer tick.Stop()
 	//total := defaultErrTolerate * len(p.runningContainer)
 	for {
 		select {
@@ -622,7 +623,7 @@ func (p *DockerPod) containerCheck() error {
 					//health check starting when Status become RUNNING
 					logs.Infof("container [%s] is running, healthy status unkown, starting HealthyChecker, ip: %s\n", task.RuntimeConf.Name, p.cnmIPAddr)
 					if task.HealthCheck.Name() == healthcheck.CommandHealthcheck {
-						task.HealthCheck.SetHost(p.GetContainerID())
+						task.HealthCheck.SetHost(task.RuntimeConf.ID)
 					} else {
 						task.HealthCheck.SetHost(p.cnmIPAddr)
 					}

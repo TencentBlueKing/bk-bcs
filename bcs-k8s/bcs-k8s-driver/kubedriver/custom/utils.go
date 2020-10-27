@@ -20,7 +20,9 @@ import (
 )
 
 const (
-	RequestFailedCode  = 4001
+	// RequestFailedCode starting code for error response
+	RequestFailedCode = 4001
+	// RequestSuccessCode code for success
 	RequestSuccessCode = 0
 )
 

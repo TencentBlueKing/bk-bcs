@@ -1,0 +1,8 @@
+domain: bmsf.tencent.com
+multigroup: true
+repo: github.com/Tencent/bk-bcs
+resources:
+- group: clb
+  kind: ClbIngress
+  version: v1
+version: "2"

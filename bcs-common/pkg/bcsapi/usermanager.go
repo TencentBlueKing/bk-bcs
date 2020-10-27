@@ -56,7 +56,7 @@ type ClusterCredential struct {
 //UserManagerCli client for bcs-user-manager
 type UserManagerCli struct {
 	Config *Config
-	Client restclient.RESTClient
+	Client *restclient.RESTClient
 }
 
 func (cli *UserManagerCli) getRequestPath() string {
@@ -70,9 +70,9 @@ func (cli *UserManagerCli) getRequestPath() string {
 // ListAllClusters get all registed kubernetes api-server
 func (cli *UserManagerCli) ListAllClusters() ([]*ClusterCredential, error) {
 	var response BasicResponse
-	err := bkbcsSetting(c.Client.Get(), c.Config).
-		WithEndpoints([]string{c.Config.Host}).
-		WithBasePath(c.getRequestPath()).
+	err := bkbcsSetting(cli.Client.Get(), cli.Config).
+		WithEndpoints(cli.Config.Hosts).
+		WithBasePath(cli.getRequestPath()).
 		SubPathf("/clusters/credentials").
 		Do().
 		Into(&response)
