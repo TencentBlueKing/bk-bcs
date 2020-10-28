@@ -151,7 +151,7 @@ func (prom *PrometheusController) Start() error {
 	return nil
 }
 
-func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.DiscoveryInfo) {
+func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Info) {
 	blog.Infof("discovery %s service discovery config changed", dInfo.Module)
 	disc, ok := prom.discoverys[dInfo.Module]
 	if !ok {
@@ -192,7 +192,7 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Discovery
 	blog.Infof("discovery %s write config file %s success", dInfo.Key, disc.GetPromSdConfigFile(dInfo.Key))
 }
 
-func (prom *PrometheusController) deletePrometheusConfigFile(dInfo discovery.DiscoveryInfo) {
+func (prom *PrometheusController) deletePrometheusConfigFile(dInfo discovery.Info) {
 	disc, ok := prom.discoverys[dInfo.Module]
 	if !ok {
 		blog.Errorf("not found discovery %s", dInfo.Module)
