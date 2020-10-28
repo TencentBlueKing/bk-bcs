@@ -385,7 +385,7 @@ func (p *Puller) pulling() {
 		// stop pulling signal.
 		case <-p.stopCh:
 			logger.Warn("Puller[%s %s][%+v]-pulling| stop pulling now", p.businessName, p.appName, p.cfgsetid)
-			// just return, break here is shit.
+			// just return, break here is inappropriate.
 			return
 
 		// handle publishing notifications.

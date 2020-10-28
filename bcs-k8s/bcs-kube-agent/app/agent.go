@@ -60,9 +60,9 @@ func Run() error {
 		if err != nil {
 			return err
 		}
-	} else {
-		go reportToBke(kubeClient, cfg)
 	}
+
+	go reportToBke(kubeClient, cfg)
 
 	// TODO: Add prometheus monitor metrics
 	http.Handle("/metrics", promhttp.Handler())
