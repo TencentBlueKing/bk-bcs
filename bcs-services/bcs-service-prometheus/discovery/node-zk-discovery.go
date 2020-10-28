@@ -36,7 +36,7 @@ type nodeZkDiscovery struct {
 	promFilePrefix string
 }
 
-// new nodeZkDiscovery for discovery node cadvisor targets
+// NewNodeZkDiscovery new nodeZkDiscovery for discovery node cadvisor targets
 func NewNodeZkDiscovery(zkAddr []string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
 	disc := &nodeZkDiscovery{
 		zkAddr:         zkAddr,
@@ -68,10 +68,11 @@ func (disc *nodeZkDiscovery) Start() error {
 
 	go disc.syncTickerPromSdConfig()
 	disc.initSuccess = true
-	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
+	disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 	return nil
 }
 
+// GetPrometheusSdConfig get service discovery configuration from promethus dir
 func (disc *nodeZkDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
 	nodes, err := disc.nodeController.List(commDiscovery.EverythingSelector())
 	if err != nil {
@@ -112,6 +113,7 @@ func (disc *nodeZkDiscovery) GetPrometheusSdConfig(module string) ([]*types.Prom
 	return promConfigs, nil
 }
 
+// GetPromSdConfigFile get specified config file
 func (disc *nodeZkDiscovery) GetPromSdConfigFile(module string) string {
 	return path.Join(disc.promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName))
 }
@@ -125,7 +127,7 @@ func (disc *nodeZkDiscovery) OnAdd(obj interface{}) {
 		return
 	}
 
-	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
+	disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 }
 
 // if on update event, then don't need to update sd config
@@ -141,7 +143,7 @@ func (disc *nodeZkDiscovery) OnDelete(obj interface{}) {
 	}
 
 	// call event handler
-	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
+	disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 }
 
 func (disc *nodeZkDiscovery) syncTickerPromSdConfig() {
@@ -151,6 +153,6 @@ func (disc *nodeZkDiscovery) syncTickerPromSdConfig() {
 	select {
 	case <-ticker.C:
 		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
+		disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 	}
 }

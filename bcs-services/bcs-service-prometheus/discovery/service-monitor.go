@@ -16,10 +16,6 @@ package discovery
 import (
 	"encoding/json"
 	"fmt"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path"
 	"reflect"
 	"regexp"
@@ -35,6 +31,10 @@ import (
 	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
@@ -116,7 +116,7 @@ func (s *serviceEndpoint) getPrometheusConfigs() []*types.PrometheusSdConfig {
 	return promConfigs
 }
 
-// new serviceMonitor for discovery node cadvisor targets
+// NewServiceMonitor new serviceMonitor for discovery node cadvisor targets
 func NewServiceMonitor(kubeconfig string, promFilePrefix, module string) (Discovery, error) {
 	disc := &serviceMonitor{
 		kubeconfig:     kubeconfig,
@@ -128,6 +128,7 @@ func NewServiceMonitor(kubeconfig string, promFilePrefix, module string) (Discov
 	return disc, nil
 }
 
+// Start start up service monitor feature
 func (disc *serviceMonitor) Start() error {
 	cfg, err := clientcmd.BuildConfigFromFlags("", disc.kubeconfig)
 	if err != nil {
@@ -311,7 +312,7 @@ func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1
 	disc.svrMonitors[serviceM.GetUuid()] = o
 	disc.Unlock()
 	blog.Infof("handle Update event ServiceMonitor(%s) success", serviceM.GetUuid())
-	go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
+	go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
 }
 
 func (disc *serviceMonitor) OnServiceMonitorDelete(obj interface{}) {
@@ -326,7 +327,7 @@ func (disc *serviceMonitor) OnServiceMonitorDelete(obj interface{}) {
 	disc.Unlock()
 	blog.Infof("handle Delete event ServiceMonitor(%s) success", serviceM.GetUuid())
 	// call event handler
-	go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
+	go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
 }
 
 func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
@@ -348,7 +349,7 @@ func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
 		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) add selected BcsEndpoint(%s) success", serviceM.GetUuid(), endpoint.GetUuid())
 		// call event handler
-		go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
+		go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
 	}
 }
 
@@ -383,7 +384,7 @@ func (disc *serviceMonitor) OnEndpointsUpdate(old, cur interface{}) {
 		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) update selected BcsEndpoint(%s) success", serviceM.GetUuid(), curEndpoint.GetUuid())
 		// call event handler
-		go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
+		go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
 	}
 }
 
@@ -426,6 +427,6 @@ func (disc *serviceMonitor) OnEndpointsDelete(obj interface{}) {
 		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) delete selected BcsEndpoint(%s) success", serviceM.GetUuid(), endpoint.GetUuid())
 		// call event handler
-		go disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: serviceM.GetUuid()})
+		go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
 	}
 }
