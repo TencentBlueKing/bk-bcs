@@ -80,8 +80,8 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ingress := &networkextensionv1.Ingress{}
 	if err := ir.Client.Get(ir.Ctx, req.NamespacedName, ingress); err != nil {
 		if k8serrors.IsNotFound(err) {
-			if err := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace); err != nil {
-				blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, err.Error())
+			if inErr := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace); inErr != nil {
+				blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, inErr.Error())
 				return ctrl.Result{
 					Requeue:      true,
 					RequeueAfter: time.Duration(5 * time.Second),

@@ -294,7 +294,7 @@ func (c *Clb) updateListener(region string, ingressListener, cloudListener *netw
 
 // update http and https listener
 func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
-	// if listener attribute is defined and is differnt from remote cloud listener attribute, then do update
+	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
 	if ingressListener.Spec.ListenerAttribute != nil &&
 		(!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) ||
 			!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) {
@@ -333,7 +333,7 @@ func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *
 
 // update 4 layer listener
 func (c *Clb) update4LayerListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
-	// if listener attribute is defined and is differnt from remote cloud listener attribute, then do update
+	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
 	if ingressListener.Spec.ListenerAttribute != nil &&
 		!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) {
 		err := c.updateListenerAttrAndCerts(region, ingressListener)

@@ -652,7 +652,7 @@ func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequ
 
 // DeregisterTargets deregister targets
 // the max number target for each operation is 20
-// when receving a big request, just split it to multiple small request
+// when receiving a big request, just split it to multiple small request
 func (sw *SdkWrapper) DeregisterTargets(region string, req *tclb.DeregisterTargetsRequest) error {
 	rounds := len(req.Targets) / MaxTargetForRegisterEachTime
 	remains := len(req.Targets) % MaxTargetForRegisterEachTime
@@ -731,7 +731,7 @@ func (sw *SdkWrapper) doDeregisterTargets(region string, req *tclb.DeregisterTar
 
 // RegisterTargets register targets
 // the max number target for each operation is 20
-// when receving a big request, just split it to multiple small request
+// when receiving a big request, just split it to multiple small request
 func (sw *SdkWrapper) RegisterTargets(region string, req *tclb.RegisterTargetsRequest) error {
 	rounds := len(req.Targets) / MaxTargetForRegisterEachTime
 	remains := len(req.Targets) % MaxTargetForRegisterEachTime
