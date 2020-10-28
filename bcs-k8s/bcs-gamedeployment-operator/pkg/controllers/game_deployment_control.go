@@ -176,7 +176,7 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	var podsScaleErr error
 	var podsUpdateErr error
 
-	scaling, podsScaleErr = gdc.scaleControl.Manage(currentSet, updateSet, currentRevision.Name, updateRevision.Name, filteredPods)
+	scaling, podsScaleErr, delayDuration = gdc.scaleControl.Manage(currentSet, updateSet, currentRevision.Name, updateRevision.Name, filteredPods)
 	if podsScaleErr != nil {
 		newStatus.Conditions = append(newStatus.Conditions, tkexv1alpha1.GameDeploymentCondition{
 			Type:               tkexv1alpha1.GameDeploymentConditionFailedScale,
@@ -187,6 +187,9 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 		err = podsScaleErr
 	}
 	if scaling {
+		return delayDuration, podsScaleErr
+	}
+	if delayDuration > 0 {
 		return delayDuration, podsScaleErr
 	}
 

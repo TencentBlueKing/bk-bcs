@@ -15,7 +15,9 @@ package scale
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/tbuspp"
 	"sync"
+	"time"
 
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
@@ -44,7 +46,7 @@ type Interface interface {
 		currentCS, updateCS *tkexv1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		pods []*v1.Pod,
-	) (bool, error)
+	) (bool, error, time.Duration)
 }
 
 // New returns a scale control.
@@ -63,16 +65,17 @@ func (r *realControl) Manage(
 	currentGD, updateGD *tkexv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	pods []*v1.Pod,
-) (bool, error) {
+) (bool, error, time.Duration) {
+	var duration time.Duration
 	if updateGD.Spec.Replicas == nil {
-		return false, fmt.Errorf("spec.Replicas is nil")
+		return false, fmt.Errorf("spec.Replicas is nil"), duration
 	}
 
 	controllerKey := util.GetControllerKey(updateGD)
 	coreControl := gdcore.New(updateGD)
 	if !coreControl.IsReadyToScale() {
 		klog.Warningf("GameDeployment %s skip scaling for not ready to scale", controllerKey)
-		return false, nil
+		return false, nil, duration
 	}
 
 	if podsToDelete := getPodsToDelete(updateGD, pods); len(podsToDelete) > 0 {
@@ -99,8 +102,9 @@ func (r *realControl) Manage(
 		// generate available ids
 		availableIDs := genAvailableIDs(expectedCreations, pods)
 
-		return r.createPods(expectedCreations, expectedCurrentCreations,
+		ret, err :=  r.createPods(expectedCreations, expectedCurrentCreations,
 			currentGD, updateGD, currentRevision, updateRevision, availableIDs.List())
+		return ret, err, duration
 
 	} else if diff > 0 {
 		klog.V(3).Infof("GameDeployment %s begin to scale in %d pods including %d (current rev)",
@@ -111,7 +115,7 @@ func (r *realControl) Manage(
 		return r.deletePods(updateGD, podsToDelete)
 	}
 
-	return false, nil
+	return false, nil, duration
 }
 
 func (r *realControl) createPods(
@@ -173,18 +177,32 @@ func (r *realControl) createOnePod(deploy *tkexv1alpha1.GameDeployment, pod *v1.
 	return nil
 }
 
-func (r *realControl) deletePods(deploy *tkexv1alpha1.GameDeployment, podsToDelete []*v1.Pod) (bool, error) {
+func (r *realControl) deletePods(deploy *tkexv1alpha1.GameDeployment, podsToDelete []*v1.Pod) (bool, error, time.Duration) {
 	var deleted bool
+	var duration time.Duration
 	for _, pod := range podsToDelete {
+		labels := pod.GetLabels()
+		if labels["app.tbuspp.io/stateful"] == "enable"{
+			ret := tbuspp.CheckCanDelete(pod.Name, pod.Namespace)
+			if ret == false {
+				klog.V(2).Infof("check scale pod podName %s podNameSpace %s not meet the conditions, not delete now, push in queue and try 10s later.",
+					pod.Name, pod.Namespace)
+				duration = 10
+				continue
+			}else {
+				klog.V(2).Infof("check scale pod podName %s podNameSpace %s meet the conditions, delete now.",
+					pod.Name, pod.Namespace)
+			}
+		}
 		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 		if err := r.kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 			r.exp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 			r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedDelete", "failed to delete pod %s: %v", pod.Name, err)
-			return deleted, err
+			return deleted, err, duration
 		}
 		deleted = true
 		r.recorder.Event(deploy, v1.EventTypeNormal, "SuccessfulDelete", fmt.Sprintf("succeed to delete pod %s", pod.Name))
 	}
 
-	return deleted, nil
+	return deleted, nil, duration
 }

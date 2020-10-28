@@ -15,6 +15,7 @@ package update
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/tbuspp"
 	"sort"
 	"time"
 
@@ -169,6 +170,7 @@ func (c *realControl) updatePod(deploy *tkexv1alpha1.GameDeployment, coreControl
 	pod *v1.Pod,
 ) (time.Duration, error) {
 	var oldRevision *apps.ControllerRevision
+	var duration time.Duration
 	for _, r := range revisions {
 		if r.Name == util.GetPodRevision(pod) {
 			oldRevision = r
@@ -197,6 +199,19 @@ func (c *realControl) updatePod(deploy *tkexv1alpha1.GameDeployment, coreControl
 		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: v%", deploy.Namespace, deploy.Name, pod.Name, err)
 		return res.DelayDuration, err
 	case tkexv1alpha1.RollingGameDeploymentUpdateStrategyType:
+		labels := pod.GetLabels()
+		if labels["app.tbuspp.io/stateful"] == "enable"{
+			ret := tbuspp.CheckCanDelete(pod.Name, pod.Namespace)
+			if ret == false {
+				klog.V(2).Infof("check update pod podName %s podNameSpace %s not meet the delete conditions, not delete now, push in queue and try 10s later.",
+					pod.Name, pod.Namespace)
+				duration = 10
+				return duration, fmt.Errorf("")
+			}else {
+				klog.V(2).Infof("check update  pod podName %s podNameSpace %s meet the conditions, delete now.",
+					pod.Name, pod.Namespace)
+			}
+		}
 		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s", deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
 
 		c.scaleExp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
