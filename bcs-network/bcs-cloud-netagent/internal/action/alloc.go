@@ -269,10 +269,10 @@ func (a *AllocateAction) storeIPObjectToAPIServer() (pbcommon.ErrCode, string) {
 					UpdateTime: common.FormatTime(timeNow),
 				},
 			}
-			_, err := a.k8sIPClient.CloudIPs(a.ipFromNetService.Namespace).
+			_, inErr := a.k8sIPClient.CloudIPs(a.ipFromNetService.Namespace).
 				Create(a.ctx, newIPObj, metav1.CreateOptions{})
-			if err != nil {
-				return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED, err.Error()
+			if inErr != nil {
+				return pbcommon.ErrCode_ERROR_CLOUD_NETAGENT_K8S_API_SERVER_OPS_FAILED, inErr.Error()
 			}
 			return pbcommon.ErrCode_ERROR_OK, ""
 		}

@@ -197,9 +197,9 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	}
 
 	for _, lbObj := range lbObjs {
-		isConflict, err := g.checkConflicts(lbObj.LbID, ingress)
-		if err != nil {
-			return err
+		isConflict, inErr := g.checkConflicts(lbObj.LbID, ingress)
+		if inErr != nil {
+			return inErr
 		}
 		if isConflict {
 			blog.Errorf("ingress %+v is conflict with existed listeners", ingress)
@@ -211,19 +211,19 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	var generatedSegListeners []networkextensionv1.Listener
 	for _, rule := range ingress.Spec.Rules {
 		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &rule)
-		listeners, err := ruleConverter.DoConvert()
-		if err != nil {
-			blog.Errorf("convert rule %+v failed, err %s", rule, err.Error())
-			return fmt.Errorf("convert rule %+v failed, err %s", rule, err.Error())
+		listeners, inErr := ruleConverter.DoConvert()
+		if inErr != nil {
+			blog.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
+			return fmt.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
 		}
 		generatedListeners = append(generatedListeners, listeners...)
 	}
 	for _, mapping := range ingress.Spec.PortMappings {
 		mappingConverter := NewMappingConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping)
-		listeners, err := mappingConverter.DoConvert()
-		if err != nil {
-			blog.Errorf("convert mapping %+v failed, err %s", mapping, err.Error())
-			return fmt.Errorf("convert mapping %+v failed, err %s", mapping, err.Error())
+		listeners, inErr := mappingConverter.DoConvert()
+		if inErr != nil {
+			blog.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())
+			return fmt.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())
 		}
 		// if ignore segment, disable segment feature;
 		// if segment length is not set or equals to 1, disable segment feature;
