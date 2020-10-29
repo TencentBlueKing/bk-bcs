@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/mock"
 )
 
+// TestEventHandler test event handler function
 func TestEventHandler(t *testing.T) {
 	listener1 := networkextensionv1.Listener{
 		TypeMeta: metav1.TypeMeta{

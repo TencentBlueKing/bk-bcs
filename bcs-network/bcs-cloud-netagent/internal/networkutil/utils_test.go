@@ -14,6 +14,7 @@ package networkutil
 
 import "testing"
 
+// TestCleanEniRtTable test clean eni route table content function
 func TestCleanEniRtTable(t *testing.T) {
 	tests := []struct {
 		before string

@@ -21,6 +21,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
+// convert clb health check info to crd fields
 func convertHealthCheck(hc *tclb.HealthCheck) *networkextensionv1.ListenerHealthCheck {
 	if hc == nil {
 		return nil
@@ -54,6 +55,7 @@ func convertHealthCheck(hc *tclb.HealthCheck) *networkextensionv1.ListenerHealth
 	return healthCheck
 }
 
+// convert clb listener attribute to crd fields
 func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressListenerAttribute {
 	if lis == nil {
 		return nil
@@ -71,6 +73,7 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	return attr
 }
 
+// convert clb certificates info to crd fields
 func convertCertificate(certs *tclb.CertificateOutput) *networkextensionv1.IngressListenerCertificate {
 	if certs == nil {
 		return nil
@@ -88,6 +91,7 @@ func convertCertificate(certs *tclb.CertificateOutput) *networkextensionv1.Ingre
 	return certificate
 }
 
+// convert clb backends info to crd fields
 func convertClbBackends(backends []*tclb.Backend) *networkextensionv1.ListenerTargetGroup {
 	tg := &networkextensionv1.ListenerTargetGroup{}
 	for _, backend := range backends {
@@ -103,6 +107,7 @@ func convertClbBackends(backends []*tclb.Backend) *networkextensionv1.ListenerTa
 	return tg
 }
 
+// convert heatlh check in crd to clb request field
 func transIngressHealtchCheck(hc *networkextensionv1.ListenerHealthCheck) *tclb.HealthCheck {
 	if hc == nil {
 		return nil
@@ -130,6 +135,7 @@ func transIngressHealtchCheck(hc *networkextensionv1.ListenerHealthCheck) *tclb.
 	return healthCheck
 }
 
+// convert certificates in crd to clb request field
 func transIngressCertificate(tc *networkextensionv1.IngressListenerCertificate) *tclb.CertificateInput {
 	if tc == nil {
 		return nil
