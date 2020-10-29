@@ -96,7 +96,7 @@ func (ef *EndpointsFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingI
 	ef.enqueueEndpointsRelatedIngress(eps, q)
 }
 
-// Generic impliment EventFilter
+// Generic implement EventFilter
 func (ef *EndpointsFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
 	metrics.IncreaseEventCounter(ef.filterName, metrics.EventTypeUnknown)
 

@@ -22,6 +22,8 @@ import (
 const (
 	// LibCallStatusErr error shows during lib call
 	LibCallStatusErr = "err"
+	// LibCallStatusTimeout timeout during lib call
+	LibCallStatusTimeout = "timeout"
 	// LibCallStatusOK lib call successfully
 	LibCallStatusOK = "ok"
 

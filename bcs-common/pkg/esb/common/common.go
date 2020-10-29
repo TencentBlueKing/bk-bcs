@@ -12,9 +12,9 @@
 
 package common
 
-// MergeMap merge addtion map into src map
-func MergeMap(src map[string]interface{}, addtion map[string]interface{}) {
-	for k, v := range addtion {
+// MergeMap merge additions map into src map
+func MergeMap(src map[string]interface{}, additions map[string]interface{}) {
+	for k, v := range additions {
 		src[k] = v
 	}
 }

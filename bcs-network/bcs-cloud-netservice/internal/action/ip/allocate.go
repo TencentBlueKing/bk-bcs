@@ -288,7 +288,7 @@ func (a *AllocateAction) Do() error {
 		}
 		return nil
 	}
-	// if available previes applied ip found, than update the ip object, and return to user
+	// if available previous applied ip found, than update the ip object, and return to user
 	if errCode, errMsg := a.updateIPObjectToStore(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)
 	}
