@@ -183,14 +183,15 @@ func (r *realControl) deletePods(deploy *tkexv1alpha1.GameDeployment, podsToDele
 	for _, pod := range podsToDelete {
 		labels := pod.GetLabels()
 		if labels["app.tbuspp.io/stateful"] == "enable"{
+			_ = tbuspp.PreDelete(pod.Name, pod.Namespace)
 			ret := tbuspp.CheckCanDelete(pod.Name, pod.Namespace)
 			if ret == false {
-				klog.V(2).Infof("check scale pod podName %s podNameSpace %s not meet the conditions, not delete now, push in queue and try 10s later.",
+				klog.V(2).Infof("check scale pod podName %s ,podNameSpace %s not meet the conditions, not delete now, push in queue and try 10s later.",
 					pod.Name, pod.Namespace)
-				duration = 10
+				duration =  time.Second * time.Duration(tbuspp.DeleteFailedRetrySeconds)
 				continue
 			}else {
-				klog.V(2).Infof("check scale pod podName %s podNameSpace %s meet the conditions, delete now.",
+				klog.V(2).Infof("check scale pod podName %s ,podNameSpace %s meet the conditions, delete now.",
 					pod.Name, pod.Namespace)
 			}
 		}

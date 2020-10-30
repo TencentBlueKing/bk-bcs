@@ -1,8 +1,8 @@
-FROM centos:7
+FROM bk.artifactory.oa.com:8080/paas/public/tbuspp/tlinux2.2-for-tbuspp:latest
 
 #for command envsubst
 RUN yum install -y gettext
-
+RUN ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-gamedeployment-operator/
 
