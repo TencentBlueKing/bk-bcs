@@ -92,7 +92,7 @@ func (s *serviceEndpoint) getPrometheusConfigs() []*types.PrometheusSdConfig {
 		//append namespace
 		conf.Labels["namespace"] = bcsEndpoint.Namespace
 		conf.Labels["job"] = fmt.Sprintf("%s/%s/0", bcsEndpoint.Namespace, s.serviceM.Name)
-		conf.Labels["name"] = s.serviceM.Name
+		//conf.Labels["name"] = s.serviceM.Name
 		for _, endpoint := range bcsEndpoint.Spec.Endpoints {
 			for _, cPort := range endpoint.Ports {
 				_, ok := s.cPorts[cPort.Name]
