@@ -15,7 +15,6 @@ package v1http
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -127,7 +126,7 @@ func ListCredentials(request *restful.Request, response *restful.Response) {
 		}
 	}
 
-	oldCredentials := sqlstore.ListOldCredentials()
+	/*oldCredentials := sqlstore.ListOldCredentials()
 	for _, v := range oldCredentials {
 		oldClusterId := v.ClusterId
 		array := strings.Split(oldClusterId, "-")
@@ -139,7 +138,7 @@ func ListCredentials(request *restful.Request, response *restful.Response) {
 			UserToken:       v.UserToken,
 			ClusterDomain:   v.ClusterDomain,
 		}
-	}
+	}*/
 	data := utils.CreateResponeData(nil, "success", credentials)
 	response.Write([]byte(data))
 
