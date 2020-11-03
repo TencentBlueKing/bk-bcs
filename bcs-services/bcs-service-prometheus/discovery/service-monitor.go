@@ -56,8 +56,7 @@ type serviceMonitor struct {
 	serviceMonitorInformer cache.SharedIndexInformer
 	//apiextensions clientset
 	extensionClientset *apiextensionsclient.Clientset
-	//initSuccess    bool
-
+	//local cache for combination of servicemonitor & bcsendpoint
 	svrMonitors map[string]*serviceEndpoint
 }
 
@@ -76,7 +75,7 @@ func (s *serviceEndpoint) getPrometheusConfigs() []*types.PrometheusSdConfig {
 			Labels:  make(map[string]string),
 		}
 		for k, v := range bcsEndpoint.Labels {
-			r, _ := regexp.Compile("[a-zA-Z_][a-zA-Z0-9_]*")
+			r, _ := regexp.Compile("([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]")
 			rk := r.FindAllString(k, 1)
 			if len(rk) != 1 || rk[0] != k {
 				blog.Infof("BcsEndpoint(%s) Label(%s:%s) is invalid", bcsEndpoint.GetUuid(), k, v)
@@ -164,11 +163,7 @@ func (disc *serviceMonitor) Start() error {
 	// Wait for all caches to sync.
 	internalFactory.WaitForCacheSync(stopCh)
 	blog.Infof("build monitorClientset for config %s success", disc.kubeconfig)
-	/*err = disc.initServiceMonitor()
-	if err!=nil {
-		return err
-	}*/
-	//disc.initSuccess = true
+
 	//add k8s resources event handler functions
 	disc.serviceMonitorInformer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
@@ -278,6 +273,8 @@ func (disc *serviceMonitor) OnServiceMonitorUpdate(old, cur interface{}) {
 	disc.handlerServiceMonitorChanged(serviceM)
 }
 
+// handlerServiceMonitorChanged recreate relationship between ServiceMonitor & BcsEndpoint
+// no matter AddEvent or UpdateEvent
 func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1.ServiceMonitor) {
 	if !disc.validateServiceMonitor(serviceM) {
 		return
@@ -302,7 +299,7 @@ func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1
 	}
 	for _, v := range endpoints {
 		if !serviceM.Match(v.Labels) {
-			blog.Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), v.GetUuid())
+			blog.V(5).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), v.GetUuid())
 			continue
 		}
 		o.endpoints[v.GetUuid()] = v
@@ -311,7 +308,7 @@ func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1
 	disc.Lock()
 	disc.svrMonitors[serviceM.GetUuid()] = o
 	disc.Unlock()
-	blog.Infof("handle Update event ServiceMonitor(%s) success", serviceM.GetUuid())
+	blog.Infof("handle recreate ServiceMonitor(%s) success", serviceM.GetUuid())
 	go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
 }
 
@@ -338,15 +335,15 @@ func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
 	}
 	by, _ := json.Marshal(endpoint)
 	blog.Infof("recieve BcsEndpoint(%s) Data(%s) Add event", endpoint.GetUuid(), string(by))
+	disc.Lock()
+	defer disc.Unlock()
 	for _, sm := range disc.svrMonitors {
 		serviceM := sm.serviceM
-		if !serviceM.Match(endpoint.Labels) {
-			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
+		if serviceM.Namespace != endpoint.Namespace || !serviceM.Match(endpoint.Labels) {
+			blog.V(5).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
 			continue
 		}
-		disc.Lock()
 		sm.endpoints[endpoint.GetUuid()] = endpoint
-		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) add selected BcsEndpoint(%s) success", serviceM.GetUuid(), endpoint.GetUuid())
 		// call event handler
 		go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
@@ -367,21 +364,20 @@ func (disc *serviceMonitor) OnEndpointsUpdate(old, cur interface{}) {
 	}
 	changed := checkEndpointsChanged(oldEndpoint.Spec.BcsEndpoint, curEndpoint.Spec.BcsEndpoint)
 	if !changed {
-		blog.V(3).Infof("OnEndpointsUpdate BcsEndpoint(%s) don't change", oldEndpoint.GetUuid())
+		blog.Infof("OnEndpointsUpdate BcsEndpoint(%s) don't change", oldEndpoint.GetUuid())
 		return
 	}
 	by, _ := json.Marshal(curEndpoint)
 	blog.Infof("recieve BcsEndpoint(%s) Data(%s) Update event", curEndpoint.GetUuid(), string(by))
-
+	disc.Lock()
+	defer disc.Unlock()
 	for _, sm := range disc.svrMonitors {
 		serviceM := sm.serviceM
-		if !serviceM.Match(curEndpoint.Labels) {
-			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), curEndpoint.GetUuid())
+		if serviceM.Namespace != curEndpoint.Namespace || !serviceM.Match(curEndpoint.Labels) {
+			blog.V(5).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), curEndpoint.GetUuid())
 			continue
 		}
-		disc.Lock()
 		sm.endpoints[curEndpoint.GetUuid()] = curEndpoint
-		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) update selected BcsEndpoint(%s) success", serviceM.GetUuid(), curEndpoint.GetUuid())
 		// call event handler
 		go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
@@ -416,15 +412,15 @@ func (disc *serviceMonitor) OnEndpointsDelete(obj interface{}) {
 		return
 	}
 	blog.Infof("recieve BcsEndpoint(%s) Delete event", endpoint.GetUuid())
+	disc.Lock()
+	defer disc.Unlock()
 	for _, sm := range disc.svrMonitors {
 		serviceM := sm.serviceM
-		if !serviceM.Match(endpoint.Labels) {
-			blog.V(3).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
+		if serviceM.Namespace != endpoint.Namespace || !serviceM.Match(endpoint.Labels) {
+			blog.V(5).Infof("ServiceMonitor(%s) don't match BcsEndpoint(%s), and continue", serviceM.GetUuid(), endpoint.GetUuid())
 			continue
 		}
-		disc.Lock()
 		delete(sm.endpoints, endpoint.GetUuid())
-		disc.Unlock()
 		blog.Infof("ServiceMonitor(%s) delete selected BcsEndpoint(%s) success", serviceM.GetUuid(), endpoint.GetUuid())
 		// call event handler
 		go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
