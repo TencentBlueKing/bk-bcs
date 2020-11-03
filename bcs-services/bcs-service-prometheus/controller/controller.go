@@ -204,5 +204,5 @@ func (prom *PrometheusController) deletePrometheusConfigFile(dInfo discovery.Inf
 		blog.Errorf("remove config file(%s) error %s", cFile, err.Error())
 		return
 	}
-	blog.Errorf("remove config file(%s) success", cFile)
+	blog.Infof("remove config file(%s) success", cFile)
 }
