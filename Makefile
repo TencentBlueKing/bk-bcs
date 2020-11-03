@@ -34,9 +34,16 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api client storage executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector k8s-watch kube-agent k8s-driver netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent mesh-manager bcs-ingress-controller log-manager
-k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
-mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
+default:api client storage executor mesos-driver mesos-watch scheduler \
+	loadbalance metricservice metriccollector k8s-watch kube-agent k8s-driver \
+	netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter \
+	hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar \
+	csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy \
+	tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller \
+	bcs-cloud-netagent mesh-manager bcs-ingress-controller log-manager gamedeployment
+k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment
+mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
+	consoleproxy clb-controller
 
 allpack: svcpack k8spack mmpack mnpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -159,7 +166,7 @@ mesos-watch:pre
 kube-sche:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-k8s-custom-scheduler ${PACKAGEPATH}/bcs-k8s-master
-	cd ./bcs-k8s/bcs-k8s-custom-scheduler && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-custom-scheduler/bcs-k8s-custom-scheduler ./main.go
+	cd ./bcs-k8s/bcs-k8s-custom-scheduler && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-custom-scheduler/bcs-k8s-custom-scheduler ./main.go
 
 csi-cbs:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
@@ -194,6 +201,7 @@ hpacontroller:pre
 
 sd-prometheus:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-service-prometheus-service ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-mesos-master/bcs-service-prometheus ${PACKAGEPATH}/bcs-mesos-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-service-prometheus-service/bcs-service-prometheus-service ./bcs-services/bcs-service-prometheus/main.go
@@ -213,6 +221,11 @@ gamestatefulset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-gamestatefulset-operator ${PACKAGEPATH}/bcs-k8s-master
 	cd bcs-k8s/bcs-gamestatefulset-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
+
+gamedeployment:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-gamedeployment-operator ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-gamedeployment-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
 
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
