@@ -15,12 +15,13 @@ package controller
 
 import (
 	"encoding/json"
+	"os"
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/discovery"
-	"os"
-	"strings"
 )
 
 const (
@@ -158,6 +159,11 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Discovery
 
 	sdConfig, err := disc.GetPrometheusSdConfig(dInfo.Key)
 	if err != nil {
+		//if serviceMonitor Not Found, then delete the specify config file
+		if strings.Contains(err.Error(), "Not Found") {
+			prom.deletePrometheusConfigFile(dInfo)
+			return
+		}
 		blog.Errorf("discovery %s get prometheus service discovery config error %s", dInfo.Key, err.Error())
 		return
 	}
@@ -182,4 +188,19 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Discovery
 	}
 
 	blog.Infof("discovery %s write config file %s success", dInfo.Key, disc.GetPromSdConfigFile(dInfo.Key))
+}
+
+func (prom *PrometheusController) deletePrometheusConfigFile(dInfo discovery.Info) {
+	disc, ok := prom.discoverys[dInfo.Module]
+	if !ok {
+		blog.Errorf("not found discovery %s", dInfo.Module)
+		return
+	}
+	cFile := disc.GetPromSdConfigFile(dInfo.Key)
+	err := os.Remove(cFile)
+	if err != nil {
+		blog.Errorf("remove config file(%s) error %s", cFile, err.Error())
+		return
+	}
+	blog.Infof("remove config file(%s) success", cFile)
 }
