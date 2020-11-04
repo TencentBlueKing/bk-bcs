@@ -96,7 +96,7 @@ func (s *serviceEndpoint) getPrometheusConfigs() []*types.PrometheusSdConfig {
 			for _, cPort := range endpoint.Ports {
 				_, ok := s.cPorts[cPort.Name]
 				if !ok {
-					blog.V(3).Infof("BcsEndpoint(%s) endpoint(%s) port(%s) don't matched, and continue",
+					blog.V(5).Infof("BcsEndpoint(%s) endpoint(%s) port(%s) don't matched, and continue",
 						bcsEndpoint.GetUuid(), endpoint.ContainerIP, cPort.Name)
 					continue
 				}
@@ -107,9 +107,8 @@ func (s *serviceEndpoint) getPrometheusConfigs() []*types.PrometheusSdConfig {
 					conf.Targets = append(conf.Targets, fmt.Sprintf("%s:%d", endpoint.ContainerIP, cPort.ContainerPort))
 				}
 			}
-
-			promConfigs = append(promConfigs, conf)
 		}
+		promConfigs = append(promConfigs, conf)
 	}
 
 	return promConfigs
@@ -309,6 +308,7 @@ func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1
 	disc.svrMonitors[serviceM.GetUuid()] = o
 	disc.Unlock()
 	blog.Infof("handle recreate ServiceMonitor(%s) success", serviceM.GetUuid())
+
 	go disc.eventHandler(Info{Module: disc.module, Key: serviceM.GetUuid()})
 }
 
