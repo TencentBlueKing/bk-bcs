@@ -75,10 +75,10 @@ func (s *serviceEndpoint) getPrometheusConfigs() []*types.PrometheusSdConfig {
 			Labels:  make(map[string]string),
 		}
 		for k, v := range bcsEndpoint.Labels {
-			r, _ := regexp.Compile("([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]")
+			r, _ := regexp.Compile("[a-zA-Z_][a-zA-Z0-9_]*")
 			rk := r.FindAllString(k, 1)
 			if len(rk) != 1 || rk[0] != k {
-				blog.Infof("BcsEndpoint(%s) Label(%s:%s) is invalid", bcsEndpoint.GetUuid(), k, v)
+				blog.Warnf("BcsEndpoint(%s) Label(%s: %s) is invalid, skip", bcsEndpoint.GetUuid(), k, v)
 				continue
 			}
 			conf.Labels[k] = v
