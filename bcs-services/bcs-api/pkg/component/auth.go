@@ -39,6 +39,7 @@ func NewPaaSAuth() *PaaSAuth {
 		host:      bKIamAuth.BKIamAuthHost,
 		appCode:   bKIamAuth.BKIamAuthAppCode,
 		appSecret: bKIamAuth.BKIamAuthAppSecret,
+		version:   bKIamAuth.Version,
 	}
 }
 
