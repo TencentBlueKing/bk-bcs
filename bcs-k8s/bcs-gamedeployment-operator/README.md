@@ -10,8 +10,8 @@ openkruise 的部分实现，支持原地重启、镜像热更新、滚动更新
 * [done]增加原地重启 InplaceUpdate 更新策略，并支持原地重启过程当中的 gracePeriodSeconds
 * [done]增加镜像热更新 HotPatchUpdate 更新策略
 * [done]支持HPA
-* [todo]集成腾讯云CLB，实现有状态端口段动态转发
-* [todo]集成BCS无损更新特性：允许不重启容器更新容器内容
+* [done]集成腾讯云CLB，实现有状态端口段动态转发
+* [done]支持分步骤自动化灰度发布，在灰度过程中加入 hook 校验
 * [todo]扩展kubectl，支持kubectl gamestatefulset子命令
 
 ### 特性
@@ -110,6 +110,12 @@ pod 容器发送信号或命令，reload 或 重启 pod 容器中的进程，最
 该功能需要配合 bcs 定制的 kubelet 和 dockerd 版本才能使用。  
 HotPatchUpdate 同样支持 partition 配置，用于实现灰度发布策略。为了兼容旧版本，HotPatchUpdate 沿用 RollingUpdate 的 partition 配置字段：
 spec/updateStrategy/rollingUpdate/partition
+
+#### 分步骤自动化灰度发布
+GameDeployment 支持分步骤自动化灰度发布功能，允许用户在 GameDeployment 定义中配置多个灰度发布的步骤，这些步骤可以是 "灰度发布部分实例"、"永久暂停灰度发布"、
+"暂停指定的时间段后再继续灰度发布"、"外部 Hook 调用以决定是否暂停灰度发布"，通过配置这些不同的灰度发布步骤，可以达到自动化的分步骤灰度发布能力，实现
+灰度发布的智能控制。  
+详见：[分步骤的自动化灰度发布](doc/features/canary/auto-canary-update.md)
 
 ### 信息初始化
 

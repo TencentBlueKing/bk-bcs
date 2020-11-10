@@ -11,7 +11,7 @@
  *
  */
 
-package controllers
+package gamedeployment
 
 /*func TestGameDeploymentUpdaterUpdateStatus(t *testing.T) {
 	pod1 := test.NewPod()

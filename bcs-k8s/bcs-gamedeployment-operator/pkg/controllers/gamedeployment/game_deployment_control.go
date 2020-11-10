@@ -11,19 +11,20 @@
  *
  */
 
-package controllers
+package gamedeployment
 
 import (
 	"fmt"
-	"k8s.io/klog"
 	"time"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
+	gamedeploylister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
 	revisioncontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/revision"
 	scalecontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/scale"
 	updatecontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/update"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
+	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/constants"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -31,6 +32,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller/history"
 )
 
@@ -41,10 +43,10 @@ type GameDeploymentControlInterface interface {
 	// If an implementation returns a non-nil error, the invocation will be retried using a rate-limited strategy.
 	// Implementors should sink any errors that they do not wish to trigger a retry, and they may feel free to
 	// exit exceptionally at any point provided they wish the update to be re-run at a later point in time.
-	UpdateGameDeployment(deploy *tkexv1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *tkexv1alpha1.GameDeploymentStatus, error)
+	UpdateGameDeployment(deploy *v1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *v1alpha1.GameDeploymentStatus, error)
 	// ListRevisions returns a array of the ControllerRevisions that represent the revisions of set. If the returned
 	// error is nil, the returns slice of ControllerRevisions is valid.
-	ListRevisions(deploy *tkexv1alpha1.GameDeployment) ([]*apps.ControllerRevision, error)
+	ListRevisions(deploy *v1alpha1.GameDeployment) ([]*apps.ControllerRevision, error)
 }
 
 // NewDefaultGameDeploymentControl returns a new instance of the default implementation GameDeploymentControlInterface that
@@ -52,6 +54,8 @@ type GameDeploymentControlInterface interface {
 // to update the status of GameDeployments.
 func NewDefaultGameDeploymentControl(
 	client tkexclientset.Interface,
+	hookRunLister gamedeploylister.HookRunLister,
+	hookTemplateLister gamedeploylister.HookTemplateLister,
 	scaleControl scalecontrol.Interface,
 	updateControl updatecontrol.Interface,
 	statusUpdater GameDeploymentStatusUpdaterInterface,
@@ -66,23 +70,26 @@ func NewDefaultGameDeploymentControl(
 		controllerHistory,
 		revisionControl,
 		recorder,
+		hookRunLister,
+		hookTemplateLister,
 	}
 }
 
 type defaultGameDeploymentControl struct {
-	client            tkexclientset.Interface
-	scaleControl      scalecontrol.Interface
-	updateControl     updatecontrol.Interface
-	statusUpdater     GameDeploymentStatusUpdaterInterface
-	controllerHistory history.Interface
-	revisionControl   revisioncontrol.Interface
-	recorder          record.EventRecorder
+	client             tkexclientset.Interface
+	scaleControl       scalecontrol.Interface
+	updateControl      updatecontrol.Interface
+	statusUpdater      GameDeploymentStatusUpdaterInterface
+	controllerHistory  history.Interface
+	revisionControl    revisioncontrol.Interface
+	recorder           record.EventRecorder
+	hookRunLister      gamedeploylister.HookRunLister
+	hookTemplateLister gamedeploylister.HookTemplateLister
 }
 
-func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *tkexv1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *tkexv1alpha1.GameDeploymentStatus, error) {
-	var delayDuration time.Duration
+func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *v1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *v1alpha1.GameDeploymentStatus, error) {
 	if deploy.DeletionTimestamp != nil {
-		return delayDuration, nil, nil
+		return 0, nil, nil
 	}
 
 	key := fmt.Sprintf("%s/%s", deploy.Namespace, deploy.Name)
@@ -90,20 +97,20 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *tkexv1alph
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("error converting GameDeployment %v selector: %v", key, err))
 		// This is a non-transient error, so don't retry.
-		return delayDuration, nil, nil
+		return 0, nil, nil
 	}
 
 	// list all revisions and sort them
 	revisions, err := gdc.controllerHistory.ListControllerRevisions(deploy, selector)
 	if err != nil {
-		return delayDuration, nil, err
+		return 0, nil, err
 	}
 	history.SortControllerRevisions(revisions)
 
 	// get the current, and update revisions
 	currentRevision, updateRevision, collisionCount, err := gdc.getActiveRevisions(deploy, revisions, util.GetPodsRevisions(pods))
 	if err != nil {
-		return delayDuration, nil, err
+		return 0, nil, err
 	}
 
 	// Refresh update expectations
@@ -113,32 +120,45 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *tkexv1alph
 	// If update expectations have not satisfied yet, just skip this reconcile.
 	if updateSatisfied, updateDirtyPods := updateExpectations.SatisfiedExpectations(key, updateRevision.Name); !updateSatisfied {
 		klog.V(4).Infof("Not satisfied update for %v, updateDirtyPods=%v", key, updateDirtyPods)
-		return delayDuration, nil, nil
+		return 0, nil, nil
 	}
 
-	newStatus := tkexv1alpha1.GameDeploymentStatus{
-		ObservedGeneration: deploy.Generation,
-		UpdateRevision:     updateRevision.Name,
-		CollisionCount:     new(int32),
-		LabelSelector:      selector.String(),
+	hrList, err := gdc.getHookRunsForGameDeployment(deploy)
+	if err != nil {
+		return 0, nil, err
 	}
-	*newStatus.CollisionCount = collisionCount
 
-	if util.CheckRevisionChange(deploy, updateRevision.Name) {
-		err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, &newStatus, pods)
-		return 0, &newStatus, err
+	canaryCtx := newCanaryCtx(deploy, hrList, updateRevision, collisionCount, selector)
+
+	if canaryutil.CheckRevisionChange(deploy, updateRevision.Name) {
+		err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, canaryCtx, pods)
+		return 0, canaryCtx.newStatus, err
 	}
-	if util.CheckStepHashChange(deploy) {
-		err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, &newStatus, pods)
-		return 0, &newStatus, err
+	if canaryutil.CheckStepHashChange(deploy) {
+		err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, canaryCtx, pods)
+		return 0, canaryCtx.newStatus, err
+	}
+
+	err = gdc.reconcileHookRuns(canaryCtx)
+	if err != nil {
+		return 0, canaryCtx.newStatus, err
+	}
+	if canaryCtx.HasAddPause() {
+		err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, canaryCtx, pods)
+		return 0, canaryCtx.newStatus, err
 	}
 
 	// scale and update pods
-	delayDuration, updateErr := gdc.updateGameDeployment(deploy, &newStatus, currentRevision, updateRevision, revisions, pods)
+	delayDuration, updateErr := gdc.updateGameDeployment(deploy, canaryCtx.newStatus, currentRevision, updateRevision, revisions, pods)
+	if updateErr != nil {
+		return 0, canaryCtx.newStatus, err
+	}
+
+	unPauseDuration := gdc.reconcilePause(deploy)
 
 	// update new status
-	if err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, &newStatus, pods); err != nil {
-		return 0, nil, err
+	if err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, canaryCtx, pods); err != nil {
+		return 0, canaryCtx.newStatus, err
 	}
 
 	if err = gdc.truncatePodsToDelete(deploy, pods); err != nil {
@@ -149,14 +169,17 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *tkexv1alph
 		klog.Errorf("Failed to truncate history for %s: %v", key, err)
 	}
 
-	return delayDuration, &newStatus, updateErr
+	// get a min duration between delayDuration and unPauseDuration
+	requeueDuration := canaryutil.GetMinDuration(delayDuration, unPauseDuration)
+
+	return requeueDuration, canaryCtx.newStatus, nil
 }
 
 func (gdc *defaultGameDeploymentControl) updateGameDeployment(
-	deploy *tkexv1alpha1.GameDeployment, newStatus *tkexv1alpha1.GameDeploymentStatus,
+	deploy *v1alpha1.GameDeployment, newStatus *v1alpha1.GameDeploymentStatus,
 	currentRevision, updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
-	filteredPods []*v1.Pod,
-) (time.Duration, error) {
+	filteredPods []*v1.Pod) (time.Duration, error) {
+
 	var delayDuration time.Duration
 	if deploy.DeletionTimestamp != nil {
 		return delayDuration, nil
@@ -178,8 +201,8 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 
 	scaling, podsScaleErr = gdc.scaleControl.Manage(currentSet, updateSet, currentRevision.Name, updateRevision.Name, filteredPods)
 	if podsScaleErr != nil {
-		newStatus.Conditions = append(newStatus.Conditions, tkexv1alpha1.GameDeploymentCondition{
-			Type:               tkexv1alpha1.GameDeploymentConditionFailedScale,
+		newStatus.Conditions = append(newStatus.Conditions, v1alpha1.GameDeploymentCondition{
+			Type:               v1alpha1.GameDeploymentConditionFailedScale,
 			Status:             v1.ConditionTrue,
 			LastTransitionTime: metav1.Now(),
 			Message:            podsScaleErr.Error(),
@@ -192,8 +215,8 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 
 	delayDuration, podsUpdateErr = gdc.updateControl.Manage(updateSet, updateRevision, revisions, filteredPods)
 	if podsUpdateErr != nil {
-		newStatus.Conditions = append(newStatus.Conditions, tkexv1alpha1.GameDeploymentCondition{
-			Type:               tkexv1alpha1.GameDeploymentConditionFailedUpdate,
+		newStatus.Conditions = append(newStatus.Conditions, v1alpha1.GameDeploymentCondition{
+			Type:               v1alpha1.GameDeploymentConditionFailedUpdate,
 			Status:             v1.ConditionTrue,
 			LastTransitionTime: metav1.Now(),
 			Message:            podsUpdateErr.Error(),
@@ -206,7 +229,24 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	return delayDuration, err
 }
 
-func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *tkexv1alpha1.GameDeployment) ([]*apps.ControllerRevision, error) {
+func (gdc *defaultGameDeploymentControl) reconcilePause(deploy *v1alpha1.GameDeployment) time.Duration {
+	var timeRemaining time.Duration
+	currentStep, _ := canaryutil.GetCurrentCanaryStep(deploy)
+	if currentStep == nil || currentStep.Pause == nil || currentStep.Pause.Duration == nil {
+		return timeRemaining
+	}
+	pauseCondition := canaryutil.GetPauseCondition(deploy, v1alpha1.PauseReasonCanaryPauseStep)
+	if pauseCondition != nil {
+		now := metav1.Now()
+		expiredTime := pauseCondition.StartTime.Add(time.Duration(*currentStep.Pause.Duration) * time.Second)
+		if expiredTime.After(now.Time) {
+			timeRemaining = expiredTime.Sub(now.Time)
+		}
+	}
+	return timeRemaining
+}
+
+func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *v1alpha1.GameDeployment) ([]*apps.ControllerRevision, error) {
 	selector, err := metav1.LabelSelectorAsSelector(deploy.Spec.Selector)
 	if err != nil {
 		return nil, err
@@ -214,7 +254,7 @@ func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *tkexv1alpha1.Game
 	return gdc.controllerHistory.ListControllerRevisions(deploy, selector)
 }
 
-func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *tkexv1alpha1.GameDeployment, revisions []*apps.ControllerRevision, podsRevisions sets.String) (
+func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *v1alpha1.GameDeployment, revisions []*apps.ControllerRevision, podsRevisions sets.String) (
 	*apps.ControllerRevision, *apps.ControllerRevision, int32, error,
 ) {
 	var currentRevision, updateRevision *apps.ControllerRevision
@@ -272,7 +312,7 @@ func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *tkexv1alpha1
 }
 
 // truncatePodsToDelete truncates any non-live pod names in spec.scaleStrategy.podsToDelete.
-func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *tkexv1alpha1.GameDeployment, pods []*v1.Pod) error {
+func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *v1alpha1.GameDeployment, pods []*v1.Pod) error {
 	if len(deploy.Spec.ScaleStrategy.PodsToDelete) == 0 {
 		return nil
 	}
@@ -305,7 +345,7 @@ func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *tkexv1alph
 // only RevisionHistoryLimit revisions remain. If the returned error is nil the operation was successful. This method
 // expects that revisions is sorted when supplied.
 func (gdc *defaultGameDeploymentControl) truncateHistory(
-	deploy *tkexv1alpha1.GameDeployment,
+	deploy *v1alpha1.GameDeployment,
 	pods []*v1.Pod,
 	revisions []*apps.ControllerRevision,
 	current *apps.ControllerRevision,

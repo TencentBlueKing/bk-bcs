@@ -36,6 +36,9 @@ rules:
   resources:
   - gamedeployments
   - gamedeployments/status
+  - hooktemplates
+  - hookruns
+  - hookruns/status
   verbs:
   - create
   - get

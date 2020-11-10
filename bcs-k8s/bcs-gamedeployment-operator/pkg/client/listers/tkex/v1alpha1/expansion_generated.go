@@ -22,3 +22,19 @@ type GameDeploymentListerExpansion interface{}
 // GameDeploymentNamespaceListerExpansion allows custom methods to be added to
 // GameDeploymentNamespaceLister.
 type GameDeploymentNamespaceListerExpansion interface{}
+
+// HookRunListerExpansion allows custom methods to be added to
+// HookRunLister.
+type HookRunListerExpansion interface{}
+
+// HookRunNamespaceListerExpansion allows custom methods to be added to
+// HookRunNamespaceLister.
+type HookRunNamespaceListerExpansion interface{}
+
+// HookTemplateListerExpansion allows custom methods to be added to
+// HookTemplateLister.
+type HookTemplateListerExpansion interface{}
+
+// HookTemplateNamespaceListerExpansion allows custom methods to be added to
+// HookTemplateNamespaceLister.
+type HookTemplateNamespaceListerExpansion interface{}

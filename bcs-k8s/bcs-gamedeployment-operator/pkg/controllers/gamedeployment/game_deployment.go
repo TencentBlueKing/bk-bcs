@@ -11,14 +11,14 @@
  *
  */
 
-package controllers
+package gamedeployment
 
 import (
 	"fmt"
 	"reflect"
 	"time"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	tkexscheme "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
 	gdinformers "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/informers/externalversions/tkex/v1alpha1"
@@ -41,7 +41,6 @@ import (
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
@@ -78,6 +77,9 @@ type GameDeploymentController struct {
 	// revListerSynced returns true if the rev shared informer has synced at least once
 	revListerSynced cache.InformerSynced
 
+	hookRunListerSynced      cache.InformerSynced
+	hookTemplateListerSynced cache.InformerSynced
+
 	control GameDeploymentControlInterface
 
 	// Controllers that need to be synced
@@ -88,22 +90,22 @@ type GameDeploymentController struct {
 func NewGameDeploymentController(
 	podInformer coreinformers.PodInformer,
 	deployInformer gdinformers.GameDeploymentInformer,
+	hookRunInformer gdinformers.HookRunInformer,
+	hookTemplateInformer gdinformers.HookTemplateInformer,
 	revInformer appsinformers.ControllerRevisionInformer,
 	kubeClient clientset.Interface,
 	gdClient tkexclientset.Interface,
-) *GameDeploymentController {
+	recorder record.EventRecorder) *GameDeploymentController {
+
 	tkexscheme.AddToScheme(scheme.Scheme)
-	klog.V(3).Info("GameDeployment Controller is creating event broadcaster")
-	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(klog.Infof)
-	eventBroadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: constants.OperatorName})
 
 	gdc := &GameDeploymentController{
 		GroupVersionKind: util.ControllerKind,
 		tkexClient:       gdClient,
 		control: NewDefaultGameDeploymentControl(
 			gdClient,
+			hookRunInformer.Lister(),
+			hookTemplateInformer.Lister(),
 			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations),
 			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder),
@@ -111,9 +113,11 @@ func NewGameDeploymentController(
 			revisioncontrol.NewRevisionControl(),
 			recorder,
 		),
-		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.OperatorName),
-		revListerSynced: revInformer.Informer().HasSynced,
-		podControl:      controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
+		queue:                    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.GameDeploymentController),
+		revListerSynced:          revInformer.Informer().HasSynced,
+		podControl:               controller.RealPodControl{KubeClient: kubeClient, Recorder: recorder},
+		hookRunListerSynced:      hookRunInformer.Informer().HasSynced,
+		hookTemplateListerSynced: hookTemplateInformer.Informer().HasSynced,
 	}
 
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -131,8 +135,8 @@ func NewGameDeploymentController(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: gdc.enqueueGameDeployment,
 			UpdateFunc: func(old, cur interface{}) {
-				oldPS := old.(*tkexv1alpha1.GameDeployment)
-				curPS := cur.(*tkexv1alpha1.GameDeployment)
+				oldPS := old.(*v1alpha1.GameDeployment)
+				curPS := cur.(*v1alpha1.GameDeployment)
 				if oldPS.Status.Replicas != curPS.Status.Replicas {
 					klog.Infof("Observed updated replica count for GameDeployment: %v, %d->%d", curPS.Name, oldPS.Status.Replicas, curPS.Status.Replicas)
 				}
@@ -144,19 +148,72 @@ func NewGameDeploymentController(
 	gdc.gdLister = deployInformer.Lister()
 	gdc.gdListerSynced = deployInformer.Informer().HasSynced
 
+	hookRunInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			gdc.enqueueGameDeploymentForHook(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			newHookRun := newObj.(*v1alpha1.HookRun)
+			oldHookRun := oldObj.(*v1alpha1.HookRun)
+			if newHookRun.Status.Phase == oldHookRun.Status.Phase {
+				return
+			}
+			gdc.enqueueGameDeploymentForHook(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			gdc.enqueueGameDeploymentForHook(obj)
+		},
+	})
+
 	return gdc
 }
 
+// enqueueGameDeploymentForHook enqueue a GameDeployment caused by HookRun
+func (gdc *GameDeploymentController) enqueueGameDeploymentForHook(obj interface{}) {
+	var object metav1.Object
+	var ok bool
+	if object, ok = obj.(metav1.Object); !ok {
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			utilruntime.HandleError(fmt.Errorf("error decoding object, invalid type"))
+			return
+		}
+		object, ok = tombstone.Obj.(metav1.Object)
+		if !ok {
+			utilruntime.HandleError(fmt.Errorf("error decoding object tombstone, invalid type"))
+			return
+		}
+		klog.Infof("Recovered deleted object '%s' from tombstone", object.GetName())
+	}
+
+	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
+		refGV, err := schema.ParseGroupVersion(ownerRef.APIVersion)
+		if err != nil {
+			klog.Errorf("Could not parse OwnerReference %v APIVersion: %v", ownerRef, err)
+			return
+		}
+		// If this object is not owned by GameDeployment, we should not do anything more with it.
+		if ownerRef.Kind != util.ControllerKind.Kind || refGV.Group != util.ControllerKind.Group {
+			return
+		}
+		namespace := object.GetNamespace()
+		deploy := cache.ExplicitKey(namespace + "/" + ownerRef.Name)
+		klog.Infof("Enqueuing GameDeployment %s for HookRun %s/%s", deploy, namespace, object.GetName())
+		gdc.enqueueGameDeployment(deploy)
+	}
+}
+
 // Run runs the gamedeployment controller.
-func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) error {
+func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 	defer gdc.queue.ShutDown()
 
 	klog.Infof("Starting gamedeployment controller")
 	defer klog.Infof("Shutting down gamedeployment controller")
 
-	if !controller.WaitForCacheSync(constants.OperatorName, stopCh, gdc.podListerSynced, gdc.gdListerSynced, gdc.revListerSynced) {
-		return fmt.Errorf("failed to wait for caches to sync")
+	if !controller.WaitForCacheSync(constants.GameDeploymentController, stopCh, gdc.podListerSynced, gdc.gdListerSynced,
+		gdc.revListerSynced, gdc.hookRunListerSynced, gdc.hookTemplateListerSynced) {
+		klog.Fatalf("Error running gamedeployment controller: failed to wait for caches to sync")
 	}
 
 	for i := 0; i < workers; i++ {
@@ -166,8 +223,6 @@ func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) er
 	klog.Info("Started workers")
 	<-stopCh
 	klog.Info("Shutting down workers")
-
-	return nil
 }
 
 // addPod adds the gamedeployment for the pod to the sync queue
@@ -308,7 +363,7 @@ func (gdc *GameDeploymentController) deletePod(obj interface{}) {
 
 // getGameDeploymentForPod returns a list of GameDeployments that potentially match
 // a given pod.
-func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*tkexv1alpha1.GameDeployment {
+func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*v1alpha1.GameDeployment {
 	deploys, err := util.GetPodGameDeployments(pod, gdc.gdLister)
 	if err != nil {
 		return nil
@@ -328,7 +383,7 @@ func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*tkexv1
 // resolveControllerRef returns the controller referenced by a ControllerRef,
 // or nil if the ControllerRef could not be resolved to a matching controller
 // of the correct Kind.
-func (gdc *GameDeploymentController) resolveControllerRef(namespace string, controllerRef *metav1.OwnerReference) *tkexv1alpha1.GameDeployment {
+func (gdc *GameDeploymentController) resolveControllerRef(namespace string, controllerRef *metav1.OwnerReference) *v1alpha1.GameDeployment {
 	// Parse the Group out of the OwnerReference to compare it to what was parsed out of the requested OwnerType
 	refGV, err := schema.ParseGroupVersion(controllerRef.APIVersion)
 	if err != nil {
@@ -366,7 +421,7 @@ func (gdc *GameDeploymentController) enqueueGameDeployment(obj interface{}) {
 }
 
 // obj could be an GameDeployment, or a DeletionFinalStateUnknown marker item.
-func (gdc *GameDeploymentController) enqueueReplicaSetAfter(obj interface{}, after time.Duration) {
+func (gdc *GameDeploymentController) enqueueGameDeploymentAfter(obj interface{}, after time.Duration) {
 	key, err := controller.KeyFunc(obj)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %+v: %v", obj, err))
@@ -463,7 +518,7 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 		}
 	}
 	if delayDuration > 0 {
-		gdc.enqueueReplicaSetAfter(deploy, delayDuration)
+		gdc.enqueueGameDeploymentAfter(deploy, delayDuration)
 	}
 
 	return updateErr
@@ -474,7 +529,7 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 //
 // NOTE: Returned Pods are pointers to objects from the cache.
 //       If you need to modify one, you need to copy it first.
-func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *tkexv1alpha1.GameDeployment, selector labels.Selector) ([]*v1.Pod, error) {
+func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *v1alpha1.GameDeployment, selector labels.Selector) ([]*v1.Pod, error) {
 	// List all pods to include the pods that don't match the selector anymore but
 	// has a ControllerRef pointing to this GameStatefulSet.
 	pods, err := gdc.podLister.Pods(deploy.Namespace).List(labels.Everything())

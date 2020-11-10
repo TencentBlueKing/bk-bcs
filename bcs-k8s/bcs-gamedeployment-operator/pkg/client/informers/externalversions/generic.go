@@ -52,6 +52,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=tkex, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("gamedeployments"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Tkex().V1alpha1().GameDeployments().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("hookruns"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tkex().V1alpha1().HookRuns().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("hooktemplates"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Tkex().V1alpha1().HookTemplates().Informer()}, nil
 
 	}
 

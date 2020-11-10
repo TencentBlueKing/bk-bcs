@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"sync"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	gdcore "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/core"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
@@ -41,7 +41,7 @@ const (
 // Interface for managing replicas including create and delete pod/pvc.
 type Interface interface {
 	Manage(
-		currentCS, updateCS *tkexv1alpha1.GameDeployment,
+		currentCS, updateCS *v1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		pods []*v1.Pod,
 	) (bool, error)
@@ -60,7 +60,7 @@ type realControl struct {
 }
 
 func (r *realControl) Manage(
-	currentGD, updateGD *tkexv1alpha1.GameDeployment,
+	currentGD, updateGD *v1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	pods []*v1.Pod,
 ) (bool, error) {
@@ -116,7 +116,7 @@ func (r *realControl) Manage(
 
 func (r *realControl) createPods(
 	expectedCreations, expectedCurrentCreations int,
-	currentGD, updateGD *tkexv1alpha1.GameDeployment,
+	currentGD, updateGD *v1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	availableIDs []string,
 ) (bool, error) {
@@ -163,7 +163,7 @@ func (r *realControl) createPods(
 	return created, err
 }
 
-func (r *realControl) createOnePod(deploy *tkexv1alpha1.GameDeployment, pod *v1.Pod) error {
+func (r *realControl) createOnePod(deploy *v1alpha1.GameDeployment, pod *v1.Pod) error {
 	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(pod); err != nil {
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreate", "failed to create pod: %v, pod: %v", err, util.DumpJSON(pod))
 		return err
@@ -173,7 +173,7 @@ func (r *realControl) createOnePod(deploy *tkexv1alpha1.GameDeployment, pod *v1.
 	return nil
 }
 
-func (r *realControl) deletePods(deploy *tkexv1alpha1.GameDeployment, podsToDelete []*v1.Pod) (bool, error) {
+func (r *realControl) deletePods(deploy *v1alpha1.GameDeployment, podsToDelete []*v1.Pod) (bool, error) {
 	var deleted bool
 	for _, pod := range podsToDelete {
 		r.exp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
