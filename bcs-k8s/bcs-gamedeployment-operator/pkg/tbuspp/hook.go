@@ -70,10 +70,10 @@ func CheckCanDelete(podName string, podNameSpace string) bool {
 		if res.Code != 0 {
 			klog.Warningf("check scale success,but cannot delete now, code %d err %s, please try later.",res.Code, res.ErrMsg)
 			return false
-		} else {
-			fmt.Printf("check scale success, delete now.")
-			return true
 		}
+		fmt.Printf("check scale success, delete now.")
+		return true
+
 	}else {
 		fmt.Printf(" check scale failed, code %d != 200. ", resp.StatusCode)
 		return false
@@ -82,6 +82,7 @@ func CheckCanDelete(podName string, podNameSpace string) bool {
 }
 // 预退出接口
 func PreDelete(podName string, podNameSpace string) bool {
+	// Resp struct
 	type Resp struct {
 		Code        int    `json:"code"`
 		ErrMsg      string `json:"err_msg"`
@@ -122,10 +123,10 @@ func PreDelete(podName string, podNameSpace string) bool {
 		if res.Code != 0 {
 			klog.Warningf("send pre delete success,but code %d not equal 0 , err %s, please try later.",res.Code, res.ErrMsg)
 			return false
-		} else {
-			fmt.Printf("check scale success, delete now.")
-			return true
 		}
+		fmt.Printf("check scale success, delete now.")
+		return true
+
 	}else {
 		fmt.Printf(" check scale failed, code %d != 200. ", resp.StatusCode)
 		return false
