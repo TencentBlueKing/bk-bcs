@@ -74,11 +74,9 @@ func CheckCanDelete(podName string, podNameSpace string) bool {
 		fmt.Printf("check scale success, delete now.")
 		return true
 
-	}else {
-		fmt.Printf(" check scale failed, code %d != 200. ", resp.StatusCode)
-		return false
 	}
-
+	fmt.Printf(" check scale failed, code %d != 200. ", resp.StatusCode)
+	return false
 }
 // 预退出接口
 func PreDelete(podName string, podNameSpace string) bool {
@@ -127,9 +125,9 @@ func PreDelete(podName string, podNameSpace string) bool {
 		fmt.Printf("check scale success, delete now.")
 		return true
 
-	}else {
-		fmt.Printf(" check scale failed, code %d != 200. ", resp.StatusCode)
-		return false
 	}
+	fmt.Printf(" check scale failed, code %d != 200. ", resp.StatusCode)
+	return false
+
 
 }
