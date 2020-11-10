@@ -6,8 +6,8 @@ replicaCount: 1
 #wether create namespace bcs-system or not
 createNamespace: false
 image:
-  repository: bk.artifactory.oa.com:8443/paas/public/tbuspp/gamedeployment
-  pullPolicy: Always
+  repository: bcs-gamedeployment-operator
+  pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 nameOverride: ""

@@ -1,1 +1,0 @@
-helm push bcs-gamedeployment-operator/ tk
