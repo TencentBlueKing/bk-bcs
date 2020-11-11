@@ -111,11 +111,11 @@ pod 容器发送信号或命令，reload 或 重启 pod 容器中的进程，最
 HotPatchUpdate 同样支持 partition 配置，用于实现灰度发布策略。为了兼容旧版本，HotPatchUpdate 沿用 RollingUpdate 的 partition 配置字段：
 spec/updateStrategy/rollingUpdate/partition
 
-#### 分步骤自动化灰度发布
-GameDeployment 支持分步骤自动化灰度发布功能，允许用户在 GameDeployment 定义中配置多个灰度发布的步骤，这些步骤可以是 "灰度发布部分实例"、"永久暂停灰度发布"、
+#### 智能式分步骤灰度发布
+GameDeployment 支持智能化的分步骤灰度发布功能，允许用户在 GameDeployment 定义中配置多个灰度发布的步骤，这些步骤可以是 "灰度发布部分实例"、"永久暂停灰度发布"、
 "暂停指定的时间段后再继续灰度发布"、"外部 Hook 调用以决定是否暂停灰度发布"，通过配置这些不同的灰度发布步骤，可以达到自动化的分步骤灰度发布能力，实现
 灰度发布的智能控制。  
-详见：[分步骤的自动化灰度发布](doc/features/canary/auto-canary-update.md)
+详见：[智能式分步骤灰度发布](doc/features/canary/auto-canary-update.md)
 
 ### 信息初始化
 
