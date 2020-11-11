@@ -98,8 +98,6 @@ func (disc *nodeEtcdDiscovery) Start() error {
 }
 
 func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
-	disc.Lock()
-	disc.Unlock()
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	for nodeIP := range disc.nodes {
 		switch disc.module {
@@ -138,9 +136,6 @@ func (disc *nodeEtcdDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 
 // OnAdd add event handler
 func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
@@ -164,9 +159,6 @@ func (disc *nodeEtcdDiscovery) OnUpdate(old, cur interface{}) {
 
 // OnDelete delete event handler
 func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
@@ -183,13 +175,3 @@ func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
 	// call event handler
 	disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 }
-
-/*func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
-	ticker := time.NewTicker(time.Minute * 5)
-
-	select {
-	case <-ticker.C:
-		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
-	}
-}*/
