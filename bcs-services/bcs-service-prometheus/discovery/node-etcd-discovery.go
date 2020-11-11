@@ -172,13 +172,3 @@ func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
 	// call event handler
 	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
 }
-
-/*func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
-	ticker := time.NewTicker(time.Minute * 5)
-
-	select {
-	case <-ticker.C:
-		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
-	}
-}*/
