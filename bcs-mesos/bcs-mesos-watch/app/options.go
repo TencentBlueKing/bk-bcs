@@ -29,9 +29,10 @@ func DefaultConfig() *types.CmdConfig {
 		PassWord:               static.ClientCertPwd,
 		RegDiscvSvr:            "",
 		Address:                "127.0.0.1",
-		ApplicationThreadNum:   20,
+		ApplicationThreadNum:   100,
 		TaskgroupThreadNum:     100,
 		ExportserviceThreadNum: 100,
+		DeploymentThreadNum:    100,
 		ServerPassWord:         static.ServerCertPwd,
 		IsExternal:             false,
 	}

@@ -15,31 +15,29 @@ package manager
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/etcd"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
+	"os"
 	"strconv"
 	"strings"
-	//"sync"
-	"os"
-	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/apiserver"
-	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/ipam"
-	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/ns"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/etcd"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
+// Mananger main body of scheduler
 type Manager struct {
 	sched        *sched.Sched
 	schedContext *schedcontext.SchedContext
 	config       util.SchedConfig
 }
 
+// New create Manager according config item
 func New(config util.SchedConfig) (*Manager, error) {
 	manager := &Manager{
 		config: config,
@@ -116,10 +114,12 @@ func New(config util.SchedConfig) (*Manager, error) {
 	return manager, nil
 }
 
+// Stop stop manager
 func (manager *Manager) Stop() error {
 	return nil
 }
 
+// Start entry point of bcs-scheduler
 func (manager *Manager) Start() error {
 
 	err := manager.sched.Start()

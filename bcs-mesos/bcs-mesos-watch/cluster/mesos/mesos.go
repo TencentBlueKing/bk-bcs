@@ -66,6 +66,7 @@ var (
 	TaskgroupThreadNum int
 	//ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
+	DeploymentThreadNum    int
 )
 
 //NewMesosCluster create mesos cluster
@@ -76,6 +77,7 @@ func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage, netservice *servi
 	ApplicationThreadNum = cfg.ApplicationThreadNum
 	TaskgroupThreadNum = cfg.TaskgroupThreadNum
 	ExportserviceThreadNum = cfg.ExportserviceThreadNum
+	DeploymentThreadNum = cfg.DeploymentThreadNum
 
 	linkItems := strings.Split(cfg.ClusterInfo, "/")
 	mesos := &MesosCluster{
@@ -190,6 +192,10 @@ func (ms *MesosCluster) registerReportHandler() error {
 	ms.reportCallback["Secret"] = ms.reportSecret
 
 	ms.reportCallback["Deployment"] = ms.reportDeployment
+	for i := 0; i == 0 || i < DeploymentThreadNum; i++ {
+		deploymentChannel := types.DeploymentChannelPrefix + strconv.Itoa(i)
+		ms.reportCallback[deploymentChannel] = ms.reportDeployment
+	}
 
 	ms.reportCallback["Endpoint"] = ms.reportEndpoint
 
@@ -461,6 +467,7 @@ func (ms *MesosCluster) Run(cxt context.Context) {
 
 	//ready to start zk connection monitor
 	tick := time.NewTicker(5 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-cxt.Done():

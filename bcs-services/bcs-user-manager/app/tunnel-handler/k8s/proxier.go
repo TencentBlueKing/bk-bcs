@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -35,6 +36,9 @@ type TunnelProxyDispatcher struct {
 	ClusterVarName string
 	// SubPathVarName is the path parameter name of sub-path needs to be forwarded
 	SubPathVarName string
+
+	wsTunnelStore      map[string]*WsTunnel
+	wsTunnelMutateLock sync.RWMutex
 }
 
 type ClusterHandlerInstance struct {
@@ -47,6 +51,7 @@ func NewTunnelProxyDispatcher(clusterVarName, subPathVarName string) *TunnelProx
 	return &TunnelProxyDispatcher{
 		ClusterVarName: clusterVarName,
 		SubPathVarName: subPathVarName,
+		wsTunnelStore:  make(map[string]*WsTunnel),
 	}
 }
 
@@ -67,7 +72,7 @@ func (f *TunnelProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 
 	var proxyHandler *ClusterHandlerInstance
 	// 先从websocket dialer缓存中查找websocket链
-	websocketHandler, found, err := lookupWsHandler(clusterId)
+	websocketHandler, found, err := f.lookupWsHandler(clusterId)
 	if err != nil {
 		blog.Errorf("error when lookup websocket conn: %s", err.Error())
 		err := fmt.Errorf("error when lookup websocket conn: %s", err.Error())

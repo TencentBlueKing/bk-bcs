@@ -93,7 +93,11 @@ func (act *UpdateAction) verify() error {
 		return errors.New("invalid params, operator too long")
 	}
 
-	if len(act.req.Name) > database.BSCPNAMELENLIMIT {
+	length = len(act.req.Name)
+	if length == 0 {
+		return errors.New("invalid params, name missing")
+	}
+	if length > database.BSCPNAMELENLIMIT {
 		return errors.New("invalid params, name too long")
 	}
 
@@ -113,7 +117,7 @@ func (act *UpdateAction) update() (pbcommon.ErrCode, string) {
 		Operator:       act.req.Operator,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeoutLT"))
 	defer cancel()
 
 	logger.V(2).Infof("UpdateMultiRelease[%d]| request to businessserver UpdateMultiRelease, %+v", act.req.Seq, r)

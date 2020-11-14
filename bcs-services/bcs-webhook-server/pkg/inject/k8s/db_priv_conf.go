@@ -14,6 +14,7 @@
 package k8s
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -30,6 +31,15 @@ type DbPrivConfInject struct {
 	BcsDbPrivConfigLister listers.BcsDbPrivConfigLister
 	Injects               options.InjectOptions
 	DbPrivSecret          *corev1.Secret
+}
+
+// DBPrivEnv is db privilege info
+type DBPrivEnv struct {
+	AppName  string `json:"appName"`
+	TargetDb string `json:"targetDb"`
+	CallUser string `json:"callUser"`
+	DbName   string `json:"dbName"`
+	CallType string `json:"callType"`
 }
 
 // NewDbPrivConfInject create DbPrivConfInject object
@@ -53,8 +63,9 @@ func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOpera
 		return nil, err
 	}
 
-	var matched *v1.BcsDbPrivConfig
+	var matchedBdpcs []*v1.BcsDbPrivConfig
 	for _, d := range bcsDbPrivConfs {
+
 		labelSelector := &metav1.LabelSelector{
 			MatchLabels: d.Spec.PodSelector,
 		}
@@ -63,32 +74,56 @@ func (dbPrivConf *DbPrivConfInject) InjectContent(pod *corev1.Pod) ([]PatchOpera
 			return nil, fmt.Errorf("invalid label selector: %s", err.Error())
 		}
 		if selector.Matches(labels.Set(pod.Labels)) {
-			matched = d
-			break
+			matchedBdpcs = append(matchedBdpcs, d)
 		}
 	}
-	if matched != nil {
-		patch = append(patch, dbPrivConf.addInitContainer(pod.Spec.InitContainers, matched))
+	if len(matchedBdpcs) > 0 {
+		container, err := dbPrivConf.generateInitContainer(matchedBdpcs)
+		if err != nil {
+			blog.Errorf("generateInitContainer error %s", err.Error())
+			return nil, err
+		}
+		initContainers := append(pod.Spec.InitContainers, container)
+		patch = append(patch, PatchOperation{
+			Op:    "replace",
+			Path:  "/spec/initContainers",
+			Value: initContainers,
+		})
 	}
 
 	return patch, nil
 }
 
-// addInitContainer add an init-container to pod
-func (dbPrivConf *DbPrivConfInject) addInitContainer(origin []corev1.Container, matched *v1.BcsDbPrivConfig) (patch PatchOperation) {
+// generateInitContainer generate an init-container with BcsDbPrivConfig
+func (dbPrivConf *DbPrivConfInject) generateInitContainer(configs []*v1.BcsDbPrivConfig) (corev1.Container, error) {
+	var envs = make([]DBPrivEnv, 0)
+	var fieldPath string
 
-	var fieldPath, callType string
+	for _, config := range configs {
+		var env = DBPrivEnv{
+			AppName:  config.Spec.AppName,
+			TargetDb: config.Spec.TargetDb,
+			CallUser: config.Spec.CallUser,
+			DbName:   config.Spec.DbName,
+		}
+		if config.Spec.DbType == "mysql" {
+			env.CallType = "mysql_ignoreCC"
+		} else if config.Spec.DbType == "spider" {
+			env.CallType = "spider_ignoreCC"
+		}
+		envs = append(envs, env)
+	}
+
+	envstr, err := json.Marshal(envs)
+	if err != nil {
+		blog.Errorf("convert DBPrivEnv array to json string failed: %s", err.Error())
+		return corev1.Container{}, err
+	}
 
 	if dbPrivConf.Injects.DbPriv.NetworkType == "overlay" {
 		fieldPath = "status.hostIP"
 	} else if dbPrivConf.Injects.DbPriv.NetworkType == "underlay" {
 		fieldPath = "status.podIP"
-	}
-
-	if matched.Spec.DbType == "mysql" {
-		callType = "mysql_ignoreCC"
-	} else if matched.Spec.DbType == "spider" {
-		callType = "spider_ignoreCC"
 	}
 
 	initContainer := corev1.Container{
@@ -120,34 +155,11 @@ func (dbPrivConf *DbPrivConfInject) addInitContainer(origin []corev1.Container, 
 				Value: string(dbPrivConf.DbPrivSecret.Data["sdk-operator"]),
 			},
 			{
-				Name:  "io_tencent_bcs_db_privilege_app_name",
-				Value: matched.Spec.AppName,
-			},
-			{
-				Name:  "io_tencent_bcs_db_privilege_target",
-				Value: matched.Spec.TargetDb,
-			},
-			{
-				Name:  "io_tencent_bcs_db_privilege_db_name",
-				Value: matched.Spec.DbName,
-			},
-			{
-				Name:  "io_tencent_bcs_db_privilege_call_user",
-				Value: matched.Spec.CallUser,
-			},
-			{
-				Name:  "io_tencent_bcs_db_privilege_db_type",
-				Value: callType,
+				Name:  "io_tencent_bcs_db_privilege_env",
+				Value: string(envstr),
 			},
 		},
 	}
 
-	patchedInitContainers := append(origin, initContainer)
-
-	patch = PatchOperation{
-		Op:    "replace",
-		Path:  "/spec/initContainers",
-		Value: patchedInitContainers,
-	}
-	return patch
+	return initContainer, nil
 }

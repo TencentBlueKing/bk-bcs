@@ -28,6 +28,10 @@ go mod vendor
 
 # 创建CRD
 kubebuilder create api --group test --version v1alpha --kind TestCrd
+Create Resource [y/n]
+y
+Create Controller [y/n]
+n
 ```
 
 **注意**: 创建CRD时，会报以下错误，因为删除了kubebuilder生成测main.go。请忽略
@@ -49,6 +53,7 @@ kubebuilder create api --group test --version v1alpha --kind TestCrd
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 ```
 
+完整内容
 ```golang
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -62,6 +67,18 @@ type NodeNetwork struct {}
 
 // NodeNetworkList contains a list of NodeNetwork
 type NodeNetworkList struct {}
+```
+
+为groupversion_info.go文件加入以下代码
+```golang
+var (
+	SchemeGroupVersion = GroupVersion
+)
+
+// Resource is required by pkg/client/listers/...
+func Resource(resource string) schema.GroupResource {
+	return SchemeGroupVersion.WithResource(resource).GroupResource()
+}
 ```
 
 ## step3: generate deepcopy manifests client lister and informer

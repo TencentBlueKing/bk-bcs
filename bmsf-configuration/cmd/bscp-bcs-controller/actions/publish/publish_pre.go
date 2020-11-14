@@ -147,16 +147,12 @@ func (act *PublishPreAction) Do() error {
 		return act.Err(errCode, errMsg)
 	}
 
-	if act.release.State == int32(pbcommon.ReleaseState_RS_PUBLISHED) {
-		return act.Err(pbcommon.ErrCode_E_BCS_ALREADY_PUBLISHED, "target release is already published.")
+	if act.release.State == int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
+		return act.Err(pbcommon.ErrCode_E_BCS_ALREADY_ROLLBACKED, "can't publish the release, it's already rollbacked.")
 	}
 
 	if act.release.State == int32(pbcommon.ReleaseState_RS_CANCELED) {
 		return act.Err(pbcommon.ErrCode_E_BCS_ALREADY_CANCELED, "can't publish the release, it's already canceled.")
-	}
-
-	if act.release.State != int32(pbcommon.ReleaseState_RS_INIT) {
-		return act.Err(pbcommon.ErrCode_E_BCS_SYSTEM_UNKONW, "can't publish the release, unknow state.")
 	}
 
 	// query target commit.

@@ -277,7 +277,8 @@ func (act *ConfirmAction) Do() error {
 		}
 
 		// rendering configs.
-		if len(commit.Template) != 0 {
+		common.DelayRandomMS(50)
+		if len(commit.Template) != 0 || len(commit.Templateid) != 0 {
 			if errCode, errMsg := act.render(commit); errCode != pbcommon.ErrCode_E_OK {
 				return act.Err(errCode, errMsg)
 			}

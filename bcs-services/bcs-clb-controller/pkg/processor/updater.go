@@ -650,74 +650,73 @@ func (updater *Updater) combineHttpListener(mainListener *cloudListenerType.Clou
 	mainListener.Spec.Rules = append(mainListener.Spec.Rules, secondListener.Spec.Rules...)
 }
 
-// [Design]
-// for statfulset rule, we expose a port for each pod,
-// ports number depends on the StartIndex and EndIndex in statefulSetRule
-func (updater *Updater) convertStatefulSetRuleToListener(statefulSetRule *ingressType.ClbStatefulSetRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
+func (updater *Updater) genAllListenerList(statefulSetRule *ingressType.ClbStatefulSetRule, protocol string) []*cloudListenerType.CloudListener {
 	var retListenerList []*cloudListenerType.CloudListener
 	for portIndex := statefulSetRule.StartIndex; portIndex <= statefulSetRule.EndIndex; portIndex++ {
-		listener := &cloudListenerType.CloudListener{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "cloudlistener",
-				APIVersion: cloudListenerType.SchemeGroupVersion.Version,
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      generateCloudListenerName(updater.opt.ClbName, protocol, statefulSetRule.StartPort+portIndex),
-				Namespace: statefulSetRule.Namespace,
-				Labels: map[string]string{
-					"bmsf.tencent.com/clbname": updater.opt.ClbName,
+		for i := 0; i < statefulSetRule.SegmentLength; i++ {
+			// compute port
+			listenPort := statefulSetRule.StartPort + portIndex*statefulSetRule.SegmentLength + i
+
+			listener := &cloudListenerType.CloudListener{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "cloudlistener",
+					APIVersion: cloudListenerType.SchemeGroupVersion.Version,
 				},
-			},
-			Spec: cloudListenerType.CloudListenerSpec{
-				LoadBalancerID: updater.lbInfo.ID,
-				Protocol:       protocol,
-				ListenPort:     statefulSetRule.StartPort + portIndex,
-				TargetGroup:    cloudListenerType.NewTargetGroup("", "", "", 0),
-			},
-			Status: cloudListenerType.CloudListenerStatus{
-				LastUpdateTime: metav1.NewTime(time.Now()),
-			},
-		}
-		listener.Spec.TargetGroup.SessionExpire = statefulSetRule.SessionTime
-		if statefulSetRule.LbPolicy != nil {
-			// listener.Spec.TargetGroup.LBPolicy WRR is already set
-			// TODO: wrr weight can be define by pod annotations
-			if statefulSetRule.LbPolicy.Strategy == cloudListenerType.ClbLBPolicyLeastConn ||
-				statefulSetRule.LbPolicy.Strategy == cloudListenerType.ClbLBPolicyIPHash {
-				listener.Spec.TargetGroup.LBPolicy = statefulSetRule.LbPolicy.Strategy
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      generateCloudListenerName(updater.opt.ClbName, protocol, listenPort),
+					Namespace: statefulSetRule.Namespace,
+					Labels: map[string]string{
+						"bmsf.tencent.com/clbname": updater.opt.ClbName,
+					},
+				},
+				Spec: cloudListenerType.CloudListenerSpec{
+					LoadBalancerID: updater.lbInfo.ID,
+					Protocol:       protocol,
+					ListenPort:     listenPort,
+					TargetGroup:    cloudListenerType.NewTargetGroup("", "", "", 0),
+				},
+				Status: cloudListenerType.CloudListenerStatus{
+					LastUpdateTime: metav1.NewTime(time.Now()),
+				},
 			}
-		}
-		if statefulSetRule.HealthCheck != nil {
-			if statefulSetRule.HealthCheck.Enabled == false {
-				listener.Spec.TargetGroup.HealthCheck.Enabled = 0
-			} else {
-				if statefulSetRule.HealthCheck.Timeout != 0 {
-					listener.Spec.TargetGroup.HealthCheck.Timeout = statefulSetRule.HealthCheck.Timeout
-				}
-				if statefulSetRule.HealthCheck.IntervalTime != 0 {
-					listener.Spec.TargetGroup.HealthCheck.IntervalTime = statefulSetRule.HealthCheck.IntervalTime
-				}
-				if statefulSetRule.HealthCheck.HealthNum != 0 {
-					listener.Spec.TargetGroup.HealthCheck.HealthNum = statefulSetRule.HealthCheck.HealthNum
-				}
-				if statefulSetRule.HealthCheck.UnHealthNum != 0 {
-					listener.Spec.TargetGroup.HealthCheck.UnHealthNum = statefulSetRule.HealthCheck.UnHealthNum
+			listener.Spec.TargetGroup.SessionExpire = statefulSetRule.SessionTime
+			if statefulSetRule.LbPolicy != nil {
+				// listener.Spec.TargetGroup.LBPolicy WRR is already set
+				// TODO: wrr weight can be define by pod annotations
+				if statefulSetRule.LbPolicy.Strategy == cloudListenerType.ClbLBPolicyLeastConn ||
+					statefulSetRule.LbPolicy.Strategy == cloudListenerType.ClbLBPolicyIPHash {
+					listener.Spec.TargetGroup.LBPolicy = statefulSetRule.LbPolicy.Strategy
 				}
 			}
+			if statefulSetRule.HealthCheck != nil {
+				if statefulSetRule.HealthCheck.Enabled == false {
+					listener.Spec.TargetGroup.HealthCheck.Enabled = 0
+				} else {
+					if statefulSetRule.HealthCheck.Timeout != 0 {
+						listener.Spec.TargetGroup.HealthCheck.Timeout = statefulSetRule.HealthCheck.Timeout
+					}
+					if statefulSetRule.HealthCheck.IntervalTime != 0 {
+						listener.Spec.TargetGroup.HealthCheck.IntervalTime = statefulSetRule.HealthCheck.IntervalTime
+					}
+					if statefulSetRule.HealthCheck.HealthNum != 0 {
+						listener.Spec.TargetGroup.HealthCheck.HealthNum = statefulSetRule.HealthCheck.HealthNum
+					}
+					if statefulSetRule.HealthCheck.UnHealthNum != 0 {
+						listener.Spec.TargetGroup.HealthCheck.UnHealthNum = statefulSetRule.HealthCheck.UnHealthNum
+					}
+				}
+			}
+			retListenerList = append(retListenerList, listener)
 		}
-		retListenerList = append(retListenerList, listener)
 	}
-	// get AppService from statefulset by service client according to service name and namespace in stateful set rule
-	appServices, err := updater.serviceClient.ListAppServiceFromStatefulSet(statefulSetRule.Namespace, statefulSetRule.ServiceName)
-	if err != nil {
-		return nil, fmt.Errorf("get app services from statefulSetRule %v, err %s", statefulSetRule, err.Error())
-	}
-	if len(appServices) == 0 {
-		return retListenerList, nil
-	}
+
+	return retListenerList
+}
+
+func (updater *Updater) bindBackendForListenerList(statefulSetRule *ingressType.ClbStatefulSetRule, retListenerList []*cloudListenerType.CloudListener, appServices []*svcclient.AppService) error {
 	for portIndex, appService := range appServices {
 		if len(appService.ServicePorts) != 1 {
-			return nil, fmt.Errorf("service port length of stateful set appService %v is not equal to 1", appService)
+			return fmt.Errorf("service port length of stateful set appService %v is not equal to 1", appService)
 		}
 		// check if the service port is in certain range
 		if appService.ServicePorts[0].ServicePort < statefulSetRule.StartIndex || appService.ServicePorts[0].ServicePort > statefulSetRule.EndIndex {
@@ -726,17 +725,46 @@ func (updater *Updater) convertStatefulSetRuleToListener(statefulSetRule *ingres
 				statefulSetRule.StartIndex, statefulSetRule.EndIndex, appService.GetName()+"/"+appService.GetNamespace())
 			continue
 		}
-		listener := retListenerList[portIndex]
-		if len(appService.Nodes) != 0 {
-			node := appService.Nodes[0]
-			newBackend := &cloudListenerType.Backend{
-				IP:     node.NodeIP,
-				Port:   statefulSetRule.StartPort + node.Ports[0].NodePort,
-				Weight: 10,
+		for i := 0; i < statefulSetRule.SegmentLength; i++ {
+			index := portIndex*statefulSetRule.SegmentLength + i
+			listener := retListenerList[index]
+			if len(appService.Nodes) != 0 {
+				node := appService.Nodes[0]
+				newBackend := &cloudListenerType.Backend{
+					IP:     node.NodeIP,
+					Port:   statefulSetRule.StartPort + index,
+					Weight: 10,
+				}
+				listener.Spec.TargetGroup.Backends = append(listener.Spec.TargetGroup.Backends, newBackend)
 			}
-			listener.Spec.TargetGroup.Backends = append(listener.Spec.TargetGroup.Backends, newBackend)
 		}
 	}
+	return nil
+}
+
+// [Design]
+// for statfulset rule, we expose [statefulSetRule.SegmentLength] ports for each pod,
+// ports number depends on the [StartIndex and EndIndex and statefulSetRule.SegmentLength] in statefulSetRule
+func (updater *Updater) convertStatefulSetRuleToListener(statefulSetRule *ingressType.ClbStatefulSetRule, protocol string) ([]*cloudListenerType.CloudListener, error) {
+	if statefulSetRule.SegmentLength == 0 {
+		statefulSetRule.SegmentLength = 1
+	}
+
+	retListenerList := updater.genAllListenerList(statefulSetRule, protocol)
+
+	// get AppService from statefulset by service client according to service name and namespace in stateful set rule
+	appServices, err := updater.serviceClient.ListAppServiceFromStatefulSet(statefulSetRule.Namespace, statefulSetRule.ServiceName)
+	if err != nil {
+		return nil, fmt.Errorf("get app services from statefulSetRule %v, err %s", statefulSetRule, err.Error())
+	}
+	if len(appServices) == 0 {
+		return retListenerList, nil
+	}
+
+	if err := updater.bindBackendForListenerList(statefulSetRule, retListenerList, appServices); err != nil {
+		return nil, err
+	}
+
 	return retListenerList, nil
 }
 

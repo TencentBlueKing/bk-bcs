@@ -48,13 +48,20 @@ import (
 const ContainerCheckTicker = 1
 
 const (
-	ContainerNamePrefix       = "bcs-container-"
-	ContainerCoreFilePrefix   = "/data/corefile"
+	// ContainerNamePrefix docker container name prefix
+	ContainerNamePrefix = "bcs-container-"
+	// ContainerCoreFilePrefix container corefile directory
+	ContainerCoreFilePrefix = "/data/corefile"
+	// ExecutorStatus_NOTRUNNING not running state
 	ExecutorStatus_NOTRUNNING = "NotRunning"
-	ExecutorStatus_LAUNCHING  = "Launching"
-	ExecutorStatus_RUNNING    = "Running"
-	ExecutorStatus_KILLING    = "Killing"
-	ExecutorStatus_SHUTDOWN   = "Shutdown"
+	// ExecutorStatus_LAUNCHING launching state
+	ExecutorStatus_LAUNCHING = "Launching"
+	// ExecutorStatus_RUNNING running state
+	ExecutorStatus_RUNNING = "Running"
+	// ExecutorStatus_KILLING killing state
+	ExecutorStatus_KILLING = "Killing"
+	// ExecutorStatus_SHUTDOWN shutdown state
+	ExecutorStatus_SHUTDOWN = "Shutdown"
 )
 
 //NewBcsExecutor create Executor instance
@@ -352,6 +359,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 	stopCh := make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
 
 		for {
 			select {
@@ -573,6 +581,7 @@ func (executor *BcsExecutor) monitorPod() {
 	}()
 
 	tick := time.NewTicker(1 * time.Second)
+	defer tick.Stop()
 	reporting := 0
 	for {
 		select {
@@ -631,7 +640,7 @@ func (executor *BcsExecutor) monitorPod() {
 						taskRunning = false
 					}
 
-					if reporting%30 == 0 || changed || healthyChanged || message != nil || !taskRunning {
+					if reporting%300 == 0 || changed || healthyChanged || message != nil || !taskRunning {
 						//report data every 30 seconds or pod healthy status changed
 						executor.status = ExecutorStatus_RUNNING
 						logs.Infof("all task is Running, healthy: %t, isChecked: %t, ConsecutiveFailureTimes: %d"+

@@ -16,15 +16,20 @@ package discovery
 import "github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 const (
+	//DefaultBcsModuleLabelKey label key
 	DefaultBcsModuleLabelKey = "bcs_module"
-	DiscoveryFileName        = "_sd_config.json"
+	// DiscoveryFileName promethus file name
+	DiscoveryFileName = "_sd_config.json"
 )
 
 const (
-	CadvisorModule   = "cadvisor"
+	// CadvisorModule name
+	CadvisorModule = "cadvisor"
+	// NodeexportModule name
 	NodeexportModule = "node_export"
 )
 
+// Discovery interface for prometheus discovery
 type Discovery interface {
 	//start
 	Start() error
@@ -39,9 +44,11 @@ type Discovery interface {
 	RegisterEventFunc(handleFunc EventHandleFunc)
 }
 
-type EventHandleFunc func(dInfo DiscoveryInfo)
+// EventHandleFunc event handler for callback
+type EventHandleFunc func(dInfo Info)
 
-type DiscoveryInfo struct {
+// Info information
+type Info struct {
 	//mesosModules: commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH ...
 	//serviceModules: commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE ...
 	//nodeModules: discovery.CadvisorModule, discovery.NodeexportModule

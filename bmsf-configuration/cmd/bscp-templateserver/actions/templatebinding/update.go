@@ -269,7 +269,6 @@ func (act *UpdateAction) createCommit() (pbcommon.ErrCode, string) {
 		Templateid:   act.req.Templateid,
 		Template:     "",
 		TemplateRule: act.req.BindingParams,
-		Configs:      []byte(act.version.Content),
 		Memo:         act.version.Memo,
 	}
 

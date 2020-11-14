@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/mesosdriver"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -32,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/mesosdriver"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/tools"
 	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
@@ -40,6 +40,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// NetworkDetection implementation
 type NetworkDetection struct {
 	sync.RWMutex
 	//network detection config
@@ -62,6 +63,7 @@ type NetworkDetection struct {
 	acts []*httpserver.Action
 }
 
+// ContainerPlatform definition for fetch container info
 type ContainerPlatform interface {
 	//get cluster all nodes
 	GetNodes(clusterid string) ([]*types.NodeInfo, error)
@@ -74,7 +76,7 @@ type ContainerPlatform interface {
 	FetchPods(clusterid, ns, name string) ([]byte, error)
 }
 
-// new NetworkDetection object
+// NewNetworkDetection new NetworkDetection object
 func NewNetworkDetection(conf *config.Config) *NetworkDetection {
 	n := &NetworkDetection{
 		conf:     conf,
@@ -88,7 +90,7 @@ func NewNetworkDetection(conf *config.Config) *NetworkDetection {
 	return n
 }
 
-// start networkdetection work
+// Start networkdetection work
 func (n *NetworkDetection) Start() error {
 	var err error
 	//init deployment template
@@ -243,30 +245,30 @@ func (n *NetworkDetection) deployNodes(o *types.DeployDetection) bool {
 	}
 
 	//create deployment in container cluster
-	deployJson := o.Template
+	deployJSON := o.Template
 	//deepcopy Constraints
 	by, _ := json.Marshal(o.Template.Constraints)
-	deployJson.Constraints = new(commtypes.Constraint)
-	json.Unmarshal(by, &deployJson.Constraints)
-	deployJson.Name = fmt.Sprintf("pinger-%d", time.Now().UnixNano())
-	deployJson.Annotations = map[string]string{
+	deployJSON.Constraints = new(commtypes.Constraint)
+	json.Unmarshal(by, &deployJSON.Constraints)
+	deployJSON.Name = fmt.Sprintf("pinger-%d", time.Now().UnixNano())
+	deployJSON.Annotations = map[string]string{
 		"idc":     o.Idc,
 		"cluster": o.Clusterid,
 	}
 	//parse deploy constraint
 	for _, node := range o.Nodes {
-		union := deployJson.Constraints.IntersectionItem[0].UnionData[0]
+		union := deployJSON.Constraints.IntersectionItem[0].UnionData[0]
 		union.Set.Item = append(union.Set.Item, node.Ip)
 	}
 
 	//create deployment
-	by, _ = json.Marshal(deployJson)
+	by, _ = json.Marshal(deployJSON)
 	blog.Infof("region(%s:%s) deploy template json(%s)", o.Clusterid, o.Idc, string(by))
 	err = n.platform.CeateDeployment(o.Clusterid, by)
 	if err != nil {
-		blog.Errorf("region(%s:%s) create deployment(%s:%s) failed: %s", o.Clusterid, o.Idc, deployJson.NameSpace, deployJson.Name, err.Error())
+		blog.Errorf("region(%s:%s) create deployment(%s:%s) failed: %s", o.Clusterid, o.Idc, deployJSON.NameSpace, deployJSON.Name, err.Error())
 	} else {
-		blog.Infof("region(%s:%s) create deployment(%s:%s) done", o.Clusterid, o.Idc, deployJson.NameSpace, deployJson.Name)
+		blog.Infof("region(%s:%s) create deployment(%s:%s) done", o.Clusterid, o.Idc, deployJSON.NameSpace, deployJSON.Name)
 	}
 
 	return false
@@ -337,6 +339,7 @@ func (n *NetworkDetection) regDiscover() {
 	blog.Info("DiscoverService(%s) succ", discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:

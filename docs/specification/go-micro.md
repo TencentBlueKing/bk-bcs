@@ -51,8 +51,11 @@
 * protoc-gen-micro： v2.9.1
 * protoc-grpc-gateway： v1.14.6
 * protoc-gen-swagger： v1.14.6
+* grpc: v1.26.0
 
 **注意**，因为grpc与etcd版本存在冲突，protoc-gen-go不能超过1.3.2
+
+grpc链接：[https://github.com/grpc/grpc-go](https://github.com/grpc/grpc-go)
 
 安装micro命令，[下载链接](https://github.com/micro/micro/releases/download/v2.9.3/micro-v2.9.3-linux-amd64.tar.gz)
 

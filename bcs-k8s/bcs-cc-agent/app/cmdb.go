@@ -73,6 +73,10 @@ func getInfoFromBkCmdb(config *config.BcsCcAgentConfig, hostIp string) (*Propert
 		"idc_unit_id",
 		"idc_id",
 	}
+	payload["page"] = map[string]int{
+		"start": 0,
+		"limit": 1,
+	}
 	payload["host_property_filter"] = PropertyFilter{
 		Condition: "AND",
 		Rules: []Rule{

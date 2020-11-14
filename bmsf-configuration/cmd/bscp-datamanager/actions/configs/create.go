@@ -113,14 +113,9 @@ func (act *CreateAction) verify() error {
 		act.req.Content = []byte{}
 	}
 
-	if len(act.req.Content) == 0 && len(act.req.CfgLink) == 0 {
-		return errors.New("invalid params, content or cfgLink missing")
-	}
-
 	if len(act.req.Content) > database.BSCPCFGCONTENTSSIZELIMIT {
 		return fmt.Errorf("invalid params, content is too large[%d]", len(act.req.Content))
 	}
-
 	if len(act.req.CfgLink) > database.BSCPCFGLINKLENLIMIT {
 		return fmt.Errorf("invalid params, configs link is too long[%d]", len(act.req.CfgLink))
 	}

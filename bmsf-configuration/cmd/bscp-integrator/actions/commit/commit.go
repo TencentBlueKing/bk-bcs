@@ -127,11 +127,14 @@ func (act *CommitAction) verify() error {
 		return errors.New("invalid params, template rules too long")
 	}
 
-	if len(act.md.Configs) == 0 && len(act.md.Template.Template) == 0 {
-		return errors.New("invalid params, empty configs and template")
-	}
 	if len(act.md.Configs) != 0 && len(act.md.Template.Template) != 0 {
 		return errors.New("invalid params, configs and template concurrence")
+	}
+	if len(act.md.Configs) != 0 && len(act.md.Template.Templateid) != 0 {
+		return errors.New("invalid params, configs and templateid concurrence")
+	}
+	if len(act.md.Template.Template) != 0 && len(act.md.Template.Templateid) != 0 {
+		return errors.New("invalid params, template and templateid concurrence")
 	}
 	if len(act.md.Template.Template) != 0 && len(act.md.Template.TemplateRule) == 0 {
 		return errors.New("invalid params, empty template rules")

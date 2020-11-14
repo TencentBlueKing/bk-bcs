@@ -48,11 +48,12 @@ const (
 	YAMLFormat = "yaml"
 )
 
+// metaObject meta info for response
 type metaObject struct {
 	mesostype.ObjectMeta `json:"metadata,omitempty"`
 }
 
-//NewJSONStream create stream implementation
+//NewMetaStream create stream implementation
 func NewMetaStream(r io.Reader, ft string) Stream {
 	allDatas, err := ioutil.ReadAll(r)
 	if err != nil || len(allDatas) == 0 {

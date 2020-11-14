@@ -15,6 +15,7 @@ package custom
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/client"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-driver/kubedriver/options"
@@ -27,21 +28,25 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// ClusterResourceStatus all kind resource
 type ClusterResourceStatus struct {
 	Capacity ResourceStatus
 	Limit    ResourceStatus
 	Request  ResourceStatus
 }
 
+// ResourceStatus status of request resources
 type ResourceStatus struct {
 	Cpu    float64
 	Memory float64
 }
 
+// ClusterResourceAPIHandler http implementation
 type ClusterResourceAPIHandler struct {
 	clientSet *kubernetes.Clientset
 }
 
+// Handler handle http request
 func (cph *ClusterResourceAPIHandler) Handler(request *restful.Request, response *restful.Response) {
 	nodes, err := cph.clientSet.CoreV1().Nodes().List(metav1.ListOptions{})
 
@@ -92,6 +97,7 @@ OutLoop:
 	return
 }
 
+// Config config kube clientset
 func (cph *ClusterResourceAPIHandler) Config(KubeMasterURL string, TLSConfig options.TLSConfig) error {
 	cph.clientSet = client.NewClientSet(KubeMasterURL, TLSConfig)
 	if cph.clientSet == nil {
@@ -129,8 +135,8 @@ func (cph *ClusterResourceAPIHandler) describePodsMetric(nodeNonTerminatedPodsLi
 	}
 }
 
+// FetchAllPods list all pod from kube-apiserver
 func (cph *ClusterResourceAPIHandler) FetchAllPods() (allPodsInNode *v1.PodList) {
-	allPodsInNode = &v1.PodList{}
 	fieldSelector, err := fields.ParseSelector(
 		"status.phase!=" + string(v1.PodSucceeded) + ",status.phase!=" + string(v1.PodFailed))
 	if err != nil {
@@ -144,6 +150,7 @@ func (cph *ClusterResourceAPIHandler) FetchAllPods() (allPodsInNode *v1.PodList)
 	return allPodsInNode
 }
 
+// PodRequestsAndLimits parse pod request & limit resource
 func PodRequestsAndLimits(pod *v1.Pod) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
 	reqs, limits = map[v1.ResourceName]resource.Quantity{}, map[v1.ResourceName]resource.Quantity{}
 	for _, container := range pod.Spec.Containers {

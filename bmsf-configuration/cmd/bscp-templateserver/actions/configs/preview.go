@@ -45,12 +45,24 @@ type PreviewAction struct {
 	version         *pbcommon.TemplateVersion
 	commit          *pbcommon.Commit
 	rules           structs.RuleList
+
+	// mapping for cluster name to cluster id
+	clusterMap map[string]string
+	// mapping for zone name to zone id
+	zoneMap map[string]string
 }
 
 // NewPreviewAction creates new PreviewAction.
 func NewPreviewAction(viper *viper.Viper, dataMgrCli pbdatamanager.DataManagerClient,
 	req *pb.PreviewRenderingReq, resp *pb.PreviewRenderingResp) *PreviewAction {
-	action := &PreviewAction{viper: viper, dataMgrCli: dataMgrCli, req: req, resp: resp}
+	action := &PreviewAction{
+		viper:      viper,
+		dataMgrCli: dataMgrCli,
+		req:        req,
+		resp:       resp,
+		clusterMap: make(map[string]string),
+		zoneMap:    make(map[string]string),
+	}
 
 	action.resp.Seq = req.Seq
 	action.resp.ErrCode = pbcommon.ErrCode_E_OK
@@ -71,6 +83,8 @@ func (act *PreviewAction) Input() error {
 	if err := act.verify(); err != nil {
 		return act.Err(pbcommon.ErrCode_E_TPL_PARAMS_INVALID, err.Error())
 	}
+	act.pluginName = renderengine.EngineGoTmplate
+
 	return nil
 }
 
@@ -370,8 +384,88 @@ func (act *PreviewAction) listZoneVars(cluster, clusterLabels, zone string) (map
 	return zoneVars, nil
 }
 
-func (act *PreviewAction) render() (pbcommon.ErrCode, string) {
+func (act *PreviewAction) convertClusterRule(clusterRule *structs.Rule) (*renderengine.RenderInCluster, pbcommon.ErrCode, string) {
+	// get cluster label string from json struct
+	clusterLabelsStr := ""
+	if len(clusterRule.ClusterLabels) != 0 {
+		labelsBytes, err := json.Marshal(clusterRule.ClusterLabels)
+		if err != nil {
+			return nil, pbcommon.ErrCode_E_TS_PARAMS_INVALID, err.Error()
+		}
+		clusterLabelsStr = string(labelsBytes)
+	}
 
+	// check cluster name in render rule
+	clusterid, err := act.queryCluster(clusterRule.Cluster, clusterLabelsStr)
+	if err != nil {
+		return nil, pbcommon.ErrCode_E_TPL_NO_CLUSTER_TO_RENDER, err.Error()
+	}
+	// add mapping for (cluster name, cluster id)
+	act.clusterMap[genKeyForCluster(clusterRule.Cluster, clusterRule.ClusterLabels)] = clusterid
+
+	// get cluster variables
+	clusterVars, err := act.listClusterVars(clusterRule.Cluster, clusterLabelsStr)
+	if err != nil {
+		return nil, pbcommon.ErrCode_E_TPL_GET_VARS_FAILED, err.Error()
+	}
+
+	// vars in rules overwrite predefined vars in template server
+	clusterVars = common.MergeVars(clusterVars, clusterRule.Variables)
+
+	clusterConf := &renderengine.RenderInCluster{
+		Cluster:       clusterRule.Cluster,
+		ClusterLabels: clusterRule.ClusterLabels,
+		Vars:          clusterVars,
+	}
+
+	for _, zoneRule := range clusterRule.Zones {
+		zoneConf, errCode, errMsg := act.convertZoneRule(clusterRule.Cluster, clusterLabelsStr, zoneRule)
+		if errCode != pbcommon.ErrCode_E_OK {
+			return nil, errCode, errMsg
+		}
+		clusterConf.Zones = append(clusterConf.Zones, zoneConf)
+	}
+
+	return clusterConf, pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *PreviewAction) convertZoneRule(cluster, clusterLabelsStr string, zoneRule *structs.RuleZone) (*renderengine.RenderInZone, pbcommon.ErrCode, string) {
+
+	zoneid, err := act.queryZone(zoneRule.Zone)
+	if err != nil {
+		return nil, pbcommon.ErrCode_E_TPL_NO_ZONE_TO_RENDER, err.Error()
+	}
+	act.zoneMap[zoneRule.Zone] = zoneid
+
+	zoneVars, err := act.listZoneVars(cluster, clusterLabelsStr, zoneRule.Zone)
+	if err != nil {
+		return nil, pbcommon.ErrCode_E_TPL_GET_VARS_FAILED, err.Error()
+	}
+
+	// vars in rules overwrite predefined vars in template server
+	zoneVars = common.MergeVars(zoneVars, zoneRule.Variables)
+
+	zoneConf := &renderengine.RenderInZone{
+		Zone: zoneRule.Zone,
+		Vars: zoneVars,
+	}
+
+	for _, instanceRule := range zoneRule.Instances {
+		instanceConf := act.convertInstanceRule(instanceRule)
+		zoneConf.Instances = append(zoneConf.Instances, instanceConf)
+	}
+
+	return zoneConf, pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *PreviewAction) convertInstanceRule(instanceRule *structs.RuleInstance) *renderengine.RenderInInstance {
+	return &renderengine.RenderInInstance{
+		Index: instanceRule.Index,
+		Vars:  instanceRule.Variables,
+	}
+}
+
+func (act *PreviewAction) render() (pbcommon.ErrCode, string) {
 	globalVars, err := act.listGlobalVars()
 	if err != nil {
 		return pbcommon.ErrCode_E_TPL_GET_VARS_FAILED, err.Error()
@@ -388,56 +482,13 @@ func (act *PreviewAction) render() (pbcommon.ErrCode, string) {
 		renderInConf.Template = act.version.Content
 	}
 
-	clusterMap := make(map[string]string)
-	zoneMap := make(map[string]string)
+	for _, clusterRule := range act.rules {
 
-	for _, rule := range act.rules {
-		clusterLabelsBytes, err := json.Marshal(rule.ClusterLabels)
-		if err != nil {
-			return pbcommon.ErrCode_E_TS_PARAMS_INVALID, err.Error()
+		clusterConf, errCode, errMsg := act.convertClusterRule(&clusterRule)
+		if errCode != pbcommon.ErrCode_E_OK {
+			return errCode, errMsg
 		}
 
-		clusterid, err := act.queryCluster(rule.Cluster, string(clusterLabelsBytes))
-		if err != nil {
-			return pbcommon.ErrCode_E_TPL_NO_CLUSTER_TO_RENDER, err.Error()
-		}
-		clusterMap[genKeyForCluster(rule.Cluster, rule.ClusterLabels)] = clusterid
-
-		clusterVars, err := act.listClusterVars(rule.Cluster, string(clusterLabelsBytes))
-		if err != nil {
-			return pbcommon.ErrCode_E_TPL_GET_VARS_FAILED, err.Error()
-		}
-		clusterConf := &renderengine.RenderInCluster{
-			Cluster:       rule.Cluster,
-			ClusterLabels: rule.ClusterLabels,
-			Vars:          clusterVars,
-		}
-		for _, zone := range rule.Zones {
-			zoneid, err := act.queryZone(zone.Zone)
-			if err != nil {
-				return pbcommon.ErrCode_E_TPL_NO_ZONE_TO_RENDER, err.Error()
-			}
-			zoneMap[zone.Zone] = zoneid
-
-			zoneVars, err := act.listZoneVars(rule.Cluster, string(clusterLabelsBytes), zone.Zone)
-			if err != nil {
-				return pbcommon.ErrCode_E_TPL_GET_VARS_FAILED, err.Error()
-			}
-			zoneConf := &renderengine.RenderInZone{
-				Zone: zone.Zone,
-				Vars: zoneVars,
-			}
-
-			for _, ins := range zone.Instances {
-				insConf := &renderengine.RenderInInstance{
-					Index: ins.Index,
-					Vars:  ins.Variables,
-				}
-				zoneConf.Instances = append(zoneConf.Instances, insConf)
-			}
-
-			clusterConf.Zones = append(clusterConf.Zones, zoneConf)
-		}
 		renderInConf.Clusters = append(renderInConf.Clusters, clusterConf)
 	}
 
@@ -448,12 +499,12 @@ func (act *PreviewAction) render() (pbcommon.ErrCode, string) {
 
 	for _, ins := range renderOutInstances {
 		act.resp.Cfgslist = append(act.resp.Cfgslist, &pbcommon.Configs{
-			Cfgsetid:  act.templateBinding.Cfgsetid,
-			Appid:     act.templateBinding.Appid,
+			Cfgsetid:  act.commit.Cfgsetid,
+			Appid:     act.req.Appid,
 			Bid:       act.req.Bid,
-			Clusterid: clusterMap[genKeyForCluster(ins.Cluster, ins.ClusterLabels)],
-			Zoneid:    zoneMap[ins.Zone],
-			Commitid:  act.templateBinding.Commitid,
+			Clusterid: act.clusterMap[genKeyForCluster(ins.Cluster, ins.ClusterLabels)],
+			Zoneid:    act.zoneMap[ins.Zone],
+			Commitid:  act.req.Commitid,
 			Cid:       common.SHA256(ins.Content),
 			Content:   []byte(ins.Content),
 			Creator:   act.req.Operator,

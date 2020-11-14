@@ -14,31 +14,38 @@
 package main
 
 import (
-	"bk-bscp/cmd/bscp-client/cmd"
-	"bk-bscp/cmd/bscp-client/option"
-	"bk-bscp/internal/version"
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"bk-bscp/cmd/bscp-client/cmd"
+	"bk-bscp/cmd/bscp-client/option"
+	"bk-bscp/internal/version"
 )
 
 // BSCP client for Configuration distribution
 func main() {
 	bscpCli := &cobra.Command{
-		Use:     "bscp-client",
-		Long:    "bscp-client controls the BlueKing Service Configuration Platform.",
+		Use:   "bk-bscp-client",
+		Short: "bk-bscp-client controls the BlueKing Service Configuration Platform.",
+		Long: `bk-bscp-client controls the BlueKing Service Configuration Platform.
+
+Publishing ConfigSet steps：
+    bk-bscp-client init  -> bk-bscp-client add -> bk-bscp-client commit -> bk-bscp-client release -> bk-bscp-client publish
+
+Explanation:
+    First initialize the configuration file repository, and then add the configuration files to be submitted to the scanning area. Then, use the commit command to submit the scan area file (after submission, the content in the scan area will be cleared). Use the release command to select the commit record submitted and generate the corresponding release version. Finally, use the publish command to select the release version to be published for publication.
+`,
 		Version: version.GetVersion(),
 		//parse global option with command line & environments
-		PersistentPreRun: option.ParseGlobalOption,
+		PersistentPreRunE: option.ParseGlobalOption,
 	}
-	//loading all subcommands
 	bscpCli.AddCommand(cmd.GetCommandList()...)
 	//loading all global flags
 	global := option.GlobalOptions
-	bscpCli.PersistentFlags().StringVar(&global.ConfigFile, "configfile", global.ConfigFile, "BlueKing Service Configuration Platform CLI configuration.")
-	bscpCli.PersistentFlags().StringVar(&global.Business, "business", "", "Business Name to operate. Also comes from ENV BSCP_BUSINESS")
-	bscpCli.PersistentFlags().StringVar(&global.Operator, "operator", "", "user name for operation, use for audit, Also comes from ENV BSCP_OPERATOR")
-
+	bscpCli.PersistentFlags().StringVar(&global.Business, "business", "", "business Name to operate. Get parameter priority: command -> env -> .bscp/desc")
+	bscpCli.PersistentFlags().StringVar(&global.Operator, "operator", "", "user name for operation.  Get parameter priority: command -> env -> .bscp/desc")
+	bscpCli.PersistentFlags().StringVar(&global.Token, "token", "", "user token for operation. Get parameter priority: command -> env -> .bscp/desc")
 	if err := bscpCli.Execute(); err != nil {
 		fmt.Printf("bscp-client Error: %s\n", err.Error())
 	}

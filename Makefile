@@ -34,9 +34,16 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api health client storage check executor mesos-driver mesos-watch scheduler loadbalance metricservice metriccollector exporter k8s-watch kube-agent k8s-driver api-export netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy tools gateway user-manager egress-controller cc-agent bkcmdb-synchronizer
-k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset
-mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller consoleproxy clb-controller
+default:api client storage executor mesos-driver mesos-watch scheduler \
+	loadbalance metricservice metriccollector k8s-watch kube-agent k8s-driver \
+	netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter \
+	hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar \
+	csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy \
+	tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller \
+	bcs-cloud-netagent mesh-manager bcs-ingress-controller log-manager gamedeployment
+k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment
+mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
+	consoleproxy clb-controller
 
 allpack: svcpack k8spack mmpack mnpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -90,7 +97,7 @@ kube-agent:pre
 client:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-client ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./bcs-services/bcs-client/cmd/main.go
+	cd ./bcs-services/bcs-client && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-client/bcs-client ./cmd/main.go
 
 dns:
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -99,13 +106,6 @@ dns:
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service coredns.go
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns coredns.go
-
-health:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-health-master ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-health-slave ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-health-master/bcs-health-master ./bcs-services/bcs-health/master/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-health-slave/bcs-health-slave ./bcs-services/bcs-health/slave/main.go
 
 metricservice:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -117,13 +117,6 @@ metriccollector:pre
 	cp -R ./install/conf/bcs-mesos-node/bcs-metriccollector ${PACKAGEPATH}/bcs-mesos-node
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-metriccollector/bcs-metriccollector ./bcs-services/bcs-metriccollector/main.go
 
-exporter:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-exporter ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-exporter/bcs-exporter ./bcs-services/bcs-exporter/main.go
-	go build ${LDFLAG} -buildmode=plugin -o ${PACKAGEPATH}/bcs-services/bcs-exporter/default_exporter.so ./bcs-services/bcs-exporter/pkg/output/plugins/default_exporter/default_exporter.go
-	go build ${LDFLAG} -buildmode=plugin -o ${PACKAGEPATH}/bcs-services/bcs-exporter/bkdata_exporter.so ./bcs-services/bcs-exporter/pkg/output/plugins/bkdata_exporter/
-
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-storage ${PACKAGEPATH}/bcs-services
@@ -132,11 +125,6 @@ storage:pre
 loadbalance:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-loadbalance/bcs-loadbalance ./bcs-services/bcs-loadbalance/main.go
 	cp -r ./bcs-services/bcs-loadbalance/image/* ${PACKAGEPATH}/bcs-services/bcs-loadbalance/
-
-check:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
-	cp -R ./install/conf/bcs-mesos-master/bcs-check ${PACKAGEPATH}/bcs-mesos-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-check/bcs-check ./bcs-mesos/bcs-check/bcs-check.go
 
 executor:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-node
@@ -178,7 +166,7 @@ mesos-watch:pre
 kube-sche:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-k8s-custom-scheduler ${PACKAGEPATH}/bcs-k8s-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-custom-scheduler/bcs-k8s-custom-scheduler ./bcs-k8s/bcs-k8s-custom-scheduler/main.go
+	cd ./bcs-k8s/bcs-k8s-custom-scheduler && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-custom-scheduler/bcs-k8s-custom-scheduler ./main.go
 
 csi-cbs:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
@@ -194,7 +182,17 @@ scheduler:pre
 logbeat-sidecar:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-logbeat-sidecar ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./bcs-services/bcs-logbeat-sidecar/main.go
+	cd ./bcs-services/bcs-logbeat-sidecar && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./main.go && cd -
+
+log-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cp -R ./install/conf/bcs-services/bcs-log-manager ${PACKAGEPATH}/bcs-services
+	cd ./bcs-services/bcs-log-manager && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-log-manager/bcs-log-manager ./main.go && cd -
+
+mesh-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services
+	cp -R ./install/conf/bcs-services/bcs-mesh-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-mesh-manager && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager ./main.go
 
 hpacontroller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
@@ -203,6 +201,7 @@ hpacontroller:pre
 
 sd-prometheus:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
+	mkdir -p ${PACKAGEPATH}/bcs-mesos-master
 	cp -R ./install/conf/bcs-services/bcs-service-prometheus-service ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-mesos-master/bcs-service-prometheus ${PACKAGEPATH}/bcs-mesos-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-service-prometheus-service/bcs-service-prometheus-service ./bcs-services/bcs-service-prometheus/main.go
@@ -223,19 +222,17 @@ gamestatefulset:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-gamestatefulset-operator ${PACKAGEPATH}/bcs-k8s-master
 	cd bcs-k8s/bcs-gamestatefulset-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
 
+gamedeployment:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-gamedeployment-operator ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-gamedeployment-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
+
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-egress-controller ${PACKAGEPATH}/bcs-k8s-master
 	#copy nginx template for egress controller
 	cp -R bcs-k8s/bcs-egress/deploy/config ${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller
 	cd bcs-k8s/bcs-egress && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-egress-controller/bcs-egress-controller ./cmd/bcs-egress-controller/main.go
-
-api-export:pre
-	mkdir -p ${EXPORTPATH}
-	cp ./bcs-common/common/types/meta.go ${EXPORTPATH}
-	cp ./bcs-common/common/types/status.go ${EXPORTPATH}
-	cp ./bcs-common/common/types/secret.go ${EXPORTPATH}
-	cp ./bcs-common/common/types/configmap.go ${EXPORTPATH}
 
 consoleproxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-consoleproxy
@@ -248,10 +245,7 @@ bmsf-mesos-adapter:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
 
 network:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
-	cp ./install/conf/bcs-mesos-node/qcloud-eip/* ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/conf
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/qcloud-eip ./bcs-services/bcs-network/qcloud-eip/main.go
+	cd ./bcs-network && make network && cd -
 
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
@@ -280,16 +274,10 @@ tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 	
 bcs-networkpolicy:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-networkpolicy
-	cp -R ./install/conf/bcs-services/bcs-networkpolicy ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-networkpolicy/bcs-networkpolicy ./bcs-services/bcs-networkpolicy/main.go
+	cd ./bcs-network && make networkpolicy && cd -
 
 bcs-cloud-network-agent:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent
-	cp -R ./install/conf/bcs-services/bcs-cloud-network-agent ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-cloud-network-agent ./bcs-services/bcs-network/bcs-cloudnetwork/cloud-network-agent/main.go
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ./bcs-services/bcs-network/bcs-cloudnetwork/bcs-eni-cni/main.go
-	cp ${PACKAGEPATH}/bcs-mesos-node/bcs-cni/bin/bcs-eni ${PACKAGEPATH}/bcs-services/bcs-cloud-network-agent/bcs-eni
+	cd ./bcs-network && make bcs-cloud-network-agent && cd -
 	
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
@@ -305,3 +293,14 @@ bkcmdb-synchronizer:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
 
+bcs-cloud-netservice:pre
+	cd ./bcs-network && make cloud-netservice && cd -
+
+bcs-cloud-netcontroller:pre
+	cd ./bcs-network && make cloud-netcontroller && cd -
+
+bcs-cloud-netagent:pre
+	cd ./bcs-network && make cloud-netagent && cd -
+
+bcs-ingress-controller:pre
+	cd ./bcs-network && make ingress-controller && cd -

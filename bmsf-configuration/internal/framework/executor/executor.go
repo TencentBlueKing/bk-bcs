@@ -13,6 +13,8 @@ limitations under the License.
 package executor
 
 import (
+	"go.uber.org/ratelimit"
+
 	pbcommon "bk-bscp/internal/protocol/common"
 )
 
@@ -33,22 +35,39 @@ type Action interface {
 
 // Executor is business action executor.
 type Executor struct {
+	// limiter is rate limiter that ctrl each action execute limit, it
+	// limits in per-second level.
+	limiter ratelimit.Limiter
 }
 
 // NewExecutor creates a new Executor.
 func NewExecutor() *Executor {
-	return &Executor{}
+	return &Executor{limiter: nil}
+}
+
+// NewRateLimitExecutor creates a new Executor with rate limit.
+func NewRateLimitExecutor(rate int) *Executor {
+	if rate <= 0 {
+		// not limit.
+		return &Executor{limiter: nil}
+	} else {
+		return &Executor{limiter: ratelimit.New(rate)}
+	}
 }
 
 // Execute executes the action.
 func (e *Executor) Execute(action Action) error {
+	// rate limit.
+	if e.limiter != nil {
+		e.limiter.Take()
+	}
+
+	// executes.
 	if err := action.Input(); err != nil {
 		return err
 	}
-
 	if err := action.Do(); err != nil {
 		return err
 	}
-
 	return action.Output()
 }

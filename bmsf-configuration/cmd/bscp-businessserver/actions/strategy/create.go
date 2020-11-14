@@ -66,6 +66,15 @@ func (act *CreateAction) Input() error {
 	if err := act.verify(); err != nil {
 		return act.Err(pbcommon.ErrCode_E_BS_PARAMS_INVALID, err.Error())
 	}
+
+	if err := strategy.ValidateLabels(act.req.Labels); err != nil {
+		return act.Err(pbcommon.ErrCode_E_BS_PARAMS_INVALID, fmt.Sprintf("invalid labels formats, %+v", err))
+	}
+
+	if err := strategy.ValidateLabels(act.req.LabelsAnd); err != nil {
+		return act.Err(pbcommon.ErrCode_E_BS_PARAMS_INVALID, fmt.Sprintf("invalid labelsAnd formats, %+v", err))
+	}
+
 	return nil
 }
 
@@ -133,6 +142,13 @@ func (act *CreateAction) verify() error {
 	}
 	if len(act.req.Labels) > database.BSCPBATCHLIMIT {
 		return errors.New("invalid params, labels set too large")
+	}
+
+	if act.req.LabelsAnd == nil {
+		act.req.LabelsAnd = make(map[string]string)
+	}
+	if len(act.req.LabelsAnd) > database.BSCPBATCHLIMIT {
+		return errors.New("invalid params, labelsAnd set too large")
 	}
 
 	length = len(act.req.Creator)
@@ -264,6 +280,7 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 		Dcs:        act.req.Dcs,
 		IPs:        act.req.IPs,
 		Labels:     act.req.Labels,
+		LabelsAnd:  act.req.LabelsAnd,
 	}
 
 	content, err := json.Marshal(act.strategies)

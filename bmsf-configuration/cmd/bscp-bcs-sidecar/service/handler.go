@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -37,6 +38,7 @@ type Handler struct {
 
 	businessName string
 	appName      string
+	path         string
 
 	// event channel.
 	ch chan interface{}
@@ -46,11 +48,12 @@ type Handler struct {
 }
 
 // NewHandler creates new Handler.
-func NewHandler(viper *viper.Viper, businessName, appName string, configHandler *ConfigHandler) *Handler {
+func NewHandler(viper *viper.Viper, businessName, appName, path string, configHandler *ConfigHandler) *Handler {
 	return &Handler{
 		viper:         viper,
 		businessName:  businessName,
 		appName:       appName,
+		path:          filepath.Clean(path),
 		configHandler: configHandler,
 		ch:            make(chan interface{}, viper.GetInt("sidecar.handlerChSize")),
 	}
@@ -61,9 +64,10 @@ func (h *Handler) handlePub(notification *pb.SCCMDPushNotification) error {
 	if notification == nil {
 		return errors.New("invalid publish notification struct: nil")
 	}
+	modKey := ModKey(h.businessName, h.appName, h.path)
 
-	if notification.Bid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", h.businessName, h.appName)) ||
-		notification.Appid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", h.businessName, h.appName)) {
+	if notification.Bid != h.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)) ||
+		notification.Appid != h.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)) {
 		return fmt.Errorf("invalid publish notification organization: bid/appid")
 	}
 
@@ -79,9 +83,10 @@ func (h *Handler) handleRoll(notification *pb.SCCMDPushRollbackNotification) err
 	if notification == nil {
 		return errors.New("invalid rollback notification struct: nil")
 	}
+	modKey := ModKey(h.businessName, h.appName, h.path)
 
-	if notification.Bid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", h.businessName, h.appName)) ||
-		notification.Appid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", h.businessName, h.appName)) {
+	if notification.Bid != h.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)) ||
+		notification.Appid != h.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)) {
 		return fmt.Errorf("invalid rollback notification organization: bid/appid")
 	}
 
@@ -97,9 +102,10 @@ func (h *Handler) handleReload(notification *pb.SCCMDPushReloadNotification) err
 	if notification == nil {
 		return errors.New("invalid reload notification struct: nil")
 	}
+	modKey := ModKey(h.businessName, h.appName, h.path)
 
-	if notification.Bid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", h.businessName, h.appName)) ||
-		notification.Appid != h.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", h.businessName, h.appName)) {
+	if notification.Bid != h.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)) ||
+		notification.Appid != h.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)) {
 		return fmt.Errorf("invalid reload notification organization: bid/appid")
 	}
 
@@ -113,8 +119,8 @@ func (h *Handler) handleReload(notification *pb.SCCMDPushReloadNotification) err
 // signalling keeps processing signalling from connserver.
 func (h *Handler) signalling() {
 	for {
-		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
-			logger.Info("handler[%s %s]| stop signalling now!", h.businessName, h.appName)
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.businessName, h.appName, h.path))) {
+			logger.Info("handler[%s %s %s]| stop signalling now!", h.businessName, h.appName, h.path)
 			return
 		}
 
@@ -124,23 +130,23 @@ func (h *Handler) signalling() {
 		case *pb.SCCMDPushNotification:
 			notification := cmd.(*pb.SCCMDPushNotification)
 			if err := h.handlePub(notification); err != nil {
-				logger.Error("handler[%s %s]| handle publish notification, %+v", h.businessName, h.appName, err)
+				logger.Error("handler[%s %s %s]| handle publish notification, %+v", h.businessName, h.appName, h.path, err)
 			}
 
 		case *pb.SCCMDPushRollbackNotification:
 			notification := cmd.(*pb.SCCMDPushRollbackNotification)
 			if err := h.handleRoll(notification); err != nil {
-				logger.Error("handler[%s %s]| handle rollback publish notification, %+v", h.businessName, h.appName, err)
+				logger.Error("handler[%s %s %s]| handle rollback publish notification, %+v", h.businessName, h.appName, h.path, err)
 			}
 
 		case *pb.SCCMDPushReloadNotification:
 			notification := cmd.(*pb.SCCMDPushReloadNotification)
 			if err := h.handleReload(notification); err != nil {
-				logger.Error("handler[%s %s]| handle reload publish notification, %+v", h.businessName, h.appName, err)
+				logger.Error("handler[%s %s %s]| handle reload publish notification, %+v", h.businessName, h.appName, h.path, err)
 			}
 
 		default:
-			logger.Error("handler[%s %s]| unknow command[%+v]", h.businessName, h.appName, cmd)
+			logger.Error("handler[%s %s %s]| unknow command[%+v]", h.businessName, h.appName, h.path, cmd)
 		}
 	}
 }
@@ -150,7 +156,7 @@ func (h *Handler) Handle(cmd interface{}) {
 	select {
 	case h.ch <- cmd:
 	case <-time.After(h.viper.GetDuration("sidecar.handlerChTimeout")):
-		logger.Error("handler[%s %s]| send cmd to handler channel timeout, %+v", h.businessName, h.appName, cmd)
+		logger.Error("handler[%s %s %s]| send cmd to handler channel timeout, %+v", h.businessName, h.appName, h.path, cmd)
 	}
 }
 
@@ -170,6 +176,7 @@ type ConfigHandler struct {
 
 	businessName string
 	appName      string
+	path         string
 
 	// config release effect cache.
 	effectCache *EffectCache
@@ -188,15 +195,19 @@ type ConfigHandler struct {
 
 	// configs reloader.
 	reloader *Reloader
+
+	// if first reload handled success.
+	isFirstReloadSucc bool
 }
 
 // NewConfigHandler creates a new config handler.
-func NewConfigHandler(viper *viper.Viper, businessName, appName string, effectCache *EffectCache,
+func NewConfigHandler(viper *viper.Viper, businessName, appName, path string, effectCache *EffectCache,
 	contentCache *ContentCache, reloader *Reloader) *ConfigHandler {
 	return &ConfigHandler{
 		viper:        viper,
 		businessName: businessName,
 		appName:      appName,
+		path:         filepath.Clean(path),
 		effectCache:  effectCache,
 		contentCache: contentCache,
 		reloader:     reloader,
@@ -223,7 +234,7 @@ func (h *ConfigHandler) makeConnectionClient() (pb.ConnectionClient, *grpc.Clien
 
 // sidecarLabels marshals sidecar labels to string base on strategy protocol.
 func (h *ConfigHandler) sidecarLabels() (string, error) {
-	sidecarLabels := &strategy.SidecarLabels{Labels: h.viper.GetStringMapString(fmt.Sprintf("appmod.%s_%s.labels", h.businessName, h.appName))}
+	sidecarLabels := &strategy.SidecarLabels{Labels: h.viper.GetStringMapString(fmt.Sprintf("appmod.%s.labels", ModKey(h.businessName, h.appName, h.path)))}
 
 	labels, err := json.Marshal(sidecarLabels)
 	if err != nil {
@@ -274,13 +285,15 @@ func (h *ConfigHandler) report(cfgsetids []string) error {
 		return err
 	}
 
+	modKey := ModKey(h.businessName, h.appName, h.path)
+
 	r := &pb.ReportReq{
 		Seq:       common.Sequence(),
-		Bid:       h.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", h.businessName, h.appName)),
-		Appid:     h.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", h.businessName, h.appName)),
-		Clusterid: h.viper.GetString(fmt.Sprintf("appmod.%s_%s.clusterid", h.businessName, h.appName)),
-		Zoneid:    h.viper.GetString(fmt.Sprintf("appmod.%s_%s.zoneid", h.businessName, h.appName)),
-		Dc:        h.viper.GetString(fmt.Sprintf("appmod.%s_%s.dc", h.businessName, h.appName)),
+		Bid:       h.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+		Appid:     h.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
+		Clusterid: h.viper.GetString(fmt.Sprintf("appmod.%s.clusterid", modKey)),
+		Zoneid:    h.viper.GetString(fmt.Sprintf("appmod.%s.zoneid", modKey)),
+		Dc:        h.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 		IP:        h.viper.GetString("appinfo.ip"),
 		Labels:    labels,
 		Infos:     reportInfos,
@@ -289,7 +302,7 @@ func (h *ConfigHandler) report(cfgsetids []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), h.viper.GetDuration("connserver.calltimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("ConfigHandler[%s %s]| request to connserver Report, %+v", h.businessName, h.appName, r)
+	logger.V(2).Infof("ConfigHandler[%s %s %s]| request to connserver Report, %+v", h.businessName, h.appName, h.path, r)
 
 	resp, err := client.Report(ctx, r)
 	if err != nil {
@@ -315,11 +328,13 @@ func (h *ConfigHandler) pullConfigSetList() ([]string, error) {
 	index := 0
 	limit := h.viper.GetInt("sidecar.configSetListSize")
 
+	modKey := ModKey(h.businessName, h.appName, h.path)
+
 	for {
 		r := &pb.PullConfigSetListReq{
 			Seq:   common.Sequence(),
-			Bid:   h.viper.GetString(fmt.Sprintf("appmod.%s_%s.bid", h.businessName, h.appName)),
-			Appid: h.viper.GetString(fmt.Sprintf("appmod.%s_%s.appid", h.businessName, h.appName)),
+			Bid:   h.viper.GetString(fmt.Sprintf("appmod.%s.bid", modKey)),
+			Appid: h.viper.GetString(fmt.Sprintf("appmod.%s.appid", modKey)),
 			Index: int32(index),
 			Limit: int32(limit),
 		}
@@ -327,7 +342,7 @@ func (h *ConfigHandler) pullConfigSetList() ([]string, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), h.viper.GetDuration("connserver.calltimeout"))
 		defer cancel()
 
-		logger.V(2).Infof("ConfigHandler[%s %s]| request to connserver PullConfigSetList, %+v", h.businessName, h.appName, r)
+		logger.V(2).Infof("ConfigHandler[%s %s %s]| request to connserver PullConfigSetList, %+v", h.businessName, h.appName, h.path, r)
 
 		// pull config set list from connserver.
 		resp, err := client.PullConfigSetList(ctx, r)
@@ -359,7 +374,7 @@ func (h *ConfigHandler) getPuller(cfgsetid string) *Puller {
 	defer h.mu.Unlock()
 
 	if v, ok := h.pullers[cfgsetid]; !ok || v == nil {
-		newPuller := NewPuller(h.viper, h.businessName, h.appName, cfgsetid, h.effectCache, h.contentCache)
+		newPuller := NewPuller(h.viper, h.businessName, h.appName, h.path, cfgsetid, h.effectCache, h.contentCache)
 
 		h.pullers[cfgsetid] = newPuller
 		newPuller.Run()
@@ -371,8 +386,8 @@ func (h *ConfigHandler) getPuller(cfgsetid string) *Puller {
 // pulling keeps pulling release.
 func (h *ConfigHandler) pulling() {
 	for {
-		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
-			logger.Info("ConfigHandler[%s %s]| stop pulling now!", h.businessName, h.appName)
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.businessName, h.appName, h.path))) {
+			logger.Info("ConfigHandler[%s %s %s]| stop pulling now!", h.businessName, h.appName, h.path)
 			return
 		}
 
@@ -385,7 +400,7 @@ func (h *ConfigHandler) pulling() {
 
 			// send publishing notification to target puller.
 			if err := puller.HandlePub(msg); err != nil {
-				logger.Error("ConfigHandler[%s %s] | pulling, handle publish notification to puller, %+v", h.businessName, h.appName, err)
+				logger.Error("ConfigHandler[%s %s %s] | pulling, handle publish notification to puller, %+v", h.businessName, h.appName, h.path, err)
 			}
 
 		case *pb.SCCMDPushRollbackNotification:
@@ -394,7 +409,7 @@ func (h *ConfigHandler) pulling() {
 
 			// send publishing notification to target puller.
 			if err := puller.HandleRoll(msg); err != nil {
-				logger.Error("ConfigHandler[%s %s] | pulling, handle rollback notification to puller, %+v", h.businessName, h.appName, err)
+				logger.Error("ConfigHandler[%s %s %s] | pulling, handle rollback notification to puller, %+v", h.businessName, h.appName, h.path, err)
 			}
 
 		case *pb.SCCMDPushReloadNotification:
@@ -402,11 +417,11 @@ func (h *ConfigHandler) pulling() {
 
 			// send publishing notification to target puller.
 			if err := h.handleReload(msg); err != nil {
-				logger.Error("ConfigHandler[%s %s] | pulling, handle reload notification to puller, %+v", h.businessName, h.appName, err)
+				logger.Error("ConfigHandler[%s %s %s] | pulling, handle reload notification to puller, %+v", h.businessName, h.appName, h.path, err)
 			}
 
 		default:
-			logger.Error("ConfigHandler[%s %s]| unknow command[%+v]", h.businessName, h.appName, notification)
+			logger.Error("ConfigHandler[%s %s %s]| unknow command[%+v]", h.businessName, h.appName, h.path, notification)
 		}
 	}
 }
@@ -414,9 +429,10 @@ func (h *ConfigHandler) pulling() {
 // handleReload handles reload event, you may not know why it's here,
 // but here is the only interface to handle all puller of configsets.
 func (h *ConfigHandler) handleReload(msg *pb.SCCMDPushReloadNotification) error {
-	if !h.viper.GetBool("instance.open") {
-		// instance service is not open.
-		logger.Warnf("ConfigHandler[%s %s]| instance service is not open, can't do reload action", h.businessName, h.appName)
+	if !h.viper.GetBool("instance.open") && !h.viper.GetBool("sidecar.fileReloadMode") {
+		// instance service is not open and file reload mode is not open.
+		logger.Warnf("ConfigHandler[%s %s %s]| instance service is not open and file reload mode is not open, can't do reload action",
+			h.businessName, h.appName, h.path)
 		return nil
 	}
 
@@ -432,7 +448,9 @@ func (h *ConfigHandler) handleReload(msg *pb.SCCMDPushReloadNotification) error 
 	}
 
 	// handle all reload spec info.
-	var referenceMetadata *ReleaseMetadata
+	var referenceReleaseName string
+	var referenceReleaseid string
+
 	metadatas := []*ReleaseMetadata{}
 
 	for _, eInfo := range msg.ReloadSpec.Info {
@@ -442,13 +460,25 @@ func (h *ConfigHandler) handleReload(msg *pb.SCCMDPushReloadNotification) error 
 			return fmt.Errorf("can't reload this release now, configset[%s] suppose not effectting release[%s] this moment", eInfo.Cfgsetid, eInfo.Releaseid)
 		}
 
-		if md.Releaseid != eInfo.Releaseid {
-			// not effectting target release this moment.
-			return fmt.Errorf("can't reload this release now, configset[%s] not effectting release[%s] this moment", eInfo.Cfgsetid, eInfo.Releaseid)
+		// check release.
+		if !msg.ReloadSpec.Rollback {
+			// normal reload.
+			if md.Releaseid != eInfo.Releaseid {
+				// not effectting target release this moment.
+				return fmt.Errorf("can't reload this release now, configset[%s] not effectting release[%s] this moment", eInfo.Cfgsetid, eInfo.Releaseid)
+			}
+		} else {
+			// rollback reload.
+			if md.Releaseid == eInfo.Releaseid {
+				// if md.Releaseid == eInfo.Releaseid || md.lastReleaseid != eInfo.Releaseid || !md.isRollback {
+				return fmt.Errorf("can't rollback reload this release now, configset[%s] not rollbacked release[%s] this moment, %+v",
+					eInfo.Cfgsetid, eInfo.Releaseid, md)
+			}
 		}
 
-		// mark reference metadata to judge event type.
-		referenceMetadata = md
+		referenceReleaseName = md.ReleaseName
+		referenceReleaseid = eInfo.Releaseid
+
 		metadatas = append(metadatas, md)
 
 		// NOTE: may other release is coming, but there should be a lock in user level.
@@ -460,9 +490,8 @@ func (h *ConfigHandler) handleReload(msg *pb.SCCMDPushReloadNotification) error 
 	spec := &ReloadSpec{
 		BusinessName: h.businessName,
 		AppName:      h.appName,
-
-		// all releases have the same name even under multi release.
-		ReleaseName: referenceMetadata.ReleaseName,
+		Path:         h.path,
+		ReleaseName:  referenceReleaseName,
 	}
 
 	// config reload specs.
@@ -478,12 +507,12 @@ func (h *ConfigHandler) handleReload(msg *pb.SCCMDPushReloadNotification) error 
 		spec.MultiReleaseid = msg.ReloadSpec.MultiReleaseid
 	} else {
 		// single release reload mode.
-		spec.Releaseid = referenceMetadata.Releaseid
+		spec.Releaseid = referenceReleaseid
 	}
 
-	// reload type, 0: update  1: rollback.
-	if referenceMetadata.isRollback {
-		spec.ReloadType = 1
+	// reload type, 0: update  1: rollback  2.first reload.
+	if msg.ReloadSpec.Rollback {
+		spec.ReloadType = int32(ReloadTypeRollback)
 	}
 
 	// sync reload event.
@@ -499,8 +528,8 @@ func (h *ConfigHandler) reporting() {
 	defer ticker.Stop()
 
 	for {
-		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
-			logger.Info("ConfigHandler[%s %s]| stop reporting now!", h.businessName, h.appName)
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.businessName, h.appName, h.path))) {
+			logger.Info("ConfigHandler[%s %s %s]| stop reporting now!", h.businessName, h.appName, h.path)
 			return
 		}
 
@@ -514,9 +543,9 @@ func (h *ConfigHandler) reporting() {
 		h.mu.RUnlock()
 
 		if err := h.report(cfgsetids); err != nil {
-			logger.Error("ConfigHandler[%s %s]| reporting, report local releases effected information, %+v", h.businessName, h.appName, err)
+			logger.Error("ConfigHandler[%s %s %s]| reporting, report local releases effected information, %+v", h.businessName, h.appName, h.path, err)
 		}
-		logger.Warn("ConfigHandler[%s %s]| reporting, report local releases effected information succcess, %+v", h.businessName, h.appName, cfgsetids)
+		logger.Warn("ConfigHandler[%s %s %s]| reporting, report local releases effected information succcess, %+v", h.businessName, h.appName, h.path, cfgsetids)
 	}
 }
 
@@ -529,23 +558,21 @@ func (h *ConfigHandler) syncConfigSetList() {
 	defer ticker.Stop()
 
 	for {
-		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
-			logger.Info("ConfigHandler[%s %s]| stop syncing configset list now!", h.businessName, h.appName)
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.businessName, h.appName, h.path))) {
+			logger.Info("ConfigHandler[%s %s %s]| stop syncing configset list now!", h.businessName, h.appName, h.path)
 			return
 		}
 
 		if !isFirstTime {
 			<-ticker.C
+		} else {
+			common.DelayRandomMS(1000)
 		}
-		isFirstTime = false
 
 		// pull configset list from connserver.
 		cfgsetids, err := h.pullConfigSetList()
 		if err != nil {
-			logger.Error("ConfigHandler[%s %s]| syncConfigSetList, sync configset list, %+v", h.businessName, h.appName, err)
-			continue
-		}
-		if len(cfgsetids) == 0 {
+			logger.Error("ConfigHandler[%s %s %s]| syncConfigSetList, sync configset list, %+v", h.businessName, h.appName, h.path, err)
 			continue
 		}
 
@@ -554,7 +581,7 @@ func (h *ConfigHandler) syncConfigSetList() {
 		newCfgsetids := make(map[string]string)
 		for _, cfgsetid := range cfgsetids {
 			if v, ok := h.pullers[cfgsetid]; !ok || v == nil {
-				newPuller := NewPuller(h.viper, h.businessName, h.appName, cfgsetid, h.effectCache, h.contentCache)
+				newPuller := NewPuller(h.viper, h.businessName, h.appName, h.path, cfgsetid, h.effectCache, h.contentCache)
 				h.pullers[cfgsetid] = newPuller
 				newPuller.Run()
 			}
@@ -567,7 +594,90 @@ func (h *ConfigHandler) syncConfigSetList() {
 			}
 		}
 		h.mu.Unlock()
-		logger.Warn("ConfigHandler[%s %s]| syncConfigSetList, sync configset list success, %+v", h.businessName, h.appName, cfgsetids)
+		logger.Warn("ConfigHandler[%s %s %s]| syncConfigSetList, sync configset list success, %+v", h.businessName, h.appName, h.path, cfgsetids)
+
+		// handle instance start first reload notification.
+		if isFirstTime {
+			go h.handleFirstReload()
+		}
+		isFirstTime = false
+	}
+}
+
+func (h *ConfigHandler) handleFirstReload() {
+	for {
+		// wait for pullers.
+		time.Sleep(time.Second)
+
+		if h.isFirstReloadSucc {
+			// first reload already success.
+			return
+		}
+
+		// handle first reload.
+		h.mu.RLock()
+		cfgsetids := []string{}
+		for cfgsetid := range h.pullers {
+			cfgsetids = append(cfgsetids, cfgsetid)
+		}
+		h.mu.RUnlock()
+
+		// check cfgsetids effected status.
+		isAllCfgsetsEffectedSucc := true
+		metadatas := []*ReleaseMetadata{}
+
+		for _, cfgsetid := range cfgsetids {
+
+			// check local release.
+			md, err := h.effectCache.LocalRelease(cfgsetid)
+			if err != nil {
+				// no need to check others, just wait and check next round.
+				logger.Warn("ConfigHandler[%s %s %s]| handleFirstReload, check local release for %+v, %+v",
+					h.businessName, h.appName, h.path, cfgsetid, err)
+
+				isAllCfgsetsEffectedSucc = false
+				break
+			}
+
+			if md == nil {
+				// no need to check others, just wait and check next round.
+				logger.Warn("ConfigHandler[%s %s %s]| handleFirstReload, check local release for %+v, no effected release this moment",
+					h.businessName, h.appName, h.path, cfgsetid)
+
+				isAllCfgsetsEffectedSucc = false
+				break
+			}
+			metadatas = append(metadatas, md)
+		}
+
+		if !isAllCfgsetsEffectedSucc {
+			// check next round.
+			continue
+		}
+
+		// all configsets already effected success this moment.
+		// send reload notification now.
+		spec := &ReloadSpec{
+			BusinessName: h.businessName,
+			AppName:      h.appName,
+			Path:         h.path,
+			ReleaseName:  "FIRST-RELOAD",
+			ReloadType:   int32(ReloadTypeFirstReload),
+		}
+
+		configSpec := []ConfigSpec{}
+		for _, md := range metadatas {
+			configSpec = append(configSpec, ConfigSpec{Name: md.CfgsetName, Fpath: md.CfgsetFpath})
+		}
+		spec.Configs = configSpec
+
+		// send reload event.
+		h.reloader.Reload(spec)
+		logger.Warn("ConfigHandler[%s %s %s]| handleFirstReload success!", h.businessName, h.appName, h.path)
+
+		// mark first reload handled success.
+		h.isFirstReloadSucc = true
+		return
 	}
 }
 
@@ -592,8 +702,8 @@ func (h *ConfigHandler) Debug() {
 	defer ticker.Stop()
 
 	for {
-		if h.viper.GetBool(fmt.Sprintf("appmod.%s_%s.stop", h.businessName, h.appName)) {
-			logger.Info("ConfigHandler[%s %s]| stop debuging now!", h.businessName, h.appName)
+		if h.viper.GetBool(fmt.Sprintf("appmod.%s.stop", ModKey(h.businessName, h.appName, h.path))) {
+			logger.Info("ConfigHandler[%s %s %s]| stop debuging now!", h.businessName, h.appName, h.path)
 			return
 		}
 
@@ -607,7 +717,7 @@ func (h *ConfigHandler) Debug() {
 		h.mu.RUnlock()
 
 		for _, cfgsetid := range cfgsetids {
-			logger.V(3).Infof("ConfigHandler[%s %s]| debug, %s", h.businessName, h.appName, h.effectCache.Debug(cfgsetid))
+			logger.V(3).Infof("ConfigHandler[%s %s %s]| debug, %s", h.businessName, h.appName, h.path, h.effectCache.Debug(cfgsetid))
 		}
 	}
 }

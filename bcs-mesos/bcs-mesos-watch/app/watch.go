@@ -266,6 +266,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 
 	appRole := "slave"
 	tick := time.NewTicker(60 * time.Second)
+	defer tick.Stop()
 
 	for {
 		select {
@@ -439,6 +440,7 @@ func RefreshDCHost(rfCxt context.Context, cfg *types.CmdConfig, storage storage.
 	blog.Info("DiscoverService(%s) succ", discvPath)
 
 	tick := time.NewTicker(120 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -514,7 +516,7 @@ func registerZkEndpoints(rdCxt context.Context, cfg *types.CmdConfig) (bool, err
 	regInfo.ServerInfo.Scheme = cfg.ServerSchem
 	regInfo.ServerInfo.Pid = os.Getpid()
 	regInfo.ServerInfo.Version = version.GetVersion()
-	data, err := json.Marshal(regInfo)
+	data, _ := json.Marshal(regInfo)
 	key := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDATAWATCH + "/" + cfg.Address
 	discvPath := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDATAWATCH
 

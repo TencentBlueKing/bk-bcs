@@ -577,3 +577,29 @@ CREATE TABLE `t_variable_zone` (
   KEY `idx_dtime` (`Fdelete_time`),
   KEY `idx_ctime` (`Fcreate_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `t_proc_attr` (
+ `Fid` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+ `Fcloudid` varchar(64) NOT NULL,
+ `Fip` varchar(32) NOT NULL,
+ `Fbid` varchar(64) NOT NULL,
+ `Fappid` varchar(64) NOT NULL,
+ `Fclusterid` varchar(64) NOT NULL,
+ `Fzoneid` varchar(64) NOT NULL,
+ `Fdc` varchar(64) NOT NULL,
+ `Flabels` longtext NOT NULL,
+ `Fpath` varchar(128) NOT NULL,
+ `Fcreator` varchar(64) NOT NULL,
+ `Flast_modify_by` varchar(64) NOT NULL,
+ `Fmemo` varchar(64) NOT NULL,
+ `Fstate` int(11) DEFAULT NULL,
+ `Fcreate_time` datetime DEFAULT NULL,
+ `Fupdate_time` datetime DEFAULT NULL,
+ `Fdelete_time` datetime DEFAULT NULL,
+ PRIMARY KEY (`Fid`),
+ UNIQUE KEY `uidx_attr` (`Fcloudid`,`Fip`,`Fbid`,`Fappid`,`Fpath`),
+ KEY `idx_state` (`Fstate`),
+ KEY `idx_ctime` (`Fcreate_time`),
+ KEY `idx_utime` (`Fupdate_time`),
+ KEY `idx_dtime` (`Fdelete_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

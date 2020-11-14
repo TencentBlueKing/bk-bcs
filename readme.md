@@ -1,8 +1,7 @@
 ![蓝鲸容器管理平台.png](./docs/logo/bcs_zh_v2.png)
 
-
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.14.6-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)              
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.18.9-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)
 
 [EnglishDocs](./readme_en.md)
 
@@ -39,7 +38,7 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
   * [跨云容器管理方案](./docs/features/solutions/BCS跨云容器管理方案.md)
   * 支持windows容器
 * 插件化的二次开发能力
-  * 网络插件 
+  * 网络插件
     * [了解社区CNI标准](https://github.com/containernetworking/cni)
     * [CNI插件实践](./docs/features/solutions/cni-practise.md)
   * 存储插件
@@ -59,7 +58,6 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 ## Getting Started
 
 > 容器管理平台是蓝鲸智云社区版V5.1以上推出的产品，后台服务可以独立部署与使用。如果需要SaaS的支持，则需要与蓝鲸社区版软件配合使用。
-
 > 目前社区版5.1在灰度内测中，若想体验，请填写问卷留下邮箱等信息，蓝鲸将在1-2个工作日通过邮箱方式，交付软件。感谢对蓝鲸的支持与理解。
 > 问卷链接：[https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
@@ -96,11 +94,11 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 
 ## Blueking Community
 
-- [BK-BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
-- [BK-CI](https://github.com/Tencent/bk-ci)：蓝鲸持续集成平台是一个开源的持续集成和持续交付系统，可以轻松将你的研发流程呈现到你面前。
-- [BK-CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
-- [BK-PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
-- [BK-SOPS](https://github.com/Tencent/bk-sops)：标准运维（SOPS）是通过可视化的图形界面进行任务流程编排和执行的系统，是蓝鲸体系中一款轻量级的调度编排类SaaS产品
+* [BK-BCS-SAAS](https://github.com/Tencent/bk-bcs-saas)：蓝鲸容器SAAS是蓝鲸针对容器管理平台提供的配置设施，为用户提供便利的容器操作。
+* [BK-CI](https://github.com/Tencent/bk-ci)：蓝鲸持续集成平台是一个开源的持续集成和持续交付系统，可以轻松将你的研发流程呈现到你面前。
+* [BK-CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
+* [BK-PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
+* [BK-SOPS](https://github.com/Tencent/bk-sops)：标准运维（SOPS）是通过可视化的图形界面进行任务流程编排和执行的系统，是蓝鲸体系中一款轻量级的调度编排类SaaS产品
 
 ## 认证
 

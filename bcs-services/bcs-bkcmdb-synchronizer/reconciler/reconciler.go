@@ -65,9 +65,6 @@ type Reconciler struct {
 	// sender lock, when locked, pod event will stay at event queue
 	sendersLock sync.Mutex
 
-	// hasher pod event to senders, to ensure the event order
-	hasher *jump.Hasher
-
 	// storage client
 	storageClient storage.Interface
 
@@ -113,7 +110,6 @@ func NewReconciler(clusterInfo common.Cluster, storageClient storage.Interface,
 		fullSyncInterval: fullSyncInterval,
 		moduleIDMap:      make(map[string]int64),
 		queue:            make(chan PodEvent, QUEUE_LENGTH),
-		hasher:           jump.New(SENDER_NUMBER, jump.NewCRC64()),
 	}
 
 	// should fetch the related modules when new reconciler is created
@@ -121,6 +117,11 @@ func NewReconciler(clusterInfo common.Cluster, storageClient storage.Interface,
 		return nil, err
 	}
 	return reconciler, nil
+}
+
+func (r *Reconciler) hash(key string) int32 {
+	// hasher pod event to senders, to ensure the event order
+	return jump.HashString(key, SENDER_NUMBER, jump.NewCRC64())
 }
 
 // Run run reconciler
@@ -337,7 +338,7 @@ func (r *Reconciler) doCompare() error {
 
 	for _, add := range adds {
 		blog.Info("%s full sync event %d, pod %s", r.logPre(), EventAdd, add.MetadataString())
-		index := r.hasher.Hash(add.PodUUID)
+		index := r.hash(add.PodUUID)
 		r.senders[index].Push(PodEvent{
 			Type: EventAdd,
 			Pod:  add,
@@ -345,7 +346,7 @@ func (r *Reconciler) doCompare() error {
 	}
 	for _, update := range updates {
 		blog.Info("%s full sync event %d, pod %s", r.logPre(), EventUpdate, update.MetadataString())
-		index := r.hasher.Hash(update.PodUUID)
+		index := r.hash(update.PodUUID)
 		r.senders[index].Push(PodEvent{
 			Type: EventUpdate,
 			Pod:  update,
@@ -354,7 +355,7 @@ func (r *Reconciler) doCompare() error {
 
 	for _, del := range dels {
 		blog.Info("%s full sync event %d, pod %s", r.logPre(), EventDel, del.MetadataString())
-		index := r.hasher.Hash(del.PodUUID)
+		index := r.hash(del.PodUUID)
 		r.senders[index].Push(PodEvent{
 			Type: EventDel,
 			Pod:  del,
@@ -411,7 +412,7 @@ func (r *Reconciler) transferLoop(ctx context.Context) {
 		select {
 		case e := <-r.queue:
 			blog.Infof("%s watch event: %d, pod: %s", r.logPre(), e.Type, e.Pod.MetadataString())
-			index := r.hasher.Hash(e.Pod.PodUUID)
+			index := r.hash(e.Pod.PodUUID)
 			r.sendersLock.Lock()
 			r.senders[index].Push(e)
 			r.sendersLock.Unlock()

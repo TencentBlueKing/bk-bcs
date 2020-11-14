@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	stsplus "bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -43,7 +43,7 @@ type GameStatefulSetPodControlInterface interface {
 	// storage this method is a no-op. If the Pod must be mutated to conform to the Set, it is mutated and updated.
 	// pod is an in-out parameter, and any updates made to the pod are reflected as mutations to this parameter. If
 	// the create is successful, the returned error is nil.
-	UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error
+	UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod, updateType string) error
 	// DeleteGameStatefulSetPod deletes a Pod in a StatefulSet. The pods PVCs are not deleted. If the delete is successful,
 	// the returned error is nil.
 	DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error
@@ -72,6 +72,7 @@ type realGameStatefulSetPodControl struct {
 	recorder  record.EventRecorder
 }
 
+// UpdateGameStatefulSetPod create pod according to definition in GameStatefulSet
 func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
 	// Create the Pod's PVCs prior to creating the Pod
 	if err := spc.createPersistentVolumeClaims(set, pod); err != nil {
@@ -88,7 +89,8 @@ func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.
 	return err
 }
 
-func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
+// UpdateGameStatefulSetPod update pod info of GameStatefulSet
+func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod, updateType string) error {
 	attemptedUpdate := false
 	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		// assume the Pod is consistent
@@ -135,17 +137,19 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		return updateErr
 	})
 	if attemptedUpdate {
-		spc.recordPodEvent("update", set, pod, err)
+		spc.recordPodEvent(updateType, set, pod, err)
 	}
 	return err
 }
 
+// DeleteGameStatefulSetPod delete pod according to GameStatefulSet
 func (spc *realGameStatefulSetPodControl) DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
 	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, nil)
 	spc.recordPodEvent("delete", set, pod, err)
 	return err
 }
 
+// ForceDeleteGameStatefulSetPod delete pod according to GameStatefulSet
 func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
 	err := spc.client.CoreV1().Pods(set.Namespace).Delete(pod.Name, metav1.NewDeleteOptions(0))
 	spc.recordPodEvent("force delete", set, pod, err)

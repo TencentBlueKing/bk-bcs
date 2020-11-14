@@ -44,7 +44,7 @@ func Run(op *options.PrometheusControllerOption) error {
 func setConfig(conf *config.Config, op *options.PrometheusControllerOption) {
 	conf.ClusterZk = op.ClusterZk
 	conf.PromFilePrefix = op.PromFilePrefix
-	conf.ClusterId = op.ClusterId
+	conf.ClusterID = op.ClusterID
 	conf.CadvisorPort = op.CadvisorPort
 	conf.NodeExportPort = op.NodeExporterPort
 	conf.ServiceZk = op.BCSZk

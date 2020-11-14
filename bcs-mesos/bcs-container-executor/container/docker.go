@@ -24,10 +24,11 @@ import (
 	"strings"
 
 	"encoding/json"
+	"time"
+
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"time"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
@@ -54,8 +55,10 @@ import (
 // }
 
 const (
+	// StopContainerGraceTime executor default gracetime
 	StopContainerGraceTime = 10
-	DefaultDockerCpuPeriod = 100000
+	// DefaultDockerCPUPeriod default cpu period for executor
+	DefaultDockerCPUPeriod = 100000
 )
 
 //DockerContainer implement container interface
@@ -115,6 +118,7 @@ func (docker *DockerContainer) RunCommand(containerID string, command []string) 
 	return nil
 }
 
+// RunCommandV2 v2 version run command
 func (docker *DockerContainer) RunCommandV2(ops *schedTypes.RequestCommandTask) (*schedTypes.ResponseCommandTask, error) {
 	if ops.User == "" {
 		ops.User = "root"
@@ -276,7 +280,7 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		PortBindings:    make(map[dockerclient.Port][]dockerclient.PortBinding),
 		Privileged:      containerTask.Privileged,
 		PublishAllPorts: containerTask.PublishAllPorts,
-		OOMKillDisable:  containerTask.OOMKillDisabled,
+		OOMKillDisable:  &containerTask.OOMKillDisabled,
 		ShmSize:         containerTask.ShmSize,
 		IpcMode:         containerTask.Ipc,
 	}
@@ -362,8 +366,8 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 	}*/
 
 	if containerTask.LimitResource != nil && containerTask.LimitResource.Cpus > 0 {
-		hostConfig.CPUPeriod = DefaultDockerCpuPeriod
-		hostConfig.CPUQuota = int64(containerTask.LimitResource.Cpus * DefaultDockerCpuPeriod)
+		hostConfig.CPUPeriod = DefaultDockerCPUPeriod
+		hostConfig.CPUQuota = int64(containerTask.LimitResource.Cpus * DefaultDockerCPUPeriod)
 	}
 	if containerTask.LimitResource != nil && containerTask.LimitResource.Mem >= 4 {
 		hostConfig.Memory = int64(containerTask.LimitResource.Mem * 1024 * 1024)
@@ -559,6 +563,7 @@ func (docker *DockerContainer) ListImage(filter string) ([]*BcsImage, error) {
 	return bcsImages, nil
 }
 
+// UpdateResources update container resource in runtime
 func (docker *DockerContainer) UpdateResources(id string, resource *schedTypes.Resource) error {
 	if resource.Cpus < 0 || resource.Mem < 4 {
 		return fmt.Errorf("container resource cpu %f memory %f is invalid", resource.Cpus, resource.Mem)
@@ -575,6 +580,7 @@ func (docker *DockerContainer) UpdateResources(id string, resource *schedTypes.R
 	return docker.client.UpdateContainer(id, options)
 }
 
+// CommitImage create image from running container
 func (docker *DockerContainer) CommitImage(id, image string) error {
 	repo, tag := dockerclient.ParseRepositoryTag(image)
 

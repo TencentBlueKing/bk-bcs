@@ -101,7 +101,7 @@ func (act *SubListAction) querySubCommits() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Select(fields).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.Commit{Bid: act.req.Bid, MultiCommitid: act.req.MultiCommitid}).
 		Find(&act.commits).Error
 

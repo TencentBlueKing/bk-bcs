@@ -229,7 +229,7 @@ func (as *AccessServer) initMetricsCollector() {
 
 // initializes action executor.
 func (as *AccessServer) initExecutor() {
-	as.executor = executor.NewExecutor()
+	as.executor = executor.NewRateLimitExecutor(as.viper.GetInt("server.executorLimitRate"))
 	logger.Info("create action executor success.")
 }
 

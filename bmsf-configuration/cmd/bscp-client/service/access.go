@@ -14,16 +14,22 @@
 package service
 
 import (
-	"bk-bscp/cmd/bscp-client/option"
-	"bk-bscp/internal/protocol/accessserver"
-	"bk-bscp/pkg/grpclb"
-	"bk-bscp/pkg/logger"
+	"context"
+	"encoding/base64"
 	"fmt"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+
+	"bk-bscp/cmd/bscp-client/option"
+	"bk-bscp/internal/protocol/accessserver"
+	"bk-bscp/pkg/logger"
+)
+
+const (
+	// defaultDialTimeout is default dial timeout.
+	defaultDialTimeout = 3 * time.Second
 )
 
 //NewOperator create business all operation interface
@@ -31,10 +37,35 @@ func NewOperator(op *option.Global) *AccessOperator {
 	operator := &AccessOperator{
 		Business: op.Business,
 		User:     op.Operator,
+		Token:    op.Token,
 		index:    op.Index,
 		limit:    op.Limit,
 	}
 	return operator
+}
+
+// CCredential is credential for per rpc.
+type CCredential struct {
+	auth string
+}
+
+// NewCCredential creates a new CCredential object.
+func NewCCredential(auth string) *CCredential {
+	return &CCredential{auth: auth}
+}
+
+// GetRequestMetadata returns metadatas for request.
+func (c *CCredential) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	// Authorization: <type> <credentials>.
+	// eg: grpcgateway-authorization: Basic YWRtaW46cGFzc3dvcmQ=
+	return map[string]string{
+		"grpcgateway-authorization": fmt.Sprintf("Basic %s", c.auth),
+	}, nil
+}
+
+// RequireTransportSecurity returns flag for transport security.
+func (c *CCredential) RequireTransportSecurity() bool {
+	return false
 }
 
 //AccessOperator basic AccessServer tools
@@ -42,7 +73,7 @@ type AccessOperator struct {
 	//yaml configuraiotn handler
 	cfgHandler *viper.Viper
 	//grpcConn for connecting AccessServer
-	grpcConn *grpclb.GRPCConn
+	grpcConn *grpc.ClientConn
 	//all common attributes shared in sub Class
 	//Client access server client interface
 	Client accessserver.AccessClient
@@ -50,6 +81,8 @@ type AccessOperator struct {
 	Business string
 	//User operator
 	User string
+	//Token
+	Token string
 	//only for list command
 	index int32
 	limit int32
@@ -129,19 +162,8 @@ func (operator *AccessOperator) initLogger() error {
 //checkInitialParameter check yaml
 func (operator *AccessOperator) checkInitialParameter() error {
 	//access configuration part
-	if !operator.cfgHandler.IsSet("access.servicename") {
-		operator.cfgHandler.SetDefault("access.servicename", "bk-bscp-accessserver")
-	}
-	if !operator.cfgHandler.IsSet("access.timeout") {
-		operator.cfgHandler.SetDefault("access.timeout", time.Second*3)
-	}
-
-	//discovery etcd configuration part
-	if !operator.cfgHandler.IsSet("etcd.endpoints") {
-		return fmt.Errorf("client configration lost etcd endpoints")
-	}
-	if !operator.cfgHandler.IsSet("etcd.dialTimeout") {
-		operator.cfgHandler.SetDefault("etcd.dialTimeout", time.Second*3)
+	if !operator.cfgHandler.IsSet("host") {
+		operator.cfgHandler.SetDefault("host", "client configration lost host")
 	}
 	if !operator.cfgHandler.IsSet("debug") {
 		operator.cfgHandler.SetDefault("debug", false)
@@ -153,25 +175,14 @@ func (operator *AccessOperator) checkInitialParameter() error {
 
 //initAccessClient create client for AccessServer
 func (operator *AccessOperator) initAccessClient() error {
-	//internal grpc lb context
-	ctx := &grpclb.Context{
-		Target: operator.cfgHandler.GetString("access.servicename"),
-		EtcdConfig: clientv3.Config{
-			Endpoints:   operator.cfgHandler.GetStringSlice("etcd.endpoints"),
-			DialTimeout: operator.cfgHandler.GetDuration("etcd.dialtimeout"),
-		},
-	}
-	// gRPC dial options, with insecure and timeout.
-	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
-		grpc.WithTimeout(operator.cfgHandler.GetDuration("access.timeout")),
-	}
-	// build gRPC client of datamanager.
-	conn, err := grpclb.NewGRPCConn(ctx, opts...)
+	bscpAuth := base64.StdEncoding.EncodeToString([]byte(operator.Token))
+	conn, err := grpc.Dial(operator.cfgHandler.GetString("host"), grpc.WithInsecure(),
+		grpc.WithTimeout(defaultDialTimeout), grpc.WithPerRPCCredentials(NewCCredential(bscpAuth)))
 	if err != nil {
 		return err
 	}
+	client := accessserver.NewAccessClient(conn)
 	operator.grpcConn = conn
-	operator.Client = accessserver.NewAccessClient(conn.Conn())
+	operator.Client = client
 	return nil
 }

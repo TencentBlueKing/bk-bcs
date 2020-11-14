@@ -19,8 +19,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
-	"github.com/pkg/errors"
 	"io"
 	"net"
 	htplib "net/http"
@@ -28,12 +26,17 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/pkg/errors"
+
 	"crypto/tls"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/gorilla/websocket"
 )
 
+// ApiRequester http interface for bcs-client
 type ApiRequester interface {
 	Do(uri, method string, data []byte, header ...*http.HeaderSet) ([]byte, error)
 	DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (*httpclient.HttpRespone, error)
@@ -55,6 +58,7 @@ type bcsApiRequester struct {
 	bcsToken  string
 }
 
+// Do do http request
 func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.HeaderSet) ([]byte, error) {
 	httpCli := httpclient.NewHttpClient()
 	httpCli.SetHeader("Content-Type", "application/json")
@@ -82,6 +86,7 @@ func (b *bcsApiRequester) Do(uri, method string, data []byte, header ...*http.He
 	return response.Reply, nil
 }
 
+// DoForResponse get response after request
 func (b *bcsApiRequester) DoForResponse(uri, method string, data []byte, header ...*http.HeaderSet) (*httpclient.HttpRespone, error) {
 	httpCli := httpclient.NewHttpClient()
 	httpCli.SetHeader("Content-Type", "application/json")
@@ -101,6 +106,7 @@ func (b *bcsApiRequester) DoForResponse(uri, method string, data []byte, header 
 	return httpCli.RequestEx(uri, method, nil, data)
 }
 
+// DoWebsocket websocket request
 func (b *bcsApiRequester) DoWebsocket(uri string, header ...*http.HeaderSet) (types.HijackedResponse, error) {
 	var hijackedResp types.HijackedResponse
 
@@ -136,6 +142,7 @@ func (b *bcsApiRequester) DoWebsocket(uri string, header ...*http.HeaderSet) (ty
 	return types.HijackedResponse{Ws: ws}, err
 }
 
+// PostHijacked post hijack for websocket
 func (b *bcsApiRequester) PostHijacked(ctx context.Context, uri string, header ...*http.HeaderSet) (types.HijackedResponse, error) {
 	req, err := htplib.NewRequest(htplib.MethodGet, uri, nil)
 	if err != nil {

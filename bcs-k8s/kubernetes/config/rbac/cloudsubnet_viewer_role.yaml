@@ -1,0 +1,20 @@
+# permissions for end users to view cloudsubnets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudsubnet-viewer-role
+rules:
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - cloudsubnets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud.bkbcs.tencent.com
+  resources:
+  - cloudsubnets/status
+  verbs:
+  - get

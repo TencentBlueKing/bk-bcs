@@ -14,7 +14,7 @@
 package sidecar
 
 import (
-	"k8s.io/apimachinery/pkg/util/json"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -32,6 +32,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	apilabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -169,6 +172,20 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 //BcsLogConfig parameter ContainerName matched, increased 10 score
 //finally, the above scores will be accumulated to be the BcsLogConfig final score
 func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf *bcsv1.BcsLogConfig) int {
+	// selector match
+	podLabelSet := apilabels.Set(pod.GetLabels())
+	podSelector, err := buildSelector(bcsLogConf.Spec.Selector)
+	if err != nil {
+		blog.Errorf("build pod selector for bcslogconfig(%s/%s) failed: %s", bcsLogConf.GetNamespace(), bcsLogConf.GetName(), err.Error())
+		return 0
+	}
+	if !podSelector.Matches(podLabelSet) {
+		blog.Warnf("container %s pod(%s:%s) labels(%+v) not match BcsLogConfig(%s:%s) pod selector(%+v)",
+			container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
+		return 0
+	}
+	blog.Infof("container %s pod(%s:%s) labels(%+v) match BcsLogConfig(%s:%s) pod selector(%+v)",
+		container.ID, pod.Name, pod.Namespace, pod.GetLabels(), bcsLogConf.GetNamespace(), bcsLogConf.GetName(), podSelector)
 	//if pod don't belong any workload
 	if len(pod.OwnerReferences) == 0 {
 		blog.Warnf("container %s pod(%s:%s) don't belongs to any workload", container.ID, pod.Name, pod.Namespace)
@@ -183,7 +200,7 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 		return 0
 	}
 	//the BcsLogConfig scores
-	score := 0
+	score := 1
 	//each match BcsLogConfig parameters, if matched, then increased score
 	//BcsLogConfig parameter WorkloadType、WorkloadName、WorkloadNamespace matched, increased 2 score
 	//else not matched, return 0 score
@@ -278,4 +295,29 @@ func (s *SidecarController) handleUpdatedBcsLogConfig(oldObj, newObj interface{}
 	by, _ := json.Marshal(conf)
 	blog.Infof("handle kubernetes Update event BcsLogConfig(%s:%s) data(%s)", conf.Namespace, conf.Name, string(by))
 	s.syncLogConfs()
+}
+
+func buildSelector(selector bcsv1.PodSelector) (apilabels.Selector, error) {
+	podSelector := apilabels.NewSelector()
+	for key, val := range selector.MatchLabels {
+		require, _ := apilabels.NewRequirement(key, selection.Equals, []string{val})
+		podSelector = podSelector.Add(*require)
+	}
+	for _, exp := range selector.MatchExpressions {
+		var op selection.Operator
+		switch strings.ToLower(exp.Operator) {
+		case "in", "notin", "exists":
+			op = selection.Operator(exp.Operator)
+		case "doesnotexist":
+			op = selection.DoesNotExist
+		default:
+			return nil, fmt.Errorf("build pod selector error: operator(%s) is not valid", exp.Operator)
+		}
+		require, err := apilabels.NewRequirement(exp.Key, op, exp.Values)
+		if err != nil {
+			return nil, err
+		}
+		podSelector = podSelector.Add(*require)
+	}
+	return podSelector, nil
 }

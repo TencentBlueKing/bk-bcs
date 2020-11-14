@@ -43,7 +43,7 @@ type nodeEtcdDiscovery struct {
 	nodes          map[string]struct{}
 }
 
-// new nodeEtcdDiscovery for discovery node cadvisor targets
+// NewNodeEtcdDiscovery new nodeEtcdDiscovery for discovery node cadvisor targets
 func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
 	disc := &nodeEtcdDiscovery{
 		kubeconfig:     kubeconfig,
@@ -67,6 +67,7 @@ func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadv
 	return disc, nil
 }
 
+// Start node discovery from etcd storage
 func (disc *nodeEtcdDiscovery) Start() error {
 	cfg, err := clientcmd.BuildConfigFromFlags("", disc.kubeconfig)
 	if err != nil {
@@ -97,14 +98,12 @@ func (disc *nodeEtcdDiscovery) Start() error {
 }
 
 func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
-	disc.Lock()
-	disc.Unlock()
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
-	for nodeIp, _ := range disc.nodes {
+	for nodeIP := range disc.nodes {
 		switch disc.module {
 		case CadvisorModule:
 			conf := &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", nodeIp, disc.cadvisorPort)},
+				Targets: []string{fmt.Sprintf("%s:%d", nodeIP, disc.cadvisorPort)},
 				Labels: map[string]string{
 					DefaultBcsModuleLabelKey: disc.module,
 				},
@@ -114,7 +113,7 @@ func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.Pr
 
 		case NodeexportModule:
 			conf := &types.PrometheusSdConfig{
-				Targets: []string{fmt.Sprintf("%s:%d", nodeIp, disc.nodeExportPort)},
+				Targets: []string{fmt.Sprintf("%s:%d", nodeIP, disc.nodeExportPort)},
 				Labels: map[string]string{
 					DefaultBcsModuleLabelKey: disc.module,
 				},
@@ -135,10 +134,8 @@ func (disc *nodeEtcdDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	disc.eventHandler = handleFunc
 }
 
+// OnAdd add event handler
 func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
@@ -152,18 +149,16 @@ func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
 	}
 	disc.nodes[ip] = struct{}{}
 
-	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
+	disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 }
 
-// if on update event, then don't need to update sd config
+// OnUpdate if on update event, then don't need to update sd config
 func (disc *nodeEtcdDiscovery) OnUpdate(old, cur interface{}) {
 	//do nothing
 }
 
+// OnDelete delete event handler
 func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
-	disc.Lock()
-	defer disc.Unlock()
-
 	agent, ok := obj.(*apisbkbcsv2.Agent)
 	if !ok {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
@@ -178,15 +173,5 @@ func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
 	delete(disc.nodes, ip)
 
 	// call event handler
-	disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
+	disc.eventHandler(Info{Module: disc.module, Key: disc.module})
 }
-
-/*func (disc *nodeEtcdDiscovery) syncTickerPromSdConfig() {
-	ticker := time.NewTicker(time.Minute * 5)
-
-	select {
-	case <-ticker.C:
-		blog.V(3).Infof("ticker sync prometheus service discovery config")
-		disc.eventHandler(DiscoveryInfo{Module: disc.module, Key: disc.module})
-	}
-}*/

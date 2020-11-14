@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sm-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: prometheus-operator-thanos-sidecar
+    release: "po" # 必须带这个label
+spec:
+  selector:
+    matchLabels:
+      app: bcs-ingress-controller
+      release: po
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+  - port: metric
+    interval: 15s

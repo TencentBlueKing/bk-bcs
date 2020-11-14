@@ -636,6 +636,62 @@ service Access {
             summary: "删除发布策略"
         };
     }
+    rpc CreateProcAttr(CreateProcAttrReq) returns (CreateProcAttrResp) {
+        option (google.api.http) = {
+          post: "/v1/interface/procattrs"
+          body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建进程环境主机归属信息"
+            summary: "创建主机应用归属信息"
+        };
+    }
+    rpc QueryHostProcAttr(QueryHostProcAttrReq) returns (QueryHostProcAttrResp) {
+        option (google.api.http) = {
+          get: "/v1/interface/host-procattrs"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "查询指定主机上的指定应用绑定信息"
+            summary: "查询主机应用绑定信息"
+        };
+    }
+    rpc QueryHostProcAttrList(QueryHostProcAttrListReq) returns (QueryHostProcAttrListResp) {
+        option (google.api.http) = {
+          get: "/v1/interface/host-procattrlist"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "查询指定主机上应用绑定列表"
+            summary: "查询主机应用绑定列表"
+        };
+    }
+    rpc QueryAppProcAttrList(QueryAppProcAttrListReq) returns (QueryAppProcAttrListResp) {
+        option (google.api.http) = {
+          get: "/v1/interface/app-procattrlist"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "查询指定应用绑定的主机列表"
+            summary: "查询应用绑定的主机列表"
+        };
+    }
+    rpc UpdateProcAttr(UpdateProcAttrReq) returns (UpdateProcAttrResp) {
+        option (google.api.http) = {
+          put: "/v1/interface/procattrs"
+          body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新指定主机上指定应用的绑定信息"
+            summary: "更新应用绑定信息"
+        };
+    }
+    rpc DeleteProcAttr(DeleteProcAttrReq) returns (DeleteProcAttrResp) {
+        option (google.api.http) = {
+          delete: "/v1/interface/procattrs"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除指定主机和应用之间的绑定"
+            summary: "删除应用绑定"
+        };
+    }
     rpc CreateShardingDB(CreateShardingDBReq) returns (CreateShardingDBResp) {
         option (google.api.http) = {
           post: "/v1/interface/shardingdbs"
@@ -1622,7 +1678,7 @@ message CreateConfigSetReq {
 			description: "创建新配置集合请求"
 			required: ["seq", "bid", "appid", "name", "creator"]
 		}
-        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "name": "server.yaml", "creator": "melo", "memo": "备注"}' }
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "fpath": "/etc", "name": "server.yaml", "creator": "melo", "memo": "备注"}' }
 	};
 
     uint64 seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
@@ -1659,7 +1715,7 @@ message QueryConfigSetReq {
 			description: "查询配置集合信息请求"
 			required: ["seq", "bid"]
 		}
-        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "name": "server.yaml", "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278"}' }
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "fpath": "/etc", "name": "server.yaml", "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278"}' }
 	};
 
     uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
@@ -1679,7 +1735,7 @@ message QueryConfigSetResp {
 			description: "查询配置集合信息响应"
 			required: ["seq", "errCode", "errMsg"]
 		}
-        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "configSet": {"cfgsetid":"626889ba-e9c1-11e9-8c23-525400f99278", "name":"server.yaml", "bid":"f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid":"0b67a798-e9c1-11e9-8c23-525400f99278", "creator":"melo", "lastModifyBy":"melo", "memo":"test", "state":0, "createdAt":"2019-10-08 19:47:20", "updatedAt":"2019-10-08 20:03:06"}}' }
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "configSet": {"cfgsetid":"626889ba-e9c1-11e9-8c23-525400f99278", "fpath": "/etc", "name":"server.yaml", "bid":"f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid":"0b67a798-e9c1-11e9-8c23-525400f99278", "creator":"melo", "lastModifyBy":"melo", "memo":"test", "state":0, "createdAt":"2019-10-08 19:47:20", "updatedAt":"2019-10-08 20:03:06"}}' }
 	};
 
     uint64           seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
@@ -1713,7 +1769,7 @@ message QueryConfigSetListResp {
 			description: "查询目标应用的配置集合列表响应"
 			required: ["seq", "errCode", "errMsg"]
 		}
-        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "configSets": [{"cfgsetid":"626889ba-e9c1-11e9-8c23-525400f99278", "name":"server.yaml", "bid":"f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid":"0b67a798-e9c1-11e9-8c23-525400f99278", "creator":"melo", "lastModifyBy":"melo", "memo":"test", "state":0, "createdAt":"2019-10-08 19:47:20", "updatedAt":"2019-10-08 20:03:06"}]}' }
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "configSets": [{"cfgsetid":"626889ba-e9c1-11e9-8c23-525400f99278", "fpath": "/etc", "name":"server.yaml", "bid":"f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid":"0b67a798-e9c1-11e9-8c23-525400f99278", "creator":"melo", "lastModifyBy":"melo", "memo":"test", "state":0, "createdAt":"2019-10-08 19:47:20", "updatedAt":"2019-10-08 20:03:06"}]}' }
 	};
 
     uint64                    seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
@@ -1729,7 +1785,7 @@ message UpdateConfigSetReq {
 			description: "更新配置集合信息请求"
 			required: ["seq", "bid", "cfgsetid", "operator"]
 		}
-        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "name": "new name", "memo": "备注", "state": 0, "operator": "melo"}' }
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "fpath": "/new_path", "name": "new name", "memo": "备注", "state": 0, "operator": "melo"}' }
 	};
 
     uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
@@ -1980,10 +2036,10 @@ message CreateCommitReq {
     string cfgsetid     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置集合ID", description: "", max_length: 64}];
     int32  op           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作类型", description: "操作类型, 默认0: 常规修改配置操作"}];
     string operator     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
-    string templateid   = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板ID", description: "可选, 用于关联外部模板管理标识", max_length: 64}];
-    string template     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板", description: "可选, 配置模板内容，基于GO Template引擎, 需进行配置渲染时传递", max_length: 2097152}];
-    string templateRule = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板规则", description: "可选, 配置模板规则，基于GO Template引擎, 需进行配置渲染时传递", max_length: 1048576}];
-    bytes  configs      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容", description: "可选，配置原始内容，非配置渲染模式时传递, base64形式", max_length: 2097152}];
+    string templateid   = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板ID", description: "可选, 内部模板ID", max_length: 64}];
+    string template     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板", description: "可选, 配置模板内容，需进行配置渲染时传递", max_length: 2097152}];
+    string templateRule = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板规则", description: "可选, 配置模板规则，需进行配置渲染时传递", max_length: 1048576}];
+    bytes  configs      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容", description: "可选，配置原始内容，非配置渲染模式时传递, base64形式。支持空配置提交, 空配置内容查询时返回JSON null", max_length: 2097152}];
     string changes      = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置变更差异描述", description: "可选，默认为空, 暂不启用差异描述", max_length: 2097152}];
     string memo         = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
 }
@@ -2200,6 +2256,7 @@ message PreviewCommitResp {
     string         errMsg            = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
     repeated common.Configs cfgslist = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "commit的预览结果", description: ""}];;
 }
+
 message CreateMultiCommitReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
@@ -3036,7 +3093,7 @@ message QueryAppInstanceReleaseResp {
     string         commitid  = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置提交Commit ID", description: "成功查询后返回当前已生效版本关联的提交ID"}];
     string         cid       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容签名CID", description: "成功查询后返回当前已生效版本CID"}];
     string         cfgLink   = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容资源链接", description: "成功查询后返回当前已生效版本配置资源链接, 可能为空"}];
-    bytes          content   = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容", description: "成功查询后返回当前已生效版本对应配置内容，使用资源链接时则为空, 以base64形式返回"}];
+    bytes          content   = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容", description: "成功查询后返回当前已生效版本对应配置内容，使用资源链接或空配置提交时则为空, 以base64形式返回"}];
 }
 
 message CreateStrategyReq {
@@ -3044,22 +3101,33 @@ message CreateStrategyReq {
 		json_schema: {
 			title: "CreateStrategyReq"
 			description: "创建发布策略请求"
-			required: ["seq", "bid", "appid", "name", "content", "creator"]
+			required: ["seq", "bid", "appid", "name", "creator"]
 		}
-        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "name":"策略1", "clusterids": ["1fe5da7b-eef5-11e9-aa0e-525400f99278"], "memo": "备注", "creator": "melo"}' }
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "name":"策略1", "clusterids": ["1fe5da7b-eef5-11e9-aa0e-525400f99278"], "zoneids": ["1fe5da7b-eef5-11e9-aa0e-525400f99278"], "dcs": ["dc01", "dc02"], "ips": ["127.0.0.1", "127.0.0.2"], "labels": {"k1": "v1", "k2": "gt|v2", "k3": "le|v3"}, "labelsAnd": {"k1": "ne|v1", "k2": "lt|v2", "k3": "ge|v3"}, "memo": "备注", "creator": "melo"}' }
 	};
 
     uint64              seq        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
     string              bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
     string              appid      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用ID", description: "", max_length: 64}];
     string              name       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "策略名称", description: "", max_length: 64}];
-    repeated string     clusterids = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的集群ID列表", description: ""}];
-    repeated string     zoneids    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的大区ID列表", description: ""}];
-    repeated string     dcs        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的机房标识列表", description: ""}];
-    repeated string     IPs        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的节点实例IP列表", description: ""}];
-    map<string, string> labels     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的节点实例标签集合", description: ""}];
+    repeated string     clusterids = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的集群ID列表, 该维度支持多个ID，每个ID之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系", description: ""}];
+    repeated string     zoneids    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的大区ID列表, 该维度支持多个ID，每个ID之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系", description: ""}];
+    repeated string     dcs        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的机房标识列表, 该维度支持多个标识，每个标识之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系", description: ""}];
+    repeated string     IPs        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的节点实例IP列表, 该维度支持多个IP，每个IP之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系", description: ""}];
+
+    // 期望的节点实例标签逻辑或集合, 该维度支持多个标签，每个标签之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系, 若存在逻辑与标签维度控制，则两维度需要同时满足. 格式：KV, map type / JSON KV, key为目标
+    // 标签名称，value为标签规则表达式，格式为OP|VALUES, OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示IN(1,2,3)的语意. OP和VALUES之间用竖线分割.
+    // 注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理.
+    map<string, string> labels     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的节点实例标签逻辑或集合, 该维度支持多个标签，每个标签之间为逻辑或的关系, 与其他维度之间整体为逻辑与关系, 若存在逻辑与标签维度控制，则两维度需要同时满足", description: ""}];
+
     string              memo       = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
     string              creator    = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+
+    // add fields here.
+    // 期望的节点实例标签逻辑与集合, 该维度支持多个标签，每个标签之间为逻辑与的关系, 与其他维度之间整体为逻辑与关系, 若存在逻辑或标签维度控制，则两维度需要同时满足. 格式：KV, map type / JSON KV, key为目标
+    // 标签名称，value为标签规则表达式，格式为OP|VALUES, OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示IN(1,2,3)的语意. OP和VALUES之间用竖线分割.
+    // 注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理.
+    map<string, string> labelsAnd  = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望的节点实例标签逻辑与集合, 该维度支持多个标签，每个标签之间为逻辑与的关系, 与其他维度之间整体为逻辑与关系, 若存在逻辑或标签维度控制，则两维度需要同时满足", description: ""}];
 }
 
 message CreateStrategyResp {
@@ -3166,6 +3234,220 @@ message DeleteStrategyResp {
 		json_schema: {
 			title: "DeleteStrategyResp"
 			description: "删除发布策略响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK"}' }
+	};
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+}
+
+message CreateProcAttrReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CreateProcAttrReq"
+			description: "创建应用绑定请求"
+			required: ["seq", "cloudid", "IP", "bid", "appid", "cloudid", "zoneid", "path", "creator"]
+		}
+        example: { value: '{ "seq": "1", "cloudid": "1", "IP": "127.0.0.1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "clusterid":"0b67a798-e9c1-11e9-8c23-525400f99278", "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278", "path": "/data/myconfigs_dir/", "memo": "备注", "creator": "melo"}' }
+	};
+
+    uint64 seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string cloudid   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境子网ID", description: "", max_length: 64}];
+    string IP        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境主机IP", description: "", max_length: 32}];
+    string bid       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string appid     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string clusterid = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
+    string zoneid    = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区ID", description: "", max_length: 64}];
+    string dc        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新物理机房标识", description: "该参数主要用于实例隔离，物理机场景下一台机器上IP相同且存在多个相同App实例，需要利用DC做虚拟的隔离使得多实例可以并行处理", max_length: 64}];
+    string labels    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "可选，JSON {\"k\":\"v\"}", max_length: 1024}];
+    string path      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置缓存路径设置", description: "", max_length: 128}];
+    string creator   = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string memo      = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+}
+
+message CreateProcAttrResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CreateProcAttrResp"
+			description: "创建应用绑定响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK"}' }
+	};
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+}
+
+message QueryHostProcAttrReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryHostProcAttrReq"
+			description: "查询主机应用绑定信息请求"
+			required: ["seq", "cloudid", "IP", "bid", "appid", "path"]
+		}
+        example: { value: '{ "seq": "1", "cloudid": "1", "IP": "127.0.0.1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278"}' }
+	};
+
+    uint64 seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string cloudid = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境子网ID", description: "", max_length: 64}];
+    string IP      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境主机IP", description: "", max_length: 32}];
+    string bid     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string appid   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string path    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置缓存路径设置", description: "", max_length: 128}];
+}
+
+message QueryHostProcAttrResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryHostProcAttrResp"
+			description: "查询主机应用绑定信息响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "procAttr": {"cloudid": "1", "IP": "127.0.0.1", "bid": "b6fb71da-eef5-11e9-aa0e-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278", "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278", "path": "/data/myconfigs_dir/", "labels":"{}", "memo":"test", "state": 0, "lastModifyBy": "melo", "createdAt":"2019-07-29 11:57:20", "updatedAt":"2019-07-29 11:57:20"}}' }
+	};
+
+    uint64          seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode  errCode  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string          errMsg   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    common.ProcAttr procAttr = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "绑定信息", description: "成功查询后返回目标主机上应用的绑定信息"}];
+}
+
+message QueryHostProcAttrListReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryHostProcAttrListReq"
+			description: "查询主机应用绑定列表请求"
+			required: ["seq", "cloudid", "IP", "index", "limit"]
+		}
+        example: { value: '{ "seq": "1", "cloudid": "1", "IP": "127.0.0.1"}' }
+	};
+
+    uint64 seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string cloudid = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境子网ID", description: "", max_length: 64}];
+    string IP      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境主机IP", description: "", max_length: 32}];
+    int32  index   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "查询索引", description: ""}];
+    int32  limit   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "查询数量", description: "", maximum: 100}];
+}
+
+message QueryHostProcAttrListResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryHostProcAttrListResp"
+			description: "查询主机应用绑定列表响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "procAttrs":[{"cloudid": "1", "IP": "127.0.0.1", "bid": "b6fb71da-eef5-11e9-aa0e-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278", "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278", "path": "/data/myconfigs_dir/", "labels":"{}", "memo":"test", "state": 0, "lastModifyBy": "melo", "createdAt":"2019-07-29 11:57:20", "updatedAt":"2019-07-29 11:57:20"}]}' }
+	};
+
+    uint64                   seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode           errCode   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string                   errMsg    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    repeated common.ProcAttr procAttrs = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "绑定应用信息列表", description: "成功查询后返回目标主机上应用的绑定信息列表"}];
+}
+
+message QueryAppProcAttrListReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryAppProcAttrListReq"
+			description: "查询应用绑定的主机列表请求"
+			required: ["seq", "bid", "index", "limit"]
+		}
+        example: { value: '{ "seq": "1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278", "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278"}' }
+	};
+
+    uint64 seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string bid       = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string appid     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string clusterid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
+    string zoneid    = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区ID", description: "", max_length: 64}];
+    int32  index     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "查询索引", description: ""}];
+    int32  limit     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "查询数量", description: "", maximum: 100}];
+}
+
+message QueryAppProcAttrListResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "QueryAppProcAttrListResp"
+			description: "查询应用绑定的主机列表响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "procAttrs":[{"cloudid": "1", "IP": "127.0.0.1", "bid": "b6fb71da-eef5-11e9-aa0e-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "clusterid": "0b67a798-e9c1-11e9-8c23-525400f99278", "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278", "path": "/data/myconfigs_dir/", "labels":"{}", "memo":"test", "state": 0, "lastModifyBy": "melo", "createdAt":"2019-07-29 11:57:20", "updatedAt":"2019-07-29 11:57:20"}]}' }
+	};
+
+    uint64                   seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode           errCode   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string                   errMsg    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    repeated common.ProcAttr procAttrs = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "绑定应用信息列表", description: "成功查询后返回目标主机上应用的绑定信息列表"}];
+}
+
+message UpdateProcAttrReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "UpdateProcAttrReq "
+			description: "更新主机应用绑定信息请求"
+			required: ["seq", "cloudid", "IP", "bid", "appid", "clusterid", "zoneid", "path", "operator"]
+		}
+        example: { value: '{ "seq": "1", "cloudid": "1", "IP": "127.0.0.1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "clusterid":"0b67a798-e9c1-11e9-8c23-525400f99278", "zoneid": "0b67a798-e9c1-11e9-8c23-525400f99278", "path": "/data/myconfigs_dir/", "memo": "备注", "operator": "melo"}' }
+	};
+
+    uint64 seq       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string cloudid   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境子网ID", description: "", max_length: 64}];
+    string IP        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境主机IP", description: "", max_length: 32}];
+    string bid       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string appid     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string clusterid = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新集群ID", description: "", max_length: 64}];
+    string zoneid    = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新大区ID", description: "", max_length: 64}];
+    string dc        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新物理机房标识", description: "该参数主要用于实例隔离，物理机场景下一台机器上IP相同且存在多个相同App实例，需要利用DC做虚拟的隔离使得多实例可以并行处理", max_length: 64}];
+    string labels    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新应用实例labels", description: "", max_length: 1024}];
+    string path      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新配置缓存路径设置", description: "", max_length: 128}];
+    string memo      = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新备注", description: "", max_length: 64}];
+    string operator  = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "修改者名称", description: "", max_length: 64}];
+}
+
+message UpdateProcAttrResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "UpdateProcAttrResp"
+			description: "更新主机应用绑定信息响应"
+			required: ["seq", "errCode", "errMsg"]
+		}
+        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK"}' }
+	};
+
+    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+}
+
+message DeleteProcAttrReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteProcAttrReq "
+			description: "删除主机应用绑定信息请求"
+			required: ["seq", "cloudid", "IP", "bid", "appid", "path", "operator"]
+		}
+        example: { value: '{ "seq": "1", "cloudid": "1", "IP": "127.0.0.1", "bid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "appid": "0b67a798-e9c1-11e9-8c23-525400f99278", "operator": "melo"}' }
+	};
+
+    uint64 seq      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string cloudid  = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境子网ID", description: "", max_length: 64}];
+    string IP       = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境主机IP", description: "", max_length: 32}];
+    string bid      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string appid    = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string path     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "更新配置缓存路径设置", description: "", max_length: 128}];
+    string operator = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "修改者名称", description: "", max_length: 64}];
+}
+
+message DeleteProcAttrResp {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "DeleteProcAttrReq"
+			description: "删除主机应用绑定信息响应"
 			required: ["seq", "errCode", "errMsg"]
 		}
         example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK"}' }
@@ -4362,6 +4644,9 @@ message ReloadReq {
     string releaseid      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "可选，指定版本ID", description: "", max_length: 64 }];
     string multiReleaseid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "可选，指定组模式版本ID", description: "", max_length: 64 }];
     string operator       = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "操作者名称", description: "", max_length: 64 }];
+
+    // add fields here.
+    bool rollback = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "是否为指定版本的回滚reload操作", description: "指定release或multirelease回滚后，通过该操作完成reload"}];
 }
 
 message ReloadResp {

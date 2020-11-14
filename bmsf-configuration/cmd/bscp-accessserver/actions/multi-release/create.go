@@ -131,7 +131,7 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 		Creator:       act.req.Creator,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeout"))
+	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("businessserver.calltimeoutLT"))
 	defer cancel()
 
 	logger.V(2).Infof("CreateMultiRelease[%d]| request to businessserver CreateMultiRelease, %+v", act.req.Seq, r)

@@ -125,7 +125,7 @@ func (act *ListAction) queryAuditList() (pbcommon.ErrCode, string) {
 
 	err := act.sd.DB().
 		Offset(act.req.Index).Limit(act.req.Limit).
-		Order("Fupdate_time DESC").
+		Order("Fupdate_time DESC, Fid DESC").
 		Where(&database.Audit{Bid: act.req.Bid, Sourceid: act.req.Sourceid, Operator: act.req.Operator}).
 		Where("Fsource_type = ?", act.req.SourceType).
 		Where("Fop_type = ?", act.req.OpType).
