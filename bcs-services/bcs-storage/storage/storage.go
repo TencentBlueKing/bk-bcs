@@ -48,7 +48,11 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 	// Http server
 	s.httpServer = httpserver.NewHttpServer(s.conf.Port, s.conf.Address, "")
 	if s.conf.ServerCert.IsSSL {
-		s.httpServer.SetSsl(s.conf.ServerCert.CAFile, s.conf.ServerCert.CertFile, s.conf.ServerCert.KeyFile, s.conf.ServerCert.CertPwd)
+		s.httpServer.SetSsl(
+			s.conf.ServerCert.CAFile,
+			s.conf.ServerCert.CertFile,
+			s.conf.ServerCert.KeyFile,
+			s.conf.ServerCert.CertPwd)
 	}
 
 	// RDiscover

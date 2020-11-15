@@ -13,21 +13,21 @@
 
 package lib
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/mongodb"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/zookeeper"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
-)
+// import (
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/mongodb"
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/zookeeper"
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
+// )
 
-func GetZookeeperTank(name string) func() operator.Tank {
-	return func() operator.Tank {
-		return zookeeper.NewZkTank(apiserver.GetAPIResource().GetZkTankName(name))
-	}
-}
+// func GetZookeeperTank(name string) func() operator.Tank {
+// 	return func() operator.Tank {
+// 		return zookeeper.NewZkTank(apiserver.GetAPIResource().GetZkTankName(name))
+// 	}
+// }
 
-func GetMongodbTank(name string) func() operator.Tank {
-	return func() operator.Tank {
-		return mongodb.NewMongodbTank(apiserver.GetAPIResource().GetMongodbTankName(name))
-	}
-}
+// func GetMongodbTank(name string) func() operator.Tank {
+// 	return func() operator.Tank {
+// 		return mongodb.NewMongodbTank(apiserver.GetAPIResource().GetMongodbTankName(name))
+// 	}
+// }

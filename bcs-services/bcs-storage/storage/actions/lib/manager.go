@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
+// Manager manager
 type Manager struct {
 	total   int64
 	avgTime int64
@@ -40,6 +41,7 @@ type Manager struct {
 	title string
 }
 
+// NewManager create manager
 func NewManager(sep int64, title string) *Manager {
 	return &Manager{
 		sep:   time.Duration(sep),
@@ -47,6 +49,7 @@ func NewManager(sep int64, title string) *Manager {
 	}
 }
 
+// Start start
 func (m *Manager) Start() {
 	for {
 		m.Flush()
@@ -54,6 +57,7 @@ func (m *Manager) Start() {
 	}
 }
 
+// Add add
 func (m *Manager) Add(t time.Duration) {
 	_t := int64(t)
 	m.Lock()
@@ -78,6 +82,7 @@ func (m *Manager) Add(t time.Duration) {
 	}
 }
 
+// Flush manager do flush
 func (m *Manager) Flush() {
 	m.Lock()
 	defer m.Unlock()

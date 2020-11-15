@@ -20,24 +20,35 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	restful "github.com/emicklei/go-restful"
 )
 
-// The ServerSide handler in a watch action.
-type watchServer struct {
-	tank operator.Tank
-	opts *operator.WatchOptions
-	req  *restful.Request
-	resp *restful.Response
+// WatchServerOption options for watch server
+type WatchServerOption struct {
+	Store     *Store
+	TableName string
+	Cond      *operator.Condition
+	Req       *restful.Request
+	Resp      *restful.Response
+}
 
-	Writer func(resp *restful.Response, event *operator.Event) bool
+// WatchServer the server side handler in a watch action.
+type WatchServer struct {
+	store     *Store
+	tableName string
+	cond      *operator.Condition
+	req       *restful.Request
+	resp      *restful.Response
+	opts      *bcstypes.WatchOptions
+	Writer    func(resp *restful.Response, event *Event) bool
 }
 
 var (
 	//DefaultWriter default json writer
-	DefaultWriter = func(resp *restful.Response, event *operator.Event) bool {
+	DefaultWriter = func(resp *restful.Response, event *Event) bool {
 		if err := codec.EncJsonWriter(event, resp.ResponseWriter); err != nil {
 			blog.Errorf("defaultWriter error: %v", err)
 			return false
@@ -47,28 +58,33 @@ var (
 )
 
 //NewWatchServer create default json formate watchServer
-func NewWatchServer(req *restful.Request, resp *restful.Response, tank operator.Tank) (*watchServer, error) {
-	opts := new(operator.WatchOptions)
-	if err := codec.DecJsonReader(req.Request.Body, opts); err != nil {
+func NewWatchServer(wopt *WatchServerOption) (*WatchServer, error) {
+	if wopt.Req == nil || wopt.Resp == nil || wopt.Store == nil {
+		return nil, fmt.Errorf("field in watch server option cannot be empty")
+	}
+	opts := new(bcstypes.WatchOptions)
+	if err := codec.DecJsonReader(wopt.Req.Request.Body, opts); err != nil {
 		return nil, err
 	}
-	return &watchServer{
-		req:    req,
-		resp:   resp,
-		tank:   tank,
-		opts:   opts,
-		Writer: DefaultWriter,
+	return &WatchServer{
+		store:     wopt.Store,
+		tableName: wopt.TableName,
+		cond:      wopt.Cond,
+		req:       wopt.Req,
+		resp:      wopt.Resp,
+		opts:      opts,
+		Writer:    DefaultWriter,
 	}, nil
 }
 
 //Go running watchServer
-func (ws *watchServer) Go(ctx context.Context) {
-	if ws.tank == nil || ws.req == nil || ws.resp == nil {
+func (ws *WatchServer) Go(ctx context.Context) {
+	if ws.store == nil || ws.req == nil || ws.resp == nil {
 		blog.Errorf(ws.sprint("Go() error, tank or req or resp can not be nil"))
 		return
 	}
 	if ws.opts == nil {
-		ws.opts = &operator.WatchOptions{}
+		ws.opts = &bcstypes.WatchOptions{}
 	}
 
 	notify := ws.resp.CloseNotify()
@@ -76,13 +92,26 @@ func (ws *watchServer) Go(ctx context.Context) {
 	ws.resp.ResponseWriter.(http.Flusher).Flush()
 
 	blog.Infof(ws.sprint("begin to watch"))
-	event, cancel := ws.tank.Watch(ws.opts)
+
+	watchOption := &StoreWatchOption{
+		Cond:      ws.cond,
+		SelfOnly:  ws.opts.SelfOnly,
+		MaxEvents: ws.opts.MaxEvents,
+		Timeout:   ws.opts.Timeout,
+		MustDiff:  ws.opts.MustDiff,
+	}
+
 	defer func() {
-		cancel()
 		blog.Infof(ws.sprint("watch end"))
-		ws.Writer(ws.resp, operator.EventWatchBreak)
+		ws.Writer(ws.resp, EventWatchBreak)
 		ws.resp.ResponseWriter.(http.Flusher).Flush()
 	}()
+	event, err := ws.store.Watch(ctx, ws.tableName, watchOption)
+	if err != nil {
+		blog.Errorf("watch failed, err %s", err.Error())
+		return
+	}
+
 	for {
 		select {
 		case <-notify:
@@ -100,6 +129,6 @@ func (ws *watchServer) Go(ctx context.Context) {
 	}
 }
 
-func (ws *watchServer) sprint(s string) string {
+func (ws *WatchServer) sprint(s string) string {
 	return fmt.Sprintf("watch server %s | %s", ws.req.Request.URL, s)
 }
