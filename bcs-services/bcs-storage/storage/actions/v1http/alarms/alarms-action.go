@@ -14,13 +14,17 @@
 package alarms
 
 import (
+	"context"
+	"time"
+
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-
-	"github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
 )
 
 const (
@@ -98,19 +102,20 @@ func ListAlarm(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
-// func CleanAlarmsOutDate() {
-// 	cleanAlarmOutDate(apiserver.GetAPIResource().Conf.AlarmMaxTime)
-// }
-
-// func CleanAlarmsOutCap() {
-// 	cleanAlarmOutCap(apiserver.GetAPIResource().Conf.AlarmMaxCap)
-// }
+// CleanAlarm clean alarm
+func CleanAlarm() {
+	maxCap := apiserver.GetAPIResource().Conf.AlarmMaxCap
+	maxTime := apiserver.GetAPIResource().Conf.AlarmMaxTime
+	cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), tableName, time.Hour)
+	cleaner.WithMaxEntryNum(maxCap)
+	cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
+	cleaner.Run(context.TODO())
+}
 
 func init() {
 	alarmPath := "/alarms"
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(PostAlarm)})
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(ListAlarm)})
 
-	// actions.RegisterDaemonFunc(CleanAlarmsOutDate)
-	// actions.RegisterDaemonFunc(CleanAlarmsOutCap)
+	actions.RegisterDaemonFunc(CleanAlarm)
 }

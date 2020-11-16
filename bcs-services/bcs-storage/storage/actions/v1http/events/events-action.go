@@ -14,12 +14,17 @@
 package events
 
 import (
+	"context"
+	"time"
+
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-
-	"github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
 )
 
 const (
@@ -82,13 +87,15 @@ func ListEvent(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
-// func CleanEventsOutDate() {
-// 	cleanEventOutDate(apiserver.GetAPIResource().Conf.EventMaxTime)
-// }
-
-// func CleanEventsOutCap() {
-// 	cleanEventOutCap(apiserver.GetAPIResource().Conf.EventMaxCap)
-// }
+// CleanEvents clean event
+func CleanEvents() {
+	maxCap := apiserver.GetAPIResource().Conf.EventMaxCap
+	maxTime := apiserver.GetAPIResource().Conf.EventMaxTime
+	cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), tableName, time.Hour)
+	cleaner.WithMaxEntryNum(maxCap)
+	cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
+	cleaner.Run(context.TODO())
+}
 
 func init() {
 	eventPath := urlPath("/events")
@@ -97,6 +104,5 @@ func init() {
 	actions.RegisterV1Action(actions.Action{
 		Verb: "GET", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
 
-	// actions.RegisterDaemonFunc(CleanEventsOutDate)
-	// actions.RegisterDaemonFunc(CleanEventsOutCap)
+	actions.RegisterDaemonFunc(CleanEvents)
 }

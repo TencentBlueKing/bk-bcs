@@ -116,15 +116,6 @@ func (a *APIResource) ParseDBConfig() (dbConf *conf.Config) {
 	return
 }
 
-// //
-// func (a *APIResource) GetMongodbTankName(name string) string {
-// 	return getDriverName(mongodbConfigKey, name)
-// }
-
-// func (a *APIResource) GetZkTankName(name string) string {
-// 	return getDriverName(zkConfigKey, name)
-// }
-
 // GetDBClient get db client by key
 func (a *APIResource) GetDBClient(key string) drivers.DB {
 	return a.dbMap[key]
@@ -134,15 +125,6 @@ func (a *APIResource) GetDBClient(key string) drivers.DB {
 func (a *APIResource) GetStoreClient(key string) store.Store {
 	return a.storeMap[key]
 }
-
-// func (a *APIResource) getDBInfo(key string) (info *operator.DBInfo) {
-// 	var ok bool
-// 	info, ok = a.dbInfoMap[key]
-// 	if !ok {
-// 		blog.Errorf("Database Config not exists: %s", key)
-// 	}
-// 	return
-// }
 
 func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 	address := dbConf.Read(key, "Addr")
@@ -208,7 +190,7 @@ func (a *APIResource) parseZk(key string, dbConf *conf.Config) error {
 		password = string(realPwd)
 	}
 
-	_ = &zookeeper.Options{
+	zkOpt := &zookeeper.Options{
 		Addrs:                 strings.Split(address, ","),
 		ConnectTimeoutSeconds: timeout,
 		Database:              database,
@@ -216,7 +198,11 @@ func (a *APIResource) parseZk(key string, dbConf *conf.Config) error {
 		Password:              password,
 	}
 
-	// TODO: init zookeeper store
+	zkStore, err := zookeeper.NewStore(zkOpt)
+	if err != nil {
+		return err
+	}
+	a.storeMap[key] = zkStore
 
 	blog.Infof("init zookeeper with key %s successfully", key)
 	return nil

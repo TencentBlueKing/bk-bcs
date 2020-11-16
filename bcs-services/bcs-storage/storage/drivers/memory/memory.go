@@ -21,6 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 // DBTableWatcher db table watcher
@@ -31,13 +32,13 @@ type DBTableWatcher struct {
 	isFull           bool
 	maxAwaitDuration time.Duration
 	startTimestamp   *primitive.Timestamp
-	conditions       []*drivers.Condition
+	conditions       []*operator.Condition
 }
 
 // DBTableFinder db table finder
 type DBTableFinder struct {
 	t          *DBTable
-	condition  *drivers.Condition
+	condition  *operator.Condition
 	projection map[string]int
 	start      int64
 	limit      int64
@@ -149,7 +150,7 @@ func (t *DBTable) Indexes(ctx context.Context) ([]drivers.Index, error) {
 }
 
 // Find return finder
-func (t *DBTable) Find(condition *drivers.Condition) drivers.Find {
+func (t *DBTable) Find(condition *operator.Condition) drivers.Find {
 	return &DBTableFinder{
 		t:         t,
 		condition: condition,
@@ -157,39 +158,44 @@ func (t *DBTable) Find(condition *drivers.Condition) drivers.Find {
 }
 
 // Insert do insert
-func (t *DBTable) Insert(ctx context.Context, docs []interface{}) error {
+func (t *DBTable) Insert(ctx context.Context, docs []interface{}) (int, error) {
 	for _, doc := range docs {
 		bytes, err := bson.Marshal(doc)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		tmpBson := make(bson.M)
 		err = bson.Unmarshal(bytes, &tmpBson)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		t.data = append(t.data, tmpBson)
 	}
-	return nil
+	return 0, nil
 }
 
 // Update do update
-func (t *DBTable) Update(ctx context.Context, condition *drivers.Condition, data interface{}) error {
+func (t *DBTable) Update(ctx context.Context, condition *operator.Condition, data interface{}) error {
 	return nil
 }
 
+// UpdateMany do update manay
+func (t *DBTable) UpdateMany(ctx context.Context, condition *operator.Condition, data interface{}) (int64, error) {
+	return 0, nil
+}
+
 // Upsert do upsert
-func (t *DBTable) Upsert(ctx context.Context, condition *drivers.Condition, data interface{}) error {
+func (t *DBTable) Upsert(ctx context.Context, condition *operator.Condition, data interface{}) error {
 	return nil
 }
 
 // Delete do delete
-func (t *DBTable) Delete(ctx context.Context, condition *drivers.Condition) error {
-	return nil
+func (t *DBTable) Delete(ctx context.Context, condition *operator.Condition) (int64, error) {
+	return 0, nil
 }
 
 // Watch watch data
-func (t *DBTable) Watch(conditions []*drivers.Condition) drivers.Watch {
+func (t *DBTable) Watch(conditions []*operator.Condition) drivers.Watch {
 	return &DBTableWatcher{}
 }
 

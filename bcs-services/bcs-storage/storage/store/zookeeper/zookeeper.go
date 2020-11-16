@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
@@ -29,6 +30,7 @@ import (
 
 // Options options for zookeeper store
 type Options struct {
+	BasePath              string
 	Addrs                 []string
 	ConnectTimeoutSeconds int
 	Database              string
@@ -40,6 +42,18 @@ type Options struct {
 type Store struct {
 	basePath string
 	zk       *zkclient.ZkClient
+}
+
+// NewStore create zk store
+func NewStore(opt *Options) (*Store, error) {
+	zkCli := zkclient.NewZkClient(opt.Addrs)
+	if err := zkCli.ConnectEx(time.Duration(opt.ConnectTimeoutSeconds) * time.Second); err != nil {
+		return nil, err
+	}
+	return &Store{
+		basePath: opt.BasePath,
+		zk:       zkCli,
+	}, nil
 }
 
 func getClusterType(clusterID string) string {
