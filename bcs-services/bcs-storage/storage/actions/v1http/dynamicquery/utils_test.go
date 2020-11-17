@@ -32,7 +32,7 @@ func TestGetQueryJson(t *testing.T) {
 	}
 
 	var p map[string]interface{}
-	err := codec.DecJson(getQueryJson(data), &p)
+	err := codec.DecJson(getQueryJSON(data), &p)
 	if err != nil {
 		t.Errorf("getQueryJson() failed! err: %v", err)
 	}

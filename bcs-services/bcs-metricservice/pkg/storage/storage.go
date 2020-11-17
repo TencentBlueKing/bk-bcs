@@ -23,10 +23,10 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-common/common/storage/watch"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/rdiscover"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -58,6 +58,7 @@ type Storage interface {
 	GetMetricWatcher(param *Param) (watcher *watch.Watcher, err error)
 }
 
+// New create storage client
 func New(cfg *config.Config, rd *rdiscover.RDiscover) (s Storage, err error) {
 	c := httpclient.NewHttpClient()
 	c.SetHeader("Content-Type", "application/json")
@@ -359,7 +360,7 @@ func (cli *storage) GetDynamicNs(param *Param) ([]byte, error) {
 func (cli *storage) GetDynamicWatcher(param *Param) (watcher *watch.Watcher, err error) {
 	blog.Infof("storage: start watch dynamic: %s %s", param.ClusterID, param.Type)
 
-	watcher = watch.NewWithOption(&operator.WatchOptions{MustDiff: "data"}, cli.client)
+	watcher = watch.NewWithOption(&bcstypes.WatchOptions{MustDiff: "data"}, cli.client)
 	addr, err := cli.rd.GetStorageServer()
 	if err != nil {
 		blog.Errorf("get storage server failed: %v", err)
@@ -377,7 +378,7 @@ func (cli *storage) GetDynamicWatcher(param *Param) (watcher *watch.Watcher, err
 func (cli *storage) GetMetricWatcher(param *Param) (watcher *watch.Watcher, err error) {
 	blog.Infof("storage: start watch metric: %s %s", param.ClusterID, param.Type)
 
-	watcher = watch.NewWithOption(&operator.WatchOptions{MustDiff: "data.version"}, cli.client)
+	watcher = watch.NewWithOption(&bcstypes.WatchOptions{MustDiff: "data.version"}, cli.client)
 	addr, err := cli.rd.GetStorageServer()
 	if err != nil {
 		blog.Errorf("get storage server failed: %v", err)

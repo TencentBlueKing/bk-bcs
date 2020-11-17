@@ -46,16 +46,18 @@ type DBTableFinder struct {
 
 // DBTable table in memory
 type DBTable struct {
+	counter int64
 	// fake indexes
 	indexes map[string]drivers.Index
 	// data
-	data []bson.M
+	data map[int64]bson.M
 }
 
 func newDBTable() *DBTable {
 	return &DBTable{
+		counter: 0,
 		indexes: make(map[string]drivers.Index),
-		data:    make([]bson.M, 0),
+		data:    make(map[int64]bson.M),
 	}
 }
 
@@ -83,6 +85,16 @@ func (db *DB) Ping() error {
 	return nil
 }
 
+// CreateTable create table
+func (db *DB) CreateTable(ctx context.Context, tableName string) error {
+	_, ok := db.data[tableName]
+	if ok {
+		return fmt.Errorf("table %s already exists", tableName)
+	}
+	db.data[tableName] = newDBTable()
+	return nil
+}
+
 // HasTable if table exists
 func (db *DB) HasTable(ctx context.Context, tableName string) (bool, error) {
 	_, ok := db.data[tableName]
@@ -100,6 +112,10 @@ func (db *DB) ListTableNames(ctx context.Context) ([]string, error) {
 
 // DropTable drop table
 func (db *DB) DropTable(ctx context.Context, tableName string) error {
+	_, ok := db.data[tableName]
+	if !ok {
+		return fmt.Errorf("table %s not found", tableName)
+	}
 	delete(db.data, tableName)
 	return nil
 }
@@ -169,7 +185,9 @@ func (t *DBTable) Insert(ctx context.Context, docs []interface{}) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		t.data = append(t.data, tmpBson)
+		time.Now().UnixNano()
+		t.data[t.counter] = tmpBson
+		t.counter++
 	}
 	return 0, nil
 }

@@ -23,6 +23,7 @@ import (
 	"time"
 )
 
+// Watcher watcher for storage
 type Watcher struct {
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -36,10 +37,12 @@ type Watcher struct {
 	config  *config.Config
 }
 
+// NewWatcher create watcher
 func NewWatcher(storage storage.Storage, zk zk.Zk, config *config.Config) *Watcher {
 	return &Watcher{storage: storage, zk: zk, config: config}
 }
 
+// Start start watcher
 func (w *Watcher) Start() chan *MetricEvent {
 	blog.Infof("start watching metric")
 	w.ctx, w.cancel = context.WithCancel(context.Background())
@@ -50,6 +53,7 @@ func (w *Watcher) Start() chan *MetricEvent {
 	return w.event
 }
 
+// Stop stop watcher
 func (w *Watcher) Stop() {
 	if w.cancel != nil {
 		blog.Infof("end watching metric")
