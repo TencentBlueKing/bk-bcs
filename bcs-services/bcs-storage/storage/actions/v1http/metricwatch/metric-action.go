@@ -23,7 +23,7 @@ const (
 )
 
 // Use Mongodb for storage.
-const dbConfig = "metric"
+const dbConfig = "mongodb/metric"
 
 func init() {
 	actions.RegisterV1Action(actions.Action{

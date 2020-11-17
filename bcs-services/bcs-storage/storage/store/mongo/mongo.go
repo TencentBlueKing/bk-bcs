@@ -84,7 +84,9 @@ func (s *Store) ensureCollection(ctx context.Context, obj *types.RawObject) erro
 }
 
 // Get get object
-func (s *Store) Get(ctx context.Context, resourceType types.ObjectType, key types.ObjectKey) (*types.RawObject, error) {
+func (s *Store) Get(ctx context.Context, resourceType types.ObjectType, key types.ObjectKey, opt *store.GetOptions) (
+	*types.RawObject, error) {
+
 	if len(resourceType) == 0 {
 		return nil, fmt.Errorf("object type cannot be empty")
 	}

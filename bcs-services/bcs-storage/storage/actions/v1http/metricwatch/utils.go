@@ -20,16 +20,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 
 	"github.com/emicklei/go-restful"
 )
 
 func watch(req *restful.Request, resp *restful.Response) {
 	opt := &lib.WatchServerOption{
-		Store:     lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig)),
+		Store: lib.NewStore(
+			apiserver.GetAPIResource().GetDBClient(dbConfig),
+			apiserver.GetAPIResource().GetEventBus(dbConfig)),
 		TableName: req.PathParameter(clusterIDTag),
-		Cond:      operator.EmptyCondition,
 		Req:       req,
 		Resp:      resp,
 	}

@@ -14,6 +14,7 @@
 package dynamicquery
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -49,12 +50,14 @@ type reqDynamic struct {
 // return a init Tank which is ready for operating
 func newReqDynamic(req *restful.Request, filter qFilter, name string) *reqDynamic {
 	return &reqDynamic{
-		req:    req,
-		store:  lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig)),
+		req: req,
+		store: lib.NewStore(
+			apiserver.GetAPIResource().GetDBClient(dbConfig),
+			apiserver.GetAPIResource().GetEventBus(dbConfig)),
 		name:   name,
 		filter: filter,
 		offset: 0,
-		limit:  -1,
+		limit:  0,
 		isPost: req.Request.Method == "POST",
 	}
 }
@@ -105,7 +108,7 @@ func (rd *reqDynamic) getQueryParamJSON() []byte {
 // rd.table will be save since first call, so reset() should be called if doing another op.
 func (rd *reqDynamic) getTable() string {
 	if rd.table == "" {
-		rd.table = rd.req.PathParameter(clusterIDTag) + "_" + rd.name
+		rd.table = rd.name
 	}
 	return rd.table
 }
@@ -115,7 +118,9 @@ func (rd *reqDynamic) getTable() string {
 func (rd *reqDynamic) getSelector() []string {
 	if rd.selector == nil {
 		s := rd.getParam(fieldTag)
-		rd.selector = strings.Split(s, ",")
+		if len(s) != 0 {
+			rd.selector = strings.Split(s, ",")
+		}
 	}
 	return rd.selector
 }
@@ -138,14 +143,15 @@ func (rd *reqDynamic) getLimit() int64 {
 	return int64(rd.limit)
 }
 
-func (rd *reqDynamic) getExtra() (extra operator.M) {
+func (rd *reqDynamic) getExtra() operator.M {
 	raw := rd.getParam(extraTag)
 	if raw == "" {
-		return
+		return nil
 	}
 
+	var extra operator.M
 	lib.NewExtra(raw).Unmarshal(&extra)
-	return
+	return extra
 }
 
 func (rd *reqDynamic) getFeat() *operator.Condition {
@@ -189,7 +195,7 @@ func (rd *reqDynamic) queryDynamic() ([]interface{}, error) {
 	return rd.get(rd.getFeat())
 }
 
-func (rd *reqDynamic) get(condition *operator.Condition) (r []interface{}, err error) {
+func (rd *reqDynamic) get(condition *operator.Condition) ([]interface{}, error) {
 	getOption := &lib.StoreGetOption{
 		Fields: rd.getSelector(),
 		Offset: rd.getOffset(),
@@ -200,7 +206,7 @@ func (rd *reqDynamic) get(condition *operator.Condition) (r []interface{}, err e
 	mList, err := rd.store.Get(rd.req.Request.Context(), rd.getTable(), getOption)
 	if err != nil {
 		blog.Errorf("Failed to query. err: %v", err)
-		return
+		return nil, fmt.Errorf("Failed to query. err: %v", err)
 	}
 
 	return []interface{}{mList}, nil

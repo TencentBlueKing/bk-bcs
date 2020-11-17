@@ -92,15 +92,15 @@ func getReqData(req *restful.Request, features operator.M) (operator.M, error) {
 	return data, nil
 }
 
-func getMetric(req *restful.Request) ([]interface{}, error) {
+func getMetric(req *restful.Request) ([]operator.M, error) {
 	return get(req, getMetricFeat(req))
 }
 
-func queryMetric(req *restful.Request) ([]interface{}, error) {
+func queryMetric(req *restful.Request) ([]operator.M, error) {
 	return get(req, getQueryFeat(req))
 }
 
-func get(req *restful.Request, condition *operator.Condition) ([]interface{}, error) {
+func get(req *restful.Request, condition *operator.Condition) ([]operator.M, error) {
 	offset, err := lib.GetQueryParamInt64(req, offsetTag, 0)
 	if err != nil {
 		return nil, err
@@ -114,8 +114,11 @@ func get(req *restful.Request, condition *operator.Condition) ([]interface{}, er
 		Offset: offset,
 		Limit:  limit,
 	}
-	r, err := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig)).Get(req.Request.Context(), getTable(req), getOption)
-	return []interface{}{r}, err
+	mList, err := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig)).Get(req.Request.Context(), getTable(req), getOption)
+	lib.FormatTime(mList, []string{createTimeTag, updateTimeTag})
+	return mList, err
 }
 
 func put(req *restful.Request) error {
@@ -124,7 +127,9 @@ func put(req *restful.Request) error {
 	if err != nil {
 		return err
 	}
-	return lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig)).Put(
+	return lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig)).Put(
 		req.Request.Context(), getTable(req), data, &lib.StorePutOption{
 			Cond:          operator.NewLeafCondition(operator.Eq, features),
 			UpdateTimeKey: updateTimeTag,
@@ -134,15 +139,19 @@ func put(req *restful.Request) error {
 
 func remove(req *restful.Request) error {
 	condition := getMetricFeat(req)
-	return lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig)).
+	return lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig)).
 		Remove(req.Request.Context(), getTable(req), &lib.StoreRemoveOption{
 			Cond: condition,
 		})
 }
 
-func tables(req *restful.Request) ([]interface{}, error) {
+func tables(req *restful.Request) ([]string, error) {
 
-	tableNames, err := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig)).GetDB().
+	tableNames, err := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig)).GetDB().
 		ListTableNames(req.Request.Context())
-	return []interface{}{tableNames}, err
+	return tableNames, err
 }

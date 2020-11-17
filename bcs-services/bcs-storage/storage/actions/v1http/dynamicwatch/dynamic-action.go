@@ -33,7 +33,7 @@ var (
 )
 
 // Use Mongodb for storage.
-const dbConfig = "dynamic"
+const dbConfig = "mongodb/dynamic"
 
 // WatchDynamic watch dynamic data
 func WatchDynamic(req *restful.Request, resp *restful.Response) {

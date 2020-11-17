@@ -76,21 +76,23 @@ func getRelationData(req *restful.Request) operator.M {
 	}
 }
 
-func getHost(req *restful.Request) ([]interface{}, error) {
+func getHost(req *restful.Request) ([]operator.M, error) {
 	return get(req, getHostFeat(req))
 }
 
-func queryHost(req *restful.Request) ([]interface{}, error) {
+func queryHost(req *restful.Request) ([]operator.M, error) {
 	return get(req, getQueryHostFeat(req))
 }
 
-func get(req *restful.Request, condition *operator.Condition) ([]interface{}, error) {
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+func get(req *restful.Request, condition *operator.Condition) ([]operator.M, error) {
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	getOption := &lib.StoreGetOption{
 		Cond: condition,
 	}
 	mList, err := store.Get(req.Request.Context(), tableName, getOption)
-	return []interface{}{mList}, err
+	return mList, err
 }
 
 func putHost(req *restful.Request) error {
@@ -99,7 +101,9 @@ func putHost(req *restful.Request) error {
 
 func put(req *restful.Request, features operator.M) error {
 	condition := operator.NewLeafCondition(operator.Eq, features)
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	putOption := &lib.StorePutOption{
 		UniqueKey:     indexKeys,
 		Cond:          condition,
@@ -120,7 +124,9 @@ func removeHost(req *restful.Request) error {
 }
 
 func remove(req *restful.Request, condition *operator.Condition) error {
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	rmOption := &lib.StoreRemoveOption{
 		Cond: condition,
 	}
@@ -132,7 +138,9 @@ func remove(req *restful.Request, condition *operator.Condition) error {
 func cleanCluster(req *restful.Request, clusterID string) error {
 	now := time.Now()
 	condition := operator.NewLeafCondition(operator.Eq, operator.M{clusterIDTag: clusterID})
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	_, err := store.GetDB().Table(tableName).UpdateMany(req.Request.Context(), condition,
 		operator.M{clusterIDTag: "", updateTimeTag: now})
 	return err
@@ -155,7 +163,9 @@ func doRelation(req *restful.Request, isPut bool) error {
 		Cond:   condition,
 		Fields: []string{ipTag},
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	mList, err := store.Get(req.Request.Context(), tableName, getOption)
 	if err != nil {
 		return fmt.Errorf("failed to query, err %s", err.Error())

@@ -28,6 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"
 )
 
+const (
+	rootPath = "/"
+)
+
 // Options options for zookeeper store
 type Options struct {
 	BasePath              string
@@ -51,35 +55,26 @@ func NewStore(opt *Options) (*Store, error) {
 		return nil, err
 	}
 	return &Store{
-		basePath: opt.BasePath,
+		basePath: filepath.Join(rootPath, opt.BasePath),
 		zk:       zkCli,
 	}, nil
 }
 
-func getClusterType(clusterID string) string {
-	if strings.Contains(clusterID, "mesos") {
-		return "mesos"
-	} else if strings.Contains(clusterID, "k8s") {
-		return "k8s"
-	}
-	return ""
-}
-
-func (s *Store) getObjectPath(objectType, clusterID, namespace, name string) string {
+func (s *Store) getObjectPath(env, objectType, clusterID, namespace, name string) string {
 	path := s.basePath
-	sysType := getClusterType(clusterID)
-	if len(sysType) != 0 {
-		path = filepath.Join(s.basePath, sysType)
+	if len(env) != 0 {
+		path = filepath.Join(s.basePath, env)
 	}
 	return filepath.Join(path, clusterID, string(objectType), namespace+"."+name)
 }
 
 // Get implement Store
-func (s *Store) Get(ctx context.Context, resourceType types.ObjectType, key types.ObjectKey) (*types.RawObject, error) {
+func (s *Store) Get(ctx context.Context, resourceType types.ObjectType, key types.ObjectKey, opt *store.GetOptions) (
+	*types.RawObject, error) {
 	if len(key.ClusterID) == 0 || len(key.Name) == 0 || len(key.Namespace) == 0 {
 		return nil, fmt.Errorf("field in object key cannot be empty")
 	}
-	path := s.getObjectPath(string(resourceType), key.ClusterID, key.Namespace, key.Name)
+	path := s.getObjectPath(opt.Env, string(resourceType), key.ClusterID, key.Namespace, key.Name)
 	content, err := s.zk.Get(path)
 	if err != nil {
 		blog.Errorf("zk get path %s failed, err %s", path, err.Error())
@@ -114,6 +109,7 @@ func (s *Store) Create(ctx context.Context, obj *types.RawObject, opt *store.Cre
 		return fmt.Errorf("field type, name, namespace, clusterid cannot be empty")
 	}
 	path := s.getObjectPath(
+		opt.Env,
 		string(obj.GetObjectType()),
 		obj.GetClusterID(),
 		obj.GetNamespace(),
@@ -162,6 +158,7 @@ func (s *Store) Update(ctx context.Context, obj *types.RawObject, opt *store.Upd
 		return fmt.Errorf("field type, name, namespace, clusterid cannot be empty")
 	}
 	path := s.getObjectPath(
+		opt.Env,
 		string(obj.GetObjectType()),
 		obj.GetClusterID(),
 		obj.GetNamespace(),
@@ -210,6 +207,7 @@ func (s *Store) Delete(ctx context.Context, obj *types.RawObject, opt *store.Del
 		return fmt.Errorf("field type, name, namespace, clusterid cannot be empty")
 	}
 	path := s.getObjectPath(
+		opt.Env,
 		string(obj.GetObjectType()),
 		obj.GetClusterID(),
 		obj.GetNamespace(),
@@ -225,7 +223,7 @@ func (s *Store) Delete(ctx context.Context, obj *types.RawObject, opt *store.Del
 		blog.Errorf("path %s to be deleted not found", path)
 		return fmt.Errorf("path %s to be deleted not found", path)
 	}
-	err = s.zk.Del(path, 0)
+	err = s.zk.Del(path, -1)
 	if err != nil {
 		blog.Errorf("del path %s failed, err %s", path, err.Error())
 		return fmt.Errorf("del path %s failed, err %s", path, err.Error())
@@ -250,16 +248,15 @@ func matchSelector(data operator.M, selectorMap map[string]interface{}) bool {
 func (s *Store) List(ctx context.Context, objectType types.ObjectType, opts *store.ListOptions) (
 	[]*types.RawObject, error) {
 
-	if len(opts.Cluster) != 0 {
+	if len(opts.Cluster) == 0 {
 		return nil, fmt.Errorf("cluster cannot be empty")
 	}
 
 	path := s.basePath
-	sysType := getClusterType(opts.Cluster)
-	if len(sysType) != 0 {
-		path = filepath.Join(s.basePath, sysType)
+	if len(opts.Env) != 0 {
+		path = filepath.Join(s.basePath, opts.Env)
 	}
-	parentPath := filepath.Join(path, opts.Cluster)
+	parentPath := filepath.Join(path, opts.Cluster, string(objectType))
 
 	children, err := s.zk.GetChildren(parentPath)
 	if err != nil {
@@ -289,24 +286,25 @@ func (s *Store) List(ctx context.Context, objectType types.ObjectType, opts *sto
 			blog.Errorf("decode data failed, err %s", err.Error())
 			return nil, fmt.Errorf("decode data failed, err %s", err.Error())
 		}
+		strs := strings.Split(child, ".")
+		if len(strs) != 2 {
+			blog.Errorf("child %s is invalid, should include .", child)
+			return nil, fmt.Errorf("child %s is invalid, should include \".\"", child)
+		}
 		if opts.Selector != nil {
-			if matchSelector(childM, opts.Selector.GetPairs()) {
-				strs := strings.Split(child, ".")
-				if len(strs) != 0 {
-					blog.Errorf("child %s is invalid, should include .", child)
-					return nil, fmt.Errorf("child %s is invalid, should include \".\"", child)
-				}
-				retList = append(retList, &types.RawObject{
-					Meta: types.Meta{
-						Type:      objectType,
-						ClusterID: opts.Cluster,
-						Namespace: strs[0],
-						Name:      strs[1],
-					},
-					Data: childM,
-				})
+			if !matchSelector(childM, opts.Selector.GetPairs()) {
+				continue
 			}
 		}
+		retList = append(retList, &types.RawObject{
+			Meta: types.Meta{
+				Type:      objectType,
+				ClusterID: opts.Cluster,
+				Namespace: strs[0],
+				Name:      strs[1],
+			},
+			Data: childM,
+		})
 	}
 	return retList, nil
 }

@@ -18,10 +18,12 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 // EventBus dispatch event
 type EventBus struct {
+	cond           *operator.Condition
 	subscribers    map[string]map[string]chan *drivers.WatchEvent
 	sublock        sync.RWMutex
 	topicListeners map[string]chan *drivers.WatchEvent
@@ -37,9 +39,16 @@ func NewEventBus(db drivers.DB) *EventBus {
 	}
 }
 
+// SetCondition set condition
+func (eb *EventBus) SetCondition(cond *operator.Condition) {
+	eb.cond = cond
+}
+
 // create listener of topic
 func (eb *EventBus) createListener(topic string) (chan *drivers.WatchEvent, error) {
-	listenerCh, err := eb.db.Table(topic).Watch(nil).WithFullContent(true).DoWatch(context.Background())
+	listenerCh, err := eb.db.Table(topic).Watch([]*operator.Condition{eb.cond}).
+		WithFullContent(true).
+		DoWatch(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("start listener of topic %s failed, err %s", topic, err.Error())
 	}
@@ -92,6 +101,7 @@ func (eb *EventBus) Unsubscribe(topic, uuid string) error {
 		if _, idFound := topicChanMap[uuid]; !idFound {
 			return fmt.Errorf("no uuid %s of topic %s to unsubscribe", uuid, topic)
 		}
+
 		delete(topicChanMap, uuid)
 	}
 	return fmt.Errorf("no topic %s to subscribe", topic)

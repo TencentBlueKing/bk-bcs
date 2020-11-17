@@ -18,22 +18,30 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"
 )
 
+// GetOptions options for get operation
+type GetOptions struct {
+	Env string
+}
+
 // CreateOptions options for create operation
 type CreateOptions struct {
 	// UpdateExists if do update when exists
 	UpdateExists bool
+	Env          string
 }
 
 // UpdateOptions options for update operation
 type UpdateOptions struct {
 	// CreateNotExists if do creation when not exists
 	CreateNotExists bool
+	Env             string
 }
 
 // DeleteOptions options for delete operation
 type DeleteOptions struct {
 	// IgnoreNotFound if return err when data not found
 	IgnoreNotFound bool
+	Env            string
 }
 
 // ListOptions options for list operation
@@ -43,6 +51,7 @@ type ListOptions struct {
 	Namespace string
 	Offset    int64
 	Limit     int64
+	Env       string
 }
 
 // WatchStartTimeStamp start time stamp for watch
@@ -57,4 +66,5 @@ type WatchOptions struct {
 	BatchSize    int32
 	MaxAwaitTime time.Duration
 	StartTime    *WatchStartTimeStamp
+	Env          string
 }

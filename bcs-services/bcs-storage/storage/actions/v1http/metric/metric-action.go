@@ -45,7 +45,7 @@ var queryExtraTags = []string{namespaceTag, typeTag, nameTag}
 var indexKeys = []string{clusterIDTag, namespaceTag, typeTag, nameTag}
 
 // Use Mongodb for storage.
-const dbConfig = "metric"
+const dbConfig = "mongodb/metric"
 
 // GetMetric get metric
 func GetMetric(req *restful.Request, resp *restful.Response) {

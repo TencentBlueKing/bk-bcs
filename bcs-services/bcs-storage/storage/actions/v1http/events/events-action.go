@@ -57,7 +57,7 @@ var conditionTagList = [...]string{
 	"extraInfo.name", "extraInfo.namespace", "extraInfo.kind"}
 
 // Use Mongodb for storage.
-const dbConfig = "event"
+const dbConfig = "mongodb/event"
 
 // PutEvent put event
 func PutEvent(req *restful.Request, resp *restful.Response) {
@@ -87,6 +87,11 @@ func ListEvent(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
+// WatchEvent watch event
+func WatchEvent(req *restful.Request, resp *restful.Response) {
+	watch(req, resp)
+}
+
 // CleanEvents clean event
 func CleanEvents() {
 	maxCap := apiserver.GetAPIResource().Conf.EventMaxCap
@@ -103,6 +108,10 @@ func init() {
 		Verb: "PUT", Path: eventPath, Params: nil, Handler: lib.MarkProcess(PutEvent)})
 	actions.RegisterV1Action(actions.Action{
 		Verb: "GET", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
+
+	eventWatchPath := urlPath("/events/watch")
+	actions.RegisterV1Action(actions.Action{
+		Verb: "POST", Path: eventWatchPath, Params: nil, Handler: lib.MarkProcess(WatchEvent)})
 
 	actions.RegisterDaemonFunc(CleanEvents)
 }

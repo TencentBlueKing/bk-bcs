@@ -48,7 +48,6 @@ type DB struct {
 
 // NewDB create db
 func NewDB(opt *Options) (*DB, error) {
-	timeoutDuration := time.Duration(opt.ConnectTimeoutSeconds) * time.Second
 	credential := mopt.Credential{
 		AuthMechanism: opt.AuthMechanism,
 		AuthSource:    opt.AuthDatabase,
@@ -61,12 +60,21 @@ func NewDB(opt *Options) (*DB, error) {
 	}
 	// construct mongo client options
 	mCliOpt := &mopt.ClientOptions{
-		MaxPoolSize:    &opt.MaxPoolSize,
-		MinPoolSize:    &opt.MinPoolSize,
-		ConnectTimeout: &timeoutDuration,
-		Auth:           &credential,
-		Hosts:          opt.Hosts,
+		Auth:  &credential,
+		Hosts: opt.Hosts,
 	}
+	if opt.MaxPoolSize != 0 {
+		mCliOpt.MaxPoolSize = &opt.MaxPoolSize
+	}
+	if opt.MinPoolSize != 0 {
+		mCliOpt.MinPoolSize = &opt.MinPoolSize
+	}
+	var timeoutDuration time.Duration
+	if opt.ConnectTimeoutSeconds != 0 {
+		timeoutDuration = time.Duration(opt.ConnectTimeoutSeconds) * time.Second
+	}
+	mCliOpt.ConnectTimeout = &timeoutDuration
+
 	// create mongo client
 	mCli, err := mongo.NewClient(mCliOpt)
 	if err != nil {
@@ -90,12 +98,24 @@ func (db *DB) Close() error {
 
 // Ping ping database
 func (db *DB) Ping() error {
-	return db.mCli.Ping(context.TODO(), nil)
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("ping", err, startTime)
+	}()
+	err = db.mCli.Ping(context.TODO(), nil)
+	return err
 }
 
 // HasTable if table exists
 func (db *DB) HasTable(ctx context.Context, tableName string) (bool, error) {
-	cursor, err := db.mCli.Database(db.dbName).ListCollections(ctx, bson.M{
+	var err error
+	var cursor *mongo.Cursor
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("hasTable", err, startTime)
+	}()
+	cursor, err = db.mCli.Database(db.dbName).ListCollections(ctx, bson.M{
 		"name": tableName,
 		"type": "collection",
 	})
@@ -112,19 +132,38 @@ func (db *DB) HasTable(ctx context.Context, tableName string) (bool, error) {
 
 // ListTableNames list collection names
 func (db *DB) ListTableNames(ctx context.Context) ([]string, error) {
-	return db.mCli.Database(db.dbName).ListCollectionNames(ctx, bson.M{})
+	var retList []string
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("listTableNames", err, startTime)
+	}()
+	retList, err = db.mCli.Database(db.dbName).ListCollectionNames(ctx, bson.M{})
+	return retList, err
 }
 
 // CreateTable create collection
 func (db *DB) CreateTable(ctx context.Context, tableName string) error {
-	return db.mCli.Database(db.dbName).RunCommand(ctx, map[string]interface{}{
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("createTable", err, startTime)
+	}()
+	err = db.mCli.Database(db.dbName).RunCommand(ctx, map[string]interface{}{
 		"create": tableName,
 	}).Err()
+	return err
 }
 
 // DropTable drop table
 func (db *DB) DropTable(ctx context.Context, tableName string) error {
-	return db.mCli.Database(db.dbName).Collection(tableName).Drop(ctx)
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("dropTable", err, startTime)
+	}()
+	err = db.mCli.Database(db.dbName).Collection(tableName).Drop(ctx)
+	return err
 }
 
 // Table get collection object
@@ -143,8 +182,14 @@ type Collection struct {
 
 // CreateIndex create index for collection
 func (c *Collection) CreateIndex(ctx context.Context, idx drivers.Index) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("createIndex", err, startTime)
+	}()
 	if len(idx.Name) == 0 {
-		return fmt.Errorf("index name cannot be empty")
+		err = fmt.Errorf("index name cannot be empty")
+		return err
 	}
 	indexOpt := mopt.Index()
 	indexOpt.SetUnique(idx.Unique)
@@ -155,19 +200,30 @@ func (c *Collection) CreateIndex(ctx context.Context, idx drivers.Index) error {
 		Options: indexOpt,
 	}
 
-	_, err := c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().CreateOne(ctx, indexModel)
+	_, err = c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().CreateOne(ctx, indexModel)
 	return err
 }
 
 // DropIndex drop index for collection
 func (c *Collection) DropIndex(ctx context.Context, indexName string) error {
-	_, err := c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().DropOne(ctx, indexName)
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("dropIndex", err, startTime)
+	}()
+	_, err = c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().DropOne(ctx, indexName)
 	return err
 }
 
 // HasIndex if has index with certain name
 func (c *Collection) HasIndex(ctx context.Context, indexName string) (bool, error) {
-	cursor, err := c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().List(ctx)
+	var err error
+	var cursor *mongo.Cursor
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("hasIndex", err, startTime)
+	}()
+	cursor, err = c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().List(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -185,7 +241,13 @@ func (c *Collection) HasIndex(ctx context.Context, indexName string) (bool, erro
 
 // Indexes list indexes of collection
 func (c *Collection) Indexes(ctx context.Context) ([]drivers.Index, error) {
-	cursor, err := c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().List(ctx)
+	var err error
+	var cursor *mongo.Cursor
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("indexes", err, startTime)
+	}()
+	cursor, err = c.mCli.Database(c.dbName).Collection(c.collectionName).Indexes().List(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +275,13 @@ func (c *Collection) Find(condition *operator.Condition) drivers.Find {
 
 // Insert insert many data
 func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error) {
-	ret, err := c.mCli.Database(c.dbName).Collection(c.collectionName).InsertMany(ctx, docs)
+	var ret *mongo.InsertManyResult
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("insert", err, startTime)
+	}()
+	ret, err = c.mCli.Database(c.dbName).Collection(c.collectionName).InsertMany(ctx, docs)
 	if err != nil {
 		return 0, err
 	}
@@ -222,17 +290,28 @@ func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error
 
 // Update update data by condition
 func (c *Collection) Update(ctx context.Context, condition *operator.Condition, data interface{}) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("insert", err, startTime)
+	}()
 	// convert condition to filter
 	filter := condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	_, err := c.mCli.Database(c.dbName).Collection(c.collectionName).UpdateOne(ctx, filter, data)
+	_, err = c.mCli.Database(c.dbName).Collection(c.collectionName).UpdateOne(ctx, filter, data)
 	return err
 }
 
 // UpdateMany update many data by condition
 func (c *Collection) UpdateMany(ctx context.Context, condition *operator.Condition, data interface{}) (int64, error) {
+	var err error
+	var ret *mongo.UpdateResult
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("updateMany", err, startTime)
+	}()
 	// convert condition to filter
 	filter := condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	ret, err := c.mCli.Database(c.dbName).Collection(c.collectionName).UpdateMany(ctx, filter, data)
+	ret, err = c.mCli.Database(c.dbName).Collection(c.collectionName).UpdateMany(ctx, filter, data)
 	if err != nil {
 		return 0, err
 	}
@@ -241,21 +320,32 @@ func (c *Collection) UpdateMany(ctx context.Context, condition *operator.Conditi
 
 // Upsert update or insert data by condition
 func (c *Collection) Upsert(ctx context.Context, condition *operator.Condition, data interface{}) error {
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("upsert", err, startTime)
+	}()
 	// convert condition to filter
 	filter := condition.Combine(leafNodeProcessor, branchNodeProcessor)
 	upsertFlag := true
 	updateOpt := &mopt.UpdateOptions{
 		Upsert: &upsertFlag,
 	}
-	_, err := c.mCli.Database(c.dbName).Collection(c.collectionName).UpdateOne(ctx, filter, data, updateOpt)
+	_, err = c.mCli.Database(c.dbName).Collection(c.collectionName).UpdateOne(ctx, filter, data, updateOpt)
 	return err
 }
 
 // Delete delete data
 func (c *Collection) Delete(ctx context.Context, condition *operator.Condition) (int64, error) {
+	var ret *mongo.DeleteResult
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("delete", err, startTime)
+	}()
 	// convert condition to filter
 	filter := condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	ret, err := c.mCli.Database(c.dbName).Collection(c.collectionName).DeleteMany(ctx, filter)
+	ret, err = c.mCli.Database(c.dbName).Collection(c.collectionName).DeleteMany(ctx, filter)
 	if err != nil {
 		return 0, err
 	}
@@ -318,13 +408,22 @@ func (f *Finder) One(ctx context.Context, result interface{}) error {
 		findOpts.SetSort(f.sort)
 	}
 
+	var err error
+	var cursor *mongo.Cursor
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("findOne", err, startTime)
+	}()
+
 	// convert condition to filter
 	filter := f.condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	cursor, err := f.mCli.Database(f.dbName).Collection(f.collectionName).Find(ctx, filter, findOpts)
+	cursor, err = f.mCli.Database(f.dbName).Collection(f.collectionName).Find(ctx, filter, findOpts)
 	if err != nil {
 		return err
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		cursor.Close(ctx)
+	}()
 	for cursor.Next(ctx) {
 		return cursor.Decode(result)
 	}
@@ -347,9 +446,15 @@ func (f *Finder) All(ctx context.Context, result interface{}) error {
 		findOpts.SetSort(f.sort)
 	}
 
+	var err error
+	var cursor *mongo.Cursor
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("findAll", err, startTime)
+	}()
 	// convert condition to filter
 	filter := f.condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	cursor, err := f.mCli.Database(f.dbName).Collection(f.collectionName).Find(ctx, filter, findOpts)
+	cursor, err = f.mCli.Database(f.dbName).Collection(f.collectionName).Find(ctx, filter, findOpts)
 	if err != nil {
 		return err
 	}
@@ -359,8 +464,15 @@ func (f *Finder) All(ctx context.Context, result interface{}) error {
 // Count count data, only condition takes effective
 func (f *Finder) Count(ctx context.Context) (int64, error) {
 	// convert condition to filter
+	var counter int64
+	var err error
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("count", err, startTime)
+	}()
 	filter := f.condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	return f.mCli.Database(f.dbName).Collection(f.collectionName).CountDocuments(ctx, filter)
+	counter, err = f.mCli.Database(f.dbName).Collection(f.collectionName).CountDocuments(ctx, filter)
+	return counter, err
 }
 
 // Watcher wrap mongodb change stream
@@ -427,7 +539,13 @@ func (w *Watcher) DoWatch(ctx context.Context) (chan *drivers.WatchEvent, error)
 		filters = append(filters, filter)
 	}
 
-	changeStream, err := w.mCli.Database(w.dbName).Collection(w.collectionName).Watch(ctx, filters, changeStreamOpt)
+	var err error
+	var changeStream *mongo.ChangeStream
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("watch", err, startTime)
+	}()
+	changeStream, err = w.mCli.Database(w.dbName).Collection(w.collectionName).Watch(ctx, filters, changeStreamOpt)
 	if err != nil {
 		return nil, err
 	}

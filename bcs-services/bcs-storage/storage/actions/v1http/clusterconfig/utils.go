@@ -56,7 +56,9 @@ func getTemplate(req *restful.Request) (string, error) {
 			versionTag: -1,
 		},
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	mList, err := store.Get(req.Request.Context(), tableTpl, getOption)
 	if err != nil {
 		return "", err
@@ -81,7 +83,9 @@ func getStableVersion(req *restful.Request) (string, error) {
 	getOption := &lib.StoreGetOption{
 		Cond: condition,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	mList, err := store.Get(req.Request.Context(), tableVer, getOption)
 	if err != nil {
 		return "", err
@@ -102,17 +106,19 @@ func getClsCondition(req *restful.Request) *operator.Condition {
 	return operator.NewLeafCondition(operator.Eq, features)
 }
 
-func getCls(req *restful.Request) ([]interface{}, error) {
+func getCls(req *restful.Request) ([]operator.M, error) {
 	condition := getClsCondition(req)
 	getOption := &lib.StoreGetOption{
 		Cond: condition,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	mList, err := store.Get(req.Request.Context(), tableCls, getOption)
 	if err != nil {
 		return nil, err
 	}
-	return []interface{}{mList}, nil
+	return mList, nil
 }
 
 func getMultiClsCondition(req *restful.Request) *operator.Condition {
@@ -128,34 +134,38 @@ func getMultiClsCondition(req *restful.Request) *operator.Condition {
 	return clsCondition
 }
 
-func getMultiCls(req *restful.Request) ([]interface{}, error) {
+func getMultiCls(req *restful.Request) ([]operator.M, error) {
 	condition := getMultiClsCondition(req)
 	getOption := &lib.StoreGetOption{
 		Cond: condition,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	mList, err := store.Get(req.Request.Context(), tableCls, getOption)
 	if err != nil {
 		return nil, err
 	}
-	return []interface{}{mList}, nil
+	return mList, nil
 }
 
-func getSvc(req *restful.Request) ([]interface{}, error) {
+func getSvc(req *restful.Request) ([]operator.M, error) {
 	condition := getSvcCondition(req)
 	getOption := &lib.StoreGetOption{
 		Cond: condition,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	mList, err := store.Get(req.Request.Context(), tableSvc, getOption)
 	if err != nil {
 		return nil, err
 	}
-	return []interface{}{mList}, nil
+	return mList, nil
 }
 
 func getSvcSet(req *restful.Request) (svcConfigSet *types.ConfigSet, err error) {
-	var svcConfig []interface{}
+	var svcConfig []operator.M
 	if svcConfig, err = getSvc(req); err != nil || len(svcConfig) == 0 {
 		if err == nil {
 			err = storageErr.ServiceConfigNoFound
@@ -163,7 +173,7 @@ func getSvcSet(req *restful.Request) (svcConfigSet *types.ConfigSet, err error) 
 		return
 	}
 
-	svcConfigRaw, _ := svcConfig[0].(map[string]interface{})
+	svcConfigRaw := svcConfig[0]
 	svcConfigRawData, _ := svcConfigRaw[dataTag]
 	if svcConfigSet, err = types.ParseConfigSet(svcConfigRawData); err != nil {
 		blog.Errorf("Failed to parse service configSet. err: %v", err)
@@ -172,32 +182,32 @@ func getSvcSet(req *restful.Request) (svcConfigSet *types.ConfigSet, err error) 
 	return
 }
 
-func getClsSet(req *restful.Request, clsFunc func(req *restful.Request) ([]interface{}, error)) (clusterSet []types.ClusterSet, err error) {
-	var clsConfig []interface{}
+func getClsSet(req *restful.Request, clsFunc func(req *restful.Request) ([]operator.M, error)) (
+	[]types.ClusterSet, error) {
+	clsConfig := make([]operator.M, 0)
+	var err error
 	if clsConfig, err = clsFunc(req); err != nil {
-		return
+		return nil, err
 	}
 	var clsConfigSet *types.ConfigSet
-	clusterSet = make([]types.ClusterSet, 0, len(clsConfig))
+	clusterSet := make([]types.ClusterSet, 0, len(clsConfig))
 	for _, clusterRaw := range clsConfig {
-		clsConfigRaw, _ := clusterRaw.(map[string]interface{})
-		clsConfigRawID, _ := clsConfigRaw[clusterIdTag]
-		clsConfigRawData, _ := clsConfigRaw[dataTag]
+		clsConfigRawID, _ := clusterRaw[clusterIdTag]
+		clsConfigRawData, _ := clusterRaw[dataTag]
 
 		if clsConfigSet, err = types.ParseConfigSet(clsConfigRawData); err != nil {
-			fmt.Println(err.Error())
-			return
+			return nil, err
 		}
 
 		clusterID, _ := clsConfigRawID.(string)
 		clusterSet = append(clusterSet, types.ClusterSet{ClusterId: clusterID, ClusterConfig: *clsConfigSet})
 	}
-	return
+	return clusterSet, err
 }
 
 func generateData(
 	req *restful.Request,
-	clsFunc func(req *restful.Request) ([]interface{}, error)) (types.DeployConfig, error) {
+	clsFunc func(req *restful.Request) ([]operator.M, error)) (types.DeployConfig, error) {
 
 	var svcConfigSet *types.ConfigSet
 	var clsConfigSet []types.ClusterSet
@@ -292,7 +302,9 @@ func putClsConfig(req *restful.Request) error {
 		UpdateTimeKey: updateTimeTag,
 	}
 
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	err = store.Put(req.Request.Context(), tableCls, data, putOption)
 	if err != nil {
 		return err
@@ -312,7 +324,9 @@ func putStableVersion(req *restful.Request) error {
 	putOption := &lib.StorePutOption{
 		Cond: condition,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	if err := store.Put(req.Request.Context(), tableVer, operator.M{dataTag: version}, putOption); err != nil {
 		blog.Errorf("Failed to set stable version of %s. err %s", service, err.Error())
 		return err

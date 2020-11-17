@@ -29,8 +29,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/mongo"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/store/zookeeper"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/watchbus"
 )
 
 const (
@@ -45,6 +47,7 @@ type APIResource struct {
 	ActionsV1 []*httpserver.Action
 	storeMap  map[string]store.Store
 	dbMap     map[string]drivers.DB
+	ebusMap   map[string]*watchbus.EventBus
 }
 
 var api = APIResource{}
@@ -63,6 +66,7 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 
 	a.storeMap = make(map[string]store.Store)
 	a.dbMap = make(map[string]drivers.DB)
+	a.ebusMap = make(map[string]*watchbus.EventBus)
 	for _, key := range dbConfig.KeyList {
 		if _, ok := a.storeMap[key]; ok {
 			blog.Warnf("Store config duplicated: %s", key)
@@ -81,10 +85,12 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 		switch s[0] {
 		case mongodbConfigKey:
 			if err = a.parseMongodb(key, dbConfig); err != nil {
+				blog.Errorf("parse mongodb failed, err %s", err.Error())
 				SetUnhealthy(mongodbConfigKey, err.Error())
 			}
 		case zkConfigKey:
 			if err = a.parseZk(key, dbConfig); err != nil {
+				blog.Errorf("parse zookeeper failed, err %s", err.Error())
 				SetUnhealthy(zkConfigKey, err.Error())
 			}
 		default:
@@ -116,6 +122,11 @@ func (a *APIResource) ParseDBConfig() (dbConf *conf.Config) {
 	return
 }
 
+// GetEventBus get event bus by key
+func (a *APIResource) GetEventBus(key string) *watchbus.EventBus {
+	return a.ebusMap[key]
+}
+
 // GetDBClient get db client by key
 func (a *APIResource) GetDBClient(key string) drivers.DB {
 	return a.dbMap[key]
@@ -137,14 +148,20 @@ func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 	username := dbConf.Read(key, "Username")
 	password := dbConf.Read(key, "Password")
 	maxPoolSizeRaw := dbConf.Read(key, "MaxPoolSize")
-	maxPoolSize, err := strconv.Atoi(maxPoolSizeRaw)
-	if err != nil {
-		return err
+	maxPoolSize := 0
+	if len(maxPoolSizeRaw) != 0 {
+		maxPoolSize, err = strconv.Atoi(maxPoolSizeRaw)
+		if err != nil {
+			return err
+		}
 	}
 	minPoolSizeRaw := dbConf.Read(key, "MinPoolSize")
-	minPoolSize, err := strconv.Atoi(minPoolSizeRaw)
-	if err != nil {
-		return err
+	minPoolSize := 0
+	if len(minPoolSizeRaw) != 0 {
+		minPoolSize, err = strconv.Atoi(minPoolSizeRaw)
+		if err != nil {
+			return err
+		}
 	}
 
 	if password != "" {
@@ -172,7 +189,16 @@ func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 		blog.Errorf("ping mongo db failed, err %s", err.Error())
 		return fmt.Errorf("ping mongo db failed, err %s", err.Error())
 	}
+
+	ignoreDeleteEventRaw := dbConf.Read(key, "IgnoreDeleteEvent")
+
+	ebus := watchbus.NewEventBus(mongoDB)
+	if ignoreDeleteEventRaw == "true" {
+		ebus.SetCondition(operator.NewBranchCondition(operator.Mat,
+			operator.NewLeafCondition(operator.Ne, operator.M{"operationType": "delete"})))
+	}
 	a.dbMap[key] = mongoDB
+	a.ebusMap[key] = ebus
 	blog.Infof("init mongo db with key %s successfully", key)
 	return nil
 }
@@ -191,6 +217,7 @@ func (a *APIResource) parseZk(key string, dbConf *conf.Config) error {
 	}
 
 	zkOpt := &zookeeper.Options{
+		BasePath:              database,
 		Addrs:                 strings.Split(address, ","),
 		ConnectTimeoutSeconds: timeout,
 		Database:              database,
@@ -203,7 +230,6 @@ func (a *APIResource) parseZk(key string, dbConf *conf.Config) error {
 		return err
 	}
 	a.storeMap[key] = zkStore
-
 	blog.Infof("init zookeeper with key %s successfully", key)
 	return nil
 }

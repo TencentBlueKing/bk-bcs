@@ -42,7 +42,7 @@ type Event struct {
 
 // Store interface for store object
 type Store interface {
-	Get(ctx context.Context, t types.ObjectType, key types.ObjectKey) (*types.RawObject, error)
+	Get(ctx context.Context, t types.ObjectType, key types.ObjectKey, opt *GetOptions) (*types.RawObject, error)
 	Create(ctx context.Context, obj *types.RawObject, opt *CreateOptions) error
 	Update(ctx context.Context, obj *types.RawObject, opt *UpdateOptions) error
 	Delete(ctx context.Context, obj *types.RawObject, opt *DeleteOptions) error

@@ -36,11 +36,11 @@ const (
 )
 
 // Use Zookeeper for storage.
-const dbConfig = "watch"
+const dbConfig = "zk/watch"
 
-// GetWatchResource get watch resource
-func GetWatchResource(req *restful.Request, resp *restful.Response) {
-	r, err := get(req)
+// K8SGetWatchResource get watch resource
+func K8SGetWatchResource(req *restful.Request, resp *restful.Response) {
+	r, err := get(req, k8sEnv)
 	if err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
@@ -52,9 +52,9 @@ func GetWatchResource(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
 }
 
-// PutWatchResource put watch resource
-func PutWatchResource(req *restful.Request, resp *restful.Response) {
-	if err := put(req); err != nil {
+// K8SPutWatchResource put watch resource
+func K8SPutWatchResource(req *restful.Request, resp *restful.Response) {
+	if err := put(req, k8sEnv); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -65,9 +65,9 @@ func PutWatchResource(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// DeleteWatchResource delete watch resource
-func DeleteWatchResource(req *restful.Request, resp *restful.Response) {
-	if err := remove(req); err != nil {
+// K8SDeleteWatchResource delete watch resource
+func K8SDeleteWatchResource(req *restful.Request, resp *restful.Response) {
+	if err := remove(req, k8sEnv); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
@@ -78,9 +78,64 @@ func DeleteWatchResource(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// ListWatchResource list watch resource
-func ListWatchResource(req *restful.Request, resp *restful.Response) {
-	r, err := list(req)
+// K8SListWatchResource list watch resource
+func K8SListWatchResource(req *restful.Request, resp *restful.Response) {
+	r, err := list(req, k8sEnv)
+	if err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			Data:    []string{},
+			ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
+}
+
+// MesosGetWatchResource get watch resource
+func MesosGetWatchResource(req *restful.Request, resp *restful.Response) {
+	r, err := get(req, mesosEnv)
+	if err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStorageGetResourceFail,
+			Message: common.BcsErrStorageGetResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
+}
+
+// MesosPutWatchResource put watch resource
+func MesosPutWatchResource(req *restful.Request, resp *restful.Response) {
+	if err := put(req, mesosEnv); err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStorageRestRequestDataIsNotJson,
+			Message: common.BcsErrStorageRestRequestDataIsNotJsonStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp})
+}
+
+// MesosDeleteWatchResource delete watch resource
+func MesosDeleteWatchResource(req *restful.Request, resp *restful.Response) {
+	if err := remove(req, mesosEnv); err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStorageDeleteResourceFail,
+			Message: common.BcsErrStorageDeleteResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp})
+}
+
+// MesosListWatchResource list watch resource
+func MesosListWatchResource(req *restful.Request, resp *restful.Response) {
+	r, err := list(req, mesosEnv)
 	if err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
@@ -97,26 +152,26 @@ func init() {
 	urlK8S := urlK8SPath("/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}")
 	actions.RegisterV1Action(actions.Action{
 		Verb: "GET", Path: urlK8S,
-		Params: nil, Handler: lib.MarkProcess(GetWatchResource)})
+		Params: nil, Handler: lib.MarkProcess(K8SGetWatchResource)})
 	actions.RegisterV1Action(actions.Action{
-		Verb: "PUT", Path: urlK8S, Params: nil, Handler: lib.MarkProcess(PutWatchResource)})
+		Verb: "PUT", Path: urlK8S, Params: nil, Handler: lib.MarkProcess(K8SPutWatchResource)})
 	actions.RegisterV1Action(actions.Action{
-		Verb: "DELETE", Path: urlK8S, Params: nil, Handler: lib.MarkProcess(DeleteWatchResource)})
+		Verb: "DELETE", Path: urlK8S, Params: nil, Handler: lib.MarkProcess(K8SDeleteWatchResource)})
 
-	listK8SURL := urlMesosPath("/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}")
+	listK8SURL := urlK8SPath("/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}")
 	actions.RegisterV1Action(actions.Action{
-		Verb: "GET", Path: listK8SURL, Params: nil, Handler: lib.MarkProcess(ListWatchResource)})
+		Verb: "GET", Path: listK8SURL, Params: nil, Handler: lib.MarkProcess(K8SListWatchResource)})
 
 	urlMesos := urlMesosPath("/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}")
 	actions.RegisterV1Action(actions.Action{
 		Verb: "GET", Path: urlMesos,
-		Params: nil, Handler: lib.MarkProcess(GetWatchResource)})
+		Params: nil, Handler: lib.MarkProcess(MesosGetWatchResource)})
 	actions.RegisterV1Action(actions.Action{
-		Verb: "PUT", Path: urlMesos, Params: nil, Handler: lib.MarkProcess(PutWatchResource)})
+		Verb: "PUT", Path: urlMesos, Params: nil, Handler: lib.MarkProcess(MesosPutWatchResource)})
 	actions.RegisterV1Action(actions.Action{
-		Verb: "DELETE", Path: urlMesos, Params: nil, Handler: lib.MarkProcess(DeleteWatchResource)})
+		Verb: "DELETE", Path: urlMesos, Params: nil, Handler: lib.MarkProcess(MesosDeleteWatchResource)})
 
 	listMesosURL := urlMesosPath("/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}")
 	actions.RegisterV1Action(actions.Action{
-		Verb: "GET", Path: listMesosURL, Params: nil, Handler: lib.MarkProcess(ListWatchResource)})
+		Verb: "GET", Path: listMesosURL, Params: nil, Handler: lib.MarkProcess(MesosListWatchResource)})
 }

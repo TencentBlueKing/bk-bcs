@@ -51,7 +51,7 @@ var needTimeFormatList = [...]string{createTimeTag, receivedTimeTag}
 var conditionTagList = [...]string{clusterIDTag, namespaceTag, sourceTag, moduleTag}
 
 // Use Mongodb for storage.
-const dbConfig = "alarm"
+const dbConfig = "mongodb/alarm"
 
 // PostAlarm post alarms
 func PostAlarm(req *restful.Request, resp *restful.Response) {
@@ -67,7 +67,9 @@ func PostAlarm(req *restful.Request, resp *restful.Response) {
 		errFunc(err)
 		return
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	if err := store.Put(req.Request.Context(), tableName, data, &lib.StorePutOption{
 		CreateTimeKey: createTimeTag,
 	}); err != nil {
@@ -92,7 +94,9 @@ func ListAlarm(req *restful.Request, resp *restful.Response) {
 		errFunc(err)
 		return
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	r, err := store.Get(req.Request.Context(), tableName, opt)
 	extra := map[string]interface{}{"total": len(r)}
 	if err != nil {

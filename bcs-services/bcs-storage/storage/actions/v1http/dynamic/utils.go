@@ -41,14 +41,13 @@ const (
 	limitTag      = "limit"
 	updateTimeTag = "updateTime"
 	createTimeTag = "createTime"
-	timeLayout    = "2006-01-02 15:04:05"
 
 	applicationTypeName = "application"
 	processTypeName     = "process"
 	kindTag             = "data.kind"
 )
 
-var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
+var needTimeFormatList = []string{updateTimeTag, createTimeTag}
 var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceNameTag}
 var csFeatTags = []string{clusterIDTag, resourceTypeTag, resourceNameTag}
 var nsListFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag}
@@ -56,14 +55,14 @@ var csListFeatTags = []string{clusterIDTag, resourceTypeTag}
 var indexKeys = []string{resourceNameTag, namespaceTag}
 
 // Use Mongodb for storage.
-const dbConfig = "dynamic"
+const dbConfig = "mongodb/dynamic"
 
 func getSelector(req *restful.Request) []string {
 	return lib.GetQueryParamStringArray(req, fieldTag, ",")
 }
 
 func getTable(req *restful.Request) string {
-	table := lib.GetQueryParamString(req, tableTag)
+	table := req.PathParameter(tableTag)
 	// for mesos
 	if table == processTypeName {
 		table = applicationTypeName
@@ -156,8 +155,15 @@ func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M
 		Offset: offset,
 		Limit:  limit,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
-	return store.Get(req.Request.Context(), getTable(req), getOption)
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
+	if err != nil {
+		return nil, err
+	}
+	lib.FormatTime(mList, needTimeFormatList)
+	return mList, err
 }
 
 func getReqData(req *restful.Request, features operator.M) (operator.M, error) {
@@ -192,7 +198,9 @@ func putResources(req *restful.Request, resourceFeatList []string) error {
 		CreateTimeKey: createTimeTag,
 		UpdateTimeKey: updateTimeTag,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	return store.Put(req.Request.Context(), getTable(req), data, putOption)
 }
 
@@ -210,7 +218,9 @@ func deleteResources(req *restful.Request, resourceFeatList []string) error {
 		Cond:           condition,
 		IgnoreNotFound: false,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	return store.Remove(req.Request.Context(), getTable(req), rmOption)
 }
 
@@ -252,7 +262,9 @@ func deleteBatchResources(req *restful.Request, resourceFeatList []string) error
 		Cond:           condition,
 		IgnoreNotFound: false,
 	}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	return store.Remove(req.Request.Context(), getTable(req), rmOption)
 }
 

@@ -14,6 +14,7 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -61,7 +62,12 @@ func getCondition(req *restful.Request) *operator.Condition {
 	timeConds := getTimeConds(req)
 	commonConds := getCommonConds(req)
 	commonConds = append(commonConds, timeConds...)
-	condition := operator.NewBranchCondition(operator.And, commonConds...)
+	var condition *operator.Condition
+	if len(commonConds) != 0 {
+		condition = operator.NewBranchCondition(operator.And, commonConds...)
+	} else {
+		condition = operator.EmptyCondition
+	}
 
 	// handle the extra field
 	var extraConds []*operator.Condition
@@ -92,8 +98,9 @@ func getCondition(req *restful.Request) *operator.Condition {
 	if len(featuresCon) > 0 {
 		extraConds = append(extraConds, operator.NewLeafCondition(operator.Con, featuresCon))
 	}
-
-	condition = operator.NewBranchCondition(operator.And, extraConds...)
+	if len(extraConds) != 0 {
+		condition = operator.NewBranchCondition(operator.And, extraConds...)
+	}
 	return condition
 }
 
@@ -123,7 +130,7 @@ func getTimeConds(req *restful.Request) []*operator.Condition {
 	return condList
 }
 
-func listEvent(req *restful.Request) ([]interface{}, int, error) {
+func listEvent(req *restful.Request) ([]operator.M, int, error) {
 	fields := lib.GetQueryParamStringArray(req, fieldTag, ",")
 	limit, err := lib.GetQueryParamInt64(req, limitTag, 0)
 	if err != nil {
@@ -145,13 +152,15 @@ func listEvent(req *restful.Request) ([]interface{}, int, error) {
 		Limit:  limit,
 	}
 
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	mList, err := store.Get(req.Request.Context(), tableName, getOption)
 	if err != nil {
 		return nil, 0, err
 	}
-
-	return []interface{}{mList}, len(mList), nil
+	lib.FormatTime(mList, []string{eventTimeTag})
+	return mList, len(mList), nil
 }
 
 func getReqData(req *restful.Request) (operator.M, error) {
@@ -182,13 +191,34 @@ func insert(req *restful.Request) error {
 	}
 
 	putOption := &lib.StorePutOption{}
-	store := lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig))
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	data[createTimeTag] = time.Now()
 	err = store.Put(req.Request.Context(), tableName, data, putOption)
 	if err != nil {
 		return fmt.Errorf("failed to insert, err %s", err.Error())
 	}
 	return nil
+}
+
+func watch(req *restful.Request, resp *restful.Response) {
+	newWatchOption := &lib.WatchServerOption{
+		Store: lib.NewStore(
+			apiserver.GetAPIResource().GetDBClient(dbConfig),
+			apiserver.GetAPIResource().GetEventBus(dbConfig)),
+		TableName: tableName,
+		Req:       req,
+		Resp:      resp,
+	}
+	ws, err := lib.NewWatchServer(newWatchOption)
+	if err != nil {
+		blog.Errorf("event get watch server failed, err %s", err.Error())
+		resp.Write(lib.EventWatchBreakBytes)
+		return
+	}
+
+	ws.Go(context.Background())
 }
 
 func urlPath(oldURL string) string {

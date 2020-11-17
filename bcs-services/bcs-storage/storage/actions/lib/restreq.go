@@ -17,6 +17,9 @@ import (
 	"strings"
 
 	"github.com/emicklei/go-restful"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 // GetQueryParamString get string from rest query parameter
@@ -27,6 +30,9 @@ func GetQueryParamString(req *restful.Request, key string) string {
 // GetQueryParamStringArray get string array from restful query parameter
 func GetQueryParamStringArray(req *restful.Request, key, sep string) []string {
 	s := req.QueryParameter(key)
+	if len(s) == 0 {
+		return nil
+	}
 	fields := strings.Split(s, sep)
 	return fields
 }
@@ -47,4 +53,19 @@ func GetQueryParamInt64(req *restful.Request, key string, defaultValue int64) (i
 		return defaultValue, nil
 	}
 	return strconv.ParseInt(s, 10, 64)
+}
+
+// FormatTime format time
+func FormatTime(data []operator.M, needTimeFormatList []string) {
+	// Some time-field need to be format before return
+	for i := range data {
+		for _, t := range needTimeFormatList {
+			tmp, ok := data[i][t].(primitive.DateTime)
+			if !ok {
+				continue
+			}
+			data[i][t] = tmp.Time()
+		}
+	}
+	return
 }

@@ -39,7 +39,7 @@ const (
 )
 
 // Use Mongodb for storage.
-const dbConfig = "clusterConfig"
+const dbConfig = "mongodb/clusterConfig"
 
 var indexKeys = []string{clusterIdTag}
 

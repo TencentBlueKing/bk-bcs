@@ -21,7 +21,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	sto "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"
@@ -35,30 +34,31 @@ func getReqData(req *restful.Request) (interface{}, error) {
 	return tmp.Data, nil
 }
 
-func get(req *restful.Request) (interface{}, error) {
-	resType := lib.GetQueryParamString(req, tableTag)
-	clusterID := lib.GetQueryParamString(req, clusterIDTag)
-	ns := lib.GetQueryParamString(req, namespaceTag)
-	name := lib.GetQueryParamString(req, nameTag)
+func get(req *restful.Request, env string) (interface{}, error) {
+	resType := req.PathParameter(tableTag)
+	clusterID := req.PathParameter(clusterIDTag)
+	ns := req.PathParameter(namespaceTag)
+	name := req.PathParameter(nameTag)
 	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
 	rawObj, err := store.Get(req.Request.Context(), types.ObjectType(resType), types.ObjectKey{
 		ClusterID: clusterID,
 		Namespace: ns,
 		Name:      name,
-	})
+	}, &sto.GetOptions{Env: env})
 	if err != nil {
 		return nil, err
 	}
 	return rawObj.GetData(), nil
 }
 
-func list(req *restful.Request) ([]string, error) {
-	resType := lib.GetQueryParamString(req, tableTag)
-	clusterID := lib.GetQueryParamString(req, clusterIDTag)
-	ns := lib.GetQueryParamString(req, namespaceTag)
+func list(req *restful.Request, env string) ([]string, error) {
+	resType := req.PathParameter(tableTag)
+	clusterID := req.PathParameter(clusterIDTag)
+	ns := req.PathParameter(namespaceTag)
 
 	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
 	objList, err := store.List(req.Request.Context(), types.ObjectType(resType), &sto.ListOptions{
+		Env:       env,
 		Cluster:   clusterID,
 		Namespace: ns,
 	})
@@ -72,17 +72,20 @@ func list(req *restful.Request) ([]string, error) {
 	return retList, nil
 }
 
-func put(req *restful.Request) error {
-	resType := lib.GetQueryParamString(req, tableTag)
-	clusterID := lib.GetQueryParamString(req, clusterIDTag)
-	ns := lib.GetQueryParamString(req, namespaceTag)
-	name := lib.GetQueryParamString(req, nameTag)
+func put(req *restful.Request, env string) error {
+	resType := req.PathParameter(tableTag)
+	clusterID := req.PathParameter(clusterIDTag)
+	ns := req.PathParameter(namespaceTag)
+	name := req.PathParameter(nameTag)
 	dataRaw, err := getReqData(req)
 	if err != nil {
 		return err
 	}
 
-	data := dataRaw.(map[string]interface{})
+	data, ok := dataRaw.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("invalid data format")
+	}
 	data[updateTimeTag] = time.Now()
 	newObj := &types.RawObject{
 		Meta: types.Meta{
@@ -95,15 +98,16 @@ func put(req *restful.Request) error {
 	}
 	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
 	return store.Update(req.Request.Context(), newObj, &sto.UpdateOptions{
+		Env:             env,
 		CreateNotExists: true,
 	})
 }
 
-func remove(req *restful.Request) error {
-	resType := lib.GetQueryParamString(req, tableTag)
-	clusterID := lib.GetQueryParamString(req, clusterIDTag)
-	ns := lib.GetQueryParamString(req, namespaceTag)
-	name := lib.GetQueryParamString(req, nameTag)
+func remove(req *restful.Request, env string) error {
+	resType := req.PathParameter(tableTag)
+	clusterID := req.PathParameter(clusterIDTag)
+	ns := req.PathParameter(namespaceTag)
+	name := req.PathParameter(nameTag)
 	newObj := &types.RawObject{
 		Meta: types.Meta{
 			Type:      types.ObjectType(resType),
@@ -114,6 +118,7 @@ func remove(req *restful.Request) error {
 	}
 	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
 	return store.Delete(req.Request.Context(), newObj, &sto.DeleteOptions{
+		Env:            env,
 		IgnoreNotFound: true,
 	})
 }

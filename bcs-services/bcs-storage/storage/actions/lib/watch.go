@@ -30,7 +30,7 @@ import (
 type WatchServerOption struct {
 	Store     *Store
 	TableName string
-	Cond      *operator.Condition
+	Cond      operator.M
 	Req       *restful.Request
 	Resp      *restful.Response
 }
@@ -39,7 +39,7 @@ type WatchServerOption struct {
 type WatchServer struct {
 	store     *Store
 	tableName string
-	cond      *operator.Condition
+	cond      operator.M
 	req       *restful.Request
 	resp      *restful.Response
 	opts      *bcstypes.WatchOptions
@@ -121,8 +121,12 @@ func (ws *WatchServer) Go(ctx context.Context) {
 			blog.Infof(ws.sprint("stop watch by server"))
 			return
 		case e := <-event:
+			if e.Type == Brk {
+				blog.Infof(ws.sprint("stop watch by event break"))
+				return
+			}
 			if ws.Writer(ws.resp, e) {
-				blog.Infof(ws.sprint(fmt.Sprintf("flush: %v", e)))
+				blog.V(5).Infof(ws.sprint(fmt.Sprintf("flush: %v", e)))
 			}
 			ws.resp.ResponseWriter.(http.Flusher).Flush()
 		}

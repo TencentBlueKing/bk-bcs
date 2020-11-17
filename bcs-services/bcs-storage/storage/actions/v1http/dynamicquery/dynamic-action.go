@@ -41,7 +41,7 @@ const (
 var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
 
 // Use Mongodb for storage.
-const dbConfig = "dynamic"
+const dbConfig = "mongodb/dynamic"
 
 func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name string) {
 	request := newReqDynamic(req, filter, name)

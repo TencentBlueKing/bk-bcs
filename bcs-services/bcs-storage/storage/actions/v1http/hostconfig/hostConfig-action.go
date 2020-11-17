@@ -38,7 +38,7 @@ var hostQueryFeatTags = []string{clusterIDTag}
 var indexKeys = []string{ipTag}
 
 // Use Mongodb for storage.
-const dbConfig = "host"
+const dbConfig = "mongdb/host"
 
 // GetHost get host
 func GetHost(req *restful.Request, resp *restful.Response) {

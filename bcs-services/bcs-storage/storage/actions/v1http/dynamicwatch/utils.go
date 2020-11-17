@@ -35,9 +35,11 @@ type reqDynamic struct {
 
 func newReqDynamic(req *restful.Request, resp *restful.Response) *reqDynamic {
 	return &reqDynamic{
-		req:   req,
-		resp:  resp,
-		store: lib.NewStore(apiserver.GetAPIResource().GetDBClient(dbConfig)),
+		req:  req,
+		resp: resp,
+		store: lib.NewStore(
+			apiserver.GetAPIResource().GetDBClient(dbConfig),
+			apiserver.GetAPIResource().GetEventBus(dbConfig)),
 	}
 }
 
@@ -48,14 +50,15 @@ func (rd *reqDynamic) getTable() string {
 func (rd *reqDynamic) watch() {
 
 	newWatchOption := &lib.WatchServerOption{
-		Store: rd.store,
-		Cond:  operator.NewLeafCondition(operator.Eq, operator.M{clusterIDTag: rd.req.PathParameter(clusterIDTag)}),
-		Req:   rd.req,
-		Resp:  rd.resp,
+		Store:     rd.store,
+		TableName: rd.getTable(),
+		Cond:      operator.M{clusterIDTag: rd.req.PathParameter(clusterIDTag)},
+		Req:       rd.req,
+		Resp:      rd.resp,
 	}
 	ws, err := lib.NewWatchServer(newWatchOption)
 	if err != nil {
-		blog.Error("dynamic get watch server failed: %v", err)
+		blog.Error("dynamic get watch server failed, err %s", err.Error())
 		rd.resp.Write(lib.EventWatchBreakBytes)
 		return
 	}

@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/deckarep/golang-set"
@@ -65,8 +66,7 @@ type Store struct {
 }
 
 // NewStore create store action
-func NewStore(mDriver drivers.DB) *Store {
-	eb := watchbus.NewEventBus(mDriver)
+func NewStore(mDriver drivers.DB, eb *watchbus.EventBus) *Store {
 	return &Store{
 		mDriver:      mDriver,
 		eventBus:     eb,
@@ -97,7 +97,6 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		return nil, fmt.Errorf("Cond in StoreGetOption cannot be empty")
 	}
 	projection := fieldsToProjection(opt.Fields)
-
 	mList := make([]operator.M, 0)
 	finder := a.mDriver.Table(resourceType).Find(opt.Cond)
 	if len(projection) != 0 {
@@ -119,7 +118,11 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		blog.Errorf("failed to query, err %s", err.Error())
 		return nil, fmt.Errorf("failed to query, err %s", err.Error())
 	}
-	return mList, nil
+	var retList []operator.M
+	for _, m := range mList {
+		retList = append(retList, dollarRecover(m))
+	}
+	return retList, nil
 }
 
 func (a *Store) ensureTable(ctx context.Context, tableName string, index drivers.Index) error {
@@ -177,12 +180,15 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 		return err
 	}
 
+	data = dollarHandler(data)
+
 	timeNow := time.Now()
 	if opt.Cond == nil {
 		data[opt.CreateTimeKey] = timeNow
 		if _, err := a.mDriver.Table(resourceType).Insert(ctx, []interface{}{data}); err != nil {
 			return err
 		}
+		return nil
 	}
 
 	counter, err := a.mDriver.Table(resourceType).Find(opt.Cond).Count(ctx)
@@ -196,7 +202,7 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 	if len(opt.UpdateTimeKey) != 0 {
 		data[opt.UpdateTimeKey] = timeNow
 	}
-	if err := a.mDriver.Table(resourceType).Upsert(ctx, opt.Cond, data); err != nil {
+	if err := a.mDriver.Table(resourceType).Upsert(ctx, opt.Cond, operator.M{"$set": data}); err != nil {
 		return err
 	}
 	return nil
@@ -270,17 +276,30 @@ type Event struct {
 
 // StoreWatchOption option for watch action
 type StoreWatchOption struct {
-	Cond      *operator.Condition
+	Cond      operator.M
 	SelfOnly  bool
 	MaxEvents uint
 	Timeout   time.Duration
 	MustDiff  string
 }
 
+func watchMatch(data, cond operator.M) bool {
+	for k, v := range cond {
+		dataValue, ok := data[k]
+		if !ok {
+			return false
+		}
+		if !reflect.DeepEqual(v, dataValue) {
+			return false
+		}
+	}
+	return true
+}
+
 // Watch watch some resource type
 func (a *Store) Watch(ctx context.Context, resourceType string, opt *StoreWatchOption) (chan *Event, error) {
 	id := uuid.New().String()
-	var dbEvent chan *drivers.WatchEvent
+	dbEvent := make(chan *drivers.WatchEvent, 100)
 	err := a.eventBus.Subscribe(resourceType, id, dbEvent)
 	if err != nil {
 		return nil, err
@@ -298,6 +317,13 @@ func (a *Store) Watch(ctx context.Context, resourceType string, opt *StoreWatchO
 						blog.V(5).Infof("watcher %s of topic %s ignore no-diff update event %+v",
 							id, resourceType, e)
 						continue
+					}
+				}
+				if len(opt.Cond) != 0 {
+					if e.Type == drivers.EventAdd || e.Type == drivers.EventUpdate || e.Type == drivers.EventDelete {
+						if !watchMatch(e.Data, opt.Cond) {
+							continue
+						}
 					}
 				}
 				switch e.Type {
@@ -332,6 +358,9 @@ func (a *Store) Watch(ctx context.Context, resourceType string, opt *StoreWatchO
 				if opt.MaxEvents != 0 {
 					if uint(eventCounter) >= opt.MaxEvents {
 						blog.Infof("watcher %s for topic %s exceeds max event %d", id, resourceType, opt.MaxEvents)
+						retEvent <- &Event{
+							Type: Brk,
+						}
 						return
 					}
 				}
