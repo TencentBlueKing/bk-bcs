@@ -71,6 +71,7 @@ func (watch *ServiceWatch) Work() {
 
 	watch.ProcessAllServices()
 	tick := time.NewTicker(8 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-watch.cancelCxt.Done():

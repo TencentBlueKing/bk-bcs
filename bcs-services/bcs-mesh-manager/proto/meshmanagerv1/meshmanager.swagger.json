@@ -144,6 +144,14 @@
           "type": "string",
           "description": "namespace",
           "title": "namespace"
+        },
+        "configurations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "configurations",
+          "title": "configurations"
         }
       },
       "description": "创建k8s集群mesh服务",

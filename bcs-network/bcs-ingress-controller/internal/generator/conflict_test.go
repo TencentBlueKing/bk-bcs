@@ -16,6 +16,7 @@ import (
 	"testing"
 )
 
+// TestGetKeyByValue test getKeyByValue function
 func TestGetKeyByValue(t *testing.T) {
 	m := map[string]string{
 		"k1": "v1",

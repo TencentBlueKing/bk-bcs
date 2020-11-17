@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator
 go 1.14
 
 replace (
+	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/Tencent/bk-bcs => ../../../bk-bcs
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../../bcs-k8s/kubernetes
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4

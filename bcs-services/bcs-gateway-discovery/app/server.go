@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -41,6 +42,7 @@ func New() *DiscoveryServer {
 		exitCancel: cfunc,
 		exitCxt:    cxt,
 		evtCh:      make(chan *ModuleEvent, 12),
+		clusterID:  make(map[string]string),
 	}
 	return s
 }
@@ -76,6 +78,9 @@ type DiscoveryServer struct {
 	exitCxt context.Context
 	//Event channel for module-discovery callback
 	evtCh chan *ModuleEvent
+	// clusterID to prevent zookeeper discovery
+	clusterID   map[string]string
+	clusterLock sync.RWMutex
 }
 
 //Init init all running resources, including
@@ -105,45 +110,67 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 		blog.Errorf("gateway init kong admin api register implementation failed, %s", err.Error())
 		return err
 	}
+
+	//init etcd registry feature with modulediscovery base on micro.Registry
+	if option.Etcd.Feature {
+		if err := s.turnOnEtcdFeature(option); err != nil {
+			return err
+		}
+	}
+
+	defaultModules = append(defaultModules, strings.Split(option.Modules, ",")...)
 	//init service data adapter
-	s.adapter = NewAdapter(option, option.Modules)
+	s.adapter = NewAdapter(option, defaultModules)
 	//init module disovery
-	allModules := append(defaultModules, option.Modules...)
-	s.discovery, err = discoverys.NewDiscoveryV2(option.ZkConfig.BCSZk, allModules)
+	s.discovery, err = discoverys.NewDiscoveryV2(option.ZkConfig.BCSZk, defaultModules)
 	if err != nil {
 		blog.Errorf("gateway init services discovery failed, %s", err.Error())
 		return err
 	}
 	s.discovery.RegisterEventFunc(s.moduleEventNotifycation)
-
-	//init etcd registry feature with modulediscovery base on micro.Registry
-	if option.Etcd.Feature {
-		blog.Infof("gateway-discovery check etcd registry feature turn on, try to initialize etcd registry")
-		etcdTLSConfig, err := option.GetEtcdRegistryTLS()
-		if err != nil {
-			blog.Errorf("gateway init etcd registry feature failed, no tlsConfig parsed correctlly, %s", err.Error())
-			return err
-		}
-		//initialize micro registry
-		addrs := strings.Split(option.Address, ",")
-		mregistry := etcd.NewRegistry(
-			registry.Addrs(addrs...),
-			registry.TLSConfig(etcdTLSConfig),
-		)
-		if err := mregistry.Init(); err != nil {
-			blog.Errorf("gateway init etcd registry feature failed, %s", err.Error())
-			return err
-		}
-		modules := strings.Split(strings.ToLower(option.Etcd.GrpcModules), ",")
-		s.microDiscovery = modulediscovery.NewDiscovery(modules, s.microModuleEvent, mregistry)
-		blog.Infof("gateway init etcd registry success, try to init bkbcs module watch")
-	}
 	return nil
+}
+
+func (s *DiscoveryServer) turnOnEtcdFeature(option *ServerOptions) error {
+	blog.Infof("gateway-discovery check etcd registry feature turn on, try to initialize etcd registry")
+	etcdTLSConfig, err := option.GetEtcdRegistryTLS()
+	if err != nil {
+		blog.Errorf("gateway init etcd registry feature failed, no tlsConfig parsed correctlly, %s", err.Error())
+		return err
+	}
+	//initialize micro registry
+	addrs := strings.Split(option.Address, ",")
+	mregistry := etcd.NewRegistry(
+		registry.Addrs(addrs...),
+		registry.TLSConfig(etcdTLSConfig),
+	)
+	if err := mregistry.Init(); err != nil {
+		blog.Errorf("gateway init etcd registry feature failed, %s", err.Error())
+		return err
+	}
+	//clean duplicated watch module for registry
+	noDuplicated := make(map[string]string)
+	for _, v := range strings.Split(option.Etcd.GrpcModules, ",") {
+		key := strings.ToLower(v)
+		defaultGrpcModules[key] = v
+		noDuplicated[key] = key
+	}
+	for _, v := range strings.Split(option.Etcd.HTTPModules, ",") {
+		key := strings.ToLower(v)
+		defaultHTTPModules[key] = v
+		noDuplicated[key] = key
+	}
+	var modules []string
+	for k := range noDuplicated {
+		modules = append(modules, k)
+	}
+	s.microDiscovery = modulediscovery.NewDiscovery(modules, s.microModuleEvent, mregistry)
+	blog.Infof("gateway init etcd registry success, try to init bkbcs module watch")
+	return s.microDiscovery.Start()
 }
 
 //Run running all necessary convertion logic, block
 func (s *DiscoveryServer) Run() error {
-	//s.discovery.
 	//check master status first
 	if err := s.dataSynchronization(); err != nil {
 		blog.Errorf("gateway-discovery first data synchronization failed, %s", err.Error())
@@ -243,20 +270,7 @@ func (s *DiscoveryServer) dataSynchronization() error {
 	}
 
 	var allCaches []*register.Service
-	//* module step 1: get all register module information from zookeeper discovery
-	allModules := append(defaultModules, s.option.Modules...)
-	localCaches, err := s.formatMultiServerInfo(allModules)
-	if err != nil {
-		blog.Errorf("disovery formate zookeeper Service info when in Synchronization, %s", err.Error())
-		return err
-	}
-	//check zookeeper module info
-	if len(localCaches) == 0 {
-		blog.Warnf("gateway-discovery finds no bk-bcs service in module-discovery, please check bk-bcs discovery machinery")
-	} else {
-		allCaches = append(allCaches, localCaches...)
-	}
-	//* module step 2: check etcd registry feature, if feature is on,
+	//* module step: check etcd registry feature, if feature is on,
 	// get all module information from etcd disocvery
 	if s.option.Etcd.Feature {
 		etcdModules, err := s.formatMultiEtcdService()
@@ -269,6 +283,18 @@ func (s *DiscoveryServer) dataSynchronization() error {
 		} else {
 			allCaches = append(allCaches, etcdModules...)
 		}
+	}
+	//* module step: get all register module information from zookeeper discovery
+	localCaches, err := s.formatMultiServerInfo(defaultModules)
+	if err != nil {
+		blog.Errorf("disovery formate zookeeper Service info when in Synchronization, %s", err.Error())
+		return err
+	}
+	//check zookeeper module info
+	if len(localCaches) == 0 {
+		blog.Warnf("gateway-discovery finds no bk-bcs service in module-discovery, please check bk-bcs discovery machinery")
+	} else {
+		allCaches = append(allCaches, localCaches...)
 	}
 	//udpate datas in gateway
 	for _, local := range allCaches {
@@ -295,7 +321,6 @@ func (s *DiscoveryServer) dataSynchronization() error {
 		}
 	}
 	blog.Infof("gateway-discovery data synchroniztion finish")
-	//todo(DevelperJim): try to fix this feature if we don't allow edit api-gateway configuration manually
 	//we don't clean additional datas in api-gateway,
 	// because we allow registe service information in api-gateway manually
 	return nil
@@ -329,4 +354,30 @@ func (s *DiscoveryServer) gatewayServiceSync(event *ModuleEvent) error {
 //detailServiceVerification all information including service/plugin/target check
 func (s *DiscoveryServer) detailServiceVerification(newSvc *register.Service, oldSvc *register.Service) {
 	//todo(DeveloperJim): we need complete verification if plugin & route rules changed frequently, not now
+}
+
+func (s *DiscoveryServer) isClusterRestriction(clusterID string) bool {
+	cluster := clusterID
+	if strings.Contains(clusterID, "-") {
+		items := strings.Split(clusterID, "-")
+		cluster = items[len(items)-1]
+	}
+	s.clusterLock.RLock()
+	defer s.clusterLock.RUnlock()
+	if _, ok := s.clusterID[cluster]; ok {
+		return true
+	}
+	return false
+}
+
+func (s *DiscoveryServer) clusterRestricted(clusterID string) {
+	blog.Infof("cluster %s is ready to restricted discovery machinery to etcd registry", clusterID)
+	cluster := clusterID
+	if strings.Contains(clusterID, "-") {
+		items := strings.Split(clusterID, "-")
+		cluster = items[len(items)-1]
+	}
+	s.clusterLock.Lock()
+	defer s.clusterLock.Unlock()
+	s.clusterID[cluster] = clusterID
 }

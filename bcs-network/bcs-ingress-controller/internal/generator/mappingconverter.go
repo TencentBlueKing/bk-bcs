@@ -148,7 +148,7 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 	for index, pod := range podList.Items {
 		podIndex, err := GetPodIndex(pod.GetName())
 		if err != nil {
-			blog.Errorf("get pod %s index failed, err %s", pod.GetName())
+			blog.Errorf("get pod %s index failed, err %s", pod.GetName(), err.Error())
 			return nil, fmt.Errorf("get pod %s index failed, err %s", pod.GetName(), err.Error())
 		}
 		retPods[podIndex] = &podList.Items[index]
@@ -174,7 +174,7 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 		for i := mg.mapping.StartIndex; i < mg.mapping.EndIndex; i++ {
 			startPort := mg.mapping.StartPort + i*segmentLength
 			endPort := mg.mapping.StartPort + (i+1)*segmentLength - 1
-			
+
 			rsStartPort := startPort
 			if mg.mapping.RsStartPort > 0 {
 				rsStartPort = mg.mapping.RsStartPort + i*segmentLength
@@ -211,6 +211,7 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	return retListeners, nil
 }
 
+// segmentListenerConverter converter for segment listener
 type segmentListenerConverter struct {
 	ingressName      string
 	ingressNamespace string

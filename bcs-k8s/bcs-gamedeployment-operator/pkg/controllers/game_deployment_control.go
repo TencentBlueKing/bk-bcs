@@ -124,6 +124,15 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *tkexv1alph
 	}
 	*newStatus.CollisionCount = collisionCount
 
+	if util.CheckRevisionChange(deploy, updateRevision.Name) {
+		err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, &newStatus, pods)
+		return 0, &newStatus, err
+	}
+	if util.CheckStepHashChange(deploy) {
+		err = gdc.statusUpdater.UpdateGameDeploymentStatus(deploy, &newStatus, pods)
+		return 0, &newStatus, err
+	}
+
 	// scale and update pods
 	delayDuration, updateErr := gdc.updateGameDeployment(deploy, &newStatus, currentRevision, updateRevision, revisions, pods)
 

@@ -619,6 +619,7 @@ func (p *CNIPod) containersWatch(cxt context.Context) {
 	}
 
 	tick := time.NewTicker(defaultPodWatchInterval * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-cxt.Done():

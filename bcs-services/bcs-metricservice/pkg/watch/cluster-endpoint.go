@@ -24,6 +24,7 @@ import (
 
 func (cw *ClusterWatcher) endpointManger() {
 	syncTick := time.NewTicker(30 * time.Second)
+	defer syncTick.Stop()
 	endpoints := cw.config.EndpointWatchPath
 
 	event := cw.zk.Watch(endpoints)

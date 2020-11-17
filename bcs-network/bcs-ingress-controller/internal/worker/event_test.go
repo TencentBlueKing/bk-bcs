@@ -23,6 +23,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
+// TestListenerEvent test listener event
 func TestListenerEvent(t *testing.T) {
 	var arr []ListenerEvent
 	var wg sync.WaitGroup

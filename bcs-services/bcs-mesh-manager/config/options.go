@@ -14,7 +14,8 @@ type MeshManagerOptions struct {
 	conf.CertConfig
 
 	DockerHub           string `json:"istio-docker-hub" value:"" usage:"istio-operator docker hub"`
-	IstioOperatorCharts string `json:"istiooperator-charts" value:"./istio-operator" usage:"istio-operator charts"`
+	IstioOperatorCharts string `json:"istiooperator-charts" value:"" usage:"istio-operator charts"`
+	IstioConfiguration  string `json:"istio-configuration" value:"" usage:"istio configuration"`
 	ServerAddress       string `json:"apigateway-addr" value:"" usage:"bcs apigateway address"`
 	UserToken           string `json:"user-token" value:"" usage:"bcs apigateway usertoken to control k8s cluster"`
 	Kubeconfig          string `json:"kubeconfig" value:"" usage:"kube-apiserver kubeconfig"`
@@ -41,6 +42,7 @@ func ParseConfig() Config {
 	conf.EtcdKeyFile = op.EtcdKeyFile
 	conf.EtcdServers = op.EtcdServers
 	conf.Kubeconfig = op.Kubeconfig
+	conf.IstioConfiguration = op.IstioConfiguration
 	//server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {
 		conf.ServerCertFile = op.CertConfig.ServerCertFile

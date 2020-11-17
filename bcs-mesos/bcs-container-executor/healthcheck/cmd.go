@@ -86,6 +86,7 @@ func (check *CommandChecker) Start() {
 	check.check()
 
 	tick := time.NewTicker(time.Duration(int64(check.mechanism.IntervalSeconds)) * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-check.cxt.Done():

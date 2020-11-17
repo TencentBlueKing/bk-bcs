@@ -32,11 +32,16 @@ import (
 
 // RuleConverter rule converter
 type RuleConverter struct {
-	cli              client.Client
-	lbs              []*cloud.LoadBalanceObject
-	ingressName      string
+	// k8s crd client
+	cli client.Client
+	// loadbalances for rule conveter
+	lbs []*cloud.LoadBalanceObject
+	// the name of ingress that rule belongs to
+	ingressName string
+	// the namespace of ingress that rule belongs to
 	ingressNamespace string
-	rule             *networkextensionv1.IngressRule
+	// rule info
+	rule *networkextensionv1.IngressRule
 }
 
 // NewRuleConverter create rule converter
@@ -83,10 +88,13 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 	return retListeners, nil
 }
 
+// generate 7 layer listener by rule info
 func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
 	li.SetName(GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
+	// set ingress name in labels
+	// the ingress name in labels is used for checking conficts
 	li.SetLabels(map[string]string{
 		rc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
@@ -109,6 +117,7 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 	return li, nil
 }
 
+// generate rule of 7 layer listener by rule info
 func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Layer7Route) (
 	[]networkextensionv1.ListenerRule, error) {
 
@@ -129,10 +138,13 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 	return retListenerRules, nil
 }
 
+// generate 4 layer listener by rule info
 func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
 	li.SetName(GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
+	// set ingress name in labels
+	// the ingress name in labels is used for checking conficts
 	li.SetLabels(map[string]string{
 		rc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
@@ -158,6 +170,7 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	return li, nil
 }
 
+// generate target group info
 func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkextensionv1.ServiceRoute) (
 	*networkextensionv1.ListenerTargetGroup, error) {
 
@@ -176,6 +189,7 @@ func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkex
 	}, nil
 }
 
+// generate service backend list
 func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
 
@@ -204,6 +218,12 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		return nil, nil
 	}
 
+
+	// subset subset only takes effect when directly connected
+	// when directly connected
+	// * if no subset, use service endpoints as backends
+	// * if there are subsets, use backends from subset to override backends from service endpoints
+	// 		the main purpose is to modify the weight
 	if svcRoute.IsDirectConnect {
 		backends, err := rc.getServiceBackendsWithoutSubsets(svcPort, svcRoute.ServiceName,
 			svcRoute.ServiceNamespace, svcRoute.GetWeight())
@@ -248,6 +268,7 @@ func mergeBackendList(
 	return existedList
 }
 
+// get backends from service endpoints
 func (rc *RuleConverter) getServiceBackendsWithoutSubsets(
 	svcPort *k8scorev1.ServicePort, svcName, svcNamespace string, weight int) (
 	[]networkextensionv1.ListenerBackend, error) {
@@ -298,6 +319,7 @@ func (rc *RuleConverter) getServiceBackendsWithoutSubsets(
 	return retBackends, nil
 }
 
+// get backends from subset
 func (rc *RuleConverter) getSubsetBackends(
 	svc *k8scorev1.Service, subset networkextensionv1.IngressSubset,
 	epsBackends []networkextensionv1.ListenerBackend) ([]networkextensionv1.ListenerBackend, error) {
@@ -333,6 +355,7 @@ func (rc *RuleConverter) getSubsetBackends(
 	return retBackends, nil
 }
 
+// use node port as clb backends
 func (rc *RuleConverter) getNodePortBackends(
 	svc *k8scorev1.Service, svcPort *k8scorev1.ServicePort, weight int) (
 	[]networkextensionv1.ListenerBackend, error) {
@@ -368,6 +391,7 @@ func (rc *RuleConverter) getNodePortBackends(
 	return retBackends, nil
 }
 
+// get pod by labels
 func (rc *RuleConverter) getPodsByLabels(ns string, labels map[string]string) ([]*k8scorev1.Pod, error) {
 	if len(labels) == 0 {
 		return nil, nil

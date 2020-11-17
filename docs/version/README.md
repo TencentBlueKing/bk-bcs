@@ -1,8 +1,33 @@
 # 发布版本信息
 
+## 1.18.8
+
+* 发布日期：2020-10-27
+* **功能优化**
+  * [Mesos] bcs-dns移入coredns 1.3.0项目中编译
+  * [Mesos] bcs-scheduler修复taskgroup实例数超过200+卡顿问题[#559]
+  * bcs-api-gateway, bcs-kube-watch容器化配置模板问题修复[#479]
+  * bcs-api支持蓝鲸权限中心v3[#567]
+  * bcs-k8s-driver支持1.16+版本API请求[#567]
+  * bcs-api, bcs-user-manager修复tke cidr接口缺失问题[#535]
+  * bcs-gamestatefulset-operator修复bitbucket代码引用问题
+  * bcs-api兼容蓝鲸鉴权中心v2，v3版本
+* **BUG修复**
+  * bcs-api, bcs-user-manager修复websocket tunnel隧道长链接泄露问题[#584]
+  * [Mesos] bcs-scheduler修复command health check失败问题[#586]
+  * [Mesos] bcs-service-prometheus生成Node配置时产生死锁问题[#564]
+  * [Mesos/K8S] 修复qcloud-eip多网卡bug问题[#556]
+  * [Mesos] bcs-mesos-watch修复deployment消息堵塞消费过慢的问题[#552]
+  * [Mesos] bcs-scheduler修复保存version latest报错问题[#525]
+  * [Mesos] bcs-scheduler修复DaemonSet死锁问题[#546]
+  * [Mesos] bcs-scheduler修复image secret缺失导致容器创建失败问题[#615]
+  * [Mesos] bcs-scheduler修复metrics上报统计问题[#618]
+  * [Mesos] 修复CPU因为ticker没有关闭导致过高问题[#478]
+
 ## 1.18.3
-- 发布日期：2020-08-04
-- **新增功能**
+
+* 发布日期：2020-08-04
+* **新增功能**
   * [Mesos]bcs-scheduler支持Daemonset特性[#207]
   * [Mesos]bcs-service-prometheus支持etcd存储模式[#473]
   * 新增模块bcs-bkcmdb-synchronizer，支持容器数据收录至蓝鲸cmdb[#476]
@@ -15,7 +40,7 @@
   * [K8S/Mesos] bcs-user-manager支持websocket tunnel模式实现集群托管[#521]
   * [Mesos] 支持机器异构场景下均匀调度容器[#25]
   * [Mesos] bcs-scheduler支持环境变量数据引用[#533]
-- **功能优化**
+* **功能优化**
   * [K8S/Mesos]容器日志采集方案支持采集路径模糊匹配，上报Label开关[#472]
   * 清理所有模块中对蓝鲸license服务依赖[#474]
   * [Mesos] bcs-scheduler支持mesos方案下容器corefile目录权限[#481]
@@ -26,7 +51,7 @@
   * [K8S]StatefulSetPlus更名为GameStatefulSet[#498]
   * 全模块容器化配置统一调整[#508]
   * [Mesos] 优化bcs-scheduler metrics数据[#532]
-- **BUG修复**
+* **BUG修复**
   * 修复所有模块中ticker未关闭问题[#478]
   * [K8S]修复bcs-k8s-watch同步数据至bcs-storage数据不一致问题[#488]
   * [K8S/Mesos]修复AWS弹性网卡方案无法联通问题[#489]
@@ -41,8 +66,9 @@
   * [Mesos] bcs-scheduler优化scale up超时问题[#527]
 
 ## 1.17.5
-- 发布日期：2020-07-06
-- **新增功能**
+
+* 发布日期：2020-07-06
+* **新增功能**
   * [Mesos]bcs-scheduler支持污点与容忍性调度能力[#398]
   * [Mesos]bcs-mesos支持容器CPUSet绑定特性[#407]
   * [K8S/Mesos]bk-bcs开源分布式配置中心服务(bscp) [#443]
@@ -61,7 +87,7 @@
   * [Mesos]bcs-client在Mesos环境下支持exec命令实现远程容器访问[#452]
   * [K8S/Mesos] bmsf-configuration配置服务支持自定义模板渲染[#454]
   * 分布式配置中心支持reload命令下发[#469]
-- **功能优化**
+* **功能优化**
   * [Mesos]bcs-scheduler优化对mesos version对象命名长度限制[#383]
   * [Mesos]bcs-container-executor针对Pod异常退出时保留镜像便于问题排查[#396]
   * [Mesos]bcs-container-executor针对Pod状态增加OOM状态[#397]
@@ -73,7 +99,7 @@
   * [Mesos]优化bcs-scheduler访问etcd ratelimiter[#462]
   * [K8S/Mesos]修复因为ticker没有关闭导致CPU过高问题[#478]
   * [Mesos]优化bcs-scheduler因为DeepCopy导致CPU过高问题[#485]
-- **BUG修复**
+* **BUG修复**
   * [Mesos]bcs-scheduler修复容器退出时间过长时导致的事务性超时问题[#381]
   * [K8S/Mesos]bcs-webhook-server修复蓝鲸日志采集hook中环境变量错误覆盖问题[#400]
   * [Mesos]bcs-container-executor修复Pod中多容器情况下容器异常退出无法上报状态的问题[#406]
@@ -87,13 +113,15 @@
   * [K8S/Mesos]修复腾讯云网络插件qcloud-eip与全局路由方案冲突问题[#515]
 
 ## 1.16.4
-- 发布日期：2020-05-08
-- **BUG修复**
+
+* 发布日期：2020-05-08
+* **BUG修复**
   * [Mesos] bcs-scheduler修复etcd模式下taskgroup存储失败问题[#436]
 
 ## 1.16.3
-- 发布日期：2020-04-20
-- **新增功能**
+
+* 发布日期：2020-04-20
+* **新增功能**
   * [Mesos] bcs-scheduler从1.17.x紧急合入支持Taints，Tolerations调度能力[#398]
   * [K8S] 新增statefulplus自定义workload[#346]
   * [K8S] bcs-k8s-watch支持CRD数据同步至storage[#363]
@@ -107,21 +135,21 @@
   * [Mesos] bcs-api支持yaml格式Mesos资源创建[#362]
   * [Mesos/K8S] bcs-webhook-server支持bscp-sidecar注入[#366]
   * [Mesos] 新增基础网络连通性检测模块bcs-network-detection[#361, #391]
-- **功能优化**
+* **功能优化**
   * [Mesos] bcs-scheduler在etcd存储模式下过滤掉不符合规范label[#351]
   * [Mesos/K8S] bcs-webhook-server CRD version group调整[#374]
   * [Mesos/K8S] bcs-clb-controller基于腾讯云SDK限制优化CLB后端实例创建[#373]
   * [Mesos/K8S] bcs-webhook-server支持非标准日志标识注入[#385]
   * [Mesos/K8S] bcs-logbeat-sidecar支持单容器多种日志采集规则[#372]
   * [Mesos/K8S] 优化BCS服务发现公共组件[#384]
-- **BUG修复**
+* **BUG修复**
   * [Mesos] bcs-webhook-server修复注入配置sidecar异常的问题[#366]
   * [Mesos] bcs-scheduler修复etcd存储模式下namespace,name长度异常问题[#383]
 
 ## 1.15.4
 
-- 发布日期：2020-02-28
-- **新增功能**
+* 发布日期：2020-02-28
+* **新增功能**
   * [Mesos] bcs-scheduler支持通过image名给与指定容器下发指令[#290]
   * [K8S/Mesos] datawatch支持同步集群underlay IP资源[#315]
   * [K8S/Mesos] BCS容器访问mysql自动授权方案[#308]
@@ -143,7 +171,7 @@
   * 开源bcs-log-webhook-server[#280]
   * bcs-hpacontroller支持mesos etcd数据存储方式[#253]
   * bcs-scheduler支持脚本方式检查容器健康[#248]
-- **功能优化**
+* **功能优化**
   * etcd存储优化label格式过滤[#351]
   * bcs-webhook-server开源与重构，支持多webhook能力[#295]
   * 优化蓝鲸日志采集方案，并开源配置刷新配置插件[#295]
@@ -162,7 +190,7 @@
   * bcs-scheduler调整mesos service selector特性[#285]
   * bcs-container-executor优化无法识别网络容器退出问题[#245]
   * 优化流水线自动构建流程
-- **bug修复**
+* **bug修复**
   * 修复module-discovery服务发现lb节点的问题[#311]
   * 修复bcs-loadbalance haproxy状态显示与panic问题[#313, #320]
   * 修复bcs-scheduler在etcd存储下taskgroup数据不一致的问题[#327]
@@ -176,8 +204,8 @@
 
 ## 1.14.5
 
-- 发布日期：2019-10-30
-- **新增功能**
+* 发布日期：2019-10-30
+* **新增功能**
   * bcs-process-executor模块开源[#9]
   * bcs-process-daemon模块开源[#10]
   * bcs-dns增加prometheus metrics支持[#156]
@@ -209,7 +237,7 @@
   * bcs-scheduler增加全量CRD数据读取接口[#198]
   * bcs-api增加对TKE容器网段管理功能[#202]
   * bcs-hpacontroller模块开源[#181]
-- **功能优化**
+* **功能优化**
   * bcs-loadbalance haproxy metrics重构prometheus metrics采集方式[#162]
   * bcs-loadbalance镜像调整，优化启动脚本[#162]
   * bcs-loadbalance服务注册同时支持集群层与服务层zookeeper[#164]
@@ -221,7 +249,7 @@
   * bcs-k8s-datawatch优化容器监控告警细则[#192]
   * bcs-scheduler优化taskgroup因资源不足无法调度提示语[#103]
   * bcs-storage优化metrics数据量[#185]
-- **bug修复**
+* **bug修复**
   * 修复bcs-api CIDR分配时锁泄露问题[#134]
   * 修复bcs-container-executor部分情况下dockerd异常退出panic的情况[#130]
   * 修复bcs-scheduler启动metrics时panic的问题[#189]
@@ -232,17 +260,17 @@
 
 ## 1.13.4
 
-- 发布日期：2019-07-26
+* 发布日期：2019-07-26
 
-- **功能优化**
+* **功能优化**
   * bcs-container-executor调整与meos-slave长链接超时时间[#82]
 
 ## 1.13.3
 
-- 发布日期：2019-07-12
-- 版本信息：1.13.3
+* 发布日期：2019-07-12
+* 版本信息：1.13.3
 
-- **新增功能**
+* **新增功能**
   * bcs-mesos支持系统常量注入[#19]
   * bcs-mesos调度状态优化，调整LOST状态处理[#26]
   * bcs-mesos支持资源强制限制特性[#27]
@@ -251,15 +279,13 @@
   * bcs-metricscollector迁移模块[#4]
   * bcs-metricsserver迁移模块[#7]
   * 工具scripts增加go vet支持[#65]
-  * bcs-client增加--all-namespace参数支持[#66] 
-
-- **功能优化**
+  * bcs-client增加--all-namespace参数支持[#66]
+* **功能优化**
   * 首页产品文档优化[#83]
   * BCS全量代码go vet调整[#70]
   * bcs-mesos容器异常超时调度调整[#24]
   * bcs-api日志调整[#32]
-
-- **bug修复**
+* **bug修复**
   * bcs-container-executor修复CNI异常调用错误显示问题[#88]
   * Makefile修复非Linux环境编译错误问题[#57]
   * bcs-container-executor修复启动阶段panic问题[#23]
@@ -273,10 +299,10 @@
 
 >以下issue索引信息是并非来源github，为保证项目内外一致性，暂不清理
 
-- 发布日期：2019-04-30
-- 版本信息：1.12.6
+* 发布日期：2019-04-30
+* 版本信息：1.12.6
 
-- **新增功能**
+* **新增功能**
   * bcs-container-executor支持CNI路径、网络镜像配置化
   * bcs-health支持告警信息转存bcs-storage
   * bcs-mesos支持AutoScaling特性[#10]
@@ -288,8 +314,7 @@
   * bcs-client支持Get命令，获取资源定义文件[#73]
   * bcs-client支持https方式链接bcs-api[#78]
   * bcs-mesos-driver支持web-hook特性[#68]
-   
-- **功能优化**
+* **功能优化**
   * 进程启动参数增加--config_file，兼容--file参数[#52]
   * LICENSE文件更新，修正复制glog代码中的copyright[#72]
   * bcs-kube-agent链接bcs-api时支持insecureSkipVerify[#75]
@@ -313,8 +338,7 @@
   * bcs-kube-agent目录调整[#2],[#4]
   * 全项目代码复杂度优化
   * 全项目重复代码优化
-  
-- **bug修复**
+* **bug修复**
   * 修复bcs-health中因zk acl错误而不断刷日志的问题[#83]
   * 修复bcs-api zookeeper断链后无法发现后端集群的异常[#56]
   * 修复bcs-api针对后端集群事件发生错误时导致的panic[#60]
@@ -323,40 +347,36 @@
 
 >以下issue索引信息是并非来源github，为保证项目内外一致性，暂不清理
 
-- 发布日期：2019-02-21
-- 版本信息：1.11.11
+* 发布日期：2019-02-21
+* 版本信息：1.11.11
 
 merge截止: !30
 
-- **新增功能**
-  - 对容器Label增加namespace/pod_name信息[#18]
-  - bcs-api与PAAS/PAAS-Auth解耦[#21]
-  - bcs-exporter插件化与标准化[#15]
-  - 内部版本与企业版本PAAS-Auth支持[#26]
-  - bcs-health的数据流出口规范化[#14]
-  - 新增模块bcs-consoleproxy[#28]，并支持https[#32]
-  - mesos支持command命令[#6]
-  - bcs-api支持websocket反向代理[#33]
-  - bcs-api rbac功能增加开关[#34]
-
-- **功能优化**
-  - bcs-container-executor支持标准CNI链式调用[#2]
-  - 采用go dep裁剪vendor目录[!63]
-  - bcs-dns自定义注册插件bcscustom支持多IP地址注册[#9]
-  - 代码中敏感信息清理[#20]
-  - bcs-api文档补充[#22]
-  - 优化与丰富bcs单元测试[#13]
-
-- **bug修复**
-  - 修复common.RegisterDiscover Session失效后zookeeper事件无法触发bug[#1]
-  - bcs-scheduler修复主机与IP资源精确调度时资源不足的问题[#3]
-  - 调整blog中glog的init行为，修复glog的初始化问题[#12]
-  - kubernete client-go升级v9.0.0导致配置字段异常问题[#16]
-  - kubernete升级1.12.3后，health check出现tls handshake错误问题[#17]
-  - bcs-api修复服务发现时可能产生的panic[#23]
-  - 修复templates配置文件缺失，将api配置文件命名与其他组件统一[#27]
-  - bcs-dns的启动脚本中去除--log，corefile中去除dnslog配置[#38]
-  - k8s metric的api路径错误修复[#37]
-  - 修复bcs-api进行healthcheck时出现的panic[#48]
-
-
+* **新增功能**
+  * 对容器Label增加namespace/pod_name信息[#18]
+  * bcs-api与PAAS/PAAS-Auth解耦[#21]
+  * bcs-exporter插件化与标准化[#15]
+  * 内部版本与企业版本PAAS-Auth支持[#26]
+  * bcs-health的数据流出口规范化[#14]
+  * 新增模块bcs-consoleproxy[#28]，并支持https[#32]
+  * mesos支持command命令[#6]
+  * bcs-api支持websocket反向代理[#33]
+  * bcs-api rbac功能增加开关[#34]
+* **功能优化**
+  * bcs-container-executor支持标准CNI链式调用[#2]
+  * 采用go dep裁剪vendor目录[!63]
+  * bcs-dns自定义注册插件bcscustom支持多IP地址注册[#9]
+  * 代码中敏感信息清理[#20]
+  * bcs-api文档补充[#22]
+  * 优化与丰富bcs单元测试[#13]
+* **bug修复**
+  * 修复common.RegisterDiscover Session失效后zookeeper事件无法触发bug[#1]
+  * bcs-scheduler修复主机与IP资源精确调度时资源不足的问题[#3]
+  * 调整blog中glog的init行为，修复glog的初始化问题[#12]
+  * kubernete client-go升级v9.0.0导致配置字段异常问题[#16]
+  * kubernete升级1.12.3后，health check出现tls handshake错误问题[#17]
+  * bcs-api修复服务发现时可能产生的panic[#23]
+  * 修复templates配置文件缺失，将api配置文件命名与其他组件统一[#27]
+  * bcs-dns的启动脚本中去除--log，corefile中去除dnslog配置[#38]
+  * k8s metric的api路径错误修复[#37]
+  * 修复bcs-api进行healthcheck时出现的panic[#48]

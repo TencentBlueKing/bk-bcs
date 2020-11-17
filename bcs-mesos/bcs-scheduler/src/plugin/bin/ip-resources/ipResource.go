@@ -271,6 +271,7 @@ func discvNetservice() {
 	blog.Infof("plugin ipResources watch netservice under (%s: %s)", conf.BcsZk, discvPath)
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-cxt.Done():

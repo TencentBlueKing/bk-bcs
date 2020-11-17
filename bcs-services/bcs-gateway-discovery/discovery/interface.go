@@ -25,13 +25,15 @@ type EventHandler func(module string)
 // Discovery grpc discovery definition, interface is designed for
 // multiple module discovery.
 type Discovery interface {
+	// Start to work
+	Start() error
 	//GetModuleServer get local watch module: types.BCS_MODULE_SCHEDULER...
 	//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver
 	GetModuleServer(module string) (*registry.Service, error)
 	// GetRandomServerInstance get random one instance of local cache server information
 	//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver
 	GetRandomServerInstance(module string) (*registry.Node, error)
-	//ListAllServer list all registed server information, only return names
+	//ListAllServer list all registed server information
 	ListAllServer() ([]*registry.Service, error)
 	// AddModuleWatch add new watch for specified module, Discovery will cache watched module info
 	AddModuleWatch(module string) error

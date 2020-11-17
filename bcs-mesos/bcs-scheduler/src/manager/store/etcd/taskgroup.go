@@ -117,12 +117,12 @@ func (store *managerStore) listTaskgroupsInDB() ([]*types.TaskGroup, error) {
 		for _, task := range obj.Taskgroup {
 			taskIds = append(taskIds, task.ID)
 		}
-		obj.Taskgroup = make([]*types.Task, len(taskIds))
+		//obj.Taskgroup = make([]*types.Task, len(taskIds))
 		for index, taskID := range taskIds {
 			task, err := store.FetchDBTask(taskID)
 			if err != nil {
-				blog.Error("fail to get task by ID(%s), err:%s", taskID, err.Error())
-				return nil, err
+				blog.Errorf("fail to get task by ID(%s), err:%s", taskID, err.Error())
+				continue
 			}
 
 			obj.Taskgroup[index] = task

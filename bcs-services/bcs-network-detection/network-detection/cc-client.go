@@ -24,12 +24,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 )
 
+//CmdbClient client for cmdb
 type CmdbClient struct {
 	conf *config.Config
 	//esb client
 	esb *esb.EsbClient
 }
 
+// NewCmdbClient client instance
 func NewCmdbClient(conf *config.Config) (*CmdbClient, error) {
 	cmdb := &CmdbClient{
 		conf: conf,
