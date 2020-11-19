@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
-// The goroutine function for launch application transaction
+// RunLaunchApplication The goroutine function for launch application transaction
 // You can create a transaction for launch application, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
 func (s *Scheduler) RunLaunchApplication(transaction *Transaction) {
@@ -156,6 +156,7 @@ func (s *Scheduler) doLaunchTrans(trans *Transaction, outOffer *offer.Offer, sta
 	}
 
 	var taskgroupName string
+	var taskGroup *types.TaskGroup
 	if opData.LaunchedNum < int(version.Instances) && s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) &&
 		s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), outOffer) {
 		//if opData.LaunchedNum < int(version.Instances) && version.IsResourceFit(types.Resource{Cpus: cpus, Mem: mem, Disk: disk}) {
@@ -211,14 +212,16 @@ func (s *Scheduler) doLaunchTrans(trans *Transaction, outOffer *offer.Offer, sta
 
 	resp, err := s.LaunchTaskGroups(offer, taskGroupInfos, version)
 	if err != nil {
-		blog.Error("transaction %s: launch taskgroups err:%s", trans.ID, err.Error())
+		blog.Error("transaction %s: launch taskgroups err: %s", trans.ID, err.Error())
 		trans.Status = types.OPERATION_STATUS_FAIL
+		s.DeleteTaskGroup(app, taskGroup, err.Error())
 		s.DeclineResource(offer.Id.Value)
 		return
 	}
 	if resp != nil && resp.StatusCode != http.StatusAccepted {
 		blog.Error("transaction %s: resp status err code : %d", trans.ID, resp.StatusCode)
 		trans.Status = types.OPERATION_STATUS_FAIL
+		s.DeleteTaskGroup(app, taskGroup, err.Error())
 		s.DeclineResource(offer.Id.Value)
 		return
 	}
