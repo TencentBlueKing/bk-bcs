@@ -57,32 +57,6 @@ func (r *Router) queryAgentSettingList(req *restful.Request, resp *restful.Respo
 	return
 }
 
-/*func (r *Router) deleteAgentSettingList(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
-		blog.Warn("scheduler is not master, can not process cmd")
-		return
-	}
-	blog.V(3).Infof("recv delete agentsettinglist request")
-
-	var IPs []string
-	if req.QueryParameter("ips") != "" {
-		IPs = strings.Split(req.QueryParameter("ips"), ",")
-	}
-	errcode, err := r.backend.DeleteAgentSettingList(IPs)
-	if err != nil {
-		blog.Error("fail to delete agentsettinglist, err:%s", err.Error())
-		data := createResponeDataV2(errcode, err.Error(), nil)
-		resp.Write([]byte(data))
-		return
-	}
-
-	data := createResponeData(nil, "success", nil)
-	resp.Write([]byte(data))
-	blog.Info("delete agentsettinglist finish")
-
-	return
-}*/
-
 func (r *Router) setAgentSettingList(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
@@ -1180,36 +1154,6 @@ func (r *Router) deleteApplication(req *restful.Request, resp *restful.Response)
 	blog.Info("request delete application(%s %s) end", runAs, appId)
 	return
 }
-
-//ListApplicationTasks is used to list all tasks belong to application via application id.
-/*func (r *Router) listApplicationTasks(req *restful.Request, resp *restful.Response) {
-	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
-		blog.Warn("scheduler is not master, can not process cmd")
-		return
-	}
-	blog.V(3).Infof("recv list application tasks request")
-	runAs := req.PathParameter("runAs")
-	appId := req.PathParameter("appId")
-
-	blog.Info("request list application(%s %s) tasks", runAs, appId)
-
-	tasks, err := r.backend.ListApplicationTasks(runAs, appId)
-	if err != nil {
-		blog.Error("request list application tasks (%s %s) failed: %s", runAs, appId, err.Error())
-		data := createResponeData(err, err.Error(), nil)
-		resp.Write([]byte(data))
-		return
-	}
-
-	blog.Info("request list application(%s %s) tasks, return num(%d)", runAs, appId, len(tasks))
-
-	data := createResponeData(nil, "", tasks)
-	resp.Write([]byte(data))
-
-	blog.Info("request list application(%s %s) tasks end", runAs, appId)
-
-	return
-}*/
 
 func (r *Router) listApplicationTaskGroups(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
