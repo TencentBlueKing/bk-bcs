@@ -17,15 +17,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"math/rand"
 	"os"
 	"time"
 
 	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/informers/externalversions"
-	gamedeploy "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/controllers"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/controllers/gamedeployment"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/controllers/hook"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/constants"
+	"k8s.io/api/core/v1"
 	api "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -39,14 +40,14 @@ import (
 )
 
 const (
-	metricsEndpoint = "0.0.0.0:8080"
+	metricsEndpoint     = "0.0.0.0:8080"
+	DefaultResyncPeriod = 15 * 60
 )
 
 var (
-	kubeConfig string
-	masterURL  string
-	//MinResyncPeriod period definition
-	MinResyncPeriod metav1.Duration
+	kubeConfig   string
+	masterURL    string
+	resyncPeriod int64
 )
 
 // leader-election config options
@@ -114,7 +115,7 @@ func main() {
 func init() {
 	flag.StringVar(&kubeConfig, "kubeConfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
-	flag.DurationVar(&MinResyncPeriod.Duration, "min-resync-period", 10*time.Minute, "The resync period in reflectors will be random between MinResyncPeriod and 2*MinResyncPeriod.")
+	flag.Int64Var(&resyncPeriod, "resync-period", DefaultResyncPeriod, "Time period in seconds for resync.")
 	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
 	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&LockName, "leader-elect-name", "gamedeployment", "The resourcelock name")
@@ -122,15 +123,6 @@ func init() {
 	flag.DurationVar(&LeaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
 	flag.DurationVar(&RenewDeadline, "leader-elect-renew-deadline", 10*time.Second, "The leader-elect RenewDeadline")
 	flag.DurationVar(&RetryPeriod, "leader-elect-retry-period", 2*time.Second, "The leader-elect RetryPeriod")
-}
-
-// resyncPeriod computes the time interval a shared informer waits before
-// resyncing with the api server.
-func resyncPeriod(MinResyncPeriod metav1.Duration) func() time.Duration {
-	return func() time.Duration {
-		factor := rand.Float64() + 1
-		return time.Duration(float64(MinResyncPeriod.Nanoseconds()) * factor)
-	}
 }
 
 func run() {
@@ -150,32 +142,46 @@ func run() {
 		klog.Fatalf("Error building kubernetes clientset: %s", err.Error())
 	}
 	fmt.Println("Operator builds kube client success...")
-	tkexClient, err := clientset.NewForConfig(cfg)
 
+	tkexClient, err := clientset.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building gamedeployment clientset: %s", err.Error())
 	}
 	fmt.Println("Operator builds tkex client success...")
-	//kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(MinResyncPeriod)())
-	//gameDeploymentInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncPeriod(MinResyncPeriod)())
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, 0)
-	gameDeploymentInformerFactory := informers.NewSharedInformerFactory(tkexClient, 0)
 
-	gdController := gamedeploy.NewGameDeploymentController(
+	resyncDuration := time.Duration(resyncPeriod) * time.Second
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncDuration)
+	gameDeploymentInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncDuration)
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(klog.Infof)
+	eventBroadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: constants.OperatorName})
+
+	gdController := gamedeployment.NewGameDeploymentController(
 		kubeInformerFactory.Core().V1().Pods(),
 		gameDeploymentInformerFactory.Tkex().V1alpha1().GameDeployments(),
+		gameDeploymentInformerFactory.Tkex().V1alpha1().HookRuns(),
+		gameDeploymentInformerFactory.Tkex().V1alpha1().HookTemplates(),
 		kubeInformerFactory.Apps().V1().ControllerRevisions(),
 		kubeClient,
-		tkexClient)
+		tkexClient,
+		recorder)
+	hrController := hook.NewHookController(
+		kubeClient,
+		tkexClient,
+		gameDeploymentInformerFactory.Tkex().V1alpha1().HookRuns(),
+		recorder,
+	)
 
-	go kubeInformerFactory.Start(stopCh)
+	kubeInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting kube Informer Factory success...")
-	go gameDeploymentInformerFactory.Start(stopCh)
+	gameDeploymentInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting tkex Informer factory success...")
 
-	if err = gdController.Run(1, stopCh); err != nil {
-		klog.Fatalf("Error running controller: %s", err.Error())
-	}
+	go gdController.Run(1, stopCh)
+
+	go hrController.Run(1, stopCh)
 }
 
 // StartedLeading callback function

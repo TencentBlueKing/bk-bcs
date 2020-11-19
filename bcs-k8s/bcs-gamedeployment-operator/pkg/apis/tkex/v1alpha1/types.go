@@ -105,6 +105,17 @@ type CanaryStrategy struct {
 type CanaryStep struct {
 	Partition *int32       `json:"partition,omitempty"`
 	Pause     *CanaryPause `json:"pause,omitempty"`
+	Hook      *HookStep    `json:"hook,omitempty"`
+}
+
+type HookStep struct {
+	TemplateName string            `json:"templateName"`
+	Args         []HookRunArgument `json:"args,omitempty"`
+}
+
+type HookRunArgument struct {
+	Name  string `json:"name"`
+	Value string `json:"value,omitempty"`
 }
 
 type CanaryPause struct {
@@ -166,6 +177,8 @@ type GameDeploymentStatus struct {
 	// Conditions represents the latest available observations of a GameDeployment's current state.
 	Conditions []GameDeploymentCondition `json:"conditions,omitempty"`
 
+	PauseConditions []PauseCondition `json:"pauseConditions,omitempty"`
+
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
 
@@ -175,8 +188,9 @@ type GameDeploymentStatus struct {
 }
 
 type CanaryStatus struct {
-	Revision       string       `json:"revision,omitempty"`
-	PauseStartTime *metav1.Time `json:"pauseStartTime,omitempty"`
+	Revision           string       `json:"revision,omitempty"`
+	PauseStartTime     *metav1.Time `json:"pauseStartTime,omitempty"`
+	CurrentStepHookRun string       `json:"currentStepHookRun,omitempty"`
 }
 
 // GameDeploymentConditionType is type for GameDeployment conditions.
@@ -222,3 +236,22 @@ type GameDeploymentList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []GameDeployment `json:"items"`
 }
+
+type PauseReason string
+
+const (
+	PauseReasonCanaryPauseStep PauseReason = "PausedByCanaryPauseStep"
+	PauseReasonStepBasedHook   PauseReason = "PausedByStepBasedHook"
+)
+
+type PauseCondition struct {
+	Reason    PauseReason `json:"reason"`
+	StartTime metav1.Time `json:"startTime"`
+}
+
+const (
+	DefaultGameDeploymentUniqueLabelKey string = "gamedeployment-revision"
+	GameDeploymentTypeLabel                    = "gamedeployment-type"
+	GameDeploymentTypeStepLabel                = "Step"
+	GameDeploymentCanaryStepIndexLabel         = "step-index"
+)

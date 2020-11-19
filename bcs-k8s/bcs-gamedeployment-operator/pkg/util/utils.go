@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"sync"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gamedeploylister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
@@ -31,10 +31,10 @@ import (
 )
 
 // ControllerKind contains the schema.GroupVersionKind for this controller type.
-var ControllerKind = tkexv1alpha1.SchemeGroupVersion.WithKind("GameDeployment")
+var ControllerKind = v1alpha1.SchemeGroupVersion.WithKind("GameDeployment")
 
 // GetControllerKey return key of GameDeployment.
-func GetControllerKey(cs *tkexv1alpha1.GameDeployment) string {
+func GetControllerKey(cs *v1alpha1.GameDeployment) string {
 	return types.NamespacedName{Namespace: cs.Namespace, Name: cs.Name}.String()
 }
 
@@ -131,9 +131,9 @@ func DumpJSON(o interface{}) string {
 // GetPodGameDeployments returns a list of GameDeployments that potentially match a pod.
 // Only the one specified in the Pod's ControllerRef will actually manage it.
 // Returns an error only if no matching GameDeployment are found.
-func GetPodGameDeployments(pod *v1.Pod, gdcLister gamedeploylister.GameDeploymentLister) ([]*tkexv1alpha1.GameDeployment, error) {
+func GetPodGameDeployments(pod *v1.Pod, gdcLister gamedeploylister.GameDeploymentLister) ([]*v1alpha1.GameDeployment, error) {
 	var selector labels.Selector
-	var ps *tkexv1alpha1.GameDeployment
+	var ps *v1alpha1.GameDeployment
 
 	if len(pod.Labels) == 0 {
 		return nil, fmt.Errorf("no GameDeployment found for pod %v because it has no labels", pod.Name)
@@ -144,7 +144,7 @@ func GetPodGameDeployments(pod *v1.Pod, gdcLister gamedeploylister.GameDeploymen
 		return nil, err
 	}
 
-	var psList []*tkexv1alpha1.GameDeployment
+	var psList []*v1alpha1.GameDeployment
 	for i := range list {
 		ps = list[i]
 		if ps.Namespace != pod.Namespace {

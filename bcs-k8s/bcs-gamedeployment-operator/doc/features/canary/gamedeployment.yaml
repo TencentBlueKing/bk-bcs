@@ -1,0 +1,38 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: GameDeployment
+metadata:
+  name: test-gamedeployment
+  labels:
+    app: test-gamedeployment
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: test-gamedeployment
+  template:
+    metadata:
+      labels:
+        app: test-gamedeployment
+    spec:
+      containers:
+        - name: python
+          image: python:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python"]
+          args: ["-m", "http.server", "8000" ]
+          ports:
+            - name: http
+              containerPort: 8000
+  updateStrategy:
+    type: InplaceUpdate
+    maxUnavailable: 2
+    canary:
+      steps:
+        - partition: 3
+        - pause: {}
+        - partition: 2
+        - pause: {duration: 60}
+        - hook:
+            templateName: test
+    inPlaceUpdateStrategy:
+      gracePeriodSeconds: 30
