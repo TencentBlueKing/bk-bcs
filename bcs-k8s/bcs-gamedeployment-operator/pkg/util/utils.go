@@ -16,6 +16,7 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
@@ -167,4 +168,16 @@ func GetPodGameDeployments(pod *v1.Pod, gdcLister gamedeploylister.GameDeploymen
 	}
 
 	return psList, nil
+}
+
+type AlphabetSortPods []*v1.Pod
+
+func (s AlphabetSortPods) Len() int      { return len(s) }
+func (s AlphabetSortPods) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+func (s AlphabetSortPods) Less(i, j int) bool {
+	if strings.Compare(s[i].Name, s[j].Name) > 0 {
+		return false
+	}
+	return true
 }

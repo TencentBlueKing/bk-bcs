@@ -53,6 +53,10 @@ type GameDeploymentSpec struct {
 	// update Pods in the GameDeployment when a revision is made to Template.
 	UpdateStrategy GameDeploymentUpdateStrategy `json:"updateStrategy,omitempty"`
 
+	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to
+	// before Delete Or Update Pods
+	PreDeleteUpdateStrategy GameDeploymentPreDeleteUpdateStrategy `json:"preDeleteUpdateStrategy,omitempty"`
+
 	// RevisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the GameDeployment's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
@@ -63,6 +67,11 @@ type GameDeploymentSpec struct {
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
+}
+
+type GameDeploymentPreDeleteUpdateStrategy struct {
+	Hook                 *HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
 }
 
 type GameDeploymentScaleStrategy struct {
@@ -182,9 +191,16 @@ type GameDeploymentStatus struct {
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
 
-	CurrentStepIndex *int32       `json:"currentStepIndex,omitempty"`
-	CurrentStepHash  string       `json:"currentStepHash,omitempty"`
-	Canary           CanaryStatus `json:"canary,omitempty"`
+	CurrentStepIndex        *int32                   `json:"currentStepIndex,omitempty"`
+	CurrentStepHash         string                   `json:"currentStepHash,omitempty"`
+	Canary                  CanaryStatus             `json:"canary,omitempty"`
+	PreDeleteHookConditions []PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
+}
+
+type PreDeleteHookCondition struct {
+	PodName   string      `json:"podName"`
+	StartTime metav1.Time `json:"startTime"`
+	HookPhase HookPhase   `json:"phase"`
 }
 
 type CanaryStatus struct {
@@ -253,5 +269,8 @@ const (
 	DefaultGameDeploymentUniqueLabelKey string = "gamedeployment-revision"
 	GameDeploymentTypeLabel                    = "gamedeployment-type"
 	GameDeploymentTypeStepLabel                = "Step"
+	GameDeploymentTypePreDeleteLabel           = "PreDelete"
 	GameDeploymentCanaryStepIndexLabel         = "step-index"
+	GameDeploymentPodControllerRevision        = "PodControllerRevision"
+	GameDeploymentPodInstanceID                = "InstanceID"
 )

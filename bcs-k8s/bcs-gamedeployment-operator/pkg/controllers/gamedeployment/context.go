@@ -33,6 +33,13 @@ func newCanaryCtx(deploy *v1alpha1.GameDeployment, hrList []*v1alpha1.HookRun, u
 	collisionCount int32, selector labels.Selector) *canaryContext {
 
 	currentHrs, otherHrs := hooksutil.FilterCurrentHookRuns(hrList, deploy)
+	canaryHrs := []*v1alpha1.HookRun{}
+	for _, hr := range otherHrs {
+		hookRunType, ok := hr.Labels[v1alpha1.GameDeploymentTypeLabel]
+		if ok && hookRunType == v1alpha1.GameDeploymentTypeStepLabel {
+			canaryHrs = append(canaryHrs, hr)
+		}
+	}
 	newStatus := v1alpha1.GameDeploymentStatus{
 		ObservedGeneration: deploy.Generation,
 		UpdateRevision:     updateRevision.Name,
@@ -40,12 +47,14 @@ func newCanaryCtx(deploy *v1alpha1.GameDeployment, hrList []*v1alpha1.HookRun, u
 		LabelSelector:      selector.String(),
 	}
 	*newStatus.CollisionCount = collisionCount
+	copyStatus := deploy.Status.DeepCopy()
+	newStatus.PreDeleteHookConditions = copyStatus.PreDeleteHookConditions
 
 	return &canaryContext{
 		deploy:     deploy,
 		newStatus:  &newStatus,
 		currentHrs: currentHrs,
-		otherHrs:   otherHrs,
+		otherHrs:   canaryHrs,
 	}
 }
 

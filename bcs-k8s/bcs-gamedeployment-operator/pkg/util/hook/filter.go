@@ -72,3 +72,15 @@ func FilterHookRunsToDelete(hrs []*v1alpha1.HookRun, revision string) []*v1alpha
 
 	return hrsToDelete
 }
+
+func FilterPreDeleteHookRuns(hrs []*v1alpha1.HookRun) []*v1alpha1.HookRun {
+	preDeleteHookRuns := []*v1alpha1.HookRun{}
+	for _, hr := range hrs {
+		hookRunType, ok := hr.Labels[v1alpha1.GameDeploymentTypeLabel]
+		if ok && hookRunType == v1alpha1.GameDeploymentTypePreDeleteLabel {
+			preDeleteHookRuns = append(preDeleteHookRuns, hr)
+		}
+	}
+
+	return preDeleteHookRuns
+}
