@@ -69,7 +69,7 @@ pre:
 	mkdir -p ${PACKAGEPATH}
 	mkdir -p ${EXPORTPATH}
 	go fmt ./...
-	cd ./scripts && chmod +x vet.sh && ./vet.sh
+	#cd ./scripts && chmod +x vet.sh && ./vet.sh
 
 api:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -217,7 +217,7 @@ gamestatefulset:pre
 gamedeployment:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-gamedeployment-operator ${PACKAGEPATH}/bcs-k8s-master
-	cd bcs-k8s/bcs-gamedeployment-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
+	cd bcs-k8s/bcs-gamedeployment-operator && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
 
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master

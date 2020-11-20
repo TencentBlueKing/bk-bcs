@@ -48,93 +48,15 @@ spec:
 用户手动介入来决定是继续灰度发布还是进行回滚操作。  
 如果不需要分步骤灰度发布，那么无需配置 spec.updateStrategy.canary ，仍然按照 [README](../../../README.md) 指引即可。
 
-#### HookTemplate 模板
-用户可以通过创建 HookTemplate 来配置 Hook 调用的模板，在一个 namespace 中创建好这个模板后，在这个 namespace 中的所有 GameDeployment 都
-可以在灰度发布步骤中引用或多次引用这个模板，从而使用这个模板的配置去进行 Hook 调用。  
-下面是一个 HookTemplate 的定义：  
-```yaml
-apiVersion: tkex.tencent.com/v1alpha1
-kind: HookTemplate
-metadata:
-  name: test
-spec:
-  metrics:
-  - name: webtest
-    count: 2
-    interval: 60s
-    failureLimit: 0
-    successCondition: "asInt(result) < 30"
-    provider:
-      web:
-        url: http://1.1.1.1:9091
-        jsonPath: "{$.age}"
-```
-在模板的 metrics 中可以定义多个 metric，每个 metric 可以配置一个 hook 调用，metric 中的 provider 定义了该 hook 的类型，目前仅支持 Webhook 
-和 Prometheus 两种 hook 调用类型。url 定义了 hook 调用的地址，jsonPath 表示提取返回 json 中的某个字段。successCondition 表示 hook 的
-成功条件。count 表示该 metric 进行 hook 调用的次数，interval 表示两次 hook 调用间的时间间隔，failureLimit 定义允许的失败次数，默认为 0，
-即只要有一次返回是失败的，那这个 metric 就是失败的。  
-以上面这个 HookTemplate 为例，定义了一个 Webhook 类型的 metric，url 地址为 http://127.0.0.1:9091，web 调用的结果返回示例如下：  
-```
-$ curl http://1.1.1.1:9091
-{"name":"bryan","male":"yes","age":45}
-```
-jsonPath 定义为 "{$.age}"，表示 result 的值取返回 json 中的 age 字段，successCondition 为 "asInt(result) < 30"，表示如果返回的 age
-小于 30，那么这次 hook 调用的结果就是符合预期的。  
-
-#### HookRun
-在 bcs-gamedeployment-operator 中运行有两个 controller，一个是 GameDeployment，一个是 HookRun。GameDeployment controller 用于控制
-GameDeployment 的运行，处理 GameDeployment 应用的创建和更新等。HookRun controller 用于控制 HookRun 的运行，用于处理 hook 调用的运行和状态。  
-如果在一个 GameDeployment 应用中配置了 hook 调用的步骤，那么 GameDeployment 就会根据指定 name 的 HookTemplate 创建一个 HookRun 进行
-hook 调用，并维护这个 HookRun 的状态。GameDeployment watch 这个 HookRun 的状态，根据 HookRun 的状态来判断是否继续或暂停灰度发布。  
-下面是 HookRun controller 创建和维护的一个 HookRun 的示例：  
-```yaml
-apiVersion: tkex.tencent.com/v1alpha1
-kind: HookRun
-metadata:
-  creationTimestamp: "2020-11-09T10:08:49Z"
-  generation: 2
-  labels:
-    gamedeployment-revision: test-gamedeployment-67864c6f65
-    gamedeployment-type: Step
-    step-index: "4"
-  name: test-gamedeployment-67864c6f65-4-test
-  namespace: default
-  ownerReferences:
-  - apiVersion: tkex.tencent.com/v1alpha1
-    blockOwnerDeletion: true
-    controller: true
-    kind: GameDeployment
-    name: test-gamedeployment
-    uid: 08db1c6b-4b0a-4fda-86c4-04327f9a788f
-  resourceVersion: "40202398"
-  selfLink: /apis/tkex.tencent.com/v1alpha1/namespaces/default/hookruns/test-gamedeployment-67864c6f65-4-test
-  uid: b3334c79-1d93-4b60-bf88-6583ee3dbfe4
-spec:
-  metrics:
-  - name: webtest
-    provider:
-      web:
-        jsonPath: '{$.age}'
-        url: http://9.146.98.118:9091
-    successCondition: asInt(result) < 30
-  terminate: true
-status:
-  metricResults:
-  - count: 1
-    failed: 1
-    measurements:
-    - finishedAt: "2020-11-09T10:08:49Z"
-      phase: Failed
-      startedAt: "2020-11-09T10:08:49Z"
-      value: "32"
-    name: webtest
-    phase: Failed
-  phase: Failed
-  startedAt: "2020-11-09T10:08:49Z"
-```
-status.phase 定义了该 HookRun 最后的运行状态。  
+#### hook 步骤的实现
+bcs-gamedeployment-operator 通过 gamedeployment-controller 与 hookrun-controller 两个 controller 的联动来实现灰度发布中的 hook 步骤。  
+如果在一个 GameDeployment 应用中配置了 hook 调用的步骤，那么 gamedeployment-controller 就会根据指定 name 的 HookTemplate 创建一个 
+HookRun crd，hookkun-controller watch 到 crd 后就会操作这个 HookRun 进行 hook 调用，并维护这个 HookRun 的状态。GameDeployment watch 
+这个 HookRun 的状态，根据 HookRun 的状态来判断是否继续或暂停灰度发布。  
+HookRun 及 HookTemplate 的原理及实现请参考：[hookrun-controller](../hookrun-controller/hookrun.md)。  
 
 ### 使用示例
+#### 前置条件
 在集群外运行一个示例的 webserver ：
 ```
 $ ./gamedeployment-canary

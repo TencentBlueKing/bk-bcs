@@ -103,7 +103,7 @@ func (gdc *defaultGameDeploymentControl) cancelHookRuns(canaryCtx *canaryContext
 			_, err := gdc.client.TkexV1alpha1().HookRuns(hr.Namespace).Patch(hr.Name, patchtypes.MergePatchType, []byte(cancelHookRun))
 			if err != nil {
 				if k8serrors.IsNotFound(err) {
-					klog.Warningf("HookRun % not found for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace, canaryCtx.deploy.Name)
+					klog.Warningf("HookRun %s not found for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace, canaryCtx.deploy.Name)
 					continue
 				}
 				return err

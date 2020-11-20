@@ -15,6 +15,7 @@ package gamedeployment
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/predelete"
 	"reflect"
 	"time"
 
@@ -99,6 +100,7 @@ func NewGameDeploymentController(
 
 	tkexscheme.AddToScheme(scheme.Scheme)
 
+	preDeleteControl := predelete.New(kubeClient, gdClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
 	gdc := &GameDeploymentController{
 		GroupVersionKind: util.ControllerKind,
 		tkexClient:       gdClient,
@@ -106,8 +108,8 @@ func NewGameDeploymentController(
 			gdClient,
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
-			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations),
-			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations),
+			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
+			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			revisioncontrol.NewRevisionControl(),
@@ -469,7 +471,8 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 	if err != nil {
 		return err
 	}
-	deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
+	//deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
+	deploy, err := gdc.tkexClient.TkexV1alpha1().GameDeployments(namespace).Get(name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Object not found, return.  Created objects are automatically garbage collected.
 		// For additional cleanup logic use finalizers.

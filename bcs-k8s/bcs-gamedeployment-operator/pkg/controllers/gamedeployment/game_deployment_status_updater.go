@@ -166,12 +166,18 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *v1alpha1.GameDepl
 				UpdateStrategy: v1alpha1.GameDeploymentUpdateStrategy{
 					Paused: deploy.Spec.UpdateStrategy.Paused,
 				},
+				PreDeleteUpdateStrategy: v1alpha1.GameDeploymentPreDeleteUpdateStrategy{
+					RetryUnexpectedHooks: deploy.Spec.PreDeleteUpdateStrategy.RetryUnexpectedHooks,
+				},
 			},
 		},
 		&v1alpha1.GameDeployment{
 			Spec: v1alpha1.GameDeploymentSpec{
 				UpdateStrategy: v1alpha1.GameDeploymentUpdateStrategy{
 					Paused: paused,
+				},
+				PreDeleteUpdateStrategy: v1alpha1.GameDeploymentPreDeleteUpdateStrategy{
+					RetryUnexpectedHooks: false,
 				},
 			},
 		}, v1alpha1.GameDeployment{})

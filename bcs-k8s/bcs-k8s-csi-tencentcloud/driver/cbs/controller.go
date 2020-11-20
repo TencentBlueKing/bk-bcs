@@ -336,7 +336,7 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 				}
 			}
 		case <-ctx.Done():
-			return nil, status.Error(codes.DeadlineExceeded, "cbs disk is not ready before deadline exceeded")
+			return nil, status.Errorf(codes.DeadlineExceeded, "cbs disk is not ready before deadline exceeded, requestID: %s", *createCbsResponse.Response.RequestId)
 		}
 	}
 }

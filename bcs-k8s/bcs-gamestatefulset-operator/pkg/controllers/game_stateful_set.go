@@ -473,7 +473,7 @@ func (ssc *GameStatefulSetController) sync(key string) error {
 }
 
 // obj could be an GameStatefulSet, or a DeletionFinalStateUnknown marker item.
-func (ssc *GameStatefulSetController) enqueueReplicaSetAfter(obj interface{}, after time.Duration) {
+func (ssc *GameStatefulSetController) enqueueGameStatefulSetAfter(obj interface{}, after time.Duration) {
 	key, err := controller.KeyFunc(obj)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("couldn't get key for object %+v: %v", obj, err))
@@ -490,7 +490,7 @@ func (ssc *GameStatefulSetController) syncGameStatefulSet(set *stsplus.GameState
 
 	delayDuration := durationStore.Pop(getGameStatefulSetKey(set))
 	if delayDuration > 0 {
-		ssc.enqueueReplicaSetAfter(set, delayDuration)
+		ssc.enqueueGameStatefulSetAfter(set, delayDuration)
 	}
 
 	if err != nil {

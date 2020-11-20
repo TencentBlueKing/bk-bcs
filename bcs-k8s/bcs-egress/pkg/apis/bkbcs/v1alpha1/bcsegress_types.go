@@ -98,12 +98,12 @@ type BCSEgressStatus struct {
 // BCSEgress is the Schema for the bcsegresses API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=bcsegresses,scope=Namespaced
-// +kubebuilder:printcolumn:name="Namespace",type="string",JSONPath=".metadata.namespace"
-// +kubebuilder:printcolumn:name="Name",type="string",JSONPath=".metadata.name"
-// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
-// +kubebuilder:printcolumn:name="HTTPActives",type="uint",JSONPath=".status.httpActives"
-// +kubebuilder:printcolumn:name="TCPActives",type="uint",JSONPath=".status.tcpActives"
-// +kubebuilder:printcolumn:name="SyncedAt",type="date",JSONPath=".status.syncedat"
+// +kubebuilder:printcolumn:name="Namespace",type="string",JsonPath=".metadata.namespace"
+// +kubebuilder:printcolumn:name="Name",type="string",JsonPath=".metadata.name"
+// +kubebuilder:printcolumn:name="State",type="string",JsonPath=".status.state"
+// +kubebuilder:printcolumn:name="HTTPActives",type="uint",JsonPath=".status.httpActives"
+// +kubebuilder:printcolumn:name="TCPActives",type="uint",JsonPath=".status.tcpActives"
+// +kubebuilder:printcolumn:name="SyncedAt",type="date",JsonPath=".status.syncedat"
 type BCSEgress struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

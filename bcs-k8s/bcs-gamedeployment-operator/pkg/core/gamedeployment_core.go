@@ -117,6 +117,8 @@ func (c *commonControl) IsPodUpdateReady(pod *v1.Pod, minReadySeconds int32) boo
 
 func (c *commonControl) GetPodsSortFunc(pods []*v1.Pod, waitUpdateIndexes []int) func(i, j int) bool {
 	// not-ready < ready, unscheduled < scheduled, and pending < running
+	//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
+	// change, maybe we should use a simple alphabetical sort
 	return func(i, j int) bool {
 		return kubecontroller.ActivePods(pods).Less(waitUpdateIndexes[i], waitUpdateIndexes[j])
 	}

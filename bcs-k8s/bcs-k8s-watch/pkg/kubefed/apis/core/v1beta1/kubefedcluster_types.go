@@ -81,8 +81,8 @@ type KubeFedClusterStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:path=kubefedclusters
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name=ready,type=string,JSONPath=.status.conditions[?(@.type=='Ready')].status
-// +kubebuilder:printcolumn:name=age,type=date,JSONPath=.metadata.creationTimestamp
+// +kubebuilder:printcolumn:name=ready,type=string,JsonPath=.status.conditions[?(@.type=='Ready')].status
+// +kubebuilder:printcolumn:name=age,type=date,JsonPath=.metadata.creationTimestamp
 type KubeFedCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
