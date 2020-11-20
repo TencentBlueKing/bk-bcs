@@ -16,19 +16,21 @@ package scheduler
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
+	"strconv"
+	"sync"
+	"time"
+
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"runtime"
-	"strconv"
-	"sync"
-	"time"
 )
 
 const (
+	//MaxEventQueueLength event queue size
 	MaxEventQueueLength = 10240
 )
 
