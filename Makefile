@@ -250,7 +250,9 @@ network:pre
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
 	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
+	cp ./bcs-services/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-services/bcs-clb-controller/Dockerfile.old
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+	cp ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ${PACKAGEPATH}/bcs-services/bcs-clb-controller/clb-controller
 
 cpuset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cpuset-device
