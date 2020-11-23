@@ -15,6 +15,7 @@ package v1
 
 import (
 	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -32,10 +33,12 @@ type ServiceMonitorSpec struct {
 	Selector  LabelSelector `json:"selector,omitempty"`
 }
 
+// LabelSelector selector for service
 type LabelSelector struct {
 	MatchLabels map[string]string `json:"matchLabels,omitempty"`
 }
 
+// Endpoint collecte enpoint path information
 type Endpoint struct {
 	Port     string              `json:"port,omitempty"`
 	Path     string              `json:"path,omitempty"`
@@ -43,19 +46,25 @@ type Endpoint struct {
 	Params   map[string][]string `json:"params,omitempty"`
 }
 
+// GetUuid key generator
 func (s *ServiceMonitor) GetUuid() string {
 	return fmt.Sprintf("%s.%s", s.Namespace, s.Name)
 }
 
-func (s *ServiceMonitor) GetSelector() labels.Requirements {
+// GetSelector get k8s selector implementation
+func (s *ServiceMonitor) GetSelector() (labels.Requirements, error) {
 	rms := labels.Requirements{}
 	for k, v := range s.Spec.Selector.MatchLabels {
-		r, _ := labels.NewRequirement(k, selection.Equals, []string{v})
+		r, err := labels.NewRequirement(k, selection.Equals, []string{v})
+		if err != nil {
+			return nil, err
+		}
 		rms = append(rms, *r)
 	}
-	return rms
+	return rms, nil
 }
 
+// Match check selector match
 func (s *ServiceMonitor) Match(labels map[string]string) bool {
 	for k, v := range s.Spec.Selector.MatchLabels {
 		val, ok := labels[k]
