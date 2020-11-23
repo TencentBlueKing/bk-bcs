@@ -429,7 +429,7 @@ func (mm *Manager) updateAppService(svc *v2.BcsService, bcsEndpoint *v2.BcsEndpo
 		mesosCritical.WithLabelValues(typeAppService, eventUpdate).Inc()
 		mesosEvent.WithLabelValues(typeAppService, eventUpdate, statusFailure).Inc()
 		// should not log error, because there are so many cases in which convert AppService failed
-		blog.V(4).Info("[Critical]MesosManager convert %v with its bcsendpoint %v to AppService failed, err %s",
+		blog.V(4).Infof("[Critical]MesosManager convert %v with its bcsendpoint %v to AppService failed, err %s",
 			svc, bcsEndpoint, err.Error())
 		return
 	}
