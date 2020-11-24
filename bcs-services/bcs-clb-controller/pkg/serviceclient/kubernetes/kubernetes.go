@@ -187,7 +187,8 @@ func (k *kubeEpsEventHandler) OnAdd(obj interface{}) {
 	svc, err := k.manager.svcsLister.Services(eps.GetNamespace()).Get(eps.GetName())
 	if err != nil {
 		k8sEvent.WithLabelValues(eps.Kind, eventAdd, statusFailure).Inc()
-		blog.V(4).Infof("get k8s Service from cache by key %s from Endpoints %s failed, err %s", svcKey, eps.String(), err.Error())
+		blog.V(4).Infof("get k8s Service from cache by key %s from Endpoints %s failed, err %s",
+			svcKey, eps.String(), err.Error())
 		return
 	}
 	k.manager.updateAppService(svc)
@@ -223,7 +224,8 @@ func (k *kubeEpsEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	svc, err := k.manager.svcsLister.Services(newEps.GetNamespace()).Get(newEps.GetName())
 	if err != nil {
 		k8sEvent.WithLabelValues(newEps.Kind, eventUpdate, statusFailure).Inc()
-		blog.V(4).Infof("get k8s Service from cache by key %s from Endpoints %s failed, err %s", svcKey, newEps.String(), err.Error())
+		blog.V(4).Infof("get k8s Service from cache by key %s from Endpoints %s failed, err %s",
+			svcKey, newEps.String(), err.Error())
 		return
 	}
 	k.manager.updateAppService(svc)
@@ -248,7 +250,8 @@ func (k *kubeEpsEventHandler) OnDelete(obj interface{}) {
 	svc, err := k.manager.svcsLister.Services(eps.GetNamespace()).Get(eps.GetName())
 	if err != nil {
 		k8sEvent.WithLabelValues(eps.Kind, eventDelete, statusFailure).Inc()
-		blog.V(4).Infof("get k8s Service from cache by key %s from Endpoints %s failed, err %s", svcKey, eps.String(), err.Error())
+		blog.V(4).Infof("get k8s Service from cache by key %s from Endpoints %s failed, err %s",
+			svcKey, eps.String(), err.Error())
 		return
 	}
 	k.manager.updateAppService(svc)
@@ -457,7 +460,8 @@ func (m *KubeManager) ListAppService(labels map[string]string) ([]*svcclient.App
 	if err != nil {
 		k8sCritical.WithLabelValues("appservice", eventList).Inc()
 		blog.Errorf("KubeManager list all k8s Services by selector %s failed, err %s", selector.String(), err.Error())
-		return nil, fmt.Errorf("KubeManager list all k8s Services by selector %s failed, err %s", selector.String(), err.Error())
+		return nil, fmt.Errorf("KubeManager list all k8s Services by selector %s failed, err %s",
+			selector.String(), err.Error())
 	}
 	if len(svcs) == 0 {
 		blog.Warnf("KubeManager list no k8s Services by selector %s", selector.String())
@@ -479,7 +483,8 @@ func (m *KubeManager) ListAppService(labels map[string]string) ([]*svcclient.App
 		}
 		localAppSvc, err := m.convert(svc, eps)
 		if err != nil {
-			blog.Warnf("KubeManager convert svc %s and eps %s to AppService failed, err %s", svc.String(), eps.String(), err.Error())
+			blog.Warnf("KubeManager convert svc %s and eps %s to AppService failed, err %s",
+				svc.String(), eps.String(), err.Error())
 			continue
 		}
 		internalAppSvcs = append(internalAppSvcs, localAppSvc)
@@ -500,7 +505,8 @@ func (m *KubeManager) ListAppServiceFromStatefulSet(ns, name string) ([]*svcclie
 		if set.Spec.ServiceName == name {
 			pods, err := m.podsLister.Pods(ns).List(k8slabels.Set(set.Spec.Selector.MatchLabels).AsSelector())
 			if err != nil {
-				return nil, fmt.Errorf("failed to find pods by set labelSelector %v, err %s", set.Spec.Selector, err.Error())
+				return nil, fmt.Errorf("failed to find pods by set labelSelector %v, err %s",
+					set.Spec.Selector, err.Error())
 			}
 			// if statefulset has no pod, do not return error
 			if len(pods) == 0 {
@@ -752,7 +758,8 @@ func (m *KubeManager) updateAppService(svc *k8scorev1.Service) {
 		return
 	}
 	k8sEvent.WithLabelValues("appservice", eventUpdate, statusSuccess).Inc()
-	blog.V(4).Infof("update AppService %s/%s to cache successfully", newAppService.GetNamespace(), newAppService.GetName())
+	blog.V(4).Infof("update AppService %s/%s to cache successfully",
+		newAppService.GetNamespace(), newAppService.GetName())
 	m.appServiceHandler.OnUpdate(oldAppService, newAppService)
 }
 
@@ -783,7 +790,8 @@ func (m *KubeManager) deleteAppService(svc *k8scorev1.Service) {
 		return
 	}
 	k8sEvent.WithLabelValues("appservice", eventDelete, statusSuccess).Inc()
-	blog.V(5).Infof("delete AppService %s%s from cache successfully", oldAppService.GetNamespace(), oldAppService.GetName())
+	blog.V(5).Infof("delete AppService %s%s from cache successfully",
+		oldAppService.GetNamespace(), oldAppService.GetName())
 }
 
 // Close client, clean resource
