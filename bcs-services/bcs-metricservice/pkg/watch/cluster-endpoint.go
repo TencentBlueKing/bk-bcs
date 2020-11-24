@@ -39,7 +39,7 @@ func (cw *ClusterWatcher) endpointManger() {
 		case <-syncTick.C:
 			cw.syncEndpoint(endpoints)
 		case myEvent := <-event:
-			blog.V(3).Infof("received raw endpoint event(%s): %v", cw.clusterId, myEvent)
+			blog.V(3).Infof("received raw endpoint event(%s): %v", cw.clusterID, myEvent)
 			cw.handleEndpointEvent(myEvent)
 		}
 	}
@@ -90,7 +90,8 @@ func (cw *ClusterWatcher) handleEndpointEvent(event *zk.Event) {
 			continue
 		}
 		if len(collectors) == 0 {
-			blog.Warnf("handle endpoint event there is not collector(%s): name(%s) namespace(%s)", cw.clusterId, metric.Namespace, metric.Name)
+			blog.Warnf("handle endpoint event there is not collector(%s): name(%s) namespace(%s)",
+				cw.clusterID, metric.Namespace, metric.Name)
 			continue
 		}
 		collector := collectors[0]

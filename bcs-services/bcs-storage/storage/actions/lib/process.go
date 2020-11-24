@@ -42,7 +42,8 @@ func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 			req.Request.Body = ioutil.NopCloser(strings.NewReader(stringBody))
 		}
 		// print log when a request comes in and returns
-		blog.Infof("Receive %s %s?%s, body: %s", req.Request.Method, req.Request.URL.Path, req.Request.URL.RawQuery, stringBody)
+		blog.Infof("Receive %s %s?%s, body: %s",
+			req.Request.Method, req.Request.URL.Path, req.Request.URL.RawQuery, stringBody)
 		f(req, resp)
 		blog.Infof("Return [%d] %s %s", resp.StatusCode(), req.Request.Method, req.Request.URL.Path)
 		reportAPIMetrics(req.Request.URL.Path, req.Request.Method, strconv.Itoa(resp.StatusCode()), entranceTime)

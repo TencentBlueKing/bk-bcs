@@ -19,10 +19,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
+// NewExtra create extra fields
 func NewExtra(raw string) *ExtraField {
 	return &ExtraField{raw: raw}
 }
 
+// ExtraField extra field
 type ExtraField struct {
 	raw string
 	str []byte
@@ -37,6 +39,7 @@ func (ef *ExtraField) decode() error {
 	return nil
 }
 
+// GetStr get string value
 func (ef *ExtraField) GetStr() (string, error) {
 	if ef.str != nil {
 		return string(ef.str), nil
@@ -45,6 +48,7 @@ func (ef *ExtraField) GetStr() (string, error) {
 	return string(ef.str), err
 }
 
+// Unmarshal unmarshal extra field to struct
 func (ef *ExtraField) Unmarshal(r interface{}) (err error) {
 	if err = ef.decode(); err != nil {
 		return

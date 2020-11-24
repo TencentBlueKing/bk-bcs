@@ -13,27 +13,27 @@
 
 package lib
 
-import (
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"testing"
+// import (
+// 	"io/ioutil"
+// 	"net/http"
+// 	"strings"
+// 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 
-	"github.com/emicklei/go-restful"
-)
+// 	"github.com/emicklei/go-restful"
+// )
 
-func TestMarkProcess(t *testing.T) {
-	bodyStr := "hello world"
-	req, _ := http.NewRequest("GET", "/", ioutil.NopCloser(strings.NewReader(bodyStr)))
-	apiserver.GetAPIResource().Conf = &options.StorageOptions{PrintBody: true, QueryMaxNum: 100}
+// func TestMarkProcess(t *testing.T) {
+// 	bodyStr := "hello world"
+// 	req, _ := http.NewRequest("GET", "/", ioutil.NopCloser(strings.NewReader(bodyStr)))
+// 	apiserver.GetAPIResource().Conf = &options.StorageOptions{PrintBody: true, QueryMaxNum: 100}
 
-	MarkProcess(func(req *restful.Request, resp *restful.Response) {
-		body, err := ioutil.ReadAll(req.Request.Body)
-		if err != nil || string(body) != bodyStr {
-			t.Errorf("MarkProcess() do not pass the correct body!")
-		}
-	})(restful.NewRequest(req), &restful.Response{})
-}
+// 	MarkProcess(func(req *restful.Request, resp *restful.Response) {
+// 		body, err := ioutil.ReadAll(req.Request.Body)
+// 		if err != nil || string(body) != bodyStr {
+// 			t.Errorf("MarkProcess() do not pass the correct body!")
+// 		}
+// 	})(restful.NewRequest(req), &restful.Response{})
+// }
