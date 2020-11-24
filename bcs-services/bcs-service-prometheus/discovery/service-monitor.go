@@ -288,7 +288,12 @@ func (disc *serviceMonitor) handlerServiceMonitorChanged(serviceM *apismonitorv1
 		blog.Infof("ServiceMonitor(%s) have endpoint(%s:%s)", serviceM.GetUuid(), endpoint.Port, endpoint.Path)
 	}
 	rms := labels.NewSelector()
-	for _, o := range serviceM.GetSelector() {
+	reqs, err := serviceM.GetSelector()
+	if err != nil {
+		blog.Errorf("ServiceMonitor(%s) selector definition err, %s. skip handling", serviceM.GetUuid(), err.Error())
+		return
+	}
+	for _, o := range reqs {
 		rms.Add(o)
 	}
 	endpoints, err := disc.endpointLister.BcsEndpoints(serviceM.Namespace).List(rms)
