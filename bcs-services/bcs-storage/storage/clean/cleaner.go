@@ -109,6 +109,7 @@ func (dbc *DBCleaner) doTimeClean() error {
 // Run run cleaner
 func (dbc *DBCleaner) Run(ctx context.Context) {
 	ticker := time.NewTicker(dbc.checkInterval)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
