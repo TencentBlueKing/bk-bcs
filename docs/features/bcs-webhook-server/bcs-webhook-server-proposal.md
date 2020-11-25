@@ -49,7 +49,8 @@ package example
 
 func init() {
     var p := &TestPlugin{}
-    pluginmanager.Register("test", p)
+    // 注册插件和插件名字，此处插件名字为example
+    pluginmanager.Register("example", p)
 }
 
 type TestPlugin struct {}
