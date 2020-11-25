@@ -1,0 +1,15 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: HookTemplate
+metadata:
+  name: test
+spec:
+  metrics:
+    - name: webtest
+      count: 3
+      interval: 60s
+      failureLimit: 2
+      successCondition: "asInt(result) < 30"
+      provider:
+        web:
+          url: http://1.1.1.1:9091
+          jsonPath: "{$.age}"
