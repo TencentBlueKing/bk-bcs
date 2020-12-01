@@ -15,6 +15,7 @@ package manager
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	nettypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
@@ -32,14 +33,14 @@ func DirtyCheck() {
 		blog.Errorf("Get driver error in check mode, %s", err.Error())
 		return
 	}
-	hostIP := GetAvailableIP()
-	hostInfo, err := driver.GetHostInfo(hostIP.String())
+	hostIP := util.GetIPAddress()
+	hostInfo, err := driver.GetHostInfo(hostIP)
 	if err != nil {
 		blog.Errorf("Get host info in check mode failed, %s", err.Error())
 		return
 	}
 	if hostInfo.Containers == nil || len(hostInfo.Containers) == 0 {
-		blog.Infof("No active container & ip address in host %s, normal exit", hostIP.String())
+		blog.Infof("No active container & ip address in host %s, normal exit", hostIP)
 		return
 	}
 	client, err := dockerclient.NewClient(defaultContainerSock)
@@ -71,10 +72,10 @@ func DirtyCheck() {
 			blog.Warnf("##container info mismatch warnning, host: %s, ip inst: %s", containerID, ipInst.Container)
 		}
 		ipInfo := &nettypes.IPInfo{}
-		blog.Errorf("Host %s release dirty ip %s in container %s", hostIP.String(), ipInst.IPAddr, containerID)
-		err := driver.ReleaseIPAddr(hostIP.String(), containerID, ipInfo)
+		blog.Errorf("Host %s release dirty ip %s in container %s", hostIP, ipInst.IPAddr, containerID)
+		err := driver.ReleaseIPAddr(hostIP, containerID, ipInfo)
 		if err != nil {
-			blog.Errorf("Host %s release container %s/%s err, %s", hostIP.String(), containerID, ipInst.IPAddr, err.Error())
+			blog.Errorf("Host %s release container %s/%s err, %s", hostIP, containerID, ipInst.IPAddr, err.Error())
 			continue
 		}
 	}

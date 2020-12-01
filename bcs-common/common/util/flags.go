@@ -15,11 +15,10 @@ package util
 
 import (
 	goflag "flag"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"os"
 	"strings"
 
-	//"github.com/golang/glog"
-	"os"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 
 	"github.com/spf13/pflag"
 )

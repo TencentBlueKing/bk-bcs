@@ -25,7 +25,4 @@ type NetManager interface {
 	AddPlugin(name string, plguin NetworkPlugin) error //Add plugin to manager dynamic if necessary
 	SetUpPod(podInfo container.Pod) error              //for setting Pod network interface
 	TearDownPod(podInfo container.Pod) error           //for release pod network resource
-	//todo(developerJim): add more network to pod
-	//SetUpNets(list []string, Pod)
-	//TearDownNets(list, Pod)
 }
