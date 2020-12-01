@@ -15,16 +15,16 @@ package cnm
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"golang.org/x/net/context"
@@ -41,6 +41,7 @@ const (
 )
 
 const (
+	// ContainerStatusAbnormal abnormal definition
 	ContainerStatusAbnormal = 1
 )
 
@@ -100,6 +101,7 @@ func (p *DockerPod) IsHealthy() bool {
 	return p.healthy
 }
 
+//GetContainerTasks get local container task
 func (p *DockerPod) GetContainerTasks() map[string]*container.BcsContainerTask {
 	return p.conTasks
 }
@@ -188,7 +190,7 @@ func (p *DockerPod) Init() error {
 
 	envHost := container.BcsKV{
 		Key:   "BCS_CONTAINER_IP",
-		Value: util.GetIPAddress()[0],
+		Value: util.GetIPAddress(),
 	}
 	p.netTask.Env = append(p.netTask.Env, envHost)
 	//assignment for environments
@@ -289,7 +291,7 @@ func (p *DockerPod) Init() error {
 	}
 	p.cnmIPAddr = info.IPAddress
 	p.netTask.RuntimeConf.Message = "container is starting"
-	p.netTask.RuntimeConf.NodeAddress = util.GetIPAddress()[0]
+	p.netTask.RuntimeConf.NodeAddress = util.GetIPAddress()
 	p.netTask.RuntimeConf.IPAddress = info.IPAddress
 	p.netTask.RuntimeConf.NetworkMode = info.NetworkMode
 	p.runningContainer[p.netTask.RuntimeConf.Name] = p.netTask.RuntimeConf
@@ -310,7 +312,7 @@ func (p *DockerPod) Start() error {
 	//add pod ipaddr to ENV
 	envHost := container.BcsKV{
 		Key:   "BCS_CONTAINER_IP",
-		Value: util.GetIPAddress()[0],
+		Value: util.GetIPAddress(),
 	}
 
 	logs.Infof("docker pod start container...")
@@ -374,7 +376,7 @@ func (p *DockerPod) Start() error {
 			return createErr
 		}
 		task.RuntimeConf.ID = createdInst.ID
-		task.RuntimeConf.NodeAddress = util.GetIPAddress()[0]
+		task.RuntimeConf.NodeAddress = util.GetIPAddress()
 		task.RuntimeConf.IPAddress = p.cnmIPAddr
 		task.RuntimeConf.Status = container.ContainerStatus_CREATED
 		task.RuntimeConf.Message = "container created"
@@ -707,10 +709,12 @@ func (p *DockerPod) copyPortMappings() {
 	}
 }
 
+//GetNetArgs implementation
 func (p *DockerPod) GetNetArgs() [][2]string {
 	return nil
 }
 
+//UpdateResources update CPU or MEM resource in runtime
 func (p *DockerPod) UpdateResources(id string, resource *schedTypes.Resource) error {
 	var exist bool
 	var conTask *container.BcsContainerTask
@@ -736,6 +740,7 @@ func (p *DockerPod) UpdateResources(id string, resource *schedTypes.Resource) er
 	return nil
 }
 
+// CommitImage image commit
 func (p *DockerPod) CommitImage(id, image string) error {
 	return p.conClient.CommitImage(id, image)
 }

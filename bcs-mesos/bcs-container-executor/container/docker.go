@@ -349,17 +349,6 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		hostConfig.Memory = int64(containerTask.Resource.Mem * 1024 * 1024)
 		hostConfig.MemorySwap = int64(containerTask.Resource.Mem * 1024 * 1024)
 	}
-	/*if len(containerTask.Resource.CPUSet) > 0 {
-		//only setting cpu info when cpu request can be met in slave host
-		//cpuList, numaList := util.GetBindingCPUs(int(math.Ceil(containerTask.Resource.Cpus)), int64(containerTask.Resource.Mem))
-		//change int list to string
-		for _, set := range containerTask.Resource.CPUSet {
-			hostConfig.CPUSetCPUs += fmt.Sprintf("%s,", set)
-			hostConfig.CPUSetMEMs
-		}
-		hostConfig.CPUSetCPUs = strings.TrimRight(hostConfig.CPUSetCPUs, "")
-		fmt.Fprintf(os.Stdout, "DEBUG: task(%s) set cpuset(%s)\n", containerTask.Name, hostConfig.CPUSetCPUs)
-	}*/
 
 	if containerTask.LimitResource != nil && containerTask.LimitResource.Cpus > 0 {
 		hostConfig.CPUPeriod = DefaultDockerCpuPeriod
