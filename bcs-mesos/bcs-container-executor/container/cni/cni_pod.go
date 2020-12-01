@@ -16,19 +16,21 @@ package cni
 import (
 	"bytes"
 	"fmt"
-	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
-	bcstypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
+
+	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
+	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
+	exeutil "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	//"github.com/pborman/uuid"
 	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
@@ -241,7 +243,7 @@ func (p *CNIPod) Init() error {
 	}
 
 	if p.cniHostName == "" {
-		p.cniHostName = "pod-" + util.RandomString(12)
+		p.cniHostName = "pod-" + exeutil.RandomString(12)
 	}
 
 	p.netTask = &container.BcsContainerTask{
@@ -441,7 +443,7 @@ func (p *CNIPod) Start() error {
 		task.HostName = hostname
 
 		task.RuntimeConf.ID = createInst.ID
-		task.RuntimeConf.NodeAddress = util.GetIPAddress()[0]
+		task.RuntimeConf.NodeAddress = util.GetIPAddress()
 		task.RuntimeConf.IPAddress = p.cniIPAddr
 		task.RuntimeConf.Status = container.ContainerStatus_CREATED
 		task.RuntimeConf.Message = "container created"

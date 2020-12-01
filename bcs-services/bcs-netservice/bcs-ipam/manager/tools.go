@@ -18,15 +18,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource/localdriver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource/netdriver"
-	"net"
 )
 
 var (
-	_, classA, _    = net.ParseCIDR("10.0.0.0/8")
-	_, classA2, _   = net.ParseCIDR("9.0.0.0/8")
-	_, classAa, _   = net.ParseCIDR("100.64.0.0/10")
-	_, classB, _    = net.ParseCIDR("172.16.0.0/12")
-	_, classC, _    = net.ParseCIDR("192.168.0.0/16")
 	defaultDatabase = "/data/bcs/bcs-cni/bin/bcs-ipam.db"
 )
 
@@ -36,32 +30,4 @@ func GetIPDriver() (resource.IPDriver, error) {
 		return localdriver.NewDriver()
 	}
 	return netdriver.NewDriver()
-}
-
-//GetAvailableIP get local host ip address
-func GetAvailableIP() net.IP {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return nil
-	}
-	for _, addr := range addrs {
-		if ip, ok := addr.(*net.IPNet); ok && !ip.IP.IsLoopback() && ip.IP.To4() != nil {
-			if classA.Contains(ip.IP) {
-				return ip.IP
-			}
-			if classA2.Contains(ip.IP) {
-				return ip.IP
-			}
-			if classAa.Contains(ip.IP) {
-				return ip.IP
-			}
-			if classB.Contains(ip.IP) {
-				return ip.IP
-			}
-			if classC.Contains(ip.IP) {
-				return ip.IP
-			}
-		}
-	}
-	return nil
 }

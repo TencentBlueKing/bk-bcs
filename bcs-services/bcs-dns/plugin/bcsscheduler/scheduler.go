@@ -48,6 +48,7 @@ var errInvalidRequest = errors.New("invalid query name")
 
 //var errZoneMisMatch = errors.New("zone group dismatch")
 
+// ForwardClusterIpDomainError err
 type ForwardClusterIpDomainError struct {
 	ClusterIP string
 }
@@ -79,7 +80,7 @@ func NewScheduler(config *ConfigItem) *BcsScheduler {
 	} else {
 		hostname, _ := os.Hostname()
 		node := &bcstypes.ServerInfo{
-			IP:         util.GetIPAddress()[0],
+			IP:         util.GetIPAddress(),
 			Port:       uint(53),
 			Pid:        os.Getpid(),
 			HostName:   hostname,
