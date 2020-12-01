@@ -259,7 +259,7 @@ func (executor *BcsExecutor) frameworkMessageCommandTask(msg *bcstype.RequestCom
 **/
 
 const (
-	defaultHttpRequestTimeout = 120
+	defaultHTTPRequestTimeout = 120
 )
 
 //dataClassRemote handle bcs_remote message, download data from remote http url, push to created container
@@ -317,7 +317,7 @@ func (executor *BcsExecutor) downloadRemoteFile(remote *bcstype.Msg_Remote) (*bc
 
 	//download content from remote http url.
 	client := http.Client{
-		Timeout: time.Duration(defaultHttpRequestTimeout * time.Second),
+		Timeout: time.Duration(defaultHTTPRequestTimeout * time.Second),
 	}
 	request, reqErr := http.NewRequest("GET", *remote.From, nil)
 	if reqErr != nil {
