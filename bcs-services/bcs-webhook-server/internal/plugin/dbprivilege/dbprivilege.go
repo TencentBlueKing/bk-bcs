@@ -69,6 +69,7 @@ func (h *Hooker) Init(configFilePath string) error {
 		blog.Errorf("read db privilege config file %s failed, err %s", configFilePath, err.Error())
 		return fmt.Errorf("read db privilege config file %s failed, err %s", configFilePath, err.Error())
 	}
+	h.opt = &DbPrivOptions{}
 	if err = json.Unmarshal(fileBytes, h.opt); err != nil {
 		blog.Errorf("decode db privilege config failed, err %s", err.Error())
 		return fmt.Errorf("decode db privilege config failed, err %s", err.Error())

@@ -44,7 +44,7 @@ func (h *Hooker) Init(configFilePath string) error {
 		blog.Errorf("load template file %s failed, err %s", configFilePath, err.Error())
 		return fmt.Errorf("load template file %s failed, err %s", configFilePath, err.Error())
 	}
-
+	h.temContainers = make([]corev1.Container, 0)
 	err = json.Unmarshal(fileBytes, &h.temContainers)
 	if err != nil {
 		blog.Errorf("decode template file %s failed, err %s", configFilePath, err.Error())

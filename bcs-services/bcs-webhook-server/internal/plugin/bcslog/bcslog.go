@@ -55,6 +55,7 @@ func (h *Hooker) Init(configFilePath string) error {
 		blog.Errorf("read bcs log config file %s failed, err %s", configFilePath, err.Error())
 		return fmt.Errorf("read bcs log config file %s failed, err %s", configFilePath, err.Error())
 	}
+	h.opt = &Options{}
 	if err = json.Unmarshal(fileBytes, h.opt); err != nil {
 		blog.Errorf("decode bcs log config file %s failed, err %s", configFilePath, err.Error())
 		return fmt.Errorf("decode bcs log config file %s failed, err %s", configFilePath, err.Error())
