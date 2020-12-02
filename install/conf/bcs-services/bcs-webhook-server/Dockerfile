@@ -4,7 +4,7 @@ FROM centos:7
 RUN yum install -y gettext
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
-RUN mkdir -p /data/bcs/bcs-webhook-server
+RUN mkdir -p /data/bcs/bcs-webhook-server/plugindirs
 
 ADD bcs-webhook-server /data/bcs/bcs-webhook-server/
 ADD container-start.sh /data/bcs/bcs-webhook-server/
