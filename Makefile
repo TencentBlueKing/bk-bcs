@@ -122,8 +122,7 @@ storage:pre
 	cp -R ./install/conf/bcs-services/bcs-storage ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-storage/bcs-storage ./bcs-services/bcs-storage/storage.go
 
-#loadbalance:pre
-loadbalance:
+loadbalance:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-loadbalance/bcs-loadbalance ./bcs-services/bcs-loadbalance/main.go
 	cp -r ./bcs-services/bcs-loadbalance/image/* ${PACKAGEPATH}/bcs-services/bcs-loadbalance/
 
