@@ -63,6 +63,9 @@ func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if !isPod {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
+	if req.Operation != v1beta1.Create {
+		return &v1beta1.AdmissionResponse{Allowed: true}
+	}
 	pod := &corev1.Pod{}
 	if err := json.Unmarshal(req.Object.Raw, pod); err != nil {
 		blog.Errorf("cannot decode raw object %s to pod, err %s", string(req.Object.Raw), err.Error())

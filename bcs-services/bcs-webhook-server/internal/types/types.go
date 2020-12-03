@@ -12,6 +12,34 @@
 
 package types
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	// NamespaceBcs bcs system namespace
+	NamespaceBcs = "bcs-system"
+	// BcsWebhookAnnotationInjectKey inject flag for object in ignored namespaces
+	BcsWebhookAnnotationInjectKey = "webhook.inject.bkbcs.tencent.com"
+)
+
+// IgnoredNamespaces namespaces to ignore inject
+var IgnoredNamespaces = []string{
+	metav1.NamespaceSystem,
+	metav1.NamespacePublic,
+	NamespaceBcs,
+}
+
+// IsIgnoredNamespace see if ns should be ignored
+func IsIgnoredNamespace(ns string) bool {
+	for _, ins := range IgnoredNamespaces {
+		if ns == ins {
+			return true
+		}
+	}
+	return false
+}
+
 // PatchOperation struct for k8s webhook patch
 type PatchOperation struct {
 	Op    string      `json:"op"`

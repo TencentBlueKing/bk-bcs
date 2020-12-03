@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/api/admission/v1beta1"
 	k8sunstruct "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -97,25 +98,54 @@ func (ws *WebhookServer) K8sHook(w http.ResponseWriter, r *http.Request) {
 func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
 	plugins := ws.PluginMgr.GetKubernetesPlugins()
+	pluginNames := ws.PluginMgr.GetKubernetesPluginNames()
+
+	runtimeObj := req.Object
+	if req.Operation == v1beta1.Delete {
+		runtimeObj = req.OldObject
+	}
+	// decode object bytes
+	tmpUnstruct := &k8sunstruct.Unstructured{}
+	if err := json.Unmarshal(runtimeObj.Raw, &tmpUnstruct); err != nil {
+		blog.Errorf("decode %s to unstructured object failed, err %s", string(runtimeObj.Raw), err.Error())
+		return pluginutil.ToAdmissionResponse(
+			fmt.Errorf("decode data to unstructured object failed, err %s", err.Error()))
+	}
+	tmpUnstructNs := tmpUnstruct.GetNamespace()
+	// Deal with potential empty fields, e.g., when the pod is created by a deployment
+	if tmpUnstructNs == "" {
+		tmpUnstructNs = req.Namespace
+	}
+
+	// check if object in ignore namespaces should be hooked
+	if types.IsIgnoredNamespace(tmpUnstructNs) {
+		if value, ok := tmpUnstruct.GetAnnotations()[types.BcsWebhookAnnotationInjectKey]; ok {
+			switch value {
+			default:
+				blog.V(5).Infof("ignored object %s/%s", tmpUnstruct.GetName(), tmpUnstruct.GetNamespace())
+				return &v1beta1.AdmissionResponse{
+					Allowed: true,
+				}
+			case "y", "yes", "true", "on":
+				// do nothing, let it go
+			}
+		}
+	}
+	blog.Infof("object %s/%s hooked", tmpUnstruct.GetName(), tmpUnstruct.GetNamespace())
 
 	var patches []types.PatchOperation
 	// traverse each plugins
-	for _, p := range plugins {
+	for index, p := range plugins {
 		annotationKey := p.AnnotationKey()
 		// case 1: if plugin annotation key is empty, always pass object to plugin
 		// case 2: if plugin annotation key is not empty, pass object to plugin if the object has the annotation key
 		if len(annotationKey) != 0 {
-			tmpObject := &k8sunstruct.Unstructured{}
-			if err := json.Unmarshal(req.Object.Raw, &tmpObject); err != nil {
-				blog.Errorf("decode %s to unstructured object failed, err %s", string(req.Object.Raw), err.Error())
-				return pluginutil.ToAdmissionResponse(
-					fmt.Errorf("decode data to unstructured object failed, err %s", err.Error()))
-			}
-			tmpAnnotations := tmpObject.GetAnnotations()
-			if _, ok := tmpAnnotations[annotationKey]; !ok {
+			if _, ok := tmpUnstruct.GetAnnotations()[annotationKey]; !ok {
 				continue
 			}
 		}
+		blog.Infof("object %s/%s hooked by plugin %s",
+			tmpUnstruct.GetName(), tmpUnstruct.GetNamespace(), pluginNames[index])
 		// do webhook
 		tmpResponse := p.Handle(ar)
 		// when one plugin is not allowed, just return response
@@ -131,6 +161,20 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 					fmt.Errorf("decode plugin patches failed, err %s", err.Error()))
 			}
 			patches = append(patches, newPatches...)
+			// change the input for next plugin
+			patchObj, err := jsonpatch.DecodePatch(tmpResponse.Patch)
+			if err != nil {
+				blog.Errorf("decode patch failed, err %s", err.Error())
+				return pluginutil.ToAdmissionResponse(
+					fmt.Errorf("decode patch failed, err %s", err.Error()))
+			}
+			modified, err := patchObj.Apply(req.Object.Raw)
+			if err != nil {
+				blog.Errorf("apply patch failed, err %s", err.Error())
+				return pluginutil.ToAdmissionResponse(
+					fmt.Errorf("apply patch failed, err %s", err.Error()))
+			}
+			req.Object.Raw = modified
 		}
 	}
 	patchesBytes, err := json.Marshal(patches)
