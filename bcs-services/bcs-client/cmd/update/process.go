@@ -18,7 +18,7 @@ import (
 	"net/url"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 )
 
 func updateProcess(c *utils.ClientContext) error {
@@ -41,7 +41,7 @@ func updateProcess(c *utils.ClientContext) error {
 		return fmt.Errorf("update process error: instances must be a positive number")
 	}
 
-	var extraValue url.Values
+	extraValue := url.Values{}
 	extraValue.Add("instances", fmt.Sprintf("%d", instances))
 
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
