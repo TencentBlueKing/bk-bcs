@@ -112,9 +112,14 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 			fmt.Errorf("decode data to unstructured object failed, err %s", err.Error()))
 	}
 	tmpUnstructNs := tmpUnstruct.GetNamespace()
+	tmpUnstructName := tmpUnstruct.GetName()
+	tmpUnstructKind := tmpUnstruct.GetKind()
 	// Deal with potential empty fields, e.g., when the pod is created by a deployment
-	if tmpUnstructNs == "" {
+	if len(tmpUnstructNs) == 0 {
 		tmpUnstructNs = req.Namespace
+	}
+	if len(tmpUnstructName) == 0 {
+		tmpUnstructName = string(tmpUnstruct.GetUID())
 	}
 
 	// check if object in ignore namespaces should be hooked
@@ -134,7 +139,7 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 			// do nothing, let it go
 		}
 	}
-	blog.Infof("object %s/%s hooked", tmpUnstruct.GetName(), tmpUnstruct.GetNamespace())
+	blog.Infof("%s %s/%s hooked", tmpUnstructKind, tmpUnstructName, tmpUnstructNs)
 
 	var patches []types.PatchOperation
 	// traverse each plugins
@@ -147,8 +152,8 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 				continue
 			}
 		}
-		blog.Infof("object %s/%s hooked by plugin %s",
-			tmpUnstruct.GetName(), tmpUnstruct.GetNamespace(), pluginNames[index])
+		blog.Infof("%s %s/%s hooked by plugin %s",
+			tmpUnstructKind, tmpUnstructName, tmpUnstructNs, pluginNames[index])
 		// do webhook
 		tmpResponse := p.Handle(ar)
 		// when one plugin is not allowed, just return response
