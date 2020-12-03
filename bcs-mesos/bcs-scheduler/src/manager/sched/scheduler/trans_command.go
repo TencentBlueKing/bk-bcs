@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
+// RunCommand run specified command in taskgroup
 func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 	if len(command.Status.Taskgroups) == 0 {
 		return
@@ -29,16 +30,16 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 	s.store.LockCommand(command.Id)
 	defer s.store.UnLockCommand(command.Id)
 	//lock application
-	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(command.Status.Taskgroups[0].TaskgroupId)
-	s.store.LockApplication(runAs + "." + appId)
-	defer s.store.UnLockApplication(runAs + "." + appId)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(command.Status.Taskgroups[0].TaskgroupId)
+	s.store.LockApplication(runAs + "." + appID)
+	defer s.store.UnLockApplication(runAs + "." + appID)
 
 	blog.Info("begin send command(%s)", command.Id)
 	for _, taskGroup := range command.Status.Taskgroups {
-		taskGroupId := taskGroup.TaskgroupId
-		taskGroupInfo, err := s.store.FetchTaskGroup(taskGroupId)
+		taskGroupID := taskGroup.TaskgroupId
+		taskGroupInfo, err := s.store.FetchTaskGroup(taskGroupID)
 		if err != nil {
-			blog.Warn("get taskgroup(%s) to do command err:%s", taskGroupId, err.Error())
+			blog.Warn("get taskgroup(%s) to do command err:%s", taskGroupID, err.Error())
 			for _, task := range taskGroup.Tasks {
 				task.Status = commtypes.TaskCommandStatusFailed
 				task.Message = err.Error()
@@ -47,16 +48,16 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 		}
 
 		for _, task := range taskGroup.Tasks {
-			taskId := task.TaskId
-			taskInfo, err := s.store.FetchTask(taskId)
+			taskID := task.TaskId
+			taskInfo, err := s.store.FetchTask(taskID)
 			if err != nil {
-				blog.Warn("get task(%s) to do command err:%s", taskId, err.Error())
+				blog.Warn("get task(%s) to do command err:%s", taskID, err.Error())
 				task.Status = commtypes.TaskCommandStatusFailed
 				task.Message = err.Error()
 				continue
 			}
 			if taskInfo.Status != types.TASK_STATUS_RUNNING {
-				blog.Warn("task(%s) not in runnning, cannot send command", taskId)
+				blog.Warn("task(%s) not in runnning, cannot send command", taskID)
 				task.Status = commtypes.TaskCommandStatusFailed
 				task.Message = "task not in running status"
 				continue
@@ -64,7 +65,7 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 
 			msg := &types.RequestCommandTask{
 				ID:         command.Id,
-				TaskId:     taskId,
+				TaskId:     taskID,
 				Env:        command.Spec.Env,
 				Cmd:        command.Spec.Command,
 				User:       command.Spec.User,
@@ -77,7 +78,7 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 			}
 			_, err = s.SendBcsMessage(taskGroupInfo, bcsMsg)
 			if err != nil {
-				blog.Warn("send command to task(%s) err:%s", taskId, err.Error())
+				blog.Warn("send command to task(%s) err:%s", taskID, err.Error())
 				task.Status = commtypes.TaskCommandStatusFailed
 				task.Message = err.Error()
 				continue
@@ -85,7 +86,7 @@ func (s *Scheduler) RunCommand(command *commtypes.BcsCommandInfo) {
 
 			task.Status = commtypes.TaskCommandStatusRunning
 			task.Message = "command in running"
-			blog.Info("send command(%s) to task(%s)", command.Id, taskId)
+			blog.Info("send command(%s) to task(%s)", command.Id, taskID)
 		}
 	}
 

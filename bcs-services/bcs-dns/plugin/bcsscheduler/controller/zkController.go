@@ -135,6 +135,7 @@ func (ctrl *ZkController) RunController(stopCh <-chan struct{}) error {
 
 	//create resync event for all data
 	tick := time.NewTicker(time.Second * time.Duration(ctrl.resyncperiod))
+	defer tick.Stop()
 	for {
 		select {
 		case <-ctrl.conCxt.Done():

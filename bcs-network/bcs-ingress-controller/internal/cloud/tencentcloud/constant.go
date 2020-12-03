@@ -55,6 +55,9 @@ const (
 	HandlerNameInMetricTencentCloudAPI = "api"
 	// HandlerNameInMetricTencentCloudSDK handler name in metric for tencent cloud sdk
 	HandlerNameInMetricTencentCloudSDK = "sdk"
+
+	// MaxTargetForRegisterEachTime max target number for registering each time
+	MaxTargetForRegisterEachTime = 20
 )
 
 var (

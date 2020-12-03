@@ -26,11 +26,11 @@ func inspectMeshCluster(c *utils.ClientContext) error {
 		return err
 	}
 	meshManager := v1.NewMeshManager(utils.GetClientOption())
-	resp,err := meshManager.ListMeshCluster(&meshmanager.ListMeshClusterReq{Clusterid: c.ClusterID()})
-	if err!=nil {
+	resp, err := meshManager.ListMeshCluster(&meshmanager.ListMeshClusterReq{Clusterid: c.ClusterID()})
+	if err != nil {
 		return err
 	}
-	if resp.ErrCode!=meshmanager.ErrCode_ERROR_OK {
+	if resp.ErrCode != meshmanager.ErrCode_ERROR_OK {
 		return fmt.Errorf("failed to inspect cluster(%s) meshcluster: %s", c.ClusterID(), resp.ErrMsg)
 	}
 	if len(resp.MeshClusters) == 0 {

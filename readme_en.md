@@ -1,6 +1,7 @@
 ![BCS.png](./docs/logo/logo_en.png)
+
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.14.6-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)   
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.18.8-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)
 
 [中文文档](./readme.md)
 
@@ -82,14 +83,13 @@ If you are interested in this project and want to contribute and improve the pro
 [BCS FAQ](https://docs.bk.tencent.com/bcs/Container/FAQ/faq.html)
 [github wiki FAQ](https://github.com/Tencent/bk-bcs/wiki/FAQ)
 
-
 ## Blueking Community
 
-- [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas): BlueKing container SAAS is UI facility for Blueking Container Service, providing convenient container operation.
-- [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
-- [BK-CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
-- [BK-PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
-- [BK-SOPS](https://github.com/Tencent/bk-sops):Standard Operations (SOPS) is a system for task scheduling and execution through a visual graphical interface. It is a lightweight in the BlueKing system scheduling SaaS products.
+* [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas): BlueKing container SAAS is UI facility for Blueking Container Service, providing convenient container operation.
+* [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
+* [BK-CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
+* [BK-PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
+* [BK-SOPS](https://github.com/Tencent/bk-sops):Standard Operations (SOPS) is a system for task scheduling and execution through a visual graphical interface. It is a lightweight in the BlueKing system scheduling SaaS products.
 
 ## License
 

@@ -38,7 +38,11 @@ type KubeRegistry struct {
 }
 
 // NewKubeRegistry create new registry for clb ingress
-func NewKubeRegistry(clbname string, informer informerv1.ClbIngressInformer, lister listerv1.ClbIngressLister, client ingressClientV1.ClbV1Interface) (clbingress.Registry, error) {
+func NewKubeRegistry(
+	clbname string,
+	informer informerv1.ClbIngressInformer,
+	lister listerv1.ClbIngressLister,
+	client ingressClientV1.ClbV1Interface) (clbingress.Registry, error) {
 
 	return &KubeRegistry{
 		clbName:  clbname,
@@ -71,7 +75,8 @@ func (kr *KubeRegistry) ListIngresses() ([]*ingressv1.ClbIngress, error) {
 		blog.V(5).Infof("index: %d ingress for clb %s\n ingress: %v", index, kr.clbName, ingress)
 	}
 	// get ingresses for all clb
-	requirementIngressForAll, err := labels.NewRequirement("bmsf.tencent.com/clbname", selection.Equals, []string{"all"})
+	requirementIngressForAll, err := labels.NewRequirement(
+		"bmsf.tencent.com/clbname", selection.Equals, []string{"all"})
 	if err != nil {
 		return nil, fmt.Errorf("create requirement of clb ingress for all clb failed, err %s", err.Error())
 	}

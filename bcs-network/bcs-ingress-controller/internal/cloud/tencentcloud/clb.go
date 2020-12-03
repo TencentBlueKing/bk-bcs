@@ -98,11 +98,7 @@ func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listene
 	if err != nil {
 		if errors.Is(err, cloud.ErrListenerNotFound) {
 			// to create listener
-			listenerID, err := c.createListner(region, listener)
-			if err != nil {
-				return "", err
-			}
-			return listenerID, nil
+			return c.createListner(region, listener)
 		}
 		return "", err
 	}

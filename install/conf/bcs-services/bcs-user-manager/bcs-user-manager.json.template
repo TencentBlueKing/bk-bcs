@@ -27,5 +27,12 @@
     "secret_key": "${tkeSecretKey}",
     "ccs_host": "${tkeCcsHost}",
     "ccs_path": "${tkeCcsPath}"
+  },
+  "etcdRegistry": {
+    "etcd_feature": ${etcdFeature},
+    "etcd_address": "${etcdAddress}",
+    "etcd_ca": "${etcdCAFile}",
+    "etcd_cert": "${etcdCertFile}",
+    "etcd_key": "${etcdKeyFile}"
   }
 }

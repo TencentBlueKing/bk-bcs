@@ -211,7 +211,7 @@ func (bcs *BcsScheduler) selfDNSRecord() dns.A {
 		return self
 	}
 	self.Hdr.Name = defaultNSName
-	self.A = net.ParseIP(addrList[0])
+	self.A = net.ParseIP(addrList)
 	return self
 }
 

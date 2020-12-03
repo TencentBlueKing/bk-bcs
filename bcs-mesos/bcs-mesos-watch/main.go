@@ -15,13 +15,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/app"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"os"
-	"runtime"
 )
 
 var (
@@ -61,6 +63,8 @@ func setCfg(op *MesosWatchOptions) {
 	if len(cfg.NetServiceZK) == 0 {
 		cfg.NetServiceZK = cfg.RegDiscvSvr
 	}
+	//etcd registry feature
+	cfg.Etcd = op.Etcd
 }
 
 func main() {
@@ -109,4 +113,6 @@ type MesosWatchOptions struct {
 	// NetServiceZK is zookeeper address config for netservice discovery,
 	// reuse RegDiscvSvr by default.
 	NetServiceZK string `json:"netservice_zookeeper" value:"" usage:"netservice discovery zookeeper address"`
+
+	Etcd registry.CMDOptions `json:"etcdRegistry"`
 }

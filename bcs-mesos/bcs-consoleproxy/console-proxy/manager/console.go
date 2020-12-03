@@ -146,6 +146,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	//})
 
 	ticker := time.NewTicker(pingPeriod)
+	defer ticker.Stop()
 	go func() {
 		for {
 			select {

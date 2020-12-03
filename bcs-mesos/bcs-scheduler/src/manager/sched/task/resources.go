@@ -28,7 +28,7 @@ func createScalarResource(name string, value float64) *mesos.Resource {
 	}
 }
 
-// Build mesos resource format
+// BuildResources Build mesos resource format
 func BuildResources(r *types.Resource) []*mesos.Resource {
 	var resources = []*mesos.Resource{}
 

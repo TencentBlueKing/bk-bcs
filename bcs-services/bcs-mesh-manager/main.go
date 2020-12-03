@@ -158,7 +158,7 @@ func main() {
 		service.Registry(etcd.NewRegistry(regOption)),
 		grpc.WithTLS(conf.TLSConf),
 		service.RegisterInterval(time.Second*30),
-		service.RegisterTTL(time.Second*35),
+		service.RegisterTTL(time.Second*40),
 	)
 	// Initialise service
 	grpcSvc.Init()

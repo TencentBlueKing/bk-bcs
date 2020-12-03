@@ -31,12 +31,18 @@ import (
 
 // IngressConverter listener generator
 type IngressConverter struct {
-	defaultRegion    string
-	cli              client.Client
+	// default cloud region for ingress converter
+	defaultRegion string
+	// crd client
+	cli client.Client
+	// ingress validater
 	ingressValidater cloud.Validater
-	lbClient         cloud.LoadBalance
-	lbIDCache        *gocache.Cache
-	lbNameCache      *gocache.Cache
+	// cloud interface for controlling cloud loadbalance
+	lbClient cloud.LoadBalance
+	// cache for cloud loadbalance id
+	lbIDCache *gocache.Cache
+	// cache for cloud loadbalance name
+	lbNameCache *gocache.Cache
 }
 
 // NewIngressConverter create ingress generator
@@ -47,15 +53,19 @@ func NewIngressConverter(
 		cli:              cli,
 		ingressValidater: ingressValidater,
 		lbClient:         lbClient,
-		lbIDCache:        gocache.New(60*time.Minute, 120*time.Minute),
-		lbNameCache:      gocache.New(60*time.Minute, 120*time.Minute),
+		// set cache expire time
+		lbIDCache:   gocache.New(60*time.Minute, 120*time.Minute),
+		lbNameCache: gocache.New(60*time.Minute, 120*time.Minute),
 	}
 }
 
+// get cloud loadbalance info by cloud loadbalance id pair
+// regionIDPair "ap-xxxxx:lb-xxxxxx"
 func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionIDPair, ":")
+	// only has id
 	if len(strs) == 1 {
 		obj, ok := g.lbIDCache.Get(g.defaultRegion + ":" + strs[0])
 		if ok {
@@ -69,6 +79,7 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 			return nil, err
 		}
 	} else if len(strs) == 2 {
+		// region and id
 		obj, ok := g.lbIDCache.Get(regionIDPair)
 		if ok {
 			if lbObj, ok = obj.(*cloud.LoadBalanceObject); !ok {
@@ -81,6 +92,7 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 			return nil, err
 		}
 	} else {
+		// invalid format
 		blog.Warnf("lbid %s invalid", regionIDPair)
 		return nil, fmt.Errorf("lbid %s invalid", regionIDPair)
 	}
@@ -89,10 +101,13 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 	return lbObj, nil
 }
 
+// get cloud loadbalance info by cloud loadbalance name pair
+// regionNamePair "ap-xxxxx:lbname"
 func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionNamePair, ":")
+	// only has name
 	if len(strs) == 1 {
 		obj, ok := g.lbNameCache.Get(g.defaultRegion + ":" + strs[0])
 		if ok {
@@ -106,6 +121,7 @@ func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.L
 			return nil, err
 		}
 	} else if len(strs) == 2 {
+		// region and name
 		obj, ok := g.lbNameCache.Get(regionNamePair)
 		if ok {
 			if lbObj, ok = obj.(*cloud.LoadBalanceObject); !ok {
@@ -118,6 +134,7 @@ func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.L
 			return nil, err
 		}
 	} else {
+		// invalid format
 		blog.Warnf("lbname %s invalid", regionNamePair)
 		return nil, fmt.Errorf("lbname %s invalid", regionNamePair)
 	}
@@ -126,7 +143,7 @@ func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.L
 	return lbObj, nil
 }
 
-// get ingress loadbalance objects
+// get ingress loadbalance objects by annotations
 func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.Ingress) (
 	[]*cloud.LoadBalanceObject, error) {
 	var lbs []*cloud.LoadBalanceObject
@@ -136,7 +153,8 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 		blog.Warnf("ingress %+v is not associated with lb instance")
 		return nil, nil
 	}
-
+	// check lb id first
+	// if there are both ids and names, ids is effective
 	if idOk {
 		lbIDs := strings.Split(lbIDStrs, ",")
 		for _, regionIDPair := range lbIDs {
@@ -179,9 +197,9 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	}
 
 	for _, lbObj := range lbObjs {
-		isConflict, err := g.checkConflicts(lbObj.LbID, ingress)
-		if err != nil {
-			return err
+		isConflict, inErr := g.checkConflicts(lbObj.LbID, ingress)
+		if inErr != nil {
+			return inErr
 		}
 		if isConflict {
 			blog.Errorf("ingress %+v is conflict with existed listeners", ingress)
@@ -193,19 +211,19 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	var generatedSegListeners []networkextensionv1.Listener
 	for _, rule := range ingress.Spec.Rules {
 		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &rule)
-		listeners, err := ruleConverter.DoConvert()
-		if err != nil {
-			blog.Errorf("convert rule %+v failed, err %s", rule, err.Error())
-			return fmt.Errorf("convert rule %+v failed, err %s", rule, err.Error())
+		listeners, inErr := ruleConverter.DoConvert()
+		if inErr != nil {
+			blog.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
+			return fmt.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
 		}
 		generatedListeners = append(generatedListeners, listeners...)
 	}
 	for _, mapping := range ingress.Spec.PortMappings {
 		mappingConverter := NewMappingConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping)
-		listeners, err := mappingConverter.DoConvert()
-		if err != nil {
-			blog.Errorf("convert mapping %+v failed, err %s", mapping, err.Error())
-			return fmt.Errorf("convert mapping %+v failed, err %s", mapping, err.Error())
+		listeners, inErr := mappingConverter.DoConvert()
+		if inErr != nil {
+			blog.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())
+			return fmt.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())
 		}
 		// if ignore segment, disable segment feature;
 		// if segment length is not set or equals to 1, disable segment feature;

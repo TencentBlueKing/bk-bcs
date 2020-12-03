@@ -31,7 +31,7 @@ type PrometheusControllerOption struct {
 	ClusterZk            string   `json:"cluster_zookeeper" value:"" usage:"mesos cluster zookeeper"`
 	CadvisorPort         int      `json:"cadvisor_port" value:"" usage:"node cadvisor port"`
 	NodeExporterPort     int      `json:"node_exporter_port" value:"" usage:"node exporter port"`
-	ClusterId            string   `json:"clusterid" value:"" usage:"mesos clusterid"`
+	ClusterID            string   `json:"clusterid" value:"" usage:"mesos clusterid"`
 	PromFilePrefix       string   `json:"prom_file_prefix" value:"" usage:"prometheus service discovery file prefix"`
 	EnableMesos          bool     `json:"enable_mesos" value:"true" usage:"enable mesos prometheus service discovery"`
 	EnableService        bool     `json:"enable_service" value:"true" usage:"enable service prometheus service discovery"`

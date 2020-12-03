@@ -32,7 +32,7 @@ func deleteMeshCluster(c *utils.ClientContext) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete cluster(%s) meshcluster: %v", c.ClusterID(), err)
 	}
-	if resp.ErrCode!=meshmanager.ErrCode_ERROR_OK {
+	if resp.ErrCode != meshmanager.ErrCode_ERROR_OK {
 		return fmt.Errorf("failed to delete cluster(%s) meshcluster: %s", c.ClusterID(), resp.ErrMsg)
 	}
 	fmt.Printf("success to delete meshcluster\n")

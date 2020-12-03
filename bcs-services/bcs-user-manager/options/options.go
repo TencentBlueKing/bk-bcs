@@ -15,8 +15,10 @@ package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
+// UserManagerOptions cmd option for user-manager
 type UserManagerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -32,9 +34,11 @@ type UserManagerOptions struct {
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
 	TKE             TKEOptions      `json:"tke"`
 	PeerToken       string          `json:"peer_token" value:"" usage:"peer token to authorize with each other, only used to websocket peer"`
+	//go-micro etcd registry feature support
+	Etcd registry.CMDOptions `json:"etcdRegistry"`
 }
 
-// tke api option
+//TKEOptions tke api option
 type TKEOptions struct {
 	SecretId  string `json:"secret_id" value:"" usage:"tke user account secret id"`
 	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`
@@ -42,6 +46,7 @@ type TKEOptions struct {
 	CcsPath   string `json:"ccs_path" value:"" usage:"tke ccs path"`
 }
 
+// BootStrapUser system admin user
 type BootStrapUser struct {
 	Name     string `json:"name"`
 	UserType string `json:"user_type" usage:"optional type: admin, saas, plain"`

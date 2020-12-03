@@ -4,7 +4,6 @@ go 1.14
 
 replace (
 	github.com/Tencent/bk-bcs => ../../
-	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager => ./
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0

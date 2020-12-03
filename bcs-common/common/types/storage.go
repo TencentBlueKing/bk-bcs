@@ -16,6 +16,8 @@ package types
 import (
 	"encoding/base64"
 	"encoding/json"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 )
 
@@ -122,6 +124,7 @@ type BcsStorageRenderIf struct {
 	User string `json:"user"`
 }
 
+// Gen generate string
 func (render *BcsStorageRenderIf) Gen() (r string, err error) {
 	s, err := json.Marshal(render)
 	if err != nil {
@@ -130,6 +133,7 @@ func (render *BcsStorageRenderIf) Gen() (r string, err error) {
 	return base64.StdEncoding.EncodeToString(s), nil
 }
 
+// GetData get data
 func (render *BcsStorageRenderIf) GetData() (dc *DeployConfig, err error) {
 	var tmp []byte
 	if err = codec.EncJson(render.Data, &tmp); err != nil {
@@ -159,19 +163,36 @@ type BcsStorageMetricIf struct {
 	Data interface{} `json:"data"`
 }
 
-// BcsStorageClusterSettingsIf define storage cluster-ip relationship interface data interaction
+// BcsStorageClusterRelationIf define storage cluster-ip relationship interface data interaction
 type BcsStorageClusterRelationIf struct {
 	Ips []string `json:"ips"`
 }
 
-// BcsHostIf define storage set host config interface data interaction
+// BcsStorageHostIf define storage set host config interface data interaction
 type BcsStorageHostIf struct {
 	Ip        string      `json:"ip"`
 	ClusterId string      `json:"clusterId"`
 	Data      interface{} `json:"data"`
 }
 
-// BcsStableVersionIf define storage stableVersion interface data interaction
+// BcsStorageStableVersionIf define storage stableVersion interface data interaction
 type BcsStorageStableVersionIf struct {
 	Version string `json:"version"`
+}
+
+// WatchOptions watch options
+type WatchOptions struct {
+	// Only watch the node itself, including children added, children removed and node value change.
+	// Will not receive existing children's event.
+	SelfOnly bool `json:"selfOnly"`
+
+	// Max time of events will received. Watch will be ended after the last event. 0 for infinity.
+	MaxEvents uint `json:"maxEvents"`
+
+	// The max waiting time of each event. Watch will be ended after timeout. 0 for no limit.
+	Timeout time.Duration `json:"timeout"`
+
+	// The value-change event will be checked if it's different from last status. If not then this event
+	// will be ignored. And it will not trigger timeout reset.
+	MustDiff string `json:"mustDiff"`
 }

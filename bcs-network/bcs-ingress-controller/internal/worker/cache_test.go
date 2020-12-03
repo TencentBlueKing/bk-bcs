@@ -31,6 +31,7 @@ var (
 	}
 )
 
+// TestEventCacheCreate test cache create function
 func TestEventCacheCreate(t *testing.T) {
 	cache := NewEventCache()
 	cache.Set("event1", &event1)
@@ -44,6 +45,7 @@ func TestEventCacheCreate(t *testing.T) {
 	}
 }
 
+// TestEventCacheList test cache list function
 func TestEventCacheList(t *testing.T) {
 	cache := NewEventCache()
 	cache.Set("event1", &event1)
@@ -54,6 +56,7 @@ func TestEventCacheList(t *testing.T) {
 	}
 }
 
+// TestEventCacheDelete test cache delete function
 func TestEventCacheDelete(t *testing.T) {
 	cache := NewEventCache()
 	cache.Set("event1", &event1)
@@ -77,6 +80,7 @@ func TestEventCacheDelete(t *testing.T) {
 	}
 }
 
+// TestEventCacheDrain test cache drain function
 func TestEventCacheDrain(t *testing.T) {
 	cache := NewEventCache()
 	cache.Set("event1", &event1)

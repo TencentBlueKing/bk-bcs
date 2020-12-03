@@ -15,21 +15,24 @@ package controller
 
 import (
 	"encoding/json"
+	"os"
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/discovery"
-	"os"
-	"strings"
 )
 
 const (
+	// ServiceMonitorModule name
 	ServiceMonitorModule = "ServiceMonitor"
 )
 
+// PrometheusController controller for prometheus service discovery
 type PrometheusController struct {
 	promFilePrefix string
-	clusterId      string
+	clusterID      string
 	conf           *config.Config
 
 	discoverys     map[string]discovery.Discovery
@@ -39,11 +42,11 @@ type PrometheusController struct {
 	serviceMonitor string
 }
 
-// new prometheus controller
+// NewPrometheusController new prometheus controller
 func NewPrometheusController(conf *config.Config) *PrometheusController {
 	prom := &PrometheusController{
 		conf:           conf,
-		clusterId:      conf.ClusterId,
+		clusterID:      conf.ClusterID,
 		promFilePrefix: conf.PromFilePrefix,
 		discoverys:     make(map[string]discovery.Discovery),
 		mesosModules: []string{commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH, commtypes.BCS_MODULE_MESOSAPISERVER,
@@ -62,7 +65,7 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 	return prom
 }
 
-// start to work update prometheus sd config
+// Start to work update prometheus sd config
 func (prom *PrometheusController) Start() error {
 	//init bcs mesos module discovery
 	if prom.conf.EnableMesos {
@@ -148,7 +151,7 @@ func (prom *PrometheusController) Start() error {
 	return nil
 }
 
-func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.DiscoveryInfo) {
+func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Info) {
 	blog.Infof("discovery %s service discovery config changed", dInfo.Module)
 	disc, ok := prom.discoverys[dInfo.Module]
 	if !ok {
@@ -158,6 +161,11 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Discovery
 
 	sdConfig, err := disc.GetPrometheusSdConfig(dInfo.Key)
 	if err != nil {
+		//if serviceMonitor Not Found, then delete the specify config file
+		if strings.Contains(err.Error(), "Not Found") {
+			prom.deletePrometheusConfigFile(dInfo)
+			return
+		}
 		blog.Errorf("discovery %s get prometheus service discovery config error %s", dInfo.Key, err.Error())
 		return
 	}
@@ -182,4 +190,19 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Discovery
 	}
 
 	blog.Infof("discovery %s write config file %s success", dInfo.Key, disc.GetPromSdConfigFile(dInfo.Key))
+}
+
+func (prom *PrometheusController) deletePrometheusConfigFile(dInfo discovery.Info) {
+	disc, ok := prom.discoverys[dInfo.Module]
+	if !ok {
+		blog.Errorf("not found discovery %s", dInfo.Module)
+		return
+	}
+	cFile := disc.GetPromSdConfigFile(dInfo.Key)
+	err := os.Remove(cFile)
+	if err != nil {
+		blog.Errorf("remove config file(%s) error %s", cFile, err.Error())
+		return
+	}
+	blog.Infof("remove config file(%s) success", cFile)
 }

@@ -16,19 +16,21 @@ package scheduler
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
+	"strconv"
+	"sync"
+	"time"
+
 	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"runtime"
-	"strconv"
-	"sync"
-	"time"
 )
 
 const (
+	//MaxEventQueueLength event queue size
 	MaxEventQueueLength = 10240
 )
 
@@ -137,6 +139,7 @@ func (e *bcsEventManager) discvstorage() {
 	blog.Infof("watch storage under (%s: %s), current goroutine num(%d)", e.bcsZk, discvPath, runtime.NumGoroutine())
 
 	tick := time.NewTicker(180 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case <-tick.C:
@@ -187,6 +190,7 @@ func (e *bcsEventManager) discvstorage() {
 func (e *bcsEventManager) handleEventQueue() {
 
 	tick := time.NewTicker(time.Second * 10)
+	defer tick.Stop()
 
 	var err error
 

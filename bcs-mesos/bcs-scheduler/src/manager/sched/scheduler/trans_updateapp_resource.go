@@ -16,14 +16,13 @@
 package scheduler
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"time"
-	/*"encoding/json"
-	"fmt"
-	"net/http"*/)
+)
 
-// The goroutine function for update application quota transaction
+// RunUpdateApplicationResource The goroutine function for update application quota transaction
 // You can create a transaction for update application quota, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
 func (s *Scheduler) RunUpdateApplicationResource(transaction *Transaction) {

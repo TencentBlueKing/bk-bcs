@@ -18,16 +18,17 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	stowatch "github.com/Tencent/bk-bcs/bcs-common/common/storage/watch"
 	btypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/driver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 	"time"
 )
 
 func (cw *ClusterWatcher) dynamicManager() {
 	syncTick := time.NewTicker(30 * time.Second)
+	defer syncTick.Stop()
 	ctx, cancel := context.WithCancel(cw.ctx)
 	cw.syncDynamic()
 	go cw.watchDynamic(ctx)
@@ -35,17 +36,17 @@ func (cw *ClusterWatcher) dynamicManager() {
 	for {
 		select {
 		case <-cw.ctx.Done():
-			blog.Warnf("metric watching cluster manager shut down: %s", cw.clusterId)
+			blog.Warnf("metric watching cluster manager shut down: %s", cw.clusterID)
 			cancel()
 			return
 		case <-syncTick.C:
 			cw.syncDynamic()
 		case event := <-cw.dynamicEvent:
-			if event == operator.EventWatchBreak {
+			if event == stowatch.EventWatchBreak {
 				cancel()
 
 				wait := time.Duration(5)
-				blog.Infof("dynamic-cluster-sync(%s) will reconnect in %d seconds", cw.clusterId, wait)
+				blog.Infof("dynamic-cluster-sync(%s) will reconnect in %d seconds", cw.clusterID, wait)
 				// after watcher connection break, sleep 5 seconds and retry connecting
 				time.Sleep(wait * time.Second)
 				ctx, cancel = context.WithCancel(cw.ctx)
@@ -53,7 +54,7 @@ func (cw *ClusterWatcher) dynamicManager() {
 				continue
 			}
 
-			blog.V(3).Infof("received raw dynamic event(%s): %v", cw.clusterId, event)
+			blog.V(3).Infof("received raw dynamic event(%s): %v", cw.clusterID, event)
 			if err := cw.handleWatchDynamicMetric(event); err != nil {
 				blog.Errorf("handle dynamic metric failed: %v", err)
 			}
@@ -62,11 +63,11 @@ func (cw *ClusterWatcher) dynamicManager() {
 }
 
 func (cw *ClusterWatcher) watchDynamic(ctx context.Context) {
-	blog.V(3).Infof("enter dynamic-watch(%s) goroutine", cw.clusterId)
-	watcher, err := cw.storage.GetDynamicWatcher(&storage.Param{ClusterID: cw.clusterId})
+	blog.V(3).Infof("enter dynamic-watch(%s) goroutine", cw.clusterID)
+	watcher, err := cw.storage.GetDynamicWatcher(&storage.Param{ClusterID: cw.clusterID})
 	if err != nil {
-		blog.Errorf("dynamic-cluster-watcher(%s) brings up failed: %v", cw.clusterId, err)
-		cw.dynamicEvent <- operator.EventWatchBreak
+		blog.Errorf("dynamic-cluster-watcher(%s) brings up failed: %v", cw.clusterID, err)
+		cw.dynamicEvent <- stowatch.EventWatchBreak
 		return
 	}
 
@@ -74,20 +75,20 @@ func (cw *ClusterWatcher) watchDynamic(ctx context.Context) {
 	go func() {
 		select {
 		case <-ctx.Done():
-			blog.Infof("dynamic-cluster-watcher(%s) shut down ", cw.clusterId)
+			blog.Infof("dynamic-cluster-watcher(%s) shut down ", cw.clusterID)
 			watcher.Close()
 		}
 	}()
 
-	blog.Infof("dynamic-cluster-watcher(%s) brings up", cw.clusterId)
+	blog.Infof("dynamic-cluster-watcher(%s) brings up", cw.clusterID)
 	for {
 		event, err := watcher.Next()
 		if err != nil {
-			blog.Errorf("dynamic-cluster-watcher(%s) get event failed: %v", cw.clusterId, err)
+			blog.Errorf("dynamic-cluster-watcher(%s) get event failed: %v", cw.clusterID, err)
 		}
 		cw.dynamicEvent <- event
-		if event == operator.EventWatchBreak {
-			blog.Errorf("dynamic-cluster-watcher(%s) connection break", cw.clusterId)
+		if event == stowatch.EventWatchBreak {
+			blog.Errorf("dynamic-cluster-watcher(%s) connection break", cw.clusterID)
 			return
 		}
 	}
@@ -96,13 +97,13 @@ func (cw *ClusterWatcher) watchDynamic(ctx context.Context) {
 func (cw *ClusterWatcher) syncDynamic() {
 	t := cw.getClusterType()
 	if t == types.ClusterUnknown {
-		blog.Warnf("cluster type of %s is unknown yet", cw.clusterId)
+		blog.Warnf("cluster type of %s is unknown yet", cw.clusterID)
 		return
 	}
 
-	r, err := cw.storage.QueryDynamic(&storage.Param{ClusterID: cw.clusterId, ClusterType: t, Type: t.GetContainerTypeName()})
+	r, err := cw.storage.QueryDynamic(&storage.Param{ClusterID: cw.clusterID, ClusterType: t, Type: t.GetContainerTypeName()})
 	if err != nil {
-		blog.Errorf("dynamic-cluster-sync(%s) get dynamic failed: %v", cw.clusterId, err)
+		blog.Errorf("dynamic-cluster-sync(%s) get dynamic failed: %v", cw.clusterID, err)
 		return
 	}
 
@@ -115,7 +116,7 @@ func (cw *ClusterWatcher) syncDynamic() {
 		}
 		ipMeta, err := driver.GetIPMetaFromDynamic(r, metric)
 		if err != nil {
-			blog.Errorf("get IPMeta(%s) failed, metric(namespace %s, name %s): %v", cw.clusterId, metric.Namespace, metric.Name, err)
+			blog.Errorf("get IPMeta(%s) failed, metric(namespace %s, name %s): %v", cw.clusterID, metric.Namespace, metric.Name, err)
 			continue
 		}
 
@@ -126,32 +127,32 @@ func (cw *ClusterWatcher) syncDynamic() {
 			Meta:   ipMeta,
 		}
 	}
-	blog.Infof("dynamic-cluster-sync(%s): %d", cw.clusterId, len(cw.metric))
+	blog.Infof("dynamic-cluster-sync(%s): %d", cw.clusterID, len(cw.metric))
 }
 
 func (cw *ClusterWatcher) getDynamicIPMeta(metric *types.Metric) (ipMeta map[string]btypes.ObjectMeta, err error) {
 	t := cw.getClusterType()
 	if t == types.ClusterUnknown {
-		blog.Warnf("cluster type of %s is unknown yet", cw.clusterId)
+		blog.Warnf("cluster type of %s is unknown yet", cw.clusterID)
 		err = fmt.Errorf("cluster type unknown")
 		return
 	}
 
-	r, err := cw.storage.QueryDynamic(&storage.Param{ClusterID: cw.clusterId, Namespace: metric.Namespace, ClusterType: t, Type: t.GetContainerTypeName()})
+	r, err := cw.storage.QueryDynamic(&storage.Param{ClusterID: cw.clusterID, Namespace: metric.Namespace, ClusterType: t, Type: t.GetContainerTypeName()})
 	if err != nil {
-		blog.Errorf("get dynamic clusterId(%s) failed: %v", cw.clusterId, err)
+		blog.Errorf("get dynamic clusterId(%s) failed: %v", cw.clusterID, err)
 		return
 	}
 
 	ipMeta, err = driver.GetIPMetaFromDynamic(r, metric)
 	if err != nil {
-		blog.Errorf("get dynamic ipMeta clusterId(%s) failed: %v", cw.clusterId, err)
+		blog.Errorf("get dynamic ipMeta clusterId(%s) failed: %v", cw.clusterID, err)
 		return
 	}
 	return
 }
 
-func (cw *ClusterWatcher) handleWatchDynamicMetric(storageEvent *operator.Event) (err error) {
+func (cw *ClusterWatcher) handleWatchDynamicMetric(storageEvent *stowatch.Event) (err error) {
 	var b []byte
 	if err = codec.EncJson([]interface{}{storageEvent.Value}, &b); err != nil {
 		return
@@ -168,13 +169,13 @@ func (cw *ClusterWatcher) handleWatchDynamicMetric(storageEvent *operator.Event)
 		var ipMeta map[string]btypes.ObjectMeta
 
 		switch storageEvent.Type {
-		case operator.Del:
+		case stowatch.Del:
 			// if delete event occurred, query dynamic to fresh the ipMeta
 			ipMeta, err = cw.getDynamicIPMeta(metric)
 			if err != nil {
 				continue
 			}
-		case operator.Add, operator.Chg:
+		case stowatch.Add, stowatch.Chg:
 			// different namespace can be passed
 			if ns, ok := storageEvent.Value["namespace"].(string); !ok || ns != metric.Namespace {
 				continue
@@ -182,7 +183,7 @@ func (cw *ClusterWatcher) handleWatchDynamicMetric(storageEvent *operator.Event)
 
 			ipMeta, err = driver.GetIPMetaFromDynamic(b, metric)
 			if err != nil {
-				blog.Errorf("get IPMeta(%s) failed, metric(namespace %s, name %s): %v", cw.clusterId, metric.Namespace, metric.Name, err)
+				blog.Errorf("get IPMeta(%s) failed, metric(namespace %s, name %s): %v", cw.clusterID, metric.Namespace, metric.Name, err)
 				continue
 			}
 
@@ -192,7 +193,7 @@ func (cw *ClusterWatcher) handleWatchDynamicMetric(storageEvent *operator.Event)
 				continue
 			}
 			if len(collectors) == 0 {
-				blog.Warnf("handle dynamic metric there is not collector(%s): name(%s) namespace(%s)", cw.clusterId, metric.Namespace, metric.Name)
+				blog.Warnf("handle dynamic metric there is not collector(%s): name(%s) namespace(%s)", cw.clusterID, metric.Namespace, metric.Name)
 				continue
 			}
 			collector := collectors[0]
@@ -214,7 +215,7 @@ func (cw *ClusterWatcher) handleWatchDynamicMetric(storageEvent *operator.Event)
 	return
 }
 
-func convertStorageMetricEvent2MetricEvent(storageEvent *operator.Event) (metricEvent *MetricEvent, err error) {
+func convertStorageMetricEvent2MetricEvent(storageEvent *stowatch.Event) (metricEvent *MetricEvent, err error) {
 	var b []byte
 	if err = codec.EncJson(storageEvent.Value, &b); err != nil {
 		return
@@ -227,12 +228,12 @@ func convertStorageMetricEvent2MetricEvent(storageEvent *operator.Event) (metric
 
 	metricEvent = &MetricEvent{ID: sMIf.ID, Metric: sMIf.Data}
 	switch storageEvent.Type {
-	case operator.Add, operator.Chg:
+	case stowatch.Add, stowatch.Chg:
 		metricEvent.Type = EventMetricUpd
-	case operator.Del:
+	case stowatch.Del:
 		metricEvent.Type = EventMetricDel
 	default:
-		err = fmt.Errorf("unknown event type: %s", storageEvent.Type)
+		err = fmt.Errorf("unknown event type: %d", storageEvent.Type)
 	}
 	return
 }
@@ -254,6 +255,7 @@ func convertStorageMetricData2MetricEvent(storageIf []byte) (metricEvent []*Metr
 	return
 }
 
+// StorageMetricIf store metric struct
 type StorageMetricIf struct {
 	ID   string        `json:"_id"`
 	Data *types.Metric `json:"data"`

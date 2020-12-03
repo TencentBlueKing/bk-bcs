@@ -118,7 +118,7 @@ func (cv *ClbValidater) validateListenerService(svc *networkextensionv1.ServiceR
 // validateListenerAttribute check listener attribute
 func (cv *ClbValidater) validateListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
 	if attr.SessionTime != 0 && (attr.SessionTime < 30 || attr.SessionTime > 3600) {
-		return false, fmt.Sprintf("invalid session time %d, availabe [0, 30-3600]", attr.SessionTime)
+		return false, fmt.Sprintf("invalid session time %d, available [0, 30-3600]", attr.SessionTime)
 	}
 	if len(attr.LbPolicy) != 0 {
 		if attr.LbPolicy != "WRR" &&
@@ -136,7 +136,7 @@ func (cv *ClbValidater) validateListenerAttribute(attr *networkextensionv1.Ingre
 		}
 		if attr.HealthCheck.Timeout != 0 &&
 			(attr.HealthCheck.Timeout < 2 || attr.HealthCheck.Timeout > 60) {
-			return false, fmt.Sprintf("invalid timeout %d, availabe [2, 60]", attr.HealthCheck.Timeout)
+			return false, fmt.Sprintf("invalid timeout %d, available [2, 60]", attr.HealthCheck.Timeout)
 		}
 		if attr.HealthCheck.IntervalTime != 0 &&
 			(attr.HealthCheck.IntervalTime < 5 || attr.HealthCheck.IntervalTime > 300) {
@@ -144,7 +144,7 @@ func (cv *ClbValidater) validateListenerAttribute(attr *networkextensionv1.Ingre
 		}
 		if attr.HealthCheck.HTTPCode != 0 &&
 			(attr.HealthCheck.HTTPCode < 1 || attr.HealthCheck.HTTPCode > 31) {
-			return false, fmt.Sprintf("invalid httpCode %d, avaiable [1, 31]", attr.HealthCheck.HTTPCode)
+			return false, fmt.Sprintf("invalid httpCode %d, available [1, 31]", attr.HealthCheck.HTTPCode)
 		}
 	}
 	return true, ""

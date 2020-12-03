@@ -14,14 +14,18 @@
 package bcsstorage
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/pprof"
 	"strconv"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
@@ -33,9 +37,10 @@ import (
 
 // StorageServer is a data struct of bcs storage server
 type StorageServer struct {
-	conf       *options.StorageOptions
-	httpServer *httpserver.HttpServer
-	rd         *rdiscover.RegDiscover
+	conf         *options.StorageOptions
+	httpServer   *httpserver.HttpServer
+	rd           *rdiscover.RegDiscover
+	etcdRegistry registry.Registry
 }
 
 // NewStorageServer create storage server object
@@ -48,11 +53,32 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 	// Http server
 	s.httpServer = httpserver.NewHttpServer(s.conf.Port, s.conf.Address, "")
 	if s.conf.ServerCert.IsSSL {
-		s.httpServer.SetSsl(s.conf.ServerCert.CAFile, s.conf.ServerCert.CertFile, s.conf.ServerCert.KeyFile, s.conf.ServerCert.CertPwd)
+		s.httpServer.SetSsl(
+			s.conf.ServerCert.CAFile,
+			s.conf.ServerCert.CertFile,
+			s.conf.ServerCert.KeyFile,
+			s.conf.ServerCert.CertPwd)
 	}
 
 	// RDiscover
 	s.rd = rdiscover.NewRegDiscover(s.conf)
+	if s.conf.Etcd.Feature {
+		tlsCfg, err := s.conf.Etcd.GetTLSConfig()
+		if err != nil {
+			blog.Errorf("storage loading etcd registry tls config failed, %s", err.Error())
+			return nil, err
+		}
+		// init go-micro registry
+		eoption := &registry.Options{
+			Name:         "storage.bkbcs.tencent.com",
+			Version:      version.BcsVersion,
+			RegistryAddr: strings.Split(s.conf.Etcd.Address, ","),
+			RegAddr:      fmt.Sprintf("%s:%d", s.conf.Address, s.conf.Port),
+			Config:       tlsCfg,
+		}
+		blog.Infof("#############storage turn on etcd registry feature, options %+v ###############", eoption)
+		s.etcdRegistry = registry.NewEtcdRegistry(eoption)
+	}
 
 	// ApiResource
 	a := apiserver.GetAPIResource()
@@ -110,9 +136,19 @@ func (s *StorageServer) Start() error {
 	// startDaemon
 	actions.StartActionDaemon()
 
+	if s.conf.Etcd.Feature {
+		if err := s.etcdRegistry.Register(); err != nil {
+			blog.Errorf("storage etcd registry failed, %s", err.Error())
+			chErr <- err
+		}
+	}
+
 	select {
 	case err := <-chErr:
 		blog.Errorf("exit! err:%s", err.Error())
+		if s.conf.Etcd.Feature {
+			s.etcdRegistry.Deregister()
+		}
 		return err
 	}
 }

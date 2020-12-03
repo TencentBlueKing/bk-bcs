@@ -32,7 +32,7 @@ func VerifyAccessTokenAndCreateUser(accessToken string) (*m.User, error) {
 
 	paasAuth := component.NewPaaSAuth()
 
-	var userId, userType interface{}
+	var userID, userType interface{}
 	var ok bool
 	edition := config.Edition
 
@@ -44,7 +44,7 @@ func VerifyAccessTokenAndCreateUser(accessToken string) (*m.User, error) {
 		if !isValid {
 			return nil, fmt.Errorf("access_token is invalid: %s", err.Error())
 		}
-		userId, ok = userInfo["user_id"]
+		userID, ok = userInfo["user_id"]
 		if !ok {
 			return nil, fmt.Errorf("get user_id failed")
 		}
@@ -60,7 +60,7 @@ func VerifyAccessTokenAndCreateUser(accessToken string) (*m.User, error) {
 		if !isValid {
 			return nil, fmt.Errorf("access_token is invalid: %s", err.Error())
 		}
-		userId, ok = userInfo["username"]
+		userID, ok = userInfo["username"]
 		if !ok {
 			return nil, fmt.Errorf("get user_id failed")
 		}
@@ -72,12 +72,12 @@ func VerifyAccessTokenAndCreateUser(accessToken string) (*m.User, error) {
 		return nil, fmt.Errorf("invalid bcs-api edition")
 	}
 
-	if userType.(string) == "" || userId.(string) == "" {
+	if userType.(string) == "" || userID.(string) == "" {
 		return nil, fmt.Errorf("access_token is invalid, userType or userId is empty")
 	}
 
 	// 2. get or create user
-	user, err := sqlstore.GetOrCreateUser(m.ExternalUserSourceTypeBCS, userId.(string), userType.(string))
+	user, err := sqlstore.GetOrCreateUser(m.ExternalUserSourceTypeBCS, userID.(string), userType.(string))
 	if err != nil {
 		return nil, fmt.Errorf("create user failed: %s", err.Error())
 	}

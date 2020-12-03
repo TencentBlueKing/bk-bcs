@@ -22,7 +22,7 @@ import (
 //Run the mesos driver
 func Run(op *options.MesosDriverOption) error {
 
-	blog.Info("config: %v", op)
+	blog.Info("config: %+v", op)
 
 	setConfig(op)
 
