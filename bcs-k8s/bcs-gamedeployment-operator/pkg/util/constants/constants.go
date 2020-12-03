@@ -25,5 +25,4 @@ const (
 	//DefaultRevisionHistoryLimit limit version for rollback, maybe setting in command line args?
 	DefaultRevisionHistoryLimit = 10
 	GameDeploymentController    = "GameDeployment"
-	HookRunController           = "HookRun"
 )

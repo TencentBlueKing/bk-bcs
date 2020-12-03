@@ -11,25 +11,20 @@
  *
  */
 
-package diff
+package v1alpha1
 
 import (
-	"encoding/json"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 )
 
-func CreateTwoWayMergePatch(orig, new, dataStruct interface{}) ([]byte, bool, error) {
-	origBytes, err := json.Marshal(orig)
-	if err != nil {
-		return nil, false, err
-	}
-	newBytes, err := json.Marshal(new)
-	if err != nil {
-		return nil, false, err
-	}
-	patch, err := strategicpatch.CreateTwoWayMergePatch(origBytes, newBytes, dataStruct)
-	if err != nil {
-		return nil, false, err
-	}
-	return patch, string(patch) != "{}", nil
+func (g *GameDeployment) GetPreDeleteHook() *hookv1alpha1.HookStep {
+	return g.Spec.PreDeleteUpdateStrategy.Hook
+}
+
+func (g *GameDeploymentStatus) GetPreDeleteHookConditions() []hookv1alpha1.PreDeleteHookCondition {
+	return g.PreDeleteHookConditions
+}
+
+func (g *GameDeploymentStatus) SetPreDeleteHookConditions(newConditions []hookv1alpha1.PreDeleteHookCondition) {
+	g.PreDeleteHookConditions = newConditions
 }

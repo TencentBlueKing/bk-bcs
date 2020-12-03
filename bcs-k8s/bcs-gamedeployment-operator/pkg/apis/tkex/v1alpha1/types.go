@@ -14,6 +14,7 @@
 package v1alpha1
 
 import (
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,8 +71,8 @@ type GameDeploymentSpec struct {
 }
 
 type GameDeploymentPreDeleteUpdateStrategy struct {
-	Hook                 *HookStep `json:"hook,omitempty"`
-	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
+	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
 
 type GameDeploymentScaleStrategy struct {
@@ -112,19 +113,9 @@ type CanaryStrategy struct {
 }
 
 type CanaryStep struct {
-	Partition *int32       `json:"partition,omitempty"`
-	Pause     *CanaryPause `json:"pause,omitempty"`
-	Hook      *HookStep    `json:"hook,omitempty"`
-}
-
-type HookStep struct {
-	TemplateName string            `json:"templateName"`
-	Args         []HookRunArgument `json:"args,omitempty"`
-}
-
-type HookRunArgument struct {
-	Name  string `json:"name"`
-	Value string `json:"value,omitempty"`
+	Partition *int32                 `json:"partition,omitempty"`
+	Pause     *CanaryPause           `json:"pause,omitempty"`
+	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
 
 type CanaryPause struct {
@@ -186,21 +177,15 @@ type GameDeploymentStatus struct {
 	// Conditions represents the latest available observations of a GameDeployment's current state.
 	Conditions []GameDeploymentCondition `json:"conditions,omitempty"`
 
-	PauseConditions []PauseCondition `json:"pauseConditions,omitempty"`
+	PauseConditions []hookv1alpha1.PauseCondition `json:"pauseConditions,omitempty"`
 
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
 
-	CurrentStepIndex        *int32                   `json:"currentStepIndex,omitempty"`
-	CurrentStepHash         string                   `json:"currentStepHash,omitempty"`
-	Canary                  CanaryStatus             `json:"canary,omitempty"`
-	PreDeleteHookConditions []PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
-}
-
-type PreDeleteHookCondition struct {
-	PodName   string      `json:"podName"`
-	StartTime metav1.Time `json:"startTime"`
-	HookPhase HookPhase   `json:"phase"`
+	CurrentStepIndex        *int32                                `json:"currentStepIndex,omitempty"`
+	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
+	Canary                  CanaryStatus                          `json:"canary,omitempty"`
+	PreDeleteHookConditions []hookv1alpha1.PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
 }
 
 type CanaryStatus struct {
@@ -252,25 +237,3 @@ type GameDeploymentList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []GameDeployment `json:"items"`
 }
-
-type PauseReason string
-
-const (
-	PauseReasonCanaryPauseStep PauseReason = "PausedByCanaryPauseStep"
-	PauseReasonStepBasedHook   PauseReason = "PausedByStepBasedHook"
-)
-
-type PauseCondition struct {
-	Reason    PauseReason `json:"reason"`
-	StartTime metav1.Time `json:"startTime"`
-}
-
-const (
-	DefaultGameDeploymentUniqueLabelKey string = "gamedeployment-revision"
-	GameDeploymentTypeLabel                    = "gamedeployment-type"
-	GameDeploymentTypeStepLabel                = "Step"
-	GameDeploymentTypePreDeleteLabel           = "PreDelete"
-	GameDeploymentCanaryStepIndexLabel         = "step-index"
-	GameDeploymentPodControllerRevision        = "PodControllerRevision"
-	GameDeploymentPodInstanceID                = "InstanceID"
-)

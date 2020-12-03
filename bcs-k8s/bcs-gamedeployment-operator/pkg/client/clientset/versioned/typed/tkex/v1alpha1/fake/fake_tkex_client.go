@@ -29,14 +29,6 @@ func (c *FakeTkexV1alpha1) GameDeployments(namespace string) v1alpha1.GameDeploy
 	return &FakeGameDeployments{c, namespace}
 }
 
-func (c *FakeTkexV1alpha1) HookRuns(namespace string) v1alpha1.HookRunInterface {
-	return &FakeHookRuns{c, namespace}
-}
-
-func (c *FakeTkexV1alpha1) HookTemplates(namespace string) v1alpha1.HookTemplateInterface {
-	return &FakeHookTemplates{c, namespace}
-}
-
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeTkexV1alpha1) RESTClient() rest.Interface {

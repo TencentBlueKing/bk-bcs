@@ -44,15 +44,29 @@ rules:
     resources:
       - gamedeployments
       - gamedeployments/status
-      - hooktemplates
-      - hookruns
-      - hookruns/status
     verbs:
       - create
       - get
       - list
       - patch
       - update
+      - watch
+      - delete
+  - apiGroups: ["tkex.tencent.com"]
+    resources:
+      - hooktemplates
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups: ["tkex.tencent.com"]
+    resources:
+      - hookruns
+    verbs:
+      - get
+      - list
+      - create
       - watch
       - delete
 ---

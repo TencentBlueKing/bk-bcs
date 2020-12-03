@@ -18,7 +18,9 @@ import (
 	"hash/fnv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/klog"
 	hashutil "k8s.io/kubernetes/pkg/util/hash"
@@ -26,7 +28,7 @@ import (
 )
 
 // GetCurrentCanaryStep get current canary step
-func GetCurrentCanaryStep(deploy *v1alpha1.GameDeployment) (*v1alpha1.CanaryStep, *int32) {
+func GetCurrentCanaryStep(deploy *gdv1alpha1.GameDeployment) (*gdv1alpha1.CanaryStep, *int32) {
 	if deploy.Spec.UpdateStrategy.CanaryStrategy == nil || len(deploy.Spec.UpdateStrategy.CanaryStrategy.Steps) == 0 {
 		return nil, nil
 	}
@@ -42,10 +44,11 @@ func GetCurrentCanaryStep(deploy *v1alpha1.GameDeployment) (*v1alpha1.CanaryStep
 }
 
 // GetCurrentPartition get current partition of canary
-func GetCurrentPartition(deploy *v1alpha1.GameDeployment) int32 {
+func GetCurrentPartition(deploy *gdv1alpha1.GameDeployment) int32 {
 	currentStep, currentStepIndex := GetCurrentCanaryStep(deploy)
 	if currentStep == nil {
-		if deploy.Spec.UpdateStrategy.Partition != nil {
+		if (deploy.Spec.UpdateStrategy.CanaryStrategy == nil || len(deploy.Spec.UpdateStrategy.CanaryStrategy.Steps) == 0) &&
+			deploy.Spec.UpdateStrategy.Partition != nil {
 			return *deploy.Spec.UpdateStrategy.Partition
 		}
 		return 0
@@ -61,7 +64,7 @@ func GetCurrentPartition(deploy *v1alpha1.GameDeployment) int32 {
 }
 
 // CheckStepHashChange detects if there is an change in the canary steps
-func CheckStepHashChange(deploy *v1alpha1.GameDeployment) bool {
+func CheckStepHashChange(deploy *gdv1alpha1.GameDeployment) bool {
 	if deploy.Status.CurrentStepHash == "" {
 		return false
 	}
@@ -69,7 +72,7 @@ func CheckStepHashChange(deploy *v1alpha1.GameDeployment) bool {
 }
 
 // CheckRevisionChange detects if there is an change in the pod template
-func CheckRevisionChange(deploy *v1alpha1.GameDeployment, revision string) bool {
+func CheckRevisionChange(deploy *gdv1alpha1.GameDeployment, revision string) bool {
 	if deploy.Status.UpdateRevision == "" {
 		return false
 	}
@@ -77,7 +80,7 @@ func CheckRevisionChange(deploy *v1alpha1.GameDeployment, revision string) bool 
 }
 
 // ComputeStepHash generates a hash with GameDeployment canary steps
-func ComputeStepHash(deploy *v1alpha1.GameDeployment) string {
+func ComputeStepHash(deploy *gdv1alpha1.GameDeployment) string {
 	deployStepHasher := fnv.New32a()
 	if deploy.Spec.UpdateStrategy.CanaryStrategy != nil {
 		hashutil.DeepHashObject(deployStepHasher, deploy.Spec.UpdateStrategy.CanaryStrategy.Steps)
@@ -86,7 +89,7 @@ func ComputeStepHash(deploy *v1alpha1.GameDeployment) string {
 }
 
 // ResetCurrentStepIndex resets the canary step
-func ResetCurrentStepIndex(deploy *v1alpha1.GameDeployment) *int32 {
+func ResetCurrentStepIndex(deploy *gdv1alpha1.GameDeployment) *int32 {
 	if deploy.Spec.UpdateStrategy.CanaryStrategy != nil && len(deploy.Spec.UpdateStrategy.CanaryStrategy.Steps) > 0 {
 		return pointer.Int32Ptr(0)
 	}
@@ -94,7 +97,7 @@ func ResetCurrentStepIndex(deploy *v1alpha1.GameDeployment) *int32 {
 }
 
 // GetPauseCondition get pause condition with a pause reason
-func GetPauseCondition(deploy *v1alpha1.GameDeployment, reason v1alpha1.PauseReason) *v1alpha1.PauseCondition {
+func GetPauseCondition(deploy *gdv1alpha1.GameDeployment, reason hookv1alpha1.PauseReason) *hookv1alpha1.PauseCondition {
 	for i := range deploy.Status.PauseConditions {
 		cond := deploy.Status.PauseConditions[i]
 		if cond.Reason == reason {

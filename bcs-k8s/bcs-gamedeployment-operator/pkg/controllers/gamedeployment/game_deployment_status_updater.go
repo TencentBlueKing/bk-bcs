@@ -16,13 +16,15 @@ package gamedeployment
 import (
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
-	gamedeploylister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
+	gdlister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
-	utildiff "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/diff"
-	hooksutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/hook"
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	commondiffutil "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/diff"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/hook"
+
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,26 +39,26 @@ import (
 type GameDeploymentStatusUpdaterInterface interface {
 	// UpdateGameDeploymentStatus sets the set's Status to status. Implementations are required to retry on conflicts,
 	// but fail on other errors. If the returned error is nil set's Status has been successfully set to status.
-	UpdateGameDeploymentStatus(deploy *v1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) error
+	UpdateGameDeploymentStatus(deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) error
 }
 
 // NewRealGameDeploymentStatusUpdater returns a GameDeploymentStatusUpdaterInterface that updates the Status of a GameDeployment,
-// using the supplied client and setLister.
+// using the supplied gdClient and setLister.
 func NewRealGameDeploymentStatusUpdater(
-	tkexClient tkexclientset.Interface,
-	setLister gamedeploylister.GameDeploymentLister,
+	tkexClient gdclientset.Interface,
+	setLister gdlister.GameDeploymentLister,
 	record record.EventRecorder) GameDeploymentStatusUpdaterInterface {
 	return &realGameDeploymentStatusUpdater{tkexClient, setLister, record}
 }
 
 type realGameDeploymentStatusUpdater struct {
-	tkexClient tkexclientset.Interface
-	setLister  gamedeploylister.GameDeploymentLister
-	recorder   record.EventRecorder
+	gdClient  gdclientset.Interface
+	setLister gdlister.GameDeploymentLister
+	recorder  record.EventRecorder
 }
 
 func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
-	deploy *v1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) error {
+	deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) error {
 
 	r.calculateBaseStatus(deploy, canaryCtx, pods)
 
@@ -137,12 +139,12 @@ func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
 
 	paused := deploy.Spec.UpdateStrategy.Paused
 
-	pauseCondition := canaryutil.GetPauseCondition(deploy, v1alpha1.PauseReasonCanaryPauseStep)
+	pauseCondition := canaryutil.GetPauseCondition(deploy, hookv1alpha1.PauseReasonCanaryPauseStep)
 	if currentStep != nil && currentStep.Pause != nil {
 		currentPartition := canaryutil.GetCurrentPartition(deploy)
 		if pauseCondition == nil && canaryCtx.newStatus.UpdatedReadyReplicas == *deploy.Spec.Replicas-currentPartition &&
 			canaryCtx.newStatus.AvailableReplicas == canaryCtx.newStatus.ReadyReplicas {
-			canaryCtx.AddPauseCondition(v1alpha1.PauseReasonCanaryPauseStep)
+			canaryCtx.AddPauseCondition(hookv1alpha1.PauseReasonCanaryPauseStep)
 		}
 	}
 
@@ -153,41 +155,41 @@ func (r *realGameDeploymentStatusUpdater) UpdateGameDeploymentStatus(
 }
 
 // updateStatus update status and updateStrategy pause of a GameDeployment to k8s
-func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *v1alpha1.GameDeployment, newStatus *v1alpha1.GameDeploymentStatus, newPause *bool) error {
+func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *gdv1alpha1.GameDeployment, newStatus *gdv1alpha1.GameDeploymentStatus, newPause *bool) error {
 	specCopy := deploy.Spec.DeepCopy()
 	paused := specCopy.UpdateStrategy.Paused
 	if newPause != nil {
 		paused = *newPause
 	}
 
-	specPatch, specModified, err := utildiff.CreateTwoWayMergePatch(
-		&v1alpha1.GameDeployment{
-			Spec: v1alpha1.GameDeploymentSpec{
-				UpdateStrategy: v1alpha1.GameDeploymentUpdateStrategy{
+	specPatch, specModified, err := commondiffutil.CreateTwoWayMergePatch(
+		&gdv1alpha1.GameDeployment{
+			Spec: gdv1alpha1.GameDeploymentSpec{
+				UpdateStrategy: gdv1alpha1.GameDeploymentUpdateStrategy{
 					Paused: deploy.Spec.UpdateStrategy.Paused,
 				},
-				PreDeleteUpdateStrategy: v1alpha1.GameDeploymentPreDeleteUpdateStrategy{
+				PreDeleteUpdateStrategy: gdv1alpha1.GameDeploymentPreDeleteUpdateStrategy{
 					RetryUnexpectedHooks: deploy.Spec.PreDeleteUpdateStrategy.RetryUnexpectedHooks,
 				},
 			},
 		},
-		&v1alpha1.GameDeployment{
-			Spec: v1alpha1.GameDeploymentSpec{
-				UpdateStrategy: v1alpha1.GameDeploymentUpdateStrategy{
+		&gdv1alpha1.GameDeployment{
+			Spec: gdv1alpha1.GameDeploymentSpec{
+				UpdateStrategy: gdv1alpha1.GameDeploymentUpdateStrategy{
 					Paused: paused,
 				},
-				PreDeleteUpdateStrategy: v1alpha1.GameDeploymentPreDeleteUpdateStrategy{
+				PreDeleteUpdateStrategy: gdv1alpha1.GameDeploymentPreDeleteUpdateStrategy{
 					RetryUnexpectedHooks: false,
 				},
 			},
-		}, v1alpha1.GameDeployment{})
+		}, gdv1alpha1.GameDeployment{})
 	if err != nil {
 		klog.Errorf("Error constructing app status patch: %v", err)
 		return err
 	}
 	if specModified {
 		klog.Infof("Rollout Spec Patch: %s", specPatch)
-		_, err = r.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(deploy.Name, patchtypes.MergePatchType, specPatch)
+		_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(deploy.Name, patchtypes.MergePatchType, specPatch)
 		if err != nil {
 			klog.Warningf("Error updating GameDeployment Spec: %v", err)
 			return err
@@ -195,13 +197,13 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *v1alpha1.GameDepl
 		klog.Info("Patch spec successfully")
 	}
 
-	statusPatch, statusModified, err := utildiff.CreateTwoWayMergePatch(
-		&v1alpha1.GameDeployment{
+	statusPatch, statusModified, err := commondiffutil.CreateTwoWayMergePatch(
+		&gdv1alpha1.GameDeployment{
 			Status: deploy.Status,
 		},
-		&v1alpha1.GameDeployment{
+		&gdv1alpha1.GameDeployment{
 			Status: *newStatus,
-		}, v1alpha1.GameDeployment{})
+		}, gdv1alpha1.GameDeployment{})
 	if err != nil {
 		klog.Errorf("Error constructing app status patch: %v", err)
 		return err
@@ -211,7 +213,7 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *v1alpha1.GameDepl
 		return nil
 	}
 	klog.Infof("Rollout Patch: %s", statusPatch)
-	_, err = r.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(deploy.Name, patchtypes.MergePatchType, statusPatch, "status")
+	_, err = r.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Patch(deploy.Name, patchtypes.MergePatchType, statusPatch, "status")
 	if err != nil {
 		klog.Warningf("Error updating application: %v", err)
 		return err
@@ -220,7 +222,7 @@ func (r *realGameDeploymentStatusUpdater) updateStatus(deploy *v1alpha1.GameDepl
 	return nil
 }
 
-func (r *realGameDeploymentStatusUpdater) inconsistentStatus(deploy *v1alpha1.GameDeployment, newStatus *v1alpha1.GameDeploymentStatus) bool {
+func (r *realGameDeploymentStatusUpdater) inconsistentStatus(deploy *gdv1alpha1.GameDeployment, newStatus *gdv1alpha1.GameDeploymentStatus) bool {
 	oldStatus := deploy.Status
 	return newStatus.ObservedGeneration > oldStatus.ObservedGeneration ||
 		newStatus.Replicas != oldStatus.Replicas ||
@@ -233,7 +235,7 @@ func (r *realGameDeploymentStatusUpdater) inconsistentStatus(deploy *v1alpha1.Ga
 }
 
 // calculateBaseStatus calculate a base status of GameDeployment
-func (r *realGameDeploymentStatusUpdater) calculateBaseStatus(deploy *v1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) {
+func (r *realGameDeploymentStatusUpdater) calculateBaseStatus(deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext, pods []*v1.Pod) {
 	for _, pod := range pods {
 		canaryCtx.newStatus.Replicas++
 		if util.IsRunningAndReady(pod) {
@@ -252,9 +254,9 @@ func (r *realGameDeploymentStatusUpdater) calculateBaseStatus(deploy *v1alpha1.G
 }
 
 // calculateConditionStatus calculate condition of GameDeployment, return true if exist pause condition
-func (r *realGameDeploymentStatusUpdater) calculateConditionStatus(deploy *v1alpha1.GameDeployment, canaryCtx *canaryContext) bool {
-	newPauseConditions := []v1alpha1.PauseCondition{}
-	pauseAlreadyExists := map[v1alpha1.PauseReason]bool{}
+func (r *realGameDeploymentStatusUpdater) calculateConditionStatus(deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext) bool {
+	newPauseConditions := []hookv1alpha1.PauseCondition{}
+	pauseAlreadyExists := map[hookv1alpha1.PauseReason]bool{}
 	for _, cond := range deploy.Status.PauseConditions {
 		newPauseConditions = append(newPauseConditions, cond)
 		pauseAlreadyExists[cond.Reason] = true
@@ -262,7 +264,7 @@ func (r *realGameDeploymentStatusUpdater) calculateConditionStatus(deploy *v1alp
 	now := metav1.Now()
 	for _, reason := range canaryCtx.pauseReasons {
 		if exists := pauseAlreadyExists[reason]; !exists {
-			cond := v1alpha1.PauseCondition{
+			cond := hookv1alpha1.PauseCondition{
 				Reason:    reason,
 				StartTime: now,
 			}
@@ -278,13 +280,13 @@ func (r *realGameDeploymentStatusUpdater) calculateConditionStatus(deploy *v1alp
 }
 
 // completeCurrentCanaryStep checks whether have already complete current canary step
-func completeCurrentCanaryStep(deploy *v1alpha1.GameDeployment, canaryCtx *canaryContext) bool {
+func completeCurrentCanaryStep(deploy *gdv1alpha1.GameDeployment, canaryCtx *canaryContext) bool {
 	currentStep, _ := canaryutil.GetCurrentCanaryStep(deploy)
 	if currentStep == nil {
 		return false
 	}
 
-	pauseCondition := canaryutil.GetPauseCondition(deploy, v1alpha1.PauseReasonCanaryPauseStep)
+	pauseCondition := canaryutil.GetPauseCondition(deploy, hookv1alpha1.PauseReasonCanaryPauseStep)
 
 	if currentStep.Pause != nil && currentStep.Pause.Duration != nil {
 		now := metav1.Now()
@@ -308,13 +310,13 @@ func completeCurrentCanaryStep(deploy *v1alpha1.GameDeployment, canaryCtx *canar
 	}
 
 	currentHrs := canaryCtx.CurrentHookRuns()
-	currentStepHr := hooksutil.GetCurrentStepHookRun(currentHrs)
+	currentStepHr := commonhookutil.GetCurrentStepHookRun(currentHrs)
 	hrExistsAndCompleted := currentStepHr != nil && currentStepHr.Status.Phase.Completed()
-	if currentStep.Hook != nil && hrExistsAndCompleted && currentStepHr.Status.Phase == v1alpha1.HookPhaseSuccessful {
+	if currentStep.Hook != nil && hrExistsAndCompleted && currentStepHr.Status.Phase == hookv1alpha1.HookPhaseSuccessful {
 		return true
 	}
 
-	pauseConditionByHook := canaryutil.GetPauseCondition(deploy, v1alpha1.PauseReasonStepBasedHook)
+	pauseConditionByHook := canaryutil.GetPauseCondition(deploy, hookv1alpha1.PauseReasonStepBasedHook)
 	if currentStep.Hook != nil && pauseConditionByHook != nil && !deploy.Spec.UpdateStrategy.Paused {
 		klog.Info("GameDeployment has been unpaused")
 		return true
