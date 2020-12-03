@@ -5,7 +5,6 @@ go 1.14
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
 	github.com/Tencent/bk-bcs => ../../bk-bcs
-	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../bcs-k8s/bcs-gamestatefulset-operator
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => ../bcs-k8s/kubedeprecated
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../bcs-k8s/kubernetes
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 => ../bcs-mesos/mesosv2
@@ -19,7 +18,6 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-mesos/mesosv2 v0.0.0-00010101000000-000000000000
