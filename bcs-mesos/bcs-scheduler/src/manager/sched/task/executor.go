@@ -29,14 +29,25 @@ import (
 	proto "github.com/golang/protobuf/proto"
 )
 
+//BcsContainerExecutorPath default container binary path
 var BcsContainerExecutorPath string
+
+//BcsProcessExecutorPath default process binary path
 var BcsProcessExecutorPath string
+
+// BcsCniDir default bcs cni plugin directory
 var BcsCniDir string
+
+// NetImage default network image information
 var NetImage string
+
+// Passwd registry pass
 var Passwd = static.BcsDefaultPasswd
+
+// User registry user
 var User = static.BcsDefaultUser
 
-//init mesos executor info
+//InitExecutorInfo init mesos executor info
 func InitExecutorInfo(CExec, PExec, CniDir, netImage string) {
 	if CExec != "" {
 		BcsContainerExecutorPath = CExec
@@ -60,25 +71,25 @@ func InitExecutorInfo(CExec, PExec, CniDir, netImage string) {
 }
 
 //CreateBcsExecutorInfo special the bcs executor
-func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID *string,
-	version *types.Version, store store.Store) *mesos.ExecutorInfo {
+func CreateBcsExecutorInfo(offer *mesos.Offer, taskGroupID *string,
+	version *types.Version, store store.Store) (*mesos.ExecutorInfo, error) {
 
-	var cmdOrUri string
+	var cmdOrURI string
 	switch version.Kind {
 	case commtypes.BcsDataType_PROCESS:
-		cmdOrUri = BcsProcessExecutorPath
+		cmdOrURI = BcsProcessExecutorPath
 	case commtypes.BcsDataType_APP, "", commtypes.BcsDataType_Daemonset:
-		cmdOrUri = BcsContainerExecutorPath
+		cmdOrURI = BcsContainerExecutorPath
 	}
 
-	pathSplit := strings.Split(cmdOrUri, "/")
+	pathSplit := strings.Split(cmdOrURI, "/")
 
 	var base string
 
 	if len(pathSplit) > 0 {
 		base = pathSplit[len(pathSplit)-1]
 	} else {
-		base = cmdOrUri
+		base = cmdOrURI
 	}
 
 	// added  20180814, if it is process, then call the Bcs_Process_Executor and pass the user-pwd configuration
@@ -97,7 +108,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 				if len(userConfSplit) != 2 {
 					blog.Error("ImagePullUser sercret config format(%s) error, version(%s.%s.%s)",
 						userConf, version.RunAs, version.ID, version.Name)
-					return nil
+					return nil, fmt.Errorf("image secret of user formation err")
 				}
 
 				userStr := userConfSplit[1]
@@ -105,7 +116,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 				if len(userStrSplit) != 2 {
 					blog.Error("ImagePullUser sercret config format(%s) error, version(%s.%s.%s)",
 						userStr, version.RunAs, version.ID, version.Name)
-					return nil
+					return nil, fmt.Errorf("image secret user information err")
 				}
 
 				secretName := strings.TrimSpace(userStrSplit[0])
@@ -115,17 +126,17 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 				bcsSecret, err := store.FetchSecret(secretNs, secretName)
 				if err != nil {
 					blog.Error("get bcssecret(%s.%s) err: %s", secretNs, secretName, err.Error())
-					return nil
+					return nil, fmt.Errorf("user secret error: %s", err.Error())
 				}
 				if bcsSecret == nil {
 					blog.Error("bcssecret(%s.%s) not exist", secretNs, secretName)
-					return nil
+					return nil, fmt.Errorf("secret %s do not exist", secretName)
 				}
 				bcsSecretItem, ok := bcsSecret.Data[secretKey]
 				if ok == false {
 					blog.Error("bcssecret item(key:%s) not exist in bcssecret(%s.%s)",
 						secretKey, secretNs, secretName)
-					return nil
+					return nil, fmt.Errorf("secret key %s do not exist", secretKey)
 				}
 
 				userBase := strings.TrimSpace(bcsSecretItem.Content)
@@ -133,7 +144,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 					userScrt, err := base64.StdEncoding.DecodeString(userBase)
 					if err != nil {
 						blog.Error("Decode base64(%s) err: %s", userBase, err.Error())
-						return nil
+						return nil, fmt.Errorf("secret content decode err, %s", err.Error())
 					}
 
 					user = string(userScrt)
@@ -159,7 +170,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 				if len(passwdConfSplit) != 2 {
 					blog.Error("ImagePullPasswd sercret config format(%s) error, version(%s.%s.%s)",
 						passwdConf, version.RunAs, version.ID, version.Name)
-					return nil
+					return nil, fmt.Errorf("image secret of passwd formation err")
 				}
 
 				passwdStr := passwdConfSplit[1]
@@ -167,7 +178,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 				if len(passwdStrSplit) != 2 {
 					blog.Error("ImagePullPasswd sercret config format(%s) error, version(%s.%s.%s)",
 						passwdStr, version.RunAs, version.ID, version.Name)
-					return nil
+					return nil, fmt.Errorf("image passwd secret formation err")
 				}
 
 				secretName := strings.TrimSpace(passwdStrSplit[0])
@@ -177,17 +188,17 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 				bcsSecret, err := store.FetchSecret(secretNs, secretName)
 				if err != nil {
 					blog.Error("get bcssecret(%s.%s) err: %s", secretNs, secretName, err.Error())
-					return nil
+					return nil, fmt.Errorf("passwd secret error: %s", err.Error())
 				}
 				if bcsSecret == nil {
 					blog.Error("bcssecret(%s.%s) not exist", secretNs, secretName)
-					return nil
+					return nil, fmt.Errorf("passwd secret do not exist")
 				}
 				bcsSecretItem, ok := bcsSecret.Data[secretKey]
 				if ok == false {
 					blog.Error("bcssecret item(key:%s) not exist in bcssecret(%s.%s)",
 						secretKey, secretNs, secretName)
-					return nil
+					return nil, fmt.Errorf("passwd secret key do not exist")
 				}
 
 				passwdBase := strings.TrimSpace(bcsSecretItem.Content)
@@ -195,7 +206,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 					passwdScrt, err := base64.StdEncoding.DecodeString(passwdBase)
 					if err != nil {
 						blog.Error("Decode base64(%s) err: %s", passwdBase, err.Error())
-						return nil
+						return nil, fmt.Errorf("passwd secret content decode err, %s", err.Error())
 					}
 					passwd = string(passwdScrt)
 				} else {
@@ -230,8 +241,6 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 		execCommand = fmt.Sprintf("./%s --user %s --uuid %s %s %s %s", base, user, string(uuid), networkType, cniDir, netImage)
 	}
 
-	//blog.Infof("exec:%s", execCommand)
-
 	var resources []*mesos.Resource
 	resources = append(resources, createScalarResource("cpus", float64(types.CPUS_PER_EXECUTOR)))
 	resources = append(resources, createScalarResource("mem", float64(types.MEM_PER_EXECUTOR)))
@@ -244,7 +253,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 		Command: &mesos.CommandInfo{
 			Uris: []*mesos.CommandInfo_URI{
 				{
-					Value:      proto.String(cmdOrUri),
+					Value:      proto.String(cmdOrURI),
 					Executable: proto.Bool(true),
 				},
 			},
@@ -253,5 +262,5 @@ func CreateBcsExecutorInfo(offer *mesos.Offer /*cmdOrUri string,*/, taskGroupID 
 		Name:      proto.String("BcsExec"),
 		Source:    proto.String("bcs"),
 		Resources: resources,
-	}
+	}, nil
 }

@@ -16,7 +16,7 @@ package revision
 import (
 	"encoding/json"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdcore "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/core"
 	gdutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	apps "k8s.io/api/apps/v1"
@@ -27,13 +27,13 @@ import (
 )
 
 var (
-	patchCodec = scheme.Codecs.LegacyCodec(tkexv1alpha1.SchemeGroupVersion)
+	patchCodec = scheme.Codecs.LegacyCodec(v1alpha1.SchemeGroupVersion)
 )
 
 // Interface is a interface to new and apply ControllerRevision.
 type Interface interface {
-	NewRevision(deploy *tkexv1alpha1.GameDeployment, revision int64, collisionCount *int32) (*apps.ControllerRevision, error)
-	ApplyRevision(deploy *tkexv1alpha1.GameDeployment, revision *apps.ControllerRevision) (*tkexv1alpha1.GameDeployment, error)
+	NewRevision(deploy *v1alpha1.GameDeployment, revision int64, collisionCount *int32) (*apps.ControllerRevision, error)
+	ApplyRevision(deploy *v1alpha1.GameDeployment, revision *apps.ControllerRevision) (*v1alpha1.GameDeployment, error)
 }
 
 // NewRevisionControl create a normal revision control.
@@ -44,7 +44,7 @@ func NewRevisionControl() Interface {
 type realControl struct {
 }
 
-func (c *realControl) NewRevision(deploy *tkexv1alpha1.GameDeployment, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
+func (c *realControl) NewRevision(deploy *v1alpha1.GameDeployment, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
 	coreControl := gdcore.New(deploy)
 	patch, err := c.getPatch(deploy, coreControl)
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *realControl) NewRevision(deploy *tkexv1alpha1.GameDeployment, revision 
 // previous version. If the returned error is nil the patch is valid. The current state that we save is just the
 // PodSpecTemplate. We can modify this later to encompass more state (or less) and remain compatible with previously
 // recorded patches.
-func (c *realControl) getPatch(deploy *tkexv1alpha1.GameDeployment, coreControl gdcore.Control) ([]byte, error) {
+func (c *realControl) getPatch(deploy *v1alpha1.GameDeployment, coreControl gdcore.Control) ([]byte, error) {
 	str, err := runtime.Encode(patchCodec, deploy)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (c *realControl) getPatch(deploy *tkexv1alpha1.GameDeployment, coreControl 
 	return patch, err
 }
 
-func (c *realControl) ApplyRevision(deploy *tkexv1alpha1.GameDeployment, revision *apps.ControllerRevision) (*tkexv1alpha1.GameDeployment, error) {
+func (c *realControl) ApplyRevision(deploy *v1alpha1.GameDeployment, revision *apps.ControllerRevision) (*v1alpha1.GameDeployment, error) {
 	clone := deploy.DeepCopy()
 	patched, err := strategicpatch.StrategicMergePatch([]byte(runtime.EncodeOrDie(patchCodec, clone)), revision.Data.Raw, clone)
 	if err != nil {

@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
-// The goroutine function for scale application transaction
+// RunScaleApplication The goroutine function for scale application transaction
 // You can create a transaction for scale application, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
 func (s *Scheduler) RunScaleApplication(transaction *Transaction) {
@@ -117,7 +117,7 @@ run_end:
 	blog.Infof("transaction %s scale(%s.%s) run end, result(%s)", transaction.ID, runAs, appID, transaction.Status)
 }
 
-// The goroutine function for inner scale application transaction
+// RunInnerScaleApplication The goroutine function for inner scale application transaction
 // You can create a transaction for scale application, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
 func (s *Scheduler) RunInnerScaleApplication(transaction *Transaction) {

@@ -20,46 +20,57 @@ import (
 	"reflect"
 )
 
+// HandlerProcessor processor interface
 type HandlerProcessor interface {
 	SetUpdated()
 }
 
+// AppServiceHandler handler for AppService
 type AppServiceHandler struct {
 	processor HandlerProcessor
 }
 
+// NewAppServiceHandler create AppService handler
 func NewAppServiceHandler() *AppServiceHandler {
 	return &AppServiceHandler{}
 }
 
+// RegisterProcessor register processor to handler
 func (handler *AppServiceHandler) RegisterProcessor(p HandlerProcessor) {
 	handler.processor = p
 }
 
+// OnAdd AppService add event
 func (handler *AppServiceHandler) OnAdd(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// OnUpdate AppService update event
 func (handler *AppServiceHandler) OnUpdate(objOld, objNew interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// OnDelete AppService delete event
 func (handler *AppServiceHandler) OnDelete(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// IngressHandler ingress handler
 type IngressHandler struct {
 	processor HandlerProcessor
 }
 
+// NewIngressHandler create ingress handler
 func NewIngressHandler() *IngressHandler {
 	return &IngressHandler{}
 }
 
+// RegisterProcessor register processor to ingress handler
 func (handler *IngressHandler) RegisterProcessor(p HandlerProcessor) {
 	handler.processor = p
 }
 
+// OnAdd ingress add event
 func (handler *IngressHandler) OnAdd(obj interface{}) {
 	ingress, ok := obj.(*ingressType.ClbIngress)
 	if ok {
@@ -71,6 +82,7 @@ func (handler *IngressHandler) OnAdd(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// OnUpdate ingress update event
 func (handler *IngressHandler) OnUpdate(objOld, objNew interface{}) {
 	ingressNew, okNew := objNew.(*ingressType.ClbIngress)
 	ingressOld, okOld := objOld.(*ingressType.ClbIngress)
@@ -87,6 +99,7 @@ func (handler *IngressHandler) OnUpdate(objOld, objNew interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// OnDelete ingress delete event
 func (handler *IngressHandler) OnDelete(obj interface{}) {
 	ingress, ok := obj.(*ingressType.ClbIngress)
 	if ok {
@@ -98,36 +111,45 @@ func (handler *IngressHandler) OnDelete(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// NodeHandler node handler
 type NodeHandler struct {
 	processor HandlerProcessor
 }
 
+// NewNodeHandler create node handler
 func NewNodeHandler() *NodeHandler {
 	return &NodeHandler{}
 }
 
+// RegisterProcessor register processor to node handler
 func (handler *NodeHandler) RegisterProcessor(p HandlerProcessor) {
 	handler.processor = p
 }
 
+// OnAdd node add event
 func (handler *NodeHandler) OnAdd(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// OnUpdate node update event
 func (handler *NodeHandler) OnUpdate(objOld, objNew interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// OnDelete node delete event
 func (handler *NodeHandler) OnDelete(obj interface{}) {
 	handler.processor.SetUpdated()
 }
 
+// ListenerHandler listener handler
 type ListenerHandler struct{}
 
+// NewListenerHandler create listener handler
 func NewListenerHandler() *ListenerHandler {
 	return &ListenerHandler{}
 }
 
+// OnAdd listener add event
 func (handler *ListenerHandler) OnAdd(obj interface{}) {
 	listener, ok := obj.(*cloudListenerType.CloudListener)
 	if ok {
@@ -137,6 +159,7 @@ func (handler *ListenerHandler) OnAdd(obj interface{}) {
 	}
 }
 
+// OnUpdate listener update event
 func (handler *ListenerHandler) OnUpdate(objOld, objNew interface{}) {
 	listenerNew, okNew := objNew.(*cloudListenerType.CloudListener)
 	listenerOld, okOld := objOld.(*cloudListenerType.CloudListener)
@@ -147,6 +170,7 @@ func (handler *ListenerHandler) OnUpdate(objOld, objNew interface{}) {
 	}
 }
 
+// OnDelete listener delete event
 func (handler *ListenerHandler) OnDelete(obj interface{}) {
 	listener, ok := obj.(*cloudListenerType.CloudListener)
 	if ok {

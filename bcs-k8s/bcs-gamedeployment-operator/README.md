@@ -10,8 +10,9 @@ openkruise 的部分实现，支持原地重启、镜像热更新、滚动更新
 * [done]增加原地重启 InplaceUpdate 更新策略，并支持原地重启过程当中的 gracePeriodSeconds
 * [done]增加镜像热更新 HotPatchUpdate 更新策略
 * [done]支持HPA
-* [todo]集成腾讯云CLB，实现有状态端口段动态转发
-* [todo]集成BCS无损更新特性：允许不重启容器更新容器内容
+* [done]集成腾讯云CLB，实现有状态端口段动态转发
+* [done]支持分步骤自动化灰度发布，在灰度过程中加入 hook 校验
+* [done]优雅地删除和更新应用实例 PreDeleteHook 
 * [todo]扩展kubectl，支持kubectl gamestatefulset子命令
 
 ### 特性
@@ -110,6 +111,22 @@ pod 容器发送信号或命令，reload 或 重启 pod 容器中的进程，最
 该功能需要配合 bcs 定制的 kubelet 和 dockerd 版本才能使用。  
 HotPatchUpdate 同样支持 partition 配置，用于实现灰度发布策略。为了兼容旧版本，HotPatchUpdate 沿用 RollingUpdate 的 partition 配置字段：
 spec/updateStrategy/rollingUpdate/partition
+
+#### 智能式分步骤灰度发布
+GameDeployment 支持智能化的分步骤灰度发布功能，允许用户在 GameDeployment 定义中配置多个灰度发布的步骤，这些步骤可以是 "灰度发布部分实例"、"永久暂停灰度发布"、
+"暂停指定的时间段后再继续灰度发布"、"外部 Hook 调用以决定是否暂停灰度发布"，通过配置这些不同的灰度发布步骤，可以达到自动化的分步骤灰度发布能力，实现
+灰度发布的智能控制。  
+详见：[智能式分步骤灰度发布](doc/features/canary/auto-canary-update.md)
+
+#### 优雅地删除和更新应用实例 PreDeleteHook
+在与腾讯的众多游戏业务的交流过程中，我们发现，许多业务场景下，在删除 pod 实例(比如缩容实例数、HPA)前或发布更新 pod 版本前，业务希望能够实现优雅的 pod 退出，
+在删除前能够加入一些 hook 勾子，通过这些 hook 判断是否已经可以正常删除或更新 pod。如果 hook 返回 ok，那么就正常删除或更新 pod，如果返回不 ok，
+那么就继续等待，直到 hook 返回 ok。  
+发散来看，这其实并非游戏业务的独特需求，而是大多数不同类型业务的普遍需求。  
+然而，原生的 kubernetes 只支持 pod 级别的 preStop 和 postStart ，远不能满足这种更精细化的 hook 需求。  
+BCS 团队结合业务需求，在 bcs-gamedeployment-operator 中通过 GameDeployment 和 HookRun 两个 controller，在 GameDeployment 这个 kubernetes workload 
+层面提供了 pod 删除或更新前的 PreDeleteHook 功能，实现了应用实例的优雅删除和更新。  
+详见：[应用实例的优雅删除和更新 PreDeleteHook](doc/features/preDeleteHook/pre-delete-hook.md)
 
 ### 信息初始化
 

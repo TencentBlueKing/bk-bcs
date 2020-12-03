@@ -18,11 +18,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 )
 
+// EventType event type
 type EventType int
 
 const (
+	// EventMetricUpd metric update event
 	EventMetricUpd EventType = iota
+	// EventMetricDel metric delete event
 	EventMetricDel
+	// EventDynamicUpd dynamic update event
 	EventDynamicUpd
 )
 
@@ -38,6 +42,7 @@ var (
 	}
 )
 
+// MetricEvent metric event
 type MetricEvent struct {
 	ID     string
 	Type   EventType

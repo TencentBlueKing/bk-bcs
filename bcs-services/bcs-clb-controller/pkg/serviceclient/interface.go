@@ -40,11 +40,11 @@ const (
 		Registry for multiple system adapter
 	*/
 
-	//ServiceRegistryCustom for mesos-adapter
+	// ServiceRegistryCustom for mesos-adapter
 	ServiceRegistryCustom = "custom"
-	//ServiceRegistryKubernetes for bcs kubernetes
+	// ServiceRegistryKubernetes for bcs kubernetes
 	ServiceRegistryKubernetes = "kubernetes"
-	//ServiceRegistryMesos for mesos etcd storage
+	// ServiceRegistryMesos for mesos etcd storage
 	ServiceRegistryMesos = "mesos"
 )
 

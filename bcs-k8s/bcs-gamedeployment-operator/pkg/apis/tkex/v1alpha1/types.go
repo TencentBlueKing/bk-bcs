@@ -53,6 +53,10 @@ type GameDeploymentSpec struct {
 	// update Pods in the GameDeployment when a revision is made to Template.
 	UpdateStrategy GameDeploymentUpdateStrategy `json:"updateStrategy,omitempty"`
 
+	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to
+	// before Delete Or Update Pods
+	PreDeleteUpdateStrategy GameDeploymentPreDeleteUpdateStrategy `json:"preDeleteUpdateStrategy,omitempty"`
+
 	// RevisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the GameDeployment's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
@@ -63,6 +67,11 @@ type GameDeploymentSpec struct {
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
+}
+
+type GameDeploymentPreDeleteUpdateStrategy struct {
+	Hook                 *HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
 }
 
 type GameDeploymentScaleStrategy struct {
@@ -105,6 +114,17 @@ type CanaryStrategy struct {
 type CanaryStep struct {
 	Partition *int32       `json:"partition,omitempty"`
 	Pause     *CanaryPause `json:"pause,omitempty"`
+	Hook      *HookStep    `json:"hook,omitempty"`
+}
+
+type HookStep struct {
+	TemplateName string            `json:"templateName"`
+	Args         []HookRunArgument `json:"args,omitempty"`
+}
+
+type HookRunArgument struct {
+	Name  string `json:"name"`
+	Value string `json:"value,omitempty"`
 }
 
 type CanaryPause struct {
@@ -166,17 +186,27 @@ type GameDeploymentStatus struct {
 	// Conditions represents the latest available observations of a GameDeployment's current state.
 	Conditions []GameDeploymentCondition `json:"conditions,omitempty"`
 
+	PauseConditions []PauseCondition `json:"pauseConditions,omitempty"`
+
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
 
-	CurrentStepIndex *int32       `json:"currentStepIndex,omitempty"`
-	CurrentStepHash  string       `json:"currentStepHash,omitempty"`
-	Canary           CanaryStatus `json:"canary,omitempty"`
+	CurrentStepIndex        *int32                   `json:"currentStepIndex,omitempty"`
+	CurrentStepHash         string                   `json:"currentStepHash,omitempty"`
+	Canary                  CanaryStatus             `json:"canary,omitempty"`
+	PreDeleteHookConditions []PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
+}
+
+type PreDeleteHookCondition struct {
+	PodName   string      `json:"podName"`
+	StartTime metav1.Time `json:"startTime"`
+	HookPhase HookPhase   `json:"phase"`
 }
 
 type CanaryStatus struct {
-	Revision       string       `json:"revision,omitempty"`
-	PauseStartTime *metav1.Time `json:"pauseStartTime,omitempty"`
+	Revision           string       `json:"revision,omitempty"`
+	PauseStartTime     *metav1.Time `json:"pauseStartTime,omitempty"`
+	CurrentStepHookRun string       `json:"currentStepHookRun,omitempty"`
 }
 
 // GameDeploymentConditionType is type for GameDeployment conditions.
@@ -222,3 +252,25 @@ type GameDeploymentList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []GameDeployment `json:"items"`
 }
+
+type PauseReason string
+
+const (
+	PauseReasonCanaryPauseStep PauseReason = "PausedByCanaryPauseStep"
+	PauseReasonStepBasedHook   PauseReason = "PausedByStepBasedHook"
+)
+
+type PauseCondition struct {
+	Reason    PauseReason `json:"reason"`
+	StartTime metav1.Time `json:"startTime"`
+}
+
+const (
+	DefaultGameDeploymentUniqueLabelKey string = "gamedeployment-revision"
+	GameDeploymentTypeLabel                    = "gamedeployment-type"
+	GameDeploymentTypeStepLabel                = "Step"
+	GameDeploymentTypePreDeleteLabel           = "PreDelete"
+	GameDeploymentCanaryStepIndexLabel         = "step-index"
+	GameDeploymentPodControllerRevision        = "PodControllerRevision"
+	GameDeploymentPodInstanceID                = "InstanceID"
+)

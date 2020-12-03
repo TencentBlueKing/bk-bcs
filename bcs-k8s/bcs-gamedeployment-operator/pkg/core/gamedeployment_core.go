@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"regexp"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	"github.com/mattbaird/jsonpatch"
@@ -33,7 +33,7 @@ var (
 )
 
 type commonControl struct {
-	*tkexv1alpha1.GameDeployment
+	*v1alpha1.GameDeployment
 }
 
 var _ Control = &commonControl{}
@@ -47,8 +47,8 @@ func (c *commonControl) SetRevisionTemplate(revisionSpec map[string]interface{},
 	template["$patch"] = "replace"
 }
 
-func (c *commonControl) ApplyRevisionPatch(patched []byte) (*tkexv1alpha1.GameDeployment, error) {
-	restoredDeploy := &tkexv1alpha1.GameDeployment{}
+func (c *commonControl) ApplyRevisionPatch(patched []byte) (*v1alpha1.GameDeployment, error) {
+	restoredDeploy := &v1alpha1.GameDeployment{}
 	if err := json.Unmarshal(patched, restoredDeploy); err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (c *commonControl) IsReadyToScale() bool {
 	return true
 }
 
-func (c *commonControl) NewVersionedPods(currentGD, updateGD *tkexv1alpha1.GameDeployment,
+func (c *commonControl) NewVersionedPods(currentGD, updateGD *v1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	expectedCreations, expectedCurrentCreations int,
 	availableIDs []string,
@@ -74,7 +74,7 @@ func (c *commonControl) NewVersionedPods(currentGD, updateGD *tkexv1alpha1.GameD
 	return newPods, nil
 }
 
-func (c *commonControl) newVersionedPods(cs *tkexv1alpha1.GameDeployment, revision string, replicas int, availableIDs *[]string) []*v1.Pod {
+func (c *commonControl) newVersionedPods(cs *v1alpha1.GameDeployment, revision string, replicas int, availableIDs *[]string) []*v1.Pod {
 	var newPods []*v1.Pod
 	for i := 0; i < replicas; i++ {
 		if len(*availableIDs) == 0 {
@@ -91,7 +91,7 @@ func (c *commonControl) newVersionedPods(cs *tkexv1alpha1.GameDeployment, revisi
 
 		pod.Name = fmt.Sprintf("%s-%s", cs.Name, id)
 		pod.Namespace = cs.Namespace
-		pod.Labels[tkexv1alpha1.GameDeploymentInstanceID] = id
+		pod.Labels[v1alpha1.GameDeploymentInstanceID] = id
 
 		inplaceupdate.InjectReadinessGate(pod)
 
@@ -117,6 +117,8 @@ func (c *commonControl) IsPodUpdateReady(pod *v1.Pod, minReadySeconds int32) boo
 
 func (c *commonControl) GetPodsSortFunc(pods []*v1.Pod, waitUpdateIndexes []int) func(i, j int) bool {
 	// not-ready < ready, unscheduled < scheduled, and pending < running
+	//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
+	// change, maybe we should use a simple alphabetical sort
 	return func(i, j int) bool {
 		return kubecontroller.ActivePods(pods).Less(waitUpdateIndexes[i], waitUpdateIndexes[j])
 	}
@@ -130,8 +132,8 @@ func (c *commonControl) GetUpdateOptions() *inplaceupdate.UpdateOptions {
 	return opts
 }
 
-func (c *commonControl) ValidateGameDeploymentUpdate(oldCS, newCS *tkexv1alpha1.GameDeployment) error {
-	if newCS.Spec.UpdateStrategy.Type != tkexv1alpha1.InPlaceGameDeploymentUpdateStrategyType {
+func (c *commonControl) ValidateGameDeploymentUpdate(oldCS, newCS *v1alpha1.GameDeployment) error {
+	if newCS.Spec.UpdateStrategy.Type != v1alpha1.InPlaceGameDeploymentUpdateStrategyType {
 		return nil
 	}
 
@@ -145,7 +147,7 @@ func (c *commonControl) ValidateGameDeploymentUpdate(oldCS, newCS *tkexv1alpha1.
 	for _, p := range patches {
 		if p.Operation != "replace" || !inPlaceUpdateTemplateSpecPatchRexp.MatchString(p.Path) {
 			return fmt.Errorf("only allowed to update images in spec for %s, but found %s %s",
-				tkexv1alpha1.InPlaceGameDeploymentUpdateStrategyType, p.Operation, p.Path)
+				v1alpha1.InPlaceGameDeploymentUpdateStrategyType, p.Operation, p.Path)
 		}
 	}
 	return nil

@@ -14,14 +14,17 @@
 package alarms
 
 import (
+	"context"
+	"time"
+
+	"github.com/emicklei/go-restful"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
-
-	"github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
 )
 
 const (
@@ -29,7 +32,7 @@ const (
 	extraTag        = "extra"
 	fieldTag        = "field"
 	typeTag         = "type"
-	clusterIdTag    = "clusterId"
+	clusterIDTag    = "clusterId"
 	namespaceTag    = "namespace"
 	messageTag      = "message"
 	sourceTag       = "source"
@@ -45,50 +48,78 @@ const (
 )
 
 var needTimeFormatList = [...]string{createTimeTag, receivedTimeTag}
-var conditionTagList = [...]string{clusterIdTag, namespaceTag, sourceTag, moduleTag}
+var conditionTagList = [...]string{clusterIDTag, namespaceTag, sourceTag, moduleTag}
 
 // Use Mongodb for storage.
-const dbConfig = "alarm"
+const dbConfig = "mongodb/alarm"
 
-var getNewTank operator.GetNewTank = lib.GetMongodbTank(dbConfig)
-
+// PostAlarm post alarms
 func PostAlarm(req *restful.Request, resp *restful.Response) {
-	request := newReqAlarm(req)
-	defer request.exit()
-	if err := request.insert(); err != nil {
+	errFunc := func(err error) {
 		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, ErrCode: common.BcsErrStoragePutResourceFail, Message: common.BcsErrStoragePutResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStoragePutResourceFail,
+			Message: common.BcsErrStoragePutResourceFailStr})
+	}
+	data, err := getReqData(req)
+	if err != nil {
+		errFunc(err)
+		return
+	}
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	if err := store.Put(req.Request.Context(), tableName, data, &lib.StorePutOption{
+		CreateTimeKey: createTimeTag,
+	}); err != nil {
+		errFunc(err)
 		return
 	}
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
+// ListAlarm list alarm
 func ListAlarm(req *restful.Request, resp *restful.Response) {
-	request := newReqAlarm(req)
-	defer request.exit()
-	r, total, err := request.listAlarm()
-	extra := map[string]interface{}{"total": total}
-	if err != nil {
+	errFunc := func(err error) {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr, Extra: extra})
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			Data:    []string{},
+			ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
+	}
+	opt, err := getStoreGetOption(req)
+	if err != nil {
+		errFunc(err)
+		return
+	}
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	r, err := store.Get(req.Request.Context(), tableName, opt)
+	extra := map[string]interface{}{"total": len(r)}
+	if err != nil {
+		errFunc(err)
 		return
 	}
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
-func CleanAlarmsOutDate() {
-	cleanAlarmOutDate(apiserver.GetAPIResource().Conf.AlarmMaxTime)
-}
-
-func CleanAlarmsOutCap() {
-	cleanAlarmOutCap(apiserver.GetAPIResource().Conf.AlarmMaxCap)
+// CleanAlarm clean alarm
+func CleanAlarm() {
+	maxCap := apiserver.GetAPIResource().Conf.AlarmMaxCap
+	maxTime := apiserver.GetAPIResource().Conf.AlarmMaxTime
+	cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), tableName, time.Hour)
+	cleaner.WithMaxEntryNum(maxCap)
+	cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
+	cleaner.Run(context.TODO())
 }
 
 func init() {
-	alarmPath := urlPath("/alarms")
+	alarmPath := "/alarms"
 	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(PostAlarm)})
 	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(ListAlarm)})
 
-	actions.RegisterDaemonFunc(CleanAlarmsOutDate)
-	actions.RegisterDaemonFunc(CleanAlarmsOutCap)
+	actions.RegisterDaemonFunc(CleanAlarm)
 }

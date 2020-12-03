@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
-// DataChecker control message
+// DataCheckMsg DataChecker control message
 type DataCheckMsg struct {
 	// opencheck
 	// closecheck
@@ -32,7 +32,7 @@ type DataCheckMsg struct {
 	MsgType string
 }
 
-// DataChecker
+// DataCheckMgr DataChecker
 type DataCheckMgr struct {
 	store store.Store
 
@@ -47,7 +47,7 @@ type DataCheckMgr struct {
 	openCheck bool
 }
 
-// Create DataChecker
+// CreateDataCheckMgr Create DataChecker
 func CreateDataCheckMgr(store store.Store, s *Scheduler) (*DataCheckMgr, error) {
 
 	mgr := &DataCheckMgr{
@@ -67,7 +67,7 @@ func (mgr *DataCheckMgr) stop() {
 	close(mgr.msgQueue)
 }
 
-// Send DataChecker control message
+// SendMsg Send DataChecker control message
 func (mgr *DataCheckMgr) SendMsg(msg *DataCheckMsg) error {
 
 	blog.V(3).Infof("data checker: send an msg to datacheck manager")
@@ -82,7 +82,7 @@ func (mgr *DataCheckMgr) SendMsg(msg *DataCheckMsg) error {
 	return nil
 }
 
-// DataChecker main function
+// DataCheckManage DataChecker main function
 func DataCheckManage(mgr *DataCheckMgr, doRecover bool) {
 	blog.Info("data checker: goroutine start ...")
 
@@ -186,21 +186,21 @@ func (mgr *DataCheckMgr) doCheck() {
 	return
 }
 
-func (mgr *DataCheckMgr) checkTaskgroup(runAs, appId string) {
-	mgr.sched.store.LockApplication(runAs + "." + appId)
-	defer mgr.sched.store.UnLockApplication(runAs + "." + appId)
+func (mgr *DataCheckMgr) checkTaskgroup(runAs, appID string) {
+	mgr.sched.store.LockApplication(runAs + "." + appID)
+	defer mgr.sched.store.UnLockApplication(runAs + "." + appID)
 
-	blog.Info("data checker: to check taskgroups:%s.%s ", runAs, appId)
-	taskGroups, _ := mgr.store.ListTaskGroups(runAs, appId)
+	blog.Info("data checker: to check taskgroups:%s.%s ", runAs, appID)
+	taskGroups, _ := mgr.store.ListTaskGroups(runAs, appID)
 	//check taskgroup whether lost
 	lostNum := mgr.checkTaskgroupWhetherLost(taskGroups, true)
 	if lostNum == 0 {
 		return
 	}
 	//  get application data from ZK
-	app, err := mgr.sched.store.FetchApplication(runAs, appId)
+	app, err := mgr.sched.store.FetchApplication(runAs, appID)
 	if err != nil {
-		blog.Error("data checker: fetch application(%s.%s) failed, err:%s", runAs, appId, err.Error())
+		blog.Error("data checker: fetch application(%s.%s) failed, err:%s", runAs, appID, err.Error())
 		return
 	}
 	appStatus := app.Status
@@ -309,17 +309,17 @@ func (mgr *DataCheckMgr) doRecover() {
 	return
 }
 
-func (mgr *DataCheckMgr) recoverTaskgroup(runAs, appId string) {
+func (mgr *DataCheckMgr) recoverTaskgroup(runAs, appID string) {
 	now := time.Now().Unix()
-	mgr.sched.store.LockApplication(runAs + "." + appId)
-	defer mgr.sched.store.UnLockApplication(runAs + "." + appId)
+	mgr.sched.store.LockApplication(runAs + "." + appID)
+	defer mgr.sched.store.UnLockApplication(runAs + "." + appID)
 
-	taskGroups, err := mgr.store.ListTaskGroups(runAs, appId)
+	taskGroups, err := mgr.store.ListTaskGroups(runAs, appID)
 	if err != nil {
-		blog.Warn("data checker: list taskgroup(%s.%s) return err:%s", runAs, appId, err.Error())
+		blog.Warn("data checker: list taskgroup(%s.%s) return err:%s", runAs, appID, err.Error())
 		return
 	}
-	blog.Info("data checker: to recover taskgroups:%s.%s ", runAs, appId)
+	blog.Info("data checker: to recover taskgroups:%s.%s ", runAs, appID)
 
 	recoverNum := 0
 	for _, taskGroup := range taskGroups {
@@ -349,9 +349,9 @@ func (mgr *DataCheckMgr) recoverTaskgroup(runAs, appId string) {
 	}
 
 	if recoverNum > 0 {
-		app, err := mgr.sched.store.FetchApplication(runAs, appId)
+		app, err := mgr.sched.store.FetchApplication(runAs, appID)
 		if err != nil {
-			blog.Error("data checker: fetch application(%s.%s) failed, err:%s", runAs, appId, err.Error())
+			blog.Error("data checker: fetch application(%s.%s) failed, err:%s", runAs, appID, err.Error())
 			return
 		}
 		appStatus := app.Status
