@@ -43,7 +43,7 @@ type GameStatefulSetPodControlInterface interface {
 	// storage this method is a no-op. If the Pod must be mutated to conform to the Set, it is mutated and updated.
 	// pod is an in-out parameter, and any updates made to the pod are reflected as mutations to this parameter. If
 	// the create is successful, the returned error is nil.
-	UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod, updateType string) error
+	UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error
 	// DeleteGameStatefulSetPod deletes a Pod in a StatefulSet. The pods PVCs are not deleted. If the delete is successful,
 	// the returned error is nil.
 	DeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error
@@ -90,35 +90,30 @@ func (spc *realGameStatefulSetPodControl) CreateGameStatefulSetPod(set *stsplus.
 }
 
 // UpdateGameStatefulSetPod update pod info of GameStatefulSet
-func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod, updateType string) error {
+func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
 	attemptedUpdate := false
 	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		// assume the Pod is consistent
-		// DeveloperJim: we support InplaceUpdate mode, so pod will not
-		//   consistent except for identityMatch and storageMatch these two
-		//   cases, we will update Env/image/initContainer etc. so we clean
-		//   consistent condition.
-		//   we had better ensure all updates are essential when calling UpdateGameStatefulSetPod
-		// consistent := true
+		consistent := true
 		// if the Pod does not conform to its identity, update the identity and dirty the Pod
 		if !IdentityMatches(set, pod) {
 			updateIdentity(set, pod)
-			// consistent = false
+			consistent = false
 		}
 		// if the Pod does not conform to the GameStatefulSet's storage requirements, update the Pod's PVC's,
 		// dirty the Pod, and create any missing PVCs
 		if !storageMatches(set, pod) {
 			updateStorage(set, pod)
-			// consistent = false
+			consistent = false
 			if err := spc.createPersistentVolumeClaims(set, pod); err != nil {
 				spc.recordPodEvent("update", set, pod, err)
 				return err
 			}
 		}
 		// if the Pod is not dirty, do nothing
-		// if consistent {
-		// 	return nil
-		// }
+		if consistent {
+			return nil
+		}
 		attemptedUpdate = true
 		// commit the update, retrying on conflicts
 		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(pod)
@@ -137,7 +132,7 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		return updateErr
 	})
 	if attemptedUpdate {
-		spc.recordPodEvent(updateType, set, pod, err)
+		spc.recordPodEvent("update", set, pod, err)
 	}
 	return err
 }

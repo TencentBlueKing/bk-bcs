@@ -3,29 +3,99 @@
 bcs-gamestatefulset-operator 是针对游戏 gameserver 实现的管理有状态应用的增强版 statefulset，基于原生 statefulset 改造，并参考了
 openkruise 的部分实现，支持原地重启、镜像热更新、滚动更新等多种更新策略。
 
-### 重构目标
+### 功能迭代
 
-* [done]本项目 group 重构可用
 * [done]增加原地重启 InplaceUpdate 更新策略，并支持原地重启过程当中的 gracePeriodSeconds
 * [done]增加镜像热更新 HotPatchUpdate 更新策略
-* [done]增加自动并行滚动更新
+* [done]支持并行滚动更新
 * [done]支持HPA
-* [todo]集成腾讯云CLB，实现有状态端口段动态转发
-* [todo]集成BCS无损更新特性：允许不重启容器更新容器内容
-* [todo]扩展kubectl，支持kubectl gamestatefulset子命令
+* [done]集成腾讯云CLB，实现有状态端口段动态转发
+* [done]支持分步骤自动化灰度发布，在灰度过程中加入 hook 校验
+* [done]优雅地删除和更新应用实例 PreDeleteHook 
+* [todo]扩展 kubectl，支持 kubectl gamestatefulset子命令
 
 ### 特性
 
 基于 CRD+Operator 开发的一种自定义的 K8S 工作负载（GameStatefulSet），核心特性包括：
 
-* 兼容StatefulSet所有特性
-* 支持Operator高可用部署
+* 兼容 StatefulSet 所有特性
+* 支持 Operator 高可用部署
 * 支持Node失联时，Pod的自动漂移（StatefulSet不支持）  
 * 支持容器原地升级
 * 支持容器镜像热更新
+* 支持自动并行滚动更新(StatefulSet 只支持按序滚动更新)
 * 支持 HPA
+* 支持分步骤自动化灰度发布
+* 优雅地删除和更新应用实例 PreDeleteHook
 
 ### 特性介绍
+GameStatefulSet 是 kubernetes 原生 StatefulSet 的增强实现，一个典型的 GameStatefulSet 定义如下：  
+```yaml
+apiVersion: tkex.tencent.com/v1alpha1
+kind: GameStatefulSet
+metadata:
+  name: test-gamestatefulset
+spec:
+  serviceName: "test"
+  podManagementPolicy: Parallel
+  replicas: 5
+  selector:
+    matchLabels:
+      app: test
+  preDeleteUpdateStrategy:
+    hook:
+      templateName: test
+  updateStrategy:
+    type: InplaceUpdate
+    rollingUpdate:
+      partition: 1
+    inPlaceUpdateStrategy:
+      gracePeriodSeconds: 30
+    canary:
+      steps:
+      - partition: 3
+      - pause: {}
+      - partition: 1
+      - pause: {duration: 60}
+      - hook:
+          templateName: test
+      - pause: {}
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - name: python
+        image: python:latest
+        imagePullPolicy: IfNotPresent
+        command: ["python"]
+        args: ["-m", "http.server", "8000" ]
+        ports:
+        - name: http
+          containerPort: 8000
+```
+
+* podManagementPolicy  
+支持 "OrderedReady" 和 "Parallel" 两种方式，定义和 StatefulSet 一致，默认为 OrderedReady。与 StatefulSet 不同的是，如果配置为 Parallel，
+那么不仅删除和创建 pod 实例是并行的，实例更新也是并行的，即自动并行更新。
+* preDeleteUpdateStrategy  
+见下文 "优雅地删除和更新应用实例 PreDeleteHook" 章节。  
+* updateStrategy/type  
+支持 RollingUpdate, OnDelete, InplaceUpdate, HotPatchUpdate 四种更新方式，相比原生 StatefulSet,新增 InplaceUpdate, HotPatchUpdate
+两种更新模式。  
+* updateStrategy/rollingUpdate/partition  
+控制灰度发布的个数，与 StatefulSet 含义一致。为了兼容，InplaceUpdate 和 HotPatchUpdate 的灰度发布个数也由这个参数配置。  
+* updateStrategy/inPlaceUpdateStrategy  
+见下方 InplaceUpdate 介绍。  
+* updateStrategy/canary  
+智能式分步骤灰度发布，见下文详细介绍。  
+
+#### 滚动发布 RollingUpdate
+同 StatefulSet
+
+#### 手动更新 OnDelete
+同 StatefulSet
 
 #### 原地重启 InplaceUpdate
 原地重启更新策略在更新过程中，保持 pod 的生命周期不变，只是重启 pod 中的容器，可主要用于以下场景：  
@@ -48,7 +118,23 @@ spec/updateStrategy/rollingUpdate/partition 。
 pod 容器发送信号或命令，reload 或 重启 pod 容器中的进程，最终实现 pod 容器的更新。  
 该功能需要配合 bcs 定制的 kubelet 和 dockerd 版本才能使用。  
 HotPatchUpdate 同样支持 partition 配置，用于实现灰度发布策略。为了兼容旧版本，HotPatchUpdate 沿用 RollingUpdate 的 partition 配置字段：
-spec/updateStrategy/rollingUpdate/partition
+spec/updateStrategy/rollingUpdate/partition。  
+
+#### 智能式分步骤灰度发布
+GameStatefulSet 支持智能化的分步骤灰度发布功能，允许用户在 GameStatefulSet 定义中配置多个灰度发布的步骤，这些步骤可以是 "灰度发布部分实例"、"永久暂停灰度发布"、
+"暂停指定的时间段后再继续灰度发布"、"外部 Hook 调用以决定是否暂停灰度发布"，通过配置这些不同的灰度发布步骤，可以达到自动化的分步骤灰度发布能力，实现
+分批灰度发布的智能控制。  
+GameStatefulSet 的智能式分步骤灰度发布的使用与 GameDeployment 一致，详见：[智能式分步骤灰度发布](../bcs-gamedeployment-operator/doc/features/canary/auto-canary-update.md)
+
+#### 优雅地删除和更新应用实例 PreDeleteHook
+在与腾讯的众多游戏业务的交流过程中，我们发现，许多业务场景下，在删除 pod 实例(比如缩容实例数、HPA)前或发布更新 pod 版本前，业务希望能够实现优雅的 pod 退出，
+在删除前能够加入一些 hook 勾子，通过这些 hook 判断是否已经可以正常删除或更新 pod。如果 hook 返回 ok，那么就正常删除或更新 pod，如果返回不 ok，
+那么就继续等待，直到 hook 返回 ok。  
+发散来看，这其实并非游戏业务的独特需求，而是大多数不同类型业务的普遍需求。  
+然而，原生的 kubernetes 只支持 pod 级别的 preStop 和 postStart ，远不能满足这种更精细化的 hook 需求。  
+BCS 团队结合业务需求，抽象并开发了 bcs-hook-operator ，用于实现多种形式的 hook 控制，在 bcs-gamedeployment-operator 和 game-statefulset-operator
+这两个 workload 层面实现了与 bcs-hook-operator 的联动，提供了 pod 删除或更新前的 PreDeleteHook 功能，实现了应用实例的优雅删除和更新。    
+GameStatefulSet 的 PreDeleteHook 的使用与 GameDeployment 一致，详见：[应用实例的优雅删除和更新 PreDeleteHook](../bcs-gamedeployment-operator/doc/features/preDeleteHook/pre-delete-hook.md)
 
 ### 信息初始化
 

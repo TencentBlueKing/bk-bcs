@@ -17,16 +17,24 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"time"
 
-	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util"
+	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/canary"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/constants"
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
+	hooklister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/hook"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/controller/history"
@@ -40,13 +48,13 @@ type GameStatefulSetControlInterface interface {
 	// If an implementation returns a non-nil error, the invocation will be retried using a rate-limited strategy.
 	// Implementors should sink any errors that they do not wish to trigger a retry, and they may feel free to
 	// exit exceptionally at any point provided they wish the update to be re-run at a later point in time.
-	UpdateGameStatefulSet(set *stsplus.GameStatefulSet, pods []*v1.Pod) error
+	UpdateGameStatefulSet(set *gstsv1alpha1.GameStatefulSet, pods []*v1.Pod) error
 	// ListRevisions returns a array of the ControllerRevisions that represent the revisions of set. If the returned
 	// error is nil, the returns slice of ControllerRevisions is valid.
-	ListRevisions(set *stsplus.GameStatefulSet) ([]*apps.ControllerRevision, error)
+	ListRevisions(set *gstsv1alpha1.GameStatefulSet) ([]*apps.ControllerRevision, error)
 	// AdoptOrphanRevisions adopts any orphaned ControllerRevisions that match set's Selector. If all adoptions are
 	// successful the returned error is nil.
-	AdoptOrphanRevisions(set *stsplus.GameStatefulSet, revisions []*apps.ControllerRevision) error
+	AdoptOrphanRevisions(set *gstsv1alpha1.GameStatefulSet, revisions []*apps.ControllerRevision) error
 }
 
 // NewDefaultGameStatefulSetControl returns a new instance of the default implementation StatefulSetControlInterface that
@@ -55,29 +63,41 @@ type GameStatefulSetControlInterface interface {
 // to update the status of StatefulSets. You should use an instance returned from NewRealStatefulPodControl() for any
 // scenario other than testing.
 func NewDefaultGameStatefulSetControl(
+	hookClient hookclientset.Interface,
 	podControl GameStatefulSetPodControlInterface,
 	inPlaceControl inplaceupdate.Interface,
 	hotPatchControl hotpatchupdate.Interface,
 	statusUpdater GameStatefulSetStatusUpdaterInterface,
 	controllerHistory history.Interface,
-	recorder record.EventRecorder) GameStatefulSetControlInterface {
+	recorder record.EventRecorder,
+	hookRunLister hooklister.HookRunLister,
+	hookTemplateLister hooklister.HookTemplateLister,
+	preDeleteControl predelete.PreDeleteInterface) GameStatefulSetControlInterface {
 	return &defaultGameStatefulSetControl{
+		hookClient,
 		podControl,
 		statusUpdater,
 		controllerHistory,
 		recorder,
 		inPlaceControl,
 		hotPatchControl,
+		hookRunLister,
+		hookTemplateLister,
+		preDeleteControl,
 	}
 }
 
 type defaultGameStatefulSetControl struct {
-	podControl        GameStatefulSetPodControlInterface
-	statusUpdater     GameStatefulSetStatusUpdaterInterface
-	controllerHistory history.Interface
-	recorder          record.EventRecorder
-	inPlaceControl    inplaceupdate.Interface
-	hotPatchControl   hotpatchupdate.Interface
+	hookClient         hookclientset.Interface
+	podControl         GameStatefulSetPodControlInterface
+	statusUpdater      GameStatefulSetStatusUpdaterInterface
+	controllerHistory  history.Interface
+	recorder           record.EventRecorder
+	inPlaceControl     inplaceupdate.Interface
+	hotPatchControl    hotpatchupdate.Interface
+	hookRunLister      hooklister.HookRunLister
+	hookTemplateLister hooklister.HookTemplateLister
+	preDeleteControl   predelete.PreDeleteInterface
 }
 
 // UpdateGameStatefulSet executes the core logic loop for a stateful set plus, applying the predictable and
@@ -86,7 +106,7 @@ type defaultGameStatefulSetControl struct {
 // strategy allows these constraints to be relaxed - pods will be created and deleted eagerly and
 // in no particular order. Clients using the burst strategy should be careful to ensure they
 // understand the consistency implications of having unpredictable numbers of pods available.
-func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *stsplus.GameStatefulSet, pods []*v1.Pod) error {
+func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *gstsv1alpha1.GameStatefulSet, pods []*v1.Pod) error {
 
 	// list all revisions and sort them
 	revisions, err := ssc.ListRevisions(set)
@@ -96,26 +116,49 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *stsplus.Gam
 	}
 	history.SortControllerRevisions(revisions)
 	// get the current, and update revisions
-	currentRevision, updateRevision, collisionCount, err := ssc.getGameStatefulSetRevisions(set, revisions)
+	currentRevision, updateRevision, collisionCount, err := ssc.getGameStatefulSetRevisions(set, revisions, getPodsRevisions(pods))
 	if err != nil {
+		return err
+	}
+
+	hrList, err := ssc.getHookRunsForGameStatefulSet(set)
+	if err != nil {
+		return err
+	}
+
+	canaryCtx := newCanaryCtx(set, hrList, currentRevision, updateRevision, collisionCount)
+
+	if canaryutil.CheckRevisionChange(set, updateRevision.Name) {
+		err = ssc.updateGameStatefulSetStatus(set, canaryCtx)
+		return err
+	}
+	if canaryutil.CheckStepHashChange(set) {
+		err = ssc.updateGameStatefulSetStatus(set, canaryCtx)
+		return err
+	}
+
+	err = ssc.reconcileHookRuns(canaryCtx)
+	if err != nil {
+		return err
+	}
+	if canaryCtx.HasAddPause() {
+		err = ssc.updateGameStatefulSetStatus(set, canaryCtx)
 		return err
 	}
 
 	// perform the main update function and get the status
-	status, err := ssc.updateGameStatefulSet(set, currentRevision, updateRevision, collisionCount, pods, revisions)
+	status, err := ssc.updateGameStatefulSet(set, canaryCtx.newStatus, currentRevision, updateRevision, pods, revisions, hrList)
 	if err != nil {
 		return err
 	}
 
-	// add Status.labelSelector
-	util.ToLabelString(set.Spec.Selector)
-	if status.LabelSelector == nil || *status.LabelSelector != util.ToLabelString(set.Spec.Selector) {
-		status.LabelSelector = new(string)
-		*status.LabelSelector = util.ToLabelString(set.Spec.Selector)
+	unPauseDuration := ssc.reconcilePause(set)
+	if unPauseDuration > 0 {
+		durationStore.Push(getGameStatefulSetKey(set), unPauseDuration)
 	}
 
 	// update the set's status
-	err = ssc.updateGameStatefulSetStatus(set, status)
+	err = ssc.updateGameStatefulSetStatus(set, canaryCtx)
 	if err != nil {
 		return err
 	}
@@ -138,8 +181,25 @@ func (ssc *defaultGameStatefulSetControl) UpdateGameStatefulSet(set *stsplus.Gam
 	return ssc.truncateHistory(set, pods, revisions, currentRevision, updateRevision)
 }
 
+func (ssc *defaultGameStatefulSetControl) reconcilePause(set *gstsv1alpha1.GameStatefulSet) time.Duration {
+	var timeRemaining time.Duration
+	currentStep, _ := canaryutil.GetCurrentCanaryStep(set)
+	if currentStep == nil || currentStep.Pause == nil || currentStep.Pause.Duration == nil {
+		return timeRemaining
+	}
+	pauseCondition := canaryutil.GetPauseCondition(set, hookv1alpha1.PauseReasonCanaryPauseStep)
+	if pauseCondition != nil {
+		now := metav1.Now()
+		expiredTime := pauseCondition.StartTime.Add(time.Duration(*currentStep.Pause.Duration) * time.Second)
+		if expiredTime.After(now.Time) {
+			timeRemaining = expiredTime.Sub(now.Time)
+		}
+	}
+	return timeRemaining
+}
+
 // ListRevisions list all revisions of gamestatefulset
-func (ssc *defaultGameStatefulSetControl) ListRevisions(set *stsplus.GameStatefulSet) ([]*apps.ControllerRevision, error) {
+func (ssc *defaultGameStatefulSetControl) ListRevisions(set *gstsv1alpha1.GameStatefulSet) ([]*apps.ControllerRevision, error) {
 	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
 	if err != nil {
 		return nil, err
@@ -149,10 +209,10 @@ func (ssc *defaultGameStatefulSetControl) ListRevisions(set *stsplus.GameStatefu
 
 // AdoptOrphanRevisions adopt orphan history revision of gamestatefulset
 func (ssc *defaultGameStatefulSetControl) AdoptOrphanRevisions(
-	set *stsplus.GameStatefulSet,
+	set *gstsv1alpha1.GameStatefulSet,
 	revisions []*apps.ControllerRevision) error {
 	for i := range revisions {
-		adopted, err := ssc.controllerHistory.AdoptControllerRevision(set, controllerKind, revisions[i])
+		adopted, err := ssc.controllerHistory.AdoptControllerRevision(set, util.ControllerKind, revisions[i])
 		if err != nil {
 			return err
 		}
@@ -167,7 +227,7 @@ func (ssc *defaultGameStatefulSetControl) AdoptOrphanRevisions(
 // only RevisionHistoryLimit revisions remain. If the returned error is nil the operation was successful. This method
 // expects that revisions is sorted when supplied.
 func (ssc *defaultGameStatefulSetControl) truncateHistory(
-	set *stsplus.GameStatefulSet,
+	set *gstsv1alpha1.GameStatefulSet,
 	pods []*v1.Pod,
 	revisions []*apps.ControllerRevision,
 	current *apps.ControllerRevision,
@@ -212,8 +272,9 @@ func (ssc *defaultGameStatefulSetControl) truncateHistory(
 // a new revision, or modify the Revision of an existing revision if an update to set is detected.
 // This method expects that revisions is sorted when supplied.
 func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
-	set *stsplus.GameStatefulSet,
-	revisions []*apps.ControllerRevision) (*apps.ControllerRevision, *apps.ControllerRevision, int32, error) {
+	set *gstsv1alpha1.GameStatefulSet,
+	revisions []*apps.ControllerRevision,
+	podsRevisions sets.String) (*apps.ControllerRevision, *apps.ControllerRevision, int32, error) {
 	var currentRevision, updateRevision *apps.ControllerRevision
 	revisionCount := len(revisions)
 	history.SortControllerRevisions(revisions)
@@ -262,9 +323,8 @@ func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
 		klog.V(3).Infof("create new controllerRevision %d/%s for %s/%s successfully", updateRevision.Revision, updateRevision.Name, set.GetNamespace(), set.GetName())
 	}
 
-	// attempt to find the revision that corresponds to the current revision
 	for i := range revisions {
-		if revisions[i].Name == set.Status.CurrentRevision {
+		if podsRevisions.Has(revisions[i].Name) {
 			currentRevision = revisions[i]
 			break
 		}
@@ -288,12 +348,13 @@ func (ssc *defaultGameStatefulSetControl) getGameStatefulSetRevisions(
 // Pods must be at Status.UpdateRevision. If the returned error is nil, the returned StatefulSetStatus is valid and the
 // update must be recorded. If the error is not nil, the method should be retried until successful.
 func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
-	set *stsplus.GameStatefulSet,
+	set *gstsv1alpha1.GameStatefulSet,
+	status *gstsv1alpha1.GameStatefulSetStatus,
 	currentRevision *apps.ControllerRevision,
 	updateRevision *apps.ControllerRevision,
-	collisionCount int32,
 	pods []*v1.Pod,
-	revisions []*apps.ControllerRevision) (*stsplus.GameStatefulSetStatus, error) {
+	revisions []*apps.ControllerRevision,
+	hrList []*hookv1alpha1.HookRun) (*gstsv1alpha1.GameStatefulSetStatus, error) {
 	// get the current and update revisions of the set.
 	currentSet, err := ApplyRevision(set, currentRevision)
 	if err != nil {
@@ -304,13 +365,18 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		return nil, err
 	}
 
-	// set the generation, and revisions in the returned status
-	status := stsplus.GameStatefulSetStatus{}
-	status.ObservedGeneration = set.Generation
-	status.CurrentRevision = currentRevision.Name
-	status.UpdateRevision = updateRevision.Name
-	status.CollisionCount = new(int32)
-	*status.CollisionCount = collisionCount
+	// truncate unneeded PreDeleteHookRuns
+	err = ssc.truncatePreDeleteHookRuns(set, pods, hrList)
+	if err != nil {
+		return status, err
+	}
+
+	ssc.truncatePreDeleteHookConditions(pods, status)
+
+	// if configured retry, delete unexpected HookRuns and reconcile
+	if set.Spec.PreDeleteUpdateStrategy.RetryUnexpectedHooks {
+		return status, ssc.deleteUnexpectedPreDeleteHookRuns(hrList)
+	}
 
 	replicaCount := int(*set.Spec.Replicas)
 	// slice that will contain all Pods such that 0 <= getOrdinal(pod) < set.Spec.Replicas
@@ -328,6 +394,10 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// count the number of running and ready replicas
 		if isRunningAndReady(pods[i]) {
 			status.ReadyReplicas++
+		}
+
+		if isRunningAndReady(pods[i]) && getPodRevision(pods[i]) == updateRevision.Name {
+			status.UpdatedReadyReplicas++
 		}
 
 		// count the number of current and update replicas
@@ -356,6 +426,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	for ord := 0; ord < replicaCount; ord++ {
 		if replicas[ord] == nil {
 			replicas[ord] = newVersionedGameStatefulSetPod(
+				set,
 				currentSet,
 				updateSet,
 				currentRevision.Name,
@@ -398,7 +469,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	// If the GameStatefulSet is being deleted, don't do anything other than updating
 	// status.
 	if set.DeletionTimestamp != nil {
-		return &status, nil
+		return status, nil
 	}
 
 	monotonic := !allowsBurst(set)
@@ -415,7 +486,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			klog.Infof("GameStatefulSet %s/%s is deleting failed Pod %s and then recreating", set.Namespace, set.Name, replicas[i].Name)
 			if err := ssc.podControl.DeleteGameStatefulSetPod(set, replicas[i]); err != nil {
 				klog.Errorf("Operator delete Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
-				return &status, err
+				return status, err
 			}
 			if getPodRevision(replicas[i]) == currentRevision.Name {
 				status.CurrentReplicas--
@@ -425,6 +496,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			}
 			status.Replicas--
 			replicas[i] = newVersionedGameStatefulSetPod(
+				set,
 				currentSet,
 				updateSet,
 				currentRevision.Name,
@@ -442,7 +514,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			klog.Infof("GameStatefulSet %s/%s forcedeletes NodeLost Pod %s and then recreating", set.Namespace, set.Name, replicas[i].Name)
 			if err := ssc.podControl.ForceDeleteGameStatefulSetPod(set, replicas[i]); err != nil {
 				klog.Errorf("Operator force delete Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
-				return &status, err
+				return status, err
 			}
 			if getPodRevision(replicas[i]) == currentRevision.Name {
 				status.CurrentReplicas--
@@ -452,6 +524,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			}
 			status.Replicas--
 			replicas[i] = newVersionedGameStatefulSetPod(
+				set,
 				currentSet,
 				updateSet,
 				currentRevision.Name,
@@ -463,7 +536,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		if !isCreated(replicas[i]) {
 			if err := ssc.podControl.CreateGameStatefulSetPod(set, replicas[i]); err != nil {
 				klog.Errorf("Operator create new Pod %s controlled by GameStatefulSet %s/%s failed, %s", replicas[i].Name, set.Namespace, set.Name, err.Error())
-				return &status, err
+				return status, err
 			}
 			klog.Infof("GameStatefulSet %s/%s is creating Pod %s", set.Namespace, set.Name, replicas[i].Name)
 			status.Replicas++
@@ -476,7 +549,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 			// if the set does not allow bursting, return immediately
 			if monotonic {
-				return &status, nil
+				return status, nil
 			}
 			// pod created, no more work possible for this round
 			continue
@@ -489,13 +562,13 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				set.Namespace,
 				set.Name,
 				replicas[i].Name)
-			return &status, nil
+			return status, nil
 		}
 
 		// If we find a Pod that is current terminating and PodManagmentPolicy is Parallel,
 		// we should ignore it and continue check next replica.
 		if isTerminating(replicas[i]) && !monotonic {
-			klog.V(3).Info(
+			klog.V(3).Infof(
 				"GameStatefulSet Pod %s/%s/%s is terminating, and the PodManagmentPolicy is Parallel, "+
 					"we will not wait until graceful deletition completes before we continue to make progress.",
 				set.Namespace,
@@ -508,7 +581,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		if res := ssc.inPlaceControl.Refresh(replicas[i], nil); res.RefreshErr != nil {
 			klog.Errorf("StatefulSet %s/%s failed to update pod %s condition for inplace: %v",
 				set.Namespace, set.Name, replicas[i].Name, res.RefreshErr)
-			return &status, res.RefreshErr
+			return status, res.RefreshErr
 		} else if res.DelayDuration > 0 {
 			durationStore.Push(getGameStatefulSetKey(set), res.DelayDuration)
 		}
@@ -516,28 +589,24 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If we have a Pod that has been created but is not running and ready we can not make progress.
 		// We must ensure that all for each Pod, when we create it, all of its predecessors, with respect to its
 		// ordinal, are Running and Ready.
-		// (DeveloperJim): Operator doesn't destrutive destroy Pod when in InplaceUpdate mode, stead, operator
-		// will partially update containers within a Pod, so Pod will turn NotReady from RunningAndReady,
-		// so skipping checking for this situation
-		if !isInplaceUpdate(set) {
-			if !isRunningAndReady(replicas[i]) && monotonic {
-				klog.V(3).Infof(
-					"GameStatefulSet %s/%s is waiting for Pod %s to be Running and Ready",
-					set.Namespace,
-					set.Name,
-					replicas[i].Name)
-				return &status, nil
-			}
+		if !isRunningAndReady(replicas[i]) && monotonic {
+			klog.V(3).Infof(
+				"GameStatefulSet %s/%s is waiting for Pod %s to be Running and Ready",
+				set.Namespace,
+				set.Name,
+				replicas[i].Name)
+			return status, nil
 		}
+
 		// Enforce the GameStatefulSet invariants
 		if IdentityMatches(set, replicas[i]) && storageMatches(set, replicas[i]) {
 			continue
 		}
 		// Make a deep copy so we don't mutate the shared cache
 		replica := replicas[i].DeepCopy()
-		if err := ssc.podControl.UpdateGameStatefulSetPod(updateSet, replica, "update"); err != nil {
+		if err := ssc.podControl.UpdateGameStatefulSetPod(updateSet, replica); err != nil {
 			klog.Errorf("Update GameStatefulSet %s/%s in normal replicas iteration err, %s", updateSet.Namespace, updateSet.Name, err.Error())
-			return &status, err
+			return status, err
 		}
 	}
 
@@ -556,7 +625,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				condemned[target].Name)
 			// block if we are in monotonic mode
 			if monotonic {
-				return &status, nil
+				return status, nil
 			}
 			continue
 		}
@@ -567,88 +636,134 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 				set.Namespace,
 				set.Name,
 				firstUnhealthyPod.Name)
-			return &status, nil
+			return status, nil
 		}
-		klog.Infof("GameStatefulSet %s/%s is terminating Pod %s for scale down",
-			set.Namespace,
-			set.Name,
-			condemned[target].Name)
 
-		if err := ssc.podControl.DeleteGameStatefulSetPod(set, condemned[target]); err != nil {
-			klog.Errorf("GameStatefulSet %s/%s clean condemoned Pod %d err: %s", set.Namespace, set.Name, target, err.Error())
-			return &status, err
+		canDelete, err := ssc.preDeleteControl.CheckDelete(set, condemned[target], status, gstsv1alpha1.GameStatefulSetPodNameLabel)
+		if err != nil {
+			klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
+				condemned[target].Name, set.Namespace, set.Name, err.Error())
+			return status, err
 		}
-		if getPodRevision(condemned[target]) == currentRevision.Name {
-			status.CurrentReplicas--
-		}
-		if getPodRevision(condemned[target]) == updateRevision.Name {
-			status.UpdatedReplicas--
-		}
-		if monotonic {
-			return &status, nil
+		if !canDelete {
+			klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s for GameStatefulSet %s/%s now.",
+				condemned[target].Name, set.Namespace, set.Name)
+			if monotonic {
+				return status, nil
+			}
+		} else {
+			klog.Infof("GameStatefulSet %s/%s is terminating Pod %s for scale down",
+				set.Namespace,
+				set.Name,
+				condemned[target].Name)
+
+			if err := ssc.podControl.DeleteGameStatefulSetPod(set, condemned[target]); err != nil {
+				klog.Errorf("GameStatefulSet %s/%s clean condemoned Pod %d err: %s", set.Namespace, set.Name, target, err.Error())
+				return status, err
+			}
+			if getPodRevision(condemned[target]) == currentRevision.Name {
+				status.CurrentReplicas--
+			}
+			if getPodRevision(condemned[target]) == updateRevision.Name {
+				status.UpdatedReplicas--
+			}
+			if monotonic {
+				return status, nil
+			}
 		}
 	}
 
 	// for the OnDelete strategy we short circuit. Pods will be updated when they are manually deleted.
-	if set.Spec.UpdateStrategy.Type == stsplus.OnDeleteGameStatefulSetStrategyType {
-		return &status, nil
+	if set.Spec.UpdateStrategy.Type == gstsv1alpha1.OnDeleteGameStatefulSetStrategyType {
+		return status, nil
 	}
 
 	// we compute the minimum ordinal of the target sequence for a destructive update based on the strategy.
 	updateMin := 0
-	if set.Spec.UpdateStrategy.RollingUpdate != nil {
-		updateMin = int(*set.Spec.UpdateStrategy.RollingUpdate.Partition)
-	}
+	currentPartition := canaryutil.GetCurrentPartition(set)
+	updateMin = int(currentPartition)
+	//if set.Spec.UpdateStrategy.RollingUpdate != nil {
+	//	updateMin = int(*set.Spec.UpdateStrategy.RollingUpdate.Partition)
+	//}
 
 	switch set.Spec.UpdateStrategy.Type {
 	//(DeveloperJim): InplaceUpdate handle here
-	case stsplus.InplaceUpdateGameStatefulSetStrategyType:
+	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
-				status.CurrentReplicas--
-				return &status, inPlaceUpdateErr
+				canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodNameLabel)
+				if err != nil {
+					klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
+						replicas[target].Name, set.Namespace, set.Name, err.Error())
+					return status, err
+				}
+				if !canDelete {
+					klog.V(2).Infof("PreDelete Hook not completed, can't inplaceUpdate the pod %s for GameStatefulSet %s/%s now.",
+						replicas[target].Name, set.Namespace, set.Name)
+					if monotonic {
+						return status, nil
+					}
+					continue
+				} else {
+					inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
+					status.CurrentReplicas--
+					return status, inPlaceUpdateErr
+				}
 			}
 
-			////TODO(DeveloperJim): add parallel featrue for fast rolling Update
-			if !isHealthy(replicas[target]) {
+			if !isHealthy(replicas[target]) && monotonic {
 				klog.V(3).Infof(
 					"GameStatefulSet %s/%s is waiting for Pod %s healthy to InplaceUpdate",
 					set.Namespace,
 					set.Name,
 					replicas[target].Name)
-				return &status, nil
+				return status, nil
 			}
 		}
 	// RollingUpdate handle here
-	case stsplus.RollingUpdateGameStatefulSetStrategyType:
+	case gstsv1alpha1.RollingUpdateGameStatefulSetStrategyType:
 		// we terminate the Pod with the largest ordinal that does not match the update revision.
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 
 			// delete the Pod if it is not already terminating and does not match the update revision.
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				klog.Infof("GameStatefulSet %s/%s terminating Pod %s for RollingUpdate",
-					set.Namespace,
-					set.Name,
-					replicas[target].Name)
-				err := ssc.podControl.DeleteGameStatefulSetPod(set, replicas[target])
-				status.CurrentReplicas--
-				return &status, err
+				canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodNameLabel)
+				if err != nil {
+					klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
+						replicas[target].Name, set.Namespace, set.Name, err.Error())
+					return status, err
+				}
+				if !canDelete {
+					klog.V(2).Infof("PreDelete Hook not completed, can't delete the pod %s for GameStatefulSet %s/%s now.",
+						replicas[target].Name, set.Namespace, set.Name)
+					if monotonic {
+						return status, nil
+					}
+					continue
+				} else {
+					klog.Infof("GameStatefulSet %s/%s terminating Pod %s for RollingUpdate",
+						set.Namespace,
+						set.Name,
+						replicas[target].Name)
+					err := ssc.podControl.DeleteGameStatefulSetPod(set, replicas[target])
+					status.CurrentReplicas--
+					return status, err
+				}
 			}
 
 			// wait for unhealthy Pods on update
-			if !isHealthy(replicas[target]) {
+			if !isHealthy(replicas[target]) && monotonic {
 				klog.V(3).Infof(
 					"GameStatefulSet %s/%s is waiting for Pod %s to RollingUpdate",
 					set.Namespace,
 					set.Name,
 					replicas[target].Name)
-				return &status, nil
+				return status, nil
 			}
 		}
 
 	//(DeveloperBryan): InplaceHotPatch handle here
-	case stsplus.HotPatchGameStatefulSetStrategyType:
+	case gstsv1alpha1.HotPatchGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name {
 				klog.Infof("GameStatefulSet %s/%s updating Pod %s to InplaceUpdate", set.Namespace,
@@ -656,26 +771,25 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 
 				err := ssc.hotPatchUpdatePod(set, replicas[target], updateRevision, revisions)
 				status.CurrentReplicas--
-				return &status, err
+				return status, err
 			}
 
-			//TODO(DeveloperJim): add parallel featrue for fast rolling Update
-			if !isHealthy(replicas[target]) {
+			if !isHealthy(replicas[target]) && monotonic {
 				klog.V(3).Infof(
 					"GameStatefulSet %s/%s is waiting for Pod %s healthy to InplaceUpdate",
 					set.Namespace,
 					set.Name,
 					replicas[target].Name)
-				return &status, nil
+				return status, nil
 			}
 		}
 	}
 
-	return &status, nil
+	return status, nil
 }
 
 func (ssc *defaultGameStatefulSetControl) inPlaceUpdatePod(
-	set *stsplus.GameStatefulSet, pod *v1.Pod,
+	set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod,
 	updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
 ) error {
 	var oldRevision *apps.ControllerRevision
@@ -704,14 +818,14 @@ func (ssc *defaultGameStatefulSetControl) inPlaceUpdatePod(
 		return res.UpdateErr
 	}
 
-	err := fmt.Errorf("find Pod %s update strategy is HotPatch, but the diff not only contains replace operation of spec.containers[x].image", pod)
+	err := fmt.Errorf("find Pod %s update strategy is InplaceUpdate, but the diff not only contains replace operation of spec.containers[x].image", pod)
 	ssc.recorder.Eventf(set, v1.EventTypeWarning, "FailedUpdatePodInPlace", "find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
 	klog.Warningf("GameStatefulSet %s/%s can not update Pod %s in-place: %v", set.Namespace, set.Name, pod.Name, err)
 	return err
 }
 
 func (ssc *defaultGameStatefulSetControl) hotPatchUpdatePod(
-	set *stsplus.GameStatefulSet, pod *v1.Pod,
+	set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod,
 	updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
 ) error {
 	var oldRevision *apps.ControllerRevision
@@ -735,33 +849,70 @@ func (ssc *defaultGameStatefulSetControl) hotPatchUpdatePod(
 // mutated to indicate completion. If status is semantically equivalent to set's Status no update is performed. If the
 // returned error is nil, the update is successful.
 func (ssc *defaultGameStatefulSetControl) updateGameStatefulSetStatus(
-	set *stsplus.GameStatefulSet,
-	status *stsplus.GameStatefulSetStatus) error {
+	set *gstsv1alpha1.GameStatefulSet,
+	canaryCtx *canaryContext) error {
 
-	// complete any in progress rolling update if necessary
-	completeRollingUpdate(set, status)
-
-	if !inconsistentStatus(set, status) {
-		klog.V(4).Infof("GameStatefulSet %s/%s consistent status, ObservedGeneration %d|%d, Replica %d|%d, CurrentReplicas %d|%d, ReadyReplicas %d|%d, UpdatedReplicas %d|%d, CurrentRevision %s|%s, UpdateRevision %s|%s",
-			set.Namespace, set.Name,
-			set.Status.ObservedGeneration, status.ObservedGeneration,
-			set.Status.Replicas, status.Replicas,
-			set.Status.CurrentReplicas, status.CurrentReplicas,
-			set.Status.ReadyReplicas, status.ReadyReplicas,
-			set.Status.UpdatedReplicas, status.UpdatedReplicas,
-			set.Status.CurrentRevision, status.CurrentRevision,
-			set.Status.UpdateRevision, status.UpdateRevision,
-		)
-		// if the status is consistent do not perform an update
-		return nil
-	}
 	// copy set and update its status
 	set = set.DeepCopy()
-	if err := ssc.statusUpdater.UpdateGameStatefulSetStatus(set, status); err != nil {
+	if err := ssc.statusUpdater.UpdateGameStatefulSetStatus(set, canaryCtx); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// truncatePreDeleteHookRuns truncate unneeded PreDeleteHookConditions
+func (ssc *defaultGameStatefulSetControl) truncatePreDeleteHookRuns(set *gstsv1alpha1.GameStatefulSet, pods []*v1.Pod, hrList []*hookv1alpha1.HookRun) error {
+	preDeleteHookRuns := commonhookutil.FilterPreDeleteHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
+	for _, hr := range preDeleteHookRuns {
+		podControllerRevision := hr.Labels[commonhookutil.WorkloadRevisionUniqueLabel]
+		podInstanceID := hr.Labels[commonhookutil.PodInstanceID]
+
+		exist := false
+		for _, pod := range pods {
+			cr, ok1 := pod.Labels[apps.ControllerRevisionHashLabelKey]
+			id, ok2 := pod.Labels[gstsv1alpha1.GameStatefulSetPodNameLabel]
+			if ok1 && ok2 && podControllerRevision == cr && podInstanceID == id {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			hrsToDelete = append(hrsToDelete, hr)
+		}
+	}
+
+	return ssc.deleteHookRuns(hrsToDelete)
+}
+
+// truncatePreDeleteHookConditions truncate unneeded PreDeleteHookConditions
+func (ssc *defaultGameStatefulSetControl) truncatePreDeleteHookConditions(pods []*v1.Pod, newStatus *gstsv1alpha1.GameStatefulSetStatus) {
+	for i, cond := range newStatus.PreDeleteHookConditions {
+		exist := false
+		for _, pod := range pods {
+			if cond.PodName == pod.Name {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			newStatus.PreDeleteHookConditions = append(newStatus.PreDeleteHookConditions[:i], newStatus.PreDeleteHookConditions[i+1:]...)
+		}
+	}
+}
+
+// deleteUnexpectedPreDeleteHookRuns delete unexpected PreDeleteHookRuns, then will trigger a reconcile
+func (ssc *defaultGameStatefulSetControl) deleteUnexpectedPreDeleteHookRuns(hrList []*hookv1alpha1.HookRun) error {
+	preDeleteHookRuns := commonhookutil.FilterPreDeleteHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
+	for _, hr := range preDeleteHookRuns {
+		if hr.Status.Phase.Completed() && hr.Status.Phase != hookv1alpha1.HookPhaseSuccessful {
+			hrsToDelete = append(hrsToDelete, hr)
+		}
+	}
+
+	return ssc.deleteHookRuns(hrsToDelete)
 }
 
 var _ GameStatefulSetControlInterface = &defaultGameStatefulSetControl{}

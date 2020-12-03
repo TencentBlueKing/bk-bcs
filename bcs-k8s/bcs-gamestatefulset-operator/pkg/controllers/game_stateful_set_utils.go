@@ -22,21 +22,25 @@ import (
 	"regexp"
 	"strconv"
 
-	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	stspluslisters "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	gstslisters "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util"
+	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/canary"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/history"
-	node "k8s.io/kubernetes/pkg/util/node"
+	"k8s.io/kubernetes/pkg/util/node"
 )
 
 // maxUpdateRetries is the maximum number of retries used for update conflict resolution prior to failure
@@ -50,11 +54,11 @@ const (
 // updateConflictError is the error used to indicate that the maximum number of retries against the API server have
 // been attempted and we need to back off
 var updateConflictError = fmt.Errorf("aborting update after %d attempts", maxUpdateRetries)
-var patchCodec = scheme.Codecs.LegacyCodec(stsplus.SchemeGroupVersion)
+var patchCodec = scheme.Codecs.LegacyCodec(gstsv1alpha1.SchemeGroupVersion)
 
 // overlappingGameStatefulSetes sorts a list of GameStatefulSetes by creation timestamp, using their names as a tie breaker.
 // Generally used to tie break between GameStatefulSetes that have overlapping selectors.
-type overlappingGameStatefulSetes []*stsplus.GameStatefulSet
+type overlappingGameStatefulSetes []*gstsv1alpha1.GameStatefulSet
 
 // Len sort interface implementation
 func (o overlappingGameStatefulSetes) Len() int { return len(o) }
@@ -103,34 +107,34 @@ func getOrdinal(pod *v1.Pod) int {
 }
 
 // getPodName gets the name of set's child Pod with an ordinal index of ordinal
-func getPodName(set *stsplus.GameStatefulSet, ordinal int) string {
+func getPodName(set *gstsv1alpha1.GameStatefulSet, ordinal int) string {
 	return fmt.Sprintf("%s-%d", set.Name, ordinal)
 }
 
 // getPersistentVolumeClaimName gets the name of PersistentVolumeClaim for a Pod with an ordinal index of ordinal. claim
 // must be a PersistentVolumeClaim from set's VolumeClaims template.
-func getPersistentVolumeClaimName(set *stsplus.GameStatefulSet, claim *v1.PersistentVolumeClaim, ordinal int) string {
+func getPersistentVolumeClaimName(set *gstsv1alpha1.GameStatefulSet, claim *v1.PersistentVolumeClaim, ordinal int) string {
 	// NOTE: This name format is used by the heuristics for zone spreading in ChooseZoneForVolume
 	return fmt.Sprintf("%s-%s-%d", claim.Name, set.Name, ordinal)
 }
 
 // isMemberOf tests if pod is a member of set.
-func isMemberOf(set *stsplus.GameStatefulSet, pod *v1.Pod) bool {
+func isMemberOf(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) bool {
 	return getParentName(pod) == set.Name
 }
 
 // IdentityMatches returns true if pod has a valid identity and network identity for a member of set.
-func IdentityMatches(set *stsplus.GameStatefulSet, pod *v1.Pod) bool {
+func IdentityMatches(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) bool {
 	parent, ordinal := getParentNameAndOrdinal(pod)
 	return ordinal >= 0 &&
 		set.Name == parent &&
 		pod.Name == getPodName(set, ordinal) &&
 		pod.Namespace == set.Namespace &&
-		pod.Labels[stsplus.GameStatefulSetPodNameLabel] == pod.Name
+		pod.Labels[gstsv1alpha1.GameStatefulSetPodNameLabel] == pod.Name
 }
 
 // storageMatches returns true if pod's Volumes cover the set of PersistentVolumeClaims
-func storageMatches(set *stsplus.GameStatefulSet, pod *v1.Pod) bool {
+func storageMatches(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) bool {
 	ordinal := getOrdinal(pod)
 	if ordinal < 0 {
 		return false
@@ -154,7 +158,7 @@ func storageMatches(set *stsplus.GameStatefulSet, pod *v1.Pod) bool {
 // getPersistentVolumeClaims gets a map of PersistentVolumeClaims to their template names, as defined in set. The
 // returned PersistentVolumeClaims are each constructed with a the name specific to the Pod. This name is determined
 // by getPersistentVolumeClaimName.
-func getPersistentVolumeClaims(set *stsplus.GameStatefulSet, pod *v1.Pod) map[string]v1.PersistentVolumeClaim {
+func getPersistentVolumeClaims(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) map[string]v1.PersistentVolumeClaim {
 	ordinal := getOrdinal(pod)
 	templates := set.Spec.VolumeClaimTemplates
 	claims := make(map[string]v1.PersistentVolumeClaim, len(templates))
@@ -176,7 +180,7 @@ func getPersistentVolumeClaims(set *stsplus.GameStatefulSet, pod *v1.Pod) map[st
 
 // updateStorage updates pod's Volumes to conform with the PersistentVolumeClaim of set's templates. If pod has
 // conflicting local Volumes these are replaced with Volumes that conform to the set's templates.
-func updateStorage(set *stsplus.GameStatefulSet, pod *v1.Pod) {
+func updateStorage(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) {
 	currentVolumes := pod.Spec.Volumes
 	claims := getPersistentVolumeClaims(set, pod)
 	newVolumes := make([]v1.Volume, 0, len(claims))
@@ -200,7 +204,7 @@ func updateStorage(set *stsplus.GameStatefulSet, pod *v1.Pod) {
 	pod.Spec.Volumes = newVolumes
 }
 
-func initIdentity(set *stsplus.GameStatefulSet, pod *v1.Pod) {
+func initIdentity(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) {
 	updateIdentity(set, pod)
 	// Set these immutable fields only on initial Pod creation, not updates.
 	pod.Spec.Hostname = pod.Name
@@ -209,13 +213,13 @@ func initIdentity(set *stsplus.GameStatefulSet, pod *v1.Pod) {
 
 // updateIdentity updates pod's name, hostname, and subdomain, and GameStatefulSetPodNameLabel to conform to set's name
 // and headless service.
-func updateIdentity(set *stsplus.GameStatefulSet, pod *v1.Pod) {
+func updateIdentity(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) {
 	pod.Name = getPodName(set, getOrdinal(pod))
 	pod.Namespace = set.Namespace
 	if pod.Labels == nil {
 		pod.Labels = make(map[string]string)
 	}
-	pod.Labels[stsplus.GameStatefulSetPodNameLabel] = pod.Name
+	pod.Labels[gstsv1alpha1.GameStatefulSetPodNameLabel] = pod.Name
 }
 
 // isRunningAndReady returns true if pod is in the PodRunning Phase, if it has a condition of PodReady.
@@ -249,8 +253,8 @@ func isHealthy(pod *v1.Pod) bool {
 }
 
 // allowsBurst is true if the alpha burst annotation is set.
-func allowsBurst(set *stsplus.GameStatefulSet) bool {
-	return set.Spec.PodManagementPolicy == stsplus.ParallelPodManagement
+func allowsBurst(set *gstsv1alpha1.GameStatefulSet) bool {
+	return set.Spec.PodManagementPolicy == gstsv1alpha1.ParallelPodManagement
 }
 
 // setPodRevision sets the revision of Pod to revision by adding the GameStatefulSetRevisionLabel
@@ -258,7 +262,7 @@ func setPodRevision(pod *v1.Pod, revision string) {
 	if pod.Labels == nil {
 		pod.Labels = make(map[string]string)
 	}
-	pod.Labels[stsplus.GameStatefulSetRevisionLabel] = revision
+	pod.Labels[gstsv1alpha1.GameStatefulSetRevisionLabel] = revision
 }
 
 // getPodRevision gets the revision of Pod by inspecting the GameStatefulSetRevisionLabel. If pod has no revision the empty
@@ -267,15 +271,25 @@ func getPodRevision(pod *v1.Pod) string {
 	if pod.Labels == nil {
 		return ""
 	}
-	return pod.Labels[stsplus.GameStatefulSetRevisionLabel]
+	return pod.Labels[gstsv1alpha1.GameStatefulSetRevisionLabel]
+}
+
+// getPodsRevisions return revision hash set of these pods.
+func getPodsRevisions(pods []*v1.Pod) sets.String {
+	revisions := sets.NewString()
+	for _, p := range pods {
+		revisions.Insert(getPodRevision(p))
+	}
+	return revisions
 }
 
 // newGameStatefulSetPod returns a new Pod conforming to the set's Spec with an identity generated from ordinal.
-func newGameStatefulSetPod(set *stsplus.GameStatefulSet, ordinal int) *v1.Pod {
-	pod, _ := controller.GetPodFromTemplate(&set.Spec.Template, set, metav1.NewControllerRef(set, controllerKind))
+func newGameStatefulSetPod(set *gstsv1alpha1.GameStatefulSet, ordinal int) *v1.Pod {
+	pod, _ := controller.GetPodFromTemplate(&set.Spec.Template, set, metav1.NewControllerRef(set, util.ControllerKind))
 	pod.Name = getPodName(set, ordinal)
 	initIdentity(set, pod)
 	updateStorage(set, pod)
+	inplaceupdate.InjectReadinessGate(pod)
 	return pod
 }
 
@@ -283,10 +297,11 @@ func newGameStatefulSetPod(set *stsplus.GameStatefulSet, ordinal int) *v1.Pod {
 // current revision. updateSet is the representation of the set at the updateRevision. currentRevision is the name of
 // the current revision. updateRevision is the name of the update revision. ordinal is the ordinal of the Pod. If the
 // returned error is nil, the returned Pod is valid.
-func newVersionedGameStatefulSetPod(currentSet, updateSet *stsplus.GameStatefulSet, currentRevision, updateRevision string, ordinal int) *v1.Pod {
-	if currentSet.Spec.UpdateStrategy.Type != stsplus.OnDeleteGameStatefulSetStrategyType &&
-		(currentSet.Spec.UpdateStrategy.RollingUpdate == nil && ordinal < int(currentSet.Status.CurrentReplicas)) ||
-		(currentSet.Spec.UpdateStrategy.RollingUpdate != nil && ordinal < int(*currentSet.Spec.UpdateStrategy.RollingUpdate.Partition)) { //nolint
+func newVersionedGameStatefulSetPod(set, currentSet, updateSet *gstsv1alpha1.GameStatefulSet, currentRevision, updateRevision string, ordinal int) *v1.Pod {
+	currentPartition := canaryutil.GetCurrentPartition(set)
+	if currentSet.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType &&
+		(currentPartition == 0 && ordinal < int(currentSet.Status.CurrentReplicas)) ||
+		(currentPartition > 0 && ordinal < int(currentPartition)) {
 		pod := newGameStatefulSetPod(currentSet, ordinal)
 		setPodRevision(pod, currentRevision)
 		return pod
@@ -296,124 +311,8 @@ func newVersionedGameStatefulSetPod(currentSet, updateSet *stsplus.GameStatefulS
 	return pod
 }
 
-// updateVersionedGameStatefulSetPod creates a new Pod for a GameStatefulSet. currentSet is the representation of the set at the
-// current revision. updateSet is the representation of the set at the updateRevision. currentRevision is the name of
-// the current revision. updateRevision is the name of the update revision. ordinal is the ordinal of the Pod. If the
-// returned error is nil, the returned Pod is valid.
-func updateVersionedGameStatefulSetPod(updateSet *stsplus.GameStatefulSet, updateRevision string, oldPod *v1.Pod) *v1.Pod {
-	// Make a deep copy so we don't mutate the shared cache
-	pod := oldPod.DeepCopy()
-	//copy Pod Labels & Annotations
-	if pod.Labels == nil {
-		pod.Labels = make(labels.Set)
-	}
-	for k, v := range updateSet.Spec.Template.Labels {
-		pod.Labels[k] = v
-	}
-	if pod.Annotations == nil {
-		pod.Annotations = make(labels.Set)
-	}
-	for k, v := range updateSet.Spec.Template.Annotations {
-		pod.Annotations[k] = v
-	}
-	if updateSet.Spec.Template.Spec.ActiveDeadlineSeconds != nil {
-		pod.Spec.ActiveDeadlineSeconds = updateSet.Spec.Template.Spec.ActiveDeadlineSeconds
-	}
-
-	if len(pod.Spec.InitContainers) > 0 {
-		// Deep copy initContainers
-		desiredInitContainers := make(map[string]v1.Container)
-		for _, container := range updateSet.Spec.Template.Spec.InitContainers {
-			desiredInitContainers[container.Name] = container
-		}
-		for i := range pod.Spec.InitContainers {
-			if container, ok := desiredInitContainers[pod.Spec.InitContainers[i].Name]; ok {
-				pod.Spec.InitContainers[i].Image = container.Image
-			}
-		}
-	}
-
-	// Deep copy container
-	desiredContainers := make(map[string]v1.Container)
-	for _, container := range updateSet.Spec.Template.Spec.Containers {
-		desiredContainers[container.Name] = container
-	}
-	for i := range pod.Spec.Containers {
-		if container, ok := desiredContainers[pod.Spec.Containers[i].Name]; ok {
-			pod.Spec.Containers[i].Image = container.Image
-		}
-	}
-
-	// TODO
-	// only additions to existing tolerations
-
-	setPodRevision(pod, updateRevision)
-	return pod
-}
-
-// hotPatchVersionedGameStatefulSetPod creates a new Pod for a GameStatefulSet. currentSet is the representation of the set at the
-// current revision. updateSet is the representation of the set at the updateRevision. currentRevision is the name of
-// the current revision. updateRevision is the name of the update revision. ordinal is the ordinal of the Pod. If the
-// returned error is nil, the returned Pod is valid.
-func hotPatchVersionedGameStatefulSetPod(updateSet *stsplus.GameStatefulSet, updateRevision string, oldPod *v1.Pod) *v1.Pod {
-	// Make a deep copy so we don't mutate the shared cache
-	pod := oldPod.DeepCopy()
-	//copy Pod Labels & Annotations
-	if pod.Labels == nil {
-		pod.Labels = make(labels.Set)
-	}
-	for k, v := range updateSet.Spec.Template.Labels {
-		pod.Labels[k] = v
-	}
-	if pod.Annotations == nil {
-		pod.Annotations = make(labels.Set)
-	}
-	for k, v := range updateSet.Spec.Template.Annotations {
-		pod.Annotations[k] = v
-	}
-
-	_, ok := pod.Annotations[PodHotpatchContainerKey]
-	if !ok {
-		pod.Annotations[PodHotpatchContainerKey] = "true"
-	}
-
-	if updateSet.Spec.Template.Spec.ActiveDeadlineSeconds != nil {
-		pod.Spec.ActiveDeadlineSeconds = updateSet.Spec.Template.Spec.ActiveDeadlineSeconds
-	}
-
-	if len(pod.Spec.InitContainers) > 0 {
-		// Deep copy initContainers
-		desiredInitContainers := make(map[string]v1.Container)
-		for _, container := range updateSet.Spec.Template.Spec.InitContainers {
-			desiredInitContainers[container.Name] = container
-		}
-		for i := range pod.Spec.InitContainers {
-			if container, ok := desiredInitContainers[pod.Spec.InitContainers[i].Name]; ok {
-				pod.Spec.InitContainers[i].Image = container.Image
-			}
-		}
-	}
-
-	// Deep copy container
-	desiredContainers := make(map[string]v1.Container)
-	for _, container := range updateSet.Spec.Template.Spec.Containers {
-		desiredContainers[container.Name] = container
-	}
-	for i := range pod.Spec.Containers {
-		if container, ok := desiredContainers[pod.Spec.Containers[i].Name]; ok {
-			pod.Spec.Containers[i].Image = container.Image
-		}
-	}
-
-	// TODO
-	// only additions to existing tolerations
-
-	setPodRevision(pod, updateRevision)
-	return pod
-}
-
 // Match check if the given GameStatefulSet's template matches the template stored in the given history.
-func Match(ss *stsplus.GameStatefulSet, history *apps.ControllerRevision) (bool, error) {
+func Match(ss *gstsv1alpha1.GameStatefulSet, history *apps.ControllerRevision) (bool, error) {
 	patch, err := getPatch(ss)
 	if err != nil {
 		return false, err
@@ -425,7 +324,7 @@ func Match(ss *stsplus.GameStatefulSet, history *apps.ControllerRevision) (bool,
 // previous version. If the returned error is nil the patch is valid. The current state that we save is just the
 // PodSpecTemplate. We can modify this later to encompass more state (or less) and remain compatible with previously
 // recorded patches.
-func getPatch(set *stsplus.GameStatefulSet) ([]byte, error) {
+func getPatch(set *gstsv1alpha1.GameStatefulSet) ([]byte, error) {
 	str, err := runtime.Encode(patchCodec, set)
 	if err != nil {
 		return nil, err
@@ -447,13 +346,13 @@ func getPatch(set *stsplus.GameStatefulSet) ([]byte, error) {
 // The Revision of the returned ControllerRevision is set to revision. If the returned error is nil, the returned
 // ControllerRevision is valid. GameStatefulSet revisions are stored as patches that re-apply the current state of set
 // to a new GameStatefulSet using a strategic merge patch to replace the saved state of the new GameStatefulSet.
-func newRevision(set *stsplus.GameStatefulSet, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
+func newRevision(set *gstsv1alpha1.GameStatefulSet, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
 	patch, err := getPatch(set)
 	if err != nil {
 		return nil, err
 	}
 	cr, err := history.NewControllerRevision(set,
-		controllerKind,
+		util.ControllerKind,
 		set.Spec.Template.Labels,
 		runtime.RawExtension{Raw: patch},
 		revision,
@@ -472,7 +371,7 @@ func newRevision(set *stsplus.GameStatefulSet, revision int64, collisionCount *i
 
 // ApplyRevision returns a new GameStatefulSet constructed by restoring the state in revision to set. If the returned error
 // is nil, the returned GameStatefulSet is valid.
-func ApplyRevision(set *stsplus.GameStatefulSet, revision *apps.ControllerRevision) (*stsplus.GameStatefulSet, error) {
+func ApplyRevision(set *gstsv1alpha1.GameStatefulSet, revision *apps.ControllerRevision) (*gstsv1alpha1.GameStatefulSet, error) {
 	clone := set.DeepCopy()
 	patched, err := strategicpatch.StrategicMergePatch([]byte(runtime.EncodeOrDie(patchCodec, clone)), revision.Data.Raw, clone)
 	if err != nil {
@@ -498,7 +397,7 @@ func nextRevision(revisions []*apps.ControllerRevision) int64 {
 
 // inconsistentStatus returns true if the ObservedGeneration of status is greater than set's
 // Generation or if any of the status's fields do not match those of set's status.
-func inconsistentStatus(set *stsplus.GameStatefulSet, status *stsplus.GameStatefulSetStatus) bool {
+func inconsistentStatus(set *gstsv1alpha1.GameStatefulSet, status *gstsv1alpha1.GameStatefulSetStatus) bool {
 	return status.ObservedGeneration > set.Status.ObservedGeneration ||
 		status.Replicas != set.Status.Replicas ||
 		status.CurrentReplicas != set.Status.CurrentReplicas ||
@@ -512,8 +411,8 @@ func inconsistentStatus(set *stsplus.GameStatefulSet, status *stsplus.GameStatef
 // to the updateRevision. status's currentRevision is set to updateRevision and its' updateRevision
 // is set to the empty string. status's currentReplicas is set to updateReplicas and its updateReplicas
 // are set to 0.
-func completeRollingUpdate(set *stsplus.GameStatefulSet, status *stsplus.GameStatefulSetStatus) {
-	if set.Spec.UpdateStrategy.Type != stsplus.OnDeleteGameStatefulSetStrategyType &&
+func completeRollingUpdate(set *gstsv1alpha1.GameStatefulSet, status *gstsv1alpha1.GameStatefulSetStatus) {
+	if set.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType &&
 		status.UpdatedReplicas == status.Replicas &&
 		status.ReadyReplicas == status.Replicas {
 		status.CurrentReplicas = status.UpdatedReplicas
@@ -544,9 +443,9 @@ func (ao ascendingOrdinal) Less(i, j int) bool {
 // GetPodGameStatefulSets returns a list of StatefulSets that potentially match a pod.
 // Only the one specified in the Pod's ControllerRef will actually manage it.
 // Returns an error only if no matching StatefulSets are found.
-func GetPodGameStatefulSets(pod *v1.Pod, sscLister stspluslisters.GameStatefulSetLister) ([]*stsplus.GameStatefulSet, error) {
+func GetPodGameStatefulSets(pod *v1.Pod, sscLister gstslisters.GameStatefulSetLister) ([]*gstsv1alpha1.GameStatefulSet, error) {
 	var selector labels.Selector
-	var ps *stsplus.GameStatefulSet
+	var ps *gstsv1alpha1.GameStatefulSet
 
 	if len(pod.Labels) == 0 {
 		return nil, fmt.Errorf("no StatefulSets found for pod %v because it has no labels", pod.Name)
@@ -557,7 +456,7 @@ func GetPodGameStatefulSets(pod *v1.Pod, sscLister stspluslisters.GameStatefulSe
 		return nil, err
 	}
 
-	var psList []*stsplus.GameStatefulSet
+	var psList []*gstsv1alpha1.GameStatefulSet
 	for i := range list {
 		ps = list[i]
 		if ps.Namespace != pod.Namespace {
@@ -582,13 +481,13 @@ func GetPodGameStatefulSets(pod *v1.Pod, sscLister stspluslisters.GameStatefulSe
 	return psList, nil
 }
 
-func isOnDeleteUpdateStragtegy(set *stsplus.GameStatefulSet) bool {
+func isOnDeleteUpdateStragtegy(set *gstsv1alpha1.GameStatefulSet) bool {
 	if set == nil {
 		klog.Errorf("the input gamestatefulset of isOnDeleteUpdateStragtegy is nil, please check it.")
 		return false
 	}
 
-	if set.Spec.UpdateStrategy.Type != stsplus.OnDeleteGameStatefulSetStrategyType {
+	if set.Spec.UpdateStrategy.Type != gstsv1alpha1.OnDeleteGameStatefulSetStrategyType {
 		klog.Errorf("the gamestatefulset's UpdateStrategy is %s, not OnDelete", set.Spec.UpdateStrategy.Type)
 		return false
 	}
@@ -616,8 +515,8 @@ func Contain(obj interface{}, target interface{}) (bool, error) {
 }
 
 //isInplaceUpdate check if GameStatefulSet is in InplaceUpdate mode,
-func isInplaceUpdate(set *stsplus.GameStatefulSet) bool {
-	return set.Spec.UpdateStrategy.Type == stsplus.InplaceUpdateGameStatefulSetStrategyType &&
+func isInplaceUpdate(set *gstsv1alpha1.GameStatefulSet) bool {
+	return set.Spec.UpdateStrategy.Type == gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType &&
 		set.Status.CurrentRevision != set.Status.UpdateRevision
 }
 
