@@ -673,6 +673,18 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		}
 	}
 
+	return ssc.handleUpdateStrategy(set, status, revisions, updateRevision, replicas, monotonic)
+}
+
+func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
+	set *gstsv1alpha1.GameStatefulSet,
+	status *gstsv1alpha1.GameStatefulSetStatus,
+	revisions []*apps.ControllerRevision,
+	updateRevision *apps.ControllerRevision,
+	replicas []*v1.Pod,
+	monotonic bool,
+	) (*gstsv1alpha1.GameStatefulSetStatus, error) {
+
 	// for the OnDelete strategy we short circuit. Pods will be updated when they are manually deleted.
 	if set.Spec.UpdateStrategy.Type == gstsv1alpha1.OnDeleteGameStatefulSetStrategyType {
 		return status, nil
@@ -682,12 +694,8 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 	updateMin := 0
 	currentPartition := canaryutil.GetCurrentPartition(set)
 	updateMin = int(currentPartition)
-	//if set.Spec.UpdateStrategy.RollingUpdate != nil {
-	//	updateMin = int(*set.Spec.UpdateStrategy.RollingUpdate.Partition)
-	//}
 
 	switch set.Spec.UpdateStrategy.Type {
-	//(DeveloperJim): InplaceUpdate handle here
 	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
