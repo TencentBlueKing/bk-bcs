@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/types"
 )
 
 // Meta meta for mesos object
@@ -65,8 +66,6 @@ func (ws *WebhookServer) MesosHook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, message.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	blog.Info(string(meta.Kind))
 
 	if meta.Kind == commtypes.BcsDataType_APP {
 		var application, injectedApplication *commtypes.ReplicaController
@@ -133,6 +132,25 @@ func (ws *WebhookServer) doAppHook(application *commtypes.ReplicaController) (*c
 	pluginNames := ws.PluginMgr.GetMesosPluginNames()
 	var err error
 	patchedApplication := application
+
+	// check if object in ignore namespaces should be hooked
+	if types.IsIgnoredNamespace(application.GetNamespace()) {
+		tmpAnnotation := application.GetAnnotations()
+		if tmpAnnotation == nil {
+			return patchedApplication, nil
+		}
+		value, ok := tmpAnnotation[types.BcsWebhookAnnotationInjectKey]
+		if !ok {
+			return patchedApplication, nil
+		}
+		switch value {
+		default:
+			return patchedApplication, nil
+		case "y", "yes", "true", "on":
+			// do nothing, let it go
+		}
+	}
+
 	for index, p := range plugins {
 		patchedApplication, err = p.InjectApplicationContent(patchedApplication)
 		if err != nil {
@@ -147,6 +165,25 @@ func (ws *WebhookServer) doDepHook(deployment *commtypes.BcsDeployment) (*commty
 	pluginNames := ws.PluginMgr.GetMesosPluginNames()
 	var err error
 	patchedDeployment := deployment
+
+	// check if object in ignore namespaces should be hooked
+	if types.IsIgnoredNamespace(deployment.GetNamespace()) {
+		tmpAnnotation := deployment.GetAnnotations()
+		if tmpAnnotation == nil {
+			return patchedDeployment, nil
+		}
+		value, ok := tmpAnnotation[types.BcsWebhookAnnotationInjectKey]
+		if !ok {
+			return patchedDeployment, nil
+		}
+		switch value {
+		default:
+			return patchedDeployment, nil
+		case "y", "yes", "true", "on":
+			// do nothing, let it go
+		}
+	}
+
 	for index, p := range plugins {
 		patchedDeployment, err = p.InjectDeployContent(patchedDeployment)
 		if err != nil {

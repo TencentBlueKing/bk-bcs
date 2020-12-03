@@ -109,7 +109,7 @@ func (h *Hooker) injectRequired(pod *corev1.Pod) bool {
 }
 
 func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
-	if h.injectRequired(pod) {
+	if !h.injectRequired(pod) {
 		blog.Infof("bscp hooker | skip Pod %s/%s sidecar injection.", pod.GetNamespace(), pod.GetName())
 		return nil, nil
 	}

@@ -119,16 +119,19 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 
 	// check if object in ignore namespaces should be hooked
 	if types.IsIgnoredNamespace(tmpUnstructNs) {
-		if value, ok := tmpUnstruct.GetAnnotations()[types.BcsWebhookAnnotationInjectKey]; ok {
-			switch value {
-			default:
-				blog.V(5).Infof("ignored object %s/%s", tmpUnstruct.GetName(), tmpUnstruct.GetNamespace())
-				return &v1beta1.AdmissionResponse{
-					Allowed: true,
-				}
-			case "y", "yes", "true", "on":
-				// do nothing, let it go
-			}
+		tmpAnnotation := tmpUnstruct.GetAnnotations()
+		if tmpAnnotation == nil {
+			return &v1beta1.AdmissionResponse{Allowed: true}
+		}
+		value, ok := tmpAnnotation[types.BcsWebhookAnnotationInjectKey]
+		if !ok {
+			return &v1beta1.AdmissionResponse{Allowed: true}
+		}
+		switch value {
+		default:
+			return &v1beta1.AdmissionResponse{Allowed: true}
+		case "y", "yes", "true", "on":
+			// do nothing, let it go
 		}
 	}
 	blog.Infof("object %s/%s hooked", tmpUnstruct.GetName(), tmpUnstruct.GetNamespace())

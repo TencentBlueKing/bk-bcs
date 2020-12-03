@@ -278,20 +278,20 @@ spec:
         - --alsologtostderr=true
         - --v=3
         - --stderrthreshold=2
-        - --server_cert_file=/etc/webhook/certs/cert.pem
-        - --server_key_file=/etc/webhook/certs/key.pem
+        - --server_cert_file=/data/bcs/cert/cert.pem
+        - --server_key_file=/data/bcs/cert/key.pem
         - --engine_type=kubernetes
-        - --plugin_dir=/etc/webhook/plugins
+        - --plugin_dir=/data/bcs/plugins
         - --dbpriv,bscp
         # bcs-webhook-server镜像地址
         image: bcs-webhook-server:1.3.0
         imagePullPolicy: IfNotPresent
         name: bcs-webhook-server
         volumeMounts:
-        - mountPath: /etc/webhook/certs
+        - mountPath: /data/bcs/cert
           name: webhook-certs
           readOnly: true
-        - mountPath: /etc/webhook/plugins
+        - mountPath: /data/bcs/plugins
           name: plugin-confs
       dnsPolicy: ClusterFirst
       nodeSelector:
