@@ -78,7 +78,7 @@ func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	}
 
 	// do inject
-	patches, err := h.createPatch(pod)
+	patches, err := h.createPatch(req.Name, req.Namespace, pod)
 	if err != nil {
 		blog.Errorf("create path failed, err %s", err.Error())
 		return pluginutil.ToAdmissionResponse(err)
@@ -102,15 +102,15 @@ func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 // check if pod injection needed
 func (h *Hooker) injectRequired(pod *corev1.Pod) bool {
 	if value, ok := pod.Annotations[AnnotationKey]; !ok || value != AnnotationValue {
-		blog.Warnf("Pod %s/%s has no expected annoation key & value", pod.Namespace, pod.Name)
+		blog.Warnf("Pod %s/%s has no expected annoation key & value", pod.Name, pod.Namespace)
 		return false
 	}
 	return true
 }
 
-func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
+func (h *Hooker) createPatch(reqName, reqNs string, pod *corev1.Pod) ([]types.PatchOperation, error) {
 	if !h.injectRequired(pod) {
-		blog.Infof("bscp hooker | skip Pod %s/%s sidecar injection.", pod.GetNamespace(), pod.GetName())
+		blog.Infof("bscp hooker | skip Pod from req %s/%s sidecar injection.", reqName, reqNs)
 		return nil, nil
 	}
 
@@ -118,10 +118,10 @@ func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
 	// check sidecar environments
 	envs, patchesReplace, err := h.retrieveEnvFromPod(pod)
 	if err != nil {
-		blog.Errorf("bscp hooker | get %s/%s environments failed, err %s",
-			pod.GetNamespace(), pod.GetName(), err.Error())
-		return nil, fmt.Errorf("bscp hooker | get %s/%s environments failed, err %s",
-			pod.GetNamespace(), pod.GetName(), err.Error())
+		blog.Errorf("bscp hooker | get pod from req %s/%s environments failed, err %s",
+			reqName, reqNs, err.Error())
+		return nil, fmt.Errorf("bscp hooker | get pod from req %s/%s environments failed, err %s",
+			reqName, reqNs, err.Error())
 	}
 	patchesAdd := h.injectToPod(pod, envs)
 	patches = append(patches, patchesReplace...)
@@ -138,7 +138,7 @@ func (h *Hooker) retrieveEnvFromPod(pod *corev1.Pod) (map[string]string, []types
 			// record all env with sidecar prefix
 			if strings.Contains(env.Name, SideCarPrefix) {
 				envMap[env.Name] = env.Value
-				blog.Infof("Injection for %s [%s=%s]", pod.GetName()+"/"+pod.GetNamespace(), env.Name, env.Value)
+				blog.Infof("Injection [%s=%s]", env.Name, env.Value)
 			}
 			// check sidecar config path for sharing files between containers
 			if env.Name == SideCarCfgPath {

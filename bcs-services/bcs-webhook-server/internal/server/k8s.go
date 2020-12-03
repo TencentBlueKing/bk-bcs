@@ -119,7 +119,7 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 		tmpUnstructNs = req.Namespace
 	}
 	if len(tmpUnstructName) == 0 {
-		tmpUnstructName = string(tmpUnstruct.GetUID())
+		tmpUnstructName = "Unknown"
 	}
 
 	// check if object in ignore namespaces should be hooked
