@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
+
 	"github.com/mattbaird/jsonpatch"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +34,7 @@ var (
 )
 
 type commonControl struct {
-	*v1alpha1.GameDeployment
+	*gdv1alpha1.GameDeployment
 }
 
 var _ Control = &commonControl{}
@@ -47,8 +48,8 @@ func (c *commonControl) SetRevisionTemplate(revisionSpec map[string]interface{},
 	template["$patch"] = "replace"
 }
 
-func (c *commonControl) ApplyRevisionPatch(patched []byte) (*v1alpha1.GameDeployment, error) {
-	restoredDeploy := &v1alpha1.GameDeployment{}
+func (c *commonControl) ApplyRevisionPatch(patched []byte) (*gdv1alpha1.GameDeployment, error) {
+	restoredDeploy := &gdv1alpha1.GameDeployment{}
 	if err := json.Unmarshal(patched, restoredDeploy); err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func (c *commonControl) IsReadyToScale() bool {
 	return true
 }
 
-func (c *commonControl) NewVersionedPods(currentGD, updateGD *v1alpha1.GameDeployment,
+func (c *commonControl) NewVersionedPods(currentGD, updateGD *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	expectedCreations, expectedCurrentCreations int,
 	availableIDs []string,
@@ -74,7 +75,7 @@ func (c *commonControl) NewVersionedPods(currentGD, updateGD *v1alpha1.GameDeplo
 	return newPods, nil
 }
 
-func (c *commonControl) newVersionedPods(cs *v1alpha1.GameDeployment, revision string, replicas int, availableIDs *[]string) []*v1.Pod {
+func (c *commonControl) newVersionedPods(cs *gdv1alpha1.GameDeployment, revision string, replicas int, availableIDs *[]string) []*v1.Pod {
 	var newPods []*v1.Pod
 	for i := 0; i < replicas; i++ {
 		if len(*availableIDs) == 0 {
@@ -91,7 +92,7 @@ func (c *commonControl) newVersionedPods(cs *v1alpha1.GameDeployment, revision s
 
 		pod.Name = fmt.Sprintf("%s-%s", cs.Name, id)
 		pod.Namespace = cs.Namespace
-		pod.Labels[v1alpha1.GameDeploymentInstanceID] = id
+		pod.Labels[gdv1alpha1.GameDeploymentInstanceID] = id
 
 		inplaceupdate.InjectReadinessGate(pod)
 
@@ -132,8 +133,8 @@ func (c *commonControl) GetUpdateOptions() *inplaceupdate.UpdateOptions {
 	return opts
 }
 
-func (c *commonControl) ValidateGameDeploymentUpdate(oldCS, newCS *v1alpha1.GameDeployment) error {
-	if newCS.Spec.UpdateStrategy.Type != v1alpha1.InPlaceGameDeploymentUpdateStrategyType {
+func (c *commonControl) ValidateGameDeploymentUpdate(oldCS, newCS *gdv1alpha1.GameDeployment) error {
+	if newCS.Spec.UpdateStrategy.Type != gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType {
 		return nil
 	}
 
@@ -147,7 +148,7 @@ func (c *commonControl) ValidateGameDeploymentUpdate(oldCS, newCS *v1alpha1.Game
 	for _, p := range patches {
 		if p.Operation != "replace" || !inPlaceUpdateTemplateSpecPatchRexp.MatchString(p.Path) {
 			return fmt.Errorf("only allowed to update images in spec for %s, but found %s %s",
-				v1alpha1.InPlaceGameDeploymentUpdateStrategyType, p.Operation, p.Path)
+				gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType, p.Operation, p.Path)
 		}
 	}
 	return nil

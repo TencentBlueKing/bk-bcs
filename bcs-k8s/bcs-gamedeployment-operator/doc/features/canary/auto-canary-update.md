@@ -49,11 +49,12 @@ spec:
 如果不需要分步骤灰度发布，那么无需配置 spec.updateStrategy.canary ，仍然按照 [README](../../../README.md) 指引即可。
 
 #### hook 步骤的实现
-bcs-gamedeployment-operator 通过 gamedeployment-controller 与 hookrun-controller 两个 controller 的联动来实现灰度发布中的 hook 步骤。  
-如果在一个 GameDeployment 应用中配置了 hook 调用的步骤，那么 gamedeployment-controller 就会根据指定 name 的 HookTemplate 创建一个 
-HookRun crd，hookkun-controller watch 到 crd 后就会操作这个 HookRun 进行 hook 调用，并维护这个 HookRun 的状态。GameDeployment watch 
+bcs-gamedeployment-operator 通过与 bcs-hook-operator 的联动来实现灰度发布中的 hook 步骤。如果想要配置分步骤灰度发布中的 hook 步骤，需要
+同时部署 bcs-gamedeployment-operator 和 bcs-hook-operator 这两个 bcs 组件。   
+bcs-hook-operator 定义了 HookRun 和 HookTemplate 两个 CRD，其原理及实现请参考：[bcs-hook-operator](../../../../bcs-hook-operator/README.md)。    
+如果在一个 GameDeployment 应用中配置了 hook 调用的步骤，那么 bcs-gamedeployment-operator 就会根据指定 name 的 HookTemplate 创建一个 
+HookRun crd，bcs-hook-operator watch 到 crd 后就会操作这个 HookRun 进行 hook 调用，并维护这个 HookRun 的状态。GameDeployment watch 
 这个 HookRun 的状态，根据 HookRun 的状态来判断是否继续或暂停灰度发布。  
-HookRun 及 HookTemplate 的原理及实现请参考：[hookrun-controller](../hookrun-controller/hookrun.md)。  
 
 ### 使用示例
 #### 前置条件
@@ -233,7 +234,7 @@ currentStepIndex 为 4，可见 GameDeployment 在步骤 3 暂停 60 秒后，�
 ```
 # kubectl get hookrun
 NAME                                   PHASE      AGE
-test-gamedeployment-9d78dd5db-4-test   Failed     37m
+canary-step-hook-test-gamedeployment-9d78dd5db-4-test   Failed     37m
 ```
 使用 kubectl get hookrun test-gamedeployment-9d78dd5db-4-test -o yaml 命令查看到其状态为 Failed:  
 ```yaml

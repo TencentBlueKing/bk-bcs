@@ -15,19 +15,22 @@ package gamedeployment
 
 import (
 	"fmt"
-	hooksutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/hook"
 	"sort"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
-	gamedeploylister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	revisioncontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/revision"
 	scalecontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/scale"
 	updatecontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/update"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/constants"
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
+	hooklister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/hook"
+
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,19 +48,20 @@ type GameDeploymentControlInterface interface {
 	// If an implementation returns a non-nil error, the invocation will be retried using a rate-limited strategy.
 	// Implementors should sink any errors that they do not wish to trigger a retry, and they may feel free to
 	// exit exceptionally at any point provided they wish the update to be re-run at a later point in time.
-	UpdateGameDeployment(deploy *v1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *v1alpha1.GameDeploymentStatus, error)
+	UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error)
 	// ListRevisions returns a array of the ControllerRevisions that represent the revisions of set. If the returned
 	// error is nil, the returns slice of ControllerRevisions is valid.
-	ListRevisions(deploy *v1alpha1.GameDeployment) ([]*apps.ControllerRevision, error)
+	ListRevisions(deploy *gdv1alpha1.GameDeployment) ([]*apps.ControllerRevision, error)
 }
 
 // NewDefaultGameDeploymentControl returns a new instance of the default implementation GameDeploymentControlInterface that
 // implements the documented semantics for GameDeployments. statusUpdater is the GameDeploymentStatusUpdaterInterface used
 // to update the status of GameDeployments.
 func NewDefaultGameDeploymentControl(
-	client tkexclientset.Interface,
-	hookRunLister gamedeploylister.HookRunLister,
-	hookTemplateLister gamedeploylister.HookTemplateLister,
+	gdClient gdclientset.Interface,
+	hookClient hookclientset.Interface,
+	hookRunLister hooklister.HookRunLister,
+	hookTemplateLister hooklister.HookTemplateLister,
 	scaleControl scalecontrol.Interface,
 	updateControl updatecontrol.Interface,
 	statusUpdater GameDeploymentStatusUpdaterInterface,
@@ -65,7 +69,8 @@ func NewDefaultGameDeploymentControl(
 	revisionControl revisioncontrol.Interface,
 	recorder record.EventRecorder) GameDeploymentControlInterface {
 	return &defaultGameDeploymentControl{
-		client,
+		gdClient,
+		hookClient,
 		scaleControl,
 		updateControl,
 		statusUpdater,
@@ -78,18 +83,19 @@ func NewDefaultGameDeploymentControl(
 }
 
 type defaultGameDeploymentControl struct {
-	client             tkexclientset.Interface
+	gdClient           gdclientset.Interface
+	hookClient 		   hookclientset.Interface
 	scaleControl       scalecontrol.Interface
 	updateControl      updatecontrol.Interface
 	statusUpdater      GameDeploymentStatusUpdaterInterface
 	controllerHistory  history.Interface
 	revisionControl    revisioncontrol.Interface
 	recorder           record.EventRecorder
-	hookRunLister      gamedeploylister.HookRunLister
-	hookTemplateLister gamedeploylister.HookTemplateLister
+	hookRunLister      hooklister.HookRunLister
+	hookTemplateLister hooklister.HookTemplateLister
 }
 
-func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *v1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *v1alpha1.GameDeploymentStatus, error) {
+func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error) {
 	if deploy.DeletionTimestamp != nil {
 		return 0, nil, nil
 	}
@@ -178,9 +184,9 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *v1alpha1.G
 }
 
 func (gdc *defaultGameDeploymentControl) updateGameDeployment(
-	deploy *v1alpha1.GameDeployment, newStatus *v1alpha1.GameDeploymentStatus,
+	deploy *gdv1alpha1.GameDeployment, newStatus *gdv1alpha1.GameDeploymentStatus,
 	currentRevision, updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
-	filteredPods []*v1.Pod, hrList []*v1alpha1.HookRun) (time.Duration, error) {
+	filteredPods []*v1.Pod, hrList []*hookv1alpha1.HookRun) (time.Duration, error) {
 
 	var delayDuration time.Duration
 	if deploy.DeletionTimestamp != nil {
@@ -217,8 +223,8 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 
 	scaling, podsScaleErr = gdc.scaleControl.Manage(deploy, currentDeploy, updateDeploy, currentRevision.Name, updateRevision.Name, filteredPods, newStatus)
 	if podsScaleErr != nil {
-		newStatus.Conditions = append(newStatus.Conditions, v1alpha1.GameDeploymentCondition{
-			Type:               v1alpha1.GameDeploymentConditionFailedScale,
+		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
+			Type:               gdv1alpha1.GameDeploymentConditionFailedScale,
 			Status:             v1.ConditionTrue,
 			LastTransitionTime: metav1.Now(),
 			Message:            podsScaleErr.Error(),
@@ -231,8 +237,8 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 
 	delayDuration, podsUpdateErr = gdc.updateControl.Manage(deploy, updateDeploy, updateRevision, revisions, filteredPods, newStatus)
 	if podsUpdateErr != nil {
-		newStatus.Conditions = append(newStatus.Conditions, v1alpha1.GameDeploymentCondition{
-			Type:               v1alpha1.GameDeploymentConditionFailedUpdate,
+		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
+			Type:               gdv1alpha1.GameDeploymentConditionFailedUpdate,
 			Status:             v1.ConditionTrue,
 			LastTransitionTime: metav1.Now(),
 			Message:            podsUpdateErr.Error(),
@@ -246,11 +252,11 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 }
 
 // deleteUnexpectedPreDeleteHookRuns delete unexpected PreDeleteHookRuns, then will trigger a reconcile
-func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreDeleteHookRuns(hrList []*v1alpha1.HookRun) error {
-	preDeleteHookRuns := hooksutil.FilterPreDeleteHookRuns(hrList)
-	hrsToDelete := []*v1alpha1.HookRun{}
+func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreDeleteHookRuns(hrList []*hookv1alpha1.HookRun) error {
+	preDeleteHookRuns := commonhookutil.FilterPreDeleteHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
 	for _, hr := range preDeleteHookRuns {
-		if hr.Status.Phase.Completed() && hr.Status.Phase != v1alpha1.HookPhaseSuccessful {
+		if hr.Status.Phase.Completed() && hr.Status.Phase != hookv1alpha1.HookPhaseSuccessful {
 			hrsToDelete = append(hrsToDelete, hr)
 		}
 	}
@@ -259,7 +265,7 @@ func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreDeleteHookRuns(hrLis
 }
 
 // truncatePreDeleteHookConditions truncate unneeded PreDeleteHookConditions
-func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookConditions(pods []*v1.Pod, newStatus *v1alpha1.GameDeploymentStatus) {
+func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookConditions(pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) {
 	for i, cond := range newStatus.PreDeleteHookConditions {
 		exist := false
 		for _, pod := range pods {
@@ -275,17 +281,19 @@ func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookConditions(pods []
 }
 
 // truncatePreDeleteHookRuns truncate unneeded PreDeleteHookConditions
-func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookRuns(deploy *v1alpha1.GameDeployment, pods []*v1.Pod, hrList []*v1alpha1.HookRun) error {
-	preDeleteHookRuns := hooksutil.FilterPreDeleteHookRuns(hrList)
-	hrsToDelete := []*v1alpha1.HookRun{}
+func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookRuns(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod,
+	hrList []*hookv1alpha1.HookRun) error {
+
+	preDeleteHookRuns := commonhookutil.FilterPreDeleteHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
 	for _, hr := range preDeleteHookRuns {
-		podControllerRevision := hr.Labels[v1alpha1.GameDeploymentPodControllerRevision]
-		podInstanceID := hr.Labels[v1alpha1.GameDeploymentPodInstanceID]
+		podControllerRevision := hr.Labels[commonhookutil.WorkloadRevisionUniqueLabel]
+		podInstanceID := hr.Labels[commonhookutil.PodInstanceID]
 
 		exist := false
 		for _, pod := range pods {
 			cr, ok1 := pod.Labels[apps.ControllerRevisionHashLabelKey]
-			id, ok2 := pod.Labels[v1alpha1.GameDeploymentInstanceID]
+			id, ok2 := pod.Labels[gdv1alpha1.GameDeploymentInstanceID]
 			if ok1 && ok2 && podControllerRevision == cr && podInstanceID == id {
 				exist = true
 				break
@@ -299,13 +307,13 @@ func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookRuns(deploy *v1alp
 	return gdc.deleteHookRuns(hrsToDelete)
 }
 
-func (gdc *defaultGameDeploymentControl) reconcilePause(deploy *v1alpha1.GameDeployment) time.Duration {
+func (gdc *defaultGameDeploymentControl) reconcilePause(deploy *gdv1alpha1.GameDeployment) time.Duration {
 	var timeRemaining time.Duration
 	currentStep, _ := canaryutil.GetCurrentCanaryStep(deploy)
 	if currentStep == nil || currentStep.Pause == nil || currentStep.Pause.Duration == nil {
 		return timeRemaining
 	}
-	pauseCondition := canaryutil.GetPauseCondition(deploy, v1alpha1.PauseReasonCanaryPauseStep)
+	pauseCondition := canaryutil.GetPauseCondition(deploy, hookv1alpha1.PauseReasonCanaryPauseStep)
 	if pauseCondition != nil {
 		now := metav1.Now()
 		expiredTime := pauseCondition.StartTime.Add(time.Duration(*currentStep.Pause.Duration) * time.Second)
@@ -316,7 +324,7 @@ func (gdc *defaultGameDeploymentControl) reconcilePause(deploy *v1alpha1.GameDep
 	return timeRemaining
 }
 
-func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *v1alpha1.GameDeployment) ([]*apps.ControllerRevision, error) {
+func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *gdv1alpha1.GameDeployment) ([]*apps.ControllerRevision, error) {
 	selector, err := metav1.LabelSelectorAsSelector(deploy.Spec.Selector)
 	if err != nil {
 		return nil, err
@@ -324,9 +332,9 @@ func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *v1alpha1.GameDepl
 	return gdc.controllerHistory.ListControllerRevisions(deploy, selector)
 }
 
-func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *v1alpha1.GameDeployment, revisions []*apps.ControllerRevision, podsRevisions sets.String) (
-	*apps.ControllerRevision, *apps.ControllerRevision, int32, error,
-) {
+func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *gdv1alpha1.GameDeployment, revisions []*apps.ControllerRevision,
+	podsRevisions sets.String) (*apps.ControllerRevision, *apps.ControllerRevision, int32, error, ) {
+
 	var currentRevision, updateRevision *apps.ControllerRevision
 	revisionCount := len(revisions)
 
@@ -382,7 +390,7 @@ func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *v1alpha1.Gam
 }
 
 // truncatePodsToDelete truncates any non-live pod names in spec.scaleStrategy.podsToDelete.
-func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *v1alpha1.GameDeployment, pods []*v1.Pod) error {
+func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) error {
 	if len(deploy.Spec.ScaleStrategy.PodsToDelete) == 0 {
 		return nil
 	}
@@ -405,7 +413,7 @@ func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *v1alpha1.G
 
 	newDeploy := deploy.DeepCopy()
 	newDeploy.Spec.ScaleStrategy.PodsToDelete = newPodsToDelete
-	_, updateErr := gdc.client.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
+	_, updateErr := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Update(newDeploy)
 	return updateErr
 }
 
@@ -415,7 +423,7 @@ func (gdc *defaultGameDeploymentControl) truncatePodsToDelete(deploy *v1alpha1.G
 // only RevisionHistoryLimit revisions remain. If the returned error is nil the operation was successful. This method
 // expects that revisions is sorted when supplied.
 func (gdc *defaultGameDeploymentControl) truncateHistory(
-	deploy *v1alpha1.GameDeployment,
+	deploy *gdv1alpha1.GameDeployment,
 	pods []*v1.Pod,
 	revisions []*apps.ControllerRevision,
 	current *apps.ControllerRevision,

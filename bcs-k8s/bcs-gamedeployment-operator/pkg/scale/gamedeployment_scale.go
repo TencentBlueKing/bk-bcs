@@ -15,15 +15,16 @@ package scale
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/predelete"
 	"sync"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
-	gamedeploylister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	gdcore "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/core"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
+	hooklister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/expectations"
+
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,35 +44,35 @@ const (
 // Interface for managing replicas including create and delete pod/pvc.
 type Interface interface {
 	Manage(
-		deploy, currentDeploy, updateDeploy *v1alpha1.GameDeployment,
+		deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		pods []*v1.Pod,
-		newStatus *v1alpha1.GameDeploymentStatus,
+		newStatus *gdv1alpha1.GameDeploymentStatus,
 	) (bool, error)
 }
 
 // New returns a scale control.
-func New(kubeClient clientset.Interface, tkexClient tkexclientset.Interface, recorder record.EventRecorder, exp expectations.ScaleExpectations,
-	hookRunLister gamedeploylister.HookRunLister, hookTemplateLister gamedeploylister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface) Interface {
+func New(kubeClient clientset.Interface, tkexClient gdclientset.Interface, recorder record.EventRecorder, exp expectations.ScaleExpectations,
+	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface) Interface {
 	return &realControl{kubeClient: kubeClient, tkexClient: tkexClient, recorder: recorder, exp: exp, hookRunLister: hookRunLister,
 		hookTemplateLister: hookTemplateLister, preDeleteControl: preDeleteControl}
 }
 
 type realControl struct {
 	kubeClient         clientset.Interface
-	tkexClient         tkexclientset.Interface
+	tkexClient         gdclientset.Interface
 	recorder           record.EventRecorder
 	exp                expectations.ScaleExpectations
-	hookRunLister      gamedeploylister.HookRunLister
-	hookTemplateLister gamedeploylister.HookTemplateLister
+	hookRunLister      hooklister.HookRunLister
+	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
 }
 
 func (r *realControl) Manage(
-	deploy, currentDeploy, updateDeploy *v1alpha1.GameDeployment,
+	deploy, currentDeploy, updateDeploy *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	pods []*v1.Pod,
-	newStatus *v1alpha1.GameDeploymentStatus,
+	newStatus *gdv1alpha1.GameDeploymentStatus,
 ) (bool, error) {
 
 	if updateDeploy.Spec.Replicas == nil {
@@ -126,7 +127,7 @@ func (r *realControl) Manage(
 
 func (r *realControl) createPods(
 	expectedCreations, expectedCurrentCreations int,
-	currentGD, updateGD *v1alpha1.GameDeployment,
+	currentGD, updateGD *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	availableIDs []string,
 ) (bool, error) {
@@ -173,7 +174,7 @@ func (r *realControl) createPods(
 	return created, err
 }
 
-func (r *realControl) createOnePod(deploy *v1alpha1.GameDeployment, pod *v1.Pod) error {
+func (r *realControl) createOnePod(deploy *gdv1alpha1.GameDeployment, pod *v1.Pod) error {
 	if _, err := r.kubeClient.CoreV1().Pods(deploy.Namespace).Create(pod); err != nil {
 		r.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedCreate", "failed to create pod: %v, pod: %v", err, util.DumpJSON(pod))
 		return err
@@ -183,10 +184,10 @@ func (r *realControl) createOnePod(deploy *v1alpha1.GameDeployment, pod *v1.Pod)
 	return nil
 }
 
-func (r *realControl) deletePods(deploy *v1alpha1.GameDeployment, podsToDelete []*v1.Pod, newStatus *v1alpha1.GameDeploymentStatus) (bool, error) {
+func (r *realControl) deletePods(deploy *gdv1alpha1.GameDeployment, podsToDelete []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) (bool, error) {
 	var deleted bool
 	for _, pod := range podsToDelete {
-		canDelete, err := r.preDeleteControl.CheckDelete(deploy, pod, newStatus)
+		canDelete, err := r.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
 		if err != nil {
 			return deleted, err
 		}

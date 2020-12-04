@@ -16,7 +16,3 @@
 package v1alpha1
 
 type GameDeploymentExpansion interface{}
-
-type HookRunExpansion interface{}
-
-type HookTemplateExpansion interface{}
