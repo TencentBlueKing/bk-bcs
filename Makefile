@@ -41,11 +41,20 @@ default:api client storage executor mesos-driver mesos-watch scheduler \
 	csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy \
 	tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller \
 	bcs-cloud-netagent mesh-manager bcs-ingress-controller log-manager gamedeployment
-k8s:api client storage k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment
-mesos:api client storage dns mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
-	consoleproxy clb-controller
 
-allpack: svcpack k8spack mmpack mnpack
+bcs-k8s:k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment \
+	cc-agent
+
+bcs-mesos:mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
+	consoleproxy
+
+bcs-service:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
+	mesh-manager logbeat-sidecar metricservice metriccollector netservice sd-prometheus storage \
+	user-manager bcs-webhook-server
+
+bcs-network:network bcs-ingress-controller bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent
+
+allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
 
 # tag for different edition compiling
@@ -70,6 +79,9 @@ mmpack:
 
 mnpack:
 	cd ./build/bcs.${VERSION}/bcs-mesos-node && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
+
+netpack:
+	cd ./build/bcs.${VERSION}/bcs-network && find . -type f ! -name MD5 | xargs -L1 md5sum > MD5
 
 pre:
 	@echo "git tag: ${GITTAG}"
