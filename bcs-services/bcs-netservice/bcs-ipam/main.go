@@ -16,15 +16,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/manager"
-	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
-	nettypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"net"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/manager"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
+	nettypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
@@ -41,7 +41,7 @@ var (
 type BcsIPAMConfig struct {
 	Name   string
 	Type   string           `json:"type"` //bcs-ipam
-	Host   net.IP           `json:"host"` //local host ip
+	Host   string           `json:"host"` //local host ip
 	Routes []types.Route    `json:"routes"`
 	Args   *bcsconf.CNIArgs `json:"-"`
 }
@@ -88,11 +88,11 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 	//check host ip if configuration designated
-	if ipamConf.Host == nil {
+	if len(ipamConf.Host) == 0 {
 		//get one available host ip from system
-		ipamConf.Host = manager.GetAvailableIP()
+		ipamConf.Host = util.GetIPAddress()
 	}
-	if ipamConf.Host == nil {
+	if len(ipamConf.Host) == 0 {
 		return fmt.Errorf("Get no available host ip for request")
 	}
 	//Get available ip address from resource
@@ -104,7 +104,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if ipamConf.Args != nil && ipamConf.Args.IP != nil {
 		requestIP = ipamConf.Args.IP.String()
 	}
-	info, getErr := ipDriver.GetIPAddr(ipamConf.Host.String(), args.ContainerID, requestIP)
+	info, getErr := ipDriver.GetIPAddr(ipamConf.Host, args.ContainerID, requestIP)
 	if getErr != nil {
 		return getErr
 	}
@@ -151,11 +151,11 @@ func cmdDel(args *skel.CmdArgs) error {
 		return err
 	}
 	//check host ip if configuration designated
-	if ipamConf.Host == nil {
+	if len(ipamConf.Host) == 0 {
 		//get one available host ip from system
-		ipamConf.Host = manager.GetAvailableIP()
+		ipamConf.Host = util.GetIPAddress()
 	}
-	if ipamConf.Host == nil {
+	if len(ipamConf.Host) == 0 {
 		return fmt.Errorf("Get no available host ip for request")
 	}
 	ipDriver, driverErr := manager.GetIPDriver()
@@ -167,7 +167,7 @@ func cmdDel(args *skel.CmdArgs) error {
 		ipInfo.IPAddr = ipamConf.Args.IP.String()
 	}
 	//release ip with IPInfo
-	return ipDriver.ReleaseIPAddr(ipamConf.Host.String(), args.ContainerID, ipInfo)
+	return ipDriver.ReleaseIPAddr(ipamConf.Host, args.ContainerID, ipInfo)
 }
 
 func main() {

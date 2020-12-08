@@ -16,13 +16,14 @@ package scheduler
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"sort"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"net/http"
-	"sort"
-	"time"
 )
 
 func (s *Scheduler) startCheckDeployments() {
@@ -49,7 +50,7 @@ func (s *Scheduler) startCheckDeployments() {
 	return
 }
 
-// Check deployment status and maintain updating progress when it is in updating
+// DeploymentCheck Check deployment status and maintain updating progress when it is in updating
 // If the updating is finish or canceled, the function will come to end
 func (s *Scheduler) DeploymentCheck(ns string, name string, recover bool) {
 
@@ -614,27 +615,28 @@ func (s *Scheduler) innerScaleApplication(runAs, appID string, instances uint64)
 	return nil
 }
 
-func (s *Scheduler) InnerDeleteApplication(runAs, appId string, enforce bool) error {
-	blog.Info("inner delete application(%s.%s), enforce(%t)", runAs, appId, enforce)
+//InnerDeleteApplication delete application, specially for deployment
+func (s *Scheduler) InnerDeleteApplication(runAs, appID string, enforce bool) error {
+	blog.Info("inner delete application(%s.%s), enforce(%t)", runAs, appID, enforce)
 
-	s.store.LockApplication(runAs + "." + appId)
-	defer s.store.UnLockApplication(runAs + "." + appId)
+	s.store.LockApplication(runAs + "." + appID)
+	defer s.store.UnLockApplication(runAs + "." + appID)
 
-	app, err := s.store.FetchApplication(runAs, appId)
+	app, err := s.store.FetchApplication(runAs, appID)
 	if err != nil {
-		blog.Warn("inner delete application:  get application(%s.%s) err %s", runAs, appId, err.Error())
+		blog.Warn("inner delete application:  get application(%s.%s) err %s", runAs, appID, err.Error())
 		return err
 	}
 	if app == nil {
-		blog.Warn("inner delete application:  get application(%s.%s) return nil", runAs, appId)
+		blog.Warn("inner delete application:  get application(%s.%s) return nil", runAs, appID)
 		return errors.New("application not found")
 	}
 
 	if app.Status == types.APP_STATUS_OPERATING {
-		blog.Warn("inner delete application:  application (%s.%s) is in status(%s) now ", runAs, appId, app.Status)
+		blog.Warn("inner delete application:  application (%s.%s) is in status(%s) now ", runAs, appID, app.Status)
 	}
 
-	taskGroups, err := s.store.ListTaskGroups(runAs, appId)
+	taskGroups, err := s.store.ListTaskGroups(runAs, appID)
 	if err != nil {
 		return err
 	}
@@ -659,7 +661,7 @@ func (s *Scheduler) InnerDeleteApplication(runAs, appId string, enforce bool) er
 
 	deleteTrans := CreateTransaction()
 	deleteTrans.RunAs = runAs
-	deleteTrans.AppID = appId
+	deleteTrans.AppID = appID
 	deleteTrans.OpType = types.OPERATION_DELETE
 	deleteTrans.Status = types.OPERATION_STATUS_INIT
 	deleteTrans.DelayTime = 0
@@ -678,7 +680,7 @@ func (s *Scheduler) InnerDeleteApplication(runAs, appId string, enforce bool) er
 	app.Message = "application in deleting"
 	if err := s.store.SaveApplication(app); err != nil {
 		blog.Error("inner delete application: save application(%s.%s) status(%s) into db failed! err:%s",
-			runAs, appId, app.Status, err.Error())
+			runAs, appID, app.Status, err.Error())
 		return err
 	}
 

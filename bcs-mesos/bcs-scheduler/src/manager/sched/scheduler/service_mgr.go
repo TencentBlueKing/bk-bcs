@@ -26,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
-// Event for service manager
+// ServiceSyncData Event for service manager
 type ServiceSyncData struct {
 	// TaskGroup, Service
 	DataType string
@@ -52,7 +52,7 @@ type exportServiceInfo struct {
 	syncTime   int64
 }
 
-// Control message for service manager
+// ServiceMgrMsg Control message for service manager
 type ServiceMgrMsg struct {
 	// open:  work
 	// close:  not work
@@ -60,7 +60,7 @@ type ServiceMgrMsg struct {
 	MsgType string
 }
 
-// Service Manager
+// ServiceMgr Service Manager
 type ServiceMgr struct {
 	esInfoCache cache.Store
 	queue       chan *ServiceSyncData
@@ -69,7 +69,7 @@ type ServiceMgr struct {
 	isWork      bool
 }
 
-// Create service manager
+// NewServiceMgr Create service manager
 func NewServiceMgr(scheduler *Scheduler) *ServiceMgr {
 	mgr := &ServiceMgr{
 		esInfoCache: cache.NewCache(esInfoKeyFunc),
@@ -82,7 +82,7 @@ func NewServiceMgr(scheduler *Scheduler) *ServiceMgr {
 	return mgr
 }
 
-// Send control message to service manager
+// SendMsg Send control message to service manager
 func (mgr *ServiceMgr) SendMsg(msg *ServiceMgrMsg) error {
 	blog.Info("ServiceMgr: send an msg to service manager")
 	select {
@@ -95,7 +95,7 @@ func (mgr *ServiceMgr) SendMsg(msg *ServiceMgrMsg) error {
 	return nil
 }
 
-// Send taskgroup update event to servie manager
+// TaskgroupUpdate Send taskgroup update event to servie manager
 func (mgr *ServiceMgr) TaskgroupUpdate(taskgroup *types.TaskGroup) {
 	data := &ServiceSyncData{
 		DataType: "TaskGroup",
@@ -106,7 +106,7 @@ func (mgr *ServiceMgr) TaskgroupUpdate(taskgroup *types.TaskGroup) {
 	return
 }
 
-// Send taskgroup add event to servie manager
+// TaskgroupAdd Send taskgroup add event to servie manager
 func (mgr *ServiceMgr) TaskgroupAdd(taskgroup *types.TaskGroup) {
 	data := &ServiceSyncData{
 		DataType: "TaskGroup",
@@ -117,7 +117,7 @@ func (mgr *ServiceMgr) TaskgroupAdd(taskgroup *types.TaskGroup) {
 	return
 }
 
-// Send taskgroup delete event to servie manager
+// TaskgroupDelete Send taskgroup delete event to servie manager
 func (mgr *ServiceMgr) TaskgroupDelete(taskgroup *types.TaskGroup) {
 	data := &ServiceSyncData{
 		DataType: "TaskGroup",
@@ -128,7 +128,7 @@ func (mgr *ServiceMgr) TaskgroupDelete(taskgroup *types.TaskGroup) {
 	return
 }
 
-// Send service updat event to servie manager
+// ServiceUpdate Send service updat event to servie manager
 func (mgr *ServiceMgr) ServiceUpdate(service *commtypes.BcsService) {
 	data := &ServiceSyncData{
 		DataType: "Service",
@@ -139,7 +139,7 @@ func (mgr *ServiceMgr) ServiceUpdate(service *commtypes.BcsService) {
 	return
 }
 
-// Send service add event to servie manager
+// ServiceAdd Send service add event to servie manager
 func (mgr *ServiceMgr) ServiceAdd(service *commtypes.BcsService) {
 	data := &ServiceSyncData{
 		DataType: "Service",
@@ -150,7 +150,7 @@ func (mgr *ServiceMgr) ServiceAdd(service *commtypes.BcsService) {
 	return
 }
 
-// Send service delete event to servie manager
+// ServiceDelete Send service delete event to servie manager
 func (mgr *ServiceMgr) ServiceDelete(service *commtypes.BcsService) {
 	data := &ServiceSyncData{
 		DataType: "Service",
@@ -168,11 +168,12 @@ func (mgr *ServiceMgr) postData(data *ServiceSyncData) {
 	mgr.queue <- data
 }
 
-// The goroutine function for service monitoring
+// Worker The goroutine function for service monitoring
 // This function will process events of taskgrou add, delete and update
 // This function will process events of service add, delete and update
 func (mgr *ServiceMgr) Worker() {
 	tick := time.NewTicker(300 * time.Second)
+	defer tick.Stop()
 	for {
 		select {
 		case req := <-mgr.msgQueue:
@@ -561,7 +562,8 @@ func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *ty
 		//	continue
 		//}
 
-		var nodeAddress string
+		//agent ip
+		nodeAddress := oneTask.AgentIPAddress
 		// added  20180815, process task do not have the statusData upload by executor, because process executor
 		// do not have the hostIP and port information. So we make NodeIP, ContainerIP, HostIP directly with AgentIPAddress
 		// which is got from offer
@@ -569,9 +571,9 @@ func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *ty
 		switch oneTask.Kind {
 		case commtypes.BcsDataType_PROCESS:
 			podEndpoint.NetworkMode = oneTask.Network
-			podEndpoint.NodeIP = oneTask.AgentIPAddress
-			podEndpoint.ContainerIP = oneTask.AgentIPAddress
-			nodeAddress = oneTask.AgentIPAddress
+			podEndpoint.NodeIP = nodeAddress
+			podEndpoint.ContainerIP = nodeAddress
+			//nodeAddress = oneTask.AgentIPAddress
 		case commtypes.BcsDataType_APP, "":
 			if len(oneTask.StatusData) == 0 {
 				blog.Warn("ServiceMgr: buildEndpoint, but task %s StatusData is empty", oneTask.ID)
@@ -585,13 +587,11 @@ func (mgr *ServiceMgr) buildEndpoint(service *commtypes.BcsService, tskgroup *ty
 			}
 
 			podEndpoint.NetworkMode = oneTask.Network
-			if bcsInfo.NodeAddress != "" {
-				podEndpoint.NodeIP = bcsInfo.NodeAddress
-			}
+			podEndpoint.NodeIP = nodeAddress
 			if bcsInfo.IPAddress != "" {
 				podEndpoint.ContainerIP = bcsInfo.IPAddress
 			}
-			nodeAddress = bcsInfo.NodeAddress
+			//nodeAddress = bcsInfo.NodeAddress
 		default:
 			continue
 		}

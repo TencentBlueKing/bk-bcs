@@ -17,6 +17,7 @@
   "local_ip": "${localIp}",
   "bkiam_auth": {
     "auth": false,
+    "auth_version": "${bkiamAuthVersion}",
     "bkiam_auth_host": "${bkiamAuthHost}"
   },
   "bke": {

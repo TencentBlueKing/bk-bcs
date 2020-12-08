@@ -269,6 +269,7 @@ func constructK8sData(cli k8sclient.Client) {
 	}
 }
 
+// TestIngressConvert test converting ingress function
 func TestIngressConvert(t *testing.T) {
 
 	testCases := []struct {

@@ -14,8 +14,9 @@
 package core
 
 import (
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -23,11 +24,11 @@ type Control interface {
 	// common
 	IsInitializing() bool
 	SetRevisionTemplate(revisionSpec map[string]interface{}, template map[string]interface{})
-	ApplyRevisionPatch(patched []byte) (*tkexv1alpha1.GameDeployment, error)
+	ApplyRevisionPatch(patched []byte) (*gdv1alpha1.GameDeployment, error)
 
 	// scale
 	IsReadyToScale() bool
-	NewVersionedPods(currentCS, updateCS *tkexv1alpha1.GameDeployment,
+	NewVersionedPods(currentCS, updateCS *gdv1alpha1.GameDeployment,
 		currentRevision, updateRevision string,
 		expectedCreations, expectedCurrentCreations int,
 		availableIDs []string,
@@ -40,9 +41,9 @@ type Control interface {
 	GetUpdateOptions() *inplaceupdate.UpdateOptions
 
 	// validation
-	ValidateGameDeploymentUpdate(oldCS, newCS *tkexv1alpha1.GameDeployment) error
+	ValidateGameDeploymentUpdate(oldCS, newCS *gdv1alpha1.GameDeployment) error
 }
 
-func New(gd *tkexv1alpha1.GameDeployment) Control {
+func New(gd *gdv1alpha1.GameDeployment) Control {
 	return &commonControl{GameDeployment: gd}
 }

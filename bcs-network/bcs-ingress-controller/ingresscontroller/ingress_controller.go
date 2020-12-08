@@ -78,12 +78,10 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	blog.V(3).Infof("ingress %+v triggered", req.NamespacedName)
 	ingress := &networkextensionv1.Ingress{}
-	err := ir.Client.Get(ir.Ctx, req.NamespacedName, ingress)
-	if err != nil {
+	if err := ir.Client.Get(ir.Ctx, req.NamespacedName, ingress); err != nil {
 		if k8serrors.IsNotFound(err) {
-			err := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace)
-			if err != nil {
-				blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, err.Error())
+			if inErr := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace); inErr != nil {
+				blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, inErr.Error())
 				return ctrl.Result{
 					Requeue:      true,
 					RequeueAfter: time.Duration(5 * time.Second),
@@ -97,8 +95,7 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			RequeueAfter: time.Duration(5 * time.Second),
 		}, err
 	}
-	err = ir.IngressConverter.ProcessUpdateIngress(ingress)
-	if err != nil {
+	if err := ir.IngressConverter.ProcessUpdateIngress(ingress); err != nil {
 		// create event for ingress
 		ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeWarning,
 			"process ingress failed", "error: %s", err.Error())

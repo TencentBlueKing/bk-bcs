@@ -21,7 +21,7 @@ import (
 	"sync"
 )
 
-// healthZ interface
+// BcsHealthIf interface
 type BcsHealthIf struct {
 	Code    int          `json:"code"`
 	OK      bool         `json:"ok"`
@@ -29,6 +29,7 @@ type BcsHealthIf struct {
 	Message string       `json:"message"`
 }
 
+// SubStatus sub status
 type SubStatus struct {
 	OK      bool   `json:"ok"`
 	Message string `json:"message"`
@@ -49,6 +50,7 @@ var (
 	healthLock sync.Mutex
 )
 
+// SetUnhealthy set storage to unhealthy status
 func SetUnhealthy(key string, message interface{}) {
 	healthLock.Lock()
 	defer healthLock.Unlock()
@@ -68,6 +70,7 @@ func SetUnhealthy(key string, message interface{}) {
 	hs.Message = fmt.Sprintf("%v", message)
 }
 
+// GetHealth get health info
 func GetHealth() metric.HealthMeta {
 	healthLock.Lock()
 	defer healthLock.Unlock()

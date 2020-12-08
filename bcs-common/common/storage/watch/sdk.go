@@ -16,22 +16,55 @@ package watch
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
-// Get a new Watcher with empty WatchOptions
+// New get a new Watcher with empty WatchOptions
 func New(client *httpclient.HttpClient) *Watcher {
-	return NewWithOption(&operator.WatchOptions{}, client)
+	return NewWithOption(&types.WatchOptions{}, client)
 }
 
-// Get a new Watcher with provided WatchOptions
-func NewWithOption(opts *operator.WatchOptions, client *httpclient.HttpClient) *Watcher {
+// EventType event type
+type EventType int32
+
+const (
+	// Nop no operation event
+	Nop EventType = iota
+	// Add add event
+	Add
+	// Del delete event
+	Del
+	// Chg change event
+	Chg
+	// SChg self change event
+	SChg
+	// Brk event
+	Brk EventType = -1
+)
+
+// Event event of watch
+type Event struct {
+	Type  EventType  `json:"type"`
+	Value operator.M `json:"value"`
+}
+
+var (
+	// EventWatchBreak watch break event
+	EventWatchBreak = &Event{Type: Brk, Value: nil}
+	// EventWatchBreakBytes watch break event content
+	EventWatchBreakBytes, _ = json.Marshal(EventWatchBreak)
+)
+
+// NewWithOption get a new Watcher with provided WatchOptions
+func NewWithOption(opts *types.WatchOptions, client *httpclient.HttpClient) *Watcher {
 	return &Watcher{
 		opts:   opts,
 		client: client,
@@ -42,14 +75,14 @@ func NewWithOption(opts *operator.WatchOptions, client *httpclient.HttpClient) *
 type Watcher struct {
 	client *httpclient.HttpClient
 
-	opts       *operator.WatchOptions
-	storageUrl []string
+	opts       *types.WatchOptions
+	storageURL []string
 	ctx        context.Context
 	cancel     context.CancelFunc
 	closed     bool
 
 	resp  *http.Response
-	event *operator.Event
+	event *Event
 	err   error
 
 	nextSignal    chan struct{}
@@ -62,10 +95,10 @@ func (w *Watcher) Connect(storageURL []string) (err error) {
 		return errors.EventWatchAlreadyConnect
 	}
 
-	w.storageUrl = storageURL
+	w.storageURL = storageURL
 
 	if w.opts == nil {
-		w.opts = &operator.WatchOptions{}
+		w.opts = &types.WatchOptions{}
 	}
 
 	if err = w.connect(); err != nil {
@@ -87,7 +120,7 @@ func (w *Watcher) connect() (err error) {
 		return
 	}
 
-	for _, u := range w.storageUrl {
+	for _, u := range w.storageURL {
 		r, err := http.NewRequest("POST", u, body)
 		if err != nil {
 			continue
@@ -110,13 +143,13 @@ func (w *Watcher) watching() {
 		case <-w.ctx.Done():
 			return
 		case <-w.nextSignal:
-			w.event = new(operator.Event)
+			w.event = new(Event)
 			if w.err = codec.DecJsonReader(w.resp.Body, w.event); w.err == io.ErrUnexpectedEOF && !w.closed {
 				if w.err = w.connect(); w.err != nil {
-					w.event = operator.EventWatchBreak
+					w.event = EventWatchBreak
 				}
 			}
-			if w.event.Type == operator.Nop {
+			if w.event.Type == Nop {
 				w.Close()
 				return
 			}
@@ -125,7 +158,7 @@ func (w *Watcher) watching() {
 	}
 }
 
-// Stop watch and close the connection. It must be stop watch first then close connection,
+// Close stop watch and close the connection. It must be stop watch first then close connection,
 // because watching() will check if the watch is stop after get a EOF error and if not it will reconnect.
 func (w *Watcher) Close() {
 	w.cancel()
@@ -137,12 +170,12 @@ func (w *Watcher) Close() {
 	}
 }
 
-// Get next event
-func (w *Watcher) Next() (*operator.Event, error) {
+// Next get next event
+func (w *Watcher) Next() (*Event, error) {
 	w.nextSignal <- struct{}{}
 	select {
 	case <-w.ctx.Done():
-		return operator.EventWatchBreak, nil
+		return EventWatchBreak, nil
 	case <-w.receiveSignal:
 		return w.event, w.err
 	}

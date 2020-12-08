@@ -3,7 +3,7 @@
 cd /data/bcs/bcs-gamestatefulset-operator 
 chmod +x bcs-gamestatefulset-operator 
 #start operator
-./bcs-gamestatefulset-operator --min-resync-period=60s --v=5
+./bcs-gamestatefulset-operator --v=5
 
 #Usage of ./bcs-gamestatefulset-operator:
 #  -add_dir_header

@@ -3,7 +3,7 @@ name: bcs-gamestatefulset-operator
 description: |
   A Helm chart for game statefulset of BlueKing Container Service(BCS).
   Main features of GameStatefulSet supported:
-    * InplaceUpdate/InplaceHotPatch
+    * OnDelete/RollingUpdate/InplaceUpdate/HotPatchUpdate
     * HPA feature
 
 # A chart can be either an 'application' or a 'library' chart.

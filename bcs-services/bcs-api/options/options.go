@@ -45,6 +45,7 @@ type ServerOption struct {
 	PeerToken string `json:"peer_token" value:"" usage:"peer token to auth with each other, only used to websocket peer"`
 }
 
+// BKEOptions bke options
 type BKEOptions struct {
 	DSN                        string                     `json:"mysql_dsn" value:"" usage:"dsn for connect to mysql"`
 	BootStrapUsers             []BootStrapUser            `json:"bootstrap_users"`
@@ -57,6 +58,7 @@ type BKEOptions struct {
 	RbacDatas []RbacData `json:"rbac_data"`
 }
 
+//TKEOptions tke api operation operation
 type TKEOptions struct {
 	SecretId  string `json:"secret_id" value:"" usage:"tke user account secret id"`
 	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`
@@ -64,17 +66,20 @@ type TKEOptions struct {
 	CcsPath   string `json:"ccs_path" value:"" usage:"tke ccs path"`
 }
 
+// RbacData rbac data for specifed cluster
 type RbacData struct {
 	Username  string   `json:"user_name"`
 	ClusterId string   `json:"cluster_id"`
 	Roles     []string `json:"roles"`
 }
 
+//CredentialsFixturesOptions option for enable cluster specifed token, deprecated
 type CredentialsFixturesOptions struct {
 	Enabled     bool         `json:"is_enabled_fixtures_credentials"`
 	Credentials []Credential `json:"credentials"`
 }
 
+// Credential specified token for cluster, deprecated
 type Credential struct {
 	ClusterID string `json:"cluster_id"`
 	Type      string `json:"type"`
@@ -83,16 +88,20 @@ type Credential struct {
 	Token     string `json:"token"`
 }
 
+//BootStrapUser user for system start up
 type BootStrapUser struct {
 	Name        string   `json:"name"`
 	IsSuperUser bool     `json:"is_super_user"`
 	Tokens      []string `json:"tokens"`
 }
 
+//AuthOption bkiam auth options
 type AuthOption struct {
 	Auth          bool `json:"auth" value:"false" usage:"use auth mode or not" mapstructure:"auth"`
 	RemoteCheck   bool `json:"remote_check" value:"false" usage:"check auth in remote host or not" mapstructure:"remote_check"`
 	SkipNoneToken bool `json:"skip_none_token" value:"false" usage:"skip auth check when token no specified" mapstructure:"skip_none_token"`
+
+	Version string `json:"auth_version" value:"3" usage:"bkiam version, 2 or 3." mapstructure:"auth_version"`
 
 	ApiGwRsaFile string `json:"apigw_rsa_file" value:"" usage:"apigw rsa public key file" mapstructure:"apigw_rsa_file"`
 
@@ -108,11 +117,13 @@ type AuthOption struct {
 	BKIamAuthSubServer  string          `json:"bkiam_auth_sub_server" value:"" usage:"bkiam auth subserver" mapstructure:"bkiam_auth_sub_server"`
 }
 
+// AuthWhitelist white list for bkiam
 type AuthWhitelist struct {
 	Token string          `json:"token"`
 	Scope []AuthWLCluster `json:"scope"`
 }
 
+// AuthWLCluster cluster id & namespace for whitelist
 type AuthWLCluster struct {
 	ClusterID string   `json:"cluster_id"`
 	Namespace []string `json:"namespace"`
@@ -124,6 +135,7 @@ func NewServerOption() *ServerOption {
 	return &s
 }
 
+//Parse configuration item parsed
 func Parse(ops *ServerOption) error {
 	conf.Parse(ops)
 	return nil

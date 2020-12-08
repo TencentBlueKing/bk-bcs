@@ -23,11 +23,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
+// TokenAuthenticater token auth implementation
 type TokenAuthenticater struct {
 	req    *http.Request
 	config *TokenAuthConfig
 }
 
+// TokenAuthConfig configuration for bcs-api auth
 type TokenAuthConfig struct {
 	SourceBearerEnabled    bool
 	sourceBasicAuthEnabled bool
@@ -35,12 +37,14 @@ type TokenAuthConfig struct {
 	ValidTokenType uint
 }
 
+// DefaultTokenAuthConfig default configuration
 var DefaultTokenAuthConfig = &TokenAuthConfig{
 	SourceBearerEnabled:    true,
 	sourceBasicAuthEnabled: true,
 	ValidTokenType:         m.UserTokenTypeSession,
 }
 
+// NewTokenAuthenticater create auth implementation from request
 func NewTokenAuthenticater(req *http.Request, config *TokenAuthConfig) *TokenAuthenticater {
 	return &TokenAuthenticater{req: req, config: config}
 }
@@ -57,6 +61,7 @@ func (ta *TokenAuthenticater) ParseTokenString() string {
 	return token
 }
 
+// ParseTokenBearer parse toke bearer information
 func (ta *TokenAuthenticater) ParseTokenBearer() string {
 	authHeaderList := ta.req.Header["Authorization"]
 
@@ -69,6 +74,7 @@ func (ta *TokenAuthenticater) ParseTokenBearer() string {
 	return ""
 }
 
+// ParseTokenBasicAuth parse token basic auth information
 func (ta *TokenAuthenticater) ParseTokenBasicAuth() string {
 	_, password, ok := ta.req.BasicAuth()
 	if ok && password != "" {
@@ -92,6 +98,7 @@ func (ta *TokenAuthenticater) GetUserFromToken(s string) (*m.User, bool) {
 	return sqlstore.GetUser(token.UserId), false
 }
 
+// GetUser get user information from specified token
 func (ta *TokenAuthenticater) GetUser() (*m.User, bool) {
 	tokenString := ta.ParseTokenString()
 	blog.Debug(fmt.Sprintf("User token found in request: %s", tokenString))
@@ -108,6 +115,7 @@ func (ta *TokenAuthenticater) GetUser() (*m.User, bool) {
 	}
 }
 
+// GetUserTokenType check user token type
 func (ta *TokenAuthenticater) GetUserTokenType() uint {
 	tokenString := ta.ParseTokenString()
 	token := sqlstore.GetUserToken(tokenString)

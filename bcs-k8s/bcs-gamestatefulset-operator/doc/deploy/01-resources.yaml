@@ -10,25 +10,16 @@ spec:
     name: Replicas
     type: integer
   - JSONPath: .status.readyReplicas
-    name: ReadyReplicas
-    type: integer
-  - JSONPath: .metadata.creationTimestamp
-    description: Age of the gamestatefulset
-    name: Age
-    type: date
-  group: tkex.tencent.com
-  additionalPrinterColumns:
-  - JSONPath: .spec.replicas
-    name: Replicas
-    type: integer
-  - JSONPath: .status.readyReplicas
-    name: ReadyReplicas
+    name: Ready_Replicas
     type: integer
   - JSONPath: .status.currentReplicas
-    name: CurrentReplicas
+    name: Current_Replicas
     type: integer
   - JSONPath: .status.updatedReplicas
-    name: UpdatedReplicas
+    name: Updated_Replicas
+    type: integer
+  - JSONPath: .status.updatedReadyReplicas
+    name: Updated_Ready_Replicas
     type: integer
   - JSONPath: .metadata.creationTimestamp
     description: Age of the gamestatefulset

@@ -55,6 +55,8 @@ func (s *DiscoveryServer) handleModuleChange(event *ModuleEvent) error {
 	return nil
 }
 
+// formatBCSServerInfo format bcs zookeeper server info according to event module name
+//@param: module, mesosdriver/cluster-xxxx, storage
 func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service, error) {
 	originals, err := s.discovery.GetModuleServers(module)
 	if err != nil {
@@ -64,6 +66,7 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 	}
 	blog.V(5).Infof("get module %s string detail: %+v", module, originals)
 	var svcs []*types.ServerInfo
+	skip := false
 	for _, info := range originals {
 		data := info.(string)
 		svc := new(types.ServerInfo)
@@ -71,9 +74,16 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 			blog.Errorf("handle module %s json %s unmarshal failed, %s", module, data, err.Error())
 			continue
 		}
+		//! compatible code here, when mesos driver already start etcd registry feature
+		//! discovery stop adopt zookeeper registry information
+		if s.isClusterRestriction(svc.Cluster) {
+			blog.Warnf("discovery check that cluster %s[%s] mesosdriver change to etcd registry, skip", svc.Cluster, svc.IP)
+			skip = true
+			continue
+		}
 		svcs = append(svcs, svc)
 	}
-	if len(svcs) == 0 {
+	if len(svcs) == 0 && !skip {
 		blog.Errorf("convert module %s all json info failed, pay more attention", module)
 		return nil, fmt.Errorf("module %s all json err", module)
 	}
@@ -86,6 +96,8 @@ func (s *DiscoveryServer) formatBCSServerInfo(module string) (*register.Service,
 	return rSvcs, nil
 }
 
+//formatDriverServerInfo format mesosdriver & kubernetedriver server information
+//@param: module, module info with clusterID, mesosdriver/BCS-MESOS-10032
 func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Service, error) {
 	originals, err := s.discovery.GetModuleServers(module)
 	if err != nil {
@@ -94,6 +106,7 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 	}
 	blog.V(5).Infof("get module %s string detail: %+v", module, originals)
 	svcs := make(map[string][]*types.ServerInfo)
+	skip := false
 	for _, info := range originals {
 		data := info.(string)
 		svc := new(types.ServerInfo)
@@ -105,10 +118,17 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 			blog.Errorf("find driver %s node lost cluster information. detail: %s", module, data)
 			continue
 		}
+		//! compatible code here, when mesos driver already start etcd registry feature
+		//! discovery stop adopt zookeeper registry information
+		if s.isClusterRestriction(svc.Cluster) {
+			blog.Warnf("discovery check that cluster %s[%s] mesosdriver change to etcd registry, skip", svc.Cluster, svc.IP)
+			skip = true
+			continue
+		}
 		key := fmt.Sprintf("%s/%s", module, svc.Cluster)
 		svcs[key] = append(svcs[key], svc)
 	}
-	if len(svcs) == 0 {
+	if len(svcs) == 0 && !skip {
 		blog.Errorf("unmarshal module %s json all failed!", module)
 		return nil, fmt.Errorf("driver %s all clusters json err", module)
 	}
@@ -130,22 +150,37 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 }
 
 func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Service, error) {
-	//we get all kubernetes api-server from bcs-user-manager
-	original, err := s.discovery.GetRandModuleServer(types.BCS_MODULE_USERMANAGER)
-	if err != nil {
-		blog.Errorf("get module %s info for list all kube-apiserver failed, %s", types.BCS_MODULE_USERMANAGER, err.Error())
-		return nil, err
-	}
-	blog.V(5).Infof("get module %s string detail: %+v", types.BCS_MODULE_USERMANAGER, original)
-	data := original.(string)
-	svc := new(types.ServerInfo)
-	if err := json.Unmarshal([]byte(data), svc); err != nil {
-		blog.Errorf("in [kubernetes api-server] handle module %s json %s unmarshal failed, %s", types.BCS_MODULE_USERMANAGER, data, err.Error())
-		return nil, err
+	var userMgrInst string
+	_, umStrategy := defaultHTTPModules["usermanager"]
+	if s.option.Etcd.Feature && umStrategy {
+		//get api-server information from bcs-user-manager etcd registry
+		node, err := s.microDiscovery.GetRandomServerInstance(types.BCS_MODULE_USERMANAGER)
+		if err != nil {
+			blog.Errorf("get user-manager module from etcd registry failed, %s", err.Error())
+			return nil, err
+		}
+		userMgrInst = node.Address
+		blog.Infof("get random user-manager instance [%s] from etcd registry for query kube-apiserver", userMgrInst)
+	} else {
+		//we get all kubernetes api-server from bcs-user-manager, zookeeper registry
+		original, err := s.discovery.GetRandModuleServer(types.BCS_MODULE_USERMANAGER)
+		if err != nil {
+			blog.Errorf("get module %s info for list all kube-apiserver failed, %s", types.BCS_MODULE_USERMANAGER, err.Error())
+			return nil, err
+		}
+		blog.V(5).Infof("get module %s string detail: %+v", types.BCS_MODULE_USERMANAGER, original)
+		data := original.(string)
+		svc := new(types.ServerInfo)
+		if err := json.Unmarshal([]byte(data), svc); err != nil {
+			blog.Errorf("in [kubernetes api-server] handle module %s json %s unmarshal failed, %s", types.BCS_MODULE_USERMANAGER, data, err.Error())
+			return nil, err
+		}
+		userMgrInst = fmt.Sprintf("%s:%d", svc.IP, svc.Port)
+		blog.Infof("get random user-manager instance [%s] from zookeeper registry for query kube-apiserver", userMgrInst)
 	}
 	//ready to get kube-apiserver list from bcs-user-manager
 	config := &bcsapi.Config{
-		Hosts:     []string{fmt.Sprintf("%s:%d", svc.IP, svc.Port)},
+		Hosts:     []string{userMgrInst},
 		AuthToken: s.option.AuthToken,
 		Gateway:   false,
 	}

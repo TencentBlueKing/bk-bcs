@@ -22,9 +22,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/network-detection"
+	network_detection "github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/network-detection"
 )
 
+// Run app entrypoint
 func Run(op *options.Option) error {
 	conf := &config.Config{}
 	setConfig(conf, op)

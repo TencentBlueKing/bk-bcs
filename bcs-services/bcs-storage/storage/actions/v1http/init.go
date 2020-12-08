@@ -16,15 +16,13 @@ package v1http
 import (
 	// trigger all package init to register handlers to actions
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/alarms"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/cluster-config"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-k8s"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-mesos"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-query"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic-watch"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/clusterconfig"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamicquery"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamicwatch"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/events"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/host-config"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/hostconfig"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric-watch"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watch-k8s"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watch-mesos"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metricwatch"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watchk8smesos"
 )

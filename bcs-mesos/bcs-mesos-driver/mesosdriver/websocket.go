@@ -30,18 +30,23 @@ import (
 )
 
 const (
-	Module        = "BCS-API-Tunnel-Module"
+	// Module tunnel module
+	Module = "BCS-API-Tunnel-Module"
+	// RegisterToken token information key
 	RegisterToken = "BCS-API-Tunnel-Token"
-	Params        = "BCS-API-Tunnel-Params"
-	Cluster       = "BCS-API-Tunnel-ClusterId"
-	ModuleName    = "mesos-driver"
+	// Params for ws tunnel
+	Params = "BCS-API-Tunnel-Params"
+	// Cluster ID for ws tunnel
+	Cluster = "BCS-API-Tunnel-ClusterId"
+	// ModuleName definition
+	ModuleName = "mesos-driver"
 )
 
-func (m *MesosDriver) buildWebsocketToApi() error {
-	if m.config.RegisterUrl == "" {
+func (m *MesosDriver) buildWebsocketToAPI() error {
+	if m.config.RegisterURL == "" {
 		return errors.New("register url is empty")
 	}
-	bcsApiUrl, err := url.Parse(m.config.RegisterUrl)
+	bcsAPIURL, err := url.Parse(m.config.RegisterURL)
 	if err != nil {
 		return err
 	}
@@ -92,7 +97,7 @@ func (m *MesosDriver) buildWebsocketToApi() error {
 
 	go func() {
 		for {
-			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/usermanager/v1/websocket/connect", bcsApiUrl.Host)
+			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/usermanager/v1/websocket/connect", bcsAPIURL.Host)
 			blog.Infof("Connecting to %s with token %s", wsURL, m.config.RegisterToken)
 
 			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto, address string) bool {

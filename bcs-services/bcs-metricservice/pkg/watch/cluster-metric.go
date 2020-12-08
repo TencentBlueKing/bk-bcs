@@ -15,17 +15,19 @@ package watch
 
 import (
 	"context"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+	stowatch "github.com/Tencent/bk-bcs/bcs-common/common/storage/watch"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/driver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
-	"time"
 )
 
 func (cw *ClusterWatcher) metricManager() {
 	syncTick := time.NewTicker(30 * time.Second)
+	defer syncTick.Stop()
 	ctx, cancel := context.WithCancel(cw.ctx)
 	cw.syncMetric()
 	go cw.watchMetric(ctx)
@@ -33,17 +35,17 @@ func (cw *ClusterWatcher) metricManager() {
 	for {
 		select {
 		case <-cw.ctx.Done():
-			blog.Warnf("metric watching cluster manager shut down: %s", cw.clusterId)
+			blog.Warnf("metric watching cluster manager shut down: %s", cw.clusterID)
 			cancel()
 			return
 		case <-syncTick.C:
 			cw.syncMetric()
 		case event := <-cw.metricEvent:
-			if event == operator.EventWatchBreak {
+			if event == stowatch.EventWatchBreak {
 				cancel()
 
 				wait := time.Duration(5)
-				blog.Infof("metric-cluster-sync(%s) will reconnect in %d seconds", cw.clusterId, wait)
+				blog.Infof("metric-cluster-sync(%s) will reconnect in %d seconds", cw.clusterID, wait)
 				// after watcher connection break, sleep 5 seconds and retry connecting
 				time.Sleep(wait * time.Second)
 				ctx, cancel = context.WithCancel(cw.ctx)
@@ -64,28 +66,28 @@ func (cw *ClusterWatcher) metricManager() {
 }
 
 func (cw *ClusterWatcher) syncMetric() {
-	r, err := cw.storage.QueryMetric(&storage.Param{ClusterID: cw.clusterId, Type: types.ResourceMetricType})
+	r, err := cw.storage.QueryMetric(&storage.Param{ClusterID: cw.clusterID, Type: types.ResourceMetricType})
 	if err != nil {
-		blog.Errorf("metric-cluster-sync(%s) get metric failed: %v", cw.clusterId, err)
+		blog.Errorf("metric-cluster-sync(%s) get metric failed: %v", cw.clusterID, err)
 		return
 	}
 
 	events, err := convertStorageMetricData2MetricEvent(r)
 	if err != nil {
-		blog.Errorf("metric-cluster-sync(%s) convert to event failed: %v", cw.clusterId, err)
+		blog.Errorf("metric-cluster-sync(%s) convert to event failed: %v", cw.clusterID, err)
 		return
 	}
 
-	blog.Infof("metric-cluster-sync(%s): %d", cw.clusterId, len(events))
+	blog.Infof("metric-cluster-sync(%s): %d", cw.clusterID, len(events))
 	cw.handleSyncMetricEvent(events)
 }
 
 func (cw *ClusterWatcher) watchMetric(ctx context.Context) {
-	blog.V(3).Infof("enter metric-watch(%s) goroutine", cw.clusterId)
-	watcher, err := cw.storage.GetMetricWatcher(&storage.Param{ClusterID: cw.clusterId, Type: types.ResourceMetricType})
+	blog.V(3).Infof("enter metric-watch(%s) goroutine", cw.clusterID)
+	watcher, err := cw.storage.GetMetricWatcher(&storage.Param{ClusterID: cw.clusterID, Type: types.ResourceMetricType})
 	if err != nil {
-		blog.Errorf("metric-cluster-watcher(%s) brings up failed: %v", cw.clusterId, err)
-		cw.metricEvent <- operator.EventWatchBreak
+		blog.Errorf("metric-cluster-watcher(%s) brings up failed: %v", cw.clusterID, err)
+		cw.metricEvent <- stowatch.EventWatchBreak
 		return
 	}
 
@@ -93,20 +95,20 @@ func (cw *ClusterWatcher) watchMetric(ctx context.Context) {
 	go func() {
 		select {
 		case <-ctx.Done():
-			blog.Infof("metric-cluster-watcher(%s) shut down ", cw.clusterId)
+			blog.Infof("metric-cluster-watcher(%s) shut down ", cw.clusterID)
 			watcher.Close()
 		}
 	}()
 
-	blog.Infof("metric-cluster-watcher(%s) brings up", cw.clusterId)
+	blog.Infof("metric-cluster-watcher(%s) brings up", cw.clusterID)
 	for {
 		event, err := watcher.Next()
 		if err != nil {
-			blog.Errorf("metric-cluster-watcher(%s) get event failed: %v", cw.clusterId, err)
+			blog.Errorf("metric-cluster-watcher(%s) get event failed: %v", cw.clusterID, err)
 		}
 		cw.metricEvent <- event
-		if event == operator.EventWatchBreak {
-			blog.Errorf("metric-cluster-watcher(%s) connection break", cw.clusterId)
+		if event == stowatch.EventWatchBreak {
+			blog.Errorf("metric-cluster-watcher(%s) connection break", cw.clusterID)
 			return
 		}
 	}
@@ -211,7 +213,7 @@ func (cw *ClusterWatcher) isLastMetricInNamespace(metric *types.Metric) bool {
 
 func (cw *ClusterWatcher) queryCollectorSettings(metric *types.Metric) (data []*StorageCollectorIf, err error) {
 	r, err := cw.storage.QueryMetric(&storage.Param{
-		ClusterID: cw.clusterId,
+		ClusterID: cw.clusterID,
 		Type:      types.ResourceCollectorType,
 		Name:      metric.Name,
 		Namespace: metric.Namespace,
@@ -228,7 +230,7 @@ func (cw *ClusterWatcher) queryCollectorSettings(metric *types.Metric) (data []*
 func (cw *ClusterWatcher) isCollectorSettingsVersionDiff(event *MetricEvent) (b bool, err error) {
 	var data []*StorageCollectorIf
 	if data, err = cw.queryCollectorSettings(event.Metric); err != nil {
-		blog.Errorf("metric-cluster-sync(%s) check collector failed: %v", cw.clusterId, err)
+		blog.Errorf("metric-cluster-sync(%s) check collector failed: %v", cw.clusterID, err)
 		return
 	}
 
@@ -241,20 +243,20 @@ func (cw *ClusterWatcher) isCollectorSettingsVersionDiff(event *MetricEvent) (b 
 
 func (cw *ClusterWatcher) isApplicationSettingsNotExist(event *MetricEvent) (b bool, err error) {
 	r, err := cw.storage.QueryMetric(&storage.Param{
-		ClusterID: cw.clusterId,
+		ClusterID: cw.clusterID,
 		Type:      types.ResourceApplicationType,
 		Name:      driver.GetApplicationName(event.Metric),
 		Namespace: event.Metric.Namespace,
 	})
 
 	if err != nil {
-		blog.Errorf("metric-cluster-sync(%s) get application failed: %v", cw.clusterId, err)
+		blog.Errorf("metric-cluster-sync(%s) get application failed: %v", cw.clusterID, err)
 		return
 	}
 
 	data := make([]*StorageApplicationIf, 0)
 	if err = codec.DecJson(r, &data); err != nil {
-		blog.Errorf("metric-cluster-sync(%s) decode application failed: %v | %s", cw.clusterId, err, string(r))
+		blog.Errorf("metric-cluster-sync(%s) decode application failed: %v | %s", cw.clusterID, err, string(r))
 		return
 	}
 
@@ -262,10 +264,12 @@ func (cw *ClusterWatcher) isApplicationSettingsNotExist(event *MetricEvent) (b b
 	return
 }
 
+// StorageCollectorIf storage collector struct
 type StorageCollectorIf struct {
 	Data *types.ApplicationCollectorCfg `json:"data"`
 }
 
+// StorageApplicationIf storage application struct
 type StorageApplicationIf struct {
 	Data string `json:"data"`
 }

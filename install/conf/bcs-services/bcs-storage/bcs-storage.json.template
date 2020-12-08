@@ -12,5 +12,12 @@
   "alarm_max_cap": ${alarmMaxCap},
   "ca_file": "${caFile}",
   "server_cert_file": "${serverCertFile}",
-  "server_key_file": "${serverKeyFile}"
+  "server_key_file": "${serverKeyFile}",
+  "etcdRegistry": {
+    "etcd_feature": ${etcdFeature},
+    "etcd_address": "${etcdAddress}",
+    "etcd_ca": "${etcdCAFile}",
+    "etcd_cert": "${etcdCertFile}",
+    "etcd_key": "${etcdKeyFile}"
+  }
 }

@@ -14,12 +14,12 @@
 package cni
 
 import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
-
-	"fmt"
 
 	"github.com/containernetworking/cni/libcni"
 )
@@ -114,8 +114,9 @@ func (manager *PluginManager) SetUpPod(podInfo container.Pod) error {
 		return nil
 	}
 	if podInfo.GetNetworkName() == "host" {
-		podInfo.SetIPAddr(util.GetIPAddress()[0])
-		logs.Infoln(fmt.Sprintf("CNI plugin manager skip pod setup with host mode, setting pod ipaddr %s", util.GetIPAddress()[0]))
+		addr := util.GetIPAddress()
+		podInfo.SetIPAddr(addr)
+		logs.Infoln(fmt.Sprintf("CNI plugin manager skip pod setup with host mode, setting pod ipaddr %s", addr))
 		return nil
 	}
 

@@ -60,22 +60,22 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		blog.Infof("send status(uuid:%s) task(%s) report acknowledge success", status.GetUuid(), status.GetTaskId().GetValue())
 	}
 
-	taskId := status.TaskId.GetValue()
-	taskGroupID := types.GetTaskGroupID(taskId)
+	taskID := status.TaskId.GetValue()
+	taskGroupID := types.GetTaskGroupID(taskID)
 	if taskGroupID == "" {
-		blog.Error("status report: can not get taskGroupId from taskID(%s)", taskId)
+		blog.Error("status report: can not get taskGroupId from taskID(%s)", taskID)
 		return
 	}
-	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	//check taskgroup whether belongs to daemonset
 	if s.CheckPodBelongDaemonset(taskGroupID) {
-		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appId)
-		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appId)
+		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appID)
+		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appID)
 	} else {
-		s.store.LockApplication(runAs + "." + appId)
-		defer s.store.UnLockApplication(runAs + "." + appId)
+		s.store.LockApplication(runAs + "." + appID)
+		defer s.store.UnLockApplication(runAs + "." + appID)
 	}
-	blog.Infof("status(uuid:%s) task(%s) Lock Appliation(%s.%s)", status.GetUuid(), taskId, runAs, appId)
+	blog.Infof("status(uuid:%s) task(%s) Lock Appliation(%s.%s)", status.GetUuid(), taskID, runAs, appID)
 
 	// ack and check
 	if s.preCheckTaskStatusReport(status) == false {
@@ -90,9 +90,9 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	executorID := status.GetExecutorId()
 	agentID := status.GetAgentId()
 	taskData := status.GetData()
-	task, err := s.store.FetchTask(taskId)
+	task, err := s.store.FetchTask(taskID)
 	if task == nil {
-		blog.Warn("status report: fetch task(%s) return nil", taskId)
+		blog.Warn("status report: fetch task(%s) return nil", taskID)
 		return
 	}
 
@@ -103,32 +103,32 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	// update task status
 	switch state {
 	case mesos.TaskState_TASK_STAGING:
-		blog.Warn("status report: Task(%s) Staging unexpected, message: %s", taskId, status.GetMessage())
+		blog.Warn("status report: Task(%s) Staging unexpected, message: %s", taskID, status.GetMessage())
 		reportStatus = types.TASK_STATUS_STAGING
 	case mesos.TaskState_TASK_STARTING:
-		blog.Info("status report: Task(%s) Starting, message: %s", taskId, status.GetMessage())
+		blog.Info("status report: Task(%s) Starting, message: %s", taskID, status.GetMessage())
 		reportStatus = types.TASK_STATUS_STARTING
 	case mesos.TaskState_TASK_RUNNING:
-		blog.V(3).Infof("status report: Task(%s) Running, data:%s", taskId, string(taskData))
+		blog.V(3).Infof("status report: Task(%s) Running, data:%s", taskID, string(taskData))
 		reportStatus = types.TASK_STATUS_RUNNING
 	case mesos.TaskState_TASK_FINISHED:
-		blog.Info("status report: Task(%s) Finished, message: %s", taskId, status.GetMessage())
+		blog.Info("status report: Task(%s) Finished, message: %s", taskID, status.GetMessage())
 		reportStatus = types.TASK_STATUS_FINISH
 	case mesos.TaskState_TASK_FAILED, mesos.TaskState_TASK_GONE:
-		blog.Info("status report: Task(%s) mesos status(%d) Failed, message: %s", taskId, state, status.GetMessage())
+		blog.Info("status report: Task(%s) mesos status(%d) Failed, message: %s", taskID, state, status.GetMessage())
 		reportStatus = types.TASK_STATUS_FAIL
 		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
 		if taskGroup != nil {
 			go s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" fail, message:"+status.GetMessage(), taskGroup.RunAs+"."+taskGroup.Name+"-task", &alarmTimeval)
 		}
 	case mesos.TaskState_TASK_KILLING:
-		blog.Info("status report: Task(%s) Killing, message: %s", taskId, status.GetMessage())
+		blog.Info("status report: Task(%s) Killing, message: %s", taskID, status.GetMessage())
 		reportStatus = types.TASK_STATUS_KILLING
 	case mesos.TaskState_TASK_KILLED:
-		blog.Info("status report: Task(%s) Killed, message: %s", taskId, status.GetMessage())
+		blog.Info("status report: Task(%s) Killed, message: %s", taskID, status.GetMessage())
 		reportStatus = types.TASK_STATUS_KILLED
 	case mesos.TaskState_TASK_LOST, mesos.TaskState_TASK_UNREACHABLE, mesos.TaskState_TASK_GONE_BY_OPERATOR:
-		blog.Info("status report: Task(%s) mesos status(%d) Lost, message: %s", taskId, state, status.GetMessage())
+		blog.Info("status report: Task(%s) mesos status(%d) Lost, message: %s", taskID, state, status.GetMessage())
 		reportStatus = types.TASK_STATUS_LOST
 		taskGroup, _ := s.store.FetchTaskGroup(taskGroupID)
 		if taskGroup != nil {
@@ -139,14 +139,14 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 			go s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" lost, message:"+status.GetMessage(), taskGroup.RunAs+"."+taskGroup.Name+"-task", &alarmTimeval)
 		}
 	case mesos.TaskState_TASK_ERROR:
-		blog.Info("status report: Task(%s) Error, message: %s", taskId, status.GetMessage())
+		blog.Info("status report: Task(%s) Error, message: %s", taskID, status.GetMessage())
 		reportStatus = types.TASK_STATUS_ERROR
 	// extent state for restart
 	case mesos.TaskState(types.Ext_TaskState_TASK_RESTARTING):
-		blog.Info("status report: Task(%s) Restarting, message: %s", taskId, status.GetMessage())
+		blog.Info("status report: Task(%s) Restarting, message: %s", taskID, status.GetMessage())
 		reportStatus = types.TASK_STATUS_RESTARTING
 	default:
-		blog.Error("status report: Unprocessed task status (%d), TaskID:%s, message: %s", state, taskId, status.GetMessage())
+		blog.Error("status report: Unprocessed task status (%d), TaskID:%s, message: %s", state, taskID, status.GetMessage())
 		return
 	}
 
@@ -154,14 +154,14 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 	task.Message = status.GetMessage()
 	task.StatusData = string(taskData)
 	if task.Status != oldStatus {
-		blog.Info("status report: task %s, status change: %s --> %s", taskId, oldStatus, task.Status)
+		blog.Info("status report: task %s, status change: %s --> %s", taskID, oldStatus, task.Status)
 		task.LastStatus = oldStatus
 		s.produceEvent(*task)
 	}
 
 	var bcsMsg *types.BcsMessage
 	if task.StatusData != oldData {
-		blog.Info("status report: task %s, statusData change: %s --> %s", taskId, oldData, task.StatusData)
+		blog.Info("status report: task %s, statusData change: %s --> %s", taskID, oldData, task.StatusData)
 		var containerInfo *containertypes.BcsContainerInfo
 		err = json.Unmarshal([]byte(task.StatusData), &containerInfo)
 		if err != nil {
@@ -173,7 +173,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		}
 	}
 	if oldData != "" && task.StatusData == "" {
-		blog.Warn("status report: Task %s, Status: %s, reported StatusData is empty, keep oldData(%s)", taskId, task.Status, oldData)
+		blog.Warn("status report: Task %s, Status: %s, reported StatusData is empty, keep oldData(%s)", taskID, task.Status, oldData)
 		task.StatusData = oldData
 	}
 
@@ -187,14 +187,14 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 
 	if taskUpdated || task.LastUpdateTime <= updateTime {
 		blog.V(3).Infof("status report: Save Task %s, Status: %s, StatusData: %s, Healthy: %t",
-			taskId, task.Status, task.StatusData, task.Healthy)
+			taskID, task.Status, task.StatusData, task.Healthy)
 	} else {
-		blog.V(3).Infof("task %s status report, not change", taskId)
+		blog.V(3).Infof("task %s status report, not change", taskID)
 		return
 	}
 	task.LastUpdateTime = now
 	if err = s.store.SaveTask(task); err != nil {
-		blog.Error("status report: SaveTask %s err: %s", taskId, err.Error())
+		blog.Error("status report: SaveTask %s err: %s", taskID, err.Error())
 		return
 	}
 
@@ -204,7 +204,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 		blog.Error("status report: Fetch task group %s failed: %s", taskGroupID, err.Error())
 		return
 	}
-	blog.Info("status report: task(%s) status(%s), taskgroup(%s)", taskId, task.Status, taskGroup.Status)
+	blog.Info("status report: task(%s) status(%s), taskgroup(%s)", taskID, task.Status, taskGroup.Status)
 
 	taskGroupStatus := taskGroup.Status
 	// update taskGroup Status according to tasks status
@@ -244,10 +244,10 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 
 	//when taskgroup belongs to daemonset
 	if s.CheckPodBelongDaemonset(taskGroup.ID) {
-		s.updateDaemonsetStatus(runAs, appId)
+		s.updateDaemonsetStatus(runAs, appID)
 	} else {
 		//check application whether changed
-		s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
+		s.checkApplicationChange(runAs, appID, taskGroupStatus, taskGroup, now)
 	}
 }
 
@@ -298,30 +298,30 @@ func (s *Scheduler) checkTaskHealth(task *types.Task, taskGroupID string, health
 	return healthyChg
 }
 
-func (s *Scheduler) checkApplicationChange(runAs, appId, taskGroupStatus string, taskGroup *types.TaskGroup, now int64) {
+func (s *Scheduler) checkApplicationChange(runAs, appID, taskGroupStatus string, taskGroup *types.TaskGroup, now int64) {
 
 	applicationUpdated := false
 	updateTime := now - MAX_DATA_UPDATE_INTERVAL
 
-	app, err := s.store.FetchApplication(runAs, appId)
+	app, err := s.store.FetchApplication(runAs, appID)
 	if err != nil {
-		blog.Error("status report: fetch application(%s.%s) failed, err:%s", runAs, appId, err.Error())
+		blog.Error("status report: fetch application(%s.%s) failed, err:%s", runAs, appID, err.Error())
 		return
 	}
 	blog.V(3).Infof("check application(%s.%s) curstatus(%s) taskgroup(%s) oldStatus(%s)->curstatus(%s) whether change",
-		runAs, appId, app.Status, taskGroup.ID, taskGroupStatus, taskGroup.Status)
+		runAs, appID, app.Status, taskGroup.ID, taskGroupStatus, taskGroup.Status)
 	appStatus := app.Status
 	// add condition for performance
 	if appStatus == types.APP_STATUS_OPERATING {
 		if taskGroupStatus != taskGroup.Status {
 			if taskGroup.Status == types.TASKGROUP_STATUS_RUNNING {
 				app.RunningInstances = app.RunningInstances + 1
-				blog.Info("applicaiton(%s.%s) RunningInstances change to %d", runAs, appId, app.RunningInstances)
+				blog.Info("applicaiton(%s.%s) RunningInstances change to %d", runAs, appID, app.RunningInstances)
 				applicationUpdated = true
 			} else if taskGroupStatus == types.TASKGROUP_STATUS_RUNNING {
 				if app.RunningInstances > 0 {
 					app.RunningInstances = app.RunningInstances - 1
-					blog.Info("application(%s.%s) RunningInstances change to %d", runAs, appId, app.RunningInstances)
+					blog.Info("application(%s.%s) RunningInstances change to %d", runAs, appID, app.RunningInstances)
 					applicationUpdated = true
 				}
 			}
@@ -351,63 +351,63 @@ func (s *Scheduler) checkApplicationChange(runAs, appId, taskGroupStatus string,
 }
 
 func (s *Scheduler) preCheckTaskStatusReport(status *mesos.TaskStatus) bool {
-	taskId := status.TaskId.GetValue()
+	taskID := status.TaskId.GetValue()
 	state := status.GetState()
 	executorID := status.GetExecutorId()
 	agentID := status.GetAgentId()
 	blog.V(3).Infof("status report: get status report: task %s, status: %s, executorID: %s, agentID: %s ",
-		taskId, state, executorID, agentID)
-	taskGroupID := types.GetTaskGroupID(taskId)
-	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	task, err := s.store.FetchTask(taskId)
+		taskID, state, executorID, agentID)
+	taskGroupID := types.GetTaskGroupID(taskID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	task, err := s.store.FetchTask(taskID)
 	if err != nil && err != store.ErrNoFound {
-		blog.Warn("status report: fetch task(%s) err(%s)", taskId, err.Error())
+		blog.Warn("status report: fetch task(%s) err(%s)", taskID, err.Error())
 		return false
 	}
 
 	if task == nil {
-		blog.Warn("status report: task(%s) not exist", taskId)
-		taskGroups, err1 := s.store.ListTaskGroups(runAs, appId)
+		blog.Warn("status report: task(%s) not exist", taskID)
+		taskGroups, err1 := s.store.ListTaskGroups(runAs, appID)
 		if err1 != nil {
-			blog.Warn("status report: list taskgroups(%s.%s) failed, err:%s", runAs, appId, err1.Error())
+			blog.Warn("status report: list taskgroups(%s.%s) failed, err:%s", runAs, appID, err1.Error())
 			return false
 		}
 		for _, taskGroup := range taskGroups {
 			if taskGroup.ID == taskGroupID {
-				blog.Error("status report: task(%s) not exist but taskgroup(%s) exist", taskId, taskGroupID)
+				blog.Error("status report: task(%s) not exist but taskgroup(%s) exist", taskID, taskGroupID)
 				return false
 			}
 		}
 
 		if agentID.GetValue() == "" || executorID.GetValue() == "" {
 			blog.Warn("status report: task(%s) not exist and reported executor(%s) or agent(%s) error, do nothing",
-				taskId, executorID.GetValue(), agentID.GetValue())
+				taskID, executorID.GetValue(), agentID.GetValue())
 			return false
 		}
 
-		blog.Warn("status report: task(%s) not eixst, kill executor(%s) on agent(%s)", taskId, executorID.GetValue(), agentID.GetValue())
+		blog.Warn("status report: task(%s) not eixst, kill executor(%s) on agent(%s)", taskID, executorID.GetValue(), agentID.GetValue())
 		s.KillExecutor(agentID.GetValue(), executorID.GetValue())
 		return false
 	}
 
 	if task.Status == types.TASK_STATUS_FINISH || task.Status == types.TASK_STATUS_ERROR || task.Status == types.TASK_STATUS_KILLED || task.Status == types.TASK_STATUS_FAIL {
-		blog.Warn("status report ignored: task %s, but current status is %s", taskId, task.Status)
+		blog.Warn("status report ignored: task %s, but current status is %s", taskID, task.Status)
 		return false
 	}
 
 	return true
 }
 
-func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentId, executorId string) (bool, error) {
+func (s *Scheduler) updateTaskgroup(taskGroup *types.TaskGroup, agentID, executorID string) (bool, error) {
 	isUpdated := false
 
-	if "" != agentId && taskGroup.AgentID != agentId {
-		taskGroup.AgentID = agentId
+	if "" != agentID && taskGroup.AgentID != agentID {
+		taskGroup.AgentID = agentID
 		isUpdated = true
 	}
 
-	if "" != executorId && taskGroup.ExecutorID != executorId {
-		taskGroup.ExecutorID = executorId
+	if "" != executorID && taskGroup.ExecutorID != executorID {
+		taskGroup.ExecutorID = executorID
 		isUpdated = true
 	}
 
@@ -524,11 +524,11 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 	isUpdated := false
 
 	runAs := app.RunAs
-	appId := app.ID
+	appID := app.ID
 
-	taskGroups, err := s.store.ListTaskGroups(runAs, appId)
+	taskGroups, err := s.store.ListTaskGroups(runAs, appID)
 	if err != nil {
-		blog.Warn("list taskgroups(%s.%s) failed, err:%s", runAs, appId, err.Error())
+		blog.Warn("list taskgroups(%s.%s) failed, err:%s", runAs, appID, err.Error())
 		return isUpdated, err
 	}
 
@@ -576,11 +576,11 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 
 	blog.V(3).Infof("TaskGroups status for application(%s.%s): totalNum(%d) stagingNum(%d) startingNum(%d) "+
 		"runningNum(%d) finishedNum(%d) errorNum(%d) failedNum(%d) killingNum(%d) killedNum(%d) lostNum(%d) unknowNum(%d)",
-		runAs, appId, totalNum, stagingNum, startingNum, runningNum, finishedNum, errorNum, failedNum, killingNum,
+		runAs, appID, totalNum, stagingNum, startingNum, runningNum, finishedNum, errorNum, failedNum, killingNum,
 		killedNum, lostNum, unknowNum)
 
 	if totalNum != int(app.Instances) {
-		blog.Error("applicaiton(%s.%s) Instances(%d), but only find %d", runAs, appId, app.Instances, totalNum)
+		blog.Error("applicaiton(%s.%s) Instances(%d), but only find %d", runAs, appID, app.Instances, totalNum)
 	}
 
 	var status, message string
@@ -611,9 +611,9 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 	}
 
 	if app.Status == types.APP_STATUS_OPERATING || app.Status == types.APP_STATUS_ROLLINGUPDATE {
-		blog.V(3).Infof("application(%s.%s) status(%s), not change", runAs, appId, app.Status)
+		blog.V(3).Infof("application(%s.%s) status(%s), not change", runAs, appID, app.Status)
 	} else if currStatus != status {
-		blog.Info("applicaiton(%s.%s) status changed: %s -> %s", runAs, appId, currStatus, status)
+		blog.Info("applicaiton(%s.%s) status changed: %s -> %s", runAs, appID, currStatus, status)
 		app.Status = status
 		app.Message = message
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
@@ -622,7 +622,7 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 	}
 
 	if app.RunningInstances != uint64(runningNum) {
-		blog.Info("applicaiton(%s.%s) RunningInstances changed: %d -> %d", runAs, appId, app.RunningInstances, runningNum)
+		blog.Info("applicaiton(%s.%s) RunningInstances changed: %d -> %d", runAs, appID, app.RunningInstances, runningNum)
 		app.RunningInstances = uint64(runningNum)
 		isUpdated = true
 	}
@@ -758,32 +758,32 @@ func (s *Scheduler) applicationStatusUpdated(app *types.Application, originStatu
 
 //UpdateTaskStatus current only update task status running by mesos message, if task status changed by mesos status update
 func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.BcsMessage) {
-	taskId := bcsMsg.TaskID.GetValue()
-	taskGroupID := types.GetTaskGroupID(taskId)
+	taskID := bcsMsg.TaskID.GetValue()
+	taskGroupID := types.GetTaskGroupID(taskID)
 	if taskGroupID == "" {
-		blog.Error("message status report: can not get taskGroupId from taskID(%s)", taskId)
+		blog.Error("message status report: can not get taskGroupId from taskID(%s)", taskID)
 		return
 	}
-	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	//check taskgroup whether belongs to daemonset
 	if s.CheckPodBelongDaemonset(taskGroupID) {
-		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appId)
-		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appId)
+		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appID)
+		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appID)
 	} else {
-		s.store.LockApplication(runAs + "." + appId)
-		defer s.store.UnLockApplication(runAs + "." + appId)
+		s.store.LockApplication(runAs + "." + appID)
+		defer s.store.UnLockApplication(runAs + "." + appID)
 	}
 
 	// ack and check
-	if s.preCheckMessageTaskStatus(agentID, executorID, taskId) == false {
+	if s.preCheckMessageTaskStatus(agentID, executorID, taskID) == false {
 		return
 	}
 
 	now := time.Now().Unix()
 	updateTime := now - MAX_DATA_UPDATE_INTERVAL
-	task, _ := s.store.FetchTask(taskId)
+	task, _ := s.store.FetchTask(taskID)
 	if task == nil {
-		blog.Warn("message status report: fetch task(%s) return nil", taskId)
+		blog.Warn("message status report: fetch task(%s) return nil", taskID)
 		return
 	}
 
@@ -799,10 +799,10 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 	// update task status
 	switch strings.ToLower(taskInfo.Status) {
 	case "running":
-		blog.V(3).Infof("message status report: Task(%s) Running", taskId)
+		blog.V(3).Infof("message status report: Task(%s) Running", taskID)
 		reportStatus = types.TASK_STATUS_RUNNING
 	default:
-		blog.Warnf("message status report: Unprocessed task status (%v), TaskID:%s", taskInfo, taskId)
+		blog.Warnf("message status report: Unprocessed task status (%v), TaskID:%s", taskInfo, taskID)
 		return
 	}
 	task.Status = reportStatus
@@ -810,7 +810,7 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 
 	var msg *types.BcsMessage
 	if task.StatusData != oldData {
-		blog.Info("message status report: task %s, statusData change: %s --> %s", taskId, oldData, task.StatusData)
+		blog.Info("message status report: task %s, statusData change: %s --> %s", taskID, oldData, task.StatusData)
 		var containerInfo *containertypes.BcsContainerInfo
 		err = json.Unmarshal([]byte(task.StatusData), &containerInfo)
 		if err != nil {
@@ -822,7 +822,7 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 		}
 	}
 	if oldData != "" && task.StatusData == "" {
-		blog.Warn("message status report: Task %s, Status: %s, reported StatusData is empty, keep oldData(%s)", taskId, task.Status, oldData)
+		blog.Warn("message status report: Task %s, Status: %s, reported StatusData is empty, keep oldData(%s)", taskID, task.Status, oldData)
 		task.StatusData = oldData
 	}
 
@@ -835,14 +835,14 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 
 	if taskUpdated || task.LastUpdateTime <= updateTime {
 		blog.V(3).Infof("message status report: Save Task %s, Status: %s, StatusData: %s, Healthy: %t",
-			taskId, task.Status, task.StatusData, task.Healthy)
+			taskID, task.Status, task.StatusData, task.Healthy)
 	} else {
-		blog.V(3).Infof("task %s status report, not change", taskId)
+		blog.V(3).Infof("task %s status report, not change", taskID)
 		return
 	}
 	task.LastUpdateTime = now
 	if err = s.store.SaveTask(task); err != nil {
-		blog.Error("message status report: SaveTask %s err: %s", taskId, err.Error())
+		blog.Error("message status report: SaveTask %s err: %s", taskID, err.Error())
 		return
 	}
 
@@ -852,7 +852,7 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 		blog.Error("message status report: Fetch task group %s failed: %s", taskGroupID, err.Error())
 		return
 	}
-	blog.Info("message status report: task(%s) status(%s), taskgroup(%s)", taskId, task.Status, taskGroup.Status)
+	blog.Info("message status report: task(%s) status(%s), taskgroup(%s)", taskID, task.Status, taskGroup.Status)
 
 	taskGroupStatus := taskGroup.Status
 	// update taskGroup Status according to tasks status
@@ -893,46 +893,46 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 
 	//when taskgroup belongs to daemonset
 	if s.CheckPodBelongDaemonset(taskGroup.ID) {
-		s.updateDaemonsetStatus(runAs, appId)
+		s.updateDaemonsetStatus(runAs, appID)
 	} else {
 		//check application whether changed
-		s.checkApplicationChange(runAs, appId, taskGroupStatus, taskGroup, now)
+		s.checkApplicationChange(runAs, appID, taskGroupStatus, taskGroup, now)
 	}
 }
 
-func (s *Scheduler) preCheckMessageTaskStatus(agentID, executorID, taskId string) bool {
+func (s *Scheduler) preCheckMessageTaskStatus(agentID, executorID, taskID string) bool {
 
-	taskGroupID := types.GetTaskGroupID(taskId)
-	runAs, appId := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
-	task, err := s.store.FetchTask(taskId)
+	taskGroupID := types.GetTaskGroupID(taskID)
+	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
+	task, err := s.store.FetchTask(taskID)
 	if err != nil && err != store.ErrNoFound {
-		blog.Warn("message status report: fetch task(%s) err(%s)", taskId, err.Error())
+		blog.Warn("message status report: fetch task(%s) err(%s)", taskID, err.Error())
 		return false
 	}
 	blog.V(3).Infof("message status report: get status report: task %s, executorID: %s, agentID: %s ",
-		taskId, executorID, agentID)
+		taskID, executorID, agentID)
 
 	if task == nil {
-		blog.Warn("message status report: task(%s) not exist", taskId)
-		taskGroups, err1 := s.store.ListTaskGroups(runAs, appId)
+		blog.Warn("message status report: task(%s) not exist", taskID)
+		taskGroups, err1 := s.store.ListTaskGroups(runAs, appID)
 		if err1 != nil {
-			blog.Warn("message status report: list taskgroups(%s.%s) failed, err:%s", runAs, appId, err1.Error())
+			blog.Warn("message status report: list taskgroups(%s.%s) failed, err:%s", runAs, appID, err1.Error())
 			return false
 		}
 		for _, taskGroup := range taskGroups {
 			if taskGroup.ID == taskGroupID {
-				blog.Error("message status report: task(%s) not exist but taskgroup(%s) exist", taskId, taskGroupID)
+				blog.Error("message status report: task(%s) not exist but taskgroup(%s) exist", taskID, taskGroupID)
 				return false
 			}
 		}
 
 		if agentID == "" || executorID == "" {
 			blog.Warn("message status report: task(%s) not exist and reported executor(%s) or agent(%s) error, do nothing",
-				taskId, executorID, agentID)
+				taskID, executorID, agentID)
 			return false
 		}
 
-		blog.Warn("message status report: task(%s) not eixst, kill executor(%s) on agent(%s)", taskId, executorID, agentID)
+		blog.Warn("message status report: task(%s) not eixst, kill executor(%s) on agent(%s)", taskID, executorID, agentID)
 		s.KillExecutor(agentID, executorID)
 		return false
 	}

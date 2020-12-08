@@ -123,7 +123,8 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	blog.Infof("success to wait clbIngress and cloudListener synced")
 
 	// create ingress registry
-	ingressRegistry, err := clbIngressClient.NewKubeRegistry(opt.ClbName, ingressInformer, ingressLister, ingressInterface)
+	ingressRegistry, err := clbIngressClient.NewKubeRegistry(
+		opt.ClbName, ingressInformer, ingressLister, ingressInterface)
 	if err != nil {
 		blog.Errorf("create ingress registry  failed, err %s", err.Error())
 		return nil, fmt.Errorf("create ingress registry  failed, err %s", err.Error())
@@ -153,13 +154,16 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	return proc, nil
 }
 
+// Init init processor
 func (p *Processor) Init() error {
 	return p.updater.EnsureLoadBalancer()
 }
 
+// Run run processor
 func (p *Processor) Run() {
 
 	updateTick := time.NewTicker(time.Second * time.Duration(p.opt.UpdatePeriod))
+	defer updateTick.Stop()
 	for {
 		select {
 		case <-p.stopCh:
@@ -187,10 +191,12 @@ func (p *Processor) Run() {
 	}
 }
 
+// SetUpdated set processor updated
 func (p *Processor) SetUpdated() {
 	p.updateFlag.Set(true)
 }
 
+// Handle handle update event
 func (p *Processor) Handle() {
 	err := p.updater.Update()
 	if err != nil {
@@ -198,6 +204,7 @@ func (p *Processor) Handle() {
 	}
 }
 
+// Stop stop processor
 func (p *Processor) Stop() {
 	close(p.stopCh)
 }

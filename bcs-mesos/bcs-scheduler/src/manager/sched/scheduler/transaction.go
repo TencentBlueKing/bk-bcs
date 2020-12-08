@@ -15,38 +15,39 @@ package scheduler
 
 import (
 	"fmt"
+	"time"
+
 	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"time"
 )
 
-// Default transaction max lifeperoid, 480 seconds
+// TRANSACTION_DEFAULT_LIFEPERIOD Default transaction max lifeperoid, 480 seconds
 // the lifeperoid for all not specified transactions are set to this
 const TRANSACTION_DEFAULT_LIFEPERIOD = 480
 
 const TRANSACTION_APPLICATION_LAUNCH_LIFEPERIOD = 1800
 
-// Max lifeperoid for every rolling transaction, 300 seconds
+// TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD Max lifeperoid for every rolling transaction, 300 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
 const TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD = 300
 
-// Max lifeperoid for every rolling transaction, 300 seconds
+// TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD Max lifeperoid for every rolling transaction, 300 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
 const TRANSACTION_DEPLOYMENT_ROLLING_DOWN_LIFEPERIOD = 7500
 
-// Max lifeperoid for innder delete application transaction, 300 seconds
+// TRANSACTION_DEPLOYMENT_INNERDELETE_LIFEPERIOD Max lifeperoid for innder delete application transaction, 300 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
 const TRANSACTION_DEPLOYMENT_INNERDELETE_LIFEPERIOD = 7500
 
-// Max lifePeriod for inner taskgroup-reschedule, 3600 seconds
+// TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD Max lifePeriod for inner taskgroup-reschedule, 3600 seconds
 // If a transaction dosen't finish in its lifePeriod, it will be timeout
 const TRANSACTION_INNER_RESCHEDULE_LIFEPERIOD = 86400
 
-// If taskgroup running than 1800 seconds, the restart times will be reset to 0
+// TRANSACTION_RESCHEDULE_RESET_INTERVAL If taskgroup running than 1800 seconds, the restart times will be reset to 0
 const TRANSACTION_RESCHEDULE_RESET_INTERVAL = 1800
 
-// Transaction
+// Transaction definition for background execution
 type Transaction struct {
 	// transaction unique ID, created in CreateTransaction
 	ID string
@@ -68,7 +69,7 @@ type Transaction struct {
 	CreateTime int64
 }
 
-// Launch application transaction data
+// TransAPILaunchOpdata Launch application transaction data
 type TransAPILaunchOpdata struct {
 	// version definition for launch application
 	Version *types.Version
@@ -80,7 +81,7 @@ type TransAPILaunchOpdata struct {
 	Reason string
 }
 
-// Scale application transaction data
+// TransAPIScaleOpdata Scale application transaction data
 type TransAPIScaleOpdata struct {
 	// version definition for application
 	Version *types.Version
@@ -94,7 +95,7 @@ type TransAPIScaleOpdata struct {
 	LaunchedNum int
 }
 
-// Update application transaction data
+// TransAPIUpdateOpdata Update application transaction data
 type TransAPIUpdateOpdata struct {
 	// version definition for application
 	Version *types.Version
@@ -108,13 +109,13 @@ type TransAPIUpdateOpdata struct {
 	Taskgroups []*types.TaskGroup
 }
 
-// Delete application transaction data
+// TransAPIDeleteOpdata Delete application transaction data
 type TransAPIDeleteOpdata struct {
 	// if false, the operation will fail when some taskgroups cannot come to end status
 	Enforce bool
 }
 
-// Reschedule taskgroup transaction data
+// TransRescheduleOpData Reschedule taskgroup transaction data
 type TransRescheduleOpData struct {
 	// version definition for application
 	Version *types.Version
@@ -132,7 +133,7 @@ type TransRescheduleOpData struct {
 	HostRetain string
 }
 
-// Create a transaction, ID, createTime will be initialized
+// CreateTransaction Create a transaction, ID, createTime will be initialized
 func CreateTransaction() *Transaction {
 	transaction := new(Transaction)
 	//tmp
@@ -144,7 +145,7 @@ func CreateTransaction() *Transaction {
 	return transaction
 }
 
-// Finish a transaction, set application status
+// FinishTransaction Finish a transaction, set application status
 func (s *Scheduler) FinishTransaction(transaction *Transaction) {
 
 	blog.Info("transaction(%s)(runAs:%s, ID:%s) type(%s) status(%s) end",

@@ -14,17 +14,18 @@
 package watch
 
 import (
+	"context"
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	stowatch "github.com/Tencent/bk-bcs/bcs-common/common/storage/watch"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/app/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/zk"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
-
-	"context"
-	"sync"
 )
 
+// ClusterWatcher cluster watcher
 type ClusterWatcher struct {
 	pCtx   context.Context
 	ctx    context.Context
@@ -32,11 +33,11 @@ type ClusterWatcher struct {
 
 	outPutEvent chan *MetricEvent
 
-	clusterId     string
+	clusterID     string
 	clusterType   types.ClusterType
-	metricEvent   chan *operator.Event
-	dynamicEvent  chan *operator.Event
-	endpointEvent chan *operator.Event
+	metricEvent   chan *stowatch.Event
+	dynamicEvent  chan *stowatch.Event
+	endpointEvent chan *stowatch.Event
 
 	metric     map[string]*types.Metric
 	metricLock sync.RWMutex
@@ -46,24 +47,27 @@ type ClusterWatcher struct {
 	config  *config.Config
 }
 
-func NewClusterWatcher(pCtx context.Context, clusterId string, storage storage.Storage, zk zk.Zk, config *config.Config) *ClusterWatcher {
-	return &ClusterWatcher{pCtx: pCtx, clusterId: clusterId, storage: storage, zk: zk, config: config}
+// NewClusterWatcher create cluster watcher
+func NewClusterWatcher(pCtx context.Context,
+	clusterID string, storage storage.Storage, zk zk.Zk, config *config.Config) *ClusterWatcher {
+	return &ClusterWatcher{pCtx: pCtx, clusterID: clusterID, storage: storage, zk: zk, config: config}
 }
 
+// Start start watcher
 func (cw *ClusterWatcher) Start(event chan *MetricEvent) {
-	blog.Infof("start watching cluster %s", cw.clusterId)
+	blog.Infof("start watching cluster %s", cw.clusterID)
 	cw.ctx, cw.cancel = context.WithCancel(cw.pCtx)
 	cw.outPutEvent = event
-	cw.metricEvent = make(chan *operator.Event, 100)
-	cw.dynamicEvent = make(chan *operator.Event, 100)
-	cw.endpointEvent = make(chan *operator.Event, 100)
+	cw.metricEvent = make(chan *stowatch.Event, 100)
+	cw.dynamicEvent = make(chan *stowatch.Event, 100)
+	cw.endpointEvent = make(chan *stowatch.Event, 100)
 	cw.metric = make(map[string]*types.Metric)
 	cw.metricLock = sync.RWMutex{}
 	go cw.metricManager()
 
 	// if is Component Metric, then launch the endpoint manager for watching endpoint changes,
 	// otherwise launch the dynamic manager for watching dynamic changes
-	switch cw.clusterId {
+	switch cw.clusterID {
 	case types.BcsComponentsClusterId:
 		go cw.endpointManger()
 	default:
@@ -71,9 +75,10 @@ func (cw *ClusterWatcher) Start(event chan *MetricEvent) {
 	}
 }
 
+// Stop stop watcher
 func (cw *ClusterWatcher) Stop() {
 	if cw.cancel != nil {
-		blog.Infof("end watching cluster %s", cw.clusterId)
+		blog.Infof("end watching cluster %s", cw.clusterID)
 		cw.cancel()
 	}
 }

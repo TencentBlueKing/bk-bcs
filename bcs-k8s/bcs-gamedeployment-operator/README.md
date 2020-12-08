@@ -10,9 +10,9 @@ openkruise 的部分实现，支持原地重启、镜像热更新、滚动更新
 * [done]增加原地重启 InplaceUpdate 更新策略，并支持原地重启过程当中的 gracePeriodSeconds
 * [done]增加镜像热更新 HotPatchUpdate 更新策略
 * [done]支持HPA
-* [todo]集成腾讯云CLB，实现有状态端口段动态转发
-* [todo]集成BCS无损更新特性：允许不重启容器更新容器内容
-* [todo]扩展kubectl，支持kubectl gamestatefulset子命令
+* [done]支持分步骤自动化灰度发布，在灰度过程中加入 hook 校验
+* [done]优雅地删除和更新应用实例 PreDeleteHook 
+* [todo]扩展kubectl，支持kubectl gamedeployment 子命令
 
 ### 特性
 
@@ -20,17 +20,19 @@ openkruise 的部分实现，支持原地重启、镜像热更新、滚动更新
 
 * 支持Operator高可用部署
 * 支持滚动更新
-* 支持灰度发布
+* 支持设置 partition 灰度发布
 * 支持容器原地升级
 * 支持容器镜像热更新
 * 支持 HPA
+* 支持分步骤自动化灰度发布
+* 优雅地删除和更新应用实例 PreDeleteHook 
 
 ### 特性介绍
 
 基于游戏业务等相关场景，bcs 需要对 deployment 管理的无状态应用添加原地重启、镜像热更新、灰度发布等新的功能，但原生的 deployment 是通过控制多个
 replicaset 来实现滚动更新的，由 replicaset 来控制 pod 实例的生命周期。如果在原生的 deployment 上进行定制改造，就无法直接控制 pod 的生命周期。  
 因此，bcs 基于 k8s 原生的 replicaset-controller 开发了 bcs-gamedeployment-operator，实现了一种新的 k8s workload：GameDeployment。  
-GameDeployment 的配置与原生的 Deployment 基本一致，只在 updateStrategy 上有所区别：  
+GameDeployment 的配置与原生的 Deployment 基本一致：  
 
 ```yaml
 apiVersion: tkex.tencent.com/v1alpha1
@@ -51,46 +53,59 @@ spec:
     spec:
       containers:
       - name: python
-        image: python:latest
+        image: python:3.5
         imagePullPolicy: IfNotPresent
         command: ["python"]
         args: ["-m", "http.server", "8000" ]
         ports:
         - name: http
           containerPort: 8000
+  preDeleteUpdateStrategy:
+    hook:
+      templateName: test
   updateStrategy:
     type: InplaceUpdate
     partition: 1
     maxUnavailable: 2
-    maxSurge: 2
+    canary:
+      steps:
+        - partition: 3
+        - pause: {}
+        - partition: 1
+        - pause: {duration: 60}
+        - hook:
+            templateName: test
+        - pause: {}
     inPlaceUpdateStrategy:
       gracePeriodSeconds: 30
 ```
 
-* type  
+* preDeleteUpdateStrategy  
+见下文 "优雅地删除和更新应用实例 PreDeleteHook" 章节。  
+* updateStrategy/type  
 支持 RollingUpdate, InplaceUpdate, HotPatchUpdate 三种更新策略。  
-* partition  
+* updateStrategy/partition  
 用于实现灰度发布，可参考 statefulset 的 partition 。
-* maxUnavailable  
+* updateStrategy/maxUnavailable  
 指在更新过程中每批执行更新的实例数量，在更新过程中这批实例是不可用的。比如一共有 8 个实例，maxUnavailable 设置为 2 ，那么每批滚动或原地重启 2 
 个实例，等这 2 个实例更新完成后，再进行下一批更新。可设置为整数值或百分比，默认值为 25% 。
-* maxSurge  
+* updateStrategy/maxSurge  
 在滚动更新过程中，如果每批都是先删除 maxUnavailable 数量的旧版本 pod 数，再新建新版本的 pod 数，那么在整个更新过程中，总共只有 replicas - maxUnavailable
 数量的实例数能够提供服务。在总实例数 replicas 数量比较小的情况下，会影响应用的服务能力。设置 maxSurge 后，会在滚动更新前先多创建 maxSurge 数量的 pod，
-然后再逐批进行更新，更新完成后，最后再删掉 maxSurge 数量的 pod ，这样就能保证整个更新过程中可服务的总实例数量。 maxSurge 默认值为 0 。
-* inPlaceUpdateStrategy  
-原地重启的速度可能会特别快，在容器重启过程中，service 来不及更新 endpoints ，亦即来不及把正在原地重启的 pod 从 endpoints 中剔除，这样会
-导致在原地重启过程中的 service 流量受损。  
-为了解决这一问题，我们在原地重启的策略中加入了 gracePeriodSeconds 的参数。  
-假如在原地重启的更新策略下，配置了 spec/updateStrategy/inPlaceUpdateStrategy/gracePeriodSeconds 为 30 秒，那么 bcs-gamedeployment-operator
-在更新一个 pod 前，会先把这个 pod 设置为 unready 状态，30 秒过后才会真正去重启 pod 中的容器，那么在这 30 秒的时间内 k8s 会把该 pod 实例从
-service 的 endpoints 中剔除。等原地重启完成后，bcs-gamedeployment-operator 才会再把该 pod 设为 ready 状态，之后 k8s 就会重新把该 pod
-实例加入到 endpoints 当中。这样，在整个原地重启过程中，能保证 service 流量的无损服务。  
-gracePeriodSeconds 的默认值为 0 ，如果不设置，bcs-gamedeployment-operator 会马上原地重启 pod 中的容器。 
+然后再逐批进行更新，更新完成后，最后再删掉 maxSurge 数量的 pod ，这样就能保证整个更新过程中可服务的总实例数量。 maxSurge 默认值为 0 。  
+因 InplaceUpdate 和 HotPatchUpdate 不会重启 pod ，因此建议只在 RollingUpdate 更新时设置 maxSurge 参数。  
+* updateStrategy/inPlaceUpdateStrategy  
+见下方 InplaceUpdate 介绍。  
+* updateStrategy/canary  
+智能式分步骤灰度发布，见下文详细介绍。  
+
+#### 滚动发布 RollingUpdate
+kubernetes 原生的 Deployment 通过控制多个 ReplicaSet 来实现应用的滚动发布，GameDeployment 通过直接控制应用 pod 实例的新增和删除来实现滚动
+发布，详见下文使用案例。  
 
 #### 原地重启 InplaceUpdate
 原地重启更新策略在更新过程中，保持 pod 的生命周期不变，只是重启 pod 中的容器，可主要用于以下场景：  
-* pod 中有多个容器，只想更新其中的一个容器，保持 pod 的 ipc 共享内存等不发生变化
+* pod 中有多个容器，只想更新其中的一个容器，保持 pod 的 ipc 共享内存等不发生变化  
 * 在更新过程中保持 pod 状态不变，不重新调度，仅仅重启和更新 pod 中的一个或多个容器，加快更新速度  
 
 原地重启的速度可能会特别快，在容器重启过程中，service 来不及更新 endpoints ，亦即来不及把正在原地重启的 pod 从 endpoints 中剔除，这样会
@@ -101,15 +116,29 @@ gracePeriodSeconds 的默认值为 0 ，如果不设置，bcs-gamedeployment-ope
 service 的 endpoints 中剔除。等原地重启完成后，bcs-gamestatefulset-operator 才会再把该 pod 设为 ready 状态，之后 k8s 就会重新把该 pod
 实例加入到 endpoints 当中。这样，在整个原地重启过程中，能保证 service 流量的无损服务。  
 gracePeriodSeconds 的默认值为 0 ，如果不设置，bcs-gamestatefulset-operator 会马上原地重启 pod 中的容器。  
-InplaceUpdate 同样支持 partition 配置，用于实现灰度发布策略。为了兼容旧版本，InplaceUpdate 沿用 RollingUpdate 的 partition 配置字段：
-spec/updateStrategy/rollingUpdate/partition 。
+InplaceUpdate 同样支持 partition 配置，用于实现灰度发布策略。  
 
 #### 镜像热更新 HotPatchUpdate 
 镜像热更新 HotPatchUpdate 更新策略在更新过程中，保持 pod 及其容器的生命周期都不变，只是新容器的镜像版本。更新完成后，用户需要通过向
 pod 容器发送信号或命令，reload 或 重启 pod 容器中的进程，最终实现 pod 容器的更新。  
 该功能需要配合 bcs 定制的 kubelet 和 dockerd 版本才能使用。  
-HotPatchUpdate 同样支持 partition 配置，用于实现灰度发布策略。为了兼容旧版本，HotPatchUpdate 沿用 RollingUpdate 的 partition 配置字段：
-spec/updateStrategy/rollingUpdate/partition
+HotPatchUpdate 同样支持 partition 配置，用于实现灰度发布策略。  
+
+#### 智能式分步骤灰度发布
+GameDeployment 支持智能化的分步骤灰度发布功能，允许用户在 GameDeployment 定义中配置多个灰度发布的步骤，这些步骤可以是 "灰度发布部分实例"、"永久暂停灰度发布"、
+"暂停指定的时间段后再继续灰度发布"、"外部 Hook 调用以决定是否暂停灰度发布"，通过配置这些不同的灰度发布步骤，可以达到自动化的分步骤灰度发布能力，实现
+灰度发布的智能控制。  
+详见：[智能式分步骤灰度发布](doc/features/canary/auto-canary-update.md)
+
+#### 优雅地删除和更新应用实例 PreDeleteHook
+在与腾讯的众多游戏业务的交流过程中，我们发现，许多业务场景下，在删除 pod 实例(比如缩容实例数、HPA)前或发布更新 pod 版本前，业务希望能够实现优雅的 pod 退出，
+在删除前能够加入一些 hook 勾子，通过这些 hook 判断是否已经可以正常删除或更新 pod。如果 hook 返回 ok，那么就正常删除或更新 pod，如果返回不 ok，
+那么就继续等待，直到 hook 返回 ok。  
+发散来看，这其实并非游戏业务的独特需求，而是大多数不同类型业务的普遍需求。  
+然而，原生的 kubernetes 只支持 pod 级别的 preStop 和 postStart ，远不能满足这种更精细化的 hook 需求。  
+BCS 团队结合业务需求，抽象并开发了 bcs-hook-operator ，用于实现多种形式的 hook 控制，在 bcs-gamedeployment-operator 和 game-statefulset-operator
+这两个 workload 层面实现了与 bcs-hook-operator 的联动，提供了 pod 删除或更新前的 PreDeleteHook 功能，实现了应用实例的优雅删除和更新。    
+详见：[应用实例的优雅删除和更新 PreDeleteHook](doc/features/preDeleteHook/pre-delete-hook.md)
 
 ### 信息初始化
 

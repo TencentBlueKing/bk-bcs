@@ -13,7 +13,9 @@
 
 package config
 
-//"github.com/Tencent/bk-bcs/bcs-common/common/static"
+import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+)
 
 //CertConfig is configuration of Cert
 type CertConfig struct {
@@ -49,6 +51,8 @@ type MesosDriverConfig struct {
 	// websocket register
 	RegisterWithWebsocket bool
 	RegisterToken         string
-	RegisterUrl           string
+	RegisterURL           string
 	InsecureSkipVerify    bool
+
+	Etcd *registry.CMDOptions
 }

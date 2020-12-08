@@ -16,13 +16,14 @@
 package scheduler
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"time"
 )
 
-// The goroutine function for delete application transaction
+// RunDeleteApplication The goroutine function for delete application transaction
 // You can create a transaction for delete application, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
 func (s *Scheduler) RunDeleteApplication(transaction *Transaction) {

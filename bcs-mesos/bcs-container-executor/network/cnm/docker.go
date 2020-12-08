@@ -24,8 +24,6 @@ func NewNetManager() network.NetManager {
 	return manager
 }
 
-//todo(developerJim): DockerNetManager can create Network namespace by driver
-
 //DockerNetManager docker network manager for using docker network
 type DockerNetManager struct {
 }

@@ -14,6 +14,7 @@
 package v1alpha1
 
 import (
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,6 +54,10 @@ type GameDeploymentSpec struct {
 	// update Pods in the GameDeployment when a revision is made to Template.
 	UpdateStrategy GameDeploymentUpdateStrategy `json:"updateStrategy,omitempty"`
 
+	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to
+	// before Delete Or Update Pods
+	PreDeleteUpdateStrategy GameDeploymentPreDeleteUpdateStrategy `json:"preDeleteUpdateStrategy,omitempty"`
+
 	// RevisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the GameDeployment's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
@@ -65,6 +70,11 @@ type GameDeploymentSpec struct {
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
 }
 
+type GameDeploymentPreDeleteUpdateStrategy struct {
+	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
+}
+
 type GameDeploymentScaleStrategy struct {
 	// PodsToDelete is the names of Pod should be deleted.
 	// Note that this list will be truncated for non-existing pod names.
@@ -74,7 +84,8 @@ type GameDeploymentScaleStrategy struct {
 type GameDeploymentUpdateStrategy struct {
 	// Type indicates the type of the GameDeploymentUpdateStrategy.
 	// Default is ReCreate.
-	Type GameDeploymentUpdateStrategyType `json:"type,omitempty"`
+	Type           GameDeploymentUpdateStrategyType `json:"type,omitempty"`
+	CanaryStrategy *CanaryStrategy                  `json:"canary,omitempty"`
 	// Partition is the desired number of pods in old revisions. It means when partition
 	// is set during pods updating, (replicas - partition) number of pods will be updated.
 	// Default value is 0.
@@ -95,6 +106,22 @@ type GameDeploymentUpdateStrategy struct {
 	Paused bool `json:"paused,omitempty"`
 	// InPlaceUpdateStrategy contains strategies for in-place update.
 	InPlaceUpdateStrategy *inplaceupdate.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
+}
+
+type CanaryStrategy struct {
+	Steps []CanaryStep `json:"steps,omitempty"`
+}
+
+type CanaryStep struct {
+	Partition *int32                 `json:"partition,omitempty"`
+	Pause     *CanaryPause           `json:"pause,omitempty"`
+	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
+}
+
+type CanaryPause struct {
+	// Duration the amount of time to wait before moving to the next step.
+	// +optional
+	Duration *int32 `json:"duration,omitempty"`
 }
 
 // GameDeploymentUpdateStrategyType defines strategies for pods in-place update.
@@ -150,8 +177,21 @@ type GameDeploymentStatus struct {
 	// Conditions represents the latest available observations of a GameDeployment's current state.
 	Conditions []GameDeploymentCondition `json:"conditions,omitempty"`
 
+	PauseConditions []hookv1alpha1.PauseCondition `json:"pauseConditions,omitempty"`
+
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
+
+	CurrentStepIndex        *int32                                `json:"currentStepIndex,omitempty"`
+	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
+	Canary                  CanaryStatus                          `json:"canary,omitempty"`
+	PreDeleteHookConditions []hookv1alpha1.PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
+}
+
+type CanaryStatus struct {
+	Revision           string       `json:"revision,omitempty"`
+	PauseStartTime     *metav1.Time `json:"pauseStartTime,omitempty"`
+	CurrentStepHookRun string       `json:"currentStepHookRun,omitempty"`
 }
 
 // GameDeploymentConditionType is type for GameDeployment conditions.
@@ -186,7 +226,7 @@ type GameDeployment struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   GameDeploymentSpec   `json:"spec,omitempty"`
-	Status GameDeploymentStatus `json:"status,omitempty"`
+	Status GameDeploymentStatus `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

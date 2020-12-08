@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/backend"
 )
 
+// Router http api registry
 type Router struct {
 	backend backend.Backend
 	actions []*httpserver.Action
@@ -47,7 +48,7 @@ func NewRouter(b backend.Backend) *Router {
 	return r
 }
 
-//get http api routing table information, and use it to register http client
+// GetActions get http api routing table information, and use it to register http client
 func (r *Router) GetActions() []*httpserver.Action {
 	return r.actions
 }

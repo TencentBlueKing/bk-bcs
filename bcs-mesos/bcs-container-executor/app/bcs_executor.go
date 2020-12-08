@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cni"
@@ -36,11 +37,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network"
 	cninet "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network/cni"
 	cnmnet "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network/cnm"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
 	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"github.com/golang/protobuf/proto"
-	//"github.com/pborman/uuid"
 	"golang.org/x/net/context"
 )
 
@@ -104,16 +103,6 @@ func NewBcsExecutor(flag *CommandFlags) exec.Executor {
 }
 
 func createNetManager(bcsExecutor *BcsExecutor, flag *CommandFlags) {
-	// exist, _ := util.FileExists(flag.CNIPluginDir + "/conf")
-	// if flag.NetworkMode == "" {
-	// 	if exist {
-	// 		//cni pod
-	// 		bcsExecutor.netManager = cninet.NewNetManager(flag.CNIPluginDir+"/bin", flag.CNIPluginDir+"/conf")
-	// 	} else {
-	// 		//docker pod
-	// 		bcsExecutor.netManager = cnmnet.NewNetManager()
-	// 	}
-	// } else {
 	if flag.NetworkMode == "cni" {
 		//cni pod
 		bcsExecutor.netManager = cninet.NewNetManager(flag.CNIPluginDir+"/bin", flag.CNIPluginDir+"/conf")
@@ -121,18 +110,9 @@ func createNetManager(bcsExecutor *BcsExecutor, flag *CommandFlags) {
 		//docker pod
 		bcsExecutor.netManager = cnmnet.NewNetManager()
 	}
-	// }
 }
 
 func createPod(executor *BcsExecutor, flag *CommandFlags, containerTasks []*container.BcsContainerTask, podEvent *container.PodEventHandler) {
-	// exist, _ := util.FileExists(flag.CNIPluginDir + "/conf")
-	// if flag.NetworkMode == "" {
-	// 	if exist {
-	// 		executor.podInst = cni.NewPod(executor.container, containerTasks, podEvent)
-	// 	} else {
-	// 		executor.podInst = cnm.NewPod(executor.container, containerTasks, podEvent)
-	// 	}
-	// } else {
 	if flag.NetworkMode == "cni" {
 		//cni pod
 		executor.podInst = cni.NewPod(executor.container, containerTasks, podEvent, flag.NetworkImage)
@@ -359,6 +339,7 @@ func (executor *BcsExecutor) LaunchTaskGroup(driver exec.ExecutorDriver, taskGro
 	stopCh := make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
 
 		for {
 			select {
@@ -580,6 +561,7 @@ func (executor *BcsExecutor) monitorPod() {
 	}()
 
 	tick := time.NewTicker(1 * time.Second)
+	defer tick.Stop()
 	reporting := 0
 	for {
 		select {
@@ -855,10 +837,9 @@ func (executor *BcsExecutor) customSettingContainer(taskInfo *container.BcsConta
 	// }
 	// taskInfo.Env = append(taskInfo.Env, caliName)
 	//setting mesos slave host ip
-	addrList := util.GetIPAddress()
 	ipAddr := container.BcsKV{
 		Key:   "BCS_NODE_IP",
-		Value: addrList[0],
+		Value: util.GetIPAddress(),
 	}
 	taskInfo.Env = append(taskInfo.Env, ipAddr)
 	podID := container.BcsKV{

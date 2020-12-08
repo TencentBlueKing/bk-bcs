@@ -18,6 +18,7 @@ import (
 	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
+// NodeInfo mesos node information
 type NodeInfo struct {
 	//node ip, example 127.0.0.1
 	Ip string
@@ -35,6 +36,7 @@ type NodeInfo struct {
 	IdcUnit string
 }
 
+// DeployDetection detection record
 type DeployDetection struct {
 	//clusterid
 	Clusterid string

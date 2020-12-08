@@ -1,0 +1,20 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: HookTemplate
+metadata:
+  name: test
+spec:
+  args:
+    - name: PodIP
+    - name: PodName
+    - name: PodNamespace
+    - name: service-name
+  metrics:
+    - name: webtest
+      count: 3
+      interval: 60s
+      failureLimit: 2
+      successCondition: "asInt(result) > 30"
+      provider:
+        web:
+          url: http://{{ args.PodIP }}:9091
+          jsonPath: "{$.age}"

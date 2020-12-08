@@ -14,8 +14,8 @@
 package create
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/meshmanager/v1"
@@ -31,14 +31,14 @@ func createMeshCluster(c *utils.ClientContext) error {
 	}
 	var req *meshmanager.CreateMeshClusterReq
 	err = json.Unmarshal(data, &req)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	resp, err := meshManager.CreateMeshCluster(req)
 	if err != nil {
 		return fmt.Errorf("failed to create meshcluster: %v", err)
 	}
-	if resp.ErrCode!=meshmanager.ErrCode_ERROR_OK {
+	if resp.ErrCode != meshmanager.ErrCode_ERROR_OK {
 		return fmt.Errorf("failed to create meshcluster: %s", resp.ErrMsg)
 	}
 	fmt.Printf("success to create meshcluster\n")

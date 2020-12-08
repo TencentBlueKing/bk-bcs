@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
-// The goroutine function for reschedule taskgroup transaction
+// RunRescheduleTaskgroup The goroutine function for reschedule taskgroup transaction
 // You can create a transaction for reschedule taskgroup, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
 func (s *Scheduler) RunRescheduleTaskgroup(transaction *Transaction) {
