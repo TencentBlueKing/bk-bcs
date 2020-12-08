@@ -3,13 +3,18 @@ module github.com/Tencent/bk-bcs
 go 1.14
 
 replace (
+	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ./bcs-k8s/kubernetes
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20181126155829-0cd23ebeb688
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
 	k8s.io/client-go => k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
+	k8s.io/kubernetes => k8s.io/kubernetes v1.13.1
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.1.9
 )
 
@@ -17,9 +22,10 @@ require (
 	github.com/DataDog/zstd v1.3.4 // indirect
 	github.com/DeveloperJim/gokong v1.9.1-0.20200511122804-1c0ed1483353
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
-	github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46 // indirect
 	github.com/Shopify/sarama v1.20.0 // indirect
 	github.com/Shopify/toxiproxy v2.1.4+incompatible // indirect
+	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator v0.0.0-20201201131446-6dab325dba89
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-20201204075550-89442130308c // indirect
 	github.com/andygrunwald/megos v0.0.0-20180424065632-0fccaea93714
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
@@ -42,7 +48,6 @@ require (
 	github.com/coreos/etcd v3.3.18+incompatible
 	github.com/coreos/go-iptables v0.4.3 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
-	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964
@@ -77,7 +82,6 @@ require (
 	github.com/fsouza/go-dockerclient v1.6.0
 	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-logr/logr v0.1.0 // indirect
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/go-openapi/analysis v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
@@ -92,17 +96,16 @@ require (
 	github.com/gobwas/pool v0.2.0 // indirect
 	github.com/gobwas/ws v1.0.3 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
-	github.com/gogo/protobuf v1.2.1
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/cadvisor v0.32.0
-	github.com/google/go-cmp v0.5.0
+	github.com/google/go-cmp v0.5.1
 	github.com/google/go-querystring v1.0.0
 	github.com/google/uuid v1.1.1
-	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
@@ -132,7 +135,6 @@ require (
 	github.com/lithammer/go-jump-consistent-hash v1.0.1
 	github.com/lucas-clemente/quic-go v0.14.1 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mesos/mesos-go v0.0.10
@@ -150,7 +152,7 @@ require (
 	github.com/nlopes/slack v0.6.1-0.20191106133607-d06c2a2b3249 // indirect
 	github.com/nranchev/go-libGeoIP v0.0.0-20170629073846-d6d4a9a4c7e8 // indirect
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
-	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/ginkgo v1.13.0
 	github.com/onsi/gomega v1.10.1
 	github.com/opencontainers/runc v1.0.0-rc6.0.20181203215513-96ec2177ae84 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
@@ -178,7 +180,7 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go v3.0.114+incompatible
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966 // indirect
-	github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8
+	github.com/ugorji/go/codec v1.1.7
 	github.com/urfave/cli v1.22.2
 	github.com/vishvananda/netlink v1.0.0 // indirect
 	github.com/vishvananda/netns v0.0.0-20190625233234-7109fa855b0f // indirect
@@ -190,9 +192,8 @@ require (
 	go.mongodb.org/mongo-driver v1.1.2
 	go.uber.org/zap v1.13.0 // indirect
 	go4.org v0.0.0-20190313082347-94abd6928b1d
-	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
-	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
-	google.golang.org/grpc v1.29.1
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	google.golang.org/grpc v1.31.0
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
