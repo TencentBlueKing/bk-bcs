@@ -14,5 +14,6 @@
 package bk_bcs
 
 const (
+	// GroupName group name
 	GroupName = "bkbcs.tencent.com"
 )

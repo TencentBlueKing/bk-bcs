@@ -15,22 +15,26 @@ package gamedeployment
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/predelete"
 	"reflect"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
-	tkexscheme "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
+	gdscheme "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned/scheme"
 	gdinformers "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/informers/externalversions/tkex/v1alpha1"
-	gamedeploylister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
+	gadlister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/listers/tkex/v1alpha1"
 	gdcore "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/core"
 	revisioncontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/revision"
 	scalecontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/scale"
 	updatecontrol "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/update"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/constants"
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
+	hookinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/expectations"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,8 +67,8 @@ type GameDeploymentController struct {
 	// Different instances of this struct may handle different GVKs.
 	// For example, this struct can be used (with adapters) to handle GameDeploymentController.
 	schema.GroupVersionKind
-	// tkexClient is a clientset for our own API group.
-	tkexClient tkexclientset.Interface
+	// gdClient is a clientset for our own API group.
+	gdClient gdclientset.Interface
 	// podControl is used for patching pods.
 	podControl controller.PodControlInterface
 	// podLister is able to list/get pods from a shared informer's store
@@ -72,7 +76,7 @@ type GameDeploymentController struct {
 	// podListerSynced returns true if the pod shared informer has synced at least once
 	podListerSynced cache.InformerSynced
 	// gdLister is able to list/get  gamedeployments from a shared informer's store
-	gdLister gamedeploylister.GameDeploymentLister
+	gdLister gadlister.GameDeploymentLister
 	// gdListerSynced returns true if the gamedeployments store has been synced at least once.
 	gdListerSynced cache.InformerSynced
 	// revListerSynced returns true if the rev shared informer has synced at least once
@@ -91,21 +95,23 @@ type GameDeploymentController struct {
 func NewGameDeploymentController(
 	podInformer coreinformers.PodInformer,
 	deployInformer gdinformers.GameDeploymentInformer,
-	hookRunInformer gdinformers.HookRunInformer,
-	hookTemplateInformer gdinformers.HookTemplateInformer,
+	hookRunInformer hookinformers.HookRunInformer,
+	hookTemplateInformer hookinformers.HookTemplateInformer,
 	revInformer appsinformers.ControllerRevisionInformer,
 	kubeClient clientset.Interface,
-	gdClient tkexclientset.Interface,
-	recorder record.EventRecorder) *GameDeploymentController {
+	gdClient gdclientset.Interface,
+	recorder record.EventRecorder,
+	hookClient hookclientset.Interface,) *GameDeploymentController {
 
-	tkexscheme.AddToScheme(scheme.Scheme)
+	gdscheme.AddToScheme(scheme.Scheme)
 
-	preDeleteControl := predelete.New(kubeClient, gdClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
+	preDeleteControl := predelete.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
 	gdc := &GameDeploymentController{
 		GroupVersionKind: util.ControllerKind,
-		tkexClient:       gdClient,
+		gdClient:         gdClient,
 		control: NewDefaultGameDeploymentControl(
 			gdClient,
+			hookClient,
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
@@ -137,8 +143,8 @@ func NewGameDeploymentController(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: gdc.enqueueGameDeployment,
 			UpdateFunc: func(old, cur interface{}) {
-				oldPS := old.(*v1alpha1.GameDeployment)
-				curPS := cur.(*v1alpha1.GameDeployment)
+				oldPS := old.(*gdv1alpha1.GameDeployment)
+				curPS := cur.(*gdv1alpha1.GameDeployment)
 				if oldPS.Status.Replicas != curPS.Status.Replicas {
 					klog.Infof("Observed updated replica count for GameDeployment: %v, %d->%d", curPS.Name, oldPS.Status.Replicas, curPS.Status.Replicas)
 				}
@@ -155,8 +161,8 @@ func NewGameDeploymentController(
 			gdc.enqueueGameDeploymentForHook(obj)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			newHookRun := newObj.(*v1alpha1.HookRun)
-			oldHookRun := oldObj.(*v1alpha1.HookRun)
+			newHookRun := newObj.(*hookv1alpha1.HookRun)
+			oldHookRun := oldObj.(*hookv1alpha1.HookRun)
 			if newHookRun.Status.Phase == oldHookRun.Status.Phase {
 				return
 			}
@@ -206,7 +212,7 @@ func (gdc *GameDeploymentController) enqueueGameDeploymentForHook(obj interface{
 }
 
 // Run runs the gamedeployment controller.
-func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) {
+func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) error {
 	defer utilruntime.HandleCrash()
 	defer gdc.queue.ShutDown()
 
@@ -215,7 +221,7 @@ func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) {
 
 	if !controller.WaitForCacheSync(constants.GameDeploymentController, stopCh, gdc.podListerSynced, gdc.gdListerSynced,
 		gdc.revListerSynced, gdc.hookRunListerSynced, gdc.hookTemplateListerSynced) {
-		klog.Fatalf("Error running gamedeployment controller: failed to wait for caches to sync")
+		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
 	for i := 0; i < workers; i++ {
@@ -225,6 +231,8 @@ func (gdc *GameDeploymentController) Run(workers int, stopCh <-chan struct{}) {
 	klog.Info("Started workers")
 	<-stopCh
 	klog.Info("Shutting down workers")
+
+	return nil
 }
 
 // addPod adds the gamedeployment for the pod to the sync queue
@@ -365,7 +373,7 @@ func (gdc *GameDeploymentController) deletePod(obj interface{}) {
 
 // getGameDeploymentForPod returns a list of GameDeployments that potentially match
 // a given pod.
-func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*v1alpha1.GameDeployment {
+func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*gdv1alpha1.GameDeployment {
 	deploys, err := util.GetPodGameDeployments(pod, gdc.gdLister)
 	if err != nil {
 		return nil
@@ -385,7 +393,7 @@ func (gdc *GameDeploymentController) getDeploymentsForPod(pod *v1.Pod) []*v1alph
 // resolveControllerRef returns the controller referenced by a ControllerRef,
 // or nil if the ControllerRef could not be resolved to a matching controller
 // of the correct Kind.
-func (gdc *GameDeploymentController) resolveControllerRef(namespace string, controllerRef *metav1.OwnerReference) *v1alpha1.GameDeployment {
+func (gdc *GameDeploymentController) resolveControllerRef(namespace string, controllerRef *metav1.OwnerReference) *gdv1alpha1.GameDeployment {
 	// Parse the Group out of the OwnerReference to compare it to what was parsed out of the requested OwnerType
 	refGV, err := schema.ParseGroupVersion(controllerRef.APIVersion)
 	if err != nil {
@@ -471,8 +479,10 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 	if err != nil {
 		return err
 	}
+
+	// in some case, the GameStatefulSet get from the informer cache may not be the latest, so get from apiserver directly
 	//deploy, err := gdc.gdLister.GameDeployments(namespace).Get(name)
-	deploy, err := gdc.tkexClient.TkexV1alpha1().GameDeployments(namespace).Get(name, metav1.GetOptions{})
+	deploy, err := gdc.gdClient.TkexV1alpha1().GameDeployments(namespace).Get(name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Object not found, return.  Created objects are automatically garbage collected.
 		// For additional cleanup logic use finalizers.
@@ -485,6 +495,9 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 		utilruntime.HandleError(fmt.Errorf("unable to retrieve GameDeployment %v from store: %v", key, err))
 		return err
 	}
+
+	// It's strange that the GameStatefulSet's GroupVersionKind is nil, to have to set it here
+	deploy.SetGroupVersionKind(util.ControllerKind)
 
 	coreControl := gdcore.New(deploy)
 	if coreControl.IsInitializing() {
@@ -532,7 +545,7 @@ func (gdc *GameDeploymentController) sync(key string) (retErr error) {
 //
 // NOTE: Returned Pods are pointers to objects from the cache.
 //       If you need to modify one, you need to copy it first.
-func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *v1alpha1.GameDeployment, selector labels.Selector) ([]*v1.Pod, error) {
+func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *gdv1alpha1.GameDeployment, selector labels.Selector) ([]*v1.Pod, error) {
 	// List all pods to include the pods that don't match the selector anymore but
 	// has a ControllerRef pointing to this GameStatefulSet.
 	pods, err := gdc.podLister.Pods(deploy.Namespace).List(labels.Everything())
@@ -545,7 +558,7 @@ func (gdc *GameDeploymentController) getPodsForGameDeployment(deploy *v1alpha1.G
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing Pods (see #42639).
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func() (metav1.Object, error) {
-		fresh, err := gdc.tkexClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(deploy.Name, metav1.GetOptions{})
+		fresh, err := gdc.gdClient.TkexV1alpha1().GameDeployments(deploy.Namespace).Get(deploy.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}

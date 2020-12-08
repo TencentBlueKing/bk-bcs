@@ -23,8 +23,10 @@ import (
 	clientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/clientset/versioned"
 	informers "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/client/informers/externalversions"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/controllers/gamedeployment"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/controllers/hook"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/constants"
+	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
+	hookinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
+
 	"k8s.io/api/core/v1"
 	api "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/server"
@@ -143,15 +145,22 @@ func run() {
 	}
 	fmt.Println("Operator builds kube client success...")
 
-	tkexClient, err := clientset.NewForConfig(cfg)
+	gdClient, err := clientset.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building gamedeployment clientset: %s", err.Error())
 	}
-	fmt.Println("Operator builds tkex client success...")
+	fmt.Println("Operator builds gamedeployment client success...")
+
+	hookClient, err := hookclientset.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Error building hook clientset: %s", err.Error())
+	}
+	fmt.Println("Operator builds bcs-hook client success...")
 
 	resyncDuration := time.Duration(resyncPeriod) * time.Second
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncDuration)
-	gameDeploymentInformerFactory := informers.NewSharedInformerFactory(tkexClient, resyncDuration)
+	gameDeploymentInformerFactory := informers.NewSharedInformerFactory(gdClient, resyncDuration)
+	hookInformerFactory := hookinformers.NewSharedInformerFactory(hookClient, resyncDuration)
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
@@ -161,27 +170,24 @@ func run() {
 	gdController := gamedeployment.NewGameDeploymentController(
 		kubeInformerFactory.Core().V1().Pods(),
 		gameDeploymentInformerFactory.Tkex().V1alpha1().GameDeployments(),
-		gameDeploymentInformerFactory.Tkex().V1alpha1().HookRuns(),
-		gameDeploymentInformerFactory.Tkex().V1alpha1().HookTemplates(),
+		hookInformerFactory.Tkex().V1alpha1().HookRuns(),
+		hookInformerFactory.Tkex().V1alpha1().HookTemplates(),
 		kubeInformerFactory.Apps().V1().ControllerRevisions(),
 		kubeClient,
-		tkexClient,
-		recorder)
-	hrController := hook.NewHookController(
-		kubeClient,
-		tkexClient,
-		gameDeploymentInformerFactory.Tkex().V1alpha1().HookRuns(),
+		gdClient,
 		recorder,
-	)
+		hookClient)
 
-	kubeInformerFactory.Start(stopCh)
+	go kubeInformerFactory.Start(stopCh)
 	fmt.Println("Operator starting kube Informer Factory success...")
-	gameDeploymentInformerFactory.Start(stopCh)
-	fmt.Println("Operator starting tkex Informer factory success...")
+	go gameDeploymentInformerFactory.Start(stopCh)
+	fmt.Println("Operator starting gamedeployment Informer factory success...")
+	go hookInformerFactory.Start(stopCh)
+	fmt.Println("Operator starting bcs-hook Informer factory success...")
 
-	go gdController.Run(1, stopCh)
-
-	go hrController.Run(1, stopCh)
+	if err = gdController.Run(1, stopCh); err != nil {
+		klog.Fatalf("Error running controller: %s", err.Error())
+	}
 }
 
 // StartedLeading callback function

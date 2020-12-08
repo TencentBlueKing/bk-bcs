@@ -45,10 +45,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&GameDeployment{},
 		&GameDeploymentList{},
-		&HookTemplate{},
-		&HookTemplateList{},
-		&HookRun{},
-		&HookRunList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

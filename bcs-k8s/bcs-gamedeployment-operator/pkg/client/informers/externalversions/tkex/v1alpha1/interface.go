@@ -23,10 +23,6 @@ import (
 type Interface interface {
 	// GameDeployments returns a GameDeploymentInformer.
 	GameDeployments() GameDeploymentInformer
-	// HookRuns returns a HookRunInformer.
-	HookRuns() HookRunInformer
-	// HookTemplates returns a HookTemplateInformer.
-	HookTemplates() HookTemplateInformer
 }
 
 type version struct {
@@ -43,14 +39,4 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // GameDeployments returns a GameDeploymentInformer.
 func (v *version) GameDeployments() GameDeploymentInformer {
 	return &gameDeploymentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// HookRuns returns a HookRunInformer.
-func (v *version) HookRuns() HookRunInformer {
-	return &hookRunInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// HookTemplates returns a HookTemplateInformer.
-func (v *version) HookTemplates() HookTemplateInformer {
-	return &hookTemplateInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

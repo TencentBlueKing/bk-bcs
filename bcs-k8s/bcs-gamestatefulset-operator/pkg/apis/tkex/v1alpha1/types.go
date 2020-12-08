@@ -14,6 +14,7 @@
 package v1alpha1
 
 import (
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,6 +80,26 @@ type GameStatefulSetUpdateStrategy struct {
 
 	// InPlaceUpdateStrategy contains strategies for in-place update.
 	InPlaceUpdateStrategy *inplaceupdate.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
+	CanaryStrategy        *CanaryStrategy                      `json:"canary,omitempty"`
+	// Paused indicates that the GameStatefulSet is paused.
+	// Default value is false
+	Paused bool `json:"paused,omitempty"`
+}
+
+type CanaryStrategy struct {
+	Steps []CanaryStep `json:"steps,omitempty"`
+}
+
+type CanaryStep struct {
+	Partition *int32                 `json:"partition,omitempty"`
+	Pause     *CanaryPause           `json:"pause,omitempty"`
+	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
+}
+
+type CanaryPause struct {
+	// Duration the amount of time to wait before moving to the next step.
+	// +optional
+	Duration *int32 `json:"duration,omitempty"`
 }
 
 // GameStatefulSetUpdateStrategyType is a string enumeration type that enumerates
@@ -171,11 +192,20 @@ type GameStatefulSetSpec struct {
 	// Template.
 	UpdateStrategy GameStatefulSetUpdateStrategy `json:"updateStrategy,omitempty" protobuf:"bytes,7,opt,name=updateStrategy"`
 
+	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to
+	// before Delete Or Update Pods
+	PreDeleteUpdateStrategy GameStatefulSetPreDeleteUpdateStrategy `json:"preDeleteUpdateStrategy,omitempty"`
+
 	// revisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the StatefulSet's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
 	// StatefulSetSpec version. The default value is 10.
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,8,opt,name=revisionHistoryLimit"`
+}
+
+type GameStatefulSetPreDeleteUpdateStrategy struct {
+	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
 
 // GameStatefulSetStatus represents the current state of a StatefulSet.
@@ -199,6 +229,10 @@ type GameStatefulSetStatus struct {
 	// indicated by updateRevision.
 	UpdatedReplicas int32 `json:"updatedReplicas,omitempty" protobuf:"varint,5,opt,name=updatedReplicas"`
 
+	// UpdatedReadyReplicas is the number of Pods created by the StatefulSet controller from the StatefulSet version
+	// indicated by updateRevision and have a Ready Condition.
+	UpdatedReadyReplicas int32 `json:"updatedReadyReplicas"`
+
 	// currentRevision, if not empty, indicates the version of the StatefulSet used to generate Pods in the
 	// sequence [0,currentReplicas).
 	CurrentRevision string `json:"currentRevision,omitempty" protobuf:"bytes,6,opt,name=currentRevision"`
@@ -221,6 +255,18 @@ type GameStatefulSetStatus struct {
 
 	// +optional
 	LabelSelector *string `json:"labelSelector" protobuf:"bytes 12,opt,name=labelSelector"`
+
+	PauseConditions         []hookv1alpha1.PauseCondition         `json:"pauseConditions,omitempty"`
+	CurrentStepIndex        *int32                                `json:"currentStepIndex,omitempty"`
+	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
+	Canary                  CanaryStatus                          `json:"canary,omitempty"`
+	PreDeleteHookConditions []hookv1alpha1.PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
+}
+
+type CanaryStatus struct {
+	Revision           string       `json:"revision,omitempty"`
+	PauseStartTime     *metav1.Time `json:"pauseStartTime,omitempty"`
+	CurrentStepHookRun string       `json:"currentStepHookRun,omitempty"`
 }
 
 //GameStatefulSetConditionType condition type for statefulset

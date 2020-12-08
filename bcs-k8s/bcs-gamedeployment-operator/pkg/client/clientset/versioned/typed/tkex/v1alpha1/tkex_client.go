@@ -25,8 +25,6 @@ import (
 type TkexV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	GameDeploymentsGetter
-	HookRunsGetter
-	HookTemplatesGetter
 }
 
 // TkexV1alpha1Client is used to interact with features provided by the tkex group.
@@ -36,14 +34,6 @@ type TkexV1alpha1Client struct {
 
 func (c *TkexV1alpha1Client) GameDeployments(namespace string) GameDeploymentInterface {
 	return newGameDeployments(c, namespace)
-}
-
-func (c *TkexV1alpha1Client) HookRuns(namespace string) HookRunInterface {
-	return newHookRuns(c, namespace)
-}
-
-func (c *TkexV1alpha1Client) HookTemplates(namespace string) HookTemplateInterface {
-	return newHookTemplates(c, namespace)
 }
 
 // NewForConfig creates a new TkexV1alpha1Client for the given config.

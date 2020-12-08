@@ -51,6 +51,22 @@ rules:
   - update
   - watch
   - delete
+- apiGroups: ["tkex.tencent.com"]
+  resources:
+  - hooktemplates
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["tkex.tencent.com"]
+  resources:
+  - hookruns
+  verbs:
+  - get
+  - list
+  - create
+  - watch
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind:  ClusterRoleBinding

@@ -8,12 +8,13 @@ BCS 团队结合业务需求，在 bcs-gamedeployment-operator 中通过 GameDep
 层面提供了 pod 删除或更新前的 PreDeleteHook 功能，实现了应用实例的优雅删除和更新。 
 
 ## 实现原理
-bcs-gamedeployment-operator 通过 gamedeployment-controller 与 hookrun-controller 两个 controller 的联动来实现 PreDeleteHook。  
-在 GameDeployment 应用中配置了 PreDeleteHook 后，gamedeployment-operator 在删除或更新一个 pod 前，会根据用户配置的 HookTemplate 
-创建一个 HookRun, hookrun-controller 控制 HookRun 的运行并实时更新其状态，gamedeployment-controller watch 这个 HookRun 的状态，如果
-HookRun 的运行结果符合预期，那么 gamedeployment-controller 会正常地删除或更新这个 pod，如果不符合预期，那么就拒绝删除或更新 pod，并在 status
-中记录状态。  
-HookRun 及 HookTemplate 的原理及实现请参考：[hookrun-controller](../hookrun-controller/hookrun.md)。  
+bcs-gamedeployment-operator 通过与 bcs-hook-operator 的联动来实现 PreDeleteHook。如果想要配置 PreDeleteHook，需要同时部署 
+bcs-gamedeployment-operator 和 bcs-hook-operator 这两个 bcs 组件。  
+bcs-hook-operator 定义了 HookRun 和 HookTemplate 两个 CRD，其原理及实现请参考：[bcs-hook-operator](../../../../bcs-hook-operator/README.md)。     
+在 GameDeployment 应用中配置了 PreDeleteHook 后，bcs-gamedeployment-operator 在删除或更新一个 pod 前，会根据用户配置的 HookTemplate 创建
+一个 HookRun, bcs-hook-operator watch 到 HookRun crd 后就会操作这个 HookRun 进行 hook 调用，并维护这个 HookRun 的状态。
+bcs-gamedeployment-operator watch 这个 HookRun 的状态，如果 HookRun 的运行结果符合预期，那么 bcs-gamedeployment-operator 会正常地
+删除或更新这个 pod，如果不符合预期，那么就拒绝删除或更新 pod，并在 status 中记录状态。  
 如果想要配置 GameDeployment 的 PreDeleteHook 功能，用户需先定义并创建 HookTemplate，然后在 GameDeployment 中配置 PreDeleteHook:  
 ```yaml
 apiVersion: tkex.tencent.com/v1alpha1
@@ -78,7 +79,7 @@ $ kubectl scale --replicas=5 gamedeployment/test-gamedeployment
 # 查看 HookRun 资源, 已经创建一个 HookRun
 $ kubectl get hookrun
   NAME                                        PHASE     AGE
-  test-gamedeployment-67864c6f65-s9rbp-test   Running   10s
+  pre-delete-hook-test-gamedeployment-67864c6f65-s9rbp-test   Running   10s
 
 # 确认 GameDeployment 状态，并未马上缩容
 $ kubectl get gamedeployment
@@ -120,8 +121,8 @@ $ kubectl patch gamedeployment test-gamedeployment --type='json' -p='[{"op": "re
 # 查看 HookRun 资源。因为 maxUnavailable 配置为 2，每批只更新两个实例，故而已经创建 2 个 HookRun
 $ kubectl get hookrun
   NAME                                        PHASE     AGE
-  test-gamedeployment-67864c6f65-q78jd-test   Running   5s
-  test-gamedeployment-67864c6f65-xv26j-test   Running   5s
+  pre-delete-hook-test-gamedeployment-67864c6f65-q78jd-test   Running   5s
+  pre-delete-hook-test-gamedeployment-67864c6f65-xv26j-test   Running   5s
 
 # 确认 GameDeployment 状态，并未马上进行原地更新
 $ kubectl get gamedeployment
@@ -145,7 +146,7 @@ $ kubectl get hookrun
 # 先创建 HookRun，等待 HookRun 的状态
 $ kubectl get hookrun
   NAME                                        PHASE     AGE
-  test-gamedeployment-67864c6f65-pqrw5-test   Running   54s
+  pre-delete-hook-test-gamedeployment-67864c6f65-pqrw5-test   Running   54s
 
 # 最终，HookRun 符合预期，完成第 2 批共 1 个 pod 的更新：  
 $ kubectl get gamedeployment
@@ -193,7 +194,7 @@ gamedeployment.tkex.tencent.com/test-gamedeployment scaled
 # 查看 HookRun 资源, 已经创建一个 HookRun
 $ kubectl get hookrun
   NAME                                        PHASE     AGE
-  test-gamedeployment-67864c6f65-f9tkt-test   Running   9s
+  pre-delete-hook-test-gamedeployment-67864c6f65-f9tkt-test   Running   9s
 
 # 确认 GameDeployment 状态，并未马上缩容
 $ kubectl get gamedeployment
@@ -208,7 +209,7 @@ test-gamedeployment   5         6         6               6       6       4m33s
 
 $ kubectl get hookrun
   NAME                                        PHASE    AGE
-  test-gamedeployment-67864c6f65-f9tkt-test   Failed   3m29s
+  pre-delete-hook-test-gamedeployment-67864c6f65-f9tkt-test   Failed   3m29s
 ```
 kubectl get gamedeployment test-gamedeployment -o yaml 检查 GameDeployment preDeleteHookCondition 状态。显示
 test-gamedeployment-f9tkt 这个 pod 因为 PreDeleteHook 的状态为 Failed, 不符合预期而删除失败。   
@@ -250,7 +251,7 @@ gamedeployment.tkex.tencent.com/test-gamedeployment patched
 # operator 重新创建该 pod 的 preDelete HookRun
 $ kubectl get hookrun
   NAME                                        PHASE     AGE
-  test-gamedeployment-67864c6f65-f9tkt-test   Running   4s
+  pre-delete-hook-test-gamedeployment-67864c6f65-f9tkt-test   Running   4s
 ```
 如果这次 HookRun 的结果符合预期，缩容就会成功。  
 
@@ -301,12 +302,12 @@ $ kubectl scale --replicas=2 gamedeployment/test-gamedeployment
 # operator 已创建两个 PreDelete HookRun
 $ kubectl get hookrun
   NAME                                        PHASE     AGE
-  test-gamedeployment-767bfd8bcc-94pn2-test   Running   8s
-  test-gamedeployment-767bfd8bcc-twlkl-test   Running   8s
+  pre-delete-hook-test-gamedeployment-767bfd8bcc-94pn2-test   Running   8s
+  pre-delete-hook-test-gamedeployment-767bfd8bcc-twlkl-test   Running   8s
 ```
 
 #### 查看 PreDelete HookRun 的状态
-kubectl get hookrun test-gamedeployment-767bfd8bcc-94pn2-test -o yaml
+kubectl get hookrun pre-delete-hook-test-gamedeployment-767bfd8bcc-94pn2-test -o yaml
 ```yaml
 apiVersion: tkex.tencent.com/v1alpha1
 kind: HookRun
