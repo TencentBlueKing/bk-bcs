@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif/sdk"
 )
 
-//CLBCfg include all config of qcloud clb
+// CLBConfig include all config of qcloud clb
 type CLBConfig struct {
 	ImplementMode         string   `json:"implementmode"`
 	BackendMode           string   `json:"backendmode"`
@@ -42,13 +42,13 @@ type CLBConfig struct {
 	WaitPeriodLBDealing   int      `json:"waitPeriodDealing"`
 }
 
-//NewCLBCfg return a clb cfg instance
+// NewCLBCfg return a clb cfg instance
 func NewCLBCfg() *CLBConfig {
 	return &CLBConfig{}
 }
 
-// ToJsonString to json string
-func (clbCfg *CLBConfig) ToJsonString() string {
+// ToJSONString to json string
+func (clbCfg *CLBConfig) ToJSONString() string {
 	bytes, _ := json.Marshal(clbCfg)
 	return string(bytes)
 }
@@ -139,7 +139,8 @@ func (clbCfg *CLBConfig) LoadFromEnv() error {
 	if len(waitPeriodExceedLimit) != 0 {
 		period, err := strconv.Atoi(waitPeriodExceedLimit)
 		if err != nil {
-			blog.Errorf("convert wait period exceed limit %s to int error, err %s, set default value 10", waitPeriodExceedLimit, err.Error())
+			blog.Errorf("convert wait period exceed limit %s to int error, err %s, set default value 10",
+				waitPeriodExceedLimit, err.Error())
 			clbCfg.WaitPeriodExceedLimit = DefaultClbWaitPeriodExceedLimit
 		} else {
 			clbCfg.WaitPeriodExceedLimit = period
@@ -151,7 +152,8 @@ func (clbCfg *CLBConfig) LoadFromEnv() error {
 	if len(waitPeriodLBDealing) != 0 {
 		period, err := strconv.Atoi(waitPeriodLBDealing)
 		if err != nil {
-			blog.Errorf("convert wait period lb dealing limit %s to int error, err %s, set default value 3", waitPeriodLBDealing, err.Error())
+			blog.Errorf("convert wait period lb dealing limit %s to int error, err %s, set default value 3",
+				waitPeriodLBDealing, err.Error())
 			clbCfg.WaitPeriodLBDealing = DefaultClbWaitPeriodDealing
 		} else {
 			clbCfg.WaitPeriodLBDealing = period

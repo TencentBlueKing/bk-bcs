@@ -26,21 +26,28 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
-	// network type
-	ClbNetworkTypePublic  = "public"
+	// ClbNetworkTypePublic public network type
+	ClbNetworkTypePublic = "public"
+	// ClbNetworkTypePrivate private network type
 	ClbNetworkTypePrivate = "private"
-	// lb policy
-	ClbLBPolicyWRR       = "wrr"
+	// ClbLBPolicyWRR wrr lb policy
+	ClbLBPolicyWRR = "wrr"
+	// ClbLBPolicyLeastConn least connection lb policy
 	ClbLBPolicyLeastConn = "least_conn"
-	ClbLBPolicyIPHash    = "ip_hash"
-	// protocol
-	ClbListenerProtocolHTTP  = "http"
+	// ClbLBPolicyIPHash ip hashed lb policy
+	ClbLBPolicyIPHash = "ip_hash"
+	// ClbListenerProtocolHTTP http protocol
+	ClbListenerProtocolHTTP = "http"
+	// ClbListenerProtocolHTTPS https protocol
 	ClbListenerProtocolHTTPS = "https"
-	ClbListenerProtocolTCP   = "tcp"
-	ClbListenerProtocolUDP   = "udp"
-	// tls
+	// ClbListenerProtocolTCP tcp protocol
+	ClbListenerProtocolTCP = "tcp"
+	// ClbListenerProtocolUDP udp protocol
+	ClbListenerProtocolUDP = "udp"
+	// ClbListenerTLSModeUniDirectional unidirectional tls mode
 	ClbListenerTLSModeUniDirectional = "unidirectional"
-	ClbListenerTLSModeMutual         = "mutual"
+	// ClbListenerTLSModeMutual mutual tls mode
+	ClbListenerTLSModeMutual = "mutual"
 )
 
 //Rule only use for http/https
@@ -128,6 +135,7 @@ type TargetGroup struct {
 	Backends    BackendList             `json:"backends,omitempty"` //CVM instance backend
 }
 
+// NewTargetGroup new target group
 func NewTargetGroup(id, name, protocol string, port int) *TargetGroup {
 	return &TargetGroup{
 		ID:            id,
@@ -252,6 +260,7 @@ type Backend struct {
 	Weight int `json:"weight"`
 }
 
+// NewBackend create new backend
 func NewBackend(ip string, port int) *Backend {
 	return &Backend{
 		IP:     ip,
@@ -260,6 +269,7 @@ func NewBackend(ip string, port int) *Backend {
 	}
 }
 
+// SetWeight set weight
 func (b *Backend) SetWeight(weight int) {
 	b.Weight = weight
 }
@@ -297,6 +307,7 @@ type CloudLoadBalancer struct {
 	VIPS        []string `json:"vips"`
 }
 
+// CloudListenerTls cloud listener tls attributes
 type CloudListenerTls struct {
 	Mode                string `json:"mode,omitempty"`
 	CertID              string `json:"certId,omitempty"`
@@ -438,6 +449,9 @@ func (cl *CloudListener) GetUpdateRules(cur *CloudListener) (olds RuleList, upda
 	for _, rule := range cur.Spec.Rules {
 		ruleOld, ok := tmpMap[rule.Domain+rule.URL]
 		if ok {
+			// To get id from old rule, or when there multiple rule,
+			// and only one rule updated, other rules will lose id.
+			rule.ID = ruleOld.ID
 			if !ruleOld.IsEqual(rule) {
 				olds = append(olds, ruleOld)
 				updates = append(updates, rule)

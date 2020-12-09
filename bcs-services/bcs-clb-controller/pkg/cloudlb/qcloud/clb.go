@@ -102,8 +102,12 @@ func (clb *ClbClient) CreateLoadbalance() (*loadbalance.CloudLoadBalancer, error
 	}
 	if lb != nil {
 		if lb.NetworkType != clb.clbInfo.NetworkType {
-			blog.Errorf("loadbalancer with name %s already existed with networktype %s, but want networktype %s, failed", lb.Name, lb.NetworkType, clb.clbInfo.NetworkType)
-			return nil, fmt.Errorf("loadbalancer with name %s already existed with networktype %s, but want networktype %s, failed", lb.Name, lb.NetworkType, clb.clbInfo.NetworkType)
+			blog.Errorf(
+				"loadbalancer with name %s already existed with networktype %s, but want networktype %s, failed",
+				lb.Name, lb.NetworkType, clb.clbInfo.NetworkType)
+			return nil, fmt.Errorf(
+				"loadbalancer with name %s already existed with networktype %s, but want networktype %s, failed",
+				lb.Name, lb.NetworkType, clb.clbInfo.NetworkType)
 		}
 		blog.Infof("loadbalancer with name %s networktype %s already existed, take over it", lb.Name, lb.NetworkType)
 		clb.clbInfo.ID = lb.ID
@@ -140,10 +144,12 @@ func (clb *ClbClient) Update(old, cur *loadbalance.CloudListener) error {
 
 	_, isExisted, err := clb.clbAdapter.DescribeListener(old.Spec.LoadBalancerID, old.Spec.ListenerID, -1)
 	if err != nil {
-		return fmt.Errorf("describe listener by lbid %s listener id %s failed, %s", old.Spec.LoadBalancerID, old.Spec.ListenerID, err.Error())
+		return fmt.Errorf("describe listener by lbid %s listener id %s failed, %s",
+			old.Spec.LoadBalancerID, old.Spec.ListenerID, err.Error())
 	}
 	if !isExisted {
-		blog.Warnf("listener %s name %s does not exist, try to create a new listener", old.Spec.LoadBalancerID, old.GetName())
+		blog.Warnf("listener %s name %s does not exist, try to create a new listener",
+			old.Spec.LoadBalancerID, old.GetName())
 		err := clb.addListener(cur)
 		if err != nil {
 			return fmt.Errorf("OnAdd failed, %s", err.Error())
@@ -160,13 +166,15 @@ func (clb *ClbClient) Update(old, cur *loadbalance.CloudListener) error {
 	}
 
 	// tcp listener use
-	if old.Spec.Protocol == loadbalance.ClbListenerProtocolTCP || old.Spec.Protocol == loadbalance.ClbListenerProtocolUDP {
+	if old.Spec.Protocol == loadbalance.ClbListenerProtocolTCP ||
+		old.Spec.Protocol == loadbalance.ClbListenerProtocolUDP {
 		err := clb.update4LayerListener(old, cur)
 		if err != nil {
 			blog.Errorf("update 4 layer listener failed, %s", err)
 			return fmt.Errorf("update 4 layer listener failed, %s", err)
 		}
-	} else if old.Spec.Protocol == loadbalance.ClbListenerProtocolHTTP || old.Spec.Protocol == loadbalance.ClbListenerProtocolHTTPS {
+	} else if old.Spec.Protocol == loadbalance.ClbListenerProtocolHTTP ||
+		old.Spec.Protocol == loadbalance.ClbListenerProtocolHTTPS {
 		err := clb.update7LayerListener(old, cur)
 		if err != nil {
 			blog.Errorf("update 7 layer listener failed, %s", err)
@@ -188,10 +196,12 @@ func (clb *ClbClient) Add(ls *loadbalance.CloudListener) error {
 		return fmt.Errorf("QCloudDescribeListener %d failed, err %s", ls.Spec.ListenPort, err.Error())
 	}
 	if isExisted {
-		blog.Warnf("listener %s port %d is already in use, try to delete it", listener.Spec.ListenerID, listener.Spec.ListenPort)
+		blog.Warnf("listener %s port %d is already in use, try to delete it",
+			listener.Spec.ListenerID, listener.Spec.ListenPort)
 		err := clb.clbAdapter.DeleteListener(listener.Spec.LoadBalancerID, listener.Spec.ListenerID)
 		if err != nil {
-			return fmt.Errorf("delete listener %s failed with port %d, err %s", listener.Spec.ListenerID, listener.Spec.ListenPort, err.Error())
+			return fmt.Errorf("delete listener %s failed with port %d, err %s",
+				listener.Spec.ListenerID, listener.Spec.ListenPort, err.Error())
 		}
 	}
 	return clb.addListener(ls)

@@ -271,8 +271,10 @@ func (c *Client) CreateListener(listener *cloudListenerType.CloudListener) (list
 		}
 		// should return listener id in response
 		if len(response.Response.ListenerIds) == 0 {
-			blog.Errorf("create listener return zero length ids with request %s, err %s", request.ToJsonString(), err.Error())
-			return "", fmt.Errorf("create listener return zero length ids with request %s, err %s", request.ToJsonString(), err.Error())
+			blog.Errorf("create listener return zero length ids with request %s, err %s",
+				request.ToJsonString(), err.Error())
+			return "", fmt.Errorf("create listener return zero length ids with request %s, err %s",
+				request.ToJsonString(), err.Error())
 		}
 		blog.Infof("create listener response:\n%s", response.ToJsonString())
 		break
@@ -369,7 +371,8 @@ func (c *Client) create4LayerListener(listener *cloudListenerType.CloudListener)
 		if listener.Spec.TargetGroup.HealthCheck != nil {
 			request.HealthCheck = &tclb.HealthCheck{}
 			request.HealthCheck.HealthSwitch = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.Enabled))
-			request.HealthCheck.IntervalTime = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.IntervalTime))
+			request.HealthCheck.IntervalTime = tcommon.Int64Ptr(
+				int64(listener.Spec.TargetGroup.HealthCheck.IntervalTime))
 			request.HealthCheck.HealthNum = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.HealthNum))
 			request.HealthCheck.UnHealthNum = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.UnHealthNum))
 			request.HealthCheck.TimeOut = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.Timeout))
@@ -412,7 +415,8 @@ func (c *Client) DeleteListener(lbID, listenerID string) error {
 // DescribeListener describe listener
 // by loadbalance id, either listener id or listener port
 // this function does different convertion for 4 layer listener and 7 layer listener.
-func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *cloudListenerType.CloudListener, isExisted bool, err error) {
+func (c *Client) DescribeListener(lbID, listenerID string, port int) (
+	listener *cloudListenerType.CloudListener, isExisted bool, err error) {
 	request := tclb.NewDescribeListenersRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
 	if len(listenerID) != 0 {
@@ -444,7 +448,8 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (listener *
 		}
 		if len(response.Response.Listeners) != 1 {
 			blog.Errorf("describe response invalid listeners length %d", len(response.Response.Listeners))
-			return nil, false, fmt.Errorf("describe response invalid listeners length %d", len(response.Response.Listeners))
+			return nil, false, fmt.Errorf("describe response invalid listeners length %d",
+				len(response.Response.Listeners))
 		}
 		listener := response.Response.Listeners[0]
 		protocol, ok := ProtocolSDK2BcsMap[*listener.Protocol]
@@ -638,7 +643,8 @@ func (c *Client) modify4LayerListenerAttribute(listener *cloudListenerType.Cloud
 		if listener.Spec.TargetGroup.HealthCheck.Enabled == 1 {
 			request.HealthCheck.HealthNum = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.HealthNum))
 			request.HealthCheck.UnHealthNum = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.UnHealthNum))
-			request.HealthCheck.IntervalTime = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.IntervalTime))
+			request.HealthCheck.IntervalTime = tcommon.Int64Ptr(
+				int64(listener.Spec.TargetGroup.HealthCheck.IntervalTime))
 			request.HealthCheck.TimeOut = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.HealthCheck.Timeout))
 		}
 	}
@@ -689,8 +695,10 @@ func (c *Client) CreateRules(lbID, listenerID string, rules cloudListenerType.Ru
 				ruleInput.HealthCheck.HealthSwitch = tcommon.Int64Ptr(int64(rule.TargetGroup.HealthCheck.Enabled))
 				if rule.TargetGroup.HealthCheck.Enabled == 1 {
 					ruleInput.HealthCheck.HealthNum = tcommon.Int64Ptr(int64(rule.TargetGroup.HealthCheck.HealthNum))
-					ruleInput.HealthCheck.UnHealthNum = tcommon.Int64Ptr(int64(rule.TargetGroup.HealthCheck.UnHealthNum))
-					ruleInput.HealthCheck.IntervalTime = tcommon.Int64Ptr(int64(rule.TargetGroup.HealthCheck.IntervalTime))
+					ruleInput.HealthCheck.UnHealthNum = tcommon.Int64Ptr(
+						int64(rule.TargetGroup.HealthCheck.UnHealthNum))
+					ruleInput.HealthCheck.IntervalTime = tcommon.Int64Ptr(
+						int64(rule.TargetGroup.HealthCheck.IntervalTime))
 					ruleInput.HealthCheck.TimeOut = tcommon.Int64Ptr(int64(rule.TargetGroup.HealthCheck.Timeout))
 					ruleInput.HealthCheck.HttpCheckPath = tcommon.StringPtr(rule.TargetGroup.HealthCheck.HTTPCheckPath)
 					ruleInput.HealthCheck.HttpCode = tcommon.Int64Ptr(int64(rule.TargetGroup.HealthCheck.HTTPCode))
@@ -761,7 +769,8 @@ func (c *Client) DeleteRule(lbID, listenerID, domain, url string) error {
 // DescribeRuleByDomainAndURL describe rule by domain and url
 // call DescribeListener api to find the certain listener
 // traverse all the rules in listener with certain domain and url
-func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, URL string) (rule *cloudListenerType.Rule, isExisted bool, err error) {
+func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, URL string) (
+	rule *cloudListenerType.Rule, isExisted bool, err error) {
 	request := tclb.NewDescribeListenersRequest()
 	request.LoadBalancerId = tcommon.StringPtr(loadBalanceID)
 	request.ListenerIds = []*string{
@@ -784,7 +793,8 @@ func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, U
 		blog.Infof("describe listener response:\n%s", response.ToJsonString())
 		if len(response.Response.Listeners) != 1 {
 			blog.Errorf("describe response invalid listeners length %d", len(response.Response.Listeners))
-			return nil, false, fmt.Errorf("describe response invalid listeners length %d", len(response.Response.Listeners))
+			return nil, false, fmt.Errorf("describe response invalid listeners length %d",
+				len(response.Response.Listeners))
 		}
 		listener := response.Response.Listeners[0]
 		// find rule with domain and url
@@ -948,7 +958,8 @@ func (c *Client) getCVMInstanceIDMapByIP(ips []string) (map[string]string, error
 // registerBackends register backendList to rules
 // when backend type is CVM: use instance id to register
 // when backend type is eni: use eni ip to register
-func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegister cloudListenerType.BackendList) error {
+func (c *Client) registerBackends(lbID, listenerID, ruleID string,
+	backendsRegister cloudListenerType.BackendList) error {
 	request := tclb.NewRegisterTargetsRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
 	request.ListenerId = tcommon.StringPtr(listenerID)
@@ -1018,7 +1029,8 @@ func (c *Client) registerBackends(lbID, listenerID, ruleID string, backendsRegis
 // deRegisterBackends deregister backendList to rules
 // when backend type is CVM: use instance id to deregister
 // when backend type is eni: use eni ip to deregister
-func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDeregister cloudListenerType.BackendList) error {
+func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string,
+	backendsDeregister cloudListenerType.BackendList) error {
 	request := tclb.NewDeregisterTargetsRequest()
 	request.LoadBalancerId = tcommon.StringPtr(lbID)
 	request.ListenerId = tcommon.StringPtr(listenerID)
@@ -1081,12 +1093,14 @@ func (c *Client) deRegisterBackends(lbID, listenerID, ruleID string, backendsDer
 }
 
 // Register7LayerBackends register 7 layer backend
-func (c *Client) Register7LayerBackends(lbID, listenerID, ruleID string, backendsRegister cloudListenerType.BackendList) error {
+func (c *Client) Register7LayerBackends(lbID, listenerID, ruleID string,
+	backendsRegister cloudListenerType.BackendList) error {
 	return c.registerBackends(lbID, listenerID, ruleID, backendsRegister)
 }
 
 // DeRegister7LayerBackends deregister 7 layer backend
-func (c *Client) DeRegister7LayerBackends(lbID, listenerID, ruleID string, backendsDeRegister cloudListenerType.BackendList) error {
+func (c *Client) DeRegister7LayerBackends(lbID, listenerID, ruleID string,
+	backendsDeRegister cloudListenerType.BackendList) error {
 	return c.deRegisterBackends(lbID, listenerID, ruleID, backendsDeRegister)
 }
 
@@ -1096,7 +1110,8 @@ func (c *Client) Register4LayerBackends(lbID, listenerID string, backendsRegiste
 }
 
 // DeRegister4LayerBackends deregister 4 layer
-func (c *Client) DeRegister4LayerBackends(lbID, listenerID string, backendsDeRegister cloudListenerType.BackendList) error {
+func (c *Client) DeRegister4LayerBackends(lbID, listenerID string,
+	backendsDeRegister cloudListenerType.BackendList) error {
 	return c.deRegisterBackends(lbID, listenerID, "", backendsDeRegister)
 }
 
@@ -1159,7 +1174,8 @@ func (c *Client) ListListener(lbID string) ([]*cloudListenerType.CloudListener, 
 	}
 	var retListenerList []*cloudListenerType.CloudListener
 	for _, tlistener := range tclbListeners {
-		cloudListener, err := c.convertTclbListenerToCloudListener(tlistener, tclbListenerBackendMap[*tlistener.ListenerId], tclbListenerHealthMap[*tlistener.ListenerId])
+		cloudListener, err := c.convertTclbListenerToCloudListener(
+			tlistener, tclbListenerBackendMap[*tlistener.ListenerId], tclbListenerHealthMap[*tlistener.ListenerId])
 		if err != nil {
 			return nil, err
 		}
@@ -1192,7 +1208,8 @@ func (c *Client) convertToCloudListenerBackend(backendList []*tclb.Backend) ([]*
 }
 
 // convert tclb health check to local type
-func (c *Client) convertToCloudListenerHealthCheck(hc *tclb.HealthCheck) (*cloudListenerType.TargetGroupHealthCheck, error) {
+func (c *Client) convertToCloudListenerHealthCheck(hc *tclb.HealthCheck) (
+	*cloudListenerType.TargetGroupHealthCheck, error) {
 	if hc == nil {
 		return nil, fmt.Errorf("cannot covert empty health check struct")
 	}
@@ -1220,7 +1237,8 @@ func (c *Client) convertToCloudListenerHealthCheck(hc *tclb.HealthCheck) (*cloud
 }
 
 // convert rules targets to local target group
-func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclbRuleTargets *tclb.RuleTargets) (*cloudListenerType.Rule, error) {
+func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclbRuleTargets *tclb.RuleTargets) (
+	*cloudListenerType.Rule, error) {
 	rule := cloudListenerType.NewRule(*tclbRule.Domain, *tclbRule.Url)
 	rule.ID = *tclbRule.LocationId
 	hc, err := c.convertToCloudListenerHealthCheck(tclbRule.HealthCheck)
@@ -1243,7 +1261,9 @@ func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclb
 }
 
 // convert tclb listener type to local cloud listener type
-func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, listenerBackend *tclb.ListenerBackend, listenerHeath *tclb.ListenerHealth) (*cloudListenerType.CloudListener, error) {
+func (c *Client) convertTclbListenerToCloudListener(
+	listener *tclb.Listener, listenerBackend *tclb.ListenerBackend, listenerHeath *tclb.ListenerHealth) (
+	*cloudListenerType.CloudListener, error) {
 	if listener == nil {
 		return nil, fmt.Errorf("cannot convert empty tclb listener object to cloud listener")
 	}
@@ -1286,7 +1306,8 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 		}
 	// convert tcp udp listener
 	case ListenerProtocolTCP, ListenerProtocolUDP:
-		cloudListener.Spec.TargetGroup = cloudListenerType.NewTargetGroup("", "", SSLModeSDK2BcsMap[*listener.Protocol], int(*listener.Port))
+		cloudListener.Spec.TargetGroup = cloudListenerType.NewTargetGroup(
+			"", "", SSLModeSDK2BcsMap[*listener.Protocol], int(*listener.Port))
 		hc, err := c.convertToCloudListenerHealthCheck(listener.HealthCheck)
 		if err != nil {
 			return nil, err
@@ -1317,13 +1338,14 @@ func (c *Client) convertTclbListenerToCloudListener(listener *tclb.Listener, lis
 		}
 		if len(ruleHealth.Targets) != 0 {
 			for _, target := range ruleHealth.Targets {
-				tmpRuleHealthStatus.Backends = append(tmpRuleHealthStatus.Backends, &cloudListenerType.CloudListenerBackendHealthStatus{
-					IP:                 *target.IP,
-					Port:               int(*target.Port),
-					HealthStatus:       *target.HealthStatus,
-					HealthStatusDetail: *target.HealthStatusDetial,
-					TargetID:           *target.TargetId,
-				})
+				tmpRuleHealthStatus.Backends = append(tmpRuleHealthStatus.Backends,
+					&cloudListenerType.CloudListenerBackendHealthStatus{
+						IP:                 *target.IP,
+						Port:               int(*target.Port),
+						HealthStatus:       *target.HealthStatus,
+						HealthStatusDetail: *target.HealthStatusDetial,
+						TargetID:           *target.TargetId,
+					})
 			}
 		}
 		healthStatus.RulesHealth = append(healthStatus.RulesHealth, tmpRuleHealthStatus)
@@ -1417,8 +1439,10 @@ func (c *Client) doListenerHealthStatus(lbID string) (map[string]*tclb.ListenerH
 		}
 		// expect one loadbalance info
 		if len(response.Response.LoadBalancers) != 1 {
-			blog.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1", len(response.Response.LoadBalancers))
-			return nil, fmt.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1", len(response.Response.LoadBalancers))
+			blog.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1",
+				len(response.Response.LoadBalancers))
+			return nil, fmt.Errorf("DescribeTargetsHealth return loadbalancerHealth array with %d element, more than 1",
+				len(response.Response.LoadBalancers))
 		}
 		lbHealth := response.Response.LoadBalancers[0]
 		if len(lbHealth.Listeners) == 0 {

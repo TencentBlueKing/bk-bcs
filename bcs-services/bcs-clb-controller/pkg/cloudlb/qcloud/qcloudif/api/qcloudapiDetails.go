@@ -733,7 +733,7 @@ func (clb *ClbAPI) getSecurityGroupPortRange(index int, groupId string) (string,
 	desc.Timestamp = uint(time.Now().Unix())
 	desc.SgID = groupId
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -787,7 +787,7 @@ func (clb *ClbAPI) modifySingleSecurityGroupPolicy(sgID, protocol, portRange str
 	desc.PolicyDesc = "clb policy"
 	desc.SgId = sgID
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -821,7 +821,7 @@ func (clb *ClbAPI) modifySecurityGroupsOfInstance(instanceID string, securityGro
 	desc.SecurityGroups = securityGroups
 	desc.Version = "2017-03-12"
 	c := qcloud.Client{
-		URL:       QCloudCVMUrl,
+		URL:       QCloudCVMURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -909,7 +909,7 @@ func (clb *ClbAPI) describeSecurityGroup(groupId *string) ([]byte, error) {
 	desc.Timestamp = uint(time.Now().Unix())
 	desc.SgID = *groupId
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -970,7 +970,7 @@ func (clb *ClbAPI) createSecurityGroupPolicy(index, sgID, protocol, portRange, c
 	desc.PolicyDesc = "clb policy"
 	desc.SgID = sgID
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)

@@ -32,7 +32,8 @@ func (clb *ClbClient) addListener(ls *loadbalance.CloudListener) error {
 	// set listener id
 	ls.Spec.ListenerID = listenerID
 
-	if ls.Spec.Protocol == loadbalance.ClbListenerProtocolTCP || ls.Spec.Protocol == loadbalance.ClbListenerProtocolUDP {
+	if ls.Spec.Protocol == loadbalance.ClbListenerProtocolTCP ||
+		ls.Spec.Protocol == loadbalance.ClbListenerProtocolUDP {
 		// register backends for 4 layer protocol
 		// when failed, we do not record these backends in cache
 		// max backends for each register is LimitationMaxBackendNumEachBind (20)
@@ -48,7 +49,8 @@ func (clb *ClbClient) addListener(ls *loadbalance.CloudListener) error {
 		}
 		ls.Spec.TargetGroup.Backends = effectedBackends
 
-	} else if ls.Spec.Protocol == loadbalance.ClbListenerProtocolHTTP || ls.Spec.Protocol == loadbalance.ClbListenerProtocolHTTPS {
+	} else if ls.Spec.Protocol == loadbalance.ClbListenerProtocolHTTP ||
+		ls.Spec.Protocol == loadbalance.ClbListenerProtocolHTTPS {
 		var successRuleList loadbalance.RuleList
 		// each rule corresponds to a target group
 		// when failed in creating rule, we do not record this rule in cache
@@ -56,7 +58,8 @@ func (clb *ClbClient) addListener(ls *loadbalance.CloudListener) error {
 		for _, rule := range ls.Spec.Rules {
 			err := clb.doCreateRule(ls, rule)
 			if err != nil {
-				blog.Warnf("createRule domain:%s url:%s targetGroup:%v failed, %s", rule.Domain, rule.URL, rule.TargetGroup, err.Error())
+				blog.Warnf("createRule domain:%s url:%s targetGroup:%v failed, %s",
+					rule.Domain, rule.URL, rule.TargetGroup, err.Error())
 				continue
 			}
 			successRuleList = append(successRuleList, rule)
@@ -70,8 +73,8 @@ func (clb *ClbClient) addListener(ls *loadbalance.CloudListener) error {
 	return nil
 }
 
-//update4LayerListener update 4 layer listener
-//when listener protocol
+// update4LayerListener update 4 layer listener
+// when listener protocol
 func (clb *ClbClient) update4LayerListener(old, cur *loadbalance.CloudListener) error {
 	if old.IsEqual(cur) {
 		blog.Warnf("the old listener %s is equal to the new one, no need to update", old.GetName())
@@ -82,12 +85,14 @@ func (clb *ClbClient) update4LayerListener(old, cur *loadbalance.CloudListener) 
 		blog.Infof("update attr of listener %s.%s", old.GetName(), old.GetNamespace())
 		err := clb.clbAdapter.ModifyListenerAttribute(cur)
 		if err != nil {
-			blog.Errorf("update attr of listener %s.%s failed, err %s", old.GetName(), old.GetNamespace(), err.Error())
-			return fmt.Errorf("update attr of listener %s.%s failed, err %s", old.GetName(), old.GetNamespace(), err.Error())
+			blog.Errorf("update attr of listener %s.%s failed, err %s",
+				old.GetName(), old.GetNamespace(), err.Error())
+			return fmt.Errorf("update attr of listener %s.%s failed, err %s",
+				old.GetName(), old.GetNamespace(), err.Error())
 		}
 	}
 
-	//update backends
+	// update backends
 	backendsDel, backendsNew := old.Spec.TargetGroup.GetDiffBackend(cur.Spec.TargetGroup)
 
 	blog.Infof("get %d backend to del: %v", len(backendsDel), backendsDel)
@@ -99,7 +104,7 @@ func (clb *ClbClient) update4LayerListener(old, cur *loadbalance.CloudListener) 
 		clbBackendsDeleteMetric.WithLabelValues(backend.IP, strconv.Itoa(backend.Port)).Inc()
 	}
 
-	//deregister old backend
+	// deregister old backend
 	if len(backendsDel) > 0 {
 		for i := 0; i < len(backendsDel); i = i + LimitationMaxBackendNumEachBind {
 			tmpBackends := GetBackendsSegment(backendsDel, i, LimitationMaxBackendNumEachBind)
@@ -139,19 +144,21 @@ func (clb *ClbClient) update7LayerListener(old, cur *loadbalance.CloudListener) 
 			blog.Infof("update listener %s.%s tls config", old.GetName(), old.GetNamespace())
 			err := clb.clbAdapter.ModifyListenerAttribute(cur)
 			if err != nil {
-				blog.Errorf("update attr of listener %s.%s failed, err %s", old.GetName(), old.GetNamespace(), err.Error())
-				return fmt.Errorf("update attr of listener %s.%s failed, err %s", old.GetName(), old.GetNamespace(), err.Error())
+				blog.Errorf("update attr of listener %s.%s failed, err %s",
+					old.GetName(), old.GetNamespace(), err.Error())
+				return fmt.Errorf("update attr of listener %s.%s failed, err %s",
+					old.GetName(), old.GetNamespace(), err.Error())
 			}
 		}
 	}
 
-	//get deleted rules and new rules
+	// get deleted rules and new rules
 	delRules, newRules := old.GetDiffRules(cur)
 
-	//get updated rules
+	// get updated rules
 	olds, updateRules := old.GetUpdateRules(cur)
 
-	//update rules
+	// update rules
 	for index, ruleUpdate := range updateRules {
 		err := clb.updateRule(old, olds[index], ruleUpdate)
 		if err != nil {
@@ -161,7 +168,7 @@ func (clb *ClbClient) update7LayerListener(old, cur *loadbalance.CloudListener) 
 		}
 	}
 
-	//delete rules
+	// delete rules
 	for _, ruleDel := range delRules {
 		err := clb.deleteRule(old, ruleDel)
 		if err != nil {
@@ -171,7 +178,7 @@ func (clb *ClbClient) update7LayerListener(old, cur *loadbalance.CloudListener) 
 		}
 	}
 
-	//add new rules
+	// add new rules
 	for _, ruleNew := range newRules {
 		err := clb.createRule(old, ruleNew)
 		if err != nil {
@@ -187,12 +194,14 @@ func (clb *ClbClient) update7LayerListener(old, cur *loadbalance.CloudListener) 
 
 func (clb *ClbClient) createRule(ls *loadbalance.CloudListener, rule *loadbalance.Rule) error {
 
-	_, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, rule.Domain, rule.URL)
+	_, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(
+		ls.Spec.LoadBalancerID, ls.Spec.ListenerID, rule.Domain, rule.URL)
 	if err != nil {
 		return fmt.Errorf("QCloudDescribeRuleByDomainAndURL failed, %s", err.Error())
 	}
 	if isExisted {
-		blog.Warnf("Rule domain:%s url:%s to be created already existed in qcloud listener %s, clean it first", rule.Domain, rule.URL, ls.Spec.ListenerID)
+		blog.Warnf("Rule domain:%s url:%s to be created already existed in qcloud listener %s, clean it first",
+			rule.Domain, rule.URL, ls.Spec.ListenerID)
 		err := clb.clbAdapter.DeleteRule(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, rule.Domain, rule.URL)
 		if err != nil {
 			return fmt.Errorf("delete rule (domain:%s, url%s) failed, err %s", rule.Domain, rule.URL, err.Error())
@@ -201,8 +210,9 @@ func (clb *ClbClient) createRule(ls *loadbalance.CloudListener, rule *loadbalanc
 	return clb.doCreateRule(ls, rule)
 }
 
-//call api to create rule
-//TODO: create multiple rules together. temporarily we are not sure if the create rules api is atomic, so create rule one by one
+// call api to create rule
+// TODO: create multiple rules together. temporarily we are not sure if the create rules api is atomic,
+// so create rule one by one
 func (clb *ClbClient) doCreateRule(ls *loadbalance.CloudListener, rule *loadbalance.Rule) error {
 
 	var ruleList loadbalance.RuleList
@@ -212,7 +222,8 @@ func (clb *ClbClient) doCreateRule(ls *loadbalance.CloudListener, rule *loadbala
 		return fmt.Errorf("create rule failed, %s", err.Error())
 	}
 
-	descRule, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, rule.Domain, rule.URL)
+	descRule, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(
+		ls.Spec.LoadBalancerID, ls.Spec.ListenerID, rule.Domain, rule.URL)
 	if err != nil {
 		return fmt.Errorf("describe rule (domain %s, url %s) failed after creation", rule.Domain, rule.URL)
 	}
@@ -239,9 +250,11 @@ func (clb *ClbClient) doCreateRule(ls *loadbalance.CloudListener, rule *loadbala
 	return nil
 }
 
-func (clb *ClbClient) updateRule(ls *loadbalance.CloudListener, ruleOld *loadbalance.Rule, ruleUpdate *loadbalance.Rule) error {
+func (clb *ClbClient) updateRule(
+	ls *loadbalance.CloudListener, ruleOld *loadbalance.Rule, ruleUpdate *loadbalance.Rule) error {
 
-	_, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.Domain, ruleOld.URL)
+	existedRule, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(
+		ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.Domain, ruleOld.URL)
 	if err != nil {
 		return fmt.Errorf("QCloudDescribeRule failed, %s", err.Error())
 	}
@@ -249,18 +262,21 @@ func (clb *ClbClient) updateRule(ls *loadbalance.CloudListener, ruleOld *loadbal
 		blog.Warnf("old rule %s %s %s does not exists, try to create new rule", ruleOld.ID, ruleOld.Domain, ruleOld.URL)
 		err := clb.doCreateRule(ls, ruleUpdate)
 		if err != nil {
-			return fmt.Errorf("createRule domain:%s url:%s for listener %s failed, %s", ruleUpdate.Domain, ruleUpdate.URL, ls.GetName(), err.Error())
+			return fmt.Errorf("createRule domain:%s url:%s for listener %s failed, %s",
+				ruleUpdate.Domain, ruleUpdate.URL, ls.GetName(), err.Error())
 		}
 		return nil
 	}
-	//because the new rule struct has no id info
-	ruleUpdate.ID = ruleOld.ID
+	// because the new rule struct has no id info
+	ruleUpdate.ID = existedRule.ID
 
 	if !ruleOld.TargetGroup.IsAttrEqual(ruleUpdate.TargetGroup) {
 		err := clb.clbAdapter.ModifyRuleAttribute(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleUpdate)
 		if err != nil {
-			blog.Infof("modify rule of lb %s listener %s config failed, err %s", ls.Spec.LoadBalancerID, ls.Spec.ListenerID, err.Error())
-			return fmt.Errorf("modify rule of lb %s listener %s config failed, err %s", ls.Spec.LoadBalancerID, ls.Spec.ListenerID, err.Error())
+			blog.Infof("modify rule of lb %s listener %s config failed, err %s",
+				ls.Spec.LoadBalancerID, ls.Spec.ListenerID, err.Error())
+			return fmt.Errorf("modify rule of lb %s listener %s config failed, err %s",
+				ls.Spec.LoadBalancerID, ls.Spec.ListenerID, err.Error())
 		}
 	}
 
@@ -272,11 +288,12 @@ func (clb *ClbClient) updateRule(ls *loadbalance.CloudListener, ruleOld *loadbal
 		clbBackendsDeleteMetric.WithLabelValues(backend.IP, strconv.Itoa(backend.Port)).Inc()
 	}
 
-	//2.1 deregister old backend
+	// 2.1 deregister old backend
 	if len(backendsDel) > 0 {
 		for i := 0; i < len(backendsDel); i = i + LimitationMaxBackendNumEachBind {
 			tmpBackends := GetBackendsSegment(backendsDel, i, LimitationMaxBackendNumEachBind)
-			err := clb.clbAdapter.DeRegister7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.ID, tmpBackends)
+			err := clb.clbAdapter.DeRegister7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID,
+				ruleUpdate.ID, tmpBackends)
 			if err != nil {
 				blog.Warnf("Deregister 7 Layer Backends %v failed, %s", tmpBackends, err.Error())
 				ruleUpdate.TargetGroup.AddBackends(tmpBackends)
@@ -288,7 +305,8 @@ func (clb *ClbClient) updateRule(ls *loadbalance.CloudListener, ruleOld *loadbal
 	if len(backendsNew) > 0 {
 		for i := 0; i < len(backendsNew); i = i + LimitationMaxBackendNumEachBind {
 			tmpBackends := GetBackendsSegment(backendsNew, i, LimitationMaxBackendNumEachBind)
-			err := clb.clbAdapter.Register7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.ID, tmpBackends)
+			err := clb.clbAdapter.Register7LayerBackends(ls.Spec.LoadBalancerID, ls.Spec.ListenerID,
+				ruleUpdate.ID, tmpBackends)
 			if err != nil {
 				blog.Warnf("Register 7Layer Backends %v failed, %s", tmpBackends, err.Error())
 				ruleUpdate.TargetGroup.RemoveBackend(tmpBackends)
@@ -301,18 +319,21 @@ func (clb *ClbClient) updateRule(ls *loadbalance.CloudListener, ruleOld *loadbal
 }
 
 func (clb *ClbClient) deleteRule(ls *loadbalance.CloudListener, ruleOld *loadbalance.Rule) error {
-	_, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.Domain, ruleOld.URL)
+	_, isExisted, err := clb.clbAdapter.DescribeRuleByDomainAndURL(ls.Spec.LoadBalancerID, ls.Spec.ListenerID,
+		ruleOld.Domain, ruleOld.URL)
 	if err != nil {
 		return fmt.Errorf("describe rule by domain %s url %s failed, %s", ruleOld.Domain, ruleOld.URL, err.Error())
 	}
 	if !isExisted {
-		blog.Warnf("old rule (id:%s domain:%s url:%s) does not exists, no need to delete", ruleOld.ID, ruleOld.Domain, ruleOld.URL)
+		blog.Warnf("old rule (id:%s domain:%s url:%s) does not exists, no need to delete",
+			ruleOld.ID, ruleOld.Domain, ruleOld.URL)
 		return nil
 	}
 
 	err = clb.clbAdapter.DeleteRule(ls.Spec.LoadBalancerID, ls.Spec.ListenerID, ruleOld.Domain, ruleOld.URL)
 	if err != nil {
-		return fmt.Errorf("delete rule (id:%s domain:%s url:%s) failed, %s", ruleOld.ID, ruleOld.Domain, ruleOld.URL, err.Error())
+		return fmt.Errorf("delete rule (id:%s domain:%s url:%s) failed, %s",
+			ruleOld.ID, ruleOld.Domain, ruleOld.URL, err.Error())
 	}
 	return nil
 }
