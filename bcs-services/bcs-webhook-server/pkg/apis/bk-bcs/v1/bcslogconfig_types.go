@@ -28,6 +28,8 @@ const (
 	BcsSystemConfigType = "bcs-system"
 	// CustomConfigType custom log config type
 	CustomConfigType = "custom"
+	// HostConfigType is config for host path collection
+	HostConfigType = "host"
 )
 
 // BcsLogConfig defines BcsLogConfig CRD format
