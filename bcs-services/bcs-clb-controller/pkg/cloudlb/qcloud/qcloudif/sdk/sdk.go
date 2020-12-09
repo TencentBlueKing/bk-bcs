@@ -200,7 +200,12 @@ func (c *Client) doDescribeLoadBalance(name string) (*tclb.LoadBalancer, error) 
 		blog.Warnf("describe clb return zero element")
 		return nil, nil
 	}
-	return response.Response.LoadBalancerSet[0], nil
+	for _, lb := range response.Response.LoadBalancerSet {
+		if lb.LoadBalancerName != nil && *lb.LoadBalancerName == name {
+			return lb, nil
+		}
+	}
+	return nil, fmt.Errorf("loadbalance with name %s not found", name)
 }
 
 // DescribeLoadBalance describe clb by name, return clb info, and return true if it is existed
@@ -414,7 +419,7 @@ func (c *Client) DeleteListener(lbID, listenerID string) error {
 
 // DescribeListener describe listener
 // by loadbalance id, either listener id or listener port
-// this function does different convertion for 4 layer listener and 7 layer listener.
+// this function does different conversion for 4 layer listener and 7 layer listener.
 func (c *Client) DescribeListener(lbID, listenerID string, port int) (
 	listener *cloudListenerType.CloudListener, isExisted bool, err error) {
 	request := tclb.NewDescribeListenersRequest()
@@ -629,7 +634,7 @@ func (c *Client) modify4LayerListenerAttribute(listener *cloudListenerType.Cloud
 	request.ListenerId = tcommon.StringPtr(listener.Spec.ListenerID)
 	request.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadBalancerID)
 	if listener.Spec.TargetGroup == nil {
-		return fmt.Errorf("target group for 4 layer listener cannot be emtpy, error listener %v", listener)
+		return fmt.Errorf("target group for 4 layer listener cannot be empty, error listener %v", listener)
 	}
 	request.SessionExpireTime = tcommon.Int64Ptr(int64(listener.Spec.TargetGroup.SessionExpire))
 	lbPolicy := LBAlgorithmRoundRobin
@@ -769,7 +774,7 @@ func (c *Client) DeleteRule(lbID, listenerID, domain, url string) error {
 // DescribeRuleByDomainAndURL describe rule by domain and url
 // call DescribeListener api to find the certain listener
 // traverse all the rules in listener with certain domain and url
-func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, URL string) (
+func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, domain, url string) (
 	rule *cloudListenerType.Rule, isExisted bool, err error) {
 	request := tclb.NewDescribeListenersRequest()
 	request.LoadBalancerId = tcommon.StringPtr(loadBalanceID)
@@ -799,11 +804,11 @@ func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, U
 		listener := response.Response.Listeners[0]
 		// find rule with domain and url
 		for _, ruleOutput := range listener.Rules {
-			if *ruleOutput.Domain == Domain && *ruleOutput.Url == URL {
+			if *ruleOutput.Domain == domain && *ruleOutput.Url == url {
 				retRule := &cloudListenerType.Rule{
 					ID:     *ruleOutput.LocationId,
-					Domain: Domain,
-					URL:    URL,
+					Domain: domain,
+					URL:    url,
 				}
 				lbPolicy := LBAlgorithmRoundRobin
 				if validPolicy, ok := LBAlgorithmTypeSDK2BcsMap[*ruleOutput.Scheduler]; ok {
@@ -839,7 +844,7 @@ func (c *Client) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, U
 				return retRule, true, nil
 			}
 		}
-		blog.Infof("rule %s %s no found with %s %s", Domain, URL, listenerID, loadBalanceID)
+		blog.Infof("rule %s %s no found with %s %s", domain, url, listenerID, loadBalanceID)
 		return nil, false, nil
 	}
 	blog.Errorf("describe rule with request %s timeout", request.ToJsonString())
