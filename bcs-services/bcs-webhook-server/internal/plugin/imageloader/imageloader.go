@@ -137,7 +137,7 @@ func (i *imageLoader) Init(configFilePath string) error {
 func (i *imageLoader) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	// check if it is an update operation
 	if ar.Request.Operation != v1beta1.Update {
-		return toAdmissionResponse(fmt.Errorf("only update operation can be handled by imageloader webhook"))
+		return toAdmissionResponse(nil)
 	}
 
 	// call different workload handle by metav1.GroupVersionKind(like v1.Pod)

@@ -106,6 +106,11 @@ func (b *bcsgdWorkload) LoadImageBeforeUpdate(ar v1beta1.AdmissionReview) *v1bet
 		return toAdmissionResponse(err)
 	}
 
+	// only inplace-update need image loader
+	if newGD.Spec.UpdateStrategy.Type != tkexv1alpha1.InPlaceGameDeploymentUpdateStrategyType {
+		return toAdmissionResponse(nil)
+	}
+
 	// get old gd
 	oldGD := &tkexv1alpha1.GameDeployment{}
 	raw = ar.Request.OldObject.Raw
