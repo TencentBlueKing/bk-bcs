@@ -86,6 +86,7 @@ func (i *imageLoader) Init(configFilePath string) error {
 	i.k8sClient, err = kubernetes.NewForConfig(config)
 	if err != nil {
 		blog.Errorf("%v", err)
+		return err
 	} else {
 		blog.Info("connect to k8s with default client success")
 	}
@@ -95,6 +96,7 @@ func (i *imageLoader) Init(configFilePath string) error {
 	err = i.registWorkloads()
 	if err != nil {
 		blog.Errorf("%v", err)
+		return err
 	}
 	if !workloadsWaitForCacheSync(i.stopCh) {
 		return fmt.Errorf("workloads cache synced failed")
@@ -133,6 +135,11 @@ func (i *imageLoader) Init(configFilePath string) error {
 
 // Handle handles webhook request of imageloader.
 func (i *imageLoader) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+	// check if it is an update operation
+	if ar.Request.Operation != v1beta1.Update {
+		return toAdmissionResponse(fmt.Errorf("only update operation can be handled by imageloader webhook"))
+	}
+
 	// call different workload handle by metav1.GroupVersionKind(like v1.Pod)
 	// find workload
 	reqName := ar.Request.Kind.String()
