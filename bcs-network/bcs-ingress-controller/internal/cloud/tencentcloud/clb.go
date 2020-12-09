@@ -71,11 +71,21 @@ func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 	if len(resp.Response.LoadBalancerSet) == 0 {
 		return nil, cloud.ErrLoadbalancerNotFound
 	}
-	if len(resp.Response.LoadBalancerSet) > 1 {
-		blog.Errorf("DescribeLoadBalancers response invalid, more than one lb, resp %s", resp.ToJsonString())
-		return nil, fmt.Errorf("DescribeLoadBalancers response invalid, more than one lb, resp %s", resp.ToJsonString())
+	var resplb *tclb.LoadBalancer
+	for _, lb := range resp.Response.LoadBalancerSet {
+		if len(lbID) != 0 && lbID == *lb.LoadBalancerId {
+			resplb = lb
+			break
+		}
+		if len(name) != 0 && name == *lb.LoadBalancerName {
+			resplb = lb
+			break
+		}
 	}
-	resplb := resp.Response.LoadBalancerSet[0]
+	if resplb == nil {
+		blog.Errorf("lb not found in resp %s", resp.ToJsonString())
+		return nil, cloud.ErrLoadbalancerNotFound
+	}
 	retlb := &cloud.LoadBalanceObject{
 		Region: region,
 	}

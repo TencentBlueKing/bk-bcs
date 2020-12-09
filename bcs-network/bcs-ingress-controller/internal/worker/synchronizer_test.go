@@ -168,9 +168,14 @@ func TestEventHandler(t *testing.T) {
 
 		newScheme := runtime.NewScheme()
 		newScheme.AddKnownTypes(networkextensionv1.GroupVersion, &listener1)
-		eventHandler := NewEventHandler(testCases[index].region, "lbID", mockCloud,
-			k8sfake.NewFakeClientWithScheme(
-				newScheme, &testCases[index].lis, &testCases[index].segLis))
+		opt := EventHandlerOption{
+			Region:   testCases[index].region,
+			LbID:     "lbID",
+			LbClient: mockCloud,
+			K8sCli: k8sfake.NewFakeClientWithScheme(
+				newScheme, &testCases[index].lis, &testCases[index].segLis),
+		}
+		eventHandler := NewEventHandler(opt)
 		eventHandler.PushEvent(&ListenerEvent{
 			Type:      testCases[index].eventType,
 			EventTime: time.Now(),

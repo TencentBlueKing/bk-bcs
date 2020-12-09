@@ -14,6 +14,7 @@ package generator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -22,6 +23,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -247,8 +249,47 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	err = g.syncListeners(ingress.GetName(), ingress.GetNamespace(),
 		existedListeners, generatedListeners, existedSegListeners, generatedSegListeners)
 	if err != nil {
-		blog.Errorf("syncListeners listener failed, err %s", err.Error())
-		return fmt.Errorf("syncListeners listener failed, err %s", err.Error())
+		blog.Errorf("syncListeners listener of ingress %s/%s failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
+		return fmt.Errorf("syncListeners listener ingress %s/%s failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
+	}
+	if err = g.patchIngressStatus(ingress, lbObjs); err != nil {
+		blog.Errorf("update ingress vips failed, err %s", err.Error())
+		return fmt.Errorf("update ingress vips failed, err %s", err.Error())
+	}
+	return nil
+}
+
+// update ingress loadbalancers fields
+func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingress,
+	lbs []*cloud.LoadBalanceObject) error {
+
+	newStatus := networkextensionv1.IngressStatus{}
+	for _, lb := range lbs {
+		newStatus.Loadbalancers = append(newStatus.Loadbalancers, networkextensionv1.IngressLoadBalancer{
+			IPs: lb.VIPs,
+		})
+	}
+	patchStruct := map[string]interface{}{
+		"status": newStatus,
+	}
+	newStatusBytes, err := json.Marshal(patchStruct)
+	if err != nil {
+		return fmt.Errorf("encoding ingress status to json bytes failed, err %s", err.Error())
+	}
+
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, newStatusBytes)
+	updatedIngress := &networkextensionv1.Ingress{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      ingress.GetName(),
+			Namespace: ingress.GetNamespace(),
+		},
+	}
+	err = g.cli.Patch(context.TODO(), updatedIngress, rawPatch, &client.PatchOptions{})
+	if err != nil {
+		return fmt.Errorf("update ingress %s/%s to k8s apiserver failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
 	}
 	return nil
 }

@@ -298,7 +298,7 @@ func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *
 	if ingressListener.Spec.ListenerAttribute != nil &&
 		(!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) ||
 			!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) {
-		err := c.updateListenerAttrAndCerts(region, ingressListener)
+		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
 			return fmt.Errorf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
@@ -336,7 +336,7 @@ func (c *Clb) update4LayerListener(region string, ingressListener, cloudListener
 	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
 	if ingressListener.Spec.ListenerAttribute != nil &&
 		!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) {
-		err := c.updateListenerAttrAndCerts(region, ingressListener)
+		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in update4LayerListener failed, err %s", err.Error())
 			return fmt.Errorf("updateListenerAttrAndCerts in update4LayerListener failed, err %s", err.Error())
@@ -387,11 +387,12 @@ func (c *Clb) update4LayerListener(region string, ingressListener, cloudListener
 }
 
 // update listener attributes and certificates
-func (c *Clb) updateListenerAttrAndCerts(region string, listener *networkextensionv1.Listener) error {
+func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *networkextensionv1.Listener) error {
 	if listener.Spec.ListenerAttribute == nil && listener.Spec.Certificate == nil {
 		return nil
 	}
 	req := tclb.NewModifyListenerRequest()
+	req.ListenerId = tcommon.StringPtr(listenerID)
 	if listener.Spec.ListenerAttribute != nil {
 		attr := listener.Spec.ListenerAttribute
 		if attr.SessionTime != 0 {
