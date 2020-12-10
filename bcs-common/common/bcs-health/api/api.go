@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-health/pkg/alarm/utils"
+	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/utils"
 )
 
 // MessageKind type for message
