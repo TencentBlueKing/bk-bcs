@@ -19,8 +19,9 @@ import (
 
 // Yaml is the structure viewed of log config file, contains metric info
 type Yaml struct {
-	Local  []Local                 `yaml:"local"`
-	Metric *metric.LogFileInfoType `yaml:"-"`
+	Local           []Local                 `yaml:"local"`
+	Metric          *metric.LogFileInfoType `yaml:"-"`
+	BCSLogConfigKey string                  `yaml:"-"`
 }
 
 // Local is a single log collection task with single dataid

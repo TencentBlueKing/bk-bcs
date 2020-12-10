@@ -3,18 +3,13 @@ module github.com/Tencent/bk-bcs
 go 1.14
 
 replace (
-	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ./bcs-k8s/kubernetes
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20181126155829-0cd23ebeb688
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181126123746-eddba98df674
 	k8s.io/client-go => k8s.io/client-go v0.0.0-20181126152608-d082d5923d3c
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
-	k8s.io/kubernetes => k8s.io/kubernetes v1.13.1
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.1.9
 )
 
@@ -24,8 +19,6 @@ require (
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
 	github.com/Shopify/sarama v1.20.0 // indirect
 	github.com/Shopify/toxiproxy v2.1.4+incompatible // indirect
-	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator v0.0.0-20201201131446-6dab325dba89
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-20201204075550-89442130308c // indirect
 	github.com/andygrunwald/megos v0.0.0-20180424065632-0fccaea93714
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
@@ -135,6 +128,7 @@ require (
 	github.com/lithammer/go-jump-consistent-hash v1.0.1
 	github.com/lucas-clemente/quic-go v0.14.1 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mesos/mesos-go v0.0.10

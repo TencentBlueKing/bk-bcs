@@ -186,7 +186,7 @@ func (gdc *defaultGameDeploymentControl) newHookRunFromGameDeployment(canaryCtx 
 		}
 		return nil, err
 	}
-	nameParts := []string{"canary-step-hook", revision}
+	nameParts := []string{"canary", revision}
 	if stepIdx != nil {
 		nameParts = append(nameParts, strconv.Itoa(int(*stepIdx)))
 	}

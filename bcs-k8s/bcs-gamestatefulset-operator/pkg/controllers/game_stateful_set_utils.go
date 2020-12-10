@@ -75,7 +75,7 @@ func (o overlappingGameStatefulSetes) Less(i, j int) bool {
 }
 
 // statefulPodRegex is a regular expression that extracts the parent GameStatefulSet and ordinal from the Name of a Pod
-var statefulPlusPodRegex = regexp.MustCompile("(.*)-([0-9]+)$")
+var statefulPodRegex = regexp.MustCompile("(.*)-([0-9]+)$")
 
 // getParentNameAndOrdinal gets the name of pod's parent GameStatefulSet and pod's ordinal as extracted from its Name. If
 // the Pod was not created by a GameStatefulSet, its parent is considered to be empty string, and its ordinal is considered
@@ -83,7 +83,7 @@ var statefulPlusPodRegex = regexp.MustCompile("(.*)-([0-9]+)$")
 func getParentNameAndOrdinal(pod *v1.Pod) (string, int) {
 	parent := ""
 	ordinal := -1
-	subMatches := statefulPlusPodRegex.FindStringSubmatch(pod.Name)
+	subMatches := statefulPodRegex.FindStringSubmatch(pod.Name)
 	if len(subMatches) < 3 {
 		return parent, ordinal
 	}
@@ -220,6 +220,8 @@ func updateIdentity(set *gstsv1alpha1.GameStatefulSet, pod *v1.Pod) {
 		pod.Labels = make(map[string]string)
 	}
 	pod.Labels[gstsv1alpha1.GameStatefulSetPodNameLabel] = pod.Name
+	pod.Labels[gstsv1alpha1.GameStatefulSetPodOrdinal] = strconv.Itoa(getOrdinal(pod))
+
 }
 
 // isRunningAndReady returns true if pod is in the PodRunning Phase, if it has a condition of PodReady.
