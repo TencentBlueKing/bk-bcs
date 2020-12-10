@@ -31,6 +31,8 @@ const (
 	DeprecatedTemplateGeneration = "deprecated.daemonset.template.generation"
 	//GameStatefulSetPodNameLabel pod name reference label
 	GameStatefulSetPodNameLabel = "gamestatefulset.kubernetes.io/pod-name"
+	//GameStatefulSetPodOrdinal pod ordinal reference label
+	GameStatefulSetPodOrdinal = "gamestatefulset.kubernetes.io/pod-ordinal"
 )
 
 // GameStatefulSet compatible with original StatefulSet but support in-place update additionally
