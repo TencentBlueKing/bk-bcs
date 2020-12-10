@@ -54,4 +54,6 @@ func setConfig(conf *config.Config, op *options.SidecarOption) {
 	conf.TemplateFile = op.TemplateFile
 	conf.LogbeatDir = op.LogbeatDir
 	conf.Kubeconfig = op.Kubeconfig
+	conf.EvalSymlink = op.EvalSymlink
+	conf.LogbeatPIDFilePath = op.LogbeatPIDFilePath
 }
