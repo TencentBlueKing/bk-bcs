@@ -16,4 +16,5 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/bcslog"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/bscp"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/dbprivilege"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/imageloader"
 )

@@ -32,6 +32,7 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 	"gopkg.in/yaml.v2"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/apimachinery/pkg/labels"
 	corev1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
@@ -171,13 +172,14 @@ func (s *SidecarController) listenerDockerEvent() {
 }
 
 func (s *SidecarController) syncLogConfs() {
+	var hostIP string
 	//list all running containers
 	apiContainers, err := s.client.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		blog.Errorf("docker ListContainers failed: %s", err.Error())
 		return
 	}
-
+	// generate container log config
 	for _, apiC := range apiContainers {
 		c, err := s.client.InspectContainer(apiC.ID)
 		if err != nil {
@@ -186,10 +188,43 @@ func (s *SidecarController) syncLogConfs() {
 		}
 
 		s.produceContainerLogConf(c)
+		//Get host IP
+		if hostIP != "" {
+			continue
+		}
+		name := c.Config.Labels[ContainerLabelK8sContainerName]
+		if name == "POD" || name == "" {
+			continue
+		}
+		podName := c.Config.Labels[ContainerLabelK8sPodName]
+		podNameSpace := c.Config.Labels[ContainerLabelK8sPodNameSpace]
+		pod, err := s.podLister.Pods(podNameSpace).Get(podName)
+		if err != nil {
+			blog.Errorf("list pod(%s/%s) failed: %s", podNameSpace, podName, err.Error())
+			continue
+		}
+		hostIP = pod.Status.HostIP
+	}
+
+	// generate host log config
+	bcsLogConfigs, err := s.bcsLogConfigLister.List(labels.Everything())
+	if err != nil {
+		blog.Errorf("list bcslogconfig error %s", err.Error())
+		return
+	}
+	for _, conf := range bcsLogConfigs {
+		if conf.Spec.ConfigType == bcsv1.HostConfigType {
+			s.produceHostLogConf(conf, hostIP)
+		}
 	}
 
 	//remove invalid logconfig file
 	s.removeInvalidLogConfigFile()
+	err = s.reloadLogbeat()
+	if err != nil {
+		blog.Errorf("reload logbeat failed: %s", err.Error())
+	}
+	blog.V(3).Infof("reload logbeat succ")
 }
 
 func (s *SidecarController) removeInvalidLogConfigFile() {
@@ -202,9 +237,9 @@ func (s *SidecarController) removeInvalidLogConfigFile() {
 	for _, o := range files {
 		confKey := fmt.Sprintf("%s/%s", s.conf.LogbeatDir, o.Name())
 		s.RLock()
-		_, ok := s.logConfs[confKey]
+		config, ok := s.logConfs[confKey]
 		s.RUnlock()
-		if ok {
+		if ok && config.yamlData != nil {
 			continue
 		}
 		err := os.Remove(confKey)
@@ -243,10 +278,18 @@ func (s *SidecarController) getContainerLogConfKey(containerID string) string {
 	return fmt.Sprintf("%s/%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, []byte(containerID)[:12])
 }
 
+func (s *SidecarController) getHostLogConfKey(logConf *bcsv1.BcsLogConfig) string {
+	return fmt.Sprintf("%s/%s-%s-%s.yaml", s.conf.LogbeatDir, s.prefixFile, logConf.GetNamespace(), logConf.GetName())
+}
+
+func (s *SidecarController) getBCSLogConfigKey(logConf *bcsv1.BcsLogConfig) string {
+	return fmt.Sprintf("%s/%s", logConf.Namespace, logConf.Name)
+}
+
 func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	key := s.getContainerLogConfKey(c.ID)
 	y, ok := s.produceLogConfParameterV2(c)
-	by, _ := yaml.Marshal(y)
+
 	//the container don't match any BcsLogConfig
 	if !ok {
 		s.Lock()
@@ -259,13 +302,71 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 		}
 		return
 	}
+	s.writeLogConfFile(key, y)
+}
+
+func (s *SidecarController) produceHostLogConf(logConf *bcsv1.BcsLogConfig, hostIP string) {
+	if logConf.Spec.NonStdDataId == "" || len(logConf.Spec.LogPaths) == 0 {
+		blog.Errorf("host logconfig(%+v) didn't set NonStdDataId or LogPaths", logConf)
+		return
+	}
+	y := &types.Yaml{
+		Local:           make([]types.Local, 0),
+		BCSLogConfigKey: s.getBCSLogConfigKey(logConf),
+	}
+	para := types.Local{
+		ToJSON:  true,
+		ExtMeta: make(map[string]string),
+		Paths:   make([]string, 0),
+	}
+	para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
+	para.ExtMeta["io_tencent_bcs_appid"] = logConf.Spec.AppId
+	//custom log tags
+	for k, v := range logConf.Spec.LogTags {
+		para.ExtMeta[k] = v
+	}
+	dataid, err := strconv.Atoi(logConf.Spec.NonStdDataId)
+	if err != nil {
+		blog.Warnf("logconfig(%+v) has wrong type of NonStdDataID(%s): %s", logConf, logConf.Spec.NonStdDataId, err.Error())
+		return
+	}
+	para.DataID = dataid
+	for _, f := range logConf.Spec.LogPaths {
+		if !filepath.IsAbs(f) {
+			blog.Errorf("host logconf path specified as \"%s\" is not an absolute path", f)
+			continue
+		}
+		para.Paths = append(para.Paths, s.getCleanPath(f))
+	}
+	y.Local = append(y.Local, para)
+	// construct log file metric info
+	y.Metric = &metric.LogFileInfoType{
+		ClusterID:    strings.ToLower(logConf.Spec.ClusterId),
+		CRDName:      logConf.GetName(),
+		CRDNamespace: logConf.GetNamespace(),
+		HostIP:       hostIP,
+	}
+	s.writeLogConfFile(s.getHostLogConfKey(logConf), y)
+}
+
+func (s *SidecarController) writeLogConfFile(key string, y *types.Yaml) {
+	by, _ := yaml.Marshal(y)
+	// get container id
+	var cid string
+	if y.Metric != nil {
+		cid = y.Metric.ContainerID
+	}
 	//if log config exist, and not changed
 	s.RLock()
 	logConf, _ := s.logConfs[key]
 	s.RUnlock()
 	if logConf != nil {
+		if logConf.yamlData != nil && logConf.yamlData.BCSLogConfigKey != "" && logConf.yamlData.BCSLogConfigKey != y.BCSLogConfigKey {
+			blog.Errorf("Unexpected conflict config detected: BcsLogConfig %s and %s define log config for the same container(%s)",
+				logConf.yamlData.BCSLogConfigKey, y.BCSLogConfigKey, cid)
+		}
 		if string(by) == string(logConf.data) {
-			blog.Infof("container %s log config %s not changed", c.ID, logConf.confPath)
+			blog.Infof("container %s or host log config %s not changed", cid, logConf.confPath)
 			if logConf.yamlData == nil {
 				logConf.yamlData = y
 				if err := y.Metric.Renew(); err != nil {
@@ -273,12 +374,10 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 				}
 			}
 			return
-		} else {
-			blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
 		}
-		blog.Infof("container %s log config %s changed, from(%s)->to(%s)", c.ID, logConf.confPath, string(logConf.data), string(by))
+		blog.Infof("container %s or host log config %s changed, from(%s)->to(%s)", cid, logConf.confPath, string(logConf.data), string(by))
 	} else {
-		blog.Infof("container %s log config %s will created, and LogConfig(%s)", c.ID, key, string(by))
+		blog.Infof("container %s or host log config %s will created, and LogConfig(%s)", cid, key, string(by))
 	}
 
 	newlogConf := &ContainerLogConf{
@@ -288,17 +387,17 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	}
 	f, err := os.Create(newlogConf.confPath)
 	if err != nil {
-		blog.Errorf("container %s open file %s failed: %s", c.ID, newlogConf.confPath, err.Error())
+		blog.Errorf("container %s or host open file %s failed: %s", cid, newlogConf.confPath, err.Error())
 		return
 	}
 	defer f.Close()
 
 	_, err = f.Write(by)
 	if err != nil {
-		blog.Errorf("container %s tempalte execute failed: %s", c.ID, err.Error())
+		blog.Errorf("container %s or host tempalte execute failed: %s", cid, err.Error())
 		return
 	}
-	blog.Infof("produce container %s log config %s success", c.ID, newlogConf.confPath)
+	blog.Infof("produce container %s or host log config %s success", cid, newlogConf.confPath)
 	// Set/Update metric
 	if logConf == nil || logConf.yamlData == nil {
 		err := y.Metric.Set(1)
@@ -314,7 +413,6 @@ func (s *SidecarController) produceContainerLogConf(c *docker.Container) {
 	s.Lock()
 	s.logConfs[key] = newlogConf
 	s.Unlock()
-	return
 }
 
 func (s *SidecarController) deleteContainerLogConf(containerID string) {
@@ -359,81 +457,93 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 		return nil, false
 	}
 
-	para := types.Local{
-		ExtMeta:          make(map[string]string),
-		NonstandardPaths: make([]string, 0),
-	}
-	para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
-	para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
-	para.ExtMeta["io_tencent_bcs_namespace"] = pod.Namespace
-	para.ExtMeta["io_tencent_bcs_server_name"] = pod.OwnerReferences[0].Name
-	para.ExtMeta["io_tencent_bcs_type"] = pod.OwnerReferences[0].Kind
-	para.ExtMeta["io_tencent_bcs_appid"] = logConf.Spec.AppId
-	para.ExtMeta["io_tencent_bcs_projectid"] = pod.Labels["io.tencent.paas.projectid"]
-	para.ExtMeta["container_id"] = container.ID
-	para.ExtMeta["container_hostname"] = container.Config.Hostname
-	para.ToJSON = true
-	containerRootPath := s.getContainerRootPath(container)
-	var matchedLogConfig bcsv1.ContainerConf
+	var matchedLogConfigs = make([]*bcsv1.ContainerConf, 0)
 	if len(logConf.Spec.ContainerConfs) > 0 {
 		for _, conf := range logConf.Spec.ContainerConfs {
 			if conf.ContainerName == name {
-				conf.DeepCopyInto(&matchedLogConfig)
-				break
+				matchedConf := conf.DeepCopy()
+				matchedLogConfigs = append(matchedLogConfigs, matchedConf)
 			}
 		}
 	} else {
+		var matchedLogConfig bcsv1.ContainerConf
 		matchedLogConfig.StdDataId = logConf.Spec.StdDataId
 		matchedLogConfig.NonStdDataId = logConf.Spec.NonStdDataId
 		matchedLogConfig.LogPaths = logConf.Spec.LogPaths
 		matchedLogConfig.HostPaths = logConf.Spec.HostPaths
 		matchedLogConfig.LogTags = logConf.Spec.LogTags
-	}
-	// generate intermediate config
-	para.StdoutDataid = matchedLogConfig.StdDataId
-	para.NonstandardDataid = matchedLogConfig.NonStdDataId
-	for _, f := range matchedLogConfig.LogPaths {
-		if !filepath.IsAbs(f) {
-			blog.Errorf("log path specified as \"%s\" is not an absolute path", f)
-			continue
-		}
-		para.NonstandardPaths = append(para.NonstandardPaths, fmt.Sprintf("%s%s", containerRootPath, f))
-	}
-	for _, f := range matchedLogConfig.HostPaths {
-		if !filepath.IsAbs(f) {
-			blog.Errorf("host path specified as \"%s\" is not an absolute path", f)
-			continue
-		}
-		para.NonstandardPaths = append(para.NonstandardPaths, f)
-	}
-	para.LogTags = matchedLogConfig.LogTags
-	//whether report pod labels to log tags
-	if logConf.Spec.PodLabels {
-		for k, v := range pod.Labels {
-			para.ExtMeta[k] = v
-		}
-	}
-	//custom log tags
-	for k, v := range para.LogTags {
-		para.ExtMeta[k] = v
+		matchedLogConfigs = append(matchedLogConfigs, &matchedLogConfig)
 	}
 
-	y := &types.Yaml{Local: make([]types.Local, 0)}
-	//if stdout container log
-	if para.StdoutDataid != "" {
-		inLocal := para
-		inLocal.Paths = []string{container.LogPath}
-		i, _ := strconv.Atoi(para.StdoutDataid)
-		inLocal.DataID = i
-		y.Local = append(y.Local, inLocal)
+	y := &types.Yaml{
+		Local:           make([]types.Local, 0),
+		BCSLogConfigKey: s.getBCSLogConfigKey(logConf),
 	}
-	//if nonstandard Log
-	if para.NonstandardDataid != "" && len(para.NonstandardPaths) > 0 {
-		inLocal := para
-		inLocal.Paths = para.NonstandardPaths
-		i, _ := strconv.Atoi(para.NonstandardDataid)
-		inLocal.DataID = i
-		y.Local = append(y.Local, inLocal)
+	var stdoutDataid = ""
+	for _, conf := range matchedLogConfigs {
+		var para = types.Local{
+			ExtMeta:           make(map[string]string),
+			NonstandardPaths:  make([]string, 0),
+			Paths:             make([]string, 0),
+			ToJSON:            true,
+			StdoutDataid:      conf.StdDataId,
+			NonstandardDataid: conf.NonStdDataId,
+		}
+		para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
+		para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
+		para.ExtMeta["io_tencent_bcs_namespace"] = pod.Namespace
+		para.ExtMeta["io_tencent_bcs_server_name"] = pod.OwnerReferences[0].Name
+		para.ExtMeta["io_tencent_bcs_type"] = pod.OwnerReferences[0].Kind
+		para.ExtMeta["io_tencent_bcs_appid"] = logConf.Spec.AppId
+		para.ExtMeta["io_tencent_bcs_projectid"] = pod.Labels["io.tencent.paas.projectid"]
+		para.ExtMeta["container_id"] = container.ID
+		para.ExtMeta["container_hostname"] = container.Config.Hostname
+		//whether report pod labels to log tags
+		if logConf.Spec.PodLabels {
+			for k, v := range pod.Labels {
+				para.ExtMeta[k] = v
+			}
+		}
+		//custom log tags
+		for k, v := range conf.LogTags {
+			para.ExtMeta[k] = v
+		}
+		// generate std output log collection config
+		if stdoutDataid == "" && conf.StdDataId != "" {
+			stdPara := para
+			id, err := strconv.Atoi(conf.StdDataId)
+			if err != nil {
+				blog.Errorf("Convert dataid from string(%s) to int failed: %s, BcsLogConfig(%+v)", conf.StdDataId, err.Error(), logConf)
+				continue
+			} else {
+				stdPara.DataID = id
+				stdPara.Paths = []string{container.LogPath}
+				y.Local = append(y.Local, stdPara)
+				stdoutDataid = conf.StdDataId
+			}
+		}
+		if conf.NonStdDataId == "" {
+			continue
+		}
+		// generate non std output log collection config
+		id, err := strconv.Atoi(conf.NonStdDataId)
+		if err != nil {
+			blog.Errorf("Convert dataid from string(%s) to int failed: %s, BcsLogConfig(%+v)", conf.NonStdDataId, err.Error(), logConf)
+			continue
+		}
+		para.DataID = id
+		for _, f := range conf.LogPaths {
+			actualPath, err := s.getActualPath(f, container)
+			if err != nil {
+				blog.Errorf("get actual path of %s with container (%+v) failed: %s", f, container, err.Error())
+				continue
+			}
+			para.Paths = append(para.Paths, actualPath)
+		}
+		if len(para.Paths) == 0 {
+			continue
+		}
+		y.Local = append(y.Local, para)
 	}
 
 	// construct log file metric info
@@ -453,13 +563,46 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 	return y, true
 }
 
+func (s *SidecarController) getCleanPath(path string) string {
+	if !s.conf.EvalSymlink {
+		return path
+	}
+	runes := []rune(path)
+	wildcardPos := s.getFirstWildcardPos(path)
+	slashPos := strings.LastIndex(string(runes[:wildcardPos]), string(os.PathSeparator))
+	cleanPath, err := filepath.EvalSymlinks(string(runes[:(slashPos + 1)]))
+	if err != nil {
+		blog.Warnf("EvalSymlinks of path %s failed: %s", string(runes[:(slashPos+1)]), err.Error())
+	} else {
+		path = cleanPath + string(runes[slashPos:])
+	}
+	return path
+}
+
+func (s *SidecarController) getFirstWildcardPos(str string) int {
+	var pos = len(str)
+	ind := strings.Index(str, "*")
+	if ind != -1 && ind < pos {
+		pos = ind
+	}
+	ind = strings.Index(str, "[")
+	if ind != -1 && ind < pos {
+		pos = ind
+	}
+	ind = strings.Index(str, "?")
+	if ind != -1 && ind < pos {
+		pos = ind
+	}
+	return pos
+}
+
 // getContainerRootPath return the root path of the container
 // Usually it begins with /data/bcs/lib/docker/overlay2/{hashid}/merged
 // If the container does not use OverlayFS, it will return /proc/{procid}/root
 func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
 	switch container.Driver {
-	// case "overlay2":
-	// 	return container.GraphDriver.Data["MergedDir"]
+	case "overlay2":
+		return container.GraphDriver.Data["MergedDir"]
 	default:
 		// blog.Warnf("Container %s has driver %s not overlay2", container.ID, container.Driver)
 		return fmt.Sprintf("/proc/%d/root", container.State.Pid)

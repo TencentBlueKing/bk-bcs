@@ -168,7 +168,7 @@ func (p *PreDeleteControl) newHookRunFromHookTemplate(metaObj metav1.Object, run
 		return nil, err
 	}
 
-	nameParts := []string{"pre-delete-hook", pod.Labels[apps.ControllerRevisionHashLabelKey], pod.Labels[podNameLabelKey], preDeleteHook.TemplateName}
+	nameParts := []string{"predelete", pod.Labels[apps.ControllerRevisionHashLabelKey], pod.Labels[podNameLabelKey], preDeleteHook.TemplateName}
 	name := strings.Join(nameParts, "-")
 
 	run, err := commonhookutil.NewHookRunFromTemplate(template, args, name, "", pod.Namespace)

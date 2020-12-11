@@ -8,7 +8,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.2.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/kubernetes-client/go v0.0.0-20200222171647-9dac5e4c5400
@@ -16,7 +16,7 @@ require (
 	github.com/onsi/ginkgo v1.13.0
 	github.com/onsi/gomega v1.10.1
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98
-	google.golang.org/grpc v1.29.1
+	google.golang.org/grpc v1.31.0
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	istio.io/istio v0.0.0-20200812220246-25bea56c0eb0 // indirect
 	k8s.io/apiextensions-apiserver v0.18.6

@@ -55,8 +55,8 @@ type ClbAPI struct {
 //NewCloudClbAPI new clb api operator
 func NewCloudClbAPI(projectID int, region, subnet, vpcID, secretID, secretKey, backendType string,
 	waitPeriodLBDealing, waitPeriodExceedLimit, expireTime int) qcloudif.ClbAdapter {
-	lbClient := qcloud.NewClient(QCloudLBUrl, secretKey)
-	cvmClient := qcloud.NewClient(QCloudCVMUrlV3, secretKey)
+	lbClient := qcloud.NewClient(QCloudLBURL, secretKey)
+	cvmClient := qcloud.NewClient(QCloudCVMURLV3, secretKey)
 
 	return &ClbAPI{
 		ProjectID:                projectID,
@@ -100,8 +100,10 @@ func (clb *ClbAPI) CreateLoadBalance(lb *loadbalance.CloudLoadBalancer) (string,
 	}
 
 	if output.Code != 0 {
-		blog.Errorf("create clb failed, response code %d, code desc %s, message %s", output.Code, output.CodeDesc, output.Message)
-		return "", nil, fmt.Errorf("create clb failed, response code %d, code desc %s, message %s", output.Code, output.CodeDesc, output.Message)
+		blog.Errorf("create clb failed, response code %d, code desc %s, message %s",
+			output.Code, output.CodeDesc, output.Message)
+		return "", nil, fmt.Errorf("create clb failed, response code %d, code desc %s, message %s",
+			output.Code, output.CodeDesc, output.Message)
 	}
 	blog.Infof("create clb request done, wait asynchronous task done")
 	for _, id := range output.UnLoadBalancerIds {
@@ -162,7 +164,8 @@ func (clb *ClbAPI) DescribeLoadBalance(name string) (*loadbalance.CloudLoadBalan
 	}
 	networkType, ok := NetworkTypeQCloud2BcsMap[output.LoadBalances[0].LoadBalancerType]
 	if !ok {
-		return nil, false, fmt.Errorf("convert qcloud network type %d to bcs type failed, err %s", output.LoadBalances[0].LoadBalancerType, err.Error())
+		return nil, false, fmt.Errorf("convert qcloud network type %d to bcs type failed, err %s",
+			output.LoadBalances[0].LoadBalancerType, err.Error())
 	}
 
 	if output.LoadBalances[0].Forward != ClbApplicationType {
@@ -311,7 +314,8 @@ func (clb *ClbAPI) CreateRules(lbID, listenerID string, rules loadbalance.RuleLi
 }
 
 //DescribeRuleByDomainAndURL query rule by domain and url
-func (clb *ClbAPI) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, URL string) (*loadbalance.Rule, bool, error) {
+func (clb *ClbAPI) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, URL string) (
+	*loadbalance.Rule, bool, error) {
 	listenerInfo, err := clb.doDescribeListener(loadBalanceID, listenerID)
 	if err != nil {
 		return nil, false, fmt.Errorf("describe listener %s of lb %s", listenerID, loadBalanceID)
@@ -395,7 +399,8 @@ func (clb *ClbAPI) getBackends(backends loadbalance.BackendList) (qcloud.Backend
 }
 
 //Register7LayerBackends register 7 layer backends
-func (clb *ClbAPI) Register7LayerBackends(lbID, listenerID, ruleID string, backendsRegister loadbalance.BackendList) error {
+func (clb *ClbAPI) Register7LayerBackends(
+	lbID, listenerID, ruleID string, backendsRegister loadbalance.BackendList) error {
 	bList, err := clb.getBackends(backendsRegister)
 	if err != nil {
 		return err
@@ -404,7 +409,8 @@ func (clb *ClbAPI) Register7LayerBackends(lbID, listenerID, ruleID string, backe
 }
 
 //_Register7LayerBackends register 7 layer backends
-func (clb *ClbAPI) _Register7LayerBackends(lbID, listenerID, ruleID string, backendsRegister loadbalance.BackendList) error {
+func (clb *ClbAPI) _Register7LayerBackends(
+	lbID, listenerID, ruleID string, backendsRegister loadbalance.BackendList) error {
 	if len(backendsRegister) == 0 {
 		return fmt.Errorf("no backends in request")
 	}
@@ -426,7 +432,8 @@ func (clb *ClbAPI) _Register7LayerBackends(lbID, listenerID, ruleID string, back
 }
 
 // DeRegister7LayerBackends de register backends for 7 layer
-func (clb *ClbAPI) DeRegister7LayerBackends(lbID, listenerID, ruleID string, backendsDeRegister loadbalance.BackendList) error {
+func (clb *ClbAPI) DeRegister7LayerBackends(
+	lbID, listenerID, ruleID string, backendsDeRegister loadbalance.BackendList) error {
 	if len(backendsDeRegister) == 0 {
 		blog.Infof("lb %s, listener %s, rule %s has no backend, no need to register", lbID, listenerID, ruleID)
 		return nil
