@@ -268,7 +268,11 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 	newStatus := networkextensionv1.IngressStatus{}
 	for _, lb := range lbs {
 		newStatus.Loadbalancers = append(newStatus.Loadbalancers, networkextensionv1.IngressLoadBalancer{
-			IPs: lb.VIPs,
+			LoadbalancerName: lb.Name,
+			LoadbalancerID:   lb.LbID,
+			Region:           lb.Region,
+			Type:             lb.Type,
+			IPs:              lb.IPs,
 		})
 	}
 	patchStruct := map[string]interface{}{
