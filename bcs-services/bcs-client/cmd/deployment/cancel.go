@@ -15,6 +15,7 @@ package deployment
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 
@@ -29,6 +30,10 @@ func NewCancelCommand() cli.Command {
 			cli.StringFlag{
 				Name:  "type, t",
 				Usage: "Cancel type, deployment",
+			},
+			cli.StringFlag{
+				Name:  "clusterid",
+				Usage: "Cluster ID",
 			},
 			cli.StringFlag{
 				Name:  "name, n",

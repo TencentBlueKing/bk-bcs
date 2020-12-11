@@ -19,7 +19,7 @@ import (
 	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 )
 
 func listDeployment(c *utils.ClientContext) error {
@@ -68,7 +68,7 @@ func printListDeployment(list v1.DeploymentList) error {
 			appName = status.Data.Application.ApplicationName
 		}
 		if status.Data.ApplicationExt != nil {
-			appExtName = status.Data.Application.ApplicationName
+			appExtName = status.Data.ApplicationExt.ApplicationName
 		}
 		fmt.Printf("%-50s  %-15s  %-30s  %-30s %-30s\n",
 			status.Data.ObjectMeta.Name,
