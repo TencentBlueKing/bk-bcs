@@ -208,24 +208,25 @@ sd-prometheus:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-service-prometheus/bcs-service-prometheus ./bcs-services/bcs-service-prometheus/main.go
 
 k8s-driver:pre
-	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
-	cp -R ./install/conf/bcs-k8s-master/bcs-k8s-driver ${PACKAGEPATH}/bcs-k8s-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-driver/bcs-k8s-driver ./bcs-k8s/bcs-k8s-driver/main.go
+	cd ./bcs-k8s/bcs-k8s-driver && make k8s-driver && cd -
 
 k8s-watch:pre
-	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
-	cp -R ./install/conf/bcs-k8s-master/bcs-k8s-watch ${PACKAGEPATH}/bcs-k8s-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-watch/bcs-k8s-watch ./bcs-k8s/bcs-k8s-watch/main.go
+	cd ./bcs-k8s/bcs-k8s-watch && make watch && cd -
 
 gamestatefulset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-gamestatefulset-operator ${PACKAGEPATH}/bcs-k8s-master
-	cd bcs-k8s/bcs-gamestatefulset-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
+	cd bcs-k8s/bcs-gamestatefulset-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamestatefulset-operator/bcs-gamestatefulset-operator ./cmd/gamestatefulset-operator/main.go
 
 gamedeployment:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-gamedeployment-operator ${PACKAGEPATH}/bcs-k8s-master
-	cd bcs-k8s/bcs-gamedeployment-operator && go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
+	cd bcs-k8s/bcs-gamedeployment-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
+
+hook:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-hook-operator ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-hook-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-hook-operator/bcs-hook-operator ./cmd/hook-operator/main.go
 
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
@@ -250,7 +251,9 @@ network:pre
 clb-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
 	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
+	cp ./bcs-services/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-services/bcs-clb-controller/Dockerfile.old
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+	cp ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ${PACKAGEPATH}/bcs-services/bcs-clb-controller/clb-controller
 
 cpuset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cpuset-device
@@ -262,9 +265,7 @@ gw-controller:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
 
 bcs-webhook-server:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
-	cp -R ./install/conf/bcs-services/bcs-webhook-server/* ${PACKAGEPATH}/bcs-services/bcs-webhook-server
-	GOOS=linux go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./bcs-services/bcs-webhook-server/cmd/server.go
+	cd ./bcs-services/bcs-webhook-server && make webhook-server && cd -
 
 detection:pre
 	cp -R ./install/conf/bcs-services/bcs-network-detection ${PACKAGEPATH}/bcs-services

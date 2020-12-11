@@ -16,8 +16,9 @@ package scale
 import (
 	"sort"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
+	
 	v1 "k8s.io/api/core/v1"
 	intstrutil "k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -27,7 +28,7 @@ import (
 	"k8s.io/utils/integer"
 )
 
-func getPodsToDelete(deploy *tkexv1alpha1.GameDeployment, pods []*v1.Pod) []*v1.Pod {
+func getPodsToDelete(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod) []*v1.Pod {
 	var podsToDelete []*v1.Pod
 	s := sets.NewString(deploy.Spec.ScaleStrategy.PodsToDelete...)
 	for _, p := range pods {
@@ -43,7 +44,7 @@ func genAvailableIDs(num int, pods []*v1.Pod) sets.String {
 	existingIDs := sets.NewString()
 
 	for _, pod := range pods {
-		if id := pod.Labels[tkexv1alpha1.GameDeploymentInstanceID]; len(id) > 0 {
+		if id := pod.Labels[gdv1alpha1.GameDeploymentInstanceID]; len(id) > 0 {
 			existingIDs.Insert(id)
 		}
 	}
@@ -68,11 +69,11 @@ func genInstanceID(existingIDs sets.String) string {
 	return id
 }
 
-func calculateDiffs(deploy *tkexv1alpha1.GameDeployment, revConsistent bool, totalPods int, notUpdatedPods int) (totalDiff int, currentRevDiff int) {
+func calculateDiffs(deploy *gdv1alpha1.GameDeployment, revConsistent bool, totalPods int, notUpdatedPods int) (totalDiff int, currentRevDiff int) {
 	var maxSurge int
 
 	if !revConsistent {
-		currentPartition := util.GetCurrentPartition(deploy)
+		currentPartition := canaryutil.GetCurrentPartition(deploy)
 		if currentPartition != 0 {
 			currentRevDiff = notUpdatedPods - integer.IntMin(int(currentPartition), int(*deploy.Spec.Replicas))
 		}
@@ -103,6 +104,8 @@ func choosePodsToDelete(totalDiff int, currentRevDiff int, notUpdatedPods, updat
 			// Sort the pods in the order such that not-ready < ready, unscheduled
 			// < scheduled, and pending < running. This ensures that we delete pods
 			// in the earlier stages whenever possible.
+			//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
+			// change, maybe we should use a simple alphabetical sort
 			sort.Sort(kubecontroller.ActivePods(pods))
 		} else if diff > len(pods) {
 			klog.Warningf("Diff > len(pods) in choosePodsToDelete func which is not expected.")

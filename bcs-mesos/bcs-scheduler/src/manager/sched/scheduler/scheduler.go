@@ -52,15 +52,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Interval for update task, taskgroup, application in ZK
+// MAX_DATA_UPDATE_INTERVAL Interval for update task, taskgroup, application in ZK
 const MAX_DATA_UPDATE_INTERVAL = 180
 
-// Interval for checking ZK data
+// DATA_CHECK_INTERVAL Interval for checking ZK data
 const DATA_CHECK_INTERVAL = 1200
 
-// HeartBeat timeout between scheduler and mesos master
+// MESOS_HEARTBEAT_TIMEOUT HeartBeat timeout between scheduler and mesos master
 const MESOS_HEARTBEAT_TIMEOUT = 120
 
+// MAX_STAGING_UPDATE_INTERVAL max interval for staging
 const MAX_STAGING_UPDATE_INTERVAL = 180
 
 const (
@@ -892,6 +893,7 @@ func stateFromMasters(masters []string) (*megos.State, error) {
 	return mesosClient.GetStateFromCluster()
 }
 
+// UpdateMesosAgents update mesos info
 func (s *Scheduler) UpdateMesosAgents() {
 	s.oprMgr.UpdateMesosAgents()
 }
@@ -948,6 +950,7 @@ func (s *Scheduler) syncAgentsettingPods() error {
 	return nil
 }
 
+// Stop stop whole scheduler
 func (s *Scheduler) Stop() {
 	blog.Info("scheduler Stop ...")
 }
@@ -1092,7 +1095,7 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 	}
 }
 
-// Send health message
+// SendHealthMsg Send health message
 func (s *Scheduler) SendHealthMsg(kind alarm.MessageKind, RunAs, message string, alarmID string, convergenceSeconds *uint16) {
 
 	if convergenceSeconds == nil {
@@ -1195,7 +1198,7 @@ func (s *Scheduler) DeclineResource(offerId *string) (*http.Response, error) {
 	return s.send(call)
 }
 
-// Decline offer from mesos master
+// DeclineOffers Decline offer from mesos master
 func (s *Scheduler) DeclineOffers(offers []*mesos.Offer) error {
 	for _, offer := range offers {
 		_, err := s.DeclineResource(offer.Id.Value)
@@ -1208,7 +1211,7 @@ func (s *Scheduler) DeclineOffers(offers []*mesos.Offer) error {
 	return nil
 }
 
-// Get offered resource from mesos master
+// OfferedResources Get offered resource from mesos master
 func (s *Scheduler) OfferedResources(offer *mesos.Offer) (cpus, mem, disk float64) {
 	for _, res := range offer.GetResources() {
 		if res.GetName() == "cpus" {
@@ -1225,7 +1228,7 @@ func (s *Scheduler) OfferedResources(offer *mesos.Offer) (cpus, mem, disk float6
 	return
 }
 
-// Get agent attributes
+// GetHostAttributes Get agent attributes
 func (s *Scheduler) GetHostAttributes(para *typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes, error) {
 	if s.pluginManager == nil {
 		return nil, fmt.Errorf("pluginManager is nil")
@@ -1234,12 +1237,12 @@ func (s *Scheduler) GetHostAttributes(para *typesplugin.HostPluginParameter) (ma
 	return s.pluginManager.GetHostAttributes(para)
 }
 
-// Get agent setting by IP
+// FetchAgentSetting Get agent setting by IP
 func (s *Scheduler) FetchAgentSetting(ip string) (*commtype.BcsClusterAgentSetting, error) {
 	return s.store.FetchAgentSetting(ip)
 }
 
-// Get agent schedInfo by hostname
+// FetchAgentSchedInfo Get agent schedInfo by hostname
 func (s *Scheduler) FetchAgentSchedInfo(hostname string) (*types.AgentSchedInfo, error) {
 	s.agentSchedInofLock.RLock()
 	defer s.agentSchedInofLock.RUnlock()
@@ -1247,7 +1250,7 @@ func (s *Scheduler) FetchAgentSchedInfo(hostname string) (*types.AgentSchedInfo,
 	return s.store.FetchAgentSchedInfo(hostname)
 }
 
-// Update agent schedinfo by hostname
+// UpdateAgentSchedInfo Update agent schedinfo by hostname
 func (s *Scheduler) UpdateAgentSchedInfo(hostname, taskGroupID string, deltaResource *types.Resource) error {
 	s.agentSchedInofLock.Lock()
 	defer s.agentSchedInofLock.Unlock()
@@ -1312,37 +1315,32 @@ func (s *Scheduler) UpdateAgentSchedInfo(hostname, taskGroupID string, deltaReso
 	return nil
 }
 
-// Get Cluster ID
+// GetClusterId Get Cluster ID
 func (s *Scheduler) GetClusterId() string {
 	return s.BcsClusterId
 }
 
-// Get current first offer from pool
+// GetFirstOffer Get current first offer from pool
 func (s *Scheduler) GetFirstOffer() *offer.Offer {
 	return s.offerPool.GetFirstOffer()
 }
 
-// Get next offer from pool
+// GetNextOffer Get next offer from pool
 func (s *Scheduler) GetNextOffer(offer *offer.Offer) *offer.Offer {
 	return s.offerPool.GetNextOffer(offer)
 }
 
-// Get current all offers
+// GetAllOffers Get current all offers
 func (s *Scheduler) GetAllOffers() []*offer.Offer {
 	return s.offerPool.GetAllOffers()
 }
 
-// Get the first offer which ID is large the id
-/*func (s *Scheduler) GetOfferGreaterThan(id int64) *offer.Offer {
-	return s.offerPool.GetOfferGreaterThan(id)
-}*/
-
-// Use offer
+// UseOffer Use offer
 func (s *Scheduler) UseOffer(o *offer.Offer) bool {
 	return s.offerPool.UseOffer(o)
 }
 
-// Get cluster resources
+// GetClusterResource Get cluster resources
 func (s *Scheduler) GetClusterResource() (*commtype.BcsClusterResource, error) {
 
 	blog.Info("get cluster resource from mesos master")
@@ -1354,7 +1352,7 @@ func (s *Scheduler) GetClusterResource() (*commtype.BcsClusterResource, error) {
 	return s.GetMesosResourceIn(s.operatorClient)
 }
 
-// Get cluster current resource information from mesos master
+// GetMesosResourceIn Get cluster current resource information from mesos master
 func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.BcsClusterResource, error) {
 
 	if mesosClient == nil {
@@ -1522,6 +1520,7 @@ func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.Bc
 	return clusterRes, nil
 }
 
+// GetCurrentOffers get all offers from offer pool
 func (s *Scheduler) GetCurrentOffers() []*mesos.Offer {
 	offers := s.offerPool.GetAllOffers()
 
@@ -1595,11 +1594,12 @@ func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*comm
 	return attributeList
 }
 
+// FetchTaskGroup get taskgroup from taskID
 func (s *Scheduler) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	return s.store.FetchTaskGroup(taskGroupID)
 }
 
-//check taskgroup whether belongs to daemonset
+//CheckPodBelongDaemonset check taskgroup whether belongs to daemonset
 func (s *Scheduler) CheckPodBelongDaemonset(taskgroupId string) bool {
 	namespace, name := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
 	version, err := s.store.GetVersion(namespace, name)

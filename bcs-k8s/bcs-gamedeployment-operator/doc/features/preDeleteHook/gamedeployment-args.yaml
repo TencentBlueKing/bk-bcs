@@ -1,0 +1,36 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: GameDeployment
+metadata:
+  name: test-gamedeployment
+  labels:
+    app: test-gamedeployment
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: test-gamedeployment
+  template:
+    metadata:
+      labels:
+        app: test-gamedeployment
+    spec:
+      containers:
+        - name: pre-delete-hook
+          image: canary-hook:test
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9091
+  preDeleteUpdateStrategy:
+    hook:
+      templateName: test
+      args:
+        - name: service-name
+          value: test-gamedeployment-svc.default.svc.cluster.local
+  updateStrategy:
+    type: RollingUpdate
+    partition: 1
+    maxUnavailable: 2
+    maxSurge: 2
+    inPlaceUpdateStrategy:
+      gracePeriodSeconds: 30

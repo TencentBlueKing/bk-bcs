@@ -23,7 +23,8 @@ import (
 )
 
 var (
-	logFileInfoGaugeLabelNames = []string{"clusterID", "crdName", "crdNamespace", "hostIP", "containerID", "podName", "podNamespace", "workloadType", "workloadName", "workloadNamespace"}
+	logFileInfoGaugeLabelNames = []string{"clusterID", "crdName", "crdNamespace", "hostIP", "containerID",
+		"podName", "podNamespace", "workloadType", "workloadName", "workloadNamespace"}
 	// LogFileInfoGauge is container log collection task Gauge metric
 	LogFileInfoGauge *prometheus.GaugeVec
 )
@@ -47,7 +48,8 @@ func init() {
 	LogFileInfoGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "logbeat_sidecar_logfile_gen_info",
-			Help: "logbeat_sidecar_logfile_gen_info has labels describing the infomation of logfile and gauge value 0/1 corresponds to (logfile generated/logfile does not generated)",
+			Help: "logbeat_sidecar_logfile_gen_info has labels describing the information" +
+				" of logfile and gauge value 0/1 corresponds to (logfile generated/logfile does not generated)",
 		},
 		logFileInfoGaugeLabelNames,
 	)

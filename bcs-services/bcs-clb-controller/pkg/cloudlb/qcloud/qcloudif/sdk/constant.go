@@ -18,23 +18,36 @@ import (
 )
 
 const (
+	// LoadBalancerForwardApplication application type loadbalance
 	LoadBalancerForwardApplication = 1
-	LoadBalancerForwardClassic     = 0
+	// LoadBalancerForwardClassic classic type loadbalance
+	LoadBalancerForwardClassic = 0
 
-	LoadBalancerNetworkPublic   = "OPEN"
+	// LoadBalancerNetworkPublic public network
+	LoadBalancerNetworkPublic = "OPEN"
+	// LoadBalancerNetworkInternal internal network
 	LoadBalancerNetworkInternal = "INTERNAL"
 
-	ListenerProtocolHTTP  = "HTTP"
+	// ListenerProtocolHTTP http protocol listener
+	ListenerProtocolHTTP = "HTTP"
+	// ListenerProtocolHTTPS https protocol listener
 	ListenerProtocolHTTPS = "HTTPS"
-	ListenerProtocolTCP   = "TCP"
-	ListenerProtocolUDP   = "UDP"
+	// ListenerProtocolTCP tcp protocol listener
+	ListenerProtocolTCP = "TCP"
+	// ListenerProtocolUDP udp protocol listener
+	ListenerProtocolUDP = "UDP"
 
+	// ListenerSSLModeUnidirectional unidirectional ssl mode
 	ListenerSSLModeUnidirectional = "UNIDIRECTIONAL"
-	ListenerSSLModeMutual         = "MUTUAL"
+	// ListenerSSLModeMutual mutual ssl mode
+	ListenerSSLModeMutual = "MUTUAL"
 
-	LBAlgorithmLeastConn  = "LEAST_CONN"
+	// LBAlgorithmLeastConn least connection policy
+	LBAlgorithmLeastConn = "LEAST_CONN"
+	// LBAlgorithmRoundRobin wrr policy
 	LBAlgorithmRoundRobin = "WRR"
-	LBAlgorithmIPHash     = "IP_HASH"
+	// LBAlgorithmIPHash ip hash policy
+	LBAlgorithmIPHash = "IP_HASH"
 
 	// RequestLimitExceededCode code for request exceeded limit
 	RequestLimitExceededCode = "4400"

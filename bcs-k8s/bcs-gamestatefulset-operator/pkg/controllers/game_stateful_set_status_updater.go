@@ -14,15 +14,22 @@
 package gamestatefulset
 
 import (
-	"fmt"
+	"time"
 
-	stsplus "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-	tkexclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
-	stspluslisters "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
+	gstsclientset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/clientset/internalclientset"
+	gstslister "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/listers/tkex/v1alpha1"
+	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/util/canary"
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	commondiffutil "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/diff"
+	commonhookutil "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/hook"
 
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/util/retry"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	patchtypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
+	"k8s.io/utils/pointer"
 )
 
 // GameStatefulSetStatusUpdaterInterface is an interface used to update the GameStatefulSetStatus associated with a GameStatefulSet.
@@ -30,45 +37,257 @@ import (
 type GameStatefulSetStatusUpdaterInterface interface {
 	// UpdateGameStatefulSetStatus sets the set's Status to status. Implementations are required to retry on conflicts,
 	// but fail on other errors. If the returned error is nil set's Status has been successfully set to status.
-	UpdateGameStatefulSetStatus(set *stsplus.GameStatefulSet, status *stsplus.GameStatefulSetStatus) error
+	UpdateGameStatefulSetStatus(set *gstsv1alpha1.GameStatefulSet, canaryCtx *canaryContext) error
 }
 
 // NewRealGameStatefulSetStatusUpdater returns a GameStatefulSetStatusUpdaterInterface that updates the Status of a GameStatefulSet,
 // using the supplied client and setLister.
 func NewRealGameStatefulSetStatusUpdater(
-	tkexClient tkexclientset.Interface,
-	setLister stspluslisters.GameStatefulSetLister) GameStatefulSetStatusUpdaterInterface {
-	return &realGameStatefulSetStatusUpdater{tkexClient, setLister}
+	gstsClient gstsclientset.Interface, setLister gstslister.GameStatefulSetLister, recorder record.EventRecorder) GameStatefulSetStatusUpdaterInterface {
+	return &realGameStatefulSetStatusUpdater{gstsClient, setLister, recorder}
 }
 
 // realGameStatefulSetStatusUpdater updater implementation
 type realGameStatefulSetStatusUpdater struct {
-	tkexClient tkexclientset.Interface
-	setLister  stspluslisters.GameStatefulSetLister
+	gstsClient gstsclientset.Interface
+	setLister  gstslister.GameStatefulSetLister
+	recorder   record.EventRecorder
 }
 
 // UpdateGameStatefulSetStatus update gamesatefulset status
 func (ssu *realGameStatefulSetStatusUpdater) UpdateGameStatefulSetStatus(
-	set *stsplus.GameStatefulSet,
-	status *stsplus.GameStatefulSetStatus) error {
-	// Debug Info
-	klog.V(3).Infof("Update %s/%s GameStatefulSet Status: %+v", set.Namespace, set.Name, status)
-	// don't wait due to limited number of clients, but backoff after the default number of steps
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		set.Status = *status
-		_, updateErr := ssu.tkexClient.TkexV1alpha1().GameStatefulSets(set.Namespace).UpdateStatus(set)
-		if updateErr == nil {
-			return nil
-		}
-		if updated, err := ssu.setLister.GameStatefulSets(set.Namespace).Get(set.Name); err == nil {
-			// make a copy so we don't mutate the shared cache
-			set = updated.DeepCopy()
-		} else {
-			utilruntime.HandleError(fmt.Errorf("error getting updated GameStatefulSet %s/%s from lister: %v", set.Namespace, set.Name, err))
-		}
+	set *gstsv1alpha1.GameStatefulSet,
+	canaryCtx *canaryContext) error {
 
-		return updateErr
-	})
+	currentStep, currentStepIndex := canaryutil.GetCurrentCanaryStep(set)
+	canaryCtx.newStatus.Canary.Revision = set.Status.Canary.Revision
+	if set.Spec.UpdateStrategy.CanaryStrategy != nil {
+		canaryCtx.newStatus.CurrentStepHash = canaryutil.ComputeStepHash(set)
+	}
+	var stepCount int32
+	if set.Spec.UpdateStrategy.CanaryStrategy != nil {
+		stepCount = int32(len(set.Spec.UpdateStrategy.CanaryStrategy.Steps))
+	}
+
+	// if canary step hash changes, reset current step index
+	if canaryutil.CheckStepHashChange(set) {
+		canaryCtx.newStatus.CurrentStepIndex = canaryutil.ResetCurrentStepIndex(set)
+		if set.Status.Canary.Revision == canaryCtx.newStatus.UpdateRevision {
+			if canaryCtx.newStatus.CurrentStepIndex != nil {
+				klog.Info("Skipping all steps because already been the update revision")
+				canaryCtx.newStatus.CurrentStepIndex = pointer.Int32Ptr(stepCount)
+				ssu.recorder.Eventf(set, corev1.EventTypeNormal, "SetStepIndex", "Set Step Index to %d", int(stepCount))
+			}
+		}
+		return ssu.updateStatus(set, canaryCtx.newStatus, pointer.BoolPtr(false))
+	}
+
+	// if pod template change, reset current step index
+	if canaryutil.CheckRevisionChange(set, canaryCtx.newStatus.UpdateRevision) {
+		canaryCtx.newStatus.CurrentStepIndex = canaryutil.ResetCurrentStepIndex(set)
+		if set.Status.Canary.Revision == canaryCtx.newStatus.UpdateRevision {
+			if canaryCtx.newStatus.CurrentStepIndex != nil {
+				klog.Info("Skipping all steps because already been the update revision")
+				canaryCtx.newStatus.CurrentStepIndex = pointer.Int32Ptr(stepCount)
+				ssu.recorder.Eventf(set, corev1.EventTypeNormal, "SetStepIndex", "Set Step Index to %d", int(stepCount))
+			}
+		}
+		return ssu.updateStatus(set, canaryCtx.newStatus, pointer.BoolPtr(false))
+	}
+
+	if set.Status.Canary.Revision == "" {
+		if set.Spec.UpdateStrategy.CanaryStrategy == nil {
+			return ssu.updateStatus(set, canaryCtx.newStatus, pointer.BoolPtr(false))
+		}
+		canaryCtx.newStatus.Canary.Revision = canaryCtx.newStatus.UpdateRevision
+		if stepCount > 0 {
+			if stepCount != *currentStepIndex {
+				ssu.recorder.Eventf(set, corev1.EventTypeNormal, "SetStepIndex", "Set Step Index to %d", int(stepCount))
+			}
+			canaryCtx.newStatus.CurrentStepIndex = &stepCount
+		}
+		return ssu.updateStatus(set, canaryCtx.newStatus, pointer.BoolPtr(false))
+	}
+
+	if stepCount == 0 {
+		klog.Info("GameStatefulSet has no steps")
+		canaryCtx.newStatus.Canary.Revision = canaryCtx.newStatus.UpdateRevision
+		return ssu.updateStatus(set, canaryCtx.newStatus, pointer.BoolPtr(false))
+	}
+
+	if *currentStepIndex == stepCount {
+		klog.Info("GameStatefulSet has executed every step")
+		canaryCtx.newStatus.CurrentStepIndex = &stepCount
+		canaryCtx.newStatus.Canary.Revision = canaryCtx.newStatus.UpdateRevision
+		return ssu.updateStatus(set, canaryCtx.newStatus, pointer.BoolPtr(false))
+	}
+
+	if completeCurrentCanaryStep(set, canaryCtx) {
+		*currentStepIndex++
+		canaryCtx.newStatus.CurrentStepIndex = currentStepIndex
+		canaryCtx.newStatus.Canary.CurrentStepHookRun = ""
+		if int(*currentStepIndex) == len(set.Spec.UpdateStrategy.CanaryStrategy.Steps) {
+			canaryCtx.newStatus.Canary.Revision = canaryCtx.newStatus.UpdateRevision
+		}
+		klog.Infof("Incrementing the Current Step Index to %d", *currentStepIndex)
+		ssu.recorder.Eventf(set, corev1.EventTypeNormal, "SetStepIndex", "Set Step Index to %d", int(*currentStepIndex))
+		return ssu.updateStatus(set, canaryCtx.newStatus, pointer.BoolPtr(false))
+	}
+
+	paused := set.Spec.UpdateStrategy.Paused
+
+	pauseCondition := canaryutil.GetPauseCondition(set, hookv1alpha1.PauseReasonCanaryPauseStep)
+	if currentStep != nil && currentStep.Pause != nil {
+		currentPartition := canaryutil.GetCurrentPartition(set)
+		if pauseCondition == nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-currentPartition {
+			canaryCtx.AddPauseCondition(hookv1alpha1.PauseReasonCanaryPauseStep)
+		}
+	}
+
+	canaryCtx.newStatus.CurrentStepIndex = currentStepIndex
+	paused = ssu.calculateConditionStatus(set, canaryCtx)
+
+	return ssu.updateStatus(set, canaryCtx.newStatus, &paused)
+}
+
+// completeCurrentCanaryStep checks whether have already complete current canary step
+func completeCurrentCanaryStep(set *gstsv1alpha1.GameStatefulSet, canaryCtx *canaryContext) bool {
+	currentStep, _ := canaryutil.GetCurrentCanaryStep(set)
+	if currentStep == nil {
+		return false
+	}
+
+	pauseCondition := canaryutil.GetPauseCondition(set, hookv1alpha1.PauseReasonCanaryPauseStep)
+
+	if currentStep.Pause != nil && currentStep.Pause.Duration != nil {
+		now := metav1.Now()
+		if pauseCondition != nil {
+			expiredTime := pauseCondition.StartTime.Add(time.Duration(*currentStep.Pause.Duration) * time.Second)
+			if now.After(expiredTime) {
+				klog.Info("GameStatefulSet has waited the duration of the pause step")
+				return true
+			}
+		}
+	}
+
+	if currentStep.Pause != nil && currentStep.Pause.Duration == nil && pauseCondition != nil && !set.Spec.UpdateStrategy.Paused {
+		klog.Info("GameStatefulSet has been unpaused")
+		return true
+	}
+
+	if currentStep.Partition != nil && canaryCtx.newStatus.UpdatedReadyReplicas == *set.Spec.Replicas-*currentStep.Partition {
+		klog.Info("GameStatefulSet has reached the desired state for the correct partition")
+		return true
+	}
+
+	currentHrs := canaryCtx.CurrentHookRuns()
+	currentStepHr := commonhookutil.GetCurrentStepHookRun(currentHrs)
+	hrExistsAndCompleted := currentStepHr != nil && currentStepHr.Status.Phase.Completed()
+	if currentStep.Hook != nil && hrExistsAndCompleted && currentStepHr.Status.Phase == hookv1alpha1.HookPhaseSuccessful {
+		return true
+	}
+
+	pauseConditionByHook := canaryutil.GetPauseCondition(set, hookv1alpha1.PauseReasonStepBasedHook)
+	if currentStep.Hook != nil && pauseConditionByHook != nil && !set.Spec.UpdateStrategy.Paused {
+		klog.Info("GameStatefulSet has been unpaused")
+		return true
+	}
+
+	return false
+}
+
+// calculateConditionStatus calculate condition of GameStatefulSet, return true if exist pause condition
+func (ssu *realGameStatefulSetStatusUpdater) calculateConditionStatus(deploy *gstsv1alpha1.GameStatefulSet, canaryCtx *canaryContext) bool {
+	newPauseConditions := []hookv1alpha1.PauseCondition{}
+	pauseAlreadyExists := map[hookv1alpha1.PauseReason]bool{}
+	for _, cond := range deploy.Status.PauseConditions {
+		newPauseConditions = append(newPauseConditions, cond)
+		pauseAlreadyExists[cond.Reason] = true
+	}
+	now := metav1.Now()
+	for _, reason := range canaryCtx.pauseReasons {
+		if exists := pauseAlreadyExists[reason]; !exists {
+			cond := hookv1alpha1.PauseCondition{
+				Reason:    reason,
+				StartTime: now,
+			}
+			newPauseConditions = append(newPauseConditions, cond)
+		}
+	}
+
+	if len(newPauseConditions) == 0 {
+		return false
+	}
+	canaryCtx.newStatus.PauseConditions = newPauseConditions
+	return true
+}
+
+// updateStatus update status and updateStrategy pause of a GameStatefulSet to k8s
+func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.GameStatefulSet, newStatus *gstsv1alpha1.GameStatefulSetStatus, newPause *bool) error {
+	specCopy := set.Spec.DeepCopy()
+	paused := specCopy.UpdateStrategy.Paused
+	if newPause != nil {
+		paused = *newPause
+	}
+
+	specPatch, specModified, err := commondiffutil.CreateTwoWayMergePatch(
+		&gstsv1alpha1.GameStatefulSet{
+			Spec: gstsv1alpha1.GameStatefulSetSpec{
+				UpdateStrategy: gstsv1alpha1.GameStatefulSetUpdateStrategy{
+					Paused: set.Spec.UpdateStrategy.Paused,
+				},
+				PreDeleteUpdateStrategy: gstsv1alpha1.GameStatefulSetPreDeleteUpdateStrategy{
+					RetryUnexpectedHooks: set.Spec.PreDeleteUpdateStrategy.RetryUnexpectedHooks,
+				},
+			},
+		},
+		&gstsv1alpha1.GameStatefulSet{
+			Spec: gstsv1alpha1.GameStatefulSetSpec{
+				UpdateStrategy: gstsv1alpha1.GameStatefulSetUpdateStrategy{
+					Paused: paused,
+				},
+				PreDeleteUpdateStrategy: gstsv1alpha1.GameStatefulSetPreDeleteUpdateStrategy{
+					RetryUnexpectedHooks: false,
+				},
+			},
+		}, gstsv1alpha1.GameStatefulSet{})
+	if err != nil {
+		klog.Errorf("Error constructing app status patch: %v", err)
+		return err
+	}
+	if specModified {
+		klog.Infof("GameStatefulSet Spec Patch: %s", specPatch)
+		_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(set.Name, patchtypes.MergePatchType, specPatch)
+		if err != nil {
+			klog.Warningf("Error updating GameStatefulSet Spec: %v", err)
+			return err
+		}
+		klog.Info("Patch spec successfully")
+	}
+
+	statusPatch, statusModified, err := commondiffutil.CreateTwoWayMergePatch(
+		&gstsv1alpha1.GameStatefulSet{
+			Status: set.Status,
+		},
+		&gstsv1alpha1.GameStatefulSet{
+			Status: *newStatus,
+		}, gstsv1alpha1.GameStatefulSet{})
+	if err != nil {
+		klog.Errorf("Error constructing app status patch: %v", err)
+		return err
+	}
+	if !statusModified {
+		klog.Info("No status changes. Skipping patch")
+		return nil
+	}
+	klog.Infof("Rollout Patch: %s", statusPatch)
+	_, err = ssu.gstsClient.TkexV1alpha1().GameStatefulSets(set.Namespace).Patch(set.Name, patchtypes.MergePatchType, statusPatch, "status")
+	if err != nil {
+		klog.Warningf("Error updating application: %v", err)
+		return err
+	}
+	klog.Info("Patch status successfully")
+	return nil
 }
 
 var _ GameStatefulSetStatusUpdaterInterface = &realGameStatefulSetStatusUpdater{}

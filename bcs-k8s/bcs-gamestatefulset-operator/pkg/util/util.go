@@ -20,14 +20,18 @@
 package util
 
 import (
-	gamestatefulset "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
-
+	gstsv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator/pkg/apis/tkex/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+)
+
+var (
+	// controllerKind contains the schema.GroupVersionKind for this controller type.
+	ControllerKind = gstsv1alpha1.SchemeGroupVersion.WithKind("GameStatefulSet")
 )
 
 // UpdatePodField Fields that can be modified
 // - spec.containers[*].imag
-func UpdatePodField(updateSet *gamestatefulset.GameStatefulSet, updateRevision string, pod *v1.Pod) *v1.Pod {
+func UpdatePodField(updateSet *gstsv1alpha1.GameStatefulSet, updateRevision string, pod *v1.Pod) *v1.Pod {
 
 	// make a deep copy, do not mutate the shared cache
 	newPod := pod.DeepCopy()
@@ -45,7 +49,7 @@ func UpdatePodField(updateSet *gamestatefulset.GameStatefulSet, updateRevision s
 	if newPod.Labels == nil {
 		newPod.Labels = make(map[string]string)
 	}
-	newPod.Labels[gamestatefulset.GameStatefulSetRevisionLabel] = updateRevision
+	newPod.Labels[gstsv1alpha1.GameStatefulSetRevisionLabel] = updateRevision
 
 	return newPod
 }

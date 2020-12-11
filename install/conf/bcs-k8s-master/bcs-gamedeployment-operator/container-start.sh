@@ -3,7 +3,7 @@
 cd /data/bcs/bcs-gamedeployment-operator
 chmod +x bcs-gamedeployment-operator
 #start operator
-./bcs-gamedeployment-operator --min-resync-period=60s --v=5
+./bcs-gamedeployment-operator --v=5
 
 #Usage of ./bcs-gamestatefulset-operator:
 #  -add_dir_header

@@ -33,7 +33,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-// Build a new taskgroup ID from an old grouptask ID: the ID format is index.application.namespace.cluster.timestamp
+// ReBuildTaskGroupID Build a new taskgroup ID from an old grouptask ID: the ID format is index.application.namespace.cluster.timestamp
 // The new ID is different from old ID in timestamp.
 func ReBuildTaskGroupID(taskGroupID string) (string, error) {
 	splitID := strings.Split(taskGroupID, ".")
@@ -42,16 +42,16 @@ func ReBuildTaskGroupID(taskGroupID string) (string, error) {
 	}
 
 	appInstances := splitID[0]
-	appId := splitID[1]
+	appID := splitID[1]
 	appRunAs := splitID[2]
-	appClusterId := splitID[3]
+	appClusterID := splitID[3]
 	idTime := time.Now().UnixNano()
-	newTaskGroupID := fmt.Sprintf("%s.%s.%s.%s.%d", appInstances, appId, appRunAs, appClusterId, idTime)
+	newTaskGroupID := fmt.Sprintf("%s.%s.%s.%s.%d", appInstances, appID, appRunAs, appClusterID, idTime)
 
 	return newTaskGroupID, nil
 }
 
-// Create a taskgroup for an application, there are two methods to create a taskgroup:
+// CreateTaskGroup Create a taskgroup for an application, there are two methods to create a taskgroup:
 // 1: you can create a taskgroup with the input of version(application definition), ID(taskgroup ID), reason and store
 // 2: you can create a taskgroup with the input of version(application definition), appInstances, appClusterID, reason and store.
 // taskgroup ID will be appInstances.$appname(version).$namespace(version).appClusterID.$timestamp
@@ -71,11 +71,11 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 		} else {
 			splitID := strings.Split(ID, ".")
 			appInstances := splitID[0]
-			appId := splitID[1]
+			appID := splitID[1]
 			appRunAs := splitID[2]
-			appClusterId := splitID[3]
+			appClusterID := splitID[3]
 			idTimeStr := splitID[4]
-			taskID = fmt.Sprintf("%s.%d.%s.%s.%s.%s", idTimeStr, index, appInstances, appId, appRunAs, appClusterId)
+			taskID = fmt.Sprintf("%s.%d.%s.%s.%s.%s", idTimeStr, index, appInstances, appID, appRunAs, appClusterID)
 			taskInstance = appInstances
 		}
 		return taskID, taskInstance
@@ -128,9 +128,9 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			// take new pointer to store uris
 			uris := make([]*commtypes.Uri, 0)
 			for _, uri := range process.Uris {
-				newUri := new(commtypes.Uri)
-				*newUri = *uri
-				uris = append(uris, newUri)
+				newURI := new(commtypes.Uri)
+				*newURI = *uri
+				uris = append(uris, newURI)
 			}
 			// process info
 			procInfo := &types.ProcDef{
@@ -178,11 +178,11 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			} else {
 				splitID := strings.Split(ID, ".")
 				appInstances := splitID[0]
-				appId := splitID[1]
+				appID := splitID[1]
 				appRunAs := splitID[2]
-				appClusterId := splitID[3]
+				appClusterID := splitID[3]
 				idTimeStr := splitID[4]
-				task.ID = fmt.Sprintf("%s.%d.%s.%s.%s.%s", idTimeStr, index, appInstances, appId, appRunAs, appClusterId)
+				task.ID = fmt.Sprintf("%s.%d.%s.%s.%s.%s", idTimeStr, index, appInstances, appID, appRunAs, appClusterID)
 				taskInstance = appInstances
 			}
 			task.Kind = version.Kind
@@ -230,7 +230,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			if err := createTaskSecrets(&task, container.Secrets, store); err != nil {
 				return nil, err
 			}
-			requestIpLabel := "io.tencent.bcs.netsvc.requestip." + taskInstance
+			requestIPLabel := "io.tencent.bcs.netsvc.requestip." + taskInstance
 			if version.Labels != nil {
 				task.Labels = make(map[string]string)
 				if task.Labels == nil {
@@ -238,7 +238,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 					return nil, fmt.Errorf("task.Labels == nil")
 				}
 				for k, v := range version.Labels {
-					if k == requestIpLabel {
+					if k == requestIPLabel {
 						k = "io.tencent.bcs.netsvc.requestip"
 						splitV := strings.Split(v, "|")
 						if len(splitV) >= 1 {
@@ -255,7 +255,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 					task.Labels = make(map[string]string)
 				}
 				for k, v := range version.ObjectMeta.Annotations {
-					if k == requestIpLabel {
+					if k == requestIPLabel {
 						k = "io.tencent.bcs.netsvc.requestip"
 						splitV := strings.Split(v, "|")
 						if len(splitV) >= 1 {
@@ -442,8 +442,8 @@ func createTaskHealthChecks(task *types.Task, healthChecks []*commtypes.HealthCh
 	task.Healthy = true
 	task.LocalMaxConsecutiveFailures = 0
 	excutorCheckNum := 0
-	remoteHttpCheckNum := 0
-	remoteTcpCheckNum := 0
+	remoteHTTPCheckNum := 0
+	remoteTCPCheckNum := 0
 	for _, healthCheck := range healthChecks {
 		switch healthCheck.Type {
 		case bcstype.BcsHealthCheckType_COMMAND:
@@ -480,8 +480,8 @@ func createTaskHealthChecks(task *types.Task, healthChecks []*commtypes.HealthCh
 				task.LocalMaxConsecutiveFailures = healthCheck.ConsecutiveFailures
 			}
 		case bcstype.BcsHealthCheckType_REMOTEHTTP:
-			remoteHttpCheckNum++
-			if remoteHttpCheckNum <= 1 {
+			remoteHTTPCheckNum++
+			if remoteHTTPCheckNum <= 1 {
 				task.HealthChecks = append(task.HealthChecks, healthCheck)
 				healthStatus := new(bcstype.BcsHealthCheckStatus)
 				healthStatus.Type = healthCheck.Type
@@ -490,8 +490,8 @@ func createTaskHealthChecks(task *types.Task, healthChecks []*commtypes.HealthCh
 				task.HealthCheckStatus = append(task.HealthCheckStatus, healthStatus)
 			}
 		case bcstype.BcsHealthCheckType_REMOTETCP:
-			remoteTcpCheckNum++
-			if remoteTcpCheckNum <= 1 {
+			remoteTCPCheckNum++
+			if remoteTCPCheckNum <= 1 {
 				task.HealthChecks = append(task.HealthChecks, healthCheck)
 				healthStatus := new(bcstype.BcsHealthCheckStatus)
 				healthStatus.Type = healthCheck.Type
@@ -1241,7 +1241,7 @@ func getTaskHealthCheckPort(task *types.Task, name string) (int32, error) {
 	}
 }
 
-// Create taskgroup information with offered resource, the information include: ports, slave attributions, health-check information etc.
+// CreateTaskGroupInfo Create taskgroup information with offered resource, the information include: ports, slave attributions, health-check information etc.
 func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version, resources []*mesos.Resource, taskgroup *types.TaskGroup) *mesos.TaskGroupInfo {
 	blog.Info("build taskgroup(%s) with offer %s||%s", taskgroup.ID, offer.GetHostname(), *offer.GetId().Value)
 
@@ -1361,6 +1361,7 @@ func getOfferCpusetResources(o *mesos.Offer) *mesos.Resource {
 	return nil
 }
 
+// GetTaskGroupID get taskgroup id from mesos information
 func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {
 	defID := proto.String("default")
 	if len(taskGroupInfo.Tasks) <= 0 {
@@ -1376,7 +1377,7 @@ func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {
 
 	//ID := strings.Join(splitID[2:], ".")
 
-	// appInstances, appID, appRunAs, appClusterId, idTime
+	// appInstances, appID, appRunAs, appClusterID, idTime
 	ID := fmt.Sprintf("%s.%s.%s.%s.%s", splitID[2], splitID[3], splitID[4], splitID[5], splitID[0])
 	return &ID
 }
@@ -1407,7 +1408,7 @@ func CanTaskGroupShutdown(taskGroup *types.TaskGroup) bool {
 	return true
 }
 
-// Whether an taskgroup can be rescheduled currently
+// CanTaskGroupReschedule Whether an taskgroup can be rescheduled currently
 func CanTaskGroupReschedule(taskGroup *types.TaskGroup) bool {
 
 	for _, task := range taskGroup.Taskgroup {
@@ -1421,7 +1422,7 @@ func CanTaskGroupReschedule(taskGroup *types.TaskGroup) bool {
 	return true
 }
 
-// Check whether the version definition is correct
+// CheckVersion Check whether the version definition is correct
 func CheckVersion(version *types.Version, store store.Store) error {
 
 	for _, container := range version.Container {
@@ -1487,18 +1488,18 @@ func CheckVersion(version *types.Version, store store.Store) error {
 	}
 
 	//check requestIP labels "io.tencent.bcs.netsvc.requestip.*"
-	requestIpLabelNum := 0
+	requestIPLabelNum := 0
 	for k := range version.Labels {
 		splitK := strings.Split(k, ".")
 		if len(splitK) == 6 && splitK[3] == "netsvc" && splitK[4] == "requestip" {
-			//if strconv.Itoa(requestIpLabelNum) != splitK[5] {
-			//	return fmt.Errorf("label netsvc.requestip.%d not exist or not in correct position", requestIpLabelNum)
+			//if strconv.Itoa(requestIPLabelNum) != splitK[5] {
+			//	return fmt.Errorf("label netsvc.requestip.%d not exist or not in correct position", requestIPLabelNum)
 			//}
-			requestIpLabelNum++
+			requestIPLabelNum++
 		}
 	}
-	if requestIpLabelNum > 0 && requestIpLabelNum < int(version.Instances) {
-		return fmt.Errorf("label netsvc.requestip count(%d) < version.Instances(%d)", requestIpLabelNum, version.Instances)
+	if requestIPLabelNum > 0 && requestIPLabelNum < int(version.Instances) {
+		return fmt.Errorf("label netsvc.requestip count(%d) < version.Instances(%d)", requestIPLabelNum, version.Instances)
 	}
 
 	return nil
@@ -1534,13 +1535,13 @@ func checkImageSecret(store store.Store, ns, secret string) error {
 
 // GetVersionRequestIpCount Get reserve IP number in version definition
 func GetVersionRequestIpCount(version *types.Version) int {
-	requestIpLabelNum := 0
+	requestIPLabelNum := 0
 	for k := range version.Labels {
 		splitK := strings.Split(k, ".")
 		if len(splitK) == 6 && splitK[3] == "netsvc" && splitK[4] == "requestip" {
-			requestIpLabelNum++
+			requestIPLabelNum++
 		}
 	}
 
-	return requestIpLabelNum
+	return requestIPLabelNum
 }

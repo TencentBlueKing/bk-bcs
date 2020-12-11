@@ -52,8 +52,10 @@ type Status struct {
 }
 
 const (
+	// StatusCodeSuccess code for success status
 	StatusCodeSuccess = 0
-	StatusCodeError   = 1
+	// StatusCodeError code for error status
+	StatusCodeError = 1
 )
 
 // StatusResponse status response

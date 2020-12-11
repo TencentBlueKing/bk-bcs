@@ -236,9 +236,10 @@ func (clbRule *ClbRule) ToString() string {
 
 // ClbStatefulSetHttPRule http rule for stateful set
 type ClbStatefulSetHttpRule struct {
-	StartPort  int `json:"startPort"`
-	StartIndex int `json:"startIndex,omitempty"`
-	EndIndex   int `json:"endIndex,omitempty"`
+	StartPort     int `json:"startPort"`
+	StartIndex    int `json:"startIndex,omitempty"`
+	EndIndex      int `json:"endIndex,omitempty"`
+	SegmentLength int `json:"segmentLength,omitempty"`
 	ClbHttpRule
 }
 

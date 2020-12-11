@@ -18,13 +18,17 @@ import (
 	"sort"
 	"time"
 
-	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/tkex/v1alpha1"
 	gdcore "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/core"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
+	hooklister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/expectations"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/requeueduration"
+
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,41 +40,50 @@ import (
 
 // Interface for managing pods updating.
 type Interface interface {
-	Manage(cs *tkexv1alpha1.GameDeployment,
+	Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
 		updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
 		pods []*v1.Pod,
+		newStatus *gdv1alpha1.GameDeploymentStatus,
 	) (time.Duration, error)
 }
 
-func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp expectations.ScaleExpectations, updateExp expectations.UpdateExpectations) Interface {
+func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp expectations.ScaleExpectations,
+	updateExp expectations.UpdateExpectations, hookRunLister hooklister.HookRunLister,
+	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface) Interface {
 	return &realControl{
-		inPlaceControl:  inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
-		hotPatchControl: hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
-		kubeClient:      kubeClient,
-		recorder:        recorder,
-		scaleExp:        scaleExp,
-		updateExp:       updateExp,
+		inPlaceControl:     inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
+		hotPatchControl:    hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
+		kubeClient:         kubeClient,
+		recorder:           recorder,
+		scaleExp:           scaleExp,
+		updateExp:          updateExp,
+		hookRunLister:      hookRunLister,
+		hookTemplateLister: hookTemplateLister,
+		preDeleteControl:   preDeleteControl,
 	}
 }
 
 type realControl struct {
-	kubeClient      clientset.Interface
-	inPlaceControl  inplaceupdate.Interface
-	hotPatchControl hotpatchupdate.Interface
-	recorder        record.EventRecorder
-	scaleExp        expectations.ScaleExpectations
-	updateExp       expectations.UpdateExpectations
+	kubeClient         clientset.Interface
+	inPlaceControl     inplaceupdate.Interface
+	hotPatchControl    hotpatchupdate.Interface
+	recorder           record.EventRecorder
+	scaleExp           expectations.ScaleExpectations
+	updateExp          expectations.UpdateExpectations
+	hookRunLister      hooklister.HookRunLister
+	hookTemplateLister hooklister.HookTemplateLister
+	preDeleteControl   predelete.PreDeleteInterface
 }
 
-func (c *realControl) Manage(deploy *tkexv1alpha1.GameDeployment,
+func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
 	updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
-	pods []*v1.Pod,
+	pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus,
 ) (time.Duration, error) {
 
 	requeueDuration := requeueduration.Duration{}
-	coreControl := gdcore.New(deploy)
+	coreControl := gdcore.New(updateDeploy)
 
-	if deploy.Spec.UpdateStrategy.Paused {
+	if updateDeploy.Spec.UpdateStrategy.Paused {
 		return requeueDuration.Get(), nil
 	}
 
@@ -83,7 +96,7 @@ func (c *realControl) Manage(deploy *tkexv1alpha1.GameDeployment,
 
 		if res := c.inPlaceControl.Refresh(pods[i], coreControl.GetUpdateOptions()); res.RefreshErr != nil {
 			klog.Errorf("GameDeployment %s/%s failed to update pod %s condition for inplace: %v",
-				deploy.Namespace, deploy.Name, pods[i].Name, res.RefreshErr)
+				updateDeploy.Namespace, updateDeploy.Name, pods[i].Name, res.RefreshErr)
 			return requeueDuration.Get(), res.RefreshErr
 		} else if res.DelayDuration > 0 {
 			requeueDuration.Update(res.DelayDuration)
@@ -95,10 +108,11 @@ func (c *realControl) Manage(deploy *tkexv1alpha1.GameDeployment,
 	}
 
 	// 2. sort all pods waiting to update
-	waitUpdateIndexes = sortUpdateIndexes(coreControl, deploy.Spec.UpdateStrategy, pods, waitUpdateIndexes)
+	waitUpdateIndexes = sortUpdateIndexes(coreControl, pods, waitUpdateIndexes)
 
 	// 3. calculate max count of pods can update
-	needToUpdateCount := calculateUpdateCount(deploy, coreControl, deploy.Spec.UpdateStrategy, deploy.Spec.MinReadySeconds, int(*deploy.Spec.Replicas), waitUpdateIndexes, pods)
+	needToUpdateCount := calculateUpdateCount(updateDeploy, coreControl, updateDeploy.Spec.UpdateStrategy, updateDeploy.Spec.MinReadySeconds,
+		int(*updateDeploy.Spec.Replicas), waitUpdateIndexes, pods)
 	if needToUpdateCount < len(waitUpdateIndexes) {
 		waitUpdateIndexes = waitUpdateIndexes[:needToUpdateCount]
 	}
@@ -106,7 +120,7 @@ func (c *realControl) Manage(deploy *tkexv1alpha1.GameDeployment,
 	// 4. update pods
 	for _, idx := range waitUpdateIndexes {
 		pod := pods[idx]
-		if duration, err := c.updatePod(deploy, coreControl, updateRevision, revisions, pod); err != nil {
+		if duration, err := c.updatePod(updateDeploy, coreControl, updateRevision, revisions, pod, newStatus); err != nil {
 			return requeueDuration.Get(), err
 		} else if duration > 0 {
 			requeueDuration.Update(duration)
@@ -116,20 +130,16 @@ func (c *realControl) Manage(deploy *tkexv1alpha1.GameDeployment,
 	return requeueDuration.Get(), nil
 }
 
-func sortUpdateIndexes(coreControl gdcore.Control, strategy tkexv1alpha1.GameDeploymentUpdateStrategy, pods []*v1.Pod, waitUpdateIndexes []int) []int {
+func sortUpdateIndexes(coreControl gdcore.Control, pods []*v1.Pod, waitUpdateIndexes []int) []int {
 	// Sort Pods with default sequence
-	sort.Slice(waitUpdateIndexes, coreControl.GetPodsSortFunc(pods, waitUpdateIndexes))
+	sort.SliceStable(waitUpdateIndexes, coreControl.GetPodsSortFunc(pods, waitUpdateIndexes))
 	return waitUpdateIndexes
 }
 
-func calculateUpdateCount(deploy *tkexv1alpha1.GameDeployment, coreControl gdcore.Control, strategy tkexv1alpha1.GameDeploymentUpdateStrategy,
+func calculateUpdateCount(deploy *gdv1alpha1.GameDeployment, coreControl gdcore.Control, strategy gdv1alpha1.GameDeploymentUpdateStrategy,
 	minReadySeconds int32, totalReplicas int, waitUpdateIndexes []int, pods []*v1.Pod) int {
-	//partition := 0
-	//if strategy.Partition != nil {
-	//	partition = int(*strategy.Partition)
-	//}
-	currentPartition := util.GetCurrentPartition(deploy)
 
+	currentPartition := canary.GetCurrentPartition(deploy)
 	if len(waitUpdateIndexes)-int(currentPartition) <= 0 {
 		return 0
 	}
@@ -141,7 +151,7 @@ func calculateUpdateCount(deploy *tkexv1alpha1.GameDeployment, coreControl gdcor
 		roundUp = maxSurge == 0
 	}
 	maxUnavailable, _ := intstrutil.GetValueFromIntOrPercent(
-		intstrutil.ValueOrDefault(strategy.MaxUnavailable, intstrutil.FromString(tkexv1alpha1.DefaultGameDeploymentMaxUnavailable)), totalReplicas, roundUp)
+		intstrutil.ValueOrDefault(strategy.MaxUnavailable, intstrutil.FromString(gdv1alpha1.DefaultGameDeploymentMaxUnavailable)), totalReplicas, roundUp)
 	usedSurge := len(pods) - totalReplicas
 
 	var notReadyCount, updateCount int
@@ -164,9 +174,9 @@ func calculateUpdateCount(deploy *tkexv1alpha1.GameDeployment, coreControl gdcor
 	return updateCount
 }
 
-func (c *realControl) updatePod(deploy *tkexv1alpha1.GameDeployment, coreControl gdcore.Control,
+func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl gdcore.Control,
 	updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
-	pod *v1.Pod,
+	pod *v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus,
 ) (time.Duration, error) {
 	var oldRevision *apps.ControllerRevision
 	for _, r := range revisions {
@@ -177,7 +187,20 @@ func (c *realControl) updatePod(deploy *tkexv1alpha1.GameDeployment, coreControl
 	}
 
 	switch deploy.Spec.UpdateStrategy.Type {
-	case tkexv1alpha1.InPlaceGameDeploymentUpdateStrategyType:
+	case gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType:
+		canDelete, err := c.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
+		if err != nil {
+			return 0, err
+		}
+		if canDelete {
+			if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
+				klog.V(2).Infof("PreDelete Hook run successfully, inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+			}
+		} else {
+			klog.V(2).Infof("PreDelete Hook not completed, can't inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+			return 0, nil
+		}
+
 		res := c.inPlaceControl.Update(pod, oldRevision, updateRevision, coreControl.GetUpdateOptions())
 
 		if res.InPlaceUpdate {
@@ -192,13 +215,25 @@ func (c *realControl) updatePod(deploy *tkexv1alpha1.GameDeployment, coreControl
 
 		}
 
-		err := fmt.Errorf("find Pod %s update strategy is HotPatch, but the diff not only contains replace operation of spec.containers[x].image", pod)
+		err = fmt.Errorf("find Pod %s update strategy is HotPatch, but the diff not only contains replace operation of spec.containers[x].image", pod)
 		c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace", "find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
 		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: v%", deploy.Namespace, deploy.Name, pod.Name, err)
 		return res.DelayDuration, err
-	case tkexv1alpha1.RollingGameDeploymentUpdateStrategyType:
-		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s", deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
+	case gdv1alpha1.RollingGameDeploymentUpdateStrategyType:
+		canDelete, err := c.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
+		if err != nil {
+			return 0, err
+		}
+		if canDelete {
+			if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
+				klog.V(2).Infof("PreDelete Hook run successfully, rolling update the pod %s/%s now.", pod.Name, pod.Namespace)
+			}
+		} else {
+			klog.V(2).Infof("PreDelete Hook not completed, can't rolling update the pod %s/%s now.", pod.Name, pod.Namespace)
+			return 0, nil
+		}
 
+		klog.V(2).Infof("GameDeployment %s/%s deleting Pod %s for update %s", deploy.Namespace, deploy.Name, pod.Name, updateRevision.Name)
 		c.scaleExp.ExpectScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
 		if err := c.kubeClient.CoreV1().Pods(deploy.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
 			c.scaleExp.ObserveScale(util.GetControllerKey(deploy), expectations.Delete, pod.Name)
@@ -211,7 +246,7 @@ func (c *realControl) updatePod(deploy *tkexv1alpha1.GameDeployment, coreControl
 			"successfully delete pod %s for update", pod.Name)
 		return 0, nil
 
-	case tkexv1alpha1.HotPatchGameDeploymentUpdateStrategyType:
+	case gdv1alpha1.HotPatchGameDeploymentUpdateStrategyType:
 		err := c.hotPatchControl.Update(pod, oldRevision, updateRevision)
 		if err != nil {
 			c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodHotPatch", "failed to update pod %s hot-patch: %v", pod.Name, err)

@@ -161,6 +161,7 @@ func (s *Scheduler) SendEnv(taskGroup *types.TaskGroup, name, value string /*rep
 	return s.SendBcsMessage(taskGroup, bcsMsg)
 }
 
+//ProcessCommandMessage handle response bcs message
 func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 
 	if bcsMsg.ResponseCommandTask == nil {
@@ -170,24 +171,24 @@ func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 	s.store.LockCommand(bcsMsg.ResponseCommandTask.ID)
 	defer s.store.UnLockCommand(bcsMsg.ResponseCommandTask.ID)
 
-	cmdId := bcsMsg.ResponseCommandTask.ID
-	taskId := bcsMsg.ResponseCommandTask.TaskId
-	blog.Info("procss command message: command(%s), task(%s)", cmdId, taskId)
+	cmdID := bcsMsg.ResponseCommandTask.ID
+	taskID := bcsMsg.ResponseCommandTask.TaskId
+	blog.Info("procss command message: command(%s), task(%s)", cmdID, taskID)
 
-	command, err := s.store.FetchCommand(cmdId)
+	command, err := s.store.FetchCommand(cmdID)
 	if err != nil {
-		blog.Warn("get command(%s) err: %s", cmdId)
+		blog.Warn("get command(%s) err: %s", cmdID)
 		return
 	}
 
 	exist := false
 	for _, taskGroup := range command.Status.Taskgroups {
 		for _, task := range taskGroup.Tasks {
-			if taskId == task.TaskId {
+			if taskID == task.TaskId {
 				task.Status = bcsMsg.ResponseCommandTask.Status
 				task.Message = bcsMsg.ResponseCommandTask.Message
 				task.CommInspect = bcsMsg.ResponseCommandTask.CommInspect
-				blog.Info("update command(%s) task(%s:%s:%s)", cmdId, taskId, task.Status, task.Message)
+				blog.Info("update command(%s) task(%s:%s:%s)", cmdID, taskID, task.Status, task.Message)
 				exist = true
 				break
 			}
@@ -201,13 +202,13 @@ func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 	if exist {
 		err := s.store.SaveCommand(command)
 		if err != nil {
-			blog.Error("process command message: command(%s), task(%s) update failed %s", cmdId, taskId, err.Error())
+			blog.Error("process command message: command(%s), task(%s) update failed %s", cmdID, taskID, err.Error())
 		} else {
-			blog.Infof("process command message: command(%s), task(%s) updated", cmdId, taskId)
+			blog.Infof("process command message: command(%s), task(%s) updated", cmdID, taskID)
 		}
 
 	} else {
-		blog.Error("process command message: command(%s), task(%s) not exist", cmdId, taskId)
+		blog.Error("process command message: command(%s), task(%s) not exist", cmdID, taskID)
 	}
 
 	return

@@ -28,11 +28,13 @@ type SidecarOption struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	DockerSock   string `json:"docker_sock" value:"unix:///var/run/docker.sock" usage:"docker socket file"`
-	LogbeatDir   string `json:"logbeat_dir" value:"" usage:"logbeat config directory"`
-	TemplateFile string `json:"template_file" value:"./unifytlogc-template.conf" usage:"logbeat tempalte config file"`
-	PrefixFile   string `json:"prefix_file" value:"" usage:"logbeat config file prefix name"`
-	Kubeconfig   string `json:"kubeconfig" value:"" usage:"kubeconfig"`
+	DockerSock         string `json:"docker_sock" value:"unix:///var/run/docker.sock" usage:"docker socket file"`
+	LogbeatDir         string `json:"logbeat_dir" value:"" usage:"logbeat config directory"`
+	TemplateFile       string `json:"template_file" value:"./unifytlogc-template.conf" usage:"logbeat tempalte config file"`
+	PrefixFile         string `json:"prefix_file" value:"" usage:"logbeat config file prefix name"`
+	Kubeconfig         string `json:"kubeconfig" value:"" usage:"kubeconfig"`
+	EvalSymlink        bool   `json:"eval_symlink" value:"false" usage:"whether to enable remove symbol link in the log path"`
+	LogbeatPIDFilePath string `json:"logbeat_pid_file_path" value:"" usage:"logbeat PID file path, which is used to reload logbeat"`
 }
 
 //NewSidecarOption create SidecarOption object

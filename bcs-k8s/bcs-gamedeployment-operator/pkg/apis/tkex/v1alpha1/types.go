@@ -14,6 +14,7 @@
 package v1alpha1
 
 import (
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,6 +54,10 @@ type GameDeploymentSpec struct {
 	// update Pods in the GameDeployment when a revision is made to Template.
 	UpdateStrategy GameDeploymentUpdateStrategy `json:"updateStrategy,omitempty"`
 
+	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to
+	// before Delete Or Update Pods
+	PreDeleteUpdateStrategy GameDeploymentPreDeleteUpdateStrategy `json:"preDeleteUpdateStrategy,omitempty"`
+
 	// RevisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the GameDeployment's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
@@ -63,6 +68,11 @@ type GameDeploymentSpec struct {
 	// without any of its container crashing, for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
+}
+
+type GameDeploymentPreDeleteUpdateStrategy struct {
+	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
 
 type GameDeploymentScaleStrategy struct {
@@ -103,8 +113,9 @@ type CanaryStrategy struct {
 }
 
 type CanaryStep struct {
-	Partition *int32       `json:"partition,omitempty"`
-	Pause     *CanaryPause `json:"pause,omitempty"`
+	Partition *int32                 `json:"partition,omitempty"`
+	Pause     *CanaryPause           `json:"pause,omitempty"`
+	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
 
 type CanaryPause struct {
@@ -166,17 +177,21 @@ type GameDeploymentStatus struct {
 	// Conditions represents the latest available observations of a GameDeployment's current state.
 	Conditions []GameDeploymentCondition `json:"conditions,omitempty"`
 
+	PauseConditions []hookv1alpha1.PauseCondition `json:"pauseConditions,omitempty"`
+
 	// LabelSelector is label selectors for query over pods that should match the replica count used by HPA.
 	LabelSelector string `json:"labelSelector,omitempty"`
 
-	CurrentStepIndex *int32       `json:"currentStepIndex,omitempty"`
-	CurrentStepHash  string       `json:"currentStepHash,omitempty"`
-	Canary           CanaryStatus `json:"canary,omitempty"`
+	CurrentStepIndex        *int32                                `json:"currentStepIndex,omitempty"`
+	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
+	Canary                  CanaryStatus                          `json:"canary,omitempty"`
+	PreDeleteHookConditions []hookv1alpha1.PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
 }
 
 type CanaryStatus struct {
-	Revision       string       `json:"revision,omitempty"`
-	PauseStartTime *metav1.Time `json:"pauseStartTime,omitempty"`
+	Revision           string       `json:"revision,omitempty"`
+	PauseStartTime     *metav1.Time `json:"pauseStartTime,omitempty"`
+	CurrentStepHookRun string       `json:"currentStepHookRun,omitempty"`
 }
 
 // GameDeploymentConditionType is type for GameDeployment conditions.

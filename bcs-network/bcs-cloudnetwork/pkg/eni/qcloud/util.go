@@ -26,7 +26,7 @@ func getMaxPrivateIPNumPerENI(cores, mem int) int {
 	if cores == 2 {
 		return 10
 	}
-	if cores == 4 && mem < 16 {
+	if cores == 4 && mem <= 16 {
 		return 10
 	}
 	if cores == 4 && mem > 16 {
@@ -52,7 +52,7 @@ func getMaxENINumPerCVM(cores, mem int) int {
 	if cores == 2 {
 		return 2
 	}
-	if cores == 4 && mem < 16 {
+	if cores == 4 && mem <= 16 {
 		return 4
 	}
 	if cores == 4 && mem > 16 {

@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 
-// The goroutine function for update application transaction
+// RunUpdateApplication The goroutine function for update application transaction
 // You can create a transaction for update application, then call this function to do it
 // This function will come to end as soon as the transaction is done, fail or timeout(as defined by transaction.LifePeriod)
 func (s *Scheduler) RunUpdateApplication(transaction *Transaction) {
