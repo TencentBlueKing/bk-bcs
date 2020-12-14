@@ -42,7 +42,7 @@ func getNowTimeStamp() string {
 
 func getExistedListeners() []networkextensionv1.Listener {
 	return []networkextensionv1.Listener{
-		networkextensionv1.Listener{
+		{
 			ObjectMeta: k8smetav1.ObjectMeta{
 				Name:      GetListenerName("lb1", 8000),
 				Namespace: "ns1",
@@ -54,7 +54,7 @@ func getExistedListeners() []networkextensionv1.Listener {
 				Protocol:       "tcp",
 			},
 		},
-		networkextensionv1.Listener{
+		{
 			ObjectMeta: k8smetav1.ObjectMeta{
 				Name:      GetListenerName("lb1", 8001),
 				Namespace: "ns1",
@@ -66,7 +66,7 @@ func getExistedListeners() []networkextensionv1.Listener {
 				Protocol:       "tcp",
 			},
 		},
-		networkextensionv1.Listener{
+		{
 			ObjectMeta: k8smetav1.ObjectMeta{
 				Name:      GetSegmentListenerName("lb1", 3000, 3002),
 				Namespace: "ns1",
@@ -78,7 +78,7 @@ func getExistedListeners() []networkextensionv1.Listener {
 				Protocol:       "tcp",
 			},
 		},
-		networkextensionv1.Listener{
+		{
 			ObjectMeta: k8smetav1.ObjectMeta{
 				Name:      GetSegmentListenerName("lb1", 3003, 3005),
 				Namespace: "ns1",
@@ -118,9 +118,9 @@ func constructStatefulsetData(cli k8sclient.Client) {
 			},
 			Spec: k8scorev1.PodSpec{
 				Containers: []k8scorev1.Container{
-					k8scorev1.Container{
+					{
 						Ports: []k8scorev1.ContainerPort{
-							k8scorev1.ContainerPort{
+							{
 								ContainerPort: int32(containerPort),
 							},
 						},
@@ -191,9 +191,9 @@ func constructK8sData(cli k8sclient.Client) {
 			},
 			Spec: k8scorev1.PodSpec{
 				Containers: []k8scorev1.Container{
-					k8scorev1.Container{
+					{
 						Ports: []k8scorev1.ContainerPort{
-							k8scorev1.ContainerPort{
+							{
 								ContainerPort: int32(containerPort),
 							},
 						},
@@ -234,7 +234,7 @@ func constructK8sData(cli k8sclient.Client) {
 					"app": selectorValue[i],
 				},
 				Ports: []k8scorev1.ServicePort{
-					k8scorev1.ServicePort{
+					{
 						Protocol:   "tcp",
 						Port:       svcPorts[i],
 						NodePort:   nodePorts[i],
@@ -281,7 +281,7 @@ func TestIngressConvert(t *testing.T) {
 		{
 			testTitle: "layer 4 listener to nodeport",
 			ingresses: []networkextensionv1.Ingress{
-				networkextensionv1.Ingress{
+				{
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      "ingress1",
@@ -292,11 +292,11 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Spec: networkextensionv1.IngressSpec{
 						Rules: []networkextensionv1.IngressRule{
-							networkextensionv1.IngressRule{
+							{
 								Port:     8000,
 								Protocol: "TCP",
 								Services: []networkextensionv1.ServiceRoute{
-									networkextensionv1.ServiceRoute{
+									{
 										ServiceName:      "svc1",
 										ServiceNamespace: "test",
 										ServicePort:      9000,
@@ -309,7 +309,7 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): networkextensionv1.Listener{
+				GetListenerName("lb1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetListenerName("lb1", 8000),
@@ -351,7 +351,7 @@ func TestIngressConvert(t *testing.T) {
 		{
 			testTitle: "layer 4 listener to pod",
 			ingresses: []networkextensionv1.Ingress{
-				networkextensionv1.Ingress{
+				{
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      "ingress1",
@@ -362,11 +362,11 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Spec: networkextensionv1.IngressSpec{
 						Rules: []networkextensionv1.IngressRule{
-							networkextensionv1.IngressRule{
+							{
 								Port:     8000,
 								Protocol: "TCP",
 								Services: []networkextensionv1.ServiceRoute{
-									networkextensionv1.ServiceRoute{
+									{
 										ServiceName:      "svc1",
 										ServiceNamespace: "test",
 										ServicePort:      9000,
@@ -380,7 +380,7 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): networkextensionv1.Listener{
+				GetListenerName("lb1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetListenerName("lb1", 8000),
@@ -422,7 +422,7 @@ func TestIngressConvert(t *testing.T) {
 		{
 			testTitle: "layer 7 listener to nodeport",
 			ingresses: []networkextensionv1.Ingress{
-				networkextensionv1.Ingress{
+				{
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      "ingress1",
@@ -433,15 +433,15 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Spec: networkextensionv1.IngressSpec{
 						Rules: []networkextensionv1.IngressRule{
-							networkextensionv1.IngressRule{
+							{
 								Port:     8000,
 								Protocol: "HTTP",
 								Routes: []networkextensionv1.Layer7Route{
-									networkextensionv1.Layer7Route{
+									{
 										Domain: "www.qq.com",
 										Path:   "/",
 										Services: []networkextensionv1.ServiceRoute{
-											networkextensionv1.ServiceRoute{
+											{
 												ServiceName:      "svc1",
 												ServiceNamespace: "test",
 												ServicePort:      9000,
@@ -456,7 +456,7 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): networkextensionv1.Listener{
+				GetListenerName("lb1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetListenerName("lb1", 8000),
@@ -475,7 +475,7 @@ func TestIngressConvert(t *testing.T) {
 						Port:           8000,
 						Protocol:       "HTTP",
 						Rules: []networkextensionv1.ListenerRule{
-							networkextensionv1.ListenerRule{
+							{
 								Domain: "www.qq.com",
 								Path:   "/",
 								TargetGroup: &networkextensionv1.ListenerTargetGroup{
@@ -504,7 +504,7 @@ func TestIngressConvert(t *testing.T) {
 		{
 			testTitle: "layer 4 to service subset",
 			ingresses: []networkextensionv1.Ingress{
-				networkextensionv1.Ingress{
+				{
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      "ingress1",
@@ -515,17 +515,17 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Spec: networkextensionv1.IngressSpec{
 						Rules: []networkextensionv1.IngressRule{
-							networkextensionv1.IngressRule{
+							{
 								Port:     8000,
 								Protocol: "TCP",
 								Services: []networkextensionv1.ServiceRoute{
-									networkextensionv1.ServiceRoute{
+									{
 										ServiceName:      "svc1",
 										ServiceNamespace: "test",
 										ServicePort:      9000,
 										IsDirectConnect:  true,
 										Subsets: []networkextensionv1.IngressSubset{
-											networkextensionv1.IngressSubset{
+											{
 												LabelSelector: map[string]string{
 													"k1": "v1",
 												},
@@ -533,7 +533,7 @@ func TestIngressConvert(t *testing.T) {
 													Value: 100,
 												},
 											},
-											networkextensionv1.IngressSubset{
+											{
 												LabelSelector: map[string]string{
 													"k2": "v2",
 												},
@@ -551,7 +551,7 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb1", 8000): networkextensionv1.Listener{
+				GetListenerName("lb1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetListenerName("lb1", 8000),
@@ -593,7 +593,7 @@ func TestIngressConvert(t *testing.T) {
 		{
 			testTitle: "mapping test 1",
 			ingresses: []networkextensionv1.Ingress{
-				networkextensionv1.Ingress{
+				{
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      "ingress1",
@@ -604,7 +604,7 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Spec: networkextensionv1.IngressSpec{
 						PortMappings: []networkextensionv1.IngressPortMapping{
-							networkextensionv1.IngressPortMapping{
+							{
 								WorkloadKind:      "StatefulSet",
 								WorkloadName:      "sts-1",
 								WorkloadNamespace: "test",
@@ -619,7 +619,7 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetSegmentListenerName("lb1", 18001, 0): networkextensionv1.Listener{
+				GetSegmentListenerName("lb1", 18001, 0): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetSegmentListenerName("lb1", 18001, 0),
@@ -651,7 +651,7 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetSegmentListenerName("lb1", 18002, 0): networkextensionv1.Listener{
+				GetSegmentListenerName("lb1", 18002, 0): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetSegmentListenerName("lb1", 18002, 0),
@@ -689,7 +689,7 @@ func TestIngressConvert(t *testing.T) {
 		{
 			testTitle: "mapping test 2",
 			ingresses: []networkextensionv1.Ingress{
-				networkextensionv1.Ingress{
+				{
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      "ingress1",
@@ -700,7 +700,7 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Spec: networkextensionv1.IngressSpec{
 						PortMappings: []networkextensionv1.IngressPortMapping{
-							networkextensionv1.IngressPortMapping{
+							{
 								WorkloadKind:      "StatefulSet",
 								WorkloadName:      "sts-1",
 								WorkloadNamespace: "test",
@@ -716,7 +716,7 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetSegmentListenerName("lb1", 18010, 18019): networkextensionv1.Listener{
+				GetSegmentListenerName("lb1", 18010, 18019): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetSegmentListenerName("lb1", 18010, 18019),
@@ -749,7 +749,7 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetSegmentListenerName("lb1", 18020, 18029): networkextensionv1.Listener{
+				GetSegmentListenerName("lb1", 18020, 18029): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetSegmentListenerName("lb1", 18020, 18029),
@@ -788,7 +788,7 @@ func TestIngressConvert(t *testing.T) {
 		{
 			testTitle: "mapping test 3",
 			ingresses: []networkextensionv1.Ingress{
-				networkextensionv1.Ingress{
+				{
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      "ingress1",
@@ -799,7 +799,7 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Spec: networkextensionv1.IngressSpec{
 						PortMappings: []networkextensionv1.IngressPortMapping{
-							networkextensionv1.IngressPortMapping{
+							{
 								WorkloadKind:      "StatefulSet",
 								WorkloadName:      "sts-1",
 								WorkloadNamespace: "test",
@@ -816,7 +816,7 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetSegmentListenerName("lb1", 18010, 18019): networkextensionv1.Listener{
+				GetSegmentListenerName("lb1", 18010, 18019): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetSegmentListenerName("lb1", 18010, 18019),
@@ -849,7 +849,7 @@ func TestIngressConvert(t *testing.T) {
 					},
 					Status: networkextensionv1.ListenerStatus{},
 				},
-				GetSegmentListenerName("lb1", 18020, 18029): networkextensionv1.Listener{
+				GetSegmentListenerName("lb1", 18020, 18029): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name:      GetSegmentListenerName("lb1", 18020, 18029),

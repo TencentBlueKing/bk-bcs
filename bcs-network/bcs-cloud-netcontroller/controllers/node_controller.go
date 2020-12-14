@@ -32,12 +32,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
 	pbcloudnet "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetservice"
-	"github.com/Tencent/bk-bcs/bcs-network/internal/grpclb"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/internal/option"
 	cloudAPI "github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud/aws"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloud-netcontroller/pkg/cloud/qcloud"
 	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-network/internal/grpclb"
 )
 
 var (

@@ -122,7 +122,7 @@ func (a *AddAction) createSubnet() (pbcommon.ErrCode, string) {
 
 	err := a.storeIf.CreateSubnet(a.ctx, newSubnet)
 	if err != nil {
-		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED, 
+		return pbcommon.ErrCode_ERROR_CLOUD_NETSERVICE_STOREOPS_FAILED,
 			fmt.Sprintf("store CreateSubnet failed, err %s", err.Error())
 	}
 

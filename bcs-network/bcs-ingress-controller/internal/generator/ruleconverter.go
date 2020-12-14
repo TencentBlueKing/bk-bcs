@@ -218,7 +218,6 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		return nil, nil
 	}
 
-
 	// subset subset only takes effect when directly connected
 	// when directly connected
 	// * if no subset, use service endpoints as backends

@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/types"
 
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/ghodss/yaml"
 	kubeclient "github.com/kubernetes-client/go/kubernetes/client"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -39,7 +40,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog"
-	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -78,10 +78,10 @@ type MeshClusterManager struct {
 // NewMeshClusterManager create ClusterManager according to clusterID
 func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster, client client.Client) (*MeshClusterManager, error) {
 	//set istio version
-	if meshCluster.Spec.Configuration==nil {
+	if meshCluster.Spec.Configuration == nil {
 		meshCluster.Spec.Configuration = make([]string, 0)
 	}
-	if meshCluster.Spec.Version!="" {
+	if meshCluster.Spec.Version != "" {
 		tag := fmt.Sprintf("{\\\"spec\\\":{\\\"tag\\\":\\\"%s\\\"}}", meshCluster.Spec.Version)
 		meshCluster.Spec.Configuration = append(meshCluster.Spec.Configuration, tag)
 	}
@@ -369,14 +369,14 @@ func (m *MeshClusterManager) applyIstioConfiguration() error {
 		klog.Errorf("read IstioOperator CR definition(%s) error %s", m.conf.IstioConfiguration, err.Error())
 		return err
 	}
-	by,err = yaml.YAMLToJSON(by)
+	by, err = yaml.YAMLToJSON(by)
 	if err != nil {
 		klog.Errorf("IstioOperator CR definition(%s) convert to json failed: %s", m.conf.IstioConfiguration, err.Error())
 		return err
 	}
 	target := m.patchIstioConfiguration(by)
 	klog.Infof("cluster(%s) istiooperator configuration(%s)", m.meshCluster.Spec.ClusterID, string(target))
-	_,_,err = m.kubeAPIClient.CustomObjectsApi.CreateNamespacedCustomObject(context.Background(), types.IstioOperatorGroup,
+	_, _, err = m.kubeAPIClient.CustomObjectsApi.CreateNamespacedCustomObject(context.Background(), types.IstioOperatorGroup,
 		types.IstioOperatorVersion, types.IstioOperatorNamespace, types.IstioOperatorPlural, string(target), nil)
 	if err != nil {
 		klog.Errorf("apply IstioOperator error %s", err.Error())
@@ -480,9 +480,9 @@ func (m *MeshClusterManager) createIstioOperatorCrds() error {
 	return nil
 }
 
-func (m *MeshClusterManager) patchIstioConfiguration(origin []byte)[]byte{
+func (m *MeshClusterManager) patchIstioConfiguration(origin []byte) []byte {
 	target := origin
-	for _,patch :=range m.meshCluster.Spec.Configuration {
+	for _, patch := range m.meshCluster.Spec.Configuration {
 		tmp, err := jsonpatch.MergePatch(target, []byte(patch))
 		if err != nil {
 			klog.Errorf("cluster(%s) patch(%s) istiooperator configuration failed: %s",

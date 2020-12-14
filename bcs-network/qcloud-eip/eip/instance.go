@@ -56,7 +56,7 @@ func (c *instanceClient) describeInstanceByIP(ip string) (*cvm.Instance, error) 
 	request := cvm.NewDescribeInstancesRequest()
 	request.Limit = common.Int64Ptr(1)
 	request.Filters = []*cvm.Filter{
-		&cvm.Filter{
+		{
 			Name:   common.StringPtr("private-ip-address"),
 			Values: common.StringPtrs([]string{ip}),
 		},

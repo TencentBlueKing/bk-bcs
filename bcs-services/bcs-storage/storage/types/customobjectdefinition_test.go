@@ -23,7 +23,7 @@ func BenchmarkSetData(t *testing.B) {
 	data := map[string]interface{}{
 		"objectType": "TestType",
 		"fields": []map[string]interface{}{
-			map[string]interface{}{
+			{
 				"name": "field1",
 				"type": "fieldtype1",
 			},
@@ -40,7 +40,7 @@ func BenchmarkJSONSetData(t *testing.B) {
 	data := map[string]interface{}{
 		"objectType": "TestType",
 		"fields": []map[string]interface{}{
-			map[string]interface{}{
+			{
 				"name": "field1",
 				"type": "fieldtype1",
 			},

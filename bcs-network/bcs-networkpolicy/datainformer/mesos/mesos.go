@@ -19,8 +19,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/apis/bkbcs/v2"
-	bcsfactory "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/generated/informers/externalversions"
 	bcsclientset "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/generated/clientset/versioned"
+	bcsfactory "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/generated/informers/externalversions"
 	bcslister "github.com/Tencent/bk-bcs/bcs-mesos/mesosv2/generated/listers/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-networkpolicy/options"
 
