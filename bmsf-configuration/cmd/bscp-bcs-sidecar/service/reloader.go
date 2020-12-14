@@ -224,7 +224,7 @@ func (r *Reloader) reportReload(req *pbsidecar.ReportReloadReq, path string) err
 		Dc:        r.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 		IP:        r.viper.GetString("appinfo.ip"),
 		Labels:    string(labels),
-		Infos: []*pbcommon.ReportInfo{&pbcommon.ReportInfo{
+		Infos: []*pbcommon.ReportInfo{{
 			Releaseid:      req.Releaseid,
 			MultiReleaseid: req.MultiReleaseid,
 			ReloadTime:     req.ReloadTime,

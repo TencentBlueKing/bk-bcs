@@ -298,7 +298,7 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 		FailoverTimeout: proto.Float64(60 * 60 * 24 * 7),
 		Checkpoint:      proto.Bool(true),
 		Capabilities: []*mesos.FrameworkInfo_Capability{
-			&mesos.FrameworkInfo_Capability{
+			{
 				Type: mesos.FrameworkInfo_Capability_PARTITION_AWARE.Enum(),
 			},
 		},

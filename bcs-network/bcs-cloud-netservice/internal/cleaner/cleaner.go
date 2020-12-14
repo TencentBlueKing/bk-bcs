@@ -79,7 +79,7 @@ func (i *IPCleaner) Run(ctx context.Context) error {
 
 func (i *IPCleaner) searchAndClean() {
 	ipObjs, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CrdNameLabelsStatus:   types.IP_STATUS_AVAILABLE,
+		kube.CrdNameLabelsStatus:  types.IP_STATUS_AVAILABLE,
 		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
 	})
 	if err != nil {
@@ -100,7 +100,7 @@ func (i *IPCleaner) searchAndClean() {
 
 	// clean dirty data
 	ipObjsDeleting, err := i.storeIf.ListIPObject(context.Background(), map[string]string{
-		kube.CrdNameLabelsStatus:   types.IP_STATUS_DELETING,
+		kube.CrdNameLabelsStatus:  types.IP_STATUS_DELETING,
 		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
 	})
 	if err != nil {

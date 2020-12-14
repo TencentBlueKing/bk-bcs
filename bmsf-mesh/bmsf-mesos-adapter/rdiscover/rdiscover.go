@@ -192,7 +192,7 @@ func (ad *AdapterDiscover) sortNode(nodes []string) []string {
 			continue
 		}
 
-		p, err := strconv.Atoi(chNode[len(chNode)-10 : len(chNode)])
+		p, err := strconv.Atoi(chNode[len(chNode)-10:])
 		if err != nil {
 			blog.V(3).Infof("fail to conv string to seq number for node(%s), err:%s", chNode, err.Error())
 			continue

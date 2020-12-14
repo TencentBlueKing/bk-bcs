@@ -12,8 +12,6 @@ limitations under the License.
 
 package structs
 
-import ()
-
 // SignallingType is type for signalling.
 type SignallingType int
 

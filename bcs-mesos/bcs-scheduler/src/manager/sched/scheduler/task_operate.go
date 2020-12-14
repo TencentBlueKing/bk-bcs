@@ -87,7 +87,7 @@ func (s *Scheduler) LaunchTaskGroup(offer *mesos.Offer, taskGroup *mesos.TaskGro
 				offer.GetId(),
 			},
 			Operations: []*mesos.Offer_Operation{
-				&mesos.Offer_Operation{
+				{
 					Type: mesos.Offer_Operation_LAUNCH_GROUP.Enum(),
 					LaunchGroup: &mesos.Offer_Operation_LaunchGroup{
 						TaskGroup: taskGroup,

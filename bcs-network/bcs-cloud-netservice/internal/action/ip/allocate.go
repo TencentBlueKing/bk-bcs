@@ -148,7 +148,7 @@ func (a *AllocateAction) Output() error {
 func (a *AllocateAction) queryAvailableIPObjectFromStore() (pbcommon.ErrCode, string) {
 	ipObjs, err := a.storeIf.ListIPObject(a.ctx, map[string]string{
 		kube.CrdNameLabelsStatus:   types.IP_STATUS_AVAILABLE,
-		kube.CrdNameLabelsIsFixed: strconv.FormatBool(false),
+		kube.CrdNameLabelsIsFixed:  strconv.FormatBool(false),
 		kube.CrdNameLabelsEni:      a.req.EniID,
 		kube.CrdNameLabelsSubnetID: a.req.SubnetID,
 		kube.CrdNameLabelsCluster:  a.req.Cluster,

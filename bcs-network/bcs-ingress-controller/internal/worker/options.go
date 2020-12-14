@@ -10,15 +10,20 @@
  * limitations under the License.
  */
 
-package server
+package worker
 
 import (
-	// import bcslog plugin
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/bcslog"
-	// import bscp plugin
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/bscp"
-	// import db privilege plugin
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/dbprivilege"
-	// import image loader plugin
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/imageloader"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
 )
+
+// EventHandlerOption handler for listener event
+type EventHandlerOption struct {
+	Region          string
+	LbID            string
+	LbClient        cloud.LoadBalance
+	K8sCli          client.Client
+	ListenerEventer record.EventRecorder
+}

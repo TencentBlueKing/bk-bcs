@@ -307,7 +307,7 @@ func (zk *ZookeeperMaster) sortNodes(nodes []string) []string {
 			continue
 		}
 
-		p, err := strconv.Atoi(chNode[len(chNode)-10 : len(chNode)])
+		p, err := strconv.Atoi(chNode[len(chNode)-10:])
 		if err != nil {
 			fmt.Printf("fail to conv string to seq number for node(%s), err:%s\n", chNode, err.Error())
 			continue

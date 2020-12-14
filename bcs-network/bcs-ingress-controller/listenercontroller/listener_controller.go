@@ -88,12 +88,14 @@ func (lc *ListenerReconciler) getListenerEventHandler(listener *networkextension
 	}
 	ehandler, ok := lc.WorkerMap[listener.Spec.LoadbalancerID]
 	if !ok {
-		newHandler := worker.NewEventHandler(
-			region,
-			listener.Spec.LoadbalancerID,
-			lc.CloudLb,
-			lc.Client,
-		)
+		newHandlerOption := worker.EventHandlerOption{
+			Region:          region,
+			LbID:            listener.Spec.LoadbalancerID,
+			LbClient:        lc.CloudLb,
+			K8sCli:          lc.Client,
+			ListenerEventer: lc.ListenerEventer,
+		}
+		newHandler := worker.NewEventHandler(newHandlerOption)
 		go newHandler.Run()
 		lc.WorkerMap[listener.Spec.LoadbalancerID] = newHandler
 		workerTotal.WithLabelValues(listener.Spec.LoadbalancerID).Set(1)

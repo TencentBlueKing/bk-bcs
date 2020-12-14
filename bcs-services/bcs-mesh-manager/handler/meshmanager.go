@@ -72,9 +72,9 @@ func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.Cr
 			Namespace: "default",
 		},
 		Spec: meshv1.MeshClusterSpec{
-			Version:   req.Version,
-			ClusterID: req.Clusterid,
-			MeshType:  meshv1.MeshType(req.Meshtype),
+			Version:       req.Version,
+			ClusterID:     req.Clusterid,
+			MeshType:      meshv1.MeshType(req.Meshtype),
 			Configuration: req.Configurations,
 		},
 	}

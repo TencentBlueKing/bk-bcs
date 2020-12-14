@@ -125,7 +125,7 @@ func (store *managerStore) ListDaemonsetTaskGroups(namespace, name string) ([]*t
 		return taskgroups, nil
 	}
 
-	for podId, _ := range daemonset.Pods {
+	for podId := range daemonset.Pods {
 		taskgroup, err := store.FetchTaskGroup(podId)
 		if err != nil {
 			return nil, err

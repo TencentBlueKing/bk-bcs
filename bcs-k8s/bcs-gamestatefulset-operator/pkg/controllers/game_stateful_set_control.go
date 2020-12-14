@@ -683,7 +683,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	updateRevision *apps.ControllerRevision,
 	replicas []*v1.Pod,
 	monotonic bool,
-	) (*gstsv1alpha1.GameStatefulSetStatus, error) {
+) (*gstsv1alpha1.GameStatefulSetStatus, error) {
 
 	// for the OnDelete strategy we short circuit. Pods will be updated when they are manually deleted.
 	if set.Spec.UpdateStrategy.Type == gstsv1alpha1.OnDeleteGameStatefulSetStrategyType {
