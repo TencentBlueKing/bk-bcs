@@ -63,7 +63,7 @@ func NewIngressConverter(
 
 // get cloud loadbalance info by cloud loadbalance id pair
 // regionIDPair "ap-xxxxx:lb-xxxxxx"
-func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionIDPair, ":")
@@ -76,7 +76,12 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "")
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, strs[0], "")
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "")
+		}
+
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +110,7 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 
 // get cloud loadbalance info by cloud loadbalance name pair
 // regionNamePair "ap-xxxxx:lbname"
-func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionNamePair, ":")
@@ -118,7 +123,11 @@ func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.L
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, "", strs[0])
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, "", strs[0])
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, "", strs[0])
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +169,7 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	if idOk {
 		lbIDs := strings.Split(lbIDStrs, ",")
 		for _, regionIDPair := range lbIDs {
-			lbObj, err := g.getLoadbalanceByID(regionIDPair)
+			lbObj, err := g.getLoadbalanceByID(ingress.GetNamespace(), regionIDPair)
 			if err != nil {
 				return nil, err
 			}
@@ -169,7 +178,7 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	} else if nameOk {
 		names := strings.Split(lbNameStrs, ",")
 		for _, regionNamePair := range names {
-			lbObj, err := g.getLoadbalanceByName(regionNamePair)
+			lbObj, err := g.getLoadbalanceByName(ingress.GetNamespace(), regionNamePair)
 			if err != nil {
 				return nil, err
 			}
@@ -213,6 +222,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	var generatedSegListeners []networkextensionv1.Listener
 	for _, rule := range ingress.Spec.Rules {
 		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &rule)
+		ruleConverter.SetNamespaced(g.lbClient.IsNamespaced())
 		listeners, inErr := ruleConverter.DoConvert()
 		if inErr != nil {
 			blog.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
@@ -222,6 +232,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	}
 	for _, mapping := range ingress.Spec.PortMappings {
 		mappingConverter := NewMappingConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping)
+		mappingConverter.SetNamespaced(g.lbClient.IsNamespaced())
 		listeners, inErr := mappingConverter.DoConvert()
 		if inErr != nil {
 			blog.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package cloud
+package nstencentcloud
 
 import (
 	"context"
@@ -112,6 +112,11 @@ func (nc *NamespacedClb) DescribeLoadBalancerWithNs(ns, region, lbID, name strin
 // DescribeLoadBalancer describe loadbalances with id or name
 func (nc *NamespacedClb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
 	return nil, fmt.Errorf("please use DescribeLoadBalancerWithNs for namespaced clb client")
+}
+
+// IsNamespaced if client is namespaced
+func (nc *NamespacedClb) IsNamespaced() bool {
+	return true
 }
 
 // EnsureListener implements LoadBalance interface

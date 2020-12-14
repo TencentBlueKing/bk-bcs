@@ -40,6 +40,8 @@ type MappingConverter struct {
 	ingressName      string
 	ingressNamespace string
 	mapping          *networkextensionv1.IngressPortMapping
+	// if true, ingress can only select service, endpoint and workload in the same namespace
+	isNamespaced bool
 }
 
 // NewMappingConverter create mapping generator
@@ -54,6 +56,11 @@ func NewMappingConverter(
 		ingressNamespace: ingressNamespace,
 		mapping:          mapping,
 	}
+}
+
+// SetNamespaced set namespaced flag
+func (mg *MappingConverter) SetNamespaced(isNamespaced bool) {
+	mg.isNamespaced = isNamespaced
 }
 
 // get selector by workload
@@ -158,8 +165,15 @@ func (mg *MappingConverter) getWorkloadPodMap(workloadKind, workloadName, worklo
 
 // DoConvert do convert action
 func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
+
+	// set namespace when namespaced flag is set
+	workloadNamespace := mg.mapping.WorkloadNamespace
+	if mg.isNamespaced {
+		workloadNamespace = mg.ingressNamespace
+	}
+
 	pods, err := mg.getWorkloadPodMap(mg.mapping.WorkloadKind,
-		mg.mapping.WorkloadName, mg.mapping.WorkloadNamespace)
+		mg.mapping.WorkloadName, workloadNamespace)
 	if err != nil {
 		return nil, err
 	}

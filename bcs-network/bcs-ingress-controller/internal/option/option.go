@@ -36,6 +36,9 @@ type ControllerOption struct {
 	// ElectionNamespace election namespace
 	ElectionNamespace string
 
+	// IsNamespaceScope if the ingress can only be associated with the service and workload in the same namespace
+	IsNamespaceScope bool
+
 	// LogConfig for blog
 	conf.LogConfig
 }

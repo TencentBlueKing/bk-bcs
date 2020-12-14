@@ -30,6 +30,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/ingresscontroller"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/nstencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/generator"
@@ -58,6 +59,8 @@ func main() {
 	flag.StringVar(&opts.Cloud, "cloud", "tencentcloud", "cloud mode for controller")
 	flag.StringVar(&opts.Region, "region", "", "default cloud region for controller")
 	flag.StringVar(&opts.ElectionNamespace, "election_namespace", "bcs-system", "namespace for leader election")
+	flag.BoolVar(&opts.IsNamespaceScope, "is_namespace_scope", false,
+		"if the ingress can only be associated with the service and workload in the same namespace")
 
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
@@ -79,27 +82,6 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	var validater cloud.Validater
-	var lbClient cloud.LoadBalance
-	var err error
-	switch opts.Cloud {
-	case constant.CloudTencent:
-		validater = tencentcloud.NewClbValidater()
-		lbClient, err = tencentcloud.NewClb()
-		if err != nil {
-			blog.Errorf("init cloud failed, err %s", err.Error())
-			os.Exit(1)
-		}
-	case constant.CloudAWS:
-		setupLog.Error(fmt.Errorf("aws not implemented"), "aws not implemented")
-		os.Exit(1)
-	}
-
-	if len(opts.Region) == 0 {
-		blog.Errorf("region cannot be empty")
-		os.Exit(1)
-	}
-
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
@@ -109,6 +91,31 @@ func main() {
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	var validater cloud.Validater
+	var lbClient cloud.LoadBalance
+	switch opts.Cloud {
+	case constant.CloudTencent:
+		validater = tencentcloud.NewClbValidater()
+		if !opts.IsNamespaceScope {
+			lbClient, err = tencentcloud.NewClb()
+			if err != nil {
+				blog.Errorf("init cloud failed, err %s", err.Error())
+				os.Exit(1)
+			}
+		} else {
+			lbClient = nstencentcloud.NewNamespacedClb(mgr.GetClient())
+		}
+
+	case constant.CloudAWS:
+		setupLog.Error(fmt.Errorf("aws not implemented"), "aws not implemented")
+		os.Exit(1)
+	}
+
+	if len(opts.Region) == 0 {
+		blog.Errorf("region cannot be empty")
 		os.Exit(1)
 	}
 

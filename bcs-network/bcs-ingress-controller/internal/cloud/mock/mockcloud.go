@@ -77,6 +77,21 @@ func (mr *MockLoadBalanceMockRecorder) DescribeLoadBalancer(arg0, arg1, arg2 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancer", reflect.TypeOf((*MockLoadBalance)(nil).DescribeLoadBalancer), arg0, arg1, arg2)
 }
 
+// DescribeLoadBalancerWithNs mocks base method
+func (m *MockLoadBalance) DescribeLoadBalancerWithNs(arg0, arg1, arg2, arg3 string) (*cloud.LoadBalanceObject, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DescribeLoadBalancerWithNs", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*cloud.LoadBalanceObject)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DescribeLoadBalancerWithNs indicates an expected call of DescribeLoadBalancerWithNs
+func (mr *MockLoadBalanceMockRecorder) DescribeLoadBalancerWithNs(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLoadBalancerWithNs", reflect.TypeOf((*MockLoadBalance)(nil).DescribeLoadBalancerWithNs), arg0, arg1, arg2, arg3)
+}
+
 // EnsureListener mocks base method
 func (m *MockLoadBalance) EnsureListener(arg0 string, arg1 *v1.Listener) (string, error) {
 	m.ctrl.T.Helper()
@@ -105,4 +120,18 @@ func (m *MockLoadBalance) EnsureSegmentListener(arg0 string, arg1 *v1.Listener) 
 func (mr *MockLoadBalanceMockRecorder) EnsureSegmentListener(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureSegmentListener", reflect.TypeOf((*MockLoadBalance)(nil).EnsureSegmentListener), arg0, arg1)
+}
+
+// IsNamespaced mocks base method
+func (m *MockLoadBalance) IsNamespaced() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsNamespaced")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsNamespaced indicates an expected call of IsNamespaced
+func (mr *MockLoadBalanceMockRecorder) IsNamespaced() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNamespaced", reflect.TypeOf((*MockLoadBalance)(nil).IsNamespaced))
 }

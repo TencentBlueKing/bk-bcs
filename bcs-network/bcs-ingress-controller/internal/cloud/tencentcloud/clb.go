@@ -118,6 +118,16 @@ func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 	return retlb, nil
 }
 
+// DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
+func (c *Clb) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+	return c.DescribeLoadBalancer(region, lbID, name)
+}
+
+// IsNamespaced if client is namespaced
+func (c *Clb) IsNamespaced() bool {
+	return false
+}
+
 // EnsureListener ensure listener to cloud, and get listener info
 func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	cloudListener, err := c.getListenerInfoByPort(region, listener.Spec.LoadbalancerID, listener.Spec.Port)
