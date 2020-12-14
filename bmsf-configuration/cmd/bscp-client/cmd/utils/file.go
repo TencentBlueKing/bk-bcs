@@ -77,7 +77,7 @@ func ReadRCFileFromScanArea() (map[string]service.ConfigFile, error) {
 
 // DeleteEdFileFromRecord to deelete deleted file from record
 func DeleteEdFileFromRecord(recordConfigFiles map[string]service.ConfigFile) map[string]service.ConfigFile {
-	for cfgset, _ := range recordConfigFiles {
+	for cfgset := range recordConfigFiles {
 		_, err := os.Stat(cfgset)
 		if err != nil {
 			delete(recordConfigFiles, cfgset)

@@ -12,8 +12,6 @@ limitations under the License.
 
 package rssche
 
-import ()
-
 // Resource is the schedulability objects, such as service instance, connection or static resource.
 // Impl your own Resource struct, add to a scheduler, get the resource by Query func.
 type Resource interface {

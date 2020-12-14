@@ -19,8 +19,8 @@ import (
 	"text/template"
 
 	pbcommon "bk-bscp/internal/protocol/common"
-	"bk-bscp/pkg/renderengine"
 	"bk-bscp/pkg/common"
+	"bk-bscp/pkg/renderengine"
 )
 
 type engine struct {

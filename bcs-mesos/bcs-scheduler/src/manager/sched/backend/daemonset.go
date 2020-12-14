@@ -85,7 +85,7 @@ func (b *backend) DeleteDaemonset(namespace, name string, force bool) error {
 	if err == store.ErrNoFound {
 		return nil
 	}
-	for podId, _ := range daemonset.Pods {
+	for podId := range daemonset.Pods {
 		pod, err := b.store.FetchTaskGroup(podId)
 		if err != nil {
 			blog.Errorf("delete daemonset(%s:%s), but FetchTaskGroup(%s) failed:",

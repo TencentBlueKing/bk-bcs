@@ -387,7 +387,7 @@ func (e *ENI) CNIAdd(args *skel.CmdArgs) error {
 
 	contIndex := 1
 	ips := []*current.IPConfig{
-		&current.IPConfig{
+		{
 			Version:   "4",
 			Address:   *ipNet,
 			Interface: &contIndex,

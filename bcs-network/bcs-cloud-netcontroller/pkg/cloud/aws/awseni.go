@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	WAIT_ATTACHED_INTERVAL   = 5 * time.Second
+	WAIT_ATTACHED_INTERVAL    = 5 * time.Second
 	WAIT_ATTACHED_MAX_RETRIES = 10
 )
 
