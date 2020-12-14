@@ -42,6 +42,8 @@ type RuleConverter struct {
 	ingressNamespace string
 	// rule info
 	rule *networkextensionv1.IngressRule
+	// if true, ingress can only select service, endpoint and workload in the same namespace
+	isNamespaced bool
 }
 
 // NewRuleConverter create rule converter
@@ -58,7 +60,13 @@ func NewRuleConverter(
 		ingressName:      ingressName,
 		ingressNamespace: ingressNamespace,
 		rule:             rule,
+		isNamespaced:     false,
 	}
+}
+
+// SetNamespaced set namespaced flag
+func (rc *RuleConverter) SetNamespaced(isNamespaced bool) {
+	rc.isNamespaced = isNamespaced
 }
 
 // DoConvert do convert action
@@ -217,7 +225,6 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 			svcRoute.ServicePort, svcRoute.ServiceNamespace, svcRoute.ServiceName)
 		return nil, nil
 	}
-
 
 	// subset subset only takes effect when directly connected
 	// when directly connected

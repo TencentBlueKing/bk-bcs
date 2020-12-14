@@ -48,6 +48,22 @@ func NewClb() (*Clb, error) {
 	}, nil
 }
 
+// NewClbWithSecretIDKey create clb client with secret id and secret key
+func NewClbWithSecretIDKey(id, key string) (*Clb, error) {
+	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(id, key)
+	if err != nil {
+		return nil, err
+	}
+	apiWrapper, err := NewAPIWrapperWithSecretIDKey(id, key)
+	if err != nil {
+		return nil, err
+	}
+	return &Clb{
+		sdkWrapper: sdkWrapper,
+		apiWrapper: apiWrapper,
+	}, nil
+}
+
 // DescribeLoadBalancer get loadbalancer object by id
 func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
 	req := tclb.NewDescribeLoadBalancersRequest()
