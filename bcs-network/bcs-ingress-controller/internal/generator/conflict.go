@@ -90,12 +90,13 @@ func isMappingConflict(lbID, ingressName, ingressNamespace string,
 			conflictMsg := generateMappingConflictMessage(mapping, ingressName, ingressNamespace,
 				conflictName, conflictNs)
 			blog.Warnf(conflictMsg)
-			return false, conflictMsg
+			return true, conflictMsg
 		}
 	}
 	return false, ""
 }
 
+// return true, if the ingress is conflicts with existed listener
 func (g *IngressConverter) checkConflicts(lbID string, ingress *networkextensionv1.Ingress) (bool, error) {
 	existedListeners := &networkextensionv1.ListenerList{}
 	err := g.cli.List(context.TODO(), existedListeners, &client.ListOptions{})
@@ -134,7 +135,8 @@ func (g *IngressConverter) checkConflicts(lbID string, ingress *networkextension
 	return false, nil
 }
 
-func checkConflictsInIngress(ingress *networkextensionv1.Ingress) (bool, string) {
+// return true, if there is no conflicts in ingress itself
+func checkNoConflictsInIngress(ingress *networkextensionv1.Ingress) (bool, string) {
 	ruleMap := make(map[int]networkextensionv1.IngressRule)
 	for index, rule := range ingress.Spec.Rules {
 		existedRule, ok := ruleMap[rule.Port]

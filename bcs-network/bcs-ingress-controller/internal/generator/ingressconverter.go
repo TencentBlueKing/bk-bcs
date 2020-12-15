@@ -81,7 +81,6 @@ func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.L
 		} else {
 			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "")
 		}
-
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +93,11 @@ func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.L
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], strs[1], "")
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], strs[1], "")
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], strs[1], "")
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +143,11 @@ func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair string) (*clo
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], "", strs[1])
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], "", strs[1])
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], "", strs[1])
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -161,8 +168,8 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	lbIDStrs, idOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceIDs]
 	lbNameStrs, nameOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceNames]
 	if !idOk && !nameOk {
-		blog.Warnf("ingress %+v is not associated with lb instance")
-		return nil, nil
+		blog.Errorf("ingress %+v is not associated with lb instance", ingress)
+		return nil, fmt.Errorf("ingress %+v is not associated with lb instance", ingress)
 	}
 	// check lb id first
 	// if there are both ids and names, ids is effective
@@ -196,7 +203,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 		return fmt.Errorf("ingress %+v ingress is invalid, err %s", ingress, errMsg)
 	}
 
-	isValid, errMsg = checkConflictsInIngress(ingress)
+	isValid, errMsg = checkNoConflictsInIngress(ingress)
 	if !isValid {
 		blog.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)
 		return fmt.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)

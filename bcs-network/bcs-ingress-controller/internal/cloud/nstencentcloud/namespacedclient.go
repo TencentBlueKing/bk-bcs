@@ -14,7 +14,6 @@ package nstencentcloud
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -28,7 +27,7 @@ import (
 
 const (
 	// IDKeySecretName secret name to store secret id and secret key
-	IDKeySecretName = "secret.networkextension.bkbcs.tencent.com"
+	IDKeySecretName = "ingress-secret.networkextension.bkbcs.tencent.com"
 )
 
 // NamespacedClb client for cloud which is aware of listener namespace
@@ -49,6 +48,7 @@ func NewNamespacedClb(k8sClient client.Client) *NamespacedClb {
 
 // init client for namespace
 func (nc *NamespacedClb) initNsClient(ns string) (cloud.LoadBalance, error) {
+	var ok bool
 	var secretIDBytes, secretKeyBytes []byte
 	var err error
 	tmpSecret := &k8scorev1.Secret{}
@@ -59,25 +59,15 @@ func (nc *NamespacedClb) initNsClient(ns string) (cloud.LoadBalance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
 	}
-	secretIDBase64Bytes, ok := tmpSecret.Data[tencentcloud.EnvNameTencentCloudAccessKeyID]
+	secretIDBytes, ok = tmpSecret.Data[tencentcloud.EnvNameTencentCloudAccessKeyID]
 	if !ok {
 		return nil, fmt.Errorf("lost %s in secret %s/%s", tencentcloud.EnvNameTencentCloudAccessKeyID,
 			IDKeySecretName, ns)
 	}
-	secretIDBytes, err = base64.StdEncoding.DecodeString(string(secretIDBase64Bytes))
-	if err != nil {
-		return nil, fmt.Errorf("decode %s in secret %s/%s failed, err %s", tencentcloud.EnvNameTencentCloudAccessKeyID,
-			IDKeySecretName, ns, err)
-	}
-	secretKeyBase64Bytes, ok := tmpSecret.Data[tencentcloud.EnvNameTencentCloudAccessKey]
+	secretKeyBytes, ok = tmpSecret.Data[tencentcloud.EnvNameTencentCloudAccessKey]
 	if !ok {
 		return nil, fmt.Errorf("lost %s in secret %s/%s", tencentcloud.EnvNameTencentCloudAccessKey,
 			IDKeySecretName, ns)
-	}
-	secretKeyBytes, err = base64.StdEncoding.DecodeString(string(secretKeyBase64Bytes))
-	if err != nil {
-		return nil, fmt.Errorf("decode %s in secret %s/%s failed, err %s", tencentcloud.EnvNameTencentCloudAccessKey,
-			IDKeySecretName, ns, err)
 	}
 	newClient, err := tencentcloud.NewClbWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
 	if err != nil {
