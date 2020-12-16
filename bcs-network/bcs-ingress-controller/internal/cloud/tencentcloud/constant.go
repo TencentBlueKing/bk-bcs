@@ -36,7 +36,7 @@ const (
 	DefaultTencentCloudClbDomain = "clb.tencentcloudapi.com"
 	// DefaultTencentCloudClbV2Domain default domain for tencent cloud clb
 	DefaultTencentCloudClbV2Domain = "lb.api.qcloud.com"
-	
+
 	// DefaultHealthCheckEnabled default value for health check enabled
 	DefaultHealthCheckEnabled = 1
 	// DefaultHealthCheckIntervalTime default value for health check interval time
@@ -47,7 +47,6 @@ const (
 	DefaultHealthCheckHealthNum = 3
 	// DefaultHealthCheckUnhealthNum default value for healtch check unhealthy num
 	DefaultHealthCheckUnhealthNum = 3
-
 
 	// SystemNameInMetricTencentCloud system name in metric for tencent cloud
 	SystemNameInMetricTencentCloud = "tencentcloud"

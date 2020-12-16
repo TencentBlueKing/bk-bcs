@@ -20,8 +20,8 @@ import (
 func TestVerifyFileUser(t *testing.T) {
 	testCases := []struct {
 		userInput string
-		isValid bool
-	} {
+		isValid   bool
+	}{
 		{
 			"user00",
 			true,

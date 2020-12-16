@@ -15,9 +15,8 @@ package main
 // Option option for cloud netservice client
 type Option struct {
 	Server string `json:"server" value:"127.0.0.1:8080" usage:"server for grpc"`
-	
 }
 
 func main() {
-	
+
 }

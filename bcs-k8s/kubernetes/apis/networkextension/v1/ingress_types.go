@@ -150,7 +150,11 @@ type IngressSpec struct {
 
 // IngressLoadBalancer loadbalancer for ingress
 type IngressLoadBalancer struct {
-	IPs []string `json:"ips,omitempty"`
+	LoadbalancerName string   `json:"loadbalancerName,omitempty"`
+	LoadbalancerID   string   `json:"loadbalancerID,omitempty"`
+	Region           string   `json:"region,omitempty"`
+	Type             string   `json:"type,omitempty"`
+	IPs              []string `json:"ips,omitempty"`
 }
 
 // IngressStatus defines the observed state of Ingress

@@ -23,7 +23,7 @@ func BenchmarkSetData(t *testing.B) {
 	data := map[string]interface{}{
 		"objectType": "TestType",
 		"fields": []map[string]interface{}{
-			map[string]interface{}{
+			{
 				"name": "field1",
 				"type": "fieldtype1",
 			},
@@ -35,12 +35,13 @@ func BenchmarkSetData(t *testing.B) {
 	t.Logf("%+v", sod)
 }
 
+// BenchmarkJSONSetData test json set
 func BenchmarkJSONSetData(t *testing.B) {
 	sod := NewStorageObjectDefinition()
 	data := map[string]interface{}{
 		"objectType": "TestType",
 		"fields": []map[string]interface{}{
-			map[string]interface{}{
+			{
 				"name": "field1",
 				"type": "fieldtype1",
 			},
@@ -55,6 +56,7 @@ func BenchmarkJSONSetData(t *testing.B) {
 	t.Logf("%+v", sod)
 }
 
+// TestGetData test get data
 func TestGetData(t *testing.T) {
 	sod := NewStorageObjectDefinition()
 	sod.Data = StorageObjectDefinitionSpec{

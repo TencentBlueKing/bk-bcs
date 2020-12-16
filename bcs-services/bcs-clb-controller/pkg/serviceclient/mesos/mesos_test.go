@@ -109,44 +109,44 @@ func TestGetIndexRcFromTaskgroupName(t *testing.T) {
 // TestSortTaskgroups test sortTaskgroups
 func TestSortTaskgroups(t *testing.T) {
 	tgs := []*v2.TaskGroup{
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "0.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.ppplication-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "1.application-1.test.00001.160576739375102",
 			},
 		},
 	}
 	tgsAfterSort := []*v2.TaskGroup{
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "0.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "1.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.ppplication-1.test.00001.160576739375102",
 			},

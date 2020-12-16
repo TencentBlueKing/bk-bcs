@@ -396,7 +396,7 @@ func (mgr *AppModManager) stopAppMods(currentAppModMap map[string]*AppModInfo) {
 	mgr.duplicateCheckMapMu.Lock()
 	defer mgr.duplicateCheckMapMu.Unlock()
 
-	for modKey, _ := range mgr.duplicateCheckMap {
+	for modKey := range mgr.duplicateCheckMap {
 		if _, isExist := currentAppModMap[modKey]; isExist {
 			continue
 		}

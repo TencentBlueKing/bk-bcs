@@ -252,7 +252,7 @@ func (c *Client) doWaitForStatus(eniID string, checkNum, checkInterval int, fina
 func (c *Client) queryInstance(instanceIP string) (*cvm.Instance, error) {
 	req := cvm.NewDescribeInstancesRequest()
 	req.Filters = []*cvm.Filter{
-		&cvm.Filter{
+		{
 			Name:   common.StringPtr("private-ip-address"),
 			Values: common.StringPtrs([]string{instanceIP}),
 		},

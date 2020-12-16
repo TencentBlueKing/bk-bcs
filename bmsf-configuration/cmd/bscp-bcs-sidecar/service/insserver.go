@@ -280,7 +280,7 @@ func (ins *InstanceServer) ReportReload(ctx context.Context, req *pbsidecar.Repo
 		Dc:        ins.viper.GetString(fmt.Sprintf("appmod.%s.dc", modKey)),
 		IP:        ins.viper.GetString("appinfo.ip"),
 		Labels:    string(labels),
-		Infos: []*pbcommon.ReportInfo{&pbcommon.ReportInfo{
+		Infos: []*pbcommon.ReportInfo{{
 			Releaseid:      req.Releaseid,
 			MultiReleaseid: req.MultiReleaseid,
 			ReloadTime:     req.ReloadTime,
