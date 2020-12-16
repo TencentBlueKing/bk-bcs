@@ -94,8 +94,14 @@ type LoadBalanceObject struct {
 
 // LoadBalance interface for clb loadbalancer
 type LoadBalance interface {
-	// DescribeLoadBalancer get loadbalancer object by id
+	// DescribeLoadBalancer get loadbalancer object by id or name
 	DescribeLoadBalancer(region, lbID, name string) (*LoadBalanceObject, error)
+
+	// DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
+	DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*LoadBalanceObject, error)
+
+	// IsNamespaced if client is namespaced
+	IsNamespaced() bool
 
 	// EnsureListener ensure listener to cloud, and get listener info
 	EnsureListener(region string, listener *networkextensionv1.Listener) (string, error)
