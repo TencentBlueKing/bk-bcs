@@ -396,9 +396,7 @@ func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *ne
 	req.ListenerId = tcommon.StringPtr(listenerID)
 	if listener.Spec.ListenerAttribute != nil {
 		attr := listener.Spec.ListenerAttribute
-		if attr.SessionTime != 0 {
-			req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
-		}
+		req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
 		if len(attr.LbPolicy) != 0 {
 			req.Scheduler = tcommon.StringPtr(attr.LbPolicy)
 		}
@@ -427,9 +425,7 @@ func (c *Clb) updateRuleAttr(region, lbID, listenerID, locationID string, rule n
 	req.ListenerId = tcommon.StringPtr(listenerID)
 	req.LocationId = tcommon.StringPtr(rule.RuleID)
 	attr := rule.ListenerAttribute
-	if attr.SessionTime != 0 {
-		req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
-	}
+	req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
 	if len(attr.LbPolicy) != 0 {
 		req.Scheduler = tcommon.StringPtr(attr.LbPolicy)
 	}
