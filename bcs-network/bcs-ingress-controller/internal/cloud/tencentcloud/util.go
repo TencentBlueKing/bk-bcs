@@ -13,6 +13,7 @@
 package tencentcloud
 
 import (
+	"reflect"
 	"strconv"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
@@ -69,6 +70,24 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	}
 	if lis.HealthCheck != nil {
 		attr.HealthCheck = convertHealthCheck(lis.HealthCheck)
+	}
+	return attr
+}
+
+// convert clb rule attribute to crd fields
+func convertRuleAttribute(rule *tclb.RuleOutput) *networkextensionv1.IngressListenerAttribute {
+	if rule == nil {
+		return nil
+	}
+	attr := &networkextensionv1.IngressListenerAttribute{}
+	if rule.SessionExpireTime != nil {
+		attr.SessionTime = int(*rule.SessionExpireTime)
+	}
+	if rule.Scheduler != nil {
+		attr.LbPolicy = *rule.Scheduler
+	}
+	if rule.HealthCheck != nil {
+		attr.HealthCheck = convertHealthCheck(rule.HealthCheck)
 	}
 	return attr
 }
@@ -254,7 +273,8 @@ func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1
 		}
 		addBackends, delBackends, updateWeightBackends := getDiffBetweenTargetGroup(
 			existedRule.TargetGroup, rule.TargetGroup)
-		if len(addBackends) != 0 || len(delBackends) != 0 || len(updateWeightBackends) != 0 {
+		if len(addBackends) != 0 || len(delBackends) != 0 || len(updateWeightBackends) != 0 ||
+			!reflect.DeepEqual(existedRule.ListenerAttribute, rule.ListenerAttribute) {
 			updateRule := networkextensionv1.ListenerRule{}
 			updateRule.Domain = rule.Domain
 			updateRule.Path = rule.Path

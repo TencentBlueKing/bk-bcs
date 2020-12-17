@@ -170,11 +170,26 @@ func (c *Clb) getListenerInfoByPort(region, lbID string, port int) (*networkexte
 	li.Spec.Protocol = strings.ToLower(*respListener.Protocol)
 	li.Spec.Certificate = convertCertificate(respListener.Certificate)
 	li.Spec.ListenerAttribute = convertListenerAttribute(respListener)
+	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
+	if len(respListener.Rules) != 0 {
+		for _, respRule := range respListener.Rules {
+			if respRule.LocationId != nil {
+				ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
+			}
+		}
+	}
 
 	// get backends info of listener
 	rules, tg, err := c.getListenerBackendsByPort(region, lbID, port)
 	if err != nil {
 		return nil, err
+	}
+	if len(rules) != 0 {
+		for _, rule := range rules {
+			if ruleAttr, ok := ruleIDAttrMap[rule.RuleID]; ok {
+				rule.ListenerAttribute = ruleAttr
+			}
+		}
 	}
 	li.Spec.Rules = rules
 	li.Spec.TargetGroup = tg
@@ -295,7 +310,7 @@ func (c *Clb) updateListener(region string, ingressListener, cloudListener *netw
 // update http and https listener
 func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
 	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
-	if ingressListener.Spec.ListenerAttribute != nil &&
+	if (ingressListener.Spec.ListenerAttribute != nil || ingressListener.Spec.Certificate != nil) &&
 		(!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) ||
 			!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
