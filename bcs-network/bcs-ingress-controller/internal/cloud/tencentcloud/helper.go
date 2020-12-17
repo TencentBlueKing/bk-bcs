@@ -392,6 +392,7 @@ func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *ne
 		return nil
 	}
 	req := tclb.NewModifyListenerRequest()
+	req.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadbalancerID)
 	req.ListenerId = tcommon.StringPtr(listenerID)
 	if listener.Spec.ListenerAttribute != nil {
 		attr := listener.Spec.ListenerAttribute
