@@ -185,9 +185,9 @@ func (c *Clb) getListenerInfoByPort(region, lbID string, port int) (*networkexte
 		return nil, err
 	}
 	if len(rules) != 0 {
-		for _, rule := range rules {
-			if ruleAttr, ok := ruleIDAttrMap[rule.RuleID]; ok {
-				rule.ListenerAttribute = ruleAttr
+		for index := range rules {
+			if ruleAttr, ok := ruleIDAttrMap[rules[index].RuleID]; ok {
+				rules[index].ListenerAttribute = ruleAttr
 			}
 		}
 	}
@@ -309,10 +309,9 @@ func (c *Clb) updateListener(region string, ingressListener, cloudListener *netw
 
 // update http and https listener
 func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
-	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
-	if (ingressListener.Spec.ListenerAttribute != nil || ingressListener.Spec.Certificate != nil) &&
-		(!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) ||
-			!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) {
+	// if listener certificate is defined and is different from remote cloud listener attribute, then do update
+	if ingressListener.Spec.Certificate != nil &&
+		!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
@@ -350,7 +349,7 @@ func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *
 func (c *Clb) update4LayerListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
 	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
 	if ingressListener.Spec.ListenerAttribute != nil &&
-		!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) {
+		needUpdateAttribute(cloudListener.Spec.ListenerAttribute, ingressListener.Spec.ListenerAttribute) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in update4LayerListener failed, err %s", err.Error())
@@ -459,7 +458,7 @@ func (c *Clb) updateRuleAttr(region, lbID, listenerID, locationID string, rule n
 // update listener rule
 func (c *Clb) updateListenerRule(region, lbID, listenerID string,
 	existedRule, newRule networkextensionv1.ListenerRule) error {
-	if !reflect.DeepEqual(newRule.ListenerAttribute, existedRule.ListenerAttribute) {
+	if needUpdateAttribute(existedRule.ListenerAttribute, newRule.ListenerAttribute) {
 		err := c.updateRuleAttr(region, lbID, listenerID, existedRule.RuleID, newRule)
 		if err != nil {
 			return err
