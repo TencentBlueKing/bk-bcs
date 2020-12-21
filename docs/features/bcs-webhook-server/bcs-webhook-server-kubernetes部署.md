@@ -282,7 +282,8 @@ spec:
         - --server_key_file=/data/bcs/cert/key.pem
         - --engine_type=kubernetes
         - --plugin_dir=/data/bcs/plugins
-        - --dbpriv,bscp
+        - --plugins
+        - dbpriv,bscp
         # bcs-webhook-server镜像地址
         image: bcs-webhook-server:1.3.0
         imagePullPolicy: IfNotPresent
