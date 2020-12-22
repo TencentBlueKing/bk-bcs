@@ -170,11 +170,26 @@ func (c *Clb) getListenerInfoByPort(region, lbID string, port int) (*networkexte
 	li.Spec.Protocol = strings.ToLower(*respListener.Protocol)
 	li.Spec.Certificate = convertCertificate(respListener.Certificate)
 	li.Spec.ListenerAttribute = convertListenerAttribute(respListener)
+	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
+	if len(respListener.Rules) != 0 {
+		for _, respRule := range respListener.Rules {
+			if respRule.LocationId != nil {
+				ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
+			}
+		}
+	}
 
 	// get backends info of listener
 	rules, tg, err := c.getListenerBackendsByPort(region, lbID, port)
 	if err != nil {
 		return nil, err
+	}
+	if len(rules) != 0 {
+		for index := range rules {
+			if ruleAttr, ok := ruleIDAttrMap[rules[index].RuleID]; ok {
+				rules[index].ListenerAttribute = ruleAttr
+			}
+		}
 	}
 	li.Spec.Rules = rules
 	li.Spec.TargetGroup = tg
@@ -294,10 +309,9 @@ func (c *Clb) updateListener(region string, ingressListener, cloudListener *netw
 
 // update http and https listener
 func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
-	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
-	if ingressListener.Spec.ListenerAttribute != nil &&
-		(!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) ||
-			!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) {
+	// if listener certificate is defined and is different from remote cloud listener attribute, then do update
+	if ingressListener.Spec.Certificate != nil &&
+		!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
@@ -335,7 +349,7 @@ func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *
 func (c *Clb) update4LayerListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
 	// if listener attribute is defined and is different from remote cloud listener attribute, then do update
 	if ingressListener.Spec.ListenerAttribute != nil &&
-		!reflect.DeepEqual(ingressListener.Spec.ListenerAttribute, cloudListener.Spec.ListenerAttribute) {
+		needUpdateAttribute(cloudListener.Spec.ListenerAttribute, ingressListener.Spec.ListenerAttribute) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in update4LayerListener failed, err %s", err.Error())
@@ -392,12 +406,11 @@ func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *ne
 		return nil
 	}
 	req := tclb.NewModifyListenerRequest()
+	req.LoadBalancerId = tcommon.StringPtr(listener.Spec.LoadbalancerID)
 	req.ListenerId = tcommon.StringPtr(listenerID)
 	if listener.Spec.ListenerAttribute != nil {
 		attr := listener.Spec.ListenerAttribute
-		if attr.SessionTime != 0 {
-			req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
-		}
+		req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
 		if len(attr.LbPolicy) != 0 {
 			req.Scheduler = tcommon.StringPtr(attr.LbPolicy)
 		}
@@ -426,9 +439,7 @@ func (c *Clb) updateRuleAttr(region, lbID, listenerID, locationID string, rule n
 	req.ListenerId = tcommon.StringPtr(listenerID)
 	req.LocationId = tcommon.StringPtr(rule.RuleID)
 	attr := rule.ListenerAttribute
-	if attr.SessionTime != 0 {
-		req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
-	}
+	req.SessionExpireTime = tcommon.Int64Ptr(int64(attr.SessionTime))
 	if len(attr.LbPolicy) != 0 {
 		req.Scheduler = tcommon.StringPtr(attr.LbPolicy)
 	}
@@ -447,7 +458,7 @@ func (c *Clb) updateRuleAttr(region, lbID, listenerID, locationID string, rule n
 // update listener rule
 func (c *Clb) updateListenerRule(region, lbID, listenerID string,
 	existedRule, newRule networkextensionv1.ListenerRule) error {
-	if !reflect.DeepEqual(newRule.ListenerAttribute, existedRule.ListenerAttribute) {
+	if needUpdateAttribute(existedRule.ListenerAttribute, newRule.ListenerAttribute) {
 		err := c.updateRuleAttr(region, lbID, listenerID, existedRule.RuleID, newRule)
 		if err != nil {
 			return err
