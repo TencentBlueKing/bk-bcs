@@ -4,7 +4,7 @@ BCS团队秉持开放的态度，欢迎志同道合的开发者一起贡献项�
 
 ## 代码准则
 
-BCS团队golang代码准则遵循蓝鲸代码规范[blueking-golang-code-conduct](./docs/specification/blueking-golang-code-conduct.pdf)
+BCS团队golang代码准则遵循蓝鲸代码规范[blueking-golang-code-conduct](./docs/specification/blueking-golang-code-conduct1.0.1.md)
 
 ## 代码协议
 
