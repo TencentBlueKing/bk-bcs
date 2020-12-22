@@ -273,7 +273,6 @@ spec:
             status:
               type: string
           required:
-          - floatingIPEni
           - status
           type: object
       type: object
