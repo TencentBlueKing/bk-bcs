@@ -27,12 +27,6 @@ type DbPrivOptions struct {
 
 // Validate validate options
 func (dpo *DbPrivOptions) Validate() error {
-	if len(dpo.KubeMaster) == 0 {
-		return fmt.Errorf("kube_master cannot be empty")
-	}
-	if len(dpo.Kubeconfig) == 0 {
-		return fmt.Errorf("kubeconfig cannot be empty")
-	}
 	if len(dpo.NetworkType) == 0 {
 		dpo.NetworkType = NetworkTypeOverlay
 	}

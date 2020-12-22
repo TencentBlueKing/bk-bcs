@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	clientGoCache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -131,9 +132,18 @@ func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bo
 }
 
 func (h *Hooker) initKubeClient() error {
-	cfg, err := clientcmd.BuildConfigFromFlags(h.opt.KubeMaster, h.opt.Kubeconfig)
-	if err != nil {
-		return fmt.Errorf("building kubeconfig failed, err %s", err.Error())
+	var cfg *restclient.Config
+	var err error
+	if len(h.opt.KubeMaster) == 0 && len(h.opt.Kubeconfig) == 0 {
+		cfg, err = restclient.InClusterConfig()
+		if err != nil {
+			return fmt.Errorf("build config from in cluster failed, err %s", err.Error())
+		}
+	} else {
+		cfg, err = clientcmd.BuildConfigFromFlags(h.opt.KubeMaster, h.opt.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("building kubeconfig failed, err %s", err.Error())
+		}
 	}
 	// init extension kubeclient to create db privilege crd
 	extensionClient, err := apiextensionsclient.NewForConfig(cfg)
