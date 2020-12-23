@@ -11,6 +11,7 @@
  *
  */
 
+// +kubebuilder:validation:Optional
 package v1alpha1
 
 import (
@@ -40,13 +41,21 @@ const (
 // +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/kubernetes/pkg/apis/autoscaling.Scale
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/kubernetes/pkg/apis/autoscaling.Scale,result=k8s.io/kubernetes/pkg/apis/autoscaling.Scale
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:printcolumn:JSONPath=.spec.replicas,name=Replicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.readyReplicas,name=Ready_Replicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.currentReplicas,name=Current_Replicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.updatedReplicas,name=Updated_Replicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.status.updatedReadyReplicas,name=Updated_Ready_Replicas,type=integer
+// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=Age,type=date,description=Age of the gamestatefulset
+// +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:selectorpath=.status.labelSelector,specpath=.spec.replicas,statuspath=.status.replicas
 type GameStatefulSet struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// +optional
 	metav1.ObjectMeta `json:"metadata,inline" protobuf:"bytes,1,opt,name=metadata"`
 
-	// +optional
+	// +kubebuilder:validation:Required
 	Spec GameStatefulSetSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 
 	// +optional
@@ -75,6 +84,7 @@ type GameStatefulSetUpdateStrategy struct {
 	// Type indicates the type of the StatefulSetUpdateStrategy.
 	// Default is RollingUpdate.
 	// +optional
+	// +kubebuilder:validation:Enum=RollingUpdate;OnDelete;InplaceUpdate;HotPatchUpdate
 	Type GameStatefulSetUpdateStrategyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type,casttype=StatefulSetStrategyType"`
 	// RollingUpdate is used to communicate parameters when Type is RollingUpdateStatefulSetStrategyType.
 	// +optional
@@ -89,13 +99,15 @@ type GameStatefulSetUpdateStrategy struct {
 }
 
 type CanaryStrategy struct {
+	// +kubebuilder:validation:Required
 	Steps []CanaryStep `json:"steps,omitempty"`
 }
 
 type CanaryStep struct {
-	Partition *int32                 `json:"partition,omitempty"`
-	Pause     *CanaryPause           `json:"pause,omitempty"`
-	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	Partition *int32       `json:"partition,omitempty"`
+	Pause     *CanaryPause `json:"pause,omitempty"`
+	// +kubebuilder:validation:Required
+	Hook *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
 
 type CanaryPause struct {
@@ -153,12 +165,14 @@ type GameStatefulSetSpec struct {
 	// selector is a label query over pods that should match the replica count.
 	// It must match the pod template's labels.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	// +kubebuilder:validation:Required
 	Selector *metav1.LabelSelector `json:"selector" protobuf:"bytes,2,opt,name=selector"`
 
 	// template is the object that describes the pod that will be created if
 	// insufficient replicas are detected. Each pod stamped out by the StatefulSet
 	// will fulfill this Template, but have a unique identity from the rest
 	// of the StatefulSet.
+	// +kubebuilder:validation:Required
 	Template core.PodTemplateSpec `json:"template" protobuf:"bytes,3,opt,name=template"`
 
 	// volumeClaimTemplates is a list of claims that pods are allowed to reference.
@@ -176,6 +190,7 @@ type GameStatefulSetSpec struct {
 	// the network identity of the set. Pods get DNS/hostnames that follow the
 	// pattern: pod-specific-string.serviceName.default.svc.cluster.local
 	// where "pod-specific-string" is managed by the StatefulSet controller.
+	// +kubebuilder:validation:Required
 	ServiceName string `json:"serviceName" protobuf:"bytes,5,opt,name=serviceName"`
 
 	// podManagementPolicy controls how pods are created during initial scale up,
@@ -187,6 +202,7 @@ type GameStatefulSetSpec struct {
 	// to match the desired scale without waiting, and on scale down will delete
 	// all pods at once.
 	// +optional
+	// +kubebuilder:validation:Enum=OrderedReady;Parallel
 	PodManagementPolicy PodManagementPolicyType `json:"podManagementPolicy,omitempty" protobuf:"bytes,6,opt,name=podManagementPolicy,casttype=PodManagementPolicyType"`
 
 	// updateStrategy indicates the StatefulSetUpdateStrategy that will be
@@ -206,6 +222,7 @@ type GameStatefulSetSpec struct {
 }
 
 type GameStatefulSetPreDeleteUpdateStrategy struct {
+	// +kubebuilder:validation:Required
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
