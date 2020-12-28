@@ -49,6 +49,14 @@ func InitWorkloads(i *imageLoader) (map[string]Workload, error) {
 	}
 	workloads[bcsgd.Name()] = bcsgd
 
+	// add bcsgs
+	bcsgs := &bcsgsWorkload{}
+	err = bcsgs.Init(i)
+	if err != nil {
+		return nil, fmt.Errorf("init bcsgs workload failed: %v", err)
+	}
+	workloads[bcsgs.Name()] = bcsgs
+
 	return workloads, nil
 }
 
