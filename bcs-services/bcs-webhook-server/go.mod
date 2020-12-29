@@ -24,7 +24,8 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator v0.0.0-20201125100148-30bfe37261b1
+	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator v0.0.0-00010101000000-000000000000
 	github.com/deckarep/golang-set v1.7.1
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
