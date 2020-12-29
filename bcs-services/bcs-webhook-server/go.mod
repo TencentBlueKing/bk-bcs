@@ -18,7 +18,7 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93
 	k8s.io/apiserver => k8s.io/apiserver v0.0.0-20181213151703-3ccfe8365421
 	k8s.io/client-go => k8s.io/client-go v0.0.0-20181213151034-8d9ed539ba31
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20201107163737-74b467f3a622
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20181109181836-c59034cc13d5
 	k8s.io/kubernetes => k8s.io/kubernetes v1.13.1
 )
 
