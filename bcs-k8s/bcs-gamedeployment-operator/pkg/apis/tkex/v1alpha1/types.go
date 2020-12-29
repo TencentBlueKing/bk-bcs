@@ -118,10 +118,9 @@ type CanaryStrategy struct {
 }
 
 type CanaryStep struct {
-	Partition *int32       `json:"partition,omitempty"`
-	Pause     *CanaryPause `json:"pause,omitempty"`
-	// +kubebuilder:validation:Required
-	Hook *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	Partition *int32                 `json:"partition,omitempty"`
+	Pause     *CanaryPause           `json:"pause,omitempty"`
+	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
 
 type CanaryPause struct {
