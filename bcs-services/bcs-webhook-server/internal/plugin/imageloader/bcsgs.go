@@ -86,12 +86,12 @@ func (b *bcsgsWorkload) Init(i *imageLoader) error {
 // LoadImageBeforeUpdate prevents workload instance from updating and
 // create a image-load job.
 func (b *bcsgsWorkload) LoadImageBeforeUpdate(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
-	// get req gd
+	// get req gs
 	newGS := &bcsgstkexv1alpha1.GameStatefulSet{}
 	raw := ar.Request.Object.Raw
 	err := json.Unmarshal(raw, newGS)
 	if err != nil {
-		blog.Errorf("get new gd failed: %v", err)
+		blog.Errorf("get new gs failed: %v", err)
 		return toAdmissionResponse(err)
 	}
 
@@ -100,12 +100,12 @@ func (b *bcsgsWorkload) LoadImageBeforeUpdate(ar v1beta1.AdmissionReview) *v1bet
 		return toAdmissionResponse(nil)
 	}
 
-	// get old gd
+	// get old gs
 	oldGS := &bcsgstkexv1alpha1.GameStatefulSet{}
 	raw = ar.Request.OldObject.Raw
 	err = json.Unmarshal(raw, oldGS)
 	if err != nil {
-		blog.Errorf("get old gd failed: %v", err)
+		blog.Errorf("get old gs failed: %v", err)
 		return toAdmissionResponse(err)
 	}
 
@@ -191,7 +191,7 @@ func (b *bcsgsWorkload) LoadImageBeforeUpdate(ar v1beta1.AdmissionReview) *v1bet
 	return toAdmissionResponse(nil, finalPatch)
 }
 
-// imageDiff diffs old and new gd, and return patch string and containers for job to load images.
+// imageDiff diffs old and new gs, and return patch string and containers for job to load images.
 func (b *bcsgsWorkload) imageDiff(o, n *bcsgstkexv1alpha1.GameStatefulSet) (string, []corev1.Container) {
 	oldContainers := o.Spec.Template.Spec.Containers
 	newContainers := n.Spec.Template.Spec.Containers
@@ -236,33 +236,33 @@ func (b *bcsgsWorkload) imageDiff(o, n *bcsgstkexv1alpha1.GameStatefulSet) (stri
 // JobDoneHook is called after image-load job is done.
 // This function trigger the update keepgoing or attachs failed event to the workload instance.
 func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event) error {
-	// get gd and update
-	gd, err := b.lister.GameStatefulSets(namespace).Get(name)
+	// get gs and update
+	gs, err := b.lister.GameStatefulSets(namespace).Get(name)
 	if err != nil {
-		blog.Errorf("get gd %s-%s failed: %v", namespace, name, err)
+		blog.Errorf("get gs %s-%s failed: %v", namespace, name, err)
 		return err
 	}
-	blog.V(3).Infof("job done, update bcsgs %v", gd)
+	blog.V(3).Infof("job done, update bcsgs %v", gs)
 
 	// handle event
 	if event != nil {
-		// add event to gd and return
+		// add event to gs and return
 		// add object ref
 		// finish the job
-		//event.Name = gd.Name + "-imageloadfailed"
-		event.Namespace = gd.Namespace
+		//event.Name = gs.Name + "-imageloadfailed"
+		event.Namespace = gs.Namespace
 		event.InvolvedObject = corev1.ObjectReference{
 			Kind:            bcsgsapi.Kind,
-			Namespace:       gd.Namespace,
-			Name:            gd.Name,
-			UID:             gd.UID,
-			APIVersion:      gd.APIVersion,
-			ResourceVersion: gd.ResourceVersion,
+			Namespace:       gs.Namespace,
+			Name:            gs.Name,
+			UID:             gs.UID,
+			APIVersion:      gs.APIVersion,
+			ResourceVersion: gs.ResourceVersion,
 		}
 		return nil
 	}
 
-	updatePatch, ok := gd.Annotations[imageUpdateAnno]
+	updatePatch, ok := gs.Annotations[imageUpdateAnno]
 	if !ok {
 		// no imageUpdateAnno found, finish the job
 		blog.Errorf("no imageUpdateAnno of bcsgs(%s-%s) when job is done", namespace, name)
@@ -273,8 +273,8 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 	updatePatch = updatePatch[:len(updatePatch)-1] + "," +
 		fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/%s\",\"value\":\"1\"}",
 			imagePreloadDoneLabel) + "]"
-	_, err = b.client.TkexV1alpha1().GameStatefulSets(gd.Namespace).Patch(
-		gd.Name,
+	_, err = b.client.TkexV1alpha1().GameStatefulSets(gs.Namespace).Patch(
+		gs.Name,
 		types.JSONPatchType,
 		[]byte(updatePatch))
 	if err != nil {
@@ -310,17 +310,17 @@ func applyPatchToGS(old *bcsgstkexv1alpha1.GameStatefulSet, patch string) (*bcsg
 }
 
 func (b *bcsgsWorkload) generateJobByDiff(
-	gd *bcsgstkexv1alpha1.GameStatefulSet, diffContainers []corev1.Container) (*batchv1.Job, error) {
+	gs *bcsgstkexv1alpha1.GameStatefulSet, diffContainers []corev1.Container) (*batchv1.Job, error) {
 	job := newJob(diffContainers)
-	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower(bcsgsapi.Kind), gd.Namespace, gd.Name)
+	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower(bcsgsapi.Kind), gs.Namespace, gs.Name)
 	// add fields to set anti affinity
 	job.Labels[jobNameLabel] = job.Name
-	job.Labels[workloadInsNameLabel] = gd.Name
-	job.Labels[workloadInsNamespaceLabel] = gd.Namespace
+	job.Labels[workloadInsNameLabel] = gs.Name
+	job.Labels[workloadInsNamespaceLabel] = gs.Namespace
 	job.Annotations[workloadNameAnno] = b.Name()
-	nodes := b.nodesOfGS(gd)
+	nodes := b.nodesOfGS(gs)
 	if len(nodes) == 0 {
-		return nil, fmt.Errorf("get nodes of job failed in bcsgs %s-%s", gd.Namespace, gd.Name)
+		return nil, fmt.Errorf("get nodes of job failed in bcsgs %s-%s", gs.Namespace, gs.Name)
 	}
 	// add fields to check image on nodes
 	job.Annotations[jobOnNodeAnno] = strings.Join(nodes, ",")
@@ -333,14 +333,14 @@ func (b *bcsgsWorkload) generateJobByDiff(
 	// add fields to select pod and pod affinity
 	job.Spec.Template.Labels[jobNameLabel] = job.Name
 
-	// add affinity to execute job with pod of gd
+	// add affinity to execute job with pod of gs
 	// add anti affinity to make sure no two pods of a job execute at same node
 	job.Spec.Template.Spec.Affinity = &corev1.Affinity{
 		PodAffinity: &corev1.PodAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 				{
-					Namespaces:    []string{gd.Namespace},
-					LabelSelector: gd.Spec.Selector,
+					Namespaces:    []string{gs.Namespace},
+					LabelSelector: gs.Spec.Selector,
 					TopologyKey:   kubeletapi.LabelHostname,
 				},
 			},
@@ -348,7 +348,7 @@ func (b *bcsgsWorkload) generateJobByDiff(
 		PodAntiAffinity: &corev1.PodAntiAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 				{
-					Namespaces: []string{gd.Namespace},
+					Namespaces: []string{gs.Namespace},
 					LabelSelector: &metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							jobNameLabel: job.Name,
@@ -363,14 +363,14 @@ func (b *bcsgsWorkload) generateJobByDiff(
 	return job, nil
 }
 
-func (b *bcsgsWorkload) nodesOfGS(gd *bcsgstkexv1alpha1.GameStatefulSet) []string {
+func (b *bcsgsWorkload) nodesOfGS(gs *bcsgstkexv1alpha1.GameStatefulSet) []string {
 	ret := []string{}
-	// get all pods of the gd
-	set := labels.Set(gd.Spec.Selector.MatchLabels)
+	// get all pods of the gs
+	set := labels.Set(gs.Spec.Selector.MatchLabels)
 	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
-	pods, err := b.i.k8sClient.CoreV1().Pods(gd.Namespace).List(listOptions)
+	pods, err := b.i.k8sClient.CoreV1().Pods(gs.Namespace).List(listOptions)
 	if err != nil {
-		blog.Errorf("get pods of bcsgs(%s-%s) failed: %v", gd.Namespace, gd.Name, err)
+		blog.Errorf("get pods of bcsgs(%s-%s) failed: %v", gs.Namespace, gs.Name, err)
 		return ret
 	}
 	for _, pod := range pods.Items {
