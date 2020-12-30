@@ -13,7 +13,7 @@ spec:
   updateStrategy:
     type: InplaceUpdate
     rollingUpdate:
-    partition: 1
+      partition: 1
     inPlaceUpdateStrategy:
       gracePeriodSeconds: 30
   replicas: 1

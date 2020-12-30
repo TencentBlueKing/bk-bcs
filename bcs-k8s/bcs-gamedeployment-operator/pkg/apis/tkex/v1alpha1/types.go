@@ -11,6 +11,7 @@
  *
  */
 
+// +kubebuilder:validation:Optional
 package v1alpha1
 
 import (
@@ -41,9 +42,11 @@ type GameDeploymentSpec struct {
 	// selector is a label query over pods that should match the replica count.
 	// It must match the pod template's labels.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	// +kubebuilder:validation:Required
 	Selector *metav1.LabelSelector `json:"selector" protobuf:"bytes,2,opt,name=selector"`
 
 	// template is the object that describes the pod that will be created
+	// +kubebuilder:validation:Required
 	Template core.PodTemplateSpec `json:"template" protobuf:"bytes,3,opt,name=template"`
 
 	// ScaleStrategy indicates the ScaleStrategy that will be employed to
@@ -84,6 +87,7 @@ type GameDeploymentScaleStrategy struct {
 type GameDeploymentUpdateStrategy struct {
 	// Type indicates the type of the GameDeploymentUpdateStrategy.
 	// Default is ReCreate.
+	// +kubebuilder:validation:Enum=RollingUpdate;InplaceUpdate;HotPatchUpdate
 	Type           GameDeploymentUpdateStrategyType `json:"type,omitempty"`
 	CanaryStrategy *CanaryStrategy                  `json:"canary,omitempty"`
 	// Partition is the desired number of pods in old revisions. It means when partition
@@ -109,6 +113,7 @@ type GameDeploymentUpdateStrategy struct {
 }
 
 type CanaryStrategy struct {
+	// +kubebuilder:validation:Required
 	Steps []CanaryStep `json:"steps,omitempty"`
 }
 
@@ -221,10 +226,19 @@ type GameDeploymentCondition struct {
 // GameDeployment is the Schema for the gamedeployments API
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:printcolumn:JSONPath=.spec.replicas,name=DESIRED,type=integer,description=The desired number of pods.
+// +kubebuilder:printcolumn:JSONPath=.status.updatedReplicas,name=UPDATED,type=integer,description=The number of pods updated.
+// +kubebuilder:printcolumn:JSONPath=.status.updatedReadyReplicas,name=UPDATED_READY,type=integer,description=The number of pods updated and ready.
+// +kubebuilder:printcolumn:JSONPath=.status.readyReplicas,name=READY,type=integer,description=The number of pods ready.
+// +kubebuilder:printcolumn:JSONPath=.status.replicas,name=TOTAL,type=integer,description=The number of currently all pods.
+// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=Age,type=date,description=CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
+// +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:selectorpath=.status.labelSelector,specpath=.spec.replicas,statuspath=.status.replicas
 type GameDeployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// +kubebuilder:validation:Required
 	Spec   GameDeploymentSpec   `json:"spec,omitempty"`
 	Status GameDeploymentStatus `json:"status"`
 }
