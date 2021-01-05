@@ -889,6 +889,10 @@ func TestIngressConvert(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	mockCloud := mock.NewMockLoadBalance(ctrl)
+	mockCloud.EXPECT().
+		IsNamespaced().
+		Return(false).
+		AnyTimes()
 	mockCloud.
 		EXPECT().
 		DescribeLoadBalancer("testregion", "lb1", "").
@@ -915,6 +919,7 @@ func TestIngressConvert(t *testing.T) {
 		newScheme.AddKnownTypes(
 			networkextensionv1.GroupVersion,
 			&networkextensionv1.Listener{},
+			&networkextensionv1.Ingress{},
 			existedListeners)
 		newScheme.AddKnownTypes(
 			k8scorev1.SchemeGroupVersion,
@@ -940,6 +945,7 @@ func TestIngressConvert(t *testing.T) {
 		)
 
 		for _, ingress := range test.ingresses {
+			cli.Create(context.TODO(), &ingress)
 			err := ic.ProcessUpdateIngress(&ingress)
 			if (err != nil && !test.hasErr) || (err == nil && test.hasErr) {
 				t.Errorf("expect %v, but err is %v", test.hasErr, err)

@@ -1,0 +1,70 @@
+# Default values for bcs-webhook-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+plugins:
+  bscp:
+    enabled: false
+  dbpriv:
+    enabled: true
+    # 连击kube-apiserver的配置，如果kubeMaster和kubeconfigPath都为空，则使用InClusterConfig
+    kubeMaster: ""
+    kubeconfigPath: ""
+    # pod的网络模式，[overlay, underlay]
+    networkType: "overlay"
+    # esb url
+    esbURL: ""
+    # 初始化容器镜像
+    initContainerImage: ""
+    sdkAppCode: ""
+    sdkAppSecret: ""
+    sdkOperator: ""
+  imageloader:
+    enabled: true
+
+pluginConfDir: /data/bcs/plugins
+enabledPlugins: dbpriv,imageloader
+
+replicaCount: 1
+
+image:
+  repository: bcs-webhook-server
+  pullPolicy: IfNotPresent
+  tag: "test1"
+
+imagePullSecrets: []
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+resource: {}
+
+serverCertFile: /data/bcs/cert/cert.pem
+serverKeyFile: /data/bcs/cert/key.pem
+serverCert: "xxxxxx"
+serverKey: "xxxxxx"
+caBundle: "xxxxxx"
+
+volumeMounts:
+  - name: webhook-certs
+    mountPath: /data/bcs/cert
+    readOnly: true
+  - name: plugin-confs
+    mountPath: /data/bcs/plugins
+
+volumes:
+  - name: webhook-certs
+    secret:
+      secretName: bcs-webhook-server-certs
+  - name: plugin-confs
+    configMap:
+      name: bcs-webhook-server-plugin-confs
+      items:
+      - key: "dbpriv.conf"
+        path: "dbpriv.conf"
+

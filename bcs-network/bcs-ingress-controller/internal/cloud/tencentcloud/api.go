@@ -72,6 +72,29 @@ func NewAPIWrapper() (*APIWrapper, error) {
 	return a, nil
 }
 
+// NewAPIWrapperWithSecretIDKey create API wrapper with secret id and secret key
+func NewAPIWrapperWithSecretIDKey(id, key string) (*APIWrapper, error) {
+	a := &APIWrapper{}
+	// load config from env
+	err := a.loadEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	a.secretID = id
+	a.secretKey = key
+
+	// domain for clb service is different between internal cloud and public cloud
+	clbClient := qcloud.NewClient(fmt.Sprintf("https://%s/v2/index.php", a.domain), a.secretKey)
+	// here we don't use cvm client, so leave it nil
+	clbAPI := qcloud.NewAPI(clbClient, nil)
+	a.apiCli = clbAPI
+	// set api call rate limit
+	a.throttler = throttle.NewTokenBucket(int64(throttleQPS), int64(bucketSize))
+
+	return a, nil
+}
+
 // common method for check api response, and do sleep action
 func (a *APIWrapper) checkErrCode(errCode int) {
 	if errCode == APIRequestLimitExceededCode {

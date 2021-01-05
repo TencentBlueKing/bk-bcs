@@ -42,6 +42,8 @@ type RuleConverter struct {
 	ingressNamespace string
 	// rule info
 	rule *networkextensionv1.IngressRule
+	// if true, ingress can only select service, endpoint and workload in the same namespace
+	isNamespaced bool
 }
 
 // NewRuleConverter create rule converter
@@ -58,7 +60,13 @@ func NewRuleConverter(
 		ingressName:      ingressName,
 		ingressNamespace: ingressNamespace,
 		rule:             rule,
+		isNamespaced:     false,
 	}
+}
+
+// SetNamespaced set namespaced flag
+func (rc *RuleConverter) SetNamespaced(isNamespaced bool) {
+	rc.isNamespaced = isNamespaced
 }
 
 // DoConvert do convert action
@@ -193,17 +201,25 @@ func (rc *RuleConverter) generateTargetGroup(protocol string, routes []networkex
 func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1.ServiceRoute) (
 	[]networkextensionv1.ListenerBackend, error) {
 
+	// set namespace when namespaced flag is set
+	svcNamespace := svcRoute.ServiceNamespace
+	if rc.isNamespaced {
+		svcNamespace = rc.ingressNamespace
+	}
+
+	// get service
 	svc := &k8scorev1.Service{}
 	err := rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
-		Namespace: svcRoute.ServiceNamespace,
+		Namespace: svcNamespace,
 		Name:      svcRoute.ServiceName,
 	}, svc)
+
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("get Service %s/%s failed, err %s",
-			svcRoute.ServiceNamespace, svcRoute.ServiceName, err.Error())
+			svcRoute.ServiceName, svcNamespace, err.Error())
 	}
 	var svcPort *k8scorev1.ServicePort
 	for _, port := range svc.Spec.Ports {
@@ -214,7 +230,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 	}
 	if svcPort == nil {
 		blog.Warnf("port %d is not found in service %s/%s",
-			svcRoute.ServicePort, svcRoute.ServiceNamespace, svcRoute.ServiceName)
+			svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace)
 		return nil, nil
 	}
 
@@ -225,7 +241,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 	// 		the main purpose is to modify the weight
 	if svcRoute.IsDirectConnect {
 		backends, err := rc.getServiceBackendsWithoutSubsets(svcPort, svcRoute.ServiceName,
-			svcRoute.ServiceNamespace, svcRoute.GetWeight())
+			svcNamespace, svcRoute.GetWeight())
 		if err != nil {
 			return nil, err
 		}
@@ -272,11 +288,21 @@ func (rc *RuleConverter) getServiceBackendsWithoutSubsets(
 	svcPort *k8scorev1.ServicePort, svcName, svcNamespace string, weight int) (
 	[]networkextensionv1.ListenerBackend, error) {
 
+	var err error
 	eps := &k8scorev1.Endpoints{}
-	err := rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
-		Namespace: svcNamespace,
-		Name:      svcName,
-	}, eps)
+	// get endpoints in the same namespace with ingress when namespaced flag is set
+	if rc.isNamespaced {
+		err = rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
+			Namespace: rc.ingressNamespace,
+			Name:      svcName,
+		}, eps)
+	} else {
+		err = rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
+			Namespace: svcNamespace,
+			Name:      svcName,
+		}, eps)
+	}
+
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			return nil, nil

@@ -106,6 +106,33 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	return sw, nil
 }
 
+// NewSdkWrapperWithSecretIDKey create sdk wrapper with secret id and secret key
+func NewSdkWrapperWithSecretIDKey(id, key string) (*SdkWrapper, error) {
+	sw := &SdkWrapper{}
+	err := sw.loadEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	sw.secretID = id
+	sw.secretKey = key
+
+	credential := tcommon.NewCredential(
+		sw.secretID,
+		sw.secretKey,
+	)
+	cpf := tprofile.NewClientProfile()
+	if len(sw.domain) != 0 {
+		cpf.HttpProfile.Endpoint = sw.domain
+	}
+	sw.credential = credential
+	sw.cpf = cpf
+	sw.clbCliMap = make(map[string]*tclb.Client)
+
+	sw.throttler = throttle.NewTokenBucket(int64(throttleQPS), int64(bucketSize))
+	return sw, nil
+}
+
 // load config for environment variables
 func (sw *SdkWrapper) loadEnv() error {
 	clbDomain := os.Getenv(EnvNameTencentCloudClbDomain)
