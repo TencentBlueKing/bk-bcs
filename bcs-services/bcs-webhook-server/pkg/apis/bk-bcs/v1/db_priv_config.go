@@ -34,6 +34,7 @@ type BcsDbPrivConfigSpec struct {
 	DbType      string            `json:"dbType"`
 	CallUser    string            `json:"callUser"`
 	DbName      string            `json:"dbName"`
+	Operator    string            `json:"operator"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
