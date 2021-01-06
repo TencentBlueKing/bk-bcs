@@ -56,6 +56,7 @@ type DBPrivEnv struct {
 	CallUser string `json:"callUser"`
 	DbName   string `json:"dbName"`
 	CallType string `json:"callType"`
+	Operator string `json:"operator"`
 }
 
 // AnnotationKey implements plugin interface
@@ -284,6 +285,7 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 			TargetDb: config.Spec.TargetDb,
 			CallUser: config.Spec.CallUser,
 			DbName:   config.Spec.DbName,
+			Operator: config.Spec.Operator,
 		}
 		if config.Spec.DbType == "mysql" {
 			env.CallType = "mysql_ignoreCC"
