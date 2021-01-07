@@ -15,9 +15,11 @@ package apiserver
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/check"
@@ -39,6 +41,7 @@ const (
 	configKeySep     = "/"
 	mongodbConfigKey = "mongodb"
 	zkConfigKey      = "zk"
+	queueConfigKey   = "queue"
 )
 
 // APIResource api resource object
@@ -48,6 +51,7 @@ type APIResource struct {
 	storeMap  map[string]store.Store
 	dbMap     map[string]drivers.DB
 	ebusMap   map[string]*watchbus.EventBus
+	msgQueue  msgqueue.MessageQueue
 }
 
 var api = APIResource{}
@@ -103,6 +107,29 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 		}
 	}
 	blog.Infof("Databases parsing completed.")
+
+	// parse config-map from queue file
+	queueConfig := a.ParseQueueConfig()
+	blog.Infof("Begin to parse queueConfig.")
+
+	for _, key := range queueConfig.KeyList {
+		var err error
+		switch key {
+		case queueConfigKey:
+			if err := a.parseQueueInit(key, queueConfig); err != nil {
+				blog.Errorf("parse queue config failed, err %s", err.Error())
+				SetUnhealthy(queueConfigKey, err.Error())
+			}
+		default:
+			err = storageErr.DatabaseConfigUnknown
+			blog.Errorf("%v: %s", err, key)
+			SetUnhealthy("unknown_config", fmt.Sprintf("%v: %s", err, key))
+		}
+		if err != nil {
+			check.Occur(err)
+		}
+	}
+	blog.Infof("MsgQueue parsing completed.")
 }
 
 // InitActions init actions
@@ -114,12 +141,82 @@ func (a *APIResource) InitActions() {
 func (a *APIResource) ParseDBConfig() (dbConf *conf.Config) {
 	dbConf = new(conf.Config)
 	if _, err := os.Stat(a.Conf.DBConfig); !os.IsNotExist(err) {
-		blog.Infof("Parsing config file: %s", a.Conf.DBConfig)
+		blog.Infof("Parsing dbConfig file: %s", a.Conf.DBConfig)
 		dbConf.InitConfig(a.Conf.DBConfig)
 	} else {
 		blog.Errorf("Config file not exists: %s", a.Conf.DBConfig)
 	}
 	return
+}
+
+// ParseQueueConfig parse queue config
+func (a *APIResource) ParseQueueConfig() (queueConf *conf.Config) {
+	queueConf = new(conf.Config)
+
+	if _, err := os.Stat(a.Conf.QueueConfig); !os.IsNotExist(err) {
+		blog.Infof("Parsing queueConfig file: %s", a.Conf.QueueConfig)
+		queueConf.InitConfig(a.Conf.QueueConfig)
+	} else {
+		blog.Errorf("Config file not exists: %s", a.Conf.QueueConfig)
+	}
+
+	return
+}
+
+// GetMsgQueue get queue client
+func (a *APIResource) GetMsgQueue() msgqueue.MessageQueue {
+	return a.msgQueue
+}
+
+func (a *APIResource) parseQueueInit(key string, queueConf *conf.Config) error {
+	flagRaw := queueConf.Read(key, "QueueFlag")
+	kind := queueConf.Read(key, "QueueKind")
+
+	flag, err := strconv.ParseBool(flagRaw)
+	if err != nil {
+		return err
+	}
+
+	resource := queueConf.Read(key, "Resource")
+	resourceToQueue := map[string]string{}
+	arrayResource := strings.Split(resource, ",")
+	for _, r := range arrayResource {
+		resourceToQueue[r] = r
+	}
+
+	address := queueConf.Read(key, "Address")
+
+	exchangeOption, err := getQueueExchangeOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	natStreamingOption, err := getNatStreamingOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	publishOption, err := getPublishOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	subscribeOption, err := getQueueSubscribeOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	msgQueue, err := msgqueue.NewMsgQueue(flag, msgqueue.QueueKind(kind), address, resourceToQueue,
+		exchangeOption, natStreamingOption, publishOption, subscribeOption)
+	if err != nil {
+		msgErr := fmt.Errorf("create queue failed, err %s", err.Error())
+		blog.Errorf("create queue failed, err %s", err.Error())
+		return msgErr
+	}
+
+	a.msgQueue = msgQueue
+	blog.Infof("init queue successfully, queue kind[%s] queue flag[%v]", kind, flag)
+	return nil
 }
 
 // GetEventBus get event bus by key
@@ -232,4 +329,146 @@ func (a *APIResource) parseZk(key string, dbConf *conf.Config) error {
 	a.storeMap[key] = zkStore
 	blog.Infof("init zookeeper with key %s successfully", key)
 	return nil
+}
+
+func getPublishOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
+	publishDeliveryRaw := queueConf.Read(key, "PublishDelivery")
+	publishDelivery, err := strconv.Atoi(publishDeliveryRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	return msgqueue.PublishOpts(
+		&msgqueue.PublishOptions{
+			DeliveryMode: uint8(publishDelivery),
+		}), nil
+}
+
+func getNatStreamingOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
+	clusterID := queueConf.Read(key, "ClusterId")
+	connectTimeoutRaw := queueConf.Read(key, "ConnectTimeout")
+	connectTimeout, err := strconv.Atoi(connectTimeoutRaw)
+	if err != nil {
+		return nil, err
+	}
+	connectRetryRaw := queueConf.Read(key, "ConnectRetry")
+	connectRetry, err := strconv.ParseBool(connectRetryRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	return msgqueue.NatsOpts(
+		&msgqueue.NatsOptions{
+			ClusterID:      clusterID,
+			ConnectTimeout: time.Duration(connectTimeout) * time.Second,
+			ConnectRetry:   connectRetry,
+		}), nil
+}
+
+func getQueueExchangeOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
+	exchangeName := queueConf.Read(key, "ExchangeName")
+	exchangeDurableRaw := queueConf.Read(key, "ExchangeDurable")
+	exchangeDurable, err := strconv.ParseBool(exchangeDurableRaw)
+	if err != nil {
+		return nil, err
+	}
+	exchagePrefetchCountRaw := queueConf.Read(key, "ExchangePrefetchCount")
+	exchagePrefetchCount, err := strconv.Atoi(exchagePrefetchCountRaw)
+	if err != nil {
+		return nil, err
+	}
+	exchangePrefetchGlobalRaw := queueConf.Read(key, "ExchangePrefetchGlobal")
+	exchangePrefetchGlobal, err := strconv.ParseBool(exchangePrefetchGlobalRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	return msgqueue.Exchange(
+		&msgqueue.ExchangeOptions{
+			Name:           exchangeName,
+			Durable:        exchangeDurable,
+			PrefetchCount:  exchagePrefetchCount,
+			PrefetchGlobal: exchangePrefetchGlobal,
+		}), nil
+
+}
+
+func getQueueSubscribeOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
+	subDurableRaw := queueConf.Read(key, "SubDurable")
+	subDurable, err := strconv.ParseBool(subDurableRaw)
+	if err != nil {
+		return nil, err
+	}
+	subDisableAutoAckRaw := queueConf.Read(key, "SubDisableAutoAck")
+	subDisableAutoAck, err := strconv.ParseBool(subDisableAutoAckRaw)
+	if err != nil {
+		return nil, err
+	}
+	subAckOnSuccessRaw := queueConf.Read(key, "SubAckOnSuccess")
+	subAckOnSuccess, err := strconv.ParseBool(subAckOnSuccessRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	subRequeueOnErrorRaw := queueConf.Read(key, "SubRequeueOnError")
+	subRequeueOnError, err := strconv.ParseBool(subRequeueOnErrorRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	subDeliverAllMessageRaw := queueConf.Read(key, "SubDeliverAllMessage")
+	subDeliverAllMessage, err := strconv.ParseBool(subDeliverAllMessageRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	subManualAckModeRaw := queueConf.Read(key, "SubManualAckMode")
+	subManualAckMode, err := strconv.ParseBool(subManualAckModeRaw)
+	if err != nil {
+		return nil, err
+	}
+	subEnableAckWaitRaw := queueConf.Read(key, "SubEnableAckWait")
+	subEnableAckWait, err := strconv.ParseBool(subEnableAckWaitRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	subAckWaitDurationRaw := queueConf.Read(key, "SubAckWaitDuration")
+	subAckWaitDuration, err := strconv.Atoi(subAckWaitDurationRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	subMaxInFlightRaw := queueConf.Read(key, "SubMaxInFlight")
+	subMaxInFlight, err := strconv.Atoi(subMaxInFlightRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	// parse queueArguments
+	arguments := make(map[string]interface{})
+	queueArgumentsRaw := queueConf.Read(key, "QueueArguments")
+	queueArguments := strings.Split(queueArgumentsRaw, ";")
+	if len(queueArguments) > 0 {
+		for _, data := range queueArguments {
+			dList := strings.Split(data, ":")
+			if len(dList) == 2 {
+				arguments[dList[0]] = dList[1]
+			}
+		}
+	}
+
+	return msgqueue.SubscribeOpts(
+		&msgqueue.SubscribeOptions{
+			DisableAutoAck:    subDisableAutoAck,
+			Durable:           subDurable,
+			AckOnSuccess:      subAckOnSuccess,
+			RequeueOnError:    subRequeueOnError,
+			DeliverAllMessage: subDeliverAllMessage,
+			ManualAckMode:     subManualAckMode,
+			EnableAckWait:     subEnableAckWait,
+			AckWaitDuration:   time.Duration(subAckWaitDuration) * time.Second,
+			MaxInFlight:       subMaxInFlight,
+			QueueArguments:    arguments,
+		}), nil
 }

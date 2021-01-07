@@ -16,6 +16,8 @@ package events
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	"github.com/micro/go-micro/v2/broker"
 	"strconv"
 	"strings"
 	"time"
@@ -199,6 +201,21 @@ func insert(req *restful.Request) error {
 	if err != nil {
 		return fmt.Errorf("failed to insert, err %s", err.Error())
 	}
+
+	queueData := lib.CopyMap(data)
+	queueData[resourceTypeTag] = EventResource
+	if extra, ok := queueData[extraInfoTag]; ok {
+		if data, ok := extra.(types.EventExtraInfo); ok {
+			queueData[nameSpaceTag] = data.Namespace
+			queueData[resourceKindTag] = data.Kind
+			queueData[resourceNameTag] = data.Name
+		}
+	}
+	err = publishEventResourceToQueue(queueData, eventFeatTags, msgqueue.EventTypeUpdate)
+	if err != nil {
+		blog.Errorf("publishEventResourceToQueue failed, err %s", err.Error())
+	}
+
 	return nil
 }
 
@@ -223,4 +240,31 @@ func watch(req *restful.Request, resp *restful.Response) {
 
 func urlPath(oldURL string) string {
 	return oldURL
+}
+
+func publishEventResourceToQueue(data operator.M, featTags []string, event msgqueue.EventKind) error {
+	message := &broker.Message{
+		Header: map[string]string{},
+	}
+
+	for _, feat := range featTags {
+		if v, ok := data[feat].(string); ok {
+			message.Header[feat] = v
+		}
+	}
+	message.Header[string(msgqueue.EventType)] = string(event)
+
+	if v, ok := data[dataTag]; ok {
+		codec.EncJson(v, &message.Body)
+	} else {
+		blog.Infof("object[%v] not exist data", data[dataTag])
+		return nil
+	}
+
+	err := apiserver.GetAPIResource().GetMsgQueue().Publish(message)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
