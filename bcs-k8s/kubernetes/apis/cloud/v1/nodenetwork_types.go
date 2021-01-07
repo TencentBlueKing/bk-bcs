@@ -96,7 +96,7 @@ type NodeNetworkStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Enis          []*ElasticNetworkInterface  `json:"enis,omitempty"`
-	FloatingIPEni *FloatingIPNetworkInterface `json:"floatingIPEni"`
+	FloatingIPEni *FloatingIPNetworkInterface `json:"floatingIPEni,omitempty"`
 	Status        string                      `json:"status"`
 }
 

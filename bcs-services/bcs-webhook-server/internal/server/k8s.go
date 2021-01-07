@@ -22,6 +22,7 @@ import (
 	"k8s.io/api/admission/v1beta1"
 	k8sunstruct "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -105,12 +106,20 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 		runtimeObj = req.OldObject
 	}
 	// decode object bytes
-	tmpUnstruct := &k8sunstruct.Unstructured{}
-	if err := json.Unmarshal(runtimeObj.Raw, &tmpUnstruct); err != nil {
-		blog.Errorf("decode %s to unstructured object failed, err %s", string(runtimeObj.Raw), err.Error())
+	tmpMapIf := make(map[string]interface{})
+	if err := json.Unmarshal(runtimeObj.Raw, &tmpMapIf); err != nil {
+		blog.Errorf("decode %s to map[string]interface failed, err %s", string(runtimeObj.Raw), err.Error())
 		return pluginutil.ToAdmissionResponse(
-			fmt.Errorf("decode data to unstructured object failed, err %s", err.Error()))
+			fmt.Errorf("decode data to map[string]interface failed failed, err %s", err.Error()))
 	}
+	tmpUnstruct := &k8sunstruct.Unstructured{}
+	tmpUnstruct.SetUnstructuredContent(tmpMapIf)
+	// for k8s 1.12.6, the GroupVersionKind may lost in runtimeObj
+	tmpUnstruct.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   req.Kind.Group,
+		Version: req.Kind.Version,
+		Kind:    req.Kind.Kind,
+	})
 	tmpUnstructNs := tmpUnstruct.GetNamespace()
 	tmpUnstructName := tmpUnstruct.GetName()
 	tmpUnstructKind := tmpUnstruct.GetKind()

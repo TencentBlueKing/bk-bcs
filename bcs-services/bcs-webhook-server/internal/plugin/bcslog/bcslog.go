@@ -146,11 +146,8 @@ func (h *Hooker) AnnotationKey() string {
 // Handle implements webhook plugin interface
 func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
-	isPod, err := pluginutil.AssertPod(req.Object.Raw)
-	if err != nil {
-		return pluginutil.ToAdmissionResponse(err)
-	}
-	if !isPod {
+	// when the kind is not Pod, ignore hook
+	if req.Kind.Kind != "Pod" {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
 	pod := &corev1.Pod{}
