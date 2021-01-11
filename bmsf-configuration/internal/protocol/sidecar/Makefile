@@ -26,6 +26,7 @@ $(SWAGGEROBJ):$(PROTO)
 
 %.swagger.json: %.proto
 	@protoc --proto_path=. --proto_path=$(GOENVPATH)/src --proto_path=$(GOENVPATH)/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@$(GWVER)/third_party/googleapis/ --proto_path=$(GOENVPATH)/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@$(GWVER) --swagger_out=logtostderr=true:. $<
+	@cp -rf ./sidecar.swagger.json ../../../api/swagger/sidecar.swagger.json
 
 clean:
 	@rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ)

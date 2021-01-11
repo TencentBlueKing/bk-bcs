@@ -14,47 +14,53 @@ package e2e
 
 import (
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 
 	"bk-bscp/pkg/common"
 )
 
+const (
+	// e2eTestBizID is e2e biz id.
+	e2eTestBizID = "e2e"
+
+	// e2eTestOperator is e2e operator name.
+	e2eTestOperator = "e2e"
+)
+
 var (
-	businessInterfaceV1            = "/v1/interface/businesses"
-	businessListInterfaceV1        = "/v1/interface/businesslist"
-	appInterfaceV1                 = "/v1/interface/apps"
-	appListInterfaceV1             = "/v1/interface/applist"
-	clusterInterfaceV1             = "/v1/interface/clusters"
-	clusterListInterfaceV1         = "/v1/interface/clusterlist"
-	zoneInterfaceV1                = "/v1/interface/zones"
-	zoneListInterfaceV1            = "/v1/interface/zonelist"
-	configsetInterfaceV1           = "/v1/interface/configsets"
-	configsetListInterfaceV1       = "/v1/interface/configsetlist"
-	configsetLockInterfaceV1       = "/v1/interface/configset-locks"
-	commitInterfaceV1              = "/v1/interface/commits"
-	commitHistoryInterfaceV1       = "/v1/interface/history-commits"
-	commitCancelInterfaceV1        = "/v1/interface/cancel-commit"
-	commitConfirmInterfaceV1       = "/v1/interface/confirm-commit"
-	commitPreviewInterfaceV1       = "/v1/interface/preview-commit"
-	configsInterfaceV1             = "/v1/interface/configs"
-	configsListInterfaceV1         = "/v1/interface/configslist"
-	releaseInterfaceV1             = "/v1/interface/releases"
-	releaseHistoryInterfaceV1      = "/v1/interface/history-releases"
-	releasePubInterfaceV1          = "/v1/interface/pub-release"
-	releaseCancelInterfaceV1       = "/v1/interface/cancel-release"
-	strategyInterfaceV1            = "/v1/interface/strategies"
-	strategyListInterfaceV1        = "/v1/interface/strategylist"
-	variableInterfaceV1            = "/v1/interface/variables"
-	variableListInterfaceV1        = "/v1/interface/variablelist"
-	templatesetInterfaceV1         = "/v1/interface/configtemplatesets"
-	templatesetListInterfaceV1     = "/v1/interface/configtemplatesetlist"
-	templateInterfaceV1            = "/v1/interface/configtemplates"
-	templateListInterfaceV1        = "/v1/interface/configtemplatelist"
-	templateversionInterfaceV1     = "/v1/interface/templateversions"
-	templateversionListInterfaceV1 = "/v1/interface/templateversionlist"
-	templatebindingInterfaceV1     = "/v1/interface/templatebindings"
-	templatebindingListInterfaceV1 = "/v1/interface/templatebindinglist"
+	createAppAPIV2 = "/api/v2/config/biz/%s/app"
+	queryAppAPIV2  = "/api/v2/config/biz/%s/app"
+	listAppAPIV2   = "/api/v2/config/list/biz/%s/app"
+	updateAppAPIV2 = "/api/v2/config/biz/%s/app/%s"
+	deleteAppAPIV2 = "/api/v2/config/biz/%s/app/%s"
+
+	createConfigAPIV2 = "/api/v2/config/biz/%s/app/%s/config"
+	queryConfigAPIV2  = "/api/v2/config/biz/%s/app/%s/config"
+	listConfigAPIV2   = "/api/v2/config/list/biz/%s/app/%s/config"
+	updateConfigAPIV2 = "/api/v2/config/biz/%s/app/%s/config/%s"
+	deleteConfigAPIV2 = "/api/v2/config/biz/%s/app/%s/config/%s"
+
+	createCommitAPIV2  = "/api/v2/config/biz/%s/app/%s/commit"
+	queryCommitAPIV2   = "/api/v2/config/biz/%s/app/%s/commit/%s"
+	listCommitAPIV2    = "/api/v2/config/list/biz/%s/app/%s/commit"
+	updateCommitAPIV2  = "/api/v2/config/biz/%s/app/%s/commit/%s"
+	cancelCommitAPIV2  = "/api/v2/config/cancel/biz/%s/app/%s/commit/%s"
+	confirmCommitAPIV2 = "/api/v2/config/confirm/biz/%s/app/%s/commit/%s"
+
+	createReleaseAPIV2   = "/api/v2/config/biz/%s/app/%s/release"
+	queryReleaseAPIV2    = "/api/v2/config/biz/%s/app/%s/release/%s"
+	updateReleaseAPIV2   = "/api/v2/config/biz/%s/app/%s/release/%s"
+	cancelReleaseAPIV2   = "/api/v2/config/cancel/biz/%s/app/%s/release/%s"
+	publishReleaseAPIV2  = "/api/v2/config/publish/biz/%s/app/%s/release/%s"
+	rollbackReleaseAPIV2 = "/api/v2/config/rollback/biz/%s/app/%s/release/%s"
+	listReleaseAPIV2     = "/api/v2/config/list/biz/%s/app/%s/release"
+
+	createStrategyAPIV2 = "/api/v2/config/biz/%s/app/%s/strategy"
+	queryStrategyAPIV2  = "/api/v2/config/biz/%s/app/%s/strategy"
+	listStrategyAPIV2   = "/api/v2/config/list/biz/%s/app/%s/strategy"
+	deleteStrategyAPIV2 = "/api/v2/config/biz/%s/app/%s/strategy/%s"
 )
 
 const (
@@ -65,11 +71,11 @@ const (
 	DEFAULTTESTHOST = "http://localhost:8080"
 )
 
-func testhost(path string) string {
+func testHost(path string) string {
 	return common.GetenvCfg(TESTHOST, DEFAULTTESTHOST) + path
 }
 
-func respbody(resp *http.Response) (string, error) {
+func respBody(resp *http.Response) (string, error) {
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -79,4 +85,17 @@ func respbody(resp *http.Response) (string, error) {
 		return "", errors.New("response body data empty")
 	}
 	return string(data), nil
+}
+
+func httpRequest(method, url, contentType string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", contentType)
+	req.Header.Add(common.RidHeaderKey, common.Sequence())
+	req.Header.Add(common.UserHeaderKey, e2eTestOperator)
+	req.Header.Add(common.AppCodeHeaderKey, e2eTestBizID)
+
+	return http.DefaultClient.Do(req)
 }

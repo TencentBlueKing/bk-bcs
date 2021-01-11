@@ -1,0 +1,496 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 2,
+  "iteration": 1607607492736,
+  "links": [],
+  "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "(sum(rate(bscp_apiserver_request_total{errcode=\"0\"}[5m]))/sum(rate(bscp_apiserver_request_total[5m]))) * 100",
+          "legendFormat": "全局 -- 成功率",
+          "refId": "A"
+        },
+        {
+          "expr": "(sum(rate(bscp_apiserver_request_total{errcode=\"0\",instance=\"$instance\"}[5m]))/sum(rate(bscp_apiserver_request_total{instance=\"$instance\"}[5m]))) * 100",
+          "legendFormat": "单实例 -- 总成功率($instance)",
+          "refId": "B"
+        },
+        {
+          "expr": "(sum(rate(bscp_apiserver_request_total{errcode=\"0\"}[5m])) by (rpc) / sum(rate(bscp_apiserver_request_total[5m])) by (rpc)) * 100",
+          "legendFormat": "RPC接口成功率({{rpc}})",
+          "refId": "C"
+        },
+        {
+          "expr": "(sum(rate(bscp_apiserver_request_total{errcode=\"0\",instance=\"$instance\"}[5m])) by (rpc) / sum(rate(bscp_apiserver_request_total{instance=\"$instance\"}[5m])) by (rpc)) * 100",
+          "legendFormat": "单实例 -- RPC接口成功率($instance  --  {{rpc}})",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "RPC接口成功率",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "percent",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 8,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total{errcode=\"0\"}[5m])) by (job)",
+          "legendFormat": "整体 -- Success[0]",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total{errcode!=\"0\"}[5m])) by (job)",
+          "legendFormat": "整体 - Failed[!0]",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total{instance=\"$instance\",errcode=\"0\"}[5m])) by (job)",
+          "legendFormat": "单实例 -- 整体Success[0] ($instance)",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total{instance=\"$instance\",errcode!=\"0\"}[5m])) by (job)",
+          "legendFormat": "单实例 -- 整体Failed[!0] ($instance)",
+          "refId": "D"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total[5m])) by (rpc, errcode)",
+          "legendFormat": " RPC接口错误码[{{errcode}}] ({{rpc}})",
+          "refId": "E"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total{instance=\"$instance\"}[5m])) by (rpc, errcode)",
+          "legendFormat": "单实例 -- RPC接口错误码[{{errcode}}] ($instance -- {{rpc}})",
+          "refId": "F"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "错误码",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 4,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(bscp_apiserver_response_time_sum[5m]))/sum(rate(bscp_apiserver_response_time_count[5m]))",
+          "legendFormat": "整体 -- 平均响应时间",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_response_time_sum{instance=\"$instance\"}[5m]))/sum(rate(bscp_apiserver_response_time_count{instance=\"$instance\"}[5m]))",
+          "legendFormat": "单实例 -- 整体平均响应时间($instance  [$quantile])",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_response_time_sum[5m])) by (rpc) /sum(rate(bscp_apiserver_response_time_count[5m])) by (rpc)",
+          "legendFormat": "RPC接口响应时间({{rpc}})",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_response_time_sum{instance=\"$instance\"}[5m])) by (rpc) /sum(rate(bscp_apiserver_response_time_count{instance=\"$instance\"}[5m])) by (rpc)",
+          "legendFormat": "单实例 -- RPC接口响应时间($instance -- {{rpc}})",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "响应时间",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 6,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": true,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total[5m])) by (job)",
+          "legendFormat": "整体 -- QPS",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total{instance=\"$instance\"}[5m])) by (job)",
+          "legendFormat": "单实例 -- 整体QPS($instance)",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total[5m])) by (rpc)",
+          "legendFormat": " RPC接口QPS({{rpc}})",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(rate(bscp_apiserver_request_total{instance=\"$instance\"}[5m])) by (rpc)",
+          "legendFormat": "单实例 --  RPC接口QPS($instance -- {{rpc}})",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "RPC请求",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "schemaVersion": 19,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "127.0.0.1:8082",
+          "value": "127.0.0.1:8082"
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values({job=\"bk-bscp-apiserver\"},instance)",
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "instance",
+        "options": [],
+        "query": "label_values({job=\"bk-bscp-apiserver\"},instance)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "BSCP-APIServer",
+  "uid": "SD2qCgxWz",
+  "version": 14
+}

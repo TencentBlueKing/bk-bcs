@@ -49,6 +49,8 @@ BK-BSCP 项目规范
 ``` go
 // viper demo
 viper := viper.New()
+or
+viper := viper.GetViper()
 
 viper.SetConfigFile("server.yaml")
 viper.ReadInConfig()
@@ -112,5 +114,9 @@ import (
 ## 项目结构
 
 * [go standard project layout](https://github.com/golang-standards/project-layout)
+
+## Protobuf协议规范
+
+* [grpc-gateway protobuf style guide](https://buf.build/docs/style-guide/#files-and-packages)
 
 # Q&A

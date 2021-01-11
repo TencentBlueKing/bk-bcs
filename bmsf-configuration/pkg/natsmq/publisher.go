@@ -13,6 +13,7 @@ limitations under the License.
 package mq
 
 import (
+	"crypto/tls"
 	"strings"
 	"time"
 
@@ -23,11 +24,12 @@ import (
 type Publisher struct {
 	nc    *nats.Conn
 	addrs []string
+	tls   *tls.Config
 }
 
 // NewPublisher creates a new Publisher.
-func NewPublisher(addrs []string) *Publisher {
-	return &Publisher{addrs: addrs}
+func NewPublisher(addrs []string, tls *tls.Config) *Publisher {
+	return &Publisher{addrs: addrs, tls: tls}
 }
 
 // Init initializes a new Publisher.
@@ -46,6 +48,11 @@ func (p *Publisher) Init(timeout, reconWait time.Duration, maxRecons int) error 
 	opts = append(opts, nats.ClosedHandler(func(nc *nats.Conn) {
 		// do nothing
 	}))
+
+	// TLS option.
+	if p.tls != nil {
+		opts = append(opts, nats.Secure(p.tls))
+	}
 
 	// connect nats
 	nc, err := nats.Connect(strings.Join(p.addrs, ","), opts...)

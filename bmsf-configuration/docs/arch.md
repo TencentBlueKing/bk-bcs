@@ -1,37 +1,49 @@
-BK-BSCP 架构设计
+BK-BSCP 平台架构设计
 ==========================
 
 [TOC]
 
-# 基础概念
+# 平台架构
+
+![avatar](./img/platform.png)
+
+# 集成服务设计
+
+## 模块
+
+![avatar](./img/middle-arch.png)
+
+* APIServer: 接入服务，负责协议转换、URL路由、权限过滤、制品库服务代理；
+* AuthServer: 权限服务，负责完成内部权限审核;
+* Other Auxiliary Modules: 其他辅助服务，如对账、补单、定时任务等辅助模块;
+
+# 原子服务设计
+
+## 基础概念
 
 ![avatar](./img/objects.png)
 
-* Business: 业务划分
-* App: 业务之下的具体应用模块
-* Cluster: 业务应用模块下的集群划分
-* Zone: 业务应用集群下的单元大区划分
-* ConfigSet: 配置集合, 可理解为以往的单一配置文件
+* Business: 业务划分, 系统内部不创建业务资源，只做外部业务的关联管理;
+* App: 业务之下的具体应用模块, 为系统中的最小管理单元，外部系统也是以此进行关联对接;
+* Config: 配置, 可理解为以往的单一配置文件;
 
-> Cluster往往是业务在某个地区机房的一组部署；Zone则是在某个集群下的二级划分，用来标识某个业务大区等；
-> ConfigSet由N组业务方编写的配置项构成，支持多种配置类型且提供私有类型支持，提供百兆大小配置文件传输。
+## 模块
 
-# 架构
+![avatar](./img/atomic-arch.png)
 
-![avatar](./img/overview.png)
-
-# 模块
-
-![avatar](./img/arch.png)
-
-* Gateway: 提供HTTP RESTful协议服务，完成HTTP到gRPC的协议转换;
-* AccessServer: 集群的入口，负责请求的接入和协议版本兼容以及相关鉴权处理;
-* BusinessServer: 业务逻辑集成服务, 完成复杂的逻辑集成；
-* Integrator: 逻辑集成器，基于yaml描述快速完成复杂逻辑处理;
-* DataManager: 数据代理服务, 提供统一的缓存、DB分片存储能力;
+* ConfigServer: 配置服务, 提供gRPC协议服务, 负责原子接口逻辑和较复杂的逻辑集成；
 * TemplateServer: 模板服务，负责配置模板的管理和内容渲染；
+* DataManager: 数据代理服务, 提供统一的缓存、DB分片存储能力;
 * BCS-Controller: BCS容器环境的控制器，负责策略控制和版本下发；
-* ConnServer: BCS容器环境会话链接服务，与BCS-Sidecar配合维护下发通道，保证容器环境可触达；
+* GSE-Controller: GSE侧的控制器，负责策略控制和版本下发；
+* ConnServer: BCS容器环境会话链接服务，与BCS-Sidecar配合维护下发通道;
+* TunnelServer: GSE侧通道服务，负责GSE通道的数据下行；
 * BCS-Sidecar: BCS容器环境sidecar，以sidecar模式运行，完成配置版本的拉取、生效和反馈上报；
+* GSE-plugin: GSE插件，与GSE Agent配合构建进程、容器混合环境下的配置通道;
+
+## 数据流
+> 配置发布的主要逻辑, 其他复杂逻辑不做展示说明
+
+![avatar](./img/logic.png)
 
 # Q&A
