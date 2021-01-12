@@ -56,6 +56,7 @@ type DBPrivEnv struct {
 	CallUser string `json:"callUser"`
 	DbName   string `json:"dbName"`
 	CallType string `json:"callType"`
+	Operator string `json:"operator"`
 }
 
 // AnnotationKey implements plugin interface
@@ -190,11 +191,8 @@ func (h *Hooker) initKubeClient() error {
 // Handle implements plugin interface
 func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
-	isPod, err := pluginutil.AssertPod(req.Object.Raw)
-	if err != nil {
-		return pluginutil.ToAdmissionResponse(err)
-	}
-	if !isPod {
+	// when the kind is not Pod, ignore hook
+	if req.Kind.Kind != "Pod" {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
 	if req.Operation != v1beta1.Create {
@@ -284,6 +282,7 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 			TargetDb: config.Spec.TargetDb,
 			CallUser: config.Spec.CallUser,
 			DbName:   config.Spec.DbName,
+			Operator: config.Spec.Operator,
 		}
 		if config.Spec.DbType == "mysql" {
 			env.CallType = "mysql_ignoreCC"

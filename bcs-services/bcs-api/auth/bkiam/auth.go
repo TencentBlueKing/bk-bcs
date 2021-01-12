@@ -18,7 +18,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -28,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 
 	"github.com/dgrijalva/jwt-go"
 )

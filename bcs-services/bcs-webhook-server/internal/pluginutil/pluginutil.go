@@ -13,29 +13,9 @@
 package pluginutil
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sunstruct "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
-
-// AssertPod to check if the raw object is Pod type
-func AssertPod(rawObject []byte) (bool, error) {
-	tmpObject := &k8sunstruct.Unstructured{}
-	if err := json.Unmarshal(rawObject, &tmpObject); err != nil {
-		blog.Errorf("decode %s to unstructured object failed, err %s", string(rawObject), err.Error())
-		return false, fmt.Errorf("decode data to unstructured object failed, err %s", err.Error())
-	}
-	if tmpObject.GroupVersionKind().Kind != "Pod" {
-		blog.Warnf("object %s/%s is not Pod", tmpObject.GetNamespace(), tmpObject.GetName())
-		return false, nil
-	}
-	return true, nil
-}
 
 // ToAdmissionResponse convert error to admission response
 func ToAdmissionResponse(err error) *v1beta1.AdmissionResponse {
