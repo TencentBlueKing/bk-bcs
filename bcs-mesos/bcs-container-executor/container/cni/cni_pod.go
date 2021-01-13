@@ -25,15 +25,15 @@ import (
 
 	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 	exeutil "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/util"
-	bcstypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	//"github.com/pborman/uuid"
-	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 
 	"golang.org/x/net/context"
 )

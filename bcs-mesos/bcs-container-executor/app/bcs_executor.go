@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cni"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container/cnm"
@@ -37,7 +38,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network"
 	cninet "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network/cni"
 	cnmnet "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/network/cnm"
-	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"

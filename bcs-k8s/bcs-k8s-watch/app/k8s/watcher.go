@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
-	netservicetypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 
 	"github.com/parnurzeal/gorequest"
 	v1 "k8s.io/api/core/v1"

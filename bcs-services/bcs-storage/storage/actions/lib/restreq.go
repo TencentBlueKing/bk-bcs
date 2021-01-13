@@ -19,7 +19,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 // GetQueryParamString get string from rest query parameter

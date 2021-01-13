@@ -15,11 +15,12 @@ package conf
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"os"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
-	"io/ioutil"
-	"os"
 
 	"github.com/containernetworking/cni/pkg/types"
 )
@@ -28,6 +29,14 @@ const (
 	// DefaultRouteRulePriority default priority of route rule
 	DefaultRouteRulePriority = 2048
 )
+
+// CNIArgs args from Env CNI_ARGS
+type CNIArgs struct {
+	//for unknown config item
+	types.CommonArgs
+	IP      net.IP `json:"ip,omitempty"`      //IP address if designated
+	Gateway net.IP `json:"gateway,omitempty"` //gateway if designated
+}
 
 // NetArgs cni net args
 type NetArgs struct {
@@ -52,7 +61,7 @@ type NetConf struct {
 	MTU                   int      `json:"mtu,omitempty"`
 	RouteRulePriority     int      `json:"routeRulePriority,omitempty"`
 	NetService            *NetArgs `json:"netservice,omitempty"`
-	Args                  *bcsconf.CNIArgs
+	Args                  *CNIArgs
 }
 
 // LoadConf load config
@@ -80,7 +89,7 @@ func LoadConf(bytes []byte, args string) (*NetConf, string, error) {
 		n.RouteRulePriority = DefaultRouteRulePriority
 	}
 	if args != "" {
-		n.Args = &bcsconf.CNIArgs{}
+		n.Args = &CNIArgs{}
 		err := types.LoadArgs(args, n.Args)
 		if err != nil {
 			return nil, "", err

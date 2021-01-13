@@ -19,7 +19,7 @@ import (
 
 	alarm "github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 // TRANSACTION_DEFAULT_LIFEPERIOD Default transaction max lifeperoid, 480 seconds

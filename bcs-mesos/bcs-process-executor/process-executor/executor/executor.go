@@ -28,9 +28,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	proc_daemon "github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/proc-daemon"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-process-executor/process-executor/types"
-	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pborman/uuid"

@@ -23,9 +23,9 @@ import (
 	"time"
 
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	"github.com/golang/protobuf/proto"
 )

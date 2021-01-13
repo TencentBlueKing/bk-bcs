@@ -20,11 +20,24 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
+)
+
+type storageError struct {
+	Message string
+	Code    int
+}
+
+func (se *storageError) Error() string {
+	return se.Message
+}
+
+var (
+	eventWatchAlreadyConnect = &storageError{Code: common.AdditionErrorCode + 6317, Message: "already connected"}
+	eventWatchNoURLAvailable = &storageError{Code: common.AdditionErrorCode + 6318, Message: "no url available"}
 )
 
 // New get a new Watcher with empty WatchOptions
@@ -52,8 +65,8 @@ const (
 
 // Event event of watch
 type Event struct {
-	Type  EventType  `json:"type"`
-	Value operator.M `json:"value"`
+	Type  EventType              `json:"type"`
+	Value map[string]interface{} `json:"value"`
 }
 
 var (
@@ -92,7 +105,7 @@ type Watcher struct {
 // Connect starts the watching
 func (w *Watcher) Connect(storageURL []string) (err error) {
 	if w.ctx != nil {
-		return errors.EventWatchAlreadyConnect
+		return eventWatchAlreadyConnect
 	}
 
 	w.storageURL = storageURL
@@ -113,7 +126,7 @@ func (w *Watcher) Connect(storageURL []string) (err error) {
 }
 
 // connect: Try to connect the url list, if they are all unreachable, then return
-// EventWatchNoUrlAvailable error.
+// eventWatchNoURLAvailable error.
 func (w *Watcher) connect() (err error) {
 	body := &bytes.Buffer{}
 	if err = codec.EncJsonWriter(w.opts, body); err != nil {
@@ -131,12 +144,12 @@ func (w *Watcher) connect() (err error) {
 		}
 		return nil
 	}
-	return errors.EventWatchNoUrlAvailable
+	return eventWatchNoURLAvailable
 }
 
 // Waiting for flushed response body. If the connection break(EOF) and it is
 // not closed, then reconnect automatically. If reconnect failed, then return
-// EventWatchNoUrlAvailable error.
+// eventWatchNoUrlAvailable error.
 func (w *Watcher) watching() {
 	for {
 		select {

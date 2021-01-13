@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
+	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 )
 
 const (

@@ -31,11 +31,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/mesosdriver"
+	mesosdriver "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/networkdetection/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/tools"
-	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 
 	"github.com/emicklei/go-restful"
 )
@@ -103,7 +103,7 @@ func (n *NetworkDetection) Start() error {
 		return err
 	}
 	//new mesos platform
-	conf := &mesosdriver.Config{
+	conf := &mesosdriver.MesosDriverClientConfig{
 		ZkAddr:     n.conf.BcsZk,
 		ClientCert: n.conf.ClientCert,
 	}
