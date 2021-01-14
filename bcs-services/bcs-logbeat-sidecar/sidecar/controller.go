@@ -488,6 +488,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 			ToJSON:            true,
 			StdoutDataid:      conf.StdDataId,
 			NonstandardDataid: conf.NonStdDataId,
+			Package:           logConf.Spec.PackageCollection,
 		}
 		para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 		para.ExtMeta["io_tencent_bcs_pod"] = pod.Name
