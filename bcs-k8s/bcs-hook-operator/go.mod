@@ -3,7 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-k8s/bcs-hook-operator
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs => ../../../bk-bcs
+    bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
+	github.com/Tencent/bk-bcs/bcs-common => ../../../bk-bcs/bcs-common
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../../bcs-k8s/kubernetes
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => ../../bcs-k8s/kubernetes/common
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4

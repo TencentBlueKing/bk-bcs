@@ -16,7 +16,7 @@ package manager
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	nettypes "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	nettypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )

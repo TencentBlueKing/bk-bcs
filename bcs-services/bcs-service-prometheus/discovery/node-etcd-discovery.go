@@ -19,9 +19,9 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
-	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
+	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
+	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 	"k8s.io/client-go/tools/cache"

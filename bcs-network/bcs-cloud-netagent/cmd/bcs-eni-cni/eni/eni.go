@@ -31,7 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-network/internal/constant"
-	bcsconf "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/config"
 )
 
 const (
@@ -39,8 +38,16 @@ const (
 	DefaultRouteRulePriority = 2048
 )
 
-//default directory for log output
+// default directory for log output
 var defaultLogDir = "./logs"
+
+// CNIArgs args from Env CNI_ARGS
+type CNIArgs struct {
+	//for unknown config item
+	types.CommonArgs
+	IP      net.IP `json:"ip,omitempty"`      //IP address if designated
+	Gateway net.IP `json:"gateway,omitempty"` //gateway if designated
+}
 
 // NetConf net config
 type NetConf struct {
@@ -48,10 +55,10 @@ type NetConf struct {
 	MTU               int    `json:"mtu,omitempty"`
 	LogDir            string `json:"logDir,omitempty"`
 	RouteRulePriority int    `json:"routeRulePriority,omitempty"`
-	Args              *bcsconf.CNIArgs
+	Args              *CNIArgs
 }
 
-//loadConf load specified configuration from cni configuration
+// loadConf load specified configuration from cni configuration
 // and command line setting
 func loadConf(bytes []byte, args string) (*NetConf, string, error) {
 	conf := &NetConf{}
@@ -73,7 +80,7 @@ func loadConf(bytes []byte, args string) (*NetConf, string, error) {
 		conf.RouteRulePriority = DefaultRouteRulePriority
 	}
 	if args != "" {
-		conf.Args = &bcsconf.CNIArgs{}
+		conf.Args = &CNIArgs{}
 		err := types.LoadArgs(args, conf.Args)
 		if err != nil {
 			return nil, "", err

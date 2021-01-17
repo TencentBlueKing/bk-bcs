@@ -16,8 +16,8 @@ import (
 	"reflect"
 	"testing"
 
-	schetypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	schetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

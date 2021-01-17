@@ -15,7 +15,7 @@ package conf
 
 import (
 	"encoding/json"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"io/ioutil"
 )
 

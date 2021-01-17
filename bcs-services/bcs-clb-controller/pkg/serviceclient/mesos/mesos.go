@@ -32,11 +32,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	mesosinformers "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
-	informerv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers/bkbcs/v2"
-	mesosclientset "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	listerv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
+	mesosinformers "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
+	informerv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers/bkbcs/v2"
+	mesosclientset "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
+	listerv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/lister/bkbcs/v2"
 	svcclient "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/serviceclient"
 )
 

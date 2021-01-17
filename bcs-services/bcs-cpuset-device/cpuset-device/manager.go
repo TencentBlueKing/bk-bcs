@@ -24,7 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/mesosdriver"
+	mesosdriver "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/types"
 
@@ -243,7 +243,7 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 }
 
 func (c *CpusetDevicePlugin) reportExtendedResources() error {
-	conf := &mesosdriver.Config{
+	conf := &mesosdriver.MesosDriverClientConfig{
 		ZkAddr:     c.conf.BcsZk,
 		ClientCert: c.conf.ClientCert,
 	}
