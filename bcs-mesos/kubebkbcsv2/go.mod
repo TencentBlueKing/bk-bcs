@@ -3,7 +3,6 @@ module github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../../bk-bcs/bcs-common
 	k8s.io/api => k8s.io/api v0.0.0-20181213150558-05914d821849
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20181127025237-2b1284ed4c93
 	k8s.io/apiserver => k8s.io/apiserver v0.0.0-20181213151703-3ccfe8365421
