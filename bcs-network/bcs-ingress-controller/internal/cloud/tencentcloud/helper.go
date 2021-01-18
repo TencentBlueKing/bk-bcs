@@ -22,9 +22,9 @@ import (
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/cloud"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
 )
 
 // do create listener

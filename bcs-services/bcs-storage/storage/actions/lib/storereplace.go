@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 const (

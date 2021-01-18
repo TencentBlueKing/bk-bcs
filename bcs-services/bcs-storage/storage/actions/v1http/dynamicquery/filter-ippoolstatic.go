@@ -14,7 +14,7 @@
 package dynamicquery
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 // IPPoolStaticFilter filter of ip pool static

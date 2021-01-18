@@ -16,10 +16,10 @@ package netdriver
 import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"strings"
 )
 
@@ -34,16 +34,12 @@ func NewDriver() (resource.IPDriver, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load config bcs.conf failed, %s", err.Error())
 	}
-	var client netservice.Client
-	var clientErr error
-	if conf.TLS == nil {
-		client, clientErr = netservice.NewClient()
-	} else {
+	client := bcsapi.NewNetserviceCli()
+	if conf.TLS != nil {
 		conf.TLS.Passwd = static.ClientCertPwd
-		client, clientErr = netservice.NewTLSClient(conf.TLS.CACert, conf.TLS.Key, conf.TLS.PubKey, conf.TLS.Passwd)
-	}
-	if clientErr != nil {
-		return nil, clientErr
+		if err := client.SetCerts(conf.TLS.CACert, conf.TLS.Key, conf.TLS.PubKey, conf.TLS.Passwd); err != nil {
+			return nil, err
+		}
 	}
 	driver := &NetDriver{
 		netClient: client,
@@ -59,7 +55,7 @@ func NewDriver() (resource.IPDriver, error) {
 
 //NetDriver driver for bcs-netservice
 type NetDriver struct {
-	netClient netservice.Client
+	netClient bcsapi.Netservice
 }
 
 //GetIPAddr get available ip resource for contaienr

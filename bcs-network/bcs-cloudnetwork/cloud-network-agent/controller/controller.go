@@ -32,7 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloudnetwork/pkg/netservice"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloudnetwork/pkg/networkutil"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-cloudnetwork/pkg/nodenetwork"
-	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	netsvc "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
 const (

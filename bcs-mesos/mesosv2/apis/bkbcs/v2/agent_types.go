@@ -14,7 +14,7 @@
 package v2
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

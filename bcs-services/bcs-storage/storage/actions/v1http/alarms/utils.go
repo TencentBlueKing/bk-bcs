@@ -21,8 +21,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 )
 
 func getStoreGetOption(req *restful.Request) (*lib.StoreGetOption, error) {

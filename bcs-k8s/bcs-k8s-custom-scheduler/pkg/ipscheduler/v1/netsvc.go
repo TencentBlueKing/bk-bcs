@@ -14,9 +14,9 @@
 package v1
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 
 	"fmt"
 	"strings"
@@ -29,19 +29,17 @@ type BcsConfig struct {
 	Interval int            `json:"interval,omitempty"`
 }
 
-func createNetSvcClient(conf *config.CustomSchedulerConfig) (netservice.Client, error) {
+func createNetSvcClient(conf *config.CustomSchedulerConfig) (bcsapi.Netservice, error) {
 	bcsConf := newBcsConf(conf)
 
-	var client netservice.Client
-	var clientErr error
-	if bcsConf.TLS == nil {
-		client, clientErr = netservice.NewClient()
-	} else {
-		client, clientErr = netservice.NewTLSClient(bcsConf.TLS.CACert, bcsConf.TLS.Key, bcsConf.TLS.PubKey, bcsConf.TLS.Passwd)
+	client := bcsapi.NewNetserviceCli()
+	if bcsConf.TLS != nil {
+		if err := client.SetCerts(
+			bcsConf.TLS.CACert, bcsConf.TLS.Key, bcsConf.TLS.PubKey, bcsConf.TLS.Passwd); err != nil {
+			return nil, err
+		}
 	}
-	if clientErr != nil {
-		return nil, clientErr
-	}
+
 	//client get bcs-netservice info
 	hosts := strings.Split(bcsConf.ZkHost, ";")
 	if err := client.GetNetService(hosts); err != nil {
