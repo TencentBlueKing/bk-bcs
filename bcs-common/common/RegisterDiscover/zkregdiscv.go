@@ -14,14 +14,14 @@
 package RegisterDiscover
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	//"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 
 	"golang.org/x/net/context"
 )

@@ -17,9 +17,9 @@ import (
 	"strings"
 
 	comtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	bcstypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //BcsPort port service for container port reflection

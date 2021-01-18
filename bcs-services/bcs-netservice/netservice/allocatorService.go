@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"path/filepath"
 	"time"
 )

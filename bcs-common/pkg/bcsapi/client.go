@@ -27,22 +27,22 @@ const (
 	clusterIDHeader = "BCS-ClusterID"
 )
 
-//Config for bcsapi
+// Config for bcsapi
 type Config struct {
-	//bcsapi host, available like 127.0.0.1:8080
-	//todo(DeveloperJim): make it slice when discovery mechanism change to etcd
+	// bcsapi host, available like 127.0.0.1:8080
+	// todo(DeveloperJim): make it slice when discovery mechanism change to etcd
 	Hosts []string
-	//tls configuratio
+	// tls configuratio
 	TLSConfig *tls.Config
-	//AuthToken for permission verification
+	// AuthToken for permission verification
 	AuthToken string
-	//clusterID for Kubernetes/Mesos operation
+	// clusterID for Kubernetes/Mesos operation
 	ClusterID string
-	//proxy flag for go through bcs-api-gateway
+	// proxy flag for go through bcs-api-gateway
 	Gateway bool
 }
 
-//BasicResponse basic http response for bkbcs
+// BasicResponse basic http response for bkbcs
 type BasicResponse struct {
 	Code    int             `json:"code"`
 	Result  bool            `json:"result"`
@@ -50,29 +50,28 @@ type BasicResponse struct {
 	Data    json.RawMessage `json:"data"`
 }
 
-//NewClient create new bcsapi instance
+// NewClient create new bcsapi instance
 func NewClient(config *Config) *Client {
 	return &Client{
 		config: config,
 	}
 }
 
-//Client all module client api composition
+// Client all module client api composition
 type Client struct {
 	config *Config
 }
 
-//UserManager client interface
+// UserManager client interface
 func (c *Client) UserManager() UserManager {
 	return NewUserManager(c.config)
 }
 
-//MesosDriver client interface
-func (c *Client) MesosDriver() *MesosDriverCli {
-	return &MesosDriverCli{
-		Config: c.config,
-	}
-}
+// TODO: to add mesos driver
+// MesosDriver client interface
+// func (c *Client) MesosDriver() MesosDriver {
+// 	return &MesosDriverClient{}
+// }
 
 // Storage client interface
 func (c *Client) Storage() Storage {

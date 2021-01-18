@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -31,16 +31,19 @@ import (
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 )
 
+// IpScheduler ip scheduler
 type IpScheduler struct {
 	Cluster      string
 	UpdatePeriod uint
-	netClient    netservice.Client
+	netClient    bcsapi.Netservice
 	NetPools     []*types.NetPool
 	KubeClient   *kubernetes.Clientset
 }
 
+// DefaultIpScheduler default ip scheduler
 var DefaultIpScheduler *IpScheduler
 
+// NewIpScheduler create ip scheduler
 func NewIpScheduler(conf *config.CustomSchedulerConfig) *IpScheduler {
 	netClit, err := createNetSvcClient(conf)
 	if err != nil {
@@ -68,6 +71,7 @@ func NewIpScheduler(conf *config.CustomSchedulerConfig) *IpScheduler {
 	}
 }
 
+// UpdateNetPoolsPeriodically update netpools periodically
 func (i *IpScheduler) UpdateNetPoolsPeriodically() {
 	updatePeriod := i.UpdatePeriod
 	ticker := time.NewTicker(time.Duration(updatePeriod) * time.Second)
@@ -87,6 +91,7 @@ func (i *IpScheduler) UpdateNetPoolsPeriodically() {
 	}
 }
 
+// HandleIpSchedulerPredicate handle ip scheduler predicate
 func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedulerapi.ExtenderFilterResult, error) {
 	if DefaultIpScheduler == nil {
 		return nil, fmt.Errorf("invalid type of custom scheduler, please check the custome scheduler config")
@@ -123,6 +128,7 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	return &scheduleResult, nil
 }
 
+// HandleIpSchedulerBinding handle ip scheduler binding
 func HandleIpSchedulerBinding(extenderBindingArgs schedulerapi.ExtenderBindingArgs) error {
 	if DefaultIpScheduler == nil {
 		return fmt.Errorf("invalid type of custom scheduler, please check the custome scheduler config")

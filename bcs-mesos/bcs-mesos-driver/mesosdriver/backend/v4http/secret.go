@@ -18,7 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	//bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	//"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	//"encoding/json"
 )
 

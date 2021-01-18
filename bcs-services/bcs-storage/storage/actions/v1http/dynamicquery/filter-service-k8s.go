@@ -14,7 +14,7 @@
 package dynamicquery
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 // ServiceK8sFilter filter of k8s service

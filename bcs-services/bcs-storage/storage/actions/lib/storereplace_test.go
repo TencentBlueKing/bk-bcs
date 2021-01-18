@@ -16,7 +16,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
 // Test dollar replace

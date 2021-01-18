@@ -23,7 +23,7 @@ import (
 
 	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 
-	qcloud "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
+	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 )
 
 func (clb *ClbAPI) waitForTaskResult(id int) error {
