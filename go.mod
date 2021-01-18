@@ -91,14 +91,13 @@ require (
 	github.com/gobwas/pool v0.2.0 // indirect
 	github.com/gobwas/ws v1.0.3 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
-	github.com/gogo/protobuf v1.3.1
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
-	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/cadvisor v0.32.0
-	github.com/google/go-cmp v0.5.1
+	github.com/google/go-cmp v0.5.2
 	github.com/google/go-querystring v1.0.0
 	github.com/google/uuid v1.1.4
 	github.com/gorilla/mux v1.8.0
@@ -123,7 +122,6 @@ require (
 	github.com/json-iterator/go v1.1.10
 	github.com/juju/ratelimit v1.0.1
 	github.com/kevholditch/gokong v6.0.0+incompatible // indirect
-	github.com/klauspost/compress v1.4.1 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/lithammer/go-jump-consistent-hash v1.0.1
@@ -142,7 +140,6 @@ require (
 	github.com/moby/term v0.0.0-20200507201656-73f35e472e8f
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
-	github.com/nats-io/nats.go v1.9.2 // indirect
 	github.com/netdata/go-orchestrator v0.0.0-20190905093727-c793edba0e8f // indirect
 	github.com/nlopes/slack v0.6.1-0.20191106133607-d06c2a2b3249 // indirect
 	github.com/nranchev/go-libGeoIP v0.0.0-20170629073846-d6d4a9a4c7e8 // indirect
@@ -169,7 +166,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.3.2
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/stripe/stripe-go/v71 v71.28.0 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/tencentcloud/tencentcloud-sdk-go v3.0.114+incompatible
@@ -184,7 +181,7 @@ require (
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
 	go.etcd.io/bbolt v1.3.4 // indirect
-	go.mongodb.org/mongo-driver v1.1.2
+	go.mongodb.org/mongo-driver v1.4.4
 	go.uber.org/zap v1.13.0 // indirect
 	go4.org v0.0.0-20190313082347-94abd6928b1d
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
@@ -207,7 +204,6 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
 	k8s.io/kubernetes v1.14.10
-	k8s.io/utils v0.0.0-20200912215256-4140de9c8800 // indirect
 	sigs.k8s.io/controller-runtime v0.6.3
 	sigs.k8s.io/testing_frameworks v0.1.1 // indirect
 )

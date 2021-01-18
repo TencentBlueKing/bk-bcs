@@ -14,6 +14,9 @@
 package dynamic
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	"github.com/micro/go-micro/v2/broker"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -177,20 +180,40 @@ func getReqData(req *restful.Request, features operator.M) (operator.M, error) {
 }
 
 func putNamespaceResources(req *restful.Request) error {
-	return putResources(req, nsFeatTags)
+	data, err := putResources(req, nsFeatTags)
+	if err != nil {
+		return err
+	}
+
+	err = publishDynamicResourceToQueue(data, nsFeatTags, msgqueue.EventTypeUpdate)
+	if err != nil {
+		blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putNamespaceResources", err)
+	}
+
+	return nil
 }
 
 func putClusterResources(req *restful.Request) error {
-	return putResources(req, csFeatTags)
+	data, err := putResources(req, csFeatTags)
+	if err != nil {
+		return err
+	}
+
+	err = publishDynamicResourceToQueue(data, csFeatTags, msgqueue.EventTypeUpdate)
+	if err != nil {
+		blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putClusterResources", err)
+	}
+
+	return nil
 }
 
-func putResources(req *restful.Request, resourceFeatList []string) error {
+func putResources(req *restful.Request, resourceFeatList []string) (operator.M, error) {
 	features := getFeatures(req, resourceFeatList)
 	extras := getExtra(req)
 	features.Merge(extras)
 	data, err := getReqData(req, features)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	putOption := &lib.StorePutOption{
 		UniqueKey:     resourceFeatList,
@@ -201,19 +224,59 @@ func putResources(req *restful.Request, resourceFeatList []string) error {
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	return store.Put(req.Request.Context(), getTable(req), data, putOption)
+
+	err = store.Put(req.Request.Context(), getTable(req), data, putOption)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func deleteNamespaceResources(req *restful.Request) error {
-	return deleteResources(req, nsFeatTags)
+	mList, err := deleteResources(req, nsFeatTags)
+	if err != nil {
+		return err
+	}
+
+	go func(mList []operator.M, featTags []string) {
+		for _, data := range mList {
+			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+			if err != nil {
+				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteNamespaceResources", err)
+			}
+		}
+	}(mList, nsFeatTags)
+
+	return nil
 }
 
 func deleteClusterResources(req *restful.Request) error {
-	return deleteResources(req, csFeatTags)
+	mList, err := deleteResources(req, csFeatTags)
+	if err != nil {
+		return err
+	}
+
+	go func(mList []operator.M, featTags []string) {
+		for _, data := range mList {
+			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+			if err != nil {
+				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteClusterResources", err)
+			}
+		}
+	}(mList, csFeatTags)
+
+	return nil
 }
 
-func deleteResources(req *restful.Request, resourceFeatList []string) error {
+func deleteResources(req *restful.Request, resourceFeatList []string) ([]operator.M, error) {
 	condition := getCondition(req, resourceFeatList)
+
+	getOption := &lib.StoreGetOption{
+		Cond:           condition,
+		IsAllDocuments: true,
+	}
+
 	rmOption := &lib.StoreRemoveOption{
 		Cond:           condition,
 		IgnoreNotFound: false,
@@ -221,7 +284,19 @@ func deleteResources(req *restful.Request, resourceFeatList []string) error {
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	return store.Remove(req.Request.Context(), getTable(req), rmOption)
+
+	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
+	if err != nil {
+		return nil, err
+	}
+	lib.FormatTime(mList, needTimeFormatList)
+
+	err = store.Remove(req.Request.Context(), getTable(req), rmOption)
+	if err != nil {
+		return nil, err
+	}
+
+	return mList, nil
 }
 
 func getTimeCondition(req *restful.Request) *operator.Condition {
@@ -246,18 +321,50 @@ func getTimeCondition(req *restful.Request) *operator.Condition {
 }
 
 func deleteBatchNamespaceResource(req *restful.Request) error {
-	return deleteBatchResources(req, nsListFeatTags)
+	mList, err := deleteBatchResources(req, nsListFeatTags)
+	if err != nil {
+		return err
+	}
+
+	go func(mList []operator.M, featTags []string) {
+		for _, data := range mList {
+			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+			if err != nil {
+				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteBatchNamespaceResource", err)
+			}
+		}
+	}(mList, nsListFeatTags)
+
+	return nil
 }
 
 func deleteClusterNamespaceResource(req *restful.Request) error {
-	return deleteBatchResources(req, csListFeatTags)
+	mList, err := deleteBatchResources(req, csListFeatTags)
+	if err != nil {
+		return err
+	}
+
+	go func(mList []operator.M, featTags []string) {
+		for _, data := range mList {
+			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+			if err != nil {
+				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteClusterNamespaceResource", err)
+			}
+		}
+	}(mList, csListFeatTags)
+
+	return nil
 }
 
-func deleteBatchResources(req *restful.Request, resourceFeatList []string) error {
+func deleteBatchResources(req *restful.Request, resourceFeatList []string) ([]operator.M, error) {
 	featCondition := getCondition(req, resourceFeatList)
 	timeCondition := getTimeCondition(req)
 	condition := operator.NewBranchCondition(operator.And, featCondition, timeCondition)
 
+	getOption := &lib.StoreGetOption{
+		Cond:           condition,
+		IsAllDocuments: true,
+	}
 	rmOption := &lib.StoreRemoveOption{
 		Cond:           condition,
 		IgnoreNotFound: false,
@@ -265,7 +372,19 @@ func deleteBatchResources(req *restful.Request, resourceFeatList []string) error
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	return store.Remove(req.Request.Context(), getTable(req), rmOption)
+
+	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
+	if err != nil {
+		return nil, err
+	}
+	lib.FormatTime(mList, needTimeFormatList)
+
+	err = store.Remove(req.Request.Context(), getTable(req), rmOption)
+	if err != nil {
+		return nil, err
+	}
+
+	return mList, nil
 }
 
 func urlPathK8S(oldURL string) string {
@@ -274,4 +393,41 @@ func urlPathK8S(oldURL string) string {
 
 func urlPathMesos(oldURL string) string {
 	return urlPrefixMesos + oldURL
+}
+
+func publishDynamicResourceToQueue(data operator.M, featTags []string, event msgqueue.EventKind) error {
+	var (
+		err     error
+		message = &broker.Message{
+			Header: map[string]string{},
+		}
+	)
+
+	startTime := time.Now()
+	defer func() {
+		if queueName, ok := message.Header[resourceTypeTag]; ok {
+			lib.ReportQueuePushMetrics(queueName, err, startTime)
+		}
+	}()
+
+	for _, feat := range featTags {
+		if v, ok := data[feat].(string); ok {
+			message.Header[feat] = v
+		}
+	}
+	message.Header[string(msgqueue.EventType)] = string(event)
+
+	if v, ok := data[dataTag]; ok {
+		codec.EncJson(v, &message.Body)
+	} else {
+		blog.Infof("object[%v] not exist data", data[dataTag])
+		return nil
+	}
+
+	err = apiserver.GetAPIResource().GetMsgQueue().Publish(message)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
