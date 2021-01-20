@@ -7,7 +7,6 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator => ../../bcs-k8s/bcs-gamedeployment-operator
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../../bcs-k8s/bcs-gamestatefulset-operator
-	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
@@ -22,7 +21,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210120070408-390787304cd5
 	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/docker/docker v20.10.0-rc1+incompatible // indirect
 	github.com/fsouza/go-dockerclient v1.6.5
