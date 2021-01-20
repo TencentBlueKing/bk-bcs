@@ -4,172 +4,205 @@ import "protoc-gen-swagger/options/annotations.proto";
 
 package common;
 
+// NOTE: 错误码规则
+// 40号段 + 5位错误码共7位
+// 错误码千位为模块编号，用于快速确认错误码产生来源，如4000000为APIServer错误码，
+// 4001000为AuthServer错误码，4002000为模板服务错误码...
+
 // ErrCode 错误码
 enum ErrCode {
     // 0 成功
     E_OK = 0;
+    // 4030403 未授权
+    E_NOT_AUTHORIZED = 4030403;
 
-    // 1000 网关服务, 节点调用失败
-    E_GW_SYSTEM_UNKONW                              = 1000;
+    // 4000000 API服务, 节点调用失败
+    E_API_SYSTEM_UNKNOWN                            = 4000000;
+    // 4000001 API服务, 参数校验失败
+    E_API_PARAMS_INVALID                            = 4000001;
 
-    // 2000 接入服务, 节点调用失败
-    E_AS_SYSTEM_UNKONW                              = 2000;
-    // 2001 接入服务, 参数校验失败
-    E_AS_PARAMS_INVALID                             = 2001;
-    // 2002 接入服务, 认证校验失败
-    E_AS_AUTH_FAILED                                = 2002;
-    // 2003 接入服务, 未授权的操作
-    E_AS_NOT_AUTHED                                 = 2003;
+    // 4001000 AUTH服务, 节点调用失败
+    E_AUTH_SYSTEM_UNKNOWN                           = 4001000;
+    // 4001001 AUTH服务, 参数校验失败
+    E_AUTH_PARAMS_INVALID                           = 4001001;
+    // 4001002 AUTH服务, 权限校验失败
+    E_AUTH_AUTHORIZE_FAILED                         = 4001002;
+    // 4001003 AUTH服务, 本地模式权限失败
+    E_AUTH_LOCAL_AUTHORIZE_FAILED                   = 4001003;
+    // 4001004 AUTH服务, IAM模式权限失败
+    E_AUTH_BKIAM_AUTHORIZE_FAILED                   = 4001004;
+    // 4001005 AUTH服务, 无权限
+    E_AUTH_NOT_AUTHORIZED                           = 4001005;
+    // 4001006 AUTH服务, 本地模式新建策略失败
+    E_AUTH_LOCAL_ADD_POLICY_FAILED                  = 4001006;
+    // 4001007 AUTH服务, IAM模式新建策略失败
+    E_AUTH_BKIAM_ADD_POLICY_FAILED                  = 4001007;
 
-    // 3000 模板服务, 节点调用失败
-    E_TPL_SYSTEM_UNKONW                             = 3000;
-    // 3001 模板服务, 参数校验失败
-    E_TPL_PARAMS_INVALID                            = 3001;
-    // 3002 模板服务, 渲染前置检查失败，检查模板和模板规则内容是否正确
-    E_TPL_RENDER_CHECK_ERROR                        = 3002;
-    // 3003 模板服务, 渲染规则非法
-    E_TPL_INVALID_TEMPLATE_RULE                     = 3003;
-    // 3004 模板服务, 渲染规则类型非法
-    E_TPL_INVALID_TEMPLATE_RULE_TYPE                = 3004;
-    // 3005 模板服务, 渲染失败
-    E_TPL_RENDER_FAILED                             = 3005;
-    // 3006 模板服务, 预览渲染失败, 集群信息未知
-    E_TPL_NO_CLUSTER_TO_RENDER                      = 3006;
-    // 3007 模板服务, 预览渲染失败, 大区信息未知
-    E_TPL_NO_ZONE_TO_RENDER                         = 3007;
-    // 3008 模版服务, 创建绑定失败, 模版信息未知
-    E_TPL_NO_TEMPLATE_TO_BIND                       = 3008;
-    // 3009 模版服务, 创建绑定失败, 模版版本信息未知
-    E_TPL_NO_VERSION_TO_BIND                        = 3009;
-    // 3010 模版服务, 创建绑定失败, App信息未知
-    E_TPL_NO_APP_TO_BIND                            = 3010;
-    // 3011 模版服务, 创建绑定失败, 集群信息未知
-    E_TPL_NO_CLUSTER_TO_BIND                        = 3011;
-    // 3012 模版服务, 创建绑定失败, 大区信息未知
-    E_TPL_NO_ZONE_TO_BIND                           = 3012;
-    // 3013 模版服务, 创建绑定失败，创建configSet失败
-    E_TPL_CREATE_CFGSET_FAILED                      = 3013;
-    // 3014 模版服务, 创建绑定失败, 创建commit失败
-    E_TPL_CREATE_COMMIT_FAILED                      = 3014;
-    // 3015 模版服务, 更新绑定失败, configSet信息未知
-    E_TPL_NO_CFGSET_TO_SYNC                         = 3015;
-    // 3016 模版服务, 获取变量失败
-    E_TPL_GET_VARS_FAILED                           = 3016;
+    // 4002000 模板服务, 节点调用失败
+    E_TPL_SYSTEM_UNKNOWN                            = 4002000;
+    // 4002001 模板服务, 参数校验失败
+    E_TPL_PARAMS_INVALID                            = 4002001;
+    // 4002002 模板服务, 指定目标对象不存在
+    E_TPL_NOT_FOUND                                 = 4002002;
+    // 4002003 模板服务, 指定目标对象已存在
+    E_TPL_ALREADY_EXISTS                            = 4002003;
+    // 4002004 模板服务, 插件检查失败
+    E_TPL_RENDER_PLUGIN_CHECK_FAILED                = 4002004;
+    // 4002005 模板服务, 无需渲染
+    E_TPL_NONEED_RENDER                             = 4002005;
+    // 4002006 模板服务, 不支持的引擎
+    E_TPL_UNKNOWN_ENGINE_TYPE                       = 4002006;
+    // 4002007 模板服务, 渲染前置检查失败
+    E_TPL_RENDER_CHECK_ERROR                        = 4002007;
+    // 4002008 模板服务, 渲染失败
+    E_TPL_RENDER_FAILED                             = 4002008;
+    // 4002009 模版服务, 模板绑定中，无法删除
+    E_TPL_TPLBINDED_CANNOT_DELETE                   = 4002009;
 
+    // 4003000 配置服务, 节点调用失败
+    E_CS_SYSTEM_UNKNOWN                             = 4003000;
+    // 4003001 配置服务, 参数校验失败
+    E_CS_PARAMS_INVALID                             = 4003001;
+    // 4003002 配置服务, 无法根据未提交确认的Commit创建配置发布版本
+    E_CS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT     = 4003002;
+    // 4003003 配置服务, 该Commit已撤销，无法再进行Confirm操作
+    E_CS_COMMIT_ALREADY_CANCELED                    = 4003003;
+    // 4003004 配置服务, 该Commit已提交
+    E_CS_COMMIT_ALREADY_CONFIRMED                   = 4003004;
+    // 4003005 配置服务, 目标资源已存在无法重复创建
+    E_CS_ALREADY_EXISTS                             = 4003005;
+    // 4003006 配置服务, 无法回滚一个未发布的版本
+    E_CS_ROLLBACK_UNPUBLISHED_RELEASE               = 4003006;
+    // 4003007 配置服务, 认证授权失败
+    E_CS_AUTH_FAILED                                = 4003007;
+    // 4003008 配置服务, 未授权
+    E_CS_NOT_AUTHED                                 = 4003008;
 
-    // 4000 业务逻辑服务, 节点调用失败
-    E_BS_SYSTEM_UNKONW                              = 4000;
-    // 4001 业务逻辑服务, 参数校验失败
-    E_BS_PARAMS_INVALID                             = 4001;
-    // 4002 业务逻辑服务, 无法根据未提交确认的Commit创建配置发布版本
-    E_BS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT     = 4002;
-    // 4003 业务逻辑服务, 该Commit已撤销，无法再进行Confirm操作
-    E_BS_COMMIT_ALREADY_CANCELED                    = 4003;
-    // 4004 业务逻辑服务, 目标资源已存在无法重复创建
-    E_BS_ALREADY_EXISTS                             = 4004;
-    // 4005 业务逻辑服务, 无法回滚一个未发布的版本
-    E_BS_ROLLBACK_UNPUBLISHED_RELEASE               = 4005;
+    // 4004000 数据管理服务, 通用未知异常
+    E_DM_SYSTEM_UNKNOWN                             = 4004000;
+    // 4004001 数据管理服务, 参数校验失败
+    E_DM_PARAMS_INVALID                             = 4004001;
+    // 4004002 数据管理服务, 指定目标对象不存在
+    E_DM_NOT_FOUND                                  = 4004002;
+    // 4004003 数据管理服务, 指定目标对象已存在
+    E_DM_ALREADY_EXISTS                             = 4004003;
+    // 4004004 数据管理服务, 获取数据存储分片失败
+    E_DM_ERR_DBSHARDING                             = 4004004;
+    // 4004005 数据管理服务, 数据操作执行异常
+    E_DM_DB_EXEC_ERR                                = 4004005;
+    // 4004006 数据管理服务, 更新失败, 无满足限定条件的目标对象
+    E_DM_DB_UPDATE_ERR                              = 4004006;
+    // 4004007 数据管理服务, 更新失败, 无满足限定条件的目标对象
+    E_DM_DB_ROW_AFFECTED_ERR                        = 4004007;
+    // 4004008 数据管理服务, 加锁指定配置集合失败
+    E_DM_CFGSET_LOCK_FAILED                         = 4004008;
+    // 4004009 数据管理服务, 解锁指定配置集合失败
+    E_DM_CFGSET_UNLOCK_FAILED                       = 4004009;
+    // 4004010 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象
+    E_DM_PUBLISH_RELEASE_FAILED                     = 4004010;
+    // 4004011 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit
+    E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT          = 4004011;
+    // 4004012 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改
+    E_DM_COMMIT_NOT_INIT_STATE                      = 4004012;
+    // 4004013 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）
+    E_DM_RELEASE_CONTENT_NOT_FOUND                  = 4004013;
 
-    // 5000 数据管理服务, 通用未知异常
-    E_DM_SYSTEM_UNKONW                              = 5000;
-    // 5001 数据管理服务, 参数校验失败
-    E_DM_PARAMS_INVALID                             = 5001;
-    // 5002 数据管理服务, 指定目标对象不存在
-    E_DM_NOT_FOUND                                  = 5002;
-    // 5003 数据管理服务, 指定目标对象已存在
-    E_DM_ALREADY_EXISTS                             = 5003;
-    // 5004 数据管理服务, 获取数据存储分片失败
-    E_DM_ERR_DBSHARDING                             = 5004;
-    // 5005 数据管理服务, 数据操作执行异常
-    E_DM_DB_EXEC_ERR                                = 5005;
-    // 5006 数据管理服务, 更新失败, 无满足限定条件的目标对象
-    E_DM_DB_UPDATE_ERR                              = 5006;
-    // 5007 数据管理服务, 加锁指定配置集合失败
-    E_DM_CFGSET_LOCK_FAILED                         = 5007;
-    // 5008 数据管理服务, 解锁指定配置集合失败
-    E_DM_CFGSET_UNLOCK_FAILED                       = 5008;
-    // 5009 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象
-    E_DM_PUBLISH_RELEASE_FAILED                     = 5009;
-    // 5010 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit
-    E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT          = 5010;
-    // 5011 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改
-    E_DM_COMMIT_NOT_INIT_STATE                      = 5011;
-    // 5012 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）
-    E_DM_RELEASE_CONFIGS_NOT_FOUND                  = 5012;
+    // 4005000 GSE控制器, 节点调用失败
+    E_GSE_SYSTEM_UNKNOWN                            = 4005000;
+    // 4005001 GSE控制器, 参数校验失败
+    E_GSE_PARAMS_INVALID                            = 4005001;
+    // 4005002 BCS控制器, 配置版本发布消息解析失败
+    E_GSE_MARSHAL_PUBLISHING_FAILED                 = 4005002;
+    // 4005003 GSE控制器, 配置版本任务发布失败
+    E_GSE_PUBLISH_RELEASE_FAILED                    = 4005003;
+    // 4005004 BCS控制器, 配置版本已执行发布，请勿重复执行
+    E_GSE_ALREADY_PUBLISHED                         = 4005004;
+    // 4005005 BCS控制器, 配置版本已撤销，无法执行发布
+    E_GSE_ALREADY_CANCELED                          = 4005005;
+    // 4005006 BCS控制器, 配置版本已回滚
+    E_GSE_ALREADY_ROLLBACKED                        = 4005006;
 
-    // 6000 GSE控制器, 节点调用失败
-    E_GSE_SYSTEM_UNKONW                             = 6000;
-    // 6001 GSE控制器, 参数校验失败
-    E_GSE_PARAMS_INVALID                            = 6001;
-    // 6002 BCS控制器, 配置版本发布消息解析失败
-    E_GSE_MARSHAL_PUBLISHING_FAILED                 = 6002;
-    // 6003 GSE控制器, 配置版本任务发布失败
-    E_GSE_PUBLISH_RELEASE_FAILED                    = 6003;
-    // 6004 BCS控制器, 配置版本已执行发布，请勿重复执行
-    E_GSE_ALREADY_PUBLISHED                         = 6004;
-    // 6005 BCS控制器, 配置版本已撤销，无法执行发布
-    E_GSE_ALREADY_CANCELED                          = 6005;
-    // 6006 BCS控制器, 配置版本已回滚
-    E_GSE_ALREADY_ROLLBACKED                        = 6006;
+    // 4006000 BCS控制器, 节点调用失败
+    E_BCS_SYSTEM_UNKNOWN                            = 4006000;
+    // 4006001 BCS控制器, 参数校验失败
+    E_BCS_PARAMS_INVALID                            = 4006001;
+    // 4006002 BCS控制器, 配置版本发布消息解析失败
+    E_BCS_MARSHAL_PUBLISHING_FAILED                 = 4006002;
+    // 4006003 BCS控制器, 广播配置版本发布消息失败
+    E_BCS_PUBLISH_RELEASE_FAILED                    = 4006003;
+    // 4006004 BCS控制器, 配置版本已执行发布，请勿重复执行
+    E_BCS_ALREADY_PUBLISHED                         = 4006004;
+    // 4006005 BCS控制器, 配置版本已撤销，无法执行发布
+    E_BCS_ALREADY_CANCELED                          = 4006005;
+    // 4006006 BCS控制器, 配置版本已回滚
+    E_BCS_ALREADY_ROLLBACKED                        = 4006006;
 
-    // 7000 BCS控制器, 节点调用失败
-    E_BCS_SYSTEM_UNKONW                             = 7000;
-    // 7001 BCS控制器, 参数校验失败
-    E_BCS_PARAMS_INVALID                            = 7001;
-    // 7002 BCS控制器, 配置版本发布消息解析失败
-    E_BCS_MARSHAL_PUBLISHING_FAILED                 = 7002;
-    // 7003 BCS控制器, 广播配置版本发布消息失败
-    E_BCS_PUBLISH_RELEASE_FAILED                    = 7003;
-    // 7004 BCS控制器, 配置版本已执行发布，请勿重复执行
-    E_BCS_ALREADY_PUBLISHED                         = 7004;
-    // 7005 BCS控制器, 配置版本已撤销，无法执行发布
-    E_BCS_ALREADY_CANCELED                          = 7005;
-    // 7006 BCS控制器, 配置版本已回滚
-    E_BCS_ALREADY_ROLLBACKED                        = 7006;
+    // 4007000 会话链接服务, 节点调用失败
+    E_CONNS_SYSTEM_UNKNOWN                          = 4007000;
+    // 4007001 会话链接服务, 参数校验失败
+    E_CONNS_PARAMS_INVALID                          = 4007001;
+    // 4007002 会话链接服务, BCS sidecar接入调度失败
+    E_CONNS_SCHEDULE_RES_FAILED                     = 4007002;
 
-    // 8000 会话链接服务, 节点调用失败
-    E_CONNS_SYSTEM_UNKONW                           = 8000;
-    // 8001 会话链接服务, 参数校验失败
-    E_CONNS_PARAMS_INVALID                          = 8001;
-    // 8002 会话链接服务, BCS sidecar接入调度失败
-    E_CONNS_SCHEDULE_RES_FAILED                     = 8002;
+    // 4008000 通道服务, 节点调用失败
+    E_TS_SYSTEM_UNKNOWN                             = 4008000;
+    // 4008001 通道服务, 参数校验失败
+    E_TS_PARAMS_INVALID                             = 4008001;
+    // 4008002 通道服务, 配置版本发布失败
+    E_TS_PUBLISH_RELEASE_FAILED                     = 4008002;
 
-    // 9000 逻辑集成服务, 节点调用失败
-    E_ITG_SYSTEM_UNKONW                             = 9000;
-    // 9001 逻辑集成服务, 参数校验失败
-    E_ITG_PARAMS_INVALID                            = 9001;
-    // 9002 逻辑集成服务, 操作集合描述文件解析失败
-    E_ITG_METADATA_INVALID                          = 9002;
-    // 9003 逻辑集成服务, 未知操作集合描述类型
-    E_ITG_UNKNOW_METADATA_KIND                      = 9003;
-    // 9004 逻辑集成服务, 未知操作集合描述类型
-    E_ITG_UNKNOW_METADATA_OP                        = 9004;
-    // 9005 逻辑集成服务, 创建版本发布策略失败
-    E_ITG_CREATE_STRATEGY_FAILED                    = 9005;
-    // 9006 逻辑集成服务, 创建集群结构失败
-    E_ITG_CONSTRUCT_CLUSTER_FAILED                  = 9006;
-    // 9007 逻辑集成服务, 创建大区结构失败
-    E_ITG_CONSTRUCT_ZONE_FAILED                     = 9007;
+    // 4009000 实例服务, 节点调用失败
+    E_IS_SYSTEM_UNKNOWN                             = 4009000;
+    // 4009001 实例服务, 参数校验失败
+    E_IS_PARAMS_INVALID                             = 4009001;
+}
 
-    // 10000 通道服务, 节点调用失败
-    E_TS_SYSTEM_UNKONW                              = 10000;
-    // 10001 通道服务, 参数校验失败
-    E_TS_PARAMS_INVALID                             = 10001;
-    // 10002 通道服务, 配置版本发布失败
-    E_TS_PUBLISH_RELEASE_FAILED                     = 10002;
+// TemplateEngineType 模板渲染引擎类型
+enum TemplateEngineType {
+    // 0 非模板
+    TET_NONE       = 0;
+    // 1 Golang内置模板引擎
+    TET_GOLANG     = 1;
+    // 2 Python Mako模板引擎
+    TET_PYTHONMAKO = 2;
+    // 3 外部模板
+    TET_EXTERNAL   = 3;
+}
 
-    // 11000 实例服务, 节点调用失败
-    E_IS_SYSTEM_UNKONW                              = 11000;
-    // 11001 实例服务, 参数校验失败
-    E_IS_PARAMS_INVALID                             = 11001;
+// ConfigFileMode 配置文件类型
+enum ConfigFileMode {
+    // 0 文本文件
+    CFM_TEXT     = 0;
+    // 1 二进制文件
+    CFM_BINARY   = 1;
+    // 2 模板文件
+    CFM_TEMPLATE = 2;
 }
 
 // CommonState 通用状态
 enum CommonState {
     // 0 正常
     CS_VALID   = 0;
-    // 1 异常
+    // 1 非正常
     CS_INVALID = 1;
+}
+
+// CommitState 改动提交状态
+enum CommitState {
+    // 0 初始化
+    CS_INIT      = 0;
+    // 1 已提交
+    CS_CONFIRMED = 1;
+    // 2 已撤销
+    CS_CANCELED  = 2;
+}
+
+// CommitMode 提交模式
+enum CommitMode {
+    // 0 非模板提交模式
+    CM_CONFIGS = 0;
+    // 1 模板提交模式
+    CM_TEMPLATE = 1;
 }
 
 // ReleaseState 发布版本状态
@@ -192,16 +225,6 @@ enum AppInstanceState {
     INSS_ONLINE  = 1;
 }
 
-// CommitState 改动提交状态
-enum CommitState {
-    // 0 初始化
-    CS_INIT      = 0;
-    // 1 已提交
-    CS_CONFIRMED = 1;
-    // 2 已撤销
-    CS_CANCELED  = 2;
-}
-
 // DeployType 部署环境类型
 enum DeployType {
     // 0 BCS容器部署
@@ -212,111 +235,33 @@ enum DeployType {
     DT_GSE_PLUGIN = 2;
 }
 
-// AppState 应用模块分组状态
-enum AppState {
-    // 0 已创建、可用状态
-    AS_CREATED = 0;
-    // 1 已删除状态
-    AS_DELETED = 1;
-}
-
-// ClusterState 集群状态
-enum ClusterState {
-    // 0 已创建、可用状态
-    CS_CREATED = 0;
-    // 1 已删除状态
-    CS_DELETED = 1;
-}
-
-// ZoneState 可用区状态
-enum ZoneState {
-    // 0 已创建、可用状态
-    ZS_CREATED = 0;
-    // 1 已删除状态
-    ZS_DELETED = 1;
-}
-
-// StrategyState 策略状态
-enum StrategyState {
-    // 0 已创建、可用状态
-    SS_CREATED = 0;
-    // 1 已删除状态
-    SS_DELETED = 1;
-}
-
-// ProcAttrState 进程应用归属信息状态
-enum ProcAttrState {
-    // 0 已创建、可用状态
-    PS_CREATED = 0;
-    // 1 已删除状态
-    PS_DELETED = 1;
-}
-
-// ConfigSetState 配置集合状态
-enum ConfigSetState {
-    // 0 已创建、可用状态
-    CSS_CREATED = 0;
-    // 1 已删除状态
-    CSS_DELETED = 1;
-}
-
-// ConfigTemplateSetState 配置模版集合状态
-enum ConfigTemplateSetState {
-    // 0 已创建、可用状态
-    CTSS_CREATED = 0;
-    // 1 已删除状态
-    CTSS_DELETED = 1;
-}
-
-// ConfigTemplateState 配置模版状态
-enum ConfigTemplateState {
-    // 0 已创建、可用状态
-    CTS_CREATED = 0;
-    // 1 已删除状态
-    CTS_DELETED = 1;
-}
-
-// ConfigTemplateVersionState 配置模版版本状态
-enum ConfigTemplateVersionState {
-    // 0 已创建、可用状态
-    CTVS_CREATED = 0;
-    // 1 已删除状态
-    CTVS_DELETED = 1;
-}
-
-// VariableState 变量状态
-enum VariableState {
-    // 0 已创建、可用状态
-    VS_CREATED = 0;
-    // 1 已删除状态
-    VS_DELETED = 1;
-}
-
 // SourceType 系统资源类型
 enum SourceType {
-    // 0 业务资源
-    ST_BUSINESS      = 0;
-    // 1 应用模块资源
-    ST_APP           = 1;
-    // 2 集群资源
-    ST_CLUSTER       = 2;
-    // 3 可用区资源
-    ST_ZONE          = 3;
-    // 4 配置集合资源
-    ST_CONFIGSET     = 4;
+    // 0 应用模块资源
+    ST_APP              = 0;
+    // 1 模板资源
+    ST_TEMPLATE         = 1;
+    // 2 模板绑定
+    ST_TEMPLATE_BIND    = 2;
+    // 3 模板版本
+    ST_TEMPLATE_VERSION = 3;
+    // 4 配置资源
+    ST_CONFIG           = 4;
     // 5 提交资源
-    ST_COMMIT        = 5;
-    // 6 版本资源
-    ST_RELEASE       = 6;
-    // 7 策略资源
-    ST_STRATEGY      = 7;
-    // 8 组模式提交资源
-    ST_MULTI_COMMIT  = 8;
-    // 9 组模式配置版本
-    ST_MULTI_RELEASE = 9;
-    // 10 进程环境应用归属信息
-    ST_PROC_ATTR     = 10;
-    ST_END           = 11;
+    ST_COMMIT           = 5;
+    // 6 配置内容
+    ST_CONTENT          = 6;
+    // 7 版本资源
+    ST_RELEASE          = 7;
+    // 8 策略资源
+    ST_STRATEGY         = 8;
+    // 9 组模式提交资源
+    ST_MULTI_COMMIT     = 9;
+    // 10 组模式配置版本
+    ST_MULTI_RELEASE    = 10;
+    // 11 进程环境应用归属信息
+    ST_PROC_ATTR        = 11;
+    ST_END              = 12;
 }
 
 // SourceOpType 资源操作类型
@@ -339,36 +284,106 @@ enum SourceOpType {
     SOT_PUBLISH  = 7;
     // 8 回滚版本
     SOT_ROLLBACK = 8;
-    // 9 锁定资源
-    SOT_LOCK     = 9;
-    // 10 解锁资源
-    SOT_UNLOCK   = 10;
-    // 11 Reload配置版本
-    SOT_RELOAD   = 11;
-    SOT_END      = 12;
+    // 9 Reload配置版本
+    SOT_RELOAD   = 9;
+    SOT_END      = 10;
 }
 
-// TemplateEngineType template engine type
-enum TemplateEngineType {
-    // 0 golang template
-    TET_GOLANG = 0;
-    // 1 python mako
-    TET_PYTHONMAKO = 1;
-}
-
-// VariableType variable type
-enum VariableType {
-    // 0 global variable
-    VT_GLOBAL = 0;
-    // 1 cluster variable
-    VT_CLUSTER = 1;
-    // 2 zone variable
-    VT_ZONE = 2;
-}
-
+// Endpoint 接入节点实例
 message Endpoint {
-    string IP   = 1;
+    // ip 接入点IP
+    string ip   = 1;
+    // port 接入点端口
     int32  port = 2;
+}
+
+message ComponentHealthzInfo {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "ComponentHealthzInfo"
+			description: "组件健康检查信息"
+		}
+	};
+
+    string component  = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组件名", description: ""}];
+    bool   is_healthy = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "健康状态", description: ""}];
+    string message    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "健康信息", description: ""}];
+}
+
+message ModuleHealthzInfo {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "ModuleHealthzInfo"
+			description: "模块健康检查信息"
+		}
+	};
+
+    string                        module     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模块名", description: ""}];
+    string                        version    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模块版本", description: ""}];
+    string                        build_time = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模块编译时间", description: ""}];
+    string                        git_hash   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模块代码仓库签名", description: ""}];
+    bool                          is_healthy = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "健康状态", description: ""}];
+    string                        message    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "健康信息", description: ""}];
+    repeated ComponentHealthzInfo components = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组件信息", description: ""}];
+}
+
+message Page {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "Page"
+			description: "分页设置"
+		}
+	};
+
+    bool  return_total = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否返回数据总量", description: ""}];
+    int32 start        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分页起始游标", description: ""}];
+    int32 limit        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分页数据量", description: ""}];
+}
+
+message LabelsMap {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "LabelsMap"
+			description: "标签策略集合"
+		}
+	};
+
+    map<string, string> labels = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "标签集合", description: "复合OP|VALUE格式"}];
+}
+
+message CommitContent {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CommitContent"
+			description: "配置内容元数据(附带内容提交时使用)"
+		}
+	};
+
+    string content_id   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容签名ID", description: "", max_length: 64}];
+    uint32 content_size = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
+
+    // 内容索引策略，用于节点索引指定版本的配置内容. 支持多个标签，每个标签之间为逻辑或关系. 格式：KV, map type / JSON KV, key为目标标签名称，value为标签规则表达式，格式为OP|VALUES,
+    // OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示
+    // IN(1,2,3)的语意. OP和VALUES之间用竖线分割. 注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理.
+    repeated LabelsMap labels_or = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容索引", description: "复合OP|VALUE格式"}];
+
+    // 内容索引策略，用于节点索引指定版本的配置内容. 支持多个标签，每个标签之间为逻辑与关系. 格式：KV, map type / JSON KV, key为目标标签名称，value为标签规则表达式，格式为OP|VALUES,
+    // OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示
+    // IN(1,2,3)的语意. OP和VALUES之间用竖线分割. 注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理.
+    repeated LabelsMap labels_and = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容索引", description: "复合OP|VALUE格式"}];
+}
+
+message CommitMetadataWithContent {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "CommitMetadataWithContent"
+			description: "配置提交元数据(附带内容)"
+		}
+	};
+
+    string                 cfg_id     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置ID", description: "", max_length: 64}];
+    repeated CommitContent contents   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容", description: "提交的配置内容，支持模板渲染下一个配置文件多份内容的场景"}];
+    string                 commit_id  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置提交ID", description: "查询时返回的字段", max_length: 64}];
 }
 
 message CommitMetadata {
@@ -377,16 +392,11 @@ message CommitMetadata {
 			title: "CommitMetadata"
 			description: "配置提交元数据"
 		}
-        example: { value: '{ "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "templateid": "tplid-01", "template": "{{ . }}", "templateRule": "{}", "configs": "dGhpcyBpcyBhIGV4YW1wbGU=", "memo": "备注"}' }
 	};
 
-    string cfgsetid     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置集合ID", description: "", max_length: 64}];
-    string templateid   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板ID", description: "可选, 用于关联外部模板管理标识", max_length: 64}];
-    string template     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板", description: "可选, 配置模板内容，基于GO Template引擎, 需进行配置渲染时传递", max_length: 2097152}];
-    string templateRule = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板规则", description: "可选, 配置模板规则，基于GO Template引擎, 需进行配置渲染时传递", max_length: 1048576}];
-    bytes  configs      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容", description: "可选，配置原始内容，非配置渲染模式时传递, base64形式", max_length: 2097152}];
-    string changes      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置变更差异描述", description: "可选，默认为空, 暂不启用差异描述", max_length: 2097152}];
-    string commitid     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置提交ID", description: "查询时返回的字段", max_length: 64}];
+    string cfg_id      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置ID", description: "", max_length: 64}];
+    int32  commit_mode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "提交类型", description: "提交类型, 默认0: 非模板提交 1:模板提交"}];
+    string commit_id   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置提交ID", description: "查询时返回的字段", max_length: 64}];
 }
 
 message ReleaseMetadata {
@@ -395,26 +405,11 @@ message ReleaseMetadata {
 			title: "ReleaseMetadata"
 			description: "配置版本元数据"
 		}
-        example: { value: '{ "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "releaseid": "78571263-e9c1-11e9-8c23-525400f99278", "commitid": "988475ba-e9c1-11e9-8c23-525400f99278"}' }
 	};
 
-    string cfgsetid  = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置集合ID", description: "", max_length: 64}];
-    string releaseid = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
-    string commitid  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置提交ID", description: "", max_length: 64}];
-}
-
-message CommitResult {
-	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {
-			title: "CommitResult"
-			description: "配置提交结果(用于组模式提交)"
-		}
-        example: { value: '{ "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "templateid": "tplid-01", "template": "{{ . }}", "templateRule": "{}", "configs": "dGhpcyBpcyBhIGV4YW1wbGU=", "memo": "备注"}' }
-	};
-
-    string cfgsetid = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置集合ID", description: "", max_length: 64}];
-    string result   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作错误信息", description: ""}];
-    string commitid = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置提交ID", description: "成功时返回的字段", max_length: 64}];
+    string cfg_id     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置ID", description: "", max_length: 64}];
+    string release_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
+    string commit_id  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置提交ID", description: "", max_length: 64}];
 }
 
 message EffectInfo {
@@ -423,11 +418,10 @@ message EffectInfo {
 			title: "EffectInfo"
 			description: "生效描述信息"
 		}
-        example: { value: '{ "cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "releaseid": "78571263-e9c1-11e9-8c23-525400f99278"}' }
 	};
 
-    string cfgsetid  = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    string releaseid = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
+    string cfg_id     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
+    string release_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
 }
 
 message ReloadSpec {
@@ -436,36 +430,55 @@ message ReloadSpec {
 			title: "ReloadSpec"
 			description: "Reload执行描述"
 		}
-        example: { value: '{ "multiReleaseid": "78571263-e9c1-11e9-8c23-525400f99278", "info": [{"cfgsetid": "626889ba-e9c1-11e9-8c23-525400f99278", "releaseid": "78571263-e9c1-11e9-8c23-525400f99278"}]}' }
 	};
 
-    string              multiReleaseid = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
-    repeated EffectInfo info           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "生效描述信息", description: ""}];
-
-    // add fields here.
-    bool rollback = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否为指定版本的回滚reload操作", description: ""}];
+    string               multi_release_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
+    repeated EffectInfo  info             = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "生效描述信息", description: ""}];
+    bool                 rollback         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "是否为指定版本的回滚reload操作", description: ""}];
 }
 
-message Business {
+message Publishing {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
-			title: "Business"
-			description: "业务"
+			title: "Publishing"
+			description: "下行发布信令内容"
 		}
 	};
 
-    string bid          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string name         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
-    string depid        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务归属部门标识", description: "", max_length: 64}];
-    string creator      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string lastModifyBy = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt    = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string     biz_id      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string     app_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string     cfg_id      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "原子配置ID", description: "", max_length: 64}];
+    string     cfg_name    = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置名称", description: "", max_length: 64}];
+    string     cfg_fpath   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置子路径", description: "", max_length: 1024}];
+    uint64     serialno    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本序列号", description: "", max_length: 1024}];
+    string     release_id  = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本ID", description: "", max_length: 64}];
+    string     strategies  = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "策略内容", description: "", max_length: 2097152}];
+    ReloadSpec reload_spec = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "回滚信令描述", description: ""}];
+}
 
-    // add fields here.
-    string auth = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "授权认证信息", description: "", max_length: 64}];
+// SignallingType 下行信令类型
+enum SignallingType {
+    // ST_SignallingTypePublish 配置发布信令
+    ST_SignallingTypePublish  = 0;
+
+    // ST_SignallingTypeRollback 配置回滚信令
+    ST_SignallingTypeRollback = 1;
+
+    // ST_SignallingTypeReload 配置Reload信令
+    ST_SignallingTypeReload   = 2;
+    ST_SignallingTypeEnd      = 3;
+}
+
+message Signalling {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "Signalling"
+			description: "下行信令"
+		}
+	};
+
+    SignallingType type       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下行信令类型", description: ""}];
+    Publishing     publishing = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下行信令内容", description: ""}];
 }
 
 message App {
@@ -476,161 +489,174 @@ message App {
 		}
 	};
 
-    string appid        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string name         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
-    string bid          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    int32  deployType   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "部署环境类型", description: "环境类型， 0: BCS容器环境  1: GSE进程环境", minimum: 0, maximum: 1}];
-    string creator      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string lastModifyBy = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string app_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string name           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
+    string biz_id         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    int32  deploy_type    = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "部署环境类型", description: "环境类型， 0: BCS容器环境  1: GSE进程环境  2:GSE插件容器模式", minimum: 0, maximum: 1}];
+    string creator        = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string memo           = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
-message Cluster {
+message TemplateBind {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
-			title: "Cluster"
-			description: "集群"
+			title: "TemplateBind"
+			description: "配置/模板原子绑定关系"
 		}
 	};
 
-    string clusterid    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
-    string name         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群名称", description: "", max_length: 64}];
-    string bid          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid        = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string rClusterid   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群物理标识", description: "", max_length: 64}];
-    string creator      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string lastModifyBy = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
-
-    // add fields here.
-    string labels       = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群标签", description: "主要用于和CC中层级描述做关联", max_length: 128}];
+    string biz_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string template_id    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
+    string app_id         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string cfg_id         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "原子配置ID", description: "", max_length: 64}];
+    int32  state          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string creator        = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string created_at     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
-message Zone {
+message ConfigTemplate {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
-			title: "Zone"
-			description: "大区"
+			title: "ConfigTemplate"
+			description: "配置模板"
 		}
 	};
 
-    string zoneid       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区ID", description: "", max_length: 64}];
-    string name         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区名称", description: "", max_length: 64}];
-    string bid          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid        = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string clusterid    = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
-    string creator      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string lastModifyBy = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string template_id    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
+    string biz_id         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string name           = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板名称", description: "", max_length: 64}];
+    string file_name      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件名", description: "", max_length: 64}];
+    string file_path      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件路径", description: "", max_length: 1024}];
+    string user           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
+    string user_group     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
+    string file_privilege = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 0755", max_length: 64}];
+    string file_format    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件系统格式", description: "例如: unix  windows", max_length: 64}];
+    int32  file_mode      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件类型 1:文本文件 2:二进制文件 3:模板文件", description: "", max_length: 64}];
+    int32  engine_type    = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板渲染引擎类型", description: ""}];
+    string memo           = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string creator        = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string created_at     = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
-message ConfigSet {
+message ConfigTemplateVersion {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
-			title: "ConfigSet"
-			description: "配置集合"
+			title: "ConfigTemplateVersion"
+			description: "配置模板版本"
 		}
 	};
 
-    string cfgsetid     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    string name         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合名称", description: "", max_length: 64}];
-    string bid          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid        = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string creator      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string lastModifyBy = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
-
-    // add fields here.
-    string fpath        = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合子路径", description: "", max_length: 1024}];
+    string version_id     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板版本ID", description: "", max_length: 64}];
+    string biz_id         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string template_id    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
+    string version_tag    = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本号", description: "在通模板下唯一"}];
+    string content_id     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容签名ID", description: "", max_length: 64}];
+    uint32 content_size   = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
+    string memo           = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string creator        = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string created_at     = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
-message Configs {
+message Config {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
-			title: "Configs"
+			title: "Config"
+			description: "配置"
+		}
+	};
+
+    string cfg_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
+    string name           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置名称", description: "", max_length: 64}];
+    string fpath          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置子路径", description: "", max_length: 1024}];
+    string biz_id         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id         = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string user           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
+    string user_group     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
+    string file_privilege = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 755", max_length: 64}];
+    string file_format    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件系统格式", description: "例如: unix  windows", max_length: 64}];
+    int32  file_mode      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件类型 1:文本文件 2:二进制文件 3:模板文件", description: "", max_length: 64}];
+    string creator        = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string memo           = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at     = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+}
+
+message Content {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "Content"
 			description: "配置内容"
 		}
 	};
 
-    string cfgsetid     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    string bid          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string clusterid    = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
-    string zoneid       = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区ID", description: "", max_length: 64}];
-    string commitid     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "改动提交ID", description: "", max_length: 64}];
-    string cid          = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容签名ID", description: "", max_length: 64}];
-    string cfgLink      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置资源链接", description: "", max_length: 4096}];
-    bytes  content      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置实体内容", description: "", max_length: 4194304}];
-    string creator      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string lastModifyBy = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt    = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
-
-    // add fields here.
-    string index        = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容的额外扩索引", description: "扩展索引，如CC中实例的IP信息进行配置数据索引", max_length: 64}];
+    string cfg_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
+    string biz_id         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string commit_id      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "改动提交ID", description: "", max_length: 64}];
+    string index          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "索引", description: ""}];
+    string content_id     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置内容签名ID", description: "", max_length: 64}];
+    uint32 content_size   = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "内容大小", description: ""}];
+    string creator        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string memo           = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at     = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message Commit {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
 			title: "Commit"
-			description: "配置改动提交"
+			description: "配置提交"
 		}
 	};
 
-    string commitid     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "改动提交ID", description: "", max_length: 64}];
-    string bid          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string cfgsetid     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    int32  op           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作类型", description: ""}];
-    string operator     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
-    string templateid   = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板ID", description: "", max_length: 64}];
-    string template     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板", description: "", max_length: 2097152}];
-    string templateRule = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置模板规则", description: "", max_length: 1048576}];
-    bytes  prevConfigs  = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "前一个版本内容", description: "", max_length: 2097152}];
-    bytes  configs      = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置实体内容", description: "", max_length: 2097152}];
-    string changes      = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置差异描述", description: "", max_length: 2097152}];
-    string releaseid    = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
-    string memo         = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
-    string createdAt    = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
-
-    // add fields here.
-    string multiCommitid = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式提交ID", description: "", max_length: 64}];
+    string commit_id       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "提交ID", description: "", max_length: 64}];
+    string biz_id          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string cfg_id          = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
+    int32  commit_mode     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "提交类型", description: "提交类型, 默认0: 非模板提交 1:模板提交"}];
+    string operator        = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
+    string release_id      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
+    string multi_commit_id = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式提交ID", description: "", max_length: 64}];
+    string memo            = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state           = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
+    string created_at      = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at      = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message MultiCommit {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
 			title: "MultiCommit"
-			description: "配置改动提交(组模式)"
+			description: "配置提交(组模式)"
 		}
 	};
 
-    string multiCommitid  = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式提交ID", description: "", max_length: 64}];
-    string bid            = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string operator       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
-    string multiReleaseid = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
-    string memo           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state          = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
-    string createdAt      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string multi_commit_id  = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式提交ID", description: "", max_length: 64}];
+    string biz_id           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id           = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string operator         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作者名称", description: "", max_length: 64}];
+    string multi_release_id = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
+    string memo             = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state            = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
+    string created_at       = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at       = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message Release {
@@ -641,26 +667,29 @@ message Release {
 		}
 	};
 
-    uint64 ID           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本序列号", description: ""}];
-    string releaseid    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
-    string name         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本名称", description: "", max_length: 64}];
-    string bid          = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid        = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string cfgsetid     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    string cfgsetName   = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合名称", description: "", max_length: 64}];
-    string strategyid   = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略ID", description: "", max_length: 64}];
-    string strategies   = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略内容", description: "", max_length: 64}];
-    string creator      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string commitid     = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "改动提交ID", description: "", max_length: 64}];
-    string lastModifyBy = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state        = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
-    string createdAt    = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
-
-    // add fields here.
-    string cfgsetFpath    = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合子路径", description: "", max_length: 1024}];
-    string multiReleaseid = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
+    uint64 id               = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本序列号", description: ""}];
+    string release_id       = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
+    string name             = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本名称", description: "", max_length: 64}];
+    string biz_id           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string cfg_id           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
+    string cfg_name         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合名称", description: "", max_length: 64}];
+    string cfg_fpath        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合子路径", description: "", max_length: 1024}];
+    string user             = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
+    string user_group       = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
+    string file_privilege   = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 755", max_length: 64}];
+    string file_format      = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件系统格式", description: "例如: unix  windows", max_length: 64}];
+    int32  file_mode        = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件类型 1:文本文件 2:二进制文件 3:模板文件", description: "", max_length: 64}];
+    string strategy_id      = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略ID", description: "", max_length: 64}];
+    string strategies       = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略内容", description: "", max_length: 64}];
+    string creator          = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string commit_id        = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "改动提交ID", description: "", max_length: 64}];
+    string multi_release_id = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
+    string last_modify_by   = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string memo             = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state            = 21 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
+    string created_at       = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at       = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message MultiRelease {
@@ -671,20 +700,20 @@ message MultiRelease {
 		}
 	};
 
-    uint64 ID             = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本序列号", description: ""}];
-    string multiReleaseid = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
-    string name           = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本名称", description: "", max_length: 64}];
-    string bid            = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string strategyid     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略ID", description: "", max_length: 64}];
-    string strategies     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略内容", description: "", max_length: 64}];
-    string creator        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string multiCommitid  = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "改动提交ID(组模式)", description: "", max_length: 64}];
-    string lastModifyBy   = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo           = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state          = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
-    string createdAt      = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt      = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    uint64 id               = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本序列号", description: ""}];
+    string multi_release_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
+    string name             = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本名称", description: "", max_length: 64}];
+    string biz_id           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string strategy_id      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略ID", description: "", max_length: 64}];
+    string strategies       = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略内容", description: "", max_length: 64}];
+    string creator          = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string multi_commit_id  = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "改动提交ID(组模式)", description: "", max_length: 64}];
+    string last_modify_by   = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string memo             = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state            = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
+    string created_at       = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at       = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message AppInstance {
@@ -695,25 +724,16 @@ message AppInstance {
 		}
 	};
 
-    uint64 instanceid = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例ID", description: ""}];
-    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string clusterid  = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
-    string zoneid     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区ID", description: "", max_length: 64}];
-    string dc         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "物理机房标识", description: "", max_length: 64}];
-    string IP         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "IP", description: "", max_length: 32}];
-    string labels     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
-    int32  state      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string effectTime = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
-    string createdAt  = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt  = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
-
-    // add fields here.
-    int32  effectCode = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误码", description: ""}];
-    string effectMsg  = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误信息", description: ""}];
-    string reloadTime = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
-    int32  reloadCode = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload状态", description: "reload执行结果"}];
-    string reloadMsg  = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload描述信息", description: "执行reload动作的结果描述"}];
+    uint64 id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "实例ID", description: ""}];
+    string biz_id     = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string cloud_id   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "区域标识", description: "", max_length: 64}];
+    string ip         = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "IP", description: "", max_length: 32}];
+    string path       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置缓存路径", description: "", max_length: 512}];
+    string labels     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
+    int32  state      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message AppInstanceRelease {
@@ -724,47 +744,42 @@ message AppInstanceRelease {
 		}
 	};
 
-    uint64 instanceid = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例ID", description: ""}];
-    string bid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string clusterid  = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
-    string zoneid     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区ID", description: "", max_length: 64}];
-    string dc         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "物理机房标识", description: "", max_length: 64}];
-    string IP         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "IP", description: "", max_length: 32}];
-    string labels     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
-    string cfgsetid   = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    string releaseid  = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
-    string effectTime = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
-    string createdAt  = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt  = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
-
-    // add fields here.
-    int32  effectCode = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误码", description: ""}];
-    string effectMsg  = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误信息", description: ""}];
-    string reloadTime = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
-    int32  reloadCode = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload状态", description: "reload执行结果"}];
-    string reloadMsg  = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload描述信息", description: "执行reload动作的结果描述"}];
+    uint64 instance_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例ID", description: ""}];
+    string biz_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string cloud_id    = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "区域标识", description: "", max_length: 64}];
+    string ip          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "IP", description: "", max_length: 32}];
+    string path        = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置缓存路径", description: "", max_length: 512}];
+    string labels      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
+    string cfg_id      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
+    string release_id  = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
+    string effect_time = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
+    int32  effect_code = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误码", description: ""}];
+    string effect_msg  = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误信息", description: ""}];
+    string reload_time = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
+    int32  reload_code = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload状态", description: "reload执行结果"}];
+    string reload_msg  = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload描述信息", description: "执行reload动作的结果描述"}];
+    string created_at  = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at  = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message ReportInfo {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {
 			title: "ReportInfo"
-			description: "应用实例上报信息"
+			description: "实例上报信息"
 		}
 	};
 
-    string cfgsetid       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    string releaseid      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
-    string effectTime     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本下发生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
-
-    // add fields here.
-    string multiReleaseid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
-    int32  effectCode     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误码", description: ""}];
-    string effectMsg      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误信息", description: ""}];
-    string reloadTime     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
-    int32  reloadCode     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误码", description: ""}];
-    string reloadMsg      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误信息", description: ""}];
+    string cfg_id           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
+    string release_id       = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
+    string multi_release_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
+    string effect_time      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本下发生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
+    int32  effect_code      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误码", description: ""}];
+    string effect_msg       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误信息", description: ""}];
+    string reload_time      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
+    int32  reload_code      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误码", description: ""}];
+    string reload_msg       = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误信息", description: ""}];
 }
 
 message Strategy {
@@ -775,16 +790,17 @@ message Strategy {
 		}
 	};
 
-    string strategyid   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略ID", description: "", max_length: 64}];
-    string appid        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string name         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略名称", description: "", max_length: 64}];
-    string content      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略内容", description: "", max_length: 2097152}];
-    string creator      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string memo         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
-    int32  state        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string lastModifyBy = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string createdAt    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string strategy_id    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略ID", description: "", max_length: 64}];
+    string biz_id         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string name           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略名称", description: "", max_length: 64}];
+    string content        = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布策略内容", description: "", max_length: 2097152}];
+    string creator        = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string memo           = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    int32  state          = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string last_modify_by = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string created_at     = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message ProcAttr {
@@ -795,25 +811,18 @@ message ProcAttr {
 		}
 	};
 
-    string cloudid      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境子网ID", description: "", max_length: 64}];
-    string IP           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境主机IP", description: "", max_length: 32}];
-    string bid          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string appid        = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string clusterid    = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群ID", description: "", max_length: 64}];
-    string zoneid       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区ID", description: "", max_length: 64}];
-    string dc           = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "物理机房标识", description: "", max_length: 64}];
-    string labels       = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
-    string path         = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置缓存路径设置", description: "", max_length: 128}];
-    string creator      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string lastModifyBy = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string memo         = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
-    int32  state        = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string businessName = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务", description: "", max_length: 64}];
-    string appName      = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
-    string clusterName  = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "集群名称", description: "", max_length: 64}];
-    string zoneName     = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "大区名称", description: "", max_length: 64}];
-    string createdAt    = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt    = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string cloud_id       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境子网ID", description: "", max_length: 64}];
+    string ip             = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "进程环境主机IP", description: "", max_length: 32}];
+    string biz_id         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string app_id         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
+    string path           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置缓存路径设置", description: "", max_length: 128}];
+    string labels         = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
+    string creator        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string memo           = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    int32  state          = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at     = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message ShardingDB {
@@ -824,15 +833,15 @@ message ShardingDB {
 		}
 	};
 
-    string dbid      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片数据库实例标识", description: "", max_length: 64}];
-    string host      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例host", description: "", max_length: 64}];
-    int32  port      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例端口", description: ""}];
-    string user      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例用户名", description: ""}];
-    string password  = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例密码", description: ""}];
-    string memo      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
-    int32  state     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string db_id      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片数据库实例标识", description: "", max_length: 64}];
+    string host       = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例host", description: "", max_length: 64}];
+    int32  port       = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例端口", description: ""}];
+    string user       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例用户名", description: ""}];
+    string password   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "数据库实例密码", description: ""}];
+    string memo       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    int32  state      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message Sharding {
@@ -843,13 +852,13 @@ message Sharding {
 		}
 	};
 
-    string key       = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片存储规则KEY", description: "", max_length: 64}];
-    string dbid      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片数据库实例标识", description: "", max_length: 64}];
-    string dbname    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片存储MySQL database", description: "", max_length: 64}];
-    string memo      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
-    int32  state     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string key        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片存储规则KEY", description: "", max_length: 64}];
+    string db_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片数据库实例标识", description: "", max_length: 64}];
+    string db_name    = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分片存储MySQL database", description: "", max_length: 64}];
+    string memo       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    int32  state      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message Audit {
@@ -860,128 +869,14 @@ message Audit {
 		}
 	};
 
-    uint64 ID         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "审计记录唯一ID", description: "", minimum: 0}];
-    int32  sourceType = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源类型", description: "", minimum: 0}];
-    int32  opType     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作类型", description: "", minimum:0}];
-    string bid        = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
-    string sourceid   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源ID", description: "", max_length: 64}];
-    string operator   = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作人", description: "", max_length: 64}];
-    string memo       = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
-    int32  state      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string createdAt  = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updatedAt  = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    uint64 id          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "审计记录唯一ID", description: "", minimum: 0}];
+    int32  source_type = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源类型", description: "", minimum: 0}];
+    int32  op_type     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作类型", description: "", minimum:0}];
+    string biz_id      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string source_id   = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源ID", description: "", max_length: 64}];
+    string operator    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "操作人", description: "", max_length: 64}];
+    string memo        = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注", description: "", max_length: 64}];
+    int32  state       = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string created_at  = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at  = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
-
-message ConfigTemplateSet {
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-        json_schema: {
-            title: "ConfigTemplateSet"
-            description: "配置模版集合"
-        }
-    };
-
-    string setid        = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合ID", description: "", max_length: 64 }];
-    string bid          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "业务ID", description: "", max_length: 64 }];
-    string name         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合名字", description: "", max_length: 64 }];
-    string memo         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合描述", description: "", max_length: 64 }];
-    string fpath        = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合路径", description: "该配置模版集合下，所有模版生成配置的父路径", max_length: 128 }];
-    string creator      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者", description: "创建者：mars", max_length: 64 }];
-    string lastModifyBy = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最后修改人", description: "最后修改人：mars", max_length: 64 }];
-    int32  state        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "状态", description: "" }];
-    string createdAt    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建时间", description: "创建时间，2019-08-29 17:18:22" }];
-    string updatedAt    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22" }];
-}
-
-message ConfigTemplate {
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-        json_schema: {
-            title: "ConfigTemplate"
-            description: "配置模版"
-        }
-    };
-
-    string templateid   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
-    string bid          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "业务ID", description: "", max_length: 64 }];
-    string setid        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合ID", description: "", max_length: 64 }];
-    string name         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版名称", description: "最终配置实例文件路径=配置模版集合路径+配置模版名称", max_length: 64 }];
-    string memo         = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版描述", description: "", max_length: 64 }];
-    string fpath        = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版集合路径", description: "最终配置实例文件路径=配置模版集合路径+配置模版名称", max_length: 128 }];
-    string user         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版生成文件的所属用户", description: "", max_length: 64 }];
-    string group        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版生成文件的所属用户组", description: "", max_length: 64 }];
-    int32  permission   = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版生成文件的权限", description: "", max_length: 64 }];
-    string fileEncoding = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版生成文件的编码", description: "", max_length: 64 }];
-    int32  engineType   = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "模版引擎类型", description: "0：golang模版； 1：python mako模版；", minimum: 0, maximum: 1 }];
-    string creator      = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者", description: "创建者：mars", max_length: 64 }];
-    string lastModifyBy = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最后修改人", description: "最后修改人：mars", max_length: 64 }];
-    int32  state        = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "状态", description: "" }];
-    string createdAt    = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建时间", description: "创建时间，2019-08-29 17:18:22" }];
-    string updatedAt    = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22" }];
-}
-
-message TemplateVersion {
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-        json_schema: {
-            title: "TemplateVersion"
-            description: "配置模版版本"
-        }
-    };
-
-    string versionid    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本ID", description: "", max_length: 64 }];
-    string bid          = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "业务ID", description: "", max_length: 64 }];
-    string templateid   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
-    string versionName  = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本名称", description: "", max_length: 64 }];
-    string memo         = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本描述", description: "", max_length: 128 }];
-    string content      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本内容", description: "", max_length: 4194304 }];
-    string creator      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者", description: "创建者：mars", max_length: 64 }];
-    string lastModifyBy = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最后修改人", description: "最后修改人：mars", max_length: 64 }];
-    int32  state        = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "状态", description: "" }];
-    string createdAt    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建时间", description: "创建时间，2019-08-29 17:18:22" }];
-    string updatedAt    = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22" }];
-}
-
-message ConfigTemplateBinding {
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-        json_schema: {
-            title: "ConfigTemplateBinding"
-            description: "配置模版绑定关系"
-        }
-    };
-
-    string bid           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "业务ID", description: "", max_length: 64 }];
-    string templateid    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版ID", description: "", max_length: 64 }];
-    string appid         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "应用ID", description: "", max_length: 64 }];
-    string versionid     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置模版版本ID", description: "", max_length: 64 }];
-    string cfgsetid      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置ID", description: "", max_length: 64 }];
-    string commitid      = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置commit ID", description: "", max_length: 64 }];
-    string bindingParams = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "具体绑定参数", description: "用于绑定配置与ConfigSet的参数，生成不同的配置实例，例如：[{\"clusterLabels\":{\"environment\":\"yun测试环境\",\"cluster\":\"集群2\",\"dc\":\"shdc\"},\"zone\":\"zone1\",\"instanceid\":\"svc1_127_0_0_1\"},{\"clusterLabels\":{\"environment\":\"正式环境\",\"cluster\":\"集群2\",\"dc\":\"cddc\"},\"zone\":\"zone2\",\"instanceid\":\"svc2_127_0_0_1\"}]", max_length: 102400 }];
-    string creator       = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者", description: "创建者：mars", max_length: 64 }];
-    string lastModifyBy  = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最后修改人", description: "最后修改人：mars", max_length: 64 }];
-    int32  state         = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "状态", description: "" }];
-    string createdAt     = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建时间", description: "创建时间，2019-08-29 17:18:22" }];
-    string updatedAt     = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22" }];
-}
-
-message Variable {
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-        json_schema: {
-            title: "Variable"
-            description: "配置模版变量"
-        }
-    };
-
-    string bid           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "业务ID", description: "", max_length: 64 }];
-    string vid           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量ID", description: "", max_length: 64 }];
-    string cluster       = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "集群名称", description: "", max_length: 64 }];
-    string clusterLabels = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "集群标签", description: "", max_length: 128 }];
-    string zone          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "zone名称", description: "", max_length: 64 }];
-    int32  type          = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "变量类型", description: "", minimum: 0, maximum: 2 }];
-    string key           = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置变量key", description: "", max_length: 64 }];
-    string value         = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置变量value", description: "", max_length: 2048 }];
-    string memo          = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "配置变量描述", description: "", max_length: 128 }];
-    string creator       = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建者", description: "创建者：mars", max_length: 64 }];
-    string lastModifyBy  = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最后修改人", description: "最后修改人：mars", max_length: 64 }];
-    int32  state         = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "状态", description: "" }];
-    string createdAt     = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "创建时间", description: "创建时间，2019-08-29 17:18:22" }];
-    string updatedAt     = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = { title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22" }];
-}
-

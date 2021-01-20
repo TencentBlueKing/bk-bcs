@@ -115,7 +115,6 @@ func (watcher *gRPCWatcher) Next() ([]*naming.Update, error) {
 	if watcher.wch == nil {
 		return watcher.first()
 	}
-
 	if watcher.err != nil {
 		return nil, watcher.err
 	}
@@ -125,12 +124,11 @@ func (watcher *gRPCWatcher) Next() ([]*naming.Update, error) {
 		watcher.err = status.Error(codes.Unavailable, etcdnaming.ErrWatcherClosed.Error())
 		return nil, watcher.err
 	}
-
 	if watcher.err = wr.Err(); watcher.err != nil {
 		return nil, watcher.err
 	}
 
-	// updates
+	// updates.
 	updates := make([]*naming.Update, 0, len(wr.Events))
 
 	for _, e := range wr.Events {
@@ -140,14 +138,16 @@ func (watcher *gRPCWatcher) Next() ([]*naming.Update, error) {
 		switch e.Type {
 		case clientv3.EventTypePut:
 			err = json.Unmarshal(e.Kv.Value, &jupdate)
-
 			jupdate.Op = naming.Add
 			jupdate.Addr = watcher.targetAddr(jupdate.Addr)
+
 		case clientv3.EventTypeDelete:
 			err = json.Unmarshal(e.PrevKv.Value, &jupdate)
-
 			jupdate.Op = naming.Delete
 			jupdate.Addr = watcher.targetAddr(jupdate.Addr)
+
+		default:
+			continue
 		}
 
 		if err == nil {
@@ -165,10 +165,9 @@ func (watcher *gRPCWatcher) targetAddr(raddr string) string {
 	}
 
 	ipPort := strings.Split(raddr, ":")
-	if ipPort == nil || len(ipPort) != 2 {
+	if len(ipPort) != 2 {
 		return raddr
 	}
-
 	return fmt.Sprintf("%s:%d", ipPort[0], watcher.lbCtx.Port)
 }
 
@@ -178,8 +177,9 @@ func (watcher *gRPCWatcher) first() ([]*naming.Update, error) {
 		return nil, err
 	}
 
-	// updates
+	// updates.
 	updates := make([]*naming.Update, 0, len(resp.Kvs))
+
 	for _, kv := range resp.Kvs {
 		var jupdate naming.Update
 		if err := json.Unmarshal(kv.Value, &jupdate); err != nil {
@@ -190,7 +190,11 @@ func (watcher *gRPCWatcher) first() ([]*naming.Update, error) {
 		updates = append(updates, &jupdate)
 	}
 
-	opts := []clientv3.OpOption{clientv3.WithRev(resp.Header.Revision + 1), clientv3.WithPrefix(), clientv3.WithPrevKV()}
+	opts := []clientv3.OpOption{
+		clientv3.WithRev(resp.Header.Revision + 1),
+		clientv3.WithPrefix(),
+		clientv3.WithPrevKV(),
+	}
 	watcher.wch = watcher.c.Watch(watcher.ctx, watcher.target, opts...)
 
 	return updates, nil

@@ -226,13 +226,13 @@ func RegisterInstanceHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 }
 
 var (
-	pattern_Instance_Ping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "instance", "ping"}, ""))
+	pattern_Instance_Ping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"instance", "v2", "ping"}, ""))
 
-	pattern_Instance_Inject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "instance", "inject"}, ""))
+	pattern_Instance_Inject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"instance", "v2", "inject"}, ""))
 
-	pattern_Instance_WatchReload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "instance", "watch-reload"}, ""))
+	pattern_Instance_WatchReload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"instance", "v2", "watch_reload"}, ""))
 
-	pattern_Instance_ReportReload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "instance", "report-reload"}, ""))
+	pattern_Instance_ReportReload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"instance", "v2", "report_reload"}, ""))
 )
 
 var (

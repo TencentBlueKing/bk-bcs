@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"bk-bscp/pkg/logger/glog"
+	"bk-bscp/pkg/version"
 )
 
 // GlogWriter serves as a bridge between the standard log package and the glog package.
@@ -49,6 +50,10 @@ type LogConfig struct {
 func InitLogger(logConfig LogConfig) {
 	glog.InitLogs(logConfig.ToStdErr, logConfig.AlsoToStdErr, logConfig.Verbosity, logConfig.StdErrThreshold,
 		logConfig.VModule, logConfig.TraceLocation, logConfig.LogDir, logConfig.LogMaxSize, logConfig.LogMaxNum)
+
+	// show inner start info.
+	glog.Info(version.GetStartInfo())
+	glog.Flush()
 
 	once.Do(func() {
 		log.SetOutput(GlogWriter{})

@@ -8,114 +8,109 @@ service BCSController {
     rpc PublishReleasePre(PublishReleasePreReq) returns (PublishReleasePreResp) {}
     rpc PublishRelease(PublishReleaseReq) returns (PublishReleaseResp) {}
     rpc RollbackRelease(RollbackReleaseReq) returns (RollbackReleaseResp) {}
-    rpc Report(ReportReq) returns (ReportResp) {}
     rpc PullRelease(PullReleaseReq) returns (PullReleaseResp) {}
-    rpc PullConfigSetList(PullConfigSetListReq) returns (PullConfigSetListResp) {}
     rpc Reload(ReloadReq) returns (ReloadResp) {}
+    rpc Healthz(HealthzReq) returns (HealthzResp) {}
 }
 
 message PublishReleasePreReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-    string operator  = 4;
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
 }
 
 message PublishReleasePreResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message PublishReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-    string operator  = 4;
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
 }
 
 message PublishReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message RollbackReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-    string operator  = 4;
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
 }
 
 message RollbackReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message ReportReq {
-    uint64                     seq       = 1;
-    string                     bid       = 2;
-    string                     appid     = 3;
-    string                     clusterid = 4;
-    string                     zoneid    = 5;
-    string                     dc        = 6;
-    string                     IP        = 7;
-    string                     labels    = 8;
-    repeated common.ReportInfo infos     = 9;
+    string                     seq      = 1;
+    string                     biz_id   = 2;
+    string                     app_id   = 3;
+    string                     cloud_id = 4;
+    string                     ip       = 5;
+    string                     path     = 6;
+    string                     labels   = 7;
+    repeated common.ReportInfo infos    = 8;
 }
 
 message ReportResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message PullReleaseReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string appid          = 3;
-    string clusterid      = 4;
-    string zoneid         = 5;
-    string dc             = 6;
-    string IP             = 7;
-    string labels         = 8;
-    string cfgsetid       = 9;
-    string localReleaseid = 10;
-    string releaseid      = 11;
+    string seq              = 1;
+    string biz_id           = 2;
+    string app_id           = 3;
+    string cloud_id         = 4;
+    string ip               = 5;
+    string path             = 6;
+    string labels           = 7;
+    string cfg_id           = 8;
+    string local_release_id = 9;
+    string release_id       = 10;
 }
 
 message PullReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
     common.Release release = 4;
 }
 
-message PullConfigSetListReq {
-    uint64 seq   = 1;
-    string bid   = 2;
-    string appid = 3;
-}
-
-message PullConfigSetListResp {
-    uint64                    seq        = 1;
-    common.ErrCode            errCode    = 2;
-    string                    errMsg     = 3;
-    repeated common.ConfigSet configSets = 4;
-}
-
 message ReloadReq {
-    uint64            seq            = 1;
-    string            bid            = 2;
-    string            releaseid      = 3;
-    string            multiReleaseid = 4;
-    string            operator       = 5;
-    common.ReloadSpec reloadSpec     = 6;
+    string            seq              = 1;
+    string            biz_id           = 2;
+    string            release_id       = 3;
+    string            multi_release_id = 4;
+    string            operator         = 5;
+    common.ReloadSpec reload_spec      = 6;
 }
 
 message ReloadResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message HealthzReq {
+    string seq = 1;
+}
+
+message HealthzResp {
+    string                   seq     = 1;
+    common.ErrCode           code    = 2;
+    string                   message = 3;
+    common.ModuleHealthzInfo data    = 4;
 }

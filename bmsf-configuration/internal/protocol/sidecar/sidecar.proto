@@ -8,8 +8,8 @@ package sidecar;
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
     info: {
-        title: "蓝鲸服务配置平台Sidecar Instance API说明文档"
-        version : "0.0.1"
+        title: "蓝鲸基础服务配置平台Sidecar Instance API说明文档"
+        version : "2.0.0"
     };
 
     schemes: HTTP
@@ -20,7 +20,7 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 service Instance {
     rpc Ping(PingReq) returns (PingResp) {
         option (google.api.http) = {
-          post: "/v1/instance/ping"
+          post: "/instance/v2/ping"
           body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -30,7 +30,7 @@ service Instance {
     }
     rpc Inject(InjectReq) returns (InjectResp) {
         option (google.api.http) = {
-          post: "/v1/instance/inject"
+          post: "/instance/v2/inject"
           body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -40,7 +40,7 @@ service Instance {
     }
     rpc WatchReload(WatchReloadReq) returns (stream WatchReloadResp) {
         option (google.api.http) = {
-          post: "/v1/instance/watch-reload"
+          post: "/instance/v2/watch_reload"
           body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -50,7 +50,7 @@ service Instance {
     }
     rpc ReportReload(ReportReloadReq) returns (ReportReloadResp) {
         option (google.api.http) = {
-          post: "/v1/instance/report-reload"
+          post: "/instance/v2/report_reload"
           body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -68,15 +68,13 @@ message ModInfo {
 		}
 	};
 
-    string              businessName = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务名称", description: "", max_length: 64}];
-    string              appName      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用名称", description: "", max_length: 64}];
-    string              clusterName  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属集群名称", description: "", max_length: 64}];
-    string              zoneName     = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属大区名称", description: "", max_length: 64}];
-    string              dc           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "物理机房标识", description: "", max_length: 64}];
-    string              IP           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "IP", description: "", max_length: 32}];
-    map<string, string> labels       = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
-    string              path         = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
-    bool                isReady      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "该App模块是否已就绪", description: "在通常情况下，需要业务方完成注入后App才会就绪拉取配置内容，业务方需要保证注入完成使得状态为true"}];
+    string              biz_id   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务名称", description: "", max_length: 64}];
+    string              app_id   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用名称", description: "", max_length: 64}];
+    string              cloud_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "区域标识", description: "", max_length: 64}];
+    string              ip       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "IP", description: "", max_length: 32}];
+    string              path     = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
+    map<string, string> labels   = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用实例labels", description: "", max_length: 1024}];
+    bool                is_ready = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "该App模块是否已就绪", description: "在通常情况下，需要业务方完成注入后App才会就绪拉取配置内容，业务方需要保证注入完成使得状态为true"}];
 }
 
 message ConfigsMetadata {
@@ -102,7 +100,7 @@ message PingReq {
         example: { value: '{ "seq": "1"}' }
 	};
 
-    uint64 seq = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string seq = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
 }
 
 message PingResp {
@@ -110,14 +108,14 @@ message PingResp {
 		json_schema: {
 			title: "PingResp"
 			description: "Ping响应"
-			required: ["seq", "errCode", "errMsg"]
+			required: ["seq", "code", "message"]
 		}
-        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "mods": [{"businessName": "business", "appName": "app", "clusterName": "cluster", "zone": "zone","dc": "dc01", "IP": "127.0.0.1", "labels": {"k1": "v1", "k2": "v2"}, "path": "/data/bk-bscp/"}]}' }
+        example: { value: '{ "seq": "1", "code": 0, "message": "OK", "mods": [{"biz_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "app_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "cloud_id": "dc01", "ip": "127.0.0.1", "labels": {"k1": "v1", "k2": "v2"}, "path": "/data/bk-bscp/"}]}' }
 	};
 
-    uint64           seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
-    common.ErrCode   errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
-    string           errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    string           seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode   code    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string           message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
     repeated ModInfo mods    = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "实例信息", description: "成功后返回实例信息(单Sidecar可以承载处理多个App)"}];
 }
 
@@ -126,16 +124,16 @@ message InjectReq {
 		json_schema: {
 			title: "InjectReq"
 			description: "实例标签信息注入请求"
-			required: ["seq", "businessName", "appName", "path", "labels"]
+			required: ["seq", "biz_id", "app_id", "path", "labels"]
 		}
-        example: { value: '{ "seq": "1", "businessName": "business", "appName": "app", "labels": {"k1": "v1", "k2": "v2"}}' }
+        example: { value: '{ "seq": "1", "biz_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "app_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "labels": {"k1": "v1", "k2": "v2"}}' }
 	};
 
-    uint64              seq          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
-    string              businessName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
-    string              appName      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
-    string              path         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
-    map<string, string> labels       = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望注入的实例标签集合", description: "JSON序列化总长度限制为1024"}];
+    string              seq    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string              biz_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
+    string              app_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
+    string              path   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
+    map<string, string> labels = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "期望注入的实例标签集合", description: "JSON序列化总长度限制为1024"}];
 }
 
 message InjectResp {
@@ -143,14 +141,14 @@ message InjectResp {
 		json_schema: {
 			title: "InjectResp"
 			description: "实例标签信息注入响应"
-			required: ["seq", "errCode", "errMsg"]
+			required: ["seq", "code", "message"]
 		}
-        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK"}' }
+        example: { value: '{ "seq": "1", "code": 0, "message": "OK"}' }
 	};
 
-    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
-    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
-    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    string         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode code    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
 }
 
 message WatchReloadReq {
@@ -158,15 +156,15 @@ message WatchReloadReq {
 		json_schema: {
 			title: "WatchReloadReq"
 			description: "订阅Reload事件请求"
-			required: ["seq", "businessName", "appName", "path"]
+			required: ["seq", "biz_id", "app_id", "path"]
 		}
-        example: { value: '{ "seq": "1", "businessName": "business", "appName": "app"}' }
+        example: { value: '{ "seq": "1", "biz_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "app_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278"}' }
 	};
 
-    uint64 seq          = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
-    string businessName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
-    string appName      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
-    string path         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
+    string seq    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string biz_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
+    string app_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
+    string path   = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
 }
 
 message WatchReloadResp {
@@ -174,20 +172,20 @@ message WatchReloadResp {
 		json_schema: {
 			title: "WatchReloadResp"
 			description: "订阅Reload事件流式响应"
-			required: ["seq", "errCode", "errMsg"]
+			required: ["seq", "code", "message"]
 		}
-        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK", "releaseid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "multiReleaseid": "f879a282-c7e5-11e9-9dc5-525400f99278", "releaseName":"new release", "reloadType": 0, "rootPath": "/data/bk-bscp", "metadatas": [{"Name":"server.yaml", "Fpath":"/etc"}]}' }
+        example: { value: '{ "seq": "1", "code": 0, "message": "OK", "release_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "multi_release_id": "f879a282-c7e5-11e9-9dc5-525400f99278", "release_name":"new release", "reload_type": 0, "root_path": "/data/bk-bscp", "metadatas": [{"name":"server.yaml", "fpath":"/etc"}]}' }
 	};
 
-    uint64                   seq            = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
-    common.ErrCode           errCode        = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
-    string                   errMsg         = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
-    string                   releaseid      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新发布版本ID", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
-    string                   multiReleaseid = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新发布版本ID(组模式)", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
-    string                   releaseName    = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新发布版本名称", description: "", max_length: 64}];
-    int32                    reloadType     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "reload类型", description: "0：发布更新  1：回滚  主要是用于描述事件背景"}];
-    string                   rootPath       = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "缓存根目录", description: "只是sidecar容器内的缓存路径，通过volums后在业务容器中位置并不一定相同"}];
-    repeated ConfigsMetadata metadatas      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "需要做reload的配置信息", description: "根据该信息到业务容器侧的volums目录中拿取指定配置数据做更新"}];
+    string                   seq              = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode           code             = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string                   message          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    string                   release_id       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新发布版本ID", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
+    string                   multi_release_id = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新发布版本ID(组模式)", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
+    string                   release_name     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "新发布版本名称", description: "", max_length: 64}];
+    int32                    reload_type      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "reload类型", description: "0：发布更新  1：回滚  主要是用于描述事件背景"}];
+    string                   root_path        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "缓存根目录", description: "只是sidecar容器内的缓存路径，通过volums后在业务容器中位置并不一定相同"}];
+    repeated ConfigsMetadata metadatas        = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "需要做reload的配置信息", description: "根据该信息到业务容器侧的volums目录中拿取指定配置数据做更新"}];
 }
 
 message ReportReloadReq {
@@ -195,20 +193,20 @@ message ReportReloadReq {
 		json_schema: {
 			title: "ReportReloadReq"
 			description: "Reload执行上报请求"
-			required: ["seq", "businessName", "appName", "path", "reloadTime", "reloadCode" "reloadMsg"]
+			required: ["seq", "biz_id", "app_id", "path", "reload_time", "reload_code" "reload_msg"]
 		}
-        example: { value: '{ "seq": "1", "businessName": "business", "appName": "app", "releaseid": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "multiReleaseid": "0b67a798-e9c1-11e9-8c23-525400f99278", "reloadTime": "2019-08-29 17:18:22", "reloadCode": 0, "reloadMsg":"SUCCESS"}' }
+        example: { value: '{ "seq": "1", "biz_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "app_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "release_id": "f879ab8f-c7e5-11e9-9dc5-525400f99278", "multi_release_id": "0b67a798-e9c1-11e9-8c23-525400f99278", "reload_time": "2019-08-29 17:18:22", "reload_code": 0, "reload_msg":"SUCCESS"}' }
 	};
 
-    uint64 seq            = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
-    string businessName   = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
-    string appName        = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
-    string path           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
-    string releaseid      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
-    string multiReleaseid = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID(组模式)", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
-    string reloadTime     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本Reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
-    int32  reloadCode     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误码", description: ""}];
-    string reloadMsg      = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误信息", description: ""}];
+    string seq              = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "请求序列号", description: "调用方的请求序列号，用于指定时间内标识某次请求"}];
+    string biz_id           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务名称", description: "", max_length: 64}];
+    string app_id           = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用名称", description: "", max_length: 64}];
+    string path             = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用在sidecar的配置缓存路径", description: "", max_length: 128}];
+    string release_id       = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
+    string multi_release_id = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "已执行生效的发布版本ID(组模式)", description: "releaseid和multiReleaseid互斥存在，通常差量reload机制下只存在multiReleaseid", max_length: 64}];
+    string reload_time      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本Reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
+    int32  reload_code      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误码", description: ""}];
+    string reload_msg       = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误信息", description: ""}];
 }
 
 message ReportReloadResp {
@@ -216,12 +214,12 @@ message ReportReloadResp {
 		json_schema: {
 			title: "ReportReloadResp"
 			description: "Reload执行上报响应"
-			required: ["seq", "errCode", "errMsg"]
+			required: ["seq", "code", "message"]
 		}
-        example: { value: '{ "seq": "1", "errCode": 0, "errMsg": "OK"}' }
+        example: { value: '{ "seq": "1", "code": 0, "message": "OK"}' }
 	};
 
-    uint64         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
-    common.ErrCode errCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
-    string         errMsg  = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
+    string         seq     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "响应序列号", description: "响应序列号, 与调用方的请求序列号一致，用于指定时间内标识某次请求"}];
+    common.ErrCode code    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误码", description: ""}];
+    string         message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "错误描述", description: ""}];
 }
