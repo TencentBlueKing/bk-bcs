@@ -14,7 +14,7 @@
 package container
 
 import (
-	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 //PodStatus for imply container status in pod

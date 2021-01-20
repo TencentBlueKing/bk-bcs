@@ -4,9 +4,7 @@ go 1.13
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs => ../../../bk-bcs
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../../bcs-k8s/kubernetes
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => ../../bcs-k8s/kubernetes/common
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-20210117140338-aeaed29b1997
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
@@ -22,7 +20,6 @@ replace (
 require (
 	bitbucket.org/ww/goautoneg v0.0.0-20120707110453-75cd24fc2f2c // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
-	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator v0.0.0-20201125100148-30bfe37261b1 // indirect
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-00010101000000-000000000000
 	github.com/coreos/bbolt v1.3.3 // indirect
 	github.com/coreos/etcd v3.3.10+incompatible // indirect
@@ -42,6 +39,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.13.0 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/onsi/ginkgo v1.13.0 // indirect
@@ -56,6 +54,7 @@ require (
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
 	go.uber.org/zap v1.13.0 // indirect
+	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	k8s.io/api v0.18.4

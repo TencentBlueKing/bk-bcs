@@ -3,12 +3,12 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-client
 go 1.14
 
 replace (
-    bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs => ../../
+	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
+    github.com/Tencent/bk-bcs => ../../
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator => ../../bcs-k8s/bcs-gamedeployment-operator
-    github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../../bcs-k8s/bcs-gamestatefulset-operator
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../../bcs-k8s/kubernetes
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => ../../bcs-k8s/kubernetes/common
+	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../../bcs-k8s/bcs-gamestatefulset-operator
+	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager => ../bcs-log-manager
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager => ../bcs-mesh-manager
 	github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server => ../../bcs-services/bcs-webhook-server
@@ -34,7 +34,8 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.1.0 // indirect
 	github.com/Masterminds/squirrel v1.2.0 // indirect
-	github.com/Tencent/bk-bcs v0.0.0-20200805130634-8a6c639f4a4c
+	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go v1.33.11 // indirect
@@ -54,7 +55,6 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
-	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/vault/api v1.0.3 // indirect

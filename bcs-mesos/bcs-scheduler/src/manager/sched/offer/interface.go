@@ -20,8 +20,8 @@ import (
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
 	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 //A SchedManager is a struct Scheduler, it is responsible for interacting with struct

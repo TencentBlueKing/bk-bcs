@@ -27,8 +27,8 @@ import (
 	"time"
 
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
-	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )

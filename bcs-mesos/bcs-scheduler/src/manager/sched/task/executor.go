@@ -23,8 +23,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 
 	proto "github.com/golang/protobuf/proto"
 )

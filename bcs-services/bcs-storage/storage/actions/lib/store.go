@@ -23,9 +23,9 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/watchbus"
 )
 

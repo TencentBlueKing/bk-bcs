@@ -4,16 +4,14 @@ go 1.14
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-    github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch => ./
-	github.com/Tencent/bk-bcs => ../../../bk-bcs
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator => ../../bcs-k8s/bcs-gamedeployment-operator
-    github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../../bcs-k8s/bcs-gamestatefulset-operator
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../../bcs-k8s/kubernetes
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => ../../bcs-k8s/kubernetes/common
-	github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server => ../../bcs-services/bcs-webhook-server
+	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../../bcs-k8s/bcs-gamestatefulset-operator
+	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210117140338-aeaed29b1997
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-    github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
+	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.0.0-20181126151915-b503174bad59
@@ -25,17 +23,25 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/json-iterator/go v1.1.10
+	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/gomega v1.10.1
 	github.com/parnurzeal/gorequest v0.2.16
+	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
+	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3 // indirect
 	k8s.io/api v0.18.6
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v0.18.6
+	k8s.io/kube-openapi v0.0.0-00010101000000-000000000000 // indirect
 	sigs.k8s.io/controller-runtime v0.6.4
 )
