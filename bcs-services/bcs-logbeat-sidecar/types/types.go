@@ -29,6 +29,7 @@ type Local struct {
 	DataID  int               `yaml:"dataid"`
 	Paths   []string          `yaml:"paths"`
 	ToJSON  bool              `yaml:"to_json"`
+	Package *bool             `yaml:"package,omitempty"`
 	ExtMeta map[string]string `yaml:"ext_meta"`
 
 	//stdout dataid
