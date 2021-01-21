@@ -29,10 +29,10 @@
     "ccs_path": "${tkeCcsPath}"
   },
   "etcdRegistry": {
-    "etcd_feature": ${etcdFeature},
-    "etcd_address": "${etcdAddress}",
-    "etcd_ca": "${etcdCAFile}",
-    "etcd_cert": "${etcdCertFile}",
-    "etcd_key": "${etcdKeyFile}"
+    "etcd_feature": ${bcsEtcdFeature},
+    "etcd_address": "${bcsEtcdHost}",
+    "etcd_ca": "${bcsEtcdCAFile}",
+    "etcd_cert": "${bcsEtcdCertFile}",
+    "etcd_key": "${bcsEtcdKeyFile}"
   }
 }

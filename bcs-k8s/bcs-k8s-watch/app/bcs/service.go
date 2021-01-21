@@ -18,7 +18,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -75,6 +75,10 @@ func NewInnerService(serviceName string, eventChan <-chan *RegisterDiscover.Disc
 // Watch keeps watching service instance endpoints from ZK.
 func (s *InnerService) Watch(bcsTLSConfig options.TLS) error {
 	glog.Infof("start to watch service[%s] from ZK", s.name)
+
+	if s.eventChan == nil {
+		return fmt.Errorf("event channel not initialized")
+	}
 
 	for data := range s.eventChan {
 		glog.Infof("received ZK event, Server: %+v", data.Server)

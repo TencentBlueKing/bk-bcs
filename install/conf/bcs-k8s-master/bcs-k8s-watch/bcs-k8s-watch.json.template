@@ -1,20 +1,19 @@
 {
     "default": {
-        "clusterIDSource": "${clusterSource}",
         "clusterID": "${clusterId}",
         "hostIP": "${localIp}"
     },
     "bcs": {
-        "zk": ["${bcsZkHost_list}"],
+        "zk": "${bcsZkHost}",
         "tls": {
             "ca-file": "${caFile}",
             "cert-file": "${clientCertFile}",
             "key-file": "${clientKeyFile}"
         },
         "is-external": ${kubeWatchExternal},
-        "netservice-zookeepers": ["$customNetServiceZK"],
-        "custom-storage-endpoints": ["${customStorage}"],
-        "custom-netservice-endpoints": ["${customNetService}"]
+        "netservice-zookeepers": "${customNetServiceZK}",
+        "custom-storage-endpoints": "${customStorage}",
+        "custom-netservice-endpoints": "${customNetService}"
     },
     "k8s": {
         "master": "${kubeMaster}",
