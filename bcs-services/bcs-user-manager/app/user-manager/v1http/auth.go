@@ -27,14 +27,17 @@ import (
 )
 
 const (
+	//CurrentUserAttr user header
 	CurrentUserAttr = "current-user"
 )
 
+// TokenAuthenticater wrapper for http request
 type TokenAuthenticater struct {
 	req    *http.Request
 	config *TokenAuthConfig
 }
 
+// TokenAuthConfig configuration
 type TokenAuthConfig struct {
 	SourceBearerEnabled    bool
 	sourceBasicAuthEnabled bool
@@ -42,6 +45,7 @@ type TokenAuthConfig struct {
 	ValidTokenType uint
 }
 
+// GetUser get specified user according token
 func (ta *TokenAuthenticater) GetUser() (*models.BcsUser, bool) {
 	tokenString := ta.ParseTokenString()
 	if tokenString == "" {
@@ -89,6 +93,7 @@ func (ta *TokenAuthenticater) ParseTokenString() string {
 	return token
 }
 
+// ParseTokenBearer extra token information from http authorization header
 func (ta *TokenAuthenticater) ParseTokenBearer() string {
 	authHeaderList := ta.req.Header["Authorization"]
 
@@ -101,6 +106,7 @@ func (ta *TokenAuthenticater) ParseTokenBearer() string {
 	return ""
 }
 
+// ParseTokenBasicAuth extra password information from http header
 func (ta *TokenAuthenticater) ParseTokenBasicAuth() string {
 	_, password, ok := ta.req.BasicAuth()
 	if ok && password != "" {
@@ -109,16 +115,19 @@ func (ta *TokenAuthenticater) ParseTokenBasicAuth() string {
 	return ""
 }
 
+// AdminAuthFunc auth filter
 func AdminAuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	rb.Filter(AdminTokenAuthenticate)
 	return rb
 }
 
+// AuthFunc token filter
 func AuthFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	rb.Filter(TokenAuthenticate)
 	return rb
 }
 
+// AdminTokenAuthenticate admin token verification
 func AdminTokenAuthenticate(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	authenticater := newTokenAuthenticater(request.Request, &TokenAuthConfig{
 		SourceBearerEnabled: true,
@@ -135,6 +144,7 @@ func AdminTokenAuthenticate(request *restful.Request, response *restful.Response
 	return
 }
 
+// TokenAuthenticate uesr token verification
 func TokenAuthenticate(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	authenticater := newTokenAuthenticater(request.Request, &TokenAuthConfig{
 		SourceBearerEnabled: true,
@@ -154,7 +164,7 @@ func newTokenAuthenticater(req *http.Request, config *TokenAuthConfig) *TokenAut
 	return &TokenAuthenticater{req: req, config: config}
 }
 
-// Get CurrentUser from request object
+// GetUser get CurrentUser from request object
 func GetUser(req *restful.Request) *models.BcsUser {
 	user := req.Attribute(CurrentUserAttr)
 	ret, ok := user.(*models.BcsUser)
