@@ -18,12 +18,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/micro/go-micro/v2/broker"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math/rand"
 	"testing"
 	"time"
 )
+
+// MockPod data
+type MockPod struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+}
 
 func connectQueue() (MessageQueue, error) {
 	var (
@@ -137,15 +141,17 @@ func TestMsgQueue_Subscribe(t *testing.T) {
 type testHandler struct {
 	name string
 }
+
 // Name show handler name
 func (h *testHandler) Name() string {
 	return h.name
 }
-// Handle handle data 
+
+// Handle handle data
 func (h *testHandler) Handle(ctx context.Context, data []byte) error {
 	var (
 		handlerData = &HandlerData{}
-		pod         = &corev1.Pod{}
+		pod         = &MockPod{}
 	)
 	json.Unmarshal(data, handlerData)
 	if len(handlerData.Body) > 0 {
@@ -169,11 +175,9 @@ func pub(queue MessageQueue) {
 				ResourceType: "Pod",
 				Name:         "pod1",
 			},
-			Data: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pod1 world",
-					Namespace: "default",
-				},
+			Data: &MockPod{
+				Name:      "pod1 world",
+				Namespace: "default",
 			},
 		},
 		{
@@ -183,11 +187,10 @@ func pub(queue MessageQueue) {
 				ResourceType: "Pod",
 				Name:         "pod2",
 			},
-			Data: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pod2 world",
-					Namespace: "kube-system",
-				},
+			Data: &MockPod{
+
+				Name:      "pod2 world",
+				Namespace: "kube-system",
 			},
 		},
 		{
@@ -197,11 +200,9 @@ func pub(queue MessageQueue) {
 				ResourceType: "Pod",
 				Name:         "pod3",
 			},
-			Data: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pod3 world",
-					Namespace: "kube-qwer",
-				},
+			Data: &MockPod{
+				Name:      "pod3 world",
+				Namespace: "kube-qwer",
 			},
 		},
 		{
@@ -211,11 +212,9 @@ func pub(queue MessageQueue) {
 				ResourceType: "Pod",
 				Name:         "pod4",
 			},
-			Data: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pod4 world",
-					Namespace: "kube-asdf",
-				},
+			Data: &MockPod{
+				Name:      "pod4 world",
+				Namespace: "kube-asdf",
 			},
 		},
 	}
