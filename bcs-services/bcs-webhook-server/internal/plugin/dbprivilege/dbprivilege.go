@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	clientGoCache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -34,10 +35,10 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/types"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	informers "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions"
-	listers "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/listers/bk-bcs/v1"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/informers/externalversions"
+	listers "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/listers/bk-bcs/v1"
 )
 
 // Hooker webhook for db privilege
@@ -55,6 +56,7 @@ type DBPrivEnv struct {
 	CallUser string `json:"callUser"`
 	DbName   string `json:"dbName"`
 	CallType string `json:"callType"`
+	Operator string `json:"operator"`
 }
 
 // AnnotationKey implements plugin interface
@@ -131,9 +133,18 @@ func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bo
 }
 
 func (h *Hooker) initKubeClient() error {
-	cfg, err := clientcmd.BuildConfigFromFlags(h.opt.KubeMaster, h.opt.Kubeconfig)
-	if err != nil {
-		return fmt.Errorf("building kubeconfig failed, err %s", err.Error())
+	var cfg *restclient.Config
+	var err error
+	if len(h.opt.KubeMaster) == 0 && len(h.opt.Kubeconfig) == 0 {
+		cfg, err = restclient.InClusterConfig()
+		if err != nil {
+			return fmt.Errorf("build config from in cluster failed, err %s", err.Error())
+		}
+	} else {
+		cfg, err = clientcmd.BuildConfigFromFlags(h.opt.KubeMaster, h.opt.Kubeconfig)
+		if err != nil {
+			return fmt.Errorf("building kubeconfig failed, err %s", err.Error())
+		}
 	}
 	// init extension kubeclient to create db privilege crd
 	extensionClient, err := apiextensionsclient.NewForConfig(cfg)
@@ -180,11 +191,8 @@ func (h *Hooker) initKubeClient() error {
 // Handle implements plugin interface
 func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
-	isPod, err := pluginutil.AssertPod(req.Object.Raw)
-	if err != nil {
-		return pluginutil.ToAdmissionResponse(err)
-	}
-	if !isPod {
+	// when the kind is not Pod, ignore hook
+	if req.Kind.Kind != "Pod" {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
 	if req.Operation != v1beta1.Create {
@@ -274,6 +282,7 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 			TargetDb: config.Spec.TargetDb,
 			CallUser: config.Spec.CallUser,
 			DbName:   config.Spec.DbName,
+			Operator: config.Spec.Operator,
 		}
 		if config.Spec.DbType == "mysql" {
 			env.CallType = "mysql_ignoreCC"

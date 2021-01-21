@@ -16,7 +16,7 @@ package backend
 import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 //SendToApplication send message to all tasks of the specified application

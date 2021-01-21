@@ -71,32 +71,32 @@ func TestGetBackendSegement(t *testing.T) {
 		{
 			info: "normal test",
 			inSlice: []*loadbalance.Backend{
-				&loadbalance.Backend{
+				{
 					IP: "a",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "b",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "c",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "d",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "e",
 				},
 			},
 			inCur:        1,
 			inSegmentLen: 3,
 			outSlice: []*loadbalance.Backend{
-				&loadbalance.Backend{
+				{
 					IP: "b",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "c",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "d",
 				},
 			},
@@ -104,32 +104,32 @@ func TestGetBackendSegement(t *testing.T) {
 		{
 			info: "normal test",
 			inSlice: []*loadbalance.Backend{
-				&loadbalance.Backend{
+				{
 					IP: "a",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "b",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "c",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "d",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "e",
 				},
 			},
 			inCur:        2,
 			inSegmentLen: 5,
 			outSlice: []*loadbalance.Backend{
-				&loadbalance.Backend{
+				{
 					IP: "c",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "d",
 				},
-				&loadbalance.Backend{
+				{
 					IP: "e",
 				},
 			},

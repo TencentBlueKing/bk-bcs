@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"time"
 )
 

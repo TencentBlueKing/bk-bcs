@@ -22,7 +22,7 @@ import (
 	canaryutil "github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	commonhookutil "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/hook"
-	
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -186,7 +186,7 @@ func (gdc *defaultGameDeploymentControl) newHookRunFromGameDeployment(canaryCtx 
 		}
 		return nil, err
 	}
-	nameParts := []string{"canary-step-hook", revision}
+	nameParts := []string{"canary", revision}
 	if stepIdx != nil {
 		nameParts = append(nameParts, strconv.Itoa(int(*stepIdx)))
 	}

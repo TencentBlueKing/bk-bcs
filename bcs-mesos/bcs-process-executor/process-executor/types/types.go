@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
-	bcstype "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	schedTypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	bcstype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	schedTypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 type ProcessTaskInfo struct {

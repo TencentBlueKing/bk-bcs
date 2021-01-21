@@ -30,7 +30,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-network/qcloud-eip/conf"
-	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
+	netsvc "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
 const (
@@ -901,7 +901,7 @@ func (eip *EIP) CNIAdd(args *skel.CmdArgs) error {
 
 	contIndex := 1
 	ips := []*current.IPConfig{
-		&current.IPConfig{
+		{
 			Version:   "4",
 			Address:   *ipNet,
 			Interface: &contIndex,

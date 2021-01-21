@@ -3,12 +3,12 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager
 go 1.14
 
 require (
-	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.2.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/kubernetes-client/go v0.0.0-20200222171647-9dac5e4c5400
@@ -16,7 +16,7 @@ require (
 	github.com/onsi/ginkgo v1.13.0
 	github.com/onsi/gomega v1.10.1
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98
-	google.golang.org/grpc v1.29.1
+	google.golang.org/grpc v1.31.0
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	istio.io/istio v0.0.0-20200812220246-25bea56c0eb0 // indirect
 	k8s.io/apiextensions-apiserver v0.18.6
@@ -31,7 +31,6 @@ require (
 )
 
 replace (
-	github.com/Tencent/bk-bcs => ../../
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20180801171038-322a19404e37

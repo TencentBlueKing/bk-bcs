@@ -13,7 +13,12 @@
 package server
 
 import (
+	// import bcslog plugin
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/bcslog"
+	// import bscp plugin
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/bscp"
+	// import db privilege plugin
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/dbprivilege"
+	// import image loader plugin
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/imageloader"
 )

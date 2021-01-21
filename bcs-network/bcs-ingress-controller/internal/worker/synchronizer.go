@@ -19,6 +19,7 @@ import (
 
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -37,6 +38,8 @@ type EventHandler struct {
 
 	k8sCli client.Client
 
+	listenerEventer record.EventRecorder
+
 	eventRecvCache  *EventCache
 	eventDoingCache *EventCache
 
@@ -45,13 +48,14 @@ type EventHandler struct {
 }
 
 // NewEventHandler create event handler
-func NewEventHandler(region, lbID string, lbClient cloud.LoadBalance, k8sCli client.Client) *EventHandler {
+func NewEventHandler(opt EventHandlerOption) *EventHandler {
 	return &EventHandler{
 		ctx:             context.Background(),
-		lbID:            lbID,
-		region:          region,
-		lbClient:        lbClient,
-		k8sCli:          k8sCli,
+		lbID:            opt.LbID,
+		region:          opt.Region,
+		lbClient:        opt.LbClient,
+		k8sCli:          opt.K8sCli,
+		listenerEventer: opt.ListenerEventer,
 		eventRecvCache:  NewEventCache(),
 		eventDoingCache: NewEventCache(),
 	}
@@ -124,16 +128,19 @@ func (h *EventHandler) ensureListener(e *ListenerEvent) error {
 	if e.Listener.Spec.EndPort > 0 {
 		listenerID, err = h.lbClient.EnsureSegmentListener(h.region, &e.Listener)
 		if err != nil {
+			h.recordListenerFailedEvent(&e.Listener, err)
 			blog.Errorf("cloud lb client EnsureSegmentListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client EnsureSegmentListener failed, err %s", err.Error())
 		}
 	} else {
 		listenerID, err = h.lbClient.EnsureListener(h.region, &e.Listener)
 		if err != nil {
+			h.recordListenerFailedEvent(&e.Listener, err)
 			blog.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
 		}
 	}
+	h.recordListenerSuccessEvent(&e.Listener, listenerID)
 
 	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte("{\"status\":{\"listenerID\":\""+listenerID+"\"}}"))
 	updateListener := &networkextensionv1.Listener{

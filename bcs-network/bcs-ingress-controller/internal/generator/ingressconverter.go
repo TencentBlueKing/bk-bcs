@@ -14,6 +14,7 @@ package generator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -22,6 +23,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -61,7 +63,7 @@ func NewIngressConverter(
 
 // get cloud loadbalance info by cloud loadbalance id pair
 // regionIDPair "ap-xxxxx:lb-xxxxxx"
-func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionIDPair, ":")
@@ -74,7 +76,11 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "")
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, strs[0], "")
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "")
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -87,7 +93,11 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], strs[1], "")
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], strs[1], "")
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], strs[1], "")
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +113,7 @@ func (g *IngressConverter) getLoadbalanceByID(regionIDPair string) (*cloud.LoadB
 
 // get cloud loadbalance info by cloud loadbalance name pair
 // regionNamePair "ap-xxxxx:lbname"
-func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionNamePair, ":")
@@ -116,7 +126,11 @@ func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.L
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, "", strs[0])
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, "", strs[0])
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, "", strs[0])
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +143,11 @@ func (g *IngressConverter) getLoadbalanceByName(regionNamePair string) (*cloud.L
 			}
 			return lbObj, nil
 		}
-		lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], "", strs[1])
+		if g.lbClient.IsNamespaced() {
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], "", strs[1])
+		} else {
+			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], "", strs[1])
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -150,15 +168,15 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	lbIDStrs, idOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceIDs]
 	lbNameStrs, nameOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceNames]
 	if !idOk && !nameOk {
-		blog.Warnf("ingress %+v is not associated with lb instance")
-		return nil, nil
+		blog.Errorf("ingress %+v is not associated with lb instance", ingress)
+		return nil, fmt.Errorf("ingress %+v is not associated with lb instance", ingress)
 	}
 	// check lb id first
 	// if there are both ids and names, ids is effective
 	if idOk {
 		lbIDs := strings.Split(lbIDStrs, ",")
 		for _, regionIDPair := range lbIDs {
-			lbObj, err := g.getLoadbalanceByID(regionIDPair)
+			lbObj, err := g.getLoadbalanceByID(ingress.GetNamespace(), regionIDPair)
 			if err != nil {
 				return nil, err
 			}
@@ -167,7 +185,7 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	} else if nameOk {
 		names := strings.Split(lbNameStrs, ",")
 		for _, regionNamePair := range names {
-			lbObj, err := g.getLoadbalanceByName(regionNamePair)
+			lbObj, err := g.getLoadbalanceByName(ingress.GetNamespace(), regionNamePair)
 			if err != nil {
 				return nil, err
 			}
@@ -185,7 +203,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 		return fmt.Errorf("ingress %+v ingress is invalid, err %s", ingress, errMsg)
 	}
 
-	isValid, errMsg = checkConflictsInIngress(ingress)
+	isValid, errMsg = checkNoConflictsInIngress(ingress)
 	if !isValid {
 		blog.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)
 		return fmt.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)
@@ -211,6 +229,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	var generatedSegListeners []networkextensionv1.Listener
 	for _, rule := range ingress.Spec.Rules {
 		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &rule)
+		ruleConverter.SetNamespaced(g.lbClient.IsNamespaced())
 		listeners, inErr := ruleConverter.DoConvert()
 		if inErr != nil {
 			blog.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
@@ -220,6 +239,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	}
 	for _, mapping := range ingress.Spec.PortMappings {
 		mappingConverter := NewMappingConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping)
+		mappingConverter.SetNamespaced(g.lbClient.IsNamespaced())
 		listeners, inErr := mappingConverter.DoConvert()
 		if inErr != nil {
 			blog.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())
@@ -247,8 +267,51 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	err = g.syncListeners(ingress.GetName(), ingress.GetNamespace(),
 		existedListeners, generatedListeners, existedSegListeners, generatedSegListeners)
 	if err != nil {
-		blog.Errorf("syncListeners listener failed, err %s", err.Error())
-		return fmt.Errorf("syncListeners listener failed, err %s", err.Error())
+		blog.Errorf("syncListeners listener of ingress %s/%s failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
+		return fmt.Errorf("syncListeners listener ingress %s/%s failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
+	}
+	if err = g.patchIngressStatus(ingress, lbObjs); err != nil {
+		blog.Errorf("update ingress vips failed, err %s", err.Error())
+		return fmt.Errorf("update ingress vips failed, err %s", err.Error())
+	}
+	return nil
+}
+
+// update ingress loadbalancers fields
+func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingress,
+	lbs []*cloud.LoadBalanceObject) error {
+
+	newStatus := networkextensionv1.IngressStatus{}
+	for _, lb := range lbs {
+		newStatus.Loadbalancers = append(newStatus.Loadbalancers, networkextensionv1.IngressLoadBalancer{
+			LoadbalancerName: lb.Name,
+			LoadbalancerID:   lb.LbID,
+			Region:           lb.Region,
+			Type:             lb.Type,
+			IPs:              lb.IPs,
+		})
+	}
+	patchStruct := map[string]interface{}{
+		"status": newStatus,
+	}
+	newStatusBytes, err := json.Marshal(patchStruct)
+	if err != nil {
+		return fmt.Errorf("encoding ingress status to json bytes failed, err %s", err.Error())
+	}
+
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, newStatusBytes)
+	updatedIngress := &networkextensionv1.Ingress{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      ingress.GetName(),
+			Namespace: ingress.GetNamespace(),
+		},
+	}
+	err = g.cli.Patch(context.TODO(), updatedIngress, rawPatch, &client.PatchOptions{})
+	if err != nil {
+		return fmt.Errorf("update ingress %s/%s to k8s apiserver failed, err %s",
+			ingress.GetName(), ingress.GetNamespace(), err.Error())
 	}
 	return nil
 }

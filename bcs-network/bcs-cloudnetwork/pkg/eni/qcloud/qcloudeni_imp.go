@@ -205,7 +205,7 @@ func (c *Client) unassignIPsFromEni(eniID string, addrs []string) error {
 func (c *Client) queryInstanceInfo() error {
 	req := cvm.NewDescribeInstancesRequest()
 	req.Filters = []*cvm.Filter{
-		&cvm.Filter{
+		{
 			Name:   common.StringPtr("private-ip-address"),
 			Values: common.StringPtrs([]string{c.InstanceIP}),
 		},

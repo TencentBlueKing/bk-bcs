@@ -13,6 +13,7 @@ limitations under the License.
 package e2e
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -28,195 +29,192 @@ import (
 func TestApp(t *testing.T) {
 	assert := assert.New(t)
 
-	newBid := ""
-	{
-		data, err := e2edata.CreateBusinessTestData()
-		assert.Nil(err)
-
-		resp, err := http.Post(testhost(businessInterfaceV1), "application/json", strings.NewReader(data))
-		assert.Nil(err)
-
-		defer resp.Body.Close()
-		assert.Equal(http.StatusOK, resp.StatusCode)
-
-		body, err := respbody(resp)
-		assert.Nil(err)
-
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "bid").String(), body)
-		newBid = gjson.Get(body, "bid").String()
-	}
-
-	data, err := e2edata.CreateAppTestData(newBid)
+	data, err := e2edata.CreateAppTestData(e2eTestBizID)
 	assert.Nil(err)
 
-	newAppid := ""
+	newAppID := ""
 	{
 		t.Logf("Case: create new application")
-		resp, err := http.Post(testhost(appInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(createAppAPIV2, e2eTestBizID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "appid").String(), body)
-		newAppid = gjson.Get(body, "appid").String()
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+
+		assert.NotEmpty(gjson.Get(body, "data.app_id").String(), body)
+		newAppID = gjson.Get(body, "data.app_id").String()
 	}
 
 	{
 		t.Logf("Case: create repeated application")
-		resp, err := http.Post(testhost(appInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(createAppAPIV2, e2eTestBizID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_DM_ALREADY_EXISTS, gjson.Get(body, "errCode").Int(), body)
-		assert.NotEqual("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.Equal(newAppid, gjson.Get(body, "appid").String(), body)
+		assert.EqualValues(false, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_CS_ALREADY_EXISTS, gjson.Get(body, "code").Int(), body)
+		assert.NotEqual("OK", gjson.Get(body, "message").String(), body)
+
+		assert.Equal(newAppID, gjson.Get(body, "data.app_id").String(), body)
 	}
 
 	name := gjson.Get(data, "name").String()
 	{
 		t.Logf("Case: query application by name")
-		resp, err := http.Get(testhost(appInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&name=" + name)
+		api := testHost(fmt.Sprintf(queryAppAPIV2, e2eTestBizID))
+		resp, err := httpRequest("GET", api+"?"+"name="+name, "application/json", nil)
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.Equal(newBid, gjson.Get(body, "app.bid").String(), body)
-		assert.Equal(newAppid, gjson.Get(body, "app.appid").String(), body)
-		assert.Equal(name, gjson.Get(body, "app.name").String(), body)
-		assert.Equal(gjson.Get(data, "creator").String(), gjson.Get(body, "app.creator").String(), body)
-		assert.Equal(gjson.Get(data, "creator").String(), gjson.Get(body, "app.lastModifyBy").String(), body)
-		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(body, "app.memo").String(), body)
-		assert.Equal(gjson.Get(data, "deployType").Int(), gjson.Get(body, "app.deployType").Int(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+
+		assert.Equal(e2eTestBizID, gjson.Get(body, "data.biz_id").String(), body)
+		assert.Equal(newAppID, gjson.Get(body, "data.app_id").String(), body)
+		assert.Equal(name, gjson.Get(body, "data.name").String(), body)
+		assert.Equal(e2eTestOperator, gjson.Get(body, "data.creator").String(), body)
+		assert.Equal(e2eTestOperator, gjson.Get(body, "data.last_modify_by").String(), body)
+		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(body, "data.memo").String(), body)
+		assert.Equal(gjson.Get(data, "deploy_type").Int(), gjson.Get(body, "data.deploy_type").Int(), body)
 	}
 
 	{
-		t.Logf("Case: query application by appid")
-		resp, err := http.Get(testhost(appInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&appid=" + newAppid)
+		t.Logf("Case: query application by app_id")
+		api := testHost(fmt.Sprintf(queryAppAPIV2, e2eTestBizID))
+		resp, err := httpRequest("GET", api+"?"+"app_id="+newAppID, "application/json", nil)
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.Equal(newBid, gjson.Get(body, "app.bid").String(), body)
-		assert.Equal(newAppid, gjson.Get(body, "app.appid").String(), body)
-		assert.Equal(name, gjson.Get(body, "app.name").String(), body)
-		assert.Equal(gjson.Get(data, "creator").String(), gjson.Get(body, "app.creator").String(), body)
-		assert.Equal(gjson.Get(data, "creator").String(), gjson.Get(body, "app.lastModifyBy").String(), body)
-		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(body, "app.memo").String(), body)
-		assert.Equal(gjson.Get(data, "deployType").Int(), gjson.Get(body, "app.deployType").Int(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+
+		assert.Equal(e2eTestBizID, gjson.Get(body, "data.biz_id").String(), body)
+		assert.Equal(newAppID, gjson.Get(body, "data.app_id").String(), body)
+		assert.Equal(name, gjson.Get(body, "data.name").String(), body)
+		assert.Equal(e2eTestOperator, gjson.Get(body, "data.creator").String(), body)
+		assert.Equal(e2eTestOperator, gjson.Get(body, "data.last_modify_by").String(), body)
+		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(body, "data.memo").String(), body)
+		assert.Equal(gjson.Get(data, "deploy_type").Int(), gjson.Get(body, "data.deploy_type").Int(), body)
 	}
 
 	{
 		t.Logf("Case: query application list")
-		resp, err := http.Get(testhost(appListInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&index=0&limit=10")
+		data, err := e2edata.QueryAppListTestData(e2eTestBizID, true, 0, 100)
+		assert.Nil(err)
+
+		api := testHost(fmt.Sprintf(listAppAPIV2, e2eTestBizID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotZero(len(gjson.Get(body, "apps").Array()), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+
+		assert.NotZero(gjson.Get(body, "data.total_count").Int(), body)
+		assert.NotZero(len(gjson.Get(body, "data.info").Array()), body)
 	}
 
 	{
 		t.Logf("Case: update application")
-		data, err := e2edata.UpdateAppTestData(newBid, newAppid)
+		data, err := e2edata.UpdateAppTestData(e2eTestBizID, newAppID)
 		assert.Nil(err)
 
-		req, err := http.NewRequest("PUT", testhost(appInterfaceV1), strings.NewReader(data))
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
+		api := testHost(fmt.Sprintf(updateAppAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("PUT", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 
-		r, err := http.Get(testhost(appInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&appid=" + newAppid)
+		api = testHost(fmt.Sprintf(queryAppAPIV2, e2eTestBizID))
+		queryResp, err := httpRequest("GET", api+"?"+"app_id="+newAppID, "application/json", nil)
 		assert.Nil(err)
 
-		defer r.Body.Close()
-		assert.Equal(http.StatusOK, r.StatusCode)
+		defer queryResp.Body.Close()
+		assert.Equal(http.StatusOK, queryResp.StatusCode)
 
-		b, err := respbody(r)
+		queryBody, err := respBody(queryResp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(b, "errCode").Int(), b)
-		assert.Equal("OK", gjson.Get(b, "errMsg").String(), b)
-		assert.Equal(newBid, gjson.Get(b, "app.bid").String(), b)
-		assert.Equal(newAppid, gjson.Get(b, "app.appid").String(), b)
-		assert.Equal(gjson.Get(data, "name").String(), gjson.Get(b, "app.name").String(), b)
-		assert.Equal(gjson.Get(data, "deployType").Int(), gjson.Get(b, "app.deployType").Int(), b)
-		assert.Equal(gjson.Get(data, "operator").String(), gjson.Get(b, "app.lastModifyBy").String(), b)
-		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(b, "app.memo").String(), b)
-		assert.Equal(gjson.Get(data, "state").Int(), gjson.Get(b, "app.state").Int(), b)
+		assert.EqualValues(true, gjson.Get(queryBody, "result").Bool(), queryBody)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(queryBody, "code").Int(), queryBody)
+		assert.Equal("OK", gjson.Get(queryBody, "message").String(), queryBody)
+
+		assert.Equal(e2eTestBizID, gjson.Get(queryBody, "data.biz_id").String(), queryBody)
+		assert.Equal(newAppID, gjson.Get(queryBody, "data.app_id").String(), queryBody)
+		assert.Equal(gjson.Get(data, "name").String(), gjson.Get(queryBody, "data.name").String(), queryBody)
+		assert.Equal(gjson.Get(data, "deploy_type").Int(), gjson.Get(queryBody, "data.deploy_type").Int(), queryBody)
+		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(queryBody, "data.memo").String(), queryBody)
+		assert.Equal(gjson.Get(data, "state").Int(), gjson.Get(queryBody, "data.state").Int(), queryBody)
 	}
 
 	{
 		t.Logf("Case: delete application")
-		req, err := http.NewRequest("DELETE", testhost(appInterfaceV1)+"?"+"seq=1&bid="+newBid+"&appid="+newAppid+"&operator=e2e", nil)
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
+		api := testHost(fmt.Sprintf(deleteAppAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("DELETE", api, "application/json", nil)
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 
-		r, err := http.Get(testhost(appInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&appid=" + newAppid)
+		api = testHost(fmt.Sprintf(queryAppAPIV2, e2eTestBizID))
+		queryResp, err := httpRequest("GET", api+"?"+"app_id="+newAppID, "application/json", nil)
 		assert.Nil(err)
 
-		defer r.Body.Close()
-		assert.Equal(http.StatusOK, r.StatusCode)
+		defer queryResp.Body.Close()
+		assert.Equal(http.StatusOK, queryResp.StatusCode)
 
-		b, err := respbody(r)
+		queryBody, err := respBody(queryResp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_DM_NOT_FOUND, gjson.Get(b, "errCode").Int(), b)
-		assert.NotEqual("OK", gjson.Get(b, "errMsg").String(), b)
+		assert.EqualValues(false, gjson.Get(queryBody, "result").Bool(), queryBody)
+		assert.EqualValues(pbcommon.ErrCode_E_DM_NOT_FOUND, gjson.Get(queryBody, "code").Int(), queryBody)
+		assert.NotEqual("OK", gjson.Get(queryBody, "message").String(), queryBody)
 	}
 }

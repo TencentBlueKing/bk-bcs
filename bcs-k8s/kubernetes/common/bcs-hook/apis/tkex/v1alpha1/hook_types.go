@@ -11,6 +11,7 @@
  *
  */
 
+// +kubebuilder:validation:Optional
 package v1alpha1
 
 import (
@@ -44,7 +45,7 @@ type HookPhase string
 type HookTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
+	// +kubebuilder:validation:Required
 	Spec HookTemplateSpec `json:"spec"`
 }
 
@@ -58,6 +59,7 @@ type HookTemplateList struct {
 }
 
 type HookTemplateSpec struct {
+	// +kubebuilder:validation:Required
 	Metrics []Metric   `json:"metrics"`
 	Args    []Argument `json:"args,omitempty"`
 }
@@ -65,6 +67,7 @@ type HookTemplateSpec struct {
 // Argument is an argument to an AnalysisRun
 type Argument struct {
 	// Name is the name of the argument
+	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 	// Value is the value of the argument
 	// +optional
@@ -79,6 +82,7 @@ func (d DurationString) Duration() (time.Duration, error) {
 }
 
 type Metric struct {
+	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 	// Interval defines an interval string (e.g. 30s, 5m, 1h) between each measurement.
 	// If omitted, will perform a single measurement
@@ -110,6 +114,7 @@ type Metric struct {
 	// succession, before the metric is considered error (default: 4)
 	ConsecutiveErrorLimit *int32 `json:"consecutiveErrorLimit,omitempty"`
 	// Provider configuration to the external system to use to verify the analysis
+	// +kubebuilder:validation:Required
 	Provider MetricProvider `json:"provider"`
 }
 
@@ -132,20 +137,26 @@ type MetricProvider struct {
 
 type PrometheusMetric struct {
 	// Address is the HTTP address and port of the prometheus server
+	// +kubebuilder:validation:Required
 	Address string `json:"address,omitempty"`
 	// Query is a raw prometheus query to perform
+	// +kubebuilder:validation:Required
 	Query string `json:"query,omitempty"`
 }
 
 type WebMetric struct {
+	// +kubebuilder:validation:Required
 	URL            string            `json:"url"`
 	Headers        []WebMetricHeader `json:"headers,omitempty"`
 	TimeoutSeconds int               `json:"timeoutSeconds,omitempty"`
-	JsonPath       string            `json:"jsonPath"`
+	// +kubebuilder:validation:Required
+	JsonPath string `json:"jsonPath"`
 }
 
 type WebMetricHeader struct {
-	Key   string `json:"key"`
+	// +kubebuilder:validation:Required
+	Key string `json:"key"`
+	// +kubebuilder:validation:Required
 	Value string `json:"value"`
 }
 
@@ -210,12 +221,15 @@ type PreDeleteHookCondition struct {
 }
 
 type HookStep struct {
+	// +kubebuilder:validation:Required
 	TemplateName string            `json:"templateName"`
 	Args         []HookRunArgument `json:"args,omitempty"`
 }
 
 type HookRunArgument struct {
-	Name  string `json:"name"`
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+	// +kubebuilder:validation:Required
 	Value string `json:"value,omitempty"`
 }
 

@@ -45,7 +45,7 @@ func NewEtcdRegistry(option *Options) Registry {
 		Name:    option.Name,
 		Version: option.Version,
 		Nodes: []*registry.Node{
-			&registry.Node{
+			{
 				Id:       fmt.Sprintf("%s-%s", option.Name, option.id),
 				Address:  option.RegAddr,
 				Metadata: option.Meta,

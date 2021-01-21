@@ -22,9 +22,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 )
 

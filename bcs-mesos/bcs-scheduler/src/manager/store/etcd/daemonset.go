@@ -14,9 +14,9 @@
 package etcd
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	schStore "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -125,7 +125,7 @@ func (store *managerStore) ListDaemonsetTaskGroups(namespace, name string) ([]*t
 		return taskgroups, nil
 	}
 
-	for podId, _ := range daemonset.Pods {
+	for podId := range daemonset.Pods {
 		taskgroup, err := store.FetchTaskGroup(podId)
 		if err != nil {
 			return nil, err

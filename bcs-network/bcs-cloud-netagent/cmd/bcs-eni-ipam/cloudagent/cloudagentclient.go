@@ -20,10 +20,10 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	netservicetype "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	pbnetagent "github.com/Tencent/bk-bcs/bcs-network/api/protocol/cloudnetagent"
 	pbcommon "github.com/Tencent/bk-bcs/bcs-network/api/protocol/common"
 	"github.com/Tencent/bk-bcs/bcs-network/pkg/common"
+	netservicetype "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
 // Client client for bcs-cloud-agent

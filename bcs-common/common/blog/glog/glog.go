@@ -888,7 +888,7 @@ const flushInterval = 30 * time.Second
 func (l *loggingT) flushDaemon() {
 	ticker := time.NewTicker(flushInterval)
 	defer ticker.Stop()
-	for _ = range ticker.C {
+	for range ticker.C {
 		l.lockAndFlushAll()
 	}
 }

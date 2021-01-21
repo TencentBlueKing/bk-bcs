@@ -73,18 +73,21 @@ const (
 	// SecurityGroupPolicyProtocolTCP security policy for tcp
 	SecurityGroupPolicyProtocolTCP = "tcp"
 
+	// TaskResultStatusSuccess result status for success
 	TaskResultStatusSuccess = 0
-	TaskResultStatusFailed  = 1
+	// TaskResultStatusFailed result status for failed
+	TaskResultStatusFailed = 1
+	// TaskResultStatusDealing result status for dealing
 	TaskResultStatusDealing = 2
 
-	//QCloudLBUrl
-	QCloudLBUrl = "https://lb.api.qcloud.com/v2/index.php"
-	//QCloudCVMUrl
-	QCloudCVMUrl = "https://cvm.api.qcloud.com/v2/index.php"
-	//QCloudCVMUrlV3
-	QCloudCVMUrlV3 = "https://cvm.tencentcloudapi.com/"
-	//QCloudDfwUrl
-	QCloudDfwUrl = "https://dfw.api.qcloud.com/v2/index.php"
+	// QCloudLBURL tencent cloud lb url
+	QCloudLBURL = "https://lb.api.qcloud.com/v2/index.php"
+	// QCloudCVMURL tencent cloud cvm v2 url
+	QCloudCVMURL = "https://cvm.api.qcloud.com/v2/index.php"
+	// QCloudCVMURLV3 tencent cloud cvm v3 url
+	QCloudCVMURLV3 = "https://cvm.tencentcloudapi.com/"
+	// QCloudDfwURL tencent cloud dfw url
+	QCloudDfwURL = "https://dfw.api.qcloud.com/v2/index.php"
 
 	//ClbMaxTimeout 异步clb接口超时时间，之所以定三分钟是因为之前遇到过最久的接口是一分多钟
 	ClbMaxTimeout = 180
@@ -100,34 +103,36 @@ const (
 )
 
 var (
+	// LBAlgorithmTypeBcs2QCloudMap map for algorithm name mapping from bcs to qcloud
 	LBAlgorithmTypeBcs2QCloudMap = map[string]string{
 		loadbalance.ClbLBPolicyLeastConn: LBAlgorithmLeastConn,
 		loadbalance.ClbLBPolicyWRR:       LBAlgorithmRoundRobin,
 		loadbalance.ClbLBPolicyIPHash:    LBAlgorithmIPHash,
 	}
-
+	// LBAlgorithmTypeQCloud2BcsMap map for algorithm name mapping from qcloud to bcs
 	LBAlgorithmTypeQCloud2BcsMap = map[string]string{
 		LBAlgorithmLeastConn:  loadbalance.ClbLBPolicyLeastConn,
 		LBAlgorithmRoundRobin: loadbalance.ClbLBPolicyWRR,
 		LBAlgorithmIPHash:     loadbalance.ClbLBPolicyIPHash,
 	}
-
+	// NetworkTypeBcs2QCloudMap map for network type from bcs to qcloud
 	NetworkTypeBcs2QCloudMap = map[string]int{
 		loadbalance.ClbNetworkTypePrivate: ClbPrivate,
 		loadbalance.ClbNetworkTypePublic:  ClbPublic,
 	}
+	// NetworkTypeQCloud2BcsMap map for network type from qcloud to bcs
 	NetworkTypeQCloud2BcsMap = map[int]string{
 		ClbPrivate: loadbalance.ClbNetworkTypePrivate,
 		ClbPublic:  loadbalance.ClbNetworkTypePublic,
 	}
-
+	// ProtocolTypeBcs2QCloudMap map for protocol type from bcs to qcloud
 	ProtocolTypeBcs2QCloudMap = map[string]int{
 		loadbalance.ClbListenerProtocolHTTP:  ClbListenerProtocolHTTP,
 		loadbalance.ClbListenerProtocolHTTPS: ClbListenerProtocolHTTPS,
 		loadbalance.ClbListenerProtocolTCP:   ClbListenerProtocolTCP,
 		loadbalance.ClbListenerProtocolUDP:   ClbListenerProtocolUDP,
 	}
-
+	// ProtocolTypeQCloud2BcsMap map for protocol type from qcloud to bcs
 	ProtocolTypeQCloud2BcsMap = map[int]string{
 		ClbListenerProtocolHTTP:  loadbalance.ClbListenerProtocolHTTP,
 		ClbListenerProtocolHTTPS: loadbalance.ClbListenerProtocolHTTPS,

@@ -639,7 +639,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 			return status, nil
 		}
 
-		canDelete, err := ssc.preDeleteControl.CheckDelete(set, condemned[target], status, gstsv1alpha1.GameStatefulSetPodNameLabel)
+		canDelete, err := ssc.preDeleteControl.CheckDelete(set, condemned[target], status, gstsv1alpha1.GameStatefulSetPodOrdinal)
 		if err != nil {
 			klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
 				condemned[target].Name, set.Namespace, set.Name, err.Error())
@@ -683,7 +683,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	updateRevision *apps.ControllerRevision,
 	replicas []*v1.Pod,
 	monotonic bool,
-	) (*gstsv1alpha1.GameStatefulSetStatus, error) {
+) (*gstsv1alpha1.GameStatefulSetStatus, error) {
 
 	// for the OnDelete strategy we short circuit. Pods will be updated when they are manually deleted.
 	if set.Spec.UpdateStrategy.Type == gstsv1alpha1.OnDeleteGameStatefulSetStrategyType {
@@ -699,7 +699,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodNameLabel)
+				canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodOrdinal)
 				if err != nil {
 					klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
 						replicas[target].Name, set.Namespace, set.Name, err.Error())
@@ -735,7 +735,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 
 			// delete the Pod if it is not already terminating and does not match the update revision.
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodNameLabel)
+				canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodOrdinal)
 				if err != nil {
 					klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
 						replicas[target].Name, set.Namespace, set.Name, err.Error())
@@ -880,7 +880,7 @@ func (ssc *defaultGameStatefulSetControl) truncatePreDeleteHookRuns(set *gstsv1a
 		exist := false
 		for _, pod := range pods {
 			cr, ok1 := pod.Labels[apps.ControllerRevisionHashLabelKey]
-			id, ok2 := pod.Labels[gstsv1alpha1.GameStatefulSetPodNameLabel]
+			id, ok2 := pod.Labels[gstsv1alpha1.GameStatefulSetPodOrdinal]
 			if ok1 && ok2 && podControllerRevision == cr && podInstanceID == id {
 				exist = true
 				break

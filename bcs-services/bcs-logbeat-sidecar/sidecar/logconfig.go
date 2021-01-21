@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/apis/bk-bcs/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/clientset/versioned"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/pkg/client/informers/externalversions"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/informers/externalversions"
 
 	docker "github.com/fsouza/go-dockerclient"
 	corev1 "k8s.io/api/core/v1"
@@ -89,9 +89,9 @@ func (s *SidecarController) initKubeconfig() error {
 	//add k8s resources event handler functions
 	s.bcsLogConfigInformer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
-			AddFunc:    s.handleChangedBcsLogConfig,
+			AddFunc:    s.handleAddedBcsLogConfig,
 			UpdateFunc: s.handleUpdatedBcsLogConfig,
-			DeleteFunc: s.handleChangedBcsLogConfig,
+			DeleteFunc: s.handleDeletedBcsLogConfig,
 		},
 	)
 	blog.Infof("build internalClientset for config %s success", s.conf.Kubeconfig)
@@ -172,6 +172,10 @@ func (s *SidecarController) getPodLogConfigCrd(container *docker.Container, pod 
 //BcsLogConfig parameter ContainerName matched, increased 10 score
 //finally, the above scores will be accumulated to be the BcsLogConfig final score
 func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf *bcsv1.BcsLogConfig) int {
+	// do not select ConfigType == host
+	if bcsLogConf.Spec.ConfigType == bcsv1.HostConfigType {
+		return 0
+	}
 	// selector match
 	podLabelSet := apilabels.Set(pod.GetLabels())
 	podSelector, err := buildSelector(bcsLogConf.Spec.Selector)
@@ -275,14 +279,28 @@ func scoreBcsLogConfig(container *docker.Container, pod *corev1.Pod, bcsLogConf 
 	return score
 }
 
-func (s *SidecarController) handleChangedBcsLogConfig(obj interface{}) {
+func (s *SidecarController) handleAddedBcsLogConfig(obj interface{}) {
 	conf, ok := obj.(*bcsv1.BcsLogConfig)
 	if !ok {
 		blog.Errorf("cannot convert to *bcsv1.BcsLogConfig: %v", obj)
 		return
 	}
 	by, _ := json.Marshal(conf)
-	blog.Infof("handle kubernetes AddOrDelete event BcsLogConfig(%s:%s) data(%s)", conf.Namespace, conf.Name, string(by))
+	blog.Infof("handle kubernetes Add event BcsLogConfig(%s:%s) data(%s)", conf.Namespace, conf.Name, string(by))
+	s.syncLogConfs()
+}
+
+func (s *SidecarController) handleDeletedBcsLogConfig(obj interface{}) {
+	conf, ok := obj.(*bcsv1.BcsLogConfig)
+	if !ok {
+		blog.Errorf("cannot convert to *bcsv1.BcsLogConfig: %v", obj)
+		return
+	}
+	if conf.Spec.ConfigType == bcsv1.HostConfigType {
+		delete(s.logConfs, s.getHostLogConfKey(conf))
+	}
+	by, _ := json.Marshal(conf)
+	blog.Infof("handle kubernetes Delete event BcsLogConfig(%s:%s) data(%s)", conf.Namespace, conf.Name, string(by))
 	s.syncLogConfs()
 }
 

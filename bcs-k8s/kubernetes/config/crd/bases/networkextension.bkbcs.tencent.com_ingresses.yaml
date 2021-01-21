@@ -300,6 +300,14 @@ spec:
                     items:
                       type: string
                     type: array
+                  loadbalancerID:
+                    type: string
+                  loadbalancerName:
+                    type: string
+                  region:
+                    type: string
+                  type:
+                    type: string
                 type: object
               type: array
           type: object

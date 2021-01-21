@@ -57,44 +57,44 @@ func TestSortStatefulSetPod(t *testing.T) {
 	}{
 		{
 			podsBefore: []*k8scorev1.Pod{
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-3",
 					},
 				},
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-2",
 					},
 				},
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-9",
 					},
 				},
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-110",
 					},
 				},
 			},
 			podsAfter: []*k8scorev1.Pod{
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-2",
 					},
 				},
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-3",
 					},
 				},
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-9",
 					},
 				},
-				&k8scorev1.Pod{
+				{
 					ObjectMeta: k8smetav1.ObjectMeta{
 						Name: "pvp-110",
 					},

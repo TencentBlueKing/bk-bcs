@@ -20,8 +20,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	sched "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/scheduler"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 const (

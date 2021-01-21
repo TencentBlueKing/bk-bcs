@@ -22,10 +22,10 @@ import (
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/strategy"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
 	"github.com/golang/protobuf/proto"
@@ -87,7 +87,7 @@ func (s *Scheduler) LaunchTaskGroup(offer *mesos.Offer, taskGroup *mesos.TaskGro
 				offer.GetId(),
 			},
 			Operations: []*mesos.Offer_Operation{
-				&mesos.Offer_Operation{
+				{
 					Type: mesos.Offer_Operation_LAUNCH_GROUP.Enum(),
 					LaunchGroup: &mesos.Offer_Operation_LaunchGroup{
 						TaskGroup: taskGroup,

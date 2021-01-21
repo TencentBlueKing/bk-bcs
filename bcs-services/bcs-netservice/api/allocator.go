@@ -15,8 +15,8 @@ package api
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"net/http"
 	"time"
 

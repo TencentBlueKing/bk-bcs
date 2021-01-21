@@ -24,11 +24,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
-	apismonitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/monitor/v1"
-	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/informers"
-	"github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/internalclientset"
-	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/client/lister/bkbcs/v2"
+	apisbkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
+	apismonitorv1 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/monitor/v1"
+	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/informers"
+	"github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/internalclientset"
+	bkbcsv2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/client/lister/bkbcs/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/types"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"

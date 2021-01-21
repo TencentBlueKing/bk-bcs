@@ -48,6 +48,22 @@ func NewClb() (*Clb, error) {
 	}, nil
 }
 
+// NewClbWithSecretIDKey create clb client with secret id and secret key
+func NewClbWithSecretIDKey(id, key string) (*Clb, error) {
+	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(id, key)
+	if err != nil {
+		return nil, err
+	}
+	apiWrapper, err := NewAPIWrapperWithSecretIDKey(id, key)
+	if err != nil {
+		return nil, err
+	}
+	return &Clb{
+		sdkWrapper: sdkWrapper,
+		apiWrapper: apiWrapper,
+	}, nil
+}
+
 // DescribeLoadBalancer get loadbalancer object by id
 func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
 	req := tclb.NewDescribeLoadBalancersRequest()
@@ -71,11 +87,21 @@ func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 	if len(resp.Response.LoadBalancerSet) == 0 {
 		return nil, cloud.ErrLoadbalancerNotFound
 	}
-	if len(resp.Response.LoadBalancerSet) > 1 {
-		blog.Errorf("DescribeLoadBalancers response invalid, more than one lb, resp %s", resp.ToJsonString())
-		return nil, fmt.Errorf("DescribeLoadBalancers response invalid, more than one lb, resp %s", resp.ToJsonString())
+	var resplb *tclb.LoadBalancer
+	for _, lb := range resp.Response.LoadBalancerSet {
+		if len(lbID) != 0 && lbID == *lb.LoadBalancerId {
+			resplb = lb
+			break
+		}
+		if len(name) != 0 && name == *lb.LoadBalancerName {
+			resplb = lb
+			break
+		}
 	}
-	resplb := resp.Response.LoadBalancerSet[0]
+	if resplb == nil {
+		blog.Errorf("lb not found in resp %s", resp.ToJsonString())
+		return nil, cloud.ErrLoadbalancerNotFound
+	}
 	retlb := &cloud.LoadBalanceObject{
 		Region: region,
 	}
@@ -90,6 +116,16 @@ func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 	}
 	retlb.IPs = tcommon.StringValues(resplb.LoadBalancerVips)
 	return retlb, nil
+}
+
+// DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
+func (c *Clb) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+	return c.DescribeLoadBalancer(region, lbID, name)
+}
+
+// IsNamespaced if client is namespaced
+func (c *Clb) IsNamespaced() bool {
+	return false
 }
 
 // EnsureListener ensure listener to cloud, and get listener info

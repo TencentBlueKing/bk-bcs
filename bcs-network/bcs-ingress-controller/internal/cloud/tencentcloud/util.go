@@ -31,6 +31,7 @@ func convertHealthCheck(hc *tclb.HealthCheck) *networkextensionv1.ListenerHealth
 		healthCheck.Enabled = false
 		return healthCheck
 	}
+	healthCheck.Enabled = true
 	if hc.TimeOut != nil {
 		healthCheck.Timeout = int(*hc.TimeOut)
 	}
@@ -69,6 +70,24 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	}
 	if lis.HealthCheck != nil {
 		attr.HealthCheck = convertHealthCheck(lis.HealthCheck)
+	}
+	return attr
+}
+
+// convert clb rule attribute to crd fields
+func convertRuleAttribute(rule *tclb.RuleOutput) *networkextensionv1.IngressListenerAttribute {
+	if rule == nil {
+		return nil
+	}
+	attr := &networkextensionv1.IngressListenerAttribute{}
+	if rule.SessionExpireTime != nil {
+		attr.SessionTime = int(*rule.SessionExpireTime)
+	}
+	if rule.Scheduler != nil {
+		attr.LbPolicy = *rule.Scheduler
+	}
+	if rule.HealthCheck != nil {
+		attr.HealthCheck = convertHealthCheck(rule.HealthCheck)
 	}
 	return attr
 }
@@ -131,6 +150,15 @@ func transIngressHealtchCheck(hc *networkextensionv1.ListenerHealthCheck) *tclb.
 	}
 	if hc.Timeout != 0 {
 		healthCheck.TimeOut = tcommon.Int64Ptr(int64(hc.Timeout))
+	}
+	if len(hc.HTTPCheckMethod) != 0 {
+		healthCheck.HttpCheckMethod = tcommon.StringPtr(hc.HTTPCheckMethod)
+	}
+	if len(hc.HTTPCheckPath) != 0 {
+		healthCheck.HttpCheckPath = tcommon.StringPtr(hc.HTTPCheckPath)
+	}
+	if hc.HTTPCode != 0 {
+		healthCheck.HttpCode = tcommon.Int64Ptr(int64(hc.HTTPCode))
 	}
 	return healthCheck
 }
@@ -229,6 +257,41 @@ func getDomainPathKey(domain, path string) string {
 	return domain + path
 }
 
+// to see if the attribute should be update
+func needUpdateAttribute(oldAttr, newAttr *networkextensionv1.IngressListenerAttribute) bool {
+	if newAttr == nil {
+		return false
+	}
+	if oldAttr == nil {
+		return true
+	}
+	if (len(newAttr.LbPolicy) != 0 && newAttr.LbPolicy != oldAttr.LbPolicy) ||
+		newAttr.SessionTime != oldAttr.SessionTime {
+		return true
+	}
+	if newAttr.HealthCheck == nil {
+		return false
+	}
+	if oldAttr.HealthCheck == nil {
+		return true
+	}
+	newHealth := newAttr.HealthCheck
+	oldHealth := oldAttr.HealthCheck
+	if newHealth.Enabled != oldHealth.Enabled {
+		return true
+	}
+	if (len(newHealth.HTTPCheckMethod) != 0 && newHealth.HTTPCheckMethod != oldHealth.HTTPCheckMethod) ||
+		(len(newHealth.HTTPCheckPath) != 0 && newHealth.HTTPCheckPath != oldHealth.HTTPCheckPath) ||
+		(newHealth.HTTPCode != 0 && newHealth.HTTPCode != oldHealth.HTTPCode) ||
+		(newHealth.HealthNum != 0 && newHealth.HealthNum != oldHealth.HealthNum) ||
+		(newHealth.UnHealthNum != 0 && newHealth.UnHealthNum != oldHealth.UnHealthNum) ||
+		(newHealth.IntervalTime != 0 && newHealth.IntervalTime != oldHealth.IntervalTime) ||
+		(newHealth.Timeout != 0 && newHealth.Timeout != oldHealth.Timeout) {
+		return true
+	}
+	return false
+}
+
 func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1.Listener) (
 	[]networkextensionv1.ListenerRule, []networkextensionv1.ListenerRule,
 	[]networkextensionv1.ListenerRule, []networkextensionv1.ListenerRule) {
@@ -254,7 +317,9 @@ func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1
 		}
 		addBackends, delBackends, updateWeightBackends := getDiffBetweenTargetGroup(
 			existedRule.TargetGroup, rule.TargetGroup)
-		if len(addBackends) != 0 || len(delBackends) != 0 || len(updateWeightBackends) != 0 {
+		if len(addBackends) != 0 || len(delBackends) != 0 || len(updateWeightBackends) != 0 ||
+			(rule.ListenerAttribute != nil &&
+				needUpdateAttribute(existedRule.ListenerAttribute, rule.ListenerAttribute)) {
 			updateRule := networkextensionv1.ListenerRule{}
 			updateRule.Domain = rule.Domain
 			updateRule.Path = rule.Path

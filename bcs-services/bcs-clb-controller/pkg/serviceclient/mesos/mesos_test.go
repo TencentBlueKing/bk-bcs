@@ -16,8 +16,8 @@ import (
 	"reflect"
 	"testing"
 
-	schetypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
-	v2 "github.com/Tencent/bk-bcs/bcs-mesos/pkg/apis/bkbcs/v2"
+	schetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	v2 "github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2/apis/bkbcs/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -109,44 +109,44 @@ func TestGetIndexRcFromTaskgroupName(t *testing.T) {
 // TestSortTaskgroups test sortTaskgroups
 func TestSortTaskgroups(t *testing.T) {
 	tgs := []*v2.TaskGroup{
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "0.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.ppplication-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "1.application-1.test.00001.160576739375102",
 			},
 		},
 	}
 	tgsAfterSort := []*v2.TaskGroup{
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "0.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "1.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.application-1.test.00001.160576739375102",
 			},
 		},
-		&v2.TaskGroup{
+		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "2.ppplication-1.test.00001.160576739375102",
 			},

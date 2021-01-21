@@ -22,11 +22,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	schedtypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/config"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/metrics"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/reflector"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-hpacontroller/hpacontroller/scaler"
-	schedtypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 const (

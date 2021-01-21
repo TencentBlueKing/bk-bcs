@@ -56,11 +56,8 @@ func (h *Hooker) Init(configFilePath string) error {
 // Handle do hook function
 func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request
-	isPod, err := pluginutil.AssertPod(req.Object.Raw)
-	if err != nil {
-		return pluginutil.ToAdmissionResponse(err)
-	}
-	if !isPod {
+	// when the kind is not Pod, ignore hook
+	if req.Kind.Kind != "Pod" {
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
 	if req.Operation != v1beta1.Create {

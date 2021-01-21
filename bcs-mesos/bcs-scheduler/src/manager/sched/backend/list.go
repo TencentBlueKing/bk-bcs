@@ -14,7 +14,7 @@
 package backend
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 func (b *backend) ListApplications(runAs string) ([]*types.Application, error) {

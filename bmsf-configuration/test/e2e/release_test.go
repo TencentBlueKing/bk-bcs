@@ -13,6 +13,7 @@ limitations under the License.
 package e2e
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -28,402 +29,342 @@ import (
 func TestRelease(t *testing.T) {
 	assert := assert.New(t)
 
-	newBid := ""
+	newAppID := ""
 	{
-		data, err := e2edata.CreateBusinessTestData()
+		data, err := e2edata.CreateAppTestData(e2eTestBizID)
 		assert.Nil(err)
 
-		resp, err := http.Post(testhost(businessInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(createAppAPIV2, e2eTestBizID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "bid").String(), body)
-		newBid = gjson.Get(body, "bid").String()
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+
+		assert.NotEmpty(gjson.Get(body, "data.app_id").String(), body)
+		newAppID = gjson.Get(body, "data.app_id").String()
 	}
 
-	newAppid := ""
+	newCfgID := ""
+	newCfgName := ""
+	newCfgFpath := ""
 	{
-		data, err := e2edata.CreateAppTestData(newBid)
+		data, err := e2edata.CreateConfigTestData(e2eTestBizID, newAppID, "/etc")
 		assert.Nil(err)
 
-		resp, err := http.Post(testhost(appInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(createConfigAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "appid").String(), body)
-		newAppid = gjson.Get(body, "appid").String()
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+		assert.NotEmpty(gjson.Get(body, "data.cfg_id").String(), body)
+		newCfgID = gjson.Get(body, "data.cfg_id").String()
+
+		api = testHost(fmt.Sprintf(queryConfigAPIV2, e2eTestBizID, newAppID))
+		queryResp, err := httpRequest("GET", api+"?"+"cfg_id="+newCfgID, "application/json", nil)
+		assert.Nil(err)
+
+		defer queryResp.Body.Close()
+		assert.Equal(http.StatusOK, queryResp.StatusCode)
+
+		queryBody, err := respBody(queryResp)
+		assert.Nil(err)
+
+		assert.EqualValues(true, gjson.Get(queryBody, "result").Bool(), queryBody)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(queryBody, "code").Int(), queryBody)
+		assert.Equal("OK", gjson.Get(queryBody, "message").String(), queryBody)
+		newCfgName = gjson.Get(queryBody, "data.name").String()
+		newCfgFpath = gjson.Get(queryBody, "data.fpath").String()
 	}
 
-	newCfgsetName := ""
-	newCfgsetid := ""
+	newCommitID := ""
 	{
-		data, err := e2edata.CreateConfigSetTestData(newBid, newAppid)
+		data, err := e2edata.CreateCommitTestData(e2eTestBizID, newAppID, newCfgID, pbcommon.CommitMode_CM_CONFIGS)
 		assert.Nil(err)
 
-		resp, err := http.Post(testhost(configsetInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(createCommitAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "cfgsetid").String(), body)
-		newCfgsetid = gjson.Get(body, "cfgsetid").String()
-		newCfgsetName = gjson.Get(data, "name").String()
-	}
-
-	newCommitid := ""
-	{
-		data, err := e2edata.CreateCommitTestData(newBid, newAppid, newCfgsetid)
-		assert.Nil(err)
-
-		resp, err := http.Post(testhost(commitInterfaceV1), "application/json", strings.NewReader(data))
-		assert.Nil(err)
-
-		defer resp.Body.Close()
-		assert.Equal(http.StatusOK, resp.StatusCode)
-
-		body, err := respbody(resp)
-		assert.Nil(err)
-
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "commitid").String(), body)
-		newCommitid = gjson.Get(body, "commitid").String()
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+		assert.NotEmpty(gjson.Get(body, "data.commit_id").String(), body)
+		newCommitID = gjson.Get(body, "data.commit_id").String()
 	}
 
 	{
 		t.Logf("Case: create new release with unconfirmed commit")
-		data, err := e2edata.CreateReleaseTestData(newBid, newCommitid, "")
+		data, err := e2edata.CreateReleaseTestData(e2eTestBizID, newAppID, newCommitID, "")
 		assert.Nil(err)
 
-		resp, err := http.Post(testhost(releaseInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(createReleaseAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_BS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT, gjson.Get(body, "errCode").Int(), body)
-		assert.NotEqual("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(false, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_CS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT,
+			gjson.Get(body, "code").Int(), body)
+		assert.NotEqual("OK", gjson.Get(body, "message").String(), body)
 	}
 
 	{
-		data, err := e2edata.ConfirmCommitTestData(newBid, newCommitid)
+		data, err := e2edata.ConfirmCommitTestData(e2eTestBizID, newAppID, newCommitID)
 		assert.Nil(err)
 
-		req, err := http.NewRequest("PUT", testhost(commitConfirmInterfaceV1), strings.NewReader(data))
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
+		api := testHost(fmt.Sprintf(confirmCommitAPIV2, e2eTestBizID, newAppID, newCommitID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 	}
 
-	newStrategies := ""
-	newStrategyid := ""
-	{
-		data, err := e2edata.CreateStrategyTestData(newBid, newAppid)
-		assert.Nil(err)
-
-		resp, err := http.Post(testhost(strategyInterfaceV1), "application/json", strings.NewReader(data))
-		assert.Nil(err)
-
-		defer resp.Body.Close()
-		assert.Equal(http.StatusOK, resp.StatusCode)
-
-		body, err := respbody(resp)
-		assert.Nil(err)
-
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "strategyid").String(), body)
-		newStrategyid = gjson.Get(body, "strategyid").String()
-	}
-
-	{
-		resp, err := http.Get(testhost(strategyInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&strategyid=" + newStrategyid)
-		assert.Nil(err)
-
-		defer resp.Body.Close()
-		assert.Equal(http.StatusOK, resp.StatusCode)
-
-		body, err := respbody(resp)
-		assert.Nil(err)
-
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.Equal(newAppid, gjson.Get(body, "strategy.appid").String(), body)
-		assert.Equal(newStrategyid, gjson.Get(body, "strategy.strategyid").String(), body)
-		newStrategies = gjson.Get(body, "strategy.content").String()
-	}
-
-	data, err := e2edata.CreateReleaseTestData(newBid, newCommitid, newStrategyid)
+	data, err := e2edata.CreateReleaseTestData(e2eTestBizID, newAppID, newCommitID, "")
 	assert.Nil(err)
 
-	newReleaseid := ""
+	newReleaseID := ""
 	{
 		t.Logf("Case: create new release with confirmed commit")
-		resp, err := http.Post(testhost(releaseInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(createReleaseAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "releaseid").String(), body)
-		newReleaseid = gjson.Get(body, "releaseid").String()
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+		assert.NotEmpty(gjson.Get(body, "data.release_id").String(), body)
+		newReleaseID = gjson.Get(body, "data.release_id").String()
 	}
 
 	{
 		t.Logf("Case: query release")
-		resp, err := http.Get(testhost(releaseInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&releaseid=" + newReleaseid)
+		api := testHost(fmt.Sprintf(queryReleaseAPIV2, e2eTestBizID, newAppID, newReleaseID))
+		resp, err := httpRequest("GET", api+"?"+"biz_id="+e2eTestBizID+"&app_id="+newAppID+
+			"&release_id="+newReleaseID, "application/json", nil)
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 
-		assert.Equal(newBid, gjson.Get(body, "release.bid").String(), body)
-		assert.Equal(newAppid, gjson.Get(body, "release.appid").String(), body)
-		assert.Equal(newCfgsetid, gjson.Get(body, "release.cfgsetid").String(), body)
-		assert.Equal(newCommitid, gjson.Get(body, "release.commitid").String(), body)
-		assert.Equal(newReleaseid, gjson.Get(body, "release.releaseid").String(), body)
-		assert.Equal(newStrategyid, gjson.Get(body, "release.strategyid").String(), body)
-		assert.Equal(newCfgsetName, gjson.Get(body, "release.cfgsetName").String(), body)
-		assert.Equal(gjson.Get(data, "name").String(), gjson.Get(body, "release.name").String(), body)
-		assert.Equal(gjson.Get(data, "creator").String(), gjson.Get(body, "release.creator").String(), body)
-		assert.Equal(gjson.Get(data, "creator").String(), gjson.Get(body, "release.lastModifyBy").String(), body)
-		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(body, "release.memo").String(), body)
-		assert.Equal(newStrategies, gjson.Get(body, "release.strategies").String(), body)
-		assert.EqualValues(pbcommon.ReleaseState_RS_INIT, gjson.Get(body, "release.state").Int(), body)
+		assert.Equal(e2eTestBizID, gjson.Get(body, "data.biz_id").String(), body)
+		assert.Equal(newAppID, gjson.Get(body, "data.app_id").String(), body)
+		assert.Equal(newCfgID, gjson.Get(body, "data.cfg_id").String(), body)
+		assert.Equal(newCommitID, gjson.Get(body, "data.commit_id").String(), body)
+		assert.Equal(newReleaseID, gjson.Get(body, "data.release_id").String(), body)
+		assert.Empty(gjson.Get(body, "data.strategy_id").String(), body)
+		assert.Equal(newCfgName, gjson.Get(body, "data.cfg_name").String(), body)
+		assert.Equal(newCfgFpath, gjson.Get(body, "data.cfg_fpath").String(), body)
+		assert.Equal(gjson.Get(data, "name").String(), gjson.Get(body, "data.name").String(), body)
+		assert.Equal(e2eTestOperator, gjson.Get(body, "data.creator").String(), body)
+		assert.Equal(e2eTestOperator, gjson.Get(body, "data.last_modify_by").String(), body)
+		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(body, "data.memo").String(), body)
+		assert.Equal("{}", gjson.Get(body, "data.strategies").String(), body)
+		assert.EqualValues(pbcommon.ReleaseState_RS_INIT, gjson.Get(body, "data.state").Int(), body)
 	}
 
 	{
-		t.Logf("Case: query history releases(all states)")
-		operator := gjson.Get(data, "creator").String()
-		resp, err := http.Get(testhost(releaseHistoryInterfaceV1) + "?" +
-			"seq=1&bid=" + newBid + "&cfgsetid=" + newCfgsetid + "&queryType=0&operator=" + operator + "&index=0&limit=10")
+		t.Logf("Case: query history releases")
+		data, err := e2edata.QueryHistoryReleasesTestData(e2eTestBizID, newAppID, newCfgID, true, 0, 100)
+		assert.Nil(err)
+
+		api := testHost(fmt.Sprintf(listReleaseAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotZero(len(gjson.Get(body, "releases").Array()), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
+
+		assert.NotZero(gjson.Get(body, "data.total_count").Int(), body)
+		assert.NotZero(len(gjson.Get(body, "data.info").Array()), body)
 	}
 
 	{
 		t.Logf("Case: update release")
-		data, err := e2edata.UpdateReleaseTestData(newBid, newReleaseid)
+		data, err := e2edata.UpdateReleaseTestData(e2eTestBizID, newAppID, newReleaseID)
 		assert.Nil(err)
 
-		req, err := http.NewRequest("PUT", testhost(releaseInterfaceV1), strings.NewReader(data))
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
+		api := testHost(fmt.Sprintf(updateReleaseAPIV2, e2eTestBizID, newAppID, newReleaseID))
+		resp, err := httpRequest("PUT", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 
-		r, err := http.Get(testhost(releaseInterfaceV1) + "?" + "seq=1&bid=" + newBid + "&releaseid=" + newReleaseid)
+		api = testHost(fmt.Sprintf(queryReleaseAPIV2, e2eTestBizID, newAppID, newReleaseID))
+		queryResp, err := httpRequest("GET", api+"?"+"biz_id="+e2eTestBizID+"&app_id="+newAppID+
+			"&release_id="+newReleaseID, "application/json", nil)
 		assert.Nil(err)
 
-		defer r.Body.Close()
-		assert.Equal(http.StatusOK, r.StatusCode)
+		defer queryResp.Body.Close()
+		assert.Equal(http.StatusOK, queryResp.StatusCode)
 
-		b, err := respbody(r)
+		queryBody, err := respBody(queryResp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(b, "errCode").Int(), b)
-		assert.Equal("OK", gjson.Get(b, "errMsg").String(), b)
-		assert.Equal(newAppid, gjson.Get(b, "release.appid").String(), b)
-		assert.Equal(newCfgsetid, gjson.Get(b, "release.cfgsetid").String(), b)
-		assert.Equal(newCommitid, gjson.Get(b, "release.commitid").String(), b)
-		assert.Equal(newReleaseid, gjson.Get(b, "release.releaseid").String(), b)
-		assert.Equal(gjson.Get(data, "name").String(), gjson.Get(b, "release.name").String(), b)
-		assert.Equal(gjson.Get(data, "operator").String(), gjson.Get(b, "release.lastModifyBy").String(), b)
-		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(b, "release.memo").String(), b)
+		assert.EqualValues(true, gjson.Get(queryBody, "result").Bool(), queryBody)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(queryBody, "code").Int(), queryBody)
+		assert.Equal("OK", gjson.Get(queryBody, "message").String(), queryBody)
+
+		assert.Equal(newAppID, gjson.Get(queryBody, "data.app_id").String(), queryBody)
+		assert.Equal(newCfgID, gjson.Get(queryBody, "data.cfg_id").String(), queryBody)
+		assert.Equal(newCommitID, gjson.Get(queryBody, "data.commit_id").String(), queryBody)
+		assert.Equal(newReleaseID, gjson.Get(queryBody, "data.release_id").String(), queryBody)
+		assert.Equal(gjson.Get(data, "name").String(), gjson.Get(queryBody, "data.name").String(), queryBody)
+		assert.Equal(e2eTestOperator, gjson.Get(queryBody, "data.last_modify_by").String(), queryBody)
+		assert.Equal(gjson.Get(data, "memo").String(), gjson.Get(queryBody, "data.memo").String(), queryBody)
 	}
 
 	{
 		t.Logf("Case: publish release")
-		data, err := e2edata.PublishReleaseTestData(newBid, newReleaseid)
+		data, err := e2edata.PublishReleaseTestData(e2eTestBizID, newAppID, newReleaseID)
 		assert.Nil(err)
 
-		resp, err := http.Post(testhost(releasePubInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(publishReleaseAPIV2, e2eTestBizID, newAppID, newReleaseID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 	}
 
 	{
 		t.Logf("Case: update release after publish")
-		data, err := e2edata.UpdateReleaseTestData(newBid, newReleaseid)
+		data, err := e2edata.UpdateReleaseTestData(e2eTestBizID, newAppID, newReleaseID)
 		assert.Nil(err)
 
-		req, err := http.NewRequest("PUT", testhost(releaseInterfaceV1), strings.NewReader(data))
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
+		api := testHost(fmt.Sprintf(updateReleaseAPIV2, e2eTestBizID, newAppID, newReleaseID))
+		resp, err := httpRequest("PUT", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, gjson.Get(body, "errCode").Int(), body)
-		assert.NotEqual("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(false, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, gjson.Get(body, "code").Int(), body)
+		assert.NotEqual("OK", gjson.Get(body, "message").String(), body)
 	}
 
 	{
 		t.Logf("Case: cancel release after publish")
-		data, err := e2edata.CancelReleaseTestData(newBid, newReleaseid)
+		data, err := e2edata.CancelReleaseTestData(e2eTestBizID, newAppID, newReleaseID)
 		assert.Nil(err)
 
-		req, err := http.NewRequest("PUT", testhost(releaseCancelInterfaceV1), strings.NewReader(data))
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
+		api := testHost(fmt.Sprintf(cancelReleaseAPIV2, e2eTestBizID, newAppID, newReleaseID))
+		resp, err := httpRequest("POST", api, "application/json", strings.NewReader(data))
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, gjson.Get(body, "errCode").Int(), body)
-		assert.NotEqual("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(false, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, gjson.Get(body, "code").Int(), body)
+		assert.NotEqual("OK", gjson.Get(body, "message").String(), body)
 	}
 
 	{
-		data, err := e2edata.CreateReleaseTestData(newBid, newCommitid, newStrategyid)
-		assert.Nil(err)
-
-		resp, err := http.Post(testhost(releaseInterfaceV1), "application/json", strings.NewReader(data))
+		api := testHost(fmt.Sprintf(deleteAppAPIV2, e2eTestBizID, newAppID))
+		resp, err := httpRequest("DELETE", api, "application/json", nil)
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-		assert.NotEmpty(gjson.Get(body, "releaseid").String(), body)
-		newReleaseid = gjson.Get(body, "releaseid").String()
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 	}
 
 	{
-		t.Logf("Case: cancel release")
-		data, err := e2edata.CancelReleaseTestData(newBid, newReleaseid)
-		assert.Nil(err)
-
-		req, err := http.NewRequest("PUT", testhost(releaseCancelInterfaceV1), strings.NewReader(data))
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
+		api := testHost(fmt.Sprintf(deleteConfigAPIV2, e2eTestBizID, newAppID, newCfgID))
+		resp, err := httpRequest("DELETE", api, "application/json", nil)
 		assert.Nil(err)
 
 		defer resp.Body.Close()
 		assert.Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := respbody(resp)
+		body, err := respBody(resp)
 		assert.Nil(err)
 
-		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "errCode").Int(), body)
-		assert.Equal("OK", gjson.Get(body, "errMsg").String(), body)
-	}
-
-	{
-		t.Logf("Case: update release after cancel")
-		data, err := e2edata.UpdateReleaseTestData(newBid, newReleaseid)
-		assert.Nil(err)
-
-		req, err := http.NewRequest("PUT", testhost(releaseInterfaceV1), strings.NewReader(data))
-		assert.Nil(err)
-
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(req)
-		assert.Nil(err)
-
-		defer resp.Body.Close()
-		assert.Equal(http.StatusOK, resp.StatusCode)
-
-		body, err := respbody(resp)
-		assert.Nil(err)
-
-		assert.EqualValues(pbcommon.ErrCode_E_DM_DB_UPDATE_ERR, gjson.Get(body, "errCode").Int(), body)
-		assert.NotEqual("OK", gjson.Get(body, "errMsg").String(), body)
+		assert.EqualValues(true, gjson.Get(body, "result").Bool(), body)
+		assert.EqualValues(pbcommon.ErrCode_E_OK, gjson.Get(body, "code").Int(), body)
+		assert.Equal("OK", gjson.Get(body, "message").String(), body)
 	}
 }

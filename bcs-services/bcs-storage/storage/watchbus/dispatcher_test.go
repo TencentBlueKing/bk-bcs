@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/drivers/mongo"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 )
 
 // TestWatchBus test watch bus

@@ -15,108 +15,103 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 32,
-  "iteration": 1575275990730,
+  "id": 5,
+  "iteration": 1607675427938,
   "links": [],
   "panels": [
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fill": 1,
-      "fillGradient": 0,
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "format": "s",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 0,
         "y": 0
       },
-      "id": 2,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": true,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
+      "id": 8,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "pluginVersion": "6.3.5",
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
       },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      "tableColumn": "",
       "targets": [
         {
-          "expr": "go_goroutines{job=\"$module\"}",
-          "legendFormat": "单实例协程数量($module)",
+          "expr": "(time() - process_start_time_seconds{job=\"$module\",instance=\"$instance\"})",
+          "legendFormat": "单实例进程运行时长",
           "refId": "A"
         }
       ],
-      "thresholds": [],
+      "thresholds": "",
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
-      "title": "协程数量",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
+      "title": "进程运行时长",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "valueName": "avg"
     },
     {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 12,
         "y": 0
@@ -149,8 +144,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "process_open_fds{job=\"$module\"}",
-          "legendFormat": "单实例FD数量($module)",
+          "expr": "process_open_fds{job=\"$module\",instance=\"$instance\"}",
+          "legendFormat": "单实例FD数量",
           "refId": "A"
         }
       ],
@@ -200,14 +195,100 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 8
+      },
+      "id": 12,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "go_gc_duration_seconds_sum{job=\"$module\",instance=\"$instance\"}/go_gc_duration_seconds_count{job=\"$module\",instance=\"$instance\"}",
+          "legendFormat": "单实例GC耗时",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "GC耗时",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
       },
       "id": 6,
       "legend": {
@@ -237,13 +318,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "process_resident_memory_bytes{job=\"$module\"}",
-          "legendFormat": "单实例常驻内存($module)",
+          "expr": "process_resident_memory_bytes{job=\"$module\",instance=\"$instance\"}",
+          "legendFormat": "单实例常驻内存",
           "refId": "A"
         },
         {
-          "expr": "process_virtual_memory_bytes{job=\"$module\"}",
-          "legendFormat": "单实例虚拟内存($module)",
+          "expr": "process_virtual_memory_bytes{job=\"$module\",instance=\"$instance\"}",
+          "legendFormat": "单实例虚拟内存",
           "refId": "B"
         }
       ],
@@ -293,22 +374,21 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
-        "x": 12,
-        "y": 9
+        "x": 0,
+        "y": 16
       },
-      "id": 8,
+      "id": 2,
       "legend": {
         "alignAsTable": true,
-        "avg": false,
+        "avg": true,
         "current": true,
-        "max": false,
-        "min": false,
+        "max": true,
+        "min": true,
         "rightSide": true,
         "show": true,
         "total": false,
@@ -330,8 +410,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(time() - process_start_time_seconds{job=\"$module\"})",
-          "legendFormat": "单实例进程运行时长($module)",
+          "expr": "go_goroutines{job=\"$module\",instance=\"$instance\"}",
+          "legendFormat": "单实例协程数量",
           "refId": "A"
         }
       ],
@@ -339,7 +419,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "进程运行时长",
+      "title": "协程数量",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -355,7 +435,94 @@
       },
       "yaxes": [
         {
-          "format": "s",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 10,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "go_threads{job=\"$module\",instance=\"$instance\"}",
+          "legendFormat": "单实例系统线程数",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "系统线程数",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -377,7 +544,7 @@
       }
     }
   ],
-  "schemaVersion": 20,
+  "schemaVersion": 19,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -385,19 +552,98 @@
       {
         "allValue": null,
         "current": {
-          "text": "bk-bscp-connserver",
-          "value": "bk-bscp-connserver"
+          "selected": true,
+          "text": "bk-bscp-apiserver",
+          "value": "bk-bscp-apiserver"
         },
-        "datasource": "Thanos",
-        "definition": "label_values({job=~\"bk-bscp-integrator|bk-bscp-connserver|bk-bscp-datamanager|bk-bscp-accessserver|bk-bscp-businessserver|bk-bscp-templateserver|bk-bscp-bcs-controller|bk-bscp-gse-controller\"},job)",
+        "datasource": "Prometheus",
+        "definition": "label_values(job)",
         "hide": 0,
         "includeAll": false,
         "label": null,
         "multi": false,
         "name": "module",
-        "options": [],
-        "query": "label_values({job=~\"bk-bscp-integrator|bk-bscp-connserver|bk-bscp-datamanager|bk-bscp-accessserver|bk-bscp-businessserver|bk-bscp-templateserver|bk-bscp-bcs-controller|bk-bscp-gse-controller\"},job)",
-        "refresh": 1,
+        "options": [
+          {
+            "selected": true,
+            "text": "bk-bscp-apiserver",
+            "value": "bk-bscp-apiserver"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-authserver",
+            "value": "bk-bscp-authserver"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-bcs-controller",
+            "value": "bk-bscp-bcs-controller"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-configserver",
+            "value": "bk-bscp-configserver"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-connserver",
+            "value": "bk-bscp-connserver"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-datamanager",
+            "value": "bk-bscp-datamanager"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-gse-controller",
+            "value": "bk-bscp-gse-controller"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-templateserver",
+            "value": "bk-bscp-templateserver"
+          },
+          {
+            "selected": false,
+            "text": "bk-bscp-tunnelserver",
+            "value": "bk-bscp-tunnelserver"
+          }
+        ],
+        "query": "label_values(job)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:8082",
+          "value": "127.0.0.1:8082"
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values({job=\"$module\"},instance)",
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "instance",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:8082",
+            "value": "127.0.0.1:8082"
+          }
+        ],
+        "query": "label_values({job=\"$module\"},instance)",
+        "refresh": 0,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -410,7 +656,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
@@ -430,5 +676,5 @@
   "timezone": "",
   "title": "BSCP-SYSTEM-STATS",
   "uid": "aDz5iXpZk",
-  "version": 6
+  "version": 40
 }

@@ -20,8 +20,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/networkdetection/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/types"
 )
 
 //CmdbClient client for cmdb

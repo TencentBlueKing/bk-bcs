@@ -16,34 +16,30 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice"
-	netsvc "github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/pkg/netservice/types"
 	"github.com/Tencent/bk-bcs/bcs-network/qcloud-eip/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	netsvc "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"strings"
 )
 
 // NetSvcClient client to operate netservice
 type NetSvcClient struct {
-	client netservice.Client
+	client bcsapi.Netservice
 }
 
 // NewNetSvcClient create client for
 func NewNetSvcClient(conf *conf.NetArgs) (*NetSvcClient, error) {
-	var client netservice.Client
-	var clientErr error
 	if conf == nil {
 		return nil, fmt.Errorf("netservice config cannot be empty")
 	}
 	if len(conf.Zookeeper) == 0 {
 		return nil, fmt.Errorf("netservice zookeeper config cannot be empty")
 	}
-	if len(conf.PubKey) == 0 && len(conf.Key) == 0 && len(conf.Ca) == 0 {
-		client, clientErr = netservice.NewClient()
-	} else {
-		client, clientErr = netservice.NewTLSClient(conf.Ca, conf.Key, conf.PubKey, static.ClientCertPwd)
-	}
-	if clientErr != nil {
-		return nil, clientErr
+	client := bcsapi.NewNetserviceCli()
+	if len(conf.PubKey) != 0 || len(conf.Key) != 0 || len(conf.Ca) != 0 {
+		if err := client.SetCerts(conf.Ca, conf.Key, conf.PubKey, static.ClientCertPwd); err != nil {
+			return nil, err
+		}
 	}
 	//client get bcs-netservice info
 	conf.Zookeeper = strings.Replace(conf.Zookeeper, ",", ";", -1)

@@ -29,4 +29,3 @@ const (
 	// IstioOperatorListKind list kind for operator
 	IstioOperatorListKind string = "IstioOperatorList"
 )
-

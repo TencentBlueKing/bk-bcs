@@ -1,16 +1,11 @@
 syntax = "proto3";
+
 import "bk-bscp/internal/protocol/common/common.proto";
 
 package datamanager;
 
 service DataManager {
-    rpc QueryAuthInfo(QueryAuthInfoReq) returns (QueryAuthInfoResp) {}
     rpc QueryAppMetadata(QueryAppMetadataReq) returns (QueryAppMetadataResp) {}
-
-    rpc CreateBusiness(CreateBusinessReq) returns (CreateBusinessResp) {}
-    rpc QueryBusiness(QueryBusinessReq) returns (QueryBusinessResp) {}
-    rpc QueryBusinessList(QueryBusinessListReq) returns (QueryBusinessListResp) {}
-    rpc UpdateBusiness(UpdateBusinessReq) returns (UpdateBusinessResp) {}
 
     rpc CreateApp(CreateAppReq) returns (CreateAppResp) {}
     rpc QueryApp(QueryAppReq) returns (QueryAppResp) {}
@@ -18,31 +13,33 @@ service DataManager {
     rpc UpdateApp(UpdateAppReq) returns (UpdateAppResp) {}
     rpc DeleteApp(DeleteAppReq) returns (DeleteAppResp) {}
 
-    rpc CreateCluster(CreateClusterReq) returns (CreateClusterResp) {}
-    rpc QueryCluster(QueryClusterReq) returns (QueryClusterResp) {}
-    rpc QueryClusterList(QueryClusterListReq) returns (QueryClusterListResp) {}
-    rpc UpdateCluster(UpdateClusterReq) returns (UpdateClusterResp) {}
-    rpc DeleteCluster(DeleteClusterReq) returns (DeleteClusterResp) {}
+    rpc CreateTemplateBind(CreateTemplateBindReq) returns (CreateTemplateBindResp) {}
+    rpc QueryTemplateBind(QueryTemplateBindReq) returns (QueryTemplateBindResp) {}
+    rpc QueryTemplateBindList(QueryTemplateBindListReq) returns (QueryTemplateBindListResp) {}
+    rpc DeleteTemplateBind(DeleteTemplateBindReq) returns (DeleteTemplateBindResp) {}
 
-    rpc CreateZone(CreateZoneReq) returns (CreateZoneResp) {}
-    rpc QueryZone(QueryZoneReq) returns (QueryZoneResp) {}
-    rpc QueryZoneList(QueryZoneListReq) returns (QueryZoneListResp) {}
-    rpc UpdateZone(UpdateZoneReq) returns (UpdateZoneResp) {}
-    rpc DeleteZone(DeleteZoneReq) returns (DeleteZoneResp) {}
+    rpc CreateConfigTemplate(CreateConfigTemplateReq) returns (CreateConfigTemplateResp) {}
+    rpc QueryConfigTemplate(QueryConfigTemplateReq) returns (QueryConfigTemplateResp) {}
+    rpc QueryConfigTemplateList(QueryConfigTemplateListReq) returns (QueryConfigTemplateListResp) {}
+    rpc UpdateConfigTemplate(UpdateConfigTemplateReq) returns (UpdateConfigTemplateResp) {}
+    rpc DeleteConfigTemplate(DeleteConfigTemplateReq) returns (DeleteConfigTemplateResp) {}
 
-    rpc CreateConfigSet(CreateConfigSetReq) returns (CreateConfigSetResp) {}
-    rpc QueryConfigSet(QueryConfigSetReq) returns (QueryConfigSetResp) {}
-    rpc QueryConfigSetList(QueryConfigSetListReq) returns (QueryConfigSetListResp) {}
-    rpc UpdateConfigSet(UpdateConfigSetReq) returns (UpdateConfigSetResp) {}
-    rpc DeleteConfigSet(DeleteConfigSetReq) returns (DeleteConfigSetResp) {}
+    rpc CreateConfigTemplateVersion(CreateConfigTemplateVersionReq) returns (CreateConfigTemplateVersionResp) {}
+    rpc QueryConfigTemplateVersion(QueryConfigTemplateVersionReq) returns(QueryConfigTemplateVersionResp) {}
+    rpc QueryConfigTemplateVersionList(QueryConfigTemplateVersionListReq) returns(QueryConfigTemplateVersionListResp) {}
+    rpc UpdateConfigTemplateVersion(UpdateConfigTemplateVersionReq) returns (UpdateConfigTemplateVersionResp) {}
+    rpc DeleteConfigTemplateVersion(DeleteConfigTemplateVersionReq) returns (DeleteConfigTemplateVersionResp) {}
 
-    rpc LockConfigSet(LockConfigSetReq) returns (LockConfigSetResp) {}
-    rpc UnlockConfigSet(UnlockConfigSetReq) returns (UnlockConfigSetResp) {}
+    rpc CreateConfig(CreateConfigReq) returns (CreateConfigResp) {}
+    rpc QueryConfig(QueryConfigReq) returns (QueryConfigResp) {}
+    rpc QueryConfigList(QueryConfigListReq) returns (QueryConfigListResp) {}
+    rpc UpdateConfig(UpdateConfigReq) returns (UpdateConfigResp) {}
+    rpc DeleteConfig(DeleteConfigReq) returns (DeleteConfigResp) {}
 
-    rpc CreateConfigs(CreateConfigsReq) returns (CreateConfigsResp) {}
-    rpc QueryConfigs(QueryConfigsReq) returns (QueryConfigsResp) {}
-    rpc QueryConfigsList(QueryConfigsListReq) returns (QueryConfigsListResp) {}
-    rpc QueryReleaseConfigs(QueryReleaseConfigsReq) returns (QueryReleaseConfigsResp) {}
+    rpc CreateConfigContent(CreateConfigContentReq) returns (CreateConfigContentResp) {}
+    rpc QueryConfigContent(QueryConfigContentReq) returns (QueryConfigContentResp) {}
+    rpc QueryConfigContentList(QueryConfigContentListReq) returns (QueryConfigContentListResp) {}
+    rpc QueryReleaseConfigContent(QueryReleaseConfigContentReq) returns (QueryReleaseConfigContentResp) {}
 
     rpc CreateCommit(CreateCommitReq) returns (CreateCommitResp) {}
     rpc QueryCommit(QueryCommitReq) returns (QueryCommitResp) {}
@@ -51,6 +48,7 @@ service DataManager {
     rpc CancelCommit(CancelCommitReq) returns (CancelCommitResp) {}
     rpc ConfirmCommit(ConfirmCommitReq) returns (ConfirmCommitResp) {}
 
+    rpc CreateMultiCommitWithContent(CreateMultiCommitWithContentReq) returns (CreateMultiCommitWithContentResp) {}
     rpc CreateMultiCommit(CreateMultiCommitReq) returns (CreateMultiCommitResp) {}
     rpc QueryMultiCommit(QueryMultiCommitReq) returns (QueryMultiCommitResp) {}
     rpc QueryHistoryMultiCommits(QueryHistoryMultiCommitsReq) returns (QueryHistoryMultiCommitsResp) {}
@@ -78,10 +76,9 @@ service DataManager {
     rpc QueryHistoryMultiReleases(QueryHistoryMultiReleasesReq) returns (QueryHistoryMultiReleasesResp) {}
 
     rpc CreateAppInstance(CreateAppInstanceReq) returns (CreateAppInstanceResp) {}
+    rpc UpdateAppInstance(UpdateAppInstanceReq) returns (UpdateAppInstanceResp) {}
     rpc QueryHistoryAppInstances(QueryHistoryAppInstancesReq) returns (QueryHistoryAppInstancesResp) {}
     rpc QueryReachableAppInstances(QueryReachableAppInstancesReq) returns (QueryReachableAppInstancesResp) {}
-    rpc UpdateAppInstance(UpdateAppInstanceReq) returns (UpdateAppInstanceResp) {}
-
     rpc CreateAppInstanceRelease(CreateAppInstanceReleaseReq) returns (CreateAppInstanceReleaseResp) {}
     rpc QueryAppInstanceRelease(QueryAppInstanceReleaseReq) returns (QueryAppInstanceReleaseResp) {}
     rpc QueryEffectedAppInstances(QueryEffectedAppInstancesReq) returns (QueryEffectedAppInstancesResp) {}
@@ -99,6 +96,7 @@ service DataManager {
     rpc UpdateProcAttr(UpdateProcAttrReq) returns (UpdateProcAttrResp) {}
     rpc DeleteProcAttr(DeleteProcAttrReq) returns (DeleteProcAttrResp) {}
 
+    rpc InitShardingDB(InitShardingDBReq) returns (InitShardingDBResp) {}
     rpc CreateShardingDB(CreateShardingDBReq) returns (CreateShardingDBResp) {}
     rpc QueryShardingDB(QueryShardingDBReq) returns (QueryShardingDBResp) {}
     rpc QueryShardingDBList(QueryShardingDBListReq) returns (QueryShardingDBListResp) {}
@@ -108,1323 +106,1393 @@ service DataManager {
     rpc QuerySharding(QueryShardingReq) returns (QueryShardingResp) {}
     rpc UpdateSharding(UpdateShardingReq) returns (UpdateShardingResp) {}
 
-    rpc CreateConfigTemplateSet(CreateConfigTemplateSetReq) returns (CreateConfigTemplateSetResp) {}
-    rpc DeleteConfigTemplateSet(DeleteConfigTemplateSetReq) returns (DeleteConfigTemplateSetResp) {}
-    rpc UpdateConfigTemplateSet(UpdateConfigTemplateSetReq) returns (UpdateConfigTemplateSetResp) {}
-    rpc QueryConfigTemplateSet(QueryConfigTemplateSetReq) returns (QueryConfigTemplateSetResp) {}
-    rpc QueryConfigTemplateSetList(QueryConfigTemplateSetListReq) returns (QueryConfigTemplateSetListResp) {}
-
-    rpc CreateConfigTemplate(CreateConfigTemplateReq) returns (CreateConfigTemplateResp) {}
-    rpc DeleteConfigTemplate(DeleteConfigTemplateReq) returns (DeleteConfigTemplateResp) {}
-    rpc UpdateConfigTemplate(UpdateConfigTemplateReq) returns (UpdateConfigTemplateResp) {}
-    rpc QueryConfigTemplate(QueryConfigTemplateReq) returns (QueryConfigTemplateResp) {}
-    rpc QueryConfigTemplateList(QueryConfigTemplateListReq) returns (QueryConfigTemplateListResp) {}
-
-    rpc CreateTemplateVersion(CreateTemplateVersionReq) returns (CreateTemplateVersionResp) {}
-    rpc DeleteTemplateVersion(DeleteTemplateVersionReq) returns (DeleteTemplateVersionResp) {}
-    rpc UpdateTemplateVersion(UpdateTemplateVersionReq) returns (UpdateTemplateVersionResp) {}
-    rpc QueryTemplateVersion(QueryTemplateVersionReq) returns(QueryTemplateVersionResp) {}
-    rpc QueryTemplateVersionList(QueryTemplateVersionListReq) returns(QueryTemplateVersionListResp) {}
-
-    rpc CreateConfigTemplateBinding(CreateConfigTemplateBindingReq) returns (CreateConfigTemplateBindingResp) {}
-    rpc DeleteConfigTemplateBinding(DeleteConfigTemplateBindingReq) returns (DeleteConfigTemplateBindingResp) {}
-    rpc UpdateConfigTemplateBinding(UpdateConfigTemplateBindingReq) returns (UpdateConfigTemplateBindingResp) {}
-    rpc QueryConfigTemplateBinding(QueryConfigTemplateBindingReq) returns (QueryConfigTemplateBindingResp) {}
-    rpc QueryConfigTemplateBindingList(QueryConfigTemplateBindingListReq) returns (QueryConfigTemplateBindingListResp) {}
-
-    rpc CreateVariable(CreateVariableReq) returns (CreateVariableResp) {}
-    rpc UpdateVariable(UpdateVariableReq) returns (UpdateVariableResp) {}
-    rpc DeleteVariable(DeleteVariableReq) returns (DeleteVariableResp) {}
-    rpc QueryVariable(QueryVariableReq) returns (QueryVariableResp) {}
-    rpc QueryVariableList(QueryVariableListReq) returns (QueryVariableListResp) {}
     rpc CreateAudit(CreateAuditReq) returns (CreateAuditResp) {}
     rpc QueryAuditList(QueryAuditListReq) returns (QueryAuditListResp) {}
-}
 
-message QueryAuthInfoReq {
-    uint64 seq = 1;
-    string bid = 2;
-}
-
-message QueryAuthInfoResp {
-    uint64         seq       = 1;
-    common.ErrCode errCode   = 2;
-    string         errMsg    = 3;
-    string         auth      = 4;
+    rpc Healthz(HealthzReq) returns (HealthzResp) {}
 }
 
 message QueryAppMetadataReq {
-    uint64 seq          = 1;
-    string businessName = 2;
-    string appName      = 3;
-    string clusterName  = 4;
-    string zoneName     = 5;
-
-    // add fields here.
-    string clusterLabels = 6;
+    string seq    = 1;
+    string biz_id = 2;
+    string app_id = 3;
 }
 
 message QueryAppMetadataResp {
-    uint64         seq       = 1;
-    common.ErrCode errCode   = 2;
-    string         errMsg    = 3;
-    string         bid       = 4;
-    string         appid     = 5;
-    string         clusterid = 6;
-    string         zoneid    = 7;
-}
-
-message CreateBusinessReq {
-    uint64 seq     = 1;
-    string bid     = 2;
-    string name    = 3;
-    string depid   = 4;
-    int32  state   = 5;
-    string creator = 6;
-    string memo    = 7;
-    string auth    = 8;
-}
-
-message CreateBusinessResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    string         bid     = 4;
-}
-
-message QueryBusinessReq {
-    uint64 seq  = 1;
-    string bid  = 2;
-    string name = 3;
-}
-
-message QueryBusinessResp {
-    uint64          seq      = 1;
-    common.ErrCode  errCode  = 2;
-    string          errMsg   = 3;
-    common.Business business = 4;
-}
-
-message QueryBusinessListReq {
-    uint64 seq   = 1;
-    int32  index = 2;
-    int32  limit = 3;
-}
-
-message QueryBusinessListResp {
-    uint64                   seq        = 1;
-    common.ErrCode           errCode    = 2;
-    string                   errMsg     = 3;
-    repeated common.Business businesses = 4;
-}
-
-message UpdateBusinessReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string name     = 3;
-    string depid    = 4;
-    string memo     = 5;
-    int32  state    = 6;
-    string operator = 7;
-}
-
-message UpdateBusinessResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message CreateAppReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string appid      = 3;
-    string name       = 4;
-    int32  deployType = 5;
-    int32  state      = 6;
-    string creator    = 7;
-    string memo       = 8;
+    string seq         = 1;
+    string biz_id      = 2;
+    string app_id      = 3;
+    string name        = 4;
+    int32  deploy_type = 5;
+    int32  state       = 6;
+    string creator     = 7;
+    string memo        = 8;
 }
 
 message CreateAppResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    string         appid   = 4;
+    message RespData {
+        string app_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
 message QueryAppReq {
-    uint64 seq   = 1;
-    string bid   = 2;
-    string appid = 3;
-    string name  = 4;
+    string seq    = 1;
+    string biz_id = 2;
+    string app_id = 3;
+    string name   = 4;
 }
 
 message QueryAppResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    common.App     app     = 4;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    common.App     data    = 4;
 }
 
 message QueryAppListReq {
-    uint64 seq   = 1;
-    string bid   = 2;
-    int32  index = 3;
-    int32  limit = 4;
+    string      seq    = 1;
+    string      biz_id = 2;
+    common.Page page   = 3;
 }
 
 message QueryAppListResp {
-    uint64              seq     = 1;
-    common.ErrCode      errCode = 2;
-    string              errMsg  = 3;
-    repeated common.App apps    = 4;
+    message RespData {
+        uint32              total_count = 1;
+        repeated common.App info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
 message UpdateAppReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string appid      = 3;
-    string name       = 4;
-    int32  deployType = 5;
-    string memo       = 6;
-    int32  state      = 7;
-    string operator   = 8;
+    string seq         = 1;
+    string biz_id      = 2;
+    string app_id      = 3;
+    string name        = 4;
+    int32  deploy_type = 5;
+    string memo        = 6;
+    int32  state       = 7;
+    string operator    = 8;
 }
 
 message UpdateAppResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message DeleteAppReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string appid    = 3;
+    string seq      = 1;
+    string biz_id   = 2;
+    string app_id   = 3;
     string operator = 4;
 }
 
 message DeleteAppResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
-message CreateClusterReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string clusterid  = 3;
-    string name       = 4;
-    string appid      = 5;
-    string rClusterid = 6;
-    string creator    = 7;
-    string memo       = 8;
-    string labels     = 9;
+message CreateTemplateBindReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string template_id = 3;
+    string app_id      = 4;
+    string cfg_id      = 5;
+    int32  state       = 6;
+    string creator     = 7;
 }
 
-message CreateClusterResp {
-    uint64         seq       = 1;
-    common.ErrCode errCode   = 2;
-    string         errMsg    = 3;
-    string         clusterid = 4;
-}
-
-message QueryClusterReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string name      = 5;
-    string labels    = 6;
-}
-
-message QueryClusterResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    common.Cluster cluster = 4;
-}
-
-message QueryClusterListReq {
-    uint64 seq     = 1;
-    string bid     = 2;
-    string appid   = 3;
-    string appName = 4;
-    int32  index   = 5;
-    int32  limit   = 6;
-}
-
-message QueryClusterListResp {
-    uint64                  seq      = 1;
-    common.ErrCode          errCode  = 2;
-    string                  errMsg   = 3;
-    repeated common.Cluster clusters = 4;
-}
-
-message UpdateClusterReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string clusterid  = 3;
-    string name       = 4;
-    string rClusterid = 5;
-    string memo       = 6;
-    int32  state      = 7;
-    string operator   = 8;
-    string labels     = 9;
-}
-
-message UpdateClusterResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message DeleteClusterReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string clusterid = 3;
-    string operator  = 4;
-}
-
-message DeleteClusterResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CreateZoneReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string zoneid    = 3;
-    string name      = 4;
-    string appid     = 5;
-    string clusterid = 6;
-    int32  state     = 7;
-    string creator   = 8;
-    string memo      = 9;
-}
-
-message CreateZoneResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    string         zoneid  = 4;
-}
-
-message QueryZoneReq {
-    uint64 seq    = 1;
-    string bid    = 2;
-    string appid  = 3;
-    string zoneid = 4;
-    string name   = 5;
-}
-
-message QueryZoneResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    common.Zone    zone    = 4;
-}
-
-message QueryZoneListReq {
-    uint64 seq         = 1;
-    string bid         = 2;
-    string appid       = 3;
-    string clusterName = 4;
-    string clusterid   = 5;
-    int32  index       = 6;
-    int32  limit       = 7;
-
-    // add fields here.
-    string clusterLabels = 8;
-}
-
-message QueryZoneListResp {
-    uint64               seq     = 1;
-    common.ErrCode       errCode = 2;
-    string               errMsg  = 3;
-    repeated common.Zone zones   = 4;
-}
-
-message UpdateZoneReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string zoneid   = 3;
-    string name     = 4;
-    string memo     = 5;
-    int32  state    = 6;
-    string operator = 7;
-}
-
-message UpdateZoneResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message DeleteZoneReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string zoneid   = 3;
-    string operator = 4;
-}
-
-message DeleteZoneResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CreateConfigSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string cfgsetid = 3;
-    string name     = 4;
-    string appid    = 5;
-    int32  state    = 6;
-    string creator  = 7;
-    string memo     = 8;
-    string fpath    = 9;
-}
-
-message CreateConfigSetResp {
-    uint64         seq      = 1;
-    common.ErrCode errCode  = 2;
-    string         errMsg   = 3;
-    string         cfgsetid = 4;
-}
-
-message QueryConfigSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string appid    = 3;
-    string cfgsetid = 4;
-    string name     = 5;
-    string fpath    = 6;
-}
-
-message QueryConfigSetResp {
-    uint64           seq       = 1;
-    common.ErrCode   errCode   = 2;
-    string           errMsg    = 3;
-    common.ConfigSet configSet = 4;
-}
-
-message QueryConfigSetListReq {
-    uint64 seq     = 1;
-    string bid     = 2;
-    string appid   = 3;
-    string appName = 4;
-    int32  index   = 5;
-    int32  limit   = 6;
-}
-
-message QueryConfigSetListResp {
-    uint64                    seq        = 1;
-    common.ErrCode            errCode    = 2;
-    string                    errMsg     = 3;
-    repeated common.ConfigSet configSets = 4;
-}
-
-message UpdateConfigSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string cfgsetid = 3;
-    string name     = 4;
-    string memo     = 5;
-    int32  state    = 6;
-    string operator = 7;
-    string fpath    = 8;
-}
-
-message UpdateConfigSetResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message DeleteConfigSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string cfgsetid = 3;
-    string operator = 4;
-}
-
-message DeleteConfigSetResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message LockConfigSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string cfgsetid = 3;
-    string operator = 4;
-    string memo     = 5;
-}
-
-message LockConfigSetResp {
-    uint64         seq      = 1;
-    common.ErrCode errCode  = 2;
-    string         errMsg   = 3;
-    string         locker   = 4;
-    string         lockTime = 5;
-}
-
-message UnlockConfigSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string cfgsetid = 3;
-    string operator = 4;
-}
-
-message UnlockConfigSetResp{
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CreateConfigsReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    string cfgsetid  = 6;
-    string commitid  = 7;
-    string cid       = 8;
-    string cfgLink   = 9;
-    bytes  content   = 10;
-    string creator   = 11;
-    string memo      = 12;
-    int32  state     = 13;
-    string index     = 14;
-}
-
-message CreateConfigsResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryConfigsReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    string cfgsetid  = 6;
-    string commitid  = 7;
-    string index     = 8;
-}
-
-message QueryConfigsResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    common.Configs configs = 4;
-}
-
-message QueryReleaseConfigsReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    string cfgsetid  = 6;
-    string commitid  = 7;
-    bool   abstract  = 8;
-    string index     = 9;
-}
-
-message QueryReleaseConfigsResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    common.Configs configs = 4;
-}
-
-message QueryConfigsListReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string cfgsetid = 3;
-    string commitid = 4;
-    int32  index    = 5;
-    int32  limit    = 6;
-}
-
-message QueryConfigsListResp {
-    uint64                  seq      = 1;
-    common.ErrCode          errCode  = 2;
-    string                  errMsg   = 3;
-    repeated common.Configs cfgslist = 4;
-}
+message CreateTemplateBindResp {
+    message RespData {
+        string cfg_id = 1;
+    }
 
-message CreateCommitReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string commitid      = 3;
-    string appid         = 4;
-    string cfgsetid      = 5;
-    int32  op            = 6;
-    string operator      = 7;
-    string templateid    = 8;
-    string template      = 9;
-    string templateRule  = 10;
-    bytes  configs       = 11;
-    string changes       = 12;
-    string memo          = 13;
-    int32  state         = 14;
-    string multiCommitid = 15;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
-message CreateCommitResp {
-    uint64         seq      = 1;
-    common.ErrCode errCode  = 2;
-    string         errMsg   = 3;
-    string         commitid = 4;
+message QueryTemplateBindReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string template_id = 3;
+    string app_id      = 4;
+    string cfg_id      = 5;
 }
 
-message QueryCommitReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string commitid = 3;
-    bool   abstract = 4;
+message QueryTemplateBindResp {
+    string              seq     = 1;
+    common.ErrCode      code    = 2;
+    string              message = 3;
+    common.TemplateBind data    = 4;
 }
 
-message QueryCommitResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    common.Commit  commit  = 4;
+message QueryTemplateBindListReq {
+    string      seq         = 1;
+    string      biz_id      = 2;
+    string      template_id = 3;
+    string      app_id      = 4;
+    common.Page page        = 5;
 }
 
-message QueryHistoryCommitsReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string cfgsetid  = 4;
-    string operator  = 5;
-    int32  queryType = 6;
-    int32  index     = 7;
-    int32  limit     = 8;
-}
-
-message QueryHistoryCommitsResp {
-    uint64                 seq     = 1;
-    common.ErrCode         errCode = 2;
-    string                 errMsg  = 3;
-    repeated common.Commit commits = 4;
-}
-
-message UpdateCommitReq {
-    uint64 seq          = 1;
-    string bid          = 2;
-    string commitid     = 3;
-    string templateid   = 4;
-    string template     = 5;
-    string templateRule = 6;
-    bytes  configs      = 7;
-    string changes      = 8;
-    string memo         = 9;
-    string operator     = 10;
-}
-
-message UpdateCommitResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CancelCommitReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string commitid = 3;
-    string operator = 4;
-}
-
-message CancelCommitResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message ConfirmCommitReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string appid    = 3;
-    string cfgsetid = 4;
-    string commitid = 5;
-    string operator = 6;
-}
-
-message ConfirmCommitResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CreateMultiCommitReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string multiCommitid = 3;
-    string appid         = 4;
-    string memo          = 5;
-    string operator      = 6;
-}
-
-message CreateMultiCommitResp {
-    uint64         seq           = 1;
-    common.ErrCode errCode       = 2;
-    string         errMsg        = 3;
-    string         multiCommitid = 4;
-}
-
-message QueryMultiCommitReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string multiCommitid = 3;
-}
-
-message QueryMultiCommitResp {
-    uint64             seq         = 1;
-    common.ErrCode     errCode     = 2;
-    string             errMsg      = 3;
-    common.MultiCommit multiCommit = 4;
-}
-
-message QueryHistoryMultiCommitsReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string operator  = 4;
-    int32  queryType = 5;
-    int32  index     = 6;
-    int32  limit     = 7;
-}
-
-message QueryHistoryMultiCommitsResp {
-    uint64                      seq          = 1;
-    common.ErrCode              errCode      = 2;
-    string                      errMsg       = 3;
-    repeated common.MultiCommit multiCommits = 4;
-}
-
-message QueryMultiCommitSubListReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string multiCommitid = 3;
-}
-
-message QueryMultiCommitSubListResp {
-    uint64          seq       = 1;
-    common.ErrCode  errCode   = 2;
-    string          errMsg    = 3;
-    repeated string commitids = 4;
-}
-
-message UpdateMultiCommitReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string multiCommitid = 3;
-    string memo          = 4;
-    string operator      = 5;
-}
-
-message UpdateMultiCommitResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CancelMultiCommitReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string multiCommitid = 3;
-    string operator      = 4;
-}
-
-message CancelMultiCommitResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message ConfirmMultiCommitReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string multiCommitid = 3;
-    string operator      = 4;
-}
-
-message ConfirmMultiCommitResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CreateReleaseReq {
-    uint64 seq         = 1;
-    string bid         = 2;
-    string releaseid   = 3;
-    string name        = 4;
-    string appid       = 5;
-    string cfgsetid    = 6;
-    string cfgsetName  = 7;
-    string strategyid  = 8;
-    string strategies  = 9;
-    string commitid    = 10;
-    string memo        = 11;
-    string creator     = 12;
-    int32  state       = 13;
-
-    // add fields here.
-    string cfgsetFpath    = 14;
-    string multiReleaseid = 15;
-}
-
-message CreateReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-}
-
-message QueryReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    common.Release release = 4;
-}
-
-message QueryNewestReleasesReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string cfgsetid       = 3;
-    string localReleaseid = 4;
-    int32  index          = 5;
-    int32  limit          = 6;
-}
-
-message QueryNewestReleasesResp {
-    uint64                  seq      = 1;
-    common.ErrCode          errCode  = 2;
-    string                  errMsg   = 3;
-    repeated common.Release releases = 4;
-}
-
-message QueryHistoryReleasesReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string cfgsetid  = 3;
-    string operator  = 4;
-    int32  queryType = 5;
-    int32  index     = 6;
-    int32  limit     = 7;
-
-    // add new fields here.
-    int32 orderType = 8;
-}
-
-message QueryHistoryReleasesResp {
-    uint64                  seq      = 1;
-    common.ErrCode          errCode  = 2;
-    string                  errMsg   = 3;
-    repeated common.Release releases = 4;
-}
-
-message UpdateReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-    string name      = 4;
-    string memo      = 5;
-    string operator  = 6;
-}
-
-message UpdateReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CancelReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-    string operator  = 4;
-}
-
-message CancelReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message RollbackReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-    string operator  = 4;
-}
-
-message RollbackReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message PublishReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string releaseid = 3;
-    string operator  = 4;
-}
-
-message PublishReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CreateMultiReleaseReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string appid          = 3;
-    string multiReleaseid = 4;
-    string name           = 5;
-    string multiCommitid  = 6;
-    string strategyid     = 7;
-    string strategies     = 8;
-    string memo           = 9;
-    string creator        = 10;
-}
-
-message CreateMultiReleaseResp {
-    uint64         seq            = 1;
-    common.ErrCode errCode        = 2;
-    string         errMsg         = 3;
-    string         multiReleaseid = 4;
-}
-
-message QueryMultiReleaseReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string multiReleaseid = 3;
-}
+message QueryTemplateBindListResp {
+    message RespData {
+        uint32                       total_count = 1;
+        repeated common.TemplateBind info        = 2;
+    }
 
-message QueryMultiReleaseResp {
-    uint64              seq          = 1;
-    common.ErrCode      errCode      = 2;
-    string              errMsg       = 3;
-    common.MultiRelease multiRelease = 4;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
-message QueryHistoryMultiReleasesReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string operator  = 4;
-    int32  queryType = 5;
-    int32  orderType = 6;
-    int32  index     = 7;
-    int32  limit     = 8;
+message DeleteTemplateBindReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string template_id = 3;
+    string app_id      = 4;
+    string cfg_id      = 5;
+    string operator    = 6;
 }
 
-message QueryHistoryMultiReleasesResp {
-    uint64                       seq           = 1;
-    common.ErrCode               errCode       = 2;
-    string                       errMsg        = 3;
-    repeated common.MultiRelease multiReleases = 4;
+message DeleteTemplateBindResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
-message UpdateMultiReleaseReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string multiReleaseid = 3;
+message CreateConfigTemplateReq {
+    string seq            = 1;
+    string template_id    = 2;
+    string biz_id         = 3;
     string name           = 4;
-    string memo           = 5;
-    string operator       = 6;
+    string file_name      = 5;
+    string file_path      = 6;
+    string user           = 7;
+    string user_group     = 8;
+    string file_privilege = 9;
+    string file_format    = 10;
+    int32  file_mode      = 11;
+    int32  engine_type    = 12;
+    string memo           = 13;
+    int32  state          = 14;
+    string creator        = 15;
 }
 
-message UpdateMultiReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+message CreateConfigTemplateResp {
+    message RespData {
+        string template_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
-message QueryMultiReleaseSubListReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string multiReleaseid = 3;
+message QueryConfigTemplateReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string template_id = 3;
 }
 
-message QueryMultiReleaseSubListResp {
-    uint64          seq        = 1;
-    common.ErrCode  errCode    = 2;
-    string          errMsg     = 3;
-    repeated string releaseids = 4;
+message QueryConfigTemplateResp {
+    string                seq     = 1;
+    common.ErrCode        code    = 2;
+    string                message = 3;
+    common.ConfigTemplate data    = 4;
 }
 
-message CancelMultiReleaseReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string multiReleaseid = 3;
-    string operator       = 4;
+message QueryConfigTemplateListReq {
+    string      seq    = 1;
+    string      biz_id = 2;
+    common.Page page   = 3;
 }
 
-message CancelMultiReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+message QueryConfigTemplateListResp {
+    message RespData {
+        uint32                         total_count = 1;
+        repeated common.ConfigTemplate info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
-message PublishMultiReleaseReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string multiReleaseid = 3;
-    string operator       = 4;
+message UpdateConfigTemplateReq {
+    string seq            = 1;
+    string biz_id         = 2;
+    string template_id    = 3;
+    string name           = 4;
+    string file_name      = 5;
+    string file_path      = 6;
+    string user           = 7;
+    string user_group     = 8;
+    string file_privilege = 9;
+    string file_format    = 10;
+    int32  file_mode      = 11;
+    int32  engine_type    = 12;
+    string memo           = 13;
+    int32  state          = 14;
+    string operator       = 15;
 }
 
-message PublishMultiReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+message UpdateConfigTemplateResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
-message RollbackMultiReleaseReq {
-    uint64 seq            = 1;
-    string bid            = 2;
-    string multiReleaseid = 3;
-    string operator       = 4;
+message DeleteConfigTemplateReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string template_id = 3;
+    string operator    = 4;
 }
 
-message RollbackMultiReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+message DeleteConfigTemplateResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
-message CreateAppInstanceReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    string dc        = 6;
-    string IP        = 7;
-    string labels    = 8;
-    int32  state     = 9;
+message CreateConfigTemplateVersionReq {
+    string seq          = 1;
+    string version_id   = 2;
+    string biz_id       = 3;
+    string template_id  = 4;
+    string version_tag  = 5;
+    string content_id   = 6;
+    uint32 content_size = 7;
+    string memo         = 8;
+    int32  state        = 9;
+    string creator      = 10;
 }
 
-message CreateAppInstanceResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+message CreateConfigTemplateVersionResp {
+    message RespData {
+        string version_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
-message QueryHistoryAppInstancesReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    int32  queryType = 6;
-    int32  index     = 7;
-    int32  limit     = 8;
+message QueryConfigTemplateVersionReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string version_id = 3;
 }
 
-message QueryHistoryAppInstancesResp {
-    uint64                      seq       = 1;
-    common.ErrCode              errCode   = 2;
-    string                      errMsg    = 3;
-    repeated common.AppInstance instances = 4;
+message QueryConfigTemplateVersionResp {
+    string                       seq     = 1;
+    common.ErrCode               code    = 2;
+    string                       message = 3;
+    common.ConfigTemplateVersion data    = 4;
 }
 
-message QueryReachableAppInstancesReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    int32  index     = 6;
-    int32  limit     = 7;
+message QueryConfigTemplateVersionListReq {
+    string      seq         = 1;
+    string      biz_id      = 2;
+    string      template_id = 3;
+    common.Page page        = 4;
 }
 
-message QueryReachableAppInstancesResp {
-    uint64                      seq       = 1;
-    common.ErrCode              errCode   = 2;
-    string                      errMsg    = 3;
-    repeated common.AppInstance instances = 4;
+message QueryConfigTemplateVersionListResp {
+    message RespData {
+        uint32                                total_count = 1;
+        repeated common.ConfigTemplateVersion info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
-message UpdateAppInstanceReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    string dc        = 6;
-    string IP        = 7;
-    string labels    = 8;
-    int32  state     = 9;
+message UpdateConfigTemplateVersionReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string version_id   = 3;
+    string content_id   = 4;
+    uint32 content_size = 5;
+    string memo         = 6;
+    int32  state        = 7;
+    string operator     = 8;
 }
 
-message UpdateAppInstanceResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+message UpdateConfigTemplateVersionResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
-message CreateAppInstanceReleaseReq {
-    uint64                     seq       = 1;
-    string                     bid       = 2;
-    string                     appid     = 3;
-    string                     clusterid = 4;
-    string                     zoneid    = 5;
-    string                     dc        = 6;
-    string                     IP        = 7;
-    string                     labels    = 8;
-    repeated common.ReportInfo infos     = 9;
-}
-
-message CreateAppInstanceReleaseResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryAppInstanceReleaseReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    string dc        = 6;
-    string IP        = 7;
-    string cfgsetid  = 8;
-}
-
-message QueryAppInstanceReleaseResp {
-    uint64         seq       = 1;
-    common.ErrCode errCode   = 2;
-    string         errMsg    = 3;
-    string         releaseid = 4;
-    string         commitid  = 5;
-    string         cid       = 6;
-    string         cfgLink   = 7;
-    bytes          content   = 8;
-}
-
-message QueryMatchedAppInstancesReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string appid      = 3;
-    string strategyid = 4;
-    int32  index      = 5;
-    int32  limit      = 6;
-}
-
-message QueryMatchedAppInstancesResp {
-    uint64                      seq       = 1;
-    common.ErrCode              errCode   = 2;
-    string                      errMsg    = 3;
-    repeated common.AppInstance instances = 4;
-}
-
-message QueryEffectedAppInstancesReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string cfgsetid  = 3;
-    string releaseid = 4;
-    int32  index     = 5;
-    int32  limit     = 6;
-}
-
-message QueryEffectedAppInstancesResp {
-    uint64                      seq       = 1;
-    common.ErrCode              errCode   = 2;
-    string                      errMsg    = 3;
-    repeated common.AppInstance instances = 4;
-}
-
-message CreateStrategyReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string appid      = 3;
-    string strategyid = 4;
-    string name       = 5;
-    string content    = 6;
-    string memo       = 7;
-    string creator    = 8;
-}
-
-message CreateStrategyResp {
-    uint64         seq        = 1;
-    common.ErrCode errCode    = 2;
-    string         errMsg     = 3;
-    string         strategyid = 4;
-}
-
-message QueryStrategyReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string appid      = 3;
-    string strategyid = 4;
-    string name       = 5;
-}
-
-message QueryStrategyResp {
-    uint64          seq      = 1;
-    common.ErrCode  errCode  = 2;
-    string          errMsg   = 3;
-    common.Strategy strategy = 4;
-}
-
-message QueryStrategyListReq {
-    uint64 seq     = 1;
-    string bid     = 2;
-    string appid   = 3;
-    string appName = 4;
-    int32  index   = 5;
-    int32  limit   = 6;
-}
-
-message QueryStrategyListResp {
-    uint64                   seq        = 1;
-    common.ErrCode           errCode    = 2;
-    string                   errMsg     = 3;
-    repeated common.Strategy strategies = 4;
-}
-
-message DeleteStrategyReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string strategyid = 3;
+message DeleteConfigTemplateVersionReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string version_id = 3;
     string operator   = 4;
 }
 
+message DeleteConfigTemplateVersionResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateConfigReq {
+    string seq            = 1;
+    string biz_id         = 2;
+    string app_id         = 3;
+    string cfg_id         = 4;
+    string name           = 5;
+    string fpath          = 6;
+    string user           = 7;
+    string user_group     = 8;
+    string file_privilege = 9;
+    string file_format    = 10;
+    int32  file_mode      = 11;
+    int32  state          = 12;
+    string creator        = 13;
+    string memo           = 14;
+}
+
+message CreateConfigResp {
+    message RespData {
+        string cfg_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryConfigReq {
+    string seq    = 1;
+    string biz_id = 2;
+    string app_id = 3;
+    string cfg_id = 4;
+    string name   = 5;
+    string fpath  = 6;
+}
+
+message QueryConfigResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    common.Config  data    = 4;
+}
+
+message QueryConfigListReq {
+    string      seq      = 1;
+    string      biz_id   = 2;
+    string      app_id   = 3;
+    string      app_name = 4;
+    common.Page page     = 5;
+}
+
+message QueryConfigListResp {
+    message RespData {
+        uint32                 total_count = 1;
+        repeated common.Config info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message UpdateConfigReq {
+    string seq            = 1;
+    string biz_id         = 2;
+    string cfg_id         = 3;
+    string name           = 4;
+    string fpath          = 5;
+    string user           = 6;
+    string user_group     = 7;
+    string file_privilege = 8;
+    string file_format    = 9;
+    int32  file_mode      = 10;
+    string memo           = 11;
+    int32  state          = 12;
+    string operator       = 13;
+}
+
+message UpdateConfigResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message DeleteConfigReq {
+    string seq      = 1;
+    string biz_id   = 2;
+    string cfg_id   = 3;
+    string operator = 4;
+}
+
+message DeleteConfigResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateConfigContentReq {
+    string seq          = 1;
+    string biz_id       = 2;
+    string app_id       = 3;
+    string cfg_id       = 4;
+    string commit_id    = 5;
+    string index        = 6;
+    string content_id   = 7;
+    uint32 content_size = 8;
+    string creator      = 9;
+    string memo         = 10;
+    int32  state        = 11;
+}
+
+message CreateConfigContentResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message QueryConfigContentReq {
+    string              seq       = 1;
+    string              biz_id    = 2;
+    string              app_id    = 3;
+    string              cfg_id    = 4;
+    string              commit_id = 5;
+    map<string, string> labels    = 6;
+}
+
+message QueryConfigContentResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    common.Content data    = 4;
+}
+
+message QueryReleaseConfigContentReq {
+    string              seq       = 1;
+    string              biz_id    = 2;
+    string              app_id    = 3;
+    string              cloud_id  = 4;
+    string              ip        = 5;
+    string              path      = 6;
+    map<string, string> labels    = 7;
+    string              cfg_id    = 8;
+    string              commit_id = 9;
+}
+
+message QueryReleaseConfigContentResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    common.Content data    = 4;
+}
+
+message QueryConfigContentListReq {
+    string      seq       = 1;
+    string      biz_id    = 2;
+    string      app_id    = 3;
+    string      cfg_id    = 4;
+    string      commit_id = 5;
+    common.Page page      = 6;
+}
+
+message QueryConfigContentListResp {
+    message RespData {
+        uint32                  total_count = 1;
+        repeated common.Content info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message CreateCommitReq {
+    string seq             = 1;
+    string biz_id          = 2;
+    string app_id          = 3;
+    string commit_id       = 4;
+    string cfg_id          = 5;
+    int32  commit_mode     = 6;
+    string operator        = 7;
+    string multi_commit_id = 8;
+    string memo            = 9;
+    int32  state           = 10;
+}
+
+message CreateCommitResp {
+    message RespData {
+        string commit_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryCommitReq {
+    string seq       = 1;
+    string biz_id    = 2;
+    string commit_id = 3;
+}
+
+message QueryCommitResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    common.Commit  data    = 4;
+}
+
+message QueryHistoryCommitsReq {
+    string      seq        = 1;
+    string      biz_id     = 2;
+    string      app_id     = 3;
+    string      cfg_id     = 4;
+    string      operator   = 5;
+    int32       query_type = 6;
+    common.Page page       = 7;
+}
+
+message QueryHistoryCommitsResp {
+    message RespData {
+        uint32                 total_count = 1;
+        repeated common.Commit info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message UpdateCommitReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string commit_id   = 3;
+    int32  commit_mode = 4;
+    string operator    = 5;
+    string memo        = 6;
+}
+
+message UpdateCommitResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CancelCommitReq {
+    string seq       = 1;
+    string biz_id    = 2;
+    string commit_id = 3;
+    string operator  = 4;
+}
+
+message CancelCommitResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message ConfirmCommitReq {
+    string seq       = 1;
+    string biz_id    = 2;
+    string commit_id = 3;
+    string operator  = 4;
+}
+
+message ConfirmCommitResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateMultiCommitWithContentReq {
+    string                                    seq             = 1;
+    string                                    biz_id          = 2;
+    string                                    app_id          = 3;
+    string                                    multi_commit_id = 4;
+    string                                    memo            = 5;
+    string                                    operator        = 6;
+    repeated common.CommitMetadataWithContent metadatas       = 7;
+}
+
+message CreateMultiCommitWithContentResp {
+    message RespData {
+        string multi_commit_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message CreateMultiCommitReq {
+    string                         seq             = 1;
+    string                         biz_id          = 2;
+    string                         app_id          = 3;
+    string                         multi_commit_id = 4;
+    string                         memo            = 5;
+    string                         operator        = 6;
+    repeated common.CommitMetadata metadatas       = 7;
+}
+
+message CreateMultiCommitResp {
+    message RespData {
+        string multi_commit_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryMultiCommitReq {
+    string seq             = 1;
+    string biz_id          = 2;
+    string multi_commit_id = 3;
+}
+
+message QueryMultiCommitResp {
+    string             seq     = 1;
+    common.ErrCode     code    = 2;
+    string             message = 3;
+    common.MultiCommit data    = 4;
+}
+
+message QueryHistoryMultiCommitsReq {
+    string      seq        = 1;
+    string      biz_id     = 2;
+    string      app_id     = 3;
+    string      operator   = 4;
+    int32       query_type = 5;
+    common.Page page       = 6;
+}
+
+message QueryHistoryMultiCommitsResp {
+    message RespData {
+        uint32                      total_count = 1;
+        repeated common.MultiCommit info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryMultiCommitSubListReq {
+    string seq             = 1;
+    string biz_id          = 2;
+    string multi_commit_id = 3;
+}
+
+message QueryMultiCommitSubListResp {
+    message RespData {
+        repeated string commit_ids = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message UpdateMultiCommitReq {
+    string seq             = 1;
+    string biz_id          = 2;
+    string multi_commit_id = 3;
+    string memo            = 4;
+    string operator        = 5;
+}
+
+message UpdateMultiCommitResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CancelMultiCommitReq {
+    string seq             = 1;
+    string biz_id          = 2;
+    string multi_commit_id = 3;
+    string operator        = 4;
+}
+
+message CancelMultiCommitResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message ConfirmMultiCommitReq {
+    string seq             = 1;
+    string biz_id          = 2;
+    string multi_commit_id = 3;
+    string operator        = 4;
+}
+
+message ConfirmMultiCommitResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string release_id       = 3;
+    string name             = 4;
+    string app_id           = 5;
+    string cfg_id           = 6;
+    string cfg_name         = 7;
+    string cfg_fpath        = 8;
+    string user             = 9;
+    string user_group       = 10;
+    string file_privilege   = 11;
+    string file_format      = 12;
+    int32  file_mode        = 13;
+    string strategy_id      = 14;
+    string strategies       = 15;
+    string commit_id        = 16;
+    string multi_release_id = 17;
+    string memo             = 18;
+    string creator          = 19;
+    int32  state            = 20;
+}
+
+message CreateReleaseResp {
+    message RespData {
+        string release_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryReleaseReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+}
+
+message QueryReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    common.Release data    = 4;
+}
+
+message QueryNewestReleasesReq {
+    string      seq              = 1;
+    string      biz_id           = 2;
+    string      cfg_id           = 3;
+    string      local_release_id = 4;
+    common.Page page             = 5;
+}
+
+message QueryNewestReleasesResp {
+    message RespData {
+        repeated common.Release info = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryHistoryReleasesReq {
+    string      seq        = 1;
+    string      biz_id     = 2;
+    string      cfg_id     = 3;
+    string      operator   = 4;
+    int32       query_type = 5;
+    int32       order_type = 6;
+    common.Page page       = 7;
+}
+
+message QueryHistoryReleasesResp {
+    message RespData {
+        uint32                  total_count = 1;
+        repeated common.Release info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message UpdateReleaseReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string name       = 4;
+    string memo       = 5;
+    string operator   = 6;
+}
+
+message UpdateReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CancelReleaseReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
+}
+
+message CancelReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message RollbackReleaseReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
+}
+
+message RollbackReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message PublishReleaseReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
+}
+
+message PublishReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateMultiReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string app_id           = 3;
+    string multi_release_id = 4;
+    string name             = 5;
+    string multi_commit_id  = 6;
+    string strategy_id      = 7;
+    string strategies       = 8;
+    string memo             = 9;
+    string creator          = 10;
+}
+
+message CreateMultiReleaseResp {
+    message RespData {
+        string multi_release_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryMultiReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string multi_release_id = 3;
+}
+
+message QueryMultiReleaseResp {
+    string              seq     = 1;
+    common.ErrCode      code    = 2;
+    string              message = 3;
+    common.MultiRelease data    = 4;
+}
+
+message QueryHistoryMultiReleasesReq {
+    string      seq        = 1;
+    string      biz_id     = 2;
+    string      app_id     = 3;
+    string      operator   = 4;
+    int32       query_type = 5;
+    int32       order_type = 6;
+    common.Page page       = 7;
+}
+
+message QueryHistoryMultiReleasesResp {
+    message RespData {
+        uint32                       total_count = 1;
+        repeated common.MultiRelease info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message UpdateMultiReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string multi_release_id = 3;
+    string name             = 4;
+    string memo             = 5;
+    string operator         = 6;
+}
+
+message UpdateMultiReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message QueryMultiReleaseSubListReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string multi_release_id = 3;
+}
+
+message QueryMultiReleaseSubListResp {
+    message RespData {
+        repeated string release_ids = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message CancelMultiReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string multi_release_id = 3;
+    string operator         = 4;
+}
+
+message CancelMultiReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message PublishMultiReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string multi_release_id = 3;
+    string operator         = 4;
+}
+
+message PublishMultiReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message RollbackMultiReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string multi_release_id = 3;
+    string operator         = 4;
+}
+
+message RollbackMultiReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateAppInstanceReq {
+    string seq       = 1;
+    string biz_id    = 2;
+    string app_id    = 3;
+    string cloud_id  = 4;
+    string ip        = 5;
+    string path      = 6;
+    string labels    = 7;
+    int32  state     = 8;
+}
+
+message CreateAppInstanceResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message QueryHistoryAppInstancesReq {
+    string                    seq        = 1;
+    string                    biz_id     = 2;
+    string                    app_id     = 3;
+    repeated common.LabelsMap labels_or  = 4;
+    repeated common.LabelsMap labels_and = 5;
+    int32                     query_type = 6;
+    common.Page               page       = 7;
+}
+
+message QueryHistoryAppInstancesResp {
+    message RespData {
+        uint32                      total_count = 1;
+        repeated common.AppInstance info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryReachableAppInstancesReq {
+    string                    seq        = 1;
+    string                    biz_id     = 2;
+    string                    app_id     = 3;
+    repeated common.LabelsMap labels_or  = 4;
+    repeated common.LabelsMap labels_and = 5;
+    common.Page               page       = 6;
+}
+
+message QueryReachableAppInstancesResp {
+    message RespData {
+        uint32                      total_count = 1;
+        repeated common.AppInstance info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message UpdateAppInstanceReq {
+    string seq      = 1;
+    string biz_id   = 2;
+    string app_id   = 3;
+    string cloud_id = 4;
+    string ip       = 5;
+    string path     = 6;
+    string labels   = 7;
+    int32  state    = 8;
+}
+
+message UpdateAppInstanceResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message CreateAppInstanceReleaseReq {
+    string                     seq      = 1;
+    string                     biz_id   = 2;
+    string                     app_id   = 3;
+    string                     cloud_id = 4;
+    string                     ip       = 5;
+    string                     path     = 6;
+    string                     labels   = 7;
+    repeated common.ReportInfo infos    = 8;
+}
+
+message CreateAppInstanceReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message QueryAppInstanceReleaseReq {
+    string seq      = 1;
+    string biz_id   = 2;
+    string app_id   = 3;
+    string cloud_id = 4;
+    string ip       = 5;
+    string path     = 6;
+    string cfg_id   = 7;
+}
+
+message QueryAppInstanceReleaseResp {
+    message RespData {
+        string content_id       = 1;
+        uint32 content_size     = 2;
+        string release_id       = 3;
+        string commit_id        = 4;
+        string multi_release_id = 5;
+        string multi_commit_id  = 6;
+        string release_name     = 7;
+        string memo             = 8;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryMatchedAppInstancesReq {
+    string      seq         = 1;
+    string      biz_id      = 2;
+    string      app_id      = 3;
+    string      strategy_id = 4;
+    common.Page page        = 5;
+}
+
+message QueryMatchedAppInstancesResp {
+    message RespData {
+        uint32                      total_count = 1;
+        repeated common.AppInstance info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryEffectedAppInstancesReq {
+    string      seq        = 1;
+    string      biz_id     = 2;
+    string      cfg_id     = 3;
+    string      release_id = 4;
+    common.Page page       = 5;
+}
+
+message QueryEffectedAppInstancesResp {
+    message RespData {
+        uint32                             total_count = 1;
+        repeated common.AppInstanceRelease info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message CreateStrategyReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string app_id      = 3;
+    string strategy_id = 4;
+    string name        = 5;
+    string content     = 6;
+    string memo        = 7;
+    string creator     = 8;
+}
+
+message CreateStrategyResp {
+    message RespData {
+        string strategy_id = 1;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message QueryStrategyReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string app_id      = 3;
+    string strategy_id = 4;
+    string name        = 5;
+}
+
+message QueryStrategyResp {
+    string          seq     = 1;
+    common.ErrCode  code    = 2;
+    string          message = 3;
+    common.Strategy data    = 4;
+}
+
+message QueryStrategyListReq {
+    string      seq      = 1;
+    string      biz_id   = 2;
+    string      app_id   = 3;
+    string      app_name = 4;
+    common.Page page     = 5;
+}
+
+message QueryStrategyListResp {
+    message RespData {
+        uint32                   total_count = 1;
+        repeated common.Strategy info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message DeleteStrategyReq {
+    string seq         = 1;
+    string biz_id      = 2;
+    string strategy_id = 3;
+    string operator    = 4;
+}
+
 message DeleteStrategyResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message CreateProcAttrReq {
-    uint64 seq       = 1;
-    string cloudid   = 2;
-    string IP        = 3;
-    string bid       = 4;
-    string appid     = 5;
-    string clusterid = 6;
-    string zoneid    = 7;
-    string dc        = 8;
-    string labels    = 9;
-    string path      = 10;
-    string creator   = 11;
-    string memo      = 12;
+    string seq      = 1;
+    string cloud_id = 2;
+    string ip       = 3;
+    string biz_id   = 4;
+    string app_id   = 5;
+    string labels   = 6;
+    string path     = 7;
+    string creator  = 8;
+    string memo     = 9;
 }
 
 message CreateProcAttrResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message QueryHostProcAttrReq {
-    uint64 seq     = 1;
-    string cloudid = 2;
-    string IP      = 3;
-    string bid     = 4;
-    string appid   = 5;
-    string path    = 6;
+    string seq      = 1;
+    string cloud_id = 2;
+    string ip       = 3;
+    string biz_id   = 4;
+    string app_id   = 5;
+    string path     = 6;
 }
 
 message QueryHostProcAttrResp {
-    uint64          seq      = 1;
-    common.ErrCode  errCode  = 2;
-    string          errMsg   = 3;
-    common.ProcAttr procAttr = 4;
+    string          seq     = 1;
+    common.ErrCode  code    = 2;
+    string          message = 3;
+    common.ProcAttr data    = 4;
 }
 
 message QueryHostProcAttrListReq {
-    uint64 seq     = 1;
-    string cloudid = 2;
-    string IP      = 3;
-    int32  index   = 4;
-    int32  limit   = 5;
+    string      seq      = 1;
+    string      cloud_id = 2;
+    string      ip       = 3;
+    common.Page page     = 4;
 }
 
 message QueryHostProcAttrListResp {
-    uint64                   seq       = 1;
-    common.ErrCode           errCode   = 2;
-    string                   errMsg    = 3;
-    repeated common.ProcAttr procAttrs = 4;
+    message RespData {
+        uint32                   total_count = 1;
+        repeated common.ProcAttr info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
 message QueryAppProcAttrListReq {
-    uint64 seq       = 1;
-    string bid       = 2;
-    string appid     = 3;
-    string clusterid = 4;
-    string zoneid    = 5;
-    int32  index     = 6;
-    int32  limit     = 7;
+    string      seq    = 1;
+    string      biz_id = 2;
+    string      app_id = 3;
+    common.Page page   = 4;
 }
 
 message QueryAppProcAttrListResp {
-    uint64                   seq       = 1;
-    common.ErrCode           errCode   = 2;
-    string                   errMsg    = 3;
-    repeated common.ProcAttr procAttrs = 4;
+    message RespData {
+        uint32                   total_count = 1;
+        repeated common.ProcAttr info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
 message UpdateProcAttrReq {
-    uint64 seq       = 1;
-    string cloudid   = 2;
-    string IP        = 3;
-    string bid       = 4;
-    string appid     = 5;
-    string clusterid = 6;
-    string zoneid    = 7;
-    string dc        = 8;
-    string labels    = 9;
-    string path      = 10;
-    string memo      = 11;
-    string operator  = 12;
+    string seq      = 1;
+    string cloud_id = 2;
+    string ip       = 3;
+    string biz_id   = 4;
+    string app_id   = 5;
+    string path     = 6;
+    string labels   = 7;
+    string memo     = 8;
+    string operator = 9;
 }
 
 message UpdateProcAttrResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message DeleteProcAttrReq {
-    uint64 seq      = 1;
-    string cloudid  = 2;
-    string IP       = 3;
-    string bid      = 4;
-    string appid    = 5;
-    string path     = 6;
-    string operator = 7;
+    string seq       = 1;
+    string cloud_id  = 2;
+    string ip        = 3;
+    string biz_id    = 4;
+    string app_id    = 5;
+    string path      = 6;
+    string operator  = 7;
 }
 
 message DeleteProcAttrResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message InitShardingDBReq {
+    string seq = 1;
+}
+
+message InitShardingDBResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message CreateShardingDBReq {
-    uint64 seq      = 1;
-    string dbid     = 2;
+    string seq      = 1;
+    string db_id    = 2;
     string host     = 3;
     int32  port     = 4;
     string user     = 5;
@@ -1434,37 +1502,43 @@ message CreateShardingDBReq {
 }
 
 message CreateShardingDBResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message QueryShardingDBReq {
-    uint64 seq  = 1;
-    string dbid = 2;
+    string seq   = 1;
+    string db_id = 2;
 }
 
 message QueryShardingDBResp {
-    uint64            seq        = 1;
-    common.ErrCode    errCode    = 2;
-    string            errMsg     = 3;
-    common.ShardingDB shardingDB = 4;
+    string            seq     = 1;
+    common.ErrCode    code    = 2;
+    string            message = 3;
+    common.ShardingDB data    = 4;
 }
 
 message QueryShardingDBListReq {
-    uint64 seq  = 1;
+    string      seq  = 1;
+    common.Page page = 2;
 }
 
 message QueryShardingDBListResp {
-    uint64                     seq         = 1;
-    common.ErrCode             errCode     = 2;
-    string                     errMsg      = 3;
-    repeated common.ShardingDB shardingDBs = 4;
+    message RespData {
+        uint32                     total_count = 1;
+        repeated common.ShardingDB info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
 }
 
 message UpdateShardingDBReq {
-    uint64 seq      = 1;
-    string dbid     = 2;
+    string seq      = 1;
+    string db_id    = 2;
     string host     = 3;
     int32  port     = 4;
     string user     = 5;
@@ -1474,487 +1548,99 @@ message UpdateShardingDBReq {
 }
 
 message UpdateShardingDBResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message CreateShardingReq {
-    uint64 seq    = 1;
-    string key    = 2;
-    string dbid   = 3;
-    string dbname = 4;
-    string memo   = 5;
-    int32  state  = 6;
+    string seq     = 1;
+    string key     = 2;
+    string db_id   = 3;
+    string db_name = 4;
+    string memo    = 5;
+    int32  state   = 6;
 }
 
 message CreateShardingResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message QueryShardingReq {
-    uint64 seq = 1;
+    string seq = 1;
     string key = 2;
 }
 
 message QueryShardingResp {
-    uint64          seq      = 1;
-    common.ErrCode  errCode  = 2;
-    string          errMsg   = 3;
-    common.Sharding sharding = 4;
+    string          seq     = 1;
+    common.ErrCode  code    = 2;
+    string          message = 3;
+    common.Sharding data    = 4;
 }
 
 message UpdateShardingReq {
-    uint64 seq    = 1;
-    string key    = 2;
-    string dbid   = 3;
-    string dbname = 4;
-    string memo   = 5;
-    int32  state  = 6;
+    string seq     = 1;
+    string key     = 2;
+    string db_id   = 3;
+    string db_name = 4;
+    string memo    = 5;
+    int32  state   = 6;
 }
 
 message UpdateShardingResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message CreateAuditReq {
-    uint64 seq        = 1;
-    int32  sourceType = 2;
-	int32  opType     = 3;
-	string bid        = 4;
-	string sourceid   = 5;
-	string operator   = 6;
-	string memo       = 7;
-	int32  state      = 8;
+    string seq         = 1;
+    int32  source_type = 2;
+	int32  op_type     = 3;
+	string biz_id      = 4;
+	string source_id   = 5;
+	string operator    = 6;
+	string memo        = 7;
+	int32  state       = 8;
 }
 
 message CreateAuditResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message CreateConfigTemplateSetReq {
-    uint64 seq     = 1;
-    string bid     = 2;
-    string setid   = 3;
-    string name    = 4;
-    string memo    = 5;
-    string fpath   = 6;
-    int32  state   = 7;
-    string creator = 8;
-}
-
-message CreateConfigTemplateSetResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    string         setid   = 4;
-}
-
-message DeleteConfigTemplateSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string setid    = 3;
-    string operator = 4;
-}
-
-message DeleteConfigTemplateSetResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message UpdateConfigTemplateSetReq {
-    uint64 seq      = 1;
-    string bid      = 2;
-    string setid    = 3;
-    string name     = 4;
-    string memo     = 5;
-    int32  state    = 6;
-    string operator = 7;
-}
-
-message UpdateConfigTemplateSetResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryConfigTemplateSetReq {
-    uint64 seq   = 1;
-    string bid   = 2;
-    string setid = 3;
-}
-
-message QueryConfigTemplateSetResp {
-    uint64                   seq         = 1;
-    common.ErrCode           errCode     = 2;
-    string                   errMsg      = 3;
-    common.ConfigTemplateSet templateSet = 4;
-}
-
-message QueryConfigTemplateSetListReq {
-    uint64 seq   = 1;
-    string bid   = 2;
-    int32  index = 3;
-    int32  limit = 4;
-}
-
-message QueryConfigTemplateSetListResp {
-    uint64         seq                             = 1;
-    common.ErrCode errCode                         = 2;
-    string         errMsg                          = 3;
-    repeated common.ConfigTemplateSet templateSets = 4;
-}
-
-message CreateConfigTemplateReq {
-    uint64 seq          = 1;
-    string bid          = 2;
-    string setid        = 3;
-    string templateid   = 4;
-    string name         = 5;
-    string memo         = 6;
-    string fpath        = 7;
-    string user         = 8;
-    string group        = 9;
-    int32  permission   = 10;
-    string fileEncoding = 11;
-    int32  engineType   = 12;
-    int32  state        = 13;
-    string creator      = 14;
-}
-
-message CreateConfigTemplateResp {
-    uint64         seq        = 1;
-    common.ErrCode errCode    = 2;
-    string         errMsg     = 3;
-    string         templateid = 4;
-}
-
-message DeleteConfigTemplateReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string templateid = 4;
-    string operator   = 5;
-}
-
-message DeleteConfigTemplateResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message UpdateConfigTemplateReq {
-    uint64 seq          = 1;
-    string bid          = 2;
-    string templateid   = 3;
-    string name         = 4;
-    string memo         = 5;
-    string user         = 6;
-    string group        = 7;
-    int32  permission   = 8;
-    string fileEncoding = 9;
-    int32  state        = 10;
-    string operator     = 11;
-}
-
-message UpdateConfigTemplateResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryConfigTemplateReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string templateid = 3;
-}
-
-message QueryConfigTemplateResp {
-    uint64                seq            = 1;
-    common.ErrCode        errCode        = 2;
-    string                errMsg         = 3;
-    common.ConfigTemplate configTemplate = 4;
-}
-
-message QueryConfigTemplateListReq {
-    uint64 seq   = 1;
-    string bid   = 2;
-    string setid = 3;
-    int32  index = 4;
-    int32  limit = 5;
-}
-
-message QueryConfigTemplateListResp {
-    uint64         seq                             = 1;
-    common.ErrCode errCode                         = 2;
-    string         errMsg                          = 3;
-    repeated common.ConfigTemplate configTemplates = 4;
-}
-
-message CreateTemplateVersionReq {
-    uint64 seq         = 1;
-    string bid         = 2;
-    string templateid  = 3;
-    string versionid   = 4;
-    string versionName = 5;
-    string memo        = 6;
-    string content     = 7;
-    int32  state       = 8;
-    string creator     = 9;
-}
-
-message CreateTemplateVersionResp {
-    uint64         seq       = 1;
-    common.ErrCode errCode   = 2;
-    string         errMsg    = 3;
-    string         versionid = 4;
-}
-
-message DeleteTemplateVersionReq {
-    uint64 seq         = 1;
-    string bid         = 2;
-    string versionid   = 3;
-    string operator    = 4;
-}
-
-message DeleteTemplateVersionResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message UpdateTemplateVersionReq {
-    uint64 seq         = 1;
-    string bid         = 2;
-    string versionid   = 3;
-    string versionName = 4;
-    string memo        = 5;
-    string content     = 6;
-    int32  state       = 7;
-    string operator    = 8;
-}
-
-message UpdateTemplateVersionResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryTemplateVersionReq {
-    uint64 seq         = 1;
-    string bid         = 2;
-    string versionid   = 3;
-}
-
-message QueryTemplateVersionResp {
-    uint64                 seq             = 1;
-    common.ErrCode         errCode         = 2;
-    string                 errMsg          = 3;
-    common.TemplateVersion templateVersion = 4;
-}
-
-message QueryTemplateVersionListReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string templateid = 3;
-    int32  index      = 4;
-    int32  limit      = 5;
-}
-
-message QueryTemplateVersionListResp {
-    uint64         seq                               = 1;
-    common.ErrCode errCode                           = 2;
-    string         errMsg                            = 3;
-    repeated common.TemplateVersion templateVersions = 4;
-}
-
-message CreateConfigTemplateBindingReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string templateid    = 3;
-    string appid         = 4;
-    string versionid     = 5;
-    string cfgsetid      = 6;
-    string commitid      = 7;
-    string bindingParams = 8;
-    int32  state         = 9;
-    string creator       = 10;
-}
-
-message CreateConfigTemplateBindingResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message DeleteConfigTemplateBindingReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string templateid = 3;
-    string appid      = 4;
-    string operator   = 5;
-}
-
-message DeleteConfigTemplateBindingResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message UpdateConfigTemplateBindingReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string templateid    = 3;
-    string appid         = 4;
-    string versionid     = 5;
-    string commitid      = 6;
-    string bindingParams = 7;
-    int32  state         = 8;
-    string operator      = 9;
-}
-
-message UpdateConfigTemplateBindingResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryConfigTemplateBindingReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string templateid = 3;
-    string appid      = 4;
-}
-
-message QueryConfigTemplateBindingResp {
-    uint64                       seq                   = 1;
-    common.ErrCode               errCode               = 2;
-    string                       errMsg                = 3;
-    common.ConfigTemplateBinding configTemplateBinding = 4;
-}
-
-message QueryConfigTemplateBindingListReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    string templateid = 3;
-    string appid      = 4;
-    int32  index      = 5;
-    int32  limit      = 6;
-}
-
-message QueryConfigTemplateBindingListResp {
-    uint64         seq                                           = 1;
-    common.ErrCode errCode                                       = 2;
-    string         errMsg                                        = 3;
-    repeated common.ConfigTemplateBinding configTemplateBindings = 4;
-}
-
-message CreateVariableReq {
-    uint64 seq           = 1;
-    string vid           = 2;
-    string bid           = 3;
-    string cluster       = 4;
-    string clusterLabels = 5;
-    string zone          = 6;
-    int32  type          = 7;
-    string key           = 8;
-    string value         = 9;
-    string memo          = 10;
-    int32  state         = 11;
-    string creator       = 12;
-}
-
-message CreateVariableResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-    string         vid     = 4;
-}
-
-message UpdateVariableReq {
-    uint64 seq      = 1;
-    string vid      = 2;
-    string bid      = 3;
-    int32  type     = 4;
-    string key      = 5;
-    string value    = 6;
-    string memo     = 7;
-    int32  state    = 8;
-    string operator = 9;
-}
-
-message UpdateVariableResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message DeleteVariableReq {
-    uint64 seq      = 1;
-    string vid      = 2;
-    string bid      = 3;
-    int32  type     = 4;
-    string operator = 5;
-}
-
-message DeleteVariableResp {
-    uint64         seq     = 1;
-    common.ErrCode errCode = 2;
-    string         errMsg  = 3;
-}
-
-message QueryVariableReq {
-    uint64 seq     = 1;
-    string vid     = 2;
-    string bid     = 3;
-    int32  type    = 4;
-}
-
-message QueryVariableResp {
-    uint64          seq     = 1;
-    common.ErrCode  errCode = 2;
-    string          errMsg  = 3;
-    common.Variable var     = 4;
-}
-
-message QueryVariableListReq {
-    uint64 seq           = 1;
-    string bid           = 2;
-    string cluster       = 3;
-    string clusterLabels = 4;
-    string zone          = 5;
-    int32  type          = 6;
-    int32  index         = 7;
-    int32  limit         = 8;
-}
-
-message QueryVariableListResp {
-    uint64         seq            = 1;
-    common.ErrCode errCode        = 2;
-    string         errMsg         = 3;
-    repeated common.Variable vars = 4;
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
 }
 
 message QueryAuditListReq {
-    uint64 seq        = 1;
-    string bid        = 2;
-    int32  sourceType = 3;
-    int32  opType     = 4;
-    string sourceid   = 5;
-    string operator   = 6;
-    int32  index      = 7;
-    int32  limit      = 8;
+    string      seq         = 1;
+    string      biz_id      = 2;
+    int32       source_type = 3;
+    int32       op_type     = 4;
+    string      source_id   = 5;
+    string      operator    = 6;
+    common.Page page        = 7;
 }
 
 message QueryAuditListResp {
-    uint64                seq     = 1;
-    common.ErrCode        errCode = 2;
-    string                errMsg  = 3;
-    repeated common.Audit audits  = 4;
+    message RespData {
+        uint32                total_count = 1;
+        repeated common.Audit info        = 2;
+    }
+
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}
+
+message HealthzReq {
+    string seq = 1;
+}
+
+message HealthzResp {
+    string                   seq     = 1;
+    common.ErrCode           code    = 2;
+    string                   message = 3;
+    common.ModuleHealthzInfo data    = 4;
 }

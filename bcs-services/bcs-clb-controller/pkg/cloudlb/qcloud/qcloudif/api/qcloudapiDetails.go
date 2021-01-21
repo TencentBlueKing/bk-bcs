@@ -23,7 +23,7 @@ import (
 
 	loadbalance "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/apis/network/v1"
 
-	qcloud "github.com/Tencent/bk-bcs/bcs-services/bcs-clb-controller/pkg/qcloud"
+	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 )
 
 func (clb *ClbAPI) waitForTaskResult(id int) error {
@@ -62,7 +62,8 @@ func (clb *ClbAPI) describeLoadBalancersTaskResult(requestID int) (int, error) {
 
 	output, err := clb.api.DescribeLoadBalanceTaskResult(desc)
 	if err != nil {
-		return TaskResultStatusFailed, fmt.Errorf("describe clb task result failed, input %v, err %s", desc, err.Error())
+		return TaskResultStatusFailed, fmt.Errorf("describe clb task result failed, input %v, err %s",
+			desc, err.Error())
 	}
 
 	//when request exceeds limits, should have a rest, we treated it as dealing status but with sleeping 5 seconds more
@@ -118,7 +119,8 @@ func (clb *ClbAPI) doDescribeLoadBalance(name string) (*qcloud.DescribeLBOutput,
 	}
 	if output.Code != 0 && output.Code != 5000 {
 		blog.Errorf("describeLoadBalance %s failed, invalid code %d, code desc %s", name, output.Code, output.CodeDesc)
-		return output, fmt.Errorf("describeLoadBalance %s failed, invalid code %d, code desc %s", name, output.Code, output.CodeDesc)
+		return output, fmt.Errorf("describeLoadBalance %s failed, invalid code %d, code desc %s",
+			name, output.Code, output.CodeDesc)
 	} else if output.Code == 5000 {
 		blog.Warnf("DescribeLoadBalancer lb %s does not exist", name)
 		return output, nil
@@ -158,7 +160,8 @@ func (clb *ClbAPI) create7LayerListener(listener *loadbalance.CloudListener) (st
 	for ; count <= ClbMaxTimeout; count++ {
 		output, err := clb.api.Create7LayerListener(desc)
 		if err != nil {
-			return "", fmt.Errorf("create 7 layer listener name %s protocol %d port %d failed, err %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, err.Error())
+			return "", fmt.Errorf("create 7 layer listener name %s protocol %d port %d failed, err %s",
+				desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, err.Error())
 		}
 		if output.Code == WrongStatusCode && output.CodeDesc == WrongStatusMessage {
 			blog.Warn("LB is dealing another action will wait a second")
@@ -171,18 +174,30 @@ func (clb *ClbAPI) create7LayerListener(listener *loadbalance.CloudListener) (st
 			return "", fmt.Errorf("clb request exceed limit, create 7 layer listener failed")
 		}
 		if output.Code != 0 {
-			blog.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
-			return "", fmt.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
+			blog.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
+			return "", fmt.Errorf(
+				"create 7 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
 		}
 		if len(output.ListenerIds) != 1 {
-			blog.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, len(output.ListenerIds))
-			return "", fmt.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, len(output.ListenerIds))
+			blog.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, len(output.ListenerIds))
+			return "", fmt.Errorf(
+				"create 7 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, len(output.ListenerIds))
 		}
 
-		blog.Infof("create 7 layer listener (name %s,  protocol %d,  port %d) successfully", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
+		blog.Infof("create 7 layer listener (name %s,  protocol %d,  port %d) successfully",
+			desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
 		return output.ListenerIds[0], nil
 	}
-	return "", fmt.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) timeout", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
+	return "", fmt.Errorf("create 7 layer listener (name %s,  protocol %d,  port %d) timeout",
+		desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
 }
 
 //create4LayerListener
@@ -216,12 +231,15 @@ func (clb *ClbAPI) create4LayerListener(listener *loadbalance.CloudListener) (st
 	var output *qcloud.CreateForwardLBFourthLayerListenersOutput
 	for ; count <= ClbMaxTimeout; count++ {
 		if count == ClbMaxTimeout {
-			blog.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) timeout", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
-			return "", fmt.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) timeout", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
+			blog.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) timeout",
+				desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
+			return "", fmt.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) timeout",
+				desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
 		}
 		output, err = clb.api.Create4LayerListener(desc)
 		if err != nil {
-			return "", fmt.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, err %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, err.Error())
+			return "", fmt.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, err %s",
+				desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, err.Error())
 		}
 		if output.Code == WrongStatusCode && output.CodeDesc == WrongStatusMessage {
 			blog.Warn("LB is dealing another action will wait a second")
@@ -234,14 +252,25 @@ func (clb *ClbAPI) create4LayerListener(listener *loadbalance.CloudListener) (st
 			return "", fmt.Errorf("clb request exceed limit, create 4 layer listener failed")
 		}
 		if output.Code != 0 {
-			blog.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
-			return "", fmt.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
+			blog.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
+			return "", fmt.Errorf(
+				"create 4 layer listener (name %s,  protocol %d,  port %d) failed, code %d, code desc %s",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, output.Code, output.CodeDesc)
 		}
 		if len(output.ListenerIds) != 1 {
-			blog.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, len(output.ListenerIds))
-			return "", fmt.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort, len(output.ListenerIds))
+			blog.Errorf("create 4 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, len(output.ListenerIds))
+			return "", fmt.Errorf(
+				"create 4 layer listener (name %s,  protocol %d,  port %d) failed, invalid ids length %d",
+				desc.ListenersListenerName, desc.ListenersProtocol,
+				desc.ListenersLoadBalancerPort, len(output.ListenerIds))
 		}
-		blog.Infof("create 4 layer listener (name %s,  protocol %d,  port %d) request done", desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
+		blog.Infof("create 4 layer listener (name %s,  protocol %d,  port %d) request done",
+			desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
 		break
 	}
 
@@ -270,8 +299,10 @@ func (clb *ClbAPI) doDescribeListener(loadBalanceID, listenerID string) (*qcloud
 		return nil, fmt.Errorf("describe clb %s listener %s failed, err %s", loadBalanceID, listenerID, err.Error())
 	}
 	if output.Code != 0 && output.Code != 5000 {
-		blog.Errorf("describe clb %s listener %s returned code %d invalid:%s", loadBalanceID, listenerID, output.Code, output.CodeDesc)
-		return nil, fmt.Errorf("describe clb %s listener %s returned code %d invalid:%s", loadBalanceID, listenerID, output.Code, output.CodeDesc)
+		blog.Errorf("describe clb %s listener %s returned code %d invalid:%s",
+			loadBalanceID, listenerID, output.Code, output.CodeDesc)
+		return nil, fmt.Errorf("describe clb %s listener %s returned code %d invalid:%s",
+			loadBalanceID, listenerID, output.Code, output.CodeDesc)
 	} else if output.Code == 5000 {
 		blog.Warnf("described clb %s listener %s is not existed", loadBalanceID, listenerID)
 		return nil, nil
@@ -280,8 +311,10 @@ func (clb *ClbAPI) doDescribeListener(loadBalanceID, listenerID string) (*qcloud
 		blog.Warnf("described clb %s listener %s return zero result length", loadBalanceID, listenerID)
 		return nil, nil
 	} else if len(output.Listeners) != 1 {
-		blog.Errorf("described clb %s listener %s return invalid result length %d", loadBalanceID, listenerID, len(output.Listeners))
-		return nil, fmt.Errorf("described clb %s listener %s return invalid result length %d", loadBalanceID, listenerID, len(output.Listeners))
+		blog.Errorf("described clb %s listener %s return invalid result length %d",
+			loadBalanceID, listenerID, len(output.Listeners))
+		return nil, fmt.Errorf("described clb %s listener %s return invalid result length %d",
+			loadBalanceID, listenerID, len(output.Listeners))
 	}
 	blog.Infof("describe clb %s listener %s done", loadBalanceID, listenerID)
 	return &output.Listeners[0], nil
@@ -304,8 +337,10 @@ func (clb *ClbAPI) doDescribeListenerByPort(loadBalanceID string, port int) (*qc
 		return nil, fmt.Errorf("describe clb %s listener by port %d failed, err %s", loadBalanceID, port, err.Error())
 	}
 	if output.Code != 0 && output.Code != 5000 {
-		blog.Errorf("describe clb %s listener by port %d, return code %d invalid, code desc %s", loadBalanceID, port, output.Code, output.CodeDesc)
-		return nil, fmt.Errorf("describe clb %s listener by port %d, return code %d invalid, code desc %s", loadBalanceID, port, output.Code, output.CodeDesc)
+		blog.Errorf("describe clb %s listener by port %d, return code %d invalid, code desc %s",
+			loadBalanceID, port, output.Code, output.CodeDesc)
+		return nil, fmt.Errorf("describe clb %s listener by port %d, return code %d invalid, code desc %s",
+			loadBalanceID, port, output.Code, output.CodeDesc)
 	} else if output.Code == 5000 {
 		return nil, nil
 	}
@@ -313,8 +348,10 @@ func (clb *ClbAPI) doDescribeListenerByPort(loadBalanceID string, port int) (*qc
 		blog.Warnf("described clb %s listener by port %d return zero result length", loadBalanceID, port)
 		return nil, nil
 	} else if len(output.Listeners) != 1 {
-		blog.Errorf("described clb %s listener by port %d return invalid result length %d", loadBalanceID, port, len(output.Listeners))
-		return nil, fmt.Errorf("described clb %s listener by port %d return invalid result length %d", loadBalanceID, port, len(output.Listeners))
+		blog.Errorf("described clb %s listener by port %d return invalid result length %d",
+			loadBalanceID, port, len(output.Listeners))
+		return nil, fmt.Errorf("described clb %s listener by port %d return invalid result length %d",
+			loadBalanceID, port, len(output.Listeners))
 	}
 	blog.Infof("describe clb %s listener by port %d done", loadBalanceID, port)
 
@@ -383,7 +420,8 @@ func (clb *ClbAPI) doModify7LayerListenerAttribute(listener *loadbalance.CloudLi
 	if err != nil {
 		return fmt.Errorf("wait for result failed, err %s", err.Error())
 	}
-	blog.Infof("modify 7 layer listener %s with port %d of %s successfully", listener.Spec.ListenerID, listener.Spec.ListenPort, listener.Spec.LoadBalancerID)
+	blog.Infof("modify 7 layer listener %s with port %d of %s successfully",
+		listener.Spec.ListenerID, listener.Spec.ListenPort, listener.Spec.LoadBalancerID)
 
 	return nil
 }
@@ -422,7 +460,8 @@ func (clb *ClbAPI) doModify4LayerListenerAttribute(listener *loadbalance.CloudLi
 	if err != nil {
 		return fmt.Errorf("wait for result failed, err %s", err.Error())
 	}
-	blog.Infof("modify 4 layer listener %s with port %d of %s successfully", listener.Spec.ListenerID, listener.Spec.ListenPort, listener.Spec.LoadBalancerID)
+	blog.Infof("modify 4 layer listener %s with port %d of %s successfully",
+		listener.Spec.ListenerID, listener.Spec.ListenPort, listener.Spec.LoadBalancerID)
 
 	return nil
 }
@@ -549,13 +588,15 @@ func (clb *ClbAPI) doModifyRule(loadBalanceID, listenerID string, rule *loadbala
 	if err != nil {
 		return fmt.Errorf("wait for task %d result failed, err %s", output.RequestID, err.Error())
 	}
-	blog.Infof("modify rule (lb %s, listener %s, domain %s, path %s) successfully", loadBalanceID, listenerID, rule.Domain, rule.URL)
+	blog.Infof("modify rule (lb %s, listener %s, domain %s, path %s) successfully",
+		loadBalanceID, listenerID, rule.Domain, rule.URL)
 
 	return nil
 }
 
 //registerInsWith7thLayerListener
-func (clb *ClbAPI) registerInsWith7thLayerListener(loadBalanceID, listenerID, locationID string, bdTargets qcloud.BackendTargetList) error {
+func (clb *ClbAPI) registerInsWith7thLayerListener(
+	loadBalanceID, listenerID, locationID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBSeventhListenerInput)
 	desc.Action = "RegisterInstancesWithForwardLBSeventhListener"
 	desc.Nonce = uint(rand.Uint32())
@@ -567,14 +608,16 @@ func (clb *ClbAPI) registerInsWith7thLayerListener(loadBalanceID, listenerID, lo
 	desc.LoadBalanceID = loadBalanceID
 	desc.LocationID = locationID
 
-	blog.Infof("start register instance with 7 layer listener %v for listener %s rule %s", bdTargets, listenerID, locationID)
+	blog.Infof("start register instance with 7 layer listener %v for listener %s rule %s",
+		bdTargets, listenerID, locationID)
 
 	output, err := clb.api.RegInstancesWith7LayerListener(desc)
 	if err != nil {
 		return fmt.Errorf("register instance with 7 layer listener failed, err %s", err.Error())
 	}
 	if output.Code != 0 {
-		return fmt.Errorf("register instance with 7 layer listener failed, code %d, message %s", output.Code, output.Message)
+		return fmt.Errorf("register instance with 7 layer listener failed, code %d, message %s",
+			output.Code, output.Message)
 	}
 	err = clb.waitForTaskResult(output.RequestID)
 	if err != nil {
@@ -585,7 +628,8 @@ func (clb *ClbAPI) registerInsWith7thLayerListener(loadBalanceID, listenerID, lo
 }
 
 //registerInstanceWith4thLayerListener
-func (clb *ClbAPI) registerInsWith4thLayerListener(loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
+func (clb *ClbAPI) registerInsWith4thLayerListener(
+	loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBFourthListenerInput)
 	desc.Action = "RegisterInstancesWithForwardLBFourthListener"
 	desc.Nonce = uint(rand.Uint32())
@@ -603,7 +647,8 @@ func (clb *ClbAPI) registerInsWith4thLayerListener(loadBalanceID, listenerID str
 		return fmt.Errorf("register instance with 4 layer listener failed, err %s", err.Error())
 	}
 	if output.Code != 0 {
-		return fmt.Errorf("register instance with 4 layer listener failed, code %d, message %s", output.Code, output.Message)
+		return fmt.Errorf("register instance with 4 layer listener failed, code %d, message %s",
+			output.Code, output.Message)
 	}
 	err = clb.waitForTaskResult(output.RequestID)
 	if err != nil {
@@ -614,7 +659,8 @@ func (clb *ClbAPI) registerInsWith4thLayerListener(loadBalanceID, listenerID str
 }
 
 //deRegisterInstances7thListener
-func (clb *ClbAPI) deRegisterInstances7thListener(loadBalanceID, listenerID, ruleID string, bdTargets qcloud.BackendTargetList) error {
+func (clb *ClbAPI) deRegisterInstances7thListener(
+	loadBalanceID, listenerID, ruleID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.DeregisterInstancesFromForwardLBSeventhListenerInput)
 	desc.Action = "DeregisterInstancesFromForwardLB"
 	desc.Nonce = uint(rand.Uint32())
@@ -625,14 +671,16 @@ func (clb *ClbAPI) deRegisterInstances7thListener(loadBalanceID, listenerID, rul
 	desc.ListenerID = listenerID
 	desc.LoadBalanceID = loadBalanceID
 	desc.LocationID = ruleID
-	blog.Infof("start deRegister instances %v of lb %s, listener %s, rule %s", bdTargets, loadBalanceID, listenerID, ruleID)
+	blog.Infof("start deRegister instances %v of lb %s, listener %s, rule %s",
+		bdTargets, loadBalanceID, listenerID, ruleID)
 
 	output, err := clb.api.DeRegInstancesWith7LayerListener(desc)
 	if err != nil {
 		return fmt.Errorf("deRegister instance with 7 layer listener failed, err %s", err.Error())
 	}
 	if output.Code != 0 {
-		return fmt.Errorf("deRegister instance with 7 layer listener failed, code %d, message %s", output.Code, output.Message)
+		return fmt.Errorf("deRegister instance with 7 layer listener failed, code %d, message %s",
+			output.Code, output.Message)
 	}
 	err = clb.waitForTaskResult(output.RequestID)
 	if err != nil {
@@ -643,7 +691,8 @@ func (clb *ClbAPI) deRegisterInstances7thListener(loadBalanceID, listenerID, rul
 }
 
 //deRegisterInstances4thListener
-func (clb *ClbAPI) deRegisterInstances4thListener(loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
+func (clb *ClbAPI) deRegisterInstances4thListener(
+	loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.DeregisterInstancesFromForwardLBFourthListenerInput)
 	desc.Action = "DeregisterInstancesFromForwardLBFourthListener"
 	desc.Nonce = uint(rand.Uint32())
@@ -661,7 +710,8 @@ func (clb *ClbAPI) deRegisterInstances4thListener(loadBalanceID, listenerID stri
 		return fmt.Errorf("deRegister instance with 4 layer listener failed, err %s", err.Error())
 	}
 	if output.Code != 0 {
-		return fmt.Errorf("deRegister instance with 4 layer listener failed, code %d, message %s", output.Code, output.Message)
+		return fmt.Errorf("deRegister instance with 4 layer listener failed, code %d, message %s",
+			output.Code, output.Message)
 	}
 	err = clb.waitForTaskResult(output.RequestID)
 	if err != nil {
@@ -733,7 +783,7 @@ func (clb *ClbAPI) getSecurityGroupPortRange(index int, groupId string) (string,
 	desc.Timestamp = uint(time.Now().Unix())
 	desc.SgID = groupId
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -787,7 +837,7 @@ func (clb *ClbAPI) modifySingleSecurityGroupPolicy(sgID, protocol, portRange str
 	desc.PolicyDesc = "clb policy"
 	desc.SgId = sgID
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -821,7 +871,7 @@ func (clb *ClbAPI) modifySecurityGroupsOfInstance(instanceID string, securityGro
 	desc.SecurityGroups = securityGroups
 	desc.Version = "2017-03-12"
 	c := qcloud.Client{
-		URL:       QCloudCVMUrl,
+		URL:       QCloudCVMURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -909,7 +959,7 @@ func (clb *ClbAPI) describeSecurityGroup(groupId *string) ([]byte, error) {
 	desc.Timestamp = uint(time.Now().Unix())
 	desc.SgID = *groupId
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)
@@ -970,7 +1020,7 @@ func (clb *ClbAPI) createSecurityGroupPolicy(index, sgID, protocol, portRange, c
 	desc.PolicyDesc = "clb policy"
 	desc.SgID = sgID
 	c := qcloud.Client{
-		URL:       QCloudDfwUrl,
+		URL:       QCloudDfwURL,
 		SecretKey: clb.SecretKey,
 	}
 	dataBytes, err := c.GetRequest(desc)

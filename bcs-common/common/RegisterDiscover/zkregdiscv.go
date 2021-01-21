@@ -14,14 +14,14 @@
 package RegisterDiscover
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	//"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 
 	"golang.org/x/net/context"
 )
@@ -195,7 +195,7 @@ func (zkRD *ZkRegDiscv) sortNode(nodes []string) []string {
 			continue
 		}
 
-		p, err := strconv.Atoi(chNode[len(chNode)-10 : len(chNode)])
+		p, err := strconv.Atoi(chNode[len(chNode)-10:])
 		if err != nil {
 			blog.V(3).Infof("fail to conv string to seq number for node(%s), err:%s", chNode, err.Error())
 			continue

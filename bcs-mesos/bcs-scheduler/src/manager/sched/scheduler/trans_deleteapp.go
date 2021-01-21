@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/task"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/types"
 )
 
 // RunDeleteApplication The goroutine function for delete application transaction

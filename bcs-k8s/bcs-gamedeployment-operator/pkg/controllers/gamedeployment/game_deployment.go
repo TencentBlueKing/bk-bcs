@@ -101,7 +101,7 @@ func NewGameDeploymentController(
 	kubeClient clientset.Interface,
 	gdClient gdclientset.Interface,
 	recorder record.EventRecorder,
-	hookClient hookclientset.Interface,) *GameDeploymentController {
+	hookClient hookclientset.Interface) *GameDeploymentController {
 
 	gdscheme.AddToScheme(scheme.Scheme)
 

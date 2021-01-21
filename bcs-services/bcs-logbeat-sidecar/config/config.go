@@ -20,6 +20,11 @@ type Config struct {
 	PrefixFile   string
 	//kube-apiserver config file path
 	Kubeconfig string
+	// whether to enable remove symbol link in the log path
+	// this should be false if deployed as in-cluster mode
+	EvalSymlink bool
+	// logbeat PID file path
+	LogbeatPIDFilePath string
 }
 
 //NewConfig create a config object

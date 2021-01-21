@@ -84,7 +84,7 @@ func NewDefaultGameDeploymentControl(
 
 type defaultGameDeploymentControl struct {
 	gdClient           gdclientset.Interface
-	hookClient 		   hookclientset.Interface
+	hookClient         hookclientset.Interface
 	scaleControl       scalecontrol.Interface
 	updateControl      updatecontrol.Interface
 	statusUpdater      GameDeploymentStatusUpdaterInterface
@@ -333,7 +333,7 @@ func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *gdv1alpha1.GameDe
 }
 
 func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *gdv1alpha1.GameDeployment, revisions []*apps.ControllerRevision,
-	podsRevisions sets.String) (*apps.ControllerRevision, *apps.ControllerRevision, int32, error, ) {
+	podsRevisions sets.String) (*apps.ControllerRevision, *apps.ControllerRevision, int32, error) {
 
 	var currentRevision, updateRevision *apps.ControllerRevision
 	revisionCount := len(revisions)
