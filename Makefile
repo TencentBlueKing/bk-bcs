@@ -98,7 +98,7 @@ api:pre
 gateway:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-gateway-discovery ${PACKAGEPATH}/bcs-services
-	cp -R ./bcs-services/bcs-gateway-discovery/bkbcs-auth ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/
+	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./bcs-services/bcs-gateway-discovery/main.go
 
 kube-agent:pre

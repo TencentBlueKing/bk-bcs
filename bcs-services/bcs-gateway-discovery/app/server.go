@@ -16,19 +16,15 @@ package app
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/master"
 	discoverys "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
 	modulediscovery "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/apisix"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/kong"
 
 	"github.com/micro/go-micro/v2/registry"
@@ -36,8 +32,8 @@ import (
 )
 
 //New create
-func New() *DiscoveryServer {
-	cxt, cfunc := context.WithCancel(context.Background())
+func New(root context.Context) *DiscoveryServer {
+	cxt, cfunc := context.WithCancel(root)
 	s := &DiscoveryServer{
 		exitCancel: cfunc,
 		exitCxt:    cxt,
@@ -70,8 +66,6 @@ type DiscoveryServer struct {
 	discovery discoverys.ModuleDiscovery
 	//go micro version discovery
 	microDiscovery modulediscovery.Discovery
-	//self node registe & master node discovery
-	bcsRegister master.Master
 	//exit func
 	exitCancel context.CancelFunc
 	//exit context
@@ -95,27 +89,29 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 	if err := option.Valid(); err != nil {
 		return err
 	}
-	//init gateway master discovery
-	if err := s.selfRegister(); err != nil {
-		return err
-	}
 	//init gateway manager
 	gatewayAddrs := strings.Split(option.AdminAPI, ",")
 	tlsConfig, err := option.GetClientTLS()
 	if err != nil {
 		return err
 	}
-	s.regMgr, err = kong.New(gatewayAddrs, tlsConfig)
-	if err != nil {
-		blog.Errorf("gateway init kong admin api register implementation failed, %s", err.Error())
-		return err
+	if option.AdminType == "kong" {
+		s.regMgr, err = kong.New(gatewayAddrs, tlsConfig)
+		if err != nil {
+			blog.Errorf("gateway init kong admin api register implementation failed, %s", err.Error())
+			return err
+		}
+	} else {
+		s.regMgr, err = apisix.New(gatewayAddrs, tlsConfig, option.AdminToken)
+		if err != nil {
+			blog.Errorf("gateway init apisix admin api register implementation failed, %s", err.Error())
+			return err
+		}
 	}
 
 	//init etcd registry feature with modulediscovery base on micro.Registry
-	if option.Etcd.Feature {
-		if err := s.turnOnEtcdFeature(option); err != nil {
-			return err
-		}
+	if err := s.turnOnEtcdFeature(option); err != nil {
+		return err
 	}
 
 	defaultModules = append(defaultModules, strings.Split(option.Modules, ",")...)
@@ -139,7 +135,7 @@ func (s *DiscoveryServer) turnOnEtcdFeature(option *ServerOptions) error {
 		return err
 	}
 	//initialize micro registry
-	addrs := strings.Split(option.Address, ",")
+	addrs := strings.Split(option.Etcd.Address, ",")
 	mregistry := etcd.NewRegistry(
 		registry.Addrs(addrs...),
 		registry.TLSConfig(etcdTLSConfig),
@@ -177,9 +173,12 @@ func (s *DiscoveryServer) Run() error {
 		return err
 	}
 	tick := time.NewTicker(time.Second * 60)
+	defer tick.Stop()
 	for {
 		select {
 		case <-s.exitCxt.Done():
+			s.discovery.Stop()
+			s.microDiscovery.Stop()
 			blog.Infof("gateway-discovery asked to exit")
 			return nil
 		case <-tick.C:
@@ -203,55 +202,11 @@ func (s *DiscoveryServer) Run() error {
 
 //Stop all backgroup routines
 func (s *DiscoveryServer) Stop() {
-	s.bcsRegister.Clean()
-	s.bcsRegister.Finit()
-	if s.option.Etcd.Feature {
-		s.microDiscovery.Stop()
-	}
 	s.exitCancel()
-}
-
-//selfRegister
-func (s *DiscoveryServer) selfRegister() error {
-	zkAddrs := strings.Split(s.option.BCSZk, ",")
-	selfPath := filepath.Join(types.BCS_SERV_BASEPATH, types.BCS_MODULE_GATEWAYDISCOVERY)
-	//self node information
-	hostname, _ := os.Hostname()
-	self := &types.ServerInfo{
-		IP:         s.option.ServiceConfig.Address,
-		Port:       s.option.ServiceConfig.Port,
-		Pid:        os.Getpid(),
-		HostName:   hostname,
-		Scheme:     "https",
-		Version:    version.BcsVersion,
-		MetricPort: s.option.MetricConfig.MetricPort,
-	}
-	var err error
-	s.bcsRegister, err = master.NewZookeeperMaster(zkAddrs, selfPath, self)
-	if err != nil {
-		blog.Errorf("gateway-discovery init zookeeper master machinery failed, %s", err.Error())
-		return err
-	}
-	//ready to start
-	if err = s.bcsRegister.Init(); err != nil {
-		blog.Errorf("gateway-discovery start master machinery failed, %s", err.Error())
-		return err
-	}
-	if err = s.bcsRegister.Register(); err != nil {
-		blog.Errorf("gateway-discvovery register local service instance failed, %s", err.Error())
-		return err
-	}
-	//time for registe & master ready
-	time.Sleep(time.Second)
-	return nil
 }
 
 //dataSynchronization sync all data from bk bcs service discovery to gateway
 func (s *DiscoveryServer) dataSynchronization() error {
-	if !s.bcsRegister.IsMaster() {
-		blog.Infof("gateway-discovery instance is not master, skip data synchronization")
-		return nil
-	}
 	blog.V(3).Infof("gateway-discovery instance is master, ready to sync all datas")
 	//first get all gateway route information
 	regisetedService, err := s.regMgr.ListServices()
