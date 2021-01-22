@@ -42,10 +42,6 @@ func getMicroModuleClusterID(host string) string {
 
 //microModuleEvent event notification callback
 func (s *DiscoveryServer) microModuleEvent(module string) {
-	if !s.bcsRegister.IsMaster() {
-		blog.Infof("gateway-discovery instance is not master, skip module %s event notification for micro registry", module)
-		return
-	}
 	//get event notification
 	event := &ModuleEvent{
 		// module info: 100032.mesosdriver, storage, meshmanager

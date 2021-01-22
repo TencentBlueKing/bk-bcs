@@ -35,8 +35,8 @@ func NewServerOptions() *ServerOptions {
 // EtcdRegistry config item for etcd discovery
 type EtcdRegistry struct {
 	Feature     bool   `json:"etcd_feature" value:"false" usage:"switch that turn on etcd registry feature"`
-	GrpcModules string `json:"etcd_grpc_modules" value:"MeshManager,LogManager" usage:"modules that support grpc interface, 'LogManager,MeshManager' is in default"`
-	HTTPModules string `json:"etcd_http_modules" value:"MeshManager,LogManager" usage:"modules that support http interface, 'LogManager,MeshManager' is in default"`
+	GrpcModules string `json:"etcd_grpc_modules" value:"MeshManager,LogManager" usage:"modules that support grpc interface"`
+	HTTPModules string `json:"etcd_http_modules" value:"MeshManager,LogManager" usage:"modules that support http interface"`
 	Address     string `json:"etcd_address" value:"127.0.0.1:2379" usage:"etcd registry feature, multiple ip addresses splited by comma"`
 	CA          string `json:"etcd_ca" value:"" usage:"etcd registry CA"`
 	Cert        string `json:"etcd_cert" value:"" usage:"etcd registry tls cert file"`
@@ -54,18 +54,11 @@ type ServerOptions struct {
 	conf.ProcessConfig
 	IPv6Mode bool `json:"ipv6_mode" value:"false" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed." mapstructure:"ipv6_mode"`
 	//gateway admin api info
-	AdminAPI string `json:"admin_api" value:"127.0.0.1:8001" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed. custom cert/key comes from client_cert_file/client_key_file" mapstructure:"admin_api" `
-	//new standard modules
-	/*
-		types.BCS_MODULE_STORAGE,
-		types.BCS_MODULE_MESOSDRIVER,
-		types.BCS_MODULE_KUBERNETEDRIVER,
-		types.BCS_MODULE_NETWORKDETECTION,
-		types.BCS_MODULE_USERMANAGER,
-		types.BCS_MODULE_KUBEAGENT,
-	*/
-	Modules   string `json:"modules" values:"storage,mesosdriver,kubernetesdriver,detection,usermanager,kubeagent" usage:"new standard moduels that discovery serve for" mapstructure:"modules" `
-	AuthToken string `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
+	AdminAPI   string `json:"admin_api" value:"127.0.0.1:8001" usage:"api-gateway connections information, splited by comma if multiple instances. http mode in default, explicit setting https if needed. custom cert/key comes from client_cert_file/client_key_file" mapstructure:"admin_api" `
+	AdminToken string `json:"amdin_token" value:"" usage:"api-gateway admin api token"`
+	AdminType  string `json:"admin_type" value:"apisix" usage:"select apisix or kong as gateway"`
+	Modules    string `json:"modules" value:"storage,mesosdriver,detection,usermanager,kubeagent" usage:"new standard moduels that discovery serve for" mapstructure:"modules"`
+	AuthToken  string `json:"auth_token" usage:"token for request bcs-user-manager" mapstructure:"auth_token" `
 
 	Etcd EtcdRegistry `json:"etcdRegistry"`
 }
@@ -74,6 +67,9 @@ type ServerOptions struct {
 func (opt *ServerOptions) Valid() error {
 	if len(opt.AdminAPI) == 0 {
 		return fmt.Errorf("Lost admin api setting")
+	}
+	if opt.AdminType == "apisix" && len(opt.AdminToken) == 0 {
+		return fmt.Errorf("lost apisix admin token")
 	}
 	if len(opt.ZkConfig.BCSZk) == 0 {
 		return fmt.Errorf("Lost bk-bcs zookeeper setting")

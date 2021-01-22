@@ -13,15 +13,19 @@
 
 package register
 
+import "fmt"
+
 const (
 	//ProtocolHTTP for http
 	ProtocolHTTP = "http"
-	//ProtocolHTTP for http
+	//ProtocolHTTPS for http
 	ProtocolHTTPS = "https"
 	//ProtocolTCP for tcp
 	ProtocolTCP = "tcp"
 	//ProtocolUDP for udp
 	ProtocolUDP = "udp"
+	//ProtocolGrpc for grpc
+	ProtocolGrpc = "grpc"
 )
 
 //Route inner data structure for traffics transffer.
@@ -63,6 +67,29 @@ type Service struct {
 	Labels   map[string]string
 }
 
+//Valid check service information
+func (s *Service) Valid() error {
+	if len(s.Name) == 0 {
+		return fmt.Errorf("service name required")
+	}
+	if len(s.Protocol) == 0 {
+		s.Protocol = ProtocolHTTP
+	}
+	if s.Retries == 0 {
+		s.Retries = 1
+	}
+	if len(s.Path) == 0 {
+		return fmt.Errorf("service path required")
+	}
+	if len(s.Routes) == 0 {
+		return fmt.Errorf("route required")
+	}
+	if len(s.Backends) == 0 {
+		return fmt.Errorf("backend required")
+	}
+	return nil
+}
+
 //Plugins holder for all gateway plugins
 type Plugins struct {
 	HeadOption *HeaderOption
@@ -79,7 +106,7 @@ type HeaderOption struct {
 	Replace map[string]string
 }
 
-//AuthOption for bkbcs-auth plugin
+//BCSAuthOption for bkbcs-auth plugin
 type BCSAuthOption struct {
 	Name          string
 	AuthEndpoints string

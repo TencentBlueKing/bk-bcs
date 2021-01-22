@@ -1,0 +1,24 @@
+apisix:
+  node_listen: 8000
+  enable_ipv6: false
+  admin_key:
+    - name: "admin"
+      key: ${adminToken}
+      role: admin
+  ssl:
+    enable: true
+    listen_port: 8443
+    ssl_cert: ${apiGatewayCert}
+    ssl_cert_key: ${apiGatewayKey}
+etcd:
+  host:
+    - "${apiGatewayEtcdHost}"
+nginx_config:
+  http_server_configuration_snippet: |
+    proxy_ssl_name        $upstream_host;
+    proxy_ssl_server_name on;
+    proxy_ssl_certificate ${clientCertFile};
+    proxy_ssl_certificate_key ${clientUnencryptKeyFile};
+  error_log: "/data/bcs/logs/bcs/apisix-error.log"
+  http:
+    access_log: "/data/bcs/logs/bcs/apisix-access.log"

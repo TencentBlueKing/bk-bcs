@@ -38,7 +38,6 @@ source:
       ".*/bcs-services/bcs-mesh-manager/api/.*",
       ".*/bcs-services/bcs-mesh-manager/proto/.*",
       ".*/bcs-services/bcs-mesh-manager/third_party/.*",
-      ".*/bmsf-configuration/internal/protocol/.*",
       ".*/bmsf-mesh/pkg/.*"
     ]
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
@@ -50,6 +49,7 @@ source:
       ".*/bcs-mesos/bcs-container-executor/mesos/.*",
       ".*/bcs-mesos/bcs-process-executor/process-executor/protobuf/.*",
       ".*/bcs-mesos/bcs-scheduler/src/mesosproto/.*",
-      ".*/pkg/mod/.*"
+      ".*/pkg/mod/.*",
+      ".*/bmsf-configuration/.*"
     ]
     
