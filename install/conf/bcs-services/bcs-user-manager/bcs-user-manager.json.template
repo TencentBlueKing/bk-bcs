@@ -1,8 +1,8 @@
 {
-  "address": "0.0.0.0",
+  "address": "${localIp}",
   "port": ${bcsUserManagerPort},
   "metric_port": ${bcsUserManagerMetricPort},
-  "insecure_address": "0.0.0.0",
+  "insecure_address": "127.0.0.1",
   "insecure_port": ${bcsUserManagerInsecurePort},
   "bcs_zookeeper": "${bcsZkHost}",
   "ca_file": "${caFile}",
