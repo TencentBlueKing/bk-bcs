@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 
-	"github.com/DeveloperJim/gokong"
+	"github.com/kevholditch/gokong"
 )
 
 const (

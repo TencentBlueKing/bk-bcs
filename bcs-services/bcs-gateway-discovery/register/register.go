@@ -16,6 +16,7 @@ package register
 import "errors"
 
 var (
+	//ErrNotExist data not exist err
 	ErrNotExist = errors.New("resource does not exist")
 )
 

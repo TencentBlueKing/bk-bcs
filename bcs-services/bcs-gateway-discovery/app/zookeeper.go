@@ -28,10 +28,6 @@ import (
 
 //service event notification
 func (s *DiscoveryServer) moduleEventNotifycation(module string) {
-	if !s.bcsRegister.IsMaster() {
-		blog.Infof("gateway-discovery instance is not master, skip module %s event notification", module)
-		return
-	}
 	//get event notification
 	event := &ModuleEvent{
 		Module: module,

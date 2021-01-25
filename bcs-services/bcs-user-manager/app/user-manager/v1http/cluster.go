@@ -27,12 +27,15 @@ import (
 )
 
 const (
+	// BcsK8sCluster bcs k8s
 	BcsK8sCluster = iota + 1
+	// BcsMesosCluster mesos cluster
 	BcsMesosCluster
+	// BcsTkeCluster tke cluster in tencent cloud
 	BcsTkeCluster
 )
 
-// CreateClusterForm
+// CreateClusterForm request form for create cluster
 type CreateClusterForm struct {
 	ClusterID        string `json:"cluster_id" validate:"required"`
 	ClusterType      string `json:"cluster_type" validate:"required"`
@@ -40,6 +43,7 @@ type CreateClusterForm struct {
 	TkeClusterRegion string `json:"tke_cluster_region"`
 }
 
+// CreateCluster create new cluster
 func CreateCluster(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
