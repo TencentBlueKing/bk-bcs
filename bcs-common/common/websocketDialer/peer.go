@@ -28,11 +28,14 @@ import (
 )
 
 var (
+	// Token token for bcs tunnel
 	Token = "BCS-API-Tunnel-Token"
-	ID    = "BCS-API-Tunnel-ID"
+	// ID tunnel id
+	ID = "BCS-API-Tunnel-ID"
 )
 
-func (s *Server) AddPeer(url, id, token string) {
+// AddPeer add tunnel server peer
+func (s *Server) AddPeer(url, id, token string, cliTLS *tls.Config) {
 	if s.PeerID == "" || s.PeerToken == "" {
 		return
 	}
@@ -42,6 +45,7 @@ func (s *Server) AddPeer(url, id, token string) {
 		url:    url,
 		id:     id,
 		token:  token,
+		cliTLS: cliTLS,
 		cancel: cancel,
 	}
 
@@ -61,6 +65,7 @@ func (s *Server) AddPeer(url, id, token string) {
 	go peer.start(ctx, s)
 }
 
+// RemovePeer remove peer of tunnel server
 func (s *Server) RemovePeer(id string) {
 	s.peerLock.Lock()
 	defer s.peerLock.Unlock()
@@ -74,6 +79,7 @@ func (s *Server) RemovePeer(id string) {
 
 type peer struct {
 	url, id, token string
+	cliTLS         *tls.Config
 	cancel         func()
 }
 
@@ -90,10 +96,14 @@ func (p *peer) start(ctx context.Context, s *Server) {
 	}
 
 	dialer := &websocket.Dialer{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
 		HandshakeTimeout: HandshakeTimeOut,
+	}
+	if p.cliTLS != nil {
+		dialer.TLSClientConfig = p.cliTLS
+	} else {
+		dialer.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
 	}
 
 outer:

@@ -30,6 +30,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Session session for tunnel
 type Session struct {
 	sync.Mutex
 
@@ -55,6 +56,7 @@ func init() {
 	}
 }
 
+// NewClientSession create new client session
 func NewClientSession(auth ConnectAuthorizer, conn *websocket.Conn) *Session {
 	return &Session{
 		clientKey: "client",
@@ -112,6 +114,7 @@ func (s *Session) stopPings() {
 	s.pingWait.Wait()
 }
 
+// Serve serve session
 func (s *Session) Serve(ctx context.Context) (int, error) {
 	if s.client {
 		s.startPings(ctx)
@@ -286,6 +289,7 @@ func (s *Session) writeMessage(message *message) (int, error) {
 	return message.WriteTo(s.conn)
 }
 
+// Close close session
 func (s *Session) Close() {
 	s.Lock()
 	defer s.Unlock()

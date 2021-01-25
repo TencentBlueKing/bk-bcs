@@ -90,9 +90,7 @@ gateway:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./bcs-services/bcs-gateway-discovery/main.go
 
 kube-agent:pre
-	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
-	cp -R ./install/conf/bcs-k8s-master/bcs-kube-agent ${PACKAGEPATH}/bcs-k8s-master
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-kube-agent/bcs-kube-agent ./bcs-k8s/bcs-kube-agent/main.go
+	cd ./bcs-k8s/bcs-kube-agent && make kubeagent && cd -
 
 client:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -305,3 +303,6 @@ bcs-cloud-netagent:pre
 
 bcs-ingress-controller:pre
 	cd ./bcs-network && make ingress-controller && cd -
+
+clustermanager:pre
+	cd ./bcs-services/bcs-cluster-manager && make clustermanager && cd -

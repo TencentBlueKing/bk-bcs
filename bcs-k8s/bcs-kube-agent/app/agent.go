@@ -29,6 +29,7 @@ const (
 	tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 )
 
+// Run run agent
 func Run() error {
 	kubeconfig := viper.GetString("agent.kubeconfig")
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)

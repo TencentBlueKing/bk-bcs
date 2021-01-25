@@ -14,8 +14,8 @@
 package app
 
 import (
+	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"os"
@@ -25,6 +25,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+
 	"github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 	"github.com/spf13/viper"
@@ -36,19 +39,25 @@ import (
 const (
 	defaultNamespace   = "default"
 	clusterServiceName = "kubernetes"
+	kubeAgentModule    = "kube-agent"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+// ClusterInfoParams parameters of cluster info
 type ClusterInfoParams struct {
-	RegisterToken   string `json:"register_token"`
-	ServerAddresses string `json:"server_addresses"`
-	CaCertData      string `json:"cacert_data"`
-	UserToken       string `json:"user_token"`
+	ServerKey     string `json:"serverKey"`
+	ClusterID     string `json:"clusterID"`
+	ClientModule  string `json:"clientModule"`
+	ServerAddress string `json:"serverAddress"`
+	CaCertData    string `json:"caCertData"`
+	UserToken     string `json:"userToken"`
+	ClusterDomain string `json:"clusterDomain"`
 }
 
 func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 	periodSync := viper.GetInt("agent.periodSync")
+	clusterID := viper.GetString("cluster.id")
 	monitorTicker := time.NewTicker(time.Duration(periodSync) * time.Second)
 	defer monitorTicker.Stop()
 	for {
@@ -61,14 +70,16 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 		}
 		blog.Infof("apiserver addresses: %s", serverAddresses)
 
-		bkeUrl, registerToken := getBkeAgentInfo()
-		blog.Infof("bke-server url：%s", bkeUrl)
+		bkeURL := getBkeAgentInfo()
+		blog.Infof("bke-server url：%s", bkeURL)
 
 		clusterInfoParams := ClusterInfoParams{
-			RegisterToken:   registerToken,
-			ServerAddresses: serverAddresses,
-			CaCertData:      string(cfg.CAData),
-			UserToken:       cfg.BearerToken,
+			ServerKey:     clusterID,
+			ClusterID:     clusterID,
+			ClientModule:  kubeAgentModule,
+			ServerAddress: serverAddresses,
+			CaCertData:    string(cfg.CAData),
+			UserToken:     cfg.BearerToken,
 		}
 
 		var request *gorequest.SuperAgent
@@ -76,14 +87,27 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 		if insecureSkipVerify {
 			request = gorequest.New().TLSClientConfig(&tls.Config{InsecureSkipVerify: insecureSkipVerify})
 		} else {
-			pool := x509.NewCertPool()
-			caCrtStr := os.Getenv("SERVER_CERT")
-			caCrt := []byte(caCrtStr)
-			pool.AppendCertsFromPEM(caCrt)
-			request = gorequest.New().TLSClientConfig(&tls.Config{RootCAs: pool})
+			var tlsConfig *tls.Config
+			caCrtFile := os.Getenv("CLIENT_CA")
+			clientCrtFile := os.Getenv("CLIENT_CERT")
+			clientKeyFile := os.Getenv("CLIENT_KEY")
+			if len(clientCrtFile) == 0 && len(clientKeyFile) == 0 {
+				tlsConfig, err = ssl.ClientTslConfVerityServer(caCrtFile)
+			} else {
+				tlsConfig, err = ssl.ClientTslConfVerity(caCrtFile, clientCrtFile, clientKeyFile, static.ClientCertPwd)
+			}
+			if err != nil {
+				blog.Errorf("get client tls config failed, err %s", err.Error())
+				break
+			}
+			request = gorequest.New().TLSClientConfig(tlsConfig)
+		}
+		userToken := os.Getenv("USER_TOKEN")
+		if len(userToken) != 0 {
+			request.AppendHeader("Authorization", "Bearer "+userToken)
 		}
 
-		resp, respBody, errs := request.Put(bkeUrl).Send(clusterInfoParams).End()
+		resp, respBody, errs := request.Put(bkeURL).Send(clusterInfoParams).End()
 		if len(errs) > 0 {
 			blog.Errorf("unable to connect to the bke server: %s", errs[0].Error())
 			// sleep a while to try again, avoid trying in loop
@@ -110,7 +134,8 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 
 	externalProxyAddresses := viper.GetString("agent.external-proxy-addresses")
 	if externalProxyAddresses == "" {
-		endpoints, err := kubeClient.CoreV1().Endpoints(defaultNamespace).Get(clusterServiceName, metav1.GetOptions{})
+		endpoints, err := kubeClient.CoreV1().Endpoints(defaultNamespace).Get(
+			context.TODO(), clusterServiceName, metav1.GetOptions{})
 		if err != nil {
 			return "", err
 		}
@@ -150,22 +175,19 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 	return serverAddresses, nil
 }
 
-func getBkeAgentInfo() (string, string) {
+func getBkeAgentInfo() string {
 	bkeServerAddress := viper.GetString("bke.serverAddress")
-	clusterId := viper.GetString("cluster.id")
-	registerToken := os.Getenv("REGISTER_TOKEN")
+	bkeReportPath := viper.GetString("bke.report-path")
+	bkeURL := fmt.Sprintf("%s"+bkeReportPath, bkeServerAddress)
 
-	//bkeUrl := fmt.Sprintf("%s/rest/clusters/%s/credentials", bkeServerAddress, clusterId)
-	bkeUrl := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/clusters/%s/credentials", bkeServerAddress, clusterId)
-
-	return bkeUrl, registerToken
+	return bkeURL
 }
 
 // probe the health of the apiserver address for 3 times
 func pingEndpoint(host string) error {
 	var err error
 	for i := 0; i < 3; i++ {
-		err = dialTls(host)
+		err = dialTLS(host)
 		if err != nil && strings.Contains(err.Error(), "connection refused") {
 			blog.Infof("Error connecting the apiserver %s. Retrying...: %s", host, err.Error())
 			time.Sleep(time.Second)
@@ -179,7 +201,7 @@ func pingEndpoint(host string) error {
 	return err
 }
 
-func dialTls(host string) error {
+func dialTLS(host string) error {
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}
