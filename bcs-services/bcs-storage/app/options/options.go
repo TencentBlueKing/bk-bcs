@@ -43,6 +43,7 @@ type StorageOptions struct {
 	Etcd       registry.CMDOptions `json:"etcdRegistry"`
 
 	DBConfig     string `json:"database_config_file" value:"storage-database.conf" usage:"Config file for database."`
+	QueueConfig  string `json:"queue_config_file" value:"queue.conf" usage:"Config file for database."`
 	EventMaxTime int64  `json:"event_max_day" value:"15" usage:"Max day for holding events data."`
 	EventMaxCap  int64  `json:"event_max_cap" value:"10000" usage:"Max num for holding events data of each cluster."`
 	AlarmMaxTime int64  `json:"alarm_max_day" value:"15" usage:"Max day for holding alarms data."`

@@ -6,6 +6,7 @@
   "pid_dir": "${pid_dir}",
   "bcs_zookeeper": "${bcsZkHost}",
   "database_config_file": "${storageDbConfig}",
+  "queue_config_file": "${queueConfig}",
   "event_max_day": ${eventMaxDay},
   "event_max_cap": ${eventMaxCap},
   "alarm_max_day": ${alarmMaxDay},
