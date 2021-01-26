@@ -155,6 +155,10 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 			blog.Errorf("get user-manager module from etcd registry failed, %s", err.Error())
 			return nil, err
 		}
+		if node == nil {
+			blog.Warnf("get no available user-manager service, no kube-apiserver service")
+			return nil, nil
+		}
 		userMgrInst = node.Address
 		blog.Infof("get random user-manager instance [%s] from etcd registry for query kube-apiserver", userMgrInst)
 	} else {
