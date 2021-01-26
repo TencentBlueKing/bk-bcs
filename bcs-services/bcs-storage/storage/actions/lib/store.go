@@ -35,11 +35,12 @@ const (
 
 // StoreGetOption option for get action
 type StoreGetOption struct {
-	Fields []string
-	Sort   map[string]int
-	Cond   *operator.Condition
-	Offset int64
-	Limit  int64
+	Fields         []string
+	Sort           map[string]int
+	Cond           *operator.Condition
+	Offset         int64
+	Limit          int64
+	IsAllDocuments bool
 }
 
 // StorePutOption option for put action
@@ -111,7 +112,9 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	if opt.Limit != 0 {
 		finder = finder.WithLimit(opt.Limit)
 	} else {
-		finder = finder.WithLimit(storeActionDefaultLimit)
+		if !opt.IsAllDocuments {
+			finder = finder.WithLimit(storeActionDefaultLimit)
+		}
 	}
 
 	if err := finder.All(ctx, &mList); err != nil {
