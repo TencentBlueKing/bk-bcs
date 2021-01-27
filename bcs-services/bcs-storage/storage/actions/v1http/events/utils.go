@@ -210,9 +210,13 @@ func insert(req *restful.Request) error {
 			queueData[resourceNameTag] = data.Name
 		}
 	}
-	err = publishEventResourceToQueue(queueData, eventFeatTags, msgqueue.EventTypeUpdate)
-	if err != nil {
-		blog.Errorf("publishEventResourceToQueue failed, err %s", err.Error())
+
+	// queueFlag true
+	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
+		err = publishEventResourceToQueue(queueData, eventFeatTags, msgqueue.EventTypeUpdate)
+		if err != nil {
+			blog.Errorf("publishEventResourceToQueue failed, err %s", err.Error())
+		}
 	}
 
 	return nil
@@ -270,7 +274,7 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 		return nil
 	}
 
-	err = apiserver.GetAPIResource().GetMsgQueue().Publish(message)
+	err = apiserver.GetAPIResource().GetMsgQueue().MsgQueue.Publish(message)
 	if err != nil {
 		return err
 	}
