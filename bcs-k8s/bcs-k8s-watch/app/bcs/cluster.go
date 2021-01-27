@@ -28,6 +28,7 @@ import (
 func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customIPStr string, isExternal bool) (*InnerService, *RegisterDiscover.RegDiscover, error) {
 	customEndpoints := strings.Split(customIPStr, ",")
 	storageService := NewInnerService(types.BCS_MODULE_STORAGE, nil, customEndpoints, isExternal)
+	storageService.update(customEndpoints, bcsTLSConfig)
 	return storageService, nil, nil
 }
 
