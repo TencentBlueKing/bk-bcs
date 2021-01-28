@@ -42,7 +42,7 @@ default:api client storage executor mesos-driver mesos-watch scheduler \
 	tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller \
 	bcs-cloud-netagent mesh-manager bcs-ingress-controller log-manager gamedeployment
 
-bcs-k8s:k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment \
+bcs-k8s:k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment hook \
 	cc-agent
 
 bcs-mesos:mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
