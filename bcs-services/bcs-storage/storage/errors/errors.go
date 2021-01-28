@@ -51,4 +51,5 @@ var (
 	ResourceDoesNotExist         = &StorageError{Code: common.AdditionErrorCode + 6319, Message: "resource does not exist"}
 	RemoveLessThanMatch          = &StorageError{Code: common.AdditionErrorCode + 6320, Message: "remove less than match"}
 	UpdateLessThanMatch          = &StorageError{Code: common.AdditionErrorCode + 6321, Message: "update less than match"}
+	QueueConfigUnknown           = &StorageError{Code: common.AdditionErrorCode + 6307, Message: "queue config unknown"}
 )
