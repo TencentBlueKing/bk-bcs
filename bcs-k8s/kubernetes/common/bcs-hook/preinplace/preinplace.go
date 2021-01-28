@@ -41,7 +41,10 @@ const (
 )
 
 type PreInplaceInterface interface {
-	CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod, newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error)
+	CheckInplace(obj PreInplaceHookObjectInterface,
+		pod *v1.Pod,
+		newStatus PreInplaceHookStatusInterface,
+		podNameLabelKey string) (bool, error)
 }
 
 type PreInplaceControl struct {
@@ -54,19 +57,22 @@ type PreInplaceControl struct {
 
 func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, recorder record.EventRecorder,
 	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister) PreInplaceInterface {
-	return &PreInplaceControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder, hookRunLister: hookRunLister,
-		hookTemplateLister: hookTemplateLister}
+	return &PreInplaceControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder,
+		hookRunLister: hookRunLister, hookTemplateLister: hookTemplateLister}
 }
 
 // CheckInplace check whether the pod can be deleted safely
-func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod, newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error) {
+func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod,
+	newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error) {
 	metaObj, ok := obj.(metav1.Object)
 	if !ok {
-		return false, fmt.Errorf("error decoding object to meta object for checking preinplace hook, invalid type")
+		return false, fmt.Errorf(
+			"error decoding object to meta object for checking preinplace hook, invalid type")
 	}
 	runtimeObj, ok1 := obj.(runtime.Object)
 	if !ok1 {
-		return false, fmt.Errorf("error decoding object to runtime object for checking preinplace hook, invalid type")
+		return false, fmt.Errorf(
+			"error decoding object to runtime object for checking preinplace hook, invalid type")
 	}
 	objectKind := runtimeObj.GetObjectKind().GroupVersionKind().Kind
 	namespace := metaObj.GetNamespace()
@@ -95,13 +101,15 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 		return false, err
 	}
 	if len(existHookRuns) == 0 {
-		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj, preInplaceHook, pod, preInplaceLabels, podNameLabelKey)
+		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
+			preInplaceHook, pod, preInplaceLabels, podNameLabelKey)
 		if err != nil {
 			return false, err
 		}
 
 		updatePreInplaceHookCondition(newStatus, pod.Name)
-		klog.Infof("Created PreInplace HookRun %s for pod %s of %s %s/%s", preInplaceHookRun.Name, pod.Name, objectKind, namespace, name)
+		klog.Infof("Created PreInplace HookRun %s for pod %s of %s %s/%s",
+			preInplaceHookRun.Name, pod.Name, objectKind, namespace, name)
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
@@ -123,8 +131,9 @@ func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod 
 }
 
 // createHookRun create a PreInplace HookRun
-func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runtime.Object, preInplaceHook *hookv1alpha1.HookStep,
-	pod *v1.Pod, labels map[string]string, podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
+func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runtime.Object,
+	preInplaceHook *hookv1alpha1.HookStep, pod *v1.Pod, labels map[string]string,
+	podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
 	arguments := []hookv1alpha1.Argument{}
 	for _, arg := range preInplaceHook.Args {
 		value := arg.Value
@@ -170,17 +179,21 @@ func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runt
 }
 
 // newHookRunFromGameStatefulSet generate a HookRun from HookTemplate
-func (p *PreInplaceControl) newHookRunFromHookTemplate(metaObj metav1.Object, runtimeObj runtime.Object, args []hookv1alpha1.Argument,
-	pod *v1.Pod, preInplaceHook *hookv1alpha1.HookStep, labels map[string]string, podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
+func (p *PreInplaceControl) newHookRunFromHookTemplate(metaObj metav1.Object,
+	runtimeObj runtime.Object, args []hookv1alpha1.Argument,
+	pod *v1.Pod, preInplaceHook *hookv1alpha1.HookStep, labels map[string]string,
+	podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
 	template, err := p.hookTemplateLister.HookTemplates(pod.Namespace).Get(preInplaceHook.TemplateName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			klog.Warningf("HookTemplate '%s' not found for %s/%s", preInplaceHook.TemplateName, pod.Namespace, pod.Name)
+			klog.Warningf("HookTemplate '%s' not found for %s/%s",
+				preInplaceHook.TemplateName, pod.Namespace, pod.Name)
 		}
 		return nil, err
 	}
 
-	nameParts := []string{"preinplace", pod.Labels[apps.ControllerRevisionHashLabelKey], pod.Labels[podNameLabelKey], preInplaceHook.TemplateName}
+	nameParts := []string{"preinplace", pod.Labels[apps.ControllerRevisionHashLabelKey],
+		pod.Labels[podNameLabelKey], preInplaceHook.TemplateName}
 	name := strings.Join(nameParts, "-")
 
 	run, err := commonhookutil.NewHookRunFromTemplate(template, args, name, "", pod.Namespace)
@@ -188,7 +201,8 @@ func (p *PreInplaceControl) newHookRunFromHookTemplate(metaObj metav1.Object, ru
 		return nil, err
 	}
 	run.Labels = labels
-	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(metaObj, runtimeObj.GetObjectKind().GroupVersionKind())}
+	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(metaObj,
+		runtimeObj.GetObjectKind().GroupVersionKind())}
 	return run, nil
 }
 
@@ -232,7 +246,8 @@ func updatePreInplaceHookCondition(status PreInplaceHookStatusInterface, podName
 }
 
 // reset PreInplaceHookConditionPhase of a pod
-func resetPreInplaceHookConditionPhase(status PreInplaceHookStatusInterface, podName string, phase hookv1alpha1.HookPhase) error {
+func resetPreInplaceHookConditionPhase(status PreInplaceHookStatusInterface, podName string,
+	phase hookv1alpha1.HookPhase) error {
 	var index int
 	found := false
 	conditions := status.GetPreInplaceHookConditions()
