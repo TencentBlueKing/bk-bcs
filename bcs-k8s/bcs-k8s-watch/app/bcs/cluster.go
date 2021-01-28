@@ -34,7 +34,6 @@ func GetStorageService(zkHosts string, bcsTLSConfig options.TLS, customIPStr str
 
 // GetNetService returns netservice InnerService object for discovery.
 func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customIPStr string, isExternal bool) (*InnerService, *RegisterDiscover.RegDiscover, error) {
-	customEndpoints := strings.Split(customIPStr, ",")
 	discovery := RegisterDiscover.NewRegDiscoverEx(zkHosts, 5*time.Second)
 	if err := discovery.Start(); err != nil {
 		return nil, nil, fmt.Errorf("get netservice from ZK failed, %+v", err)
@@ -49,7 +48,10 @@ func GetNetService(zkHosts string, bcsTLSConfig options.TLS, customIPStr string,
 		discovery.Stop()
 		return nil, nil, fmt.Errorf("discover netservice failed, %+v", err)
 	}
-
+	var customEndpoints []string
+	if len(customIPStr) != 0 {
+		customEndpoints = strings.Split(customIPStr, ",")
+	}
 	netService := NewInnerService(types.BCS_MODULE_NETSERVICE, eventChan, customEndpoints, isExternal)
 	go netService.Watch(bcsTLSConfig)
 
