@@ -589,7 +589,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If we have a Pod that has been created but is not running and ready we can not make progress.
 		// We must ensure that all for each Pod, when we create it, all of its predecessors, with respect to its
 		// ordinal, are Running and Ready.
-		if monotonic && (getPodRevision(replicas[i]) == updateRevision.Name) && (!isRunningAndReady(replicas[i]))  {
+		if monotonic && (getPodRevision(replicas[i]) == updateRevision.Name) && (!isRunningAndReady(replicas[i])) {
 			klog.V(3).Infof(
 				"GameStatefulSet %s/%s is waiting for Pod %s to be Running and Ready",
 				set.Namespace,

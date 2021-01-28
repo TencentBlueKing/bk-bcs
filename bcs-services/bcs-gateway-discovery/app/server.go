@@ -211,12 +211,12 @@ func (s *DiscoveryServer) dataSynchronization() error {
 	//first get all gateway route information
 	regisetedService, err := s.regMgr.ListServices()
 	if err != nil {
-		blog.Errorf("gateway-discovery get all registed Service from Register failed, %s. wait for next tick", err.Error())
+		blog.Errorf("gateway-discovery get all registered Service from Register failed, %s. wait for next tick", err.Error())
 		return err
 	}
 	regisetedMap := make(map[string]*register.Service)
 	if len(regisetedService) == 0 {
-		blog.Warnf("gateway-discovery finds no registed service from Register, maybe this is first synchronization.")
+		blog.Warnf("gateway-discovery finds no registered service from Register, maybe this is first synchronization.")
 	} else {
 		for _, srv := range regisetedService {
 			blog.V(3).Infof("gateway-discovery check Service %s is under regiseted", srv.Name)

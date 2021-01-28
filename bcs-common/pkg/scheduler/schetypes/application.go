@@ -207,7 +207,7 @@ func (in *Version) GetExtendedResources() map[string]*commtypes.ExtendedResource
 	return ers
 }
 
-//Resource discribe resources needed by a task
+//Resource describe resources needed by a task
 type Resource struct {
 	//cpu核数
 	Cpus float64

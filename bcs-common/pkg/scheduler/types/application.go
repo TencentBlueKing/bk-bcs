@@ -122,7 +122,7 @@ type Version struct {
 	Mode        string
 }
 
-//Resource discribe resources needed by a task
+//Resource describe resources needed by a task
 type Resource struct {
 	Cpus float64
 	Mem  float64

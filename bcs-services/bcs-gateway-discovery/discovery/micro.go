@@ -169,7 +169,7 @@ func (d *MicroDiscovery) GetRandomServerInstance(module string) (*registry.Node,
 	return svc.Nodes[selected], nil
 }
 
-//ListAllServer list all registed server information
+//ListAllServer list all registered server information
 func (d *MicroDiscovery) ListAllServer() ([]*registry.Service, error) {
 	svcList, err := d.microRegistry.ListServices()
 	if err != nil {
@@ -294,7 +294,7 @@ func (d *MicroDiscovery) handleEvent(r *registry.Result) {
 	fullName := r.Service.Name
 	allNodeSvc, err := d.innerGetService(r.Service.Name)
 	if err != nil {
-		blog.Errorf("discovery get module %s information failed, %s", err.Error())
+		blog.Errorf("discovery get module %s information failed, %s", fullName, err.Error())
 		return
 	}
 	if allNodeSvc == nil {

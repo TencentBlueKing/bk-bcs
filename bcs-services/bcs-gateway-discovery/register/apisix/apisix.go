@@ -81,7 +81,7 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 	for _, innerroute := range svc.Routes {
 		route := apisixRouteConversion(svc, &innerroute)
 		if routeErr = r.apisixClient.CreateRoute(route); routeErr != nil {
-			blog.Errorf("apisix register create service %s route failed, %s. route detials: %+v",
+			blog.Errorf("apisix register create service %s route failed, %s. route details: %+v",
 				svc.Name, routeErr.Error(), route)
 			failed = true
 			break
@@ -97,7 +97,7 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 		}
 		//create service failed, ready to clean dirty upstream data
 		if err := r.apisixClient.DeleteService(service.ID); err != nil {
-			blog.Errorf("apisix register clean dirty service %s data failed, %s", service.ID)
+			blog.Errorf("apisix register clean dirty service %s data failed, %s", service.ID, err.Error())
 		}
 		//create service failed, ready to clean dirty upstream data
 		if err := r.apisixClient.DeleteUpstream(upstream.ID); err != nil {
@@ -108,7 +108,7 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 	return nil
 }
 
-//UpdateService update specifed Service, if service does not exist, return error
+//UpdateService update specified Service, if service does not exist, return error
 func (r *apiRegister) UpdateService(svc *register.Service) error {
 	return fmt.Errorf("Not Implemented")
 }
@@ -173,7 +173,7 @@ func (r *apiRegister) ListServices() ([]*register.Service, error) {
 //GetTargetByService get service relative backends
 func (r *apiRegister) GetTargetByService(svc *register.Service) ([]register.Backend, error) {
 	if svc == nil || len(svc.Name) == 0 {
-		return nil, fmt.Errorf("neccessary service info lost")
+		return nil, fmt.Errorf("necessary service info lost")
 	}
 	upstream, err := r.apisixClient.GetUpstream(svc.Name)
 	if err != nil {

@@ -37,5 +37,6 @@ require (
 	go.mongodb.org/mongo-driver v1.4.5
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	gopkg.in/inf.v0 v0.9.1 // indirect
+	k8s.io/api v0.20.2
 	moul.io/http2curl v1.0.0 // indirect
 )

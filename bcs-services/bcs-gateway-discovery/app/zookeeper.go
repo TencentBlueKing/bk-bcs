@@ -192,7 +192,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 		return nil, err
 	}
 	if len(clusters) == 0 {
-		blog.Warnf("No kube-apiserver registed, skip kube-apiserver proxy rules")
+		blog.Warnf("No kube-apiserver registered, skip kube-apiserver proxy rules")
 		return nil, nil
 	}
 	//construct inner Service definition
