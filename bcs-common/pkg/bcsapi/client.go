@@ -19,8 +19,6 @@ import (
 )
 
 //! v4 version binding~
-//! todo(DeveloperJim): refactor http request with esb/client
-//! 	that's more effiency and focus on SDK logic
 
 const (
 	gatewayPrefix   = "/bcsapi/v4/"
@@ -30,7 +28,6 @@ const (
 // Config for bcsapi
 type Config struct {
 	// bcsapi host, available like 127.0.0.1:8080
-	// todo(DeveloperJim): make it slice when discovery mechanism change to etcd
 	Hosts []string
 	// tls configuratio
 	TLSConfig *tls.Config
@@ -67,7 +64,6 @@ func (c *Client) UserManager() UserManager {
 	return NewUserManager(c.config)
 }
 
-// TODO: to add mesos driver
 // MesosDriver client interface
 // func (c *Client) MesosDriver() MesosDriver {
 // 	return &MesosDriverClient{}

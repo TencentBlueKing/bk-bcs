@@ -74,7 +74,7 @@ func NewDefaultGameStatefulSetControl(
 	hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister,
 	preDeleteControl predelete.PreDeleteInterface,
-	preInplaceControl preinplace.PreInplaceInterface,) GameStatefulSetControlInterface {
+	preInplaceControl preinplace.PreInplaceInterface) GameStatefulSetControlInterface {
 	return &defaultGameStatefulSetControl{
 		hookClient,
 		podControl,
@@ -101,7 +101,7 @@ type defaultGameStatefulSetControl struct {
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
-	preInplaceControl   preinplace.PreInplaceInterface
+	preInplaceControl  preinplace.PreInplaceInterface
 }
 
 // UpdateGameStatefulSet executes the core logic loop for a stateful set plus, applying the predictable and
@@ -628,8 +628,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If we have a Pod that has been created but is not running and ready we can not make progress.
 		// We must ensure that all for each Pod, when we create it, all of its predecessors, with respect to its
 		// ordinal, are Running and Ready.
-
-		if monotonic && (getPodRevision(replicas[i]) == updateRevision.Name) && (!isRunningAndReady(replicas[i]))  {
+		if monotonic && (getPodRevision(replicas[i]) == updateRevision.Name) && (!isRunningAndReady(replicas[i])) {
 			klog.V(3).Infof(
 				"GameStatefulSet %s/%s is waiting for Pod %s to be Running and Ready",
 				set.Namespace,
@@ -749,7 +748,7 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				if set.Spec.PreInplaceUpdateStrategy.Hook != nil{
+				if set.Spec.PreInplaceUpdateStrategy.Hook != nil {
 					canInplace, err := ssc.preInplaceControl.CheckInplace(
 						set,
 						replicas[target],
@@ -931,7 +930,7 @@ func (ssc *defaultGameStatefulSetControl) inPlaceUpdatePod(
 	}
 
 	err := fmt.Errorf(
-		"find Pod %s update strategy is InplaceUpdate, but the diff " +
+		"find Pod %s update strategy is InplaceUpdate, but the diff "+
 			"not only contains replace operation of spec.containers[x].image",
 		pod)
 	ssc.recorder.Eventf(

@@ -862,7 +862,7 @@ curl http://127.0.0.1:8000/apisix/admin/routes/kube-agent-tunnel \
   -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
 {
   "name": "kube-agent-tunnel",
-  "uri": "/tunnels/clusters/*",
+  "uri": "/clusters/*",
   "service_id": "clustermanager",
   "service_protocol": "http",
   "enable_websocket": true,
@@ -871,6 +871,7 @@ curl http://127.0.0.1:8000/apisix/admin/routes/kube-agent-tunnel \
       "include_in_response": true
     },
     "proxy-rewrite": {
+      "regex_uri": ["/clusters/(.*)", "/clustermanager/clusters/$1"],
       "scheme": "https"
     }
   }
@@ -889,7 +890,7 @@ curl http://127.0.0.1:8000/apisix/admin/routes/mesosdriver-tunnel \
       "include_in_response": true
     },
     "proxy-rewrite": {
-      "regex_uri": ["/bcsapi/v4/scheduler/mesos/(.*)", "/mesosdriver/v4/$1"],
+      "regex_uri": ["/bcsapi/v4/scheduler/mesos/(.*)", "/clustermanager/mesosdriver/v4/$1"],
       "scheme": "https"
     }
   }

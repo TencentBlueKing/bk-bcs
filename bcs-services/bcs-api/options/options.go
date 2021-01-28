@@ -66,14 +66,14 @@ type TKEOptions struct {
 	CcsPath   string `json:"ccs_path" value:"" usage:"tke ccs path"`
 }
 
-// RbacData rbac data for specifed cluster
+// RbacData rbac data for specified cluster
 type RbacData struct {
 	Username  string   `json:"user_name"`
 	ClusterId string   `json:"cluster_id"`
 	Roles     []string `json:"roles"`
 }
 
-//CredentialsFixturesOptions option for enable cluster specifed token, deprecated
+//CredentialsFixturesOptions option for enable cluster specified token, deprecated
 type CredentialsFixturesOptions struct {
 	Enabled     bool         `json:"is_enabled_fixtures_credentials"`
 	Credentials []Credential `json:"credentials"`
