@@ -4,7 +4,7 @@ go 1.13
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common => ../kubernetes/common
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
@@ -39,16 +39,13 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.13.0 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
-	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/prometheus/client_golang v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/soheilhy/cmux v0.1.4 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200122045848-3419fae592fc // indirect
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect

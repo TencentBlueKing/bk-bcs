@@ -239,6 +239,9 @@ func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.Game
 				PreDeleteUpdateStrategy: gstsv1alpha1.GameStatefulSetPreDeleteUpdateStrategy{
 					RetryUnexpectedHooks: set.Spec.PreDeleteUpdateStrategy.RetryUnexpectedHooks,
 				},
+				PreInplaceUpdateStrategy: gstsv1alpha1.GameStatefulSetPreInplaceUpdateStrategy{
+					RetryUnexpectedHooks: set.Spec.PreInplaceUpdateStrategy.RetryUnexpectedHooks,
+				},
 			},
 		},
 		&gstsv1alpha1.GameStatefulSet{
@@ -247,6 +250,9 @@ func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.Game
 					Paused: paused,
 				},
 				PreDeleteUpdateStrategy: gstsv1alpha1.GameStatefulSetPreDeleteUpdateStrategy{
+					RetryUnexpectedHooks: false,
+				},
+				PreInplaceUpdateStrategy: gstsv1alpha1.GameStatefulSetPreInplaceUpdateStrategy{
 					RetryUnexpectedHooks: false,
 				},
 			},

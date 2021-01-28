@@ -30,6 +30,7 @@ const (
 	HookRunTypeLabel                   = "hookrun-type"
 	HookRunTypeCanaryStepLabel         = "canary-step"
 	HookRunTypePreDeleteLabel          = "pre-delete-step"
+	HookRunTypePreInplaceLabel          = "pre-inplace-step"
 	HookRunCanaryStepIndexLabel        = "canary-step-index"
 	PodControllerRevision              = "pod-controller-revision"
 	PodInstanceID                      = "instance-id"
@@ -85,6 +86,7 @@ func MergeArgs(incomingArgs, templateArgs []hookv1alpha1.Argument) ([]hookv1alph
 			return nil, fmt.Errorf("args.%s was not resolved", arg.Name)
 		}
 	}
+
 	return newArgs, nil
 }
 

@@ -15,6 +15,7 @@ package gamestatefulset
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"math"
 	"sort"
 	"time"
@@ -72,7 +73,7 @@ func NewDefaultGameStatefulSetControl(
 	recorder record.EventRecorder,
 	hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister,
-	preDeleteControl predelete.PreDeleteInterface) GameStatefulSetControlInterface {
+	preDeleteControl predelete.PreDeleteInterface, preInplaceControl preinplace.PreInplaceInterface,) GameStatefulSetControlInterface {
 	return &defaultGameStatefulSetControl{
 		hookClient,
 		podControl,
@@ -84,6 +85,7 @@ func NewDefaultGameStatefulSetControl(
 		hookRunLister,
 		hookTemplateLister,
 		preDeleteControl,
+		preInplaceControl,
 	}
 }
 
@@ -98,6 +100,7 @@ type defaultGameStatefulSetControl struct {
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
+	preInplaceControl   preinplace.PreInplaceInterface
 }
 
 // UpdateGameStatefulSet executes the core logic loop for a stateful set plus, applying the predictable and
@@ -378,6 +381,19 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		return status, ssc.deleteUnexpectedPreDeleteHookRuns(hrList)
 	}
 
+	// truncate unneeded PreDeleteHookRuns
+	err = ssc.truncatePreInplaceHookRuns(set, pods, hrList)
+	if err != nil {
+		return status, err
+	}
+
+	ssc.truncatePreInplaceHookConditions(pods, status)
+
+	// if configured retry, delete unexpected HookRuns and reconcile
+	if set.Spec.PreInplaceUpdateStrategy.RetryUnexpectedHooks {
+		return status, ssc.deleteUnexpectedPreInplaceHookRuns(hrList)
+	}
+
 	replicaCount := int(*set.Spec.Replicas)
 	// slice that will contain all Pods such that 0 <= getOrdinal(pod) < set.Spec.Replicas
 	replicas := make([]*v1.Pod, replicaCount)
@@ -589,7 +605,7 @@ func (ssc *defaultGameStatefulSetControl) updateGameStatefulSet(
 		// If we have a Pod that has been created but is not running and ready we can not make progress.
 		// We must ensure that all for each Pod, when we create it, all of its predecessors, with respect to its
 		// ordinal, are Running and Ready.
-		if !isRunningAndReady(replicas[i]) && monotonic {
+		if monotonic && (getPodRevision(replicas[i]) == updateRevision.Name) && (!isRunningAndReady(replicas[i]))  {
 			klog.V(3).Infof(
 				"GameStatefulSet %s/%s is waiting for Pod %s to be Running and Ready",
 				set.Namespace,
@@ -699,24 +715,40 @@ func (ssc *defaultGameStatefulSetControl) handleUpdateStrategy(
 	case gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType:
 		for target := len(replicas) - 1; target >= updateMin; target-- {
 			if getPodRevision(replicas[target]) != updateRevision.Name && !isTerminating(replicas[target]) {
-				canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodOrdinal)
-				if err != nil {
-					klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
-						replicas[target].Name, set.Namespace, set.Name, err.Error())
-					return status, err
-				}
-				if !canDelete {
-					klog.V(2).Infof("PreDelete Hook not completed, can't inplaceUpdate the pod %s for GameStatefulSet %s/%s now.",
-						replicas[target].Name, set.Namespace, set.Name)
-					if monotonic {
-						return status, nil
+				if set.Spec.PreInplaceUpdateStrategy.Hook != nil{
+					canInplace, err := ssc.preInplaceControl.CheckInplace(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodOrdinal)
+					if err != nil {
+						klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
+							replicas[target].Name, set.Namespace, set.Name, err.Error())
+						return status, err
 					}
-					continue
+					if !canInplace {
+						klog.V(2).Infof("PreInplace Hook not completed, can't inplaceUpdate the pod %s for GameStatefulSet %s/%s now.",
+							replicas[target].Name, set.Namespace, set.Name)
+						if monotonic {
+							return status, nil
+						}
+						continue
+					}
 				} else {
-					inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
-					status.CurrentReplicas--
-					return status, inPlaceUpdateErr
+					canDelete, err := ssc.preDeleteControl.CheckDelete(set, replicas[target], status, gstsv1alpha1.GameStatefulSetPodOrdinal)
+					if err != nil {
+						klog.Errorf("Error to check whether the pod %s can be safely deleted for GameStatefulSet %s/%s: %s",
+							replicas[target].Name, set.Namespace, set.Name, err.Error())
+						return status, err
+					}
+					if !canDelete {
+						klog.V(2).Infof("PreDelete Hook not completed, can't inplaceUpdate the pod %s for GameStatefulSet %s/%s now.",
+							replicas[target].Name, set.Namespace, set.Name)
+						if monotonic {
+							return status, nil
+						}
+						continue
+					}
 				}
+				inPlaceUpdateErr := ssc.inPlaceUpdatePod(set, replicas[target], updateRevision, revisions)
+				status.CurrentReplicas--
+				return status, inPlaceUpdateErr
 			}
 
 			if !isHealthy(replicas[target]) && monotonic {
@@ -915,6 +947,60 @@ func (ssc *defaultGameStatefulSetControl) deleteUnexpectedPreDeleteHookRuns(hrLi
 	preDeleteHookRuns := commonhookutil.FilterPreDeleteHookRuns(hrList)
 	hrsToDelete := []*hookv1alpha1.HookRun{}
 	for _, hr := range preDeleteHookRuns {
+		if hr.Status.Phase.Completed() && hr.Status.Phase != hookv1alpha1.HookPhaseSuccessful {
+			hrsToDelete = append(hrsToDelete, hr)
+		}
+	}
+
+	return ssc.deleteHookRuns(hrsToDelete)
+}
+
+// truncatePreInplaceHookRuns truncate unneeded PreInplaceHookConditions
+func (ssc *defaultGameStatefulSetControl) truncatePreInplaceHookRuns(set *gstsv1alpha1.GameStatefulSet, pods []*v1.Pod, hrList []*hookv1alpha1.HookRun) error {
+	preInplaceHookRuns := commonhookutil.FilterPreInplaceHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
+	for _, hr := range preInplaceHookRuns {
+		podControllerRevision := hr.Labels[commonhookutil.WorkloadRevisionUniqueLabel]
+		podInstanceID := hr.Labels[commonhookutil.PodInstanceID]
+
+		exist := false
+		for _, pod := range pods {
+			cr, ok1 := pod.Labels[apps.ControllerRevisionHashLabelKey]
+			id, ok2 := pod.Labels[gstsv1alpha1.GameStatefulSetPodOrdinal]
+			if ok1 && ok2 && podControllerRevision == cr && podInstanceID == id {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			hrsToDelete = append(hrsToDelete, hr)
+		}
+	}
+
+	return ssc.deleteHookRuns(hrsToDelete)
+}
+
+// truncatePreInplaceHookConditions truncate unneeded PreInplaceHookConditions
+func (ssc *defaultGameStatefulSetControl) truncatePreInplaceHookConditions(pods []*v1.Pod, newStatus *gstsv1alpha1.GameStatefulSetStatus) {
+	for i, cond := range newStatus.PreInplaceHookConditions {
+		exist := false
+		for _, pod := range pods {
+			if cond.PodName == pod.Name {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			newStatus.PreInplaceHookConditions = append(newStatus.PreInplaceHookConditions[:i], newStatus.PreInplaceHookConditions[i+1:]...)
+		}
+	}
+}
+
+// deleteUnexpectedPreInplaceHookRuns delete unexpected PreInplaceHookRuns, then will trigger a reconcile
+func (ssc *defaultGameStatefulSetControl) deleteUnexpectedPreInplaceHookRuns(hrList []*hookv1alpha1.HookRun) error {
+	preInplaceHookRuns := commonhookutil.FilterPreInplaceHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
+	for _, hr := range preInplaceHookRuns {
 		if hr.Status.Phase.Completed() && hr.Status.Phase != hookv1alpha1.HookPhaseSuccessful {
 			hrsToDelete = append(hrsToDelete, hr)
 		}

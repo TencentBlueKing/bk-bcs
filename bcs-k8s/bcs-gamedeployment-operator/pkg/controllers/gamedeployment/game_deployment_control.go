@@ -216,6 +216,19 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 		return delayDuration, gdc.deleteUnexpectedPreDeleteHookRuns(hrList)
 	}
 
+	// truncate unneeded PreInplaceHookRuns
+	err = gdc.truncatePreInplaceHookRuns(deploy, filteredPods, hrList)
+	if err != nil {
+		return delayDuration, err
+	}
+
+	gdc.truncatePreInplaceHookConditions(filteredPods, newStatus)
+
+	// if configured retry, delete unexpected HookRuns and reconcile
+	if deploy.Spec.PreInplaceUpdateStrategy.RetryUnexpectedHooks {
+		return delayDuration, gdc.deleteUnexpectedPreInplaceHookRuns(hrList)
+	}
+
 	sort.Sort(util.AlphabetSortPods(filteredPods))
 	var scaling bool
 	var podsScaleErr error
@@ -287,6 +300,62 @@ func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookRuns(deploy *gdv1a
 	preDeleteHookRuns := commonhookutil.FilterPreDeleteHookRuns(hrList)
 	hrsToDelete := []*hookv1alpha1.HookRun{}
 	for _, hr := range preDeleteHookRuns {
+		podControllerRevision := hr.Labels[commonhookutil.WorkloadRevisionUniqueLabel]
+		podInstanceID := hr.Labels[commonhookutil.PodInstanceID]
+
+		exist := false
+		for _, pod := range pods {
+			cr, ok1 := pod.Labels[apps.ControllerRevisionHashLabelKey]
+			id, ok2 := pod.Labels[gdv1alpha1.GameDeploymentInstanceID]
+			if ok1 && ok2 && podControllerRevision == cr && podInstanceID == id {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			hrsToDelete = append(hrsToDelete, hr)
+		}
+	}
+
+	return gdc.deleteHookRuns(hrsToDelete)
+}
+
+// deleteUnexpectedPreInplaceHookRuns delete unexpected PreInplaceHookRuns, then will trigger a reconcile
+func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreInplaceHookRuns(hrList []*hookv1alpha1.HookRun) error {
+	preInplaceHookRuns := commonhookutil.FilterPreInplaceHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
+	for _, hr := range preInplaceHookRuns {
+		if hr.Status.Phase.Completed() && hr.Status.Phase != hookv1alpha1.HookPhaseSuccessful {
+			hrsToDelete = append(hrsToDelete, hr)
+		}
+	}
+
+	return gdc.deleteHookRuns(hrsToDelete)
+}
+
+// truncatePreInplaceHookConditions truncate unneeded PreInplaceHookConditions
+func (gdc *defaultGameDeploymentControl) truncatePreInplaceHookConditions(pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) {
+	for i, cond := range newStatus.PreInplaceHookConditions {
+		exist := false
+		for _, pod := range pods {
+			if cond.PodName == pod.Name {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			newStatus.PreInplaceHookConditions = append(newStatus.PreInplaceHookConditions[:i], newStatus.PreInplaceHookConditions[i+1:]...)
+		}
+	}
+}
+
+// truncatePreInplaceHookRuns truncate unneeded PreInplaceHookConditions
+func (gdc *defaultGameDeploymentControl) truncatePreInplaceHookRuns(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod,
+	hrList []*hookv1alpha1.HookRun) error {
+
+	preInplaceHookRuns := commonhookutil.FilterPreInplaceHookRuns(hrList)
+	hrsToDelete := []*hookv1alpha1.HookRun{}
+	for _, hr := range preInplaceHookRuns {
 		podControllerRevision := hr.Labels[commonhookutil.WorkloadRevisionUniqueLabel]
 		podInstanceID := hr.Labels[commonhookutil.PodInstanceID]
 

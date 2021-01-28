@@ -15,6 +15,7 @@ package gamedeployment
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"reflect"
 	"time"
 
@@ -106,6 +107,7 @@ func NewGameDeploymentController(
 	gdscheme.AddToScheme(scheme.Scheme)
 
 	preDeleteControl := predelete.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
+	preInplaceControl := preinplace.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
 	gdc := &GameDeploymentController{
 		GroupVersionKind: util.ControllerKind,
 		gdClient:         gdClient,
@@ -115,7 +117,7 @@ func NewGameDeploymentController(
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
-			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
+			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			revisioncontrol.NewRevisionControl(),

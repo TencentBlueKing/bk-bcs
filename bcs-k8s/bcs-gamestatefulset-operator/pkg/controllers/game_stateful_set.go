@@ -15,6 +15,7 @@ package gamestatefulset
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"reflect"
 	"time"
 
@@ -109,6 +110,8 @@ func NewGameStatefulSetController(
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: constants.OperatorName})
 
 	preDeleteControl := predelete.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
+	preInplaceControl := preinplace.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
+
 	ssc := &GameStatefulSetController{
 		kubeClient: kubeClient,
 		gstsClient: gstsClient,
@@ -127,6 +130,7 @@ func NewGameStatefulSetController(
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			preDeleteControl,
+			preInplaceControl,
 		),
 		pvcListerSynced: pvcInformer.Informer().HasSynced,
 		queue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), constants.OperatorName),
