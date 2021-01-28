@@ -185,9 +185,12 @@ func putNamespaceResources(req *restful.Request) error {
 		return err
 	}
 
-	err = publishDynamicResourceToQueue(data, nsFeatTags, msgqueue.EventTypeUpdate)
-	if err != nil {
-		blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putNamespaceResources", err)
+	// queueFlag true
+	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
+		err = publishDynamicResourceToQueue(data, nsFeatTags, msgqueue.EventTypeUpdate)
+		if err != nil {
+			blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putNamespaceResources", err)
+		}
 	}
 
 	return nil
@@ -199,9 +202,12 @@ func putClusterResources(req *restful.Request) error {
 		return err
 	}
 
-	err = publishDynamicResourceToQueue(data, csFeatTags, msgqueue.EventTypeUpdate)
-	if err != nil {
-		blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putClusterResources", err)
+	// queueFlag true
+	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
+		err = publishDynamicResourceToQueue(data, csFeatTags, msgqueue.EventTypeUpdate)
+		if err != nil {
+			blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putClusterResources", err)
+		}
 	}
 
 	return nil
@@ -239,14 +245,17 @@ func deleteNamespaceResources(req *restful.Request) error {
 		return err
 	}
 
-	go func(mList []operator.M, featTags []string) {
-		for _, data := range mList {
-			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
-			if err != nil {
-				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteNamespaceResources", err)
+	// queueFlag true
+	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
+		go func(mList []operator.M, featTags []string) {
+			for _, data := range mList {
+				err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+				if err != nil {
+					blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteNamespaceResources", err)
+				}
 			}
-		}
-	}(mList, nsFeatTags)
+		}(mList, nsFeatTags)
+	}
 
 	return nil
 }
@@ -257,14 +266,17 @@ func deleteClusterResources(req *restful.Request) error {
 		return err
 	}
 
-	go func(mList []operator.M, featTags []string) {
-		for _, data := range mList {
-			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
-			if err != nil {
-				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteClusterResources", err)
+	// queueFlag true
+	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
+		go func(mList []operator.M, featTags []string) {
+			for _, data := range mList {
+				err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+				if err != nil {
+					blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteClusterResources", err)
+				}
 			}
-		}
-	}(mList, csFeatTags)
+		}(mList, csFeatTags)
+	}
 
 	return nil
 }
@@ -326,14 +338,17 @@ func deleteBatchNamespaceResource(req *restful.Request) error {
 		return err
 	}
 
-	go func(mList []operator.M, featTags []string) {
-		for _, data := range mList {
-			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
-			if err != nil {
-				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteBatchNamespaceResource", err)
+	// queueFlag true
+	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
+		go func(mList []operator.M, featTags []string) {
+			for _, data := range mList {
+				err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+				if err != nil {
+					blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteBatchNamespaceResource", err)
+				}
 			}
-		}
-	}(mList, nsListFeatTags)
+		}(mList, nsListFeatTags)
+	}
 
 	return nil
 }
@@ -344,14 +359,17 @@ func deleteClusterNamespaceResource(req *restful.Request) error {
 		return err
 	}
 
-	go func(mList []operator.M, featTags []string) {
-		for _, data := range mList {
-			err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
-			if err != nil {
-				blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteClusterNamespaceResource", err)
+	// queueFlag true
+	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
+		go func(mList []operator.M, featTags []string) {
+			for _, data := range mList {
+				err := publishDynamicResourceToQueue(data, featTags, msgqueue.EventTypeDelete)
+				if err != nil {
+					blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "deleteClusterNamespaceResource", err)
+				}
 			}
-		}
-	}(mList, csListFeatTags)
+		}(mList, csListFeatTags)
+	}
 
 	return nil
 }
@@ -424,7 +442,7 @@ func publishDynamicResourceToQueue(data operator.M, featTags []string, event msg
 		return nil
 	}
 
-	err = apiserver.GetAPIResource().GetMsgQueue().Publish(message)
+	err = apiserver.GetAPIResource().GetMsgQueue().MsgQueue.Publish(message)
 	if err != nil {
 		return err
 	}
