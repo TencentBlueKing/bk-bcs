@@ -10,7 +10,6 @@ replace (
 	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr => github.com/go-logr/zapr v0.1.1
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
-	k8s.io/client-go => k8s.io/client-go v0.18.2
 	k8s.io/klog => k8s.io/klog v1.0.0
 )
 
@@ -22,9 +21,9 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	k8s.io/api v0.18.6
-	k8s.io/apimachinery v0.18.6
-	k8s.io/client-go v0.18.6
-	k8s.io/klog v1.0.0
+	k8s.io/api v0.20.2
+	k8s.io/apimachinery v0.20.2
+	k8s.io/client-go v0.20.2
+	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kubernetes v1.14.10
 )
