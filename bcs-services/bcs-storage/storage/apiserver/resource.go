@@ -43,6 +43,12 @@ const (
 	queueConfigKey   = "queue"
 )
 
+// MessageQueue queue object
+type MessageQueue struct {
+	QueueFlag bool
+	MsgQueue  msgqueue.MessageQueue
+}
+
 // APIResource api resource object
 type APIResource struct {
 	Conf      *options.StorageOptions
@@ -50,7 +56,7 @@ type APIResource struct {
 	storeMap  map[string]store.Store
 	dbMap     map[string]drivers.DB
 	ebusMap   map[string]*watchbus.EventBus
-	msgQueue  msgqueue.MessageQueue
+	msgQueue  *MessageQueue
 }
 
 var api = APIResource{}
@@ -120,7 +126,7 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 				SetUnhealthy(queueConfigKey, err.Error())
 			}
 		default:
-			err = storageErr.DatabaseConfigUnknown
+			err = storageErr.QueueConfigUnknown
 			blog.Errorf("%v: %s", err, key)
 			SetUnhealthy("unknown_config", fmt.Sprintf("%v: %s", err, key))
 		}
@@ -163,11 +169,36 @@ func (a *APIResource) ParseQueueConfig() *conf.Config {
 }
 
 // GetMsgQueue get queue client
-func (a *APIResource) GetMsgQueue() msgqueue.MessageQueue {
+func (a *APIResource) GetMsgQueue() *MessageQueue {
 	return a.msgQueue
 }
 
+func (a *APIResource) getMsgQueueFlag(key string, queueConf *conf.Config) bool {
+	flagRaw := queueConf.Read(key, "QueueFlag")
+	if flagRaw == "" {
+		return false
+	}
+
+	flag, err := strconv.ParseBool(flagRaw)
+	if err != nil {
+		return false
+	}
+
+	blog.Infof("queueFlag is [%v]", flag)
+	return flag
+}
+
 func (a *APIResource) parseQueueInit(key string, queueConf *conf.Config) error {
+	queueFlag := a.getMsgQueueFlag(key, queueConf)
+	if !queueFlag {
+		a.msgQueue = &MessageQueue{
+			QueueFlag: queueFlag,
+			MsgQueue:  nil,
+		}
+
+		return nil
+	}
+
 	commonOption, err := getQueueCommonOptions(key, queueConf)
 	if err != nil {
 		return err
@@ -201,7 +232,10 @@ func (a *APIResource) parseQueueInit(key string, queueConf *conf.Config) error {
 	}
 	queueKind, _ := msgQueue.String()
 
-	a.msgQueue = msgQueue
+	a.msgQueue = &MessageQueue{
+		QueueFlag: queueFlag,
+		MsgQueue:  msgQueue,
+	}
 	blog.Infof("init queue[%s] successfully", queueKind)
 	return nil
 }

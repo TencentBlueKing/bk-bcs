@@ -121,7 +121,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		blog.Errorf("failed to query, err %s", err.Error())
 		return nil, fmt.Errorf("failed to query, err %s", err.Error())
 	}
-	var retList []operator.M
+	retList := make([]operator.M, 0)
 	for _, m := range mList {
 		retList = append(retList, dollarRecover(m))
 	}
