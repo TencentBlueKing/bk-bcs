@@ -86,7 +86,6 @@ func MergeArgs(incomingArgs, templateArgs []hookv1alpha1.Argument) ([]hookv1alph
 			return nil, fmt.Errorf("args.%s was not resolved", arg.Name)
 		}
 	}
-
 	return newArgs, nil
 }
 
