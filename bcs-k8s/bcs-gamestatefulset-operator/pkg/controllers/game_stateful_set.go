@@ -15,7 +15,6 @@ package gamestatefulset
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"reflect"
 	"time"
 
@@ -30,6 +29,7 @@ import (
 	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/util/requeueduration"
