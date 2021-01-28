@@ -11,7 +11,7 @@
  *
  */
 
-package predelete
+package preinplace
 
 import (
 	"fmt"
@@ -40,11 +40,14 @@ const (
 	PodImageArgKey  = "PodContainer"
 )
 
-type PreDeleteInterface interface {
-	CheckDelete(obj PreDeleteHookObjectInterface, pod *v1.Pod, newStatus PreDeleteHookStatusInterface, podNameLabelKey string) (bool, error)
+type PreInplaceInterface interface {
+	CheckInplace(obj PreInplaceHookObjectInterface,
+		pod *v1.Pod,
+		newStatus PreInplaceHookStatusInterface,
+		podNameLabelKey string) (bool, error)
 }
 
-type PreDeleteControl struct {
+type PreInplaceControl struct {
 	kubeClient         clientset.Interface
 	hookClient         hookclientset.Interface
 	recorder           record.EventRecorder
@@ -53,38 +56,41 @@ type PreDeleteControl struct {
 }
 
 func New(kubeClient clientset.Interface, hookClient hookclientset.Interface, recorder record.EventRecorder,
-	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister) PreDeleteInterface {
-	return &PreDeleteControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder, hookRunLister: hookRunLister,
-		hookTemplateLister: hookTemplateLister}
+	hookRunLister hooklister.HookRunLister, hookTemplateLister hooklister.HookTemplateLister) PreInplaceInterface {
+	return &PreInplaceControl{kubeClient: kubeClient, hookClient: hookClient, recorder: recorder,
+		hookRunLister: hookRunLister, hookTemplateLister: hookTemplateLister}
 }
 
-// CheckDelete check whether the pod can be deleted safely
-func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1.Pod, newStatus PreDeleteHookStatusInterface, podNameLabelKey string) (bool, error) {
+// CheckInplace check whether the pod can be deleted safely
+func (p *PreInplaceControl) CheckInplace(obj PreInplaceHookObjectInterface, pod *v1.Pod,
+	newStatus PreInplaceHookStatusInterface, podNameLabelKey string) (bool, error) {
 	metaObj, ok := obj.(metav1.Object)
 	if !ok {
-		return false, fmt.Errorf("error decoding object to meta object for checking predelete hook, invalid type")
+		return false, fmt.Errorf(
+			"error decoding object to meta object for checking preinplace hook, invalid type")
 	}
 	runtimeObj, ok1 := obj.(runtime.Object)
 	if !ok1 {
-		return false, fmt.Errorf("error decoding object to runtime object for checking predelete hook, invalid type")
+		return false, fmt.Errorf(
+			"error decoding object to runtime object for checking preinplace hook, invalid type")
 	}
 	objectKind := runtimeObj.GetObjectKind().GroupVersionKind().Kind
 	namespace := metaObj.GetNamespace()
 	name := metaObj.GetName()
 
-	preDeleteHook := obj.GetPreDeleteHook()
-	if preDeleteHook == nil {
+	preInplaceHook := obj.GetPreInplaceHook()
+	if preInplaceHook == nil {
 		return true, nil
 	}
 
-	preDeleteLabels := map[string]string{
-		commonhookutil.HookRunTypeLabel:            commonhookutil.HookRunTypePreDeleteLabel,
+	preInplaceLabels := map[string]string{
+		commonhookutil.HookRunTypeLabel:            commonhookutil.HookRunTypePreInplaceLabel,
 		commonhookutil.WorkloadRevisionUniqueLabel: pod.Labels[apps.ControllerRevisionHashLabelKey],
 		commonhookutil.PodInstanceID:               pod.Labels[podNameLabelKey],
 	}
 
 	labelSelector := &metav1.LabelSelector{
-		MatchLabels: preDeleteLabels,
+		MatchLabels: preInplaceLabels,
 	}
 	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
@@ -95,38 +101,41 @@ func (p *PreDeleteControl) CheckDelete(obj PreDeleteHookObjectInterface, pod *v1
 		return false, err
 	}
 	if len(existHookRuns) == 0 {
-		preDeleteHookRun, err := p.createHookRun(metaObj, runtimeObj, preDeleteHook, pod, preDeleteLabels, podNameLabelKey)
+		preInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
+			preInplaceHook, pod, preInplaceLabels, podNameLabelKey)
 		if err != nil {
 			return false, err
 		}
 
-		updatePreDeleteHookCondition(newStatus, pod.Name)
-		klog.Infof("Created PreDelete HookRun %s for pod %s of %s %s/%s", preDeleteHookRun.Name, pod.Name, objectKind, namespace, name)
+		updatePreInplaceHookCondition(newStatus, pod.Name)
+		klog.Infof("Created PreInplace HookRun %s for pod %s of %s %s/%s",
+			preInplaceHookRun.Name, pod.Name, objectKind, namespace, name)
 		return false, nil
 	}
 	if existHookRuns[0].Status.Phase == hookv1alpha1.HookPhaseSuccessful {
-		err := deletePreDeleteHookCondition(newStatus, pod.Name)
+		err := deletePreInplaceHookCondition(newStatus, pod.Name)
 		if err != nil {
-			klog.Warningf("expected the %s %s/%s exists a PreDeleteHookCondition for pod %s, but got an error: %s",
+			klog.Warningf("expected the %s %s/%s exists a PreInplaceHookCondition for pod %s, but got an error: %s",
 				objectKind, namespace, name, pod.Name, err.Error())
 		}
 		return true, nil
 	}
 
-	err = resetPreDeleteHookConditionPhase(newStatus, pod.Name, existHookRuns[0].Status.Phase)
+	err = resetPreInplaceHookConditionPhase(newStatus, pod.Name, existHookRuns[0].Status.Phase)
 	if err != nil {
-		klog.Warningf("expected the %s %s/%s exists a PreDeleteHookCondition for pod %s, but got an error: %s",
+		klog.Warningf("expected the %s %s/%s exists a PreInplaceHookCondition for pod %s, but got an error: %s",
 			objectKind, namespace, name, pod.Name, err.Error())
 	}
 
 	return false, nil
 }
 
-// createHookRun create a PreDelete HookRun
-func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runtime.Object, preDeleteHook *hookv1alpha1.HookStep,
-	pod *v1.Pod, labels map[string]string, podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
+// createHookRun create a PreInplace HookRun
+func (p *PreInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj runtime.Object,
+	preInplaceHook *hookv1alpha1.HookStep, pod *v1.Pod, labels map[string]string,
+	podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
 	arguments := []hookv1alpha1.Argument{}
-	for _, arg := range preDeleteHook.Args {
+	for _, arg := range preInplaceHook.Args {
 		value := arg.Value
 		hookArg := hookv1alpha1.Argument{
 			Name:  arg.Name,
@@ -152,16 +161,16 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 	arguments = append(arguments, podArgs...)
 
 	for i, value := range pod.Spec.Containers {
-		podArgs = []hookv1alpha1.Argument{
+		imageArgs := []hookv1alpha1.Argument{
 			{
 				Name: PodImageArgKey + "[" + strconv.Itoa(i) + "]",
 				Value: &value.Name,
 			},
 		}
-		arguments = append(arguments, podArgs...)
+		arguments = append(arguments, imageArgs...)
 	}
 
-	hr, err := p.newHookRunFromHookTemplate(metaObj, runtimeObj, arguments, pod, preDeleteHook, labels, podNameLabelKey)
+	hr, err := p.newHookRunFromHookTemplate(metaObj, runtimeObj, arguments, pod, preInplaceHook, labels, podNameLabelKey)
 	if err != nil {
 		return nil, err
 	}
@@ -170,17 +179,21 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 }
 
 // newHookRunFromGameStatefulSet generate a HookRun from HookTemplate
-func (p *PreDeleteControl) newHookRunFromHookTemplate(metaObj metav1.Object, runtimeObj runtime.Object, args []hookv1alpha1.Argument,
-	pod *v1.Pod, preDeleteHook *hookv1alpha1.HookStep, labels map[string]string, podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
-	template, err := p.hookTemplateLister.HookTemplates(pod.Namespace).Get(preDeleteHook.TemplateName)
+func (p *PreInplaceControl) newHookRunFromHookTemplate(metaObj metav1.Object,
+	runtimeObj runtime.Object, args []hookv1alpha1.Argument,
+	pod *v1.Pod, preInplaceHook *hookv1alpha1.HookStep, labels map[string]string,
+	podNameLabelKey string) (*hookv1alpha1.HookRun, error) {
+	template, err := p.hookTemplateLister.HookTemplates(pod.Namespace).Get(preInplaceHook.TemplateName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			klog.Warningf("HookTemplate '%s' not found for %s/%s", preDeleteHook.TemplateName, pod.Namespace, pod.Name)
+			klog.Warningf("HookTemplate '%s' not found for %s/%s",
+				preInplaceHook.TemplateName, pod.Namespace, pod.Name)
 		}
 		return nil, err
 	}
 
-	nameParts := []string{"predelete", pod.Labels[apps.ControllerRevisionHashLabelKey], pod.Labels[podNameLabelKey], preDeleteHook.TemplateName}
+	nameParts := []string{"preinplace", pod.Labels[apps.ControllerRevisionHashLabelKey],
+		pod.Labels[podNameLabelKey], preInplaceHook.TemplateName}
 	name := strings.Join(nameParts, "-")
 
 	run, err := commonhookutil.NewHookRunFromTemplate(template, args, name, "", pod.Namespace)
@@ -188,15 +201,16 @@ func (p *PreDeleteControl) newHookRunFromHookTemplate(metaObj metav1.Object, run
 		return nil, err
 	}
 	run.Labels = labels
-	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(metaObj, runtimeObj.GetObjectKind().GroupVersionKind())}
+	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(metaObj,
+		runtimeObj.GetObjectKind().GroupVersionKind())}
 	return run, nil
 }
 
-// delete PreDeleteHookCondition of a pod
-func deletePreDeleteHookCondition(status PreDeleteHookStatusInterface, podName string) error {
+// delete PreInplaceHookCondition of a pod
+func deletePreInplaceHookCondition(status PreInplaceHookStatusInterface, podName string) error {
 	var index int
 	found := false
-	conditions := status.GetPreDeleteHookConditions()
+	conditions := status.GetPreInplaceHookConditions()
 	for i, cond := range conditions {
 		if cond.PodName == podName {
 			found = true
@@ -205,37 +219,38 @@ func deletePreDeleteHookCondition(status PreDeleteHookStatusInterface, podName s
 		}
 	}
 	if !found {
-		return fmt.Errorf("no PreDeleteHookCondition to delete")
+		return fmt.Errorf("no PreInplaceHookCondition to delete")
 	}
 
 	newConditions := append(conditions[:index], conditions[index+1:]...)
-	status.SetPreDeleteHookConditions(newConditions)
+	status.SetPreInplaceHookConditions(newConditions)
 	return nil
 }
 
-func updatePreDeleteHookCondition(status PreDeleteHookStatusInterface, podName string) {
-	conditions := status.GetPreDeleteHookConditions()
+func updatePreInplaceHookCondition(status PreInplaceHookStatusInterface, podName string) {
+	conditions := status.GetPreInplaceHookConditions()
 	for i, cond := range conditions {
 		if cond.PodName == podName {
 			conditions[i].HookPhase = hookv1alpha1.HookPhasePending
 			conditions[i].StartTime = metav1.Now()
-			status.SetPreDeleteHookConditions(conditions)
+			status.SetPreInplaceHookConditions(conditions)
 			return
 		}
 	}
-	conditions = append(conditions, hookv1alpha1.PreDeleteHookCondition{
+	conditions = append(conditions, hookv1alpha1.PreInplaceHookCondition{
 		PodName:   podName,
 		StartTime: metav1.Now(),
 		HookPhase: hookv1alpha1.HookPhasePending,
 	})
-	status.SetPreDeleteHookConditions(conditions)
+	status.SetPreInplaceHookConditions(conditions)
 }
 
-// reset PreDeleteHookConditionPhase of a pod
-func resetPreDeleteHookConditionPhase(status PreDeleteHookStatusInterface, podName string, phase hookv1alpha1.HookPhase) error {
+// reset PreInplaceHookConditionPhase of a pod
+func resetPreInplaceHookConditionPhase(status PreInplaceHookStatusInterface, podName string,
+	phase hookv1alpha1.HookPhase) error {
 	var index int
 	found := false
-	conditions := status.GetPreDeleteHookConditions()
+	conditions := status.GetPreInplaceHookConditions()
 	for i, cond := range conditions {
 		if cond.PodName == podName {
 			found = true
@@ -244,10 +259,10 @@ func resetPreDeleteHookConditionPhase(status PreDeleteHookStatusInterface, podNa
 		}
 	}
 	if !found {
-		return fmt.Errorf("no PreDeleteHookCondition to reset phase")
+		return fmt.Errorf("no PreInplaceHookCondition to reset phase")
 	}
 
 	conditions[index].HookPhase = phase
-	status.SetPreDeleteHookConditions(conditions)
+	status.SetPreInplaceHookConditions(conditions)
 	return nil
 }

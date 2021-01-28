@@ -28,3 +28,15 @@ func (g *GameStatefulSetStatus) GetPreDeleteHookConditions() []hookv1alpha1.PreD
 func (g *GameStatefulSetStatus) SetPreDeleteHookConditions(newConditions []hookv1alpha1.PreDeleteHookCondition) {
 	g.PreDeleteHookConditions = newConditions
 }
+
+func (g *GameStatefulSet) GetPreInplaceHook() *hookv1alpha1.HookStep {
+	return g.Spec.PreInplaceUpdateStrategy.Hook
+}
+
+func (g *GameStatefulSetStatus) GetPreInplaceHookConditions() []hookv1alpha1.PreInplaceHookCondition {
+	return g.PreInplaceHookConditions
+}
+
+func (g *GameStatefulSetStatus) SetPreInplaceHookConditions(newConditions []hookv1alpha1.PreInplaceHookCondition) {
+	g.PreInplaceHookConditions = newConditions
+}
