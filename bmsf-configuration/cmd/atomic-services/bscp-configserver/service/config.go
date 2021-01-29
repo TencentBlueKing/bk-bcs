@@ -66,7 +66,7 @@ func (c *config) check() error {
 		return errors.New("config check, missing 'server.endpoint.port'")
 	}
 	c.viper.BindEnv("server.discoveryTTL", c.envName("DISCOVERY_TTL"))
-	c.viper.SetDefault("server.discoveryTTL", 60)
+	c.viper.SetDefault("server.discoveryTTL", 10)
 
 	c.viper.BindEnv("server.executorLimitRate", c.envName("EXEC_LIMIT_RATE"))
 	c.viper.SetDefault("server.executorLimitRate", 0)

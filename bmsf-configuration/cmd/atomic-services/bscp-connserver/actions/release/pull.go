@@ -128,7 +128,7 @@ func (act *PullAction) pullRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PullRelease[%s]| request to bcs-controller, %+v", act.req.Seq, r)
+	logger.V(4).Infof("PullRelease[%s]| request to bcs-controller, %+v", act.req.Seq, r)
 
 	resp, err := act.bcsControllerCli.PullRelease(ctx, r)
 	if err != nil {
@@ -161,7 +161,7 @@ func (act *PullAction) queryReleaseConfigContent() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PullRelease[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("PullRelease[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryReleaseConfigContent(ctx, r)
 	if err != nil {

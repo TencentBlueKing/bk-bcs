@@ -169,7 +169,7 @@ func (act *ReloadAction) reloadBCSMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.Reload(ctx, r)
 	if err != nil {
@@ -191,7 +191,7 @@ func (act *ReloadAction) reloadGSEPluginMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.Reload(ctx, r)
 	if err != nil {
@@ -231,7 +231,7 @@ func (act *ReloadAction) queryRelease(releaseID string) (*pbcommon.Release, pbco
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {
@@ -250,7 +250,7 @@ func (act *ReloadAction) queryMultiRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiRelease(ctx, r)
 	if err != nil {
@@ -286,7 +286,7 @@ func (act *ReloadAction) querySubReleaseList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiReleaseSubList(ctx, r)
 	if err != nil {
@@ -311,7 +311,7 @@ func (act *ReloadAction) queryApp(appID string) (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryApp(ctx, r)
 	if err != nil {

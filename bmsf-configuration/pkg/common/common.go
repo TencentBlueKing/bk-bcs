@@ -282,6 +282,16 @@ func GetEthAddr(key string) (string, error) {
 	return "", errors.New("unknown target eth address")
 }
 
+// EmptyStr returns an empty string.
+func EmptyStr() string {
+	return ""
+}
+
+// EmptyJSONStr returns an empty json string.
+func EmptyJSONStr() string {
+	return "{}"
+}
+
 // ToStr converts int to string.
 func ToStr(i int) string {
 	return strconv.Itoa(i)
@@ -422,16 +432,6 @@ func ParseFpath(fpath string) string {
 	return filepath.Clean(fmt.Sprintf("/%s", fpath))
 }
 
-// ParseClusterLabels returns cluster labels and cluster name.
-//              labels/clustername       ->  labels, clustername
-//              path/labels/clustername  ->  path/labels, clustername
-//              path/labels//clustername ->  path/labels/, clustername
-func ParseClusterLabels(cluster string) (string, string) {
-	_, clusterName := filepath.Split(cluster)
-	clusterLabels := strings.TrimSuffix(strings.TrimSuffix(cluster, clusterName), "/")
-	return clusterLabels, clusterName
-}
-
 // ParseHTTPBasicAuth parses http basic authorization, and return auth token.
 func ParseHTTPBasicAuth(ctx context.Context) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -499,18 +499,6 @@ func VerifyUserPWD(input, setting string) bool {
 		return false
 	}
 	return true
-}
-
-// MergeVars merge
-func MergeVars(m1 map[string]interface{}, m2 map[string]interface{}) map[string]interface{} {
-	vars := make(map[string]interface{})
-	for k, v := range m1 {
-		vars[k] = v
-	}
-	for k, v := range m2 {
-		vars[k] = v
-	}
-	return vars
 }
 
 // DelayRandomMS delaies a random millisecond time.

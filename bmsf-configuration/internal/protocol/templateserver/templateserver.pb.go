@@ -1006,10 +1006,12 @@ type CreateConfigTemplateVersionReq struct {
 	Memo        string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
 }
 
-func (m *CreateConfigTemplateVersionReq) Reset()                    { *m = CreateConfigTemplateVersionReq{} }
-func (m *CreateConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateVersionReq) ProtoMessage()               {}
-func (*CreateConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+func (m *CreateConfigTemplateVersionReq) Reset()         { *m = CreateConfigTemplateVersionReq{} }
+func (m *CreateConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionReq) ProtoMessage()    {}
+func (*CreateConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{20}
+}
 
 func (m *CreateConfigTemplateVersionReq) GetBizId() string {
 	if m != nil {
@@ -1154,10 +1156,12 @@ type QueryConfigTemplateVersionResp struct {
 	Data    *common.ConfigTemplateVersion `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *QueryConfigTemplateVersionResp) Reset()                    { *m = QueryConfigTemplateVersionResp{} }
-func (m *QueryConfigTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateVersionResp) ProtoMessage()               {}
-func (*QueryConfigTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
+func (m *QueryConfigTemplateVersionResp) Reset()         { *m = QueryConfigTemplateVersionResp{} }
+func (m *QueryConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionResp) ProtoMessage()    {}
+func (*QueryConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{23}
+}
 
 func (m *QueryConfigTemplateVersionResp) GetResult() bool {
 	if m != nil {
@@ -1302,10 +1306,12 @@ type UpdateConfigTemplateVersionReq struct {
 	Memo        string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
 }
 
-func (m *UpdateConfigTemplateVersionReq) Reset()                    { *m = UpdateConfigTemplateVersionReq{} }
-func (m *UpdateConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateVersionReq) ProtoMessage()               {}
-func (*UpdateConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
+func (m *UpdateConfigTemplateVersionReq) Reset()         { *m = UpdateConfigTemplateVersionReq{} }
+func (m *UpdateConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateVersionReq) ProtoMessage()    {}
+func (*UpdateConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{26}
+}
 
 func (m *UpdateConfigTemplateVersionReq) GetBizId() string {
 	if m != nil {
@@ -1389,10 +1395,12 @@ type DeleteConfigTemplateVersionReq struct {
 	VersionId  string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
 }
 
-func (m *DeleteConfigTemplateVersionReq) Reset()                    { *m = DeleteConfigTemplateVersionReq{} }
-func (m *DeleteConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateVersionReq) ProtoMessage()               {}
-func (*DeleteConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
+func (m *DeleteConfigTemplateVersionReq) Reset()         { *m = DeleteConfigTemplateVersionReq{} }
+func (m *DeleteConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateVersionReq) ProtoMessage()    {}
+func (*DeleteConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{28}
+}
 
 func (m *DeleteConfigTemplateVersionReq) GetBizId() string {
 	if m != nil {
@@ -2118,7 +2126,7 @@ func init() { proto.RegisterFile("templateserver.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
 	// 3535 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xd4, 0x5c, 0x5b, 0x70, 0x14, 0x55,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5c, 0x5b, 0x70, 0x14, 0x55,
 	0xde, 0xff, 0xce, 0x24, 0x84, 0xe4, 0x24, 0x82, 0xb6, 0x5c, 0xc6, 0x41, 0xe3, 0x78, 0x3e, 0x45,
 	0x6c, 0x48, 0x32, 0x69, 0x32, 0x24, 0x69, 0x2d, 0x2b, 0x1d, 0xf0, 0x92, 0x4f, 0x45, 0x1c, 0x51,
 	0xf1, 0x56, 0x7c, 0x9d, 0x99, 0xce, 0x30, 0x3a, 0x33, 0x3d, 0x99, 0xe9, 0x70, 0xcb, 0x37, 0x16,

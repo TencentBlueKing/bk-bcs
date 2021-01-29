@@ -107,7 +107,7 @@ func (act *ListAction) list() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryAppList[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryAppList[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryAppList(ctx, r)
 	if err != nil {

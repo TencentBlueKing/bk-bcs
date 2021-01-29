@@ -105,7 +105,7 @@ func (act *QueryAction) queryTemplateBind() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryTemplateBid[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("QueryTemplateBid[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.QueryTemplateBind(ctx, req)
 	if err != nil {

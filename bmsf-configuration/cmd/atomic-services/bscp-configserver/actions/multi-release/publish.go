@@ -146,7 +146,7 @@ func (act *PublishAction) queryApp() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryApp(ctx, r)
 	if err != nil {
@@ -167,7 +167,7 @@ func (act *PublishAction) querySubReleaseList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiReleaseSubList(ctx, r)
 	if err != nil {
@@ -192,7 +192,7 @@ func (act *PublishAction) querySubCommitList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiCommitSubList(ctx, r)
 	if err != nil {
@@ -217,7 +217,7 @@ func (act *PublishAction) queryMultiRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiRelease(ctx, r)
 	if err != nil {
@@ -239,7 +239,7 @@ func (act *PublishAction) publishPreBCSMode(releaseID string) (pbcommon.ErrCode,
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.PublishReleasePre(ctx, r)
 	if err != nil {
@@ -264,7 +264,7 @@ func (act *PublishAction) publishPreGSEPluginMode(releaseID string) (pbcommon.Er
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.PublishReleasePre(ctx, r)
 	if err != nil {
@@ -289,7 +289,7 @@ func (act *PublishAction) publishBCSMode(releaseID string) (pbcommon.ErrCode, st
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -309,7 +309,7 @@ func (act *PublishAction) publishGSEPluginMode(releaseID string) (pbcommon.ErrCo
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -329,7 +329,7 @@ func (act *PublishAction) publishMultiReleaseData() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.PublishMultiRelease(ctx, r)
 	if err != nil {

@@ -472,7 +472,6 @@ func (c *ContentCacheCleaner) purge(isExceedThreshold bool) error {
 		// rename the cache to expired path.
 		if err := os.Rename(contentCacheContentPath(c.contentCachePath, contentID),
 			c.expiredFile(contentID)); err != nil {
-
 			UnlockFile(fl)
 			logger.Warn("ContentCacheCleaner| clean content cache[%s], remove failed, %+v", contentID, err)
 			continue
@@ -482,8 +481,7 @@ func (c *ContentCacheCleaner) purge(isExceedThreshold bool) error {
 	}
 
 	// clean disk usage.
-	logger.V(2).Infof("ContentCacheCleaner| oldest and largest cache[%s] size[%d] cached time[%d], "+
-		"exceed threshold[%+v]",
+	logger.V(2).Infof("ContentCacheCleaner| oldest and largest cache[%s] size[%d] cached time[%d], threshold[%+v]",
 		oldestCacheContentID, oldestCacheSize, oldestCacheTime, isExceedThreshold)
 
 	if isExceedThreshold {

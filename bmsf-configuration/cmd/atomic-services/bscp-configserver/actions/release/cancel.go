@@ -138,7 +138,7 @@ func (act *CancelAction) cancel() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CancelRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CancelRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CancelRelease(ctx, r)
 	if err != nil {

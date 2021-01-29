@@ -134,7 +134,7 @@ func (act *ConfirmAction) confirmMultiCommit() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("ConfirmMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("ConfirmMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.ConfirmMultiCommit(ctx, r)
 	if err != nil {

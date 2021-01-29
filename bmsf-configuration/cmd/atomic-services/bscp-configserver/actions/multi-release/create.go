@@ -170,7 +170,7 @@ func (act *CreateAction) createMultiRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateMultiRelease(ctx, r)
 	if err != nil {
@@ -199,7 +199,7 @@ func (act *CreateAction) queryMultiCommit() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiCommit(ctx, r)
 	if err != nil {
@@ -224,7 +224,7 @@ func (act *CreateAction) queryStrategy() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryStrategy(ctx, r)
 	if err != nil {

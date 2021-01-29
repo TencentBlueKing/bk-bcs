@@ -108,7 +108,7 @@ func (act *ListAction) queryConfigTemplateList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryConfigTemplateList[%s]| request to DataManager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryConfigTemplateList[%s]| request to DataManager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryConfigTemplateList(ctx, r)
 	if err != nil {

@@ -1766,10 +1766,12 @@ type CreateConfigTemplateVersionReq struct {
 	Creator     string `protobuf:"bytes,10,opt,name=creator" json:"creator,omitempty"`
 }
 
-func (m *CreateConfigTemplateVersionReq) Reset()                    { *m = CreateConfigTemplateVersionReq{} }
-func (m *CreateConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateVersionReq) ProtoMessage()               {}
-func (*CreateConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
+func (m *CreateConfigTemplateVersionReq) Reset()         { *m = CreateConfigTemplateVersionReq{} }
+func (m *CreateConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionReq) ProtoMessage()    {}
+func (*CreateConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{30}
+}
 
 func (m *CreateConfigTemplateVersionReq) GetSeq() string {
 	if m != nil {
@@ -1942,10 +1944,12 @@ type QueryConfigTemplateVersionResp struct {
 	Data    *common.ConfigTemplateVersion `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *QueryConfigTemplateVersionResp) Reset()                    { *m = QueryConfigTemplateVersionResp{} }
-func (m *QueryConfigTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateVersionResp) ProtoMessage()               {}
-func (*QueryConfigTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{33} }
+func (m *QueryConfigTemplateVersionResp) Reset()         { *m = QueryConfigTemplateVersionResp{} }
+func (m *QueryConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionResp) ProtoMessage()    {}
+func (*QueryConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33}
+}
 
 func (m *QueryConfigTemplateVersionResp) GetSeq() string {
 	if m != nil {
@@ -2100,10 +2104,12 @@ type UpdateConfigTemplateVersionReq struct {
 	Operator    string `protobuf:"bytes,8,opt,name=operator" json:"operator,omitempty"`
 }
 
-func (m *UpdateConfigTemplateVersionReq) Reset()                    { *m = UpdateConfigTemplateVersionReq{} }
-func (m *UpdateConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateVersionReq) ProtoMessage()               {}
-func (*UpdateConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{36} }
+func (m *UpdateConfigTemplateVersionReq) Reset()         { *m = UpdateConfigTemplateVersionReq{} }
+func (m *UpdateConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateVersionReq) ProtoMessage()    {}
+func (*UpdateConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{36}
+}
 
 func (m *UpdateConfigTemplateVersionReq) GetSeq() string {
 	if m != nil {
@@ -2202,10 +2208,12 @@ type DeleteConfigTemplateVersionReq struct {
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
-func (m *DeleteConfigTemplateVersionReq) Reset()                    { *m = DeleteConfigTemplateVersionReq{} }
-func (m *DeleteConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateVersionReq) ProtoMessage()               {}
-func (*DeleteConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{38} }
+func (m *DeleteConfigTemplateVersionReq) Reset()         { *m = DeleteConfigTemplateVersionReq{} }
+func (m *DeleteConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateVersionReq) ProtoMessage()    {}
+func (*DeleteConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{38}
+}
 
 func (m *DeleteConfigTemplateVersionReq) GetSeq() string {
 	if m != nil {
@@ -4030,8 +4038,10 @@ type CreateMultiCommitWithContentResp_RespData struct {
 func (m *CreateMultiCommitWithContentResp_RespData) Reset() {
 	*m = CreateMultiCommitWithContentResp_RespData{}
 }
-func (m *CreateMultiCommitWithContentResp_RespData) String() string { return proto.CompactTextString(m) }
-func (*CreateMultiCommitWithContentResp_RespData) ProtoMessage()    {}
+func (m *CreateMultiCommitWithContentResp_RespData) String() string {
+	return proto.CompactTextString(m)
+}
+func (*CreateMultiCommitWithContentResp_RespData) ProtoMessage() {}
 func (*CreateMultiCommitWithContentResp_RespData) Descriptor() ([]byte, []int) {
 	return fileDescriptor0, []int{71, 0}
 }
@@ -5798,10 +5808,12 @@ type QueryHistoryMultiReleasesResp struct {
 	Data    *QueryHistoryMultiReleasesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *QueryHistoryMultiReleasesResp) Reset()                    { *m = QueryHistoryMultiReleasesResp{} }
-func (m *QueryHistoryMultiReleasesResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryHistoryMultiReleasesResp) ProtoMessage()               {}
-func (*QueryHistoryMultiReleasesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{107} }
+func (m *QueryHistoryMultiReleasesResp) Reset()         { *m = QueryHistoryMultiReleasesResp{} }
+func (m *QueryHistoryMultiReleasesResp) String() string { return proto.CompactTextString(m) }
+func (*QueryHistoryMultiReleasesResp) ProtoMessage()    {}
+func (*QueryHistoryMultiReleasesResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{107}
+}
 
 func (m *QueryHistoryMultiReleasesResp) GetSeq() string {
 	if m != nil {
@@ -6496,10 +6508,12 @@ type QueryReachableAppInstancesReq struct {
 	Page      *common.Page        `protobuf:"bytes,6,opt,name=page" json:"page,omitempty"`
 }
 
-func (m *QueryReachableAppInstancesReq) Reset()                    { *m = QueryReachableAppInstancesReq{} }
-func (m *QueryReachableAppInstancesReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryReachableAppInstancesReq) ProtoMessage()               {}
-func (*QueryReachableAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{122} }
+func (m *QueryReachableAppInstancesReq) Reset()         { *m = QueryReachableAppInstancesReq{} }
+func (m *QueryReachableAppInstancesReq) String() string { return proto.CompactTextString(m) }
+func (*QueryReachableAppInstancesReq) ProtoMessage()    {}
+func (*QueryReachableAppInstancesReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{122}
+}
 
 func (m *QueryReachableAppInstancesReq) GetSeq() string {
 	if m != nil {
@@ -7168,10 +7182,12 @@ type QueryEffectedAppInstancesResp struct {
 	Data    *QueryEffectedAppInstancesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *QueryEffectedAppInstancesResp) Reset()                    { *m = QueryEffectedAppInstancesResp{} }
-func (m *QueryEffectedAppInstancesResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryEffectedAppInstancesResp) ProtoMessage()               {}
-func (*QueryEffectedAppInstancesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{133} }
+func (m *QueryEffectedAppInstancesResp) Reset()         { *m = QueryEffectedAppInstancesResp{} }
+func (m *QueryEffectedAppInstancesResp) String() string { return proto.CompactTextString(m) }
+func (*QueryEffectedAppInstancesResp) ProtoMessage()    {}
+func (*QueryEffectedAppInstancesResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{133}
+}
 
 func (m *QueryEffectedAppInstancesResp) GetSeq() string {
 	if m != nil {
@@ -12361,7 +12377,7 @@ func init() { proto.RegisterFile("datamanager.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
 	// 5452 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xec, 0x3d, 0x6d, 0x8c, 0x1c, 0xc9,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x3d, 0x6d, 0x8c, 0x1c, 0xc9,
 	0x55, 0xdb, 0xb3, 0x33, 0xbb, 0x33, 0x6f, 0xf6, 0xb3, 0x6d, 0xef, 0x8e, 0xc7, 0x5e, 0xaf, 0xb7,
 	0xed, 0xb3, 0xd7, 0xbe, 0x78, 0x9d, 0x73, 0x2e, 0x21, 0x24, 0x40, 0xf0, 0xd9, 0x77, 0xb9, 0x3d,
 	0xd9, 0x8e, 0xb3, 0xbe, 0xbb, 0x28, 0x22, 0xc2, 0xf4, 0xcc, 0xf4, 0xce, 0xce, 0x79, 0x76, 0xba,

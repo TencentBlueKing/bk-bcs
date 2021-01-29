@@ -69,7 +69,7 @@ func (c *config) check() error {
 		return errors.New("config check, missing 'server.endpoint.port'")
 	}
 	c.viper.BindEnv("server.discoveryTTL", c.envName("DISCOVERY_TTL"))
-	c.viper.SetDefault("server.discoveryTTL", 60)
+	c.viper.SetDefault("server.discoveryTTL", 10)
 
 	c.viper.BindEnv("auth.mode", c.envName("AUTH_MODE"))
 	if !c.viper.IsSet("auth.mode") {

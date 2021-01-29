@@ -248,7 +248,7 @@ func (act *SignalAction) onSidecarOnline(sidecar *session.SidecarInstance) error
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("request to datamanager, %+v", r)
+	logger.V(4).Infof("request to datamanager, %+v", r)
 
 	resp, err := act.dataMgrCli.CreateAppInstance(ctx, r)
 	if err != nil {
@@ -280,7 +280,7 @@ func (act *SignalAction) onSidecarOffline(sidecar *session.SidecarInstance) erro
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("request to datamanager, %+v", r)
+	logger.V(4).Infof("request to datamanager, %+v", r)
 
 	resp, err := act.dataMgrCli.UpdateAppInstance(ctx, r)
 	if err != nil {
@@ -435,7 +435,7 @@ func (act *SignalAction) Do() error {
 				logger.Error("SignallingChannel-PING[%s]| send PONG back, %+v, %+v", r.Seq, act.sidecar, err)
 				return nil
 			}
-			logger.V(2).Infof("SignallingChannel-PING[%s]| PING success, %+v", r.Seq, act.sidecar)
+			logger.V(4).Infof("SignallingChannel-PING[%s]| PING success, %+v", r.Seq, act.sidecar)
 
 		default:
 			logger.Warn("SignallingChannel| unknow CMD, %+v", r)

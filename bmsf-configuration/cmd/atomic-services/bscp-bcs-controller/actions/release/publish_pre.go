@@ -101,7 +101,7 @@ func (act *PublishPreAction) queryRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishReleasePre[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("PublishReleasePre[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {
@@ -122,7 +122,7 @@ func (act *PublishPreAction) queryCommit() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishReleasePre[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("PublishReleasePre[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryCommit(ctx, r)
 	if err != nil {

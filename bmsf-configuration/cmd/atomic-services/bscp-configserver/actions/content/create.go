@@ -179,7 +179,7 @@ func (act *CreateAction) queryCommit() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigContent[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateConfigContent[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryCommit(ctx, r)
 	if err != nil {
@@ -230,7 +230,7 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigContent[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateConfigContent[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateConfigContent(ctx, r)
 	if err != nil {
