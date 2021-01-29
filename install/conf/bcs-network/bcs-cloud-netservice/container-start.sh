@@ -34,5 +34,5 @@ chmod +x ${module}
 #       --stderrthreshold string         logs at or above this threshold go to stderr (default "2")
 #       --swagger-dir string             swagger dir
 #       --v int32                        log level for V logs
-#       --version                        show version infomation
+#       --version                        show version information
 #       --vmodule string                 comma-separated list of pattern=N settings for file-filtered logging

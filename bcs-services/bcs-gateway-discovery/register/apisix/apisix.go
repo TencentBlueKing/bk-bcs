@@ -30,7 +30,7 @@ func New(addr []string, config *tls.Config, token string) (register.Register, er
 		Addrs:      addr,
 		//TLSConfig:  config,
 	}
-	blog.Infof("apisix config detials: %+v", opt)
+	blog.Infof("apisix config details: %+v", opt)
 	reg := &apiRegister{
 		apisixClient: admin.NewClient(opt),
 	}

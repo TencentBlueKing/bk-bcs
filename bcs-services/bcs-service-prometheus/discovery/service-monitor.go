@@ -242,7 +242,7 @@ func (disc *serviceMonitor) OnServiceMonitorAdd(obj interface{}) {
 		return
 	}
 	by, _ := json.Marshal(serviceM)
-	blog.Infof("recieve ServiceMonitor(%s) Data(%s) Add event", serviceM.GetUuid(), string(by))
+	blog.Infof("receive ServiceMonitor(%s) Data(%s) Add event", serviceM.GetUuid(), string(by))
 	disc.handlerServiceMonitorChanged(serviceM)
 }
 
@@ -268,7 +268,7 @@ func (disc *serviceMonitor) OnServiceMonitorUpdate(old, cur interface{}) {
 		return
 	}
 	by, _ := json.Marshal(serviceM)
-	blog.Infof("recieve ServiceMonitor(%s) Data(%s) Update event", serviceM.GetUuid(), string(by))
+	blog.Infof("receive ServiceMonitor(%s) Data(%s) Update event", serviceM.GetUuid(), string(by))
 	disc.handlerServiceMonitorChanged(serviceM)
 }
 
@@ -323,7 +323,7 @@ func (disc *serviceMonitor) OnServiceMonitorDelete(obj interface{}) {
 		blog.Errorf("cannot convert to *apismonitorv1.ServiceMonitor: %v", obj)
 		return
 	}
-	blog.Infof("recieve ServiceMonitor(%s) Delete event", serviceM.GetUuid())
+	blog.Infof("receive ServiceMonitor(%s) Delete event", serviceM.GetUuid())
 	disc.Lock()
 	delete(disc.svrMonitors, serviceM.GetUuid())
 	disc.Unlock()
@@ -339,7 +339,7 @@ func (disc *serviceMonitor) OnEndpointsAdd(obj interface{}) {
 		return
 	}
 	by, _ := json.Marshal(endpoint)
-	blog.Infof("recieve BcsEndpoint(%s) Data(%s) Add event", endpoint.GetUuid(), string(by))
+	blog.Infof("receive BcsEndpoint(%s) Data(%s) Add event", endpoint.GetUuid(), string(by))
 	disc.Lock()
 	defer disc.Unlock()
 	for _, sm := range disc.svrMonitors {
@@ -373,7 +373,7 @@ func (disc *serviceMonitor) OnEndpointsUpdate(old, cur interface{}) {
 		return
 	}
 	by, _ := json.Marshal(curEndpoint)
-	blog.Infof("recieve BcsEndpoint(%s) Data(%s) Update event", curEndpoint.GetUuid(), string(by))
+	blog.Infof("receive BcsEndpoint(%s) Data(%s) Update event", curEndpoint.GetUuid(), string(by))
 	disc.Lock()
 	defer disc.Unlock()
 	for _, sm := range disc.svrMonitors {
@@ -416,7 +416,7 @@ func (disc *serviceMonitor) OnEndpointsDelete(obj interface{}) {
 		blog.Errorf("cannot convert to *apisbkbcsv2.BcsEndpoint: %v", obj)
 		return
 	}
-	blog.Infof("recieve BcsEndpoint(%s) Delete event", endpoint.GetUuid())
+	blog.Infof("receive BcsEndpoint(%s) Delete event", endpoint.GetUuid())
 	disc.Lock()
 	defer disc.Unlock()
 	for _, sm := range disc.svrMonitors {

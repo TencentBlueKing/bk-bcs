@@ -81,7 +81,7 @@ var (
 			Namespace: "bcs_api",
 			Subsystem: "session_server",
 			Name:      "total_receive_bytes",
-			Help:      "Total bytes recieved",
+			Help:      "Total bytes received",
 		},
 		[]string{"clientkey"},
 	)

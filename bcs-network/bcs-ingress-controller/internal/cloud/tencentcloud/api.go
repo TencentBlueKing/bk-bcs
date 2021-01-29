@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 	"github.com/Tencent/bk-bcs/bcs-network/bcs-ingress-controller/internal/metrics"
-	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 )
 
 const (
@@ -106,7 +106,7 @@ func (a *APIWrapper) checkErrCode(errCode int) {
 	}
 }
 
-// load config from env
+// loadEnv config from env
 func (a *APIWrapper) loadEnv() error {
 	secretID := os.Getenv(EnvNameTencentCloudAccessKeyID)
 	secretKey := os.Getenv(EnvNameTencentCloudAccessKey)

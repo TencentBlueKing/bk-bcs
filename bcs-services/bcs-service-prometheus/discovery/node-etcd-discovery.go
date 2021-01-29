@@ -141,7 +141,7 @@ func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
 		return
 	}
-	blog.Infof("recieve Agent(%s) Add event", agent.Name)
+	blog.Infof("receive Agent(%s) Add event", agent.Name)
 	ip := agent.Spec.GetAgentIP()
 	if ip == "" {
 		blog.Errorf("node %s not found InnerIP", agent.GetName())
@@ -164,7 +164,7 @@ func (disc *nodeEtcdDiscovery) OnDelete(obj interface{}) {
 		blog.Errorf("cannot convert to *apisbkbcsv2.Agent: %v", obj)
 		return
 	}
-	blog.Infof("recieve Agent(%s) Delete event", agent.Name)
+	blog.Infof("receive Agent(%s) Delete event", agent.Name)
 	ip := agent.Spec.GetAgentIP()
 	if ip == "" {
 		blog.Errorf("node %s not found InnerIP", agent.GetName())

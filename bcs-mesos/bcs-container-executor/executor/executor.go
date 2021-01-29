@@ -676,7 +676,7 @@ func (driver *BcsExecutorDriver) acknowledgementMessage(from *upid.UPID, pbMsg *
 	return
 }
 
-//recieve framework message from scheduler
+//receive framework message from scheduler
 //the task complete is sync
 func (driver *BcsExecutorDriver) frameworkMessage(from *upid.UPID, pbMsg *exec.Event_Message) {
 	if driver.status == mesos.Status_DRIVER_ABORTED {

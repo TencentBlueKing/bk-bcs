@@ -59,7 +59,7 @@ type Pod interface {
 	GetPid() int                                      //get network infrastructure container pid
 	GetContainerID() string                           //get network infrastructure container id
 	GetPodID() string                                 //get pod id
-	GetNetStatus() string                             //get network ip address infomation
+	GetNetStatus() string                             //get network ip address information
 	GetPodStatus() PodStatus                          //pod status, see @PodStatus
 	GetMessage() string                               //Get status message
 	Init() error                                      //init pod, start network container

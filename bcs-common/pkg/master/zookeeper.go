@@ -16,13 +16,14 @@ package master
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 
 	zktype "github.com/samuel/go-zookeeper/zk"
 	"golang.org/x/net/context"
@@ -85,7 +86,7 @@ func (zk *ZookeeperMaster) Finit() {
 	zk.client = nil
 }
 
-//Register registery infomation to storage
+//Register registery information to storage
 func (zk *ZookeeperMaster) Register() error {
 	if err := zk.createSelfNode(); err != nil {
 		return err
@@ -231,7 +232,7 @@ func (zk *ZookeeperMaster) masterLoop() {
 			zk.isMaster = false
 		}
 	} else {
-		blog.Warnf("zookeeper master get emtpy data with first node %s", nodepath)
+		blog.Warnf("zookeeper master get empty data with first node %s", nodepath)
 		zk.isMaster = false
 	}
 	select {
@@ -245,12 +246,12 @@ func (zk *ZookeeperMaster) masterLoop() {
 			return
 		}
 		if event.Type == zktype.EventSession {
-			blog.Warnf("zookeeper happend EventSession in children watch.")
+			blog.Warnf("zookeeper happened EventSession in children watch.")
 			go zk.masterLoop()
 			return
 		}
 		if event.Type == zktype.EventNotWatching {
-			blog.Warnf("zookeeper happend EventNotWatching in children watch. try to watch again")
+			blog.Warnf("zookeeper happened EventNotWatching in children watch. try to watch again")
 			go zk.masterLoop()
 			return
 		}

@@ -11,7 +11,7 @@
  *
  */
 
-//transaction for scaleup applicaiton
+//transaction for scaleup application
 
 package scheduler
 

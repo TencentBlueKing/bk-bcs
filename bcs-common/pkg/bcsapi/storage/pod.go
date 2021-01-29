@@ -20,7 +20,7 @@ import (
 
 // Pod information from
 // https://bcs-api-gateway.bk.tencent.com:8443/bcsapi/v4/storage/query/k8s/dynamic/clusters/BCS-K8S-40026/pod
-// data structure difinitions are refered to store structures in mongodb. they are not the the same with
+// data structure difinitions are referred to store structures in mongodb. they are not the the same with
 // original kubernetes data structure. Module bcs-storage add some additional control information for
 // multiple cluster management.
 

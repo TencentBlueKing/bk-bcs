@@ -84,13 +84,13 @@ func New(config util.SchedConfig) (*Manager, error) {
 
 	splitID := strings.Split(listener.TCPAddr, ":")
 	if len(splitID) < 2 {
-		return nil, fmt.Errorf("listen adress %s format error", listener.TCPAddr)
+		return nil, fmt.Errorf("listen address %s format error", listener.TCPAddr)
 	}
 	ip := splitID[0]
 	port, err := strconv.Atoi(splitID[1])
 	if err != nil {
 		blog.Error("get port from %s error: %s", listener.TCPAddr, err.Error())
-		return nil, fmt.Errorf("listen adress %s format error", listener.TCPAddr)
+		return nil, fmt.Errorf("listen address %s format error", listener.TCPAddr)
 	}
 
 	manager.schedContext.ApiServer2 = httpserver.NewHttpServer(uint(port), ip, listener.UnixAddr)

@@ -44,7 +44,7 @@ func WarnWordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedNam
 
 // AddCommonFlags add common flags that is needed by all modules
 func AddCommonFlags(cmdline *pflag.FlagSet) *bool {
-	version := cmdline.Bool("version", false, "show version infomation")
+	version := cmdline.Bool("version", false, "show version information")
 	return version
 }
 

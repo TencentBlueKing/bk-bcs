@@ -123,7 +123,7 @@ end
 -- haproxy
 local Stats = Class()
 
--- stats init, create defualt value for attributes
+-- stats init, create default value for attributes
 function Stats:_init()
     -- all frontends that can not connect to backend
     -- key/value

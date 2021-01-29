@@ -48,6 +48,7 @@ type Interface interface {
 	) (time.Duration, error)
 }
 
+// New create pod update interface for gamedeployment
 func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp expectations.ScaleExpectations,
 	updateExp expectations.UpdateExpectations, hookRunLister hooklister.HookRunLister,
 	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface, preInplaceControl preinplace.PreInplaceInterface) Interface {
@@ -61,7 +62,7 @@ func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp
 		hookRunLister:      hookRunLister,
 		hookTemplateLister: hookTemplateLister,
 		preDeleteControl:   preDeleteControl,
-		preInplaceControl:   preInplaceControl,
+		preInplaceControl:  preInplaceControl,
 	}
 }
 
@@ -75,7 +76,7 @@ type realControl struct {
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
-	preInplaceControl   preinplace.PreInplaceInterface
+	preInplaceControl  preinplace.PreInplaceInterface
 }
 
 func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
@@ -191,7 +192,7 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 	switch deploy.Spec.UpdateStrategy.Type {
 	case gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType:
-		if deploy.Spec.PreInplaceUpdateStrategy.Hook != nil  {
+		if deploy.Spec.PreInplaceUpdateStrategy.Hook != nil {
 			klog.V(2).Infof("PreInplace Hook check for inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
 
 			canInplace, err := c.preInplaceControl.CheckInplace(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
@@ -240,7 +241,7 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 		err := fmt.Errorf("find Pod %s update strategy is InPlace, but the diff not only contains replace operation of spec.containers[x].image", pod)
 		c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace", "find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
-		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: v%", deploy.Namespace, deploy.Name, pod.Name, err)
+		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: %+v", deploy.Namespace, deploy.Name, pod.Name, err)
 		return res.DelayDuration, err
 	case gdv1alpha1.RollingGameDeploymentUpdateStrategyType:
 		canDelete, err := c.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
