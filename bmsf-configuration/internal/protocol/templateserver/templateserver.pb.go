@@ -9,60 +9,38 @@ It is generated from these files:
 	templateserver.proto
 
 It has these top-level messages:
-	RenderReq
-	RenderResp
-	PreviewRenderingReq
-	PreviewRenderingResp
-	CreateConfigTemplateSetReq
-	CreateConfigTemplateSetResp
-	DeleteConfigTemplateSetReq
-	DeleteConfigTemplateSetResp
-	UpdateConfigTemplateSetReq
-	UpdateConfigTemplateSetResp
-	QueryConfigTemplateSetReq
-	QueryConfigTemplateSetResp
-	QueryConfigTemplateSetListReq
-	QueryConfigTemplateSetListResp
+	CreateTemplateBindReq
+	CreateTemplateBindResp
+	QueryTemplateBindReq
+	QueryTemplateBindResp
+	QueryTemplateBindListReq
+	QueryTemplateBindListResp
+	DeleteTemplateBindReq
+	DeleteTemplateBindResp
 	CreateConfigTemplateReq
 	CreateConfigTemplateResp
-	DeleteConfigTemplateReq
-	DeleteConfigTemplateResp
-	UpdateConfigTemplateReq
-	UpdateConfigTemplateResp
 	QueryConfigTemplateReq
 	QueryConfigTemplateResp
 	QueryConfigTemplateListReq
 	QueryConfigTemplateListResp
-	CreateTemplateVersionReq
-	CreateTemplateVersionResp
-	DeleteTemplateVersionReq
-	DeleteTemplateVersionResp
-	UpdateTemplateVersionReq
-	UpdateTemplateVersionResp
-	QueryTemplateVersionReq
-	QueryTemplateVersionResp
-	QueryTemplateVersionListReq
-	QueryTemplateVersionListResp
-	CreateConfigTemplateBindingReq
-	CreateConfigTemplateBindingResp
-	DeleteConfigTemplateBindingReq
-	DeleteConfigTemplateBindingResp
-	SyncConfigTemplateBindingReq
-	SyncConfigTemplateBindingResp
-	QueryConfigTemplateBindingReq
-	QueryConfigTemplateBindingResp
-	QueryConfigTemplateBindingListReq
-	QueryConfigTemplateBindingListResp
-	CreateVariableReq
-	CreateVariableResp
-	UpdateVariableReq
-	UpdateVariableResp
-	DeleteVariableReq
-	DeleteVariableResp
-	QueryVariableReq
-	QueryVariableResp
-	QueryVariableListReq
-	QueryVariableListResp
+	UpdateConfigTemplateReq
+	UpdateConfigTemplateResp
+	DeleteConfigTemplateReq
+	DeleteConfigTemplateResp
+	RenderConfigTemplateReq
+	RenderConfigTemplateResp
+	CreateConfigTemplateVersionReq
+	CreateConfigTemplateVersionResp
+	QueryConfigTemplateVersionReq
+	QueryConfigTemplateVersionResp
+	QueryConfigTemplateVersionListReq
+	QueryConfigTemplateVersionListResp
+	UpdateConfigTemplateVersionReq
+	UpdateConfigTemplateVersionResp
+	DeleteConfigTemplateVersionReq
+	DeleteConfigTemplateVersionResp
+	HealthzReq
+	HealthzResp
 */
 package templateserver
 
@@ -70,6 +48,8 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import common "bk-bscp/internal/protocol/common"
+import _ "google.golang.org/genproto/googleapis/api/annotations"
+import _ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 
 import (
 	context "golang.org/x/net/context"
@@ -87,618 +67,360 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type RenderReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid    string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Commitid string `protobuf:"bytes,4,opt,name=commitid" json:"commitid,omitempty"`
-	Operator string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
+type CreateTemplateBindReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 }
 
-func (m *RenderReq) Reset()                    { *m = RenderReq{} }
-func (m *RenderReq) String() string            { return proto.CompactTextString(m) }
-func (*RenderReq) ProtoMessage()               {}
-func (*RenderReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *CreateTemplateBindReq) Reset()                    { *m = CreateTemplateBindReq{} }
+func (m *CreateTemplateBindReq) String() string            { return proto.CompactTextString(m) }
+func (*CreateTemplateBindReq) ProtoMessage()               {}
+func (*CreateTemplateBindReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *RenderReq) GetSeq() uint64 {
+func (m *CreateTemplateBindReq) GetBizId() string {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *RenderReq) GetBid() string {
-	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *RenderReq) GetAppid() string {
+func (m *CreateTemplateBindReq) GetTemplateId() string {
 	if m != nil {
-		return m.Appid
+		return m.TemplateId
 	}
 	return ""
 }
 
-func (m *RenderReq) GetCommitid() string {
+func (m *CreateTemplateBindReq) GetAppId() string {
 	if m != nil {
-		return m.Commitid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *RenderReq) GetOperator() string {
+type CreateTemplateBindResp struct {
+	Result  bool                             `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                   `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                           `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateTemplateBindResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *CreateTemplateBindResp) Reset()                    { *m = CreateTemplateBindResp{} }
+func (m *CreateTemplateBindResp) String() string            { return proto.CompactTextString(m) }
+func (*CreateTemplateBindResp) ProtoMessage()               {}
+func (*CreateTemplateBindResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *CreateTemplateBindResp) GetResult() bool {
 	if m != nil {
-		return m.Operator
+		return m.Result
 	}
-	return ""
+	return false
 }
 
-type RenderResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *RenderResp) Reset()                    { *m = RenderResp{} }
-func (m *RenderResp) String() string            { return proto.CompactTextString(m) }
-func (*RenderResp) ProtoMessage()               {}
-func (*RenderResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *RenderResp) GetSeq() uint64 {
+func (m *CreateTemplateBindResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *RenderResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *RenderResp) GetErrMsg() string {
+func (m *CreateTemplateBindResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-type PreviewRenderingReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid    string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Commitid string `protobuf:"bytes,4,opt,name=commitid" json:"commitid,omitempty"`
-	Operator string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *PreviewRenderingReq) Reset()                    { *m = PreviewRenderingReq{} }
-func (m *PreviewRenderingReq) String() string            { return proto.CompactTextString(m) }
-func (*PreviewRenderingReq) ProtoMessage()               {}
-func (*PreviewRenderingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
-
-func (m *PreviewRenderingReq) GetSeq() uint64 {
+func (m *CreateTemplateBindResp) GetData() *CreateTemplateBindResp_RespData {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *PreviewRenderingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *PreviewRenderingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *PreviewRenderingReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *PreviewRenderingReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type PreviewRenderingResp struct {
-	Seq      uint64            `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode    `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string            `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Cfgslist []*common.Configs `protobuf:"bytes,4,rep,name=cfgslist" json:"cfgslist,omitempty"`
-}
-
-func (m *PreviewRenderingResp) Reset()                    { *m = PreviewRenderingResp{} }
-func (m *PreviewRenderingResp) String() string            { return proto.CompactTextString(m) }
-func (*PreviewRenderingResp) ProtoMessage()               {}
-func (*PreviewRenderingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
-
-func (m *PreviewRenderingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *PreviewRenderingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *PreviewRenderingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *PreviewRenderingResp) GetCfgslist() []*common.Configs {
-	if m != nil {
-		return m.Cfgslist
+		return m.Data
 	}
 	return nil
 }
 
-type CreateConfigTemplateSetReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid     string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Name    string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
-	Memo    string `protobuf:"bytes,4,opt,name=memo" json:"memo,omitempty"`
-	Fpath   string `protobuf:"bytes,5,opt,name=fpath" json:"fpath,omitempty"`
-	Creator string `protobuf:"bytes,6,opt,name=creator" json:"creator,omitempty"`
+type CreateTemplateBindResp_RespData struct {
+	CfgId string `protobuf:"bytes,1,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
 }
 
-func (m *CreateConfigTemplateSetReq) Reset()                    { *m = CreateConfigTemplateSetReq{} }
-func (m *CreateConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateSetReq) ProtoMessage()               {}
-func (*CreateConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
-
-func (m *CreateConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
+func (m *CreateTemplateBindResp_RespData) Reset()         { *m = CreateTemplateBindResp_RespData{} }
+func (m *CreateTemplateBindResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateTemplateBindResp_RespData) ProtoMessage()    {}
+func (*CreateTemplateBindResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{1, 0}
 }
 
-func (m *CreateConfigTemplateSetReq) GetBid() string {
+func (m *CreateTemplateBindResp_RespData) GetCfgId() string {
 	if m != nil {
-		return m.Bid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *CreateConfigTemplateSetReq) GetName() string {
+type QueryTemplateBindReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+}
+
+func (m *QueryTemplateBindReq) Reset()                    { *m = QueryTemplateBindReq{} }
+func (m *QueryTemplateBindReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindReq) ProtoMessage()               {}
+func (*QueryTemplateBindReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *QueryTemplateBindReq) GetBizId() string {
 	if m != nil {
-		return m.Name
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateConfigTemplateSetReq) GetMemo() string {
+func (m *QueryTemplateBindReq) GetTemplateId() string {
 	if m != nil {
-		return m.Memo
+		return m.TemplateId
 	}
 	return ""
 }
 
-func (m *CreateConfigTemplateSetReq) GetFpath() string {
+func (m *QueryTemplateBindReq) GetAppId() string {
 	if m != nil {
-		return m.Fpath
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateConfigTemplateSetReq) GetCreator() string {
+type QueryTemplateBindResp struct {
+	Result  bool                 `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode       `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string               `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.TemplateBind `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryTemplateBindResp) Reset()                    { *m = QueryTemplateBindResp{} }
+func (m *QueryTemplateBindResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindResp) ProtoMessage()               {}
+func (*QueryTemplateBindResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *QueryTemplateBindResp) GetResult() bool {
 	if m != nil {
-		return m.Creator
+		return m.Result
 	}
-	return ""
+	return false
 }
 
-type CreateConfigTemplateSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Setid   string         `protobuf:"bytes,4,opt,name=setid" json:"setid,omitempty"`
-}
-
-func (m *CreateConfigTemplateSetResp) Reset()                    { *m = CreateConfigTemplateSetResp{} }
-func (m *CreateConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateSetResp) ProtoMessage()               {}
-func (*CreateConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
-
-func (m *CreateConfigTemplateSetResp) GetSeq() uint64 {
+func (m *QueryTemplateBindResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateConfigTemplateSetResp) GetErrMsg() string {
+func (m *QueryTemplateBindResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *CreateConfigTemplateSetResp) GetSetid() string {
+func (m *QueryTemplateBindResp) GetData() *common.TemplateBind {
 	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-type DeleteConfigTemplateSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid    string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteConfigTemplateSetReq) Reset()                    { *m = DeleteConfigTemplateSetReq{} }
-func (m *DeleteConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateSetReq) ProtoMessage()               {}
-func (*DeleteConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
-
-func (m *DeleteConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateSetReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteConfigTemplateSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteConfigTemplateSetResp) Reset()                    { *m = DeleteConfigTemplateSetResp{} }
-func (m *DeleteConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateSetResp) ProtoMessage()               {}
-func (*DeleteConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
-
-func (m *DeleteConfigTemplateSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteConfigTemplateSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type UpdateConfigTemplateSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid    string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Name     string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo     string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	Operator string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateConfigTemplateSetReq) Reset()                    { *m = UpdateConfigTemplateSetReq{} }
-func (m *UpdateConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateSetReq) ProtoMessage()               {}
-func (*UpdateConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
-
-func (m *UpdateConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateConfigTemplateSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateConfigTemplateSetResp) Reset()                    { *m = UpdateConfigTemplateSetResp{} }
-func (m *UpdateConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateSetResp) ProtoMessage()               {}
-func (*UpdateConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
-
-func (m *UpdateConfigTemplateSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateConfigTemplateSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryConfigTemplateSetReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-}
-
-func (m *QueryConfigTemplateSetReq) Reset()                    { *m = QueryConfigTemplateSetReq{} }
-func (m *QueryConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetReq) ProtoMessage()               {}
-func (*QueryConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
-
-func (m *QueryConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateSetReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-type QueryConfigTemplateSetResp struct {
-	Seq         uint64                    `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode     common.ErrCode            `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg      string                    `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateSet *common.ConfigTemplateSet `protobuf:"bytes,4,opt,name=templateSet" json:"templateSet,omitempty"`
-}
-
-func (m *QueryConfigTemplateSetResp) Reset()                    { *m = QueryConfigTemplateSetResp{} }
-func (m *QueryConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetResp) ProtoMessage()               {}
-func (*QueryConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
-
-func (m *QueryConfigTemplateSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateSetResp) GetTemplateSet() *common.ConfigTemplateSet {
-	if m != nil {
-		return m.TemplateSet
+		return m.Data
 	}
 	return nil
 }
 
-type QueryConfigTemplateSetListReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Index int32  `protobuf:"varint,3,opt,name=index" json:"index,omitempty"`
-	Limit int32  `protobuf:"varint,4,opt,name=limit" json:"limit,omitempty"`
+type QueryTemplateBindListReq struct {
+	BizId      string       `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string       `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	Page       *common.Page `protobuf:"bytes,4,opt,name=page" json:"page,omitempty"`
 }
 
-func (m *QueryConfigTemplateSetListReq) Reset()                    { *m = QueryConfigTemplateSetListReq{} }
-func (m *QueryConfigTemplateSetListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetListReq) ProtoMessage()               {}
-func (*QueryConfigTemplateSetListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (m *QueryTemplateBindListReq) Reset()                    { *m = QueryTemplateBindListReq{} }
+func (m *QueryTemplateBindListReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindListReq) ProtoMessage()               {}
+func (*QueryTemplateBindListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
-func (m *QueryConfigTemplateSetListReq) GetSeq() uint64 {
+func (m *QueryTemplateBindListReq) GetBizId() string {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryConfigTemplateSetListReq) GetIndex() int32 {
+func (m *QueryTemplateBindListReq) GetTemplateId() string {
 	if m != nil {
-		return m.Index
+		return m.TemplateId
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigTemplateSetListReq) GetLimit() int32 {
+func (m *QueryTemplateBindListReq) GetAppId() string {
 	if m != nil {
-		return m.Limit
+		return m.AppId
 	}
-	return 0
+	return ""
 }
 
-type QueryConfigTemplateSetListResp struct {
-	Seq          uint64                      `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode      common.ErrCode              `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg       string                      `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateSets []*common.ConfigTemplateSet `protobuf:"bytes,4,rep,name=templateSets" json:"templateSets,omitempty"`
-}
-
-func (m *QueryConfigTemplateSetListResp) Reset()                    { *m = QueryConfigTemplateSetListResp{} }
-func (m *QueryConfigTemplateSetListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetListResp) ProtoMessage()               {}
-func (*QueryConfigTemplateSetListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
-
-func (m *QueryConfigTemplateSetListResp) GetSeq() uint64 {
+func (m *QueryTemplateBindListReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Seq
+		return m.Page
 	}
-	return 0
+	return nil
 }
 
-func (m *QueryConfigTemplateSetListResp) GetErrCode() common.ErrCode {
+type QueryTemplateBindListResp struct {
+	Result  bool                                `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                      `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                              `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryTemplateBindListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryTemplateBindListResp) Reset()                    { *m = QueryTemplateBindListResp{} }
+func (m *QueryTemplateBindListResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindListResp) ProtoMessage()               {}
+func (*QueryTemplateBindListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *QueryTemplateBindListResp) GetResult() bool {
 	if m != nil {
-		return m.ErrCode
+		return m.Result
+	}
+	return false
+}
+
+func (m *QueryTemplateBindListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryConfigTemplateSetListResp) GetErrMsg() string {
+func (m *QueryTemplateBindListResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *QueryConfigTemplateSetListResp) GetTemplateSets() []*common.ConfigTemplateSet {
+func (m *QueryTemplateBindListResp) GetData() *QueryTemplateBindListResp_RespData {
 	if m != nil {
-		return m.TemplateSets
+		return m.Data
 	}
 	return nil
+}
+
+type QueryTemplateBindListResp_RespData struct {
+	TotalCount uint32                 `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.TemplateBind `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryTemplateBindListResp_RespData) Reset()         { *m = QueryTemplateBindListResp_RespData{} }
+func (m *QueryTemplateBindListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryTemplateBindListResp_RespData) ProtoMessage()    {}
+func (*QueryTemplateBindListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{5, 0}
+}
+
+func (m *QueryTemplateBindListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryTemplateBindListResp_RespData) GetInfo() []*common.TemplateBind {
+	if m != nil {
+		return m.Info
+	}
+	return nil
+}
+
+type DeleteTemplateBindReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+}
+
+func (m *DeleteTemplateBindReq) Reset()                    { *m = DeleteTemplateBindReq{} }
+func (m *DeleteTemplateBindReq) String() string            { return proto.CompactTextString(m) }
+func (*DeleteTemplateBindReq) ProtoMessage()               {}
+func (*DeleteTemplateBindReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+func (m *DeleteTemplateBindReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *DeleteTemplateBindReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *DeleteTemplateBindReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+type DeleteTemplateBindResp struct {
+	Result  bool           `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *DeleteTemplateBindResp) Reset()                    { *m = DeleteTemplateBindResp{} }
+func (m *DeleteTemplateBindResp) String() string            { return proto.CompactTextString(m) }
+func (*DeleteTemplateBindResp) ProtoMessage()               {}
+func (*DeleteTemplateBindResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *DeleteTemplateBindResp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
+func (m *DeleteTemplateBindResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *DeleteTemplateBindResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
 }
 
 type CreateConfigTemplateReq struct {
-	Seq          uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid          string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid        string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Name         string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo         string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	User         string `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
-	Group        string `protobuf:"bytes,7,opt,name=group" json:"group,omitempty"`
-	Permission   int32  `protobuf:"varint,8,opt,name=permission" json:"permission,omitempty"`
-	FileEncoding string `protobuf:"bytes,9,opt,name=fileEncoding" json:"fileEncoding,omitempty"`
-	EngineType   int32  `protobuf:"varint,10,opt,name=engineType" json:"engineType,omitempty"`
-	Creator      string `protobuf:"bytes,11,opt,name=creator" json:"creator,omitempty"`
+	BizId         string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	Name          string `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+	FileName      string `protobuf:"bytes,3,opt,name=file_name,json=fileName" json:"file_name,omitempty"`
+	FilePath      string `protobuf:"bytes,4,opt,name=file_path,json=filePath" json:"file_path,omitempty"`
+	User          string `protobuf:"bytes,5,opt,name=user" json:"user,omitempty"`
+	UserGroup     string `protobuf:"bytes,6,opt,name=user_group,json=userGroup" json:"user_group,omitempty"`
+	FilePrivilege string `protobuf:"bytes,7,opt,name=file_privilege,json=filePrivilege" json:"file_privilege,omitempty"`
+	FileFormat    string `protobuf:"bytes,8,opt,name=file_format,json=fileFormat" json:"file_format,omitempty"`
+	FileMode      int32  `protobuf:"varint,9,opt,name=file_mode,json=fileMode" json:"file_mode,omitempty"`
+	EngineType    int32  `protobuf:"varint,10,opt,name=engine_type,json=engineType" json:"engine_type,omitempty"`
+	Memo          string `protobuf:"bytes,11,opt,name=memo" json:"memo,omitempty"`
 }
 
 func (m *CreateConfigTemplateReq) Reset()                    { *m = CreateConfigTemplateReq{} }
 func (m *CreateConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateConfigTemplateReq) ProtoMessage()               {}
-func (*CreateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*CreateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
-func (m *CreateConfigTemplateReq) GetSeq() uint64 {
+func (m *CreateConfigTemplateReq) GetBizId() string {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
+		return m.BizId
 	}
 	return ""
 }
@@ -710,9 +432,16 @@ func (m *CreateConfigTemplateReq) GetName() string {
 	return ""
 }
 
-func (m *CreateConfigTemplateReq) GetMemo() string {
+func (m *CreateConfigTemplateReq) GetFileName() string {
 	if m != nil {
-		return m.Memo
+		return m.FileName
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFilePath() string {
+	if m != nil {
+		return m.FilePath
 	}
 	return ""
 }
@@ -724,25 +453,32 @@ func (m *CreateConfigTemplateReq) GetUser() string {
 	return ""
 }
 
-func (m *CreateConfigTemplateReq) GetGroup() string {
+func (m *CreateConfigTemplateReq) GetUserGroup() string {
 	if m != nil {
-		return m.Group
+		return m.UserGroup
 	}
 	return ""
 }
 
-func (m *CreateConfigTemplateReq) GetPermission() int32 {
+func (m *CreateConfigTemplateReq) GetFilePrivilege() string {
 	if m != nil {
-		return m.Permission
+		return m.FilePrivilege
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFileFormat() string {
+	if m != nil {
+		return m.FileFormat
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFileMode() int32 {
+	if m != nil {
+		return m.FileMode
 	}
 	return 0
-}
-
-func (m *CreateConfigTemplateReq) GetFileEncoding() string {
-	if m != nil {
-		return m.FileEncoding
-	}
-	return ""
 }
 
 func (m *CreateConfigTemplateReq) GetEngineType() int32 {
@@ -752,160 +488,255 @@ func (m *CreateConfigTemplateReq) GetEngineType() int32 {
 	return 0
 }
 
-func (m *CreateConfigTemplateReq) GetCreator() string {
+func (m *CreateConfigTemplateReq) GetMemo() string {
 	if m != nil {
-		return m.Creator
+		return m.Memo
 	}
 	return ""
 }
 
 type CreateConfigTemplateResp struct {
-	Seq        uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Templateid string         `protobuf:"bytes,4,opt,name=templateid" json:"templateid,omitempty"`
+	Result  bool                               `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                     `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                             `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateConfigTemplateResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *CreateConfigTemplateResp) Reset()                    { *m = CreateConfigTemplateResp{} }
 func (m *CreateConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateConfigTemplateResp) ProtoMessage()               {}
-func (*CreateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+func (*CreateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
-func (m *CreateConfigTemplateResp) GetSeq() uint64 {
+func (m *CreateConfigTemplateResp) GetResult() bool {
 	if m != nil {
-		return m.Seq
+		return m.Result
 	}
-	return 0
+	return false
 }
 
-func (m *CreateConfigTemplateResp) GetErrCode() common.ErrCode {
+func (m *CreateConfigTemplateResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateConfigTemplateResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateResp) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-type DeleteConfigTemplateReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Operator   string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteConfigTemplateReq) Reset()                    { *m = DeleteConfigTemplateReq{} }
-func (m *DeleteConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateReq) ProtoMessage()               {}
-func (*DeleteConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
-
-func (m *DeleteConfigTemplateReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteConfigTemplateResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteConfigTemplateResp) Reset()                    { *m = DeleteConfigTemplateResp{} }
-func (m *DeleteConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateResp) ProtoMessage()               {}
-func (*DeleteConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
-
-func (m *DeleteConfigTemplateResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *DeleteConfigTemplateResp) GetErrMsg() string {
+func (m *CreateConfigTemplateResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
+}
+
+func (m *CreateConfigTemplateResp) GetData() *CreateConfigTemplateResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateConfigTemplateResp_RespData struct {
+	TemplateId string `protobuf:"bytes,1,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+}
+
+func (m *CreateConfigTemplateResp_RespData) Reset()         { *m = CreateConfigTemplateResp_RespData{} }
+func (m *CreateConfigTemplateResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateResp_RespData) ProtoMessage()    {}
+func (*CreateConfigTemplateResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{9, 0}
+}
+
+func (m *CreateConfigTemplateResp_RespData) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+type QueryConfigTemplateReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+}
+
+func (m *QueryConfigTemplateReq) Reset()                    { *m = QueryConfigTemplateReq{} }
+func (m *QueryConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateReq) ProtoMessage()               {}
+func (*QueryConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *QueryConfigTemplateReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+type QueryConfigTemplateResp struct {
+	Result  bool                   `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode         `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                 `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ConfigTemplate `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigTemplateResp) Reset()                    { *m = QueryConfigTemplateResp{} }
+func (m *QueryConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateResp) ProtoMessage()               {}
+func (*QueryConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *QueryConfigTemplateResp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
+func (m *QueryConfigTemplateResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigTemplateResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateResp) GetData() *common.ConfigTemplate {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigTemplateListReq struct {
+	BizId string       `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	Page  *common.Page `protobuf:"bytes,2,opt,name=page" json:"page,omitempty"`
+}
+
+func (m *QueryConfigTemplateListReq) Reset()                    { *m = QueryConfigTemplateListReq{} }
+func (m *QueryConfigTemplateListReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateListReq) ProtoMessage()               {}
+func (*QueryConfigTemplateListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *QueryConfigTemplateListReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateListReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
+}
+
+type QueryConfigTemplateListResp struct {
+	Result  bool                                  `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                        `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryConfigTemplateListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigTemplateListResp) Reset()                    { *m = QueryConfigTemplateListResp{} }
+func (m *QueryConfigTemplateListResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateListResp) ProtoMessage()               {}
+func (*QueryConfigTemplateListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+
+func (m *QueryConfigTemplateListResp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
+func (m *QueryConfigTemplateListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigTemplateListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateListResp) GetData() *QueryConfigTemplateListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigTemplateListResp_RespData struct {
+	TotalCount uint32                   `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.ConfigTemplate `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryConfigTemplateListResp_RespData) Reset()         { *m = QueryConfigTemplateListResp_RespData{} }
+func (m *QueryConfigTemplateListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateListResp_RespData) ProtoMessage()    {}
+func (*QueryConfigTemplateListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{13, 0}
+}
+
+func (m *QueryConfigTemplateListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryConfigTemplateListResp_RespData) GetInfo() []*common.ConfigTemplate {
+	if m != nil {
+		return m.Info
+	}
+	return nil
 }
 
 type UpdateConfigTemplateReq struct {
-	Seq          uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid          string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid   string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Name         string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo         string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	User         string `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
-	Group        string `protobuf:"bytes,7,opt,name=group" json:"group,omitempty"`
-	Permission   int32  `protobuf:"varint,8,opt,name=permission" json:"permission,omitempty"`
-	FileEncoding string `protobuf:"bytes,9,opt,name=fileEncoding" json:"fileEncoding,omitempty"`
-	Operator     string `protobuf:"bytes,10,opt,name=operator" json:"operator,omitempty"`
+	BizId         string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId    string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	Name          string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
+	FileName      string `protobuf:"bytes,4,opt,name=file_name,json=fileName" json:"file_name,omitempty"`
+	FilePath      string `protobuf:"bytes,5,opt,name=file_path,json=filePath" json:"file_path,omitempty"`
+	User          string `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
+	UserGroup     string `protobuf:"bytes,7,opt,name=user_group,json=userGroup" json:"user_group,omitempty"`
+	FilePrivilege string `protobuf:"bytes,8,opt,name=file_privilege,json=filePrivilege" json:"file_privilege,omitempty"`
+	FileFormat    string `protobuf:"bytes,9,opt,name=file_format,json=fileFormat" json:"file_format,omitempty"`
+	FileMode      int32  `protobuf:"varint,10,opt,name=file_mode,json=fileMode" json:"file_mode,omitempty"`
+	EngineType    int32  `protobuf:"varint,11,opt,name=engine_type,json=engineType" json:"engine_type,omitempty"`
+	Memo          string `protobuf:"bytes,12,opt,name=memo" json:"memo,omitempty"`
 }
 
 func (m *UpdateConfigTemplateReq) Reset()                    { *m = UpdateConfigTemplateReq{} }
 func (m *UpdateConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateConfigTemplateReq) ProtoMessage()               {}
-func (*UpdateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+func (*UpdateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
-func (m *UpdateConfigTemplateReq) GetSeq() uint64 {
+func (m *UpdateConfigTemplateReq) GetBizId() string {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *UpdateConfigTemplateReq) GetTemplateid() string {
+func (m *UpdateConfigTemplateReq) GetTemplateId() string {
 	if m != nil {
-		return m.Templateid
+		return m.TemplateId
 	}
 	return ""
 }
@@ -917,9 +748,16 @@ func (m *UpdateConfigTemplateReq) GetName() string {
 	return ""
 }
 
-func (m *UpdateConfigTemplateReq) GetMemo() string {
+func (m *UpdateConfigTemplateReq) GetFileName() string {
 	if m != nil {
-		return m.Memo
+		return m.FileName
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFilePath() string {
+	if m != nil {
+		return m.FilePath
 	}
 	return ""
 }
@@ -931,1697 +769,782 @@ func (m *UpdateConfigTemplateReq) GetUser() string {
 	return ""
 }
 
-func (m *UpdateConfigTemplateReq) GetGroup() string {
+func (m *UpdateConfigTemplateReq) GetUserGroup() string {
 	if m != nil {
-		return m.Group
+		return m.UserGroup
 	}
 	return ""
 }
 
-func (m *UpdateConfigTemplateReq) GetPermission() int32 {
+func (m *UpdateConfigTemplateReq) GetFilePrivilege() string {
 	if m != nil {
-		return m.Permission
+		return m.FilePrivilege
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFileFormat() string {
+	if m != nil {
+		return m.FileFormat
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFileMode() int32 {
+	if m != nil {
+		return m.FileMode
 	}
 	return 0
 }
 
-func (m *UpdateConfigTemplateReq) GetFileEncoding() string {
+func (m *UpdateConfigTemplateReq) GetEngineType() int32 {
 	if m != nil {
-		return m.FileEncoding
+		return m.EngineType
 	}
-	return ""
+	return 0
 }
 
-func (m *UpdateConfigTemplateReq) GetOperator() string {
+func (m *UpdateConfigTemplateReq) GetMemo() string {
 	if m != nil {
-		return m.Operator
+		return m.Memo
 	}
 	return ""
 }
 
 type UpdateConfigTemplateResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Result  bool           `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateConfigTemplateResp) Reset()                    { *m = UpdateConfigTemplateResp{} }
 func (m *UpdateConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateConfigTemplateResp) ProtoMessage()               {}
-func (*UpdateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+func (*UpdateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
 
-func (m *UpdateConfigTemplateResp) GetSeq() uint64 {
+func (m *UpdateConfigTemplateResp) GetResult() bool {
 	if m != nil {
-		return m.Seq
+		return m.Result
 	}
-	return 0
+	return false
 }
 
-func (m *UpdateConfigTemplateResp) GetErrCode() common.ErrCode {
+func (m *UpdateConfigTemplateResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateConfigTemplateResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryConfigTemplateReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-}
-
-func (m *QueryConfigTemplateReq) Reset()                    { *m = QueryConfigTemplateReq{} }
-func (m *QueryConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateReq) ProtoMessage()               {}
-func (*QueryConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
-
-func (m *QueryConfigTemplateReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-type QueryConfigTemplateResp struct {
-	Seq            uint64                 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode        common.ErrCode         `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg         string                 `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplate *common.ConfigTemplate `protobuf:"bytes,4,opt,name=configTemplate" json:"configTemplate,omitempty"`
-}
-
-func (m *QueryConfigTemplateResp) Reset()                    { *m = QueryConfigTemplateResp{} }
-func (m *QueryConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateResp) ProtoMessage()               {}
-func (*QueryConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
-
-func (m *QueryConfigTemplateResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryConfigTemplateResp) GetErrMsg() string {
+func (m *UpdateConfigTemplateResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *QueryConfigTemplateResp) GetConfigTemplate() *common.ConfigTemplate {
+type DeleteConfigTemplateReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+}
+
+func (m *DeleteConfigTemplateReq) Reset()                    { *m = DeleteConfigTemplateReq{} }
+func (m *DeleteConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateReq) ProtoMessage()               {}
+func (*DeleteConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+
+func (m *DeleteConfigTemplateReq) GetBizId() string {
 	if m != nil {
-		return m.ConfigTemplate
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *DeleteConfigTemplateReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+type DeleteConfigTemplateResp struct {
+	Result  bool           `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *DeleteConfigTemplateResp) Reset()                    { *m = DeleteConfigTemplateResp{} }
+func (m *DeleteConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateResp) ProtoMessage()               {}
+func (*DeleteConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+
+func (m *DeleteConfigTemplateResp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
+func (m *DeleteConfigTemplateResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *DeleteConfigTemplateResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type RenderConfigTemplateReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	VersionId  string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
+	Variables  string `protobuf:"bytes,4,opt,name=variables" json:"variables,omitempty"`
+}
+
+func (m *RenderConfigTemplateReq) Reset()                    { *m = RenderConfigTemplateReq{} }
+func (m *RenderConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
+func (*RenderConfigTemplateReq) ProtoMessage()               {}
+func (*RenderConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+
+func (m *RenderConfigTemplateReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *RenderConfigTemplateReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *RenderConfigTemplateReq) GetVersionId() string {
+	if m != nil {
+		return m.VersionId
+	}
+	return ""
+}
+
+func (m *RenderConfigTemplateReq) GetVariables() string {
+	if m != nil {
+		return m.Variables
+	}
+	return ""
+}
+
+type RenderConfigTemplateResp struct {
+	Result  bool                               `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                     `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                             `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *RenderConfigTemplateResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *RenderConfigTemplateResp) Reset()                    { *m = RenderConfigTemplateResp{} }
+func (m *RenderConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
+func (*RenderConfigTemplateResp) ProtoMessage()               {}
+func (*RenderConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+
+func (m *RenderConfigTemplateResp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
+func (m *RenderConfigTemplateResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *RenderConfigTemplateResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *RenderConfigTemplateResp) GetData() *RenderConfigTemplateResp_RespData {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
-type QueryConfigTemplateListReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Index int32  `protobuf:"varint,4,opt,name=index" json:"index,omitempty"`
-	Limit int32  `protobuf:"varint,5,opt,name=limit" json:"limit,omitempty"`
+type RenderConfigTemplateResp_RespData struct {
+	ContentId string `protobuf:"bytes,1,opt,name=content_id,json=contentId" json:"content_id,omitempty"`
 }
 
-func (m *QueryConfigTemplateListReq) Reset()                    { *m = QueryConfigTemplateListReq{} }
-func (m *QueryConfigTemplateListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateListReq) ProtoMessage()               {}
-func (*QueryConfigTemplateListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
+func (m *RenderConfigTemplateResp_RespData) Reset()         { *m = RenderConfigTemplateResp_RespData{} }
+func (m *RenderConfigTemplateResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*RenderConfigTemplateResp_RespData) ProtoMessage()    {}
+func (*RenderConfigTemplateResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{19, 0}
+}
 
-func (m *QueryConfigTemplateListReq) GetSeq() uint64 {
+func (m *RenderConfigTemplateResp_RespData) GetContentId() string {
 	if m != nil {
-		return m.Seq
+		return m.ContentId
+	}
+	return ""
+}
+
+type CreateConfigTemplateVersionReq struct {
+	BizId       string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId  string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	VersionTag  string `protobuf:"bytes,3,opt,name=version_tag,json=versionTag" json:"version_tag,omitempty"`
+	ContentId   string `protobuf:"bytes,4,opt,name=content_id,json=contentId" json:"content_id,omitempty"`
+	ContentSize uint32 `protobuf:"varint,5,opt,name=content_size,json=contentSize" json:"content_size,omitempty"`
+	Memo        string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
+}
+
+func (m *CreateConfigTemplateVersionReq) Reset()                    { *m = CreateConfigTemplateVersionReq{} }
+func (m *CreateConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionReq) ProtoMessage()               {}
+func (*CreateConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+
+func (m *CreateConfigTemplateVersionReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetVersionTag() string {
+	if m != nil {
+		return m.VersionTag
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetContentId() string {
+	if m != nil {
+		return m.ContentId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetContentSize() uint32 {
+	if m != nil {
+		return m.ContentSize
 	}
 	return 0
 }
 
-func (m *QueryConfigTemplateListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateListReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryConfigTemplateListResp struct {
-	Seq             uint64                   `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode         common.ErrCode           `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg          string                   `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplates []*common.ConfigTemplate `protobuf:"bytes,4,rep,name=configTemplates" json:"configTemplates,omitempty"`
-}
-
-func (m *QueryConfigTemplateListResp) Reset()                    { *m = QueryConfigTemplateListResp{} }
-func (m *QueryConfigTemplateListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateListResp) ProtoMessage()               {}
-func (*QueryConfigTemplateListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
-
-func (m *QueryConfigTemplateListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateListResp) GetConfigTemplates() []*common.ConfigTemplate {
-	if m != nil {
-		return m.ConfigTemplates
-	}
-	return nil
-}
-
-type CreateTemplateVersionReq struct {
-	Seq         uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid         string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid  string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	VersionName string `protobuf:"bytes,4,opt,name=versionName" json:"versionName,omitempty"`
-	Memo        string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	Creator     string `protobuf:"bytes,6,opt,name=creator" json:"creator,omitempty"`
-	Content     string `protobuf:"bytes,7,opt,name=content" json:"content,omitempty"`
-}
-
-func (m *CreateTemplateVersionReq) Reset()                    { *m = CreateTemplateVersionReq{} }
-func (m *CreateTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateTemplateVersionReq) ProtoMessage()               {}
-func (*CreateTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
-
-func (m *CreateTemplateVersionReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateTemplateVersionReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetVersionName() string {
-	if m != nil {
-		return m.VersionName
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetMemo() string {
+func (m *CreateConfigTemplateVersionReq) GetMemo() string {
 	if m != nil {
 		return m.Memo
 	}
 	return ""
 }
 
-func (m *CreateTemplateVersionReq) GetCreator() string {
+type CreateConfigTemplateVersionResp struct {
+	Result  bool                                      `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                            `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                    `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateConfigTemplateVersionResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *CreateConfigTemplateVersionResp) Reset()         { *m = CreateConfigTemplateVersionResp{} }
+func (m *CreateConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionResp) ProtoMessage()    {}
+func (*CreateConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{21}
+}
+
+func (m *CreateConfigTemplateVersionResp) GetResult() bool {
 	if m != nil {
-		return m.Creator
+		return m.Result
 	}
-	return ""
+	return false
 }
 
-func (m *CreateTemplateVersionReq) GetContent() string {
+func (m *CreateConfigTemplateVersionResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Content
-	}
-	return ""
-}
-
-type CreateTemplateVersionResp struct {
-	Seq       uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Versionid string         `protobuf:"bytes,4,opt,name=versionid" json:"versionid,omitempty"`
-}
-
-func (m *CreateTemplateVersionResp) Reset()                    { *m = CreateTemplateVersionResp{} }
-func (m *CreateTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateTemplateVersionResp) ProtoMessage()               {}
-func (*CreateTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
-
-func (m *CreateTemplateVersionResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateTemplateVersionResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateTemplateVersionResp) GetErrMsg() string {
+func (m *CreateConfigTemplateVersionResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *CreateTemplateVersionResp) GetVersionid() string {
+func (m *CreateConfigTemplateVersionResp) GetData() *CreateConfigTemplateVersionResp_RespData {
 	if m != nil {
-		return m.Versionid
+		return m.Data
+	}
+	return nil
+}
+
+type CreateConfigTemplateVersionResp_RespData struct {
+	VersionId string `protobuf:"bytes,1,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
+}
+
+func (m *CreateConfigTemplateVersionResp_RespData) Reset() {
+	*m = CreateConfigTemplateVersionResp_RespData{}
+}
+func (m *CreateConfigTemplateVersionResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionResp_RespData) ProtoMessage()    {}
+func (*CreateConfigTemplateVersionResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{21, 0}
+}
+
+func (m *CreateConfigTemplateVersionResp_RespData) GetVersionId() string {
+	if m != nil {
+		return m.VersionId
 	}
 	return ""
 }
 
-type DeleteTemplateVersionReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Versionid string `protobuf:"bytes,3,opt,name=versionid" json:"versionid,omitempty"`
-	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
+type QueryConfigTemplateVersionReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	VersionId  string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
 }
 
-func (m *DeleteTemplateVersionReq) Reset()                    { *m = DeleteTemplateVersionReq{} }
-func (m *DeleteTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteTemplateVersionReq) ProtoMessage()               {}
-func (*DeleteTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
+func (m *QueryConfigTemplateVersionReq) Reset()                    { *m = QueryConfigTemplateVersionReq{} }
+func (m *QueryConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionReq) ProtoMessage()               {}
+func (*QueryConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
 
-func (m *DeleteTemplateVersionReq) GetSeq() uint64 {
+func (m *QueryConfigTemplateVersionReq) GetBizId() string {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteTemplateVersionReq) GetBid() string {
-	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *DeleteTemplateVersionReq) GetVersionid() string {
+func (m *QueryConfigTemplateVersionReq) GetTemplateId() string {
 	if m != nil {
-		return m.Versionid
+		return m.TemplateId
 	}
 	return ""
 }
 
-func (m *DeleteTemplateVersionReq) GetOperator() string {
+func (m *QueryConfigTemplateVersionReq) GetVersionId() string {
 	if m != nil {
-		return m.Operator
+		return m.VersionId
 	}
 	return ""
 }
 
-type DeleteTemplateVersionResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+type QueryConfigTemplateVersionResp struct {
+	Result  bool                          `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                        `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ConfigTemplateVersion `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *DeleteTemplateVersionResp) Reset()                    { *m = DeleteTemplateVersionResp{} }
-func (m *DeleteTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteTemplateVersionResp) ProtoMessage()               {}
-func (*DeleteTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
+func (m *QueryConfigTemplateVersionResp) Reset()                    { *m = QueryConfigTemplateVersionResp{} }
+func (m *QueryConfigTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionResp) ProtoMessage()               {}
+func (*QueryConfigTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
 
-func (m *DeleteTemplateVersionResp) GetSeq() uint64 {
+func (m *QueryConfigTemplateVersionResp) GetResult() bool {
 	if m != nil {
-		return m.Seq
+		return m.Result
 	}
-	return 0
+	return false
 }
 
-func (m *DeleteTemplateVersionResp) GetErrCode() common.ErrCode {
+func (m *QueryConfigTemplateVersionResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *DeleteTemplateVersionResp) GetErrMsg() string {
+func (m *QueryConfigTemplateVersionResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-type UpdateTemplateVersionReq struct {
-	Seq         uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid         string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Versionid   string `protobuf:"bytes,3,opt,name=versionid" json:"versionid,omitempty"`
-	VersionName string `protobuf:"bytes,4,opt,name=versionName" json:"versionName,omitempty"`
-	Memo        string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	Operator    string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
-	Content     string `protobuf:"bytes,7,opt,name=content" json:"content,omitempty"`
+func (m *QueryConfigTemplateVersionResp) GetData() *common.ConfigTemplateVersion {
+	if m != nil {
+		return m.Data
+	}
+	return nil
 }
 
-func (m *UpdateTemplateVersionReq) Reset()                    { *m = UpdateTemplateVersionReq{} }
-func (m *UpdateTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateTemplateVersionReq) ProtoMessage()               {}
-func (*UpdateTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
+type QueryConfigTemplateVersionListReq struct {
+	BizId      string       `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string       `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	Page       *common.Page `protobuf:"bytes,3,opt,name=page" json:"page,omitempty"`
+}
 
-func (m *UpdateTemplateVersionReq) GetSeq() uint64 {
+func (m *QueryConfigTemplateVersionListReq) Reset()         { *m = QueryConfigTemplateVersionListReq{} }
+func (m *QueryConfigTemplateVersionListReq) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionListReq) ProtoMessage()    {}
+func (*QueryConfigTemplateVersionListReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{24}
+}
+
+func (m *QueryConfigTemplateVersionListReq) GetBizId() string {
 	if m != nil {
-		return m.Seq
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
+}
+
+type QueryConfigTemplateVersionListResp struct {
+	Result  bool                                         `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode                               `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                       `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryConfigTemplateVersionListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigTemplateVersionListResp) Reset()         { *m = QueryConfigTemplateVersionListResp{} }
+func (m *QueryConfigTemplateVersionListResp) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionListResp) ProtoMessage()    {}
+func (*QueryConfigTemplateVersionListResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{25}
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetData() *QueryConfigTemplateVersionListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigTemplateVersionListResp_RespData struct {
+	TotalCount uint32                          `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.ConfigTemplateVersion `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryConfigTemplateVersionListResp_RespData) Reset() {
+	*m = QueryConfigTemplateVersionListResp_RespData{}
+}
+func (m *QueryConfigTemplateVersionListResp_RespData) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryConfigTemplateVersionListResp_RespData) ProtoMessage() {}
+func (*QueryConfigTemplateVersionListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{25, 0}
+}
+
+func (m *QueryConfigTemplateVersionListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
 	}
 	return 0
 }
 
-func (m *UpdateTemplateVersionReq) GetBid() string {
+func (m *QueryConfigTemplateVersionListResp_RespData) GetInfo() []*common.ConfigTemplateVersion {
 	if m != nil {
-		return m.Bid
+		return m.Info
+	}
+	return nil
+}
+
+type UpdateConfigTemplateVersionReq struct {
+	BizId       string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId  string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	VersionId   string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
+	ContentId   string `protobuf:"bytes,4,opt,name=content_id,json=contentId" json:"content_id,omitempty"`
+	ContentSize uint32 `protobuf:"varint,5,opt,name=content_size,json=contentSize" json:"content_size,omitempty"`
+	Memo        string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
+}
+
+func (m *UpdateConfigTemplateVersionReq) Reset()                    { *m = UpdateConfigTemplateVersionReq{} }
+func (m *UpdateConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateVersionReq) ProtoMessage()               {}
+func (*UpdateConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
+
+func (m *UpdateConfigTemplateVersionReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *UpdateTemplateVersionReq) GetVersionid() string {
+func (m *UpdateConfigTemplateVersionReq) GetTemplateId() string {
 	if m != nil {
-		return m.Versionid
+		return m.TemplateId
 	}
 	return ""
 }
 
-func (m *UpdateTemplateVersionReq) GetVersionName() string {
+func (m *UpdateConfigTemplateVersionReq) GetVersionId() string {
 	if m != nil {
-		return m.VersionName
+		return m.VersionId
 	}
 	return ""
 }
 
-func (m *UpdateTemplateVersionReq) GetMemo() string {
+func (m *UpdateConfigTemplateVersionReq) GetContentId() string {
+	if m != nil {
+		return m.ContentId
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetContentSize() uint32 {
+	if m != nil {
+		return m.ContentSize
+	}
+	return 0
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetMemo() string {
 	if m != nil {
 		return m.Memo
 	}
 	return ""
 }
 
-func (m *UpdateTemplateVersionReq) GetOperator() string {
+type UpdateConfigTemplateVersionResp struct {
+	Result  bool           `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *UpdateConfigTemplateVersionResp) Reset()         { *m = UpdateConfigTemplateVersionResp{} }
+func (m *UpdateConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateVersionResp) ProtoMessage()    {}
+func (*UpdateConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{27}
+}
+
+func (m *UpdateConfigTemplateVersionResp) GetResult() bool {
 	if m != nil {
-		return m.Operator
+		return m.Result
 	}
-	return ""
+	return false
 }
 
-func (m *UpdateTemplateVersionReq) GetContent() string {
+func (m *UpdateConfigTemplateVersionResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Content
-	}
-	return ""
-}
-
-type UpdateTemplateVersionResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateTemplateVersionResp) Reset()                    { *m = UpdateTemplateVersionResp{} }
-func (m *UpdateTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateTemplateVersionResp) ProtoMessage()               {}
-func (*UpdateTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
-
-func (m *UpdateTemplateVersionResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateTemplateVersionResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateTemplateVersionResp) GetErrMsg() string {
+func (m *UpdateConfigTemplateVersionResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-type QueryTemplateVersionReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Versionid string `protobuf:"bytes,3,opt,name=versionid" json:"versionid,omitempty"`
+type DeleteConfigTemplateVersionReq struct {
+	BizId      string `protobuf:"bytes,1,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	VersionId  string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
 }
 
-func (m *QueryTemplateVersionReq) Reset()                    { *m = QueryTemplateVersionReq{} }
-func (m *QueryTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionReq) ProtoMessage()               {}
-func (*QueryTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
+func (m *DeleteConfigTemplateVersionReq) Reset()                    { *m = DeleteConfigTemplateVersionReq{} }
+func (m *DeleteConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateVersionReq) ProtoMessage()               {}
+func (*DeleteConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
 
-func (m *QueryTemplateVersionReq) GetSeq() uint64 {
+func (m *DeleteConfigTemplateVersionReq) GetBizId() string {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionReq) GetBid() string {
-	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryTemplateVersionReq) GetVersionid() string {
+func (m *DeleteConfigTemplateVersionReq) GetTemplateId() string {
 	if m != nil {
-		return m.Versionid
+		return m.TemplateId
 	}
 	return ""
 }
 
-type QueryTemplateVersionResp struct {
-	Seq             uint64                  `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode         common.ErrCode          `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg          string                  `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateVersion *common.TemplateVersion `protobuf:"bytes,4,opt,name=templateVersion" json:"templateVersion,omitempty"`
-}
-
-func (m *QueryTemplateVersionResp) Reset()                    { *m = QueryTemplateVersionResp{} }
-func (m *QueryTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionResp) ProtoMessage()               {}
-func (*QueryTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{31} }
-
-func (m *QueryTemplateVersionResp) GetSeq() uint64 {
+func (m *DeleteConfigTemplateVersionReq) GetVersionId() string {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryTemplateVersionResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
+		return m.VersionId
 	}
 	return ""
 }
 
-func (m *QueryTemplateVersionResp) GetTemplateVersion() *common.TemplateVersion {
+type DeleteConfigTemplateVersionResp struct {
+	Result  bool           `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *DeleteConfigTemplateVersionResp) Reset()         { *m = DeleteConfigTemplateVersionResp{} }
+func (m *DeleteConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateVersionResp) ProtoMessage()    {}
+func (*DeleteConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{29}
+}
+
+func (m *DeleteConfigTemplateVersionResp) GetResult() bool {
 	if m != nil {
-		return m.TemplateVersion
+		return m.Result
 	}
-	return nil
+	return false
 }
 
-type QueryTemplateVersionListReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Index      int32  `protobuf:"varint,4,opt,name=index" json:"index,omitempty"`
-	Limit      int32  `protobuf:"varint,5,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryTemplateVersionListReq) Reset()                    { *m = QueryTemplateVersionListReq{} }
-func (m *QueryTemplateVersionListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionListReq) ProtoMessage()               {}
-func (*QueryTemplateVersionListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{32} }
-
-func (m *QueryTemplateVersionListReq) GetSeq() uint64 {
+func (m *DeleteConfigTemplateVersionResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryTemplateVersionListReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *QueryTemplateVersionListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryTemplateVersionListResp struct {
-	Seq              uint64                    `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode          common.ErrCode            `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg           string                    `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateVersions []*common.TemplateVersion `protobuf:"bytes,4,rep,name=templateVersions" json:"templateVersions,omitempty"`
-}
-
-func (m *QueryTemplateVersionListResp) Reset()                    { *m = QueryTemplateVersionListResp{} }
-func (m *QueryTemplateVersionListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionListResp) ProtoMessage()               {}
-func (*QueryTemplateVersionListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{33} }
-
-func (m *QueryTemplateVersionListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryTemplateVersionListResp) GetErrMsg() string {
+func (m *DeleteConfigTemplateVersionResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *QueryTemplateVersionListResp) GetTemplateVersions() []*common.TemplateVersion {
-	if m != nil {
-		return m.TemplateVersions
-	}
-	return nil
+type HealthzReq struct {
+	Seq string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
 }
 
-type CreateConfigTemplateBindingReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid    string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid         string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Versionid     string `protobuf:"bytes,5,opt,name=versionid" json:"versionid,omitempty"`
-	BindingParams string `protobuf:"bytes,6,opt,name=bindingParams" json:"bindingParams,omitempty"`
-	Creator       string `protobuf:"bytes,7,opt,name=creator" json:"creator,omitempty"`
-}
+func (m *HealthzReq) Reset()                    { *m = HealthzReq{} }
+func (m *HealthzReq) String() string            { return proto.CompactTextString(m) }
+func (*HealthzReq) ProtoMessage()               {}
+func (*HealthzReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
 
-func (m *CreateConfigTemplateBindingReq) Reset()                    { *m = CreateConfigTemplateBindingReq{} }
-func (m *CreateConfigTemplateBindingReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateBindingReq) ProtoMessage()               {}
-func (*CreateConfigTemplateBindingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{34} }
-
-func (m *CreateConfigTemplateBindingReq) GetSeq() uint64 {
+func (m *HealthzReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
-}
-
-func (m *CreateConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
 	return ""
 }
 
-func (m *CreateConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
+type HealthzResp struct {
+	Seq     string                    `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode            `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                    `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ModuleHealthzInfo `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *CreateConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
+func (m *HealthzResp) Reset()                    { *m = HealthzResp{} }
+func (m *HealthzResp) String() string            { return proto.CompactTextString(m) }
+func (*HealthzResp) ProtoMessage()               {}
+func (*HealthzResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{31} }
 
-func (m *CreateConfigTemplateBindingReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetBindingParams() string {
-	if m != nil {
-		return m.BindingParams
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-type CreateConfigTemplateBindingResp struct {
-	Seq      uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Cfgsetid string         `protobuf:"bytes,4,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Commitid string         `protobuf:"bytes,5,opt,name=commitid" json:"commitid,omitempty"`
-}
-
-func (m *CreateConfigTemplateBindingResp) Reset()         { *m = CreateConfigTemplateBindingResp{} }
-func (m *CreateConfigTemplateBindingResp) String() string { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateBindingResp) ProtoMessage()    {}
-func (*CreateConfigTemplateBindingResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{35}
-}
-
-func (m *CreateConfigTemplateBindingResp) GetSeq() uint64 {
+func (m *HealthzResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateConfigTemplateBindingResp) GetErrCode() common.ErrCode {
+func (m *HealthzResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateConfigTemplateBindingResp) GetErrMsg() string {
+func (m *HealthzResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *CreateConfigTemplateBindingResp) GetCfgsetid() string {
+func (m *HealthzResp) GetData() *common.ModuleHealthzInfo {
 	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingResp) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-type DeleteConfigTemplateBindingReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid      string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Operator   string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteConfigTemplateBindingReq) Reset()                    { *m = DeleteConfigTemplateBindingReq{} }
-func (m *DeleteConfigTemplateBindingReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateBindingReq) ProtoMessage()               {}
-func (*DeleteConfigTemplateBindingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{36} }
-
-func (m *DeleteConfigTemplateBindingReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteConfigTemplateBindingResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteConfigTemplateBindingResp) Reset()         { *m = DeleteConfigTemplateBindingResp{} }
-func (m *DeleteConfigTemplateBindingResp) String() string { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateBindingResp) ProtoMessage()    {}
-func (*DeleteConfigTemplateBindingResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{37}
-}
-
-func (m *DeleteConfigTemplateBindingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateBindingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteConfigTemplateBindingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type SyncConfigTemplateBindingReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid    string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid         string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Versionid     string `protobuf:"bytes,5,opt,name=versionid" json:"versionid,omitempty"`
-	BindingParams string `protobuf:"bytes,6,opt,name=bindingParams" json:"bindingParams,omitempty"`
-	Operator      string `protobuf:"bytes,7,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *SyncConfigTemplateBindingReq) Reset()                    { *m = SyncConfigTemplateBindingReq{} }
-func (m *SyncConfigTemplateBindingReq) String() string            { return proto.CompactTextString(m) }
-func (*SyncConfigTemplateBindingReq) ProtoMessage()               {}
-func (*SyncConfigTemplateBindingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{38} }
-
-func (m *SyncConfigTemplateBindingReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *SyncConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *SyncConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *SyncConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *SyncConfigTemplateBindingReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-func (m *SyncConfigTemplateBindingReq) GetBindingParams() string {
-	if m != nil {
-		return m.BindingParams
-	}
-	return ""
-}
-
-func (m *SyncConfigTemplateBindingReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type SyncConfigTemplateBindingResp struct {
-	Seq      uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Commitid string         `protobuf:"bytes,4,opt,name=commitid" json:"commitid,omitempty"`
-}
-
-func (m *SyncConfigTemplateBindingResp) Reset()                    { *m = SyncConfigTemplateBindingResp{} }
-func (m *SyncConfigTemplateBindingResp) String() string            { return proto.CompactTextString(m) }
-func (*SyncConfigTemplateBindingResp) ProtoMessage()               {}
-func (*SyncConfigTemplateBindingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{39} }
-
-func (m *SyncConfigTemplateBindingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *SyncConfigTemplateBindingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *SyncConfigTemplateBindingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *SyncConfigTemplateBindingResp) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-type QueryConfigTemplateBindingReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid      string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingReq) Reset()                    { *m = QueryConfigTemplateBindingReq{} }
-func (m *QueryConfigTemplateBindingReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingReq) ProtoMessage()               {}
-func (*QueryConfigTemplateBindingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{40} }
-
-func (m *QueryConfigTemplateBindingReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-type QueryConfigTemplateBindingResp struct {
-	Seq                   uint64                        `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode               common.ErrCode                `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg                string                        `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplateBinding *common.ConfigTemplateBinding `protobuf:"bytes,4,opt,name=configTemplateBinding" json:"configTemplateBinding,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingResp) Reset()                    { *m = QueryConfigTemplateBindingResp{} }
-func (m *QueryConfigTemplateBindingResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingResp) ProtoMessage()               {}
-func (*QueryConfigTemplateBindingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{41} }
-
-func (m *QueryConfigTemplateBindingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateBindingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingResp) GetConfigTemplateBinding() *common.ConfigTemplateBinding {
-	if m != nil {
-		return m.ConfigTemplateBinding
-	}
-	return nil
-}
-
-type QueryConfigTemplateBindingListReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid      string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Index      int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit      int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingListReq) Reset()         { *m = QueryConfigTemplateBindingListReq{} }
-func (m *QueryConfigTemplateBindingListReq) String() string { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingListReq) ProtoMessage()    {}
-func (*QueryConfigTemplateBindingListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{42}
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryConfigTemplateBindingListResp struct {
-	Seq                    uint64                          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode                common.ErrCode                  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg                 string                          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplateBindings []*common.ConfigTemplateBinding `protobuf:"bytes,4,rep,name=configTemplateBindings" json:"configTemplateBindings,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingListResp) Reset()         { *m = QueryConfigTemplateBindingListResp{} }
-func (m *QueryConfigTemplateBindingListResp) String() string { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingListResp) ProtoMessage()    {}
-func (*QueryConfigTemplateBindingListResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{43}
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetConfigTemplateBindings() []*common.ConfigTemplateBinding {
-	if m != nil {
-		return m.ConfigTemplateBindings
-	}
-	return nil
-}
-
-type CreateVariableReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cluster       string `protobuf:"bytes,3,opt,name=cluster" json:"cluster,omitempty"`
-	ClusterLabels string `protobuf:"bytes,4,opt,name=clusterLabels" json:"clusterLabels,omitempty"`
-	Zone          string `protobuf:"bytes,5,opt,name=zone" json:"zone,omitempty"`
-	Type          int32  `protobuf:"varint,6,opt,name=type" json:"type,omitempty"`
-	Key           string `protobuf:"bytes,7,opt,name=key" json:"key,omitempty"`
-	Value         string `protobuf:"bytes,8,opt,name=value" json:"value,omitempty"`
-	Memo          string `protobuf:"bytes,9,opt,name=memo" json:"memo,omitempty"`
-	Creator       string `protobuf:"bytes,10,opt,name=creator" json:"creator,omitempty"`
-}
-
-func (m *CreateVariableReq) Reset()                    { *m = CreateVariableReq{} }
-func (m *CreateVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateVariableReq) ProtoMessage()               {}
-func (*CreateVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{44} }
-
-func (m *CreateVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetCluster() string {
-	if m != nil {
-		return m.Cluster
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetClusterLabels() string {
-	if m != nil {
-		return m.ClusterLabels
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetZone() string {
-	if m != nil {
-		return m.Zone
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *CreateVariableReq) GetKey() string {
-	if m != nil {
-		return m.Key
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-type CreateVariableResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Vid     string         `protobuf:"bytes,4,opt,name=vid" json:"vid,omitempty"`
-}
-
-func (m *CreateVariableResp) Reset()                    { *m = CreateVariableResp{} }
-func (m *CreateVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateVariableResp) ProtoMessage()               {}
-func (*CreateVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{45} }
-
-func (m *CreateVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateVariableResp) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-type UpdateVariableReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Vid      string `protobuf:"bytes,3,opt,name=vid" json:"vid,omitempty"`
-	Type     int32  `protobuf:"varint,4,opt,name=type" json:"type,omitempty"`
-	Key      string `protobuf:"bytes,5,opt,name=key" json:"key,omitempty"`
-	Value    string `protobuf:"bytes,6,opt,name=value" json:"value,omitempty"`
-	Memo     string `protobuf:"bytes,7,opt,name=memo" json:"memo,omitempty"`
-	Operator string `protobuf:"bytes,8,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateVariableReq) Reset()                    { *m = UpdateVariableReq{} }
-func (m *UpdateVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateVariableReq) ProtoMessage()               {}
-func (*UpdateVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{46} }
-
-func (m *UpdateVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *UpdateVariableReq) GetKey() string {
-	if m != nil {
-		return m.Key
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateVariableResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateVariableResp) Reset()                    { *m = UpdateVariableResp{} }
-func (m *UpdateVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateVariableResp) ProtoMessage()               {}
-func (*UpdateVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{47} }
-
-func (m *UpdateVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type DeleteVariableReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Vid      string `protobuf:"bytes,3,opt,name=vid" json:"vid,omitempty"`
-	Type     int32  `protobuf:"varint,4,opt,name=type" json:"type,omitempty"`
-	Operator string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteVariableReq) Reset()                    { *m = DeleteVariableReq{} }
-func (m *DeleteVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteVariableReq) ProtoMessage()               {}
-func (*DeleteVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{48} }
-
-func (m *DeleteVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteVariableReq) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-func (m *DeleteVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *DeleteVariableReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteVariableResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteVariableResp) Reset()                    { *m = DeleteVariableResp{} }
-func (m *DeleteVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteVariableResp) ProtoMessage()               {}
-func (*DeleteVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{49} }
-
-func (m *DeleteVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryVariableReq struct {
-	Seq  uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid  string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Vid  string `protobuf:"bytes,3,opt,name=vid" json:"vid,omitempty"`
-	Type int32  `protobuf:"varint,4,opt,name=type" json:"type,omitempty"`
-}
-
-func (m *QueryVariableReq) Reset()                    { *m = QueryVariableReq{} }
-func (m *QueryVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableReq) ProtoMessage()               {}
-func (*QueryVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{50} }
-
-func (m *QueryVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryVariableReq) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-func (m *QueryVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-type QueryVariableResp struct {
-	Seq     uint64           `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode   `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string           `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Var     *common.Variable `protobuf:"bytes,4,opt,name=var" json:"var,omitempty"`
-}
-
-func (m *QueryVariableResp) Reset()                    { *m = QueryVariableResp{} }
-func (m *QueryVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableResp) ProtoMessage()               {}
-func (*QueryVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{51} }
-
-func (m *QueryVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryVariableResp) GetVar() *common.Variable {
-	if m != nil {
-		return m.Var
-	}
-	return nil
-}
-
-type QueryVariableListReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cluster       string `protobuf:"bytes,3,opt,name=cluster" json:"cluster,omitempty"`
-	ClusterLabels string `protobuf:"bytes,4,opt,name=clusterLabels" json:"clusterLabels,omitempty"`
-	Zone          string `protobuf:"bytes,5,opt,name=zone" json:"zone,omitempty"`
-	Type          int32  `protobuf:"varint,6,opt,name=type" json:"type,omitempty"`
-	Index         int32  `protobuf:"varint,7,opt,name=index" json:"index,omitempty"`
-	Limit         int32  `protobuf:"varint,8,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryVariableListReq) Reset()                    { *m = QueryVariableListReq{} }
-func (m *QueryVariableListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableListReq) ProtoMessage()               {}
-func (*QueryVariableListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{52} }
-
-func (m *QueryVariableListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetCluster() string {
-	if m != nil {
-		return m.Cluster
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetClusterLabels() string {
-	if m != nil {
-		return m.ClusterLabels
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetZone() string {
-	if m != nil {
-		return m.Zone
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *QueryVariableListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryVariableListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryVariableListResp struct {
-	Seq     uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode     `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string             `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Vars    []*common.Variable `protobuf:"bytes,4,rep,name=vars" json:"vars,omitempty"`
-}
-
-func (m *QueryVariableListResp) Reset()                    { *m = QueryVariableListResp{} }
-func (m *QueryVariableListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableListResp) ProtoMessage()               {}
-func (*QueryVariableListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{53} }
-
-func (m *QueryVariableListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryVariableListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryVariableListResp) GetVars() []*common.Variable {
-	if m != nil {
-		return m.Vars
+		return m.Data
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterType((*RenderReq)(nil), "templateserver.RenderReq")
-	proto.RegisterType((*RenderResp)(nil), "templateserver.RenderResp")
-	proto.RegisterType((*PreviewRenderingReq)(nil), "templateserver.PreviewRenderingReq")
-	proto.RegisterType((*PreviewRenderingResp)(nil), "templateserver.PreviewRenderingResp")
-	proto.RegisterType((*CreateConfigTemplateSetReq)(nil), "templateserver.CreateConfigTemplateSetReq")
-	proto.RegisterType((*CreateConfigTemplateSetResp)(nil), "templateserver.CreateConfigTemplateSetResp")
-	proto.RegisterType((*DeleteConfigTemplateSetReq)(nil), "templateserver.DeleteConfigTemplateSetReq")
-	proto.RegisterType((*DeleteConfigTemplateSetResp)(nil), "templateserver.DeleteConfigTemplateSetResp")
-	proto.RegisterType((*UpdateConfigTemplateSetReq)(nil), "templateserver.UpdateConfigTemplateSetReq")
-	proto.RegisterType((*UpdateConfigTemplateSetResp)(nil), "templateserver.UpdateConfigTemplateSetResp")
-	proto.RegisterType((*QueryConfigTemplateSetReq)(nil), "templateserver.QueryConfigTemplateSetReq")
-	proto.RegisterType((*QueryConfigTemplateSetResp)(nil), "templateserver.QueryConfigTemplateSetResp")
-	proto.RegisterType((*QueryConfigTemplateSetListReq)(nil), "templateserver.QueryConfigTemplateSetListReq")
-	proto.RegisterType((*QueryConfigTemplateSetListResp)(nil), "templateserver.QueryConfigTemplateSetListResp")
+	proto.RegisterType((*CreateTemplateBindReq)(nil), "templateserver.CreateTemplateBindReq")
+	proto.RegisterType((*CreateTemplateBindResp)(nil), "templateserver.CreateTemplateBindResp")
+	proto.RegisterType((*CreateTemplateBindResp_RespData)(nil), "templateserver.CreateTemplateBindResp.RespData")
+	proto.RegisterType((*QueryTemplateBindReq)(nil), "templateserver.QueryTemplateBindReq")
+	proto.RegisterType((*QueryTemplateBindResp)(nil), "templateserver.QueryTemplateBindResp")
+	proto.RegisterType((*QueryTemplateBindListReq)(nil), "templateserver.QueryTemplateBindListReq")
+	proto.RegisterType((*QueryTemplateBindListResp)(nil), "templateserver.QueryTemplateBindListResp")
+	proto.RegisterType((*QueryTemplateBindListResp_RespData)(nil), "templateserver.QueryTemplateBindListResp.RespData")
+	proto.RegisterType((*DeleteTemplateBindReq)(nil), "templateserver.DeleteTemplateBindReq")
+	proto.RegisterType((*DeleteTemplateBindResp)(nil), "templateserver.DeleteTemplateBindResp")
 	proto.RegisterType((*CreateConfigTemplateReq)(nil), "templateserver.CreateConfigTemplateReq")
 	proto.RegisterType((*CreateConfigTemplateResp)(nil), "templateserver.CreateConfigTemplateResp")
-	proto.RegisterType((*DeleteConfigTemplateReq)(nil), "templateserver.DeleteConfigTemplateReq")
-	proto.RegisterType((*DeleteConfigTemplateResp)(nil), "templateserver.DeleteConfigTemplateResp")
-	proto.RegisterType((*UpdateConfigTemplateReq)(nil), "templateserver.UpdateConfigTemplateReq")
-	proto.RegisterType((*UpdateConfigTemplateResp)(nil), "templateserver.UpdateConfigTemplateResp")
+	proto.RegisterType((*CreateConfigTemplateResp_RespData)(nil), "templateserver.CreateConfigTemplateResp.RespData")
 	proto.RegisterType((*QueryConfigTemplateReq)(nil), "templateserver.QueryConfigTemplateReq")
 	proto.RegisterType((*QueryConfigTemplateResp)(nil), "templateserver.QueryConfigTemplateResp")
 	proto.RegisterType((*QueryConfigTemplateListReq)(nil), "templateserver.QueryConfigTemplateListReq")
 	proto.RegisterType((*QueryConfigTemplateListResp)(nil), "templateserver.QueryConfigTemplateListResp")
-	proto.RegisterType((*CreateTemplateVersionReq)(nil), "templateserver.CreateTemplateVersionReq")
-	proto.RegisterType((*CreateTemplateVersionResp)(nil), "templateserver.CreateTemplateVersionResp")
-	proto.RegisterType((*DeleteTemplateVersionReq)(nil), "templateserver.DeleteTemplateVersionReq")
-	proto.RegisterType((*DeleteTemplateVersionResp)(nil), "templateserver.DeleteTemplateVersionResp")
-	proto.RegisterType((*UpdateTemplateVersionReq)(nil), "templateserver.UpdateTemplateVersionReq")
-	proto.RegisterType((*UpdateTemplateVersionResp)(nil), "templateserver.UpdateTemplateVersionResp")
-	proto.RegisterType((*QueryTemplateVersionReq)(nil), "templateserver.QueryTemplateVersionReq")
-	proto.RegisterType((*QueryTemplateVersionResp)(nil), "templateserver.QueryTemplateVersionResp")
-	proto.RegisterType((*QueryTemplateVersionListReq)(nil), "templateserver.QueryTemplateVersionListReq")
-	proto.RegisterType((*QueryTemplateVersionListResp)(nil), "templateserver.QueryTemplateVersionListResp")
-	proto.RegisterType((*CreateConfigTemplateBindingReq)(nil), "templateserver.CreateConfigTemplateBindingReq")
-	proto.RegisterType((*CreateConfigTemplateBindingResp)(nil), "templateserver.CreateConfigTemplateBindingResp")
-	proto.RegisterType((*DeleteConfigTemplateBindingReq)(nil), "templateserver.DeleteConfigTemplateBindingReq")
-	proto.RegisterType((*DeleteConfigTemplateBindingResp)(nil), "templateserver.DeleteConfigTemplateBindingResp")
-	proto.RegisterType((*SyncConfigTemplateBindingReq)(nil), "templateserver.SyncConfigTemplateBindingReq")
-	proto.RegisterType((*SyncConfigTemplateBindingResp)(nil), "templateserver.SyncConfigTemplateBindingResp")
-	proto.RegisterType((*QueryConfigTemplateBindingReq)(nil), "templateserver.QueryConfigTemplateBindingReq")
-	proto.RegisterType((*QueryConfigTemplateBindingResp)(nil), "templateserver.QueryConfigTemplateBindingResp")
-	proto.RegisterType((*QueryConfigTemplateBindingListReq)(nil), "templateserver.QueryConfigTemplateBindingListReq")
-	proto.RegisterType((*QueryConfigTemplateBindingListResp)(nil), "templateserver.QueryConfigTemplateBindingListResp")
-	proto.RegisterType((*CreateVariableReq)(nil), "templateserver.CreateVariableReq")
-	proto.RegisterType((*CreateVariableResp)(nil), "templateserver.CreateVariableResp")
-	proto.RegisterType((*UpdateVariableReq)(nil), "templateserver.UpdateVariableReq")
-	proto.RegisterType((*UpdateVariableResp)(nil), "templateserver.UpdateVariableResp")
-	proto.RegisterType((*DeleteVariableReq)(nil), "templateserver.DeleteVariableReq")
-	proto.RegisterType((*DeleteVariableResp)(nil), "templateserver.DeleteVariableResp")
-	proto.RegisterType((*QueryVariableReq)(nil), "templateserver.QueryVariableReq")
-	proto.RegisterType((*QueryVariableResp)(nil), "templateserver.QueryVariableResp")
-	proto.RegisterType((*QueryVariableListReq)(nil), "templateserver.QueryVariableListReq")
-	proto.RegisterType((*QueryVariableListResp)(nil), "templateserver.QueryVariableListResp")
+	proto.RegisterType((*QueryConfigTemplateListResp_RespData)(nil), "templateserver.QueryConfigTemplateListResp.RespData")
+	proto.RegisterType((*UpdateConfigTemplateReq)(nil), "templateserver.UpdateConfigTemplateReq")
+	proto.RegisterType((*UpdateConfigTemplateResp)(nil), "templateserver.UpdateConfigTemplateResp")
+	proto.RegisterType((*DeleteConfigTemplateReq)(nil), "templateserver.DeleteConfigTemplateReq")
+	proto.RegisterType((*DeleteConfigTemplateResp)(nil), "templateserver.DeleteConfigTemplateResp")
+	proto.RegisterType((*RenderConfigTemplateReq)(nil), "templateserver.RenderConfigTemplateReq")
+	proto.RegisterType((*RenderConfigTemplateResp)(nil), "templateserver.RenderConfigTemplateResp")
+	proto.RegisterType((*RenderConfigTemplateResp_RespData)(nil), "templateserver.RenderConfigTemplateResp.RespData")
+	proto.RegisterType((*CreateConfigTemplateVersionReq)(nil), "templateserver.CreateConfigTemplateVersionReq")
+	proto.RegisterType((*CreateConfigTemplateVersionResp)(nil), "templateserver.CreateConfigTemplateVersionResp")
+	proto.RegisterType((*CreateConfigTemplateVersionResp_RespData)(nil), "templateserver.CreateConfigTemplateVersionResp.RespData")
+	proto.RegisterType((*QueryConfigTemplateVersionReq)(nil), "templateserver.QueryConfigTemplateVersionReq")
+	proto.RegisterType((*QueryConfigTemplateVersionResp)(nil), "templateserver.QueryConfigTemplateVersionResp")
+	proto.RegisterType((*QueryConfigTemplateVersionListReq)(nil), "templateserver.QueryConfigTemplateVersionListReq")
+	proto.RegisterType((*QueryConfigTemplateVersionListResp)(nil), "templateserver.QueryConfigTemplateVersionListResp")
+	proto.RegisterType((*QueryConfigTemplateVersionListResp_RespData)(nil), "templateserver.QueryConfigTemplateVersionListResp.RespData")
+	proto.RegisterType((*UpdateConfigTemplateVersionReq)(nil), "templateserver.UpdateConfigTemplateVersionReq")
+	proto.RegisterType((*UpdateConfigTemplateVersionResp)(nil), "templateserver.UpdateConfigTemplateVersionResp")
+	proto.RegisterType((*DeleteConfigTemplateVersionReq)(nil), "templateserver.DeleteConfigTemplateVersionReq")
+	proto.RegisterType((*DeleteConfigTemplateVersionResp)(nil), "templateserver.DeleteConfigTemplateVersionResp")
+	proto.RegisterType((*HealthzReq)(nil), "templateserver.HealthzReq")
+	proto.RegisterType((*HealthzResp)(nil), "templateserver.HealthzResp")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2635,33 +1558,22 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Template service
 
 type TemplateClient interface {
-	Render(ctx context.Context, in *RenderReq, opts ...grpc.CallOption) (*RenderResp, error)
-	PreviewRendering(ctx context.Context, in *PreviewRenderingReq, opts ...grpc.CallOption) (*PreviewRenderingResp, error)
-	CreateConfigTemplateSet(ctx context.Context, in *CreateConfigTemplateSetReq, opts ...grpc.CallOption) (*CreateConfigTemplateSetResp, error)
-	DeleteConfigTemplateSet(ctx context.Context, in *DeleteConfigTemplateSetReq, opts ...grpc.CallOption) (*DeleteConfigTemplateSetResp, error)
-	UpdateConfigTemplateSet(ctx context.Context, in *UpdateConfigTemplateSetReq, opts ...grpc.CallOption) (*UpdateConfigTemplateSetResp, error)
-	QueryConfigTemplateSet(ctx context.Context, in *QueryConfigTemplateSetReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetResp, error)
-	QueryConfigTemplateSetList(ctx context.Context, in *QueryConfigTemplateSetListReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetListResp, error)
+	CreateTemplateBind(ctx context.Context, in *CreateTemplateBindReq, opts ...grpc.CallOption) (*CreateTemplateBindResp, error)
+	QueryTemplateBind(ctx context.Context, in *QueryTemplateBindReq, opts ...grpc.CallOption) (*QueryTemplateBindResp, error)
+	QueryTemplateBindList(ctx context.Context, in *QueryTemplateBindListReq, opts ...grpc.CallOption) (*QueryTemplateBindListResp, error)
+	DeleteTemplateBind(ctx context.Context, in *DeleteTemplateBindReq, opts ...grpc.CallOption) (*DeleteTemplateBindResp, error)
 	CreateConfigTemplate(ctx context.Context, in *CreateConfigTemplateReq, opts ...grpc.CallOption) (*CreateConfigTemplateResp, error)
-	DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error)
-	UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error)
 	QueryConfigTemplate(ctx context.Context, in *QueryConfigTemplateReq, opts ...grpc.CallOption) (*QueryConfigTemplateResp, error)
 	QueryConfigTemplateList(ctx context.Context, in *QueryConfigTemplateListReq, opts ...grpc.CallOption) (*QueryConfigTemplateListResp, error)
-	CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...grpc.CallOption) (*CreateTemplateVersionResp, error)
-	DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...grpc.CallOption) (*DeleteTemplateVersionResp, error)
-	UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, opts ...grpc.CallOption) (*UpdateTemplateVersionResp, error)
-	QueryTemplateVersion(ctx context.Context, in *QueryTemplateVersionReq, opts ...grpc.CallOption) (*QueryTemplateVersionResp, error)
-	QueryTemplateVersionList(ctx context.Context, in *QueryTemplateVersionListReq, opts ...grpc.CallOption) (*QueryTemplateVersionListResp, error)
-	CreateConfigTemplateBinding(ctx context.Context, in *CreateConfigTemplateBindingReq, opts ...grpc.CallOption) (*CreateConfigTemplateBindingResp, error)
-	DeleteConfigTemplateBinding(ctx context.Context, in *DeleteConfigTemplateBindingReq, opts ...grpc.CallOption) (*DeleteConfigTemplateBindingResp, error)
-	SyncConfigTemplateBinding(ctx context.Context, in *SyncConfigTemplateBindingReq, opts ...grpc.CallOption) (*SyncConfigTemplateBindingResp, error)
-	QueryConfigTemplateBinding(ctx context.Context, in *QueryConfigTemplateBindingReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingResp, error)
-	QueryConfigTemplateBindingList(ctx context.Context, in *QueryConfigTemplateBindingListReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingListResp, error)
-	CreateVariable(ctx context.Context, in *CreateVariableReq, opts ...grpc.CallOption) (*CreateVariableResp, error)
-	UpdateVariable(ctx context.Context, in *UpdateVariableReq, opts ...grpc.CallOption) (*UpdateVariableResp, error)
-	DeleteVariable(ctx context.Context, in *DeleteVariableReq, opts ...grpc.CallOption) (*DeleteVariableResp, error)
-	QueryVariable(ctx context.Context, in *QueryVariableReq, opts ...grpc.CallOption) (*QueryVariableResp, error)
-	QueryVariableList(ctx context.Context, in *QueryVariableListReq, opts ...grpc.CallOption) (*QueryVariableListResp, error)
+	UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error)
+	DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error)
+	RenderConfigTemplate(ctx context.Context, in *RenderConfigTemplateReq, opts ...grpc.CallOption) (*RenderConfigTemplateResp, error)
+	CreateConfigTemplateVersion(ctx context.Context, in *CreateConfigTemplateVersionReq, opts ...grpc.CallOption) (*CreateConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersion(ctx context.Context, in *QueryConfigTemplateVersionReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersionList(ctx context.Context, in *QueryConfigTemplateVersionListReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionListResp, error)
+	UpdateConfigTemplateVersion(ctx context.Context, in *UpdateConfigTemplateVersionReq, opts ...grpc.CallOption) (*UpdateConfigTemplateVersionResp, error)
+	DeleteConfigTemplateVersion(ctx context.Context, in *DeleteConfigTemplateVersionReq, opts ...grpc.CallOption) (*DeleteConfigTemplateVersionResp, error)
+	Healthz(ctx context.Context, in *HealthzReq, opts ...grpc.CallOption) (*HealthzResp, error)
 }
 
 type templateClient struct {
@@ -2672,63 +1584,36 @@ func NewTemplateClient(cc *grpc.ClientConn) TemplateClient {
 	return &templateClient{cc}
 }
 
-func (c *templateClient) Render(ctx context.Context, in *RenderReq, opts ...grpc.CallOption) (*RenderResp, error) {
-	out := new(RenderResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/Render", in, out, c.cc, opts...)
+func (c *templateClient) CreateTemplateBind(ctx context.Context, in *CreateTemplateBindReq, opts ...grpc.CallOption) (*CreateTemplateBindResp, error) {
+	out := new(CreateTemplateBindResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/CreateTemplateBind", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) PreviewRendering(ctx context.Context, in *PreviewRenderingReq, opts ...grpc.CallOption) (*PreviewRenderingResp, error) {
-	out := new(PreviewRenderingResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/PreviewRendering", in, out, c.cc, opts...)
+func (c *templateClient) QueryTemplateBind(ctx context.Context, in *QueryTemplateBindReq, opts ...grpc.CallOption) (*QueryTemplateBindResp, error) {
+	out := new(QueryTemplateBindResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/QueryTemplateBind", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) CreateConfigTemplateSet(ctx context.Context, in *CreateConfigTemplateSetReq, opts ...grpc.CallOption) (*CreateConfigTemplateSetResp, error) {
-	out := new(CreateConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/CreateConfigTemplateSet", in, out, c.cc, opts...)
+func (c *templateClient) QueryTemplateBindList(ctx context.Context, in *QueryTemplateBindListReq, opts ...grpc.CallOption) (*QueryTemplateBindListResp, error) {
+	out := new(QueryTemplateBindListResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/QueryTemplateBindList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) DeleteConfigTemplateSet(ctx context.Context, in *DeleteConfigTemplateSetReq, opts ...grpc.CallOption) (*DeleteConfigTemplateSetResp, error) {
-	out := new(DeleteConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteConfigTemplateSet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) UpdateConfigTemplateSet(ctx context.Context, in *UpdateConfigTemplateSetReq, opts ...grpc.CallOption) (*UpdateConfigTemplateSetResp, error) {
-	out := new(UpdateConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/UpdateConfigTemplateSet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) QueryConfigTemplateSet(ctx context.Context, in *QueryConfigTemplateSetReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetResp, error) {
-	out := new(QueryConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryConfigTemplateSet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) QueryConfigTemplateSetList(ctx context.Context, in *QueryConfigTemplateSetListReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetListResp, error) {
-	out := new(QueryConfigTemplateSetListResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryConfigTemplateSetList", in, out, c.cc, opts...)
+func (c *templateClient) DeleteTemplateBind(ctx context.Context, in *DeleteTemplateBindReq, opts ...grpc.CallOption) (*DeleteTemplateBindResp, error) {
+	out := new(DeleteTemplateBindResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteTemplateBind", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2738,24 +1623,6 @@ func (c *templateClient) QueryConfigTemplateSetList(ctx context.Context, in *Que
 func (c *templateClient) CreateConfigTemplate(ctx context.Context, in *CreateConfigTemplateReq, opts ...grpc.CallOption) (*CreateConfigTemplateResp, error) {
 	out := new(CreateConfigTemplateResp)
 	err := grpc.Invoke(ctx, "/templateserver.Template/CreateConfigTemplate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error) {
-	out := new(DeleteConfigTemplateResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteConfigTemplate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error) {
-	out := new(UpdateConfigTemplateResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/UpdateConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2780,135 +1647,81 @@ func (c *templateClient) QueryConfigTemplateList(ctx context.Context, in *QueryC
 	return out, nil
 }
 
-func (c *templateClient) CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...grpc.CallOption) (*CreateTemplateVersionResp, error) {
-	out := new(CreateTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/CreateTemplateVersion", in, out, c.cc, opts...)
+func (c *templateClient) UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error) {
+	out := new(UpdateConfigTemplateResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/UpdateConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...grpc.CallOption) (*DeleteTemplateVersionResp, error) {
-	out := new(DeleteTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteTemplateVersion", in, out, c.cc, opts...)
+func (c *templateClient) DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error) {
+	out := new(DeleteConfigTemplateResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, opts ...grpc.CallOption) (*UpdateTemplateVersionResp, error) {
-	out := new(UpdateTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/UpdateTemplateVersion", in, out, c.cc, opts...)
+func (c *templateClient) RenderConfigTemplate(ctx context.Context, in *RenderConfigTemplateReq, opts ...grpc.CallOption) (*RenderConfigTemplateResp, error) {
+	out := new(RenderConfigTemplateResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/RenderConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) QueryTemplateVersion(ctx context.Context, in *QueryTemplateVersionReq, opts ...grpc.CallOption) (*QueryTemplateVersionResp, error) {
-	out := new(QueryTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryTemplateVersion", in, out, c.cc, opts...)
+func (c *templateClient) CreateConfigTemplateVersion(ctx context.Context, in *CreateConfigTemplateVersionReq, opts ...grpc.CallOption) (*CreateConfigTemplateVersionResp, error) {
+	out := new(CreateConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/CreateConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) QueryTemplateVersionList(ctx context.Context, in *QueryTemplateVersionListReq, opts ...grpc.CallOption) (*QueryTemplateVersionListResp, error) {
-	out := new(QueryTemplateVersionListResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryTemplateVersionList", in, out, c.cc, opts...)
+func (c *templateClient) QueryConfigTemplateVersion(ctx context.Context, in *QueryConfigTemplateVersionReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionResp, error) {
+	out := new(QueryConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/QueryConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) CreateConfigTemplateBinding(ctx context.Context, in *CreateConfigTemplateBindingReq, opts ...grpc.CallOption) (*CreateConfigTemplateBindingResp, error) {
-	out := new(CreateConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/CreateConfigTemplateBinding", in, out, c.cc, opts...)
+func (c *templateClient) QueryConfigTemplateVersionList(ctx context.Context, in *QueryConfigTemplateVersionListReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionListResp, error) {
+	out := new(QueryConfigTemplateVersionListResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/QueryConfigTemplateVersionList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) DeleteConfigTemplateBinding(ctx context.Context, in *DeleteConfigTemplateBindingReq, opts ...grpc.CallOption) (*DeleteConfigTemplateBindingResp, error) {
-	out := new(DeleteConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteConfigTemplateBinding", in, out, c.cc, opts...)
+func (c *templateClient) UpdateConfigTemplateVersion(ctx context.Context, in *UpdateConfigTemplateVersionReq, opts ...grpc.CallOption) (*UpdateConfigTemplateVersionResp, error) {
+	out := new(UpdateConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/UpdateConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) SyncConfigTemplateBinding(ctx context.Context, in *SyncConfigTemplateBindingReq, opts ...grpc.CallOption) (*SyncConfigTemplateBindingResp, error) {
-	out := new(SyncConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/SyncConfigTemplateBinding", in, out, c.cc, opts...)
+func (c *templateClient) DeleteConfigTemplateVersion(ctx context.Context, in *DeleteConfigTemplateVersionReq, opts ...grpc.CallOption) (*DeleteConfigTemplateVersionResp, error) {
+	out := new(DeleteConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) QueryConfigTemplateBinding(ctx context.Context, in *QueryConfigTemplateBindingReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingResp, error) {
-	out := new(QueryConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryConfigTemplateBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) QueryConfigTemplateBindingList(ctx context.Context, in *QueryConfigTemplateBindingListReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingListResp, error) {
-	out := new(QueryConfigTemplateBindingListResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryConfigTemplateBindingList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) CreateVariable(ctx context.Context, in *CreateVariableReq, opts ...grpc.CallOption) (*CreateVariableResp, error) {
-	out := new(CreateVariableResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/CreateVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) UpdateVariable(ctx context.Context, in *UpdateVariableReq, opts ...grpc.CallOption) (*UpdateVariableResp, error) {
-	out := new(UpdateVariableResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/UpdateVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) DeleteVariable(ctx context.Context, in *DeleteVariableReq, opts ...grpc.CallOption) (*DeleteVariableResp, error) {
-	out := new(DeleteVariableResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/DeleteVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) QueryVariable(ctx context.Context, in *QueryVariableReq, opts ...grpc.CallOption) (*QueryVariableResp, error) {
-	out := new(QueryVariableResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *templateClient) QueryVariableList(ctx context.Context, in *QueryVariableListReq, opts ...grpc.CallOption) (*QueryVariableListResp, error) {
-	out := new(QueryVariableListResp)
-	err := grpc.Invoke(ctx, "/templateserver.Template/QueryVariableList", in, out, c.cc, opts...)
+func (c *templateClient) Healthz(ctx context.Context, in *HealthzReq, opts ...grpc.CallOption) (*HealthzResp, error) {
+	out := new(HealthzResp)
+	err := grpc.Invoke(ctx, "/templateserver.Template/Healthz", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2918,161 +1731,96 @@ func (c *templateClient) QueryVariableList(ctx context.Context, in *QueryVariabl
 // Server API for Template service
 
 type TemplateServer interface {
-	Render(context.Context, *RenderReq) (*RenderResp, error)
-	PreviewRendering(context.Context, *PreviewRenderingReq) (*PreviewRenderingResp, error)
-	CreateConfigTemplateSet(context.Context, *CreateConfigTemplateSetReq) (*CreateConfigTemplateSetResp, error)
-	DeleteConfigTemplateSet(context.Context, *DeleteConfigTemplateSetReq) (*DeleteConfigTemplateSetResp, error)
-	UpdateConfigTemplateSet(context.Context, *UpdateConfigTemplateSetReq) (*UpdateConfigTemplateSetResp, error)
-	QueryConfigTemplateSet(context.Context, *QueryConfigTemplateSetReq) (*QueryConfigTemplateSetResp, error)
-	QueryConfigTemplateSetList(context.Context, *QueryConfigTemplateSetListReq) (*QueryConfigTemplateSetListResp, error)
+	CreateTemplateBind(context.Context, *CreateTemplateBindReq) (*CreateTemplateBindResp, error)
+	QueryTemplateBind(context.Context, *QueryTemplateBindReq) (*QueryTemplateBindResp, error)
+	QueryTemplateBindList(context.Context, *QueryTemplateBindListReq) (*QueryTemplateBindListResp, error)
+	DeleteTemplateBind(context.Context, *DeleteTemplateBindReq) (*DeleteTemplateBindResp, error)
 	CreateConfigTemplate(context.Context, *CreateConfigTemplateReq) (*CreateConfigTemplateResp, error)
-	DeleteConfigTemplate(context.Context, *DeleteConfigTemplateReq) (*DeleteConfigTemplateResp, error)
-	UpdateConfigTemplate(context.Context, *UpdateConfigTemplateReq) (*UpdateConfigTemplateResp, error)
 	QueryConfigTemplate(context.Context, *QueryConfigTemplateReq) (*QueryConfigTemplateResp, error)
 	QueryConfigTemplateList(context.Context, *QueryConfigTemplateListReq) (*QueryConfigTemplateListResp, error)
-	CreateTemplateVersion(context.Context, *CreateTemplateVersionReq) (*CreateTemplateVersionResp, error)
-	DeleteTemplateVersion(context.Context, *DeleteTemplateVersionReq) (*DeleteTemplateVersionResp, error)
-	UpdateTemplateVersion(context.Context, *UpdateTemplateVersionReq) (*UpdateTemplateVersionResp, error)
-	QueryTemplateVersion(context.Context, *QueryTemplateVersionReq) (*QueryTemplateVersionResp, error)
-	QueryTemplateVersionList(context.Context, *QueryTemplateVersionListReq) (*QueryTemplateVersionListResp, error)
-	CreateConfigTemplateBinding(context.Context, *CreateConfigTemplateBindingReq) (*CreateConfigTemplateBindingResp, error)
-	DeleteConfigTemplateBinding(context.Context, *DeleteConfigTemplateBindingReq) (*DeleteConfigTemplateBindingResp, error)
-	SyncConfigTemplateBinding(context.Context, *SyncConfigTemplateBindingReq) (*SyncConfigTemplateBindingResp, error)
-	QueryConfigTemplateBinding(context.Context, *QueryConfigTemplateBindingReq) (*QueryConfigTemplateBindingResp, error)
-	QueryConfigTemplateBindingList(context.Context, *QueryConfigTemplateBindingListReq) (*QueryConfigTemplateBindingListResp, error)
-	CreateVariable(context.Context, *CreateVariableReq) (*CreateVariableResp, error)
-	UpdateVariable(context.Context, *UpdateVariableReq) (*UpdateVariableResp, error)
-	DeleteVariable(context.Context, *DeleteVariableReq) (*DeleteVariableResp, error)
-	QueryVariable(context.Context, *QueryVariableReq) (*QueryVariableResp, error)
-	QueryVariableList(context.Context, *QueryVariableListReq) (*QueryVariableListResp, error)
+	UpdateConfigTemplate(context.Context, *UpdateConfigTemplateReq) (*UpdateConfigTemplateResp, error)
+	DeleteConfigTemplate(context.Context, *DeleteConfigTemplateReq) (*DeleteConfigTemplateResp, error)
+	RenderConfigTemplate(context.Context, *RenderConfigTemplateReq) (*RenderConfigTemplateResp, error)
+	CreateConfigTemplateVersion(context.Context, *CreateConfigTemplateVersionReq) (*CreateConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersion(context.Context, *QueryConfigTemplateVersionReq) (*QueryConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersionList(context.Context, *QueryConfigTemplateVersionListReq) (*QueryConfigTemplateVersionListResp, error)
+	UpdateConfigTemplateVersion(context.Context, *UpdateConfigTemplateVersionReq) (*UpdateConfigTemplateVersionResp, error)
+	DeleteConfigTemplateVersion(context.Context, *DeleteConfigTemplateVersionReq) (*DeleteConfigTemplateVersionResp, error)
+	Healthz(context.Context, *HealthzReq) (*HealthzResp, error)
 }
 
 func RegisterTemplateServer(s *grpc.Server, srv TemplateServer) {
 	s.RegisterService(&_Template_serviceDesc, srv)
 }
 
-func _Template_Render_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RenderReq)
+func _Template_CreateTemplateBind_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTemplateBindReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).Render(ctx, in)
+		return srv.(TemplateServer).CreateTemplateBind(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/Render",
+		FullMethod: "/templateserver.Template/CreateTemplateBind",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).Render(ctx, req.(*RenderReq))
+		return srv.(TemplateServer).CreateTemplateBind(ctx, req.(*CreateTemplateBindReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_PreviewRendering_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PreviewRenderingReq)
+func _Template_QueryTemplateBind_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTemplateBindReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).PreviewRendering(ctx, in)
+		return srv.(TemplateServer).QueryTemplateBind(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/PreviewRendering",
+		FullMethod: "/templateserver.Template/QueryTemplateBind",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).PreviewRendering(ctx, req.(*PreviewRenderingReq))
+		return srv.(TemplateServer).QueryTemplateBind(ctx, req.(*QueryTemplateBindReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_CreateConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConfigTemplateSetReq)
+func _Template_QueryTemplateBindList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTemplateBindListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).CreateConfigTemplateSet(ctx, in)
+		return srv.(TemplateServer).QueryTemplateBindList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/CreateConfigTemplateSet",
+		FullMethod: "/templateserver.Template/QueryTemplateBindList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).CreateConfigTemplateSet(ctx, req.(*CreateConfigTemplateSetReq))
+		return srv.(TemplateServer).QueryTemplateBindList(ctx, req.(*QueryTemplateBindListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_DeleteConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteConfigTemplateSetReq)
+func _Template_DeleteTemplateBind_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplateBindReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).DeleteConfigTemplateSet(ctx, in)
+		return srv.(TemplateServer).DeleteTemplateBind(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/DeleteConfigTemplateSet",
+		FullMethod: "/templateserver.Template/DeleteTemplateBind",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).DeleteConfigTemplateSet(ctx, req.(*DeleteConfigTemplateSetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_UpdateConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateConfigTemplateSetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).UpdateConfigTemplateSet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/UpdateConfigTemplateSet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).UpdateConfigTemplateSet(ctx, req.(*UpdateConfigTemplateSetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_QueryConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateSetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).QueryConfigTemplateSet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryConfigTemplateSet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryConfigTemplateSet(ctx, req.(*QueryConfigTemplateSetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_QueryConfigTemplateSetList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateSetListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).QueryConfigTemplateSetList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryConfigTemplateSetList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryConfigTemplateSetList(ctx, req.(*QueryConfigTemplateSetListReq))
+		return srv.(TemplateServer).DeleteTemplateBind(ctx, req.(*DeleteTemplateBindReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3091,42 +1839,6 @@ func _Template_CreateConfigTemplate_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TemplateServer).CreateConfigTemplate(ctx, req.(*CreateConfigTemplateReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_DeleteConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteConfigTemplateReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).DeleteConfigTemplate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/DeleteConfigTemplate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).DeleteConfigTemplate(ctx, req.(*DeleteConfigTemplateReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_UpdateConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateConfigTemplateReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).UpdateConfigTemplate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/UpdateConfigTemplate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).UpdateConfigTemplate(ctx, req.(*UpdateConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3167,272 +1879,164 @@ func _Template_QueryConfigTemplateList_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_CreateTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTemplateVersionReq)
+func _Template_UpdateConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConfigTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).CreateTemplateVersion(ctx, in)
+		return srv.(TemplateServer).UpdateConfigTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/CreateTemplateVersion",
+		FullMethod: "/templateserver.Template/UpdateConfigTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).CreateTemplateVersion(ctx, req.(*CreateTemplateVersionReq))
+		return srv.(TemplateServer).UpdateConfigTemplate(ctx, req.(*UpdateConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_DeleteTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTemplateVersionReq)
+func _Template_DeleteConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).DeleteTemplateVersion(ctx, in)
+		return srv.(TemplateServer).DeleteConfigTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/DeleteTemplateVersion",
+		FullMethod: "/templateserver.Template/DeleteConfigTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).DeleteTemplateVersion(ctx, req.(*DeleteTemplateVersionReq))
+		return srv.(TemplateServer).DeleteConfigTemplate(ctx, req.(*DeleteConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_UpdateTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTemplateVersionReq)
+func _Template_RenderConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenderConfigTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).UpdateTemplateVersion(ctx, in)
+		return srv.(TemplateServer).RenderConfigTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/UpdateTemplateVersion",
+		FullMethod: "/templateserver.Template/RenderConfigTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).UpdateTemplateVersion(ctx, req.(*UpdateTemplateVersionReq))
+		return srv.(TemplateServer).RenderConfigTemplate(ctx, req.(*RenderConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_QueryTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryTemplateVersionReq)
+func _Template_CreateConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).QueryTemplateVersion(ctx, in)
+		return srv.(TemplateServer).CreateConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryTemplateVersion",
+		FullMethod: "/templateserver.Template/CreateConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryTemplateVersion(ctx, req.(*QueryTemplateVersionReq))
+		return srv.(TemplateServer).CreateConfigTemplateVersion(ctx, req.(*CreateConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_QueryTemplateVersionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryTemplateVersionListReq)
+func _Template_QueryConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).QueryTemplateVersionList(ctx, in)
+		return srv.(TemplateServer).QueryConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryTemplateVersionList",
+		FullMethod: "/templateserver.Template/QueryConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryTemplateVersionList(ctx, req.(*QueryTemplateVersionListReq))
+		return srv.(TemplateServer).QueryConfigTemplateVersion(ctx, req.(*QueryConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_CreateConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConfigTemplateBindingReq)
+func _Template_QueryConfigTemplateVersionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigTemplateVersionListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).CreateConfigTemplateBinding(ctx, in)
+		return srv.(TemplateServer).QueryConfigTemplateVersionList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/CreateConfigTemplateBinding",
+		FullMethod: "/templateserver.Template/QueryConfigTemplateVersionList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).CreateConfigTemplateBinding(ctx, req.(*CreateConfigTemplateBindingReq))
+		return srv.(TemplateServer).QueryConfigTemplateVersionList(ctx, req.(*QueryConfigTemplateVersionListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_DeleteConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteConfigTemplateBindingReq)
+func _Template_UpdateConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).DeleteConfigTemplateBinding(ctx, in)
+		return srv.(TemplateServer).UpdateConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/DeleteConfigTemplateBinding",
+		FullMethod: "/templateserver.Template/UpdateConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).DeleteConfigTemplateBinding(ctx, req.(*DeleteConfigTemplateBindingReq))
+		return srv.(TemplateServer).UpdateConfigTemplateVersion(ctx, req.(*UpdateConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_SyncConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SyncConfigTemplateBindingReq)
+func _Template_DeleteConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).SyncConfigTemplateBinding(ctx, in)
+		return srv.(TemplateServer).DeleteConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/SyncConfigTemplateBinding",
+		FullMethod: "/templateserver.Template/DeleteConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).SyncConfigTemplateBinding(ctx, req.(*SyncConfigTemplateBindingReq))
+		return srv.(TemplateServer).DeleteConfigTemplateVersion(ctx, req.(*DeleteConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_QueryConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateBindingReq)
+func _Template_Healthz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthzReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).QueryConfigTemplateBinding(ctx, in)
+		return srv.(TemplateServer).Healthz(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryConfigTemplateBinding",
+		FullMethod: "/templateserver.Template/Healthz",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryConfigTemplateBinding(ctx, req.(*QueryConfigTemplateBindingReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_QueryConfigTemplateBindingList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateBindingListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).QueryConfigTemplateBindingList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryConfigTemplateBindingList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryConfigTemplateBindingList(ctx, req.(*QueryConfigTemplateBindingListReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_CreateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).CreateVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/CreateVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).CreateVariable(ctx, req.(*CreateVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_UpdateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).UpdateVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/UpdateVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).UpdateVariable(ctx, req.(*UpdateVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_DeleteVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).DeleteVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/DeleteVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).DeleteVariable(ctx, req.(*DeleteVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_QueryVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).QueryVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryVariable(ctx, req.(*QueryVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Template_QueryVariableList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryVariableListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TemplateServer).QueryVariableList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/templateserver.Template/QueryVariableList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).QueryVariableList(ctx, req.(*QueryVariableListReq))
+		return srv.(TemplateServer).Healthz(ctx, req.(*HealthzReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3442,44 +2046,24 @@ var _Template_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*TemplateServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Render",
-			Handler:    _Template_Render_Handler,
+			MethodName: "CreateTemplateBind",
+			Handler:    _Template_CreateTemplateBind_Handler,
 		},
 		{
-			MethodName: "PreviewRendering",
-			Handler:    _Template_PreviewRendering_Handler,
+			MethodName: "QueryTemplateBind",
+			Handler:    _Template_QueryTemplateBind_Handler,
 		},
 		{
-			MethodName: "CreateConfigTemplateSet",
-			Handler:    _Template_CreateConfigTemplateSet_Handler,
+			MethodName: "QueryTemplateBindList",
+			Handler:    _Template_QueryTemplateBindList_Handler,
 		},
 		{
-			MethodName: "DeleteConfigTemplateSet",
-			Handler:    _Template_DeleteConfigTemplateSet_Handler,
-		},
-		{
-			MethodName: "UpdateConfigTemplateSet",
-			Handler:    _Template_UpdateConfigTemplateSet_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateSet",
-			Handler:    _Template_QueryConfigTemplateSet_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateSetList",
-			Handler:    _Template_QueryConfigTemplateSetList_Handler,
+			MethodName: "DeleteTemplateBind",
+			Handler:    _Template_DeleteTemplateBind_Handler,
 		},
 		{
 			MethodName: "CreateConfigTemplate",
 			Handler:    _Template_CreateConfigTemplate_Handler,
-		},
-		{
-			MethodName: "DeleteConfigTemplate",
-			Handler:    _Template_DeleteConfigTemplate_Handler,
-		},
-		{
-			MethodName: "UpdateConfigTemplate",
-			Handler:    _Template_UpdateConfigTemplate_Handler,
 		},
 		{
 			MethodName: "QueryConfigTemplate",
@@ -3490,64 +2074,40 @@ var _Template_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Template_QueryConfigTemplateList_Handler,
 		},
 		{
-			MethodName: "CreateTemplateVersion",
-			Handler:    _Template_CreateTemplateVersion_Handler,
+			MethodName: "UpdateConfigTemplate",
+			Handler:    _Template_UpdateConfigTemplate_Handler,
 		},
 		{
-			MethodName: "DeleteTemplateVersion",
-			Handler:    _Template_DeleteTemplateVersion_Handler,
+			MethodName: "DeleteConfigTemplate",
+			Handler:    _Template_DeleteConfigTemplate_Handler,
 		},
 		{
-			MethodName: "UpdateTemplateVersion",
-			Handler:    _Template_UpdateTemplateVersion_Handler,
+			MethodName: "RenderConfigTemplate",
+			Handler:    _Template_RenderConfigTemplate_Handler,
 		},
 		{
-			MethodName: "QueryTemplateVersion",
-			Handler:    _Template_QueryTemplateVersion_Handler,
+			MethodName: "CreateConfigTemplateVersion",
+			Handler:    _Template_CreateConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "QueryTemplateVersionList",
-			Handler:    _Template_QueryTemplateVersionList_Handler,
+			MethodName: "QueryConfigTemplateVersion",
+			Handler:    _Template_QueryConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "CreateConfigTemplateBinding",
-			Handler:    _Template_CreateConfigTemplateBinding_Handler,
+			MethodName: "QueryConfigTemplateVersionList",
+			Handler:    _Template_QueryConfigTemplateVersionList_Handler,
 		},
 		{
-			MethodName: "DeleteConfigTemplateBinding",
-			Handler:    _Template_DeleteConfigTemplateBinding_Handler,
+			MethodName: "UpdateConfigTemplateVersion",
+			Handler:    _Template_UpdateConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "SyncConfigTemplateBinding",
-			Handler:    _Template_SyncConfigTemplateBinding_Handler,
+			MethodName: "DeleteConfigTemplateVersion",
+			Handler:    _Template_DeleteConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "QueryConfigTemplateBinding",
-			Handler:    _Template_QueryConfigTemplateBinding_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateBindingList",
-			Handler:    _Template_QueryConfigTemplateBindingList_Handler,
-		},
-		{
-			MethodName: "CreateVariable",
-			Handler:    _Template_CreateVariable_Handler,
-		},
-		{
-			MethodName: "UpdateVariable",
-			Handler:    _Template_UpdateVariable_Handler,
-		},
-		{
-			MethodName: "DeleteVariable",
-			Handler:    _Template_DeleteVariable_Handler,
-		},
-		{
-			MethodName: "QueryVariable",
-			Handler:    _Template_QueryVariable_Handler,
-		},
-		{
-			MethodName: "QueryVariableList",
-			Handler:    _Template_QueryVariableList_Handler,
+			MethodName: "Healthz",
+			Handler:    _Template_Healthz_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -3557,117 +2117,226 @@ var _Template_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("templateserver.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 1780 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xd4, 0x5a, 0xcf, 0x6f, 0xdc, 0xc4,
-	0x17, 0x8f, 0xbb, 0xbb, 0xf9, 0xf1, 0xd2, 0xa6, 0xc9, 0x34, 0x4d, 0x1c, 0xb7, 0x4d, 0xd3, 0xf9,
-	0xe6, 0xfb, 0x6d, 0xda, 0x7c, 0x93, 0x88, 0x70, 0x44, 0x20, 0x4a, 0xe8, 0xad, 0xa0, 0xb2, 0x69,
-	0x2b, 0x21, 0x90, 0x90, 0x77, 0x77, 0x92, 0x5a, 0xdd, 0xb5, 0x5d, 0xdb, 0xd9, 0x76, 0x8b, 0x2a,
-	0x21, 0x2e, 0x80, 0x04, 0x14, 0x71, 0x40, 0x88, 0x2b, 0x27, 0x2e, 0x3d, 0x20, 0x90, 0xe0, 0x3f,
-	0x40, 0x1c, 0x10, 0xc7, 0xfe, 0x23, 0xdc, 0xd1, 0xcc, 0x78, 0x1c, 0xff, 0x98, 0xf1, 0x7a, 0x4b,
-	0x26, 0xc0, 0x69, 0x3d, 0xe3, 0xe7, 0xf7, 0x79, 0xf3, 0x99, 0x37, 0xef, 0xcd, 0xbc, 0x59, 0x98,
-	0x8f, 0x48, 0xcf, 0xef, 0xda, 0x11, 0x09, 0x49, 0xd0, 0x27, 0xc1, 0xa6, 0x1f, 0x78, 0x91, 0x87,
-	0x66, 0xb2, 0xbd, 0xd6, 0x46, 0xeb, 0xde, 0x46, 0x2b, 0x6c, 0xfb, 0x5b, 0x8e, 0x1b, 0x91, 0xc0,
-	0xb5, 0xbb, 0x5b, 0x4c, 0xae, 0xed, 0x75, 0xb7, 0xda, 0x5e, 0xaf, 0xe7, 0xb9, 0xf1, 0x0f, 0xff,
-	0x1c, 0x3f, 0x86, 0xa9, 0x26, 0x71, 0x3b, 0x24, 0x68, 0x92, 0xfb, 0x68, 0x16, 0x6a, 0x21, 0xb9,
-	0x6f, 0x1a, 0x2b, 0xc6, 0x5a, 0xbd, 0x49, 0x1f, 0x69, 0x4f, 0xcb, 0xe9, 0x98, 0x27, 0x56, 0x8c,
-	0xb5, 0xa9, 0x26, 0x7d, 0x44, 0xf3, 0xd0, 0xb0, 0x7d, 0xdf, 0xe9, 0x98, 0x35, 0xd6, 0xc7, 0x1b,
-	0xc8, 0x82, 0x49, 0xaa, 0xd6, 0x89, 0x9c, 0x8e, 0x59, 0x67, 0x2f, 0x92, 0x36, 0x7d, 0xe7, 0xf9,
-	0x24, 0xb0, 0x23, 0x2f, 0x30, 0x1b, 0xfc, 0x9d, 0x68, 0x63, 0x1b, 0x40, 0xc0, 0x87, 0xbe, 0x04,
-	0xff, 0x0a, 0x4c, 0x90, 0x20, 0xd8, 0xf1, 0x3a, 0x84, 0xd9, 0x30, 0xb3, 0x7d, 0x7a, 0x33, 0x36,
-	0xff, 0x3a, 0xef, 0x6e, 0x8a, 0xf7, 0x68, 0x01, 0xc6, 0x49, 0x10, 0xbc, 0x11, 0xee, 0xc7, 0x96,
-	0xc5, 0x2d, 0xfc, 0x91, 0x01, 0x67, 0x6e, 0x06, 0xa4, 0xef, 0x90, 0x07, 0x1c, 0xca, 0x71, 0xf7,
-	0xff, 0x9e, 0xc1, 0x7e, 0x6d, 0xc0, 0x7c, 0xd1, 0x12, 0x4d, 0xe3, 0x46, 0xeb, 0x30, 0xd9, 0xde,
-	0xdb, 0x0f, 0xbb, 0x4e, 0x18, 0x99, 0xf5, 0x95, 0xda, 0xda, 0xf4, 0xa1, 0x8e, 0x1d, 0xcf, 0xdd,
-	0x73, 0xf6, 0xc3, 0x66, 0x22, 0x40, 0x4d, 0xb3, 0x76, 0x02, 0x62, 0x47, 0x84, 0xbf, 0xbb, 0x15,
-	0x3b, 0xd5, 0x2e, 0x89, 0xaa, 0x72, 0x85, 0xa0, 0xee, 0xda, 0x3d, 0x12, 0x5b, 0xc1, 0x9e, 0x69,
-	0x5f, 0x8f, 0xf4, 0xbc, 0x98, 0x25, 0xf6, 0x4c, 0x39, 0xdd, 0xf3, 0xed, 0xe8, 0x6e, 0x4c, 0x0f,
-	0x6f, 0x20, 0x13, 0x26, 0xda, 0x14, 0xdf, 0x0b, 0xcc, 0x71, 0xd6, 0x2f, 0x9a, 0xf8, 0x63, 0x03,
-	0xce, 0x29, 0x4d, 0xd3, 0x45, 0xde, 0x3c, 0x34, 0x42, 0x72, 0x38, 0xbf, 0xbc, 0x81, 0x03, 0xb0,
-	0x5e, 0x27, 0x5d, 0xf2, 0x17, 0x48, 0x4a, 0xf4, 0xd6, 0x52, 0x7a, 0x33, 0x4e, 0x53, 0xcf, 0x39,
-	0x4d, 0x00, 0xe7, 0x94, 0x98, 0xba, 0x96, 0xcc, 0x37, 0x06, 0x58, 0xb7, 0xfd, 0x8e, 0x7d, 0xe4,
-	0x03, 0x15, 0x3e, 0x52, 0x97, 0xf8, 0x48, 0x23, 0xe5, 0x23, 0x69, 0x42, 0xc6, 0x8b, 0x84, 0x28,
-	0x6d, 0xd3, 0x45, 0xc8, 0x6d, 0x58, 0x7a, 0xeb, 0x80, 0x04, 0x83, 0xa3, 0xa5, 0x03, 0x3f, 0x35,
-	0xc0, 0x52, 0xe9, 0xd5, 0xe5, 0xd9, 0x2f, 0xc1, 0x74, 0x74, 0x88, 0xc3, 0x66, 0x62, 0x7a, 0x7b,
-	0x29, 0x1b, 0x19, 0xd2, 0x86, 0xa4, 0xa5, 0xb1, 0x07, 0x17, 0xe4, 0xf6, 0xde, 0x70, 0xc2, 0x51,
-	0xb8, 0x70, 0xdc, 0x0e, 0x79, 0xc8, 0x0c, 0x6b, 0x34, 0x79, 0x83, 0xf6, 0x76, 0x9d, 0x9e, 0xc3,
-	0x2d, 0x6a, 0x34, 0x79, 0x03, 0xff, 0x60, 0xc0, 0x72, 0x19, 0xa2, 0x2e, 0x96, 0x5e, 0x86, 0x93,
-	0xa9, 0x71, 0x87, 0x71, 0x00, 0x2d, 0xa1, 0x29, 0x23, 0x8e, 0xbf, 0x3d, 0x01, 0x8b, 0xb2, 0x98,
-	0x75, 0x3c, 0xab, 0x07, 0x41, 0xfd, 0x20, 0x24, 0x62, 0xe5, 0xb0, 0x67, 0xaa, 0x71, 0x3f, 0xf0,
-	0x0e, 0x7c, 0x73, 0x82, 0x6b, 0x64, 0x0d, 0xb4, 0x0c, 0xe0, 0x93, 0xa0, 0xe7, 0x84, 0xa1, 0xe3,
-	0xb9, 0xe6, 0x24, 0x63, 0x3e, 0xd5, 0x83, 0x30, 0x9c, 0xdc, 0x73, 0xba, 0xe4, 0xba, 0xdb, 0xf6,
-	0x3a, 0x8e, 0xbb, 0x6f, 0x4e, 0xb1, 0x8f, 0x33, 0x7d, 0x54, 0x07, 0x71, 0xf7, 0x1d, 0x97, 0xdc,
-	0x1a, 0xf8, 0xc4, 0x04, 0xae, 0xe3, 0xb0, 0x27, 0x1d, 0xd9, 0xa7, 0xb3, 0x91, 0xfd, 0x89, 0x01,
-	0xa6, 0x9c, 0x25, 0x5d, 0xd3, 0xba, 0x0c, 0x20, 0xe6, 0x29, 0x89, 0xed, 0xa9, 0x1e, 0x3c, 0x80,
-	0x45, 0x59, 0xb0, 0xad, 0x3a, 0x6d, 0x59, 0xf5, 0xb5, 0xbc, 0xfa, 0xd2, 0x38, 0xef, 0x81, 0x29,
-	0x87, 0xd6, 0x15, 0xd3, 0x9e, 0x9c, 0x80, 0x45, 0x59, 0x20, 0x3d, 0xaa, 0xc1, 0xfe, 0x33, 0xbd,
-	0x35, 0x3d, 0x05, 0x50, 0x9c, 0x02, 0x39, 0x21, 0xba, 0xa6, 0xe0, 0x5d, 0x58, 0x90, 0x04, 0xb7,
-	0x23, 0x9a, 0x00, 0x9a, 0x5d, 0x16, 0xa5, 0xea, 0x75, 0xad, 0xae, 0x57, 0x60, 0xa6, 0x9d, 0x81,
-	0x8a, 0xb3, 0xcb, 0x82, 0x3c, 0x6c, 0x36, 0x73, 0xd2, 0xf8, 0x43, 0x79, 0x3a, 0x1c, 0x31, 0xb7,
-	0x48, 0x02, 0x67, 0x92, 0x71, 0xea, 0xd2, 0x8c, 0xd3, 0xc8, 0x65, 0x9c, 0x73, 0x4a, 0x23, 0x74,
-	0x31, 0xf7, 0x2a, 0x9c, 0xce, 0x72, 0x21, 0x32, 0x8e, 0x8a, 0xba, 0xbc, 0x38, 0xfe, 0x25, 0x89,
-	0xa5, 0xa2, 0xef, 0x0e, 0x09, 0xe8, 0xaa, 0x38, 0xaa, 0xe5, 0xbc, 0x02, 0xd3, 0x7d, 0xae, 0xf1,
-	0xcd, 0xc3, 0x55, 0x9d, 0xee, 0x92, 0x2e, 0x6e, 0xe5, 0xb6, 0x9e, 0xbd, 0xf1, 0xdc, 0x88, 0xb8,
-	0x51, 0xbc, 0xc8, 0x45, 0x13, 0x7f, 0x6e, 0xc0, 0x92, 0x62, 0x28, 0xba, 0xf8, 0x3f, 0x0f, 0x53,
-	0xf1, 0x48, 0x92, 0xb4, 0x70, 0xd8, 0x81, 0x1f, 0x8a, 0xd0, 0xfc, 0x9c, 0xd4, 0x66, 0xb4, 0xd7,
-	0x72, 0xda, 0x4b, 0x93, 0x82, 0x0f, 0x4b, 0x0a, 0x64, 0x5d, 0x21, 0x89, 0xfa, 0x11, 0x0f, 0x82,
-	0x5a, 0x06, 0xfb, 0x7c, 0x5e, 0x54, 0x72, 0x1c, 0x28, 0xf1, 0x23, 0x1f, 0x96, 0x14, 0x23, 0xd1,
-	0x45, 0xde, 0x3b, 0x71, 0xc0, 0xd5, 0x41, 0x1d, 0xfe, 0xde, 0x00, 0x53, 0xae, 0x5d, 0xd7, 0xaa,
-	0xb8, 0x06, 0xa7, 0xa3, 0x2c, 0x56, 0x1c, 0xd0, 0x17, 0x85, 0xaa, 0xbc, 0x29, 0x79, 0x79, 0xfc,
-	0x99, 0x88, 0xa6, 0x39, 0xc9, 0x51, 0x62, 0xfa, 0xb0, 0xc8, 0x34, 0x4a, 0x74, 0xff, 0xc9, 0x80,
-	0xf3, 0x6a, 0x7b, 0x74, 0x11, 0xb9, 0x03, 0xb3, 0x39, 0x62, 0x44, 0x7c, 0x57, 0x32, 0x59, 0xf8,
-	0x00, 0x3f, 0x33, 0x60, 0x59, 0xb6, 0x5b, 0x7e, 0xcd, 0x71, 0x3b, 0x23, 0x94, 0xb4, 0x2a, 0xb0,
-	0xc9, 0x4b, 0x5e, 0xf5, 0x74, 0xc9, 0x2b, 0xe3, 0x9a, 0x8d, 0xfc, 0xaa, 0x5e, 0x85, 0x53, 0x2d,
-	0x6e, 0xc5, 0x4d, 0x3b, 0xb0, 0x7b, 0x61, 0xbc, 0x48, 0xb3, 0x9d, 0xe9, 0x5c, 0x30, 0x91, 0x3d,
-	0x08, 0x3c, 0x35, 0xe0, 0x62, 0xe9, 0xd0, 0x74, 0x4d, 0x8c, 0xc5, 0x6b, 0x64, 0x24, 0x5d, 0xc9,
-	0x8b, 0xdb, 0x99, 0x2a, 0x5f, 0x23, 0x5b, 0xe5, 0xc3, 0x5f, 0x19, 0xb0, 0x2c, 0xdb, 0xad, 0x1f,
-	0xcb, 0x5c, 0x94, 0x95, 0x18, 0xfb, 0x70, 0xb1, 0xd4, 0x2e, 0x5d, 0x91, 0xef, 0x99, 0x01, 0xe7,
-	0x77, 0x07, 0x6e, 0xfb, 0x5f, 0xea, 0x9a, 0x69, 0x4a, 0x27, 0x72, 0x94, 0x7e, 0x61, 0xc0, 0x85,
-	0x92, 0xa1, 0xe9, 0x74, 0x4d, 0x45, 0x91, 0x19, 0x0f, 0xa4, 0x65, 0x98, 0xe3, 0x60, 0x1b, 0xff,
-	0x2a, 0x2f, 0xc8, 0x68, 0xa7, 0x63, 0x17, 0xce, 0xb6, 0x65, 0x88, 0x71, 0x46, 0xba, 0x20, 0xdf,
-	0x27, 0x0b, 0xb3, 0xe4, 0xdf, 0xe2, 0xef, 0x0c, 0xb8, 0xa4, 0x1e, 0xcc, 0x11, 0xe7, 0x28, 0x89,
-	0xeb, 0x26, 0x99, 0xab, 0x21, 0xcd, 0x5c, 0xe3, 0xe9, 0xcc, 0xf5, 0xbb, 0x01, 0x78, 0x98, 0xad,
-	0xba, 0xc8, 0xbf, 0x0d, 0x0b, 0x52, 0x02, 0x45, 0x16, 0x1b, 0xc2, 0xbe, 0xe2, 0x63, 0xfc, 0x87,
-	0x01, 0x73, 0x3c, 0xec, 0xdf, 0xb1, 0x03, 0xc7, 0x6e, 0x75, 0x2b, 0x1f, 0x7d, 0x69, 0x2a, 0xe9,
-	0x1e, 0x84, 0x11, 0x09, 0x62, 0x4b, 0x45, 0x93, 0xae, 0xf7, 0xf8, 0xf1, 0x86, 0xdd, 0x22, 0xdd,
-	0x30, 0x26, 0x3c, 0xdb, 0x49, 0x37, 0x99, 0x8f, 0x3c, 0x97, 0x88, 0x4d, 0x26, 0x7d, 0xa6, 0x7d,
-	0xd1, 0xc0, 0x27, 0x31, 0xeb, 0xec, 0x99, 0x22, 0xdf, 0x23, 0x83, 0x38, 0x24, 0xd0, 0x47, 0x3a,
-	0x39, 0x7d, 0xbb, 0x7b, 0x40, 0x58, 0xf9, 0x61, 0xaa, 0xc9, 0x1b, 0xc9, 0xa6, 0x75, 0x4a, 0x7e,
-	0xf4, 0x81, 0x6c, 0xba, 0x7b, 0x1f, 0x50, 0x7e, 0xd8, 0xba, 0x66, 0x6e, 0x16, 0x6a, 0xfd, 0xc4,
-	0xeb, 0xe8, 0x23, 0xfe, 0xd1, 0x80, 0x39, 0xbe, 0x2d, 0x1e, 0x95, 0xf4, 0x58, 0x57, 0x2d, 0xd1,
-	0x95, 0x50, 0x56, 0x2f, 0x52, 0xd6, 0x90, 0x50, 0x36, 0x2e, 0xa3, 0x6c, 0x42, 0xb1, 0xcf, 0x9f,
-	0xcc, 0x85, 0x61, 0x07, 0x50, 0xde, 0x6c, 0x5d, 0xc9, 0x6c, 0x00, 0x73, 0x3c, 0x89, 0xea, 0x61,
-	0xa8, 0x2c, 0x7f, 0x3b, 0x80, 0xf2, 0xd0, 0xfa, 0x8a, 0x4f, 0xb3, 0x2c, 0x9e, 0x68, 0x19, 0x24,
-	0xfe, 0xd4, 0x80, 0xb9, 0x9c, 0x7a, 0x5d, 0x3e, 0x8e, 0xa1, 0xd6, 0xb7, 0x83, 0x38, 0x11, 0xcc,
-	0x8a, 0xcf, 0x13, 0x5c, 0xfa, 0x12, 0xff, 0x66, 0xc0, 0x7c, 0xc6, 0x9c, 0x51, 0x82, 0xfb, 0x71,
-	0x45, 0x9b, 0x24, 0x1d, 0x4c, 0x48, 0xd3, 0xc1, 0x64, 0x3a, 0x1d, 0x7c, 0x69, 0xc0, 0x59, 0xc9,
-	0x80, 0x74, 0x71, 0xbc, 0x0a, 0xf5, 0xbe, 0x1d, 0x88, 0x78, 0x5f, 0x24, 0x99, 0xbd, 0xdd, 0xfe,
-	0x79, 0x11, 0x26, 0x45, 0x94, 0x47, 0xd7, 0x60, 0x9c, 0xdf, 0x72, 0xa3, 0xa5, 0xcd, 0xdc, 0x3f,
-	0x17, 0x92, 0x7f, 0x1c, 0x58, 0x96, 0xea, 0x55, 0xe8, 0xe3, 0x31, 0xf4, 0x1e, 0xcc, 0xe6, 0xef,
-	0xcb, 0xd1, 0x7f, 0xf2, 0x5f, 0x48, 0xee, 0xf6, 0xad, 0xd5, 0xe1, 0x42, 0x0c, 0x20, 0x92, 0x5f,
-	0xd3, 0xec, 0x92, 0x08, 0x5d, 0xcd, 0xab, 0x50, 0x5f, 0x8f, 0x5b, 0xeb, 0x95, 0x65, 0x05, 0xaa,
-	0xe2, 0x4a, 0xb7, 0x88, 0xaa, 0xbe, 0x6f, 0x2e, 0xa2, 0x96, 0xdc, 0x13, 0x73, 0x54, 0xc5, 0xbd,
-	0x69, 0x11, 0x55, 0x7d, 0xf9, 0x5b, 0x44, 0x2d, 0xb9, 0x8c, 0xc5, 0x63, 0xe8, 0xbe, 0xb4, 0xc4,
-	0x4d, 0x41, 0xaf, 0xe4, 0x15, 0x29, 0x6f, 0x58, 0xad, 0xab, 0x55, 0x45, 0x19, 0xe4, 0x63, 0xd5,
-	0xa5, 0x2a, 0x5d, 0x22, 0x68, 0xa3, 0x9a, 0xae, 0x38, 0x3e, 0x58, 0x9b, 0xa3, 0x88, 0x33, 0xf8,
-	0x7b, 0x30, 0x2f, 0x9b, 0x7e, 0x74, 0xb9, 0x8a, 0x93, 0x50, 0xc8, 0xb5, 0x6a, 0x82, 0x02, 0x4c,
-	0x36, 0xeb, 0x45, 0x30, 0xc5, 0xb5, 0x56, 0x11, 0x4c, 0x75, 0x09, 0xc5, 0xc1, 0x64, 0x93, 0x5d,
-	0x04, 0x53, 0x5c, 0x2b, 0x15, 0xc1, 0x54, 0xd7, 0x2d, 0x78, 0x0c, 0xdd, 0x85, 0x33, 0x12, 0xaa,
-	0xd1, 0xff, 0x2a, 0xcc, 0x07, 0x85, 0xba, 0x5c, 0x49, 0x4e, 0x2c, 0x0c, 0x45, 0xc1, 0x1f, 0x55,
-	0x71, 0x3c, 0xe1, 0x29, 0xeb, 0x95, 0x65, 0x19, 0xaa, 0x0b, 0x67, 0xa5, 0x45, 0x6e, 0xa4, 0x98,
-	0xfe, 0x62, 0x4d, 0xd1, 0xba, 0x52, 0x51, 0x52, 0xe0, 0x49, 0x4b, 0xc9, 0x48, 0xe1, 0x01, 0x55,
-	0xf0, 0x94, 0xb5, 0x69, 0x8e, 0x27, 0xad, 0xbe, 0x22, 0x85, 0x13, 0x54, 0xc1, 0x53, 0x96, 0x73,
-	0xb9, 0x73, 0xca, 0x0a, 0x7b, 0x48, 0xee, 0x08, 0x12, 0xb4, 0xb5, 0x6a, 0x82, 0x0c, 0xec, 0x81,
-	0xbc, 0x14, 0xcb, 0x7c, 0x66, 0xbd, 0x8a, 0x1e, 0xe1, 0x34, 0xff, 0xaf, 0x2e, 0xcc, 0x80, 0x3f,
-	0x50, 0xfc, 0x19, 0x2a, 0x3e, 0x53, 0xa1, 0xcd, 0x2a, 0xb1, 0xe3, 0xb0, 0x50, 0x60, 0x6d, 0x8d,
-	0x24, 0x9f, 0x98, 0x50, 0x52, 0x63, 0x2a, 0x9a, 0x50, 0x5e, 0x28, 0x2b, 0x9a, 0x30, 0xa4, 0x80,
-	0x85, 0xc7, 0xd0, 0x23, 0x58, 0x52, 0x56, 0x64, 0x50, 0x81, 0xd2, 0xb2, 0xba, 0x94, 0xb5, 0x31,
-	0x82, 0x74, 0x49, 0x76, 0x11, 0xe0, 0x55, 0xb2, 0x4b, 0x0a, 0x7d, 0x73, 0x14, 0x71, 0x06, 0xff,
-	0x49, 0x69, 0xfd, 0x85, 0x39, 0xe0, 0x0b, 0xd5, 0x95, 0x0a, 0x37, 0xdc, 0x1e, 0xf5, 0x13, 0x66,
-	0xcb, 0xdb, 0x30, 0x93, 0x3d, 0xc7, 0xa2, 0x4b, 0x72, 0x77, 0x4a, 0x1d, 0x31, 0x2c, 0x3c, 0x4c,
-	0x44, 0xa8, 0xce, 0x9e, 0xf6, 0x8a, 0xaa, 0x0b, 0x87, 0xd8, 0xa2, 0xea, 0xe2, 0x81, 0x91, 0xab,
-	0xce, 0x1e, 0xb1, 0x8a, 0xaa, 0x0b, 0xa7, 0xbf, 0xa2, 0xea, 0xe2, 0x29, 0x0d, 0x8f, 0xa1, 0x3b,
-	0x70, 0x2a, 0xb3, 0x27, 0x47, 0x2b, 0x52, 0x5e, 0xd3, 0x8a, 0x2f, 0x0d, 0x91, 0x60, 0x7a, 0x5b,
-	0xb9, 0xb3, 0x14, 0x9b, 0xe6, 0xd5, 0xd2, 0x2f, 0xc5, 0xcc, 0xfe, 0xb7, 0x82, 0x14, 0xc5, 0x68,
-	0x8d, 0xb3, 0xff, 0x03, 0xbf, 0xf8, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3b, 0x44, 0x15, 0xba,
-	0x66, 0x2c, 0x00, 0x00,
+	// 3535 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xd4, 0x5c, 0x5b, 0x70, 0x14, 0x55,
+	0xde, 0xff, 0xce, 0x24, 0x84, 0xe4, 0x24, 0x82, 0xb6, 0x5c, 0xc6, 0x41, 0xe3, 0x78, 0x3e, 0x45,
+	0x6c, 0x48, 0x32, 0x69, 0x32, 0x24, 0x69, 0x2d, 0x2b, 0x1d, 0xf0, 0x92, 0x4f, 0x45, 0x1c, 0x51,
+	0xf1, 0x56, 0x7c, 0x9d, 0x99, 0xce, 0x30, 0x3a, 0x33, 0x3d, 0x99, 0xe9, 0x70, 0xcb, 0x37, 0x16,
+	0x2a, 0x48, 0x04, 0x42, 0x62, 0x13, 0x50, 0x04, 0xc5, 0x7c, 0xa2, 0xb2, 0x55, 0x4a, 0x50, 0x14,
+	0x22, 0x41, 0x28, 0xb7, 0xca, 0x7d, 0xd8, 0xd2, 0x2a, 0x37, 0xfb, 0xb0, 0x4f, 0xbb, 0xd6, 0x56,
+	0xa5, 0x67, 0x92, 0xad, 0xad, 0xda, 0xda, 0x97, 0xad, 0xdd, 0xb7, 0xad, 0x73, 0xba, 0x3b, 0xe9,
+	0x99, 0xee, 0x9e, 0x1b, 0x11, 0x67, 0x5f, 0x60, 0xe6, 0xf4, 0xff, 0x9c, 0xf3, 0xbf, 0xfc, 0xfe,
+	0xe7, 0x7f, 0xe9, 0x33, 0x81, 0x4b, 0x24, 0x21, 0x12, 0x0b, 0xf3, 0x92, 0x90, 0x10, 0xe2, 0xdb,
+	0x85, 0x78, 0x63, 0x2c, 0x2e, 0x4a, 0x22, 0xb5, 0x28, 0x73, 0xd4, 0xd5, 0xd0, 0xfd, 0x72, 0x43,
+	0x77, 0xc2, 0x1f, 0x6b, 0x0a, 0x45, 0x25, 0x21, 0x1e, 0xe5, 0xc3, 0x4d, 0x84, 0xce, 0x2f, 0x86,
+	0x9b, 0xfc, 0x62, 0x24, 0x22, 0x46, 0xb5, 0xff, 0xd4, 0xe9, 0xae, 0x5b, 0x83, 0xa2, 0x18, 0x0c,
+	0x0b, 0x4d, 0x7c, 0x2c, 0xd4, 0xc4, 0x47, 0xa3, 0xa2, 0xc4, 0x4b, 0x21, 0x31, 0x9a, 0xd0, 0x9e,
+	0xae, 0x51, 0xe7, 0x36, 0x04, 0x85, 0x68, 0x43, 0x62, 0x07, 0x1f, 0x0c, 0x0a, 0xf1, 0x26, 0x31,
+	0x46, 0x28, 0xcc, 0xd4, 0xe8, 0x2b, 0x07, 0x5c, 0xba, 0x3e, 0x2e, 0xf0, 0x92, 0xb0, 0x59, 0xe3,
+	0xa9, 0x33, 0x14, 0x0d, 0xf8, 0x84, 0x5e, 0x6a, 0x25, 0xac, 0xea, 0x0e, 0xed, 0xde, 0x1a, 0x0a,
+	0x38, 0x81, 0x1b, 0xac, 0xaa, 0xe9, 0x5c, 0x2c, 0x73, 0x75, 0x74, 0xf5, 0xd4, 0xf8, 0xbb, 0xca,
+	0x81, 0xd1, 0xae, 0x0d, 0x3b, 0x3b, 0x7c, 0x0b, 0xba, 0x43, 0xbb, 0xbb, 0x02, 0x94, 0x07, 0xd6,
+	0xea, 0xe2, 0x60, 0x62, 0x87, 0x81, 0x38, 0x75, 0x66, 0x34, 0xf5, 0xde, 0x55, 0x42, 0x0c, 0x75,
+	0x9a, 0xae, 0x00, 0x5e, 0x99, 0x8f, 0xc5, 0x30, 0x71, 0x85, 0x81, 0x58, 0xb9, 0x34, 0x92, 0x1e,
+	0x39, 0xa3, 0xae, 0xcc, 0xc7, 0x62, 0x5d, 0x01, 0xf6, 0x38, 0x90, 0xb9, 0xa3, 0x00, 0xbe, 0x48,
+	0x5b, 0x73, 0xc8, 0xdc, 0xa9, 0x0c, 0x9c, 0x50, 0x26, 0x2e, 0xcd, 0xec, 0x1b, 0x4c, 0x7f, 0x73,
+	0x56, 0xdd, 0x2b, 0x3d, 0xf1, 0x96, 0x72, 0xf6, 0x5d, 0x65, 0xdf, 0xf9, 0xf4, 0xf9, 0x89, 0xe9,
+	0xb1, 0x8b, 0xa9, 0xcf, 0x5f, 0x9b, 0x04, 0x9a, 0x18, 0x93, 0xc0, 0xc8, 0xe7, 0x24, 0xd0, 0x78,
+	0x60, 0x5a, 0x28, 0xa6, 0x1f, 0xa9, 0x9f, 0x11, 0xeb, 0x46, 0x3d, 0x6d, 0xad, 0xed, 0x7c, 0x77,
+	0x5b, 0x4f, 0x83, 0xbf, 0x55, 0xf0, 0x36, 0x34, 0x37, 0x0b, 0xed, 0x0d, 0xed, 0x01, 0xbf, 0xb7,
+	0xc1, 0xcb, 0x78, 0x5b, 0x3c, 0x9e, 0x9e, 0xf6, 0x76, 0xa6, 0xb5, 0x0d, 0x25, 0xd1, 0x3f, 0x2b,
+	0xe0, 0x32, 0x2b, 0xae, 0x12, 0x31, 0xea, 0x1e, 0x58, 0x15, 0x17, 0x12, 0x7d, 0x61, 0x89, 0x28,
+	0xae, 0xba, 0xf3, 0x26, 0x99, 0x5b, 0x44, 0xd7, 0xa5, 0xde, 0xfc, 0x64, 0x7a, 0xf4, 0x50, 0x7a,
+	0xe2, 0x48, 0xea, 0xfd, 0x93, 0x3e, 0x8d, 0x80, 0x5a, 0x0b, 0x2b, 0xfd, 0x62, 0x40, 0x20, 0x4a,
+	0x5b, 0xc4, 0x2c, 0x6e, 0xd4, 0xcc, 0xfc, 0x40, 0x3c, 0xbe, 0x5e, 0x0c, 0x08, 0x9d, 0x8b, 0x64,
+	0xae, 0x96, 0xae, 0x99, 0x19, 0x39, 0x3e, 0x3d, 0x36, 0x96, 0xfe, 0xe0, 0x55, 0x1f, 0x21, 0xa6,
+	0x56, 0xc3, 0x85, 0x11, 0x21, 0x91, 0xe0, 0x83, 0x82, 0xa6, 0x3f, 0x75, 0x03, 0x95, 0x2c, 0x35,
+	0x34, 0x34, 0x7d, 0xf5, 0x9c, 0x4f, 0xa7, 0xa0, 0x36, 0xc1, 0xca, 0x00, 0x2f, 0xf1, 0xce, 0x4a,
+	0x37, 0x58, 0x55, 0xcb, 0x34, 0x35, 0x66, 0xe1, 0xd1, 0x5a, 0x84, 0x46, 0xfc, 0xcf, 0x06, 0x5e,
+	0xe2, 0x3b, 0x6b, 0x65, 0xae, 0x9a, 0xae, 0xd2, 0xb8, 0x26, 0x2b, 0xb9, 0x18, 0x58, 0xad, 0x3f,
+	0xc6, 0x96, 0xf4, 0xf7, 0x04, 0xb3, 0x31, 0xa2, 0x1a, 0x44, 0xb5, 0xa4, 0xbf, 0x27, 0xd8, 0x15,
+	0x60, 0x7f, 0x0b, 0x64, 0xee, 0x37, 0x00, 0x6e, 0xa1, 0x6d, 0x74, 0x96, 0xcf, 0x94, 0xca, 0x91,
+	0x41, 0xe5, 0xd2, 0xc8, 0x24, 0xd0, 0xf4, 0x36, 0x09, 0x88, 0x26, 0x26, 0x81, 0x2e, 0x26, 0xf3,
+	0x12, 0xb5, 0xad, 0x1f, 0xa9, 0x0f, 0x11, 0xeb, 0x96, 0xe2, 0x7d, 0xc2, 0x1a, 0x37, 0xc2, 0x34,
+	0x88, 0x75, 0x7b, 0xd6, 0xb8, 0x91, 0x46, 0x87, 0x0d, 0xfc, 0xf8, 0x23, 0x68, 0x8d, 0x1b, 0x61,
+	0x51, 0x10, 0xeb, 0xee, 0x47, 0x2a, 0xff, 0x85, 0x5b, 0x3e, 0x89, 0xce, 0x3b, 0xe0, 0x92, 0x27,
+	0xfa, 0x84, 0xf8, 0xae, 0xf2, 0xf3, 0x98, 0x77, 0x80, 0xcc, 0x8d, 0x00, 0xf8, 0x02, 0x6d, 0xc9,
+	0x20, 0x73, 0x67, 0xea, 0xd4, 0x47, 0xd3, 0x63, 0xff, 0xff, 0x8b, 0x38, 0xcc, 0x3f, 0x1c, 0x70,
+	0xa9, 0x05, 0x53, 0xe5, 0xe6, 0x2f, 0xde, 0x0c, 0x7f, 0x59, 0xa2, 0xef, 0x60, 0x64, 0xda, 0xc2,
+	0x29, 0x74, 0xc5, 0x3f, 0x43, 0x5b, 0xcb, 0x98, 0x4f, 0xf3, 0x79, 0xf1, 0xdd, 0x4e, 0xb5, 0x96,
+	0x82, 0xef, 0xfe, 0x64, 0x12, 0x9d, 0xae, 0x80, 0x4e, 0x13, 0x53, 0x8f, 0x86, 0x12, 0x52, 0x59,
+	0x40, 0x16, 0x9b, 0x34, 0x86, 0x4d, 0xa3, 0x2a, 0xbc, 0x4e, 0x57, 0xf8, 0x26, 0x3e, 0x28, 0x68,
+	0x86, 0x52, 0x06, 0xde, 0x98, 0x19, 0xfd, 0x6a, 0xfa, 0xec, 0x95, 0xf4, 0x37, 0x67, 0x7d, 0x84,
+	0x98, 0xfd, 0x11, 0xc8, 0xdc, 0xf7, 0x00, 0x3e, 0x4d, 0xdb, 0x4a, 0xc6, 0xd0, 0x79, 0x34, 0x3e,
+	0xf0, 0xf6, 0xf4, 0xe8, 0x19, 0x13, 0xe2, 0xc9, 0xf2, 0x4c, 0x9c, 0x8a, 0xf5, 0x23, 0x83, 0xbc,
+	0x88, 0x2d, 0x0c, 0xe5, 0x6b, 0xdc, 0x28, 0xa6, 0x5a, 0x01, 0x1b, 0x4b, 0xea, 0x8b, 0x47, 0xb7,
+	0x4a, 0xa2, 0xc4, 0x87, 0xe7, 0x4c, 0x96, 0x90, 0xf8, 0xb8, 0xa4, 0xd9, 0x2c, 0x1c, 0x8a, 0x84,
+	0xf0, 0xe7, 0x66, 0x8f, 0x27, 0x99, 0x44, 0xe3, 0x95, 0xf0, 0x16, 0x1b, 0x61, 0xca, 0xcd, 0x47,
+	0x9e, 0xcc, 0xf0, 0x11, 0x26, 0x3b, 0xa6, 0xd8, 0x4a, 0x91, 0x33, 0xac, 0xf4, 0x19, 0xc2, 0x0a,
+	0x03, 0x6b, 0x89, 0xde, 0xb6, 0xfa, 0xc5, 0xbe, 0xa8, 0x2a, 0xf2, 0x0d, 0xba, 0xc8, 0x7b, 0x26,
+	0x52, 0x47, 0xcf, 0xa5, 0x06, 0xcf, 0xce, 0xec, 0x1f, 0xf2, 0x41, 0x42, 0xb5, 0x1e, 0x13, 0x61,
+	0xc7, 0x0d, 0x45, 0x7b, 0x44, 0xa7, 0xc3, 0x5d, 0x51, 0xa0, 0xe3, 0x62, 0x72, 0xf6, 0x5b, 0x20,
+	0x73, 0xdf, 0x00, 0xc8, 0xd3, 0xf6, 0xca, 0x2f, 0x0c, 0x4a, 0x79, 0x5d, 0x78, 0x0b, 0xf5, 0x74,
+	0x49, 0x2e, 0x8c, 0x0c, 0xaa, 0x50, 0xd1, 0xb2, 0xc6, 0x8d, 0x30, 0xef, 0x88, 0x7d, 0xbe, 0x3f,
+	0xf9, 0x62, 0x32, 0x49, 0x72, 0xb8, 0x0d, 0x42, 0x58, 0x28, 0xef, 0x1c, 0xce, 0x92, 0x43, 0x1c,
+	0xf8, 0x3f, 0x98, 0x39, 0x7e, 0xfa, 0x17, 0x09, 0x49, 0x17, 0x1c, 0x70, 0x99, 0x15, 0x57, 0x65,
+	0xe6, 0x6f, 0xec, 0x61, 0x20, 0x73, 0x07, 0x48, 0xf6, 0x64, 0xcd, 0x6d, 0x3e, 0x25, 0xe6, 0x85,
+	0x66, 0x23, 0xb5, 0xa6, 0x08, 0x68, 0x26, 0xd1, 0xe5, 0x6a, 0xb8, 0x5c, 0x4d, 0xe4, 0xd6, 0x8b,
+	0xd1, 0x9e, 0x50, 0x50, 0x67, 0xa8, 0x18, 0xc8, 0xdd, 0x0d, 0x2b, 0xa3, 0x7c, 0x44, 0xd0, 0xb0,
+	0x76, 0xb3, 0xcc, 0xdd, 0x48, 0xd7, 0xa9, 0xac, 0x2b, 0xc3, 0x83, 0xe9, 0x4f, 0xce, 0xed, 0xec,
+	0xf0, 0x11, 0x02, 0x6a, 0x2d, 0xac, 0xe9, 0x09, 0x85, 0x85, 0xad, 0x84, 0x5a, 0x55, 0xd6, 0x32,
+	0x99, 0xbb, 0x99, 0x5e, 0xac, 0x89, 0x7b, 0x6c, 0xff, 0xd4, 0xc4, 0x05, 0x65, 0x78, 0x70, 0x67,
+	0x87, 0xaf, 0x1a, 0x13, 0x6e, 0xc4, 0x93, 0x5a, 0xb5, 0x49, 0x31, 0x5e, 0xda, 0x46, 0xce, 0xa9,
+	0x9a, 0x4e, 0x97, 0xcc, 0x2d, 0xa7, 0x29, 0xe3, 0xa4, 0xe9, 0x8b, 0x63, 0xca, 0x95, 0xbd, 0x3b,
+	0xf7, 0x54, 0xab, 0x13, 0x37, 0xf1, 0xd2, 0x36, 0xcc, 0x56, 0x5f, 0x42, 0x88, 0x3b, 0x17, 0x18,
+	0xd9, 0x22, 0xd4, 0xe9, 0x91, 0x33, 0xa9, 0x81, 0x8b, 0x98, 0x2d, 0x4c, 0x40, 0x79, 0x21, 0xc4,
+	0xff, 0x6f, 0x0d, 0xc6, 0xc5, 0xbe, 0x98, 0xb3, 0xca, 0xc0, 0x97, 0x91, 0x3c, 0x3d, 0xb1, 0x77,
+	0x67, 0x87, 0xaf, 0x06, 0x53, 0x3e, 0x84, 0x09, 0xa9, 0x87, 0xe1, 0x22, 0x95, 0xb1, 0x78, 0x68,
+	0x7b, 0x28, 0x2c, 0x04, 0x05, 0xe7, 0x42, 0x32, 0xf5, 0x0e, 0x99, 0xab, 0xd7, 0x77, 0x4a, 0xbd,
+	0xf7, 0xfa, 0xcc, 0xf1, 0x61, 0xa6, 0x6e, 0xea, 0xca, 0x41, 0xe5, 0xe3, 0xd7, 0x58, 0xb7, 0xa7,
+	0xd5, 0xeb, 0xdd, 0xd9, 0xe1, 0xbb, 0x81, 0x30, 0xa9, 0xcf, 0xa3, 0x9e, 0x80, 0xb5, 0x64, 0xa5,
+	0x1e, 0x31, 0x1e, 0xe1, 0x25, 0x67, 0x35, 0x59, 0xc6, 0x23, 0x73, 0x0d, 0x34, 0xa5, 0x71, 0x70,
+	0x7e, 0x22, 0x3d, 0x71, 0x2a, 0xf5, 0xc1, 0x65, 0xe5, 0xf2, 0x10, 0xb3, 0x54, 0x5f, 0xac, 0x2f,
+	0x1a, 0xda, 0xe9, 0x76, 0xef, 0x08, 0x45, 0x03, 0xe2, 0x8e, 0x04, 0x76, 0x6a, 0xbc, 0xc8, 0x83,
+	0x64, 0x0d, 0xea, 0x7f, 0x35, 0xad, 0x45, 0x30, 0x9e, 0x6b, 0xdc, 0x60, 0xd5, 0x82, 0xce, 0xf5,
+	0x32, 0xd7, 0x41, 0xdf, 0xa7, 0x2d, 0xf8, 0xf9, 0x84, 0xf2, 0xfe, 0x41, 0x77, 0x33, 0x9b, 0x3a,
+	0xb6, 0x3f, 0x75, 0xf2, 0x53, 0x75, 0xd0, 0xcd, 0xb0, 0x53, 0x97, 0x0e, 0x4d, 0x5f, 0x3d, 0xa1,
+	0x0c, 0x5c, 0xd0, 0x46, 0xd6, 0xb2, 0xaa, 0x21, 0xd5, 0xaf, 0xba, 0x5d, 0x1e, 0xc3, 0xb8, 0xbf,
+	0x1f, 0xd6, 0x0a, 0xd1, 0x60, 0x28, 0x2a, 0x6c, 0x95, 0x76, 0xc5, 0x04, 0x27, 0x24, 0x7b, 0xdc,
+	0x26, 0x73, 0x2e, 0xda, 0xa9, 0xcd, 0x19, 0xff, 0x22, 0x75, 0xea, 0x88, 0x72, 0xf9, 0x68, 0xea,
+	0xc8, 0x61, 0x75, 0x3f, 0x1f, 0x54, 0x67, 0x6c, 0xde, 0x15, 0x13, 0xb0, 0x79, 0x22, 0x42, 0x44,
+	0x74, 0xd6, 0x1a, 0xcc, 0xa3, 0x9c, 0xde, 0x9f, 0x3a, 0x7f, 0x66, 0xea, 0xea, 0x68, 0xea, 0xd5,
+	0x31, 0x6c, 0x1e, 0x4c, 0xc0, 0x1e, 0xaf, 0x90, 0xb9, 0xa3, 0x15, 0xf0, 0x0c, 0xa0, 0xed, 0x90,
+	0xca, 0x38, 0xcd, 0x35, 0x87, 0x39, 0x1f, 0xc0, 0xa8, 0x9b, 0x04, 0x73, 0x08, 0xd4, 0x3f, 0x63,
+	0x60, 0x4d, 0x02, 0x02, 0x85, 0x49, 0x60, 0x40, 0xc2, 0x24, 0xc8, 0xb2, 0xef, 0x24, 0x30, 0x9a,
+	0x49, 0x9f, 0x1e, 0x21, 0x0e, 0x68, 0xd4, 0x05, 0x93, 0x06, 0xd4, 0x14, 0xe8, 0x47, 0x78, 0x13,
+	0xec, 0x68, 0x91, 0x5d, 0x0d, 0xfa, 0x51, 0x87, 0x83, 0xc1, 0x2c, 0x03, 0xf8, 0x99, 0x16, 0x68,
+	0x77, 0xf1, 0x91, 0xf0, 0xec, 0x33, 0xcc, 0x10, 0x62, 0x51, 0x93, 0x20, 0xf9, 0xf1, 0x18, 0xe6,
+	0x08, 0x93, 0xc6, 0x45, 0x51, 0xd2, 0xbf, 0xab, 0x1c, 0x1a, 0x47, 0x33, 0x59, 0xc5, 0x4f, 0x3c,
+	0xad, 0xad, 0xad, 0xb3, 0x4f, 0x54, 0x9e, 0xf1, 0x30, 0x46, 0xcd, 0xec, 0x70, 0x64, 0xee, 0x64,
+	0x30, 0x08, 0x30, 0x7b, 0x56, 0x44, 0x44, 0xc4, 0x22, 0xd5, 0x28, 0x78, 0x8a, 0x1f, 0xab, 0x5f,
+	0x24, 0xcc, 0x44, 0x84, 0xb0, 0x88, 0x92, 0x68, 0x5f, 0x25, 0x74, 0x5a, 0x1b, 0xa5, 0xdc, 0x32,
+	0x1d, 0x5f, 0x46, 0xa6, 0xd3, 0x6c, 0x5d, 0x3d, 0x9b, 0x85, 0xc8, 0x99, 0xe8, 0x74, 0x18, 0x12,
+	0x9d, 0x96, 0xcc, 0xb8, 0x0b, 0xe6, 0x50, 0xbd, 0xc8, 0x08, 0xcb, 0xae, 0x0d, 0xc6, 0xd8, 0xcb,
+	0x7e, 0x07, 0x64, 0xee, 0x5b, 0x00, 0x37, 0xd2, 0xb6, 0x5a, 0xb4, 0xc2, 0x76, 0xde, 0x28, 0x20,
+	0x52, 0x91, 0x12, 0x6b, 0xe8, 0x8c, 0x54, 0xb9, 0xf0, 0x42, 0xfa, 0x7b, 0x00, 0x97, 0x91, 0xac,
+	0xab, 0xf4, 0x28, 0xd2, 0x62, 0x95, 0xb8, 0xe4, 0x55, 0xe0, 0x66, 0x99, 0x7b, 0x02, 0x76, 0xd1,
+	0x36, 0x9b, 0x33, 0x4e, 0x73, 0xbe, 0x97, 0x33, 0x0f, 0x61, 0x2a, 0x29, 0x47, 0x7f, 0x12, 0xfd,
+	0xdd, 0x01, 0x97, 0x5b, 0xae, 0x58, 0x6e, 0xa8, 0x6e, 0xcd, 0x40, 0xf5, 0x32, 0x7d, 0x87, 0x4c,
+	0xb6, 0xad, 0xaa, 0xdc, 0x21, 0x20, 0x73, 0x07, 0x01, 0x7c, 0x8c, 0xb6, 0x93, 0xd3, 0x4a, 0x75,
+	0x79, 0x71, 0xc7, 0x52, 0x6d, 0xa5, 0xe1, 0x2e, 0x99, 0x44, 0x87, 0x1c, 0xd0, 0x65, 0xc1, 0x4b,
+	0xb1, 0xe5, 0xad, 0x5e, 0x84, 0x3a, 0x8a, 0x29, 0x42, 0x87, 0x81, 0xcc, 0x1d, 0x02, 0xf0, 0x51,
+	0x3a, 0x07, 0x07, 0x4c, 0xbd, 0x85, 0x42, 0x72, 0x95, 0x9e, 0xf7, 0x51, 0x6c, 0x7f, 0xe9, 0x45,
+	0xe4, 0x85, 0x4a, 0xb8, 0xc2, 0x96, 0x99, 0x72, 0x83, 0xe1, 0x53, 0x19, 0x30, 0x6c, 0xb1, 0x2c,
+	0x23, 0xad, 0xe5, 0xc8, 0x79, 0xbe, 0xee, 0xb8, 0xc6, 0x42, 0xb2, 0x35, 0xa3, 0x90, 0x2c, 0xcc,
+	0x3b, 0x48, 0x29, 0xf9, 0x35, 0x90, 0xb9, 0xaf, 0x00, 0x7c, 0x86, 0xce, 0x65, 0x02, 0x7b, 0x40,
+	0xe4, 0xf5, 0x93, 0xe7, 0xa8, 0x2d, 0xa5, 0x9e, 0xcf, 0xb6, 0x15, 0xa4, 0x5b, 0x2b, 0x21, 0xc7,
+	0xaa, 0xe0, 0xf2, 0xa7, 0x62, 0x81, 0x6b, 0xca, 0xe8, 0x8b, 0x2f, 0x22, 0xf5, 0x1a, 0xa0, 0xa2,
+	0xa8, 0x1a, 0xa0, 0xb2, 0x94, 0x1a, 0x60, 0x41, 0x09, 0x35, 0x40, 0x55, 0x71, 0x35, 0xc0, 0xc2,
+	0xd2, 0x6b, 0x80, 0xea, 0xf9, 0xa9, 0x01, 0x6a, 0xe6, 0xbb, 0x06, 0x80, 0xd7, 0xa1, 0x06, 0xa8,
+	0x2d, 0xb5, 0x06, 0xa8, 0xcb, 0x57, 0x03, 0x3c, 0x2f, 0x73, 0x5b, 0xe0, 0x26, 0xda, 0x0e, 0xd8,
+	0x4c, 0x7d, 0xea, 0xc4, 0x97, 0xa9, 0x63, 0xe7, 0x8c, 0xae, 0xa8, 0xae, 0x50, 0x48, 0xb4, 0x3f,
+	0xeb, 0x80, 0x4e, 0xeb, 0x85, 0xcb, 0xad, 0x7d, 0xb0, 0x17, 0xc8, 0xdc, 0x1e, 0x92, 0x2e, 0xda,
+	0xf1, 0xcb, 0x38, 0xcd, 0x9a, 0x98, 0xf7, 0xa6, 0xc1, 0x8f, 0x00, 0x2e, 0x57, 0xfb, 0x17, 0xd7,
+	0xf1, 0x88, 0x99, 0xc5, 0x80, 0xcd, 0xce, 0x4c, 0xbd, 0xb9, 0x75, 0x52, 0x1c, 0x06, 0xac, 0x17,
+	0x2e, 0x5f, 0x0c, 0xd8, 0xf1, 0x8b, 0x4b, 0x86, 0x6c, 0x4d, 0xcc, 0x3b, 0x06, 0x3e, 0xaf, 0x80,
+	0xcb, 0x7d, 0x42, 0x34, 0x20, 0xc4, 0xaf, 0x67, 0x98, 0x69, 0x81, 0x70, 0xbb, 0x10, 0x4f, 0x84,
+	0xc4, 0xe8, 0x5c, 0xbf, 0x72, 0xa9, 0xcc, 0x51, 0xf4, 0x22, 0xad, 0x57, 0xf6, 0xe6, 0x40, 0xea,
+	0xe4, 0xa7, 0x64, 0x5a, 0x8d, 0x46, 0xd8, 0x15, 0xa0, 0x1e, 0x87, 0x35, 0xdb, 0xf9, 0x78, 0x88,
+	0xef, 0x0e, 0x0b, 0x09, 0x2d, 0xe6, 0x34, 0xcb, 0x5c, 0x23, 0x4d, 0x6b, 0xc7, 0xd3, 0xd0, 0x3b,
+	0x33, 0xfb, 0x87, 0x56, 0xfd, 0xcf, 0x93, 0x8f, 0x6f, 0x54, 0x2e, 0x0d, 0x29, 0x03, 0x6f, 0x2b,
+	0x87, 0x8e, 0x29, 0xc3, 0x87, 0xd3, 0xef, 0xee, 0x55, 0x3e, 0x7b, 0x3b, 0xfd, 0xe9, 0xc7, 0x53,
+	0xe3, 0x5f, 0xdc, 0x43, 0x16, 0xd4, 0xd7, 0x60, 0xbf, 0x04, 0x32, 0x77, 0x0e, 0xc0, 0x10, 0x6d,
+	0xa7, 0x02, 0xa6, 0x5e, 0x5d, 0xba, 0x48, 0x30, 0x4e, 0x02, 0x83, 0x78, 0x93, 0x60, 0x6e, 0x47,
+	0x66, 0x3d, 0xc5, 0xf5, 0xa3, 0xb9, 0x67, 0xd8, 0x0c, 0xfe, 0x75, 0xed, 0x42, 0x73, 0x9b, 0xb7,
+	0xbb, 0x85, 0xef, 0x6e, 0xe1, 0xbd, 0x81, 0xb5, 0x6b, 0xbd, 0xed, 0xdd, 0x7c, 0x1b, 0x9f, 0x08,
+	0xf0, 0x89, 0x00, 0xce, 0x19, 0x66, 0x27, 0x63, 0xe2, 0xfe, 0x24, 0x4a, 0xa2, 0xd1, 0x4a, 0xe8,
+	0xb4, 0x66, 0xf8, 0x3f, 0xac, 0x5a, 0xb7, 0x13, 0xa2, 0x88, 0x6a, 0x1d, 0xfa, 0xc5, 0xa8, 0x24,
+	0x44, 0xa5, 0x39, 0x94, 0xaa, 0x38, 0x52, 0xde, 0xd8, 0xa7, 0x9c, 0xfd, 0x3a, 0xfd, 0xd9, 0x15,
+	0x65, 0x78, 0x50, 0xc5, 0x91, 0x46, 0xd8, 0x15, 0x60, 0xff, 0x0c, 0x64, 0xee, 0x8f, 0xc4, 0xf5,
+	0xec, 0x18, 0x60, 0x9c, 0x66, 0xbb, 0xe7, 0x75, 0xbd, 0x03, 0x80, 0xda, 0x0f, 0x4a, 0x7d, 0xe7,
+	0x3d, 0x2b, 0x05, 0x62, 0x6d, 0x10, 0xd1, 0xd6, 0xde, 0xda, 0xde, 0xda, 0xea, 0xf1, 0xaf, 0x6b,
+	0xf3, 0x74, 0xb7, 0xb6, 0xf7, 0xf8, 0x79, 0xa1, 0x67, 0xad, 0xb7, 0x3b, 0x20, 0xf8, 0x3d, 0x5e,
+	0x4f, 0x7b, 0xb3, 0x57, 0x68, 0x6b, 0x63, 0x02, 0x0c, 0xe3, 0x6d, 0xf3, 0xac, 0xc3, 0x95, 0xfc,
+	0x5f, 0x2a, 0x61, 0xbd, 0x55, 0x2f, 0xe2, 0x69, 0x15, 0x7b, 0x3f, 0xaf, 0x7b, 0x6f, 0x84, 0xb5,
+	0x3a, 0xc6, 0x25, 0x3e, 0xa8, 0xe1, 0xa4, 0x41, 0xe6, 0x68, 0x7a, 0xb1, 0xd1, 0xbf, 0x95, 0xa1,
+	0x8b, 0xcc, 0x52, 0xe5, 0xe4, 0x19, 0x65, 0xf8, 0x90, 0xe6, 0x5a, 0xe3, 0x07, 0x95, 0x91, 0xb1,
+	0xa9, 0xf1, 0x3d, 0x78, 0x3d, 0x6d, 0x85, 0xcd, 0x7c, 0x30, 0xcb, 0xcc, 0x95, 0x85, 0x99, 0x99,
+	0x6a, 0x81, 0x75, 0xfa, 0xac, 0x44, 0x68, 0xb7, 0x40, 0x12, 0x4e, 0xbd, 0xd6, 0x50, 0xe7, 0x29,
+	0xa7, 0x3f, 0x51, 0xce, 0x0d, 0xf9, 0x6a, 0x35, 0xb2, 0x27, 0x43, 0xbb, 0xe7, 0x72, 0x99, 0xaa,
+	0x7c, 0xb9, 0xcc, 0x80, 0x43, 0xe6, 0xf6, 0x3a, 0xe0, 0xab, 0x80, 0xce, 0xa3, 0x68, 0x1c, 0xd1,
+	0x4c, 0x57, 0x29, 0x88, 0x02, 0xf2, 0x1c, 0x22, 0x46, 0x25, 0x4e, 0x02, 0x83, 0x0a, 0x26, 0x41,
+	0x86, 0x64, 0xcc, 0x2b, 0xd4, 0xff, 0xcd, 0x9d, 0x2a, 0x12, 0x1f, 0x44, 0x2c, 0xda, 0xde, 0x4c,
+	0x3a, 0x7d, 0x06, 0x58, 0xb9, 0xaf, 0x1d, 0x57, 0x86, 0x15, 0xf1, 0xbe, 0xa4, 0x72, 0x61, 0x5a,
+	0x92, 0xe8, 0x54, 0x25, 0xbc, 0x3d, 0xa7, 0x0e, 0xca, 0xed, 0x5c, 0x7a, 0x36, 0xe3, 0x5c, 0x6a,
+	0x2b, 0xa4, 0x8b, 0x68, 0x90, 0xa5, 0x98, 0xe3, 0xc9, 0x10, 0xe6, 0x40, 0x61, 0x61, 0x8e, 0xfd,
+	0x1d, 0x90, 0xb9, 0x1f, 0x00, 0x7c, 0x9e, 0xce, 0xa7, 0x53, 0x7b, 0x60, 0xe5, 0x3d, 0xab, 0xa2,
+	0x54, 0xb8, 0xc4, 0x93, 0x2a, 0x33, 0x78, 0x15, 0xda, 0x58, 0x3c, 0xe5, 0x80, 0xb7, 0x59, 0xd4,
+	0xe0, 0xd7, 0xe5, 0x34, 0x2a, 0x29, 0xd9, 0x60, 0xa3, 0x32, 0xf7, 0x32, 0xf4, 0xd3, 0xb9, 0xb9,
+	0xb6, 0xea, 0x1d, 0x14, 0xe4, 0xda, 0x06, 0x8e, 0xb4, 0xcc, 0xf5, 0x50, 0x05, 0xac, 0xcf, 0xb5,
+	0x57, 0xb9, 0xb9, 0xd0, 0xfd, 0x19, 0x2e, 0x74, 0x9b, 0x75, 0x53, 0x46, 0xe3, 0xde, 0xaa, 0x73,
+	0x79, 0x12, 0xc8, 0xdc, 0x3b, 0x00, 0x3e, 0x47, 0xe7, 0x91, 0xda, 0x5e, 0xc5, 0x3f, 0x6b, 0x1b,
+	0xf3, 0x4f, 0x0e, 0x78, 0x87, 0x3d, 0x63, 0x3f, 0xff, 0x65, 0x1d, 0xbd, 0xff, 0x59, 0x51, 0x4c,
+	0xff, 0xf3, 0x57, 0x40, 0xe6, 0x3e, 0x02, 0x30, 0x48, 0xe7, 0x67, 0xdd, 0xf2, 0xfe, 0x93, 0xaa,
+	0x56, 0xeb, 0x66, 0x68, 0x26, 0x7e, 0xd5, 0xd6, 0x28, 0x51, 0xb0, 0xda, 0x1a, 0x2d, 0xa2, 0x33,
+	0xaa, 0x36, 0x46, 0xff, 0x50, 0x09, 0x51, 0x3e, 0x2e, 0xcb, 0x0d, 0xf3, 0x2f, 0x64, 0x60, 0xfe,
+	0xde, 0x02, 0xfa, 0xa3, 0x59, 0xe2, 0xe4, 0x8c, 0x1c, 0xaf, 0x5c, 0x63, 0x9b, 0xf4, 0xfe, 0x8c,
+	0x36, 0x69, 0x51, 0x1e, 0x49, 0xba, 0xa5, 0xda, 0x4b, 0xac, 0x00, 0x5d, 0x80, 0x5d, 0xf2, 0xc1,
+	0x27, 0xaf, 0x6f, 0x3e, 0x4b, 0x3d, 0x33, 0xef, 0xad, 0x53, 0xad, 0x73, 0x7a, 0xa1, 0x02, 0xd6,
+	0x5b, 0xf5, 0x55, 0xca, 0x37, 0xd8, 0x94, 0x67, 0x82, 0x2b, 0xca, 0x5c, 0x18, 0x06, 0xe8, 0x3c,
+	0xba, 0xb4, 0xea, 0xd9, 0x95, 0x18, 0x02, 0x7f, 0xed, 0x80, 0xb7, 0xe7, 0xdc, 0xac, 0xdc, 0x7a,
+	0x38, 0x6f, 0x01, 0x99, 0x1b, 0x24, 0x99, 0x5a, 0x1e, 0xb6, 0xed, 0x95, 0x34, 0xef, 0x0d, 0x9d,
+	0x51, 0x07, 0xac, 0xb7, 0xea, 0x28, 0x95, 0x71, 0xaa, 0xa5, 0x03, 0x2d, 0x37, 0xdb, 0x56, 0x8d,
+	0xc1, 0x6b, 0x00, 0x5a, 0xce, 0xcd, 0xca, 0x17, 0x68, 0x79, 0xd8, 0xbe, 0x8e, 0x40, 0xab, 0x87,
+	0xf0, 0x61, 0x81, 0x0f, 0x4b, 0xdb, 0x76, 0x63, 0x4c, 0xdd, 0x08, 0x2b, 0x12, 0x42, 0xaf, 0x0a,
+	0x28, 0x1f, 0xfe, 0x88, 0x06, 0x01, 0xac, 0x9d, 0x25, 0x48, 0xc4, 0xcc, 0x14, 0xd4, 0x7f, 0xe7,
+	0xd4, 0x9b, 0xa6, 0x27, 0x67, 0x96, 0x9e, 0xe6, 0xa2, 0x71, 0x43, 0x46, 0x34, 0xbe, 0x45, 0x9f,
+	0xfe, 0x98, 0x18, 0xe8, 0x0b, 0x0b, 0xda, 0xce, 0x5d, 0xd1, 0x1e, 0x51, 0x0d, 0xaf, 0xcc, 0xbf,
+	0x6e, 0x85, 0xd5, 0xba, 0xc6, 0xa8, 0xbf, 0x02, 0x48, 0x99, 0x7f, 0xf8, 0x40, 0xdd, 0x55, 0xc8,
+	0xaf, 0x31, 0x7a, 0x5d, 0x2b, 0x0b, 0xfb, 0xd1, 0x06, 0x7a, 0x03, 0xc8, 0xdc, 0x3a, 0x58, 0x97,
+	0xb1, 0x05, 0xa5, 0xd6, 0x6c, 0xc6, 0x3b, 0x81, 0x2e, 0x8b, 0xb1, 0xd7, 0x7e, 0x3f, 0x75, 0xc4,
+	0xf1, 0x10, 0xea, 0x24, 0x3f, 0x29, 0xda, 0xce, 0x34, 0xe9, 0x1b, 0x36, 0x75, 0x87, 0x76, 0x37,
+	0xf5, 0xab, 0x40, 0x4f, 0xce, 0x8d, 0xf6, 0x1b, 0x10, 0x3f, 0x37, 0xbc, 0xb5, 0x3b, 0x14, 0x0d,
+	0xb0, 0x80, 0xa6, 0x52, 0x00, 0xde, 0x64, 0xba, 0x4d, 0x4b, 0xdd, 0x99, 0xf7, 0x9e, 0x30, 0x16,
+	0xf6, 0xae, 0x02, 0xa8, 0x12, 0x31, 0xf4, 0xba, 0x95, 0xac, 0x6a, 0x92, 0x90, 0x29, 0xab, 0x79,
+	0x8c, 0xc8, 0xba, 0x81, 0x9a, 0x07, 0x59, 0xa9, 0xbf, 0x01, 0x8b, 0xdf, 0x34, 0xe0, 0xa4, 0x85,
+	0x5a, 0x55, 0xe0, 0xa5, 0xe8, 0x5e, 0xd7, 0x3d, 0x05, 0x5f, 0x9f, 0x46, 0x7b, 0x80, 0xcc, 0x75,
+	0x66, 0x09, 0xed, 0x34, 0x0b, 0xa8, 0xe6, 0x44, 0x2e, 0xdb, 0x27, 0x44, 0x01, 0x5e, 0xe4, 0x31,
+	0x29, 0x20, 0x1c, 0x4a, 0x48, 0xd6, 0x5a, 0x98, 0x35, 0xed, 0x0c, 0x80, 0x94, 0xf9, 0x12, 0xaa,
+	0x19, 0xc9, 0x96, 0x97, 0x7d, 0xcd, 0x48, 0xb6, 0xbe, 0xcf, 0x6a, 0x6d, 0x5d, 0xf5, 0x3c, 0xce,
+	0x46, 0x72, 0xf6, 0x98, 0x6a, 0x5d, 0x7a, 0x3e, 0xac, 0xfb, 0x1d, 0x80, 0x4b, 0xac, 0x7a, 0x22,
+	0xd4, 0xdd, 0x85, 0xdd, 0x03, 0xeb, 0x75, 0xad, 0x2a, 0xf4, 0xc2, 0x18, 0x7a, 0x4e, 0xe6, 0x56,
+	0x1a, 0x0e, 0x8c, 0x3a, 0xa3, 0x8b, 0xba, 0x32, 0xbe, 0x11, 0x01, 0x57, 0xa3, 0x95, 0x85, 0x09,
+	0x88, 0x6d, 0xf6, 0x03, 0x80, 0x37, 0x5b, 0xe4, 0xd8, 0xd4, 0xca, 0x02, 0x2a, 0x0a, 0x2c, 0xc5,
+	0xdd, 0x05, 0xd1, 0x25, 0x62, 0x48, 0xc8, 0x12, 0xc2, 0x08, 0x40, 0x57, 0xc6, 0x37, 0x22, 0xc4,
+	0x3a, 0xaa, 0xa5, 0x14, 0x2b, 0x51, 0x3f, 0x01, 0xcb, 0x7b, 0x56, 0xc4, 0xef, 0xe8, 0x82, 0x6f,
+	0x91, 0xf4, 0xba, 0x56, 0x17, 0x71, 0xe3, 0x04, 0xbd, 0x2c, 0x73, 0x8c, 0x41, 0xb6, 0x8c, 0x73,
+	0x45, 0x73, 0x38, 0x8b, 0x31, 0x22, 0xa7, 0x07, 0xad, 0x2e, 0xc2, 0xd5, 0xb0, 0xc5, 0x7e, 0x02,
+	0x70, 0x89, 0x55, 0x8e, 0x67, 0x46, 0x9e, 0xcd, 0xab, 0x6d, 0x33, 0xf2, 0xec, 0x5e, 0xfd, 0x22,
+	0x29, 0x5b, 0x30, 0x12, 0xd1, 0x8d, 0x2f, 0x9f, 0x5c, 0x16, 0x63, 0x44, 0xb0, 0x76, 0x57, 0x49,
+	0x06, 0xc4, 0x12, 0xfe, 0x08, 0xe0, 0x12, 0xab, 0xe4, 0xc2, 0x2c, 0xa1, 0xcd, 0x8b, 0x5b, 0xb3,
+	0x84, 0x76, 0x2f, 0x36, 0x4d, 0xb0, 0x34, 0x1e, 0x1a, 0xae, 0x8c, 0x6f, 0x2a, 0x2c, 0xe9, 0xd2,
+	0x60, 0x99, 0x02, 0x70, 0x89, 0xd5, 0x1b, 0x1e, 0xb3, 0x48, 0x36, 0xaf, 0xff, 0xcc, 0x22, 0xd9,
+	0xbd, 0x30, 0x42, 0xfd, 0xd9, 0x46, 0x23, 0x89, 0xa2, 0xf1, 0xf6, 0x84, 0xcb, 0x62, 0x8c, 0x88,
+	0xd7, 0x81, 0xee, 0x35, 0x89, 0x17, 0x27, 0xfb, 0x14, 0x6a, 0xbb, 0xbd, 0x0e, 0xb8, 0x22, 0x47,
+	0xaf, 0x98, 0x6a, 0x2c, 0xaa, 0xc1, 0xdd, 0xeb, 0x6a, 0x2a, 0xb2, 0x21, 0x4e, 0xc2, 0x43, 0x3b,
+	0x5c, 0x9c, 0xbd, 0x6f, 0x66, 0x5e, 0x43, 0xd2, 0x50, 0x97, 0xc5, 0x18, 0xd1, 0x02, 0x87, 0xee,
+	0x2b, 0x29, 0x42, 0x68, 0xc9, 0x3d, 0x56, 0xc3, 0x41, 0xeb, 0xab, 0x87, 0x3a, 0x37, 0x0d, 0x85,
+	0xf7, 0x6b, 0xb0, 0x12, 0x1a, 0x8b, 0x21, 0x4f, 0xc4, 0xd0, 0xa0, 0x8d, 0x0e, 0x32, 0x82, 0xbe,
+	0xa6, 0x03, 0xf3, 0x18, 0xd1, 0xc1, 0x23, 0x54, 0xd7, 0xb5, 0xe8, 0xa0, 0xa9, 0x7f, 0xae, 0xd2,
+	0x49, 0x52, 0xef, 0x3b, 0x72, 0x35, 0x94, 0xc9, 0xd9, 0xdc, 0x5c, 0x6c, 0x07, 0xab, 0xd7, 0xc5,
+	0x14, 0xdf, 0xf4, 0x42, 0x23, 0x40, 0xe6, 0x1e, 0x30, 0x6b, 0xc6, 0x69, 0xd6, 0x82, 0x65, 0xa2,
+	0x64, 0x78, 0x42, 0xb4, 0xf4, 0x20, 0xe2, 0x8a, 0x38, 0xbd, 0xed, 0xe1, 0xf2, 0x96, 0x03, 0xae,
+	0xc8, 0x51, 0xb7, 0x9b, 0xbd, 0x26, 0x77, 0x23, 0xc4, 0xec, 0x35, 0x79, 0x9a, 0x02, 0x68, 0xd8,
+	0x0e, 0x31, 0x86, 0xc3, 0x7d, 0x16, 0x31, 0xa6, 0x31, 0xa2, 0x8b, 0x8d, 0xae, 0xf9, 0x43, 0x0c,
+	0xd6, 0xc9, 0x61, 0x07, 0x5c, 0x91, 0xa3, 0xc4, 0x34, 0xeb, 0x24, 0x77, 0xcd, 0x6e, 0xd6, 0x49,
+	0x9e, 0xfa, 0xd5, 0xd6, 0x8b, 0x32, 0xf2, 0xca, 0xd9, 0x93, 0x24, 0x7b, 0x4c, 0xf5, 0x22, 0x7a,
+	0x1e, 0xbd, 0x68, 0x03, 0x5c, 0xa8, 0x95, 0x92, 0x94, 0x2b, 0x5b, 0x96, 0xb9, 0xf2, 0xd7, 0xb5,
+	0xc2, 0xf6, 0x59, 0x22, 0x86, 0xfe, 0xab, 0x53, 0x94, 0xb9, 0x30, 0xb5, 0x1e, 0xb2, 0xd3, 0x47,
+	0xde, 0x9b, 0xf9, 0x62, 0x5c, 0x39, 0x75, 0x29, 0x3d, 0xba, 0x27, 0x75, 0x72, 0x50, 0x39, 0x30,
+	0xaa, 0x16, 0xea, 0xca, 0xd7, 0xe7, 0x95, 0xa1, 0x73, 0xdc, 0xa6, 0xae, 0xd4, 0xb1, 0xfd, 0xa9,
+	0xd1, 0x0f, 0x1b, 0x34, 0x99, 0x4e, 0x8c, 0x2b, 0xfb, 0xce, 0xa7, 0x0e, 0x7f, 0xa4, 0x0c, 0x7d,
+	0xc8, 0x2c, 0x60, 0x1a, 0x3d, 0x8d, 0x1e, 0x1a, 0x00, 0xe6, 0x46, 0x3e, 0x16, 0x0b, 0x87, 0xfc,
+	0xe4, 0x8f, 0x46, 0x34, 0xbd, 0x94, 0x10, 0xa3, 0xac, 0x69, 0xa4, 0xbb, 0x8a, 0xfc, 0x2d, 0x89,
+	0xb5, 0xff, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x70, 0x16, 0xee, 0xdc, 0xee, 0x42, 0x00, 0x00,
 }

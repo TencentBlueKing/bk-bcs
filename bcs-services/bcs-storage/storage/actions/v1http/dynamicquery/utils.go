@@ -188,14 +188,14 @@ func (rd *reqDynamic) generateFilter() error {
 	return nil
 }
 
-func (rd *reqDynamic) queryDynamic() ([]interface{}, error) {
+func (rd *reqDynamic) queryDynamic() ([]operator.M, error) {
 	if err := rd.generateFilter(); err != nil {
 		return nil, err
 	}
 	return rd.get(rd.getFeat())
 }
 
-func (rd *reqDynamic) get(condition *operator.Condition) ([]interface{}, error) {
+func (rd *reqDynamic) get(condition *operator.Condition) ([]operator.M, error) {
 	getOption := &lib.StoreGetOption{
 		Fields: rd.getSelector(),
 		Offset: rd.getOffset(),
@@ -206,10 +206,10 @@ func (rd *reqDynamic) get(condition *operator.Condition) ([]interface{}, error) 
 	mList, err := rd.store.Get(rd.req.Request.Context(), rd.getTable(), getOption)
 	if err != nil {
 		blog.Errorf("Failed to query. err: %v", err)
-		return nil, fmt.Errorf("Failed to query. err: %v", err)
+		return nil, fmt.Errorf("failed to query. err: %v", err)
 	}
 
-	return []interface{}{mList}, nil
+	return mList, nil
 }
 
 func getQueryJSON(s url.Values) (p []byte) {
@@ -227,7 +227,7 @@ func urlPath(oldURL string) string {
 	return urlPrefix + oldURL
 }
 
-func fetchNamespace(r []interface{}, result []string) []string {
+func fetchNamespace(r []operator.M, result []string) []string {
 	if result == nil {
 		result = make([]string, 0)
 	}
@@ -238,12 +238,7 @@ func fetchNamespace(r []interface{}, result []string) []string {
 	}
 
 	for _, item := range r {
-		mapItem, ok := item.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		ns, ok := mapItem[namespaceTag]
+		ns, ok := item[namespaceTag]
 		if !ok {
 			continue
 		}

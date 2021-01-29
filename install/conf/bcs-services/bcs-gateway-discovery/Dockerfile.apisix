@@ -1,0 +1,25 @@
+FROM centos:centos7
+
+#for command envsubst
+RUN yum install -y gettext
+
+# install openresty & apisix
+RUN yum install -y yum-utils && yum-config-manager --add-repo https://openresty.org/package/centos/openresty.repo \
+    sed 's/$baseurl/7/g' /etc/yum.repos.d/openresty.repo && yum install -y openresty
+COPY apisix-2.1-0.el7.noarch.rpm /tmp/
+RUN cd /tmp/ && rpm -ivh apisix-2.1-0.el7.noarch.rpm
+#install apisix plugin
+COPY ./apisix/ /usr/local/apisix/apisix/plugins/
+#apisix configuration
+COPY config.yaml.template /usr/local/apisix/conf
+RUN sed -i '202a\ \ - bkbcs-auth' /usr/local/apisix/conf/config-default.yaml
+
+RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert/bcs
+RUN mkdir -p /data/bcs/bcs-api-gateway
+
+ADD apisix-start.sh /data/bcs/bcs-api-gateway/
+RUN chmod +x /data/bcs/bcs-api-gateway/apisix-start.sh
+
+WORKDIR /data/bcs/bcs-api-gateway/
+CMD ["/data/bcs/bcs-api-gateway/apisix-start.sh"]
+

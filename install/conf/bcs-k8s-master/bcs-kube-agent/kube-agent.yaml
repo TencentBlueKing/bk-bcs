@@ -38,9 +38,10 @@ spec:
           image: ${kubeAgentImage}
           imagePullPolicy: IfNotPresent
           args:
-            - --bke-address=${bkeAddress}
+            - --bke-address="${bkeAddress}"
             - --cluster-id=${clusterId}
-            - --external-proxy-addresses=${kubeAgentProxy}
+            - --external-proxy-addresses="${kubeAgentProxy}"
+            - --use-websocket=${kubeAgentWSTunnel}
           env:
             - name: REGISTER_TOKEN
               valueFrom:

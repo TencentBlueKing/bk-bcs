@@ -49,12 +49,21 @@ const (
 	createTimeTag = "createTime"
 	eventTimeTag  = "eventTime"
 	timeLayout    = "2006-01-02 15:04:05"
+
+	nameSpaceTag    = "namespace"
+	resourceTypeTag = "resourceType"
+	resourceKindTag = "resourceKind"
+	resourceNameTag = "resourceName"
+
+	EventResource = "Event"
 )
 
 var needTimeFormatList = [...]string{createTimeTag, eventTimeTag}
 var conditionTagList = [...]string{
 	idTag, envTag, kindTag, levelTag, componentTag, typeTag, clusterIDTag,
 	"extraInfo.name", "extraInfo.namespace", "extraInfo.kind"}
+var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typeTag,
+	clusterIDTag, nameSpaceTag, resourceTypeTag, resourceKindTag, resourceNameTag}
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/event"

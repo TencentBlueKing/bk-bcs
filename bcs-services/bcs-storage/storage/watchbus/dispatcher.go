@@ -69,7 +69,7 @@ func (eb *EventBus) createListener(topic string) (chan *drivers.WatchEvent, erro
 	return listenerCh, nil
 }
 
-// Subscribe subscribe event for certain topic, here hopic is database table
+// Subscribe subscribe event for certain topic, here topic is database table
 func (eb *EventBus) Subscribe(topic, uuid string, ch chan *drivers.WatchEvent) error {
 	eb.sublock.Lock()
 	defer eb.sublock.Unlock()

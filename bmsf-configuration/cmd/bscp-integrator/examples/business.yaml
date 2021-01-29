@@ -1,9 +1,0 @@
-kind: business
-version: v1
-op: create
-spec:
-    businessName: business-itg
-    depid: Blueking
-    dbid: db01
-    dbname: testdb
-    memo: created by itg

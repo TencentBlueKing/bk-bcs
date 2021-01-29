@@ -26,6 +26,9 @@ const (
 
 	// EmptyStrategy is empty json string for release.
 	EmptyStrategy = "{}"
+
+	// EmptyContentIndex is empty json string for content index.
+	EmptyContentIndex = "{}"
 )
 
 // SidecarLabels is app sidecar instance labels struct.
@@ -45,73 +48,263 @@ type SidecarLabels struct {
 	}
 */
 
-// Strategy is struct of strategies in release.
-type Strategy struct {
-	Appid string
+// ContentIndex is config commit content index struct.
+type ContentIndex struct {
+	// LabelsOr is content index labels in strategy which control "OR".
+	LabelsOr []map[string]string
 
-	// NOTE: it is OR logical relationship in clusterid zoneid dc ip levels, it is OR logical relationship
-	// in labels OR level, it is AND logical relationship in labels AND level, it is AND logical relationship
-	// between clusterid zoneid dc ip labels(Labels && LabelsAnd) levels, it is AND logical relationship between
-	// Labels and LabelsAnd.
+	// LabelsAnd is content index labels in strategy which control "AND".
+	LabelsAnd []map[string]string
 
-	Clusterids []string
-	Zoneids    []string
-	Dcs        []string
-	IPs        []string
+	/*
+	   	example:
+	   	{
+	   		"LabelsOr": [
+	   			{
+	   				"k1":"1",        // k1=1
+	   				"k2":"1,2,3",    // k2 in (1,2,3)
+	   				"k3":"ne|1,2,3", // k3 not in (1,2,3)
+	   				"k4":"gt|1",     // k4 > 1
+	   			},
+	   			{
+	   				"k1":"1",        // k1=1
+	   				"k2":"1,2,3",    // k2 in (1,2,3)
+	   				"k3":"ne|1,2,3", // k3 not in (1,2,3)
+	   				"k4":"gt|1",     // k4 > 1
+	   			}
+	           ],
+	   		"LabelsAnd": [
+	   			{
+	   				"k3":"1",	  // k3=1
+	   				"k4":"1,2,3", // k4 in (1,2,3)
+	   			},
+	   			{
+	   				"k3":"1",	  // k3=1
+	   				"k4":"1,2,3", // k4 in (1,2,3)
+	   			}
+	           ]
+	   	}
 
-	// Labels is instance labels in strategy which control "OR".
-	Labels map[string]string
+	   	Labels kv relation ops,
+	   	    format:
+	   		    "KEY": "OP|VALUE"
 
-	// LabelsAnd is instance labels in strategy which control "AND".
-	LabelsAnd map[string]string
-
-	// NOTE: when Labels(OR) and LabelsAnd(AND) both exist, the strategy need AND logical relationship,
-	// eg. (Labels AND LabelsAnd), the strategy matched when all labels logical matched.
-	// The labels support IN (like SQL) grammar, eg. k=1,2,3, mean k in (1,2,3)
-
-	// eg. (clusterid IN(...)) && (zoneid IN(...)) && (dc IN(...)) && (ip IN(...)) && (labels (K IN(...) || K IN(...) ...)) && (labelsAnd (K IN(...) && K IN(...) ...))
+	   	    OP:
+	   		    1.=: empty or eq
+	   		    2.!=: ne
+	   		    3.>: gt
+	   		    4.<: lt
+	   		    5.>=: ge
+	   		    6.<=: le
+	*/
 }
 
-/*
-	example:
-	{
-		"Appid":"appid",
-		"Clusterids":
-			["clusterid01","clusterid02","clusterid03"],
-		"Zoneids":
-			["zoneid01","zoneid02","zoneid03"],
-		"Dcs":
-			["dc01","dc02","dc03"],
-		"IPs":
-			["X.X.X.1","X.X.X.2","X.X.X.3"],
-		"Labels":
-			{
-				"k1":"1",        // k1=1
-				"k2":"1,2,3",    // k2 in (1,2,3)
-				"k3":"ne|1,2,3", // k3 not in (1,2,3)
-				"k4":"gt|1",     // k4 > 1
-			},
-		"LabelsAnd":
-			{
-				"k3":"1",	  // k3=1
-				"k4":"1,2,3", // k4 in (1,2,3)
-			}
+// MatchLabels matchs content index strategy base on labels info.
+func (index *ContentIndex) MatchLabels(labels map[string]string) bool {
+	if len(index.LabelsOr) == 0 && len(index.LabelsAnd) == 0 {
+		// NOTE: empty index labels would not match anything.
+		// It's different with normal release strategy.
+		return false
 	}
 
-	Labels kv relation ops,
-		format:
-			"KEY": "OP|VALUE"
+	if len(labels) == 0 {
+		// NOTE: empty node instance labels, would not match anything.
+		// Cause we can not index the content by nothing for instance.
+		return false
+	}
 
-		OP:
-			1.=: empty or eq
-			2.!=: ne
-			3.>: gt
-			4.<: lt
-			5.>=: ge
-			6.<=: le
-*/
+	// match IN multi LabelsOr...
+	for _, labelsOr := range index.LabelsOr {
+		if index.matchLabelsOr(labelsOr, labels) {
+			return true
+		}
+	}
 
-// ValidateLabels checks labels formats for strategy.
+	// match IN multi LabelsAnd...
+	for _, labelsAnd := range index.LabelsAnd {
+		if index.matchLabelsAnd(labelsAnd, labels) {
+			return true
+		}
+	}
+	return false
+}
+
+func (index *ContentIndex) matchLabelsOr(labelsOr, labels map[string]string) bool {
+	if len(labelsOr) == 0 {
+		return false
+	}
+
+	for k, v := range labelsOr {
+		// parse v from strategy like k=gt|1,2,3.
+		op, vals, err := ParseLabelVals(v)
+		if err != nil {
+			return false
+		}
+
+		if IsLabelMatch(labels[k], op, vals) {
+			return true
+		}
+	}
+
+	// all labels OR not matched.
+	return false
+}
+
+func (index *ContentIndex) matchLabelsAnd(labelsAnd, labels map[string]string) bool {
+	if len(labelsAnd) == 0 {
+		return false
+	}
+
+	for k, v := range labelsAnd {
+		// parse v from strategy like k=gt|1,2,3.
+		op, vals, err := ParseLabelVals(v)
+		if err != nil {
+			return false
+		}
+
+		if !IsLabelMatch(labels[k], op, vals) {
+			return false
+		}
+	}
+
+	// all labels AND matched.
+	return true
+}
+
+// MatchInstance matchs content index strategy base on instance info.
+func (index *ContentIndex) MatchInstance(instance *pbcommon.AppInstance) bool {
+	// instance labels.
+	insLabels := SidecarLabels{}
+	if err := json.Unmarshal([]byte(instance.Labels), &insLabels); err != nil {
+		// unknow instance labels.
+		return false
+	}
+	return index.MatchLabels(insLabels.Labels)
+}
+
+// Strategy is struct of strategies in release.
+type Strategy struct {
+	// NOTE: it is OR logical relationship in labels OR level, it is AND logical relationship in labels AND level,
+	// it is IN(OR) logical relationship between Labels and LabelsAnd.
+
+	// LabelsOr is instance labels in strategy which control "OR".
+	LabelsOr []map[string]string
+
+	// LabelsAnd is instance labels in strategy which control "AND".
+	LabelsAnd []map[string]string
+
+	// NOTE: when LabelsOr(OR) and LabelsAnd(AND) both exist, the strategy need IN(OR) logical relationship,
+	// eg. (IN(LabelsOr, LabelsAnd), the strategy matched when any labels logical matched.
+
+	/*
+	   	example:
+	   	{
+	   		"LabelsOr": [
+	   			{
+	   				"k1":"1",        // k1=1
+	   				"k2":"1,2,3",    // k2 in (1,2,3)
+	   				"k3":"ne|1,2,3", // k3 not in (1,2,3)
+	   				"k4":"gt|1",     // k4 > 1
+	   			},
+	   			{
+	   				"k1":"1",        // k1=1
+	   				"k2":"1,2,3",    // k2 in (1,2,3)
+	   				"k3":"ne|1,2,3", // k3 not in (1,2,3)
+	   				"k4":"gt|1",     // k4 > 1
+	   			}
+	        ],
+	   		"LabelsAnd": [
+	   			{
+	   				"k3":"1",	  // k3=1
+	   				"k4":"1,2,3", // k4 in (1,2,3)
+	   			},
+	   			{
+	   				"k3":"1",	  // k3=1
+	   				"k4":"1,2,3", // k4 in (1,2,3)
+	   			}
+	        ]
+	   	}
+
+	   	Labels kv relation ops,
+	   		format:
+	   			"KEY": "OP|VALUE"
+
+	   		OP:
+	   			1.=: empty or eq
+	   			2.!=: ne
+	   			3.>: gt
+	   			4.<: lt
+	   			5.>=: ge
+	   			6.<=: le
+	*/
+}
+
+// MatchLabels matchs strategy base on labels info.
+func (s *Strategy) MatchLabels(labels map[string]string) bool {
+	if len(s.LabelsOr) == 0 && len(s.LabelsAnd) == 0 {
+		// NOTE: empty labels is the strategy which could be found by any instance..
+		return true
+	}
+
+	// match IN multi LabelsOr...
+	for _, labelsOr := range s.LabelsOr {
+		if s.matchLabelsOr(labelsOr, labels) {
+			return true
+		}
+	}
+
+	// match IN multi LabelsAnd...
+	for _, labelsAnd := range s.LabelsAnd {
+		if s.matchLabelsAnd(labelsAnd, labels) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Strategy) matchLabelsOr(labelsOr, labels map[string]string) bool {
+	if len(labelsOr) == 0 {
+		return false
+	}
+
+	for k, v := range labelsOr {
+		// parse v from strategy like k=gt|1,2,3.
+		op, vals, err := ParseLabelVals(v)
+		if err != nil {
+			return false
+		}
+
+		if IsLabelMatch(labels[k], op, vals) {
+			return true
+		}
+	}
+
+	// all labels OR not matched.
+	return false
+}
+
+func (s *Strategy) matchLabelsAnd(labelsAnd, labels map[string]string) bool {
+	if len(labelsAnd) == 0 {
+		return false
+	}
+
+	for k, v := range labelsAnd {
+		// parse v from strategy like k=gt|1,2,3.
+		op, vals, err := ParseLabelVals(v)
+		if err != nil {
+			return false
+		}
+
+		if !IsLabelMatch(labels[k], op, vals) {
+			return false
+		}
+	}
+
+	// all labels AND matched.
+	return true
+}
+
+// ValidateLabels checks labels formats for strategy or content index.
 func ValidateLabels(labels map[string]string) error {
 	if len(labels) == 0 {
 		// just empty labels.
@@ -283,150 +476,18 @@ func (h *Handler) Matcher() Matcher {
 
 // default matcher impl.
 var defaultMatcher = func(strategy *Strategy, instance *pbcommon.AppInstance) bool {
-	return matchWhitelist(strategy, instance)
-}
-
-// matchWhitelist matchs strategy.
-func matchWhitelist(strategy *Strategy, instance *pbcommon.AppInstance) bool {
-	// #lizard forgives
-	if strategy.Appid != instance.Appid {
+	if strategy == nil || instance == nil {
 		return false
 	}
+	return defaultMatch(strategy, instance)
+}
 
-	// matching results, cluster level.
-	isClusteridMatched := false
-
-	// matching results, zoneid level.
-	isZoneidMatched := false
-
-	// matching results, dc level.
-	isDcMatched := false
-
-	// matching results, ip level.
-	isIPMatched := false
-
-	// matching results, labels OR level.
-	isLabelsMatched := false
-
-	// matching results, labels AND level.
-	isLabelsAndMatched := false
-
-	if len(strategy.Clusterids) != 0 {
-		for _, clusterid := range strategy.Clusterids {
-			if clusterid == instance.Clusterid {
-				isClusteridMatched = true
-				break
-			}
-		}
-
-		// not matched cluster level.
-		if !isClusteridMatched {
-			return false
-		}
-	}
-
-	if len(strategy.Zoneids) != 0 {
-		for _, zoneid := range strategy.Zoneids {
-			if zoneid == instance.Zoneid {
-				isZoneidMatched = true
-				break
-			}
-		}
-
-		// not matched zone level.
-		if !isZoneidMatched {
-			return false
-		}
-	}
-
-	if len(strategy.Dcs) != 0 {
-		for _, dc := range strategy.Dcs {
-			if dc == instance.Dc {
-				isDcMatched = true
-				break
-			}
-		}
-
-		// not matched dc level.
-		if !isDcMatched {
-			return false
-		}
-	}
-
-	if len(strategy.IPs) != 0 {
-		for _, ip := range strategy.IPs {
-			if ip == instance.IP {
-				isIPMatched = true
-				break
-			}
-		}
-
-		// not matched ip level.
-		if !isIPMatched {
-			return false
-		}
-	}
-
-	if len(strategy.Labels) == 0 && len(strategy.LabelsAnd) == 0 {
-		// empty labels.
-		return true
-	}
-
-	// instance labels.
+func defaultMatch(strategy *Strategy, instance *pbcommon.AppInstance) bool {
+	// #lizard forgives
 	insLabels := SidecarLabels{}
 	if err := json.Unmarshal([]byte(instance.Labels), &insLabels); err != nil {
 		// unknow instance labels.
 		return false
 	}
-
-	// Labels is labels for "OR".
-	if len(strategy.Labels) != 0 {
-		for k, v := range strategy.Labels {
-			// parse v from strategy like k=gt|1,2,3.
-			op, vals, err := ParseLabelVals(v)
-			if err != nil {
-				return false
-			}
-
-			if IsLabelMatch(insLabels.Labels[k], op, vals) {
-				isLabelsMatched = true
-				// no need to match other labels in OR mode.
-				break
-			}
-		}
-	} else {
-		// empty OR labels, mark flag true, and contine check LabelsAnd.
-		isLabelsMatched = true
-	}
-
-	// LabelsAnd is labels for "AND".
-	if len(strategy.LabelsAnd) != 0 {
-		// AND mode, try to find and mark FALSE.
-		isLabelsAndMatched = true
-
-		for k, v := range strategy.LabelsAnd {
-			// parse v from strategy like k=gt|1,2,3.
-			op, vals, err := ParseLabelVals(v)
-			if err != nil {
-				return false
-			}
-
-			if !IsLabelMatch(insLabels.Labels[k], op, vals) {
-				// no need to match other labels in AND mode.
-				isLabelsAndMatched = false
-				break
-			}
-		}
-	} else {
-		// empty ADN labels, mark flag true, and final result base on OR labels.
-		isLabelsAndMatched = true
-	}
-
-	// check final OR && AND labels result.
-	if isLabelsMatched && isLabelsAndMatched {
-		// labels matched.
-		return true
-	}
-
-	return false
+	return strategy.MatchLabels(insLabels.Labels)
 }

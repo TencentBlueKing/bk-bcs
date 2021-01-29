@@ -56,6 +56,7 @@ type BcsLogConfigSpec struct {
 	ContainerConfs    []ContainerConf   `json:"containerConfs"`
 	PodLabels         bool              `json:"podLabels"`
 	Selector          PodSelector       `json:"selector"`
+	PackageCollection bool              `json:"packageCollection"`
 }
 
 // ContainerConf defines log config for containers

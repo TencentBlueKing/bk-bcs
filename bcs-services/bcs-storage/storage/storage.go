@@ -29,8 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/rdiscover"
-
 	restful "github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -39,7 +37,6 @@ import (
 type StorageServer struct {
 	conf         *options.StorageOptions
 	httpServer   *httpserver.HttpServer
-	rd           *rdiscover.RegDiscover
 	etcdRegistry registry.Registry
 }
 
@@ -61,7 +58,6 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 	}
 
 	// RDiscover
-	s.rd = rdiscover.NewRegDiscover(s.conf)
 	if s.conf.Etcd.Feature {
 		tlsCfg, err := s.conf.Etcd.GetTLSConfig()
 		if err != nil {
@@ -124,18 +120,12 @@ func (s *StorageServer) Start() error {
 		chErr <- err
 	}()
 
-	// register and discover
-	go func() {
-		err := s.rd.Start()
-		blog.Errorf("storage rdiscover start failed! err:%s", err.Error())
-		chErr <- err
-	}()
-
 	runPrometheusMetrics(s.conf)
 
 	// startDaemon
 	actions.StartActionDaemon()
 
+	// register and discover
 	if s.conf.Etcd.Feature {
 		if err := s.etcdRegistry.Register(); err != nil {
 			blog.Errorf("storage etcd registry failed, %s", err.Error())

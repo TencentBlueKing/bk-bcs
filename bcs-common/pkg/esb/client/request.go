@@ -45,8 +45,9 @@ type Request struct {
 	// http header
 	headers http.Header
 
-	// http body
-	body map[string]interface{}
+	// http body, map or json
+	mapBody  map[string]interface{}
+	jsonBody interface{}
 
 	// http scheme
 	scheme string
@@ -148,8 +149,29 @@ func (r *Request) subResource(subPath string) *Request {
 
 // Body set http body
 func (r *Request) Body(body map[string]interface{}) *Request {
-	r.body = body
+	r.mapBody = body
 	return r
+}
+
+// WithJSON set http json body
+func (r *Request) WithJSON(jsonBody interface{}) *Request {
+	r.jsonBody = jsonBody
+	return r
+}
+
+func (r *Request) getBody() interface{} {
+	if r.mapBody != nil {
+		if len(r.client.credential) > 0 {
+			for key, obj := range r.client.credential {
+				r.mapBody[key] = obj
+			}
+		}
+		return r.mapBody
+	}
+	if r.jsonBody != nil {
+		return r.jsonBody
+	}
+	return make(map[string]string)
 }
 
 // WrapURL use subPath args and params to fill url
@@ -228,16 +250,8 @@ func (r *Request) Do() *Result {
 
 			r.tryThrottle(url)
 
-			if len(r.body) == 0 {
-				r.body = make(map[string]interface{})
-			}
-			if len(r.client.credential) > 0 {
-				for key, obj := range r.client.credential {
-					r.body[key] = obj
-				}
-			}
-
-			bodyData, err := json.Marshal(r.body)
+			body := r.getBody()
+			bodyData, err := json.Marshal(body)
 			if err != nil {
 				result.Err = fmt.Errorf("invalid body")
 				return result

@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 )
 
+// HealthChecker check k8s cluster healthz
 type HealthChecker struct {
 	k8sConfig *options.K8sConfig
 }
@@ -89,6 +90,7 @@ func (h *HealthChecker) healthz(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Run start http server
 func (h *HealthChecker) Run(stopChan <-chan struct{}) {
 	addr := "0.0.0.0:8000"
 	http.HandleFunc("/healthz/", h.healthz)

@@ -1,8 +1,8 @@
 {
-  "address": "0.0.0.0",
+  "address": "${localIp}",
   "port": ${bcsUserManagerPort},
   "metric_port": ${bcsUserManagerMetricPort},
-  "insecure_address": "0.0.0.0",
+  "insecure_address": "127.0.0.1",
   "insecure_port": ${bcsUserManagerInsecurePort},
   "bcs_zookeeper": "${bcsZkHost}",
   "ca_file": "${caFile}",
@@ -29,10 +29,10 @@
     "ccs_path": "${tkeCcsPath}"
   },
   "etcdRegistry": {
-    "etcd_feature": ${etcdFeature},
-    "etcd_address": "${etcdAddress}",
-    "etcd_ca": "${etcdCAFile}",
-    "etcd_cert": "${etcdCertFile}",
-    "etcd_key": "${etcdKeyFile}"
+    "etcd_feature": ${bcsEtcdFeature},
+    "etcd_address": "${bcsEtcdHost}",
+    "etcd_ca": "${bcsEtcdCAFile}",
+    "etcd_cert": "${bcsEtcdCertFile}",
+    "etcd_key": "${bcsEtcdKeyFile}"
   }
 }

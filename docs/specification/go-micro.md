@@ -79,6 +79,18 @@ go get -v github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.14.6
 export PATH=$PATH:$GOPATH/bin
 ```
 
+## 服务信息要求
+
+* 服务名称注册注册 ${moduleName}.bkbcs.tencent.com，例如datamanager.bkbcs.tencent.com
+* 默认以grpc方式暴露服务，模块需要集成grpc-gateway，gateway的端口为grpc端口+1
+  * 除兼容老模块http接口部分，新增模块需要以grpc方式提供接口，兼容http接口部分并入grpc-gateway模块中
+  * grpc服务以模块名称命名，例如datamanaer.DataManager
+  * grpc-gateway暴露的http规则需要以模块名称为前缀，例如ip:port/datamanager/v1
+* 基于默认命名规则，bcs-api-gateway提供转发规则
+  * http转发：以/bcsapi/v4/${moduleName}/ => /$moduleName/
+  * grpc转发为透传，例如/datamanager.DataManager/默认转发至服务发现datamanager.bkbcs.tencent.com的服务实例
+* 未依赖go-micro开发模块，集成etcd服务发现时采用bcs-common/pkg/registry
+
 ## 项目初始化示例
 
 ```shell
@@ -117,15 +129,15 @@ Creating service go.micro.service.bcs-data-manager in bcs-data-manager
 ```protoc
 syntax = "proto3";
 
-package bcsdatamanager;
+package datamanager;
 
-option go_package = "proto/bcs-data-manager;bcsdatamanager";
+option go_package = "proto/bcs-data-manager;datamanager";
 ```
 
 定义数据与grpc服务
 
 ```protoc
-service BcsDataManager {
+service DataManager {
     rpc Call(Request) returns (Response) {}
     rpc Stream(StreamingRequest) returns (stream StreamingResponse) {}
     rpc PingPong(stream Ping) returns (stream Pong) {}
@@ -144,7 +156,7 @@ grpc-gateway需要依赖google定义的[annotation](https://github.com/googleapi
 //grpc-gateway requirement
 import "google/api/annotations.proto";
 
-service BcsDataManager {
+service DataManager {
     rpc Call(Request) returns (Response) {
         option (google.api.http) = {
             post: "/v1/hello"

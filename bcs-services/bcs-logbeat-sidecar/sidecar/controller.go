@@ -23,11 +23,11 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
+	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/listers/bk-bcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-logbeat-sidecar/types"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
-	bkbcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/listers/bk-bcs/v1"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"gopkg.in/yaml.v2"
@@ -488,6 +488,11 @@ func (s *SidecarController) produceLogConfParameterV2(container *docker.Containe
 			ToJSON:            true,
 			StdoutDataid:      conf.StdDataId,
 			NonstandardDataid: conf.NonStdDataId,
+		}
+		if logConf.Spec.PackageCollection {
+			pack := new(bool)
+			*pack = true
+			para.Package = pack
 		}
 		para.ExtMeta["io_tencent_bcs_cluster"] = logConf.Spec.ClusterId
 		para.ExtMeta["io_tencent_bcs_pod"] = pod.Name

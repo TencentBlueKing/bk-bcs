@@ -52,6 +52,7 @@ source:
       ".*/bcs-mesos/bcs-container-executor/mesos/.*",
       ".*/bcs-mesos/bcs-process-executor/process-executor/protobuf/.*",
       ".*/bcs-mesos/bcs-scheduler/src/mesosproto/.*",
-      ".*/pkg/mod/.*"
+      ".*/pkg/mod/.*",
+      ".*/bmsf-configuration/.*"
     ]
     

@@ -29,6 +29,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// PermissionForm registe form
 type PermissionForm struct {
 	UserName     string `json:"user_name" validate:"required"`
 	ResourceType string `json:"resource_type" validate:"required"`
@@ -36,17 +37,20 @@ type PermissionForm struct {
 	Role         string `json:"role" validate:"required"`
 }
 
+// PermissionsResp query response for
 type PermissionsResp struct {
 	ResourceType string `json:"resource_type"`
 	Resource     string `json:"resource"`
 	Role         string `json:"role"`
 }
 
+// GetPermissionForm request form
 type GetPermissionForm struct {
 	UserName     string `json:"user_name" validate:"required"`
 	ResourceType string `json:"resource_type" validate:"required"`
 }
 
+// VerifyPermissionForm request form for permission
 type VerifyPermissionForm struct {
 	UserToken    string `json:"user_token" validate:"required"`
 	ResourceType string `json:"resource_type" validate:"required"`
@@ -54,15 +58,18 @@ type VerifyPermissionForm struct {
 	Action       string `json:"action" validate:"required"`
 }
 
+// VerifyPermissionResponse http verify response
 type VerifyPermissionResponse struct {
 	Allowed bool   `json:"allowed"`
 	Message string `json:"message"`
 }
 
+// OwnedPermissions action
 type OwnedPermissions struct {
 	Actions string `json:"actions"`
 }
 
+//UserResourceAction resource operation action
 type UserResourceAction struct {
 	UserId       uint
 	ResourceType string
@@ -70,12 +77,14 @@ type UserResourceAction struct {
 	Actions      string
 }
 
+// UserPermissions user permission definition
 type UserPermissions struct {
 	ResourceType string
 	Resource     string
 	Actions      string
 }
 
+// PermissionsCache local cache for speed up
 var PermissionsCache map[uint][]UserPermissions
 var mutex *sync.RWMutex
 
@@ -316,6 +325,7 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("permission", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+//VerifyPermission [GET] path /usermanager/v1/permissions/verify
 func VerifyPermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -323,6 +333,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 	_ = request.ReadEntity(&form)
 	err := utils.Validate.Struct(&form)
 	if err != nil {
+		blog.Errorf("formation of perssiom request from %s is invalid, %s", request.Request.RemoteAddr, err.Error())
 		metrics.RequestErrorCount.WithLabelValues("permission", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("permission", request.Request.Method).Observe(time.Since(start).Seconds())
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
@@ -331,8 +342,8 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 
 	user, hasExpired := getUserFromToken(form.UserToken)
 	if user == nil {
-		blog.Warnf("usertoken [%s] is invalid", form.UserToken)
-
+		blog.Warnf("usertoken [%s] is invalid from %s, type: %s, resource: %s",
+			form.UserToken, request.Request.RemoteAddr, form.ResourceType, form.Resource)
 		data := utils.CreateResponeData(nil, "success", &VerifyPermissionResponse{
 			Allowed: false,
 			Message: fmt.Sprintf("usertoken [%s] is invalid", form.UserToken),
@@ -341,7 +352,8 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 		return
 	}
 	if hasExpired {
-		blog.Warnf("usertoken [%s] is expired", form.UserToken)
+		blog.Warnf("usertoken [%s] is expired from %s, type: %s, resource: %s",
+			form.UserToken, request.Request.RemoteAddr, form.ResourceType, form.Resource)
 
 		data := utils.CreateResponeData(nil, "success", &VerifyPermissionResponse{
 			Allowed: false,
@@ -359,6 +371,8 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			Allowed: allowed,
 			Message: message,
 		})
+		blog.Infof("user %s access to type: %s, resource: %s, action: %s, permission: %t",
+			user.Name, form.ResourceType, form.Resource, form.Action, allowed)
 		_, _ = response.Write([]byte(data))
 	default:
 		allowed, message := verifyResourceReplica(user.ID, form.ResourceType, "", form.Action)
@@ -367,6 +381,8 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			Allowed: allowed,
 			Message: message,
 		})
+		blog.Infof("user %s access to type: %s, action: %s, permission: %s",
+			user.Name, form.ResourceType, form.Action, allowed)
 		_, _ = response.Write([]byte(data))
 	}
 
@@ -375,14 +391,14 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 }
 
 // verifyResourceReplica verify whether a user have permission for s resource, return true or false
-func verifyResourceReplica(userId uint, resourceType, resource, action string) (bool, string) {
+func verifyResourceReplica(userID uint, resourceType, resource, action string) (bool, string) {
 	var op []OwnedPermissions
 	if resource == "" {
 		//sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select("bcs_roles.actions").
 		//	Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id where bcs_user_resource_roles.user_id = ? and bcs_user_resource_roles.resource_type = ?", userId, resourceType).Scan(&op) //nolint
 
 		mutex.RLock()
-		for _, v := range PermissionsCache[userId] {
+		for _, v := range PermissionsCache[userID] {
 			if v.ResourceType == resourceType {
 				op = append(op, OwnedPermissions{Actions: v.Actions})
 			}
@@ -394,7 +410,7 @@ func verifyResourceReplica(userId uint, resourceType, resource, action string) (
 		//	and (bcs_user_resource_roles.resource = ? or bcs_user_resource_roles.resource = ?)", userId, resourceType, resource, "*").Scan(&op) //nolint
 
 		mutex.RLock()
-		for _, v := range PermissionsCache[userId] {
+		for _, v := range PermissionsCache[userID] {
 			if v.ResourceType == resourceType && (v.Resource == resource || v.Resource == "*") {
 				op = append(op, OwnedPermissions{Actions: v.Actions})
 			}

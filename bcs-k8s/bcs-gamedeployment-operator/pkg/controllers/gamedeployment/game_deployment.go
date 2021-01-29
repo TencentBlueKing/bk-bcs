@@ -33,6 +33,7 @@ import (
 	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/expectations"
 
 	v1 "k8s.io/api/core/v1"
@@ -106,6 +107,7 @@ func NewGameDeploymentController(
 	gdscheme.AddToScheme(scheme.Scheme)
 
 	preDeleteControl := predelete.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
+	preInplaceControl := preinplace.New(kubeClient, hookClient, recorder, hookRunInformer.Lister(), hookTemplateInformer.Lister())
 	gdc := &GameDeploymentController{
 		GroupVersionKind: util.ControllerKind,
 		gdClient:         gdClient,
@@ -115,7 +117,7 @@ func NewGameDeploymentController(
 			hookRunInformer.Lister(),
 			hookTemplateInformer.Lister(),
 			scalecontrol.New(kubeClient, gdClient, recorder, scaleExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
-			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl),
+			updatecontrol.New(kubeClient, recorder, scaleExpectations, updateExpectations, hookRunInformer.Lister(), hookTemplateInformer.Lister(), preDeleteControl, preInplaceControl),
 			NewRealGameDeploymentStatusUpdater(gdClient, deployInformer.Lister(), recorder),
 			history.NewHistory(kubeClient, revInformer.Lister()),
 			revisioncontrol.NewRevisionControl(),

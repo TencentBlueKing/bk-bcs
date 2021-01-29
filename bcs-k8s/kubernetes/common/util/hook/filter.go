@@ -75,3 +75,16 @@ func FilterPreDeleteHookRuns(hrs []*hookv1alpha1.HookRun) []*hookv1alpha1.HookRu
 
 	return preDeleteHookRuns
 }
+
+func FilterPreInplaceHookRuns(hrs []*hookv1alpha1.HookRun) []*hookv1alpha1.HookRun {
+	preInplaceHookRuns := []*hookv1alpha1.HookRun{}
+	for _, hr := range hrs {
+		hookRunType, ok := hr.Labels[HookRunTypeLabel]
+		if ok && hookRunType == HookRunTypePreInplaceLabel {
+			preInplaceHookRuns = append(preInplaceHookRuns, hr)
+		}
+	}
+
+	return preInplaceHookRuns
+}
+

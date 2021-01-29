@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator/pkg/util/canary"
 	hooklister "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/predelete"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/preinplace"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/expectations"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/hotpatchupdate"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/update/inplaceupdate"
@@ -49,7 +50,7 @@ type Interface interface {
 
 func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp expectations.ScaleExpectations,
 	updateExp expectations.UpdateExpectations, hookRunLister hooklister.HookRunLister,
-	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface) Interface {
+	hookTemplateLister hooklister.HookTemplateLister, preDeleteControl predelete.PreDeleteInterface, preInplaceControl preinplace.PreInplaceInterface) Interface {
 	return &realControl{
 		inPlaceControl:     inplaceupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
 		hotPatchControl:    hotpatchupdate.NewForTypedClient(kubeClient, apps.ControllerRevisionHashLabelKey),
@@ -60,6 +61,7 @@ func New(kubeClient clientset.Interface, recorder record.EventRecorder, scaleExp
 		hookRunLister:      hookRunLister,
 		hookTemplateLister: hookTemplateLister,
 		preDeleteControl:   preDeleteControl,
+		preInplaceControl:   preInplaceControl,
 	}
 }
 
@@ -73,6 +75,7 @@ type realControl struct {
 	hookRunLister      hooklister.HookRunLister
 	hookTemplateLister hooklister.HookTemplateLister
 	preDeleteControl   predelete.PreDeleteInterface
+	preInplaceControl   preinplace.PreInplaceInterface
 }
 
 func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
@@ -188,17 +191,37 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 	switch deploy.Spec.UpdateStrategy.Type {
 	case gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType:
-		canDelete, err := c.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
-		if err != nil {
-			return 0, err
-		}
-		if canDelete {
-			if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
-				klog.V(2).Infof("PreDelete Hook run successfully, inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+		if deploy.Spec.PreInplaceUpdateStrategy.Hook != nil  {
+			klog.V(2).Infof("PreInplace Hook check for inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+
+			canInplace, err := c.preInplaceControl.CheckInplace(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
+			if err != nil {
+				return 0, err
 			}
+			if canInplace {
+				if deploy.Spec.PreInplaceUpdateStrategy.Hook != nil {
+					klog.V(2).Infof("PreInplace Hook run successfully, inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+				}
+			} else {
+				klog.V(2).Infof("PreInplace Hook not completed, can't inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+				return 0, nil
+			}
+
 		} else {
-			klog.V(2).Infof("PreDelete Hook not completed, can't inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
-			return 0, nil
+			klog.V(2).Infof("PreDelete Hook check for inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+
+			canDelete, err := c.preDeleteControl.CheckDelete(deploy, pod, newStatus, gdv1alpha1.GameDeploymentInstanceID)
+			if err != nil {
+				return 0, err
+			}
+			if canDelete {
+				if deploy.Spec.PreDeleteUpdateStrategy.Hook != nil {
+					klog.V(2).Infof("PreDelete Hook run successfully, inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+				}
+			} else {
+				klog.V(2).Infof("PreDelete Hook not completed, can't inplace update the pod %s/%s now.", pod.Name, pod.Namespace)
+				return 0, nil
+			}
 		}
 
 		res := c.inPlaceControl.Update(pod, oldRevision, updateRevision, coreControl.GetUpdateOptions())
@@ -215,7 +238,7 @@ func (c *realControl) updatePod(deploy *gdv1alpha1.GameDeployment, coreControl g
 
 		}
 
-		err = fmt.Errorf("find Pod %s update strategy is HotPatch, but the diff not only contains replace operation of spec.containers[x].image", pod)
+		err := fmt.Errorf("find Pod %s update strategy is InPlace, but the diff not only contains replace operation of spec.containers[x].image", pod)
 		c.recorder.Eventf(deploy, v1.EventTypeWarning, "FailedUpdatePodInPlace", "find Pod %s update strategy is InPlace but can not update in-place: %v", pod.Name, err)
 		klog.Warningf("GameDeployment %s/%s can not update Pod %s in-place: v%", deploy.Namespace, deploy.Name, pod.Name, err)
 		return res.DelayDuration, err
