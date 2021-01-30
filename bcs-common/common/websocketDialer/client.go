@@ -24,19 +24,28 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// ConnectAuthorizer is function form for authorize connect
 type ConnectAuthorizer func(proto, address string) bool
 
-func ClientConnect(ctx context.Context, wsURL string, headers http.Header, tlsConfig *tls.Config, dialer *websocket.Dialer, auth ConnectAuthorizer) {
+// ClientConnect do client connection
+func ClientConnect(
+	ctx context.Context, wsURL string, headers http.Header,
+	tlsConfig *tls.Config, dialer *websocket.Dialer, auth ConnectAuthorizer) {
 	if err := connectToProxy(ctx, wsURL, headers, tlsConfig, auth, dialer); err != nil {
 		time.Sleep(time.Duration(5) * time.Second)
 	}
 }
 
-func connectToProxy(rootCtx context.Context, proxyURL string, headers http.Header, tlsConfig *tls.Config, auth ConnectAuthorizer, dialer *websocket.Dialer) error {
+func connectToProxy(
+	rootCtx context.Context, proxyURL string, headers http.Header,
+	tlsConfig *tls.Config, auth ConnectAuthorizer, dialer *websocket.Dialer) error {
 	blog.Infof("connecting to proxy %s", proxyURL)
 
 	if dialer == nil {
-		dialer = &websocket.Dialer{Proxy: http.ProxyFromEnvironment, HandshakeTimeout: HandshakeTimeOut, TLSClientConfig: tlsConfig}
+		dialer = &websocket.Dialer{
+			Proxy:            http.ProxyFromEnvironment,
+			HandshakeTimeout: HandshakeTimeOut,
+			TLSClientConfig:  tlsConfig}
 	}
 	ws, resp, err := dialer.Dial(proxyURL, headers)
 	if err != nil {
@@ -45,11 +54,16 @@ func connectToProxy(rootCtx context.Context, proxyURL string, headers http.Heade
 		} else {
 			rb, err2 := ioutil.ReadAll(resp.Body)
 			if err2 != nil {
-				blog.Errorf("Failed to connect to proxy. Response status: %v - %v. Couldn't read response body (err: %v)", resp.StatusCode, resp.Status, err2)
+				blog.Errorf(
+					"Failed to connect to proxy. Response status: %v - %v. Couldn't read response body (err: %v)",
+					resp.StatusCode, resp.Status, err2)
 			} else {
-				blog.Errorf("Failed to connect to proxy. Response status: %v - %v. Response body: %s. Error: %s", resp.StatusCode, resp.Status, rb, err.Error())
+				blog.Errorf(
+					"Failed to connect to proxy. Response status: %v - %v. Response body: %s. Error: %s",
+					resp.StatusCode, resp.Status, rb, err.Error())
 			}
 		}
+		blog.Errorf("Failed to connect, err %s", err.Error())
 		return err
 	}
 	defer ws.Close()

@@ -16,8 +16,10 @@ package websocketDialer
 import "time"
 
 const (
-	PingWaitDuration  = 60 * time.Second
+	// PingWaitDuration duration for wait ping
+	PingWaitDuration = 60 * time.Second
+	// PingWriteInterval ping interval
 	PingWriteInterval = 5 * time.Second
-	MaxRead           = 8192
-	HandshakeTimeOut  = 10 * time.Second
+	// HandshakeTimeOut timeout for client handshake
+	HandshakeTimeOut = 10 * time.Second
 )
