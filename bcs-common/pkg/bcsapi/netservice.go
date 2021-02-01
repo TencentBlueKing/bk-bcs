@@ -59,7 +59,8 @@ type Netservice interface {
 
 // NetserviceCli netservice http client
 type NetserviceCli struct {
-	tlsConfig *tls.Config
+	httpClientTimeout int
+	tlsConfig         *tls.Config
 	// netservice addresses
 	netSvrs []string
 	random  *rand.Rand
@@ -68,7 +69,16 @@ type NetserviceCli struct {
 // NewNetserviceCli create new client
 func NewNetserviceCli() *NetserviceCli {
 	return &NetserviceCli{
-		random: rand.New(rand.NewSource(time.Now().UnixNano())),
+		httpClientTimeout: 3,
+		random:            rand.New(rand.NewSource(time.Now().UnixNano())),
+	}
+}
+
+// NewNetserviceCliWithTimeout create new client with timeout
+func NewNetserviceCliWithTimeout(timeoutSeconds int) *NetserviceCli {
+	return &NetserviceCli{
+		httpClientTimeout: timeoutSeconds,
+		random:            rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
@@ -156,7 +166,7 @@ func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 		return fmt.Errorf("register pool encode failed, err %s", err.Error())
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool"
 	request, err := http.NewRequest("POST", uri, bytes.NewBuffer(reqDatas))
 	if err != nil {
@@ -205,7 +215,7 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	}
 	blog.Info("udpate pool string:%s", reqDatas)
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool/" + pool.Cluster + "/" + pool.Net
 	request, err := http.NewRequest("PUT", uri, bytes.NewBuffer(reqDatas))
 	if err != nil {
@@ -244,7 +254,7 @@ func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) 
 		return nil, fmt.Errorf("no available bcs-netservice")
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool/" + cluster + "/" + net
 	request, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -287,7 +297,7 @@ func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 		return nil, fmt.Errorf("no available bcs-netservice")
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool"
 	request, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -330,7 +340,7 @@ func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPoo
 		return nil, fmt.Errorf("no available bcs-netservice")
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/pool/" + cluster + "?info=detail"
 	request, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -413,7 +423,7 @@ func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 		return fmt.Errorf("Host info is invalid")
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/host"
 	reqDatas, err := json.Marshal(host)
 	if err != nil {
@@ -455,7 +465,7 @@ func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 		return fmt.Errorf("bad request host ip")
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/host/" + host
 
 	// create net request
@@ -689,7 +699,7 @@ func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 		return fmt.Errorf("ip instance lost key data")
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/ipinstance"
 	reqDatas, err := json.Marshal(inst)
 	if err != nil {
@@ -732,7 +742,7 @@ func (nc *NetserviceCli) TransferIPAttr(input *types.TranIPAttrInput) error {
 		return fmt.Errorf("cluster, net, iplist, src, dest can not be empty")
 	}
 	seq := nc.random.Perm(len(nc.netSvrs))
-	httpClient, prefix := nc.getHTTPClient(3)
+	httpClient, prefix := nc.getHTTPClient(nc.httpClientTimeout)
 	uri := prefix + nc.netSvrs[seq[0]] + "/v1/ipinstance/status"
 	reqDatas, err := json.Marshal(input)
 	if err != nil {
