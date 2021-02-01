@@ -16,14 +16,14 @@ package app
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/base64"
 	"fmt"
-	"net/url"
 	"os"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
@@ -33,11 +33,16 @@ const (
 	kubernetesServiceHost = "KUBERNETES_SERVICE_HOST"
 	kubernetesServicePort = "KUBERNETES_SERVICE_PORT"
 
-	Module        = "BCS-API-Tunnel-Module"
+	// Module model field for http header
+	Module = "BCS-API-Tunnel-Module"
+	// RegisterToken register token field for http header
 	RegisterToken = "BCS-API-Tunnel-Token"
-	Params        = "BCS-API-Tunnel-Params"
-	Cluster       = "BCS-API-Tunnel-ClusterId"
+	// Params parameters field for http header
+	Params = "BCS-API-Tunnel-Params"
+	// Cluster cluster field for http header
+	Cluster = "BCS-API-Tunnel-ClusterId"
 
+	// ModuleName module name for kube agent
 	ModuleName = "kube-agent"
 )
 
@@ -51,13 +56,9 @@ func getenv(env string) (string, error) {
 
 func buildWebsocketToBke(cfg *rest.Config) error {
 	bkeServerAddress := viper.GetString("bke.serverAddress")
-	clusterId := viper.GetString("cluster.id")
+	bkeWsPath := viper.GetString("bke.websocket-path")
+	clusterID := viper.GetString("cluster.id")
 	registerToken := os.Getenv("REGISTER_TOKEN")
-
-	bkeServerUrl, err := url.Parse(bkeServerAddress)
-	if err != nil {
-		return err
-	}
 
 	if err := populateCAData(cfg); err != nil {
 		return fmt.Errorf("error populating ca data: %s", err.Error())
@@ -83,9 +84,13 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 
 	headers := map[string][]string{
 		Module:        {ModuleName},
-		Cluster:       {clusterId},
+		Cluster:       {clusterID},
 		RegisterToken: {registerToken},
 		Params:        {base64.StdEncoding.EncodeToString(bytes)},
+	}
+	userToken := os.Getenv("USER_TOKEN")
+	if len(userToken) != 0 {
+		headers["Authorization"] = []string{"Bearer " + userToken}
 	}
 
 	var tlsConfig *tls.Config
@@ -93,27 +98,34 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 	if insecureSkipVerify {
 		tlsConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
 	} else {
-		pool := x509.NewCertPool()
-		caCrtStr := os.Getenv("SERVER_CERT")
-		caCrt := []byte(caCrtStr)
-		pool.AppendCertsFromPEM(caCrt)
-		tlsConfig = &tls.Config{RootCAs: pool}
+		caCrtFile := os.Getenv("CLIENT_CA")
+		clientCrtFile := os.Getenv("CLIENT_CERT")
+		clientKeyFile := os.Getenv("CLIENT_KEY")
+		if len(clientCrtFile) == 0 && len(clientKeyFile) == 0 {
+			tlsConfig, err = ssl.ClientTslConfVerityServer(caCrtFile)
+		} else {
+			tlsConfig, err = ssl.ClientTslConfVerity(caCrtFile, clientCrtFile, clientKeyFile, static.ClientCertPwd)
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	go func() {
 		for {
-			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/usermanager/v1/websocket/connect", bkeServerUrl.Host)
+			wsURL := fmt.Sprintf("%s%s", bkeServerAddress, bkeWsPath)
 			blog.Infof("Connecting to %s with token %s", wsURL, registerToken)
 
-			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto, address string) bool {
-				switch proto {
-				case "tcp":
-					return true
-				case "unix":
-					return address == "/var/run/docker.sock"
-				}
-				return false
-			})
+			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil,
+				func(proto, address string) bool {
+					switch proto {
+					case "tcp":
+						return true
+					case "unix":
+						return address == "/var/run/docker.sock"
+					}
+					return false
+				})
 			time.Sleep(5 * time.Second)
 		}
 	}()
