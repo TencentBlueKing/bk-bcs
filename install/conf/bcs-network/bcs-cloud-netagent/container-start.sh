@@ -36,5 +36,5 @@ chmod +x ${module}
 #   -p, --port uint                           Port to listen on for this service (default 8080)
 #       --stderrthreshold string              logs at or above this threshold go to stderr (default "2")
 #       --v int32                             log level for V logs
-#       --version                             show version infomation
+#       --version                             show version information
 #       --vmodule string                      comma-separated list of pattern=N settings for file-filtered logging

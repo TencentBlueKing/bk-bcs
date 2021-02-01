@@ -16,15 +16,16 @@ package register
 import "errors"
 
 var (
+	//ErrNotExist data not exist err
 	ErrNotExist = errors.New("resource does not exist")
 )
 
-//Register interface for gateway-discovery to registe all neccessary
+//Register interface for gateway-discovery to registe all necessary
 //bcs services to specified api-gateway
 type Register interface {
 	//CreateService create Service interface, if service already exists, return error
 	CreateService(svc *Service) error
-	//UpdateService update specifed Service, if service does not exist, return error
+	//UpdateService update specified Service, if service does not exist, return error
 	UpdateService(svc *Service) error
 	//GetService get specified service by name, if no service, return nil
 	GetService(svc string) (*Service, error)

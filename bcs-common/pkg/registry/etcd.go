@@ -85,7 +85,7 @@ func (e *etcdRegister) Register() error {
 		return err
 	}
 	e.registered = true
-	//start backgroud goroutine for interval keep alive
+	//start background goroutine for interval keep alive
 	// because we setting ttl for register
 	go func() {
 		tick := time.NewTicker(e.option.Interval)
@@ -129,7 +129,7 @@ func (e *etcdRegister) innerRegister() error {
 
 //Deregister clean service information from registry
 func (e *etcdRegister) Deregister() error {
-	//stop backgroud keepalive goroutine
+	//stop background keepalive goroutine
 	e.stop()
 	//clean registered node information
 	if err := e.etcdregistry.Deregister(e.localService); err != nil {

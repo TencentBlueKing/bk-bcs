@@ -29,10 +29,15 @@ import (
 )
 
 const (
+	// Data message type for data
 	Data messageType = iota + 1
+	// Connect message type for connection
 	Connect
+	// Error message type for error
 	Error
+	// AddClient message for adding client
 	AddClient
+	// RemoveClient message for removing client
 	RemoveClient
 )
 

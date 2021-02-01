@@ -18,19 +18,14 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/json-iterator/go"
-
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
-const (
-	ClusterIDSourceClusterKeeper = "clusterKeeper"
-	ClusterIDSourceConfig        = "config"
-)
-
+// DefaultConfig default config
 type DefaultConfig struct {
-	Environment     string `json:"environment"`
-	ClusterIDSource string `json:"clusterIDSource"`
+	Environment string `json:"environment"`
 	// ClusterID is only used when CluterIDSource was set to "config"
 	ClusterID string `json:"clusterID"`
 
@@ -39,18 +34,13 @@ type DefaultConfig struct {
 
 // validate validates DefaultConfig and set proper default values
 func (c *DefaultConfig) validate() error {
-	if c.ClusterIDSource == "" {
-		c.ClusterIDSource = ClusterIDSourceClusterKeeper
-	} else if c.ClusterIDSource == ClusterIDSourceConfig {
-		if c.ClusterID == "" {
-			return errors.New("must set ClusterID when ClusterIDSource was set to 'config'")
-		}
-	} else {
-		return fmt.Errorf("unsupported ClusterIDSource %s", c.ClusterIDSource)
+	if c.ClusterID == "" {
+		return errors.New("must set ClusterID when ClusterIDSource was set to 'config'")
 	}
 	return nil
 }
 
+// TLS tls config
 type TLS struct {
 	CAFile   string `json:"ca-file"`
 	CertFile string `json:"cert-file"`
@@ -58,33 +48,37 @@ type TLS struct {
 	Password string `json:"password"`
 }
 
+// BCSConfig configuration for bcs service discovery
 type BCSConfig struct {
-	ZkHosts []string `json:"zk"`
-	TLS     TLS      `json:"tls"`
+	// bcs zookeeper host list, split by comma
+	ZkHosts string `json:"zk"`
+	TLS     TLS    `json:"tls"`
 
-	// NetServiceZKHosts is zookeepers hosts for netservice discovery.
-	NetServiceZKHosts []string `json:"netservice-zookeepers"`
-
-	CustomStorageEndpoints []string `json:"custom-storage-endpoints"`
-
-	// CustomNetServiceEndpoints is custom target netservice endpoints.
-	CustomNetServiceEndpoints []string `json:"custom-netservice-endpoints"`
+	// NetServiceZKHosts is zookeepers hosts for netservice discovery, split by comma
+	NetServiceZKHosts string `json:"netservice-zookeepers"`
+	// CustomStorageEndpoints, split by comma
+	CustomStorageEndpoints string `json:"custom-storage-endpoints"`
+	// CustomNetServiceEndpoints is custom target netservice endpoints, split by comma
+	CustomNetServiceEndpoints string `json:"custom-netservice-endpoints"`
 
 	// whether the k8s cluster and bcs-k8s-watch is in external network
 	IsExternal bool `json:"is-external"`
 }
 
+// K8sConfig for installation out of cluster
 type K8sConfig struct {
 	Master string `json:"master"`
 	TLS    TLS    `json:"tls"`
 }
 
+// WatchConfig k8s-watch config
 type WatchConfig struct {
 	Default DefaultConfig `json:"default"`
 	BCS     BCSConfig     `json:"bcs"`
 	K8s     K8sConfig     `json:"k8s"`
 }
 
+// ParseConfigFile parse & validate config file
 func ParseConfigFile(configFilePath string) (*WatchConfig, error) {
 	bytes, err := ioutil.ReadFile(configFilePath)
 	if err != nil {

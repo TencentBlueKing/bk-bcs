@@ -14,15 +14,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/service"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/app"
+	"github.com/google/uuid"
+
+	"github.com/micro/go-micro/v2/sync"
+	"github.com/micro/go-micro/v2/sync/etcd"
 )
 
 //disovery now is designed for stage that bkbcs routes http/https traffics.
@@ -36,26 +40,65 @@ func main() {
 	//init logger
 	blog.InitLogs(opt.LogConfig)
 	defer blog.CloseLogs()
+
+	cxt := service.SetupSignalContext()
+	leader := becomeLeader(cxt, opt)
+	go work(cxt, leader, opt)
+	<-cxt.Done()
+}
+
+func becomeLeader(cxt context.Context, opt *app.ServerOptions) sync.Leader {
+	etcdTLS, err := opt.GetEtcdRegistryTLS()
+	if err != nil {
+		fmt.Printf("etcd configuration err: %s, service exit.\n", err.Error())
+		os.Exit(-1)
+	}
+	//ready to compaign
+	synch := etcd.NewSync(
+		sync.Nodes(strings.Split(opt.Etcd.Address, ",")...),
+		sync.WithTLS(etcdTLS),
+		sync.Prefix("gatewaydiscovery.bkbcs.tencent.com"),
+		sync.WithContext(cxt),
+	)
+	id := uuid.New().String()
+	blog.Infof("Node %s waiting to become a leader...", id)
+	leader, err := synch.Leader(id, sync.LeaderContext(cxt))
+	if err != nil {
+		fmt.Printf("create etcd leader election failed: %s, service exit.\n", err.Error())
+		os.Exit(-1)
+	}
+	blog.Infof("I'm leader!")
+	return leader
+}
+
+func work(cxt context.Context, leader sync.Leader, opt *app.ServerOptions) {
 	//create app, init
-	svc := app.New()
+	svc := app.New(cxt)
 	if err := svc.Init(opt); err != nil {
 		fmt.Printf("bcs-gateway-discovery init failed, %s. service exit\n", err.Error())
 		os.Exit(-1)
 	}
-	//system signal trap for server exit
-	go func() {
-		//system signal trap
-		close := make(chan os.Signal, 10)
-		signal.Notify(close, syscall.SIGINT, syscall.SIGTERM)
-		<-close
-		blog.Infof("bcs-gateway-dicovery catch exit signal, exit in 3 seconds...")
-		fmt.Printf("bcs-gateway-dicovery catch exit signal, exit in 3 seconds...\n")
-		svc.Stop()
-		time.Sleep(time.Second * 3)
-	}()
+	go leaderTracing(cxt, leader, svc)
 	//start running
 	if err := svc.Run(); err != nil {
 		fmt.Printf("bcs-gateway-discovery enter running loop failed, %s\n", err.Error())
 		os.Exit(-1)
+	}
+	if err := leader.Resign(); err != nil {
+		blog.Infof("I'm leader again!")
+		go work(cxt, leader, opt)
+	}
+}
+
+func leaderTracing(cxt context.Context, leader sync.Leader, svc *app.DiscoveryServer) {
+	lost := leader.Status()
+	select {
+	case <-cxt.Done():
+		blog.Infof("catch signal, ready to exit leader tracing")
+		return
+	case <-lost:
+		blog.Infof("I lost leader, clean all works")
+		svc.Stop()
+		return
 	}
 }

@@ -15,14 +15,12 @@ It has these top-level messages:
 	PublishReleaseResp
 	RollbackReleaseReq
 	RollbackReleaseResp
-	ReportReq
-	ReportResp
 	PullReleaseReq
 	PullReleaseResp
-	PullConfigSetListReq
-	PullConfigSetListResp
 	ReloadReq
 	ReloadResp
+	HealthzReq
+	HealthzResp
 */
 package gsecontroller
 
@@ -48,9 +46,9 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type PublishReleasePreReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
@@ -59,23 +57,23 @@ func (m *PublishReleasePreReq) String() string            { return proto.Compact
 func (*PublishReleasePreReq) ProtoMessage()               {}
 func (*PublishReleasePreReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *PublishReleasePreReq) GetSeq() uint64 {
+func (m *PublishReleasePreReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *PublishReleasePreReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *PublishReleasePreReq) GetReleaseid() string {
+func (m *PublishReleasePreReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *PublishReleasePreReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -88,9 +86,9 @@ func (m *PublishReleasePreReq) GetOperator() string {
 }
 
 type PublishReleasePreResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *PublishReleasePreResp) Reset()                    { *m = PublishReleasePreResp{} }
@@ -98,31 +96,31 @@ func (m *PublishReleasePreResp) String() string            { return proto.Compac
 func (*PublishReleasePreResp) ProtoMessage()               {}
 func (*PublishReleasePreResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *PublishReleasePreResp) GetSeq() uint64 {
+func (m *PublishReleasePreResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *PublishReleasePreResp) GetErrCode() common.ErrCode {
+func (m *PublishReleasePreResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *PublishReleasePreResp) GetErrMsg() string {
+func (m *PublishReleasePreResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type PublishReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
@@ -131,23 +129,23 @@ func (m *PublishReleaseReq) String() string            { return proto.CompactTex
 func (*PublishReleaseReq) ProtoMessage()               {}
 func (*PublishReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-func (m *PublishReleaseReq) GetSeq() uint64 {
+func (m *PublishReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *PublishReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *PublishReleaseReq) GetReleaseid() string {
+func (m *PublishReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *PublishReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -160,9 +158,9 @@ func (m *PublishReleaseReq) GetOperator() string {
 }
 
 type PublishReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *PublishReleaseResp) Reset()                    { *m = PublishReleaseResp{} }
@@ -170,31 +168,31 @@ func (m *PublishReleaseResp) String() string            { return proto.CompactTe
 func (*PublishReleaseResp) ProtoMessage()               {}
 func (*PublishReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
-func (m *PublishReleaseResp) GetSeq() uint64 {
+func (m *PublishReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *PublishReleaseResp) GetErrCode() common.ErrCode {
+func (m *PublishReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *PublishReleaseResp) GetErrMsg() string {
+func (m *PublishReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type RollbackReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
@@ -203,23 +201,23 @@ func (m *RollbackReleaseReq) String() string            { return proto.CompactTe
 func (*RollbackReleaseReq) ProtoMessage()               {}
 func (*RollbackReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
-func (m *RollbackReleaseReq) GetSeq() uint64 {
+func (m *RollbackReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *RollbackReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *RollbackReleaseReq) GetReleaseid() string {
+func (m *RollbackReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *RollbackReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -232,9 +230,9 @@ func (m *RollbackReleaseReq) GetOperator() string {
 }
 
 type RollbackReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *RollbackReleaseResp) Reset()                    { *m = RollbackReleaseResp{} }
@@ -242,203 +240,83 @@ func (m *RollbackReleaseResp) String() string            { return proto.CompactT
 func (*RollbackReleaseResp) ProtoMessage()               {}
 func (*RollbackReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
-func (m *RollbackReleaseResp) GetSeq() uint64 {
+func (m *RollbackReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *RollbackReleaseResp) GetErrCode() common.ErrCode {
+func (m *RollbackReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *RollbackReleaseResp) GetErrMsg() string {
+func (m *RollbackReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type ReportReq struct {
-	Seq       uint64               `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string               `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string               `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string               `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string               `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc        string               `protobuf:"bytes,6,opt,name=dc" json:"dc,omitempty"`
-	IP        string               `protobuf:"bytes,7,opt,name=IP" json:"IP,omitempty"`
-	Labels    string               `protobuf:"bytes,8,opt,name=labels" json:"labels,omitempty"`
-	Infos     []*common.ReportInfo `protobuf:"bytes,9,rep,name=infos" json:"infos,omitempty"`
-}
-
-func (m *ReportReq) Reset()                    { *m = ReportReq{} }
-func (m *ReportReq) String() string            { return proto.CompactTextString(m) }
-func (*ReportReq) ProtoMessage()               {}
-func (*ReportReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
-
-func (m *ReportReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *ReportReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *ReportReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *ReportReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *ReportReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *ReportReq) GetDc() string {
-	if m != nil {
-		return m.Dc
-	}
-	return ""
-}
-
-func (m *ReportReq) GetIP() string {
-	if m != nil {
-		return m.IP
-	}
-	return ""
-}
-
-func (m *ReportReq) GetLabels() string {
-	if m != nil {
-		return m.Labels
-	}
-	return ""
-}
-
-func (m *ReportReq) GetInfos() []*common.ReportInfo {
-	if m != nil {
-		return m.Infos
-	}
-	return nil
-}
-
-type ReportResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *ReportResp) Reset()                    { *m = ReportResp{} }
-func (m *ReportResp) String() string            { return proto.CompactTextString(m) }
-func (*ReportResp) ProtoMessage()               {}
-func (*ReportResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
-
-func (m *ReportResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *ReportResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *ReportResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type PullReleaseReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid          string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid      string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid         string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc             string `protobuf:"bytes,6,opt,name=dc" json:"dc,omitempty"`
-	IP             string `protobuf:"bytes,7,opt,name=IP" json:"IP,omitempty"`
-	Labels         string `protobuf:"bytes,8,opt,name=labels" json:"labels,omitempty"`
-	Cfgsetid       string `protobuf:"bytes,9,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	LocalReleaseid string `protobuf:"bytes,10,opt,name=localReleaseid" json:"localReleaseid,omitempty"`
-	Releaseid      string `protobuf:"bytes,11,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId          string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CloudId        string `protobuf:"bytes,4,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip             string `protobuf:"bytes,5,opt,name=ip" json:"ip,omitempty"`
+	Path           string `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
+	Labels         string `protobuf:"bytes,7,opt,name=labels" json:"labels,omitempty"`
+	CfgId          string `protobuf:"bytes,8,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	LocalReleaseId string `protobuf:"bytes,9,opt,name=local_release_id,json=localReleaseId" json:"local_release_id,omitempty"`
+	ReleaseId      string `protobuf:"bytes,10,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 }
 
 func (m *PullReleaseReq) Reset()                    { *m = PullReleaseReq{} }
 func (m *PullReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*PullReleaseReq) ProtoMessage()               {}
-func (*PullReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*PullReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
-func (m *PullReleaseReq) GetSeq() uint64 {
+func (m *PullReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *PullReleaseReq) GetBid() string {
+func (m *PullReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *PullReleaseReq) GetAppid() string {
+func (m *PullReleaseReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *PullReleaseReq) GetClusterid() string {
+func (m *PullReleaseReq) GetCloudId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *PullReleaseReq) GetZoneid() string {
+func (m *PullReleaseReq) GetIp() string {
 	if m != nil {
-		return m.Zoneid
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *PullReleaseReq) GetDc() string {
+func (m *PullReleaseReq) GetPath() string {
 	if m != nil {
-		return m.Dc
-	}
-	return ""
-}
-
-func (m *PullReleaseReq) GetIP() string {
-	if m != nil {
-		return m.IP
+		return m.Path
 	}
 	return ""
 }
@@ -450,56 +328,56 @@ func (m *PullReleaseReq) GetLabels() string {
 	return ""
 }
 
-func (m *PullReleaseReq) GetCfgsetid() string {
+func (m *PullReleaseReq) GetCfgId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *PullReleaseReq) GetLocalReleaseid() string {
+func (m *PullReleaseReq) GetLocalReleaseId() string {
 	if m != nil {
-		return m.LocalReleaseid
+		return m.LocalReleaseId
 	}
 	return ""
 }
 
-func (m *PullReleaseReq) GetReleaseid() string {
+func (m *PullReleaseReq) GetReleaseId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.ReleaseId
 	}
 	return ""
 }
 
 type PullReleaseResp struct {
-	Seq     uint64          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string          `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode  `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string          `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 	Release *common.Release `protobuf:"bytes,4,opt,name=release" json:"release,omitempty"`
 }
 
 func (m *PullReleaseResp) Reset()                    { *m = PullReleaseResp{} }
 func (m *PullReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*PullReleaseResp) ProtoMessage()               {}
-func (*PullReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*PullReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
-func (m *PullReleaseResp) GetSeq() uint64 {
+func (m *PullReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *PullReleaseResp) GetErrCode() common.ErrCode {
+func (m *PullReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *PullReleaseResp) GetErrMsg() string {
+func (m *PullReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
@@ -511,116 +389,44 @@ func (m *PullReleaseResp) GetRelease() *common.Release {
 	return nil
 }
 
-type PullConfigSetListReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-}
-
-func (m *PullConfigSetListReq) Reset()                    { *m = PullConfigSetListReq{} }
-func (m *PullConfigSetListReq) String() string            { return proto.CompactTextString(m) }
-func (*PullConfigSetListReq) ProtoMessage()               {}
-func (*PullConfigSetListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
-
-func (m *PullConfigSetListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *PullConfigSetListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *PullConfigSetListReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-type PullConfigSetListResp struct {
-	Seq        uint64              `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode      `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string              `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigSets []*common.ConfigSet `protobuf:"bytes,4,rep,name=configSets" json:"configSets,omitempty"`
-}
-
-func (m *PullConfigSetListResp) Reset()                    { *m = PullConfigSetListResp{} }
-func (m *PullConfigSetListResp) String() string            { return proto.CompactTextString(m) }
-func (*PullConfigSetListResp) ProtoMessage()               {}
-func (*PullConfigSetListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
-
-func (m *PullConfigSetListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *PullConfigSetListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *PullConfigSetListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *PullConfigSetListResp) GetConfigSets() []*common.ConfigSet {
-	if m != nil {
-		return m.ConfigSets
-	}
-	return nil
-}
-
 type ReloadReq struct {
-	Seq            uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string             `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid      string             `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
-	MultiReleaseid string             `protobuf:"bytes,4,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string             `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string             `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId      string             `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
+	MultiReleaseId string             `protobuf:"bytes,4,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 	Operator       string             `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-	ReloadSpec     *common.ReloadSpec `protobuf:"bytes,6,opt,name=reloadSpec" json:"reloadSpec,omitempty"`
+	ReloadSpec     *common.ReloadSpec `protobuf:"bytes,6,opt,name=reload_spec,json=reloadSpec" json:"reload_spec,omitempty"`
 }
 
 func (m *ReloadReq) Reset()                    { *m = ReloadReq{} }
 func (m *ReloadReq) String() string            { return proto.CompactTextString(m) }
 func (*ReloadReq) ProtoMessage()               {}
-func (*ReloadReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (*ReloadReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
-func (m *ReloadReq) GetSeq() uint64 {
+func (m *ReloadReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *ReloadReq) GetBid() string {
+func (m *ReloadReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *ReloadReq) GetReleaseid() string {
+func (m *ReloadReq) GetReleaseId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.ReleaseId
 	}
 	return ""
 }
 
-func (m *ReloadReq) GetMultiReleaseid() string {
+func (m *ReloadReq) GetMultiReleaseId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.MultiReleaseId
 	}
 	return ""
 }
@@ -640,35 +446,91 @@ func (m *ReloadReq) GetReloadSpec() *common.ReloadSpec {
 }
 
 type ReloadResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *ReloadResp) Reset()                    { *m = ReloadResp{} }
 func (m *ReloadResp) String() string            { return proto.CompactTextString(m) }
 func (*ReloadResp) ProtoMessage()               {}
-func (*ReloadResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+func (*ReloadResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
-func (m *ReloadResp) GetSeq() uint64 {
+func (m *ReloadResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *ReloadResp) GetErrCode() common.ErrCode {
+func (m *ReloadResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *ReloadResp) GetErrMsg() string {
+func (m *ReloadResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
+}
+
+type HealthzReq struct {
+	Seq string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+}
+
+func (m *HealthzReq) Reset()                    { *m = HealthzReq{} }
+func (m *HealthzReq) String() string            { return proto.CompactTextString(m) }
+func (*HealthzReq) ProtoMessage()               {}
+func (*HealthzReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *HealthzReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+type HealthzResp struct {
+	Seq     string                    `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode            `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                    `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ModuleHealthzInfo `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *HealthzResp) Reset()                    { *m = HealthzResp{} }
+func (m *HealthzResp) String() string            { return proto.CompactTextString(m) }
+func (*HealthzResp) ProtoMessage()               {}
+func (*HealthzResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *HealthzResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *HealthzResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *HealthzResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *HealthzResp) GetData() *common.ModuleHealthzInfo {
+	if m != nil {
+		return m.Data
+	}
+	return nil
 }
 
 func init() {
@@ -678,14 +540,12 @@ func init() {
 	proto.RegisterType((*PublishReleaseResp)(nil), "gsecontroller.PublishReleaseResp")
 	proto.RegisterType((*RollbackReleaseReq)(nil), "gsecontroller.RollbackReleaseReq")
 	proto.RegisterType((*RollbackReleaseResp)(nil), "gsecontroller.RollbackReleaseResp")
-	proto.RegisterType((*ReportReq)(nil), "gsecontroller.ReportReq")
-	proto.RegisterType((*ReportResp)(nil), "gsecontroller.ReportResp")
 	proto.RegisterType((*PullReleaseReq)(nil), "gsecontroller.PullReleaseReq")
 	proto.RegisterType((*PullReleaseResp)(nil), "gsecontroller.PullReleaseResp")
-	proto.RegisterType((*PullConfigSetListReq)(nil), "gsecontroller.PullConfigSetListReq")
-	proto.RegisterType((*PullConfigSetListResp)(nil), "gsecontroller.PullConfigSetListResp")
 	proto.RegisterType((*ReloadReq)(nil), "gsecontroller.ReloadReq")
 	proto.RegisterType((*ReloadResp)(nil), "gsecontroller.ReloadResp")
+	proto.RegisterType((*HealthzReq)(nil), "gsecontroller.HealthzReq")
+	proto.RegisterType((*HealthzResp)(nil), "gsecontroller.HealthzResp")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -702,10 +562,9 @@ type GSEControllerClient interface {
 	PublishReleasePre(ctx context.Context, in *PublishReleasePreReq, opts ...grpc.CallOption) (*PublishReleasePreResp, error)
 	PublishRelease(ctx context.Context, in *PublishReleaseReq, opts ...grpc.CallOption) (*PublishReleaseResp, error)
 	RollbackRelease(ctx context.Context, in *RollbackReleaseReq, opts ...grpc.CallOption) (*RollbackReleaseResp, error)
-	Report(ctx context.Context, in *ReportReq, opts ...grpc.CallOption) (*ReportResp, error)
 	PullRelease(ctx context.Context, in *PullReleaseReq, opts ...grpc.CallOption) (*PullReleaseResp, error)
-	PullConfigSetList(ctx context.Context, in *PullConfigSetListReq, opts ...grpc.CallOption) (*PullConfigSetListResp, error)
 	Reload(ctx context.Context, in *ReloadReq, opts ...grpc.CallOption) (*ReloadResp, error)
+	Healthz(ctx context.Context, in *HealthzReq, opts ...grpc.CallOption) (*HealthzResp, error)
 }
 
 type gSEControllerClient struct {
@@ -743,27 +602,9 @@ func (c *gSEControllerClient) RollbackRelease(ctx context.Context, in *RollbackR
 	return out, nil
 }
 
-func (c *gSEControllerClient) Report(ctx context.Context, in *ReportReq, opts ...grpc.CallOption) (*ReportResp, error) {
-	out := new(ReportResp)
-	err := grpc.Invoke(ctx, "/gsecontroller.GSEController/Report", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *gSEControllerClient) PullRelease(ctx context.Context, in *PullReleaseReq, opts ...grpc.CallOption) (*PullReleaseResp, error) {
 	out := new(PullReleaseResp)
 	err := grpc.Invoke(ctx, "/gsecontroller.GSEController/PullRelease", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *gSEControllerClient) PullConfigSetList(ctx context.Context, in *PullConfigSetListReq, opts ...grpc.CallOption) (*PullConfigSetListResp, error) {
-	out := new(PullConfigSetListResp)
-	err := grpc.Invoke(ctx, "/gsecontroller.GSEController/PullConfigSetList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -779,16 +620,24 @@ func (c *gSEControllerClient) Reload(ctx context.Context, in *ReloadReq, opts ..
 	return out, nil
 }
 
+func (c *gSEControllerClient) Healthz(ctx context.Context, in *HealthzReq, opts ...grpc.CallOption) (*HealthzResp, error) {
+	out := new(HealthzResp)
+	err := grpc.Invoke(ctx, "/gsecontroller.GSEController/Healthz", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for GSEController service
 
 type GSEControllerServer interface {
 	PublishReleasePre(context.Context, *PublishReleasePreReq) (*PublishReleasePreResp, error)
 	PublishRelease(context.Context, *PublishReleaseReq) (*PublishReleaseResp, error)
 	RollbackRelease(context.Context, *RollbackReleaseReq) (*RollbackReleaseResp, error)
-	Report(context.Context, *ReportReq) (*ReportResp, error)
 	PullRelease(context.Context, *PullReleaseReq) (*PullReleaseResp, error)
-	PullConfigSetList(context.Context, *PullConfigSetListReq) (*PullConfigSetListResp, error)
 	Reload(context.Context, *ReloadReq) (*ReloadResp, error)
+	Healthz(context.Context, *HealthzReq) (*HealthzResp, error)
 }
 
 func RegisterGSEControllerServer(s *grpc.Server, srv GSEControllerServer) {
@@ -849,24 +698,6 @@ func _GSEController_RollbackRelease_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GSEController_Report_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GSEControllerServer).Report(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gsecontroller.GSEController/Report",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GSEControllerServer).Report(ctx, req.(*ReportReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _GSEController_PullRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PullReleaseReq)
 	if err := dec(in); err != nil {
@@ -881,24 +712,6 @@ func _GSEController_PullRelease_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GSEControllerServer).PullRelease(ctx, req.(*PullReleaseReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GSEController_PullConfigSetList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PullConfigSetListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GSEControllerServer).PullConfigSetList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gsecontroller.GSEController/PullConfigSetList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GSEControllerServer).PullConfigSetList(ctx, req.(*PullConfigSetListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -921,6 +734,24 @@ func _GSEController_Reload_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GSEController_Healthz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthzReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GSEControllerServer).Healthz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gsecontroller.GSEController/Healthz",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GSEControllerServer).Healthz(ctx, req.(*HealthzReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _GSEController_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "gsecontroller.GSEController",
 	HandlerType: (*GSEControllerServer)(nil),
@@ -938,20 +769,16 @@ var _GSEController_serviceDesc = grpc.ServiceDesc{
 			Handler:    _GSEController_RollbackRelease_Handler,
 		},
 		{
-			MethodName: "Report",
-			Handler:    _GSEController_Report_Handler,
-		},
-		{
 			MethodName: "PullRelease",
 			Handler:    _GSEController_PullRelease_Handler,
 		},
 		{
-			MethodName: "PullConfigSetList",
-			Handler:    _GSEController_PullConfigSetList_Handler,
-		},
-		{
 			MethodName: "Reload",
 			Handler:    _GSEController_Reload_Handler,
+		},
+		{
+			MethodName: "Healthz",
+			Handler:    _GSEController_Healthz_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -961,48 +788,45 @@ var _GSEController_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("gse-controller.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 674 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xcc, 0x56, 0xdd, 0x6e, 0xd3, 0x3e,
-	0x14, 0x5f, 0xba, 0xb6, 0x5b, 0x4f, 0xb5, 0xee, 0x3f, 0xff, 0x07, 0x32, 0x11, 0xa0, 0x12, 0xd0,
-	0x54, 0x2e, 0xd6, 0x89, 0xf2, 0x00, 0x5c, 0x4c, 0x13, 0x9a, 0x04, 0x28, 0xca, 0x2e, 0x90, 0xb8,
-	0x22, 0x1f, 0x6e, 0x31, 0xf3, 0xe2, 0xcc, 0x4e, 0x6f, 0x78, 0x0b, 0x6e, 0xb9, 0xe1, 0x69, 0x78,
-	0x09, 0x24, 0xde, 0x05, 0xd9, 0x8e, 0xdb, 0x26, 0x0d, 0x2b, 0x08, 0x82, 0xb8, 0x6a, 0xcf, 0x87,
-	0xcf, 0xcf, 0xbf, 0xe3, 0xf3, 0x11, 0x38, 0x9c, 0x49, 0x72, 0x1c, 0xf3, 0x34, 0x17, 0x9c, 0x31,
-	0x22, 0xc6, 0x99, 0xe0, 0x39, 0x47, 0x7b, 0x33, 0x49, 0x96, 0x4a, 0xf7, 0x38, 0xba, 0x3c, 0x8e,
-	0x64, 0x9c, 0x9d, 0xd0, 0x34, 0x27, 0x22, 0x0d, 0xd9, 0x89, 0x76, 0x8b, 0x39, 0x3b, 0x89, 0xf9,
-	0xd5, 0x15, 0x4f, 0x8b, 0x1f, 0x73, 0xda, 0xcb, 0xe1, 0xd0, 0x9f, 0x47, 0x8c, 0xca, 0x77, 0x01,
-	0x61, 0x24, 0x94, 0xc4, 0x17, 0x24, 0x20, 0xd7, 0xe8, 0x3f, 0xd8, 0x96, 0xe4, 0x1a, 0x3b, 0x43,
-	0x67, 0xd4, 0x0e, 0xd4, 0x5f, 0xa5, 0x89, 0x68, 0x82, 0x5b, 0x43, 0x67, 0xd4, 0x0b, 0xd4, 0x5f,
-	0x74, 0x17, 0x7a, 0xc2, 0x1c, 0xa2, 0x09, 0xde, 0xd6, 0xfa, 0xa5, 0x02, 0xb9, 0xb0, 0xcb, 0x33,
-	0x22, 0xc2, 0x9c, 0x0b, 0xdc, 0xd6, 0xc6, 0x85, 0xec, 0x31, 0xb8, 0x55, 0x83, 0x2a, 0xb3, 0x1a,
-	0xd8, 0xc7, 0xb0, 0x43, 0x84, 0x38, 0xe5, 0x09, 0xd1, 0xd0, 0x83, 0xc9, 0xfe, 0xb8, 0x20, 0x70,
-	0x66, 0xd4, 0x81, 0xb5, 0xa3, 0xdb, 0xd0, 0x25, 0x42, 0xbc, 0x94, 0xb3, 0xe2, 0x32, 0x85, 0xe4,
-	0x5d, 0xc3, 0x41, 0x19, 0xad, 0x79, 0x82, 0x14, 0x50, 0x15, 0xb2, 0x29, 0x76, 0x02, 0x50, 0xc0,
-	0x19, 0x8b, 0xc2, 0xf8, 0xf2, 0xaf, 0xd1, 0x7b, 0x0f, 0xff, 0xaf, 0x61, 0x36, 0xc5, 0xef, 0x9b,
-	0x03, 0xbd, 0x80, 0x64, 0x5c, 0xe4, 0x3f, 0xcb, 0xeb, 0x10, 0x3a, 0x61, 0x96, 0x2d, 0x38, 0x19,
-	0x41, 0xb1, 0x8d, 0xd9, 0x5c, 0xe6, 0x44, 0xd0, 0xa4, 0x20, 0xb4, 0x54, 0x28, 0xf4, 0x0f, 0x3c,
-	0x55, 0x89, 0xe8, 0x18, 0x74, 0x23, 0xa1, 0x01, 0xb4, 0x92, 0x18, 0x77, 0xb5, 0xae, 0x95, 0xc4,
-	0x4a, 0x3e, 0xf7, 0xf1, 0x8e, 0x91, 0xcf, 0x7d, 0x75, 0x8e, 0x85, 0x11, 0x61, 0x12, 0xef, 0x9a,
-	0x73, 0x46, 0x42, 0x23, 0xe8, 0xd0, 0x74, 0xca, 0x25, 0xee, 0x0d, 0xb7, 0x47, 0xfd, 0x09, 0xb2,
-	0xb4, 0x0d, 0x93, 0xf3, 0x74, 0xca, 0x03, 0xe3, 0xe0, 0x85, 0x00, 0x96, 0x5e, 0x53, 0x29, 0xfc,
-	0xd4, 0x82, 0x81, 0x3f, 0x67, 0xec, 0x17, 0xeb, 0xe3, 0x5f, 0xc8, 0xa3, 0x0b, 0xbb, 0xf1, 0x74,
-	0x26, 0x49, 0x4e, 0x13, 0xdc, 0x33, 0x55, 0x68, 0x65, 0x74, 0x04, 0x03, 0xc6, 0xe3, 0xd0, 0xd2,
-	0xa2, 0x09, 0x06, 0xed, 0x51, 0xd1, 0x96, 0xeb, 0xbc, 0x5f, 0xa9, 0x73, 0xef, 0xa3, 0x03, 0xfb,
-	0xa5, 0xe4, 0x34, 0xf4, 0x0a, 0x2a, 0x44, 0x81, 0xaa, 0xd3, 0xd6, 0x5f, 0x86, 0xb0, 0xd0, 0xd6,
-	0xee, 0xf9, 0x6a, 0x2a, 0x33, 0x76, 0xca, 0xd3, 0x29, 0x9d, 0x5d, 0x90, 0xfc, 0x05, 0x95, 0xbf,
-	0x57, 0xfd, 0xde, 0x67, 0x47, 0x8d, 0xdc, 0xb5, 0x90, 0x4d, 0x71, 0x7d, 0x02, 0x10, 0x5b, 0x24,
-	0x89, 0xdb, 0xba, 0x07, 0x0e, 0x6c, 0x94, 0xc5, 0x1d, 0x82, 0x15, 0x27, 0xef, 0x8b, 0xee, 0x73,
-	0xc6, 0xc3, 0xe4, 0xcf, 0xcc, 0xaf, 0x23, 0x18, 0x5c, 0xcd, 0x59, 0x4e, 0x97, 0xd5, 0x61, 0x8a,
-	0xb5, 0xa2, 0x2d, 0xcd, 0xb9, 0x4e, 0x79, 0xce, 0xa1, 0x09, 0x80, 0xd0, 0x57, 0xba, 0xc8, 0x88,
-	0xa9, 0xde, 0x52, 0x2b, 0x5b, 0x4b, 0xb0, 0xe2, 0x65, 0xfa, 0xd9, 0xd0, 0x68, 0x28, 0xbb, 0x93,
-	0xaf, 0x6d, 0xd8, 0x7b, 0x7e, 0x71, 0x76, 0xba, 0xd8, 0xfa, 0xe8, 0x6d, 0x75, 0xc5, 0xf9, 0x82,
-	0xa0, 0x87, 0xe3, 0xd2, 0xa7, 0xc1, 0xb8, 0x6e, 0xd1, 0xbb, 0x8f, 0x36, 0x3b, 0xc9, 0xcc, 0xdb,
-	0x42, 0xaf, 0xd5, 0x08, 0x59, 0x35, 0xa1, 0xe1, 0x8d, 0x27, 0x55, 0xec, 0x07, 0x1b, 0x3c, 0x74,
-	0xe0, 0x37, 0xb0, 0x5f, 0xd9, 0x25, 0xa8, 0x7a, 0x6e, 0x7d, 0xbf, 0xb9, 0xde, 0x26, 0x17, 0x1d,
-	0xfb, 0x19, 0x74, 0xcd, 0x6c, 0x45, 0xb8, 0xea, 0x6f, 0x37, 0x8a, 0x7b, 0xe7, 0x07, 0x16, 0x1d,
-	0xe0, 0x15, 0xf4, 0x57, 0x66, 0x03, 0xba, 0xb7, 0x46, 0x68, 0x75, 0xa8, 0xba, 0xf7, 0x6f, 0x32,
-	0xeb, 0x78, 0xfa, 0x9d, 0x2a, 0x5d, 0x58, 0xf3, 0x4e, 0xeb, 0xad, 0x5f, 0xf3, 0x4e, 0x35, 0xcd,
-	0x6c, 0x29, 0xab, 0xf2, 0xab, 0xa1, 0x5c, 0x34, 0x57, 0x0d, 0x65, 0x5b, 0xaf, 0xde, 0x56, 0xd4,
-	0xd5, 0x1f, 0x86, 0x4f, 0xbf, 0x07, 0x00, 0x00, 0xff, 0xff, 0x46, 0xc2, 0xe5, 0xa4, 0x6e, 0x0a,
-	0x00, 0x00,
+	// 631 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x5f, 0x4f, 0xdb, 0x30,
+	0x10, 0x5f, 0x4b, 0xff, 0xd0, 0xab, 0x28, 0xec, 0x06, 0x53, 0x88, 0x04, 0x62, 0x61, 0x0f, 0xec,
+	0xa1, 0x45, 0x82, 0x0f, 0x30, 0x69, 0x08, 0x6d, 0x79, 0xd8, 0x54, 0x85, 0x87, 0x49, 0x93, 0x26,
+	0xe6, 0xd8, 0x6e, 0x1b, 0xe1, 0xd6, 0xc6, 0x4e, 0xb5, 0xa9, 0x5f, 0x60, 0x4f, 0xfb, 0x6a, 0xfb,
+	0x42, 0x7b, 0x99, 0xe2, 0x24, 0x6d, 0x1a, 0x0a, 0x48, 0xd3, 0xca, 0x53, 0xe3, 0xfb, 0xdd, 0xdd,
+	0xcf, 0xbf, 0xbb, 0xb3, 0x5d, 0xd8, 0x1d, 0x1a, 0xde, 0xa5, 0x72, 0x12, 0x6b, 0x29, 0x04, 0xd7,
+	0x3d, 0xa5, 0x65, 0x2c, 0x71, 0x6b, 0x68, 0xf8, 0xc2, 0xe8, 0x76, 0xc3, 0x9b, 0x6e, 0x68, 0xa8,
+	0x3a, 0x8d, 0x26, 0x31, 0xd7, 0x13, 0x22, 0x4e, 0xad, 0x1b, 0x95, 0xe2, 0x94, 0xca, 0xf1, 0x58,
+	0x4e, 0xb2, 0x9f, 0x34, 0xda, 0x9b, 0xc1, 0x6e, 0x7f, 0x1a, 0x8a, 0xc8, 0x8c, 0x02, 0x2e, 0x38,
+	0x31, 0xbc, 0xaf, 0x79, 0xc0, 0x6f, 0x71, 0x07, 0x36, 0x0c, 0xbf, 0x75, 0x2a, 0x47, 0x95, 0x93,
+	0x56, 0x90, 0x7c, 0xe2, 0x1e, 0x34, 0xc2, 0x68, 0x76, 0x1d, 0x31, 0xa7, 0x6a, 0x8d, 0xf5, 0x30,
+	0x9a, 0xf9, 0x0c, 0x0f, 0x00, 0x74, 0x1a, 0x99, 0x40, 0x1b, 0x16, 0x6a, 0x65, 0x16, 0x9f, 0xa1,
+	0x0b, 0x9b, 0x52, 0x71, 0x4d, 0x62, 0xa9, 0x9d, 0x9a, 0x05, 0xe7, 0x6b, 0x6f, 0x04, 0x7b, 0x2b,
+	0xb8, 0x8d, 0x5a, 0x41, 0x7e, 0x0c, 0x35, 0x2a, 0x19, 0xb7, 0xd4, 0x9d, 0xb3, 0xed, 0x5e, 0xa6,
+	0xe1, 0x52, 0xeb, 0x0b, 0xc9, 0x78, 0x60, 0x41, 0x74, 0xa0, 0x39, 0xe6, 0xc6, 0x90, 0x21, 0xcf,
+	0xf6, 0x91, 0x2f, 0xbd, 0xef, 0xf0, 0x7c, 0x99, 0xe9, 0xa9, 0x24, 0x72, 0xc0, 0x32, 0xf1, 0x3a,
+	0xf4, 0xfd, 0x00, 0x0c, 0xa4, 0x10, 0x21, 0xa1, 0x37, 0x4f, 0x2c, 0x70, 0x00, 0x2f, 0xee, 0x30,
+	0xaf, 0x43, 0xe1, 0xcf, 0x2a, 0x74, 0xfa, 0x53, 0x21, 0xfe, 0x45, 0xde, 0x1e, 0x34, 0x88, 0x52,
+	0x0b, 0x69, 0x75, 0xa2, 0x94, 0xcf, 0x70, 0x1f, 0x36, 0xa9, 0x90, 0x53, 0x96, 0x00, 0xa9, 0xac,
+	0xa6, 0x5d, 0xfb, 0x0c, 0x3b, 0x50, 0x8d, 0x94, 0x53, 0xb7, 0xc6, 0x6a, 0xa4, 0x10, 0xa1, 0xa6,
+	0x48, 0x3c, 0x72, 0x1a, 0xd6, 0x62, 0xbf, 0xf1, 0x25, 0x34, 0x04, 0x09, 0xb9, 0x30, 0x4e, 0xd3,
+	0x5a, 0xb3, 0x55, 0xc2, 0x46, 0x07, 0xc3, 0x24, 0xe9, 0x66, 0xca, 0x46, 0x07, 0x43, 0x9f, 0xe1,
+	0x09, 0xec, 0x08, 0x49, 0x89, 0xb8, 0x2e, 0x54, 0xba, 0x65, 0x1d, 0x3a, 0xd6, 0x1e, 0xcc, 0xcb,
+	0xbd, 0xdc, 0x0d, 0x28, 0x75, 0xc3, 0xfb, 0x55, 0x81, 0xed, 0xa5, 0x4a, 0xac, 0xa1, 0xdc, 0xf8,
+	0x06, 0x9a, 0x19, 0xa3, 0x2d, 0x4d, 0x7b, 0x91, 0x21, 0xa7, 0xcd, 0x71, 0xef, 0x77, 0x05, 0x5a,
+	0x01, 0x17, 0x92, 0xb0, 0xff, 0x39, 0x73, 0x27, 0xb0, 0x33, 0x9e, 0x8a, 0x38, 0x2a, 0x96, 0x2b,
+	0x6d, 0x52, 0xc7, 0xda, 0x83, 0x95, 0xd3, 0x59, 0x5f, 0x9e, 0x4e, 0x3c, 0x87, 0xb6, 0xb6, 0x5b,
+	0xbb, 0x36, 0x8a, 0x53, 0xdb, 0xbe, 0xf6, 0x19, 0x16, 0xa4, 0x48, 0xc2, 0xae, 0x14, 0xa7, 0x01,
+	0xe8, 0xf9, 0xb7, 0xf7, 0x15, 0x20, 0xd7, 0xb3, 0x8e, 0x49, 0x3e, 0x04, 0xf8, 0xc0, 0x89, 0x88,
+	0x47, 0xb3, 0x95, 0xf5, 0x4a, 0xfa, 0xdb, 0x9e, 0x3b, 0xac, 0xa3, 0xb7, 0x5d, 0xa8, 0x31, 0x12,
+	0x93, 0xac, 0xb1, 0xfb, 0x79, 0xf8, 0x47, 0xc9, 0xa6, 0x82, 0x67, 0xcc, 0xfe, 0x64, 0x20, 0x03,
+	0xeb, 0x76, 0xf6, 0x67, 0x03, 0xb6, 0xde, 0x5f, 0x5d, 0x5e, 0xcc, 0x9f, 0x18, 0xfc, 0x56, 0xbe,
+	0x4d, 0xfb, 0x9a, 0xe3, 0x71, 0x6f, 0xe9, 0x1d, 0xea, 0xad, 0x7a, 0x55, 0xdc, 0xd7, 0x8f, 0x3b,
+	0x19, 0xe5, 0x3d, 0xc3, 0xcf, 0xc9, 0x61, 0x2f, 0x42, 0x78, 0xf4, 0x60, 0x64, 0x92, 0xfb, 0xd5,
+	0x23, 0x1e, 0x36, 0xf1, 0x17, 0xd8, 0x2e, 0x5d, 0x57, 0x58, 0x8e, 0xbb, 0x7b, 0x91, 0xba, 0xde,
+	0x63, 0x2e, 0x36, 0xf7, 0x27, 0x68, 0x17, 0xce, 0x25, 0x1e, 0xdc, 0xd9, 0x4f, 0xf1, 0xf6, 0x72,
+	0x0f, 0x1f, 0x82, 0x6d, 0xbe, 0xb7, 0xd0, 0x48, 0xe7, 0x10, 0x9d, 0x32, 0x7f, 0x7e, 0xdc, 0xdc,
+	0xfd, 0x7b, 0x10, 0x9b, 0xe0, 0x1d, 0x34, 0xb3, 0x76, 0x62, 0xd9, 0x6f, 0x31, 0x81, 0xae, 0x7b,
+	0x1f, 0x94, 0xe4, 0x08, 0x1b, 0xf6, 0x6f, 0xc2, 0xf9, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc9,
+	0x14, 0x28, 0xd5, 0x7c, 0x08, 0x00, 0x00,
 }

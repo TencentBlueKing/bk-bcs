@@ -61,6 +61,10 @@ type GameDeploymentSpec struct {
 	// before Delete Or Update Pods
 	PreDeleteUpdateStrategy GameDeploymentPreDeleteUpdateStrategy `json:"preDeleteUpdateStrategy,omitempty"`
 
+	// PreInplaceUpdateStrategy indicates the PreInplaceUpdateStrategy that will be employed to
+	// before Delete Or Update Pods
+	PreInplaceUpdateStrategy GameDeploymentPreInplaceUpdateStrategy `json:"preInplaceUpdateStrategy,omitempty"`
+
 	// RevisionHistoryLimit is the maximum number of revisions that will
 	// be maintained in the GameDeployment's revision history. The revision history
 	// consists of all revisions not represented by a currently applied
@@ -74,6 +78,11 @@ type GameDeploymentSpec struct {
 }
 
 type GameDeploymentPreDeleteUpdateStrategy struct {
+	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
+	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
+}
+
+type GameDeploymentPreInplaceUpdateStrategy struct {
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
@@ -191,6 +200,7 @@ type GameDeploymentStatus struct {
 	CurrentStepHash         string                                `json:"currentStepHash,omitempty"`
 	Canary                  CanaryStatus                          `json:"canary,omitempty"`
 	PreDeleteHookConditions []hookv1alpha1.PreDeleteHookCondition `json:"preDeleteHookCondition,omitempty"`
+	PreInplaceHookConditions []hookv1alpha1.PreInplaceHookCondition `json:"preInplaceHookCondition,omitempty"`
 }
 
 type CanaryStatus struct {

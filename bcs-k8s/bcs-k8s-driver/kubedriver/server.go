@@ -79,7 +79,7 @@ func StartServer(o *options.KubeDriverServerOptions) error {
 				return err
 			}
 		} else {
-			// Register node to zk and then keep it registed
+			// Register node to zk and then keep it registered
 			// Get current node info to register it to zookeeper
 			serverInfo := GetServerInfo(o, clusterID)
 			node := custom.NewServiceNode(serverInfo)

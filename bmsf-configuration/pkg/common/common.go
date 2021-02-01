@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -26,7 +27,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -37,28 +37,19 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"bk-bscp/internal/database"
-	pbcommon "bk-bscp/internal/protocol/common"
+	"bk-bscp/pkg/kit"
 )
 
 // Global constant variables.
 const (
-	// BIDPREFIX is prefix of bid.
-	BIDPREFIX = "B"
-
 	// APPIDPREFIX is prefix of appid.
 	APPIDPREFIX = "A"
 
-	// CLUSTERIDPREFIX is prefix of clusterid.
-	CLUSTERIDPREFIX = "C"
-
-	// ZONEIDPREFIX is prefix of zoneid.
-	ZONEIDPREFIX = "Z"
-
-	// CFGSETIDPREFIX is prefix of cfgsetid.
-	CFGSETIDPREFIX = "F"
+	// CFGIDPREFIX is prefix of cfgid.
+	CFGIDPREFIX = "F"
 
 	// COMMITIDPREFIX is prefix of commitid.
 	COMMITIDPREFIX = "M"
@@ -75,174 +66,118 @@ const (
 	// STRATEGYIDPREFIX is prefix of strategyid.
 	STRATEGYIDPREFIX = "S"
 
-	// CONFIGTEMPLATESETPREFIX is prefix of config template set
-	CONFIGTEMPLATESETPREFIX = "TS"
-
 	// CONFIGTEMPLATEPREFIX is prefix of config template
 	CONFIGTEMPLATEPREFIX = "T"
 
 	// CONFIGTEMPLATEVERSIONPREFIX is prefix of config template version
 	CONFIGTEMPLATEVERSIONPREFIX = "TV"
+)
 
-	// VARIABLEPREFIX is prefix of variables
-	VARIABLEPREFIX = "V"
+const (
+	// RidHeaderKey is request id header key.
+	RidHeaderKey = "X-Bkapi-Request-Id"
+
+	// UserHeaderKey is operator name header key.
+	UserHeaderKey = "X-Bkapi-User-Name"
+
+	// AppCodeHeaderKey is blueking application code header key.
+	AppCodeHeaderKey = "X-Bkapi-App-Code"
+
+	// ContentIDHeaderKey is common content sha256 id.
+	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
+
+	// ContentOverwriteHeaderKey is common content upload overwrite flag.
+	ContentOverwriteHeaderKey = "X-Bkapi-File-Content-Overwrite"
+
+	// AuthorizationHeaderKey is common authorization flag, only for internal authorize.
+	AuthorizationHeaderKey = "X-Bkapi-Authorization"
 )
 
 // Global sequence num.
 var seq uint64
 
-// Sequence return an uint64 as a global sequence num.
-func Sequence() uint64 {
+// SequenceNum return an uint64 as a global sequence num.
+func SequenceNum() uint64 {
 	return atomic.AddUint64(&seq, 1)
 }
 
-// GenUUID generates an UUID string.
-func GenUUID() (string, error) {
-	uuid, err := uuid.NewUUID()
+// GenUUIDV1 generates a version 1 UUID string.
+func GenUUIDV1() (string, error) {
+	newUUID, err := uuid.NewUUID()
 	if err != nil {
 		return "", err
 	}
-	return uuid.String(), nil
+	return newUUID.String(), nil
 }
 
-// GenBid generates a business id.
-func GenBid() (string, error) {
-	uuid, err := GenUUID()
+// GenUUIDV4 generates a version 4 UUID string.
+func GenUUIDV4() (string, error) {
+	newUUID, err := uuid.NewRandom()
 	if err != nil {
 		return "", err
 	}
-	id := fmt.Sprintf("%s-%s", BIDPREFIX, uuid)
-	return id, nil
+	return newUUID.String(), nil
 }
 
-// GenAppid generates an app id.
-func GenAppid() (string, error) {
-	uuid, err := GenUUID()
+// GenUUID generates an UUID string which is version 4 or version 1.
+func GenUUID() string {
+	// V4: one chance in 17 billion.
+	newUUID, err := GenUUIDV4()
 	if err != nil {
-		return "", err
+		// NOTE: V1.
+		newUUID, _ = GenUUIDV1()
 	}
-	id := fmt.Sprintf("%s-%s", APPIDPREFIX, uuid)
-	return id, nil
+	return newUUID
 }
 
-// GenClusterid generates a cluster id.
-func GenClusterid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", CLUSTERIDPREFIX, uuid)
-	return id, nil
+// Sequence return a uuid string as a global sequence id.
+func Sequence() string {
+	return strings.Replace(GenUUID(), "-", "", -1)
 }
 
-// GenZoneid generates a zone id.
-func GenZoneid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", ZONEIDPREFIX, uuid)
-	return id, nil
+// GenAppID generates an app id.
+func GenAppID() (string, error) {
+	return fmt.Sprintf("%s-%s", APPIDPREFIX, GenUUID()), nil
 }
 
-// GenCfgsetid generates a config set id.
-func GenCfgsetid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", CFGSETIDPREFIX, uuid)
-	return id, nil
+// GenCfgID generates a config id.
+func GenCfgID() (string, error) {
+	return fmt.Sprintf("%s-%s", CFGIDPREFIX, GenUUID()), nil
 }
 
-// GenCommitid generates a commit id.
-func GenCommitid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", COMMITIDPREFIX, uuid)
-	return id, nil
+// GenCommitID generates a commit id.
+func GenCommitID() (string, error) {
+	return fmt.Sprintf("%s-%s", COMMITIDPREFIX, GenUUID()), nil
 }
 
-// GenMultiCommitid generates a multi commit id.
-func GenMultiCommitid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", MULTICOMMITIDPREFIX, uuid)
-	return id, nil
+// GenMultiCommitID generates a multi commit id.
+func GenMultiCommitID() (string, error) {
+	return fmt.Sprintf("%s-%s", MULTICOMMITIDPREFIX, GenUUID()), nil
 }
 
-// GenReleaseid generates a release id.
-func GenReleaseid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", RELEASEIDPREFIX, uuid)
-	return id, nil
+// GenReleaseID generates a release id.
+func GenReleaseID() (string, error) {
+	return fmt.Sprintf("%s-%s", RELEASEIDPREFIX, GenUUID()), nil
 }
 
-// GenMultiReleaseid generates a multi release id.
-func GenMultiReleaseid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", MULTIRELEASEIDPREFIX, uuid)
-	return id, nil
+// GenMultiReleaseID generates a multi release id.
+func GenMultiReleaseID() (string, error) {
+	return fmt.Sprintf("%s-%s", MULTIRELEASEIDPREFIX, GenUUID()), nil
 }
 
-// GenStrategyid generates a strategy id.
-func GenStrategyid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", STRATEGYIDPREFIX, uuid)
-	return id, nil
+// GenStrategyID generates a strategy id.
+func GenStrategyID() (string, error) {
+	return fmt.Sprintf("%s-%s", STRATEGYIDPREFIX, GenUUID()), nil
 }
 
-// GenTemplateSetid generate a config template set id
-func GenTemplateSetid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", CONFIGTEMPLATESETPREFIX, uuid)
-	return id, nil
+// GenTemplateID generate a config template id
+func GenTemplateID() (string, error) {
+	return fmt.Sprintf("%s-%s", CONFIGTEMPLATEPREFIX, GenUUID()), nil
 }
 
-// GenTemplateid generate a config template id
-func GenTemplateid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", CONFIGTEMPLATEPREFIX, uuid)
-	return id, nil
-}
-
-// GenTemplateVersionid generate a config template id
-func GenTemplateVersionid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", CONFIGTEMPLATEVERSIONPREFIX, uuid)
-	return id, nil
-}
-
-// GenVariableid generate a variable id
-func GenVariableid() (string, error) {
-	uuid, err := GenUUID()
-	if err != nil {
-		return "", err
-	}
-	id := fmt.Sprintf("%s-%s", VARIABLEPREFIX, uuid)
-	return id, nil
+// GenTemplateVersionID generate a config template id
+func GenTemplateVersionID() (string, error) {
+	return fmt.Sprintf("%s-%s", CONFIGTEMPLATEVERSIONPREFIX, GenUUID()), nil
 }
 
 // SHA256 returns a sha256 string of the data string.
@@ -344,7 +279,17 @@ func GetEthAddr(key string) (string, error) {
 		}
 	}
 
-	return "", errors.New("unknow target eth address")
+	return "", errors.New("unknown target eth address")
+}
+
+// EmptyStr returns an empty string.
+func EmptyStr() string {
+	return ""
+}
+
+// EmptyJSONStr returns an empty json string.
+func EmptyJSONStr() string {
+	return "{}"
 }
 
 // ToStr converts int to string.
@@ -359,6 +304,15 @@ func ToInt(str string) int {
 		return 0
 	}
 	return i
+}
+
+// ToFileMode converts string to FileMode type.
+func ToFileMode(s string) os.FileMode {
+	t, err := strconv.ParseUint(s, 0, 32)
+	if err != nil {
+		return 0
+	}
+	return os.FileMode(t)
 }
 
 // Endpoint returns endpoint format string.
@@ -459,7 +413,7 @@ func CollectMemPprofData(filepath string) {
 		memStat.TotalAlloc, memStat.Alloc, memStat.Sys)
 }
 
-// ParseFpath parses configset fpath and return final path string.
+// ParseFpath parses config fpath and return final path string.
 // 				a/b/c         -> /a/b/c
 // 				./a/b/c       -> /a/b/c
 // 				/a/b/c        -> /a/b/c
@@ -474,170 +428,8 @@ func CollectMemPprofData(filepath string) {
 //              "./////"      -> /
 //              ".//a/..//"   -> /
 func ParseFpath(fpath string) string {
-	// configset fpath is relative path, add root dir and parse by filepath Clean.
+	// config fpath is relative path, add root dir and parse by filepath Clean.
 	return filepath.Clean(fmt.Sprintf("/%s", fpath))
-}
-
-// ParseClusterLabels returns cluster labels and cluster name.
-//              labels/clustername       ->  labels, clustername
-//              path/labels/clustername  ->  path/labels, clustername
-//              path/labels//clustername ->  path/labels/, clustername
-func ParseClusterLabels(cluster string) (string, string) {
-	_, clusterName := filepath.Split(cluster)
-	clusterLabels := strings.TrimSuffix(strings.TrimSuffix(cluster, clusterName), "/")
-	return clusterLabels, clusterName
-}
-
-// VerifyFpath verify file path
-func VerifyFpath(fpath string) error {
-	if len(fpath) > database.BSCPCFGSETFPATHLENLIMIT {
-		return errors.New("invalid params, fpath too long")
-	}
-	return nil
-}
-
-// VerifyFileUser verify file user
-func VerifyFileUser(user string) error {
-	if len(user) == 0 {
-		return errors.New("invalid params, file user missing")
-	}
-	if len(user) > database.BSCPFILEUSERLENGTHLIMIT {
-		return errors.New("invalid params, file user too long")
-	}
-	// compatible with windows and linux name
-	if isMatched, err := regexp.Match("^[a-zA-Z_][a-zA-Z0-9_-]*$", []byte(user)); err != nil {
-		return errors.New("invalid params, regex match err")
-	} else if !isMatched {
-		return errors.New("invalid params, file user not match regex \"^[a-zA-Z_][a-zA-Z0-9_-]*$\"")
-	}
-	return nil
-}
-
-// VerifyFileUserGroup verify file group
-func VerifyFileUserGroup(user string) error {
-	if len(user) == 0 {
-		return errors.New("invalid params, file user group missing")
-	}
-	if len(user) > database.BSCPFILEGROUPLENGTHLIMIT {
-		return errors.New("invalid params, file user group too long")
-	}
-	// compatible with windows and linux name
-	if isMatched, err := regexp.Match("^[a-zA-Z_][a-zA-Z0-9_-]*$", []byte(user)); err != nil {
-		return errors.New("invalid params, regex match err")
-	} else if !isMatched {
-		return errors.New("invalid params, file user not match regex \"^[a-zA-Z_][a-zA-Z0-9_-]*$\"")
-	}
-	return nil
-}
-
-// VerifyFileEncoding verify file encoding
-func VerifyFileEncoding(fileEncoding string) error {
-	if len(fileEncoding) > database.BSCPFILEENCODINGLENGTHLIMIT {
-		return errors.New("invalid params, file encoding string is too long")
-	}
-	return nil
-}
-
-// VerifyID verify object id
-func VerifyID(id, objectKind string) error {
-	length := len(id)
-	if length == 0 {
-		return fmt.Errorf("invalid params, %s missing", objectKind)
-	}
-	if length > database.BSCPIDLENLIMIT {
-		return fmt.Errorf("invalid params, %s too long", objectKind)
-	}
-	return nil
-}
-
-// VerifyNormalName verify object name
-func VerifyNormalName(name, objectKind string) error {
-	length := len(name)
-	if length == 0 {
-		return fmt.Errorf("invalid params, %s missing", objectKind)
-	}
-	if length > database.BSCPNAMELENLIMIT {
-		return fmt.Errorf("invalid params, %s too long", objectKind)
-	}
-	return nil
-}
-
-// VerifyMemo verify memo
-func VerifyMemo(memo string) error {
-	if len(memo) > database.BSCPLONGSTRLENLIMIT {
-		return errors.New("invalid params, memo too long")
-	}
-	return nil
-}
-
-// VerifyTemplateContent verify config template content
-func VerifyTemplateContent(content string) error {
-	if len(content) > database.BSCPTPLSIZELIMIT {
-		return errors.New("invalid params, content too long")
-	}
-	return nil
-}
-
-// VerifyVarKey verify variable key
-func VerifyVarKey(key string) error {
-	length := len(key)
-	if length == 0 {
-		return errors.New("invalid params, key missing")
-	}
-	if length > database.BSCPVARIABLEKEYLENGTHLIMIT {
-		return errors.New("invalid params, key too long")
-	}
-	return nil
-}
-
-// VerifyVarValue verify variable value
-func VerifyVarValue(key string) error {
-	if len(key) > database.BSCPVARIABLEVALUESIZELIMIT {
-		return errors.New("invalid params, value too long")
-	}
-	return nil
-}
-
-// VerifyQueryLimit verify query limit
-func VerifyQueryLimit(limit int32) error {
-	if limit == 0 {
-		return errors.New("invalid params, limit missing")
-	}
-	if limit > database.BSCPQUERYLIMIT {
-		return errors.New("invalid params, limit too big")
-	}
-	return nil
-}
-
-// VerifyTemplateBindingParams verify template binding params
-func VerifyTemplateBindingParams(param string) error {
-	length := len(param)
-	if length == 0 {
-		return errors.New("invalid params, bindingParams missing")
-	}
-	if length > database.BSCPTEMPLATEBINDINGPARAMSSIZELIMIT {
-		return errors.New("invalid params, bindingParams too long")
-	}
-	return nil
-}
-
-// VerifyVariableType verify variable type
-func VerifyVariableType(t int32) error {
-	if t != int32(pbcommon.VariableType_VT_GLOBAL) &&
-		t != int32(pbcommon.VariableType_VT_CLUSTER) &&
-		t != int32(pbcommon.VariableType_VT_ZONE) {
-
-		return errors.New("invalid params, unavailable variable type")
-	}
-	return nil
-}
-
-// VerifyClusterLabels verify cluster labels
-func VerifyClusterLabels(clusterLabels string) error {
-	if len(clusterLabels) > database.BSCPCLUSTERLABELSLENLIMIT {
-		return errors.New("invalid params, clusterLabels too long")
-	}
-	return nil
 }
 
 // ParseHTTPBasicAuth parses http basic authorization, and return auth token.
@@ -709,18 +501,6 @@ func VerifyUserPWD(input, setting string) bool {
 	return true
 }
 
-// MergeVars merge
-func MergeVars(m1 map[string]interface{}, m2 map[string]interface{}) map[string]interface{} {
-	vars := make(map[string]interface{})
-	for k, v := range m1 {
-		vars[k] = v
-	}
-	for k, v := range m2 {
-		vars[k] = v
-	}
-	return vars
-}
-
 // DelayRandomMS delaies a random millisecond time.
 func DelayRandomMS(max int) {
 	rand.Seed(time.Now().UnixNano())
@@ -731,4 +511,118 @@ func DelayRandomMS(max int) {
 func RandomMS(max int) time.Duration {
 	rand.Seed(time.Now().UnixNano())
 	return time.Duration(rand.Intn(max)) * time.Millisecond
+}
+
+// GRPCMethod return method name of target gRPC call from context.
+func GRPCMethod(ctx context.Context) string {
+	method, ok := grpc.Method(ctx)
+	if !ok {
+		return "unknown"
+	}
+
+	_, name := filepath.Split(method)
+	if len(name) != 0 {
+		return name
+	}
+	return "unknown"
+}
+
+// GRPCMetadata returns MD which is a mapping from metadata keys to values.
+func GRPCMetadata(ctx context.Context) map[string]string {
+	m := make(map[string]string, 0)
+
+	// incoming context.
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok || len(md) == 0 {
+		// context metadata empty.
+		return m
+	}
+
+	for key, value := range md {
+		if len(value) != 0 {
+			// NOTE: only first value item.
+			m[key] = value[0]
+		}
+	}
+	return m
+}
+
+// RequestKit returns method/metadata KVs in grpc request.
+func RequestKit(ctx context.Context) kit.Kit {
+	method := GRPCMethod(ctx)
+	metadata := GRPCMetadata(ctx)
+
+	return kit.Kit{
+		Ctx:     ctx,
+		User:    metadata[strings.ToLower(UserHeaderKey)],
+		Rid:     metadata[strings.ToLower(RidHeaderKey)],
+		Method:  method,
+		AppCode: metadata[strings.ToLower(AppCodeHeaderKey)],
+
+		// NOTE: grpc metadata is only used for internal modules.
+		Authorization: metadata[strings.ToLower(AuthorizationHeaderKey)],
+	}
+}
+
+// HTTPRequestKit returns method/metadata KVs in http request.
+func HTTPRequestKit(req *http.Request) kit.Kit {
+	return kit.Kit{
+		Ctx:     context.Background(),
+		User:    req.Header.Get(UserHeaderKey),
+		Rid:     req.Header.Get(RidHeaderKey),
+		Method:  fmt.Sprintf("%s-%s", req.RequestURI, req.Method),
+		AppCode: req.Header.Get(AppCodeHeaderKey),
+	}
+}
+
+// DiskStatus is disk usage status.
+type DiskStatus struct {
+	// All is all disk capacity.
+	All uint64 `json:"all"`
+
+	// Used is used disk capacity.
+	Used uint64 `json:"used"`
+
+	// Free is free disk capacity.
+	Free uint64 `json:"free"`
+}
+
+// DiskUsage return current disk usage of path/disk.
+func DiskUsage(path string) (*DiskStatus, error) {
+	fs := syscall.Statfs_t{}
+	if err := syscall.Statfs(path, &fs); err != nil {
+		return nil, err
+	}
+
+	status := &DiskStatus{}
+
+	// disk bytes capacity.
+	status.All = fs.Blocks * uint64(fs.Bsize)
+	status.Free = fs.Bfree * uint64(fs.Bsize)
+	status.Used = status.All - status.Free
+
+	return status, nil
+}
+
+// StatDirectoryFileSize stats files size under target dir.
+func StatDirectoryFileSize(dir string) (int64, error) {
+	fList, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return 0, err
+	}
+
+	var size int64
+
+	for _, f := range fList {
+		if f.IsDir() {
+			subSize, err := StatDirectoryFileSize(dir + "/" + f.Name())
+			if err != nil {
+				return 0, err
+			}
+			size += subSize
+		} else {
+			size += f.Size()
+		}
+	}
+	return size, nil
 }

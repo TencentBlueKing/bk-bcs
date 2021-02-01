@@ -49,7 +49,7 @@ func NewHTTPChecker(container, schema string, port int, path string, mechanism *
 		mechanism: mechanism,
 		notify:    notify,
 	}
-	//defualt schema
+	//default schema
 	if len(schema) == 0 {
 		checker.schema = "http"
 	}

@@ -20,7 +20,8 @@ import (
 	"time"
 
 	"github.com/bluele/gcache"
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 
 	"bk-bscp/internal/database"
 	pbcommon "bk-bscp/internal/protocol/common"
@@ -35,9 +36,6 @@ var (
 	// BSCPDBKEY is the key of bscp system sharding db.
 	BSCPDBKEY = "BSCPDBKEY"
 )
-
-// enableDBLog is database inner log flag.
-var enableDBLog = false
 
 // DBService is DB service instance.
 type DBService struct {
@@ -78,19 +76,10 @@ type DBConfigTemplate struct {
 	KeepAlive time.Duration
 }
 
-var (
-	// tbMap is a map that stored tables base informations
-	// for auto migration, dbid:dbname:tablename -> EXISTSFLAG.
-	tbMap = make(map[string]bool)
-
-	// tbMapMu makes the ops on tbMap safe.
-	tbMapMu = sync.RWMutex{}
-)
-
 // ShardingDB is database sharding result.
 type ShardingDB struct {
 	// DB service id.
-	DBid string
+	DBID string
 
 	// database name.
 	DBName string
@@ -104,36 +93,8 @@ func (sd *ShardingDB) DB() *gorm.DB {
 	return sd.db
 }
 
-func (sd *ShardingDB) tbmapKey(tbname string) string {
-	return sd.DBid + ":" + sd.DBName + ":" + tbname
-}
-
-// AutoMigrate run auto migration for given models.
-func (sd *ShardingDB) AutoMigrate(tb database.Table) {
-	tbMapMu.RLock()
-	_, ok := tbMap[sd.tbmapKey(tb.TableName())]
-	tbMapMu.RUnlock()
-
-	if ok {
-		return
-	}
-
-	if sd.db.HasTable(tb) {
-		tbMapMu.Lock()
-		tbMap[sd.tbmapKey(tb.TableName())] = true
-		tbMapMu.Unlock()
-	} else {
-		// only create table, do not alter table, ignore the error
-		// when there is a repeated db operation。
-		sd.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(tb)
-	}
-}
-
 // Config of ShardingMgr.
 type Config struct {
-	// Dialect is database driver name.
-	Dialect string
-
 	// DBHost is database service host.
 	DBHost string
 
@@ -196,48 +157,30 @@ func NewShardingMgr(config *Config, configTemplate *DBConfigTemplate) *ShardingM
 
 // Init initializes new sharding manager.
 func (mgr *ShardingManager) Init() error {
-	// initializes system database.
-	db, err := gorm.Open(mgr.config.Dialect,
-		fmt.Sprintf("%s:%s@tcp(%s:%d)/?parseTime=true&loc=Local&timeout=%s&readTimeout=%s&writeTimeout=%s&charset=%s",
-			mgr.config.DBUser,
-			mgr.config.DBPasswd,
-			mgr.config.DBHost,
-			mgr.config.DBPort,
-			mgr.configTemplate.ConnTimeout,
-			mgr.configTemplate.ReadTimeout,
-			mgr.configTemplate.WriteTimeout,
-			database.BSCPCHARSET,
-		))
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local&timeout=%s&readTimeout=%s&writeTimeout=%s&charset=%s",
+		mgr.config.DBUser,
+		mgr.config.DBPasswd,
+		mgr.config.DBHost,
+		mgr.config.DBPort,
+		database.BSCPDB,
+		mgr.configTemplate.ConnTimeout,
+		mgr.configTemplate.ReadTimeout,
+		mgr.configTemplate.WriteTimeout,
+		database.BSCPCHARSET,
+	)
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return err
 	}
-	if err = db.Exec("CREATE DATABASE IF NOT EXISTS " + database.BSCPSHARDINGDB).Error; err != nil {
+	sqlDB, err := db.DB()
+	if err != nil {
 		return err
 	}
-	if err = db.Close(); err != nil {
-		return err
-	}
+	sqlDB.SetMaxOpenConns(mgr.configTemplate.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(mgr.configTemplate.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(mgr.configTemplate.KeepAlive)
 
-	if db, err = gorm.Open(mgr.config.Dialect,
-		fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local&timeout=%s&readTimeout=%s&writeTimeout=%s&charset=%s",
-			mgr.config.DBUser,
-			mgr.config.DBPasswd,
-			mgr.config.DBHost,
-			mgr.config.DBPort,
-			database.BSCPSHARDINGDB,
-			mgr.configTemplate.ConnTimeout,
-			mgr.configTemplate.ReadTimeout,
-			mgr.configTemplate.WriteTimeout,
-			database.BSCPCHARSET,
-		)); err != nil {
-		return err
-	}
-
-	db.DB().SetMaxOpenConns(mgr.configTemplate.MaxOpenConns)
-	db.DB().SetMaxIdleConns(mgr.configTemplate.MaxIdleConns)
-	db.DB().SetConnMaxLifetime(mgr.configTemplate.KeepAlive)
-
-	db.LogMode(enableDBLog)
 	mgr.db = db
 
 	// start purging sharding cache.
@@ -257,40 +200,44 @@ func (mgr *ShardingManager) Init() error {
 
 // newDB make a new db handler base on gorm database connection.
 func (mgr *ShardingManager) newDB(service *DBService, dbname string) (*gorm.DB, error) {
-	db, err := gorm.Open(mgr.config.Dialect,
-		fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local&timeout=%s&readTimeout=%s&writeTimeout=%s&charset=%s",
-			service.User,
-			service.Password,
-			service.Host,
-			service.Port,
-			dbname,
-			mgr.configTemplate.ConnTimeout,
-			mgr.configTemplate.ReadTimeout,
-			mgr.configTemplate.WriteTimeout,
-			database.BSCPCHARSET,
-		))
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local&timeout=%s&readTimeout=%s&writeTimeout=%s&charset=%s",
+		service.User,
+		service.Password,
+		service.Host,
+		service.Port,
+		dbname,
+		mgr.configTemplate.ConnTimeout,
+		mgr.configTemplate.ReadTimeout,
+		mgr.configTemplate.WriteTimeout,
+		database.BSCPCHARSET,
+	)
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-
-	db.DB().SetMaxOpenConns(mgr.configTemplate.MaxOpenConns)
-	db.DB().SetMaxIdleConns(mgr.configTemplate.MaxIdleConns)
-	db.DB().SetConnMaxLifetime(mgr.configTemplate.KeepAlive)
-
-	db.LogMode(enableDBLog)
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetMaxOpenConns(mgr.configTemplate.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(mgr.configTemplate.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(mgr.configTemplate.KeepAlive)
 
 	return db, nil
 }
 
 func (mgr *ShardingManager) evicteDB(k, v interface{}) {
 	db, ok := v.(*gorm.DB)
-	if !ok {
+	if !ok || db == nil {
 		return
 	}
 
-	if db != nil {
-		db.Close()
+	sqlDB, err := db.DB()
+	if err != nil || sqlDB == nil {
+		return
 	}
+	sqlDB.Close()
 }
 
 func (mgr *ShardingManager) getSharding(key string) (*ShardingDB, error) {
@@ -298,17 +245,15 @@ func (mgr *ShardingManager) getSharding(key string) (*ShardingDB, error) {
 
 	sd, err := mgr.shardings.Get(key)
 	if err != nil || sd == nil {
-		if !mgr.db.HasTable(&database.Sharding{}) {
-			mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.Sharding{})
-		}
+		var st database.Sharding
 
-		var stsd database.Sharding
-		if err := mgr.db.Where("Fkey = ?", key).First(&stsd).Error; err != nil {
+		if err := mgr.db.Where("Fkey = ?", key).First(&st).Error; err != nil {
 			return nil, err
 		}
-		target = &ShardingDB{DBid: stsd.DBid, DBName: stsd.DBName}
 
+		target = &ShardingDB{DBID: st.DBID, DBName: st.DBName}
 		mgr.shardings.Set(key, target)
+
 	} else {
 		v, ok := sd.(*ShardingDB)
 		if !ok || v == nil {
@@ -320,30 +265,28 @@ func (mgr *ShardingManager) getSharding(key string) (*ShardingDB, error) {
 	return target, nil
 }
 
-func (mgr *ShardingManager) getDBService(dbid string) (*DBService, error) {
+func (mgr *ShardingManager) getDBService(dbID string) (*DBService, error) {
 	var target *DBService
 
-	service, err := mgr.dbServices.Get(dbid)
+	service, err := mgr.dbServices.Get(dbID)
 	if err != nil || service == nil {
-		if !mgr.db.HasTable(&database.ShardingDB{}) {
-			mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.ShardingDB{})
-		}
+		var st database.ShardingDB
 
-		var stdb database.ShardingDB
-		if err := mgr.db.Where("Fdbid = ? AND Fstate = ?", dbid, pbcommon.CommonState_CS_VALID).
-			First(&stdb).Error; err != nil {
+		if err := mgr.db.
+			Where("Fdb_id = ? AND Fstate = ?", dbID, pbcommon.CommonState_CS_VALID).
+			First(&st).Error; err != nil {
 			return nil, err
 		}
 
 		target = &DBService{
-			ID:       stdb.DBid,
-			Host:     stdb.Host,
-			Port:     int(stdb.Port),
-			User:     stdb.User,
-			Password: stdb.Password,
+			ID:       st.DBID,
+			Host:     st.Host,
+			Port:     int(st.Port),
+			User:     st.User,
+			Password: st.Password,
 		}
+		mgr.dbServices.Set(st.DBID, target)
 
-		mgr.dbServices.Set(stdb.DBid, target)
 	} else {
 		v, ok := service.(*DBService)
 		if !ok || v == nil {
@@ -355,22 +298,24 @@ func (mgr *ShardingManager) getDBService(dbid string) (*DBService, error) {
 	return target, nil
 }
 
-func (mgr *ShardingManager) dbSDKey(dbid, dbname string) string {
-	return dbid + "-" + dbname
+func (mgr *ShardingManager) dbSDKey(dbID, dbName string) string {
+	return dbID + "-" + dbName
 }
 
-func (mgr *ShardingManager) getDB(dbid, dbname string) (*gorm.DB, error) {
+func (mgr *ShardingManager) getDB(dbID, dbName string) (*gorm.DB, error) {
 	var target *gorm.DB
 
-	db, err := mgr.dbs.Get(mgr.dbSDKey(dbid, dbname))
+	dbSDKey := mgr.dbSDKey(dbID, dbName)
+
+	db, err := mgr.dbs.Get(dbSDKey)
 	if err != nil || db == nil {
-		service, err := mgr.getDBService(dbid)
+		service, err := mgr.getDBService(dbID)
 		if err != nil {
 			return nil, err
 		}
 
 		// make a new db connection with db service instance.
-		newDB, err := mgr.newDB(service, dbname)
+		newDB, err := mgr.newDB(service, dbName)
 		if err != nil {
 			return nil, err
 		}
@@ -379,18 +324,24 @@ func (mgr *ShardingManager) getDB(dbid, dbname string) (*gorm.DB, error) {
 		mgr.repeatMu.Lock()
 		defer mgr.repeatMu.Unlock()
 
-		odb, err := mgr.dbs.Get(mgr.dbSDKey(dbid, dbname))
+		oldDB, err := mgr.dbs.Get(dbSDKey)
 		if err != nil {
 			target = newDB
-			mgr.dbs.Set(mgr.dbSDKey(dbid, dbname), target)
+			mgr.dbs.Set(dbSDKey, target)
+
 		} else {
-			v, ok := odb.(*gorm.DB)
+			v, ok := oldDB.(*gorm.DB)
 			if !ok || v == nil {
 				return nil, errors.New("can't get sharding database, invalid dbs cache struct")
 			}
 			target = v
-			newDB.Close()
+
+			sqlDB, err := newDB.DB()
+			if err == nil {
+				sqlDB.Close()
+			}
 		}
+
 	} else {
 		v, ok := db.(*gorm.DB)
 		if !ok || v == nil {
@@ -410,7 +361,7 @@ func (mgr *ShardingManager) ShardingDB(key string) (*ShardingDB, error) {
 	}
 
 	if key == BSCPDBKEY {
-		return &ShardingDB{DBName: database.BSCPSHARDINGDB, db: mgr.db}, nil
+		return &ShardingDB{DBName: database.BSCPDB, db: mgr.db}, nil
 	}
 
 	// get ShardingDB from shardings cache.
@@ -420,14 +371,14 @@ func (mgr *ShardingManager) ShardingDB(key string) (*ShardingDB, error) {
 	}
 
 	// target db service instance client.
-	db, err := mgr.getDB(sd.DBid, sd.DBName)
+	db, err := mgr.getDB(sd.DBID, sd.DBName)
 	if err != nil {
 		return nil, err
 	}
 
 	// return target sharding result, include dbname and db handler.
 	shardingDB := &ShardingDB{
-		DBid:   sd.DBid,
+		DBID:   sd.DBID,
 		DBName: sd.DBName,
 		db:     db,
 	}
@@ -442,7 +393,11 @@ func (mgr *ShardingManager) PurgeSharding() {
 
 // Close closes sharding manager.
 func (mgr *ShardingManager) Close() error {
-	if err := mgr.db.Close(); err != nil {
+	sqlDB, err := mgr.db.DB()
+	if err != nil {
+		return err
+	}
+	if err := sqlDB.Close(); err != nil {
 		return err
 	}
 
@@ -456,7 +411,10 @@ func (mgr *ShardingManager) Close() error {
 		if !ok {
 			continue
 		}
-		db.Close()
+
+		if sqlDB, err := db.DB(); err == nil {
+			sqlDB.Close()
+		}
 	}
 
 	return nil
@@ -464,12 +422,8 @@ func (mgr *ShardingManager) Close() error {
 
 // CreateShardingDB create a new sharding database.
 func (mgr *ShardingManager) CreateShardingDB(db *pbcommon.ShardingDB) error {
-	if !mgr.db.HasTable(&database.ShardingDB{}) {
-		mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.ShardingDB{})
-	}
-
 	st := &database.ShardingDB{
-		DBid:     db.Dbid,
+		DBID:     db.DbId,
 		Host:     db.Host,
 		Port:     db.Port,
 		User:     db.User,
@@ -481,18 +435,14 @@ func (mgr *ShardingManager) CreateShardingDB(db *pbcommon.ShardingDB) error {
 }
 
 // QueryShardingDB returns target sharding database.
-func (mgr *ShardingManager) QueryShardingDB(dbid string) (*pbcommon.ShardingDB, error) {
-	if !mgr.db.HasTable(&database.ShardingDB{}) {
-		mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.ShardingDB{})
-	}
-
+func (mgr *ShardingManager) QueryShardingDB(dbID string) (*pbcommon.ShardingDB, error) {
 	var st database.ShardingDB
-	if err := mgr.db.Where("Fdbid = ?", dbid).First(&st).Error; err != nil {
+	if err := mgr.db.Where("Fdb_id = ?", dbID).First(&st).Error; err != nil {
 		return nil, err
 	}
 
 	db := &pbcommon.ShardingDB{
-		Dbid:      st.DBid,
+		DbId:      st.DBID,
 		Host:      st.Host,
 		Port:      st.Port,
 		User:      st.User,
@@ -507,19 +457,19 @@ func (mgr *ShardingManager) QueryShardingDB(dbid string) (*pbcommon.ShardingDB, 
 
 // QueryShardingDBList returns all sharding databases.
 func (mgr *ShardingManager) QueryShardingDBList() ([]*pbcommon.ShardingDB, error) {
-	if !mgr.db.HasTable(&database.ShardingDB{}) {
-		mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.ShardingDB{})
-	}
-
 	var sts []database.ShardingDB
-	if err := mgr.db.Where("Fstate = ?", pbcommon.CommonState_CS_VALID).Find(&sts).Error; err != nil {
+
+	if err := mgr.db.
+		Where("Fstate = ?", pbcommon.CommonState_CS_VALID).
+		Find(&sts).Error; err != nil {
 		return nil, err
 	}
 
 	var dbs []*pbcommon.ShardingDB
+
 	for _, st := range sts {
 		db := &pbcommon.ShardingDB{
-			Dbid:      st.DBid,
+			DbId:      st.DBID,
 			Host:      st.Host,
 			Port:      st.Port,
 			User:      st.User,
@@ -535,12 +485,21 @@ func (mgr *ShardingManager) QueryShardingDBList() ([]*pbcommon.ShardingDB, error
 	return dbs, nil
 }
 
+// QueryShardingDBCount returns all sharding databases count.
+func (mgr *ShardingManager) QueryShardingDBCount() (int64, error) {
+	var totalCount int64
+
+	if err := mgr.db.
+		Model(&database.ShardingDB{}).
+		Where("Fstate = ?", pbcommon.CommonState_CS_VALID).
+		Count(&totalCount).Error; err != nil {
+		return 0, err
+	}
+	return totalCount, nil
+}
+
 // UpdateShardingDB updates target sharding database.
 func (mgr *ShardingManager) UpdateShardingDB(db *pbcommon.ShardingDB) error {
-	if !mgr.db.HasTable(&database.ShardingDB{}) {
-		mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.ShardingDB{})
-	}
-
 	ups := map[string]interface{}{
 		"Host":     db.Host,
 		"Port":     db.Port,
@@ -549,19 +508,15 @@ func (mgr *ShardingManager) UpdateShardingDB(db *pbcommon.ShardingDB) error {
 		"Memo":     db.Memo,
 		"State":    db.State,
 	}
-	return mgr.db.Model(&database.ShardingDB{}).Where("Fdbid = ?", db.Dbid).Updates(ups).Error
+	return mgr.db.Model(&database.ShardingDB{}).Where("Fdb_id = ?", db.DbId).Updates(ups).Error
 }
 
 // CreateSharding creates a new sharding relation.
 func (mgr *ShardingManager) CreateSharding(sharding *pbcommon.Sharding) error {
-	if !mgr.db.HasTable(&database.Sharding{}) {
-		mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.Sharding{})
-	}
-
 	st := &database.Sharding{
 		Key:    sharding.Key,
-		DBid:   sharding.Dbid,
-		DBName: sharding.Dbname,
+		DBID:   sharding.DbId,
+		DBName: sharding.DbName,
 		Memo:   sharding.Memo,
 		State:  sharding.State,
 	}
@@ -570,10 +525,6 @@ func (mgr *ShardingManager) CreateSharding(sharding *pbcommon.Sharding) error {
 
 // QuerySharding returns target sharding by key.
 func (mgr *ShardingManager) QuerySharding(key string) (*pbcommon.Sharding, error) {
-	if !mgr.db.HasTable(&database.Sharding{}) {
-		mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.Sharding{})
-	}
-
 	var st database.Sharding
 	if err := mgr.db.Where("Fkey = ?", key).First(&st).Error; err != nil {
 		return nil, err
@@ -581,8 +532,8 @@ func (mgr *ShardingManager) QuerySharding(key string) (*pbcommon.Sharding, error
 
 	sharding := &pbcommon.Sharding{
 		Key:       st.Key,
-		Dbid:      st.DBid,
-		Dbname:    st.DBName,
+		DbId:      st.DBID,
+		DbName:    st.DBName,
 		Memo:      st.Memo,
 		State:     st.State,
 		CreatedAt: st.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -593,13 +544,9 @@ func (mgr *ShardingManager) QuerySharding(key string) (*pbcommon.Sharding, error
 
 // UpdateSharding updates target sharding relation.
 func (mgr *ShardingManager) UpdateSharding(sharding *pbcommon.Sharding) error {
-	if !mgr.db.HasTable(&database.Sharding{}) {
-		mgr.db.Set("gorm:table_options", "CHARSET="+database.BSCPCHARSET).CreateTable(&database.Sharding{})
-	}
-
 	ups := map[string]interface{}{
-		"DBid":   sharding.Dbid,
-		"DBName": sharding.Dbname,
+		"DBID":   sharding.DbId,
+		"DBName": sharding.DbName,
 		"Memo":   sharding.Memo,
 		"State":  sharding.State,
 	}

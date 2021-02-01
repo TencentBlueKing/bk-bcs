@@ -220,6 +220,12 @@ type PreDeleteHookCondition struct {
 	HookPhase HookPhase   `json:"phase"`
 }
 
+type PreInplaceHookCondition struct {
+	PodName   string      `json:"podName"`
+	StartTime metav1.Time `json:"startTime"`
+	HookPhase HookPhase   `json:"phase"`
+}
+
 type HookStep struct {
 	// +kubebuilder:validation:Required
 	TemplateName string            `json:"templateName"`

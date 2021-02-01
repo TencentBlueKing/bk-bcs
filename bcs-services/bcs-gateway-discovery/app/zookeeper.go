@@ -28,10 +28,6 @@ import (
 
 //service event notification
 func (s *DiscoveryServer) moduleEventNotifycation(module string) {
-	if !s.bcsRegister.IsMaster() {
-		blog.Infof("gateway-discovery instance is not master, skip module %s event notification", module)
-		return
-	}
 	//get event notification
 	event := &ModuleEvent{
 		Module: module,
@@ -159,6 +155,10 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 			blog.Errorf("get user-manager module from etcd registry failed, %s", err.Error())
 			return nil, err
 		}
+		if node == nil {
+			blog.Warnf("get no available user-manager service, no kube-apiserver service")
+			return nil, nil
+		}
 		userMgrInst = node.Address
 		blog.Infof("get random user-manager instance [%s] from etcd registry for query kube-apiserver", userMgrInst)
 	} else {
@@ -192,7 +192,7 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 		return nil, err
 	}
 	if len(clusters) == 0 {
-		blog.Warnf("No kube-apiserver registed, skip kube-apiserver proxy rules")
+		blog.Warnf("No kube-apiserver registered, skip kube-apiserver proxy rules")
 		return nil, nil
 	}
 	//construct inner Service definition

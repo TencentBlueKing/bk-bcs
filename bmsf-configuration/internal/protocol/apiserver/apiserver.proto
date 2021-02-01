@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package apiserver;
+
+// 仅用于API网关前置返回, 正常的接口请求返回由后置的各个逻辑服务负责.
+message CommonAPIResponse {
+    bool           result  = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+// 仅用于API网关内置返回，该结构返回系统内部各个模块的健康检查信息.
+message HealthzResponse {
+    message RespData {
+        bool                              is_healthy = 1;
+        repeated common.ModuleHealthzInfo modules    = 2;
+    }
+
+    bool           result  = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+    RespData       data    = 4;
+}

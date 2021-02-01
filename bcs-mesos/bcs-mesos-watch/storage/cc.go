@@ -312,7 +312,7 @@ func (cc *CCStorage) Worker() {
 			if len(cc.queue)+1024 > cap(cc.queue) {
 				blog.Warnf("CCStorage task busy, current task queue(%d/%d)", len(cc.queue), cap(cc.queue))
 			} else {
-				blog.V(3).Infof("CCStorage recieve task, current queue(%d/%d)", len(cc.queue), cap(cc.queue))
+				blog.V(3).Infof("CCStorage receive task, current queue(%d/%d)", len(cc.queue), cap(cc.queue))
 			}
 
 			if handler, ok := cc.handlers[data.DataType]; ok {

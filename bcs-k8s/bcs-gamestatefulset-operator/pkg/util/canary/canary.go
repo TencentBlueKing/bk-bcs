@@ -47,7 +47,7 @@ func GetCurrentPartition(set *gstsv1alpha1.GameStatefulSet) int32 {
 	currentStep, currentStepIndex := GetCurrentCanaryStep(set)
 	if currentStep == nil {
 		if (set.Spec.UpdateStrategy.CanaryStrategy == nil || len(set.Spec.UpdateStrategy.CanaryStrategy.Steps) == 0) &&
-			set.Spec.UpdateStrategy.RollingUpdate.Partition != nil {
+			set.Spec.UpdateStrategy.RollingUpdate != nil && set.Spec.UpdateStrategy.RollingUpdate.Partition != nil {
 			return *set.Spec.UpdateStrategy.RollingUpdate.Partition
 		}
 		return 0

@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 
-	"github.com/DeveloperJim/gokong"
+	"github.com/kevholditch/gokong"
 )
 
 const (
@@ -135,7 +135,7 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 	return nil
 }
 
-//UpdateService update specifed Service, if service does not exist, return error
+//UpdateService update specified Service, if service does not exist, return error
 func (r *kRegister) UpdateService(svc *register.Service) error {
 	return fmt.Errorf("not implemented")
 }
@@ -208,7 +208,7 @@ func (r *kRegister) ListServices() ([]*register.Service, error) {
 //GetTargetByService get service relative backends
 func (r *kRegister) GetTargetByService(svc *register.Service) ([]register.Backend, error) {
 	if svc == nil || len(svc.Host) == 0 {
-		return nil, fmt.Errorf("neccessary service info lost")
+		return nil, fmt.Errorf("necessary service info lost")
 	}
 	ktargets, err := r.kClient.Targets().GetTargetsFromUpstreamId(svc.Host)
 	if err != nil {

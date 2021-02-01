@@ -1,0 +1,47 @@
+# 当前模块相关配置信息
+server:
+    # RPC监听配置
+    endpoint:
+        ip: 0.0.0.0
+        port: ${AUTH_SERVER_PORT}
+
+# 权限相关配置
+auth:
+    # 权限认证模式(e.g. LOCAL、BKIAM) 说明：LOCAL-本地ACL准入控制模式  BKIAM-蓝鲸权限中心模式
+    mode: ${AUTH_MODE}
+
+# 蓝鲸权限中心模式相关配置
+bkiam:
+    host: ${BKIAM_HOST}
+    token: ${BKIAM_TOKEN}
+
+# 数据库相关配置信息
+database:
+    host: ${DB_HOST}
+    port: ${DB_PORT}
+    user: ${DB_USER}
+    passwd: ${DB_PASSWD}
+
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - ${ETCD_IP}:${ETCD_PORT}
+
+    # TLS接口配置
+    tls:
+        certPassword: ${ETCD_TLS_CERT_PASSWORD}
+        caFile: ${ETCD_TLS_CA_FILE}
+        certFile: ${ETCD_TLS_CERT_FILE}
+        keyFile: ${ETCD_TLS_KEY_FILE}
+
+# metrics采集接口相关配置
+metrics:
+    endpoint: ${AUTH_SERVER_METRICS_ENDPOINT}
+
+# 日志相关配置信息
+logger:
+    directory: ${LOG_DIR}
+    level: ${LOG_LEVEL}
+    maxnum: ${LOG_FILE_MAX_NUM}
+    maxsize: ${LOG_FILE_MAX_SIZE}

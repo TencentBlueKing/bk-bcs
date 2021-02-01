@@ -1,6 +1,8 @@
-TARGET = bscp-e2e-testing
+TARGET = bk-bscp-e2e-testing
 
 GOENVPATH = $(shell go env GOPATH)
+
+export GO111MODULE=on
 
 default:
 	@echo -e "\e[34;1mBuilding $(TARGET)...\033[0m"

@@ -9,18 +9,8 @@ It is generated from these files:
 	datamanager.proto
 
 It has these top-level messages:
-	QueryAuthInfoReq
-	QueryAuthInfoResp
 	QueryAppMetadataReq
 	QueryAppMetadataResp
-	CreateBusinessReq
-	CreateBusinessResp
-	QueryBusinessReq
-	QueryBusinessResp
-	QueryBusinessListReq
-	QueryBusinessListResp
-	UpdateBusinessReq
-	UpdateBusinessResp
 	CreateAppReq
 	CreateAppResp
 	QueryAppReq
@@ -31,48 +21,52 @@ It has these top-level messages:
 	UpdateAppResp
 	DeleteAppReq
 	DeleteAppResp
-	CreateClusterReq
-	CreateClusterResp
-	QueryClusterReq
-	QueryClusterResp
-	QueryClusterListReq
-	QueryClusterListResp
-	UpdateClusterReq
-	UpdateClusterResp
-	DeleteClusterReq
-	DeleteClusterResp
-	CreateZoneReq
-	CreateZoneResp
-	QueryZoneReq
-	QueryZoneResp
-	QueryZoneListReq
-	QueryZoneListResp
-	UpdateZoneReq
-	UpdateZoneResp
-	DeleteZoneReq
-	DeleteZoneResp
-	CreateConfigSetReq
-	CreateConfigSetResp
-	QueryConfigSetReq
-	QueryConfigSetResp
-	QueryConfigSetListReq
-	QueryConfigSetListResp
-	UpdateConfigSetReq
-	UpdateConfigSetResp
-	DeleteConfigSetReq
-	DeleteConfigSetResp
-	LockConfigSetReq
-	LockConfigSetResp
-	UnlockConfigSetReq
-	UnlockConfigSetResp
-	CreateConfigsReq
-	CreateConfigsResp
-	QueryConfigsReq
-	QueryConfigsResp
-	QueryReleaseConfigsReq
-	QueryReleaseConfigsResp
-	QueryConfigsListReq
-	QueryConfigsListResp
+	CreateTemplateBindReq
+	CreateTemplateBindResp
+	QueryTemplateBindReq
+	QueryTemplateBindResp
+	QueryTemplateBindListReq
+	QueryTemplateBindListResp
+	DeleteTemplateBindReq
+	DeleteTemplateBindResp
+	CreateConfigTemplateReq
+	CreateConfigTemplateResp
+	QueryConfigTemplateReq
+	QueryConfigTemplateResp
+	QueryConfigTemplateListReq
+	QueryConfigTemplateListResp
+	UpdateConfigTemplateReq
+	UpdateConfigTemplateResp
+	DeleteConfigTemplateReq
+	DeleteConfigTemplateResp
+	CreateConfigTemplateVersionReq
+	CreateConfigTemplateVersionResp
+	QueryConfigTemplateVersionReq
+	QueryConfigTemplateVersionResp
+	QueryConfigTemplateVersionListReq
+	QueryConfigTemplateVersionListResp
+	UpdateConfigTemplateVersionReq
+	UpdateConfigTemplateVersionResp
+	DeleteConfigTemplateVersionReq
+	DeleteConfigTemplateVersionResp
+	CreateConfigReq
+	CreateConfigResp
+	QueryConfigReq
+	QueryConfigResp
+	QueryConfigListReq
+	QueryConfigListResp
+	UpdateConfigReq
+	UpdateConfigResp
+	DeleteConfigReq
+	DeleteConfigResp
+	CreateConfigContentReq
+	CreateConfigContentResp
+	QueryConfigContentReq
+	QueryConfigContentResp
+	QueryReleaseConfigContentReq
+	QueryReleaseConfigContentResp
+	QueryConfigContentListReq
+	QueryConfigContentListResp
 	CreateCommitReq
 	CreateCommitResp
 	QueryCommitReq
@@ -85,6 +79,8 @@ It has these top-level messages:
 	CancelCommitResp
 	ConfirmCommitReq
 	ConfirmCommitResp
+	CreateMultiCommitWithContentReq
+	CreateMultiCommitWithContentResp
 	CreateMultiCommitReq
 	CreateMultiCommitResp
 	QueryMultiCommitReq
@@ -167,6 +163,8 @@ It has these top-level messages:
 	UpdateProcAttrResp
 	DeleteProcAttrReq
 	DeleteProcAttrResp
+	InitShardingDBReq
+	InitShardingDBResp
 	CreateShardingDBReq
 	CreateShardingDBResp
 	QueryShardingDBReq
@@ -183,58 +181,10 @@ It has these top-level messages:
 	UpdateShardingResp
 	CreateAuditReq
 	CreateAuditResp
-	CreateConfigTemplateSetReq
-	CreateConfigTemplateSetResp
-	DeleteConfigTemplateSetReq
-	DeleteConfigTemplateSetResp
-	UpdateConfigTemplateSetReq
-	UpdateConfigTemplateSetResp
-	QueryConfigTemplateSetReq
-	QueryConfigTemplateSetResp
-	QueryConfigTemplateSetListReq
-	QueryConfigTemplateSetListResp
-	CreateConfigTemplateReq
-	CreateConfigTemplateResp
-	DeleteConfigTemplateReq
-	DeleteConfigTemplateResp
-	UpdateConfigTemplateReq
-	UpdateConfigTemplateResp
-	QueryConfigTemplateReq
-	QueryConfigTemplateResp
-	QueryConfigTemplateListReq
-	QueryConfigTemplateListResp
-	CreateTemplateVersionReq
-	CreateTemplateVersionResp
-	DeleteTemplateVersionReq
-	DeleteTemplateVersionResp
-	UpdateTemplateVersionReq
-	UpdateTemplateVersionResp
-	QueryTemplateVersionReq
-	QueryTemplateVersionResp
-	QueryTemplateVersionListReq
-	QueryTemplateVersionListResp
-	CreateConfigTemplateBindingReq
-	CreateConfigTemplateBindingResp
-	DeleteConfigTemplateBindingReq
-	DeleteConfigTemplateBindingResp
-	UpdateConfigTemplateBindingReq
-	UpdateConfigTemplateBindingResp
-	QueryConfigTemplateBindingReq
-	QueryConfigTemplateBindingResp
-	QueryConfigTemplateBindingListReq
-	QueryConfigTemplateBindingListResp
-	CreateVariableReq
-	CreateVariableResp
-	UpdateVariableReq
-	UpdateVariableResp
-	DeleteVariableReq
-	DeleteVariableResp
-	QueryVariableReq
-	QueryVariableResp
-	QueryVariableListReq
-	QueryVariableListResp
 	QueryAuditListReq
 	QueryAuditListResp
+	HealthzReq
+	HealthzResp
 */
 package datamanager
 
@@ -259,549 +209,76 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type QueryAuthInfoReq struct {
-	Seq uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-}
-
-func (m *QueryAuthInfoReq) Reset()                    { *m = QueryAuthInfoReq{} }
-func (m *QueryAuthInfoReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryAuthInfoReq) ProtoMessage()               {}
-func (*QueryAuthInfoReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
-
-func (m *QueryAuthInfoReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAuthInfoReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-type QueryAuthInfoResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Auth    string         `protobuf:"bytes,4,opt,name=auth" json:"auth,omitempty"`
-}
-
-func (m *QueryAuthInfoResp) Reset()                    { *m = QueryAuthInfoResp{} }
-func (m *QueryAuthInfoResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryAuthInfoResp) ProtoMessage()               {}
-func (*QueryAuthInfoResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *QueryAuthInfoResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAuthInfoResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryAuthInfoResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryAuthInfoResp) GetAuth() string {
-	if m != nil {
-		return m.Auth
-	}
-	return ""
-}
-
 type QueryAppMetadataReq struct {
-	Seq          uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	BusinessName string `protobuf:"bytes,2,opt,name=businessName" json:"businessName,omitempty"`
-	AppName      string `protobuf:"bytes,3,opt,name=appName" json:"appName,omitempty"`
-	ClusterName  string `protobuf:"bytes,4,opt,name=clusterName" json:"clusterName,omitempty"`
-	ZoneName     string `protobuf:"bytes,5,opt,name=zoneName" json:"zoneName,omitempty"`
-	// add fields here.
-	ClusterLabels string `protobuf:"bytes,6,opt,name=clusterLabels" json:"clusterLabels,omitempty"`
+	Seq   string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 }
 
 func (m *QueryAppMetadataReq) Reset()                    { *m = QueryAppMetadataReq{} }
 func (m *QueryAppMetadataReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppMetadataReq) ProtoMessage()               {}
-func (*QueryAppMetadataReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*QueryAppMetadataReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *QueryAppMetadataReq) GetSeq() uint64 {
+func (m *QueryAppMetadataReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryAppMetadataReq) GetBusinessName() string {
+func (m *QueryAppMetadataReq) GetBizId() string {
 	if m != nil {
-		return m.BusinessName
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryAppMetadataReq) GetAppName() string {
+func (m *QueryAppMetadataReq) GetAppId() string {
 	if m != nil {
-		return m.AppName
-	}
-	return ""
-}
-
-func (m *QueryAppMetadataReq) GetClusterName() string {
-	if m != nil {
-		return m.ClusterName
-	}
-	return ""
-}
-
-func (m *QueryAppMetadataReq) GetZoneName() string {
-	if m != nil {
-		return m.ZoneName
-	}
-	return ""
-}
-
-func (m *QueryAppMetadataReq) GetClusterLabels() string {
-	if m != nil {
-		return m.ClusterLabels
+		return m.AppId
 	}
 	return ""
 }
 
 type QueryAppMetadataResp struct {
-	Seq       uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Bid       string         `protobuf:"bytes,4,opt,name=bid" json:"bid,omitempty"`
-	Appid     string         `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string         `protobuf:"bytes,6,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string         `protobuf:"bytes,7,opt,name=zoneid" json:"zoneid,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *QueryAppMetadataResp) Reset()                    { *m = QueryAppMetadataResp{} }
 func (m *QueryAppMetadataResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppMetadataResp) ProtoMessage()               {}
-func (*QueryAppMetadataResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*QueryAppMetadataResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *QueryAppMetadataResp) GetSeq() uint64 {
+func (m *QueryAppMetadataResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryAppMetadataResp) GetErrCode() common.ErrCode {
+func (m *QueryAppMetadataResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryAppMetadataResp) GetErrMsg() string {
+func (m *QueryAppMetadataResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryAppMetadataResp) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryAppMetadataResp) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryAppMetadataResp) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *QueryAppMetadataResp) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-type CreateBusinessReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid     string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Name    string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
-	Depid   string `protobuf:"bytes,4,opt,name=depid" json:"depid,omitempty"`
-	State   int32  `protobuf:"varint,5,opt,name=state" json:"state,omitempty"`
-	Creator string `protobuf:"bytes,6,opt,name=creator" json:"creator,omitempty"`
-	Memo    string `protobuf:"bytes,7,opt,name=memo" json:"memo,omitempty"`
-	Auth    string `protobuf:"bytes,8,opt,name=auth" json:"auth,omitempty"`
-}
-
-func (m *CreateBusinessReq) Reset()                    { *m = CreateBusinessReq{} }
-func (m *CreateBusinessReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateBusinessReq) ProtoMessage()               {}
-func (*CreateBusinessReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
-
-func (m *CreateBusinessReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateBusinessReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateBusinessReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *CreateBusinessReq) GetDepid() string {
-	if m != nil {
-		return m.Depid
-	}
-	return ""
-}
-
-func (m *CreateBusinessReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateBusinessReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-func (m *CreateBusinessReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateBusinessReq) GetAuth() string {
-	if m != nil {
-		return m.Auth
-	}
-	return ""
-}
-
-type CreateBusinessResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Bid     string         `protobuf:"bytes,4,opt,name=bid" json:"bid,omitempty"`
-}
-
-func (m *CreateBusinessResp) Reset()                    { *m = CreateBusinessResp{} }
-func (m *CreateBusinessResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateBusinessResp) ProtoMessage()               {}
-func (*CreateBusinessResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
-
-func (m *CreateBusinessResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateBusinessResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateBusinessResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateBusinessResp) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-type QueryBusinessReq struct {
-	Seq  uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid  string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Name string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
-}
-
-func (m *QueryBusinessReq) Reset()                    { *m = QueryBusinessReq{} }
-func (m *QueryBusinessReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryBusinessReq) ProtoMessage()               {}
-func (*QueryBusinessReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
-
-func (m *QueryBusinessReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryBusinessReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryBusinessReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-type QueryBusinessResp struct {
-	Seq      uint64           `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode   `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string           `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Business *common.Business `protobuf:"bytes,4,opt,name=business" json:"business,omitempty"`
-}
-
-func (m *QueryBusinessResp) Reset()                    { *m = QueryBusinessResp{} }
-func (m *QueryBusinessResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryBusinessResp) ProtoMessage()               {}
-func (*QueryBusinessResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
-
-func (m *QueryBusinessResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryBusinessResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryBusinessResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryBusinessResp) GetBusiness() *common.Business {
-	if m != nil {
-		return m.Business
-	}
-	return nil
-}
-
-type QueryBusinessListReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Index int32  `protobuf:"varint,2,opt,name=index" json:"index,omitempty"`
-	Limit int32  `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryBusinessListReq) Reset()                    { *m = QueryBusinessListReq{} }
-func (m *QueryBusinessListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryBusinessListReq) ProtoMessage()               {}
-func (*QueryBusinessListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
-
-func (m *QueryBusinessListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryBusinessListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryBusinessListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryBusinessListResp struct {
-	Seq        uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode     `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string             `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Businesses []*common.Business `protobuf:"bytes,4,rep,name=businesses" json:"businesses,omitempty"`
-}
-
-func (m *QueryBusinessListResp) Reset()                    { *m = QueryBusinessListResp{} }
-func (m *QueryBusinessListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryBusinessListResp) ProtoMessage()               {}
-func (*QueryBusinessListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
-
-func (m *QueryBusinessListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryBusinessListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryBusinessListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryBusinessListResp) GetBusinesses() []*common.Business {
-	if m != nil {
-		return m.Businesses
-	}
-	return nil
-}
-
-type UpdateBusinessReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Name     string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
-	Depid    string `protobuf:"bytes,4,opt,name=depid" json:"depid,omitempty"`
-	Memo     string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	State    int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
-	Operator string `protobuf:"bytes,7,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateBusinessReq) Reset()                    { *m = UpdateBusinessReq{} }
-func (m *UpdateBusinessReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateBusinessReq) ProtoMessage()               {}
-func (*UpdateBusinessReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
-
-func (m *UpdateBusinessReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateBusinessReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateBusinessReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *UpdateBusinessReq) GetDepid() string {
-	if m != nil {
-		return m.Depid
-	}
-	return ""
-}
-
-func (m *UpdateBusinessReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateBusinessReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateBusinessReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateBusinessResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateBusinessResp) Reset()                    { *m = UpdateBusinessResp{} }
-func (m *UpdateBusinessResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateBusinessResp) ProtoMessage()               {}
-func (*UpdateBusinessResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
-
-func (m *UpdateBusinessResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateBusinessResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateBusinessResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateAppReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid      string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId      string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 	Name       string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	DeployType int32  `protobuf:"varint,5,opt,name=deployType" json:"deployType,omitempty"`
+	DeployType int32  `protobuf:"varint,5,opt,name=deploy_type,json=deployType" json:"deploy_type,omitempty"`
 	State      int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
 	Creator    string `protobuf:"bytes,7,opt,name=creator" json:"creator,omitempty"`
 	Memo       string `protobuf:"bytes,8,opt,name=memo" json:"memo,omitempty"`
@@ -810,25 +287,25 @@ type CreateAppReq struct {
 func (m *CreateAppReq) Reset()                    { *m = CreateAppReq{} }
 func (m *CreateAppReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateAppReq) ProtoMessage()               {}
-func (*CreateAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (*CreateAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-func (m *CreateAppReq) GetSeq() uint64 {
+func (m *CreateAppReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateAppReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *CreateAppReq) GetAppid() string {
+func (m *CreateAppReq) GetBizId() string {
 	if m != nil {
-		return m.Appid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CreateAppReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
@@ -869,74 +346,90 @@ func (m *CreateAppReq) GetMemo() string {
 }
 
 type CreateAppResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Appid   string         `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
+	Seq     string                  `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode          `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                  `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateAppResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *CreateAppResp) Reset()                    { *m = CreateAppResp{} }
 func (m *CreateAppResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateAppResp) ProtoMessage()               {}
-func (*CreateAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+func (*CreateAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
-func (m *CreateAppResp) GetSeq() uint64 {
+func (m *CreateAppResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateAppResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateAppResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *CreateAppResp) GetAppid() string {
+func (m *CreateAppResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Appid
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateAppResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateAppResp) GetData() *CreateAppResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateAppResp_RespData struct {
+	AppId string `protobuf:"bytes,1,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+}
+
+func (m *CreateAppResp_RespData) Reset()                    { *m = CreateAppResp_RespData{} }
+func (m *CreateAppResp_RespData) String() string            { return proto.CompactTextString(m) }
+func (*CreateAppResp_RespData) ProtoMessage()               {}
+func (*CreateAppResp_RespData) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3, 0} }
+
+func (m *CreateAppResp_RespData) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
 
 type QueryAppReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
+	Seq   string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 	Name  string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
 }
 
 func (m *QueryAppReq) Reset()                    { *m = QueryAppReq{} }
 func (m *QueryAppReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppReq) ProtoMessage()               {}
-func (*QueryAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*QueryAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
-func (m *QueryAppReq) GetSeq() uint64 {
+func (m *QueryAppReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAppReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryAppReq) GetAppid() string {
+func (m *QueryAppReq) GetBizId() string {
 	if m != nil {
-		return m.Appid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryAppReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
@@ -949,131 +442,147 @@ func (m *QueryAppReq) GetName() string {
 }
 
 type QueryAppResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	App     *common.App    `protobuf:"bytes,4,opt,name=app" json:"app,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.App    `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryAppResp) Reset()                    { *m = QueryAppResp{} }
 func (m *QueryAppResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppResp) ProtoMessage()               {}
-func (*QueryAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+func (*QueryAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
-func (m *QueryAppResp) GetSeq() uint64 {
+func (m *QueryAppResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAppResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryAppResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryAppResp) GetApp() *common.App {
+func (m *QueryAppResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.App
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryAppResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryAppResp) GetData() *common.App {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryAppListReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Index int32  `protobuf:"varint,3,opt,name=index" json:"index,omitempty"`
-	Limit int32  `protobuf:"varint,4,opt,name=limit" json:"limit,omitempty"`
+	Seq   string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	Page  *common.Page `protobuf:"bytes,3,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryAppListReq) Reset()                    { *m = QueryAppListReq{} }
 func (m *QueryAppListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppListReq) ProtoMessage()               {}
-func (*QueryAppListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+func (*QueryAppListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
-func (m *QueryAppListReq) GetSeq() uint64 {
+func (m *QueryAppListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAppListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryAppListReq) GetIndex() int32 {
+func (m *QueryAppListReq) GetBizId() string {
 	if m != nil {
-		return m.Index
+		return m.BizId
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryAppListReq) GetLimit() int32 {
+func (m *QueryAppListReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Limit
+		return m.Page
 	}
-	return 0
+	return nil
 }
 
 type QueryAppListResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Apps    []*common.App  `protobuf:"bytes,4,rep,name=apps" json:"apps,omitempty"`
+	Seq     string                     `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode             `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                     `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryAppListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryAppListResp) Reset()                    { *m = QueryAppListResp{} }
 func (m *QueryAppListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppListResp) ProtoMessage()               {}
-func (*QueryAppListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+func (*QueryAppListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
-func (m *QueryAppListResp) GetSeq() uint64 {
+func (m *QueryAppListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAppListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryAppListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryAppListResp) GetApps() []*common.App {
+func (m *QueryAppListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Apps
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryAppListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryAppListResp) GetData() *QueryAppListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryAppListResp_RespData struct {
+	TotalCount uint32        `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.App `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryAppListResp_RespData) Reset()                    { *m = QueryAppListResp_RespData{} }
+func (m *QueryAppListResp_RespData) String() string            { return proto.CompactTextString(m) }
+func (*QueryAppListResp_RespData) ProtoMessage()               {}
+func (*QueryAppListResp_RespData) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7, 0} }
+
+func (m *QueryAppListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryAppListResp_RespData) GetInfo() []*common.App {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type UpdateAppReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid      string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId      string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 	Name       string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	DeployType int32  `protobuf:"varint,5,opt,name=deployType" json:"deployType,omitempty"`
+	DeployType int32  `protobuf:"varint,5,opt,name=deploy_type,json=deployType" json:"deploy_type,omitempty"`
 	Memo       string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
 	State      int32  `protobuf:"varint,7,opt,name=state" json:"state,omitempty"`
 	Operator   string `protobuf:"bytes,8,opt,name=operator" json:"operator,omitempty"`
@@ -1082,25 +591,25 @@ type UpdateAppReq struct {
 func (m *UpdateAppReq) Reset()                    { *m = UpdateAppReq{} }
 func (m *UpdateAppReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateAppReq) ProtoMessage()               {}
-func (*UpdateAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+func (*UpdateAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
-func (m *UpdateAppReq) GetSeq() uint64 {
+func (m *UpdateAppReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateAppReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *UpdateAppReq) GetAppid() string {
+func (m *UpdateAppReq) GetBizId() string {
 	if m != nil {
-		return m.Appid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *UpdateAppReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
@@ -1141,66 +650,66 @@ func (m *UpdateAppReq) GetOperator() string {
 }
 
 type UpdateAppResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateAppResp) Reset()                    { *m = UpdateAppResp{} }
 func (m *UpdateAppResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateAppResp) ProtoMessage()               {}
-func (*UpdateAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+func (*UpdateAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
-func (m *UpdateAppResp) GetSeq() uint64 {
+func (m *UpdateAppResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateAppResp) GetErrCode() common.ErrCode {
+func (m *UpdateAppResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateAppResp) GetErrMsg() string {
+func (m *UpdateAppResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type DeleteAppReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid    string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId    string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *DeleteAppReq) Reset()                    { *m = DeleteAppReq{} }
 func (m *DeleteAppReq) String() string            { return proto.CompactTextString(m) }
 func (*DeleteAppReq) ProtoMessage()               {}
-func (*DeleteAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+func (*DeleteAppReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
 
-func (m *DeleteAppReq) GetSeq() uint64 {
+func (m *DeleteAppReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteAppReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *DeleteAppReq) GetAppid() string {
+func (m *DeleteAppReq) GetBizId() string {
 	if m != nil {
-		return m.Appid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *DeleteAppReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
@@ -1213,2219 +722,2685 @@ func (m *DeleteAppReq) GetOperator() string {
 }
 
 type DeleteAppResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *DeleteAppResp) Reset()                    { *m = DeleteAppResp{} }
 func (m *DeleteAppResp) String() string            { return proto.CompactTextString(m) }
 func (*DeleteAppResp) ProtoMessage()               {}
-func (*DeleteAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
+func (*DeleteAppResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
 
-func (m *DeleteAppResp) GetSeq() uint64 {
+func (m *DeleteAppResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteAppResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteAppResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-type CreateClusterReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Clusterid  string `protobuf:"bytes,3,opt,name=clusterid" json:"clusterid,omitempty"`
-	Name       string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Appid      string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
-	RClusterid string `protobuf:"bytes,6,opt,name=rClusterid" json:"rClusterid,omitempty"`
+func (m *DeleteAppResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *DeleteAppResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type CreateTemplateBindReq struct {
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string `protobuf:"bytes,4,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId      string `protobuf:"bytes,5,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	State      int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
 	Creator    string `protobuf:"bytes,7,opt,name=creator" json:"creator,omitempty"`
-	Memo       string `protobuf:"bytes,8,opt,name=memo" json:"memo,omitempty"`
-	Labels     string `protobuf:"bytes,9,opt,name=labels" json:"labels,omitempty"`
 }
 
-func (m *CreateClusterReq) Reset()                    { *m = CreateClusterReq{} }
-func (m *CreateClusterReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateClusterReq) ProtoMessage()               {}
-func (*CreateClusterReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
+func (m *CreateTemplateBindReq) Reset()                    { *m = CreateTemplateBindReq{} }
+func (m *CreateTemplateBindReq) String() string            { return proto.CompactTextString(m) }
+func (*CreateTemplateBindReq) ProtoMessage()               {}
+func (*CreateTemplateBindReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
 
-func (m *CreateClusterReq) GetSeq() uint64 {
+func (m *CreateTemplateBindReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateClusterReq) GetBid() string {
+func (m *CreateTemplateBindReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateClusterReq) GetClusterid() string {
+func (m *CreateTemplateBindReq) GetTemplateId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.TemplateId
 	}
 	return ""
 }
 
-func (m *CreateClusterReq) GetName() string {
+func (m *CreateTemplateBindReq) GetAppId() string {
 	if m != nil {
-		return m.Name
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateClusterReq) GetAppid() string {
+func (m *CreateTemplateBindReq) GetCfgId() string {
 	if m != nil {
-		return m.Appid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *CreateClusterReq) GetRClusterid() string {
-	if m != nil {
-		return m.RClusterid
-	}
-	return ""
-}
-
-func (m *CreateClusterReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-func (m *CreateClusterReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateClusterReq) GetLabels() string {
-	if m != nil {
-		return m.Labels
-	}
-	return ""
-}
-
-type CreateClusterResp struct {
-	Seq       uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Clusterid string         `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-}
-
-func (m *CreateClusterResp) Reset()                    { *m = CreateClusterResp{} }
-func (m *CreateClusterResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateClusterResp) ProtoMessage()               {}
-func (*CreateClusterResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
-
-func (m *CreateClusterResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateClusterResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateClusterResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateClusterResp) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-type QueryClusterReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Name      string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
-	Labels    string `protobuf:"bytes,6,opt,name=labels" json:"labels,omitempty"`
-}
-
-func (m *QueryClusterReq) Reset()                    { *m = QueryClusterReq{} }
-func (m *QueryClusterReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryClusterReq) ProtoMessage()               {}
-func (*QueryClusterReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
-
-func (m *QueryClusterReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryClusterReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryClusterReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryClusterReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *QueryClusterReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *QueryClusterReq) GetLabels() string {
-	if m != nil {
-		return m.Labels
-	}
-	return ""
-}
-
-type QueryClusterResp struct {
-	Seq     uint64          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Cluster *common.Cluster `protobuf:"bytes,4,opt,name=cluster" json:"cluster,omitempty"`
-}
-
-func (m *QueryClusterResp) Reset()                    { *m = QueryClusterResp{} }
-func (m *QueryClusterResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryClusterResp) ProtoMessage()               {}
-func (*QueryClusterResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
-
-func (m *QueryClusterResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryClusterResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryClusterResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryClusterResp) GetCluster() *common.Cluster {
-	if m != nil {
-		return m.Cluster
-	}
-	return nil
-}
-
-type QueryClusterListReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid     string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid   string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	AppName string `protobuf:"bytes,4,opt,name=appName" json:"appName,omitempty"`
-	Index   int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit   int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryClusterListReq) Reset()                    { *m = QueryClusterListReq{} }
-func (m *QueryClusterListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryClusterListReq) ProtoMessage()               {}
-func (*QueryClusterListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
-
-func (m *QueryClusterListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryClusterListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryClusterListReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryClusterListReq) GetAppName() string {
-	if m != nil {
-		return m.AppName
-	}
-	return ""
-}
-
-func (m *QueryClusterListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryClusterListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryClusterListResp struct {
-	Seq      uint64            `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode    `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string            `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Clusters []*common.Cluster `protobuf:"bytes,4,rep,name=clusters" json:"clusters,omitempty"`
-}
-
-func (m *QueryClusterListResp) Reset()                    { *m = QueryClusterListResp{} }
-func (m *QueryClusterListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryClusterListResp) ProtoMessage()               {}
-func (*QueryClusterListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
-
-func (m *QueryClusterListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryClusterListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryClusterListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryClusterListResp) GetClusters() []*common.Cluster {
-	if m != nil {
-		return m.Clusters
-	}
-	return nil
-}
-
-type UpdateClusterReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Clusterid  string `protobuf:"bytes,3,opt,name=clusterid" json:"clusterid,omitempty"`
-	Name       string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	RClusterid string `protobuf:"bytes,5,opt,name=rClusterid" json:"rClusterid,omitempty"`
-	Memo       string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
-	State      int32  `protobuf:"varint,7,opt,name=state" json:"state,omitempty"`
-	Operator   string `protobuf:"bytes,8,opt,name=operator" json:"operator,omitempty"`
-	Labels     string `protobuf:"bytes,9,opt,name=labels" json:"labels,omitempty"`
-}
-
-func (m *UpdateClusterReq) Reset()                    { *m = UpdateClusterReq{} }
-func (m *UpdateClusterReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateClusterReq) ProtoMessage()               {}
-func (*UpdateClusterReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
-
-func (m *UpdateClusterReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateClusterReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateClusterReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *UpdateClusterReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *UpdateClusterReq) GetRClusterid() string {
-	if m != nil {
-		return m.RClusterid
-	}
-	return ""
-}
-
-func (m *UpdateClusterReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateClusterReq) GetState() int32 {
+func (m *CreateTemplateBindReq) GetState() int32 {
 	if m != nil {
 		return m.State
 	}
 	return 0
 }
 
-func (m *UpdateClusterReq) GetOperator() string {
+func (m *CreateTemplateBindReq) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+type CreateTemplateBindResp struct {
+	Seq     string                           `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                   `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                           `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateTemplateBindResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *CreateTemplateBindResp) Reset()                    { *m = CreateTemplateBindResp{} }
+func (m *CreateTemplateBindResp) String() string            { return proto.CompactTextString(m) }
+func (*CreateTemplateBindResp) ProtoMessage()               {}
+func (*CreateTemplateBindResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+
+func (m *CreateTemplateBindResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateTemplateBindResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateTemplateBindResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateTemplateBindResp) GetData() *CreateTemplateBindResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateTemplateBindResp_RespData struct {
+	CfgId string `protobuf:"bytes,1,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+}
+
+func (m *CreateTemplateBindResp_RespData) Reset()         { *m = CreateTemplateBindResp_RespData{} }
+func (m *CreateTemplateBindResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateTemplateBindResp_RespData) ProtoMessage()    {}
+func (*CreateTemplateBindResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{13, 0}
+}
+
+func (m *CreateTemplateBindResp_RespData) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+type QueryTemplateBindReq struct {
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string `protobuf:"bytes,4,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId      string `protobuf:"bytes,5,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+}
+
+func (m *QueryTemplateBindReq) Reset()                    { *m = QueryTemplateBindReq{} }
+func (m *QueryTemplateBindReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindReq) ProtoMessage()               {}
+func (*QueryTemplateBindReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+
+func (m *QueryTemplateBindReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+type QueryTemplateBindResp struct {
+	Seq     string               `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode       `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string               `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.TemplateBind `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryTemplateBindResp) Reset()                    { *m = QueryTemplateBindResp{} }
+func (m *QueryTemplateBindResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindResp) ProtoMessage()               {}
+func (*QueryTemplateBindResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+
+func (m *QueryTemplateBindResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryTemplateBindResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindResp) GetData() *common.TemplateBind {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryTemplateBindListReq struct {
+	Seq        string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string       `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string       `protobuf:"bytes,4,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	Page       *common.Page `protobuf:"bytes,5,opt,name=page" json:"page,omitempty"`
+}
+
+func (m *QueryTemplateBindListReq) Reset()                    { *m = QueryTemplateBindListReq{} }
+func (m *QueryTemplateBindListReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindListReq) ProtoMessage()               {}
+func (*QueryTemplateBindListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+
+func (m *QueryTemplateBindListReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindListReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindListReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindListReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindListReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
+}
+
+type QueryTemplateBindListResp struct {
+	Seq     string                              `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                      `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                              `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryTemplateBindListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryTemplateBindListResp) Reset()                    { *m = QueryTemplateBindListResp{} }
+func (m *QueryTemplateBindListResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryTemplateBindListResp) ProtoMessage()               {}
+func (*QueryTemplateBindListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+
+func (m *QueryTemplateBindListResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryTemplateBindListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryTemplateBindListResp) GetData() *QueryTemplateBindListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryTemplateBindListResp_RespData struct {
+	TotalCount uint32                 `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.TemplateBind `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryTemplateBindListResp_RespData) Reset()         { *m = QueryTemplateBindListResp_RespData{} }
+func (m *QueryTemplateBindListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryTemplateBindListResp_RespData) ProtoMessage()    {}
+func (*QueryTemplateBindListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{17, 0}
+}
+
+func (m *QueryTemplateBindListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryTemplateBindListResp_RespData) GetInfo() []*common.TemplateBind {
+	if m != nil {
+		return m.Info
+	}
+	return nil
+}
+
+type DeleteTemplateBindReq struct {
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	AppId      string `protobuf:"bytes,4,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId      string `protobuf:"bytes,5,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	Operator   string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
+}
+
+func (m *DeleteTemplateBindReq) Reset()                    { *m = DeleteTemplateBindReq{} }
+func (m *DeleteTemplateBindReq) String() string            { return proto.CompactTextString(m) }
+func (*DeleteTemplateBindReq) ProtoMessage()               {}
+func (*DeleteTemplateBindReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+
+func (m *DeleteTemplateBindReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *DeleteTemplateBindReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *DeleteTemplateBindReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *DeleteTemplateBindReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *DeleteTemplateBindReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+func (m *DeleteTemplateBindReq) GetOperator() string {
 	if m != nil {
 		return m.Operator
 	}
 	return ""
 }
 
-func (m *UpdateClusterReq) GetLabels() string {
+type DeleteTemplateBindResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *DeleteTemplateBindResp) Reset()                    { *m = DeleteTemplateBindResp{} }
+func (m *DeleteTemplateBindResp) String() string            { return proto.CompactTextString(m) }
+func (*DeleteTemplateBindResp) ProtoMessage()               {}
+func (*DeleteTemplateBindResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+
+func (m *DeleteTemplateBindResp) GetSeq() string {
 	if m != nil {
-		return m.Labels
+		return m.Seq
 	}
 	return ""
 }
 
-type UpdateClusterResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateClusterResp) Reset()                    { *m = UpdateClusterResp{} }
-func (m *UpdateClusterResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateClusterResp) ProtoMessage()               {}
-func (*UpdateClusterResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
-
-func (m *UpdateClusterResp) GetSeq() uint64 {
+func (m *DeleteTemplateBindResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateClusterResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateClusterResp) GetErrMsg() string {
+func (m *DeleteTemplateBindResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-type DeleteClusterReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Clusterid string `protobuf:"bytes,3,opt,name=clusterid" json:"clusterid,omitempty"`
+type CreateConfigTemplateReq struct {
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	TemplateId    string `protobuf:"bytes,2,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	BizId         string `protobuf:"bytes,3,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	Name          string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
+	FileName      string `protobuf:"bytes,5,opt,name=file_name,json=fileName" json:"file_name,omitempty"`
+	FilePath      string `protobuf:"bytes,6,opt,name=file_path,json=filePath" json:"file_path,omitempty"`
+	User          string `protobuf:"bytes,7,opt,name=user" json:"user,omitempty"`
+	UserGroup     string `protobuf:"bytes,8,opt,name=user_group,json=userGroup" json:"user_group,omitempty"`
+	FilePrivilege string `protobuf:"bytes,9,opt,name=file_privilege,json=filePrivilege" json:"file_privilege,omitempty"`
+	FileFormat    string `protobuf:"bytes,10,opt,name=file_format,json=fileFormat" json:"file_format,omitempty"`
+	FileMode      int32  `protobuf:"varint,11,opt,name=file_mode,json=fileMode" json:"file_mode,omitempty"`
+	EngineType    int32  `protobuf:"varint,12,opt,name=engine_type,json=engineType" json:"engine_type,omitempty"`
+	Memo          string `protobuf:"bytes,13,opt,name=memo" json:"memo,omitempty"`
+	State         int32  `protobuf:"varint,14,opt,name=state" json:"state,omitempty"`
+	Creator       string `protobuf:"bytes,15,opt,name=creator" json:"creator,omitempty"`
+}
+
+func (m *CreateConfigTemplateReq) Reset()                    { *m = CreateConfigTemplateReq{} }
+func (m *CreateConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateReq) ProtoMessage()               {}
+func (*CreateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+
+func (m *CreateConfigTemplateReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFileName() string {
+	if m != nil {
+		return m.FileName
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFilePath() string {
+	if m != nil {
+		return m.FilePath
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetUserGroup() string {
+	if m != nil {
+		return m.UserGroup
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFilePrivilege() string {
+	if m != nil {
+		return m.FilePrivilege
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFileFormat() string {
+	if m != nil {
+		return m.FileFormat
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetFileMode() int32 {
+	if m != nil {
+		return m.FileMode
+	}
+	return 0
+}
+
+func (m *CreateConfigTemplateReq) GetEngineType() int32 {
+	if m != nil {
+		return m.EngineType
+	}
+	return 0
+}
+
+func (m *CreateConfigTemplateReq) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateReq) GetState() int32 {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+
+func (m *CreateConfigTemplateReq) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+type CreateConfigTemplateResp struct {
+	Seq     string                             `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                     `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                             `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateConfigTemplateResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *CreateConfigTemplateResp) Reset()                    { *m = CreateConfigTemplateResp{} }
+func (m *CreateConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateResp) ProtoMessage()               {}
+func (*CreateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
+
+func (m *CreateConfigTemplateResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateConfigTemplateResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateResp) GetData() *CreateConfigTemplateResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateConfigTemplateResp_RespData struct {
+	TemplateId string `protobuf:"bytes,1,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+}
+
+func (m *CreateConfigTemplateResp_RespData) Reset()         { *m = CreateConfigTemplateResp_RespData{} }
+func (m *CreateConfigTemplateResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateResp_RespData) ProtoMessage()    {}
+func (*CreateConfigTemplateResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{21, 0}
+}
+
+func (m *CreateConfigTemplateResp_RespData) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+type QueryConfigTemplateReq struct {
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+}
+
+func (m *QueryConfigTemplateReq) Reset()                    { *m = QueryConfigTemplateReq{} }
+func (m *QueryConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateReq) ProtoMessage()               {}
+func (*QueryConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
+
+func (m *QueryConfigTemplateReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+type QueryConfigTemplateResp struct {
+	Seq     string                 `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode         `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                 `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ConfigTemplate `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigTemplateResp) Reset()                    { *m = QueryConfigTemplateResp{} }
+func (m *QueryConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateResp) ProtoMessage()               {}
+func (*QueryConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
+
+func (m *QueryConfigTemplateResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigTemplateResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateResp) GetData() *common.ConfigTemplate {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigTemplateListReq struct {
+	Seq   string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	Page  *common.Page `protobuf:"bytes,3,opt,name=page" json:"page,omitempty"`
+}
+
+func (m *QueryConfigTemplateListReq) Reset()                    { *m = QueryConfigTemplateListReq{} }
+func (m *QueryConfigTemplateListReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateListReq) ProtoMessage()               {}
+func (*QueryConfigTemplateListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
+
+func (m *QueryConfigTemplateListReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateListReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateListReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
+}
+
+type QueryConfigTemplateListResp struct {
+	Seq     string                                `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                        `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryConfigTemplateListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigTemplateListResp) Reset()                    { *m = QueryConfigTemplateListResp{} }
+func (m *QueryConfigTemplateListResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateListResp) ProtoMessage()               {}
+func (*QueryConfigTemplateListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
+
+func (m *QueryConfigTemplateListResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigTemplateListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateListResp) GetData() *QueryConfigTemplateListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigTemplateListResp_RespData struct {
+	TotalCount uint32                   `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.ConfigTemplate `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryConfigTemplateListResp_RespData) Reset()         { *m = QueryConfigTemplateListResp_RespData{} }
+func (m *QueryConfigTemplateListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateListResp_RespData) ProtoMessage()    {}
+func (*QueryConfigTemplateListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{25, 0}
+}
+
+func (m *QueryConfigTemplateListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryConfigTemplateListResp_RespData) GetInfo() []*common.ConfigTemplate {
+	if m != nil {
+		return m.Info
+	}
+	return nil
+}
+
+type UpdateConfigTemplateReq struct {
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId    string `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	Name          string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
+	FileName      string `protobuf:"bytes,5,opt,name=file_name,json=fileName" json:"file_name,omitempty"`
+	FilePath      string `protobuf:"bytes,6,opt,name=file_path,json=filePath" json:"file_path,omitempty"`
+	User          string `protobuf:"bytes,7,opt,name=user" json:"user,omitempty"`
+	UserGroup     string `protobuf:"bytes,8,opt,name=user_group,json=userGroup" json:"user_group,omitempty"`
+	FilePrivilege string `protobuf:"bytes,9,opt,name=file_privilege,json=filePrivilege" json:"file_privilege,omitempty"`
+	FileFormat    string `protobuf:"bytes,10,opt,name=file_format,json=fileFormat" json:"file_format,omitempty"`
+	FileMode      int32  `protobuf:"varint,11,opt,name=file_mode,json=fileMode" json:"file_mode,omitempty"`
+	EngineType    int32  `protobuf:"varint,12,opt,name=engine_type,json=engineType" json:"engine_type,omitempty"`
+	Memo          string `protobuf:"bytes,13,opt,name=memo" json:"memo,omitempty"`
+	State         int32  `protobuf:"varint,14,opt,name=state" json:"state,omitempty"`
+	Operator      string `protobuf:"bytes,15,opt,name=operator" json:"operator,omitempty"`
+}
+
+func (m *UpdateConfigTemplateReq) Reset()                    { *m = UpdateConfigTemplateReq{} }
+func (m *UpdateConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateReq) ProtoMessage()               {}
+func (*UpdateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
+
+func (m *UpdateConfigTemplateReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFileName() string {
+	if m != nil {
+		return m.FileName
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFilePath() string {
+	if m != nil {
+		return m.FilePath
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetUserGroup() string {
+	if m != nil {
+		return m.UserGroup
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFilePrivilege() string {
+	if m != nil {
+		return m.FilePrivilege
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFileFormat() string {
+	if m != nil {
+		return m.FileFormat
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetFileMode() int32 {
+	if m != nil {
+		return m.FileMode
+	}
+	return 0
+}
+
+func (m *UpdateConfigTemplateReq) GetEngineType() int32 {
+	if m != nil {
+		return m.EngineType
+	}
+	return 0
+}
+
+func (m *UpdateConfigTemplateReq) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateReq) GetState() int32 {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+
+func (m *UpdateConfigTemplateReq) GetOperator() string {
+	if m != nil {
+		return m.Operator
+	}
+	return ""
+}
+
+type UpdateConfigTemplateResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *UpdateConfigTemplateResp) Reset()                    { *m = UpdateConfigTemplateResp{} }
+func (m *UpdateConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateResp) ProtoMessage()               {}
+func (*UpdateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
+
+func (m *UpdateConfigTemplateResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *UpdateConfigTemplateResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type DeleteConfigTemplateReq struct {
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	Operator   string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
+}
+
+func (m *DeleteConfigTemplateReq) Reset()                    { *m = DeleteConfigTemplateReq{} }
+func (m *DeleteConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateReq) ProtoMessage()               {}
+func (*DeleteConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
+
+func (m *DeleteConfigTemplateReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *DeleteConfigTemplateReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *DeleteConfigTemplateReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *DeleteConfigTemplateReq) GetOperator() string {
+	if m != nil {
+		return m.Operator
+	}
+	return ""
+}
+
+type DeleteConfigTemplateResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *DeleteConfigTemplateResp) Reset()                    { *m = DeleteConfigTemplateResp{} }
+func (m *DeleteConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateResp) ProtoMessage()               {}
+func (*DeleteConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
+
+func (m *DeleteConfigTemplateResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *DeleteConfigTemplateResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *DeleteConfigTemplateResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type CreateConfigTemplateVersionReq struct {
+	Seq         string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	VersionId   string `protobuf:"bytes,2,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
+	BizId       string `protobuf:"bytes,3,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId  string `protobuf:"bytes,4,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	VersionTag  string `protobuf:"bytes,5,opt,name=version_tag,json=versionTag" json:"version_tag,omitempty"`
+	ContentId   string `protobuf:"bytes,6,opt,name=content_id,json=contentId" json:"content_id,omitempty"`
+	ContentSize uint32 `protobuf:"varint,7,opt,name=content_size,json=contentSize" json:"content_size,omitempty"`
+	Memo        string `protobuf:"bytes,8,opt,name=memo" json:"memo,omitempty"`
+	State       int32  `protobuf:"varint,9,opt,name=state" json:"state,omitempty"`
+	Creator     string `protobuf:"bytes,10,opt,name=creator" json:"creator,omitempty"`
+}
+
+func (m *CreateConfigTemplateVersionReq) Reset()         { *m = CreateConfigTemplateVersionReq{} }
+func (m *CreateConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionReq) ProtoMessage()    {}
+func (*CreateConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{30}
+}
+
+func (m *CreateConfigTemplateVersionReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetVersionId() string {
+	if m != nil {
+		return m.VersionId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetVersionTag() string {
+	if m != nil {
+		return m.VersionTag
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetContentId() string {
+	if m != nil {
+		return m.ContentId
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetContentSize() uint32 {
+	if m != nil {
+		return m.ContentSize
+	}
+	return 0
+}
+
+func (m *CreateConfigTemplateVersionReq) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionReq) GetState() int32 {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+
+func (m *CreateConfigTemplateVersionReq) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+type CreateConfigTemplateVersionResp struct {
+	Seq     string                                    `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                            `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                    `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateConfigTemplateVersionResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *CreateConfigTemplateVersionResp) Reset()         { *m = CreateConfigTemplateVersionResp{} }
+func (m *CreateConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionResp) ProtoMessage()    {}
+func (*CreateConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{31}
+}
+
+func (m *CreateConfigTemplateVersionResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateConfigTemplateVersionResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateConfigTemplateVersionResp) GetData() *CreateConfigTemplateVersionResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateConfigTemplateVersionResp_RespData struct {
+	VersionId string `protobuf:"bytes,1,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
+}
+
+func (m *CreateConfigTemplateVersionResp_RespData) Reset() {
+	*m = CreateConfigTemplateVersionResp_RespData{}
+}
+func (m *CreateConfigTemplateVersionResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateConfigTemplateVersionResp_RespData) ProtoMessage()    {}
+func (*CreateConfigTemplateVersionResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{31, 0}
+}
+
+func (m *CreateConfigTemplateVersionResp_RespData) GetVersionId() string {
+	if m != nil {
+		return m.VersionId
+	}
+	return ""
+}
+
+type QueryConfigTemplateVersionReq struct {
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	VersionId string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
+}
+
+func (m *QueryConfigTemplateVersionReq) Reset()                    { *m = QueryConfigTemplateVersionReq{} }
+func (m *QueryConfigTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionReq) ProtoMessage()               {}
+func (*QueryConfigTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{32} }
+
+func (m *QueryConfigTemplateVersionReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionReq) GetVersionId() string {
+	if m != nil {
+		return m.VersionId
+	}
+	return ""
+}
+
+type QueryConfigTemplateVersionResp struct {
+	Seq     string                        `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                        `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ConfigTemplateVersion `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigTemplateVersionResp) Reset()         { *m = QueryConfigTemplateVersionResp{} }
+func (m *QueryConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionResp) ProtoMessage()    {}
+func (*QueryConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33}
+}
+
+func (m *QueryConfigTemplateVersionResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigTemplateVersionResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionResp) GetData() *common.ConfigTemplateVersion {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigTemplateVersionListReq struct {
+	Seq        string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	TemplateId string       `protobuf:"bytes,3,opt,name=template_id,json=templateId" json:"template_id,omitempty"`
+	Page       *common.Page `protobuf:"bytes,4,opt,name=page" json:"page,omitempty"`
+}
+
+func (m *QueryConfigTemplateVersionListReq) Reset()         { *m = QueryConfigTemplateVersionListReq{} }
+func (m *QueryConfigTemplateVersionListReq) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionListReq) ProtoMessage()    {}
+func (*QueryConfigTemplateVersionListReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{34}
+}
+
+func (m *QueryConfigTemplateVersionListReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListReq) GetTemplateId() string {
+	if m != nil {
+		return m.TemplateId
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
+}
+
+type QueryConfigTemplateVersionListResp struct {
+	Seq     string                                       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                               `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                       `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryConfigTemplateVersionListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigTemplateVersionListResp) Reset()         { *m = QueryConfigTemplateVersionListResp{} }
+func (m *QueryConfigTemplateVersionListResp) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigTemplateVersionListResp) ProtoMessage()    {}
+func (*QueryConfigTemplateVersionListResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{35}
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigTemplateVersionListResp) GetData() *QueryConfigTemplateVersionListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigTemplateVersionListResp_RespData struct {
+	TotalCount uint32                          `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.ConfigTemplateVersion `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryConfigTemplateVersionListResp_RespData) Reset() {
+	*m = QueryConfigTemplateVersionListResp_RespData{}
+}
+func (m *QueryConfigTemplateVersionListResp_RespData) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryConfigTemplateVersionListResp_RespData) ProtoMessage() {}
+func (*QueryConfigTemplateVersionListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{35, 0}
+}
+
+func (m *QueryConfigTemplateVersionListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryConfigTemplateVersionListResp_RespData) GetInfo() []*common.ConfigTemplateVersion {
+	if m != nil {
+		return m.Info
+	}
+	return nil
+}
+
+type UpdateConfigTemplateVersionReq struct {
+	Seq         string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId       string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	VersionId   string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
+	ContentId   string `protobuf:"bytes,4,opt,name=content_id,json=contentId" json:"content_id,omitempty"`
+	ContentSize uint32 `protobuf:"varint,5,opt,name=content_size,json=contentSize" json:"content_size,omitempty"`
+	Memo        string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
+	State       int32  `protobuf:"varint,7,opt,name=state" json:"state,omitempty"`
+	Operator    string `protobuf:"bytes,8,opt,name=operator" json:"operator,omitempty"`
+}
+
+func (m *UpdateConfigTemplateVersionReq) Reset()         { *m = UpdateConfigTemplateVersionReq{} }
+func (m *UpdateConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateVersionReq) ProtoMessage()    {}
+func (*UpdateConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{36}
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetVersionId() string {
+	if m != nil {
+		return m.VersionId
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetContentId() string {
+	if m != nil {
+		return m.ContentId
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetContentSize() uint32 {
+	if m != nil {
+		return m.ContentSize
+	}
+	return 0
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetState() int32 {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+
+func (m *UpdateConfigTemplateVersionReq) GetOperator() string {
+	if m != nil {
+		return m.Operator
+	}
+	return ""
+}
+
+type UpdateConfigTemplateVersionResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *UpdateConfigTemplateVersionResp) Reset()         { *m = UpdateConfigTemplateVersionResp{} }
+func (m *UpdateConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*UpdateConfigTemplateVersionResp) ProtoMessage()    {}
+func (*UpdateConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{37}
+}
+
+func (m *UpdateConfigTemplateVersionResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *UpdateConfigTemplateVersionResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *UpdateConfigTemplateVersionResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type DeleteConfigTemplateVersionReq struct {
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	VersionId string `protobuf:"bytes,3,opt,name=version_id,json=versionId" json:"version_id,omitempty"`
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
-func (m *DeleteClusterReq) Reset()                    { *m = DeleteClusterReq{} }
-func (m *DeleteClusterReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteClusterReq) ProtoMessage()               {}
-func (*DeleteClusterReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
+func (m *DeleteConfigTemplateVersionReq) Reset()         { *m = DeleteConfigTemplateVersionReq{} }
+func (m *DeleteConfigTemplateVersionReq) String() string { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateVersionReq) ProtoMessage()    {}
+func (*DeleteConfigTemplateVersionReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{38}
+}
 
-func (m *DeleteClusterReq) GetSeq() uint64 {
+func (m *DeleteConfigTemplateVersionReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *DeleteClusterReq) GetBid() string {
+func (m *DeleteConfigTemplateVersionReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *DeleteClusterReq) GetClusterid() string {
+func (m *DeleteConfigTemplateVersionReq) GetVersionId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.VersionId
 	}
 	return ""
 }
 
-func (m *DeleteClusterReq) GetOperator() string {
+func (m *DeleteConfigTemplateVersionReq) GetOperator() string {
 	if m != nil {
 		return m.Operator
 	}
 	return ""
 }
 
-type DeleteClusterResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+type DeleteConfigTemplateVersionResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
-func (m *DeleteClusterResp) Reset()                    { *m = DeleteClusterResp{} }
-func (m *DeleteClusterResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteClusterResp) ProtoMessage()               {}
-func (*DeleteClusterResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{31} }
+func (m *DeleteConfigTemplateVersionResp) Reset()         { *m = DeleteConfigTemplateVersionResp{} }
+func (m *DeleteConfigTemplateVersionResp) String() string { return proto.CompactTextString(m) }
+func (*DeleteConfigTemplateVersionResp) ProtoMessage()    {}
+func (*DeleteConfigTemplateVersionResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{39}
+}
 
-func (m *DeleteClusterResp) GetSeq() uint64 {
+func (m *DeleteConfigTemplateVersionResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *DeleteClusterResp) GetErrCode() common.ErrCode {
+func (m *DeleteConfigTemplateVersionResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *DeleteClusterResp) GetErrMsg() string {
+func (m *DeleteConfigTemplateVersionResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-type CreateZoneReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Zoneid    string `protobuf:"bytes,3,opt,name=zoneid" json:"zoneid,omitempty"`
-	Name      string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Appid     string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,6,opt,name=clusterid" json:"clusterid,omitempty"`
-	State     int32  `protobuf:"varint,7,opt,name=state" json:"state,omitempty"`
-	Creator   string `protobuf:"bytes,8,opt,name=creator" json:"creator,omitempty"`
-	Memo      string `protobuf:"bytes,9,opt,name=memo" json:"memo,omitempty"`
+type CreateConfigReq struct {
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId         string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId         string `protobuf:"bytes,4,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	Name          string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
+	Fpath         string `protobuf:"bytes,6,opt,name=fpath" json:"fpath,omitempty"`
+	User          string `protobuf:"bytes,7,opt,name=user" json:"user,omitempty"`
+	UserGroup     string `protobuf:"bytes,8,opt,name=user_group,json=userGroup" json:"user_group,omitempty"`
+	FilePrivilege string `protobuf:"bytes,9,opt,name=file_privilege,json=filePrivilege" json:"file_privilege,omitempty"`
+	FileFormat    string `protobuf:"bytes,10,opt,name=file_format,json=fileFormat" json:"file_format,omitempty"`
+	FileMode      int32  `protobuf:"varint,11,opt,name=file_mode,json=fileMode" json:"file_mode,omitempty"`
+	State         int32  `protobuf:"varint,12,opt,name=state" json:"state,omitempty"`
+	Creator       string `protobuf:"bytes,13,opt,name=creator" json:"creator,omitempty"`
+	Memo          string `protobuf:"bytes,14,opt,name=memo" json:"memo,omitempty"`
 }
 
-func (m *CreateZoneReq) Reset()                    { *m = CreateZoneReq{} }
-func (m *CreateZoneReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateZoneReq) ProtoMessage()               {}
-func (*CreateZoneReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{32} }
+func (m *CreateConfigReq) Reset()                    { *m = CreateConfigReq{} }
+func (m *CreateConfigReq) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigReq) ProtoMessage()               {}
+func (*CreateConfigReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{40} }
 
-func (m *CreateZoneReq) GetSeq() uint64 {
+func (m *CreateConfigReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateZoneReq) GetBid() string {
+func (m *CreateConfigReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateZoneReq) GetZoneid() string {
+func (m *CreateConfigReq) GetAppId() string {
 	if m != nil {
-		return m.Zoneid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateZoneReq) GetName() string {
+func (m *CreateConfigReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+func (m *CreateConfigReq) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *CreateZoneReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *CreateZoneReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *CreateZoneReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateZoneReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-func (m *CreateZoneReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-type CreateZoneResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Zoneid  string         `protobuf:"bytes,4,opt,name=zoneid" json:"zoneid,omitempty"`
-}
-
-func (m *CreateZoneResp) Reset()                    { *m = CreateZoneResp{} }
-func (m *CreateZoneResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateZoneResp) ProtoMessage()               {}
-func (*CreateZoneResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{33} }
-
-func (m *CreateZoneResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateZoneResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateZoneResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateZoneResp) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-type QueryZoneReq struct {
-	Seq    uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid    string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid  string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Zoneid string `protobuf:"bytes,4,opt,name=zoneid" json:"zoneid,omitempty"`
-	Name   string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
-}
-
-func (m *QueryZoneReq) Reset()                    { *m = QueryZoneReq{} }
-func (m *QueryZoneReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryZoneReq) ProtoMessage()               {}
-func (*QueryZoneReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{34} }
-
-func (m *QueryZoneReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryZoneReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryZoneReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryZoneReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *QueryZoneReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-type QueryZoneResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Zone    *common.Zone   `protobuf:"bytes,4,opt,name=zone" json:"zone,omitempty"`
-}
-
-func (m *QueryZoneResp) Reset()                    { *m = QueryZoneResp{} }
-func (m *QueryZoneResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryZoneResp) ProtoMessage()               {}
-func (*QueryZoneResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{35} }
-
-func (m *QueryZoneResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryZoneResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryZoneResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryZoneResp) GetZone() *common.Zone {
-	if m != nil {
-		return m.Zone
-	}
-	return nil
-}
-
-type QueryZoneListReq struct {
-	Seq         uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid         string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid       string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	ClusterName string `protobuf:"bytes,4,opt,name=clusterName" json:"clusterName,omitempty"`
-	Clusterid   string `protobuf:"bytes,5,opt,name=clusterid" json:"clusterid,omitempty"`
-	Index       int32  `protobuf:"varint,6,opt,name=index" json:"index,omitempty"`
-	Limit       int32  `protobuf:"varint,7,opt,name=limit" json:"limit,omitempty"`
-	// add fields here.
-	ClusterLabels string `protobuf:"bytes,8,opt,name=clusterLabels" json:"clusterLabels,omitempty"`
-}
-
-func (m *QueryZoneListReq) Reset()                    { *m = QueryZoneListReq{} }
-func (m *QueryZoneListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryZoneListReq) ProtoMessage()               {}
-func (*QueryZoneListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{36} }
-
-func (m *QueryZoneListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryZoneListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryZoneListReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryZoneListReq) GetClusterName() string {
-	if m != nil {
-		return m.ClusterName
-	}
-	return ""
-}
-
-func (m *QueryZoneListReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *QueryZoneListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryZoneListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-func (m *QueryZoneListReq) GetClusterLabels() string {
-	if m != nil {
-		return m.ClusterLabels
-	}
-	return ""
-}
-
-type QueryZoneListResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Zones   []*common.Zone `protobuf:"bytes,4,rep,name=zones" json:"zones,omitempty"`
-}
-
-func (m *QueryZoneListResp) Reset()                    { *m = QueryZoneListResp{} }
-func (m *QueryZoneListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryZoneListResp) ProtoMessage()               {}
-func (*QueryZoneListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{37} }
-
-func (m *QueryZoneListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryZoneListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryZoneListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryZoneListResp) GetZones() []*common.Zone {
-	if m != nil {
-		return m.Zones
-	}
-	return nil
-}
-
-type UpdateZoneReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Zoneid   string `protobuf:"bytes,3,opt,name=zoneid" json:"zoneid,omitempty"`
-	Name     string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo     string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	State    int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
-	Operator string `protobuf:"bytes,7,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateZoneReq) Reset()                    { *m = UpdateZoneReq{} }
-func (m *UpdateZoneReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateZoneReq) ProtoMessage()               {}
-func (*UpdateZoneReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{38} }
-
-func (m *UpdateZoneReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateZoneReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateZoneReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *UpdateZoneReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *UpdateZoneReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateZoneReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateZoneReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateZoneResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateZoneResp) Reset()                    { *m = UpdateZoneResp{} }
-func (m *UpdateZoneResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateZoneResp) ProtoMessage()               {}
-func (*UpdateZoneResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{39} }
-
-func (m *UpdateZoneResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateZoneResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateZoneResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type DeleteZoneReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Zoneid   string `protobuf:"bytes,3,opt,name=zoneid" json:"zoneid,omitempty"`
-	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteZoneReq) Reset()                    { *m = DeleteZoneReq{} }
-func (m *DeleteZoneReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteZoneReq) ProtoMessage()               {}
-func (*DeleteZoneReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{40} }
-
-func (m *DeleteZoneReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteZoneReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteZoneReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *DeleteZoneReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteZoneResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteZoneResp) Reset()                    { *m = DeleteZoneResp{} }
-func (m *DeleteZoneResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteZoneResp) ProtoMessage()               {}
-func (*DeleteZoneResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{41} }
-
-func (m *DeleteZoneResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteZoneResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteZoneResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type CreateConfigSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Name     string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Appid    string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
-	State    int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
-	Creator  string `protobuf:"bytes,7,opt,name=creator" json:"creator,omitempty"`
-	Memo     string `protobuf:"bytes,8,opt,name=memo" json:"memo,omitempty"`
-	Fpath    string `protobuf:"bytes,9,opt,name=fpath" json:"fpath,omitempty"`
-}
-
-func (m *CreateConfigSetReq) Reset()                    { *m = CreateConfigSetReq{} }
-func (m *CreateConfigSetReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigSetReq) ProtoMessage()               {}
-func (*CreateConfigSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{42} }
-
-func (m *CreateConfigSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateConfigSetReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *CreateConfigSetReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *CreateConfigSetReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *CreateConfigSetReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateConfigSetReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-func (m *CreateConfigSetReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateConfigSetReq) GetFpath() string {
+func (m *CreateConfigReq) GetFpath() string {
 	if m != nil {
 		return m.Fpath
 	}
 	return ""
 }
 
-type CreateConfigSetResp struct {
-	Seq      uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Cfgsetid string         `protobuf:"bytes,4,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
+func (m *CreateConfigReq) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
 }
 
-func (m *CreateConfigSetResp) Reset()                    { *m = CreateConfigSetResp{} }
-func (m *CreateConfigSetResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigSetResp) ProtoMessage()               {}
-func (*CreateConfigSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{43} }
-
-func (m *CreateConfigSetResp) GetSeq() uint64 {
+func (m *CreateConfigReq) GetUserGroup() string {
 	if m != nil {
-		return m.Seq
+		return m.UserGroup
+	}
+	return ""
+}
+
+func (m *CreateConfigReq) GetFilePrivilege() string {
+	if m != nil {
+		return m.FilePrivilege
+	}
+	return ""
+}
+
+func (m *CreateConfigReq) GetFileFormat() string {
+	if m != nil {
+		return m.FileFormat
+	}
+	return ""
+}
+
+func (m *CreateConfigReq) GetFileMode() int32 {
+	if m != nil {
+		return m.FileMode
 	}
 	return 0
 }
 
-func (m *CreateConfigSetResp) GetErrCode() common.ErrCode {
+func (m *CreateConfigReq) GetState() int32 {
 	if m != nil {
-		return m.ErrCode
+		return m.State
+	}
+	return 0
+}
+
+func (m *CreateConfigReq) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *CreateConfigReq) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
+type CreateConfigResp struct {
+	Seq     string                     `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode             `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                     `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateConfigResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *CreateConfigResp) Reset()                    { *m = CreateConfigResp{} }
+func (m *CreateConfigResp) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigResp) ProtoMessage()               {}
+func (*CreateConfigResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{41} }
+
+func (m *CreateConfigResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateConfigResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateConfigSetResp) GetErrMsg() string {
+func (m *CreateConfigResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *CreateConfigSetResp) GetCfgsetid() string {
+func (m *CreateConfigResp) GetData() *CreateConfigResp_RespData {
 	if m != nil {
-		return m.Cfgsetid
+		return m.Data
+	}
+	return nil
+}
+
+type CreateConfigResp_RespData struct {
+	CfgId string `protobuf:"bytes,1,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+}
+
+func (m *CreateConfigResp_RespData) Reset()                    { *m = CreateConfigResp_RespData{} }
+func (m *CreateConfigResp_RespData) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigResp_RespData) ProtoMessage()               {}
+func (*CreateConfigResp_RespData) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{41, 0} }
+
+func (m *CreateConfigResp_RespData) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
 	}
 	return ""
 }
 
-type QueryConfigSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid    string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,4,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Name     string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
-	Fpath    string `protobuf:"bytes,6,opt,name=fpath" json:"fpath,omitempty"`
+type QueryConfigReq struct {
+	Seq   string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId string `protobuf:"bytes,4,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	Name  string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
+	Fpath string `protobuf:"bytes,6,opt,name=fpath" json:"fpath,omitempty"`
 }
 
-func (m *QueryConfigSetReq) Reset()                    { *m = QueryConfigSetReq{} }
-func (m *QueryConfigSetReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigSetReq) ProtoMessage()               {}
-func (*QueryConfigSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{44} }
+func (m *QueryConfigReq) Reset()                    { *m = QueryConfigReq{} }
+func (m *QueryConfigReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigReq) ProtoMessage()               {}
+func (*QueryConfigReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{42} }
 
-func (m *QueryConfigSetReq) GetSeq() uint64 {
+func (m *QueryConfigReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigSetReq) GetBid() string {
+func (m *QueryConfigReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryConfigSetReq) GetAppid() string {
+func (m *QueryConfigReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryConfigSetReq) GetCfgsetid() string {
+func (m *QueryConfigReq) GetCfgId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *QueryConfigSetReq) GetName() string {
+func (m *QueryConfigReq) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *QueryConfigSetReq) GetFpath() string {
+func (m *QueryConfigReq) GetFpath() string {
 	if m != nil {
 		return m.Fpath
 	}
 	return ""
 }
 
-type QueryConfigSetResp struct {
-	Seq       uint64            `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode    `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string            `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigSet *common.ConfigSet `protobuf:"bytes,4,opt,name=configSet" json:"configSet,omitempty"`
+type QueryConfigResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.Config `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *QueryConfigSetResp) Reset()                    { *m = QueryConfigSetResp{} }
-func (m *QueryConfigSetResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigSetResp) ProtoMessage()               {}
-func (*QueryConfigSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{45} }
+func (m *QueryConfigResp) Reset()                    { *m = QueryConfigResp{} }
+func (m *QueryConfigResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigResp) ProtoMessage()               {}
+func (*QueryConfigResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{43} }
 
-func (m *QueryConfigSetResp) GetSeq() uint64 {
+func (m *QueryConfigResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigSetResp) GetErrCode() common.ErrCode {
+func (m *QueryConfigResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryConfigSetResp) GetErrMsg() string {
+func (m *QueryConfigResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *QueryConfigSetResp) GetConfigSet() *common.ConfigSet {
+func (m *QueryConfigResp) GetData() *common.Config {
 	if m != nil {
-		return m.ConfigSet
+		return m.Data
 	}
 	return nil
 }
 
-type QueryConfigSetListReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid     string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid   string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	AppName string `protobuf:"bytes,4,opt,name=appName" json:"appName,omitempty"`
-	Index   int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit   int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
+type QueryConfigListReq struct {
+	Seq     string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId   string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	AppName string       `protobuf:"bytes,4,opt,name=app_name,json=appName" json:"app_name,omitempty"`
+	Page    *common.Page `protobuf:"bytes,5,opt,name=page" json:"page,omitempty"`
 }
 
-func (m *QueryConfigSetListReq) Reset()                    { *m = QueryConfigSetListReq{} }
-func (m *QueryConfigSetListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigSetListReq) ProtoMessage()               {}
-func (*QueryConfigSetListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{46} }
+func (m *QueryConfigListReq) Reset()                    { *m = QueryConfigListReq{} }
+func (m *QueryConfigListReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigListReq) ProtoMessage()               {}
+func (*QueryConfigListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{44} }
 
-func (m *QueryConfigSetListReq) GetSeq() uint64 {
+func (m *QueryConfigListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigSetListReq) GetBid() string {
+func (m *QueryConfigListReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryConfigSetListReq) GetAppid() string {
+func (m *QueryConfigListReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryConfigSetListReq) GetAppName() string {
+func (m *QueryConfigListReq) GetAppName() string {
 	if m != nil {
 		return m.AppName
 	}
 	return ""
 }
 
-func (m *QueryConfigSetListReq) GetIndex() int32 {
+func (m *QueryConfigListReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryConfigSetListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryConfigSetListResp struct {
-	Seq        uint64              `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode      `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string              `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigSets []*common.ConfigSet `protobuf:"bytes,4,rep,name=configSets" json:"configSets,omitempty"`
-}
-
-func (m *QueryConfigSetListResp) Reset()                    { *m = QueryConfigSetListResp{} }
-func (m *QueryConfigSetListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigSetListResp) ProtoMessage()               {}
-func (*QueryConfigSetListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{47} }
-
-func (m *QueryConfigSetListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigSetListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigSetListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigSetListResp) GetConfigSets() []*common.ConfigSet {
-	if m != nil {
-		return m.ConfigSets
+		return m.Page
 	}
 	return nil
 }
 
-type UpdateConfigSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Name     string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo     string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	State    int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
-	Operator string `protobuf:"bytes,7,opt,name=operator" json:"operator,omitempty"`
-	Fpath    string `protobuf:"bytes,8,opt,name=fpath" json:"fpath,omitempty"`
+type QueryConfigListResp struct {
+	Seq     string                        `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                        `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryConfigListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *UpdateConfigSetReq) Reset()                    { *m = UpdateConfigSetReq{} }
-func (m *UpdateConfigSetReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigSetReq) ProtoMessage()               {}
-func (*UpdateConfigSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{48} }
+func (m *QueryConfigListResp) Reset()                    { *m = QueryConfigListResp{} }
+func (m *QueryConfigListResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigListResp) ProtoMessage()               {}
+func (*QueryConfigListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{45} }
 
-func (m *UpdateConfigSetReq) GetSeq() uint64 {
+func (m *QueryConfigListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigListResp) GetData() *QueryConfigListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigListResp_RespData struct {
+	TotalCount uint32           `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.Config `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryConfigListResp_RespData) Reset()         { *m = QueryConfigListResp_RespData{} }
+func (m *QueryConfigListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigListResp_RespData) ProtoMessage()    {}
+func (*QueryConfigListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{45, 0}
+}
+
+func (m *QueryConfigListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
 	}
 	return 0
 }
 
-func (m *UpdateConfigSetReq) GetBid() string {
+func (m *QueryConfigListResp_RespData) GetInfo() []*common.Config {
 	if m != nil {
-		return m.Bid
+		return m.Info
+	}
+	return nil
+}
+
+type UpdateConfigReq struct {
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CfgId         string `protobuf:"bytes,3,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	Name          string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
+	Fpath         string `protobuf:"bytes,5,opt,name=fpath" json:"fpath,omitempty"`
+	User          string `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
+	UserGroup     string `protobuf:"bytes,7,opt,name=user_group,json=userGroup" json:"user_group,omitempty"`
+	FilePrivilege string `protobuf:"bytes,8,opt,name=file_privilege,json=filePrivilege" json:"file_privilege,omitempty"`
+	FileFormat    string `protobuf:"bytes,9,opt,name=file_format,json=fileFormat" json:"file_format,omitempty"`
+	FileMode      int32  `protobuf:"varint,10,opt,name=file_mode,json=fileMode" json:"file_mode,omitempty"`
+	Memo          string `protobuf:"bytes,11,opt,name=memo" json:"memo,omitempty"`
+	State         int32  `protobuf:"varint,12,opt,name=state" json:"state,omitempty"`
+	Operator      string `protobuf:"bytes,13,opt,name=operator" json:"operator,omitempty"`
+}
+
+func (m *UpdateConfigReq) Reset()                    { *m = UpdateConfigReq{} }
+func (m *UpdateConfigReq) String() string            { return proto.CompactTextString(m) }
+func (*UpdateConfigReq) ProtoMessage()               {}
+func (*UpdateConfigReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{46} }
+
+func (m *UpdateConfigReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
 	}
 	return ""
 }
 
-func (m *UpdateConfigSetReq) GetCfgsetid() string {
+func (m *UpdateConfigReq) GetBizId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *UpdateConfigSetReq) GetName() string {
+func (m *UpdateConfigReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+func (m *UpdateConfigReq) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *UpdateConfigSetReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateConfigSetReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateConfigSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-func (m *UpdateConfigSetReq) GetFpath() string {
+func (m *UpdateConfigReq) GetFpath() string {
 	if m != nil {
 		return m.Fpath
 	}
 	return ""
 }
 
-type UpdateConfigSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+func (m *UpdateConfigReq) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
 }
 
-func (m *UpdateConfigSetResp) Reset()                    { *m = UpdateConfigSetResp{} }
-func (m *UpdateConfigSetResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigSetResp) ProtoMessage()               {}
-func (*UpdateConfigSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{49} }
-
-func (m *UpdateConfigSetResp) GetSeq() uint64 {
+func (m *UpdateConfigReq) GetUserGroup() string {
 	if m != nil {
-		return m.Seq
+		return m.UserGroup
+	}
+	return ""
+}
+
+func (m *UpdateConfigReq) GetFilePrivilege() string {
+	if m != nil {
+		return m.FilePrivilege
+	}
+	return ""
+}
+
+func (m *UpdateConfigReq) GetFileFormat() string {
+	if m != nil {
+		return m.FileFormat
+	}
+	return ""
+}
+
+func (m *UpdateConfigReq) GetFileMode() int32 {
+	if m != nil {
+		return m.FileMode
 	}
 	return 0
 }
 
-func (m *UpdateConfigSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateConfigSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type DeleteConfigSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteConfigSetReq) Reset()                    { *m = DeleteConfigSetReq{} }
-func (m *DeleteConfigSetReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigSetReq) ProtoMessage()               {}
-func (*DeleteConfigSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{50} }
-
-func (m *DeleteConfigSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteConfigSetReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *DeleteConfigSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteConfigSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteConfigSetResp) Reset()                    { *m = DeleteConfigSetResp{} }
-func (m *DeleteConfigSetResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigSetResp) ProtoMessage()               {}
-func (*DeleteConfigSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{51} }
-
-func (m *DeleteConfigSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteConfigSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type LockConfigSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-	Memo     string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-}
-
-func (m *LockConfigSetReq) Reset()                    { *m = LockConfigSetReq{} }
-func (m *LockConfigSetReq) String() string            { return proto.CompactTextString(m) }
-func (*LockConfigSetReq) ProtoMessage()               {}
-func (*LockConfigSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{52} }
-
-func (m *LockConfigSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *LockConfigSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *LockConfigSetReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *LockConfigSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-func (m *LockConfigSetReq) GetMemo() string {
+func (m *UpdateConfigReq) GetMemo() string {
 	if m != nil {
 		return m.Memo
 	}
 	return ""
 }
 
-type LockConfigSetResp struct {
-	Seq      uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Locker   string         `protobuf:"bytes,4,opt,name=locker" json:"locker,omitempty"`
-	LockTime string         `protobuf:"bytes,5,opt,name=lockTime" json:"lockTime,omitempty"`
-}
-
-func (m *LockConfigSetResp) Reset()                    { *m = LockConfigSetResp{} }
-func (m *LockConfigSetResp) String() string            { return proto.CompactTextString(m) }
-func (*LockConfigSetResp) ProtoMessage()               {}
-func (*LockConfigSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{53} }
-
-func (m *LockConfigSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *LockConfigSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *LockConfigSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *LockConfigSetResp) GetLocker() string {
-	if m != nil {
-		return m.Locker
-	}
-	return ""
-}
-
-func (m *LockConfigSetResp) GetLockTime() string {
-	if m != nil {
-		return m.LockTime
-	}
-	return ""
-}
-
-type UnlockConfigSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UnlockConfigSetReq) Reset()                    { *m = UnlockConfigSetReq{} }
-func (m *UnlockConfigSetReq) String() string            { return proto.CompactTextString(m) }
-func (*UnlockConfigSetReq) ProtoMessage()               {}
-func (*UnlockConfigSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{54} }
-
-func (m *UnlockConfigSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UnlockConfigSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UnlockConfigSetReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *UnlockConfigSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UnlockConfigSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UnlockConfigSetResp) Reset()                    { *m = UnlockConfigSetResp{} }
-func (m *UnlockConfigSetResp) String() string            { return proto.CompactTextString(m) }
-func (*UnlockConfigSetResp) ProtoMessage()               {}
-func (*UnlockConfigSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{55} }
-
-func (m *UnlockConfigSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UnlockConfigSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UnlockConfigSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type CreateConfigsReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Cfgsetid  string `protobuf:"bytes,6,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Commitid  string `protobuf:"bytes,7,opt,name=commitid" json:"commitid,omitempty"`
-	Cid       string `protobuf:"bytes,8,opt,name=cid" json:"cid,omitempty"`
-	CfgLink   string `protobuf:"bytes,9,opt,name=cfgLink" json:"cfgLink,omitempty"`
-	Content   []byte `protobuf:"bytes,10,opt,name=content,proto3" json:"content,omitempty"`
-	Creator   string `protobuf:"bytes,11,opt,name=creator" json:"creator,omitempty"`
-	Memo      string `protobuf:"bytes,12,opt,name=memo" json:"memo,omitempty"`
-	State     int32  `protobuf:"varint,13,opt,name=state" json:"state,omitempty"`
-	Index     string `protobuf:"bytes,14,opt,name=index" json:"index,omitempty"`
-}
-
-func (m *CreateConfigsReq) Reset()                    { *m = CreateConfigsReq{} }
-func (m *CreateConfigsReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigsReq) ProtoMessage()               {}
-func (*CreateConfigsReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{56} }
-
-func (m *CreateConfigsReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigsReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetCid() string {
-	if m != nil {
-		return m.Cid
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetCfgLink() string {
-	if m != nil {
-		return m.CfgLink
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetContent() []byte {
-	if m != nil {
-		return m.Content
-	}
-	return nil
-}
-
-func (m *CreateConfigsReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateConfigsReq) GetState() int32 {
+func (m *UpdateConfigReq) GetState() int32 {
 	if m != nil {
 		return m.State
 	}
 	return 0
 }
 
-func (m *CreateConfigsReq) GetIndex() string {
+func (m *UpdateConfigReq) GetOperator() string {
+	if m != nil {
+		return m.Operator
+	}
+	return ""
+}
+
+type UpdateConfigResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *UpdateConfigResp) Reset()                    { *m = UpdateConfigResp{} }
+func (m *UpdateConfigResp) String() string            { return proto.CompactTextString(m) }
+func (*UpdateConfigResp) ProtoMessage()               {}
+func (*UpdateConfigResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{47} }
+
+func (m *UpdateConfigResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *UpdateConfigResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *UpdateConfigResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type DeleteConfigReq struct {
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CfgId    string `protobuf:"bytes,3,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
+}
+
+func (m *DeleteConfigReq) Reset()                    { *m = DeleteConfigReq{} }
+func (m *DeleteConfigReq) String() string            { return proto.CompactTextString(m) }
+func (*DeleteConfigReq) ProtoMessage()               {}
+func (*DeleteConfigReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{48} }
+
+func (m *DeleteConfigReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *DeleteConfigReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *DeleteConfigReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+func (m *DeleteConfigReq) GetOperator() string {
+	if m != nil {
+		return m.Operator
+	}
+	return ""
+}
+
+type DeleteConfigResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *DeleteConfigResp) Reset()                    { *m = DeleteConfigResp{} }
+func (m *DeleteConfigResp) String() string            { return proto.CompactTextString(m) }
+func (*DeleteConfigResp) ProtoMessage()               {}
+func (*DeleteConfigResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{49} }
+
+func (m *DeleteConfigResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *DeleteConfigResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *DeleteConfigResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type CreateConfigContentReq struct {
+	Seq         string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId       string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId       string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId       string `protobuf:"bytes,4,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	CommitId    string `protobuf:"bytes,5,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	Index       string `protobuf:"bytes,6,opt,name=index" json:"index,omitempty"`
+	ContentId   string `protobuf:"bytes,7,opt,name=content_id,json=contentId" json:"content_id,omitempty"`
+	ContentSize uint32 `protobuf:"varint,8,opt,name=content_size,json=contentSize" json:"content_size,omitempty"`
+	Creator     string `protobuf:"bytes,9,opt,name=creator" json:"creator,omitempty"`
+	Memo        string `protobuf:"bytes,10,opt,name=memo" json:"memo,omitempty"`
+	State       int32  `protobuf:"varint,11,opt,name=state" json:"state,omitempty"`
+}
+
+func (m *CreateConfigContentReq) Reset()                    { *m = CreateConfigContentReq{} }
+func (m *CreateConfigContentReq) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigContentReq) ProtoMessage()               {}
+func (*CreateConfigContentReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{50} }
+
+func (m *CreateConfigContentReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateConfigContentReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CreateConfigContentReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *CreateConfigContentReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+func (m *CreateConfigContentReq) GetCommitId() string {
+	if m != nil {
+		return m.CommitId
+	}
+	return ""
+}
+
+func (m *CreateConfigContentReq) GetIndex() string {
 	if m != nil {
 		return m.Index
 	}
 	return ""
 }
 
-type CreateConfigsResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+func (m *CreateConfigContentReq) GetContentId() string {
+	if m != nil {
+		return m.ContentId
+	}
+	return ""
 }
 
-func (m *CreateConfigsResp) Reset()                    { *m = CreateConfigsResp{} }
-func (m *CreateConfigsResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigsResp) ProtoMessage()               {}
-func (*CreateConfigsResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{57} }
-
-func (m *CreateConfigsResp) GetSeq() uint64 {
+func (m *CreateConfigContentReq) GetContentSize() uint32 {
 	if m != nil {
-		return m.Seq
+		return m.ContentSize
 	}
 	return 0
 }
 
-func (m *CreateConfigsResp) GetErrCode() common.ErrCode {
+func (m *CreateConfigContentReq) GetCreator() string {
 	if m != nil {
-		return m.ErrCode
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *CreateConfigContentReq) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
+func (m *CreateConfigContentReq) GetState() int32 {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+
+type CreateConfigContentResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *CreateConfigContentResp) Reset()                    { *m = CreateConfigContentResp{} }
+func (m *CreateConfigContentResp) String() string            { return proto.CompactTextString(m) }
+func (*CreateConfigContentResp) ProtoMessage()               {}
+func (*CreateConfigContentResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{51} }
+
+func (m *CreateConfigContentResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateConfigContentResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateConfigsResp) GetErrMsg() string {
+func (m *CreateConfigContentResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-type QueryConfigsReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Cfgsetid  string `protobuf:"bytes,6,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Commitid  string `protobuf:"bytes,7,opt,name=commitid" json:"commitid,omitempty"`
-	Index     string `protobuf:"bytes,8,opt,name=index" json:"index,omitempty"`
+type QueryConfigContentReq struct {
+	Seq      string            `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string            `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId    string            `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId    string            `protobuf:"bytes,4,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	CommitId string            `protobuf:"bytes,5,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	Labels   map[string]string `protobuf:"bytes,6,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *QueryConfigsReq) Reset()                    { *m = QueryConfigsReq{} }
-func (m *QueryConfigsReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigsReq) ProtoMessage()               {}
-func (*QueryConfigsReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{58} }
+func (m *QueryConfigContentReq) Reset()                    { *m = QueryConfigContentReq{} }
+func (m *QueryConfigContentReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigContentReq) ProtoMessage()               {}
+func (*QueryConfigContentReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{52} }
 
-func (m *QueryConfigsReq) GetSeq() uint64 {
+func (m *QueryConfigContentReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigsReq) GetBid() string {
+func (m *QueryConfigContentReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryConfigsReq) GetAppid() string {
+func (m *QueryConfigContentReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryConfigsReq) GetClusterid() string {
+func (m *QueryConfigContentReq) GetCfgId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *QueryConfigsReq) GetZoneid() string {
+func (m *QueryConfigContentReq) GetCommitId() string {
 	if m != nil {
-		return m.Zoneid
+		return m.CommitId
 	}
 	return ""
 }
 
-func (m *QueryConfigsReq) GetCfgsetid() string {
+func (m *QueryConfigContentReq) GetLabels() map[string]string {
 	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *QueryConfigsReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *QueryConfigsReq) GetIndex() string {
-	if m != nil {
-		return m.Index
-	}
-	return ""
-}
-
-type QueryConfigsResp struct {
-	Seq     uint64          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Configs *common.Configs `protobuf:"bytes,4,opt,name=configs" json:"configs,omitempty"`
-}
-
-func (m *QueryConfigsResp) Reset()                    { *m = QueryConfigsResp{} }
-func (m *QueryConfigsResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigsResp) ProtoMessage()               {}
-func (*QueryConfigsResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{59} }
-
-func (m *QueryConfigsResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigsResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigsResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigsResp) GetConfigs() *common.Configs {
-	if m != nil {
-		return m.Configs
+		return m.Labels
 	}
 	return nil
 }
 
-type QueryReleaseConfigsReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Cfgsetid  string `protobuf:"bytes,6,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Commitid  string `protobuf:"bytes,7,opt,name=commitid" json:"commitid,omitempty"`
-	Abstract  bool   `protobuf:"varint,8,opt,name=abstract" json:"abstract,omitempty"`
-	Index     string `protobuf:"bytes,9,opt,name=index" json:"index,omitempty"`
+type QueryConfigContentResp struct {
+	Seq     string          `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode  `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string          `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.Content `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *QueryReleaseConfigsReq) Reset()                    { *m = QueryReleaseConfigsReq{} }
-func (m *QueryReleaseConfigsReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryReleaseConfigsReq) ProtoMessage()               {}
-func (*QueryReleaseConfigsReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{60} }
+func (m *QueryConfigContentResp) Reset()                    { *m = QueryConfigContentResp{} }
+func (m *QueryConfigContentResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigContentResp) ProtoMessage()               {}
+func (*QueryConfigContentResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{53} }
 
-func (m *QueryReleaseConfigsReq) GetSeq() uint64 {
+func (m *QueryConfigContentResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
-}
-
-func (m *QueryReleaseConfigsReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
 	return ""
 }
 
-func (m *QueryReleaseConfigsReq) GetAppid() string {
+func (m *QueryConfigContentResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryReleaseConfigsReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *QueryReleaseConfigsReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *QueryReleaseConfigsReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *QueryReleaseConfigsReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *QueryReleaseConfigsReq) GetAbstract() bool {
-	if m != nil {
-		return m.Abstract
-	}
-	return false
-}
-
-func (m *QueryReleaseConfigsReq) GetIndex() string {
-	if m != nil {
-		return m.Index
-	}
-	return ""
-}
-
-type QueryReleaseConfigsResp struct {
-	Seq     uint64          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Configs *common.Configs `protobuf:"bytes,4,opt,name=configs" json:"configs,omitempty"`
-}
-
-func (m *QueryReleaseConfigsResp) Reset()                    { *m = QueryReleaseConfigsResp{} }
-func (m *QueryReleaseConfigsResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryReleaseConfigsResp) ProtoMessage()               {}
-func (*QueryReleaseConfigsResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{61} }
-
-func (m *QueryReleaseConfigsResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryReleaseConfigsResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryReleaseConfigsResp) GetErrMsg() string {
+func (m *QueryConfigContentResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *QueryReleaseConfigsResp) GetConfigs() *common.Configs {
+func (m *QueryConfigContentResp) GetData() *common.Content {
 	if m != nil {
-		return m.Configs
+		return m.Data
 	}
 	return nil
 }
 
-type QueryConfigsListReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Commitid string `protobuf:"bytes,4,opt,name=commitid" json:"commitid,omitempty"`
-	Index    int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit    int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
+type QueryReleaseConfigContentReq struct {
+	Seq      string            `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string            `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId    string            `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CloudId  string            `protobuf:"bytes,4,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip       string            `protobuf:"bytes,5,opt,name=ip" json:"ip,omitempty"`
+	Path     string            `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
+	Labels   map[string]string `protobuf:"bytes,7,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	CfgId    string            `protobuf:"bytes,8,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	CommitId string            `protobuf:"bytes,9,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
 }
 
-func (m *QueryConfigsListReq) Reset()                    { *m = QueryConfigsListReq{} }
-func (m *QueryConfigsListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigsListReq) ProtoMessage()               {}
-func (*QueryConfigsListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{62} }
+func (m *QueryReleaseConfigContentReq) Reset()                    { *m = QueryReleaseConfigContentReq{} }
+func (m *QueryReleaseConfigContentReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryReleaseConfigContentReq) ProtoMessage()               {}
+func (*QueryReleaseConfigContentReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{54} }
 
-func (m *QueryConfigsListReq) GetSeq() uint64 {
+func (m *QueryReleaseConfigContentReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigsListReq) GetBid() string {
+func (m *QueryReleaseConfigContentReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryConfigsListReq) GetCfgsetid() string {
+func (m *QueryReleaseConfigContentReq) GetAppId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryConfigsListReq) GetCommitid() string {
+func (m *QueryReleaseConfigContentReq) GetCloudId() string {
 	if m != nil {
-		return m.Commitid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *QueryConfigsListReq) GetIndex() int32 {
+func (m *QueryReleaseConfigContentReq) GetIp() string {
 	if m != nil {
-		return m.Index
+		return m.Ip
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigsListReq) GetLimit() int32 {
+func (m *QueryReleaseConfigContentReq) GetPath() string {
 	if m != nil {
-		return m.Limit
+		return m.Path
 	}
-	return 0
+	return ""
 }
 
-type QueryConfigsListResp struct {
-	Seq      uint64            `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode    `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string            `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Cfgslist []*common.Configs `protobuf:"bytes,4,rep,name=cfgslist" json:"cfgslist,omitempty"`
+func (m *QueryReleaseConfigContentReq) GetLabels() map[string]string {
+	if m != nil {
+		return m.Labels
+	}
+	return nil
 }
 
-func (m *QueryConfigsListResp) Reset()                    { *m = QueryConfigsListResp{} }
-func (m *QueryConfigsListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigsListResp) ProtoMessage()               {}
-func (*QueryConfigsListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{63} }
+func (m *QueryReleaseConfigContentReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
 
-func (m *QueryConfigsListResp) GetSeq() uint64 {
+func (m *QueryReleaseConfigContentReq) GetCommitId() string {
+	if m != nil {
+		return m.CommitId
+	}
+	return ""
+}
+
+type QueryReleaseConfigContentResp struct {
+	Seq     string          `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode  `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string          `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.Content `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryReleaseConfigContentResp) Reset()                    { *m = QueryReleaseConfigContentResp{} }
+func (m *QueryReleaseConfigContentResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryReleaseConfigContentResp) ProtoMessage()               {}
+func (*QueryReleaseConfigContentResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{55} }
+
+func (m *QueryReleaseConfigContentResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryConfigsListResp) GetErrCode() common.ErrCode {
+func (m *QueryReleaseConfigContentResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryConfigsListResp) GetErrMsg() string {
+func (m *QueryReleaseConfigContentResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *QueryConfigsListResp) GetCfgslist() []*common.Configs {
+func (m *QueryReleaseConfigContentResp) GetData() *common.Content {
 	if m != nil {
-		return m.Cfgslist
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigContentListReq struct {
+	Seq      string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId    string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId    string       `protobuf:"bytes,4,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	CommitId string       `protobuf:"bytes,5,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	Page     *common.Page `protobuf:"bytes,6,opt,name=page" json:"page,omitempty"`
+}
+
+func (m *QueryConfigContentListReq) Reset()                    { *m = QueryConfigContentListReq{} }
+func (m *QueryConfigContentListReq) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigContentListReq) ProtoMessage()               {}
+func (*QueryConfigContentListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{56} }
+
+func (m *QueryConfigContentListReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigContentListReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryConfigContentListReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *QueryConfigContentListReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
+	}
+	return ""
+}
+
+func (m *QueryConfigContentListReq) GetCommitId() string {
+	if m != nil {
+		return m.CommitId
+	}
+	return ""
+}
+
+func (m *QueryConfigContentListReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
+}
+
+type QueryConfigContentListResp struct {
+	Seq     string                               `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                       `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                               `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryConfigContentListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *QueryConfigContentListResp) Reset()                    { *m = QueryConfigContentListResp{} }
+func (m *QueryConfigContentListResp) String() string            { return proto.CompactTextString(m) }
+func (*QueryConfigContentListResp) ProtoMessage()               {}
+func (*QueryConfigContentListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{57} }
+
+func (m *QueryConfigContentListResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *QueryConfigContentListResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryConfigContentListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryConfigContentListResp) GetData() *QueryConfigContentListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryConfigContentListResp_RespData struct {
+	TotalCount uint32            `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.Content `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryConfigContentListResp_RespData) Reset()         { *m = QueryConfigContentListResp_RespData{} }
+func (m *QueryConfigContentListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryConfigContentListResp_RespData) ProtoMessage()    {}
+func (*QueryConfigContentListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{57, 0}
+}
+
+func (m *QueryConfigContentListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryConfigContentListResp_RespData) GetInfo() []*common.Content {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type CreateCommitReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Commitid      string `protobuf:"bytes,3,opt,name=commitid" json:"commitid,omitempty"`
-	Appid         string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Cfgsetid      string `protobuf:"bytes,5,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Op            int32  `protobuf:"varint,6,opt,name=op" json:"op,omitempty"`
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId         string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CommitId      string `protobuf:"bytes,4,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	CfgId         string `protobuf:"bytes,5,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	CommitMode    int32  `protobuf:"varint,6,opt,name=commit_mode,json=commitMode" json:"commit_mode,omitempty"`
 	Operator      string `protobuf:"bytes,7,opt,name=operator" json:"operator,omitempty"`
-	Templateid    string `protobuf:"bytes,8,opt,name=templateid" json:"templateid,omitempty"`
-	Template      string `protobuf:"bytes,9,opt,name=template" json:"template,omitempty"`
-	TemplateRule  string `protobuf:"bytes,10,opt,name=templateRule" json:"templateRule,omitempty"`
-	Configs       []byte `protobuf:"bytes,11,opt,name=configs,proto3" json:"configs,omitempty"`
-	Changes       string `protobuf:"bytes,12,opt,name=changes" json:"changes,omitempty"`
-	Memo          string `protobuf:"bytes,13,opt,name=memo" json:"memo,omitempty"`
-	State         int32  `protobuf:"varint,14,opt,name=state" json:"state,omitempty"`
-	MultiCommitid string `protobuf:"bytes,15,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
+	MultiCommitId string `protobuf:"bytes,8,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
+	Memo          string `protobuf:"bytes,9,opt,name=memo" json:"memo,omitempty"`
+	State         int32  `protobuf:"varint,10,opt,name=state" json:"state,omitempty"`
 }
 
 func (m *CreateCommitReq) Reset()                    { *m = CreateCommitReq{} }
 func (m *CreateCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateCommitReq) ProtoMessage()               {}
-func (*CreateCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{64} }
+func (*CreateCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{58} }
 
-func (m *CreateCommitReq) GetSeq() uint64 {
+func (m *CreateCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateCommitReq) GetBid() string {
+func (m *CreateCommitReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateCommitReq) GetCommitid() string {
+func (m *CreateCommitReq) GetAppId() string {
 	if m != nil {
-		return m.Commitid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateCommitReq) GetAppid() string {
+func (m *CreateCommitReq) GetCommitId() string {
 	if m != nil {
-		return m.Appid
+		return m.CommitId
 	}
 	return ""
 }
 
-func (m *CreateCommitReq) GetCfgsetid() string {
+func (m *CreateCommitReq) GetCfgId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *CreateCommitReq) GetOp() int32 {
+func (m *CreateCommitReq) GetCommitMode() int32 {
 	if m != nil {
-		return m.Op
+		return m.CommitMode
 	}
 	return 0
 }
@@ -3437,37 +3412,9 @@ func (m *CreateCommitReq) GetOperator() string {
 	return ""
 }
 
-func (m *CreateCommitReq) GetTemplateid() string {
+func (m *CreateCommitReq) GetMultiCommitId() string {
 	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *CreateCommitReq) GetTemplate() string {
-	if m != nil {
-		return m.Template
-	}
-	return ""
-}
-
-func (m *CreateCommitReq) GetTemplateRule() string {
-	if m != nil {
-		return m.TemplateRule
-	}
-	return ""
-}
-
-func (m *CreateCommitReq) GetConfigs() []byte {
-	if m != nil {
-		return m.Configs
-	}
-	return nil
-}
-
-func (m *CreateCommitReq) GetChanges() string {
-	if m != nil {
-		return m.Changes
+		return m.MultiCommitId
 	}
 	return ""
 }
@@ -3486,173 +3433,173 @@ func (m *CreateCommitReq) GetState() int32 {
 	return 0
 }
 
-func (m *CreateCommitReq) GetMultiCommitid() string {
-	if m != nil {
-		return m.MultiCommitid
-	}
-	return ""
-}
-
 type CreateCommitResp struct {
-	Seq      uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Commitid string         `protobuf:"bytes,4,opt,name=commitid" json:"commitid,omitempty"`
+	Seq     string                     `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode             `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                     `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateCommitResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *CreateCommitResp) Reset()                    { *m = CreateCommitResp{} }
 func (m *CreateCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateCommitResp) ProtoMessage()               {}
-func (*CreateCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{65} }
+func (*CreateCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{59} }
 
-func (m *CreateCommitResp) GetSeq() uint64 {
+func (m *CreateCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateCommitResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateCommitResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *CreateCommitResp) GetCommitid() string {
+func (m *CreateCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Commitid
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateCommitResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateCommitResp) GetData() *CreateCommitResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateCommitResp_RespData struct {
+	CommitId string `protobuf:"bytes,1,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+}
+
+func (m *CreateCommitResp_RespData) Reset()                    { *m = CreateCommitResp_RespData{} }
+func (m *CreateCommitResp_RespData) String() string            { return proto.CompactTextString(m) }
+func (*CreateCommitResp_RespData) ProtoMessage()               {}
+func (*CreateCommitResp_RespData) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{59, 0} }
+
+func (m *CreateCommitResp_RespData) GetCommitId() string {
+	if m != nil {
+		return m.CommitId
 	}
 	return ""
 }
 
 type QueryCommitReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Commitid string `protobuf:"bytes,3,opt,name=commitid" json:"commitid,omitempty"`
-	Abstract bool   `protobuf:"varint,4,opt,name=abstract" json:"abstract,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CommitId string `protobuf:"bytes,3,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
 }
 
 func (m *QueryCommitReq) Reset()                    { *m = QueryCommitReq{} }
 func (m *QueryCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryCommitReq) ProtoMessage()               {}
-func (*QueryCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{66} }
+func (*QueryCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{60} }
 
-func (m *QueryCommitReq) GetSeq() uint64 {
+func (m *QueryCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryCommitReq) GetBid() string {
+func (m *QueryCommitReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryCommitReq) GetCommitid() string {
+func (m *QueryCommitReq) GetCommitId() string {
 	if m != nil {
-		return m.Commitid
+		return m.CommitId
 	}
 	return ""
-}
-
-func (m *QueryCommitReq) GetAbstract() bool {
-	if m != nil {
-		return m.Abstract
-	}
-	return false
 }
 
 type QueryCommitResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Commit  *common.Commit `protobuf:"bytes,4,opt,name=commit" json:"commit,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.Commit `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryCommitResp) Reset()                    { *m = QueryCommitResp{} }
 func (m *QueryCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryCommitResp) ProtoMessage()               {}
-func (*QueryCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{67} }
+func (*QueryCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{61} }
 
-func (m *QueryCommitResp) GetSeq() uint64 {
+func (m *QueryCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryCommitResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryCommitResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryCommitResp) GetCommit() *common.Commit {
+func (m *QueryCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Commit
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryCommitResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryCommitResp) GetData() *common.Commit {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryHistoryCommitsReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Cfgsetid  string `protobuf:"bytes,4,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Operator  string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-	QueryType int32  `protobuf:"varint,6,opt,name=queryType" json:"queryType,omitempty"`
-	Index     int32  `protobuf:"varint,7,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,8,opt,name=limit" json:"limit,omitempty"`
+	Seq       string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId     string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId     string       `protobuf:"bytes,4,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	Operator  string       `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
+	QueryType int32        `protobuf:"varint,6,opt,name=query_type,json=queryType" json:"query_type,omitempty"`
+	Page      *common.Page `protobuf:"bytes,7,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryHistoryCommitsReq) Reset()                    { *m = QueryHistoryCommitsReq{} }
 func (m *QueryHistoryCommitsReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryCommitsReq) ProtoMessage()               {}
-func (*QueryHistoryCommitsReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{68} }
+func (*QueryHistoryCommitsReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{62} }
 
-func (m *QueryHistoryCommitsReq) GetSeq() uint64 {
+func (m *QueryHistoryCommitsReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryHistoryCommitsReq) GetBid() string {
+func (m *QueryHistoryCommitsReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryHistoryCommitsReq) GetAppid() string {
+func (m *QueryHistoryCommitsReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryHistoryCommitsReq) GetCfgsetid() string {
+func (m *QueryHistoryCommitsReq) GetCfgId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
@@ -3671,130 +3618,124 @@ func (m *QueryHistoryCommitsReq) GetQueryType() int32 {
 	return 0
 }
 
-func (m *QueryHistoryCommitsReq) GetIndex() int32 {
+func (m *QueryHistoryCommitsReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryHistoryCommitsReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryHistoryCommitsResp struct {
-	Seq     uint64           `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode   `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string           `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Commits []*common.Commit `protobuf:"bytes,4,rep,name=commits" json:"commits,omitempty"`
+	Seq     string                            `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                    `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                            `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryHistoryCommitsResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryHistoryCommitsResp) Reset()                    { *m = QueryHistoryCommitsResp{} }
 func (m *QueryHistoryCommitsResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryCommitsResp) ProtoMessage()               {}
-func (*QueryHistoryCommitsResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{69} }
+func (*QueryHistoryCommitsResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{63} }
 
-func (m *QueryHistoryCommitsResp) GetSeq() uint64 {
+func (m *QueryHistoryCommitsResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryCommitsResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryHistoryCommitsResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryHistoryCommitsResp) GetCommits() []*common.Commit {
+func (m *QueryHistoryCommitsResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Commits
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryHistoryCommitsResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryHistoryCommitsResp) GetData() *QueryHistoryCommitsResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryHistoryCommitsResp_RespData struct {
+	TotalCount uint32           `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.Commit `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryHistoryCommitsResp_RespData) Reset()         { *m = QueryHistoryCommitsResp_RespData{} }
+func (m *QueryHistoryCommitsResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryHistoryCommitsResp_RespData) ProtoMessage()    {}
+func (*QueryHistoryCommitsResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{63, 0}
+}
+
+func (m *QueryHistoryCommitsResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryHistoryCommitsResp_RespData) GetInfo() []*common.Commit {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type UpdateCommitReq struct {
-	Seq          uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid          string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Commitid     string `protobuf:"bytes,3,opt,name=commitid" json:"commitid,omitempty"`
-	Templateid   string `protobuf:"bytes,4,opt,name=templateid" json:"templateid,omitempty"`
-	Template     string `protobuf:"bytes,5,opt,name=template" json:"template,omitempty"`
-	TemplateRule string `protobuf:"bytes,6,opt,name=templateRule" json:"templateRule,omitempty"`
-	Configs      []byte `protobuf:"bytes,7,opt,name=configs,proto3" json:"configs,omitempty"`
-	Changes      string `protobuf:"bytes,8,opt,name=changes" json:"changes,omitempty"`
-	Memo         string `protobuf:"bytes,9,opt,name=memo" json:"memo,omitempty"`
-	Operator     string `protobuf:"bytes,10,opt,name=operator" json:"operator,omitempty"`
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CommitId   string `protobuf:"bytes,3,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	CommitMode int32  `protobuf:"varint,4,opt,name=commit_mode,json=commitMode" json:"commit_mode,omitempty"`
+	Operator   string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
+	Memo       string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
 }
 
 func (m *UpdateCommitReq) Reset()                    { *m = UpdateCommitReq{} }
 func (m *UpdateCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateCommitReq) ProtoMessage()               {}
-func (*UpdateCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{70} }
+func (*UpdateCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{64} }
 
-func (m *UpdateCommitReq) GetSeq() uint64 {
+func (m *UpdateCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
+	}
+	return ""
+}
+
+func (m *UpdateCommitReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *UpdateCommitReq) GetCommitId() string {
+	if m != nil {
+		return m.CommitId
+	}
+	return ""
+}
+
+func (m *UpdateCommitReq) GetCommitMode() int32 {
+	if m != nil {
+		return m.CommitMode
 	}
 	return 0
 }
 
-func (m *UpdateCommitReq) GetBid() string {
+func (m *UpdateCommitReq) GetOperator() string {
 	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateCommitReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *UpdateCommitReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *UpdateCommitReq) GetTemplate() string {
-	if m != nil {
-		return m.Template
-	}
-	return ""
-}
-
-func (m *UpdateCommitReq) GetTemplateRule() string {
-	if m != nil {
-		return m.TemplateRule
-	}
-	return ""
-}
-
-func (m *UpdateCommitReq) GetConfigs() []byte {
-	if m != nil {
-		return m.Configs
-	}
-	return nil
-}
-
-func (m *UpdateCommitReq) GetChanges() string {
-	if m != nil {
-		return m.Changes
+		return m.Operator
 	}
 	return ""
 }
@@ -3806,74 +3747,67 @@ func (m *UpdateCommitReq) GetMemo() string {
 	return ""
 }
 
-func (m *UpdateCommitReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
 type UpdateCommitResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateCommitResp) Reset()                    { *m = UpdateCommitResp{} }
 func (m *UpdateCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateCommitResp) ProtoMessage()               {}
-func (*UpdateCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{71} }
+func (*UpdateCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{65} }
 
-func (m *UpdateCommitResp) GetSeq() uint64 {
+func (m *UpdateCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateCommitResp) GetErrCode() common.ErrCode {
+func (m *UpdateCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateCommitResp) GetErrMsg() string {
+func (m *UpdateCommitResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CancelCommitReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Commitid string `protobuf:"bytes,3,opt,name=commitid" json:"commitid,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CommitId string `protobuf:"bytes,3,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
 	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *CancelCommitReq) Reset()                    { *m = CancelCommitReq{} }
 func (m *CancelCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*CancelCommitReq) ProtoMessage()               {}
-func (*CancelCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{72} }
+func (*CancelCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{66} }
 
-func (m *CancelCommitReq) GetSeq() uint64 {
+func (m *CancelCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CancelCommitReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *CancelCommitReq) GetCommitid() string {
+func (m *CancelCommitReq) GetBizId() string {
 	if m != nil {
-		return m.Commitid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CancelCommitReq) GetCommitId() string {
+	if m != nil {
+		return m.CommitId
 	}
 	return ""
 }
@@ -3886,82 +3820,66 @@ func (m *CancelCommitReq) GetOperator() string {
 }
 
 type CancelCommitResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CancelCommitResp) Reset()                    { *m = CancelCommitResp{} }
 func (m *CancelCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*CancelCommitResp) ProtoMessage()               {}
-func (*CancelCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{73} }
+func (*CancelCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{67} }
 
-func (m *CancelCommitResp) GetSeq() uint64 {
+func (m *CancelCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CancelCommitResp) GetErrCode() common.ErrCode {
+func (m *CancelCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CancelCommitResp) GetErrMsg() string {
+func (m *CancelCommitResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type ConfirmCommitReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid    string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Cfgsetid string `protobuf:"bytes,4,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Commitid string `protobuf:"bytes,5,opt,name=commitid" json:"commitid,omitempty"`
-	Operator string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId    string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CommitId string `protobuf:"bytes,3,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *ConfirmCommitReq) Reset()                    { *m = ConfirmCommitReq{} }
 func (m *ConfirmCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*ConfirmCommitReq) ProtoMessage()               {}
-func (*ConfirmCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{74} }
+func (*ConfirmCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{68} }
 
-func (m *ConfirmCommitReq) GetSeq() uint64 {
+func (m *ConfirmCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *ConfirmCommitReq) GetBid() string {
+func (m *ConfirmCommitReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *ConfirmCommitReq) GetAppid() string {
+func (m *ConfirmCommitReq) GetCommitId() string {
 	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *ConfirmCommitReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *ConfirmCommitReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
+		return m.CommitId
 	}
 	return ""
 }
@@ -3974,75 +3892,206 @@ func (m *ConfirmCommitReq) GetOperator() string {
 }
 
 type ConfirmCommitResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *ConfirmCommitResp) Reset()                    { *m = ConfirmCommitResp{} }
 func (m *ConfirmCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*ConfirmCommitResp) ProtoMessage()               {}
-func (*ConfirmCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{75} }
+func (*ConfirmCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{69} }
 
-func (m *ConfirmCommitResp) GetSeq() uint64 {
+func (m *ConfirmCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *ConfirmCommitResp) GetErrCode() common.ErrCode {
+func (m *ConfirmCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *ConfirmCommitResp) GetErrMsg() string {
+func (m *ConfirmCommitResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
+	}
+	return ""
+}
+
+type CreateMultiCommitWithContentReq struct {
+	Seq           string                              `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string                              `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId         string                              `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	MultiCommitId string                              `protobuf:"bytes,4,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
+	Memo          string                              `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
+	Operator      string                              `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
+	Metadatas     []*common.CommitMetadataWithContent `protobuf:"bytes,7,rep,name=metadatas" json:"metadatas,omitempty"`
+}
+
+func (m *CreateMultiCommitWithContentReq) Reset()         { *m = CreateMultiCommitWithContentReq{} }
+func (m *CreateMultiCommitWithContentReq) String() string { return proto.CompactTextString(m) }
+func (*CreateMultiCommitWithContentReq) ProtoMessage()    {}
+func (*CreateMultiCommitWithContentReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{70}
+}
+
+func (m *CreateMultiCommitWithContentReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentReq) GetBizId() string {
+	if m != nil {
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentReq) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentReq) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentReq) GetOperator() string {
+	if m != nil {
+		return m.Operator
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentReq) GetMetadatas() []*common.CommitMetadataWithContent {
+	if m != nil {
+		return m.Metadatas
+	}
+	return nil
+}
+
+type CreateMultiCommitWithContentResp struct {
+	Seq     string                                     `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                             `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                     `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateMultiCommitWithContentResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *CreateMultiCommitWithContentResp) Reset()         { *m = CreateMultiCommitWithContentResp{} }
+func (m *CreateMultiCommitWithContentResp) String() string { return proto.CompactTextString(m) }
+func (*CreateMultiCommitWithContentResp) ProtoMessage()    {}
+func (*CreateMultiCommitWithContentResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{71}
+}
+
+func (m *CreateMultiCommitWithContentResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateMultiCommitWithContentResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitWithContentResp) GetData() *CreateMultiCommitWithContentResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateMultiCommitWithContentResp_RespData struct {
+	MultiCommitId string `protobuf:"bytes,1,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
+}
+
+func (m *CreateMultiCommitWithContentResp_RespData) Reset() {
+	*m = CreateMultiCommitWithContentResp_RespData{}
+}
+func (m *CreateMultiCommitWithContentResp_RespData) String() string {
+	return proto.CompactTextString(m)
+}
+func (*CreateMultiCommitWithContentResp_RespData) ProtoMessage() {}
+func (*CreateMultiCommitWithContentResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{71, 0}
+}
+
+func (m *CreateMultiCommitWithContentResp_RespData) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
 	}
 	return ""
 }
 
 type CreateMultiCommitReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiCommitid string `protobuf:"bytes,3,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
-	Appid         string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Memo          string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	Operator      string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
+	Seq           string                   `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string                   `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId         string                   `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	MultiCommitId string                   `protobuf:"bytes,4,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
+	Memo          string                   `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
+	Operator      string                   `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
+	Metadatas     []*common.CommitMetadata `protobuf:"bytes,7,rep,name=metadatas" json:"metadatas,omitempty"`
 }
 
 func (m *CreateMultiCommitReq) Reset()                    { *m = CreateMultiCommitReq{} }
 func (m *CreateMultiCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateMultiCommitReq) ProtoMessage()               {}
-func (*CreateMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{76} }
+func (*CreateMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{72} }
 
-func (m *CreateMultiCommitReq) GetSeq() uint64 {
+func (m *CreateMultiCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateMultiCommitReq) GetBid() string {
+func (m *CreateMultiCommitReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateMultiCommitReq) GetMultiCommitid() string {
+func (m *CreateMultiCommitReq) GetAppId() string {
 	if m != nil {
-		return m.MultiCommitid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateMultiCommitReq) GetAppid() string {
+func (m *CreateMultiCommitReq) GetMultiCommitId() string {
 	if m != nil {
-		return m.Appid
+		return m.MultiCommitId
 	}
 	return ""
 }
@@ -4061,150 +4110,174 @@ func (m *CreateMultiCommitReq) GetOperator() string {
 	return ""
 }
 
+func (m *CreateMultiCommitReq) GetMetadatas() []*common.CommitMetadata {
+	if m != nil {
+		return m.Metadatas
+	}
+	return nil
+}
+
 type CreateMultiCommitResp struct {
-	Seq           uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode       common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg        string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	MultiCommitid string         `protobuf:"bytes,4,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
+	Seq     string                          `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                  `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                          `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateMultiCommitResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *CreateMultiCommitResp) Reset()                    { *m = CreateMultiCommitResp{} }
 func (m *CreateMultiCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateMultiCommitResp) ProtoMessage()               {}
-func (*CreateMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{77} }
+func (*CreateMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{73} }
 
-func (m *CreateMultiCommitResp) GetSeq() uint64 {
+func (m *CreateMultiCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateMultiCommitResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateMultiCommitResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *CreateMultiCommitResp) GetMultiCommitid() string {
+func (m *CreateMultiCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.MultiCommitid
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateMultiCommitResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateMultiCommitResp) GetData() *CreateMultiCommitResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateMultiCommitResp_RespData struct {
+	MultiCommitId string `protobuf:"bytes,1,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
+}
+
+func (m *CreateMultiCommitResp_RespData) Reset()         { *m = CreateMultiCommitResp_RespData{} }
+func (m *CreateMultiCommitResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateMultiCommitResp_RespData) ProtoMessage()    {}
+func (*CreateMultiCommitResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{73, 0}
+}
+
+func (m *CreateMultiCommitResp_RespData) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
 	}
 	return ""
 }
 
 type QueryMultiCommitReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiCommitid string `protobuf:"bytes,3,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiCommitId string `protobuf:"bytes,3,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
 }
 
 func (m *QueryMultiCommitReq) Reset()                    { *m = QueryMultiCommitReq{} }
 func (m *QueryMultiCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiCommitReq) ProtoMessage()               {}
-func (*QueryMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{78} }
+func (*QueryMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{74} }
 
-func (m *QueryMultiCommitReq) GetSeq() uint64 {
+func (m *QueryMultiCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiCommitReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryMultiCommitReq) GetMultiCommitid() string {
+func (m *QueryMultiCommitReq) GetBizId() string {
 	if m != nil {
-		return m.MultiCommitid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryMultiCommitReq) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
 	}
 	return ""
 }
 
 type QueryMultiCommitResp struct {
-	Seq         uint64              `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode     common.ErrCode      `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg      string              `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	MultiCommit *common.MultiCommit `protobuf:"bytes,4,opt,name=multiCommit" json:"multiCommit,omitempty"`
+	Seq     string              `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode      `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string              `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.MultiCommit `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryMultiCommitResp) Reset()                    { *m = QueryMultiCommitResp{} }
 func (m *QueryMultiCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiCommitResp) ProtoMessage()               {}
-func (*QueryMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{79} }
+func (*QueryMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{75} }
 
-func (m *QueryMultiCommitResp) GetSeq() uint64 {
+func (m *QueryMultiCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiCommitResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryMultiCommitResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryMultiCommitResp) GetMultiCommit() *common.MultiCommit {
+func (m *QueryMultiCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.MultiCommit
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryMultiCommitResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryMultiCommitResp) GetData() *common.MultiCommit {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryHistoryMultiCommitsReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-	QueryType int32  `protobuf:"varint,5,opt,name=queryType" json:"queryType,omitempty"`
-	Index     int32  `protobuf:"varint,6,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,7,opt,name=limit" json:"limit,omitempty"`
+	Seq       string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId     string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	Operator  string       `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
+	QueryType int32        `protobuf:"varint,5,opt,name=query_type,json=queryType" json:"query_type,omitempty"`
+	Page      *common.Page `protobuf:"bytes,6,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryHistoryMultiCommitsReq) Reset()                    { *m = QueryHistoryMultiCommitsReq{} }
 func (m *QueryHistoryMultiCommitsReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryMultiCommitsReq) ProtoMessage()               {}
-func (*QueryHistoryMultiCommitsReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{80} }
+func (*QueryHistoryMultiCommitsReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{76} }
 
-func (m *QueryHistoryMultiCommitsReq) GetSeq() uint64 {
+func (m *QueryHistoryMultiCommitsReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryMultiCommitsReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryHistoryMultiCommitsReq) GetAppid() string {
+func (m *QueryHistoryMultiCommitsReq) GetBizId() string {
 	if m != nil {
-		return m.Appid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryHistoryMultiCommitsReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
@@ -4223,136 +4296,173 @@ func (m *QueryHistoryMultiCommitsReq) GetQueryType() int32 {
 	return 0
 }
 
-func (m *QueryHistoryMultiCommitsReq) GetIndex() int32 {
+func (m *QueryHistoryMultiCommitsReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryHistoryMultiCommitsReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryHistoryMultiCommitsResp struct {
-	Seq          uint64                `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode      common.ErrCode        `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg       string                `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	MultiCommits []*common.MultiCommit `protobuf:"bytes,4,rep,name=multiCommits" json:"multiCommits,omitempty"`
+	Seq     string                                 `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                         `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                 `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryHistoryMultiCommitsResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryHistoryMultiCommitsResp) Reset()                    { *m = QueryHistoryMultiCommitsResp{} }
 func (m *QueryHistoryMultiCommitsResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryMultiCommitsResp) ProtoMessage()               {}
-func (*QueryHistoryMultiCommitsResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{81} }
+func (*QueryHistoryMultiCommitsResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{77} }
 
-func (m *QueryHistoryMultiCommitsResp) GetSeq() uint64 {
+func (m *QueryHistoryMultiCommitsResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryMultiCommitsResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryHistoryMultiCommitsResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryHistoryMultiCommitsResp) GetMultiCommits() []*common.MultiCommit {
+func (m *QueryHistoryMultiCommitsResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.MultiCommits
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryHistoryMultiCommitsResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryHistoryMultiCommitsResp) GetData() *QueryHistoryMultiCommitsResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryHistoryMultiCommitsResp_RespData struct {
+	TotalCount uint32                `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.MultiCommit `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryHistoryMultiCommitsResp_RespData) Reset()         { *m = QueryHistoryMultiCommitsResp_RespData{} }
+func (m *QueryHistoryMultiCommitsResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryHistoryMultiCommitsResp_RespData) ProtoMessage()    {}
+func (*QueryHistoryMultiCommitsResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{77, 0}
+}
+
+func (m *QueryHistoryMultiCommitsResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryHistoryMultiCommitsResp_RespData) GetInfo() []*common.MultiCommit {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type QueryMultiCommitSubListReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiCommitid string `protobuf:"bytes,3,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiCommitId string `protobuf:"bytes,3,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
 }
 
 func (m *QueryMultiCommitSubListReq) Reset()                    { *m = QueryMultiCommitSubListReq{} }
 func (m *QueryMultiCommitSubListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiCommitSubListReq) ProtoMessage()               {}
-func (*QueryMultiCommitSubListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{82} }
+func (*QueryMultiCommitSubListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{78} }
 
-func (m *QueryMultiCommitSubListReq) GetSeq() uint64 {
+func (m *QueryMultiCommitSubListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiCommitSubListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryMultiCommitSubListReq) GetMultiCommitid() string {
+func (m *QueryMultiCommitSubListReq) GetBizId() string {
 	if m != nil {
-		return m.MultiCommitid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryMultiCommitSubListReq) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
 	}
 	return ""
 }
 
 type QueryMultiCommitSubListResp struct {
-	Seq       uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Commitids []string       `protobuf:"bytes,4,rep,name=commitids" json:"commitids,omitempty"`
+	Seq     string                                `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                        `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryMultiCommitSubListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryMultiCommitSubListResp) Reset()                    { *m = QueryMultiCommitSubListResp{} }
 func (m *QueryMultiCommitSubListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiCommitSubListResp) ProtoMessage()               {}
-func (*QueryMultiCommitSubListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{83} }
+func (*QueryMultiCommitSubListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{79} }
 
-func (m *QueryMultiCommitSubListResp) GetSeq() uint64 {
+func (m *QueryMultiCommitSubListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiCommitSubListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryMultiCommitSubListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryMultiCommitSubListResp) GetCommitids() []string {
+func (m *QueryMultiCommitSubListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Commitids
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryMultiCommitSubListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryMultiCommitSubListResp) GetData() *QueryMultiCommitSubListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryMultiCommitSubListResp_RespData struct {
+	CommitIds []string `protobuf:"bytes,1,rep,name=commit_ids,json=commitIds" json:"commit_ids,omitempty"`
+}
+
+func (m *QueryMultiCommitSubListResp_RespData) Reset()         { *m = QueryMultiCommitSubListResp_RespData{} }
+func (m *QueryMultiCommitSubListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryMultiCommitSubListResp_RespData) ProtoMessage()    {}
+func (*QueryMultiCommitSubListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{79, 0}
+}
+
+func (m *QueryMultiCommitSubListResp_RespData) GetCommitIds() []string {
+	if m != nil {
+		return m.CommitIds
 	}
 	return nil
 }
 
 type UpdateMultiCommitReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiCommitid string `protobuf:"bytes,3,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiCommitId string `protobuf:"bytes,3,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
 	Memo          string `protobuf:"bytes,4,opt,name=memo" json:"memo,omitempty"`
 	Operator      string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
 }
@@ -4360,25 +4470,25 @@ type UpdateMultiCommitReq struct {
 func (m *UpdateMultiCommitReq) Reset()                    { *m = UpdateMultiCommitReq{} }
 func (m *UpdateMultiCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateMultiCommitReq) ProtoMessage()               {}
-func (*UpdateMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{84} }
+func (*UpdateMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{80} }
 
-func (m *UpdateMultiCommitReq) GetSeq() uint64 {
+func (m *UpdateMultiCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateMultiCommitReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *UpdateMultiCommitReq) GetMultiCommitid() string {
+func (m *UpdateMultiCommitReq) GetBizId() string {
 	if m != nil {
-		return m.MultiCommitid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *UpdateMultiCommitReq) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
 	}
 	return ""
 }
@@ -4398,66 +4508,66 @@ func (m *UpdateMultiCommitReq) GetOperator() string {
 }
 
 type UpdateMultiCommitResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateMultiCommitResp) Reset()                    { *m = UpdateMultiCommitResp{} }
 func (m *UpdateMultiCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateMultiCommitResp) ProtoMessage()               {}
-func (*UpdateMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{85} }
+func (*UpdateMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{81} }
 
-func (m *UpdateMultiCommitResp) GetSeq() uint64 {
+func (m *UpdateMultiCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateMultiCommitResp) GetErrCode() common.ErrCode {
+func (m *UpdateMultiCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateMultiCommitResp) GetErrMsg() string {
+func (m *UpdateMultiCommitResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CancelMultiCommitReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiCommitid string `protobuf:"bytes,3,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiCommitId string `protobuf:"bytes,3,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
 	Operator      string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *CancelMultiCommitReq) Reset()                    { *m = CancelMultiCommitReq{} }
 func (m *CancelMultiCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*CancelMultiCommitReq) ProtoMessage()               {}
-func (*CancelMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{86} }
+func (*CancelMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{82} }
 
-func (m *CancelMultiCommitReq) GetSeq() uint64 {
+func (m *CancelMultiCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CancelMultiCommitReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *CancelMultiCommitReq) GetMultiCommitid() string {
+func (m *CancelMultiCommitReq) GetBizId() string {
 	if m != nil {
-		return m.MultiCommitid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CancelMultiCommitReq) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
 	}
 	return ""
 }
@@ -4470,66 +4580,66 @@ func (m *CancelMultiCommitReq) GetOperator() string {
 }
 
 type CancelMultiCommitResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CancelMultiCommitResp) Reset()                    { *m = CancelMultiCommitResp{} }
 func (m *CancelMultiCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*CancelMultiCommitResp) ProtoMessage()               {}
-func (*CancelMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{87} }
+func (*CancelMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{83} }
 
-func (m *CancelMultiCommitResp) GetSeq() uint64 {
+func (m *CancelMultiCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CancelMultiCommitResp) GetErrCode() common.ErrCode {
+func (m *CancelMultiCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CancelMultiCommitResp) GetErrMsg() string {
+func (m *CancelMultiCommitResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type ConfirmMultiCommitReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiCommitid string `protobuf:"bytes,3,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
+	Seq           string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId         string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiCommitId string `protobuf:"bytes,3,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
 	Operator      string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *ConfirmMultiCommitReq) Reset()                    { *m = ConfirmMultiCommitReq{} }
 func (m *ConfirmMultiCommitReq) String() string            { return proto.CompactTextString(m) }
 func (*ConfirmMultiCommitReq) ProtoMessage()               {}
-func (*ConfirmMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{88} }
+func (*ConfirmMultiCommitReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{84} }
 
-func (m *ConfirmMultiCommitReq) GetSeq() uint64 {
+func (m *ConfirmMultiCommitReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *ConfirmMultiCommitReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *ConfirmMultiCommitReq) GetMultiCommitid() string {
+func (m *ConfirmMultiCommitReq) GetBizId() string {
 	if m != nil {
-		return m.MultiCommitid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *ConfirmMultiCommitReq) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
 	}
 	return ""
 }
@@ -4542,78 +4652,82 @@ func (m *ConfirmMultiCommitReq) GetOperator() string {
 }
 
 type ConfirmMultiCommitResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *ConfirmMultiCommitResp) Reset()                    { *m = ConfirmMultiCommitResp{} }
 func (m *ConfirmMultiCommitResp) String() string            { return proto.CompactTextString(m) }
 func (*ConfirmMultiCommitResp) ProtoMessage()               {}
-func (*ConfirmMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{89} }
+func (*ConfirmMultiCommitResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{85} }
 
-func (m *ConfirmMultiCommitResp) GetSeq() uint64 {
+func (m *ConfirmMultiCommitResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *ConfirmMultiCommitResp) GetErrCode() common.ErrCode {
+func (m *ConfirmMultiCommitResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *ConfirmMultiCommitResp) GetErrMsg() string {
+func (m *ConfirmMultiCommitResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateReleaseReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid  string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
-	Name       string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Appid      string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
-	Cfgsetid   string `protobuf:"bytes,6,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	CfgsetName string `protobuf:"bytes,7,opt,name=cfgsetName" json:"cfgsetName,omitempty"`
-	Strategyid string `protobuf:"bytes,8,opt,name=strategyid" json:"strategyid,omitempty"`
-	Strategies string `protobuf:"bytes,9,opt,name=strategies" json:"strategies,omitempty"`
-	Commitid   string `protobuf:"bytes,10,opt,name=commitid" json:"commitid,omitempty"`
-	Memo       string `protobuf:"bytes,11,opt,name=memo" json:"memo,omitempty"`
-	Creator    string `protobuf:"bytes,12,opt,name=creator" json:"creator,omitempty"`
-	State      int32  `protobuf:"varint,13,opt,name=state" json:"state,omitempty"`
-	// add fields here.
-	CfgsetFpath    string `protobuf:"bytes,14,opt,name=cfgsetFpath" json:"cfgsetFpath,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,15,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId      string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
+	Name           string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
+	AppId          string `protobuf:"bytes,5,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CfgId          string `protobuf:"bytes,6,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	CfgName        string `protobuf:"bytes,7,opt,name=cfg_name,json=cfgName" json:"cfg_name,omitempty"`
+	CfgFpath       string `protobuf:"bytes,8,opt,name=cfg_fpath,json=cfgFpath" json:"cfg_fpath,omitempty"`
+	User           string `protobuf:"bytes,9,opt,name=user" json:"user,omitempty"`
+	UserGroup      string `protobuf:"bytes,10,opt,name=user_group,json=userGroup" json:"user_group,omitempty"`
+	FilePrivilege  string `protobuf:"bytes,11,opt,name=file_privilege,json=filePrivilege" json:"file_privilege,omitempty"`
+	FileFormat     string `protobuf:"bytes,12,opt,name=file_format,json=fileFormat" json:"file_format,omitempty"`
+	FileMode       int32  `protobuf:"varint,13,opt,name=file_mode,json=fileMode" json:"file_mode,omitempty"`
+	StrategyId     string `protobuf:"bytes,14,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
+	Strategies     string `protobuf:"bytes,15,opt,name=strategies" json:"strategies,omitempty"`
+	CommitId       string `protobuf:"bytes,16,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,17,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
+	Memo           string `protobuf:"bytes,18,opt,name=memo" json:"memo,omitempty"`
+	Creator        string `protobuf:"bytes,19,opt,name=creator" json:"creator,omitempty"`
+	State          int32  `protobuf:"varint,20,opt,name=state" json:"state,omitempty"`
 }
 
 func (m *CreateReleaseReq) Reset()                    { *m = CreateReleaseReq{} }
 func (m *CreateReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateReleaseReq) ProtoMessage()               {}
-func (*CreateReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{90} }
+func (*CreateReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{86} }
 
-func (m *CreateReleaseReq) GetSeq() uint64 {
+func (m *CreateReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *CreateReleaseReq) GetReleaseid() string {
+func (m *CreateReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CreateReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -4625,30 +4739,72 @@ func (m *CreateReleaseReq) GetName() string {
 	return ""
 }
 
-func (m *CreateReleaseReq) GetAppid() string {
+func (m *CreateReleaseReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateReleaseReq) GetCfgsetid() string {
+func (m *CreateReleaseReq) GetCfgId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *CreateReleaseReq) GetCfgsetName() string {
+func (m *CreateReleaseReq) GetCfgName() string {
 	if m != nil {
-		return m.CfgsetName
+		return m.CfgName
 	}
 	return ""
 }
 
-func (m *CreateReleaseReq) GetStrategyid() string {
+func (m *CreateReleaseReq) GetCfgFpath() string {
 	if m != nil {
-		return m.Strategyid
+		return m.CfgFpath
+	}
+	return ""
+}
+
+func (m *CreateReleaseReq) GetUser() string {
+	if m != nil {
+		return m.User
+	}
+	return ""
+}
+
+func (m *CreateReleaseReq) GetUserGroup() string {
+	if m != nil {
+		return m.UserGroup
+	}
+	return ""
+}
+
+func (m *CreateReleaseReq) GetFilePrivilege() string {
+	if m != nil {
+		return m.FilePrivilege
+	}
+	return ""
+}
+
+func (m *CreateReleaseReq) GetFileFormat() string {
+	if m != nil {
+		return m.FileFormat
+	}
+	return ""
+}
+
+func (m *CreateReleaseReq) GetFileMode() int32 {
+	if m != nil {
+		return m.FileMode
+	}
+	return 0
+}
+
+func (m *CreateReleaseReq) GetStrategyId() string {
+	if m != nil {
+		return m.StrategyId
 	}
 	return ""
 }
@@ -4660,9 +4816,16 @@ func (m *CreateReleaseReq) GetStrategies() string {
 	return ""
 }
 
-func (m *CreateReleaseReq) GetCommitid() string {
+func (m *CreateReleaseReq) GetCommitId() string {
 	if m != nil {
-		return m.Commitid
+		return m.CommitId
+	}
+	return ""
+}
+
+func (m *CreateReleaseReq) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
@@ -4688,254 +4851,272 @@ func (m *CreateReleaseReq) GetState() int32 {
 	return 0
 }
 
-func (m *CreateReleaseReq) GetCfgsetFpath() string {
-	if m != nil {
-		return m.CfgsetFpath
-	}
-	return ""
-}
-
-func (m *CreateReleaseReq) GetMultiReleaseid() string {
-	if m != nil {
-		return m.MultiReleaseid
-	}
-	return ""
-}
-
 type CreateReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string                      `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode              `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                      `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateReleaseResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *CreateReleaseResp) Reset()                    { *m = CreateReleaseResp{} }
 func (m *CreateReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateReleaseResp) ProtoMessage()               {}
-func (*CreateReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{91} }
+func (*CreateReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{87} }
 
-func (m *CreateReleaseResp) GetSeq() uint64 {
+func (m *CreateReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateReleaseResp) GetErrCode() common.ErrCode {
+func (m *CreateReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateReleaseResp) GetErrMsg() string {
+func (m *CreateReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateReleaseResp) GetData() *CreateReleaseResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateReleaseResp_RespData struct {
+	ReleaseId string `protobuf:"bytes,1,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
+}
+
+func (m *CreateReleaseResp_RespData) Reset()                    { *m = CreateReleaseResp_RespData{} }
+func (m *CreateReleaseResp_RespData) String() string            { return proto.CompactTextString(m) }
+func (*CreateReleaseResp_RespData) ProtoMessage()               {}
+func (*CreateReleaseResp_RespData) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{87, 0} }
+
+func (m *CreateReleaseResp_RespData) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
 
 type QueryReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 }
 
 func (m *QueryReleaseReq) Reset()                    { *m = QueryReleaseReq{} }
 func (m *QueryReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryReleaseReq) ProtoMessage()               {}
-func (*QueryReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{92} }
+func (*QueryReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{88} }
 
-func (m *QueryReleaseReq) GetSeq() uint64 {
+func (m *QueryReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryReleaseReq) GetReleaseid() string {
+func (m *QueryReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
 
 type QueryReleaseResp struct {
-	Seq     uint64          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Release *common.Release `protobuf:"bytes,4,opt,name=release" json:"release,omitempty"`
+	Seq     string          `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode  `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string          `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.Release `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryReleaseResp) Reset()                    { *m = QueryReleaseResp{} }
 func (m *QueryReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryReleaseResp) ProtoMessage()               {}
-func (*QueryReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{93} }
+func (*QueryReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{89} }
 
-func (m *QueryReleaseResp) GetSeq() uint64 {
+func (m *QueryReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryReleaseResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryReleaseResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryReleaseResp) GetRelease() *common.Release {
+func (m *QueryReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Release
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryReleaseResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryReleaseResp) GetData() *common.Release {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryNewestReleasesReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid       string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	LocalReleaseid string `protobuf:"bytes,4,opt,name=localReleaseid" json:"localReleaseid,omitempty"`
-	Index          int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit          int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
+	Seq            string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CfgId          string       `protobuf:"bytes,3,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	LocalReleaseId string       `protobuf:"bytes,4,opt,name=local_release_id,json=localReleaseId" json:"local_release_id,omitempty"`
+	Page           *common.Page `protobuf:"bytes,5,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryNewestReleasesReq) Reset()                    { *m = QueryNewestReleasesReq{} }
 func (m *QueryNewestReleasesReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryNewestReleasesReq) ProtoMessage()               {}
-func (*QueryNewestReleasesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{94} }
+func (*QueryNewestReleasesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{90} }
 
-func (m *QueryNewestReleasesReq) GetSeq() uint64 {
+func (m *QueryNewestReleasesReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryNewestReleasesReq) GetBid() string {
+func (m *QueryNewestReleasesReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryNewestReleasesReq) GetCfgsetid() string {
+func (m *QueryNewestReleasesReq) GetCfgId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *QueryNewestReleasesReq) GetLocalReleaseid() string {
+func (m *QueryNewestReleasesReq) GetLocalReleaseId() string {
 	if m != nil {
-		return m.LocalReleaseid
+		return m.LocalReleaseId
 	}
 	return ""
 }
 
-func (m *QueryNewestReleasesReq) GetIndex() int32 {
+func (m *QueryNewestReleasesReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryNewestReleasesReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryNewestReleasesResp struct {
-	Seq      uint64            `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode    `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string            `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Releases []*common.Release `protobuf:"bytes,4,rep,name=releases" json:"releases,omitempty"`
+	Seq     string                            `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                    `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                            `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryNewestReleasesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryNewestReleasesResp) Reset()                    { *m = QueryNewestReleasesResp{} }
 func (m *QueryNewestReleasesResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryNewestReleasesResp) ProtoMessage()               {}
-func (*QueryNewestReleasesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{95} }
+func (*QueryNewestReleasesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{91} }
 
-func (m *QueryNewestReleasesResp) GetSeq() uint64 {
+func (m *QueryNewestReleasesResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryNewestReleasesResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryNewestReleasesResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryNewestReleasesResp) GetReleases() []*common.Release {
+func (m *QueryNewestReleasesResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Releases
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryNewestReleasesResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryNewestReleasesResp) GetData() *QueryNewestReleasesResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryNewestReleasesResp_RespData struct {
+	Info []*common.Release `protobuf:"bytes,1,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryNewestReleasesResp_RespData) Reset()         { *m = QueryNewestReleasesResp_RespData{} }
+func (m *QueryNewestReleasesResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryNewestReleasesResp_RespData) ProtoMessage()    {}
+func (*QueryNewestReleasesResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{91, 0}
+}
+
+func (m *QueryNewestReleasesResp_RespData) GetInfo() []*common.Release {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type QueryHistoryReleasesReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid  string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-	QueryType int32  `protobuf:"varint,5,opt,name=queryType" json:"queryType,omitempty"`
-	Index     int32  `protobuf:"varint,6,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,7,opt,name=limit" json:"limit,omitempty"`
-	// add new fields here.
-	OrderType int32 `protobuf:"varint,8,opt,name=orderType" json:"orderType,omitempty"`
+	Seq       string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CfgId     string       `protobuf:"bytes,3,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	Operator  string       `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
+	QueryType int32        `protobuf:"varint,5,opt,name=query_type,json=queryType" json:"query_type,omitempty"`
+	OrderType int32        `protobuf:"varint,6,opt,name=order_type,json=orderType" json:"order_type,omitempty"`
+	Page      *common.Page `protobuf:"bytes,7,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryHistoryReleasesReq) Reset()                    { *m = QueryHistoryReleasesReq{} }
 func (m *QueryHistoryReleasesReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryReleasesReq) ProtoMessage()               {}
-func (*QueryHistoryReleasesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{96} }
+func (*QueryHistoryReleasesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{92} }
 
-func (m *QueryHistoryReleasesReq) GetSeq() uint64 {
+func (m *QueryHistoryReleasesReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryReleasesReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryHistoryReleasesReq) GetCfgsetid() string {
+func (m *QueryHistoryReleasesReq) GetBizId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryHistoryReleasesReq) GetCfgId() string {
+	if m != nil {
+		return m.CfgId
 	}
 	return ""
 }
@@ -4954,20 +5135,6 @@ func (m *QueryHistoryReleasesReq) GetQueryType() int32 {
 	return 0
 }
 
-func (m *QueryHistoryReleasesReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryHistoryReleasesReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
 func (m *QueryHistoryReleasesReq) GetOrderType() int32 {
 	if m != nil {
 		return m.OrderType
@@ -4975,50 +5142,83 @@ func (m *QueryHistoryReleasesReq) GetOrderType() int32 {
 	return 0
 }
 
+func (m *QueryHistoryReleasesReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
+}
+
 type QueryHistoryReleasesResp struct {
-	Seq      uint64            `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode    `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string            `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Releases []*common.Release `protobuf:"bytes,4,rep,name=releases" json:"releases,omitempty"`
+	Seq     string                             `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                     `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                             `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryHistoryReleasesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryHistoryReleasesResp) Reset()                    { *m = QueryHistoryReleasesResp{} }
 func (m *QueryHistoryReleasesResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryReleasesResp) ProtoMessage()               {}
-func (*QueryHistoryReleasesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{97} }
+func (*QueryHistoryReleasesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{93} }
 
-func (m *QueryHistoryReleasesResp) GetSeq() uint64 {
+func (m *QueryHistoryReleasesResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryReleasesResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryHistoryReleasesResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryHistoryReleasesResp) GetReleases() []*common.Release {
+func (m *QueryHistoryReleasesResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Releases
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryHistoryReleasesResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryHistoryReleasesResp) GetData() *QueryHistoryReleasesResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryHistoryReleasesResp_RespData struct {
+	TotalCount uint32            `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.Release `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryHistoryReleasesResp_RespData) Reset()         { *m = QueryHistoryReleasesResp_RespData{} }
+func (m *QueryHistoryReleasesResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryHistoryReleasesResp_RespData) ProtoMessage()    {}
+func (*QueryHistoryReleasesResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{93, 0}
+}
+
+func (m *QueryHistoryReleasesResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryHistoryReleasesResp_RespData) GetInfo() []*common.Release {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type UpdateReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 	Name      string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
 	Memo      string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
 	Operator  string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
@@ -5027,25 +5227,25 @@ type UpdateReleaseReq struct {
 func (m *UpdateReleaseReq) Reset()                    { *m = UpdateReleaseReq{} }
 func (m *UpdateReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateReleaseReq) ProtoMessage()               {}
-func (*UpdateReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{98} }
+func (*UpdateReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{94} }
 
-func (m *UpdateReleaseReq) GetSeq() uint64 {
+func (m *UpdateReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *UpdateReleaseReq) GetReleaseid() string {
+func (m *UpdateReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *UpdateReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -5072,66 +5272,66 @@ func (m *UpdateReleaseReq) GetOperator() string {
 }
 
 type UpdateReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateReleaseResp) Reset()                    { *m = UpdateReleaseResp{} }
 func (m *UpdateReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateReleaseResp) ProtoMessage()               {}
-func (*UpdateReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{99} }
+func (*UpdateReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{95} }
 
-func (m *UpdateReleaseResp) GetSeq() uint64 {
+func (m *UpdateReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateReleaseResp) GetErrCode() common.ErrCode {
+func (m *UpdateReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateReleaseResp) GetErrMsg() string {
+func (m *UpdateReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CancelReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *CancelReleaseReq) Reset()                    { *m = CancelReleaseReq{} }
 func (m *CancelReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*CancelReleaseReq) ProtoMessage()               {}
-func (*CancelReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{100} }
+func (*CancelReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{96} }
 
-func (m *CancelReleaseReq) GetSeq() uint64 {
+func (m *CancelReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CancelReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *CancelReleaseReq) GetReleaseid() string {
+func (m *CancelReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CancelReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -5144,66 +5344,66 @@ func (m *CancelReleaseReq) GetOperator() string {
 }
 
 type CancelReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CancelReleaseResp) Reset()                    { *m = CancelReleaseResp{} }
 func (m *CancelReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*CancelReleaseResp) ProtoMessage()               {}
-func (*CancelReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{101} }
+func (*CancelReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{97} }
 
-func (m *CancelReleaseResp) GetSeq() uint64 {
+func (m *CancelReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CancelReleaseResp) GetErrCode() common.ErrCode {
+func (m *CancelReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CancelReleaseResp) GetErrMsg() string {
+func (m *CancelReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type RollbackReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *RollbackReleaseReq) Reset()                    { *m = RollbackReleaseReq{} }
 func (m *RollbackReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*RollbackReleaseReq) ProtoMessage()               {}
-func (*RollbackReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{102} }
+func (*RollbackReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{98} }
 
-func (m *RollbackReleaseReq) GetSeq() uint64 {
+func (m *RollbackReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *RollbackReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *RollbackReleaseReq) GetReleaseid() string {
+func (m *RollbackReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *RollbackReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -5216,66 +5416,66 @@ func (m *RollbackReleaseReq) GetOperator() string {
 }
 
 type RollbackReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *RollbackReleaseResp) Reset()                    { *m = RollbackReleaseResp{} }
 func (m *RollbackReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*RollbackReleaseResp) ProtoMessage()               {}
-func (*RollbackReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{103} }
+func (*RollbackReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{99} }
 
-func (m *RollbackReleaseResp) GetSeq() uint64 {
+func (m *RollbackReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *RollbackReleaseResp) GetErrCode() common.ErrCode {
+func (m *RollbackReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *RollbackReleaseResp) GetErrMsg() string {
+func (m *RollbackReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type PublishReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Releaseid string `protobuf:"bytes,3,opt,name=releaseid" json:"releaseid,omitempty"`
+	Seq       string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	ReleaseId string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
 	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *PublishReleaseReq) Reset()                    { *m = PublishReleaseReq{} }
 func (m *PublishReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*PublishReleaseReq) ProtoMessage()               {}
-func (*PublishReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{104} }
+func (*PublishReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{100} }
 
-func (m *PublishReleaseReq) GetSeq() uint64 {
+func (m *PublishReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *PublishReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *PublishReleaseReq) GetReleaseid() string {
+func (m *PublishReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *PublishReleaseReq) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
 	}
 	return ""
 }
@@ -5288,45 +5488,45 @@ func (m *PublishReleaseReq) GetOperator() string {
 }
 
 type PublishReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *PublishReleaseResp) Reset()                    { *m = PublishReleaseResp{} }
 func (m *PublishReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*PublishReleaseResp) ProtoMessage()               {}
-func (*PublishReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{105} }
+func (*PublishReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{101} }
 
-func (m *PublishReleaseResp) GetSeq() uint64 {
+func (m *PublishReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *PublishReleaseResp) GetErrCode() common.ErrCode {
+func (m *PublishReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *PublishReleaseResp) GetErrMsg() string {
+func (m *PublishReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateMultiReleaseReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid          string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,4,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId          string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,4,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 	Name           string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
-	MultiCommitid  string `protobuf:"bytes,6,opt,name=multiCommitid" json:"multiCommitid,omitempty"`
-	Strategyid     string `protobuf:"bytes,7,opt,name=strategyid" json:"strategyid,omitempty"`
+	MultiCommitId  string `protobuf:"bytes,6,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
+	StrategyId     string `protobuf:"bytes,7,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
 	Strategies     string `protobuf:"bytes,8,opt,name=strategies" json:"strategies,omitempty"`
 	Memo           string `protobuf:"bytes,9,opt,name=memo" json:"memo,omitempty"`
 	Creator        string `protobuf:"bytes,10,opt,name=creator" json:"creator,omitempty"`
@@ -5335,32 +5535,32 @@ type CreateMultiReleaseReq struct {
 func (m *CreateMultiReleaseReq) Reset()                    { *m = CreateMultiReleaseReq{} }
 func (m *CreateMultiReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateMultiReleaseReq) ProtoMessage()               {}
-func (*CreateMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{106} }
+func (*CreateMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{102} }
 
-func (m *CreateMultiReleaseReq) GetSeq() uint64 {
+func (m *CreateMultiReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateMultiReleaseReq) GetBid() string {
+func (m *CreateMultiReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateMultiReleaseReq) GetAppid() string {
+func (m *CreateMultiReleaseReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateMultiReleaseReq) GetMultiReleaseid() string {
+func (m *CreateMultiReleaseReq) GetMultiReleaseId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.MultiReleaseId
 	}
 	return ""
 }
@@ -5372,16 +5572,16 @@ func (m *CreateMultiReleaseReq) GetName() string {
 	return ""
 }
 
-func (m *CreateMultiReleaseReq) GetMultiCommitid() string {
+func (m *CreateMultiReleaseReq) GetMultiCommitId() string {
 	if m != nil {
-		return m.MultiCommitid
+		return m.MultiCommitId
 	}
 	return ""
 }
 
-func (m *CreateMultiReleaseReq) GetStrategyid() string {
+func (m *CreateMultiReleaseReq) GetStrategyId() string {
 	if m != nil {
-		return m.Strategyid
+		return m.StrategyId
 	}
 	return ""
 }
@@ -5408,150 +5608,167 @@ func (m *CreateMultiReleaseReq) GetCreator() string {
 }
 
 type CreateMultiReleaseResp struct {
-	Seq            uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode        common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg         string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	MultiReleaseid string         `protobuf:"bytes,4,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq     string                           `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                   `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                           `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateMultiReleaseResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *CreateMultiReleaseResp) Reset()                    { *m = CreateMultiReleaseResp{} }
 func (m *CreateMultiReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateMultiReleaseResp) ProtoMessage()               {}
-func (*CreateMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{107} }
+func (*CreateMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{103} }
 
-func (m *CreateMultiReleaseResp) GetSeq() uint64 {
+func (m *CreateMultiReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateMultiReleaseResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateMultiReleaseResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *CreateMultiReleaseResp) GetMultiReleaseid() string {
+func (m *CreateMultiReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateMultiReleaseResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateMultiReleaseResp) GetData() *CreateMultiReleaseResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateMultiReleaseResp_RespData struct {
+	MultiReleaseId string `protobuf:"bytes,1,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
+}
+
+func (m *CreateMultiReleaseResp_RespData) Reset()         { *m = CreateMultiReleaseResp_RespData{} }
+func (m *CreateMultiReleaseResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateMultiReleaseResp_RespData) ProtoMessage()    {}
+func (*CreateMultiReleaseResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{103, 0}
+}
+
+func (m *CreateMultiReleaseResp_RespData) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
 
 type QueryMultiReleaseReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,3,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,3,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 }
 
 func (m *QueryMultiReleaseReq) Reset()                    { *m = QueryMultiReleaseReq{} }
 func (m *QueryMultiReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiReleaseReq) ProtoMessage()               {}
-func (*QueryMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{108} }
+func (*QueryMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{104} }
 
-func (m *QueryMultiReleaseReq) GetSeq() uint64 {
+func (m *QueryMultiReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryMultiReleaseReq) GetMultiReleaseid() string {
+func (m *QueryMultiReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryMultiReleaseReq) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
 
 type QueryMultiReleaseResp struct {
-	Seq          uint64               `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode      common.ErrCode       `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg       string               `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	MultiRelease *common.MultiRelease `protobuf:"bytes,4,opt,name=multiRelease" json:"multiRelease,omitempty"`
+	Seq     string               `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode       `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string               `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.MultiRelease `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryMultiReleaseResp) Reset()                    { *m = QueryMultiReleaseResp{} }
 func (m *QueryMultiReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiReleaseResp) ProtoMessage()               {}
-func (*QueryMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{109} }
+func (*QueryMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{105} }
 
-func (m *QueryMultiReleaseResp) GetSeq() uint64 {
+func (m *QueryMultiReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiReleaseResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryMultiReleaseResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryMultiReleaseResp) GetMultiRelease() *common.MultiRelease {
+func (m *QueryMultiReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.MultiRelease
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryMultiReleaseResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryMultiReleaseResp) GetData() *common.MultiRelease {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryHistoryMultiReleasesReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-	QueryType int32  `protobuf:"varint,5,opt,name=queryType" json:"queryType,omitempty"`
-	OrderType int32  `protobuf:"varint,6,opt,name=orderType" json:"orderType,omitempty"`
-	Index     int32  `protobuf:"varint,7,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,8,opt,name=limit" json:"limit,omitempty"`
+	Seq       string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId     string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	Operator  string       `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
+	QueryType int32        `protobuf:"varint,5,opt,name=query_type,json=queryType" json:"query_type,omitempty"`
+	OrderType int32        `protobuf:"varint,6,opt,name=order_type,json=orderType" json:"order_type,omitempty"`
+	Page      *common.Page `protobuf:"bytes,7,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryHistoryMultiReleasesReq) Reset()                    { *m = QueryHistoryMultiReleasesReq{} }
 func (m *QueryHistoryMultiReleasesReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryMultiReleasesReq) ProtoMessage()               {}
-func (*QueryHistoryMultiReleasesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{110} }
+func (*QueryHistoryMultiReleasesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{106} }
 
-func (m *QueryHistoryMultiReleasesReq) GetSeq() uint64 {
+func (m *QueryHistoryMultiReleasesReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryMultiReleasesReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryHistoryMultiReleasesReq) GetAppid() string {
+func (m *QueryHistoryMultiReleasesReq) GetBizId() string {
 	if m != nil {
-		return m.Appid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryHistoryMultiReleasesReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
@@ -5577,66 +5794,87 @@ func (m *QueryHistoryMultiReleasesReq) GetOrderType() int32 {
 	return 0
 }
 
-func (m *QueryHistoryMultiReleasesReq) GetIndex() int32 {
+func (m *QueryHistoryMultiReleasesReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryHistoryMultiReleasesReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryHistoryMultiReleasesResp struct {
-	Seq           uint64                 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode       common.ErrCode         `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg        string                 `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	MultiReleases []*common.MultiRelease `protobuf:"bytes,4,rep,name=multiReleases" json:"multiReleases,omitempty"`
+	Seq     string                                  `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                          `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                  `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryHistoryMultiReleasesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryHistoryMultiReleasesResp) Reset()         { *m = QueryHistoryMultiReleasesResp{} }
 func (m *QueryHistoryMultiReleasesResp) String() string { return proto.CompactTextString(m) }
 func (*QueryHistoryMultiReleasesResp) ProtoMessage()    {}
 func (*QueryHistoryMultiReleasesResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{111}
+	return fileDescriptor0, []int{107}
 }
 
-func (m *QueryHistoryMultiReleasesResp) GetSeq() uint64 {
+func (m *QueryHistoryMultiReleasesResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryMultiReleasesResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryHistoryMultiReleasesResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryHistoryMultiReleasesResp) GetMultiReleases() []*common.MultiRelease {
+func (m *QueryHistoryMultiReleasesResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.MultiReleases
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryHistoryMultiReleasesResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryHistoryMultiReleasesResp) GetData() *QueryHistoryMultiReleasesResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryHistoryMultiReleasesResp_RespData struct {
+	TotalCount uint32                 `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.MultiRelease `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryHistoryMultiReleasesResp_RespData) Reset() {
+	*m = QueryHistoryMultiReleasesResp_RespData{}
+}
+func (m *QueryHistoryMultiReleasesResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryHistoryMultiReleasesResp_RespData) ProtoMessage()    {}
+func (*QueryHistoryMultiReleasesResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{107, 0}
+}
+
+func (m *QueryHistoryMultiReleasesResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryHistoryMultiReleasesResp_RespData) GetInfo() []*common.MultiRelease {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type UpdateMultiReleaseReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,3,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,3,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 	Name           string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
 	Memo           string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
 	Operator       string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
@@ -5645,25 +5883,25 @@ type UpdateMultiReleaseReq struct {
 func (m *UpdateMultiReleaseReq) Reset()                    { *m = UpdateMultiReleaseReq{} }
 func (m *UpdateMultiReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateMultiReleaseReq) ProtoMessage()               {}
-func (*UpdateMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{112} }
+func (*UpdateMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{108} }
 
-func (m *UpdateMultiReleaseReq) GetSeq() uint64 {
+func (m *UpdateMultiReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateMultiReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *UpdateMultiReleaseReq) GetMultiReleaseid() string {
+func (m *UpdateMultiReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *UpdateMultiReleaseReq) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
@@ -5690,138 +5928,156 @@ func (m *UpdateMultiReleaseReq) GetOperator() string {
 }
 
 type UpdateMultiReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateMultiReleaseResp) Reset()                    { *m = UpdateMultiReleaseResp{} }
 func (m *UpdateMultiReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateMultiReleaseResp) ProtoMessage()               {}
-func (*UpdateMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{113} }
+func (*UpdateMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{109} }
 
-func (m *UpdateMultiReleaseResp) GetSeq() uint64 {
+func (m *UpdateMultiReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateMultiReleaseResp) GetErrCode() common.ErrCode {
+func (m *UpdateMultiReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateMultiReleaseResp) GetErrMsg() string {
+func (m *UpdateMultiReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type QueryMultiReleaseSubListReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,3,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,3,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 }
 
 func (m *QueryMultiReleaseSubListReq) Reset()                    { *m = QueryMultiReleaseSubListReq{} }
 func (m *QueryMultiReleaseSubListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiReleaseSubListReq) ProtoMessage()               {}
-func (*QueryMultiReleaseSubListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{114} }
+func (*QueryMultiReleaseSubListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{110} }
 
-func (m *QueryMultiReleaseSubListReq) GetSeq() uint64 {
+func (m *QueryMultiReleaseSubListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiReleaseSubListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryMultiReleaseSubListReq) GetMultiReleaseid() string {
+func (m *QueryMultiReleaseSubListReq) GetBizId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryMultiReleaseSubListReq) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
 
 type QueryMultiReleaseSubListResp struct {
-	Seq        uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Releaseids []string       `protobuf:"bytes,4,rep,name=releaseids" json:"releaseids,omitempty"`
+	Seq     string                                 `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                         `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                 `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryMultiReleaseSubListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryMultiReleaseSubListResp) Reset()                    { *m = QueryMultiReleaseSubListResp{} }
 func (m *QueryMultiReleaseSubListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryMultiReleaseSubListResp) ProtoMessage()               {}
-func (*QueryMultiReleaseSubListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{115} }
+func (*QueryMultiReleaseSubListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{111} }
 
-func (m *QueryMultiReleaseSubListResp) GetSeq() uint64 {
+func (m *QueryMultiReleaseSubListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMultiReleaseSubListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryMultiReleaseSubListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryMultiReleaseSubListResp) GetReleaseids() []string {
+func (m *QueryMultiReleaseSubListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Releaseids
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryMultiReleaseSubListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryMultiReleaseSubListResp) GetData() *QueryMultiReleaseSubListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryMultiReleaseSubListResp_RespData struct {
+	ReleaseIds []string `protobuf:"bytes,1,rep,name=release_ids,json=releaseIds" json:"release_ids,omitempty"`
+}
+
+func (m *QueryMultiReleaseSubListResp_RespData) Reset()         { *m = QueryMultiReleaseSubListResp_RespData{} }
+func (m *QueryMultiReleaseSubListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryMultiReleaseSubListResp_RespData) ProtoMessage()    {}
+func (*QueryMultiReleaseSubListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{111, 0}
+}
+
+func (m *QueryMultiReleaseSubListResp_RespData) GetReleaseIds() []string {
+	if m != nil {
+		return m.ReleaseIds
 	}
 	return nil
 }
 
 type CancelMultiReleaseReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,3,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,3,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 	Operator       string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *CancelMultiReleaseReq) Reset()                    { *m = CancelMultiReleaseReq{} }
 func (m *CancelMultiReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*CancelMultiReleaseReq) ProtoMessage()               {}
-func (*CancelMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{116} }
+func (*CancelMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{112} }
 
-func (m *CancelMultiReleaseReq) GetSeq() uint64 {
+func (m *CancelMultiReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CancelMultiReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *CancelMultiReleaseReq) GetMultiReleaseid() string {
+func (m *CancelMultiReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *CancelMultiReleaseReq) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
@@ -5834,66 +6090,66 @@ func (m *CancelMultiReleaseReq) GetOperator() string {
 }
 
 type CancelMultiReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CancelMultiReleaseResp) Reset()                    { *m = CancelMultiReleaseResp{} }
 func (m *CancelMultiReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*CancelMultiReleaseResp) ProtoMessage()               {}
-func (*CancelMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{117} }
+func (*CancelMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{113} }
 
-func (m *CancelMultiReleaseResp) GetSeq() uint64 {
+func (m *CancelMultiReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CancelMultiReleaseResp) GetErrCode() common.ErrCode {
+func (m *CancelMultiReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CancelMultiReleaseResp) GetErrMsg() string {
+func (m *CancelMultiReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type PublishMultiReleaseReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,3,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,3,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 	Operator       string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *PublishMultiReleaseReq) Reset()                    { *m = PublishMultiReleaseReq{} }
 func (m *PublishMultiReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*PublishMultiReleaseReq) ProtoMessage()               {}
-func (*PublishMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{118} }
+func (*PublishMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{114} }
 
-func (m *PublishMultiReleaseReq) GetSeq() uint64 {
+func (m *PublishMultiReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *PublishMultiReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *PublishMultiReleaseReq) GetMultiReleaseid() string {
+func (m *PublishMultiReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *PublishMultiReleaseReq) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
@@ -5906,66 +6162,66 @@ func (m *PublishMultiReleaseReq) GetOperator() string {
 }
 
 type PublishMultiReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *PublishMultiReleaseResp) Reset()                    { *m = PublishMultiReleaseResp{} }
 func (m *PublishMultiReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*PublishMultiReleaseResp) ProtoMessage()               {}
-func (*PublishMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{119} }
+func (*PublishMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{115} }
 
-func (m *PublishMultiReleaseResp) GetSeq() uint64 {
+func (m *PublishMultiReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *PublishMultiReleaseResp) GetErrCode() common.ErrCode {
+func (m *PublishMultiReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *PublishMultiReleaseResp) GetErrMsg() string {
+func (m *PublishMultiReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type RollbackMultiReleaseReq struct {
-	Seq            uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid            string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	MultiReleaseid string `protobuf:"bytes,3,opt,name=multiReleaseid" json:"multiReleaseid,omitempty"`
+	Seq            string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId          string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,3,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
 	Operator       string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *RollbackMultiReleaseReq) Reset()                    { *m = RollbackMultiReleaseReq{} }
 func (m *RollbackMultiReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*RollbackMultiReleaseReq) ProtoMessage()               {}
-func (*RollbackMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{120} }
+func (*RollbackMultiReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{116} }
 
-func (m *RollbackMultiReleaseReq) GetSeq() uint64 {
+func (m *RollbackMultiReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *RollbackMultiReleaseReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *RollbackMultiReleaseReq) GetMultiReleaseid() string {
+func (m *RollbackMultiReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.MultiReleaseid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *RollbackMultiReleaseReq) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
 	}
 	return ""
 }
@@ -5978,99 +6234,91 @@ func (m *RollbackMultiReleaseReq) GetOperator() string {
 }
 
 type RollbackMultiReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *RollbackMultiReleaseResp) Reset()                    { *m = RollbackMultiReleaseResp{} }
 func (m *RollbackMultiReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*RollbackMultiReleaseResp) ProtoMessage()               {}
-func (*RollbackMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{121} }
+func (*RollbackMultiReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{117} }
 
-func (m *RollbackMultiReleaseResp) GetSeq() uint64 {
+func (m *RollbackMultiReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *RollbackMultiReleaseResp) GetErrCode() common.ErrCode {
+func (m *RollbackMultiReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *RollbackMultiReleaseResp) GetErrMsg() string {
+func (m *RollbackMultiReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateAppInstanceReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc        string `protobuf:"bytes,6,opt,name=dc" json:"dc,omitempty"`
-	IP        string `protobuf:"bytes,7,opt,name=IP" json:"IP,omitempty"`
-	Labels    string `protobuf:"bytes,8,opt,name=labels" json:"labels,omitempty"`
-	State     int32  `protobuf:"varint,9,opt,name=state" json:"state,omitempty"`
+	Seq     string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId   string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CloudId string `protobuf:"bytes,4,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip      string `protobuf:"bytes,5,opt,name=ip" json:"ip,omitempty"`
+	Path    string `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
+	Labels  string `protobuf:"bytes,7,opt,name=labels" json:"labels,omitempty"`
+	State   int32  `protobuf:"varint,8,opt,name=state" json:"state,omitempty"`
 }
 
 func (m *CreateAppInstanceReq) Reset()                    { *m = CreateAppInstanceReq{} }
 func (m *CreateAppInstanceReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateAppInstanceReq) ProtoMessage()               {}
-func (*CreateAppInstanceReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{122} }
+func (*CreateAppInstanceReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{118} }
 
-func (m *CreateAppInstanceReq) GetSeq() uint64 {
+func (m *CreateAppInstanceReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateAppInstanceReq) GetBid() string {
+func (m *CreateAppInstanceReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReq) GetAppid() string {
+func (m *CreateAppInstanceReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReq) GetClusterid() string {
+func (m *CreateAppInstanceReq) GetCloudId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReq) GetZoneid() string {
+func (m *CreateAppInstanceReq) GetIp() string {
 	if m != nil {
-		return m.Zoneid
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReq) GetDc() string {
+func (m *CreateAppInstanceReq) GetPath() string {
 	if m != nil {
-		return m.Dc
-	}
-	return ""
-}
-
-func (m *CreateAppInstanceReq) GetIP() string {
-	if m != nil {
-		return m.IP
+		return m.Path
 	}
 	return ""
 }
@@ -6090,86 +6338,85 @@ func (m *CreateAppInstanceReq) GetState() int32 {
 }
 
 type CreateAppInstanceResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CreateAppInstanceResp) Reset()                    { *m = CreateAppInstanceResp{} }
 func (m *CreateAppInstanceResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateAppInstanceResp) ProtoMessage()               {}
-func (*CreateAppInstanceResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{123} }
+func (*CreateAppInstanceResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{119} }
 
-func (m *CreateAppInstanceResp) GetSeq() uint64 {
+func (m *CreateAppInstanceResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateAppInstanceResp) GetErrCode() common.ErrCode {
+func (m *CreateAppInstanceResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateAppInstanceResp) GetErrMsg() string {
+func (m *CreateAppInstanceResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type QueryHistoryAppInstancesReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	QueryType int32  `protobuf:"varint,6,opt,name=queryType" json:"queryType,omitempty"`
-	Index     int32  `protobuf:"varint,7,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,8,opt,name=limit" json:"limit,omitempty"`
+	Seq       string              `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string              `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId     string              `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	LabelsOr  []*common.LabelsMap `protobuf:"bytes,4,rep,name=labels_or,json=labelsOr" json:"labels_or,omitempty"`
+	LabelsAnd []*common.LabelsMap `protobuf:"bytes,5,rep,name=labels_and,json=labelsAnd" json:"labels_and,omitempty"`
+	QueryType int32               `protobuf:"varint,6,opt,name=query_type,json=queryType" json:"query_type,omitempty"`
+	Page      *common.Page        `protobuf:"bytes,7,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryHistoryAppInstancesReq) Reset()                    { *m = QueryHistoryAppInstancesReq{} }
 func (m *QueryHistoryAppInstancesReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryAppInstancesReq) ProtoMessage()               {}
-func (*QueryHistoryAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{124} }
+func (*QueryHistoryAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{120} }
 
-func (m *QueryHistoryAppInstancesReq) GetSeq() uint64 {
+func (m *QueryHistoryAppInstancesReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryHistoryAppInstancesReq) GetBid() string {
+func (m *QueryHistoryAppInstancesReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryHistoryAppInstancesReq) GetAppid() string {
+func (m *QueryHistoryAppInstancesReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryHistoryAppInstancesReq) GetClusterid() string {
+func (m *QueryHistoryAppInstancesReq) GetLabelsOr() []*common.LabelsMap {
 	if m != nil {
-		return m.Clusterid
+		return m.LabelsOr
 	}
-	return ""
+	return nil
 }
 
-func (m *QueryHistoryAppInstancesReq) GetZoneid() string {
+func (m *QueryHistoryAppInstancesReq) GetLabelsAnd() []*common.LabelsMap {
 	if m != nil {
-		return m.Zoneid
+		return m.LabelsAnd
 	}
-	return ""
+	return nil
 }
 
 func (m *QueryHistoryAppInstancesReq) GetQueryType() int32 {
@@ -6179,230 +6426,261 @@ func (m *QueryHistoryAppInstancesReq) GetQueryType() int32 {
 	return 0
 }
 
-func (m *QueryHistoryAppInstancesReq) GetIndex() int32 {
+func (m *QueryHistoryAppInstancesReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryHistoryAppInstancesReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryHistoryAppInstancesResp struct {
-	Seq       uint64                `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode        `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string                `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Instances []*common.AppInstance `protobuf:"bytes,4,rep,name=instances" json:"instances,omitempty"`
+	Seq     string                                 `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                         `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                 `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryHistoryAppInstancesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryHistoryAppInstancesResp) Reset()                    { *m = QueryHistoryAppInstancesResp{} }
 func (m *QueryHistoryAppInstancesResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryHistoryAppInstancesResp) ProtoMessage()               {}
-func (*QueryHistoryAppInstancesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{125} }
+func (*QueryHistoryAppInstancesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{121} }
 
-func (m *QueryHistoryAppInstancesResp) GetSeq() uint64 {
+func (m *QueryHistoryAppInstancesResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHistoryAppInstancesResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryHistoryAppInstancesResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryHistoryAppInstancesResp) GetInstances() []*common.AppInstance {
+func (m *QueryHistoryAppInstancesResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Instances
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryHistoryAppInstancesResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryHistoryAppInstancesResp) GetData() *QueryHistoryAppInstancesResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryHistoryAppInstancesResp_RespData struct {
+	TotalCount uint32                `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.AppInstance `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryHistoryAppInstancesResp_RespData) Reset()         { *m = QueryHistoryAppInstancesResp_RespData{} }
+func (m *QueryHistoryAppInstancesResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryHistoryAppInstancesResp_RespData) ProtoMessage()    {}
+func (*QueryHistoryAppInstancesResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{121, 0}
+}
+
+func (m *QueryHistoryAppInstancesResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryHistoryAppInstancesResp_RespData) GetInfo() []*common.AppInstance {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type QueryReachableAppInstancesReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Index     int32  `protobuf:"varint,6,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,7,opt,name=limit" json:"limit,omitempty"`
+	Seq       string              `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string              `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId     string              `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	LabelsOr  []*common.LabelsMap `protobuf:"bytes,4,rep,name=labels_or,json=labelsOr" json:"labels_or,omitempty"`
+	LabelsAnd []*common.LabelsMap `protobuf:"bytes,5,rep,name=labels_and,json=labelsAnd" json:"labels_and,omitempty"`
+	Page      *common.Page        `protobuf:"bytes,6,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryReachableAppInstancesReq) Reset()         { *m = QueryReachableAppInstancesReq{} }
 func (m *QueryReachableAppInstancesReq) String() string { return proto.CompactTextString(m) }
 func (*QueryReachableAppInstancesReq) ProtoMessage()    {}
 func (*QueryReachableAppInstancesReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{126}
+	return fileDescriptor0, []int{122}
 }
 
-func (m *QueryReachableAppInstancesReq) GetSeq() uint64 {
+func (m *QueryReachableAppInstancesReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryReachableAppInstancesReq) GetBid() string {
+func (m *QueryReachableAppInstancesReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryReachableAppInstancesReq) GetAppid() string {
+func (m *QueryReachableAppInstancesReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryReachableAppInstancesReq) GetClusterid() string {
+func (m *QueryReachableAppInstancesReq) GetLabelsOr() []*common.LabelsMap {
 	if m != nil {
-		return m.Clusterid
+		return m.LabelsOr
 	}
-	return ""
+	return nil
 }
 
-func (m *QueryReachableAppInstancesReq) GetZoneid() string {
+func (m *QueryReachableAppInstancesReq) GetLabelsAnd() []*common.LabelsMap {
 	if m != nil {
-		return m.Zoneid
+		return m.LabelsAnd
 	}
-	return ""
+	return nil
 }
 
-func (m *QueryReachableAppInstancesReq) GetIndex() int32 {
+func (m *QueryReachableAppInstancesReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryReachableAppInstancesReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryReachableAppInstancesResp struct {
-	Seq       uint64                `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode        `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string                `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Instances []*common.AppInstance `protobuf:"bytes,4,rep,name=instances" json:"instances,omitempty"`
+	Seq     string                                   `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                           `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                   `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryReachableAppInstancesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryReachableAppInstancesResp) Reset()         { *m = QueryReachableAppInstancesResp{} }
 func (m *QueryReachableAppInstancesResp) String() string { return proto.CompactTextString(m) }
 func (*QueryReachableAppInstancesResp) ProtoMessage()    {}
 func (*QueryReachableAppInstancesResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{127}
+	return fileDescriptor0, []int{123}
 }
 
-func (m *QueryReachableAppInstancesResp) GetSeq() uint64 {
+func (m *QueryReachableAppInstancesResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryReachableAppInstancesResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryReachableAppInstancesResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryReachableAppInstancesResp) GetInstances() []*common.AppInstance {
+func (m *QueryReachableAppInstancesResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Instances
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryReachableAppInstancesResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryReachableAppInstancesResp) GetData() *QueryReachableAppInstancesResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryReachableAppInstancesResp_RespData struct {
+	TotalCount uint32                `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.AppInstance `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryReachableAppInstancesResp_RespData) Reset() {
+	*m = QueryReachableAppInstancesResp_RespData{}
+}
+func (m *QueryReachableAppInstancesResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryReachableAppInstancesResp_RespData) ProtoMessage()    {}
+func (*QueryReachableAppInstancesResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{123, 0}
+}
+
+func (m *QueryReachableAppInstancesResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryReachableAppInstancesResp_RespData) GetInfo() []*common.AppInstance {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type UpdateAppInstanceReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc        string `protobuf:"bytes,6,opt,name=dc" json:"dc,omitempty"`
-	IP        string `protobuf:"bytes,7,opt,name=IP" json:"IP,omitempty"`
-	Labels    string `protobuf:"bytes,8,opt,name=labels" json:"labels,omitempty"`
-	State     int32  `protobuf:"varint,9,opt,name=state" json:"state,omitempty"`
+	Seq     string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId   string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CloudId string `protobuf:"bytes,4,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip      string `protobuf:"bytes,5,opt,name=ip" json:"ip,omitempty"`
+	Path    string `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
+	Labels  string `protobuf:"bytes,7,opt,name=labels" json:"labels,omitempty"`
+	State   int32  `protobuf:"varint,8,opt,name=state" json:"state,omitempty"`
 }
 
 func (m *UpdateAppInstanceReq) Reset()                    { *m = UpdateAppInstanceReq{} }
 func (m *UpdateAppInstanceReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateAppInstanceReq) ProtoMessage()               {}
-func (*UpdateAppInstanceReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{128} }
+func (*UpdateAppInstanceReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{124} }
 
-func (m *UpdateAppInstanceReq) GetSeq() uint64 {
+func (m *UpdateAppInstanceReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateAppInstanceReq) GetBid() string {
+func (m *UpdateAppInstanceReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *UpdateAppInstanceReq) GetAppid() string {
+func (m *UpdateAppInstanceReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *UpdateAppInstanceReq) GetClusterid() string {
+func (m *UpdateAppInstanceReq) GetCloudId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *UpdateAppInstanceReq) GetZoneid() string {
+func (m *UpdateAppInstanceReq) GetIp() string {
 	if m != nil {
-		return m.Zoneid
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *UpdateAppInstanceReq) GetDc() string {
+func (m *UpdateAppInstanceReq) GetPath() string {
 	if m != nil {
-		return m.Dc
-	}
-	return ""
-}
-
-func (m *UpdateAppInstanceReq) GetIP() string {
-	if m != nil {
-		return m.IP
+		return m.Path
 	}
 	return ""
 }
@@ -6422,99 +6700,91 @@ func (m *UpdateAppInstanceReq) GetState() int32 {
 }
 
 type UpdateAppInstanceResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateAppInstanceResp) Reset()                    { *m = UpdateAppInstanceResp{} }
 func (m *UpdateAppInstanceResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateAppInstanceResp) ProtoMessage()               {}
-func (*UpdateAppInstanceResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{129} }
+func (*UpdateAppInstanceResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{125} }
 
-func (m *UpdateAppInstanceResp) GetSeq() uint64 {
+func (m *UpdateAppInstanceResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateAppInstanceResp) GetErrCode() common.ErrCode {
+func (m *UpdateAppInstanceResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateAppInstanceResp) GetErrMsg() string {
+func (m *UpdateAppInstanceResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateAppInstanceReleaseReq struct {
-	Seq       uint64               `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string               `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string               `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string               `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string               `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc        string               `protobuf:"bytes,6,opt,name=dc" json:"dc,omitempty"`
-	IP        string               `protobuf:"bytes,7,opt,name=IP" json:"IP,omitempty"`
-	Labels    string               `protobuf:"bytes,8,opt,name=labels" json:"labels,omitempty"`
-	Infos     []*common.ReportInfo `protobuf:"bytes,9,rep,name=infos" json:"infos,omitempty"`
+	Seq     string               `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId   string               `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string               `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CloudId string               `protobuf:"bytes,4,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip      string               `protobuf:"bytes,5,opt,name=ip" json:"ip,omitempty"`
+	Path    string               `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
+	Labels  string               `protobuf:"bytes,7,opt,name=labels" json:"labels,omitempty"`
+	Infos   []*common.ReportInfo `protobuf:"bytes,8,rep,name=infos" json:"infos,omitempty"`
 }
 
 func (m *CreateAppInstanceReleaseReq) Reset()                    { *m = CreateAppInstanceReleaseReq{} }
 func (m *CreateAppInstanceReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateAppInstanceReleaseReq) ProtoMessage()               {}
-func (*CreateAppInstanceReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{130} }
+func (*CreateAppInstanceReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{126} }
 
-func (m *CreateAppInstanceReleaseReq) GetSeq() uint64 {
+func (m *CreateAppInstanceReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateAppInstanceReleaseReq) GetBid() string {
+func (m *CreateAppInstanceReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReleaseReq) GetAppid() string {
+func (m *CreateAppInstanceReleaseReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReleaseReq) GetClusterid() string {
+func (m *CreateAppInstanceReleaseReq) GetCloudId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReleaseReq) GetZoneid() string {
+func (m *CreateAppInstanceReleaseReq) GetIp() string {
 	if m != nil {
-		return m.Zoneid
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *CreateAppInstanceReleaseReq) GetDc() string {
+func (m *CreateAppInstanceReleaseReq) GetPath() string {
 	if m != nil {
-		return m.Dc
-	}
-	return ""
-}
-
-func (m *CreateAppInstanceReleaseReq) GetIP() string {
-	if m != nil {
-		return m.IP
+		return m.Path
 	}
 	return ""
 }
@@ -6534,380 +6804,452 @@ func (m *CreateAppInstanceReleaseReq) GetInfos() []*common.ReportInfo {
 }
 
 type CreateAppInstanceReleaseResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CreateAppInstanceReleaseResp) Reset()                    { *m = CreateAppInstanceReleaseResp{} }
 func (m *CreateAppInstanceReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateAppInstanceReleaseResp) ProtoMessage()               {}
-func (*CreateAppInstanceReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{131} }
+func (*CreateAppInstanceReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{127} }
 
-func (m *CreateAppInstanceReleaseResp) GetSeq() uint64 {
+func (m *CreateAppInstanceReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateAppInstanceReleaseResp) GetErrCode() common.ErrCode {
+func (m *CreateAppInstanceReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateAppInstanceReleaseResp) GetErrMsg() string {
+func (m *CreateAppInstanceReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type QueryAppInstanceReleaseReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc        string `protobuf:"bytes,6,opt,name=dc" json:"dc,omitempty"`
-	IP        string `protobuf:"bytes,7,opt,name=IP" json:"IP,omitempty"`
-	Cfgsetid  string `protobuf:"bytes,8,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
+	Seq     string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId   string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	CloudId string `protobuf:"bytes,4,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip      string `protobuf:"bytes,5,opt,name=ip" json:"ip,omitempty"`
+	Path    string `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
+	CfgId   string `protobuf:"bytes,7,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
 }
 
 func (m *QueryAppInstanceReleaseReq) Reset()                    { *m = QueryAppInstanceReleaseReq{} }
 func (m *QueryAppInstanceReleaseReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppInstanceReleaseReq) ProtoMessage()               {}
-func (*QueryAppInstanceReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{132} }
+func (*QueryAppInstanceReleaseReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{128} }
 
-func (m *QueryAppInstanceReleaseReq) GetSeq() uint64 {
+func (m *QueryAppInstanceReleaseReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryAppInstanceReleaseReq) GetBid() string {
+func (m *QueryAppInstanceReleaseReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryAppInstanceReleaseReq) GetAppid() string {
+func (m *QueryAppInstanceReleaseReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryAppInstanceReleaseReq) GetClusterid() string {
+func (m *QueryAppInstanceReleaseReq) GetCloudId() string {
 	if m != nil {
-		return m.Clusterid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *QueryAppInstanceReleaseReq) GetZoneid() string {
+func (m *QueryAppInstanceReleaseReq) GetIp() string {
 	if m != nil {
-		return m.Zoneid
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *QueryAppInstanceReleaseReq) GetDc() string {
+func (m *QueryAppInstanceReleaseReq) GetPath() string {
 	if m != nil {
-		return m.Dc
+		return m.Path
 	}
 	return ""
 }
 
-func (m *QueryAppInstanceReleaseReq) GetIP() string {
+func (m *QueryAppInstanceReleaseReq) GetCfgId() string {
 	if m != nil {
-		return m.IP
-	}
-	return ""
-}
-
-func (m *QueryAppInstanceReleaseReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
 
 type QueryAppInstanceReleaseResp struct {
-	Seq       uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Releaseid string         `protobuf:"bytes,4,opt,name=releaseid" json:"releaseid,omitempty"`
-	Commitid  string         `protobuf:"bytes,5,opt,name=commitid" json:"commitid,omitempty"`
-	Cid       string         `protobuf:"bytes,6,opt,name=cid" json:"cid,omitempty"`
-	CfgLink   string         `protobuf:"bytes,7,opt,name=cfgLink" json:"cfgLink,omitempty"`
-	Content   []byte         `protobuf:"bytes,8,opt,name=content,proto3" json:"content,omitempty"`
+	Seq     string                                `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                        `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryAppInstanceReleaseResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryAppInstanceReleaseResp) Reset()                    { *m = QueryAppInstanceReleaseResp{} }
 func (m *QueryAppInstanceReleaseResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppInstanceReleaseResp) ProtoMessage()               {}
-func (*QueryAppInstanceReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{133} }
+func (*QueryAppInstanceReleaseResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{129} }
 
-func (m *QueryAppInstanceReleaseResp) GetSeq() uint64 {
+func (m *QueryAppInstanceReleaseResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryAppInstanceReleaseResp) GetErrCode() common.ErrCode {
+func (m *QueryAppInstanceReleaseResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *QueryAppInstanceReleaseResp) GetErrMsg() string {
+func (m *QueryAppInstanceReleaseResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
-func (m *QueryAppInstanceReleaseResp) GetReleaseid() string {
+func (m *QueryAppInstanceReleaseResp) GetData() *QueryAppInstanceReleaseResp_RespData {
 	if m != nil {
-		return m.Releaseid
-	}
-	return ""
-}
-
-func (m *QueryAppInstanceReleaseResp) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *QueryAppInstanceReleaseResp) GetCid() string {
-	if m != nil {
-		return m.Cid
-	}
-	return ""
-}
-
-func (m *QueryAppInstanceReleaseResp) GetCfgLink() string {
-	if m != nil {
-		return m.CfgLink
-	}
-	return ""
-}
-
-func (m *QueryAppInstanceReleaseResp) GetContent() []byte {
-	if m != nil {
-		return m.Content
+		return m.Data
 	}
 	return nil
 }
 
+type QueryAppInstanceReleaseResp_RespData struct {
+	ContentId      string `protobuf:"bytes,1,opt,name=content_id,json=contentId" json:"content_id,omitempty"`
+	ContentSize    uint32 `protobuf:"varint,2,opt,name=content_size,json=contentSize" json:"content_size,omitempty"`
+	ReleaseId      string `protobuf:"bytes,3,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
+	CommitId       string `protobuf:"bytes,4,opt,name=commit_id,json=commitId" json:"commit_id,omitempty"`
+	MultiReleaseId string `protobuf:"bytes,5,opt,name=multi_release_id,json=multiReleaseId" json:"multi_release_id,omitempty"`
+	MultiCommitId  string `protobuf:"bytes,6,opt,name=multi_commit_id,json=multiCommitId" json:"multi_commit_id,omitempty"`
+	ReleaseName    string `protobuf:"bytes,7,opt,name=release_name,json=releaseName" json:"release_name,omitempty"`
+	Memo           string `protobuf:"bytes,8,opt,name=memo" json:"memo,omitempty"`
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) Reset()         { *m = QueryAppInstanceReleaseResp_RespData{} }
+func (m *QueryAppInstanceReleaseResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryAppInstanceReleaseResp_RespData) ProtoMessage()    {}
+func (*QueryAppInstanceReleaseResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{129, 0}
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetContentId() string {
+	if m != nil {
+		return m.ContentId
+	}
+	return ""
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetContentSize() uint32 {
+	if m != nil {
+		return m.ContentSize
+	}
+	return 0
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetReleaseId() string {
+	if m != nil {
+		return m.ReleaseId
+	}
+	return ""
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetCommitId() string {
+	if m != nil {
+		return m.CommitId
+	}
+	return ""
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetMultiReleaseId() string {
+	if m != nil {
+		return m.MultiReleaseId
+	}
+	return ""
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetMultiCommitId() string {
+	if m != nil {
+		return m.MultiCommitId
+	}
+	return ""
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetReleaseName() string {
+	if m != nil {
+		return m.ReleaseName
+	}
+	return ""
+}
+
+func (m *QueryAppInstanceReleaseResp_RespData) GetMemo() string {
+	if m != nil {
+		return m.Memo
+	}
+	return ""
+}
+
 type QueryMatchedAppInstancesReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid      string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Strategyid string `protobuf:"bytes,4,opt,name=strategyid" json:"strategyid,omitempty"`
-	Index      int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit      int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
+	Seq        string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId      string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	StrategyId string       `protobuf:"bytes,4,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
+	Page       *common.Page `protobuf:"bytes,5,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryMatchedAppInstancesReq) Reset()                    { *m = QueryMatchedAppInstancesReq{} }
 func (m *QueryMatchedAppInstancesReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryMatchedAppInstancesReq) ProtoMessage()               {}
-func (*QueryMatchedAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{134} }
+func (*QueryMatchedAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{130} }
 
-func (m *QueryMatchedAppInstancesReq) GetSeq() uint64 {
+func (m *QueryMatchedAppInstancesReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryMatchedAppInstancesReq) GetBid() string {
+func (m *QueryMatchedAppInstancesReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryMatchedAppInstancesReq) GetAppid() string {
+func (m *QueryMatchedAppInstancesReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryMatchedAppInstancesReq) GetStrategyid() string {
+func (m *QueryMatchedAppInstancesReq) GetStrategyId() string {
 	if m != nil {
-		return m.Strategyid
+		return m.StrategyId
 	}
 	return ""
 }
 
-func (m *QueryMatchedAppInstancesReq) GetIndex() int32 {
+func (m *QueryMatchedAppInstancesReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryMatchedAppInstancesReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryMatchedAppInstancesResp struct {
-	Seq       uint64                `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode        `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string                `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Instances []*common.AppInstance `protobuf:"bytes,4,rep,name=instances" json:"instances,omitempty"`
+	Seq     string                                 `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                         `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                 `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryMatchedAppInstancesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryMatchedAppInstancesResp) Reset()                    { *m = QueryMatchedAppInstancesResp{} }
 func (m *QueryMatchedAppInstancesResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryMatchedAppInstancesResp) ProtoMessage()               {}
-func (*QueryMatchedAppInstancesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{135} }
+func (*QueryMatchedAppInstancesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{131} }
 
-func (m *QueryMatchedAppInstancesResp) GetSeq() uint64 {
+func (m *QueryMatchedAppInstancesResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryMatchedAppInstancesResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryMatchedAppInstancesResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryMatchedAppInstancesResp) GetInstances() []*common.AppInstance {
+func (m *QueryMatchedAppInstancesResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Instances
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryMatchedAppInstancesResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryMatchedAppInstancesResp) GetData() *QueryMatchedAppInstancesResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryMatchedAppInstancesResp_RespData struct {
+	TotalCount uint32                `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.AppInstance `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryMatchedAppInstancesResp_RespData) Reset()         { *m = QueryMatchedAppInstancesResp_RespData{} }
+func (m *QueryMatchedAppInstancesResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryMatchedAppInstancesResp_RespData) ProtoMessage()    {}
+func (*QueryMatchedAppInstancesResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{131, 0}
+}
+
+func (m *QueryMatchedAppInstancesResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryMatchedAppInstancesResp_RespData) GetInfo() []*common.AppInstance {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type QueryEffectedAppInstancesReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cfgsetid  string `protobuf:"bytes,3,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Releaseid string `protobuf:"bytes,4,opt,name=releaseid" json:"releaseid,omitempty"`
-	Index     int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
+	Seq       string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId     string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	CfgId     string       `protobuf:"bytes,3,opt,name=cfg_id,json=cfgId" json:"cfg_id,omitempty"`
+	ReleaseId string       `protobuf:"bytes,4,opt,name=release_id,json=releaseId" json:"release_id,omitempty"`
+	Page      *common.Page `protobuf:"bytes,5,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryEffectedAppInstancesReq) Reset()                    { *m = QueryEffectedAppInstancesReq{} }
 func (m *QueryEffectedAppInstancesReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryEffectedAppInstancesReq) ProtoMessage()               {}
-func (*QueryEffectedAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{136} }
+func (*QueryEffectedAppInstancesReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{132} }
 
-func (m *QueryEffectedAppInstancesReq) GetSeq() uint64 {
+func (m *QueryEffectedAppInstancesReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryEffectedAppInstancesReq) GetBid() string {
+func (m *QueryEffectedAppInstancesReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryEffectedAppInstancesReq) GetCfgsetid() string {
+func (m *QueryEffectedAppInstancesReq) GetCfgId() string {
 	if m != nil {
-		return m.Cfgsetid
+		return m.CfgId
 	}
 	return ""
 }
 
-func (m *QueryEffectedAppInstancesReq) GetReleaseid() string {
+func (m *QueryEffectedAppInstancesReq) GetReleaseId() string {
 	if m != nil {
-		return m.Releaseid
+		return m.ReleaseId
 	}
 	return ""
 }
 
-func (m *QueryEffectedAppInstancesReq) GetIndex() int32 {
+func (m *QueryEffectedAppInstancesReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryEffectedAppInstancesReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryEffectedAppInstancesResp struct {
-	Seq       uint64                `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode        `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string                `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Instances []*common.AppInstance `protobuf:"bytes,4,rep,name=instances" json:"instances,omitempty"`
+	Seq     string                                  `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                          `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                                  `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryEffectedAppInstancesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryEffectedAppInstancesResp) Reset()         { *m = QueryEffectedAppInstancesResp{} }
 func (m *QueryEffectedAppInstancesResp) String() string { return proto.CompactTextString(m) }
 func (*QueryEffectedAppInstancesResp) ProtoMessage()    {}
 func (*QueryEffectedAppInstancesResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{137}
+	return fileDescriptor0, []int{133}
 }
 
-func (m *QueryEffectedAppInstancesResp) GetSeq() uint64 {
+func (m *QueryEffectedAppInstancesResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryEffectedAppInstancesResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryEffectedAppInstancesResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryEffectedAppInstancesResp) GetInstances() []*common.AppInstance {
+func (m *QueryEffectedAppInstancesResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Instances
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryEffectedAppInstancesResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryEffectedAppInstancesResp) GetData() *QueryEffectedAppInstancesResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryEffectedAppInstancesResp_RespData struct {
+	TotalCount uint32                       `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.AppInstanceRelease `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryEffectedAppInstancesResp_RespData) Reset() {
+	*m = QueryEffectedAppInstancesResp_RespData{}
+}
+func (m *QueryEffectedAppInstancesResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryEffectedAppInstancesResp_RespData) ProtoMessage()    {}
+func (*QueryEffectedAppInstancesResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{133, 0}
+}
+
+func (m *QueryEffectedAppInstancesResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryEffectedAppInstancesResp_RespData) GetInfo() []*common.AppInstanceRelease {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type CreateStrategyReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid      string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Strategyid string `protobuf:"bytes,4,opt,name=strategyid" json:"strategyid,omitempty"`
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId      string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	StrategyId string `protobuf:"bytes,4,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
 	Name       string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
 	Content    string `protobuf:"bytes,6,opt,name=content" json:"content,omitempty"`
 	Memo       string `protobuf:"bytes,7,opt,name=memo" json:"memo,omitempty"`
@@ -6917,32 +7259,32 @@ type CreateStrategyReq struct {
 func (m *CreateStrategyReq) Reset()                    { *m = CreateStrategyReq{} }
 func (m *CreateStrategyReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateStrategyReq) ProtoMessage()               {}
-func (*CreateStrategyReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{138} }
+func (*CreateStrategyReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{134} }
 
-func (m *CreateStrategyReq) GetSeq() uint64 {
+func (m *CreateStrategyReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateStrategyReq) GetBid() string {
+func (m *CreateStrategyReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateStrategyReq) GetAppid() string {
+func (m *CreateStrategyReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *CreateStrategyReq) GetStrategyid() string {
+func (m *CreateStrategyReq) GetStrategyId() string {
 	if m != nil {
-		return m.Strategyid
+		return m.StrategyId
 	}
 	return ""
 }
@@ -6976,82 +7318,100 @@ func (m *CreateStrategyReq) GetCreator() string {
 }
 
 type CreateStrategyResp struct {
-	Seq        uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Strategyid string         `protobuf:"bytes,4,opt,name=strategyid" json:"strategyid,omitempty"`
+	Seq     string                       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode               `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                       `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *CreateStrategyResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *CreateStrategyResp) Reset()                    { *m = CreateStrategyResp{} }
 func (m *CreateStrategyResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateStrategyResp) ProtoMessage()               {}
-func (*CreateStrategyResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{139} }
+func (*CreateStrategyResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{135} }
 
-func (m *CreateStrategyResp) GetSeq() uint64 {
+func (m *CreateStrategyResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateStrategyResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateStrategyResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *CreateStrategyResp) GetStrategyid() string {
+func (m *CreateStrategyResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Strategyid
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *CreateStrategyResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *CreateStrategyResp) GetData() *CreateStrategyResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type CreateStrategyResp_RespData struct {
+	StrategyId string `protobuf:"bytes,1,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
+}
+
+func (m *CreateStrategyResp_RespData) Reset()         { *m = CreateStrategyResp_RespData{} }
+func (m *CreateStrategyResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateStrategyResp_RespData) ProtoMessage()    {}
+func (*CreateStrategyResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{135, 0}
+}
+
+func (m *CreateStrategyResp_RespData) GetStrategyId() string {
+	if m != nil {
+		return m.StrategyId
 	}
 	return ""
 }
 
 type QueryStrategyReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid      string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Strategyid string `protobuf:"bytes,4,opt,name=strategyid" json:"strategyid,omitempty"`
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId      string `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	StrategyId string `protobuf:"bytes,4,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
 	Name       string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
 }
 
 func (m *QueryStrategyReq) Reset()                    { *m = QueryStrategyReq{} }
 func (m *QueryStrategyReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryStrategyReq) ProtoMessage()               {}
-func (*QueryStrategyReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{140} }
+func (*QueryStrategyReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{136} }
 
-func (m *QueryStrategyReq) GetSeq() uint64 {
+func (m *QueryStrategyReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryStrategyReq) GetBid() string {
+func (m *QueryStrategyReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryStrategyReq) GetAppid() string {
+func (m *QueryStrategyReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryStrategyReq) GetStrategyid() string {
+func (m *QueryStrategyReq) GetStrategyId() string {
 	if m != nil {
-		return m.Strategyid
+		return m.StrategyId
 	}
 	return ""
 }
@@ -7064,76 +7424,75 @@ func (m *QueryStrategyReq) GetName() string {
 }
 
 type QueryStrategyResp struct {
-	Seq      uint64           `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode   `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string           `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Strategy *common.Strategy `protobuf:"bytes,4,opt,name=strategy" json:"strategy,omitempty"`
+	Seq     string           `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode   `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string           `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.Strategy `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryStrategyResp) Reset()                    { *m = QueryStrategyResp{} }
 func (m *QueryStrategyResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryStrategyResp) ProtoMessage()               {}
-func (*QueryStrategyResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{141} }
+func (*QueryStrategyResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{137} }
 
-func (m *QueryStrategyResp) GetSeq() uint64 {
+func (m *QueryStrategyResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryStrategyResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryStrategyResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryStrategyResp) GetStrategy() *common.Strategy {
+func (m *QueryStrategyResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Strategy
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryStrategyResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryStrategyResp) GetData() *common.Strategy {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryStrategyListReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid     string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid   string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	AppName string `protobuf:"bytes,4,opt,name=appName" json:"appName,omitempty"`
-	Index   int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit   int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
+	Seq     string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId   string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	AppName string       `protobuf:"bytes,4,opt,name=app_name,json=appName" json:"app_name,omitempty"`
+	Page    *common.Page `protobuf:"bytes,5,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryStrategyListReq) Reset()                    { *m = QueryStrategyListReq{} }
 func (m *QueryStrategyListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryStrategyListReq) ProtoMessage()               {}
-func (*QueryStrategyListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{142} }
+func (*QueryStrategyListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{138} }
 
-func (m *QueryStrategyListReq) GetSeq() uint64 {
+func (m *QueryStrategyListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryStrategyListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *QueryStrategyListReq) GetAppid() string {
+func (m *QueryStrategyListReq) GetBizId() string {
 	if m != nil {
-		return m.Appid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *QueryStrategyListReq) GetAppId() string {
+	if m != nil {
+		return m.AppId
 	}
 	return ""
 }
@@ -7145,89 +7504,108 @@ func (m *QueryStrategyListReq) GetAppName() string {
 	return ""
 }
 
-func (m *QueryStrategyListReq) GetIndex() int32 {
+func (m *QueryStrategyListReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryStrategyListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryStrategyListResp struct {
-	Seq        uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode     `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string             `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Strategies []*common.Strategy `protobuf:"bytes,4,rep,name=strategies" json:"strategies,omitempty"`
+	Seq     string                          `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                  `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                          `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryStrategyListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryStrategyListResp) Reset()                    { *m = QueryStrategyListResp{} }
 func (m *QueryStrategyListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryStrategyListResp) ProtoMessage()               {}
-func (*QueryStrategyListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{143} }
+func (*QueryStrategyListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{139} }
 
-func (m *QueryStrategyListResp) GetSeq() uint64 {
+func (m *QueryStrategyListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryStrategyListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryStrategyListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryStrategyListResp) GetStrategies() []*common.Strategy {
+func (m *QueryStrategyListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Strategies
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryStrategyListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryStrategyListResp) GetData() *QueryStrategyListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryStrategyListResp_RespData struct {
+	TotalCount uint32             `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.Strategy `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryStrategyListResp_RespData) Reset()         { *m = QueryStrategyListResp_RespData{} }
+func (m *QueryStrategyListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryStrategyListResp_RespData) ProtoMessage()    {}
+func (*QueryStrategyListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{139, 0}
+}
+
+func (m *QueryStrategyListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryStrategyListResp_RespData) GetInfo() []*common.Strategy {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type DeleteStrategyReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Strategyid string `protobuf:"bytes,3,opt,name=strategyid" json:"strategyid,omitempty"`
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	StrategyId string `protobuf:"bytes,3,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
 	Operator   string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *DeleteStrategyReq) Reset()                    { *m = DeleteStrategyReq{} }
 func (m *DeleteStrategyReq) String() string            { return proto.CompactTextString(m) }
 func (*DeleteStrategyReq) ProtoMessage()               {}
-func (*DeleteStrategyReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{144} }
+func (*DeleteStrategyReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{140} }
 
-func (m *DeleteStrategyReq) GetSeq() uint64 {
+func (m *DeleteStrategyReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteStrategyReq) GetBid() string {
-	if m != nil {
-		return m.Bid
 	}
 	return ""
 }
 
-func (m *DeleteStrategyReq) GetStrategyid() string {
+func (m *DeleteStrategyReq) GetBizId() string {
 	if m != nil {
-		return m.Strategyid
+		return m.BizId
+	}
+	return ""
+}
+
+func (m *DeleteStrategyReq) GetStrategyId() string {
+	if m != nil {
+		return m.StrategyId
 	}
 	return ""
 }
@@ -7240,109 +7618,85 @@ func (m *DeleteStrategyReq) GetOperator() string {
 }
 
 type DeleteStrategyResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *DeleteStrategyResp) Reset()                    { *m = DeleteStrategyResp{} }
 func (m *DeleteStrategyResp) String() string            { return proto.CompactTextString(m) }
 func (*DeleteStrategyResp) ProtoMessage()               {}
-func (*DeleteStrategyResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{145} }
+func (*DeleteStrategyResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{141} }
 
-func (m *DeleteStrategyResp) GetSeq() uint64 {
+func (m *DeleteStrategyResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *DeleteStrategyResp) GetErrCode() common.ErrCode {
+func (m *DeleteStrategyResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *DeleteStrategyResp) GetErrMsg() string {
+func (m *DeleteStrategyResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateProcAttrReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Cloudid   string `protobuf:"bytes,2,opt,name=cloudid" json:"cloudid,omitempty"`
-	IP        string `protobuf:"bytes,3,opt,name=IP" json:"IP,omitempty"`
-	Bid       string `protobuf:"bytes,4,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,6,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,7,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc        string `protobuf:"bytes,8,opt,name=dc" json:"dc,omitempty"`
-	Labels    string `protobuf:"bytes,9,opt,name=labels" json:"labels,omitempty"`
-	Path      string `protobuf:"bytes,10,opt,name=path" json:"path,omitempty"`
-	Creator   string `protobuf:"bytes,11,opt,name=creator" json:"creator,omitempty"`
-	Memo      string `protobuf:"bytes,12,opt,name=memo" json:"memo,omitempty"`
+	Seq     string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	CloudId string `protobuf:"bytes,2,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip      string `protobuf:"bytes,3,opt,name=ip" json:"ip,omitempty"`
+	BizId   string `protobuf:"bytes,4,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string `protobuf:"bytes,5,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	Labels  string `protobuf:"bytes,6,opt,name=labels" json:"labels,omitempty"`
+	Path    string `protobuf:"bytes,7,opt,name=path" json:"path,omitempty"`
+	Creator string `protobuf:"bytes,8,opt,name=creator" json:"creator,omitempty"`
+	Memo    string `protobuf:"bytes,9,opt,name=memo" json:"memo,omitempty"`
 }
 
 func (m *CreateProcAttrReq) Reset()                    { *m = CreateProcAttrReq{} }
 func (m *CreateProcAttrReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateProcAttrReq) ProtoMessage()               {}
-func (*CreateProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{146} }
+func (*CreateProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{142} }
 
-func (m *CreateProcAttrReq) GetSeq() uint64 {
+func (m *CreateProcAttrReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateProcAttrReq) GetCloudid() string {
+func (m *CreateProcAttrReq) GetCloudId() string {
 	if m != nil {
-		return m.Cloudid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *CreateProcAttrReq) GetIP() string {
+func (m *CreateProcAttrReq) GetIp() string {
 	if m != nil {
-		return m.IP
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *CreateProcAttrReq) GetBid() string {
+func (m *CreateProcAttrReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateProcAttrReq) GetAppid() string {
+func (m *CreateProcAttrReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *CreateProcAttrReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *CreateProcAttrReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *CreateProcAttrReq) GetDc() string {
-	if m != nil {
-		return m.Dc
+		return m.AppId
 	}
 	return ""
 }
@@ -7376,82 +7730,82 @@ func (m *CreateProcAttrReq) GetMemo() string {
 }
 
 type CreateProcAttrResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CreateProcAttrResp) Reset()                    { *m = CreateProcAttrResp{} }
 func (m *CreateProcAttrResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateProcAttrResp) ProtoMessage()               {}
-func (*CreateProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{147} }
+func (*CreateProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{143} }
 
-func (m *CreateProcAttrResp) GetSeq() uint64 {
+func (m *CreateProcAttrResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateProcAttrResp) GetErrCode() common.ErrCode {
+func (m *CreateProcAttrResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateProcAttrResp) GetErrMsg() string {
+func (m *CreateProcAttrResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type QueryHostProcAttrReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Cloudid string `protobuf:"bytes,2,opt,name=cloudid" json:"cloudid,omitempty"`
-	IP      string `protobuf:"bytes,3,opt,name=IP" json:"IP,omitempty"`
-	Bid     string `protobuf:"bytes,4,opt,name=bid" json:"bid,omitempty"`
-	Appid   string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
+	Seq     string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	CloudId string `protobuf:"bytes,2,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip      string `protobuf:"bytes,3,opt,name=ip" json:"ip,omitempty"`
+	BizId   string `protobuf:"bytes,4,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId   string `protobuf:"bytes,5,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 	Path    string `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
 }
 
 func (m *QueryHostProcAttrReq) Reset()                    { *m = QueryHostProcAttrReq{} }
 func (m *QueryHostProcAttrReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryHostProcAttrReq) ProtoMessage()               {}
-func (*QueryHostProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{148} }
+func (*QueryHostProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{144} }
 
-func (m *QueryHostProcAttrReq) GetSeq() uint64 {
+func (m *QueryHostProcAttrReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryHostProcAttrReq) GetCloudid() string {
+func (m *QueryHostProcAttrReq) GetCloudId() string {
 	if m != nil {
-		return m.Cloudid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *QueryHostProcAttrReq) GetIP() string {
+func (m *QueryHostProcAttrReq) GetIp() string {
 	if m != nil {
-		return m.IP
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *QueryHostProcAttrReq) GetBid() string {
+func (m *QueryHostProcAttrReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryHostProcAttrReq) GetAppid() string {
+func (m *QueryHostProcAttrReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
@@ -7464,316 +7818,305 @@ func (m *QueryHostProcAttrReq) GetPath() string {
 }
 
 type QueryHostProcAttrResp struct {
-	Seq      uint64           `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode   `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string           `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ProcAttr *common.ProcAttr `protobuf:"bytes,4,opt,name=procAttr" json:"procAttr,omitempty"`
+	Seq     string           `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode   `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string           `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ProcAttr `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryHostProcAttrResp) Reset()                    { *m = QueryHostProcAttrResp{} }
 func (m *QueryHostProcAttrResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryHostProcAttrResp) ProtoMessage()               {}
-func (*QueryHostProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{149} }
+func (*QueryHostProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{145} }
 
-func (m *QueryHostProcAttrResp) GetSeq() uint64 {
+func (m *QueryHostProcAttrResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHostProcAttrResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryHostProcAttrResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryHostProcAttrResp) GetProcAttr() *common.ProcAttr {
+func (m *QueryHostProcAttrResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ProcAttr
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryHostProcAttrResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryHostProcAttrResp) GetData() *common.ProcAttr {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryHostProcAttrListReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Cloudid string `protobuf:"bytes,2,opt,name=cloudid" json:"cloudid,omitempty"`
-	IP      string `protobuf:"bytes,3,opt,name=IP" json:"IP,omitempty"`
-	Index   int32  `protobuf:"varint,4,opt,name=index" json:"index,omitempty"`
-	Limit   int32  `protobuf:"varint,5,opt,name=limit" json:"limit,omitempty"`
+	Seq     string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	CloudId string       `protobuf:"bytes,2,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip      string       `protobuf:"bytes,3,opt,name=ip" json:"ip,omitempty"`
+	Page    *common.Page `protobuf:"bytes,4,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryHostProcAttrListReq) Reset()                    { *m = QueryHostProcAttrListReq{} }
 func (m *QueryHostProcAttrListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryHostProcAttrListReq) ProtoMessage()               {}
-func (*QueryHostProcAttrListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{150} }
+func (*QueryHostProcAttrListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{146} }
 
-func (m *QueryHostProcAttrListReq) GetSeq() uint64 {
+func (m *QueryHostProcAttrListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryHostProcAttrListReq) GetCloudid() string {
+func (m *QueryHostProcAttrListReq) GetCloudId() string {
 	if m != nil {
-		return m.Cloudid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *QueryHostProcAttrListReq) GetIP() string {
+func (m *QueryHostProcAttrListReq) GetIp() string {
 	if m != nil {
-		return m.IP
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *QueryHostProcAttrListReq) GetIndex() int32 {
+func (m *QueryHostProcAttrListReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryHostProcAttrListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryHostProcAttrListResp struct {
-	Seq       uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode     `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string             `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ProcAttrs []*common.ProcAttr `protobuf:"bytes,4,rep,name=procAttrs" json:"procAttrs,omitempty"`
+	Seq     string                              `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                      `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                              `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryHostProcAttrListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryHostProcAttrListResp) Reset()                    { *m = QueryHostProcAttrListResp{} }
 func (m *QueryHostProcAttrListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryHostProcAttrListResp) ProtoMessage()               {}
-func (*QueryHostProcAttrListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{151} }
+func (*QueryHostProcAttrListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{147} }
 
-func (m *QueryHostProcAttrListResp) GetSeq() uint64 {
+func (m *QueryHostProcAttrListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryHostProcAttrListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryHostProcAttrListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryHostProcAttrListResp) GetProcAttrs() []*common.ProcAttr {
+func (m *QueryHostProcAttrListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ProcAttrs
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryHostProcAttrListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryHostProcAttrListResp) GetData() *QueryHostProcAttrListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryHostProcAttrListResp_RespData struct {
+	TotalCount uint32             `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.ProcAttr `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryHostProcAttrListResp_RespData) Reset()         { *m = QueryHostProcAttrListResp_RespData{} }
+func (m *QueryHostProcAttrListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryHostProcAttrListResp_RespData) ProtoMessage()    {}
+func (*QueryHostProcAttrListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{147, 0}
+}
+
+func (m *QueryHostProcAttrListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryHostProcAttrListResp_RespData) GetInfo() []*common.ProcAttr {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type QueryAppProcAttrListReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,3,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,4,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,5,opt,name=zoneid" json:"zoneid,omitempty"`
-	Index     int32  `protobuf:"varint,6,opt,name=index" json:"index,omitempty"`
-	Limit     int32  `protobuf:"varint,7,opt,name=limit" json:"limit,omitempty"`
+	Seq   string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId string       `protobuf:"bytes,3,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	Page  *common.Page `protobuf:"bytes,4,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryAppProcAttrListReq) Reset()                    { *m = QueryAppProcAttrListReq{} }
 func (m *QueryAppProcAttrListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppProcAttrListReq) ProtoMessage()               {}
-func (*QueryAppProcAttrListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{152} }
+func (*QueryAppProcAttrListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{148} }
 
-func (m *QueryAppProcAttrListReq) GetSeq() uint64 {
+func (m *QueryAppProcAttrListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryAppProcAttrListReq) GetBid() string {
+func (m *QueryAppProcAttrListReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *QueryAppProcAttrListReq) GetAppid() string {
+func (m *QueryAppProcAttrListReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
 
-func (m *QueryAppProcAttrListReq) GetClusterid() string {
+func (m *QueryAppProcAttrListReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Clusterid
+		return m.Page
 	}
-	return ""
-}
-
-func (m *QueryAppProcAttrListReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *QueryAppProcAttrListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryAppProcAttrListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryAppProcAttrListResp struct {
-	Seq       uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode     `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string             `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ProcAttrs []*common.ProcAttr `protobuf:"bytes,4,rep,name=procAttrs" json:"procAttrs,omitempty"`
+	Seq     string                             `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                     `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                             `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryAppProcAttrListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryAppProcAttrListResp) Reset()                    { *m = QueryAppProcAttrListResp{} }
 func (m *QueryAppProcAttrListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryAppProcAttrListResp) ProtoMessage()               {}
-func (*QueryAppProcAttrListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{153} }
+func (*QueryAppProcAttrListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{149} }
 
-func (m *QueryAppProcAttrListResp) GetSeq() uint64 {
+func (m *QueryAppProcAttrListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAppProcAttrListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryAppProcAttrListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryAppProcAttrListResp) GetProcAttrs() []*common.ProcAttr {
+func (m *QueryAppProcAttrListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ProcAttrs
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryAppProcAttrListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryAppProcAttrListResp) GetData() *QueryAppProcAttrListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryAppProcAttrListResp_RespData struct {
+	TotalCount uint32             `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.ProcAttr `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryAppProcAttrListResp_RespData) Reset()         { *m = QueryAppProcAttrListResp_RespData{} }
+func (m *QueryAppProcAttrListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryAppProcAttrListResp_RespData) ProtoMessage()    {}
+func (*QueryAppProcAttrListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{149, 0}
+}
+
+func (m *QueryAppProcAttrListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryAppProcAttrListResp_RespData) GetInfo() []*common.ProcAttr {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type UpdateProcAttrReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Cloudid   string `protobuf:"bytes,2,opt,name=cloudid" json:"cloudid,omitempty"`
-	IP        string `protobuf:"bytes,3,opt,name=IP" json:"IP,omitempty"`
-	Bid       string `protobuf:"bytes,4,opt,name=bid" json:"bid,omitempty"`
-	Appid     string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
-	Clusterid string `protobuf:"bytes,6,opt,name=clusterid" json:"clusterid,omitempty"`
-	Zoneid    string `protobuf:"bytes,7,opt,name=zoneid" json:"zoneid,omitempty"`
-	Dc        string `protobuf:"bytes,8,opt,name=dc" json:"dc,omitempty"`
-	Labels    string `protobuf:"bytes,9,opt,name=labels" json:"labels,omitempty"`
-	Path      string `protobuf:"bytes,10,opt,name=path" json:"path,omitempty"`
-	Memo      string `protobuf:"bytes,11,opt,name=memo" json:"memo,omitempty"`
-	Operator  string `protobuf:"bytes,12,opt,name=operator" json:"operator,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	CloudId  string `protobuf:"bytes,2,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip       string `protobuf:"bytes,3,opt,name=ip" json:"ip,omitempty"`
+	BizId    string `protobuf:"bytes,4,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId    string `protobuf:"bytes,5,opt,name=app_id,json=appId" json:"app_id,omitempty"`
+	Path     string `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
+	Labels   string `protobuf:"bytes,7,opt,name=labels" json:"labels,omitempty"`
+	Memo     string `protobuf:"bytes,8,opt,name=memo" json:"memo,omitempty"`
+	Operator string `protobuf:"bytes,9,opt,name=operator" json:"operator,omitempty"`
 }
 
 func (m *UpdateProcAttrReq) Reset()                    { *m = UpdateProcAttrReq{} }
 func (m *UpdateProcAttrReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateProcAttrReq) ProtoMessage()               {}
-func (*UpdateProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{154} }
+func (*UpdateProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{150} }
 
-func (m *UpdateProcAttrReq) GetSeq() uint64 {
+func (m *UpdateProcAttrReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateProcAttrReq) GetCloudid() string {
+func (m *UpdateProcAttrReq) GetCloudId() string {
 	if m != nil {
-		return m.Cloudid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *UpdateProcAttrReq) GetIP() string {
+func (m *UpdateProcAttrReq) GetIp() string {
 	if m != nil {
-		return m.IP
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *UpdateProcAttrReq) GetBid() string {
+func (m *UpdateProcAttrReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *UpdateProcAttrReq) GetAppid() string {
+func (m *UpdateProcAttrReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *UpdateProcAttrReq) GetClusterid() string {
-	if m != nil {
-		return m.Clusterid
-	}
-	return ""
-}
-
-func (m *UpdateProcAttrReq) GetZoneid() string {
-	if m != nil {
-		return m.Zoneid
-	}
-	return ""
-}
-
-func (m *UpdateProcAttrReq) GetDc() string {
-	if m != nil {
-		return m.Dc
-	}
-	return ""
-}
-
-func (m *UpdateProcAttrReq) GetLabels() string {
-	if m != nil {
-		return m.Labels
+		return m.AppId
 	}
 	return ""
 }
@@ -7781,6 +8124,13 @@ func (m *UpdateProcAttrReq) GetLabels() string {
 func (m *UpdateProcAttrReq) GetPath() string {
 	if m != nil {
 		return m.Path
+	}
+	return ""
+}
+
+func (m *UpdateProcAttrReq) GetLabels() string {
+	if m != nil {
+		return m.Labels
 	}
 	return ""
 }
@@ -7800,43 +8150,43 @@ func (m *UpdateProcAttrReq) GetOperator() string {
 }
 
 type UpdateProcAttrResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateProcAttrResp) Reset()                    { *m = UpdateProcAttrResp{} }
 func (m *UpdateProcAttrResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateProcAttrResp) ProtoMessage()               {}
-func (*UpdateProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{155} }
+func (*UpdateProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{151} }
 
-func (m *UpdateProcAttrResp) GetSeq() uint64 {
+func (m *UpdateProcAttrResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateProcAttrResp) GetErrCode() common.ErrCode {
+func (m *UpdateProcAttrResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateProcAttrResp) GetErrMsg() string {
+func (m *UpdateProcAttrResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type DeleteProcAttrReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Cloudid  string `protobuf:"bytes,2,opt,name=cloudid" json:"cloudid,omitempty"`
-	IP       string `protobuf:"bytes,3,opt,name=IP" json:"IP,omitempty"`
-	Bid      string `protobuf:"bytes,4,opt,name=bid" json:"bid,omitempty"`
-	Appid    string `protobuf:"bytes,5,opt,name=appid" json:"appid,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	CloudId  string `protobuf:"bytes,2,opt,name=cloud_id,json=cloudId" json:"cloud_id,omitempty"`
+	Ip       string `protobuf:"bytes,3,opt,name=ip" json:"ip,omitempty"`
+	BizId    string `protobuf:"bytes,4,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	AppId    string `protobuf:"bytes,5,opt,name=app_id,json=appId" json:"app_id,omitempty"`
 	Path     string `protobuf:"bytes,6,opt,name=path" json:"path,omitempty"`
 	Operator string `protobuf:"bytes,7,opt,name=operator" json:"operator,omitempty"`
 }
@@ -7844,39 +8194,39 @@ type DeleteProcAttrReq struct {
 func (m *DeleteProcAttrReq) Reset()                    { *m = DeleteProcAttrReq{} }
 func (m *DeleteProcAttrReq) String() string            { return proto.CompactTextString(m) }
 func (*DeleteProcAttrReq) ProtoMessage()               {}
-func (*DeleteProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{156} }
+func (*DeleteProcAttrReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{152} }
 
-func (m *DeleteProcAttrReq) GetSeq() uint64 {
+func (m *DeleteProcAttrReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *DeleteProcAttrReq) GetCloudid() string {
+func (m *DeleteProcAttrReq) GetCloudId() string {
 	if m != nil {
-		return m.Cloudid
+		return m.CloudId
 	}
 	return ""
 }
 
-func (m *DeleteProcAttrReq) GetIP() string {
+func (m *DeleteProcAttrReq) GetIp() string {
 	if m != nil {
-		return m.IP
+		return m.Ip
 	}
 	return ""
 }
 
-func (m *DeleteProcAttrReq) GetBid() string {
+func (m *DeleteProcAttrReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *DeleteProcAttrReq) GetAppid() string {
+func (m *DeleteProcAttrReq) GetAppId() string {
 	if m != nil {
-		return m.Appid
+		return m.AppId
 	}
 	return ""
 }
@@ -7896,40 +8246,88 @@ func (m *DeleteProcAttrReq) GetOperator() string {
 }
 
 type DeleteProcAttrResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *DeleteProcAttrResp) Reset()                    { *m = DeleteProcAttrResp{} }
 func (m *DeleteProcAttrResp) String() string            { return proto.CompactTextString(m) }
 func (*DeleteProcAttrResp) ProtoMessage()               {}
-func (*DeleteProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{157} }
+func (*DeleteProcAttrResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{153} }
 
-func (m *DeleteProcAttrResp) GetSeq() uint64 {
+func (m *DeleteProcAttrResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *DeleteProcAttrResp) GetErrCode() common.ErrCode {
+func (m *DeleteProcAttrResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *DeleteProcAttrResp) GetErrMsg() string {
+func (m *DeleteProcAttrResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
+	}
+	return ""
+}
+
+type InitShardingDBReq struct {
+	Seq string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+}
+
+func (m *InitShardingDBReq) Reset()                    { *m = InitShardingDBReq{} }
+func (m *InitShardingDBReq) String() string            { return proto.CompactTextString(m) }
+func (*InitShardingDBReq) ProtoMessage()               {}
+func (*InitShardingDBReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{154} }
+
+func (m *InitShardingDBReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+type InitShardingDBResp struct {
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+}
+
+func (m *InitShardingDBResp) Reset()                    { *m = InitShardingDBResp{} }
+func (m *InitShardingDBResp) String() string            { return proto.CompactTextString(m) }
+func (*InitShardingDBResp) ProtoMessage()               {}
+func (*InitShardingDBResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{155} }
+
+func (m *InitShardingDBResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *InitShardingDBResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *InitShardingDBResp) GetMessage() string {
+	if m != nil {
+		return m.Message
 	}
 	return ""
 }
 
 type CreateShardingDBReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Dbid     string `protobuf:"bytes,2,opt,name=dbid" json:"dbid,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	DbId     string `protobuf:"bytes,2,opt,name=db_id,json=dbId" json:"db_id,omitempty"`
 	Host     string `protobuf:"bytes,3,opt,name=host" json:"host,omitempty"`
 	Port     int32  `protobuf:"varint,4,opt,name=port" json:"port,omitempty"`
 	User     string `protobuf:"bytes,5,opt,name=user" json:"user,omitempty"`
@@ -7941,18 +8339,18 @@ type CreateShardingDBReq struct {
 func (m *CreateShardingDBReq) Reset()                    { *m = CreateShardingDBReq{} }
 func (m *CreateShardingDBReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateShardingDBReq) ProtoMessage()               {}
-func (*CreateShardingDBReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{158} }
+func (*CreateShardingDBReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{156} }
 
-func (m *CreateShardingDBReq) GetSeq() uint64 {
+func (m *CreateShardingDBReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateShardingDBReq) GetDbid() string {
+func (m *CreateShardingDBReq) GetDbId() string {
 	if m != nil {
-		return m.Dbid
+		return m.DbId
 	}
 	return ""
 }
@@ -8000,160 +8398,194 @@ func (m *CreateShardingDBReq) GetState() int32 {
 }
 
 type CreateShardingDBResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CreateShardingDBResp) Reset()                    { *m = CreateShardingDBResp{} }
 func (m *CreateShardingDBResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateShardingDBResp) ProtoMessage()               {}
-func (*CreateShardingDBResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{159} }
+func (*CreateShardingDBResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{157} }
 
-func (m *CreateShardingDBResp) GetSeq() uint64 {
+func (m *CreateShardingDBResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateShardingDBResp) GetErrCode() common.ErrCode {
+func (m *CreateShardingDBResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateShardingDBResp) GetErrMsg() string {
+func (m *CreateShardingDBResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type QueryShardingDBReq struct {
-	Seq  uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Dbid string `protobuf:"bytes,2,opt,name=dbid" json:"dbid,omitempty"`
+	Seq  string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	DbId string `protobuf:"bytes,2,opt,name=db_id,json=dbId" json:"db_id,omitempty"`
 }
 
 func (m *QueryShardingDBReq) Reset()                    { *m = QueryShardingDBReq{} }
 func (m *QueryShardingDBReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryShardingDBReq) ProtoMessage()               {}
-func (*QueryShardingDBReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{160} }
+func (*QueryShardingDBReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{158} }
 
-func (m *QueryShardingDBReq) GetSeq() uint64 {
+func (m *QueryShardingDBReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryShardingDBReq) GetDbid() string {
+func (m *QueryShardingDBReq) GetDbId() string {
 	if m != nil {
-		return m.Dbid
+		return m.DbId
 	}
 	return ""
 }
 
 type QueryShardingDBResp struct {
-	Seq        uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode     `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string             `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ShardingDB *common.ShardingDB `protobuf:"bytes,4,opt,name=shardingDB" json:"shardingDB,omitempty"`
+	Seq     string             `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode     `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string             `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ShardingDB `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryShardingDBResp) Reset()                    { *m = QueryShardingDBResp{} }
 func (m *QueryShardingDBResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryShardingDBResp) ProtoMessage()               {}
-func (*QueryShardingDBResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{161} }
+func (*QueryShardingDBResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{159} }
 
-func (m *QueryShardingDBResp) GetSeq() uint64 {
+func (m *QueryShardingDBResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryShardingDBResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryShardingDBResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryShardingDBResp) GetShardingDB() *common.ShardingDB {
+func (m *QueryShardingDBResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ShardingDB
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryShardingDBResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryShardingDBResp) GetData() *common.ShardingDB {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type QueryShardingDBListReq struct {
-	Seq uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
+	Seq  string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Page *common.Page `protobuf:"bytes,2,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryShardingDBListReq) Reset()                    { *m = QueryShardingDBListReq{} }
 func (m *QueryShardingDBListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryShardingDBListReq) ProtoMessage()               {}
-func (*QueryShardingDBListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{162} }
+func (*QueryShardingDBListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{160} }
 
-func (m *QueryShardingDBListReq) GetSeq() uint64 {
+func (m *QueryShardingDBListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
+}
+
+func (m *QueryShardingDBListReq) GetPage() *common.Page {
+	if m != nil {
+		return m.Page
+	}
+	return nil
 }
 
 type QueryShardingDBListResp struct {
-	Seq         uint64               `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode     common.ErrCode       `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg      string               `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ShardingDBs []*common.ShardingDB `protobuf:"bytes,4,rep,name=shardingDBs" json:"shardingDBs,omitempty"`
+	Seq     string                            `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode                    `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                            `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryShardingDBListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryShardingDBListResp) Reset()                    { *m = QueryShardingDBListResp{} }
 func (m *QueryShardingDBListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryShardingDBListResp) ProtoMessage()               {}
-func (*QueryShardingDBListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{163} }
+func (*QueryShardingDBListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{161} }
 
-func (m *QueryShardingDBListResp) GetSeq() uint64 {
+func (m *QueryShardingDBListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryShardingDBListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryShardingDBListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryShardingDBListResp) GetShardingDBs() []*common.ShardingDB {
+func (m *QueryShardingDBListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ShardingDBs
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryShardingDBListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryShardingDBListResp) GetData() *QueryShardingDBListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryShardingDBListResp_RespData struct {
+	TotalCount uint32               `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.ShardingDB `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryShardingDBListResp_RespData) Reset()         { *m = QueryShardingDBListResp_RespData{} }
+func (m *QueryShardingDBListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryShardingDBListResp_RespData) ProtoMessage()    {}
+func (*QueryShardingDBListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{161, 0}
+}
+
+func (m *QueryShardingDBListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryShardingDBListResp_RespData) GetInfo() []*common.ShardingDB {
+	if m != nil {
+		return m.Info
 	}
 	return nil
 }
 
 type UpdateShardingDBReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Dbid     string `protobuf:"bytes,2,opt,name=dbid" json:"dbid,omitempty"`
+	Seq      string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	DbId     string `protobuf:"bytes,2,opt,name=db_id,json=dbId" json:"db_id,omitempty"`
 	Host     string `protobuf:"bytes,3,opt,name=host" json:"host,omitempty"`
 	Port     int32  `protobuf:"varint,4,opt,name=port" json:"port,omitempty"`
 	User     string `protobuf:"bytes,5,opt,name=user" json:"user,omitempty"`
@@ -8165,18 +8597,18 @@ type UpdateShardingDBReq struct {
 func (m *UpdateShardingDBReq) Reset()                    { *m = UpdateShardingDBReq{} }
 func (m *UpdateShardingDBReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateShardingDBReq) ProtoMessage()               {}
-func (*UpdateShardingDBReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{164} }
+func (*UpdateShardingDBReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{162} }
 
-func (m *UpdateShardingDBReq) GetSeq() uint64 {
+func (m *UpdateShardingDBReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateShardingDBReq) GetDbid() string {
+func (m *UpdateShardingDBReq) GetDbId() string {
 	if m != nil {
-		return m.Dbid
+		return m.DbId
 	}
 	return ""
 }
@@ -8224,42 +8656,42 @@ func (m *UpdateShardingDBReq) GetState() int32 {
 }
 
 type UpdateShardingDBResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateShardingDBResp) Reset()                    { *m = UpdateShardingDBResp{} }
 func (m *UpdateShardingDBResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateShardingDBResp) ProtoMessage()               {}
-func (*UpdateShardingDBResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{165} }
+func (*UpdateShardingDBResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{163} }
 
-func (m *UpdateShardingDBResp) GetSeq() uint64 {
+func (m *UpdateShardingDBResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateShardingDBResp) GetErrCode() common.ErrCode {
+func (m *UpdateShardingDBResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateShardingDBResp) GetErrMsg() string {
+func (m *UpdateShardingDBResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateShardingReq struct {
-	Seq    uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
+	Seq    string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
 	Key    string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
-	Dbid   string `protobuf:"bytes,3,opt,name=dbid" json:"dbid,omitempty"`
-	Dbname string `protobuf:"bytes,4,opt,name=dbname" json:"dbname,omitempty"`
+	DbId   string `protobuf:"bytes,3,opt,name=db_id,json=dbId" json:"db_id,omitempty"`
+	DbName string `protobuf:"bytes,4,opt,name=db_name,json=dbName" json:"db_name,omitempty"`
 	Memo   string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
 	State  int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
 }
@@ -8267,13 +8699,13 @@ type CreateShardingReq struct {
 func (m *CreateShardingReq) Reset()                    { *m = CreateShardingReq{} }
 func (m *CreateShardingReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateShardingReq) ProtoMessage()               {}
-func (*CreateShardingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{166} }
+func (*CreateShardingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{164} }
 
-func (m *CreateShardingReq) GetSeq() uint64 {
+func (m *CreateShardingReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
 func (m *CreateShardingReq) GetKey() string {
@@ -8283,16 +8715,16 @@ func (m *CreateShardingReq) GetKey() string {
 	return ""
 }
 
-func (m *CreateShardingReq) GetDbid() string {
+func (m *CreateShardingReq) GetDbId() string {
 	if m != nil {
-		return m.Dbid
+		return m.DbId
 	}
 	return ""
 }
 
-func (m *CreateShardingReq) GetDbname() string {
+func (m *CreateShardingReq) GetDbName() string {
 	if m != nil {
-		return m.Dbname
+		return m.DbName
 	}
 	return ""
 }
@@ -8312,52 +8744,52 @@ func (m *CreateShardingReq) GetState() int32 {
 }
 
 type CreateShardingResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CreateShardingResp) Reset()                    { *m = CreateShardingResp{} }
 func (m *CreateShardingResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateShardingResp) ProtoMessage()               {}
-func (*CreateShardingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{167} }
+func (*CreateShardingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{165} }
 
-func (m *CreateShardingResp) GetSeq() uint64 {
+func (m *CreateShardingResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateShardingResp) GetErrCode() common.ErrCode {
+func (m *CreateShardingResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateShardingResp) GetErrMsg() string {
+func (m *CreateShardingResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type QueryShardingReq struct {
-	Seq uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
+	Seq string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
 	Key string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
 }
 
 func (m *QueryShardingReq) Reset()                    { *m = QueryShardingReq{} }
 func (m *QueryShardingReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryShardingReq) ProtoMessage()               {}
-func (*QueryShardingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{168} }
+func (*QueryShardingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{166} }
 
-func (m *QueryShardingReq) GetSeq() uint64 {
+func (m *QueryShardingReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
 func (m *QueryShardingReq) GetKey() string {
@@ -8368,50 +8800,50 @@ func (m *QueryShardingReq) GetKey() string {
 }
 
 type QueryShardingResp struct {
-	Seq      uint64           `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode  common.ErrCode   `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg   string           `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Sharding *common.Sharding `protobuf:"bytes,4,opt,name=sharding" json:"sharding,omitempty"`
+	Seq     string           `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode   `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string           `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.Sharding `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryShardingResp) Reset()                    { *m = QueryShardingResp{} }
 func (m *QueryShardingResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryShardingResp) ProtoMessage()               {}
-func (*QueryShardingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{169} }
+func (*QueryShardingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{167} }
 
-func (m *QueryShardingResp) GetSeq() uint64 {
+func (m *QueryShardingResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryShardingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryShardingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryShardingResp) GetSharding() *common.Sharding {
+func (m *QueryShardingResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Sharding
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryShardingResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryShardingResp) GetData() *common.Sharding {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 type UpdateShardingReq struct {
-	Seq    uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
+	Seq    string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
 	Key    string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
-	Dbid   string `protobuf:"bytes,3,opt,name=dbid" json:"dbid,omitempty"`
-	Dbname string `protobuf:"bytes,4,opt,name=dbname" json:"dbname,omitempty"`
+	DbId   string `protobuf:"bytes,3,opt,name=db_id,json=dbId" json:"db_id,omitempty"`
+	DbName string `protobuf:"bytes,4,opt,name=db_name,json=dbName" json:"db_name,omitempty"`
 	Memo   string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
 	State  int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
 }
@@ -8419,13 +8851,13 @@ type UpdateShardingReq struct {
 func (m *UpdateShardingReq) Reset()                    { *m = UpdateShardingReq{} }
 func (m *UpdateShardingReq) String() string            { return proto.CompactTextString(m) }
 func (*UpdateShardingReq) ProtoMessage()               {}
-func (*UpdateShardingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{170} }
+func (*UpdateShardingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{168} }
 
-func (m *UpdateShardingReq) GetSeq() uint64 {
+func (m *UpdateShardingReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
 func (m *UpdateShardingReq) GetKey() string {
@@ -8435,16 +8867,16 @@ func (m *UpdateShardingReq) GetKey() string {
 	return ""
 }
 
-func (m *UpdateShardingReq) GetDbid() string {
+func (m *UpdateShardingReq) GetDbId() string {
 	if m != nil {
-		return m.Dbid
+		return m.DbId
 	}
 	return ""
 }
 
-func (m *UpdateShardingReq) GetDbname() string {
+func (m *UpdateShardingReq) GetDbName() string {
 	if m != nil {
-		return m.Dbname
+		return m.DbName
 	}
 	return ""
 }
@@ -8464,43 +8896,43 @@ func (m *UpdateShardingReq) GetState() int32 {
 }
 
 type UpdateShardingResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *UpdateShardingResp) Reset()                    { *m = UpdateShardingResp{} }
 func (m *UpdateShardingResp) String() string            { return proto.CompactTextString(m) }
 func (*UpdateShardingResp) ProtoMessage()               {}
-func (*UpdateShardingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{171} }
+func (*UpdateShardingResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{169} }
 
-func (m *UpdateShardingResp) GetSeq() uint64 {
+func (m *UpdateShardingResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *UpdateShardingResp) GetErrCode() common.ErrCode {
+func (m *UpdateShardingResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *UpdateShardingResp) GetErrMsg() string {
+func (m *UpdateShardingResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
 }
 
 type CreateAuditReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	SourceType int32  `protobuf:"varint,2,opt,name=sourceType" json:"sourceType,omitempty"`
-	OpType     int32  `protobuf:"varint,3,opt,name=opType" json:"opType,omitempty"`
-	Bid        string `protobuf:"bytes,4,opt,name=bid" json:"bid,omitempty"`
-	Sourceid   string `protobuf:"bytes,5,opt,name=sourceid" json:"sourceid,omitempty"`
+	Seq        string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	SourceType int32  `protobuf:"varint,2,opt,name=source_type,json=sourceType" json:"source_type,omitempty"`
+	OpType     int32  `protobuf:"varint,3,opt,name=op_type,json=opType" json:"op_type,omitempty"`
+	BizId      string `protobuf:"bytes,4,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	SourceId   string `protobuf:"bytes,5,opt,name=source_id,json=sourceId" json:"source_id,omitempty"`
 	Operator   string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
 	Memo       string `protobuf:"bytes,7,opt,name=memo" json:"memo,omitempty"`
 	State      int32  `protobuf:"varint,8,opt,name=state" json:"state,omitempty"`
@@ -8509,13 +8941,13 @@ type CreateAuditReq struct {
 func (m *CreateAuditReq) Reset()                    { *m = CreateAuditReq{} }
 func (m *CreateAuditReq) String() string            { return proto.CompactTextString(m) }
 func (*CreateAuditReq) ProtoMessage()               {}
-func (*CreateAuditReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{172} }
+func (*CreateAuditReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{170} }
 
-func (m *CreateAuditReq) GetSeq() uint64 {
+func (m *CreateAuditReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
 func (m *CreateAuditReq) GetSourceType() int32 {
@@ -8532,16 +8964,16 @@ func (m *CreateAuditReq) GetOpType() int32 {
 	return 0
 }
 
-func (m *CreateAuditReq) GetBid() string {
+func (m *CreateAuditReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
 
-func (m *CreateAuditReq) GetSourceid() string {
+func (m *CreateAuditReq) GetSourceId() string {
 	if m != nil {
-		return m.Sourceid
+		return m.SourceId
 	}
 	return ""
 }
@@ -8568,2507 +9000,62 @@ func (m *CreateAuditReq) GetState() int32 {
 }
 
 type CreateAuditResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
+	Seq     string         `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string         `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
 }
 
 func (m *CreateAuditResp) Reset()                    { *m = CreateAuditResp{} }
 func (m *CreateAuditResp) String() string            { return proto.CompactTextString(m) }
 func (*CreateAuditResp) ProtoMessage()               {}
-func (*CreateAuditResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{173} }
+func (*CreateAuditResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{171} }
 
-func (m *CreateAuditResp) GetSeq() uint64 {
+func (m *CreateAuditResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *CreateAuditResp) GetErrCode() common.ErrCode {
+func (m *CreateAuditResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.ErrCode
+		return m.Code
 	}
 	return common.ErrCode_E_OK
 }
 
-func (m *CreateAuditResp) GetErrMsg() string {
+func (m *CreateAuditResp) GetMessage() string {
 	if m != nil {
-		return m.ErrMsg
+		return m.Message
 	}
 	return ""
-}
-
-type CreateConfigTemplateSetReq struct {
-	Seq     uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid     string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid   string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Name    string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo    string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	Fpath   string `protobuf:"bytes,6,opt,name=fpath" json:"fpath,omitempty"`
-	State   int32  `protobuf:"varint,7,opt,name=state" json:"state,omitempty"`
-	Creator string `protobuf:"bytes,8,opt,name=creator" json:"creator,omitempty"`
-}
-
-func (m *CreateConfigTemplateSetReq) Reset()                    { *m = CreateConfigTemplateSetReq{} }
-func (m *CreateConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateSetReq) ProtoMessage()               {}
-func (*CreateConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{174} }
-
-func (m *CreateConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateSetReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateSetReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateSetReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateSetReq) GetFpath() string {
-	if m != nil {
-		return m.Fpath
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateSetReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateSetReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-type CreateConfigTemplateSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Setid   string         `protobuf:"bytes,4,opt,name=setid" json:"setid,omitempty"`
-}
-
-func (m *CreateConfigTemplateSetResp) Reset()                    { *m = CreateConfigTemplateSetResp{} }
-func (m *CreateConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateSetResp) ProtoMessage()               {}
-func (*CreateConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{175} }
-
-func (m *CreateConfigTemplateSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateConfigTemplateSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateSetResp) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-type DeleteConfigTemplateSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid    string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Operator string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteConfigTemplateSetReq) Reset()                    { *m = DeleteConfigTemplateSetReq{} }
-func (m *DeleteConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateSetReq) ProtoMessage()               {}
-func (*DeleteConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{176} }
-
-func (m *DeleteConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateSetReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteConfigTemplateSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteConfigTemplateSetResp) Reset()                    { *m = DeleteConfigTemplateSetResp{} }
-func (m *DeleteConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateSetResp) ProtoMessage()               {}
-func (*DeleteConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{177} }
-
-func (m *DeleteConfigTemplateSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteConfigTemplateSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type UpdateConfigTemplateSetReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid      string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid    string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Name     string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo     string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	State    int32  `protobuf:"varint,6,opt,name=state" json:"state,omitempty"`
-	Operator string `protobuf:"bytes,7,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateConfigTemplateSetReq) Reset()                    { *m = UpdateConfigTemplateSetReq{} }
-func (m *UpdateConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateSetReq) ProtoMessage()               {}
-func (*UpdateConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{178} }
-
-func (m *UpdateConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateSetReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateSetReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateConfigTemplateSetResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateConfigTemplateSetResp) Reset()                    { *m = UpdateConfigTemplateSetResp{} }
-func (m *UpdateConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateSetResp) ProtoMessage()               {}
-func (*UpdateConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{179} }
-
-func (m *UpdateConfigTemplateSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateConfigTemplateSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryConfigTemplateSetReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-}
-
-func (m *QueryConfigTemplateSetReq) Reset()                    { *m = QueryConfigTemplateSetReq{} }
-func (m *QueryConfigTemplateSetReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetReq) ProtoMessage()               {}
-func (*QueryConfigTemplateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{180} }
-
-func (m *QueryConfigTemplateSetReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateSetReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-type QueryConfigTemplateSetResp struct {
-	Seq         uint64                    `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode     common.ErrCode            `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg      string                    `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateSet *common.ConfigTemplateSet `protobuf:"bytes,4,opt,name=templateSet" json:"templateSet,omitempty"`
-}
-
-func (m *QueryConfigTemplateSetResp) Reset()                    { *m = QueryConfigTemplateSetResp{} }
-func (m *QueryConfigTemplateSetResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetResp) ProtoMessage()               {}
-func (*QueryConfigTemplateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{181} }
-
-func (m *QueryConfigTemplateSetResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateSetResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateSetResp) GetTemplateSet() *common.ConfigTemplateSet {
-	if m != nil {
-		return m.TemplateSet
-	}
-	return nil
-}
-
-type QueryConfigTemplateSetListReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Index int32  `protobuf:"varint,3,opt,name=index" json:"index,omitempty"`
-	Limit int32  `protobuf:"varint,4,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryConfigTemplateSetListReq) Reset()                    { *m = QueryConfigTemplateSetListReq{} }
-func (m *QueryConfigTemplateSetListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetListReq) ProtoMessage()               {}
-func (*QueryConfigTemplateSetListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{182} }
-
-func (m *QueryConfigTemplateSetListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateSetListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryConfigTemplateSetListResp struct {
-	Seq          uint64                      `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode      common.ErrCode              `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg       string                      `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateSets []*common.ConfigTemplateSet `protobuf:"bytes,4,rep,name=templateSets" json:"templateSets,omitempty"`
-}
-
-func (m *QueryConfigTemplateSetListResp) Reset()         { *m = QueryConfigTemplateSetListResp{} }
-func (m *QueryConfigTemplateSetListResp) String() string { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateSetListResp) ProtoMessage()    {}
-func (*QueryConfigTemplateSetListResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{183}
-}
-
-func (m *QueryConfigTemplateSetListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateSetListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateSetListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateSetListResp) GetTemplateSets() []*common.ConfigTemplateSet {
-	if m != nil {
-		return m.TemplateSets
-	}
-	return nil
-}
-
-type CreateConfigTemplateReq struct {
-	Seq          uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid          string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid        string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Templateid   string `protobuf:"bytes,4,opt,name=templateid" json:"templateid,omitempty"`
-	Name         string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
-	Memo         string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
-	Fpath        string `protobuf:"bytes,7,opt,name=fpath" json:"fpath,omitempty"`
-	User         string `protobuf:"bytes,8,opt,name=user" json:"user,omitempty"`
-	Group        string `protobuf:"bytes,9,opt,name=group" json:"group,omitempty"`
-	Permission   int32  `protobuf:"varint,10,opt,name=permission" json:"permission,omitempty"`
-	FileEncoding string `protobuf:"bytes,11,opt,name=fileEncoding" json:"fileEncoding,omitempty"`
-	EngineType   int32  `protobuf:"varint,12,opt,name=engineType" json:"engineType,omitempty"`
-	State        int32  `protobuf:"varint,13,opt,name=state" json:"state,omitempty"`
-	Creator      string `protobuf:"bytes,14,opt,name=creator" json:"creator,omitempty"`
-}
-
-func (m *CreateConfigTemplateReq) Reset()                    { *m = CreateConfigTemplateReq{} }
-func (m *CreateConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateReq) ProtoMessage()               {}
-func (*CreateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{184} }
-
-func (m *CreateConfigTemplateReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetFpath() string {
-	if m != nil {
-		return m.Fpath
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetUser() string {
-	if m != nil {
-		return m.User
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetGroup() string {
-	if m != nil {
-		return m.Group
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetPermission() int32 {
-	if m != nil {
-		return m.Permission
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateReq) GetFileEncoding() string {
-	if m != nil {
-		return m.FileEncoding
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateReq) GetEngineType() int32 {
-	if m != nil {
-		return m.EngineType
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-type CreateConfigTemplateResp struct {
-	Seq        uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode    common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg     string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Templateid string         `protobuf:"bytes,4,opt,name=templateid" json:"templateid,omitempty"`
-}
-
-func (m *CreateConfigTemplateResp) Reset()                    { *m = CreateConfigTemplateResp{} }
-func (m *CreateConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateResp) ProtoMessage()               {}
-func (*CreateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{185} }
-
-func (m *CreateConfigTemplateResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateConfigTemplateResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateResp) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-type DeleteConfigTemplateReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,4,opt,name=templateid" json:"templateid,omitempty"`
-	Operator   string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteConfigTemplateReq) Reset()                    { *m = DeleteConfigTemplateReq{} }
-func (m *DeleteConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateReq) ProtoMessage()               {}
-func (*DeleteConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{186} }
-
-func (m *DeleteConfigTemplateReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteConfigTemplateResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteConfigTemplateResp) Reset()                    { *m = DeleteConfigTemplateResp{} }
-func (m *DeleteConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateResp) ProtoMessage()               {}
-func (*DeleteConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{187} }
-
-func (m *DeleteConfigTemplateResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteConfigTemplateResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type UpdateConfigTemplateReq struct {
-	Seq          uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid          string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid   string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Name         string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
-	Memo         string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	User         string `protobuf:"bytes,6,opt,name=user" json:"user,omitempty"`
-	Group        string `protobuf:"bytes,7,opt,name=group" json:"group,omitempty"`
-	Permission   int32  `protobuf:"varint,8,opt,name=permission" json:"permission,omitempty"`
-	FileEncoding string `protobuf:"bytes,9,opt,name=fileEncoding" json:"fileEncoding,omitempty"`
-	State        int32  `protobuf:"varint,10,opt,name=state" json:"state,omitempty"`
-	Operator     string `protobuf:"bytes,11,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateConfigTemplateReq) Reset()                    { *m = UpdateConfigTemplateReq{} }
-func (m *UpdateConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateReq) ProtoMessage()               {}
-func (*UpdateConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{188} }
-
-func (m *UpdateConfigTemplateReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateReq) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateReq) GetUser() string {
-	if m != nil {
-		return m.User
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateReq) GetGroup() string {
-	if m != nil {
-		return m.Group
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateReq) GetPermission() int32 {
-	if m != nil {
-		return m.Permission
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateReq) GetFileEncoding() string {
-	if m != nil {
-		return m.FileEncoding
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateConfigTemplateResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateConfigTemplateResp) Reset()                    { *m = UpdateConfigTemplateResp{} }
-func (m *UpdateConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateResp) ProtoMessage()               {}
-func (*UpdateConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{189} }
-
-func (m *UpdateConfigTemplateResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateConfigTemplateResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryConfigTemplateReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-}
-
-func (m *QueryConfigTemplateReq) Reset()                    { *m = QueryConfigTemplateReq{} }
-func (m *QueryConfigTemplateReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateReq) ProtoMessage()               {}
-func (*QueryConfigTemplateReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{190} }
-
-func (m *QueryConfigTemplateReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-type QueryConfigTemplateResp struct {
-	Seq            uint64                 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode        common.ErrCode         `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg         string                 `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplate *common.ConfigTemplate `protobuf:"bytes,4,opt,name=configTemplate" json:"configTemplate,omitempty"`
-}
-
-func (m *QueryConfigTemplateResp) Reset()                    { *m = QueryConfigTemplateResp{} }
-func (m *QueryConfigTemplateResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateResp) ProtoMessage()               {}
-func (*QueryConfigTemplateResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{191} }
-
-func (m *QueryConfigTemplateResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateResp) GetConfigTemplate() *common.ConfigTemplate {
-	if m != nil {
-		return m.ConfigTemplate
-	}
-	return nil
-}
-
-type QueryConfigTemplateListReq struct {
-	Seq   uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid   string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Setid string `protobuf:"bytes,3,opt,name=setid" json:"setid,omitempty"`
-	Index int32  `protobuf:"varint,4,opt,name=index" json:"index,omitempty"`
-	Limit int32  `protobuf:"varint,5,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryConfigTemplateListReq) Reset()                    { *m = QueryConfigTemplateListReq{} }
-func (m *QueryConfigTemplateListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateListReq) ProtoMessage()               {}
-func (*QueryConfigTemplateListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{192} }
-
-func (m *QueryConfigTemplateListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateListReq) GetSetid() string {
-	if m != nil {
-		return m.Setid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryConfigTemplateListResp struct {
-	Seq             uint64                   `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode         common.ErrCode           `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg          string                   `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplates []*common.ConfigTemplate `protobuf:"bytes,4,rep,name=configTemplates" json:"configTemplates,omitempty"`
-}
-
-func (m *QueryConfigTemplateListResp) Reset()                    { *m = QueryConfigTemplateListResp{} }
-func (m *QueryConfigTemplateListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateListResp) ProtoMessage()               {}
-func (*QueryConfigTemplateListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{193} }
-
-func (m *QueryConfigTemplateListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateListResp) GetConfigTemplates() []*common.ConfigTemplate {
-	if m != nil {
-		return m.ConfigTemplates
-	}
-	return nil
-}
-
-type CreateTemplateVersionReq struct {
-	Seq         uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid         string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid  string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Versionid   string `protobuf:"bytes,4,opt,name=versionid" json:"versionid,omitempty"`
-	VersionName string `protobuf:"bytes,5,opt,name=versionName" json:"versionName,omitempty"`
-	Memo        string `protobuf:"bytes,6,opt,name=memo" json:"memo,omitempty"`
-	Content     string `protobuf:"bytes,7,opt,name=content" json:"content,omitempty"`
-	State       int32  `protobuf:"varint,8,opt,name=state" json:"state,omitempty"`
-	Creator     string `protobuf:"bytes,9,opt,name=creator" json:"creator,omitempty"`
-}
-
-func (m *CreateTemplateVersionReq) Reset()                    { *m = CreateTemplateVersionReq{} }
-func (m *CreateTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateTemplateVersionReq) ProtoMessage()               {}
-func (*CreateTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{194} }
-
-func (m *CreateTemplateVersionReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateTemplateVersionReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetVersionName() string {
-	if m != nil {
-		return m.VersionName
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetContent() string {
-	if m != nil {
-		return m.Content
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateTemplateVersionReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-type CreateTemplateVersionResp struct {
-	Seq       uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode   common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg    string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Versionid string         `protobuf:"bytes,4,opt,name=versionid" json:"versionid,omitempty"`
-}
-
-func (m *CreateTemplateVersionResp) Reset()                    { *m = CreateTemplateVersionResp{} }
-func (m *CreateTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateTemplateVersionResp) ProtoMessage()               {}
-func (*CreateTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{195} }
-
-func (m *CreateTemplateVersionResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateTemplateVersionResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateTemplateVersionResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateTemplateVersionResp) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-type DeleteTemplateVersionReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Versionid string `protobuf:"bytes,3,opt,name=versionid" json:"versionid,omitempty"`
-	Operator  string `protobuf:"bytes,4,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteTemplateVersionReq) Reset()                    { *m = DeleteTemplateVersionReq{} }
-func (m *DeleteTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteTemplateVersionReq) ProtoMessage()               {}
-func (*DeleteTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{196} }
-
-func (m *DeleteTemplateVersionReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteTemplateVersionReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteTemplateVersionReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-func (m *DeleteTemplateVersionReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteTemplateVersionResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteTemplateVersionResp) Reset()                    { *m = DeleteTemplateVersionResp{} }
-func (m *DeleteTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteTemplateVersionResp) ProtoMessage()               {}
-func (*DeleteTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{197} }
-
-func (m *DeleteTemplateVersionResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteTemplateVersionResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteTemplateVersionResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type UpdateTemplateVersionReq struct {
-	Seq         uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid         string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Versionid   string `protobuf:"bytes,3,opt,name=versionid" json:"versionid,omitempty"`
-	VersionName string `protobuf:"bytes,4,opt,name=versionName" json:"versionName,omitempty"`
-	Memo        string `protobuf:"bytes,5,opt,name=memo" json:"memo,omitempty"`
-	Content     string `protobuf:"bytes,6,opt,name=content" json:"content,omitempty"`
-	State       int32  `protobuf:"varint,7,opt,name=state" json:"state,omitempty"`
-	Operator    string `protobuf:"bytes,8,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateTemplateVersionReq) Reset()                    { *m = UpdateTemplateVersionReq{} }
-func (m *UpdateTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateTemplateVersionReq) ProtoMessage()               {}
-func (*UpdateTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{198} }
-
-func (m *UpdateTemplateVersionReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateTemplateVersionReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateTemplateVersionReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-func (m *UpdateTemplateVersionReq) GetVersionName() string {
-	if m != nil {
-		return m.VersionName
-	}
-	return ""
-}
-
-func (m *UpdateTemplateVersionReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateTemplateVersionReq) GetContent() string {
-	if m != nil {
-		return m.Content
-	}
-	return ""
-}
-
-func (m *UpdateTemplateVersionReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateTemplateVersionReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateTemplateVersionResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateTemplateVersionResp) Reset()                    { *m = UpdateTemplateVersionResp{} }
-func (m *UpdateTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateTemplateVersionResp) ProtoMessage()               {}
-func (*UpdateTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{199} }
-
-func (m *UpdateTemplateVersionResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateTemplateVersionResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateTemplateVersionResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryTemplateVersionReq struct {
-	Seq       uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid       string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Versionid string `protobuf:"bytes,3,opt,name=versionid" json:"versionid,omitempty"`
-}
-
-func (m *QueryTemplateVersionReq) Reset()                    { *m = QueryTemplateVersionReq{} }
-func (m *QueryTemplateVersionReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionReq) ProtoMessage()               {}
-func (*QueryTemplateVersionReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{200} }
-
-func (m *QueryTemplateVersionReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryTemplateVersionReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-type QueryTemplateVersionResp struct {
-	Seq             uint64                  `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode         common.ErrCode          `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg          string                  `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateVersion *common.TemplateVersion `protobuf:"bytes,4,opt,name=templateVersion" json:"templateVersion,omitempty"`
-}
-
-func (m *QueryTemplateVersionResp) Reset()                    { *m = QueryTemplateVersionResp{} }
-func (m *QueryTemplateVersionResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionResp) ProtoMessage()               {}
-func (*QueryTemplateVersionResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{201} }
-
-func (m *QueryTemplateVersionResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryTemplateVersionResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryTemplateVersionResp) GetTemplateVersion() *common.TemplateVersion {
-	if m != nil {
-		return m.TemplateVersion
-	}
-	return nil
-}
-
-type QueryTemplateVersionListReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Index      int32  `protobuf:"varint,4,opt,name=index" json:"index,omitempty"`
-	Limit      int32  `protobuf:"varint,5,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryTemplateVersionListReq) Reset()                    { *m = QueryTemplateVersionListReq{} }
-func (m *QueryTemplateVersionListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionListReq) ProtoMessage()               {}
-func (*QueryTemplateVersionListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{202} }
-
-func (m *QueryTemplateVersionListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryTemplateVersionListReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *QueryTemplateVersionListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryTemplateVersionListResp struct {
-	Seq              uint64                    `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode          common.ErrCode            `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg           string                    `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	TemplateVersions []*common.TemplateVersion `protobuf:"bytes,4,rep,name=templateVersions" json:"templateVersions,omitempty"`
-}
-
-func (m *QueryTemplateVersionListResp) Reset()                    { *m = QueryTemplateVersionListResp{} }
-func (m *QueryTemplateVersionListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryTemplateVersionListResp) ProtoMessage()               {}
-func (*QueryTemplateVersionListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{203} }
-
-func (m *QueryTemplateVersionListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryTemplateVersionListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryTemplateVersionListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryTemplateVersionListResp) GetTemplateVersions() []*common.TemplateVersion {
-	if m != nil {
-		return m.TemplateVersions
-	}
-	return nil
-}
-
-type CreateConfigTemplateBindingReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid    string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid         string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Versionid     string `protobuf:"bytes,5,opt,name=versionid" json:"versionid,omitempty"`
-	Cfgsetid      string `protobuf:"bytes,6,opt,name=cfgsetid" json:"cfgsetid,omitempty"`
-	Commitid      string `protobuf:"bytes,7,opt,name=commitid" json:"commitid,omitempty"`
-	BindingParams string `protobuf:"bytes,8,opt,name=bindingParams" json:"bindingParams,omitempty"`
-	State         int32  `protobuf:"varint,9,opt,name=state" json:"state,omitempty"`
-	Creator       string `protobuf:"bytes,10,opt,name=creator" json:"creator,omitempty"`
-}
-
-func (m *CreateConfigTemplateBindingReq) Reset()         { *m = CreateConfigTemplateBindingReq{} }
-func (m *CreateConfigTemplateBindingReq) String() string { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateBindingReq) ProtoMessage()    {}
-func (*CreateConfigTemplateBindingReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{204}
-}
-
-func (m *CreateConfigTemplateBindingReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetCfgsetid() string {
-	if m != nil {
-		return m.Cfgsetid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetBindingParams() string {
-	if m != nil {
-		return m.BindingParams
-	}
-	return ""
-}
-
-func (m *CreateConfigTemplateBindingReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateBindingReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-type CreateConfigTemplateBindingResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *CreateConfigTemplateBindingResp) Reset()         { *m = CreateConfigTemplateBindingResp{} }
-func (m *CreateConfigTemplateBindingResp) String() string { return proto.CompactTextString(m) }
-func (*CreateConfigTemplateBindingResp) ProtoMessage()    {}
-func (*CreateConfigTemplateBindingResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{205}
-}
-
-func (m *CreateConfigTemplateBindingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateConfigTemplateBindingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateConfigTemplateBindingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type DeleteConfigTemplateBindingReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid      string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Operator   string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteConfigTemplateBindingReq) Reset()         { *m = DeleteConfigTemplateBindingReq{} }
-func (m *DeleteConfigTemplateBindingReq) String() string { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateBindingReq) ProtoMessage()    {}
-func (*DeleteConfigTemplateBindingReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{206}
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *DeleteConfigTemplateBindingReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteConfigTemplateBindingResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteConfigTemplateBindingResp) Reset()         { *m = DeleteConfigTemplateBindingResp{} }
-func (m *DeleteConfigTemplateBindingResp) String() string { return proto.CompactTextString(m) }
-func (*DeleteConfigTemplateBindingResp) ProtoMessage()    {}
-func (*DeleteConfigTemplateBindingResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{207}
-}
-
-func (m *DeleteConfigTemplateBindingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteConfigTemplateBindingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteConfigTemplateBindingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type UpdateConfigTemplateBindingReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid    string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid         string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Versionid     string `protobuf:"bytes,5,opt,name=versionid" json:"versionid,omitempty"`
-	Commitid      string `protobuf:"bytes,6,opt,name=commitid" json:"commitid,omitempty"`
-	BindingParams string `protobuf:"bytes,7,opt,name=bindingParams" json:"bindingParams,omitempty"`
-	State         int32  `protobuf:"varint,8,opt,name=state" json:"state,omitempty"`
-	Operator      string `protobuf:"bytes,9,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateConfigTemplateBindingReq) Reset()         { *m = UpdateConfigTemplateBindingReq{} }
-func (m *UpdateConfigTemplateBindingReq) String() string { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateBindingReq) ProtoMessage()    {}
-func (*UpdateConfigTemplateBindingReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{208}
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetVersionid() string {
-	if m != nil {
-		return m.Versionid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetCommitid() string {
-	if m != nil {
-		return m.Commitid
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetBindingParams() string {
-	if m != nil {
-		return m.BindingParams
-	}
-	return ""
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateBindingReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateConfigTemplateBindingResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateConfigTemplateBindingResp) Reset()         { *m = UpdateConfigTemplateBindingResp{} }
-func (m *UpdateConfigTemplateBindingResp) String() string { return proto.CompactTextString(m) }
-func (*UpdateConfigTemplateBindingResp) ProtoMessage()    {}
-func (*UpdateConfigTemplateBindingResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{209}
-}
-
-func (m *UpdateConfigTemplateBindingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateConfigTemplateBindingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateConfigTemplateBindingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryConfigTemplateBindingReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid      string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingReq) Reset()                    { *m = QueryConfigTemplateBindingReq{} }
-func (m *QueryConfigTemplateBindingReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingReq) ProtoMessage()               {}
-func (*QueryConfigTemplateBindingReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{210} }
-
-func (m *QueryConfigTemplateBindingReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-type QueryConfigTemplateBindingResp struct {
-	Seq                   uint64                        `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode               common.ErrCode                `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg                string                        `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplateBinding *common.ConfigTemplateBinding `protobuf:"bytes,4,opt,name=configTemplateBinding" json:"configTemplateBinding,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingResp) Reset()         { *m = QueryConfigTemplateBindingResp{} }
-func (m *QueryConfigTemplateBindingResp) String() string { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingResp) ProtoMessage()    {}
-func (*QueryConfigTemplateBindingResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{211}
-}
-
-func (m *QueryConfigTemplateBindingResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateBindingResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingResp) GetConfigTemplateBinding() *common.ConfigTemplateBinding {
-	if m != nil {
-		return m.ConfigTemplateBinding
-	}
-	return nil
-}
-
-type QueryConfigTemplateBindingListReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Templateid string `protobuf:"bytes,3,opt,name=templateid" json:"templateid,omitempty"`
-	Appid      string `protobuf:"bytes,4,opt,name=appid" json:"appid,omitempty"`
-	Index      int32  `protobuf:"varint,5,opt,name=index" json:"index,omitempty"`
-	Limit      int32  `protobuf:"varint,6,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingListReq) Reset()         { *m = QueryConfigTemplateBindingListReq{} }
-func (m *QueryConfigTemplateBindingListReq) String() string { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingListReq) ProtoMessage()    {}
-func (*QueryConfigTemplateBindingListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{212}
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetTemplateid() string {
-	if m != nil {
-		return m.Templateid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetAppid() string {
-	if m != nil {
-		return m.Appid
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryConfigTemplateBindingListResp struct {
-	Seq                    uint64                          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode                common.ErrCode                  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg                 string                          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	ConfigTemplateBindings []*common.ConfigTemplateBinding `protobuf:"bytes,4,rep,name=configTemplateBindings" json:"configTemplateBindings,omitempty"`
-}
-
-func (m *QueryConfigTemplateBindingListResp) Reset()         { *m = QueryConfigTemplateBindingListResp{} }
-func (m *QueryConfigTemplateBindingListResp) String() string { return proto.CompactTextString(m) }
-func (*QueryConfigTemplateBindingListResp) ProtoMessage()    {}
-func (*QueryConfigTemplateBindingListResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{213}
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryConfigTemplateBindingListResp) GetConfigTemplateBindings() []*common.ConfigTemplateBinding {
-	if m != nil {
-		return m.ConfigTemplateBindings
-	}
-	return nil
-}
-
-type CreateVariableReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Vid           string `protobuf:"bytes,2,opt,name=vid" json:"vid,omitempty"`
-	Bid           string `protobuf:"bytes,3,opt,name=bid" json:"bid,omitempty"`
-	Cluster       string `protobuf:"bytes,4,opt,name=cluster" json:"cluster,omitempty"`
-	ClusterLabels string `protobuf:"bytes,5,opt,name=clusterLabels" json:"clusterLabels,omitempty"`
-	Zone          string `protobuf:"bytes,6,opt,name=zone" json:"zone,omitempty"`
-	Type          int32  `protobuf:"varint,7,opt,name=type" json:"type,omitempty"`
-	Key           string `protobuf:"bytes,8,opt,name=key" json:"key,omitempty"`
-	Value         string `protobuf:"bytes,9,opt,name=value" json:"value,omitempty"`
-	Memo          string `protobuf:"bytes,10,opt,name=memo" json:"memo,omitempty"`
-	State         int32  `protobuf:"varint,11,opt,name=state" json:"state,omitempty"`
-	Creator       string `protobuf:"bytes,12,opt,name=creator" json:"creator,omitempty"`
-}
-
-func (m *CreateVariableReq) Reset()                    { *m = CreateVariableReq{} }
-func (m *CreateVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*CreateVariableReq) ProtoMessage()               {}
-func (*CreateVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{214} }
-
-func (m *CreateVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateVariableReq) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetCluster() string {
-	if m != nil {
-		return m.Cluster
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetClusterLabels() string {
-	if m != nil {
-		return m.ClusterLabels
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetZone() string {
-	if m != nil {
-		return m.Zone
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *CreateVariableReq) GetKey() string {
-	if m != nil {
-		return m.Key
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *CreateVariableReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *CreateVariableReq) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-type CreateVariableResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Vid     string         `protobuf:"bytes,4,opt,name=vid" json:"vid,omitempty"`
-}
-
-func (m *CreateVariableResp) Reset()                    { *m = CreateVariableResp{} }
-func (m *CreateVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*CreateVariableResp) ProtoMessage()               {}
-func (*CreateVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{215} }
-
-func (m *CreateVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *CreateVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *CreateVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *CreateVariableResp) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-type UpdateVariableReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Vid      string `protobuf:"bytes,2,opt,name=vid" json:"vid,omitempty"`
-	Bid      string `protobuf:"bytes,3,opt,name=bid" json:"bid,omitempty"`
-	Type     int32  `protobuf:"varint,4,opt,name=type" json:"type,omitempty"`
-	Key      string `protobuf:"bytes,5,opt,name=key" json:"key,omitempty"`
-	Value    string `protobuf:"bytes,6,opt,name=value" json:"value,omitempty"`
-	Memo     string `protobuf:"bytes,7,opt,name=memo" json:"memo,omitempty"`
-	State    int32  `protobuf:"varint,8,opt,name=state" json:"state,omitempty"`
-	Operator string `protobuf:"bytes,9,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *UpdateVariableReq) Reset()                    { *m = UpdateVariableReq{} }
-func (m *UpdateVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*UpdateVariableReq) ProtoMessage()               {}
-func (*UpdateVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{216} }
-
-func (m *UpdateVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateVariableReq) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *UpdateVariableReq) GetKey() string {
-	if m != nil {
-		return m.Key
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetMemo() string {
-	if m != nil {
-		return m.Memo
-	}
-	return ""
-}
-
-func (m *UpdateVariableReq) GetState() int32 {
-	if m != nil {
-		return m.State
-	}
-	return 0
-}
-
-func (m *UpdateVariableReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type UpdateVariableResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *UpdateVariableResp) Reset()                    { *m = UpdateVariableResp{} }
-func (m *UpdateVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*UpdateVariableResp) ProtoMessage()               {}
-func (*UpdateVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{217} }
-
-func (m *UpdateVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *UpdateVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *UpdateVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type DeleteVariableReq struct {
-	Seq      uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Vid      string `protobuf:"bytes,2,opt,name=vid" json:"vid,omitempty"`
-	Bid      string `protobuf:"bytes,3,opt,name=bid" json:"bid,omitempty"`
-	Type     int32  `protobuf:"varint,4,opt,name=type" json:"type,omitempty"`
-	Operator string `protobuf:"bytes,5,opt,name=operator" json:"operator,omitempty"`
-}
-
-func (m *DeleteVariableReq) Reset()                    { *m = DeleteVariableReq{} }
-func (m *DeleteVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*DeleteVariableReq) ProtoMessage()               {}
-func (*DeleteVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{218} }
-
-func (m *DeleteVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteVariableReq) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-func (m *DeleteVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *DeleteVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *DeleteVariableReq) GetOperator() string {
-	if m != nil {
-		return m.Operator
-	}
-	return ""
-}
-
-type DeleteVariableResp struct {
-	Seq     uint64         `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string         `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-}
-
-func (m *DeleteVariableResp) Reset()                    { *m = DeleteVariableResp{} }
-func (m *DeleteVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*DeleteVariableResp) ProtoMessage()               {}
-func (*DeleteVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{219} }
-
-func (m *DeleteVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *DeleteVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *DeleteVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-type QueryVariableReq struct {
-	Seq  uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Vid  string `protobuf:"bytes,2,opt,name=vid" json:"vid,omitempty"`
-	Bid  string `protobuf:"bytes,3,opt,name=bid" json:"bid,omitempty"`
-	Type int32  `protobuf:"varint,4,opt,name=type" json:"type,omitempty"`
-}
-
-func (m *QueryVariableReq) Reset()                    { *m = QueryVariableReq{} }
-func (m *QueryVariableReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableReq) ProtoMessage()               {}
-func (*QueryVariableReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{220} }
-
-func (m *QueryVariableReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableReq) GetVid() string {
-	if m != nil {
-		return m.Vid
-	}
-	return ""
-}
-
-func (m *QueryVariableReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryVariableReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-type QueryVariableResp struct {
-	Seq     uint64           `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode   `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string           `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Var     *common.Variable `protobuf:"bytes,4,opt,name=var" json:"var,omitempty"`
-}
-
-func (m *QueryVariableResp) Reset()                    { *m = QueryVariableResp{} }
-func (m *QueryVariableResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableResp) ProtoMessage()               {}
-func (*QueryVariableResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{221} }
-
-func (m *QueryVariableResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryVariableResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryVariableResp) GetVar() *common.Variable {
-	if m != nil {
-		return m.Var
-	}
-	return nil
-}
-
-type QueryVariableListReq struct {
-	Seq           uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid           string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	Cluster       string `protobuf:"bytes,3,opt,name=cluster" json:"cluster,omitempty"`
-	ClusterLabels string `protobuf:"bytes,4,opt,name=clusterLabels" json:"clusterLabels,omitempty"`
-	Zone          string `protobuf:"bytes,5,opt,name=zone" json:"zone,omitempty"`
-	Type          int32  `protobuf:"varint,6,opt,name=type" json:"type,omitempty"`
-	Index         int32  `protobuf:"varint,7,opt,name=index" json:"index,omitempty"`
-	Limit         int32  `protobuf:"varint,8,opt,name=limit" json:"limit,omitempty"`
-}
-
-func (m *QueryVariableListReq) Reset()                    { *m = QueryVariableListReq{} }
-func (m *QueryVariableListReq) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableListReq) ProtoMessage()               {}
-func (*QueryVariableListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{222} }
-
-func (m *QueryVariableListReq) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableListReq) GetBid() string {
-	if m != nil {
-		return m.Bid
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetCluster() string {
-	if m != nil {
-		return m.Cluster
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetClusterLabels() string {
-	if m != nil {
-		return m.ClusterLabels
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetZone() string {
-	if m != nil {
-		return m.Zone
-	}
-	return ""
-}
-
-func (m *QueryVariableListReq) GetType() int32 {
-	if m != nil {
-		return m.Type
-	}
-	return 0
-}
-
-func (m *QueryVariableListReq) GetIndex() int32 {
-	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *QueryVariableListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-type QueryVariableListResp struct {
-	Seq     uint64             `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode     `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string             `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Vars    []*common.Variable `protobuf:"bytes,4,rep,name=vars" json:"vars,omitempty"`
-}
-
-func (m *QueryVariableListResp) Reset()                    { *m = QueryVariableListResp{} }
-func (m *QueryVariableListResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryVariableListResp) ProtoMessage()               {}
-func (*QueryVariableListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{223} }
-
-func (m *QueryVariableListResp) GetSeq() uint64 {
-	if m != nil {
-		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryVariableListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryVariableListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *QueryVariableListResp) GetVars() []*common.Variable {
-	if m != nil {
-		return m.Vars
-	}
-	return nil
 }
 
 type QueryAuditListReq struct {
-	Seq        uint64 `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	Bid        string `protobuf:"bytes,2,opt,name=bid" json:"bid,omitempty"`
-	SourceType int32  `protobuf:"varint,3,opt,name=sourceType" json:"sourceType,omitempty"`
-	OpType     int32  `protobuf:"varint,4,opt,name=opType" json:"opType,omitempty"`
-	Sourceid   string `protobuf:"bytes,5,opt,name=sourceid" json:"sourceid,omitempty"`
-	Operator   string `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
-	Index      int32  `protobuf:"varint,7,opt,name=index" json:"index,omitempty"`
-	Limit      int32  `protobuf:"varint,8,opt,name=limit" json:"limit,omitempty"`
+	Seq        string       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	BizId      string       `protobuf:"bytes,2,opt,name=biz_id,json=bizId" json:"biz_id,omitempty"`
+	SourceType int32        `protobuf:"varint,3,opt,name=source_type,json=sourceType" json:"source_type,omitempty"`
+	OpType     int32        `protobuf:"varint,4,opt,name=op_type,json=opType" json:"op_type,omitempty"`
+	SourceId   string       `protobuf:"bytes,5,opt,name=source_id,json=sourceId" json:"source_id,omitempty"`
+	Operator   string       `protobuf:"bytes,6,opt,name=operator" json:"operator,omitempty"`
+	Page       *common.Page `protobuf:"bytes,7,opt,name=page" json:"page,omitempty"`
 }
 
 func (m *QueryAuditListReq) Reset()                    { *m = QueryAuditListReq{} }
 func (m *QueryAuditListReq) String() string            { return proto.CompactTextString(m) }
 func (*QueryAuditListReq) ProtoMessage()               {}
-func (*QueryAuditListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{224} }
+func (*QueryAuditListReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{172} }
 
-func (m *QueryAuditListReq) GetSeq() uint64 {
+func (m *QueryAuditListReq) GetSeq() string {
 	if m != nil {
 		return m.Seq
 	}
-	return 0
+	return ""
 }
 
-func (m *QueryAuditListReq) GetBid() string {
+func (m *QueryAuditListReq) GetBizId() string {
 	if m != nil {
-		return m.Bid
+		return m.BizId
 	}
 	return ""
 }
@@ -11087,9 +9074,9 @@ func (m *QueryAuditListReq) GetOpType() int32 {
 	return 0
 }
 
-func (m *QueryAuditListReq) GetSourceid() string {
+func (m *QueryAuditListReq) GetSourceId() string {
 	if m != nil {
-		return m.Sourceid
+		return m.SourceId
 	}
 	return ""
 }
@@ -11101,145 +9088,233 @@ func (m *QueryAuditListReq) GetOperator() string {
 	return ""
 }
 
-func (m *QueryAuditListReq) GetIndex() int32 {
+func (m *QueryAuditListReq) GetPage() *common.Page {
 	if m != nil {
-		return m.Index
+		return m.Page
 	}
-	return 0
-}
-
-func (m *QueryAuditListReq) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type QueryAuditListResp struct {
-	Seq     uint64          `protobuf:"varint,1,opt,name=seq" json:"seq,omitempty"`
-	ErrCode common.ErrCode  `protobuf:"varint,2,opt,name=errCode,enum=common.ErrCode" json:"errCode,omitempty"`
-	ErrMsg  string          `protobuf:"bytes,3,opt,name=errMsg" json:"errMsg,omitempty"`
-	Audits  []*common.Audit `protobuf:"bytes,4,rep,name=audits" json:"audits,omitempty"`
+	Seq     string                       `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode               `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                       `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *QueryAuditListResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
 func (m *QueryAuditListResp) Reset()                    { *m = QueryAuditListResp{} }
 func (m *QueryAuditListResp) String() string            { return proto.CompactTextString(m) }
 func (*QueryAuditListResp) ProtoMessage()               {}
-func (*QueryAuditListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{225} }
+func (*QueryAuditListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{173} }
 
-func (m *QueryAuditListResp) GetSeq() uint64 {
+func (m *QueryAuditListResp) GetSeq() string {
 	if m != nil {
 		return m.Seq
-	}
-	return 0
-}
-
-func (m *QueryAuditListResp) GetErrCode() common.ErrCode {
-	if m != nil {
-		return m.ErrCode
-	}
-	return common.ErrCode_E_OK
-}
-
-func (m *QueryAuditListResp) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
 	}
 	return ""
 }
 
-func (m *QueryAuditListResp) GetAudits() []*common.Audit {
+func (m *QueryAuditListResp) GetCode() common.ErrCode {
 	if m != nil {
-		return m.Audits
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *QueryAuditListResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *QueryAuditListResp) GetData() *QueryAuditListResp_RespData {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type QueryAuditListResp_RespData struct {
+	TotalCount uint32          `protobuf:"varint,1,opt,name=total_count,json=totalCount" json:"total_count,omitempty"`
+	Info       []*common.Audit `protobuf:"bytes,2,rep,name=info" json:"info,omitempty"`
+}
+
+func (m *QueryAuditListResp_RespData) Reset()         { *m = QueryAuditListResp_RespData{} }
+func (m *QueryAuditListResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*QueryAuditListResp_RespData) ProtoMessage()    {}
+func (*QueryAuditListResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{173, 0}
+}
+
+func (m *QueryAuditListResp_RespData) GetTotalCount() uint32 {
+	if m != nil {
+		return m.TotalCount
+	}
+	return 0
+}
+
+func (m *QueryAuditListResp_RespData) GetInfo() []*common.Audit {
+	if m != nil {
+		return m.Info
+	}
+	return nil
+}
+
+type HealthzReq struct {
+	Seq string `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+}
+
+func (m *HealthzReq) Reset()                    { *m = HealthzReq{} }
+func (m *HealthzReq) String() string            { return proto.CompactTextString(m) }
+func (*HealthzReq) ProtoMessage()               {}
+func (*HealthzReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{174} }
+
+func (m *HealthzReq) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+type HealthzResp struct {
+	Seq     string                    `protobuf:"bytes,1,opt,name=seq" json:"seq,omitempty"`
+	Code    common.ErrCode            `protobuf:"varint,2,opt,name=code,enum=common.ErrCode" json:"code,omitempty"`
+	Message string                    `protobuf:"bytes,3,opt,name=message" json:"message,omitempty"`
+	Data    *common.ModuleHealthzInfo `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
+}
+
+func (m *HealthzResp) Reset()                    { *m = HealthzResp{} }
+func (m *HealthzResp) String() string            { return proto.CompactTextString(m) }
+func (*HealthzResp) ProtoMessage()               {}
+func (*HealthzResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{175} }
+
+func (m *HealthzResp) GetSeq() string {
+	if m != nil {
+		return m.Seq
+	}
+	return ""
+}
+
+func (m *HealthzResp) GetCode() common.ErrCode {
+	if m != nil {
+		return m.Code
+	}
+	return common.ErrCode_E_OK
+}
+
+func (m *HealthzResp) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *HealthzResp) GetData() *common.ModuleHealthzInfo {
+	if m != nil {
+		return m.Data
 	}
 	return nil
 }
 
 func init() {
-	proto.RegisterType((*QueryAuthInfoReq)(nil), "datamanager.QueryAuthInfoReq")
-	proto.RegisterType((*QueryAuthInfoResp)(nil), "datamanager.QueryAuthInfoResp")
 	proto.RegisterType((*QueryAppMetadataReq)(nil), "datamanager.QueryAppMetadataReq")
 	proto.RegisterType((*QueryAppMetadataResp)(nil), "datamanager.QueryAppMetadataResp")
-	proto.RegisterType((*CreateBusinessReq)(nil), "datamanager.CreateBusinessReq")
-	proto.RegisterType((*CreateBusinessResp)(nil), "datamanager.CreateBusinessResp")
-	proto.RegisterType((*QueryBusinessReq)(nil), "datamanager.QueryBusinessReq")
-	proto.RegisterType((*QueryBusinessResp)(nil), "datamanager.QueryBusinessResp")
-	proto.RegisterType((*QueryBusinessListReq)(nil), "datamanager.QueryBusinessListReq")
-	proto.RegisterType((*QueryBusinessListResp)(nil), "datamanager.QueryBusinessListResp")
-	proto.RegisterType((*UpdateBusinessReq)(nil), "datamanager.UpdateBusinessReq")
-	proto.RegisterType((*UpdateBusinessResp)(nil), "datamanager.UpdateBusinessResp")
 	proto.RegisterType((*CreateAppReq)(nil), "datamanager.CreateAppReq")
 	proto.RegisterType((*CreateAppResp)(nil), "datamanager.CreateAppResp")
+	proto.RegisterType((*CreateAppResp_RespData)(nil), "datamanager.CreateAppResp.RespData")
 	proto.RegisterType((*QueryAppReq)(nil), "datamanager.QueryAppReq")
 	proto.RegisterType((*QueryAppResp)(nil), "datamanager.QueryAppResp")
 	proto.RegisterType((*QueryAppListReq)(nil), "datamanager.QueryAppListReq")
 	proto.RegisterType((*QueryAppListResp)(nil), "datamanager.QueryAppListResp")
+	proto.RegisterType((*QueryAppListResp_RespData)(nil), "datamanager.QueryAppListResp.RespData")
 	proto.RegisterType((*UpdateAppReq)(nil), "datamanager.UpdateAppReq")
 	proto.RegisterType((*UpdateAppResp)(nil), "datamanager.UpdateAppResp")
 	proto.RegisterType((*DeleteAppReq)(nil), "datamanager.DeleteAppReq")
 	proto.RegisterType((*DeleteAppResp)(nil), "datamanager.DeleteAppResp")
-	proto.RegisterType((*CreateClusterReq)(nil), "datamanager.CreateClusterReq")
-	proto.RegisterType((*CreateClusterResp)(nil), "datamanager.CreateClusterResp")
-	proto.RegisterType((*QueryClusterReq)(nil), "datamanager.QueryClusterReq")
-	proto.RegisterType((*QueryClusterResp)(nil), "datamanager.QueryClusterResp")
-	proto.RegisterType((*QueryClusterListReq)(nil), "datamanager.QueryClusterListReq")
-	proto.RegisterType((*QueryClusterListResp)(nil), "datamanager.QueryClusterListResp")
-	proto.RegisterType((*UpdateClusterReq)(nil), "datamanager.UpdateClusterReq")
-	proto.RegisterType((*UpdateClusterResp)(nil), "datamanager.UpdateClusterResp")
-	proto.RegisterType((*DeleteClusterReq)(nil), "datamanager.DeleteClusterReq")
-	proto.RegisterType((*DeleteClusterResp)(nil), "datamanager.DeleteClusterResp")
-	proto.RegisterType((*CreateZoneReq)(nil), "datamanager.CreateZoneReq")
-	proto.RegisterType((*CreateZoneResp)(nil), "datamanager.CreateZoneResp")
-	proto.RegisterType((*QueryZoneReq)(nil), "datamanager.QueryZoneReq")
-	proto.RegisterType((*QueryZoneResp)(nil), "datamanager.QueryZoneResp")
-	proto.RegisterType((*QueryZoneListReq)(nil), "datamanager.QueryZoneListReq")
-	proto.RegisterType((*QueryZoneListResp)(nil), "datamanager.QueryZoneListResp")
-	proto.RegisterType((*UpdateZoneReq)(nil), "datamanager.UpdateZoneReq")
-	proto.RegisterType((*UpdateZoneResp)(nil), "datamanager.UpdateZoneResp")
-	proto.RegisterType((*DeleteZoneReq)(nil), "datamanager.DeleteZoneReq")
-	proto.RegisterType((*DeleteZoneResp)(nil), "datamanager.DeleteZoneResp")
-	proto.RegisterType((*CreateConfigSetReq)(nil), "datamanager.CreateConfigSetReq")
-	proto.RegisterType((*CreateConfigSetResp)(nil), "datamanager.CreateConfigSetResp")
-	proto.RegisterType((*QueryConfigSetReq)(nil), "datamanager.QueryConfigSetReq")
-	proto.RegisterType((*QueryConfigSetResp)(nil), "datamanager.QueryConfigSetResp")
-	proto.RegisterType((*QueryConfigSetListReq)(nil), "datamanager.QueryConfigSetListReq")
-	proto.RegisterType((*QueryConfigSetListResp)(nil), "datamanager.QueryConfigSetListResp")
-	proto.RegisterType((*UpdateConfigSetReq)(nil), "datamanager.UpdateConfigSetReq")
-	proto.RegisterType((*UpdateConfigSetResp)(nil), "datamanager.UpdateConfigSetResp")
-	proto.RegisterType((*DeleteConfigSetReq)(nil), "datamanager.DeleteConfigSetReq")
-	proto.RegisterType((*DeleteConfigSetResp)(nil), "datamanager.DeleteConfigSetResp")
-	proto.RegisterType((*LockConfigSetReq)(nil), "datamanager.LockConfigSetReq")
-	proto.RegisterType((*LockConfigSetResp)(nil), "datamanager.LockConfigSetResp")
-	proto.RegisterType((*UnlockConfigSetReq)(nil), "datamanager.UnlockConfigSetReq")
-	proto.RegisterType((*UnlockConfigSetResp)(nil), "datamanager.UnlockConfigSetResp")
-	proto.RegisterType((*CreateConfigsReq)(nil), "datamanager.CreateConfigsReq")
-	proto.RegisterType((*CreateConfigsResp)(nil), "datamanager.CreateConfigsResp")
-	proto.RegisterType((*QueryConfigsReq)(nil), "datamanager.QueryConfigsReq")
-	proto.RegisterType((*QueryConfigsResp)(nil), "datamanager.QueryConfigsResp")
-	proto.RegisterType((*QueryReleaseConfigsReq)(nil), "datamanager.QueryReleaseConfigsReq")
-	proto.RegisterType((*QueryReleaseConfigsResp)(nil), "datamanager.QueryReleaseConfigsResp")
-	proto.RegisterType((*QueryConfigsListReq)(nil), "datamanager.QueryConfigsListReq")
-	proto.RegisterType((*QueryConfigsListResp)(nil), "datamanager.QueryConfigsListResp")
+	proto.RegisterType((*CreateTemplateBindReq)(nil), "datamanager.CreateTemplateBindReq")
+	proto.RegisterType((*CreateTemplateBindResp)(nil), "datamanager.CreateTemplateBindResp")
+	proto.RegisterType((*CreateTemplateBindResp_RespData)(nil), "datamanager.CreateTemplateBindResp.RespData")
+	proto.RegisterType((*QueryTemplateBindReq)(nil), "datamanager.QueryTemplateBindReq")
+	proto.RegisterType((*QueryTemplateBindResp)(nil), "datamanager.QueryTemplateBindResp")
+	proto.RegisterType((*QueryTemplateBindListReq)(nil), "datamanager.QueryTemplateBindListReq")
+	proto.RegisterType((*QueryTemplateBindListResp)(nil), "datamanager.QueryTemplateBindListResp")
+	proto.RegisterType((*QueryTemplateBindListResp_RespData)(nil), "datamanager.QueryTemplateBindListResp.RespData")
+	proto.RegisterType((*DeleteTemplateBindReq)(nil), "datamanager.DeleteTemplateBindReq")
+	proto.RegisterType((*DeleteTemplateBindResp)(nil), "datamanager.DeleteTemplateBindResp")
+	proto.RegisterType((*CreateConfigTemplateReq)(nil), "datamanager.CreateConfigTemplateReq")
+	proto.RegisterType((*CreateConfigTemplateResp)(nil), "datamanager.CreateConfigTemplateResp")
+	proto.RegisterType((*CreateConfigTemplateResp_RespData)(nil), "datamanager.CreateConfigTemplateResp.RespData")
+	proto.RegisterType((*QueryConfigTemplateReq)(nil), "datamanager.QueryConfigTemplateReq")
+	proto.RegisterType((*QueryConfigTemplateResp)(nil), "datamanager.QueryConfigTemplateResp")
+	proto.RegisterType((*QueryConfigTemplateListReq)(nil), "datamanager.QueryConfigTemplateListReq")
+	proto.RegisterType((*QueryConfigTemplateListResp)(nil), "datamanager.QueryConfigTemplateListResp")
+	proto.RegisterType((*QueryConfigTemplateListResp_RespData)(nil), "datamanager.QueryConfigTemplateListResp.RespData")
+	proto.RegisterType((*UpdateConfigTemplateReq)(nil), "datamanager.UpdateConfigTemplateReq")
+	proto.RegisterType((*UpdateConfigTemplateResp)(nil), "datamanager.UpdateConfigTemplateResp")
+	proto.RegisterType((*DeleteConfigTemplateReq)(nil), "datamanager.DeleteConfigTemplateReq")
+	proto.RegisterType((*DeleteConfigTemplateResp)(nil), "datamanager.DeleteConfigTemplateResp")
+	proto.RegisterType((*CreateConfigTemplateVersionReq)(nil), "datamanager.CreateConfigTemplateVersionReq")
+	proto.RegisterType((*CreateConfigTemplateVersionResp)(nil), "datamanager.CreateConfigTemplateVersionResp")
+	proto.RegisterType((*CreateConfigTemplateVersionResp_RespData)(nil), "datamanager.CreateConfigTemplateVersionResp.RespData")
+	proto.RegisterType((*QueryConfigTemplateVersionReq)(nil), "datamanager.QueryConfigTemplateVersionReq")
+	proto.RegisterType((*QueryConfigTemplateVersionResp)(nil), "datamanager.QueryConfigTemplateVersionResp")
+	proto.RegisterType((*QueryConfigTemplateVersionListReq)(nil), "datamanager.QueryConfigTemplateVersionListReq")
+	proto.RegisterType((*QueryConfigTemplateVersionListResp)(nil), "datamanager.QueryConfigTemplateVersionListResp")
+	proto.RegisterType((*QueryConfigTemplateVersionListResp_RespData)(nil), "datamanager.QueryConfigTemplateVersionListResp.RespData")
+	proto.RegisterType((*UpdateConfigTemplateVersionReq)(nil), "datamanager.UpdateConfigTemplateVersionReq")
+	proto.RegisterType((*UpdateConfigTemplateVersionResp)(nil), "datamanager.UpdateConfigTemplateVersionResp")
+	proto.RegisterType((*DeleteConfigTemplateVersionReq)(nil), "datamanager.DeleteConfigTemplateVersionReq")
+	proto.RegisterType((*DeleteConfigTemplateVersionResp)(nil), "datamanager.DeleteConfigTemplateVersionResp")
+	proto.RegisterType((*CreateConfigReq)(nil), "datamanager.CreateConfigReq")
+	proto.RegisterType((*CreateConfigResp)(nil), "datamanager.CreateConfigResp")
+	proto.RegisterType((*CreateConfigResp_RespData)(nil), "datamanager.CreateConfigResp.RespData")
+	proto.RegisterType((*QueryConfigReq)(nil), "datamanager.QueryConfigReq")
+	proto.RegisterType((*QueryConfigResp)(nil), "datamanager.QueryConfigResp")
+	proto.RegisterType((*QueryConfigListReq)(nil), "datamanager.QueryConfigListReq")
+	proto.RegisterType((*QueryConfigListResp)(nil), "datamanager.QueryConfigListResp")
+	proto.RegisterType((*QueryConfigListResp_RespData)(nil), "datamanager.QueryConfigListResp.RespData")
+	proto.RegisterType((*UpdateConfigReq)(nil), "datamanager.UpdateConfigReq")
+	proto.RegisterType((*UpdateConfigResp)(nil), "datamanager.UpdateConfigResp")
+	proto.RegisterType((*DeleteConfigReq)(nil), "datamanager.DeleteConfigReq")
+	proto.RegisterType((*DeleteConfigResp)(nil), "datamanager.DeleteConfigResp")
+	proto.RegisterType((*CreateConfigContentReq)(nil), "datamanager.CreateConfigContentReq")
+	proto.RegisterType((*CreateConfigContentResp)(nil), "datamanager.CreateConfigContentResp")
+	proto.RegisterType((*QueryConfigContentReq)(nil), "datamanager.QueryConfigContentReq")
+	proto.RegisterType((*QueryConfigContentResp)(nil), "datamanager.QueryConfigContentResp")
+	proto.RegisterType((*QueryReleaseConfigContentReq)(nil), "datamanager.QueryReleaseConfigContentReq")
+	proto.RegisterType((*QueryReleaseConfigContentResp)(nil), "datamanager.QueryReleaseConfigContentResp")
+	proto.RegisterType((*QueryConfigContentListReq)(nil), "datamanager.QueryConfigContentListReq")
+	proto.RegisterType((*QueryConfigContentListResp)(nil), "datamanager.QueryConfigContentListResp")
+	proto.RegisterType((*QueryConfigContentListResp_RespData)(nil), "datamanager.QueryConfigContentListResp.RespData")
 	proto.RegisterType((*CreateCommitReq)(nil), "datamanager.CreateCommitReq")
 	proto.RegisterType((*CreateCommitResp)(nil), "datamanager.CreateCommitResp")
+	proto.RegisterType((*CreateCommitResp_RespData)(nil), "datamanager.CreateCommitResp.RespData")
 	proto.RegisterType((*QueryCommitReq)(nil), "datamanager.QueryCommitReq")
 	proto.RegisterType((*QueryCommitResp)(nil), "datamanager.QueryCommitResp")
 	proto.RegisterType((*QueryHistoryCommitsReq)(nil), "datamanager.QueryHistoryCommitsReq")
 	proto.RegisterType((*QueryHistoryCommitsResp)(nil), "datamanager.QueryHistoryCommitsResp")
+	proto.RegisterType((*QueryHistoryCommitsResp_RespData)(nil), "datamanager.QueryHistoryCommitsResp.RespData")
 	proto.RegisterType((*UpdateCommitReq)(nil), "datamanager.UpdateCommitReq")
 	proto.RegisterType((*UpdateCommitResp)(nil), "datamanager.UpdateCommitResp")
 	proto.RegisterType((*CancelCommitReq)(nil), "datamanager.CancelCommitReq")
 	proto.RegisterType((*CancelCommitResp)(nil), "datamanager.CancelCommitResp")
 	proto.RegisterType((*ConfirmCommitReq)(nil), "datamanager.ConfirmCommitReq")
 	proto.RegisterType((*ConfirmCommitResp)(nil), "datamanager.ConfirmCommitResp")
+	proto.RegisterType((*CreateMultiCommitWithContentReq)(nil), "datamanager.CreateMultiCommitWithContentReq")
+	proto.RegisterType((*CreateMultiCommitWithContentResp)(nil), "datamanager.CreateMultiCommitWithContentResp")
+	proto.RegisterType((*CreateMultiCommitWithContentResp_RespData)(nil), "datamanager.CreateMultiCommitWithContentResp.RespData")
 	proto.RegisterType((*CreateMultiCommitReq)(nil), "datamanager.CreateMultiCommitReq")
 	proto.RegisterType((*CreateMultiCommitResp)(nil), "datamanager.CreateMultiCommitResp")
+	proto.RegisterType((*CreateMultiCommitResp_RespData)(nil), "datamanager.CreateMultiCommitResp.RespData")
 	proto.RegisterType((*QueryMultiCommitReq)(nil), "datamanager.QueryMultiCommitReq")
 	proto.RegisterType((*QueryMultiCommitResp)(nil), "datamanager.QueryMultiCommitResp")
 	proto.RegisterType((*QueryHistoryMultiCommitsReq)(nil), "datamanager.QueryHistoryMultiCommitsReq")
 	proto.RegisterType((*QueryHistoryMultiCommitsResp)(nil), "datamanager.QueryHistoryMultiCommitsResp")
+	proto.RegisterType((*QueryHistoryMultiCommitsResp_RespData)(nil), "datamanager.QueryHistoryMultiCommitsResp.RespData")
 	proto.RegisterType((*QueryMultiCommitSubListReq)(nil), "datamanager.QueryMultiCommitSubListReq")
 	proto.RegisterType((*QueryMultiCommitSubListResp)(nil), "datamanager.QueryMultiCommitSubListResp")
+	proto.RegisterType((*QueryMultiCommitSubListResp_RespData)(nil), "datamanager.QueryMultiCommitSubListResp.RespData")
 	proto.RegisterType((*UpdateMultiCommitReq)(nil), "datamanager.UpdateMultiCommitReq")
 	proto.RegisterType((*UpdateMultiCommitResp)(nil), "datamanager.UpdateMultiCommitResp")
 	proto.RegisterType((*CancelMultiCommitReq)(nil), "datamanager.CancelMultiCommitReq")
@@ -11248,12 +9323,15 @@ func init() {
 	proto.RegisterType((*ConfirmMultiCommitResp)(nil), "datamanager.ConfirmMultiCommitResp")
 	proto.RegisterType((*CreateReleaseReq)(nil), "datamanager.CreateReleaseReq")
 	proto.RegisterType((*CreateReleaseResp)(nil), "datamanager.CreateReleaseResp")
+	proto.RegisterType((*CreateReleaseResp_RespData)(nil), "datamanager.CreateReleaseResp.RespData")
 	proto.RegisterType((*QueryReleaseReq)(nil), "datamanager.QueryReleaseReq")
 	proto.RegisterType((*QueryReleaseResp)(nil), "datamanager.QueryReleaseResp")
 	proto.RegisterType((*QueryNewestReleasesReq)(nil), "datamanager.QueryNewestReleasesReq")
 	proto.RegisterType((*QueryNewestReleasesResp)(nil), "datamanager.QueryNewestReleasesResp")
+	proto.RegisterType((*QueryNewestReleasesResp_RespData)(nil), "datamanager.QueryNewestReleasesResp.RespData")
 	proto.RegisterType((*QueryHistoryReleasesReq)(nil), "datamanager.QueryHistoryReleasesReq")
 	proto.RegisterType((*QueryHistoryReleasesResp)(nil), "datamanager.QueryHistoryReleasesResp")
+	proto.RegisterType((*QueryHistoryReleasesResp_RespData)(nil), "datamanager.QueryHistoryReleasesResp.RespData")
 	proto.RegisterType((*UpdateReleaseReq)(nil), "datamanager.UpdateReleaseReq")
 	proto.RegisterType((*UpdateReleaseResp)(nil), "datamanager.UpdateReleaseResp")
 	proto.RegisterType((*CancelReleaseReq)(nil), "datamanager.CancelReleaseReq")
@@ -11264,14 +9342,17 @@ func init() {
 	proto.RegisterType((*PublishReleaseResp)(nil), "datamanager.PublishReleaseResp")
 	proto.RegisterType((*CreateMultiReleaseReq)(nil), "datamanager.CreateMultiReleaseReq")
 	proto.RegisterType((*CreateMultiReleaseResp)(nil), "datamanager.CreateMultiReleaseResp")
+	proto.RegisterType((*CreateMultiReleaseResp_RespData)(nil), "datamanager.CreateMultiReleaseResp.RespData")
 	proto.RegisterType((*QueryMultiReleaseReq)(nil), "datamanager.QueryMultiReleaseReq")
 	proto.RegisterType((*QueryMultiReleaseResp)(nil), "datamanager.QueryMultiReleaseResp")
 	proto.RegisterType((*QueryHistoryMultiReleasesReq)(nil), "datamanager.QueryHistoryMultiReleasesReq")
 	proto.RegisterType((*QueryHistoryMultiReleasesResp)(nil), "datamanager.QueryHistoryMultiReleasesResp")
+	proto.RegisterType((*QueryHistoryMultiReleasesResp_RespData)(nil), "datamanager.QueryHistoryMultiReleasesResp.RespData")
 	proto.RegisterType((*UpdateMultiReleaseReq)(nil), "datamanager.UpdateMultiReleaseReq")
 	proto.RegisterType((*UpdateMultiReleaseResp)(nil), "datamanager.UpdateMultiReleaseResp")
 	proto.RegisterType((*QueryMultiReleaseSubListReq)(nil), "datamanager.QueryMultiReleaseSubListReq")
 	proto.RegisterType((*QueryMultiReleaseSubListResp)(nil), "datamanager.QueryMultiReleaseSubListResp")
+	proto.RegisterType((*QueryMultiReleaseSubListResp_RespData)(nil), "datamanager.QueryMultiReleaseSubListResp.RespData")
 	proto.RegisterType((*CancelMultiReleaseReq)(nil), "datamanager.CancelMultiReleaseReq")
 	proto.RegisterType((*CancelMultiReleaseResp)(nil), "datamanager.CancelMultiReleaseResp")
 	proto.RegisterType((*PublishMultiReleaseReq)(nil), "datamanager.PublishMultiReleaseReq")
@@ -11282,24 +9363,31 @@ func init() {
 	proto.RegisterType((*CreateAppInstanceResp)(nil), "datamanager.CreateAppInstanceResp")
 	proto.RegisterType((*QueryHistoryAppInstancesReq)(nil), "datamanager.QueryHistoryAppInstancesReq")
 	proto.RegisterType((*QueryHistoryAppInstancesResp)(nil), "datamanager.QueryHistoryAppInstancesResp")
+	proto.RegisterType((*QueryHistoryAppInstancesResp_RespData)(nil), "datamanager.QueryHistoryAppInstancesResp.RespData")
 	proto.RegisterType((*QueryReachableAppInstancesReq)(nil), "datamanager.QueryReachableAppInstancesReq")
 	proto.RegisterType((*QueryReachableAppInstancesResp)(nil), "datamanager.QueryReachableAppInstancesResp")
+	proto.RegisterType((*QueryReachableAppInstancesResp_RespData)(nil), "datamanager.QueryReachableAppInstancesResp.RespData")
 	proto.RegisterType((*UpdateAppInstanceReq)(nil), "datamanager.UpdateAppInstanceReq")
 	proto.RegisterType((*UpdateAppInstanceResp)(nil), "datamanager.UpdateAppInstanceResp")
 	proto.RegisterType((*CreateAppInstanceReleaseReq)(nil), "datamanager.CreateAppInstanceReleaseReq")
 	proto.RegisterType((*CreateAppInstanceReleaseResp)(nil), "datamanager.CreateAppInstanceReleaseResp")
 	proto.RegisterType((*QueryAppInstanceReleaseReq)(nil), "datamanager.QueryAppInstanceReleaseReq")
 	proto.RegisterType((*QueryAppInstanceReleaseResp)(nil), "datamanager.QueryAppInstanceReleaseResp")
+	proto.RegisterType((*QueryAppInstanceReleaseResp_RespData)(nil), "datamanager.QueryAppInstanceReleaseResp.RespData")
 	proto.RegisterType((*QueryMatchedAppInstancesReq)(nil), "datamanager.QueryMatchedAppInstancesReq")
 	proto.RegisterType((*QueryMatchedAppInstancesResp)(nil), "datamanager.QueryMatchedAppInstancesResp")
+	proto.RegisterType((*QueryMatchedAppInstancesResp_RespData)(nil), "datamanager.QueryMatchedAppInstancesResp.RespData")
 	proto.RegisterType((*QueryEffectedAppInstancesReq)(nil), "datamanager.QueryEffectedAppInstancesReq")
 	proto.RegisterType((*QueryEffectedAppInstancesResp)(nil), "datamanager.QueryEffectedAppInstancesResp")
+	proto.RegisterType((*QueryEffectedAppInstancesResp_RespData)(nil), "datamanager.QueryEffectedAppInstancesResp.RespData")
 	proto.RegisterType((*CreateStrategyReq)(nil), "datamanager.CreateStrategyReq")
 	proto.RegisterType((*CreateStrategyResp)(nil), "datamanager.CreateStrategyResp")
+	proto.RegisterType((*CreateStrategyResp_RespData)(nil), "datamanager.CreateStrategyResp.RespData")
 	proto.RegisterType((*QueryStrategyReq)(nil), "datamanager.QueryStrategyReq")
 	proto.RegisterType((*QueryStrategyResp)(nil), "datamanager.QueryStrategyResp")
 	proto.RegisterType((*QueryStrategyListReq)(nil), "datamanager.QueryStrategyListReq")
 	proto.RegisterType((*QueryStrategyListResp)(nil), "datamanager.QueryStrategyListResp")
+	proto.RegisterType((*QueryStrategyListResp_RespData)(nil), "datamanager.QueryStrategyListResp.RespData")
 	proto.RegisterType((*DeleteStrategyReq)(nil), "datamanager.DeleteStrategyReq")
 	proto.RegisterType((*DeleteStrategyResp)(nil), "datamanager.DeleteStrategyResp")
 	proto.RegisterType((*CreateProcAttrReq)(nil), "datamanager.CreateProcAttrReq")
@@ -11308,18 +9396,23 @@ func init() {
 	proto.RegisterType((*QueryHostProcAttrResp)(nil), "datamanager.QueryHostProcAttrResp")
 	proto.RegisterType((*QueryHostProcAttrListReq)(nil), "datamanager.QueryHostProcAttrListReq")
 	proto.RegisterType((*QueryHostProcAttrListResp)(nil), "datamanager.QueryHostProcAttrListResp")
+	proto.RegisterType((*QueryHostProcAttrListResp_RespData)(nil), "datamanager.QueryHostProcAttrListResp.RespData")
 	proto.RegisterType((*QueryAppProcAttrListReq)(nil), "datamanager.QueryAppProcAttrListReq")
 	proto.RegisterType((*QueryAppProcAttrListResp)(nil), "datamanager.QueryAppProcAttrListResp")
+	proto.RegisterType((*QueryAppProcAttrListResp_RespData)(nil), "datamanager.QueryAppProcAttrListResp.RespData")
 	proto.RegisterType((*UpdateProcAttrReq)(nil), "datamanager.UpdateProcAttrReq")
 	proto.RegisterType((*UpdateProcAttrResp)(nil), "datamanager.UpdateProcAttrResp")
 	proto.RegisterType((*DeleteProcAttrReq)(nil), "datamanager.DeleteProcAttrReq")
 	proto.RegisterType((*DeleteProcAttrResp)(nil), "datamanager.DeleteProcAttrResp")
+	proto.RegisterType((*InitShardingDBReq)(nil), "datamanager.InitShardingDBReq")
+	proto.RegisterType((*InitShardingDBResp)(nil), "datamanager.InitShardingDBResp")
 	proto.RegisterType((*CreateShardingDBReq)(nil), "datamanager.CreateShardingDBReq")
 	proto.RegisterType((*CreateShardingDBResp)(nil), "datamanager.CreateShardingDBResp")
 	proto.RegisterType((*QueryShardingDBReq)(nil), "datamanager.QueryShardingDBReq")
 	proto.RegisterType((*QueryShardingDBResp)(nil), "datamanager.QueryShardingDBResp")
 	proto.RegisterType((*QueryShardingDBListReq)(nil), "datamanager.QueryShardingDBListReq")
 	proto.RegisterType((*QueryShardingDBListResp)(nil), "datamanager.QueryShardingDBListResp")
+	proto.RegisterType((*QueryShardingDBListResp_RespData)(nil), "datamanager.QueryShardingDBListResp.RespData")
 	proto.RegisterType((*UpdateShardingDBReq)(nil), "datamanager.UpdateShardingDBReq")
 	proto.RegisterType((*UpdateShardingDBResp)(nil), "datamanager.UpdateShardingDBResp")
 	proto.RegisterType((*CreateShardingReq)(nil), "datamanager.CreateShardingReq")
@@ -11330,58 +9423,11 @@ func init() {
 	proto.RegisterType((*UpdateShardingResp)(nil), "datamanager.UpdateShardingResp")
 	proto.RegisterType((*CreateAuditReq)(nil), "datamanager.CreateAuditReq")
 	proto.RegisterType((*CreateAuditResp)(nil), "datamanager.CreateAuditResp")
-	proto.RegisterType((*CreateConfigTemplateSetReq)(nil), "datamanager.CreateConfigTemplateSetReq")
-	proto.RegisterType((*CreateConfigTemplateSetResp)(nil), "datamanager.CreateConfigTemplateSetResp")
-	proto.RegisterType((*DeleteConfigTemplateSetReq)(nil), "datamanager.DeleteConfigTemplateSetReq")
-	proto.RegisterType((*DeleteConfigTemplateSetResp)(nil), "datamanager.DeleteConfigTemplateSetResp")
-	proto.RegisterType((*UpdateConfigTemplateSetReq)(nil), "datamanager.UpdateConfigTemplateSetReq")
-	proto.RegisterType((*UpdateConfigTemplateSetResp)(nil), "datamanager.UpdateConfigTemplateSetResp")
-	proto.RegisterType((*QueryConfigTemplateSetReq)(nil), "datamanager.QueryConfigTemplateSetReq")
-	proto.RegisterType((*QueryConfigTemplateSetResp)(nil), "datamanager.QueryConfigTemplateSetResp")
-	proto.RegisterType((*QueryConfigTemplateSetListReq)(nil), "datamanager.QueryConfigTemplateSetListReq")
-	proto.RegisterType((*QueryConfigTemplateSetListResp)(nil), "datamanager.QueryConfigTemplateSetListResp")
-	proto.RegisterType((*CreateConfigTemplateReq)(nil), "datamanager.CreateConfigTemplateReq")
-	proto.RegisterType((*CreateConfigTemplateResp)(nil), "datamanager.CreateConfigTemplateResp")
-	proto.RegisterType((*DeleteConfigTemplateReq)(nil), "datamanager.DeleteConfigTemplateReq")
-	proto.RegisterType((*DeleteConfigTemplateResp)(nil), "datamanager.DeleteConfigTemplateResp")
-	proto.RegisterType((*UpdateConfigTemplateReq)(nil), "datamanager.UpdateConfigTemplateReq")
-	proto.RegisterType((*UpdateConfigTemplateResp)(nil), "datamanager.UpdateConfigTemplateResp")
-	proto.RegisterType((*QueryConfigTemplateReq)(nil), "datamanager.QueryConfigTemplateReq")
-	proto.RegisterType((*QueryConfigTemplateResp)(nil), "datamanager.QueryConfigTemplateResp")
-	proto.RegisterType((*QueryConfigTemplateListReq)(nil), "datamanager.QueryConfigTemplateListReq")
-	proto.RegisterType((*QueryConfigTemplateListResp)(nil), "datamanager.QueryConfigTemplateListResp")
-	proto.RegisterType((*CreateTemplateVersionReq)(nil), "datamanager.CreateTemplateVersionReq")
-	proto.RegisterType((*CreateTemplateVersionResp)(nil), "datamanager.CreateTemplateVersionResp")
-	proto.RegisterType((*DeleteTemplateVersionReq)(nil), "datamanager.DeleteTemplateVersionReq")
-	proto.RegisterType((*DeleteTemplateVersionResp)(nil), "datamanager.DeleteTemplateVersionResp")
-	proto.RegisterType((*UpdateTemplateVersionReq)(nil), "datamanager.UpdateTemplateVersionReq")
-	proto.RegisterType((*UpdateTemplateVersionResp)(nil), "datamanager.UpdateTemplateVersionResp")
-	proto.RegisterType((*QueryTemplateVersionReq)(nil), "datamanager.QueryTemplateVersionReq")
-	proto.RegisterType((*QueryTemplateVersionResp)(nil), "datamanager.QueryTemplateVersionResp")
-	proto.RegisterType((*QueryTemplateVersionListReq)(nil), "datamanager.QueryTemplateVersionListReq")
-	proto.RegisterType((*QueryTemplateVersionListResp)(nil), "datamanager.QueryTemplateVersionListResp")
-	proto.RegisterType((*CreateConfigTemplateBindingReq)(nil), "datamanager.CreateConfigTemplateBindingReq")
-	proto.RegisterType((*CreateConfigTemplateBindingResp)(nil), "datamanager.CreateConfigTemplateBindingResp")
-	proto.RegisterType((*DeleteConfigTemplateBindingReq)(nil), "datamanager.DeleteConfigTemplateBindingReq")
-	proto.RegisterType((*DeleteConfigTemplateBindingResp)(nil), "datamanager.DeleteConfigTemplateBindingResp")
-	proto.RegisterType((*UpdateConfigTemplateBindingReq)(nil), "datamanager.UpdateConfigTemplateBindingReq")
-	proto.RegisterType((*UpdateConfigTemplateBindingResp)(nil), "datamanager.UpdateConfigTemplateBindingResp")
-	proto.RegisterType((*QueryConfigTemplateBindingReq)(nil), "datamanager.QueryConfigTemplateBindingReq")
-	proto.RegisterType((*QueryConfigTemplateBindingResp)(nil), "datamanager.QueryConfigTemplateBindingResp")
-	proto.RegisterType((*QueryConfigTemplateBindingListReq)(nil), "datamanager.QueryConfigTemplateBindingListReq")
-	proto.RegisterType((*QueryConfigTemplateBindingListResp)(nil), "datamanager.QueryConfigTemplateBindingListResp")
-	proto.RegisterType((*CreateVariableReq)(nil), "datamanager.CreateVariableReq")
-	proto.RegisterType((*CreateVariableResp)(nil), "datamanager.CreateVariableResp")
-	proto.RegisterType((*UpdateVariableReq)(nil), "datamanager.UpdateVariableReq")
-	proto.RegisterType((*UpdateVariableResp)(nil), "datamanager.UpdateVariableResp")
-	proto.RegisterType((*DeleteVariableReq)(nil), "datamanager.DeleteVariableReq")
-	proto.RegisterType((*DeleteVariableResp)(nil), "datamanager.DeleteVariableResp")
-	proto.RegisterType((*QueryVariableReq)(nil), "datamanager.QueryVariableReq")
-	proto.RegisterType((*QueryVariableResp)(nil), "datamanager.QueryVariableResp")
-	proto.RegisterType((*QueryVariableListReq)(nil), "datamanager.QueryVariableListReq")
-	proto.RegisterType((*QueryVariableListResp)(nil), "datamanager.QueryVariableListResp")
 	proto.RegisterType((*QueryAuditListReq)(nil), "datamanager.QueryAuditListReq")
 	proto.RegisterType((*QueryAuditListResp)(nil), "datamanager.QueryAuditListResp")
+	proto.RegisterType((*QueryAuditListResp_RespData)(nil), "datamanager.QueryAuditListResp.RespData")
+	proto.RegisterType((*HealthzReq)(nil), "datamanager.HealthzReq")
+	proto.RegisterType((*HealthzResp)(nil), "datamanager.HealthzResp")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -11395,44 +9441,42 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for DataManager service
 
 type DataManagerClient interface {
-	QueryAuthInfo(ctx context.Context, in *QueryAuthInfoReq, opts ...grpc.CallOption) (*QueryAuthInfoResp, error)
 	QueryAppMetadata(ctx context.Context, in *QueryAppMetadataReq, opts ...grpc.CallOption) (*QueryAppMetadataResp, error)
-	CreateBusiness(ctx context.Context, in *CreateBusinessReq, opts ...grpc.CallOption) (*CreateBusinessResp, error)
-	QueryBusiness(ctx context.Context, in *QueryBusinessReq, opts ...grpc.CallOption) (*QueryBusinessResp, error)
-	QueryBusinessList(ctx context.Context, in *QueryBusinessListReq, opts ...grpc.CallOption) (*QueryBusinessListResp, error)
-	UpdateBusiness(ctx context.Context, in *UpdateBusinessReq, opts ...grpc.CallOption) (*UpdateBusinessResp, error)
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppResp, error)
 	QueryApp(ctx context.Context, in *QueryAppReq, opts ...grpc.CallOption) (*QueryAppResp, error)
 	QueryAppList(ctx context.Context, in *QueryAppListReq, opts ...grpc.CallOption) (*QueryAppListResp, error)
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
-	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...grpc.CallOption) (*CreateClusterResp, error)
-	QueryCluster(ctx context.Context, in *QueryClusterReq, opts ...grpc.CallOption) (*QueryClusterResp, error)
-	QueryClusterList(ctx context.Context, in *QueryClusterListReq, opts ...grpc.CallOption) (*QueryClusterListResp, error)
-	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...grpc.CallOption) (*UpdateClusterResp, error)
-	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...grpc.CallOption) (*DeleteClusterResp, error)
-	CreateZone(ctx context.Context, in *CreateZoneReq, opts ...grpc.CallOption) (*CreateZoneResp, error)
-	QueryZone(ctx context.Context, in *QueryZoneReq, opts ...grpc.CallOption) (*QueryZoneResp, error)
-	QueryZoneList(ctx context.Context, in *QueryZoneListReq, opts ...grpc.CallOption) (*QueryZoneListResp, error)
-	UpdateZone(ctx context.Context, in *UpdateZoneReq, opts ...grpc.CallOption) (*UpdateZoneResp, error)
-	DeleteZone(ctx context.Context, in *DeleteZoneReq, opts ...grpc.CallOption) (*DeleteZoneResp, error)
-	CreateConfigSet(ctx context.Context, in *CreateConfigSetReq, opts ...grpc.CallOption) (*CreateConfigSetResp, error)
-	QueryConfigSet(ctx context.Context, in *QueryConfigSetReq, opts ...grpc.CallOption) (*QueryConfigSetResp, error)
-	QueryConfigSetList(ctx context.Context, in *QueryConfigSetListReq, opts ...grpc.CallOption) (*QueryConfigSetListResp, error)
-	UpdateConfigSet(ctx context.Context, in *UpdateConfigSetReq, opts ...grpc.CallOption) (*UpdateConfigSetResp, error)
-	DeleteConfigSet(ctx context.Context, in *DeleteConfigSetReq, opts ...grpc.CallOption) (*DeleteConfigSetResp, error)
-	LockConfigSet(ctx context.Context, in *LockConfigSetReq, opts ...grpc.CallOption) (*LockConfigSetResp, error)
-	UnlockConfigSet(ctx context.Context, in *UnlockConfigSetReq, opts ...grpc.CallOption) (*UnlockConfigSetResp, error)
-	CreateConfigs(ctx context.Context, in *CreateConfigsReq, opts ...grpc.CallOption) (*CreateConfigsResp, error)
-	QueryConfigs(ctx context.Context, in *QueryConfigsReq, opts ...grpc.CallOption) (*QueryConfigsResp, error)
-	QueryConfigsList(ctx context.Context, in *QueryConfigsListReq, opts ...grpc.CallOption) (*QueryConfigsListResp, error)
-	QueryReleaseConfigs(ctx context.Context, in *QueryReleaseConfigsReq, opts ...grpc.CallOption) (*QueryReleaseConfigsResp, error)
+	CreateTemplateBind(ctx context.Context, in *CreateTemplateBindReq, opts ...grpc.CallOption) (*CreateTemplateBindResp, error)
+	QueryTemplateBind(ctx context.Context, in *QueryTemplateBindReq, opts ...grpc.CallOption) (*QueryTemplateBindResp, error)
+	QueryTemplateBindList(ctx context.Context, in *QueryTemplateBindListReq, opts ...grpc.CallOption) (*QueryTemplateBindListResp, error)
+	DeleteTemplateBind(ctx context.Context, in *DeleteTemplateBindReq, opts ...grpc.CallOption) (*DeleteTemplateBindResp, error)
+	CreateConfigTemplate(ctx context.Context, in *CreateConfigTemplateReq, opts ...grpc.CallOption) (*CreateConfigTemplateResp, error)
+	QueryConfigTemplate(ctx context.Context, in *QueryConfigTemplateReq, opts ...grpc.CallOption) (*QueryConfigTemplateResp, error)
+	QueryConfigTemplateList(ctx context.Context, in *QueryConfigTemplateListReq, opts ...grpc.CallOption) (*QueryConfigTemplateListResp, error)
+	UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error)
+	DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error)
+	CreateConfigTemplateVersion(ctx context.Context, in *CreateConfigTemplateVersionReq, opts ...grpc.CallOption) (*CreateConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersion(ctx context.Context, in *QueryConfigTemplateVersionReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersionList(ctx context.Context, in *QueryConfigTemplateVersionListReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionListResp, error)
+	UpdateConfigTemplateVersion(ctx context.Context, in *UpdateConfigTemplateVersionReq, opts ...grpc.CallOption) (*UpdateConfigTemplateVersionResp, error)
+	DeleteConfigTemplateVersion(ctx context.Context, in *DeleteConfigTemplateVersionReq, opts ...grpc.CallOption) (*DeleteConfigTemplateVersionResp, error)
+	CreateConfig(ctx context.Context, in *CreateConfigReq, opts ...grpc.CallOption) (*CreateConfigResp, error)
+	QueryConfig(ctx context.Context, in *QueryConfigReq, opts ...grpc.CallOption) (*QueryConfigResp, error)
+	QueryConfigList(ctx context.Context, in *QueryConfigListReq, opts ...grpc.CallOption) (*QueryConfigListResp, error)
+	UpdateConfig(ctx context.Context, in *UpdateConfigReq, opts ...grpc.CallOption) (*UpdateConfigResp, error)
+	DeleteConfig(ctx context.Context, in *DeleteConfigReq, opts ...grpc.CallOption) (*DeleteConfigResp, error)
+	CreateConfigContent(ctx context.Context, in *CreateConfigContentReq, opts ...grpc.CallOption) (*CreateConfigContentResp, error)
+	QueryConfigContent(ctx context.Context, in *QueryConfigContentReq, opts ...grpc.CallOption) (*QueryConfigContentResp, error)
+	QueryConfigContentList(ctx context.Context, in *QueryConfigContentListReq, opts ...grpc.CallOption) (*QueryConfigContentListResp, error)
+	QueryReleaseConfigContent(ctx context.Context, in *QueryReleaseConfigContentReq, opts ...grpc.CallOption) (*QueryReleaseConfigContentResp, error)
 	CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateCommitResp, error)
 	QueryCommit(ctx context.Context, in *QueryCommitReq, opts ...grpc.CallOption) (*QueryCommitResp, error)
 	QueryHistoryCommits(ctx context.Context, in *QueryHistoryCommitsReq, opts ...grpc.CallOption) (*QueryHistoryCommitsResp, error)
 	UpdateCommit(ctx context.Context, in *UpdateCommitReq, opts ...grpc.CallOption) (*UpdateCommitResp, error)
 	CancelCommit(ctx context.Context, in *CancelCommitReq, opts ...grpc.CallOption) (*CancelCommitResp, error)
 	ConfirmCommit(ctx context.Context, in *ConfirmCommitReq, opts ...grpc.CallOption) (*ConfirmCommitResp, error)
+	CreateMultiCommitWithContent(ctx context.Context, in *CreateMultiCommitWithContentReq, opts ...grpc.CallOption) (*CreateMultiCommitWithContentResp, error)
 	CreateMultiCommit(ctx context.Context, in *CreateMultiCommitReq, opts ...grpc.CallOption) (*CreateMultiCommitResp, error)
 	QueryMultiCommit(ctx context.Context, in *QueryMultiCommitReq, opts ...grpc.CallOption) (*QueryMultiCommitResp, error)
 	QueryHistoryMultiCommits(ctx context.Context, in *QueryHistoryMultiCommitsReq, opts ...grpc.CallOption) (*QueryHistoryMultiCommitsResp, error)
@@ -11457,9 +9501,9 @@ type DataManagerClient interface {
 	RollbackMultiRelease(ctx context.Context, in *RollbackMultiReleaseReq, opts ...grpc.CallOption) (*RollbackMultiReleaseResp, error)
 	QueryHistoryMultiReleases(ctx context.Context, in *QueryHistoryMultiReleasesReq, opts ...grpc.CallOption) (*QueryHistoryMultiReleasesResp, error)
 	CreateAppInstance(ctx context.Context, in *CreateAppInstanceReq, opts ...grpc.CallOption) (*CreateAppInstanceResp, error)
+	UpdateAppInstance(ctx context.Context, in *UpdateAppInstanceReq, opts ...grpc.CallOption) (*UpdateAppInstanceResp, error)
 	QueryHistoryAppInstances(ctx context.Context, in *QueryHistoryAppInstancesReq, opts ...grpc.CallOption) (*QueryHistoryAppInstancesResp, error)
 	QueryReachableAppInstances(ctx context.Context, in *QueryReachableAppInstancesReq, opts ...grpc.CallOption) (*QueryReachableAppInstancesResp, error)
-	UpdateAppInstance(ctx context.Context, in *UpdateAppInstanceReq, opts ...grpc.CallOption) (*UpdateAppInstanceResp, error)
 	CreateAppInstanceRelease(ctx context.Context, in *CreateAppInstanceReleaseReq, opts ...grpc.CallOption) (*CreateAppInstanceReleaseResp, error)
 	QueryAppInstanceRelease(ctx context.Context, in *QueryAppInstanceReleaseReq, opts ...grpc.CallOption) (*QueryAppInstanceReleaseResp, error)
 	QueryEffectedAppInstances(ctx context.Context, in *QueryEffectedAppInstancesReq, opts ...grpc.CallOption) (*QueryEffectedAppInstancesResp, error)
@@ -11474,6 +9518,7 @@ type DataManagerClient interface {
 	QueryAppProcAttrList(ctx context.Context, in *QueryAppProcAttrListReq, opts ...grpc.CallOption) (*QueryAppProcAttrListResp, error)
 	UpdateProcAttr(ctx context.Context, in *UpdateProcAttrReq, opts ...grpc.CallOption) (*UpdateProcAttrResp, error)
 	DeleteProcAttr(ctx context.Context, in *DeleteProcAttrReq, opts ...grpc.CallOption) (*DeleteProcAttrResp, error)
+	InitShardingDB(ctx context.Context, in *InitShardingDBReq, opts ...grpc.CallOption) (*InitShardingDBResp, error)
 	CreateShardingDB(ctx context.Context, in *CreateShardingDBReq, opts ...grpc.CallOption) (*CreateShardingDBResp, error)
 	QueryShardingDB(ctx context.Context, in *QueryShardingDBReq, opts ...grpc.CallOption) (*QueryShardingDBResp, error)
 	QueryShardingDBList(ctx context.Context, in *QueryShardingDBListReq, opts ...grpc.CallOption) (*QueryShardingDBListResp, error)
@@ -11481,33 +9526,9 @@ type DataManagerClient interface {
 	CreateSharding(ctx context.Context, in *CreateShardingReq, opts ...grpc.CallOption) (*CreateShardingResp, error)
 	QuerySharding(ctx context.Context, in *QueryShardingReq, opts ...grpc.CallOption) (*QueryShardingResp, error)
 	UpdateSharding(ctx context.Context, in *UpdateShardingReq, opts ...grpc.CallOption) (*UpdateShardingResp, error)
-	CreateConfigTemplateSet(ctx context.Context, in *CreateConfigTemplateSetReq, opts ...grpc.CallOption) (*CreateConfigTemplateSetResp, error)
-	DeleteConfigTemplateSet(ctx context.Context, in *DeleteConfigTemplateSetReq, opts ...grpc.CallOption) (*DeleteConfigTemplateSetResp, error)
-	UpdateConfigTemplateSet(ctx context.Context, in *UpdateConfigTemplateSetReq, opts ...grpc.CallOption) (*UpdateConfigTemplateSetResp, error)
-	QueryConfigTemplateSet(ctx context.Context, in *QueryConfigTemplateSetReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetResp, error)
-	QueryConfigTemplateSetList(ctx context.Context, in *QueryConfigTemplateSetListReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetListResp, error)
-	CreateConfigTemplate(ctx context.Context, in *CreateConfigTemplateReq, opts ...grpc.CallOption) (*CreateConfigTemplateResp, error)
-	DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error)
-	UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error)
-	QueryConfigTemplate(ctx context.Context, in *QueryConfigTemplateReq, opts ...grpc.CallOption) (*QueryConfigTemplateResp, error)
-	QueryConfigTemplateList(ctx context.Context, in *QueryConfigTemplateListReq, opts ...grpc.CallOption) (*QueryConfigTemplateListResp, error)
-	CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...grpc.CallOption) (*CreateTemplateVersionResp, error)
-	DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...grpc.CallOption) (*DeleteTemplateVersionResp, error)
-	UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, opts ...grpc.CallOption) (*UpdateTemplateVersionResp, error)
-	QueryTemplateVersion(ctx context.Context, in *QueryTemplateVersionReq, opts ...grpc.CallOption) (*QueryTemplateVersionResp, error)
-	QueryTemplateVersionList(ctx context.Context, in *QueryTemplateVersionListReq, opts ...grpc.CallOption) (*QueryTemplateVersionListResp, error)
-	CreateConfigTemplateBinding(ctx context.Context, in *CreateConfigTemplateBindingReq, opts ...grpc.CallOption) (*CreateConfigTemplateBindingResp, error)
-	DeleteConfigTemplateBinding(ctx context.Context, in *DeleteConfigTemplateBindingReq, opts ...grpc.CallOption) (*DeleteConfigTemplateBindingResp, error)
-	UpdateConfigTemplateBinding(ctx context.Context, in *UpdateConfigTemplateBindingReq, opts ...grpc.CallOption) (*UpdateConfigTemplateBindingResp, error)
-	QueryConfigTemplateBinding(ctx context.Context, in *QueryConfigTemplateBindingReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingResp, error)
-	QueryConfigTemplateBindingList(ctx context.Context, in *QueryConfigTemplateBindingListReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingListResp, error)
-	CreateVariable(ctx context.Context, in *CreateVariableReq, opts ...grpc.CallOption) (*CreateVariableResp, error)
-	UpdateVariable(ctx context.Context, in *UpdateVariableReq, opts ...grpc.CallOption) (*UpdateVariableResp, error)
-	DeleteVariable(ctx context.Context, in *DeleteVariableReq, opts ...grpc.CallOption) (*DeleteVariableResp, error)
-	QueryVariable(ctx context.Context, in *QueryVariableReq, opts ...grpc.CallOption) (*QueryVariableResp, error)
-	QueryVariableList(ctx context.Context, in *QueryVariableListReq, opts ...grpc.CallOption) (*QueryVariableListResp, error)
 	CreateAudit(ctx context.Context, in *CreateAuditReq, opts ...grpc.CallOption) (*CreateAuditResp, error)
 	QueryAuditList(ctx context.Context, in *QueryAuditListReq, opts ...grpc.CallOption) (*QueryAuditListResp, error)
+	Healthz(ctx context.Context, in *HealthzReq, opts ...grpc.CallOption) (*HealthzResp, error)
 }
 
 type dataManagerClient struct {
@@ -11518,54 +9539,9 @@ func NewDataManagerClient(cc *grpc.ClientConn) DataManagerClient {
 	return &dataManagerClient{cc}
 }
 
-func (c *dataManagerClient) QueryAuthInfo(ctx context.Context, in *QueryAuthInfoReq, opts ...grpc.CallOption) (*QueryAuthInfoResp, error) {
-	out := new(QueryAuthInfoResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryAuthInfo", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *dataManagerClient) QueryAppMetadata(ctx context.Context, in *QueryAppMetadataReq, opts ...grpc.CallOption) (*QueryAppMetadataResp, error) {
 	out := new(QueryAppMetadataResp)
 	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryAppMetadata", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) CreateBusiness(ctx context.Context, in *CreateBusinessReq, opts ...grpc.CallOption) (*CreateBusinessResp, error) {
-	out := new(CreateBusinessResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateBusiness", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryBusiness(ctx context.Context, in *QueryBusinessReq, opts ...grpc.CallOption) (*QueryBusinessResp, error) {
-	out := new(QueryBusinessResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryBusiness", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryBusinessList(ctx context.Context, in *QueryBusinessListReq, opts ...grpc.CallOption) (*QueryBusinessListResp, error) {
-	out := new(QueryBusinessListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryBusinessList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) UpdateBusiness(ctx context.Context, in *UpdateBusinessReq, opts ...grpc.CallOption) (*UpdateBusinessResp, error) {
-	out := new(UpdateBusinessResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateBusiness", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -11617,189 +9593,207 @@ func (c *dataManagerClient) DeleteApp(ctx context.Context, in *DeleteAppReq, opt
 	return out, nil
 }
 
-func (c *dataManagerClient) CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...grpc.CallOption) (*CreateClusterResp, error) {
-	out := new(CreateClusterResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateCluster", in, out, c.cc, opts...)
+func (c *dataManagerClient) CreateTemplateBind(ctx context.Context, in *CreateTemplateBindReq, opts ...grpc.CallOption) (*CreateTemplateBindResp, error) {
+	out := new(CreateTemplateBindResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateTemplateBind", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryCluster(ctx context.Context, in *QueryClusterReq, opts ...grpc.CallOption) (*QueryClusterResp, error) {
-	out := new(QueryClusterResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryCluster", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryTemplateBind(ctx context.Context, in *QueryTemplateBindReq, opts ...grpc.CallOption) (*QueryTemplateBindResp, error) {
+	out := new(QueryTemplateBindResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryTemplateBind", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryClusterList(ctx context.Context, in *QueryClusterListReq, opts ...grpc.CallOption) (*QueryClusterListResp, error) {
-	out := new(QueryClusterListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryClusterList", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryTemplateBindList(ctx context.Context, in *QueryTemplateBindListReq, opts ...grpc.CallOption) (*QueryTemplateBindListResp, error) {
+	out := new(QueryTemplateBindListResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryTemplateBindList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...grpc.CallOption) (*UpdateClusterResp, error) {
-	out := new(UpdateClusterResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateCluster", in, out, c.cc, opts...)
+func (c *dataManagerClient) DeleteTemplateBind(ctx context.Context, in *DeleteTemplateBindReq, opts ...grpc.CallOption) (*DeleteTemplateBindResp, error) {
+	out := new(DeleteTemplateBindResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteTemplateBind", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...grpc.CallOption) (*DeleteClusterResp, error) {
-	out := new(DeleteClusterResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteCluster", in, out, c.cc, opts...)
+func (c *dataManagerClient) CreateConfigTemplate(ctx context.Context, in *CreateConfigTemplateReq, opts ...grpc.CallOption) (*CreateConfigTemplateResp, error) {
+	out := new(CreateConfigTemplateResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) CreateZone(ctx context.Context, in *CreateZoneReq, opts ...grpc.CallOption) (*CreateZoneResp, error) {
-	out := new(CreateZoneResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateZone", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryConfigTemplate(ctx context.Context, in *QueryConfigTemplateReq, opts ...grpc.CallOption) (*QueryConfigTemplateResp, error) {
+	out := new(QueryConfigTemplateResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryZone(ctx context.Context, in *QueryZoneReq, opts ...grpc.CallOption) (*QueryZoneResp, error) {
-	out := new(QueryZoneResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryZone", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryConfigTemplateList(ctx context.Context, in *QueryConfigTemplateListReq, opts ...grpc.CallOption) (*QueryConfigTemplateListResp, error) {
+	out := new(QueryConfigTemplateListResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryZoneList(ctx context.Context, in *QueryZoneListReq, opts ...grpc.CallOption) (*QueryZoneListResp, error) {
-	out := new(QueryZoneListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryZoneList", in, out, c.cc, opts...)
+func (c *dataManagerClient) UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error) {
+	out := new(UpdateConfigTemplateResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) UpdateZone(ctx context.Context, in *UpdateZoneReq, opts ...grpc.CallOption) (*UpdateZoneResp, error) {
-	out := new(UpdateZoneResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateZone", in, out, c.cc, opts...)
+func (c *dataManagerClient) DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error) {
+	out := new(DeleteConfigTemplateResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteConfigTemplate", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) DeleteZone(ctx context.Context, in *DeleteZoneReq, opts ...grpc.CallOption) (*DeleteZoneResp, error) {
-	out := new(DeleteZoneResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteZone", in, out, c.cc, opts...)
+func (c *dataManagerClient) CreateConfigTemplateVersion(ctx context.Context, in *CreateConfigTemplateVersionReq, opts ...grpc.CallOption) (*CreateConfigTemplateVersionResp, error) {
+	out := new(CreateConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) CreateConfigSet(ctx context.Context, in *CreateConfigSetReq, opts ...grpc.CallOption) (*CreateConfigSetResp, error) {
-	out := new(CreateConfigSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigSet", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryConfigTemplateVersion(ctx context.Context, in *QueryConfigTemplateVersionReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionResp, error) {
+	out := new(QueryConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryConfigSet(ctx context.Context, in *QueryConfigSetReq, opts ...grpc.CallOption) (*QueryConfigSetResp, error) {
-	out := new(QueryConfigSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigSet", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryConfigTemplateVersionList(ctx context.Context, in *QueryConfigTemplateVersionListReq, opts ...grpc.CallOption) (*QueryConfigTemplateVersionListResp, error) {
+	out := new(QueryConfigTemplateVersionListResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateVersionList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryConfigSetList(ctx context.Context, in *QueryConfigSetListReq, opts ...grpc.CallOption) (*QueryConfigSetListResp, error) {
-	out := new(QueryConfigSetListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigSetList", in, out, c.cc, opts...)
+func (c *dataManagerClient) UpdateConfigTemplateVersion(ctx context.Context, in *UpdateConfigTemplateVersionReq, opts ...grpc.CallOption) (*UpdateConfigTemplateVersionResp, error) {
+	out := new(UpdateConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) UpdateConfigSet(ctx context.Context, in *UpdateConfigSetReq, opts ...grpc.CallOption) (*UpdateConfigSetResp, error) {
-	out := new(UpdateConfigSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateConfigSet", in, out, c.cc, opts...)
+func (c *dataManagerClient) DeleteConfigTemplateVersion(ctx context.Context, in *DeleteConfigTemplateVersionReq, opts ...grpc.CallOption) (*DeleteConfigTemplateVersionResp, error) {
+	out := new(DeleteConfigTemplateVersionResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteConfigTemplateVersion", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) DeleteConfigSet(ctx context.Context, in *DeleteConfigSetReq, opts ...grpc.CallOption) (*DeleteConfigSetResp, error) {
-	out := new(DeleteConfigSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteConfigSet", in, out, c.cc, opts...)
+func (c *dataManagerClient) CreateConfig(ctx context.Context, in *CreateConfigReq, opts ...grpc.CallOption) (*CreateConfigResp, error) {
+	out := new(CreateConfigResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfig", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) LockConfigSet(ctx context.Context, in *LockConfigSetReq, opts ...grpc.CallOption) (*LockConfigSetResp, error) {
-	out := new(LockConfigSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/LockConfigSet", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryConfig(ctx context.Context, in *QueryConfigReq, opts ...grpc.CallOption) (*QueryConfigResp, error) {
+	out := new(QueryConfigResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfig", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) UnlockConfigSet(ctx context.Context, in *UnlockConfigSetReq, opts ...grpc.CallOption) (*UnlockConfigSetResp, error) {
-	out := new(UnlockConfigSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UnlockConfigSet", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryConfigList(ctx context.Context, in *QueryConfigListReq, opts ...grpc.CallOption) (*QueryConfigListResp, error) {
+	out := new(QueryConfigListResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) CreateConfigs(ctx context.Context, in *CreateConfigsReq, opts ...grpc.CallOption) (*CreateConfigsResp, error) {
-	out := new(CreateConfigsResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigs", in, out, c.cc, opts...)
+func (c *dataManagerClient) UpdateConfig(ctx context.Context, in *UpdateConfigReq, opts ...grpc.CallOption) (*UpdateConfigResp, error) {
+	out := new(UpdateConfigResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateConfig", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryConfigs(ctx context.Context, in *QueryConfigsReq, opts ...grpc.CallOption) (*QueryConfigsResp, error) {
-	out := new(QueryConfigsResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigs", in, out, c.cc, opts...)
+func (c *dataManagerClient) DeleteConfig(ctx context.Context, in *DeleteConfigReq, opts ...grpc.CallOption) (*DeleteConfigResp, error) {
+	out := new(DeleteConfigResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteConfig", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryConfigsList(ctx context.Context, in *QueryConfigsListReq, opts ...grpc.CallOption) (*QueryConfigsListResp, error) {
-	out := new(QueryConfigsListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigsList", in, out, c.cc, opts...)
+func (c *dataManagerClient) CreateConfigContent(ctx context.Context, in *CreateConfigContentReq, opts ...grpc.CallOption) (*CreateConfigContentResp, error) {
+	out := new(CreateConfigContentResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigContent", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataManagerClient) QueryReleaseConfigs(ctx context.Context, in *QueryReleaseConfigsReq, opts ...grpc.CallOption) (*QueryReleaseConfigsResp, error) {
-	out := new(QueryReleaseConfigsResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryReleaseConfigs", in, out, c.cc, opts...)
+func (c *dataManagerClient) QueryConfigContent(ctx context.Context, in *QueryConfigContentReq, opts ...grpc.CallOption) (*QueryConfigContentResp, error) {
+	out := new(QueryConfigContentResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigContent", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataManagerClient) QueryConfigContentList(ctx context.Context, in *QueryConfigContentListReq, opts ...grpc.CallOption) (*QueryConfigContentListResp, error) {
+	out := new(QueryConfigContentListResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigContentList", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataManagerClient) QueryReleaseConfigContent(ctx context.Context, in *QueryReleaseConfigContentReq, opts ...grpc.CallOption) (*QueryReleaseConfigContentResp, error) {
+	out := new(QueryReleaseConfigContentResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryReleaseConfigContent", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -11854,6 +9848,15 @@ func (c *dataManagerClient) CancelCommit(ctx context.Context, in *CancelCommitRe
 func (c *dataManagerClient) ConfirmCommit(ctx context.Context, in *ConfirmCommitReq, opts ...grpc.CallOption) (*ConfirmCommitResp, error) {
 	out := new(ConfirmCommitResp)
 	err := grpc.Invoke(ctx, "/datamanager.DataManager/ConfirmCommit", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataManagerClient) CreateMultiCommitWithContent(ctx context.Context, in *CreateMultiCommitWithContentReq, opts ...grpc.CallOption) (*CreateMultiCommitWithContentResp, error) {
+	out := new(CreateMultiCommitWithContentResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateMultiCommitWithContent", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -12076,6 +10079,15 @@ func (c *dataManagerClient) CreateAppInstance(ctx context.Context, in *CreateApp
 	return out, nil
 }
 
+func (c *dataManagerClient) UpdateAppInstance(ctx context.Context, in *UpdateAppInstanceReq, opts ...grpc.CallOption) (*UpdateAppInstanceResp, error) {
+	out := new(UpdateAppInstanceResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateAppInstance", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataManagerClient) QueryHistoryAppInstances(ctx context.Context, in *QueryHistoryAppInstancesReq, opts ...grpc.CallOption) (*QueryHistoryAppInstancesResp, error) {
 	out := new(QueryHistoryAppInstancesResp)
 	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryHistoryAppInstances", in, out, c.cc, opts...)
@@ -12088,15 +10100,6 @@ func (c *dataManagerClient) QueryHistoryAppInstances(ctx context.Context, in *Qu
 func (c *dataManagerClient) QueryReachableAppInstances(ctx context.Context, in *QueryReachableAppInstancesReq, opts ...grpc.CallOption) (*QueryReachableAppInstancesResp, error) {
 	out := new(QueryReachableAppInstancesResp)
 	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryReachableAppInstances", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) UpdateAppInstance(ctx context.Context, in *UpdateAppInstanceReq, opts ...grpc.CallOption) (*UpdateAppInstanceResp, error) {
-	out := new(UpdateAppInstanceResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateAppInstance", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -12229,6 +10232,15 @@ func (c *dataManagerClient) DeleteProcAttr(ctx context.Context, in *DeleteProcAt
 	return out, nil
 }
 
+func (c *dataManagerClient) InitShardingDB(ctx context.Context, in *InitShardingDBReq, opts ...grpc.CallOption) (*InitShardingDBResp, error) {
+	out := new(InitShardingDBResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/InitShardingDB", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataManagerClient) CreateShardingDB(ctx context.Context, in *CreateShardingDBReq, opts ...grpc.CallOption) (*CreateShardingDBResp, error) {
 	out := new(CreateShardingDBResp)
 	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateShardingDB", in, out, c.cc, opts...)
@@ -12292,231 +10304,6 @@ func (c *dataManagerClient) UpdateSharding(ctx context.Context, in *UpdateShardi
 	return out, nil
 }
 
-func (c *dataManagerClient) CreateConfigTemplateSet(ctx context.Context, in *CreateConfigTemplateSetReq, opts ...grpc.CallOption) (*CreateConfigTemplateSetResp, error) {
-	out := new(CreateConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigTemplateSet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) DeleteConfigTemplateSet(ctx context.Context, in *DeleteConfigTemplateSetReq, opts ...grpc.CallOption) (*DeleteConfigTemplateSetResp, error) {
-	out := new(DeleteConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteConfigTemplateSet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) UpdateConfigTemplateSet(ctx context.Context, in *UpdateConfigTemplateSetReq, opts ...grpc.CallOption) (*UpdateConfigTemplateSetResp, error) {
-	out := new(UpdateConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateConfigTemplateSet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryConfigTemplateSet(ctx context.Context, in *QueryConfigTemplateSetReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetResp, error) {
-	out := new(QueryConfigTemplateSetResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateSet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryConfigTemplateSetList(ctx context.Context, in *QueryConfigTemplateSetListReq, opts ...grpc.CallOption) (*QueryConfigTemplateSetListResp, error) {
-	out := new(QueryConfigTemplateSetListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateSetList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) CreateConfigTemplate(ctx context.Context, in *CreateConfigTemplateReq, opts ...grpc.CallOption) (*CreateConfigTemplateResp, error) {
-	out := new(CreateConfigTemplateResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigTemplate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) DeleteConfigTemplate(ctx context.Context, in *DeleteConfigTemplateReq, opts ...grpc.CallOption) (*DeleteConfigTemplateResp, error) {
-	out := new(DeleteConfigTemplateResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteConfigTemplate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) UpdateConfigTemplate(ctx context.Context, in *UpdateConfigTemplateReq, opts ...grpc.CallOption) (*UpdateConfigTemplateResp, error) {
-	out := new(UpdateConfigTemplateResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateConfigTemplate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryConfigTemplate(ctx context.Context, in *QueryConfigTemplateReq, opts ...grpc.CallOption) (*QueryConfigTemplateResp, error) {
-	out := new(QueryConfigTemplateResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryConfigTemplateList(ctx context.Context, in *QueryConfigTemplateListReq, opts ...grpc.CallOption) (*QueryConfigTemplateListResp, error) {
-	out := new(QueryConfigTemplateListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, opts ...grpc.CallOption) (*CreateTemplateVersionResp, error) {
-	out := new(CreateTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateTemplateVersion", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) DeleteTemplateVersion(ctx context.Context, in *DeleteTemplateVersionReq, opts ...grpc.CallOption) (*DeleteTemplateVersionResp, error) {
-	out := new(DeleteTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteTemplateVersion", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) UpdateTemplateVersion(ctx context.Context, in *UpdateTemplateVersionReq, opts ...grpc.CallOption) (*UpdateTemplateVersionResp, error) {
-	out := new(UpdateTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateTemplateVersion", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryTemplateVersion(ctx context.Context, in *QueryTemplateVersionReq, opts ...grpc.CallOption) (*QueryTemplateVersionResp, error) {
-	out := new(QueryTemplateVersionResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryTemplateVersion", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryTemplateVersionList(ctx context.Context, in *QueryTemplateVersionListReq, opts ...grpc.CallOption) (*QueryTemplateVersionListResp, error) {
-	out := new(QueryTemplateVersionListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryTemplateVersionList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) CreateConfigTemplateBinding(ctx context.Context, in *CreateConfigTemplateBindingReq, opts ...grpc.CallOption) (*CreateConfigTemplateBindingResp, error) {
-	out := new(CreateConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateConfigTemplateBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) DeleteConfigTemplateBinding(ctx context.Context, in *DeleteConfigTemplateBindingReq, opts ...grpc.CallOption) (*DeleteConfigTemplateBindingResp, error) {
-	out := new(DeleteConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteConfigTemplateBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) UpdateConfigTemplateBinding(ctx context.Context, in *UpdateConfigTemplateBindingReq, opts ...grpc.CallOption) (*UpdateConfigTemplateBindingResp, error) {
-	out := new(UpdateConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateConfigTemplateBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryConfigTemplateBinding(ctx context.Context, in *QueryConfigTemplateBindingReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingResp, error) {
-	out := new(QueryConfigTemplateBindingResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateBinding", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryConfigTemplateBindingList(ctx context.Context, in *QueryConfigTemplateBindingListReq, opts ...grpc.CallOption) (*QueryConfigTemplateBindingListResp, error) {
-	out := new(QueryConfigTemplateBindingListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryConfigTemplateBindingList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) CreateVariable(ctx context.Context, in *CreateVariableReq, opts ...grpc.CallOption) (*CreateVariableResp, error) {
-	out := new(CreateVariableResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) UpdateVariable(ctx context.Context, in *UpdateVariableReq, opts ...grpc.CallOption) (*UpdateVariableResp, error) {
-	out := new(UpdateVariableResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/UpdateVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) DeleteVariable(ctx context.Context, in *DeleteVariableReq, opts ...grpc.CallOption) (*DeleteVariableResp, error) {
-	out := new(DeleteVariableResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/DeleteVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryVariable(ctx context.Context, in *QueryVariableReq, opts ...grpc.CallOption) (*QueryVariableResp, error) {
-	out := new(QueryVariableResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryVariable", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataManagerClient) QueryVariableList(ctx context.Context, in *QueryVariableListReq, opts ...grpc.CallOption) (*QueryVariableListResp, error) {
-	out := new(QueryVariableListResp)
-	err := grpc.Invoke(ctx, "/datamanager.DataManager/QueryVariableList", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *dataManagerClient) CreateAudit(ctx context.Context, in *CreateAuditReq, opts ...grpc.CallOption) (*CreateAuditResp, error) {
 	out := new(CreateAuditResp)
 	err := grpc.Invoke(ctx, "/datamanager.DataManager/CreateAudit", in, out, c.cc, opts...)
@@ -12535,47 +10322,54 @@ func (c *dataManagerClient) QueryAuditList(ctx context.Context, in *QueryAuditLi
 	return out, nil
 }
 
+func (c *dataManagerClient) Healthz(ctx context.Context, in *HealthzReq, opts ...grpc.CallOption) (*HealthzResp, error) {
+	out := new(HealthzResp)
+	err := grpc.Invoke(ctx, "/datamanager.DataManager/Healthz", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DataManager service
 
 type DataManagerServer interface {
-	QueryAuthInfo(context.Context, *QueryAuthInfoReq) (*QueryAuthInfoResp, error)
 	QueryAppMetadata(context.Context, *QueryAppMetadataReq) (*QueryAppMetadataResp, error)
-	CreateBusiness(context.Context, *CreateBusinessReq) (*CreateBusinessResp, error)
-	QueryBusiness(context.Context, *QueryBusinessReq) (*QueryBusinessResp, error)
-	QueryBusinessList(context.Context, *QueryBusinessListReq) (*QueryBusinessListResp, error)
-	UpdateBusiness(context.Context, *UpdateBusinessReq) (*UpdateBusinessResp, error)
 	CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error)
 	QueryApp(context.Context, *QueryAppReq) (*QueryAppResp, error)
 	QueryAppList(context.Context, *QueryAppListReq) (*QueryAppListResp, error)
 	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
-	CreateCluster(context.Context, *CreateClusterReq) (*CreateClusterResp, error)
-	QueryCluster(context.Context, *QueryClusterReq) (*QueryClusterResp, error)
-	QueryClusterList(context.Context, *QueryClusterListReq) (*QueryClusterListResp, error)
-	UpdateCluster(context.Context, *UpdateClusterReq) (*UpdateClusterResp, error)
-	DeleteCluster(context.Context, *DeleteClusterReq) (*DeleteClusterResp, error)
-	CreateZone(context.Context, *CreateZoneReq) (*CreateZoneResp, error)
-	QueryZone(context.Context, *QueryZoneReq) (*QueryZoneResp, error)
-	QueryZoneList(context.Context, *QueryZoneListReq) (*QueryZoneListResp, error)
-	UpdateZone(context.Context, *UpdateZoneReq) (*UpdateZoneResp, error)
-	DeleteZone(context.Context, *DeleteZoneReq) (*DeleteZoneResp, error)
-	CreateConfigSet(context.Context, *CreateConfigSetReq) (*CreateConfigSetResp, error)
-	QueryConfigSet(context.Context, *QueryConfigSetReq) (*QueryConfigSetResp, error)
-	QueryConfigSetList(context.Context, *QueryConfigSetListReq) (*QueryConfigSetListResp, error)
-	UpdateConfigSet(context.Context, *UpdateConfigSetReq) (*UpdateConfigSetResp, error)
-	DeleteConfigSet(context.Context, *DeleteConfigSetReq) (*DeleteConfigSetResp, error)
-	LockConfigSet(context.Context, *LockConfigSetReq) (*LockConfigSetResp, error)
-	UnlockConfigSet(context.Context, *UnlockConfigSetReq) (*UnlockConfigSetResp, error)
-	CreateConfigs(context.Context, *CreateConfigsReq) (*CreateConfigsResp, error)
-	QueryConfigs(context.Context, *QueryConfigsReq) (*QueryConfigsResp, error)
-	QueryConfigsList(context.Context, *QueryConfigsListReq) (*QueryConfigsListResp, error)
-	QueryReleaseConfigs(context.Context, *QueryReleaseConfigsReq) (*QueryReleaseConfigsResp, error)
+	CreateTemplateBind(context.Context, *CreateTemplateBindReq) (*CreateTemplateBindResp, error)
+	QueryTemplateBind(context.Context, *QueryTemplateBindReq) (*QueryTemplateBindResp, error)
+	QueryTemplateBindList(context.Context, *QueryTemplateBindListReq) (*QueryTemplateBindListResp, error)
+	DeleteTemplateBind(context.Context, *DeleteTemplateBindReq) (*DeleteTemplateBindResp, error)
+	CreateConfigTemplate(context.Context, *CreateConfigTemplateReq) (*CreateConfigTemplateResp, error)
+	QueryConfigTemplate(context.Context, *QueryConfigTemplateReq) (*QueryConfigTemplateResp, error)
+	QueryConfigTemplateList(context.Context, *QueryConfigTemplateListReq) (*QueryConfigTemplateListResp, error)
+	UpdateConfigTemplate(context.Context, *UpdateConfigTemplateReq) (*UpdateConfigTemplateResp, error)
+	DeleteConfigTemplate(context.Context, *DeleteConfigTemplateReq) (*DeleteConfigTemplateResp, error)
+	CreateConfigTemplateVersion(context.Context, *CreateConfigTemplateVersionReq) (*CreateConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersion(context.Context, *QueryConfigTemplateVersionReq) (*QueryConfigTemplateVersionResp, error)
+	QueryConfigTemplateVersionList(context.Context, *QueryConfigTemplateVersionListReq) (*QueryConfigTemplateVersionListResp, error)
+	UpdateConfigTemplateVersion(context.Context, *UpdateConfigTemplateVersionReq) (*UpdateConfigTemplateVersionResp, error)
+	DeleteConfigTemplateVersion(context.Context, *DeleteConfigTemplateVersionReq) (*DeleteConfigTemplateVersionResp, error)
+	CreateConfig(context.Context, *CreateConfigReq) (*CreateConfigResp, error)
+	QueryConfig(context.Context, *QueryConfigReq) (*QueryConfigResp, error)
+	QueryConfigList(context.Context, *QueryConfigListReq) (*QueryConfigListResp, error)
+	UpdateConfig(context.Context, *UpdateConfigReq) (*UpdateConfigResp, error)
+	DeleteConfig(context.Context, *DeleteConfigReq) (*DeleteConfigResp, error)
+	CreateConfigContent(context.Context, *CreateConfigContentReq) (*CreateConfigContentResp, error)
+	QueryConfigContent(context.Context, *QueryConfigContentReq) (*QueryConfigContentResp, error)
+	QueryConfigContentList(context.Context, *QueryConfigContentListReq) (*QueryConfigContentListResp, error)
+	QueryReleaseConfigContent(context.Context, *QueryReleaseConfigContentReq) (*QueryReleaseConfigContentResp, error)
 	CreateCommit(context.Context, *CreateCommitReq) (*CreateCommitResp, error)
 	QueryCommit(context.Context, *QueryCommitReq) (*QueryCommitResp, error)
 	QueryHistoryCommits(context.Context, *QueryHistoryCommitsReq) (*QueryHistoryCommitsResp, error)
 	UpdateCommit(context.Context, *UpdateCommitReq) (*UpdateCommitResp, error)
 	CancelCommit(context.Context, *CancelCommitReq) (*CancelCommitResp, error)
 	ConfirmCommit(context.Context, *ConfirmCommitReq) (*ConfirmCommitResp, error)
+	CreateMultiCommitWithContent(context.Context, *CreateMultiCommitWithContentReq) (*CreateMultiCommitWithContentResp, error)
 	CreateMultiCommit(context.Context, *CreateMultiCommitReq) (*CreateMultiCommitResp, error)
 	QueryMultiCommit(context.Context, *QueryMultiCommitReq) (*QueryMultiCommitResp, error)
 	QueryHistoryMultiCommits(context.Context, *QueryHistoryMultiCommitsReq) (*QueryHistoryMultiCommitsResp, error)
@@ -12600,9 +10394,9 @@ type DataManagerServer interface {
 	RollbackMultiRelease(context.Context, *RollbackMultiReleaseReq) (*RollbackMultiReleaseResp, error)
 	QueryHistoryMultiReleases(context.Context, *QueryHistoryMultiReleasesReq) (*QueryHistoryMultiReleasesResp, error)
 	CreateAppInstance(context.Context, *CreateAppInstanceReq) (*CreateAppInstanceResp, error)
+	UpdateAppInstance(context.Context, *UpdateAppInstanceReq) (*UpdateAppInstanceResp, error)
 	QueryHistoryAppInstances(context.Context, *QueryHistoryAppInstancesReq) (*QueryHistoryAppInstancesResp, error)
 	QueryReachableAppInstances(context.Context, *QueryReachableAppInstancesReq) (*QueryReachableAppInstancesResp, error)
-	UpdateAppInstance(context.Context, *UpdateAppInstanceReq) (*UpdateAppInstanceResp, error)
 	CreateAppInstanceRelease(context.Context, *CreateAppInstanceReleaseReq) (*CreateAppInstanceReleaseResp, error)
 	QueryAppInstanceRelease(context.Context, *QueryAppInstanceReleaseReq) (*QueryAppInstanceReleaseResp, error)
 	QueryEffectedAppInstances(context.Context, *QueryEffectedAppInstancesReq) (*QueryEffectedAppInstancesResp, error)
@@ -12617,6 +10411,7 @@ type DataManagerServer interface {
 	QueryAppProcAttrList(context.Context, *QueryAppProcAttrListReq) (*QueryAppProcAttrListResp, error)
 	UpdateProcAttr(context.Context, *UpdateProcAttrReq) (*UpdateProcAttrResp, error)
 	DeleteProcAttr(context.Context, *DeleteProcAttrReq) (*DeleteProcAttrResp, error)
+	InitShardingDB(context.Context, *InitShardingDBReq) (*InitShardingDBResp, error)
 	CreateShardingDB(context.Context, *CreateShardingDBReq) (*CreateShardingDBResp, error)
 	QueryShardingDB(context.Context, *QueryShardingDBReq) (*QueryShardingDBResp, error)
 	QueryShardingDBList(context.Context, *QueryShardingDBListReq) (*QueryShardingDBListResp, error)
@@ -12624,55 +10419,13 @@ type DataManagerServer interface {
 	CreateSharding(context.Context, *CreateShardingReq) (*CreateShardingResp, error)
 	QuerySharding(context.Context, *QueryShardingReq) (*QueryShardingResp, error)
 	UpdateSharding(context.Context, *UpdateShardingReq) (*UpdateShardingResp, error)
-	CreateConfigTemplateSet(context.Context, *CreateConfigTemplateSetReq) (*CreateConfigTemplateSetResp, error)
-	DeleteConfigTemplateSet(context.Context, *DeleteConfigTemplateSetReq) (*DeleteConfigTemplateSetResp, error)
-	UpdateConfigTemplateSet(context.Context, *UpdateConfigTemplateSetReq) (*UpdateConfigTemplateSetResp, error)
-	QueryConfigTemplateSet(context.Context, *QueryConfigTemplateSetReq) (*QueryConfigTemplateSetResp, error)
-	QueryConfigTemplateSetList(context.Context, *QueryConfigTemplateSetListReq) (*QueryConfigTemplateSetListResp, error)
-	CreateConfigTemplate(context.Context, *CreateConfigTemplateReq) (*CreateConfigTemplateResp, error)
-	DeleteConfigTemplate(context.Context, *DeleteConfigTemplateReq) (*DeleteConfigTemplateResp, error)
-	UpdateConfigTemplate(context.Context, *UpdateConfigTemplateReq) (*UpdateConfigTemplateResp, error)
-	QueryConfigTemplate(context.Context, *QueryConfigTemplateReq) (*QueryConfigTemplateResp, error)
-	QueryConfigTemplateList(context.Context, *QueryConfigTemplateListReq) (*QueryConfigTemplateListResp, error)
-	CreateTemplateVersion(context.Context, *CreateTemplateVersionReq) (*CreateTemplateVersionResp, error)
-	DeleteTemplateVersion(context.Context, *DeleteTemplateVersionReq) (*DeleteTemplateVersionResp, error)
-	UpdateTemplateVersion(context.Context, *UpdateTemplateVersionReq) (*UpdateTemplateVersionResp, error)
-	QueryTemplateVersion(context.Context, *QueryTemplateVersionReq) (*QueryTemplateVersionResp, error)
-	QueryTemplateVersionList(context.Context, *QueryTemplateVersionListReq) (*QueryTemplateVersionListResp, error)
-	CreateConfigTemplateBinding(context.Context, *CreateConfigTemplateBindingReq) (*CreateConfigTemplateBindingResp, error)
-	DeleteConfigTemplateBinding(context.Context, *DeleteConfigTemplateBindingReq) (*DeleteConfigTemplateBindingResp, error)
-	UpdateConfigTemplateBinding(context.Context, *UpdateConfigTemplateBindingReq) (*UpdateConfigTemplateBindingResp, error)
-	QueryConfigTemplateBinding(context.Context, *QueryConfigTemplateBindingReq) (*QueryConfigTemplateBindingResp, error)
-	QueryConfigTemplateBindingList(context.Context, *QueryConfigTemplateBindingListReq) (*QueryConfigTemplateBindingListResp, error)
-	CreateVariable(context.Context, *CreateVariableReq) (*CreateVariableResp, error)
-	UpdateVariable(context.Context, *UpdateVariableReq) (*UpdateVariableResp, error)
-	DeleteVariable(context.Context, *DeleteVariableReq) (*DeleteVariableResp, error)
-	QueryVariable(context.Context, *QueryVariableReq) (*QueryVariableResp, error)
-	QueryVariableList(context.Context, *QueryVariableListReq) (*QueryVariableListResp, error)
 	CreateAudit(context.Context, *CreateAuditReq) (*CreateAuditResp, error)
 	QueryAuditList(context.Context, *QueryAuditListReq) (*QueryAuditListResp, error)
+	Healthz(context.Context, *HealthzReq) (*HealthzResp, error)
 }
 
 func RegisterDataManagerServer(s *grpc.Server, srv DataManagerServer) {
 	s.RegisterService(&_DataManager_serviceDesc, srv)
-}
-
-func _DataManager_QueryAuthInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAuthInfoReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryAuthInfo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryAuthInfo",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryAuthInfo(ctx, req.(*QueryAuthInfoReq))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _DataManager_QueryAppMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -12689,78 +10442,6 @@ func _DataManager_QueryAppMetadata_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataManagerServer).QueryAppMetadata(ctx, req.(*QueryAppMetadataReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_CreateBusiness_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateBusinessReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).CreateBusiness(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateBusiness",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateBusiness(ctx, req.(*CreateBusinessReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryBusiness_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryBusinessReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryBusiness(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryBusiness",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryBusiness(ctx, req.(*QueryBusinessReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryBusinessList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryBusinessListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryBusinessList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryBusinessList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryBusinessList(ctx, req.(*QueryBusinessListReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_UpdateBusiness_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateBusinessReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateBusiness(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateBusiness",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateBusiness(ctx, req.(*UpdateBusinessReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -12855,380 +10536,416 @@ func _DataManager_DeleteApp_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_CreateCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateClusterReq)
+func _DataManager_CreateTemplateBind_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTemplateBindReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).CreateCluster(ctx, in)
+		return srv.(DataManagerServer).CreateTemplateBind(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateCluster",
+		FullMethod: "/datamanager.DataManager/CreateTemplateBind",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateCluster(ctx, req.(*CreateClusterReq))
+		return srv.(DataManagerServer).CreateTemplateBind(ctx, req.(*CreateTemplateBindReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryClusterReq)
+func _DataManager_QueryTemplateBind_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTemplateBindReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryCluster(ctx, in)
+		return srv.(DataManagerServer).QueryTemplateBind(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryCluster",
+		FullMethod: "/datamanager.DataManager/QueryTemplateBind",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryCluster(ctx, req.(*QueryClusterReq))
+		return srv.(DataManagerServer).QueryTemplateBind(ctx, req.(*QueryTemplateBindReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryClusterList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryClusterListReq)
+func _DataManager_QueryTemplateBindList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTemplateBindListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryClusterList(ctx, in)
+		return srv.(DataManagerServer).QueryTemplateBindList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryClusterList",
+		FullMethod: "/datamanager.DataManager/QueryTemplateBindList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryClusterList(ctx, req.(*QueryClusterListReq))
+		return srv.(DataManagerServer).QueryTemplateBindList(ctx, req.(*QueryTemplateBindListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_UpdateCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateClusterReq)
+func _DataManager_DeleteTemplateBind_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplateBindReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateCluster(ctx, in)
+		return srv.(DataManagerServer).DeleteTemplateBind(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateCluster",
+		FullMethod: "/datamanager.DataManager/DeleteTemplateBind",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateCluster(ctx, req.(*UpdateClusterReq))
+		return srv.(DataManagerServer).DeleteTemplateBind(ctx, req.(*DeleteTemplateBindReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_DeleteCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteClusterReq)
+func _DataManager_CreateConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConfigTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteCluster(ctx, in)
+		return srv.(DataManagerServer).CreateConfigTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteCluster",
+		FullMethod: "/datamanager.DataManager/CreateConfigTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteCluster(ctx, req.(*DeleteClusterReq))
+		return srv.(DataManagerServer).CreateConfigTemplate(ctx, req.(*CreateConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_CreateZone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateZoneReq)
+func _DataManager_QueryConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).CreateZone(ctx, in)
+		return srv.(DataManagerServer).QueryConfigTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateZone",
+		FullMethod: "/datamanager.DataManager/QueryConfigTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateZone(ctx, req.(*CreateZoneReq))
+		return srv.(DataManagerServer).QueryConfigTemplate(ctx, req.(*QueryConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryZone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryZoneReq)
+func _DataManager_QueryConfigTemplateList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigTemplateListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryZone(ctx, in)
+		return srv.(DataManagerServer).QueryConfigTemplateList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryZone",
+		FullMethod: "/datamanager.DataManager/QueryConfigTemplateList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryZone(ctx, req.(*QueryZoneReq))
+		return srv.(DataManagerServer).QueryConfigTemplateList(ctx, req.(*QueryConfigTemplateListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryZoneList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryZoneListReq)
+func _DataManager_UpdateConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConfigTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryZoneList(ctx, in)
+		return srv.(DataManagerServer).UpdateConfigTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryZoneList",
+		FullMethod: "/datamanager.DataManager/UpdateConfigTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryZoneList(ctx, req.(*QueryZoneListReq))
+		return srv.(DataManagerServer).UpdateConfigTemplate(ctx, req.(*UpdateConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_UpdateZone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateZoneReq)
+func _DataManager_DeleteConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigTemplateReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateZone(ctx, in)
+		return srv.(DataManagerServer).DeleteConfigTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateZone",
+		FullMethod: "/datamanager.DataManager/DeleteConfigTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateZone(ctx, req.(*UpdateZoneReq))
+		return srv.(DataManagerServer).DeleteConfigTemplate(ctx, req.(*DeleteConfigTemplateReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_DeleteZone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteZoneReq)
+func _DataManager_CreateConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteZone(ctx, in)
+		return srv.(DataManagerServer).CreateConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteZone",
+		FullMethod: "/datamanager.DataManager/CreateConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteZone(ctx, req.(*DeleteZoneReq))
+		return srv.(DataManagerServer).CreateConfigTemplateVersion(ctx, req.(*CreateConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_CreateConfigSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConfigSetReq)
+func _DataManager_QueryConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).CreateConfigSet(ctx, in)
+		return srv.(DataManagerServer).QueryConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateConfigSet",
+		FullMethod: "/datamanager.DataManager/QueryConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateConfigSet(ctx, req.(*CreateConfigSetReq))
+		return srv.(DataManagerServer).QueryConfigTemplateVersion(ctx, req.(*QueryConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryConfigSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigSetReq)
+func _DataManager_QueryConfigTemplateVersionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigTemplateVersionListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigSet(ctx, in)
+		return srv.(DataManagerServer).QueryConfigTemplateVersionList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigSet",
+		FullMethod: "/datamanager.DataManager/QueryConfigTemplateVersionList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigSet(ctx, req.(*QueryConfigSetReq))
+		return srv.(DataManagerServer).QueryConfigTemplateVersionList(ctx, req.(*QueryConfigTemplateVersionListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryConfigSetList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigSetListReq)
+func _DataManager_UpdateConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigSetList(ctx, in)
+		return srv.(DataManagerServer).UpdateConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigSetList",
+		FullMethod: "/datamanager.DataManager/UpdateConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigSetList(ctx, req.(*QueryConfigSetListReq))
+		return srv.(DataManagerServer).UpdateConfigTemplateVersion(ctx, req.(*UpdateConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_UpdateConfigSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateConfigSetReq)
+func _DataManager_DeleteConfigTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigTemplateVersionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateConfigSet(ctx, in)
+		return srv.(DataManagerServer).DeleteConfigTemplateVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateConfigSet",
+		FullMethod: "/datamanager.DataManager/DeleteConfigTemplateVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateConfigSet(ctx, req.(*UpdateConfigSetReq))
+		return srv.(DataManagerServer).DeleteConfigTemplateVersion(ctx, req.(*DeleteConfigTemplateVersionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_DeleteConfigSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteConfigSetReq)
+func _DataManager_CreateConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConfigReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteConfigSet(ctx, in)
+		return srv.(DataManagerServer).CreateConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteConfigSet",
+		FullMethod: "/datamanager.DataManager/CreateConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteConfigSet(ctx, req.(*DeleteConfigSetReq))
+		return srv.(DataManagerServer).CreateConfig(ctx, req.(*CreateConfigReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_LockConfigSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LockConfigSetReq)
+func _DataManager_QueryConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).LockConfigSet(ctx, in)
+		return srv.(DataManagerServer).QueryConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/LockConfigSet",
+		FullMethod: "/datamanager.DataManager/QueryConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).LockConfigSet(ctx, req.(*LockConfigSetReq))
+		return srv.(DataManagerServer).QueryConfig(ctx, req.(*QueryConfigReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_UnlockConfigSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UnlockConfigSetReq)
+func _DataManager_QueryConfigList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigListReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).UnlockConfigSet(ctx, in)
+		return srv.(DataManagerServer).QueryConfigList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UnlockConfigSet",
+		FullMethod: "/datamanager.DataManager/QueryConfigList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UnlockConfigSet(ctx, req.(*UnlockConfigSetReq))
+		return srv.(DataManagerServer).QueryConfigList(ctx, req.(*QueryConfigListReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_CreateConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConfigsReq)
+func _DataManager_UpdateConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConfigReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).CreateConfigs(ctx, in)
+		return srv.(DataManagerServer).UpdateConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateConfigs",
+		FullMethod: "/datamanager.DataManager/UpdateConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateConfigs(ctx, req.(*CreateConfigsReq))
+		return srv.(DataManagerServer).UpdateConfig(ctx, req.(*UpdateConfigReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigsReq)
+func _DataManager_DeleteConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConfigReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigs(ctx, in)
+		return srv.(DataManagerServer).DeleteConfig(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigs",
+		FullMethod: "/datamanager.DataManager/DeleteConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigs(ctx, req.(*QueryConfigsReq))
+		return srv.(DataManagerServer).DeleteConfig(ctx, req.(*DeleteConfigReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryConfigsList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigsListReq)
+func _DataManager_CreateConfigContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConfigContentReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigsList(ctx, in)
+		return srv.(DataManagerServer).CreateConfigContent(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigsList",
+		FullMethod: "/datamanager.DataManager/CreateConfigContent",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigsList(ctx, req.(*QueryConfigsListReq))
+		return srv.(DataManagerServer).CreateConfigContent(ctx, req.(*CreateConfigContentReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_QueryReleaseConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryReleaseConfigsReq)
+func _DataManager_QueryConfigContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigContentReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataManagerServer).QueryReleaseConfigs(ctx, in)
+		return srv.(DataManagerServer).QueryConfigContent(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryReleaseConfigs",
+		FullMethod: "/datamanager.DataManager/QueryConfigContent",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryReleaseConfigs(ctx, req.(*QueryReleaseConfigsReq))
+		return srv.(DataManagerServer).QueryConfigContent(ctx, req.(*QueryConfigContentReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DataManager_QueryConfigContentList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryConfigContentListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataManagerServer).QueryConfigContentList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/datamanager.DataManager/QueryConfigContentList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataManagerServer).QueryConfigContentList(ctx, req.(*QueryConfigContentListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DataManager_QueryReleaseConfigContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReleaseConfigContentReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataManagerServer).QueryReleaseConfigContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/datamanager.DataManager/QueryReleaseConfigContent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataManagerServer).QueryReleaseConfigContent(ctx, req.(*QueryReleaseConfigContentReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -13337,6 +11054,24 @@ func _DataManager_ConfirmCommit_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataManagerServer).ConfirmCommit(ctx, req.(*ConfirmCommitReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DataManager_CreateMultiCommitWithContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateMultiCommitWithContentReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataManagerServer).CreateMultiCommitWithContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/datamanager.DataManager/CreateMultiCommitWithContent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataManagerServer).CreateMultiCommitWithContent(ctx, req.(*CreateMultiCommitWithContentReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -13773,6 +11508,24 @@ func _DataManager_CreateAppInstance_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DataManager_UpdateAppInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAppInstanceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataManagerServer).UpdateAppInstance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/datamanager.DataManager/UpdateAppInstance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataManagerServer).UpdateAppInstance(ctx, req.(*UpdateAppInstanceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DataManager_QueryHistoryAppInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryHistoryAppInstancesReq)
 	if err := dec(in); err != nil {
@@ -13805,24 +11558,6 @@ func _DataManager_QueryReachableAppInstances_Handler(srv interface{}, ctx contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataManagerServer).QueryReachableAppInstances(ctx, req.(*QueryReachableAppInstancesReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_UpdateAppInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateAppInstanceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateAppInstance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateAppInstance",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateAppInstance(ctx, req.(*UpdateAppInstanceReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -14079,6 +11814,24 @@ func _DataManager_DeleteProcAttr_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DataManager_InitShardingDB_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitShardingDBReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataManagerServer).InitShardingDB(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/datamanager.DataManager/InitShardingDB",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataManagerServer).InitShardingDB(ctx, req.(*InitShardingDBReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DataManager_CreateShardingDB_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateShardingDBReq)
 	if err := dec(in); err != nil {
@@ -14205,456 +11958,6 @@ func _DataManager_UpdateSharding_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataManager_CreateConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConfigTemplateSetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).CreateConfigTemplateSet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateConfigTemplateSet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateConfigTemplateSet(ctx, req.(*CreateConfigTemplateSetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_DeleteConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteConfigTemplateSetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteConfigTemplateSet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteConfigTemplateSet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteConfigTemplateSet(ctx, req.(*DeleteConfigTemplateSetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_UpdateConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateConfigTemplateSetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateConfigTemplateSet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateConfigTemplateSet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateConfigTemplateSet(ctx, req.(*UpdateConfigTemplateSetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryConfigTemplateSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateSetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigTemplateSet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigTemplateSet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigTemplateSet(ctx, req.(*QueryConfigTemplateSetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryConfigTemplateSetList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateSetListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigTemplateSetList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigTemplateSetList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigTemplateSetList(ctx, req.(*QueryConfigTemplateSetListReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_CreateConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConfigTemplateReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).CreateConfigTemplate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateConfigTemplate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateConfigTemplate(ctx, req.(*CreateConfigTemplateReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_DeleteConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteConfigTemplateReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteConfigTemplate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteConfigTemplate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteConfigTemplate(ctx, req.(*DeleteConfigTemplateReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_UpdateConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateConfigTemplateReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateConfigTemplate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateConfigTemplate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateConfigTemplate(ctx, req.(*UpdateConfigTemplateReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryConfigTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigTemplate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigTemplate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigTemplate(ctx, req.(*QueryConfigTemplateReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryConfigTemplateList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigTemplateList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigTemplateList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigTemplateList(ctx, req.(*QueryConfigTemplateListReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_CreateTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTemplateVersionReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).CreateTemplateVersion(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateTemplateVersion",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateTemplateVersion(ctx, req.(*CreateTemplateVersionReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_DeleteTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTemplateVersionReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteTemplateVersion(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteTemplateVersion",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteTemplateVersion(ctx, req.(*DeleteTemplateVersionReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_UpdateTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTemplateVersionReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateTemplateVersion(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateTemplateVersion",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateTemplateVersion(ctx, req.(*UpdateTemplateVersionReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryTemplateVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryTemplateVersionReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryTemplateVersion(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryTemplateVersion",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryTemplateVersion(ctx, req.(*QueryTemplateVersionReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryTemplateVersionList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryTemplateVersionListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryTemplateVersionList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryTemplateVersionList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryTemplateVersionList(ctx, req.(*QueryTemplateVersionListReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_CreateConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateConfigTemplateBindingReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).CreateConfigTemplateBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateConfigTemplateBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateConfigTemplateBinding(ctx, req.(*CreateConfigTemplateBindingReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_DeleteConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteConfigTemplateBindingReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteConfigTemplateBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteConfigTemplateBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteConfigTemplateBinding(ctx, req.(*DeleteConfigTemplateBindingReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_UpdateConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateConfigTemplateBindingReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateConfigTemplateBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateConfigTemplateBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateConfigTemplateBinding(ctx, req.(*UpdateConfigTemplateBindingReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryConfigTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateBindingReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigTemplateBinding(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigTemplateBinding",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigTemplateBinding(ctx, req.(*QueryConfigTemplateBindingReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryConfigTemplateBindingList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryConfigTemplateBindingListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryConfigTemplateBindingList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryConfigTemplateBindingList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryConfigTemplateBindingList(ctx, req.(*QueryConfigTemplateBindingListReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_CreateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).CreateVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/CreateVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).CreateVariable(ctx, req.(*CreateVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_UpdateVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).UpdateVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/UpdateVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).UpdateVariable(ctx, req.(*UpdateVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_DeleteVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).DeleteVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/DeleteVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).DeleteVariable(ctx, req.(*DeleteVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryVariableReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryVariable",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryVariable(ctx, req.(*QueryVariableReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataManager_QueryVariableList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryVariableListReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataManagerServer).QueryVariableList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/datamanager.DataManager/QueryVariableList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataManagerServer).QueryVariableList(ctx, req.(*QueryVariableListReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _DataManager_CreateAudit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateAuditReq)
 	if err := dec(in); err != nil {
@@ -14691,33 +11994,31 @@ func _DataManager_QueryAuditList_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DataManager_Healthz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthzReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataManagerServer).Healthz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/datamanager.DataManager/Healthz",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataManagerServer).Healthz(ctx, req.(*HealthzReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DataManager_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "datamanager.DataManager",
 	HandlerType: (*DataManagerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "QueryAuthInfo",
-			Handler:    _DataManager_QueryAuthInfo_Handler,
-		},
-		{
 			MethodName: "QueryAppMetadata",
 			Handler:    _DataManager_QueryAppMetadata_Handler,
-		},
-		{
-			MethodName: "CreateBusiness",
-			Handler:    _DataManager_CreateBusiness_Handler,
-		},
-		{
-			MethodName: "QueryBusiness",
-			Handler:    _DataManager_QueryBusiness_Handler,
-		},
-		{
-			MethodName: "QueryBusinessList",
-			Handler:    _DataManager_QueryBusinessList_Handler,
-		},
-		{
-			MethodName: "UpdateBusiness",
-			Handler:    _DataManager_UpdateBusiness_Handler,
 		},
 		{
 			MethodName: "CreateApp",
@@ -14740,88 +12041,96 @@ var _DataManager_serviceDesc = grpc.ServiceDesc{
 			Handler:    _DataManager_DeleteApp_Handler,
 		},
 		{
-			MethodName: "CreateCluster",
-			Handler:    _DataManager_CreateCluster_Handler,
+			MethodName: "CreateTemplateBind",
+			Handler:    _DataManager_CreateTemplateBind_Handler,
 		},
 		{
-			MethodName: "QueryCluster",
-			Handler:    _DataManager_QueryCluster_Handler,
+			MethodName: "QueryTemplateBind",
+			Handler:    _DataManager_QueryTemplateBind_Handler,
 		},
 		{
-			MethodName: "QueryClusterList",
-			Handler:    _DataManager_QueryClusterList_Handler,
+			MethodName: "QueryTemplateBindList",
+			Handler:    _DataManager_QueryTemplateBindList_Handler,
 		},
 		{
-			MethodName: "UpdateCluster",
-			Handler:    _DataManager_UpdateCluster_Handler,
+			MethodName: "DeleteTemplateBind",
+			Handler:    _DataManager_DeleteTemplateBind_Handler,
 		},
 		{
-			MethodName: "DeleteCluster",
-			Handler:    _DataManager_DeleteCluster_Handler,
+			MethodName: "CreateConfigTemplate",
+			Handler:    _DataManager_CreateConfigTemplate_Handler,
 		},
 		{
-			MethodName: "CreateZone",
-			Handler:    _DataManager_CreateZone_Handler,
+			MethodName: "QueryConfigTemplate",
+			Handler:    _DataManager_QueryConfigTemplate_Handler,
 		},
 		{
-			MethodName: "QueryZone",
-			Handler:    _DataManager_QueryZone_Handler,
+			MethodName: "QueryConfigTemplateList",
+			Handler:    _DataManager_QueryConfigTemplateList_Handler,
 		},
 		{
-			MethodName: "QueryZoneList",
-			Handler:    _DataManager_QueryZoneList_Handler,
+			MethodName: "UpdateConfigTemplate",
+			Handler:    _DataManager_UpdateConfigTemplate_Handler,
 		},
 		{
-			MethodName: "UpdateZone",
-			Handler:    _DataManager_UpdateZone_Handler,
+			MethodName: "DeleteConfigTemplate",
+			Handler:    _DataManager_DeleteConfigTemplate_Handler,
 		},
 		{
-			MethodName: "DeleteZone",
-			Handler:    _DataManager_DeleteZone_Handler,
+			MethodName: "CreateConfigTemplateVersion",
+			Handler:    _DataManager_CreateConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "CreateConfigSet",
-			Handler:    _DataManager_CreateConfigSet_Handler,
+			MethodName: "QueryConfigTemplateVersion",
+			Handler:    _DataManager_QueryConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "QueryConfigSet",
-			Handler:    _DataManager_QueryConfigSet_Handler,
+			MethodName: "QueryConfigTemplateVersionList",
+			Handler:    _DataManager_QueryConfigTemplateVersionList_Handler,
 		},
 		{
-			MethodName: "QueryConfigSetList",
-			Handler:    _DataManager_QueryConfigSetList_Handler,
+			MethodName: "UpdateConfigTemplateVersion",
+			Handler:    _DataManager_UpdateConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "UpdateConfigSet",
-			Handler:    _DataManager_UpdateConfigSet_Handler,
+			MethodName: "DeleteConfigTemplateVersion",
+			Handler:    _DataManager_DeleteConfigTemplateVersion_Handler,
 		},
 		{
-			MethodName: "DeleteConfigSet",
-			Handler:    _DataManager_DeleteConfigSet_Handler,
+			MethodName: "CreateConfig",
+			Handler:    _DataManager_CreateConfig_Handler,
 		},
 		{
-			MethodName: "LockConfigSet",
-			Handler:    _DataManager_LockConfigSet_Handler,
+			MethodName: "QueryConfig",
+			Handler:    _DataManager_QueryConfig_Handler,
 		},
 		{
-			MethodName: "UnlockConfigSet",
-			Handler:    _DataManager_UnlockConfigSet_Handler,
+			MethodName: "QueryConfigList",
+			Handler:    _DataManager_QueryConfigList_Handler,
 		},
 		{
-			MethodName: "CreateConfigs",
-			Handler:    _DataManager_CreateConfigs_Handler,
+			MethodName: "UpdateConfig",
+			Handler:    _DataManager_UpdateConfig_Handler,
 		},
 		{
-			MethodName: "QueryConfigs",
-			Handler:    _DataManager_QueryConfigs_Handler,
+			MethodName: "DeleteConfig",
+			Handler:    _DataManager_DeleteConfig_Handler,
 		},
 		{
-			MethodName: "QueryConfigsList",
-			Handler:    _DataManager_QueryConfigsList_Handler,
+			MethodName: "CreateConfigContent",
+			Handler:    _DataManager_CreateConfigContent_Handler,
 		},
 		{
-			MethodName: "QueryReleaseConfigs",
-			Handler:    _DataManager_QueryReleaseConfigs_Handler,
+			MethodName: "QueryConfigContent",
+			Handler:    _DataManager_QueryConfigContent_Handler,
+		},
+		{
+			MethodName: "QueryConfigContentList",
+			Handler:    _DataManager_QueryConfigContentList_Handler,
+		},
+		{
+			MethodName: "QueryReleaseConfigContent",
+			Handler:    _DataManager_QueryReleaseConfigContent_Handler,
 		},
 		{
 			MethodName: "CreateCommit",
@@ -14846,6 +12155,10 @@ var _DataManager_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConfirmCommit",
 			Handler:    _DataManager_ConfirmCommit_Handler,
+		},
+		{
+			MethodName: "CreateMultiCommitWithContent",
+			Handler:    _DataManager_CreateMultiCommitWithContent_Handler,
 		},
 		{
 			MethodName: "CreateMultiCommit",
@@ -14944,16 +12257,16 @@ var _DataManager_serviceDesc = grpc.ServiceDesc{
 			Handler:    _DataManager_CreateAppInstance_Handler,
 		},
 		{
+			MethodName: "UpdateAppInstance",
+			Handler:    _DataManager_UpdateAppInstance_Handler,
+		},
+		{
 			MethodName: "QueryHistoryAppInstances",
 			Handler:    _DataManager_QueryHistoryAppInstances_Handler,
 		},
 		{
 			MethodName: "QueryReachableAppInstances",
 			Handler:    _DataManager_QueryReachableAppInstances_Handler,
-		},
-		{
-			MethodName: "UpdateAppInstance",
-			Handler:    _DataManager_UpdateAppInstance_Handler,
 		},
 		{
 			MethodName: "CreateAppInstanceRelease",
@@ -15012,6 +12325,10 @@ var _DataManager_serviceDesc = grpc.ServiceDesc{
 			Handler:    _DataManager_DeleteProcAttr_Handler,
 		},
 		{
+			MethodName: "InitShardingDB",
+			Handler:    _DataManager_InitShardingDB_Handler,
+		},
+		{
 			MethodName: "CreateShardingDB",
 			Handler:    _DataManager_CreateShardingDB_Handler,
 		},
@@ -15040,112 +12357,16 @@ var _DataManager_serviceDesc = grpc.ServiceDesc{
 			Handler:    _DataManager_UpdateSharding_Handler,
 		},
 		{
-			MethodName: "CreateConfigTemplateSet",
-			Handler:    _DataManager_CreateConfigTemplateSet_Handler,
-		},
-		{
-			MethodName: "DeleteConfigTemplateSet",
-			Handler:    _DataManager_DeleteConfigTemplateSet_Handler,
-		},
-		{
-			MethodName: "UpdateConfigTemplateSet",
-			Handler:    _DataManager_UpdateConfigTemplateSet_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateSet",
-			Handler:    _DataManager_QueryConfigTemplateSet_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateSetList",
-			Handler:    _DataManager_QueryConfigTemplateSetList_Handler,
-		},
-		{
-			MethodName: "CreateConfigTemplate",
-			Handler:    _DataManager_CreateConfigTemplate_Handler,
-		},
-		{
-			MethodName: "DeleteConfigTemplate",
-			Handler:    _DataManager_DeleteConfigTemplate_Handler,
-		},
-		{
-			MethodName: "UpdateConfigTemplate",
-			Handler:    _DataManager_UpdateConfigTemplate_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplate",
-			Handler:    _DataManager_QueryConfigTemplate_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateList",
-			Handler:    _DataManager_QueryConfigTemplateList_Handler,
-		},
-		{
-			MethodName: "CreateTemplateVersion",
-			Handler:    _DataManager_CreateTemplateVersion_Handler,
-		},
-		{
-			MethodName: "DeleteTemplateVersion",
-			Handler:    _DataManager_DeleteTemplateVersion_Handler,
-		},
-		{
-			MethodName: "UpdateTemplateVersion",
-			Handler:    _DataManager_UpdateTemplateVersion_Handler,
-		},
-		{
-			MethodName: "QueryTemplateVersion",
-			Handler:    _DataManager_QueryTemplateVersion_Handler,
-		},
-		{
-			MethodName: "QueryTemplateVersionList",
-			Handler:    _DataManager_QueryTemplateVersionList_Handler,
-		},
-		{
-			MethodName: "CreateConfigTemplateBinding",
-			Handler:    _DataManager_CreateConfigTemplateBinding_Handler,
-		},
-		{
-			MethodName: "DeleteConfigTemplateBinding",
-			Handler:    _DataManager_DeleteConfigTemplateBinding_Handler,
-		},
-		{
-			MethodName: "UpdateConfigTemplateBinding",
-			Handler:    _DataManager_UpdateConfigTemplateBinding_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateBinding",
-			Handler:    _DataManager_QueryConfigTemplateBinding_Handler,
-		},
-		{
-			MethodName: "QueryConfigTemplateBindingList",
-			Handler:    _DataManager_QueryConfigTemplateBindingList_Handler,
-		},
-		{
-			MethodName: "CreateVariable",
-			Handler:    _DataManager_CreateVariable_Handler,
-		},
-		{
-			MethodName: "UpdateVariable",
-			Handler:    _DataManager_UpdateVariable_Handler,
-		},
-		{
-			MethodName: "DeleteVariable",
-			Handler:    _DataManager_DeleteVariable_Handler,
-		},
-		{
-			MethodName: "QueryVariable",
-			Handler:    _DataManager_QueryVariable_Handler,
-		},
-		{
-			MethodName: "QueryVariableList",
-			Handler:    _DataManager_QueryVariableList_Handler,
-		},
-		{
 			MethodName: "CreateAudit",
 			Handler:    _DataManager_CreateAudit_Handler,
 		},
 		{
 			MethodName: "QueryAuditList",
 			Handler:    _DataManager_QueryAuditList_Handler,
+		},
+		{
+			MethodName: "Healthz",
+			Handler:    _DataManager_Healthz_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -15155,391 +12376,346 @@ var _DataManager_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("datamanager.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 6168 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xdc, 0x5d, 0x7d, 0x8c, 0x24, 0xc7,
-	0x55, 0xdf, 0xde, 0xf9, 0xd8, 0xd9, 0xb7, 0x7b, 0x7b, 0x77, 0x7d, 0x5f, 0x7b, 0x73, 0x77, 0xeb,
-	0x73, 0xf9, 0xeb, 0xfc, 0x91, 0x33, 0x98, 0x4f, 0x05, 0x81, 0x38, 0x9f, 0x0d, 0x71, 0xe4, 0x8b,
-	0x8e, 0x39, 0xdb, 0x92, 0x89, 0xa5, 0xa8, 0x77, 0xa6, 0x77, 0x77, 0x7c, 0xb3, 0xd3, 0x7d, 0xd3,
-	0xbd, 0xe7, 0x9c, 0x49, 0x04, 0x38, 0x12, 0x0a, 0x52, 0x62, 0x22, 0x5b, 0xce, 0x17, 0x09, 0x04,
-	0x48, 0xec, 0x20, 0x21, 0x14, 0xa1, 0x20, 0x81, 0x50, 0x24, 0x84, 0xf2, 0x07, 0x01, 0x29, 0x20,
-	0x61, 0x09, 0x84, 0x20, 0x7f, 0x21, 0xfe, 0x8d, 0xc8, 0xdf, 0xfc, 0x11, 0x75, 0x57, 0xbd, 0xea,
-	0xaa, 0xea, 0x57, 0x3d, 0xd3, 0xe7, 0xa9, 0xdd, 0x75, 0xfe, 0xda, 0xed, 0xaa, 0x9a, 0x7a, 0xf5,
-	0x7e, 0xf5, 0xea, 0xd5, 0xab, 0xaf, 0xf7, 0xe0, 0xf8, 0x20, 0x48, 0x83, 0xdd, 0x60, 0x1c, 0x6c,
-	0x87, 0x93, 0xcb, 0xf1, 0x24, 0x4a, 0x23, 0x7f, 0x45, 0x49, 0xea, 0x7e, 0x60, 0xf3, 0xe6, 0x07,
-	0x36, 0x93, 0x7e, 0xfc, 0xf8, 0x70, 0x9c, 0x86, 0x93, 0x71, 0x30, 0x7a, 0x3c, 0x2f, 0xd4, 0x8f,
-	0x46, 0x8f, 0xf7, 0xa3, 0xdd, 0xdd, 0x68, 0x2c, 0xfe, 0xf0, 0xdf, 0xb2, 0x9f, 0x87, 0x63, 0xbf,
-	0xb1, 0x17, 0x4e, 0xee, 0x5c, 0xd9, 0x4b, 0x77, 0x9e, 0x19, 0x6f, 0x45, 0xbd, 0xf0, 0x96, 0x7f,
-	0x0c, 0x1a, 0x49, 0x78, 0x6b, 0xdd, 0xbb, 0xe8, 0x5d, 0x6a, 0xf6, 0xb2, 0x7f, 0xb3, 0x94, 0xcd,
-	0xe1, 0x60, 0x7d, 0xf1, 0xa2, 0x77, 0x69, 0xb9, 0x97, 0xfd, 0xcb, 0x3e, 0x01, 0xc7, 0x8d, 0xdf,
-	0x25, 0x31, 0xf1, 0xc3, 0x87, 0x61, 0x29, 0x9c, 0x4c, 0xae, 0x46, 0x83, 0x30, 0xff, 0xf1, 0xda,
-	0x13, 0x47, 0x2f, 0x0b, 0xf2, 0x4f, 0xf3, 0xe4, 0x1e, 0xe6, 0xfb, 0xa7, 0xa1, 0x1d, 0x4e, 0x26,
-	0xd7, 0x92, 0xed, 0xf5, 0x46, 0x4e, 0x46, 0x7c, 0xf9, 0x3e, 0x34, 0x83, 0xbd, 0x74, 0x67, 0xbd,
-	0x99, 0xa7, 0xe6, 0xff, 0xb3, 0xef, 0x79, 0x70, 0x82, 0x93, 0x8f, 0xe3, 0x6b, 0x61, 0x1a, 0x64,
-	0x00, 0xd0, 0x2d, 0x67, 0xb0, 0xba, 0xb9, 0x97, 0x0c, 0xc7, 0x61, 0x92, 0x7c, 0x24, 0xd8, 0x0d,
-	0x05, 0x0b, 0x5a, 0x9a, 0xbf, 0x0e, 0x4b, 0x41, 0x1c, 0xe7, 0xd9, 0x9c, 0x34, 0x7e, 0xfa, 0x17,
-	0x61, 0xa5, 0x3f, 0xda, 0x4b, 0xd2, 0x70, 0x92, 0xe7, 0xf2, 0x26, 0xa8, 0x49, 0x7e, 0x17, 0x3a,
-	0xaf, 0x46, 0xe3, 0x30, 0xcf, 0x6e, 0xe5, 0xd9, 0xf2, 0xdb, 0xbf, 0x1f, 0x8e, 0x88, 0xa2, 0xcf,
-	0x06, 0x9b, 0xe1, 0x28, 0x59, 0x6f, 0xe7, 0x05, 0xf4, 0xc4, 0x8c, 0x97, 0x93, 0x65, 0x5e, 0x5c,
-	0xa1, 0x29, 0x7a, 0xb2, 0x29, 0x7b, 0xd2, 0x3f, 0x09, 0xad, 0x20, 0x8e, 0x87, 0x03, 0xd1, 0x7c,
-	0xfe, 0xe1, 0x9f, 0x87, 0x65, 0xd1, 0xcc, 0xe1, 0x40, 0xb4, 0xbb, 0x48, 0xc8, 0x6a, 0xcf, 0xb8,
-	0x1c, 0x0e, 0xd6, 0x97, 0x78, 0xed, 0xfc, 0x8b, 0xfd, 0xad, 0x07, 0xc7, 0xaf, 0x4e, 0xc2, 0x20,
-	0x0d, 0x9f, 0x14, 0x00, 0xcf, 0x28, 0x4f, 0x59, 0x2f, 0x8f, 0x8b, 0x0e, 0xc8, 0xff, 0xcf, 0x5a,
-	0x36, 0x08, 0x63, 0xd9, 0x5a, 0xfe, 0x91, 0xa5, 0x26, 0x69, 0x90, 0x72, 0xb8, 0x5b, 0x3d, 0xfe,
-	0x91, 0xf5, 0x61, 0x3f, 0x23, 0x1c, 0x4d, 0x44, 0x6b, 0xf1, 0x33, 0xab, 0x79, 0x37, 0xdc, 0x8d,
-	0x44, 0x4b, 0xf3, 0xff, 0xa5, 0x4c, 0x75, 0x14, 0x99, 0xfa, 0x2d, 0xf0, 0xcd, 0xa6, 0xef, 0x5b,
-	0x27, 0xb0, 0x0f, 0x8b, 0x61, 0x38, 0x07, 0xd8, 0xd8, 0xe7, 0x3d, 0x31, 0x36, 0xdd, 0x33, 0xf2,
-	0x18, 0x74, 0x70, 0x24, 0xe5, 0xdc, 0xac, 0x3c, 0x71, 0x0c, 0xeb, 0x90, 0xc4, 0x65, 0x09, 0xf6,
-	0x9c, 0x10, 0x74, 0xcc, 0x7a, 0x76, 0x98, 0xa4, 0x34, 0xa3, 0x27, 0xa1, 0x35, 0x1c, 0x0f, 0xc2,
-	0x8f, 0xe7, 0x0d, 0x6b, 0xf5, 0xf8, 0x47, 0x96, 0x3a, 0x1a, 0xee, 0x0e, 0xd3, 0xbc, 0x11, 0xad,
-	0x1e, 0xff, 0x60, 0x7f, 0xe4, 0xc1, 0x29, 0xa2, 0x5a, 0x57, 0x2c, 0xff, 0x14, 0x00, 0x32, 0x14,
-	0x66, 0x4c, 0x37, 0x48, 0xa6, 0x95, 0x32, 0xec, 0x1d, 0x0f, 0x8e, 0x3f, 0x1f, 0x0f, 0x9c, 0x0e,
-	0x0a, 0x14, 0xf2, 0x96, 0x22, 0xe4, 0x72, 0xa0, 0xb4, 0xd5, 0x81, 0xd2, 0x85, 0x4e, 0x14, 0x87,
-	0x93, 0x7c, 0xa4, 0xf0, 0x21, 0x21, 0xbf, 0xd9, 0x10, 0x7c, 0xb3, 0xa1, 0x8e, 0x60, 0x64, 0x7f,
-	0xef, 0xc1, 0x2a, 0x1f, 0x6e, 0x57, 0xe2, 0x78, 0x56, 0x3c, 0xa4, 0xaa, 0x6a, 0xa8, 0xaa, 0x0a,
-	0x51, 0x6a, 0x2a, 0x28, 0x6d, 0x00, 0x0c, 0xc2, 0x78, 0x14, 0xdd, 0x79, 0xee, 0x4e, 0x8c, 0x9a,
-	0x42, 0x49, 0xb1, 0x60, 0xa3, 0x28, 0x91, 0x25, 0x5a, 0x89, 0x74, 0x0a, 0x7c, 0xd9, 0xab, 0x70,
-	0x44, 0xe1, 0xc0, 0x95, 0xbc, 0x49, 0x9e, 0x9b, 0x0a, 0xcf, 0xec, 0xa3, 0xb0, 0x82, 0x73, 0xc6,
-	0xdc, 0xc1, 0x63, 0xaf, 0x79, 0xb0, 0x5a, 0xd4, 0xee, 0x8a, 0xb1, 0x0b, 0xd0, 0x08, 0xe2, 0x58,
-	0xa8, 0x8d, 0x15, 0xfc, 0x79, 0x46, 0x32, 0x4b, 0x67, 0x01, 0x1c, 0xc5, 0x36, 0xd8, 0xf5, 0x04,
-	0xc9, 0x25, 0xd7, 0x1c, 0x0d, 0x52, 0x73, 0x34, 0x55, 0xcd, 0xf1, 0x69, 0x0f, 0x8d, 0x1f, 0xa4,
-	0xe1, 0x8a, 0xd7, 0x7b, 0xa0, 0x19, 0xc4, 0x31, 0xaa, 0x0b, 0x8d, 0xd9, 0x3c, 0x83, 0xfd, 0x83,
-	0x07, 0xab, 0x7c, 0xe8, 0x1d, 0xc8, 0x70, 0x40, 0xf1, 0x6e, 0x53, 0xea, 0x63, 0xc9, 0xa6, 0x3e,
-	0x3a, 0x86, 0xfa, 0x18, 0xc0, 0x11, 0x85, 0x07, 0x57, 0x9a, 0x63, 0x00, 0xab, 0x4f, 0x85, 0xa3,
-	0x70, 0x0e, 0x48, 0xa9, 0xbc, 0x34, 0xcb, 0xbc, 0x28, 0x54, 0x5c, 0xf1, 0xf2, 0x3f, 0x1e, 0x1c,
-	0xe3, 0x3a, 0xe4, 0x2a, 0xb7, 0xad, 0x66, 0x65, 0x48, 0x33, 0xcf, 0x1a, 0xa6, 0x79, 0x46, 0x89,
-	0x00, 0x6d, 0xe6, 0x6d, 0x00, 0x4c, 0xae, 0x1a, 0x76, 0x9e, 0x92, 0x52, 0x4f, 0x23, 0x66, 0x6c,
-	0x8e, 0xb8, 0xa5, 0xbb, 0xcc, 0xd9, 0xe4, 0x5f, 0xec, 0xf7, 0xa4, 0x59, 0x28, 0xd9, 0x74, 0x35,
-	0xd2, 0x34, 0x60, 0x9a, 0x06, 0x30, 0xec, 0x2d, 0x4f, 0x68, 0x95, 0x9a, 0x70, 0xd3, 0xf2, 0x53,
-	0x49, 0x4b, 0x76, 0x42, 0x4b, 0xe9, 0x84, 0x02, 0xa0, 0xb6, 0x06, 0xd0, 0x1b, 0xa8, 0x89, 0x9c,
-	0xe3, 0xf3, 0x30, 0x2c, 0x89, 0x26, 0x0a, 0xcd, 0x2b, 0xab, 0x40, 0xd2, 0x98, 0x9f, 0x81, 0x75,
-	0x42, 0x6d, 0x54, 0x4d, 0x35, 0x4c, 0x00, 0xa6, 0x2c, 0xb4, 0x9a, 0xfa, 0x42, 0x4b, 0xaa, 0xed,
-	0x16, 0xa9, 0xb6, 0xdb, 0xaa, 0xda, 0xfe, 0x22, 0x2e, 0x98, 0xb4, 0x76, 0xb9, 0x02, 0xec, 0x51,
-	0xe8, 0x08, 0x40, 0x50, 0x7d, 0x97, 0x10, 0x93, 0x05, 0xd8, 0xff, 0x7a, 0x70, 0x8c, 0xab, 0x40,
-	0xe7, 0xe3, 0x59, 0x1f, 0xb9, 0xad, 0xd2, 0xc8, 0x9d, 0x8b, 0x4a, 0xb7, 0x8e, 0xe8, 0x1d, 0x34,
-	0x69, 0x5d, 0x0b, 0x2c, 0x8b, 0xe1, 0x18, 0x57, 0xc4, 0x73, 0x45, 0xb4, 0x4a, 0xf5, 0xef, 0xc0,
-	0x71, 0x83, 0xa2, 0x2b, 0xde, 0xfe, 0xdd, 0x43, 0x13, 0xf2, 0x37, 0xa3, 0x71, 0x38, 0x2b, 0x67,
-	0xc5, 0xe2, 0xbb, 0xa1, 0x2e, 0xbe, 0x6b, 0x68, 0xfd, 0xea, 0xc5, 0x3d, 0x2d, 0x25, 0xca, 0x4c,
-	0xd0, 0xa1, 0x67, 0x82, 0x65, 0xc5, 0x36, 0xfe, 0x24, 0xac, 0xa9, 0x8c, 0xb9, 0x1a, 0x9c, 0x05,
-	0x14, 0x4d, 0x6d, 0x1f, 0x22, 0x15, 0x06, 0x6c, 0x1d, 0x58, 0x69, 0x95, 0x65, 0xa1, 0x40, 0x69,
-	0xf7, 0x6c, 0x9a, 0x3b, 0xa2, 0x90, 0x75, 0xc5, 0xf4, 0x45, 0x68, 0x66, 0x8d, 0x10, 0xfa, 0x7b,
-	0x15, 0x7f, 0x9f, 0x13, 0xcd, 0x73, 0xd8, 0x0f, 0x70, 0x3a, 0xc9, 0xd2, 0xde, 0xbb, 0xda, 0x9e,
-	0xbe, 0x0b, 0xa6, 0x09, 0x54, 0x8b, 0x10, 0x28, 0xae, 0xdc, 0xdb, 0xa4, 0x72, 0x5f, 0x52, 0x94,
-	0x7b, 0x79, 0xcf, 0xac, 0x43, 0xed, 0x99, 0x7d, 0x06, 0xb7, 0x38, 0x0a, 0x06, 0x5d, 0xa1, 0xcd,
-	0xa0, 0x95, 0x61, 0x8a, 0xca, 0x5f, 0x87, 0x9b, 0x67, 0xb1, 0x6f, 0x78, 0x68, 0xf9, 0xba, 0x1a,
-	0xc7, 0xf3, 0x59, 0xdf, 0x87, 0xb0, 0xa6, 0x36, 0xd3, 0x95, 0x5a, 0xdb, 0x46, 0xdb, 0x79, 0x1e,
-	0x68, 0x54, 0x69, 0xea, 0x10, 0xd6, 0x54, 0x42, 0xae, 0xf8, 0xf9, 0x0f, 0x0f, 0xb7, 0x06, 0xaf,
-	0x46, 0xe3, 0xad, 0xe1, 0xf6, 0x8d, 0x70, 0xe6, 0x01, 0xd5, 0x85, 0x4e, 0x7f, 0x6b, 0x3b, 0x09,
-	0x53, 0xc9, 0x97, 0xfc, 0xae, 0xa1, 0xaf, 0xe7, 0xb0, 0x5b, 0x91, 0xd5, 0xb1, 0x15, 0x07, 0xe9,
-	0x8e, 0x50, 0xd3, 0xfc, 0x23, 0x53, 0x59, 0x27, 0x4a, 0xac, 0xb9, 0x1a, 0x4a, 0x2a, 0x18, 0x4d,
-	0x1d, 0x0c, 0xf6, 0x26, 0x8e, 0xe8, 0xda, 0x10, 0x5b, 0xd7, 0x76, 0x36, 0x5a, 0xa4, 0x65, 0x2e,
-	0xe1, 0x69, 0xab, 0xf0, 0x7c, 0xd9, 0x03, 0xdf, 0x6c, 0x95, 0x2b, 0x74, 0x1e, 0x87, 0xe5, 0x3e,
-	0x52, 0x11, 0xba, 0xfd, 0xb8, 0xb4, 0x34, 0x25, 0xf9, 0xa2, 0x0c, 0xfb, 0x02, 0x6e, 0x7c, 0xca,
-	0xdc, 0xc3, 0x62, 0xa1, 0x7f, 0xcd, 0x83, 0xd3, 0x54, 0xcb, 0x5c, 0x41, 0xf7, 0xd3, 0x00, 0x12,
-	0x16, 0x54, 0xd4, 0x04, 0x76, 0x4a, 0x21, 0xf6, 0x5d, 0x0f, 0xf7, 0x3a, 0x9d, 0x8f, 0xe9, 0xb9,
-	0xe8, 0xee, 0x42, 0x40, 0x3b, 0xaa, 0x80, 0xbe, 0x0c, 0x27, 0x4a, 0x5c, 0xb8, 0xb3, 0xc4, 0x7d,
-	0x61, 0x17, 0xcf, 0x13, 0xb1, 0x2a, 0xfd, 0xfe, 0x32, 0x9c, 0x28, 0x51, 0x74, 0xc5, 0xdd, 0x6b,
-	0x1e, 0x1c, 0x7b, 0x36, 0xea, 0xdf, 0xdc, 0x2f, 0xe6, 0x28, 0xb1, 0x60, 0x5f, 0xf1, 0xe0, 0xb8,
-	0xd1, 0x08, 0x87, 0xa6, 0xf3, 0x28, 0xea, 0xdf, 0x0c, 0xb1, 0x61, 0xe2, 0x2b, 0x6b, 0x72, 0xf6,
-	0xdf, 0x73, 0xc3, 0xe2, 0x40, 0x13, 0xbf, 0x33, 0x09, 0x78, 0x7e, 0x3c, 0xda, 0x47, 0x90, 0x72,
-	0xf9, 0x36, 0x29, 0xba, 0x92, 0x80, 0xff, 0x5c, 0x94, 0x9b, 0x71, 0x39, 0xb1, 0xc4, 0xe5, 0xee,
-	0x50, 0x61, 0xee, 0xb4, 0x4c, 0x73, 0x47, 0x02, 0xd5, 0x2e, 0x03, 0x95, 0xf1, 0x34, 0x4c, 0xe5,
-	0xb9, 0xab, 0xfc, 0xce, 0x5a, 0xd5, 0x1f, 0x0e, 0x84, 0x72, 0xc8, 0xfe, 0xcd, 0xcd, 0x83, 0xad,
-	0xed, 0x67, 0x87, 0xe3, 0x9b, 0x62, 0xca, 0xc7, 0xcf, 0x3c, 0x27, 0x1a, 0xa7, 0xe1, 0x38, 0x5d,
-	0x87, 0x8b, 0xde, 0xa5, 0xd5, 0x1e, 0x7e, 0xaa, 0x26, 0xc5, 0x0a, 0x6d, 0x52, 0xac, 0x52, 0x4a,
-	0xec, 0x88, 0xaa, 0xc4, 0xe4, 0x44, 0xb1, 0xc6, 0xd1, 0xc8, 0x3f, 0xb2, 0x45, 0xb5, 0x81, 0xad,
-	0xab, 0x6e, 0xfc, 0x17, 0xb9, 0xc7, 0xf7, 0xfe, 0xeb, 0x45, 0x89, 0x5d, 0x47, 0xc5, 0xae, 0xd8,
-	0x1d, 0x74, 0x8c, 0x5d, 0xbe, 0x3b, 0xc8, 0x69, 0x94, 0x76, 0x07, 0x05, 0x69, 0xcc, 0x67, 0x3f,
-	0xc2, 0x39, 0xbe, 0x17, 0x8e, 0xc2, 0x20, 0x79, 0x3f, 0x8e, 0x99, 0x2e, 0x74, 0x82, 0xcd, 0x24,
-	0x9d, 0x04, 0xfd, 0x34, 0x07, 0xbc, 0xd3, 0x93, 0xdf, 0x45, 0x4f, 0x2c, 0xab, 0x3d, 0xf1, 0x25,
-	0x0f, 0xce, 0x90, 0x4c, 0x1f, 0x82, 0x0e, 0xf9, 0xaa, 0xdc, 0xae, 0xe5, 0x09, 0x75, 0x8c, 0xc1,
-	0x29, 0xea, 0x59, 0x22, 0xd8, 0xb4, 0xc9, 0x6b, 0xad, 0x6d, 0x5b, 0xb5, 0x7d, 0x2e, 0xb7, 0x6d,
-	0xb7, 0xb6, 0x93, 0xd1, 0x30, 0x49, 0x4b, 0xdb, 0xb6, 0x02, 0x39, 0x59, 0x80, 0xbd, 0xd9, 0x80,
-	0xa3, 0xa8, 0x9d, 0x32, 0xce, 0xea, 0xc0, 0x86, 0xd0, 0x34, 0xca, 0xd0, 0x94, 0xcf, 0x6d, 0x35,
-	0xa0, 0x5b, 0x06, 0xd0, 0x6b, 0xb0, 0x18, 0xc5, 0x02, 0xb3, 0xc5, 0x28, 0xae, 0xb4, 0x06, 0x37,
-	0x00, 0xd2, 0x70, 0x37, 0x1e, 0x05, 0x69, 0x28, 0xb5, 0xbe, 0x92, 0x92, 0xfd, 0x16, 0xbf, 0x84,
-	0x04, 0xcb, 0x6f, 0x9f, 0xc1, 0x2a, 0xfe, 0xdf, 0xdb, 0x1b, 0x85, 0xf9, 0x1c, 0xb0, 0xdc, 0xd3,
-	0xd2, 0xc4, 0x14, 0x91, 0xcb, 0xdd, 0x8a, 0x9c, 0x22, 0xb2, 0xcf, 0x3c, 0x67, 0x27, 0x18, 0x6f,
-	0x87, 0x89, 0x98, 0x0b, 0xf0, 0x53, 0x4e, 0x11, 0x47, 0xa8, 0x29, 0x62, 0x4d, 0x9d, 0x22, 0xee,
-	0x87, 0x23, 0xbb, 0x7b, 0xa3, 0x74, 0x78, 0x15, 0xc1, 0x3b, 0xca, 0x37, 0x79, 0xb4, 0x44, 0xf6,
-	0xa9, 0xe2, 0x70, 0x4c, 0xf4, 0x8a, 0xcb, 0x85, 0xa9, 0x45, 0xc4, 0xd9, 0x08, 0xd6, 0x84, 0xd4,
-	0xce, 0x4b, 0x32, 0x54, 0xb5, 0xd3, 0xd4, 0xd5, 0x0e, 0x7b, 0xbd, 0x98, 0xbc, 0xdc, 0xb2, 0xfc,
-	0x20, 0xb4, 0x79, 0x83, 0x84, 0x5e, 0x59, 0x2b, 0x46, 0x47, 0x4e, 0x58, 0xe4, 0xb2, 0x77, 0x51,
-	0xcd, 0x7f, 0x68, 0x98, 0xa4, 0x11, 0xb6, 0x2b, 0x71, 0xb7, 0x38, 0x57, 0xa5, 0xbe, 0x65, 0x48,
-	0xfd, 0x79, 0x58, 0xbe, 0x95, 0xb5, 0x25, 0x3f, 0xc5, 0xe6, 0x03, 0xa5, 0x48, 0x28, 0x94, 0xd1,
-	0x12, 0xa9, 0x8c, 0x3a, 0x86, 0x32, 0x3a, 0x43, 0xb2, 0xe5, 0x0a, 0xef, 0x4b, 0xd9, 0x80, 0xca,
-	0x69, 0x08, 0x75, 0x64, 0x02, 0x8e, 0xd9, 0xec, 0xad, 0x45, 0x38, 0x8a, 0x6b, 0xba, 0x79, 0x89,
-	0x9c, 0xae, 0x2e, 0x9a, 0x95, 0xea, 0xa2, 0x35, 0x45, 0x5d, 0xb4, 0xab, 0xd5, 0xc5, 0x92, 0x55,
-	0x5d, 0x74, 0x68, 0x75, 0xa1, 0x1c, 0x1b, 0x68, 0x9d, 0x0f, 0xc6, 0x52, 0x60, 0x5b, 0x1e, 0xad,
-	0xb9, 0x1d, 0x1a, 0x6c, 0x17, 0x8e, 0x5e, 0x0d, 0xc6, 0xfd, 0x70, 0x34, 0xd7, 0x21, 0x6f, 0x5d,
-	0xe2, 0x6c, 0xc3, 0x31, 0x9d, 0x9c, 0x2b, 0xbe, 0xbe, 0x96, 0xe9, 0xd3, 0xac, 0x5b, 0x26, 0xbb,
-	0xf5, 0x38, 0xbb, 0xab, 0x41, 0x2c, 0xb1, 0x68, 0x55, 0x60, 0xd1, 0x2e, 0x1f, 0xbd, 0x19, 0x2d,
-	0x74, 0x05, 0xc6, 0xdb, 0x1e, 0x9c, 0xe4, 0x93, 0xcb, 0xb5, 0x62, 0xd2, 0x99, 0x15, 0x90, 0xd2,
-	0xfc, 0xd5, 0x20, 0xe6, 0x2f, 0x8b, 0x05, 0x40, 0xed, 0x06, 0x55, 0x41, 0xf2, 0x86, 0x07, 0xa7,
-	0x88, 0x86, 0xba, 0xd2, 0x53, 0x25, 0xd6, 0x9a, 0xd4, 0xd4, 0xfc, 0x31, 0x61, 0x6a, 0xba, 0xc2,
-	0x8e, 0xfd, 0x29, 0x1a, 0x8b, 0xfb, 0xc2, 0xf4, 0xcf, 0xc1, 0x8a, 0x42, 0x5e, 0xcc, 0x88, 0x27,
-	0xb0, 0x1a, 0xb5, 0x09, 0x6a, 0x39, 0xf6, 0x1d, 0x0f, 0xce, 0xa9, 0x93, 0x88, 0x52, 0x30, 0x71,
-	0x76, 0x33, 0x49, 0x9f, 0x04, 0x5b, 0xd6, 0x49, 0x70, 0xfa, 0x59, 0x1b, 0xfb, 0x0b, 0x0f, 0xce,
-	0xdb, 0xdb, 0xef, 0x0a, 0xec, 0x5f, 0x80, 0x55, 0x05, 0x44, 0x9c, 0x0e, 0x49, 0xb4, 0xb5, 0x82,
-	0x6c, 0x0b, 0xba, 0xa6, 0x48, 0xdc, 0xd8, 0xdb, 0xac, 0xb3, 0xcc, 0x99, 0x4d, 0xf6, 0x3e, 0x87,
-	0xdd, 0x4a, 0x11, 0x72, 0x79, 0x6f, 0x49, 0x34, 0x80, 0x43, 0x92, 0xad, 0x7c, 0x31, 0x21, 0x6b,
-	0xd2, 0x49, 0x3e, 0xf9, 0x39, 0xd3, 0x56, 0xa8, 0x97, 0x9a, 0x16, 0xbd, 0x64, 0xd8, 0x62, 0x6c,
-	0x04, 0xa7, 0x88, 0x16, 0xb9, 0x52, 0xd7, 0x9f, 0x80, 0x93, 0x7c, 0x92, 0x74, 0xc6, 0x7f, 0xd5,
-	0x14, 0x3d, 0x82, 0x53, 0x04, 0x75, 0x57, 0xbc, 0x7e, 0x12, 0x4e, 0x89, 0x49, 0xf0, 0x40, 0x98,
-	0xdd, 0x85, 0xd3, 0x14, 0x79, 0x57, 0xdc, 0x7e, 0xbd, 0x81, 0xab, 0x3c, 0xb1, 0xa7, 0x52, 0xe3,
-	0x82, 0xcf, 0x84, 0xff, 0xa2, 0xb8, 0xe0, 0x23, 0x13, 0x6a, 0x1c, 0xae, 0x56, 0xed, 0x1e, 0x6d,
-	0x00, 0xf0, 0xff, 0xf3, 0x13, 0x31, 0xbe, 0x08, 0x57, 0x52, 0xb2, 0xfc, 0x6c, 0xe1, 0x96, 0x86,
-	0xdb, 0x77, 0x8a, 0x65, 0x78, 0x91, 0xa2, 0xe4, 0x0f, 0x43, 0xbc, 0x42, 0xa5, 0xa4, 0x68, 0x76,
-	0x12, 0x18, 0x76, 0x12, 0x0e, 0xc8, 0x15, 0x65, 0x40, 0x2a, 0xfb, 0xb3, 0xab, 0xfa, 0xfe, 0x2c,
-	0xbd, 0x17, 0x7b, 0x11, 0x56, 0x78, 0x6b, 0x7f, 0x2d, 0x3f, 0x3a, 0x5a, 0x13, 0x37, 0x37, 0x8a,
-	0x24, 0xff, 0x41, 0x58, 0xcb, 0x45, 0xa3, 0x27, 0xa1, 0xe4, 0x6b, 0x71, 0x23, 0xb5, 0xd8, 0xbf,
-	0x95, 0xbd, 0xe4, 0x4a, 0x20, 0x6e, 0x88, 0x15, 0xf0, 0x3c, 0xc5, 0xa1, 0xd8, 0x42, 0x75, 0xdd,
-	0xfc, 0xac, 0x0a, 0x41, 0xd6, 0xdc, 0xb1, 0x43, 0xd2, 0x98, 0x9f, 0xcd, 0xbf, 0x7c, 0x6d, 0xfd,
-	0x91, 0xf0, 0x95, 0x30, 0x9b, 0x5c, 0xf2, 0xe4, 0x64, 0x1e, 0x9b, 0x76, 0x0f, 0xc2, 0xda, 0x28,
-	0xea, 0x07, 0xa3, 0xa2, 0x5b, 0xf9, 0x40, 0x30, 0x52, 0x6b, 0x6d, 0xe0, 0xfd, 0x21, 0xae, 0x99,
-	0xcd, 0xe6, 0x3a, 0xdc, 0xc3, 0x13, 0x50, 0x95, 0xae, 0x5e, 0x22, 0x96, 0xb2, 0x00, 0xfb, 0x6f,
-	0x63, 0x45, 0x3f, 0x4f, 0x34, 0xf7, 0xc5, 0x1c, 0xcb, 0x6a, 0x8a, 0x26, 0x83, 0x70, 0x92, 0xd7,
-	0xc4, 0x77, 0x2b, 0x8a, 0x04, 0xf6, 0x15, 0x0f, 0xd6, 0x69, 0xfe, 0x0e, 0x05, 0xfc, 0x5f, 0x94,
-	0x37, 0x5f, 0x9d, 0xab, 0xf1, 0xba, 0x2b, 0x28, 0x79, 0x57, 0xd5, 0xb9, 0xea, 0x8a, 0x71, 0x29,
-	0x3f, 0x57, 0x0c, 0xa6, 0xdc, 0x55, 0x35, 0x28, 0xba, 0xe2, 0x6d, 0x02, 0x7e, 0x2f, 0x1a, 0x8d,
-	0x36, 0x83, 0xfe, 0xcd, 0x7d, 0xe3, 0xee, 0x65, 0x38, 0x51, 0xa2, 0xe9, 0x8a, 0xbf, 0x5b, 0x70,
-	0xfc, 0xfa, 0xde, 0xe6, 0x68, 0x98, 0xec, 0xec, 0x1b, 0x7b, 0x43, 0xf0, 0x4d, 0x92, 0xae, 0xb8,
-	0xfb, 0x93, 0x45, 0x6d, 0x17, 0xa1, 0x26, 0x8b, 0xf4, 0x22, 0xb5, 0x6c, 0x3a, 0x34, 0x29, 0xd3,
-	0x81, 0xbc, 0x6e, 0x55, 0x32, 0x53, 0xdb, 0x94, 0x99, 0xaa, 0x9b, 0x57, 0x4b, 0x53, 0xcc, 0xab,
-	0x4e, 0xc9, 0xbc, 0xa2, 0xb6, 0x18, 0x15, 0x13, 0x0a, 0x34, 0x13, 0x8a, 0xbd, 0xe5, 0xc1, 0x69,
-	0x0a, 0x23, 0x77, 0x5b, 0xf0, 0x33, 0xe1, 0xc7, 0x36, 0xd5, 0xad, 0x90, 0x9a, 0x3d, 0x57, 0xa6,
-	0xd1, 0x20, 0x69, 0xbc, 0x8d, 0x77, 0xc9, 0xf6, 0x87, 0xf5, 0x5f, 0x14, 0x7b, 0x00, 0x3d, 0xcd,
-	0x52, 0x3a, 0xa9, 0xed, 0x01, 0x60, 0x23, 0xb4, 0x92, 0xec, 0xbf, 0xa8, 0x3d, 0x8b, 0xba, 0x73,
-	0xfd, 0xbc, 0x37, 0x5d, 0xb4, 0x99, 0xbb, 0x6d, 0xcc, 0xdc, 0xb5, 0xce, 0x25, 0xbe, 0xe5, 0xc1,
-	0x85, 0x0a, 0xf6, 0x5c, 0xf5, 0xc7, 0x07, 0xc5, 0x70, 0xec, 0xe9, 0xf3, 0x3d, 0xdd, 0x21, 0x7a,
-	0x51, 0xf6, 0x8e, 0xa7, 0xed, 0x04, 0xb8, 0x11, 0xd0, 0xb9, 0x18, 0x02, 0xbb, 0x70, 0x9a, 0x6a,
-	0xa8, 0x2b, 0x9d, 0x3b, 0x54, 0xb7, 0x91, 0x04, 0xb5, 0x9a, 0x1b, 0x56, 0xb3, 0x0e, 0xdf, 0x37,
-	0x71, 0x54, 0x90, 0xb4, 0x5c, 0x49, 0xcd, 0x06, 0x80, 0x9c, 0xe8, 0x70, 0xd3, 0x4a, 0x49, 0x61,
-	0xbf, 0xad, 0x6d, 0x9b, 0x38, 0x12, 0x8c, 0x69, 0x5b, 0x19, 0x44, 0x03, 0x5c, 0x75, 0xf8, 0xef,
-	0x78, 0x70, 0x5a, 0x4c, 0xe8, 0x07, 0xc5, 0xf1, 0x18, 0xce, 0x90, 0x2d, 0x70, 0xc5, 0xf2, 0xef,
-	0x7a, 0x70, 0x06, 0x4d, 0xb4, 0x83, 0xe2, 0x39, 0x82, 0x75, 0xba, 0x09, 0xae, 0x98, 0x7e, 0x57,
-	0x9e, 0x1d, 0x5d, 0x89, 0xe3, 0x67, 0xc6, 0x49, 0x9a, 0xc9, 0xd8, 0x41, 0x5c, 0x7c, 0x5a, 0x83,
-	0xc5, 0x41, 0x5f, 0xa8, 0xb9, 0xc5, 0x41, 0x3f, 0xfb, 0x7e, 0xe6, 0xba, 0xb0, 0x93, 0x16, 0x9f,
-	0xb9, 0xae, 0xbc, 0xde, 0xeb, 0xa8, 0xaf, 0xf7, 0x8a, 0xcd, 0xa2, 0x65, 0x65, 0xb3, 0x28, 0xdf,
-	0xe5, 0x2c, 0x73, 0xe5, 0xf0, 0xed, 0x9b, 0x76, 0x78, 0xa2, 0x10, 0x3d, 0x90, 0x4b, 0x64, 0xf3,
-	0xbb, 0x5b, 0xf0, 0xb6, 0x61, 0xa2, 0xe8, 0x9c, 0xb9, 0xbb, 0x03, 0xbf, 0x3c, 0x44, 0x2a, 0xe6,
-	0x99, 0x8a, 0xda, 0xa1, 0x45, 0x29, 0xf6, 0x77, 0x68, 0x6c, 0xf4, 0xc2, 0xa0, 0xbf, 0x13, 0x6c,
-	0x8e, 0xc2, 0x83, 0xee, 0x84, 0x3a, 0xa7, 0x57, 0xdf, 0xf4, 0x60, 0xa3, 0xaa, 0xf5, 0x87, 0x08,
-	0xe8, 0x77, 0xe5, 0xf1, 0xcd, 0x4f, 0x9a, 0xc2, 0x20, 0xb8, 0x72, 0xa5, 0x30, 0x7e, 0xe8, 0xc1,
-	0x39, 0x42, 0x3f, 0xcd, 0x61, 0x21, 0xbb, 0xbf, 0x58, 0x5e, 0xca, 0x64, 0x7c, 0x2b, 0x4a, 0xd6,
-	0x97, 0x73, 0xd9, 0xf1, 0x8b, 0x3d, 0xb5, 0x38, 0x9a, 0xa4, 0xb9, 0x2f, 0x35, 0x5e, 0x80, 0x25,
-	0x70, 0xde, 0xce, 0xb0, 0x2b, 0x98, 0xff, 0xd1, 0x13, 0xc7, 0xac, 0xef, 0x0f, 0x94, 0xd5, 0x6d,
-	0xdb, 0x8e, 0xf1, 0xa6, 0xec, 0x47, 0x38, 0xc5, 0xec, 0x23, 0x7e, 0xfa, 0x76, 0x50, 0x93, 0xd8,
-	0x0e, 0xb2, 0x5e, 0x8c, 0x11, 0x57, 0xf8, 0xdb, 0xe4, 0x15, 0xfe, 0x25, 0xeb, 0x15, 0xfe, 0x8e,
-	0x76, 0x85, 0x9f, 0xfd, 0x99, 0x3c, 0xbd, 0x0e, 0xd2, 0xfe, 0x4e, 0x38, 0x98, 0x9f, 0x4a, 0xd7,
-	0x77, 0x63, 0x9a, 0xa5, 0xdd, 0x98, 0x3a, 0x67, 0x09, 0x72, 0x8e, 0x24, 0x5b, 0x79, 0x88, 0x54,
-	0xf7, 0x37, 0xb1, 0xa1, 0x4f, 0x6f, 0x6d, 0x85, 0xfd, 0xf4, 0xee, 0xf0, 0xac, 0x3a, 0x5b, 0xa8,
-	0x96, 0x97, 0x3a, 0x98, 0xbe, 0x83, 0xd3, 0x39, 0xdd, 0xd4, 0x43, 0x04, 0xea, 0xf7, 0xa4, 0x3f,
-	0x98, 0x1b, 0x42, 0x7c, 0xdc, 0x4a, 0x26, 0xb5, 0x03, 0xa9, 0x8c, 0x20, 0x74, 0x18, 0x28, 0x1e,
-	0xc1, 0x50, 0x0e, 0x03, 0xad, 0xde, 0x0f, 0xd8, 0xef, 0xcb, 0xc7, 0xc1, 0x05, 0x2f, 0x0e, 0x17,
-	0xdc, 0x55, 0x7c, 0x66, 0x0b, 0x50, 0x7e, 0xca, 0x79, 0x60, 0xb0, 0x16, 0xce, 0x07, 0xdd, 0xa3,
-	0xf1, 0x18, 0x74, 0xb0, 0x31, 0xa6, 0xf3, 0x41, 0x49, 0x5c, 0x96, 0xc8, 0x1a, 0x76, 0x52, 0x6b,
-	0xd8, 0x61, 0x79, 0x2c, 0x2b, 0xfd, 0x17, 0xea, 0x0d, 0x73, 0xe8, 0xbf, 0x50, 0xd9, 0x33, 0x37,
-	0xfc, 0x17, 0x4a, 0xdc, 0x94, 0x32, 0x2c, 0x41, 0x7f, 0x28, 0x75, 0xa5, 0x4a, 0x97, 0x9f, 0x46,
-	0x49, 0x7e, 0xa6, 0x9c, 0x8d, 0x98, 0x44, 0x5d, 0x59, 0x3c, 0x5f, 0x58, 0x44, 0x6d, 0x74, 0x7d,
-	0x12, 0xf5, 0xaf, 0xa4, 0xa9, 0xc5, 0xc7, 0x4c, 0xa6, 0x03, 0x46, 0xd1, 0xde, 0x40, 0x32, 0x89,
-	0x9f, 0xc2, 0x28, 0x69, 0x48, 0xa3, 0xc4, 0xa9, 0x93, 0x55, 0x61, 0x12, 0x75, 0xa4, 0x49, 0x64,
-	0xf1, 0xd1, 0x93, 0x0d, 0xcf, 0xfc, 0xd6, 0x07, 0x3f, 0xe6, 0xc8, 0xff, 0xaf, 0xf7, 0xc0, 0x2f,
-	0xeb, 0x04, 0x13, 0x18, 0x57, 0x9d, 0xf0, 0x3a, 0x0e, 0xcf, 0x0f, 0x45, 0x49, 0xba, 0xdf, 0xfd,
-	0x80, 0x48, 0xb5, 0x0b, 0xa4, 0xd8, 0x97, 0x71, 0x58, 0xea, 0x0d, 0x72, 0xa8, 0xcc, 0x62, 0x41,
-	0xc4, 0x54, 0x66, 0x92, 0xb8, 0x2c, 0xc1, 0x5e, 0x93, 0x97, 0x01, 0x94, 0xc6, 0xd9, 0x15, 0xda,
-	0xec, 0x88, 0x49, 0xc5, 0xd5, 0x24, 0x15, 0x57, 0xcb, 0x78, 0xe5, 0x7f, 0xd6, 0xd2, 0x08, 0x57,
-	0x28, 0x5d, 0x86, 0x65, 0xc4, 0xa0, 0xa4, 0xbb, 0x24, 0x4c, 0x45, 0x11, 0xf6, 0xd7, 0x78, 0x29,
-	0xe4, 0x4a, 0x1c, 0x4f, 0x87, 0xe9, 0xf0, 0xec, 0x6d, 0xfc, 0x31, 0xf6, 0x6f, 0xa9, 0xdd, 0x87,
-	0x05, 0xd9, 0x2f, 0x2d, 0xe2, 0xad, 0x8a, 0x9f, 0x7c, 0xa5, 0x49, 0xdd, 0xc4, 0x53, 0xe7, 0xae,
-	0x55, 0x9b, 0x1b, 0x5d, 0xf7, 0x6a, 0xf3, 0x1d, 0x0f, 0x27, 0xe7, 0x43, 0xa0, 0x33, 0xa7, 0xf9,
-	0x16, 0x36, 0x1b, 0xea, 0x0a, 0x94, 0xef, 0x48, 0xa7, 0x36, 0x37, 0x76, 0x82, 0xc9, 0x60, 0x38,
-	0xde, 0x7e, 0xea, 0x49, 0x1a, 0x16, 0x1f, 0x9a, 0x83, 0x62, 0xc8, 0xe7, 0xff, 0x67, 0x69, 0x3b,
-	0x51, 0x92, 0xa2, 0xd3, 0xe5, 0xec, 0xff, 0x9c, 0xd9, 0x68, 0x82, 0xee, 0x63, 0xf3, 0xff, 0xb3,
-	0xb4, 0xbd, 0x24, 0xc4, 0x8b, 0xd1, 0xf9, 0xff, 0x19, 0x00, 0x71, 0x90, 0x24, 0xaf, 0x44, 0x13,
-	0x79, 0x97, 0x14, 0xbf, 0xc9, 0x65, 0x85, 0xdc, 0x57, 0xeb, 0xa8, 0xfb, 0x6a, 0x37, 0xf1, 0x78,
-	0x41, 0x6d, 0xbe, 0x2b, 0xb0, 0x3e, 0x28, 0x3c, 0xdc, 0xdc, 0x05, 0x54, 0x99, 0xe9, 0x7a, 0xa2,
-	0xf4, 0x63, 0x57, 0x1a, 0xea, 0x09, 0x80, 0x44, 0x92, 0x11, 0x73, 0xa4, 0xdc, 0x3c, 0x53, 0x1a,
-	0xa0, 0x94, 0x62, 0x8f, 0x88, 0x0b, 0x96, 0x45, 0xb6, 0x55, 0xfb, 0xb3, 0xaf, 0xe3, 0x5c, 0x61,
-	0x16, 0x76, 0xc5, 0xd0, 0xcf, 0xc2, 0x4a, 0xd1, 0x54, 0x54, 0xba, 0x14, 0x47, 0x6a, 0xb1, 0x5c,
-	0xb8, 0xb9, 0x76, 0x79, 0xdf, 0x0a, 0x77, 0xb9, 0xf9, 0xae, 0x84, 0xfb, 0xb3, 0xc5, 0x46, 0x83,
-	0xa0, 0x66, 0x9d, 0xf9, 0x6f, 0x86, 0x77, 0x70, 0xe6, 0xbf, 0x19, 0xde, 0x91, 0xe0, 0x35, 0x14,
-	0xf0, 0x4e, 0x43, 0x7b, 0xb0, 0xa9, 0xdc, 0x42, 0x10, 0x5f, 0xb3, 0x3b, 0xf8, 0x29, 0x0c, 0xea,
-	0xa2, 0x39, 0xae, 0x58, 0xc7, 0xc0, 0x1e, 0x35, 0x19, 0x57, 0x16, 0xf0, 0xae, 0x9b, 0x98, 0x2f,
-	0xe0, 0x05, 0x91, 0xd2, 0x02, 0x1e, 0x89, 0xcb, 0x12, 0x79, 0x5f, 0xea, 0x92, 0x73, 0xe0, 0x7d,
-	0x69, 0x36, 0xc7, 0x55, 0x5f, 0x7e, 0xdf, 0x43, 0x77, 0x9a, 0x57, 0xf6, 0x06, 0xb6, 0xb7, 0x20,
-	0xd9, 0x6a, 0x3b, 0xda, 0x9b, 0xf4, 0xc3, 0xfc, 0x04, 0x93, 0x07, 0x4e, 0x50, 0x52, 0xb2, 0xca,
-	0xa3, 0x38, 0xcf, 0xe3, 0xae, 0xd1, 0xc5, 0x17, 0x31, 0xe1, 0x77, 0xa1, 0xc3, 0x7f, 0x57, 0x6c,
-	0x52, 0xe3, 0x77, 0xd5, 0xfd, 0x9a, 0x1a, 0x4a, 0x60, 0x0b, 0xfd, 0x2d, 0x08, 0x7e, 0x5c, 0x01,
-	0xf7, 0x5d, 0x0f, 0xba, 0xaa, 0xdb, 0x99, 0xe7, 0xc4, 0xa3, 0xe5, 0x7a, 0xee, 0xe5, 0xd4, 0x8d,
-	0xdb, 0x56, 0x6d, 0x3f, 0x5f, 0x65, 0xb7, 0x72, 0x75, 0x3d, 0xac, 0xb2, 0x4f, 0xcb, 0xa3, 0x2f,
-	0x82, 0x0d, 0x87, 0x81, 0x07, 0xd4, 0xc7, 0xbd, 0xfc, 0x83, 0x4d, 0xa0, 0xab, 0xba, 0xe4, 0x9a,
-	0x1b, 0xa0, 0x55, 0x7b, 0x41, 0x13, 0x38, 0x67, 0xa5, 0xe9, 0x4a, 0x72, 0xbe, 0xe5, 0x41, 0x57,
-	0xf5, 0xac, 0x76, 0x10, 0x92, 0x53, 0xd3, 0xbb, 0xe7, 0x04, 0xce, 0x59, 0x5b, 0xec, 0x0a, 0xa6,
-	0xe7, 0xc5, 0x16, 0xc0, 0x7c, 0x41, 0x62, 0x7f, 0x89, 0x87, 0x90, 0xfb, 0x28, 0xef, 0xbf, 0x04,
-	0x2b, 0x69, 0x41, 0x47, 0x4c, 0x48, 0x67, 0x75, 0xa7, 0x31, 0x6a, 0x43, 0xd4, 0xd2, 0x2c, 0x12,
-	0x47, 0x2f, 0xa5, 0x62, 0xae, 0x62, 0x57, 0x7c, 0x1b, 0x6f, 0x3f, 0x58, 0x28, 0xba, 0x42, 0xe9,
-	0x97, 0x0b, 0x6f, 0x10, 0x8a, 0xb3, 0xc5, 0x0a, 0x98, 0xb4, 0xe2, 0xec, 0x87, 0x8b, 0x70, 0x86,
-	0xd2, 0x64, 0xef, 0x6d, 0x4c, 0x4d, 0x73, 0x6f, 0x41, 0x9d, 0xff, 0x58, 0xfc, 0xa3, 0x73, 0x6d,
-	0xbd, 0xa4, 0x6a, 0x6b, 0xb4, 0x85, 0x3b, 0x8a, 0x2d, 0x7c, 0x12, 0x5a, 0xdb, 0x93, 0x68, 0x2f,
-	0x46, 0xf7, 0x50, 0xf9, 0x47, 0xd6, 0x8e, 0x38, 0x9c, 0xec, 0x0e, 0x93, 0x64, 0x18, 0x8d, 0xf3,
-	0x2d, 0x84, 0x56, 0x4f, 0x49, 0xf1, 0x19, 0xac, 0x6e, 0x0d, 0x47, 0xe1, 0xd3, 0xe3, 0x7e, 0x94,
-	0x1b, 0x3d, 0x7c, 0x43, 0x41, 0x4b, 0xcb, 0xea, 0x08, 0xc7, 0xdb, 0xc3, 0x31, 0x9f, 0xc6, 0x57,
-	0x79, 0x1d, 0x45, 0x8a, 0xe5, 0xa1, 0x9f, 0x32, 0x77, 0xac, 0xe9, 0x73, 0xc7, 0x1f, 0x78, 0xb0,
-	0x4e, 0x23, 0xee, 0xf0, 0x94, 0xaa, 0xaa, 0x37, 0xd8, 0x1d, 0x38, 0x43, 0xa9, 0xf3, 0x1a, 0xa7,
-	0x0a, 0xd3, 0x7c, 0x99, 0x58, 0x1f, 0x2d, 0x47, 0xb0, 0x4e, 0x93, 0x76, 0xa5, 0x1f, 0xbf, 0xb1,
-	0x08, 0x67, 0x28, 0xa5, 0x7c, 0x77, 0xcc, 0x36, 0xac, 0x92, 0x3d, 0x6d, 0x36, 0x41, 0x19, 0x6e,
-	0x53, 0x32, 0xbc, 0x64, 0x97, 0xe1, 0xce, 0x54, 0x19, 0x5e, 0x26, 0x64, 0x58, 0xca, 0x28, 0xd8,
-	0xe6, 0xae, 0x95, 0x72, 0xc7, 0xd0, 0x30, 0xb9, 0xea, 0x98, 0x97, 0x34, 0x0f, 0xb5, 0x73, 0xee,
-	0x96, 0x6c, 0xfe, 0x3a, 0x43, 0x56, 0xef, 0x6a, 0xcc, 0xfd, 0x0a, 0xac, 0xf5, 0x35, 0x52, 0x62,
-	0xfe, 0x3a, 0x4d, 0x2b, 0xe6, 0x9e, 0x51, 0x9a, 0xbd, 0x46, 0x4f, 0xb8, 0x35, 0x67, 0x2f, 0x42,
-	0x35, 0xd7, 0x39, 0x50, 0xf8, 0x36, 0x5e, 0x5d, 0xa1, 0x1a, 0xe1, 0x0a, 0xb9, 0x5f, 0x85, 0xa3,
-	0x3a, 0x16, 0x38, 0xa7, 0xd9, 0xa0, 0x33, 0x8b, 0xb3, 0xff, 0x97, 0x1a, 0x16, 0xd3, 0x5e, 0x08,
-	0x27, 0xd9, 0x58, 0x99, 0xd7, 0x20, 0x3f, 0x0f, 0xcb, 0xb7, 0x79, 0x8d, 0xc5, 0x79, 0x83, 0x4c,
-	0xf0, 0x2f, 0xc2, 0x8a, 0xf8, 0x50, 0x82, 0x50, 0xaa, 0x49, 0xe4, 0x54, 0xa7, 0x5c, 0x7f, 0x58,
-	0xd2, 0xaf, 0x3f, 0x90, 0x2b, 0x36, 0x75, 0x82, 0x59, 0xd6, 0x27, 0x98, 0xd7, 0x3d, 0x38, 0x6b,
-	0x61, 0xdf, 0xe1, 0x1d, 0x2b, 0x3b, 0x20, 0xec, 0xe3, 0xa8, 0xe4, 0xef, 0xb2, 0x3b, 0xb4, 0xda,
-	0x1b, 0x26, 0xdc, 0x55, 0x0b, 0x95, 0x18, 0xce, 0x5a, 0x28, 0xbb, 0x52, 0x63, 0x3f, 0xf0, 0x50,
-	0x71, 0x3a, 0x61, 0xd6, 0x90, 0xad, 0xa6, 0x5d, 0xb6, 0x5a, 0xb4, 0x6c, 0xb5, 0x2d, 0xb2, 0x35,
-	0x73, 0x4c, 0xb1, 0x18, 0xce, 0x5a, 0xf8, 0x73, 0x05, 0xe9, 0x47, 0x85, 0xea, 0x76, 0x01, 0x28,
-	0xfb, 0x2b, 0x3c, 0xd8, 0xdb, 0xb7, 0xb1, 0x72, 0x05, 0x8e, 0xa6, 0x3a, 0x2d, 0x31, 0x35, 0x9c,
-	0xc1, 0xaa, 0xcc, 0xa6, 0x98, 0xe5, 0xd9, 0x67, 0x51, 0x2f, 0x1b, 0x25, 0xeb, 0xcc, 0x0e, 0xd3,
-	0x74, 0x5c, 0x9d, 0x79, 0xe2, 0x6f, 0xf0, 0x4e, 0x1e, 0xd9, 0x1e, 0x57, 0x40, 0x5e, 0x85, 0x63,
-	0x06, 0x30, 0x38, 0x53, 0x58, 0x91, 0x2c, 0xfd, 0x80, 0xbd, 0xbd, 0x08, 0x1b, 0x94, 0x35, 0xfe,
-	0xe4, 0x70, 0x5c, 0xb9, 0xa3, 0x59, 0x1f, 0x4d, 0xc2, 0xf5, 0x98, 0x26, 0x9a, 0x2d, 0x42, 0xb1,
-	0xdd, 0x95, 0x17, 0xdd, 0xfb, 0xe1, 0xc8, 0x26, 0x6f, 0xfd, 0xf5, 0x60, 0x12, 0xec, 0xca, 0x88,
-	0x2d, 0x5a, 0x22, 0x7d, 0x83, 0xbc, 0xe2, 0x31, 0xee, 0x6d, 0xb8, 0xa7, 0x12, 0x27, 0x57, 0xa3,
-	0xff, 0xf3, 0x1e, 0x6c, 0x50, 0x4b, 0x84, 0x7d, 0xe9, 0xa0, 0xaa, 0xa5, 0xcb, 0x6d, 0xb8, 0xa7,
-	0xb2, 0x5d, 0xae, 0x00, 0xf9, 0xcc, 0x22, 0x6c, 0x50, 0xa6, 0xf9, 0x21, 0x91, 0x58, 0xfd, 0xfd,
-	0x78, 0x85, 0x54, 0x2e, 0x55, 0x4a, 0x65, 0xc7, 0x36, 0x1f, 0x2d, 0x97, 0xbb, 0xa1, 0x12, 0x0d,
-	0x57, 0xdd, 0x70, 0x87, 0xdc, 0x60, 0xda, 0x8f, 0x4e, 0x60, 0xff, 0x44, 0x6f, 0x35, 0xb9, 0x66,
-	0xd9, 0xbf, 0x01, 0xa7, 0xfa, 0x14, 0x45, 0x31, 0x7f, 0x5d, 0xa0, 0xed, 0x73, 0x6c, 0x16, 0xfd,
-	0x5b, 0xf6, 0xe7, 0x1e, 0xdc, 0x6b, 0x67, 0x66, 0xce, 0x33, 0x1a, 0x21, 0xd1, 0x75, 0x6e, 0x86,
-	0xfe, 0xab, 0x07, 0x6c, 0x5a, 0x5b, 0x5d, 0x81, 0xff, 0x3c, 0x9c, 0x26, 0x01, 0xc4, 0x39, 0x6f,
-	0x0a, 0xfa, 0x96, 0x1f, 0xb3, 0xaf, 0xca, 0xbb, 0x96, 0x2f, 0x04, 0x93, 0x61, 0xb0, 0x39, 0xb2,
-	0x2f, 0xb9, 0x6f, 0x17, 0x70, 0xdf, 0xe6, 0xaf, 0x23, 0x8a, 0x33, 0xbc, 0xbc, 0x03, 0xd6, 0xf5,
-	0x50, 0x96, 0xcb, 0x32, 0x72, 0x65, 0x39, 0x88, 0x58, 0x8b, 0x08, 0x22, 0x96, 0x99, 0xae, 0x79,
-	0x1c, 0x35, 0xb1, 0x2c, 0xca, 0xfe, 0xcf, 0xd2, 0xd2, 0x3b, 0x31, 0xda, 0xa7, 0xf9, 0xff, 0x78,
-	0xa0, 0xd8, 0x29, 0x0e, 0x14, 0x4f, 0x42, 0xeb, 0x76, 0x30, 0xda, 0x43, 0xd7, 0xda, 0xfc, 0x43,
-	0x9a, 0xc2, 0x40, 0xed, 0xe2, 0xaf, 0x58, 0xa6, 0x3d, 0xdd, 0x8d, 0x57, 0x11, 0x84, 0xbe, 0x80,
-	0xc7, 0x61, 0x10, 0xfa, 0xdb, 0xc5, 0xb9, 0xdf, 0xed, 0xe1, 0x80, 0xfd, 0xb3, 0x3c, 0x61, 0x7d,
-	0xef, 0x9d, 0x83, 0x40, 0x36, 0xcb, 0x40, 0xb6, 0x08, 0x20, 0xdb, 0x14, 0x90, 0x53, 0xcf, 0x11,
-	0x2b, 0x35, 0xb5, 0x3c, 0x9f, 0x75, 0x0e, 0x25, 0xbb, 0x83, 0x97, 0xb0, 0xdc, 0xe0, 0x56, 0x65,
-	0x16, 0xc8, 0x6b, 0x55, 0xee, 0xb9, 0x7c, 0x49, 0xdc, 0x28, 0x70, 0xc2, 0x64, 0x11, 0xd2, 0xcf,
-	0xbd, 0xe4, 0x33, 0x68, 0xdc, 0x0e, 0x4a, 0xd7, 0x6c, 0x25, 0xdd, 0x2c, 0x93, 0x7d, 0x1f, 0xef,
-	0x23, 0x63, 0x72, 0x9d, 0xa9, 0x41, 0xd1, 0x4c, 0x8d, 0x29, 0x9a, 0xa9, 0x59, 0xa5, 0x99, 0x5a,
-	0x84, 0x66, 0x6a, 0x2b, 0x82, 0x51, 0xe7, 0x55, 0xf2, 0x1b, 0x78, 0x9f, 0x59, 0x67, 0xc8, 0x9d,
-	0x1f, 0xe1, 0xe6, 0xed, 0xa0, 0x7c, 0x95, 0x54, 0x82, 0x9c, 0xe7, 0xb2, 0x7f, 0xc3, 0x4e, 0xcf,
-	0xef, 0x01, 0xd4, 0x9c, 0x7d, 0x95, 0xdb, 0x0e, 0x8d, 0x8a, 0xdb, 0x0e, 0x4d, 0xed, 0xb6, 0xc3,
-	0xdd, 0xde, 0x6d, 0xa8, 0x03, 0xf5, 0xe7, 0x30, 0x6a, 0x9c, 0xc2, 0x95, 0x2b, 0x9c, 0x1f, 0x80,
-	0x76, 0x90, 0x51, 0x41, 0xa4, 0x8f, 0xc8, 0xa7, 0x57, 0xf9, 0xcd, 0x0a, 0x91, 0xf9, 0xc4, 0xff,
-	0xf5, 0x60, 0xe5, 0xa9, 0x20, 0x0d, 0xae, 0x05, 0xe3, 0x60, 0x3b, 0x9c, 0xf8, 0xd7, 0x45, 0xa4,
-	0xd2, 0x2b, 0x7b, 0xe9, 0xce, 0x33, 0xe3, 0xad, 0xc8, 0xbf, 0x70, 0x79, 0x10, 0xa4, 0xc1, 0x2e,
-	0xcf, 0xbe, 0xac, 0xe5, 0xf5, 0xc2, 0x5b, 0xdd, 0x8d, 0xaa, 0xec, 0x24, 0x66, 0x0b, 0xfe, 0x8b,
-	0x45, 0x2c, 0xfd, 0x6b, 0x61, 0x1a, 0x64, 0xc5, 0xfd, 0x8b, 0xc4, 0xaf, 0x8a, 0xec, 0xac, 0xde,
-	0x7b, 0xa7, 0x94, 0xc8, 0xab, 0xbe, 0x81, 0xb7, 0x5f, 0x9e, 0xdc, 0x4b, 0x86, 0xe3, 0x30, 0x49,
-	0x7c, 0xbd, 0x39, 0x7a, 0x66, 0x56, 0xed, 0x3d, 0x95, 0xf9, 0x79, 0xa5, 0x88, 0x80, 0xac, 0x93,
-	0x40, 0x40, 0xad, 0x72, 0xa3, 0x2a, 0x3b, 0xaf, 0xf1, 0x25, 0x21, 0xcb, 0x98, 0x9c, 0x75, 0xbc,
-	0x7f, 0xaf, 0xfd, 0x67, 0x42, 0xdc, 0xbb, 0x6c, 0x5a, 0x11, 0x04, 0x81, 0x4f, 0x67, 0x16, 0x10,
-	0xf4, 0xcc, 0x32, 0x08, 0x66, 0x7e, 0x5e, 0xe9, 0x53, 0xb0, 0x2c, 0x5f, 0x18, 0xfb, 0x67, 0x09,
-	0xd0, 0x78, 0x8c, 0xfd, 0x6e, 0xd7, 0x96, 0x95, 0xd7, 0x72, 0x05, 0x3a, 0xd8, 0x73, 0xfe, 0x3a,
-	0xd9, 0xa1, 0x59, 0x1d, 0x67, 0x2d, 0x39, 0x79, 0x15, 0xd7, 0x44, 0xc0, 0xde, 0x2b, 0x71, 0x9c,
-	0xc3, 0x76, 0x9e, 0x2c, 0x8c, 0x88, 0x5d, 0xa8, 0xc8, 0x45, 0xbe, 0xe4, 0xcb, 0x74, 0x83, 0x2f,
-	0x99, 0x5e, 0xe6, 0x4b, 0xc9, 0xc2, 0x5a, 0xf8, 0xdc, 0x5a, 0xae, 0x45, 0xa6, 0x97, 0x6b, 0x51,
-	0xb2, 0x50, 0xd0, 0xb4, 0xd8, 0xf7, 0x86, 0xa0, 0x99, 0xe1, 0xff, 0xbb, 0x1b, 0x55, 0xd9, 0x1a,
-	0x58, 0x58, 0x21, 0x01, 0x96, 0x52, 0xdf, 0x85, 0x8a, 0x5c, 0x6d, 0xe4, 0x2a, 0xe1, 0xd4, 0xa9,
-	0x91, 0xab, 0x47, 0x81, 0xa7, 0x46, 0xae, 0x11, 0x8f, 0x9d, 0xf3, 0xae, 0x85, 0x09, 0x37, 0x78,
-	0x37, 0x43, 0xa5, 0x77, 0x37, 0xaa, 0xb2, 0xb1, 0x46, 0x2d, 0x38, 0xb7, 0x51, 0xa3, 0x19, 0x2a,
-	0xdc, 0xa8, 0xb1, 0x14, 0xd7, 0x9b, 0x2d, 0xf8, 0xbf, 0x0e, 0x50, 0x84, 0xaa, 0xf6, 0x29, 0x49,
-	0x17, 0x61, 0x6c, 0xbb, 0xe7, 0xac, 0x79, 0x28, 0x2e, 0x32, 0x26, 0xb1, 0x4f, 0x48, 0x3b, 0x56,
-	0xd3, 0xb5, 0x65, 0x69, 0x7a, 0x09, 0x23, 0x1b, 0x53, 0x7a, 0x49, 0x09, 0xeb, 0x4c, 0xe9, 0x25,
-	0x35, 0x28, 0x32, 0x67, 0xb0, 0x88, 0xfa, 0xeb, 0x53, 0x22, 0x4f, 0x33, 0xa8, 0x87, 0x0a, 0xe6,
-	0x15, 0x15, 0xe1, 0x76, 0x7d, 0x4a, 0xea, 0xe9, 0x8a, 0xf4, 0x18, 0xbd, 0x6c, 0xc1, 0x7f, 0xa1,
-	0x08, 0xb7, 0x24, 0xa2, 0xfa, 0xf9, 0x94, 0xc6, 0x56, 0xa3, 0x0c, 0x76, 0x2f, 0x56, 0x17, 0x40,
-	0x1d, 0xa9, 0x87, 0x1d, 0xf5, 0x09, 0x74, 0xb4, 0x5a, 0xef, 0xa9, 0xcc, 0xcf, 0x2b, 0xfd, 0x98,
-	0x19, 0x02, 0x36, 0xef, 0x15, 0x56, 0xf1, 0x43, 0xec, 0x9a, 0xfb, 0xa6, 0x96, 0x41, 0x34, 0x8c,
-	0x18, 0x9e, 0x3e, 0xa5, 0xba, 0x2b, 0xd0, 0x20, 0x42, 0x80, 0xf2, 0x7a, 0x8d, 0xe8, 0x99, 0x46,
-	0xbd, 0xe5, 0x68, 0x9e, 0x46, 0xbd, 0x44, 0xf0, 0x4d, 0x2e, 0xa1, 0x5a, 0x8c, 0x4a, 0x43, 0x42,
-	0xcd, 0x20, 0x9a, 0x86, 0x84, 0x96, 0xc2, 0x5b, 0x0a, 0x04, 0xf4, 0x28, 0x8f, 0x26, 0x02, 0xa5,
-	0xa8, 0x93, 0x26, 0x02, 0xe5, 0x20, 0x91, 0x9a, 0xea, 0x15, 0xd1, 0x68, 0x2e, 0x58, 0x85, 0x28,
-	0xb1, 0xaa, 0xde, 0x22, 0xc4, 0x9b, 0xaa, 0x7a, 0x45, 0x85, 0xe7, 0x6d, 0x5d, 0x9c, 0xd8, 0x54,
-	0xaf, 0x56, 0xdd, 0x8b, 0x7a, 0x60, 0x3f, 0xab, 0xea, 0xd5, 0x22, 0xba, 0x91, 0xaa, 0x57, 0x8f,
-	0xa9, 0xc6, 0x16, 0xfc, 0x4d, 0xf1, 0x34, 0x43, 0x8f, 0x54, 0xe7, 0x13, 0x32, 0x59, 0x0a, 0xe0,
-	0xd7, 0xbd, 0x7f, 0x7a, 0x21, 0x44, 0x43, 0x0d, 0xd0, 0x65, 0xa0, 0x61, 0x44, 0x54, 0xeb, 0x5e,
-	0xa8, 0xc8, 0xcd, 0xab, 0xfb, 0x30, 0xac, 0x28, 0xb1, 0xaf, 0xfc, 0x73, 0x14, 0x9b, 0x58, 0xd9,
-	0x79, 0x7b, 0xa6, 0xc6, 0xbe, 0x1e, 0xdf, 0x89, 0x62, 0xbf, 0x14, 0xd8, 0x8a, 0x62, 0xbf, 0x1c,
-	0x26, 0x8a, 0xb3, 0xaf, 0x46, 0x24, 0x32, 0xd8, 0x37, 0x62, 0x38, 0x75, 0x2f, 0x54, 0xe4, 0x4a,
-	0x34, 0x95, 0x40, 0x40, 0x26, 0x9a, 0x7a, 0x48, 0x22, 0x13, 0x4d, 0x23, 0x82, 0x90, 0x10, 0x7e,
-	0x35, 0x96, 0x8e, 0x29, 0xfc, 0x46, 0x24, 0x20, 0x53, 0xf8, 0xcd, 0x30, 0x3c, 0xdc, 0xc0, 0x2d,
-	0x45, 0xa2, 0x31, 0x0c, 0x5c, 0x2a, 0xa4, 0x8e, 0x61, 0xe0, 0x92, 0xc1, 0x6c, 0x94, 0xb1, 0xa0,
-	0x56, 0x4e, 0x8c, 0x05, 0xa3, 0xee, 0x7b, 0xa7, 0x94, 0xc8, 0xab, 0xbe, 0xa5, 0xbb, 0xce, 0x56,
-	0xe3, 0x9c, 0xf8, 0x97, 0xac, 0x9d, 0x6d, 0x84, 0x73, 0xe9, 0x3e, 0x3c, 0x63, 0xc9, 0x9c, 0xe4,
-	0x58, 0x9c, 0x22, 0x97, 0x63, 0x88, 0xf8, 0x0f, 0x55, 0x36, 0xb9, 0xf0, 0x10, 0xd9, 0xbd, 0x34,
-	0x5b, 0x41, 0xec, 0x9b, 0x52, 0x38, 0x0e, 0xa3, 0x6f, 0xa8, 0x00, 0x22, 0x46, 0xdf, 0x90, 0x11,
-	0x3d, 0x44, 0xcf, 0x9b, 0x01, 0x30, 0xcc, 0x9e, 0x27, 0xc2, 0x73, 0x98, 0x3d, 0x4f, 0xc5, 0xd0,
-	0xe0, 0x33, 0x6c, 0x39, 0xe2, 0x84, 0x31, 0xc3, 0x92, 0x11, 0x31, 0x8c, 0x19, 0x96, 0x0e, 0x5b,
-	0xa1, 0xce, 0x03, 0x42, 0x8b, 0x91, 0xf3, 0x40, 0xe1, 0xe4, 0x88, 0x9c, 0x07, 0x14, 0xc7, 0x41,
-	0xca, 0x3c, 0x80, 0x15, 0x9e, 0xb7, 0x6a, 0x4c, 0xcb, 0x3c, 0xa0, 0x57, 0x87, 0xda, 0x4a, 0xf7,
-	0xac, 0x4f, 0x69, 0xab, 0x52, 0xa8, 0x00, 0x4a, 0x5b, 0x95, 0x1d, 0xf4, 0xb3, 0x05, 0x3f, 0xc4,
-	0x07, 0xf6, 0xba, 0xff, 0x78, 0xdf, 0xae, 0xed, 0x54, 0x2a, 0x0f, 0xcc, 0x50, 0x4a, 0x37, 0xf9,
-	0x69, 0xac, 0x4d, 0x1f, 0xf1, 0xa4, 0xc9, 0xaf, 0x83, 0x93, 0xf5, 0x9e, 0xea, 0xe3, 0xdc, 0xa7,
-	0x54, 0x9f, 0xbd, 0xf7, 0x4c, 0xf7, 0xe8, 0xdc, 0xde, 0x30, 0xfc, 0x8a, 0x1b, 0xf6, 0x46, 0xd9,
-	0xd3, 0xb9, 0x61, 0x6f, 0x10, 0x6e, 0xc9, 0xb9, 0xfd, 0xa9, 0x3b, 0xf4, 0x36, 0xec, 0xcf, 0x92,
-	0x83, 0x71, 0xc3, 0xfe, 0x2c, 0x7b, 0x03, 0x17, 0xa3, 0xa3, 0xe4, 0x95, 0xda, 0xb7, 0xea, 0x54,
-	0xa5, 0xf2, 0xfb, 0xa6, 0x96, 0xd1, 0xf6, 0x2d, 0xb4, 0xfa, 0x6d, 0x7a, 0x55, 0xa9, 0x9e, 0x4d,
-	0x2b, 0xa2, 0xe9, 0x5e, 0xc2, 0x33, 0xad, 0x7f, 0xa9, 0xba, 0x06, 0x45, 0x15, 0x3e, 0x3c, 0x63,
-	0x49, 0x44, 0xac, 0xec, 0xe7, 0xd7, 0xb7, 0x6a, 0x3a, 0x2b, 0x62, 0xb4, 0xb3, 0x60, 0xd1, 0x25,
-	0x25, 0xbf, 0xb2, 0xbe, 0x55, 0xd9, 0xd9, 0xbb, 0x84, 0x74, 0x4e, 0xcb, 0xf5, 0x01, 0xe1, 0xc6,
-	0xd5, 0xd0, 0x07, 0xb4, 0xab, 0x59, 0x43, 0x1f, 0x58, 0xbc, 0xc1, 0x72, 0x7d, 0x40, 0xb9, 0x4d,
-	0x35, 0xf4, 0x81, 0xc5, 0xb9, 0xab, 0xa1, 0x0f, 0x6c, 0xfe, 0x57, 0xd9, 0x82, 0x9f, 0xa2, 0x93,
-	0x08, 0xc2, 0xa1, 0xb5, 0x3f, 0x65, 0x4a, 0x55, 0x15, 0xd0, 0x23, 0xb3, 0x16, 0xd5, 0x4d, 0x15,
-	0xc5, 0x03, 0x15, 0x69, 0xaa, 0xe8, 0x0e, 0x19, 0x49, 0x53, 0xc5, 0xf0, 0x6e, 0x58, 0xb6, 0x27,
-	0x54, 0x3f, 0x5b, 0x15, 0xf6, 0x84, 0xe1, 0x39, 0xac, 0xc2, 0x9e, 0x30, 0x1d, 0x77, 0xb1, 0x05,
-	0xff, 0x15, 0x71, 0x3f, 0x97, 0x74, 0x76, 0xe9, 0x3f, 0x42, 0x4d, 0x30, 0xb4, 0x4f, 0xcf, 0xee,
-	0xa3, 0x33, 0x97, 0xd5, 0x0d, 0x0b, 0x3b, 0x92, 0x94, 0x6b, 0x4b, 0xd2, 0xb0, 0x20, 0x91, 0xb4,
-	0xb9, 0x38, 0x34, 0x90, 0xac, 0x70, 0xfd, 0x68, 0x20, 0x59, 0xe5, 0x33, 0x51, 0xb1, 0xcc, 0x08,
-	0x8a, 0x0f, 0x91, 0xfb, 0x8a, 0x04, 0xc1, 0x4b, 0xb3, 0x15, 0xd4, 0x06, 0x00, 0xe5, 0x95, 0x8d,
-	0x1a, 0x00, 0x16, 0x47, 0x73, 0xd4, 0x00, 0xb0, 0x39, 0x7a, 0x53, 0xd5, 0x6e, 0xd9, 0xbf, 0x1e,
-	0xa9, 0x76, 0x49, 0x67, 0x81, 0xa4, 0xda, 0xa5, 0x1d, 0xf6, 0xa9, 0xdb, 0xf4, 0xe8, 0xb2, 0x89,
-	0xdc, 0xa6, 0x57, 0x9c, 0x48, 0x91, 0xdb, 0xf4, 0xaa, 0xbf, 0x27, 0x65, 0x3b, 0x4c, 0xd6, 0x49,
-	0xd8, 0x52, 0x6a, 0x95, 0x1b, 0x55, 0xd9, 0xda, 0x74, 0xa7, 0xba, 0xdb, 0xa2, 0xa6, 0x3b, 0xc3,
-	0x4f, 0x18, 0x35, 0xdd, 0x99, 0x1e, 0xbb, 0x38, 0x08, 0xba, 0xdf, 0x2a, 0x9f, 0xda, 0x81, 0xb4,
-	0x83, 0x50, 0x76, 0x7a, 0xa5, 0x22, 0x8b, 0xbe, 0x33, 0x48, 0x64, 0x15, 0x0f, 0x20, 0x24, 0xb2,
-	0xaa, 0xe3, 0x0d, 0x05, 0x07, 0xd5, 0x7b, 0x0f, 0x85, 0x83, 0xe1, 0x90, 0x89, 0xc2, 0xc1, 0x74,
-	0x91, 0xc4, 0x16, 0xfc, 0x1d, 0xc2, 0x7b, 0x52, 0x8e, 0xf4, 0x03, 0xd5, 0x3f, 0x47, 0xb4, 0x1f,
-	0x9c, 0xa5, 0x98, 0x66, 0xd7, 0x1a, 0xae, 0x72, 0x28, 0xbb, 0xb6, 0xec, 0x05, 0x88, 0xb2, 0x6b,
-	0x09, 0x9f, 0x3b, 0xea, 0xf9, 0x8b, 0xa5, 0x0f, 0x4a, 0xce, 0x70, 0xc8, 0xf3, 0x17, 0x03, 0x25,
-	0x29, 0x2d, 0x96, 0x4a, 0x4b, 0xae, 0x5d, 0x48, 0x69, 0x31, 0x2a, 0x7d, 0x11, 0x03, 0xea, 0x15,
-	0x1e, 0x16, 0x7c, 0x6a, 0xf7, 0x54, 0xf3, 0x1f, 0xd1, 0xbd, 0x77, 0x4a, 0x09, 0x34, 0x9c, 0x0d,
-	0x17, 0x19, 0x3e, 0xb1, 0x83, 0xaa, 0x57, 0x7c, 0xb1, 0xba, 0x80, 0xb6, 0xfe, 0xd1, 0x5d, 0x6f,
-	0x50, 0xeb, 0x9f, 0x92, 0x27, 0x0f, 0x6a, 0xfd, 0x53, 0xf6, 0xe0, 0xc1, 0x61, 0x31, 0x1d, 0x4f,
-	0xf8, 0xd4, 0x36, 0x6a, 0x15, 0x2c, 0x94, 0xe7, 0x0a, 0x4d, 0xf3, 0x89, 0x1c, 0x5a, 0xf3, 0x15,
-	0x6e, 0x0b, 0x68, 0xcd, 0xa7, 0xf8, 0x11, 0x50, 0x35, 0x1f, 0xd6, 0x79, 0xc1, 0xce, 0xa8, 0x4d,
-	0xf3, 0xe9, 0x35, 0x4a, 0x11, 0xb6, 0x34, 0xb3, 0xe4, 0x5d, 0x81, 0x14, 0x61, 0xa3, 0xd2, 0x31,
-	0xfd, 0xa0, 0xf3, 0x46, 0x68, 0x6e, 0x74, 0xd8, 0xdf, 0xe1, 0x77, 0x2f, 0xcd, 0x56, 0x10, 0xe9,
-	0x59, 0x1e, 0x83, 0x1b, 0xf4, 0xec, 0xcf, 0xd4, 0x0d, 0x7a, 0x15, 0x6f, 0xcb, 0x39, 0x3d, 0xcb,
-	0xab, 0x6a, 0x83, 0x9e, 0xfd, 0xb5, 0xb8, 0x41, 0xaf, 0xe2, 0x91, 0x36, 0x5b, 0xf0, 0x6f, 0x92,
-	0x0f, 0xd3, 0x32, 0x72, 0x0f, 0xda, 0xb6, 0x7d, 0x0d, 0x6a, 0x0f, 0xcd, 0x54, 0x4e, 0xb3, 0x2a,
-	0xc9, 0x47, 0xc4, 0x94, 0x55, 0x69, 0x7b, 0xdf, 0x4c, 0x59, 0x95, 0xd6, 0x97, 0xc9, 0x5c, 0x69,
-	0x53, 0xdd, 0x6c, 0x28, 0x6d, 0xcb, 0x4b, 0x61, 0x43, 0x69, 0xdb, 0x5e, 0xb7, 0x72, 0x32, 0x54,
-	0xef, 0x1a, 0x64, 0x2c, 0xaf, 0x51, 0x0d, 0x32, 0xb6, 0x87, 0xa3, 0x9c, 0x0c, 0xd5, 0xa9, 0x06,
-	0x19, 0xcb, 0x3b, 0x50, 0x83, 0x8c, 0xed, 0x19, 0xa4, 0xa2, 0x25, 0x0d, 0x2a, 0xf7, 0x4d, 0x83,
-	0xde, 0xa2, 0x25, 0x49, 0x1a, 0x63, 0xf2, 0xe1, 0xa2, 0x6d, 0xdf, 0x92, 0x7c, 0x2d, 0x48, 0x59,
-	0xc7, 0xf4, 0x8b, 0x3e, 0x6e, 0x27, 0x90, 0x8f, 0xc7, 0x7c, 0xaa, 0x8f, 0xcb, 0x4f, 0x72, 0x0c,
-	0x3b, 0xc1, 0xfa, 0x0e, 0x8d, 0x53, 0x22, 0x1f, 0x67, 0xf9, 0x54, 0x37, 0x4f, 0xa5, 0x64, 0x7d,
-	0xe7, 0xc5, 0x29, 0x91, 0x6f, 0x96, 0x7c, 0xaa, 0xa7, 0xa7, 0x52, 0xb2, 0x3e, 0x7f, 0x52, 0x6c,
-	0x1f, 0x93, 0x10, 0xd1, 0xdb, 0x04, 0x9d, 0x07, 0x66, 0x28, 0xa5, 0x2d, 0x26, 0x88, 0xf7, 0x36,
-	0xd4, 0x62, 0x82, 0x7e, 0x26, 0x44, 0x2d, 0x26, 0x2c, 0x0f, 0x78, 0xd8, 0x82, 0xff, 0x2a, 0xed,
-	0xf1, 0x44, 0x5c, 0x24, 0xf6, 0x1f, 0x9d, 0xaa, 0x01, 0x8a, 0xab, 0xf1, 0xdd, 0xc7, 0x66, 0x2f,
-	0x8c, 0xb4, 0x2b, 0x9e, 0x5a, 0x18, 0xb4, 0xab, 0x1f, 0x8b, 0x18, 0xb4, 0xa7, 0xbc, 0xe0, 0xe0,
-	0xb4, 0x2b, 0xde, 0x17, 0x18, 0xb4, 0xab, 0xdf, 0x65, 0x18, 0xb4, 0xa7, 0x3c, 0x5b, 0xb0, 0xce,
-	0x06, 0x48, 0x7a, 0xea, 0x6c, 0xa0, 0x50, 0x7e, 0x74, 0xe6, 0xb2, 0x39, 0xe1, 0x4f, 0x55, 0xbe,
-	0x30, 0xc8, 0xc5, 0xec, 0xf2, 0x8c, 0x35, 0xa2, 0xb0, 0x3d, 0x5e, 0xab, 0xbc, 0x6e, 0xc5, 0xe1,
-	0x25, 0x45, 0xd2, 0x8a, 0x53, 0x6e, 0xbf, 0x92, 0x56, 0x9c, 0x7a, 0x7d, 0x55, 0xb5, 0xb9, 0x2c,
-	0x95, 0x96, 0xee, 0x5b, 0x93, 0x36, 0x57, 0xb9, 0x52, 0xfd, 0xd2, 0x2f, 0xb9, 0x6c, 0xb0, 0x57,
-	0x5a, 0xbe, 0x31, 0xac, 0xd8, 0x9b, 0xb2, 0x4e, 0xc2, 0xde, 0x54, 0xab, 0xdc, 0xa8, 0xca, 0xd6,
-	0x56, 0x98, 0xea, 0x8d, 0x53, 0x6a, 0x85, 0x69, 0x5c, 0xb1, 0xa5, 0x56, 0x98, 0xe6, 0xa5, 0x55,
-	0x7e, 0x5a, 0xac, 0xf8, 0x90, 0xf2, 0xa9, 0xcb, 0x39, 0xe8, 0x2d, 0xab, 0x7b, 0xde, 0x9e, 0xa9,
-	0x5d, 0x1c, 0x91, 0x17, 0x36, 0x7d, 0xf2, 0xc2, 0x63, 0x71, 0x47, 0x95, 0xba, 0x38, 0xa2, 0xdd,
-	0xf6, 0x64, 0x0b, 0x9b, 0xed, 0x78, 0x12, 0xa5, 0xd1, 0xcf, 0xfc, 0x38, 0x00, 0x00, 0xff, 0xff,
-	0xa1, 0xf7, 0xdd, 0xd7, 0xb2, 0xb1, 0x00, 0x00,
+	// 5452 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x3d, 0x6d, 0x8c, 0x1c, 0xc9,
+	0x55, 0xdb, 0xb3, 0x33, 0xbb, 0x33, 0x6f, 0xf6, 0xb3, 0x6d, 0xef, 0x8e, 0xc7, 0x5e, 0xaf, 0xb7,
+	0xed, 0xb3, 0xd7, 0xbe, 0x78, 0x9d, 0x73, 0x2e, 0x21, 0x24, 0x40, 0xf0, 0xd9, 0x77, 0xb9, 0x3d,
+	0xd9, 0x8e, 0xb3, 0xbe, 0xbb, 0x28, 0x22, 0xc2, 0xf4, 0xcc, 0xf4, 0xce, 0xce, 0x79, 0x76, 0xba,
+	0x77, 0xa6, 0xf7, 0x2e, 0x6b, 0x84, 0x08, 0x24, 0x24, 0x27, 0xa4, 0x38, 0x39, 0x20, 0xe1, 0x17,
+	0x1f, 0x12, 0xf9, 0x11, 0x09, 0x14, 0x05, 0x7e, 0x21, 0x84, 0x40, 0x22, 0x48, 0x10, 0x29, 0x42,
+	0xe1, 0x07, 0x08, 0x02, 0x44, 0x20, 0xf2, 0x83, 0x3f, 0x20, 0xa4, 0x48, 0xfc, 0x40, 0x08, 0xa1,
+	0xae, 0x8f, 0x9e, 0xaa, 0xea, 0x57, 0xdd, 0x33, 0xeb, 0xa9, 0x9d, 0x3d, 0x89, 0x3f, 0xf6, 0x4e,
+	0x75, 0x77, 0xbd, 0xaf, 0xaa, 0xf7, 0x5e, 0xbd, 0x7a, 0xf5, 0x0a, 0x16, 0x1b, 0x6e, 0xe8, 0xee,
+	0xba, 0x1d, 0xb7, 0xe9, 0x75, 0x37, 0x82, 0xae, 0x1f, 0xfa, 0x76, 0x59, 0x68, 0xaa, 0x5e, 0xab,
+	0x3d, 0xba, 0x56, 0xeb, 0xd5, 0x83, 0xeb, 0xad, 0x4e, 0xe8, 0x75, 0x3b, 0x6e, 0xfb, 0x3a, 0x79,
+	0xa9, 0xee, 0xb7, 0xaf, 0xd7, 0xfd, 0xdd, 0x5d, 0xbf, 0xc3, 0xfe, 0xa3, 0xdf, 0x3a, 0xaf, 0xc1,
+	0x89, 0x8f, 0xef, 0x7b, 0xdd, 0x83, 0x9b, 0x41, 0x70, 0xd7, 0x0b, 0xdd, 0xa8, 0xa7, 0x2d, 0x6f,
+	0xcf, 0x5e, 0x80, 0xc9, 0x9e, 0xb7, 0x57, 0xb1, 0xce, 0x5b, 0xeb, 0xa5, 0xad, 0xe8, 0x4f, 0xfb,
+	0x14, 0x4c, 0xd5, 0x5a, 0x8f, 0x1f, 0xb6, 0x1a, 0x95, 0x1c, 0x69, 0x2c, 0xd4, 0x5a, 0x8f, 0x37,
+	0x1b, 0x51, 0xb3, 0x1b, 0x04, 0x51, 0xf3, 0x24, 0x6d, 0x76, 0x83, 0x60, 0xb3, 0xe1, 0x34, 0xe1,
+	0x64, 0xb2, 0xdb, 0x5e, 0x80, 0xf4, 0x7b, 0x01, 0xf2, 0x75, 0xbf, 0xe1, 0x91, 0x5e, 0xe7, 0x6e,
+	0xcc, 0x6f, 0x30, 0xec, 0x5e, 0xec, 0x76, 0x6f, 0xf9, 0x0d, 0x6f, 0x8b, 0x3c, 0xb4, 0x2b, 0x30,
+	0xbd, 0xeb, 0xf5, 0x7a, 0x6e, 0xd3, 0x63, 0x60, 0xf8, 0x4f, 0xe7, 0x2f, 0x2c, 0x98, 0xb9, 0xd5,
+	0xf5, 0xdc, 0xd0, 0xbb, 0x19, 0x04, 0x23, 0xc0, 0xdc, 0xb6, 0x21, 0xdf, 0x71, 0x77, 0xbd, 0x4a,
+	0x9e, 0x34, 0x92, 0xbf, 0xed, 0x55, 0x28, 0x37, 0xbc, 0xa0, 0xed, 0x1f, 0x3c, 0x0c, 0x0f, 0x02,
+	0xaf, 0x52, 0x38, 0x6f, 0xad, 0x17, 0xb6, 0x80, 0x36, 0xbd, 0x7a, 0x10, 0x78, 0xf6, 0x49, 0x28,
+	0xf4, 0x42, 0x37, 0xf4, 0x2a, 0x53, 0xe4, 0x11, 0xfd, 0x11, 0x61, 0x5d, 0x8f, 0x50, 0xf3, 0xbb,
+	0x95, 0x69, 0x8a, 0x35, 0xfb, 0x19, 0x01, 0xd9, 0xf5, 0x76, 0xfd, 0x4a, 0x91, 0x02, 0x89, 0xfe,
+	0x76, 0xfe, 0xd8, 0x82, 0x59, 0x81, 0x12, 0x03, 0xcc, 0xb2, 0x7f, 0x04, 0xf2, 0x91, 0x24, 0x08,
+	0x6d, 0xe5, 0x1b, 0x17, 0x36, 0xc4, 0xa1, 0x24, 0x81, 0xde, 0x88, 0xfe, 0xb9, 0x1d, 0x09, 0x8d,
+	0x7c, 0x50, 0x5d, 0x83, 0x22, 0x6f, 0x11, 0xf8, 0x66, 0x89, 0x12, 0x77, 0xa1, 0xcc, 0x25, 0x6e,
+	0x48, 0x0c, 0xce, 0x67, 0x2c, 0x98, 0xe9, 0xc3, 0x30, 0xc1, 0xa0, 0x55, 0x89, 0x41, 0x65, 0xfe,
+	0x79, 0x04, 0x8f, 0x3c, 0x70, 0x3e, 0x05, 0xf3, 0x1c, 0x83, 0x3b, 0xad, 0x5e, 0x38, 0x14, 0xa5,
+	0xe7, 0x21, 0x1f, 0x70, 0x98, 0xe5, 0x1b, 0x33, 0xbc, 0xf3, 0xfb, 0x6e, 0xd3, 0xdb, 0x22, 0x4f,
+	0x9c, 0x7f, 0xb7, 0x60, 0x41, 0xee, 0xde, 0x04, 0x91, 0x1f, 0x92, 0x88, 0xbc, 0x24, 0x8d, 0x02,
+	0x15, 0xba, 0x3a, 0x10, 0xee, 0x08, 0x03, 0x61, 0x15, 0xca, 0xa1, 0x1f, 0xba, 0xed, 0x87, 0x75,
+	0x7f, 0xbf, 0x13, 0x12, 0x04, 0x67, 0xb7, 0x80, 0x34, 0xdd, 0x8a, 0x5a, 0x22, 0x6e, 0xb6, 0x3a,
+	0xdb, 0x7e, 0x25, 0x77, 0x7e, 0x32, 0xc1, 0xcd, 0xe8, 0x81, 0xf3, 0x6d, 0x0b, 0x66, 0x5e, 0x0b,
+	0x1a, 0x63, 0x9e, 0xbc, 0x7c, 0x32, 0x4e, 0xf5, 0x27, 0x63, 0x7f, 0x42, 0x4f, 0x8b, 0x13, 0xba,
+	0x0a, 0x45, 0x3f, 0xf0, 0xba, 0x64, 0x46, 0xd3, 0xa9, 0x1b, 0xff, 0x76, 0x7e, 0x06, 0x66, 0x05,
+	0x52, 0x4c, 0xa8, 0xba, 0x37, 0x60, 0xe6, 0xb6, 0xd7, 0xf6, 0x46, 0xc6, 0x2c, 0x91, 0x9a, 0x7c,
+	0x92, 0x1a, 0x01, 0x96, 0x09, 0x6a, 0xfe, 0xd4, 0x82, 0x53, 0x54, 0xe7, 0xbc, 0xea, 0xed, 0x06,
+	0x6d, 0x37, 0xf4, 0x5e, 0x68, 0x75, 0x1a, 0x43, 0xd1, 0x15, 0x0d, 0x40, 0xf6, 0x6d, 0x9f, 0x38,
+	0xe0, 0x4d, 0x12, 0xe1, 0x79, 0x91, 0xf0, 0x53, 0x30, 0x55, 0xdf, 0x6e, 0x46, 0xcd, 0x05, 0xda,
+	0x5c, 0xdf, 0x6e, 0x6e, 0x36, 0x86, 0x55, 0xe2, 0xce, 0x5f, 0x59, 0xb0, 0x84, 0x51, 0x60, 0x62,
+	0xce, 0xfe, 0xa4, 0x34, 0x67, 0xdf, 0x83, 0x68, 0x6e, 0x15, 0x87, 0x0c, 0x15, 0xce, 0x18, 0x60,
+	0x09, 0x0c, 0x70, 0x9e, 0x58, 0xcc, 0x6a, 0x1f, 0x13, 0x89, 0x38, 0xbf, 0x62, 0xc1, 0x29, 0x04,
+	0x21, 0x13, 0x0c, 0x5e, 0x97, 0x18, 0x7c, 0x92, 0x7f, 0x2e, 0x01, 0xa6, 0x26, 0xe0, 0x37, 0x2c,
+	0xa8, 0x24, 0x90, 0x1a, 0xda, 0x18, 0x1c, 0x96, 0x53, 0xdc, 0x88, 0x14, 0xb4, 0x46, 0xe4, 0xed,
+	0x1c, 0x9c, 0xd6, 0xe0, 0x67, 0x82, 0x71, 0xb7, 0x24, 0xc6, 0x5d, 0x4f, 0x5a, 0x13, 0x0c, 0x0d,
+	0x75, 0x70, 0xbe, 0x36, 0x8c, 0x59, 0x59, 0x97, 0xcc, 0x8a, 0x46, 0x54, 0xc4, 0xbe, 0xfc, 0xae,
+	0x05, 0xa7, 0xa8, 0x1a, 0x3b, 0x2e, 0x3a, 0x46, 0xd4, 0xb9, 0x53, 0x8a, 0xce, 0x6d, 0xc1, 0x12,
+	0x86, 0xac, 0x09, 0xe5, 0xfb, 0x8d, 0x49, 0x58, 0xa6, 0x6a, 0xe3, 0x96, 0xdf, 0xd9, 0x6e, 0x35,
+	0x39, 0x44, 0x9c, 0x35, 0x0a, 0x0f, 0x72, 0x18, 0x0f, 0x18, 0xef, 0x26, 0x45, 0xde, 0x61, 0xd6,
+	0xf8, 0x0c, 0x94, 0xb6, 0x5b, 0x6d, 0xef, 0x21, 0x79, 0x40, 0x59, 0x53, 0x8c, 0x1a, 0xee, 0x89,
+	0x0f, 0x03, 0x37, 0xdc, 0xe1, 0xec, 0x89, 0x1a, 0xee, 0xbb, 0xe1, 0x4e, 0xd4, 0xdb, 0x7e, 0xcf,
+	0xe3, 0x5a, 0x98, 0xfc, 0x6d, 0xaf, 0x00, 0x44, 0xff, 0x3f, 0x6c, 0x76, 0xfd, 0xfd, 0x80, 0x99,
+	0xe4, 0x52, 0xd4, 0xf2, 0xd1, 0xa8, 0xc1, 0x7e, 0x06, 0xe6, 0x68, 0x7f, 0xdd, 0xd6, 0x9b, 0xad,
+	0xb6, 0xd7, 0xf4, 0x2a, 0x25, 0xf2, 0xca, 0x2c, 0xe9, 0x94, 0x37, 0x46, 0xf4, 0x91, 0xd7, 0xb6,
+	0xfd, 0xee, 0xae, 0x1b, 0x56, 0x80, 0xd2, 0x17, 0x35, 0xbd, 0x44, 0x5a, 0x62, 0xbc, 0x76, 0x23,
+	0x96, 0x97, 0x89, 0x75, 0x20, 0x78, 0xdd, 0x8d, 0xb8, 0xbc, 0x0a, 0x65, 0xaf, 0xd3, 0x6c, 0x75,
+	0x3c, 0xea, 0x5f, 0xcc, 0x50, 0xff, 0x82, 0x36, 0x49, 0xfe, 0xc5, 0x2c, 0xe6, 0x5f, 0xcc, 0x69,
+	0x6c, 0xcd, 0xbc, 0x6c, 0x6b, 0xfe, 0xd1, 0x82, 0x0a, 0x2e, 0x30, 0x13, 0x73, 0xfa, 0x05, 0x69,
+	0x4e, 0x6f, 0x20, 0xd6, 0x26, 0x89, 0x85, 0x3a, 0xa5, 0x9f, 0x55, 0xa6, 0xb4, 0x30, 0x80, 0x2c,
+	0x75, 0x00, 0x39, 0x35, 0x58, 0x22, 0xba, 0x62, 0x90, 0xd1, 0x78, 0xc8, 0x89, 0xea, 0x7c, 0xd5,
+	0x82, 0x65, 0x14, 0x88, 0x09, 0x0e, 0x5e, 0x95, 0x38, 0xb8, 0xc4, 0x3f, 0x57, 0x40, 0x53, 0x83,
+	0xd2, 0x84, 0x2a, 0x82, 0x97, 0x81, 0xe5, 0xc5, 0x93, 0x1c, 0x9c, 0xd1, 0x42, 0x32, 0xc1, 0x85,
+	0x17, 0x25, 0x2e, 0x3c, 0x97, 0xb4, 0x0d, 0x38, 0x22, 0xea, 0x50, 0xfa, 0xc4, 0x30, 0xd6, 0xe1,
+	0xaa, 0x64, 0x1d, 0xb4, 0x9c, 0x27, 0xf6, 0xe1, 0x9b, 0x93, 0xb0, 0x4c, 0x9d, 0x76, 0x83, 0x03,
+	0xef, 0xff, 0xd5, 0xe0, 0xb0, 0x6a, 0x50, 0x34, 0x92, 0xf3, 0x8a, 0x91, 0x7c, 0x04, 0x15, 0x5c,
+	0x62, 0x26, 0xcc, 0xe4, 0xcf, 0xc3, 0x32, 0xb5, 0xc8, 0x26, 0x87, 0x47, 0xda, 0x32, 0xec, 0x11,
+	0x54, 0x70, 0x04, 0x4c, 0x50, 0xfb, 0xcd, 0x1c, 0x9c, 0xc3, 0xb4, 0xfb, 0xeb, 0x5e, 0xb7, 0xd7,
+	0xf2, 0x3b, 0x38, 0xd5, 0x2b, 0x00, 0x6f, 0xd2, 0xe7, 0x7d, 0xca, 0x4b, 0xac, 0x45, 0xef, 0x19,
+	0x28, 0x4c, 0xc9, 0x27, 0x98, 0xb2, 0x0a, 0x65, 0xde, 0x6d, 0xe8, 0x36, 0xd9, 0x0c, 0xe1, 0x90,
+	0x5e, 0x75, 0x9b, 0x11, 0xdc, 0xba, 0xdf, 0x09, 0xbd, 0x4e, 0x18, 0x75, 0x40, 0x27, 0x49, 0x89,
+	0xb5, 0x6c, 0x36, 0xec, 0x35, 0x98, 0xe1, 0x8f, 0x7b, 0xad, 0xc7, 0x74, 0x19, 0x3f, 0xbb, 0x55,
+	0x66, 0x6d, 0x0f, 0x5a, 0x8f, 0x3d, 0x2c, 0x06, 0xd7, 0x1f, 0x8f, 0x25, 0x8d, 0x59, 0x06, 0xd9,
+	0x2c, 0xff, 0x9b, 0x05, 0xab, 0xa9, 0x2c, 0x33, 0xa1, 0x55, 0x37, 0x25, 0xad, 0xfa, 0xfe, 0x4c,
+	0xeb, 0x2c, 0x20, 0xa3, 0x6a, 0xd6, 0x2b, 0x82, 0x66, 0x95, 0x25, 0x69, 0x29, 0x92, 0x74, 0x9a,
+	0xb0, 0x82, 0xa8, 0xec, 0xd4, 0xb1, 0xa1, 0x99, 0x11, 0x32, 0xa0, 0x49, 0x15, 0xd0, 0xd7, 0x2c,
+	0x38, 0x97, 0x06, 0xc9, 0x04, 0x4b, 0x9f, 0x93, 0x58, 0xba, 0x82, 0x1b, 0x0d, 0x8e, 0x01, 0xb5,
+	0xda, 0x5f, 0xb2, 0x60, 0x4d, 0x8f, 0xe6, 0xe8, 0xd7, 0x83, 0xdc, 0xbc, 0xe7, 0xb5, 0xe6, 0xfd,
+	0x77, 0x72, 0xe0, 0x64, 0x61, 0x64, 0x82, 0x79, 0x77, 0x24, 0xe6, 0x7d, 0x30, 0xcb, 0xca, 0x2b,
+	0xf8, 0xa8, 0x43, 0xf2, 0xa7, 0x87, 0x31, 0xf6, 0xcf, 0x49, 0xc6, 0x3e, 0x4b, 0x6e, 0xc4, 0xe6,
+	0xff, 0xa7, 0x05, 0xe7, 0x30, 0x0b, 0x32, 0xfa, 0x91, 0xac, 0xe8, 0xa8, 0x7c, 0x96, 0x8e, 0x2a,
+	0xe8, 0x75, 0xd4, 0xd3, 0x85, 0x26, 0xbb, 0xb0, 0x9a, 0x4a, 0xb1, 0x09, 0x63, 0xf2, 0x39, 0x0b,
+	0xce, 0x61, 0xa6, 0xcb, 0x00, 0x9b, 0xd3, 0x0c, 0x68, 0x17, 0x56, 0x53, 0xb1, 0x30, 0x41, 0xfa,
+	0x7f, 0xe4, 0x60, 0x5e, 0xd4, 0xc3, 0xa3, 0x88, 0xd5, 0xf6, 0xc3, 0x09, 0x79, 0x31, 0x9c, 0xc0,
+	0x5d, 0xcb, 0x82, 0xe0, 0x5a, 0x9e, 0x84, 0xc2, 0xb6, 0xe0, 0x39, 0xd2, 0x1f, 0xc7, 0xd6, 0x6d,
+	0x8c, 0x47, 0xf3, 0x8c, 0xc6, 0xe2, 0xce, 0xe2, 0x3b, 0x67, 0x73, 0xc2, 0xce, 0xd9, 0x9f, 0x59,
+	0xb0, 0x20, 0x33, 0xfc, 0xa8, 0xb7, 0x4d, 0x54, 0xe8, 0x87, 0x08, 0xbe, 0xbe, 0x63, 0xc1, 0x9c,
+	0xa0, 0x2d, 0x8f, 0xc3, 0xa0, 0x71, 0x3e, 0x6f, 0xb1, 0xed, 0x2e, 0x93, 0x7c, 0x75, 0x24, 0xbe,
+	0xce, 0xc9, 0x3a, 0x9c, 0x19, 0xdb, 0x77, 0x2c, 0xb0, 0x05, 0x44, 0x86, 0xb6, 0xae, 0x1a, 0x06,
+	0x9d, 0x86, 0x62, 0xd4, 0x2c, 0xac, 0xce, 0xa6, 0xdd, 0x20, 0x20, 0x6b, 0xb0, 0xec, 0x38, 0xeb,
+	0x7f, 0x59, 0x6c, 0xeb, 0x5c, 0xc4, 0xc9, 0x04, 0x83, 0x7e, 0x5c, 0x62, 0xd0, 0x15, 0x9d, 0x7d,
+	0xd5, 0x19, 0xd4, 0x8f, 0x0d, 0x63, 0x50, 0x1d, 0xc9, 0xa0, 0x26, 0x84, 0x41, 0x2c, 0xe8, 0xdf,
+	0xe7, 0x60, 0x5e, 0xb4, 0x27, 0xc3, 0x4a, 0x82, 0x8d, 0xc9, 0x49, 0x6c, 0x4c, 0xe6, 0xb1, 0x31,
+	0x59, 0xc0, 0x14, 0xd9, 0x94, 0x56, 0x91, 0x4d, 0x67, 0x2b, 0xb2, 0xe2, 0x00, 0x8a, 0xac, 0x94,
+	0xae, 0xc8, 0x40, 0x51, 0x64, 0x5c, 0x31, 0x95, 0x31, 0x53, 0x3d, 0xa3, 0x33, 0xd5, 0xb3, 0x8a,
+	0xbd, 0xaa, 0xc3, 0x82, 0xcc, 0x5a, 0x13, 0x06, 0x6a, 0x17, 0xe6, 0x45, 0xa3, 0x38, 0x0a, 0xf9,
+	0xa5, 0xd9, 0xe0, 0x3a, 0x2c, 0xc8, 0xe0, 0x4c, 0xd0, 0xf4, 0xf5, 0x1c, 0xdf, 0x8c, 0xa3, 0x50,
+	0x6e, 0x51, 0x2f, 0xca, 0xa0, 0x1a, 0x3d, 0x03, 0xa5, 0x08, 0xc7, 0x56, 0xd8, 0x0f, 0xf2, 0x17,
+	0x69, 0x03, 0xdd, 0x4b, 0x6c, 0x75, 0x1a, 0xde, 0xa7, 0xb9, 0x3e, 0x25, 0x3f, 0x14, 0x87, 0x70,
+	0x3a, 0xcb, 0x21, 0x2c, 0x26, 0x1d, 0x42, 0xc1, 0x30, 0x96, 0x70, 0xc3, 0x08, 0xd8, 0xf8, 0x2b,
+	0x0b, 0xe3, 0xcf, 0x79, 0x43, 0x8e, 0xfd, 0xc7, 0x9c, 0x32, 0x21, 0x96, 0x27, 0x39, 0xb6, 0x83,
+	0x77, 0x2c, 0xa4, 0xf2, 0x12, 0x4c, 0xb5, 0xdd, 0x9a, 0xd7, 0xee, 0x55, 0xa6, 0x88, 0x7e, 0xdb,
+	0xd0, 0xe9, 0xd2, 0x3e, 0x9e, 0x1b, 0x77, 0xc8, 0x07, 0x2f, 0x76, 0xc2, 0xee, 0xc1, 0x16, 0xfb,
+	0xba, 0xfa, 0xa3, 0x50, 0x16, 0x9a, 0x23, 0x52, 0x1e, 0x79, 0x07, 0x9c, 0x94, 0x47, 0xde, 0x41,
+	0xc4, 0xf8, 0x37, 0xdd, 0xf6, 0xbe, 0xc7, 0x29, 0x21, 0x3f, 0x3e, 0x94, 0xfb, 0xa0, 0xe5, 0x3c,
+	0xb1, 0xa4, 0x50, 0xb7, 0x49, 0xe6, 0x47, 0x9f, 0x0b, 0x86, 0x63, 0x5e, 0x50, 0xe6, 0x04, 0x26,
+	0x35, 0xad, 0xff, 0x90, 0x83, 0xb3, 0x04, 0xa1, 0x2d, 0xaf, 0xed, 0xb9, 0xbd, 0xd1, 0x4f, 0x9f,
+	0xd3, 0x50, 0xac, 0xb7, 0xfd, 0xfd, 0x46, 0x5f, 0x54, 0xd3, 0xe4, 0xf7, 0x66, 0xc3, 0x9e, 0x83,
+	0x5c, 0x2b, 0x60, 0x52, 0xca, 0xb5, 0x82, 0x68, 0x0c, 0x0b, 0x4e, 0x08, 0xf9, 0xdb, 0xbe, 0x1b,
+	0xcb, 0x6c, 0x9a, 0xc8, 0xec, 0xfd, 0x49, 0x99, 0x69, 0x30, 0xc7, 0x44, 0x27, 0x0c, 0x9b, 0xa2,
+	0x76, 0xd8, 0x94, 0xe4, 0x61, 0xf3, 0x34, 0xe2, 0xfe, 0x8a, 0xc5, 0xc2, 0x26, 0x38, 0x8e, 0x63,
+	0x93, 0xfa, 0xef, 0x5b, 0x6c, 0x93, 0x58, 0x42, 0x68, 0x54, 0x7e, 0xd5, 0x61, 0xe6, 0x26, 0x77,
+	0xb8, 0xa6, 0xb4, 0x0e, 0xd7, 0x2f, 0xe5, 0xa4, 0x8d, 0x12, 0x09, 0x67, 0x13, 0x8c, 0xbc, 0x2d,
+	0x31, 0xf2, 0xbd, 0x19, 0xba, 0x42, 0xe7, 0x7e, 0xdd, 0x1f, 0xc6, 0xfd, 0xba, 0x20, 0xb9, 0x5f,
+	0x49, 0xd9, 0x11, 0xff, 0xeb, 0xd7, 0x84, 0xf5, 0x65, 0xc4, 0xbc, 0x51, 0x48, 0x4c, 0x12, 0x4d,
+	0x5e, 0x11, 0x8d, 0x66, 0x2f, 0x7b, 0x15, 0xca, 0xec, 0x1b, 0xe2, 0x10, 0xd1, 0xac, 0x19, 0xa0,
+	0x4d, 0xc4, 0x25, 0x12, 0x9d, 0x82, 0x69, 0xd9, 0x29, 0xb0, 0x2f, 0xc1, 0xfc, 0xee, 0x7e, 0x3b,
+	0x6c, 0x3d, 0xec, 0x83, 0x65, 0x4e, 0x19, 0x69, 0xbe, 0xc5, 0x61, 0x73, 0xb3, 0x56, 0xc2, 0xcc,
+	0x1a, 0x88, 0x66, 0xed, 0x2f, 0x85, 0x55, 0x20, 0x65, 0xcb, 0xb8, 0x56, 0x81, 0x1c, 0xba, 0x3a,
+	0x14, 0x2e, 0x0b, 0x43, 0x41, 0x62, 0xb8, 0x25, 0x33, 0xdc, 0x79, 0x3d, 0x5e, 0x0a, 0x0e, 0x2d,
+	0x5f, 0xa9, 0xdf, 0x49, 0xa5, 0x5f, 0x61, 0x3d, 0x67, 0x8e, 0x43, 0xda, 0xf5, 0x1c, 0x01, 0x49,
+	0xd5, 0xcf, 0x77, 0xb8, 0x15, 0x7c, 0xb9, 0xd5, 0x0b, 0x7d, 0x8e, 0x4f, 0xcf, 0xa0, 0xee, 0x11,
+	0xc7, 0x62, 0x41, 0x19, 0x8b, 0x2b, 0x00, 0x7b, 0x11, 0x32, 0x74, 0xe7, 0x8a, 0x8e, 0xe3, 0x12,
+	0x69, 0x21, 0x1b, 0x57, 0x5c, 0x33, 0x4d, 0x6b, 0x35, 0xd3, 0xff, 0xf2, 0xad, 0x65, 0x95, 0x1c,
+	0x13, 0xfc, 0xbd, 0x29, 0xf1, 0xf7, 0x5a, 0x52, 0x2d, 0x25, 0x91, 0x30, 0xb3, 0x24, 0xa4, 0xf2,
+	0x24, 0x2a, 0xe9, 0xeb, 0x56, 0x7f, 0x49, 0x38, 0xd2, 0x21, 0xab, 0x2a, 0x99, 0x7c, 0xaa, 0x92,
+	0x51, 0x05, 0x8b, 0x84, 0x4f, 0xc5, 0x15, 0x96, 0xb1, 0x39, 0xe0, 0xf4, 0x60, 0xfe, 0x96, 0xdb,
+	0xa9, 0x7b, 0xed, 0x51, 0xb3, 0x23, 0x63, 0x9d, 0x25, 0x03, 0x35, 0x41, 0x59, 0x08, 0x0b, 0xc4,
+	0xec, 0x75, 0x77, 0x8f, 0x92, 0xb4, 0x06, 0x2c, 0x2a, 0x50, 0x4d, 0xd0, 0xf6, 0xdf, 0xf1, 0x6e,
+	0xde, 0xdd, 0xbe, 0x0d, 0xfa, 0x44, 0x2b, 0xdc, 0x19, 0xa1, 0x37, 0x8c, 0xd8, 0xbd, 0x7c, 0x9a,
+	0xdd, 0x2b, 0x08, 0x76, 0x2f, 0x25, 0x79, 0xcc, 0xfe, 0x08, 0x94, 0x76, 0xd9, 0x41, 0x0b, 0xee,
+	0x29, 0xaf, 0xc9, 0x53, 0x95, 0x9f, 0xc3, 0x10, 0x09, 0xea, 0x7f, 0xe3, 0xfc, 0xd0, 0x82, 0xf3,
+	0xe9, 0xc4, 0x9b, 0x50, 0x66, 0xaf, 0x48, 0xca, 0xec, 0x03, 0x88, 0x39, 0xd5, 0x63, 0xa3, 0x6a,
+	0xb5, 0x1b, 0x82, 0x56, 0x43, 0xd8, 0x6c, 0x21, 0x6c, 0x76, 0x7e, 0x60, 0xc1, 0xc9, 0x04, 0x9c,
+	0xe3, 0x2c, 0xe7, 0xe7, 0x93, 0x72, 0x5e, 0xc2, 0xe5, 0x2c, 0x0a, 0xf7, 0x9f, 0xe2, 0x64, 0x6b,
+	0x89, 0x4c, 0x13, 0x12, 0xfd, 0x88, 0x24, 0xd1, 0x67, 0xd3, 0x25, 0x3a, 0x2a, 0x31, 0x6e, 0xb3,
+	0x50, 0xec, 0x61, 0x85, 0x88, 0xc0, 0x99, 0xc4, 0xe0, 0x7c, 0x99, 0x67, 0x48, 0x1b, 0x67, 0xe3,
+	0x65, 0x89, 0x8d, 0x27, 0xf8, 0xe7, 0x22, 0x5c, 0xea, 0x4a, 0xfd, 0x91, 0xc5, 0x92, 0xba, 0x98,
+	0xd9, 0x17, 0xde, 0xe8, 0x19, 0x3e, 0x25, 0xa0, 0x38, 0x4e, 0x05, 0x9d, 0xe3, 0xa4, 0x5f, 0xd2,
+	0x7d, 0x91, 0x07, 0x1f, 0x50, 0xe4, 0x4d, 0xf0, 0xf5, 0x25, 0x89, 0xaf, 0x37, 0xb4, 0xde, 0x93,
+	0x8a, 0x89, 0x3a, 0x4a, 0x5f, 0x1d, 0xc6, 0x85, 0xba, 0x2c, 0xb9, 0x50, 0xb8, 0x30, 0x89, 0x1f,
+	0xb5, 0xcb, 0x56, 0xb8, 0xc2, 0x93, 0x07, 0xfb, 0xb5, 0xa1, 0x97, 0xe5, 0x83, 0x0e, 0xe7, 0x7f,
+	0xe6, 0x63, 0x07, 0x83, 0x37, 0x96, 0x84, 0x40, 0x1c, 0x91, 0x8c, 0xb4, 0x95, 0x98, 0xca, 0x5e,
+	0xc5, 0x3a, 0x3f, 0x49, 0x63, 0xaa, 0x94, 0xc2, 0x9e, 0xf3, 0xeb, 0x16, 0x9c, 0xa4, 0xfe, 0x9e,
+	0x61, 0xdd, 0x10, 0x6b, 0xf2, 0xbc, 0x46, 0x93, 0x2b, 0xce, 0xa9, 0xb3, 0x03, 0xa7, 0x10, 0xc4,
+	0x4c, 0xf8, 0x35, 0x9f, 0x8d, 0x8c, 0x1c, 0xf1, 0x0c, 0x4d, 0xf3, 0x20, 0xcd, 0x87, 0xdb, 0x81,
+	0x53, 0x08, 0x12, 0x86, 0x72, 0x0f, 0x4e, 0x31, 0x77, 0x71, 0x9c, 0x04, 0xb7, 0x60, 0x09, 0xc3,
+	0xc2, 0x04, 0xc5, 0x7f, 0x98, 0xe7, 0xb1, 0x0f, 0x16, 0x67, 0x1c, 0x36, 0xbf, 0xa2, 0x4b, 0x3f,
+	0x13, 0xf2, 0x2b, 0x58, 0x8b, 0x66, 0x6f, 0xae, 0x6f, 0x2c, 0x0a, 0xf8, 0xe2, 0x7b, 0x4a, 0x5c,
+	0x7c, 0x9f, 0x86, 0x62, 0xd4, 0x4c, 0x7a, 0xe1, 0x87, 0xa8, 0xb6, 0x9b, 0x3c, 0xd7, 0x35, 0x7a,
+	0x44, 0x37, 0xfa, 0x58, 0xe2, 0x4a, 0x7d, 0xbb, 0xf9, 0x92, 0xb4, 0xd7, 0x57, 0xd2, 0xee, 0xf5,
+	0x41, 0xf6, 0x5e, 0x5f, 0x79, 0x80, 0xbd, 0xbe, 0x99, 0xf4, 0xbd, 0xbe, 0xd9, 0x64, 0xae, 0x6b,
+	0x2f, 0xec, 0xba, 0xa1, 0xd7, 0x3c, 0x88, 0x68, 0xa5, 0xb9, 0x08, 0xc0, 0x9b, 0x36, 0x1b, 0xf6,
+	0x39, 0xe0, 0xbf, 0x5a, 0x5e, 0x8f, 0xe5, 0xb0, 0x0a, 0x2d, 0xf2, 0x42, 0x68, 0x41, 0x59, 0x08,
+	0xad, 0xc3, 0x02, 0x1d, 0x7b, 0x82, 0x50, 0x16, 0xc9, 0x3b, 0x73, 0xa4, 0x7d, 0x4b, 0x94, 0x0c,
+	0x51, 0x39, 0xb6, 0xa0, 0x72, 0x84, 0x1d, 0xa2, 0x13, 0xf2, 0x0e, 0x51, 0x1c, 0x36, 0x3b, 0x29,
+	0x86, 0xcd, 0xbe, 0x63, 0xc1, 0xa2, 0x32, 0x74, 0x4c, 0x68, 0xfe, 0x0f, 0x4b, 0x9a, 0xff, 0x32,
+	0xe2, 0x16, 0x0a, 0xe0, 0x33, 0xf4, 0xbd, 0xc0, 0x17, 0x4b, 0x19, 0xac, 0xce, 0x27, 0x59, 0x84,
+	0x6b, 0xf4, 0xf3, 0xc0, 0x79, 0x9b, 0x9f, 0xce, 0x35, 0xca, 0x28, 0x4d, 0xf8, 0x9e, 0xc3, 0xa4,
+	0x4e, 0xdf, 0xd7, 0x78, 0xfc, 0xec, 0x9e, 0xf7, 0x96, 0x17, 0xd9, 0x48, 0xf2, 0xb0, 0x37, 0x8a,
+	0x9d, 0xdc, 0x75, 0x58, 0x68, 0xfb, 0x75, 0xb7, 0x2d, 0x8e, 0x3e, 0x3a, 0xf3, 0xe7, 0x48, 0x7b,
+	0x7f, 0xf4, 0x65, 0xa7, 0x48, 0x7c, 0x9f, 0xc7, 0xc5, 0x54, 0x34, 0xc7, 0x12, 0x17, 0x4b, 0x22,
+	0xa1, 0x8e, 0xb3, 0xeb, 0xc2, 0x38, 0xe3, 0xa1, 0x78, 0x4b, 0x0e, 0xc5, 0xc7, 0x72, 0x20, 0xfe,
+	0xda, 0xdf, 0x28, 0x81, 0xbf, 0x51, 0x0a, 0xe2, 0x29, 0x1c, 0xef, 0x15, 0x00, 0xbf, 0xdb, 0xf0,
+	0xba, 0x52, 0x40, 0x93, 0xb4, 0x0c, 0x18, 0xd0, 0xfc, 0x85, 0x1c, 0x3b, 0xe3, 0x98, 0xa0, 0xeb,
+	0xa8, 0x8f, 0x1b, 0xe9, 0xb0, 0x30, 0xb1, 0xcd, 0x22, 0xcb, 0xf6, 0x37, 0x2d, 0x1e, 0x29, 0x3c,
+	0x22, 0x9b, 0x3a, 0x64, 0x28, 0xc0, 0x69, 0xc0, 0xa2, 0x82, 0x9f, 0x09, 0xd7, 0xe2, 0x4d, 0x1e,
+	0x55, 0x34, 0xc0, 0x85, 0xac, 0x90, 0x9f, 0x0c, 0xd7, 0x04, 0x75, 0x9f, 0x06, 0x7b, 0xcb, 0x6f,
+	0xb7, 0x6b, 0x6e, 0xfd, 0xd1, 0x11, 0xd3, 0xb7, 0x0d, 0x27, 0x12, 0x90, 0x4d, 0x50, 0xf8, 0x16,
+	0x2c, 0xde, 0xdf, 0xaf, 0xb5, 0x5b, 0xbd, 0x9d, 0x23, 0x26, 0xd0, 0x03, 0x5b, 0x05, 0x6c, 0x82,
+	0xbe, 0xdf, 0xcb, 0x49, 0xa1, 0xad, 0xc3, 0x10, 0xa9, 0x89, 0x7c, 0x60, 0x7e, 0x58, 0x5e, 0xe7,
+	0x87, 0x25, 0x32, 0x2a, 0x91, 0x15, 0xc4, 0x14, 0xb6, 0x82, 0x50, 0x7c, 0xc9, 0xe9, 0x0c, 0x5f,
+	0xb2, 0x98, 0xf0, 0x25, 0xb1, 0x1d, 0x52, 0xfd, 0x89, 0x95, 0x7f, 0x89, 0x8b, 0x16, 0xc8, 0xec,
+	0x1a, 0x4f, 0xd1, 0x02, 0x15, 0x07, 0x55, 0xab, 0x3f, 0x2f, 0x68, 0x75, 0x4c, 0x1c, 0x16, 0x26,
+	0x0e, 0xa7, 0x25, 0x06, 0xe9, 0x0e, 0x33, 0x20, 0x30, 0x50, 0x93, 0x28, 0xa8, 0xb8, 0x42, 0x81,
+	0x79, 0x6e, 0x6a, 0x2a, 0x14, 0x48, 0x80, 0xa9, 0x77, 0xf8, 0x3d, 0x0b, 0x89, 0xaa, 0x1d, 0xd6,
+	0x35, 0x19, 0x71, 0x4c, 0xf0, 0xa9, 0x5d, 0x93, 0x2f, 0xe7, 0x58, 0x46, 0x0d, 0x4e, 0x9c, 0x09,
+	0xce, 0x7f, 0x54, 0xe2, 0xfc, 0xfb, 0xd2, 0x63, 0x86, 0x69, 0x4e, 0xca, 0x28, 0xca, 0x1c, 0xc8,
+	0xf2, 0x26, 0x9e, 0xca, 0x37, 0x2c, 0x29, 0x94, 0x64, 0x74, 0xc4, 0x8f, 0xc4, 0x73, 0x69, 0xc1,
+	0x12, 0x86, 0xaf, 0x09, 0xf3, 0x10, 0x88, 0x11, 0x4e, 0x06, 0xe9, 0x30, 0x21, 0xd5, 0xc1, 0x55,
+	0xc2, 0x0f, 0xf8, 0xec, 0x43, 0x41, 0x8e, 0x25, 0xa6, 0xad, 0xc1, 0x24, 0xe3, 0xc8, 0x7e, 0x9f,
+	0x52, 0x1e, 0x57, 0x85, 0xd8, 0xf2, 0xf7, 0x9c, 0xcf, 0x5b, 0x52, 0x3c, 0xcf, 0xec, 0xa0, 0xcb,
+	0x0a, 0xb3, 0x21, 0x78, 0x98, 0x18, 0x4c, 0x5f, 0xb0, 0x60, 0x89, 0xf9, 0x34, 0x63, 0x26, 0xfa,
+	0x0d, 0x58, 0x46, 0x11, 0x31, 0x41, 0xf5, 0xdb, 0x16, 0x2c, 0x73, 0x57, 0x75, 0xcc, 0x64, 0x3f,
+	0x82, 0x0a, 0x8e, 0x89, 0x09, 0xba, 0xbf, 0x15, 0xef, 0x0d, 0xdf, 0x0c, 0x82, 0xcd, 0x4e, 0x2f,
+	0x8c, 0x46, 0xd9, 0x31, 0xc8, 0x88, 0x5d, 0x12, 0x32, 0x62, 0xa3, 0x56, 0x9e, 0xda, 0x1a, 0xc7,
+	0xf7, 0x8a, 0x62, 0x7c, 0x6f, 0x87, 0xbb, 0xc7, 0x12, 0x11, 0x26, 0xf8, 0xf5, 0x99, 0x9c, 0xbc,
+	0x13, 0x29, 0x00, 0x1c, 0x89, 0xd7, 0xb1, 0x01, 0x25, 0x4a, 0xe9, 0x43, 0x32, 0x32, 0x22, 0xab,
+	0xb8, 0xc8, 0x71, 0xa4, 0xf9, 0xb9, 0x77, 0xdd, 0x60, 0xab, 0x48, 0xdf, 0xf9, 0x58, 0xd7, 0x7e,
+	0x2f, 0x00, 0x7b, 0xdf, 0xed, 0x34, 0x2a, 0x05, 0xdd, 0x07, 0xac, 0xd3, 0x9b, 0x9d, 0xc6, 0xd3,
+	0x27, 0x82, 0xa9, 0xfb, 0x99, 0x32, 0x0b, 0xc6, 0xb9, 0x9f, 0xa9, 0x62, 0x62, 0x62, 0x3f, 0x53,
+	0x1c, 0x61, 0xd4, 0x33, 0xf9, 0xd7, 0x7e, 0xfa, 0xb3, 0x5b, 0xdf, 0x71, 0x6b, 0x6d, 0xef, 0xdd,
+	0x37, 0x28, 0xb2, 0x77, 0xb1, 0xdf, 0xc9, 0xb1, 0x13, 0xeb, 0x1a, 0x2a, 0x4d, 0xc8, 0xfd, 0x65,
+	0x49, 0xee, 0xcf, 0x63, 0x49, 0xf1, 0x1a, 0x5c, 0x8e, 0x46, 0xf2, 0xdf, 0x8a, 0xf7, 0x5d, 0xdf,
+	0xe5, 0xca, 0x13, 0x21, 0xc2, 0x84, 0xf2, 0xfc, 0xbe, 0x05, 0x67, 0x10, 0x3d, 0x3d, 0xb2, 0x60,
+	0x86, 0x21, 0xb6, 0xad, 0x43, 0x21, 0x12, 0x77, 0xaf, 0x52, 0x24, 0x03, 0xc2, 0xee, 0x87, 0x52,
+	0x03, 0xbf, 0x1b, 0x6e, 0x76, 0xb6, 0xfd, 0x2d, 0xfa, 0x82, 0xe3, 0xc3, 0x59, 0x3d, 0x7d, 0x26,
+	0x38, 0xfa, 0x07, 0x16, 0x4b, 0xa6, 0x38, 0x96, 0x0c, 0xed, 0x07, 0xfd, 0xa7, 0xc5, 0x53, 0xc0,
+	0xdf, 0x9e, 0x64, 0x36, 0xf4, 0x88, 0xb8, 0x94, 0x9d, 0x91, 0x81, 0x23, 0xa2, 0x2a, 0x91, 0x77,
+	0x72, 0x6a, 0x4a, 0x46, 0x7c, 0xcc, 0xcd, 0xca, 0x3a, 0xe6, 0x96, 0x4b, 0x1e, 0x73, 0xcb, 0x08,
+	0x3b, 0xa6, 0x9e, 0x56, 0xc0, 0x3c, 0xcd, 0x02, 0xea, 0x69, 0x0e, 0x1a, 0xa2, 0x5b, 0x83, 0x19,
+	0xde, 0x97, 0xb0, 0x85, 0xcd, 0xd7, 0x47, 0xf7, 0xc4, 0x15, 0xb0, 0x58, 0xd0, 0xf9, 0xb7, 0xe3,
+	0xec, 0x1a, 0x37, 0xac, 0xef, 0x78, 0x8d, 0x51, 0x9b, 0x3e, 0x25, 0x72, 0x98, 0x4f, 0x44, 0x0e,
+	0xb3, 0x37, 0xe8, 0x62, 0x7f, 0x05, 0x45, 0x71, 0x3c, 0x6b, 0x55, 0x1c, 0x93, 0xa3, 0xb1, 0x5a,
+	0xbf, 0xc5, 0xd7, 0xee, 0x2f, 0x6e, 0x6f, 0x7b, 0xf5, 0xf0, 0xe9, 0x64, 0x86, 0x6d, 0xea, 0xc9,
+	0x03, 0x3b, 0xaf, 0x0e, 0xec, 0x6c, 0x89, 0x7d, 0x95, 0x87, 0xbf, 0x70, 0x0c, 0xc7, 0x12, 0xfe,
+	0xd2, 0xa1, 0xa2, 0xca, 0xec, 0xa7, 0x86, 0x91, 0xd9, 0x86, 0x24, 0xb3, 0x2a, 0x26, 0x33, 0x29,
+	0x08, 0xf6, 0xdd, 0x38, 0x8f, 0xe1, 0x01, 0x9b, 0x01, 0x47, 0x32, 0xc7, 0xb0, 0xd0, 0x7f, 0x05,
+	0xa6, 0x99, 0x32, 0x63, 0xfa, 0x84, 0xff, 0x8c, 0xd5, 0xc4, 0x34, 0x1e, 0xab, 0x2f, 0xca, 0xb1,
+	0xfa, 0xef, 0x5a, 0x60, 0xab, 0x24, 0x99, 0x10, 0xf0, 0x8f, 0x49, 0x02, 0x5e, 0x47, 0xe2, 0xf4,
+	0x22, 0xfc, 0x8c, 0xa8, 0x91, 0xc8, 0x2e, 0x4b, 0x65, 0x97, 0xf3, 0x05, 0x9e, 0x43, 0x31, 0x6e,
+	0x21, 0x39, 0xbf, 0x6c, 0xc1, 0xa2, 0x82, 0x89, 0x09, 0xde, 0x5e, 0x94, 0x78, 0xbb, 0xc0, 0x3f,
+	0x8f, 0x81, 0xd2, 0x88, 0xfd, 0xaf, 0xf2, 0xbc, 0x62, 0xde, 0x7e, 0x2c, 0x2a, 0x5c, 0xfc, 0x0f,
+	0xdf, 0xdc, 0x90, 0xb1, 0x3a, 0xea, 0xac, 0x71, 0x14, 0x05, 0x75, 0x14, 0x7e, 0x7c, 0x18, 0xdd,
+	0x72, 0x51, 0xd2, 0x2d, 0x88, 0x50, 0x88, 0x46, 0x39, 0x80, 0x45, 0x5a, 0xb7, 0xe0, 0x50, 0x63,
+	0x55, 0x19, 0x94, 0x93, 0x89, 0x41, 0x99, 0xb1, 0x77, 0xaa, 0x82, 0x36, 0xe1, 0x22, 0xff, 0x5d,
+	0xac, 0x33, 0xef, 0x77, 0xfd, 0xfa, 0xcd, 0x30, 0xec, 0xe2, 0x24, 0x8a, 0xbe, 0x6e, 0x0e, 0xf3,
+	0x75, 0x27, 0x63, 0x5f, 0xb7, 0xcf, 0x8d, 0x3c, 0x3e, 0x3c, 0xa5, 0x7c, 0xc1, 0x25, 0xe1, 0x40,
+	0xbe, 0xb8, 0xac, 0xe0, 0x1e, 0xf3, 0xb4, 0xe0, 0x31, 0x6b, 0xf5, 0x24, 0xb6, 0x03, 0x1a, 0x71,
+	0x50, 0xa5, 0xcc, 0x04, 0x07, 0xbf, 0xc2, 0x27, 0xee, 0xcb, 0x7e, 0x2f, 0x1c, 0x13, 0x13, 0x91,
+	0xe5, 0x85, 0xf3, 0x84, 0x4f, 0x5d, 0x19, 0xaf, 0x23, 0xd4, 0x70, 0x31, 0x50, 0xaa, 0xe1, 0x0e,
+	0x78, 0x42, 0x91, 0x80, 0x8f, 0x5e, 0xc9, 0x0d, 0xc1, 0xab, 0xec, 0xba, 0x78, 0x9f, 0xe3, 0x05,
+	0xd1, 0x93, 0xb0, 0xc7, 0x52, 0x10, 0x1d, 0x43, 0xc3, 0x84, 0x3a, 0xeb, 0x4b, 0x80, 0xa8, 0xb3,
+	0x9f, 0x65, 0xa9, 0x6a, 0x37, 0x83, 0x20, 0x5b, 0x00, 0xc3, 0x59, 0x99, 0x6c, 0x19, 0xfc, 0x22,
+	0x4f, 0x28, 0x4b, 0x40, 0x1f, 0x4b, 0x42, 0x19, 0x82, 0xc5, 0x11, 0x48, 0xe0, 0x7b, 0x16, 0xcf,
+	0xd8, 0x3a, 0x3e, 0x9a, 0x42, 0x1b, 0xd9, 0xc1, 0xca, 0xa3, 0x8a, 0x26, 0xab, 0x94, 0x34, 0x59,
+	0x2a, 0x6d, 0x46, 0x2a, 0xd7, 0x5b, 0xdc, 0x2a, 0x1f, 0x23, 0x1e, 0xa6, 0x14, 0x3a, 0xe8, 0x9b,
+	0x72, 0xb3, 0x7c, 0x79, 0x06, 0x16, 0x37, 0x3b, 0xad, 0xf0, 0xc1, 0x8e, 0xdb, 0x6d, 0xb4, 0x3a,
+	0xcd, 0xdb, 0x2f, 0xa0, 0x6c, 0x89, 0xb0, 0x51, 0x5f, 0x33, 0x81, 0xcd, 0x9f, 0x58, 0x70, 0x82,
+	0xad, 0x1c, 0xd2, 0x11, 0xb2, 0x4f, 0x40, 0xa1, 0x51, 0xeb, 0x0b, 0x29, 0xdf, 0xa8, 0x51, 0x1e,
+	0xef, 0xf8, 0xbd, 0x90, 0xf5, 0x4a, 0xfe, 0x26, 0x7c, 0xf7, 0xbb, 0x21, 0x3b, 0x01, 0x4e, 0xfe,
+	0x8e, 0xcf, 0x07, 0x14, 0x84, 0xf3, 0x01, 0x55, 0x28, 0x06, 0x6e, 0xaf, 0xf7, 0x96, 0xdf, 0xe5,
+	0xd1, 0x9c, 0xf8, 0x37, 0xba, 0xfc, 0xc2, 0x03, 0xbf, 0x4d, 0xbe, 0xf5, 0x67, 0x9a, 0x53, 0x1f,
+	0x66, 0x85, 0xed, 0x0e, 0xc3, 0xa7, 0xc8, 0xca, 0x9f, 0x48, 0x7c, 0x6d, 0x42, 0xa1, 0x5e, 0x92,
+	0x14, 0x6a, 0x1c, 0xe5, 0x15, 0xc0, 0x52, 0x2b, 0x7f, 0x87, 0xa5, 0xa5, 0xf7, 0x1f, 0xe8, 0x4d,
+	0x0c, 0x37, 0x1a, 0xb9, 0x34, 0xa3, 0xb1, 0x8c, 0x76, 0x37, 0x96, 0xf4, 0xf1, 0x24, 0x12, 0xaa,
+	0xc9, 0x78, 0x30, 0x8c, 0xc9, 0xb8, 0x24, 0x99, 0x0c, 0x94, 0xa5, 0xc4, 0x68, 0x44, 0x53, 0x89,
+	0x2a, 0xd6, 0x77, 0xef, 0x54, 0x4a, 0xe2, 0x6f, 0x62, 0x2a, 0x7d, 0xa9, 0x1f, 0x01, 0x62, 0x90,
+	0x70, 0x3e, 0xb1, 0xfa, 0x4d, 0xb9, 0x7e, 0xfd, 0xa6, 0x98, 0x73, 0x93, 0x02, 0xe7, 0x96, 0x61,
+	0xba, 0x51, 0x13, 0x57, 0xce, 0x53, 0x8d, 0xda, 0x3d, 0x5d, 0xb6, 0x13, 0x7a, 0x77, 0x54, 0x7f,
+	0x11, 0xd2, 0x47, 0xc8, 0x04, 0xe1, 0x1f, 0xe0, 0x31, 0x95, 0xe1, 0xc8, 0x16, 0x42, 0x20, 0x26,
+	0xd1, 0xd3, 0x86, 0x40, 0x38, 0xd0, 0xb8, 0x9e, 0xf6, 0xa2, 0x3c, 0x4e, 0x8e, 0x81, 0xf4, 0x54,
+	0x84, 0x4c, 0x48, 0xef, 0x6f, 0x2d, 0x98, 0x63, 0x3b, 0x63, 0xfb, 0x0d, 0xdd, 0x31, 0xc5, 0x55,
+	0x28, 0xf7, 0xfc, 0xfd, 0x6e, 0x9d, 0xdd, 0xae, 0x90, 0xa3, 0x65, 0x50, 0x68, 0x13, 0xc9, 0x4d,
+	0x58, 0x86, 0x69, 0x3f, 0xa0, 0x0f, 0x27, 0xc9, 0xc3, 0x29, 0x3f, 0x20, 0x0f, 0x34, 0xde, 0xcd,
+	0x19, 0x28, 0xb1, 0x0e, 0xfb, 0xb5, 0xb8, 0x68, 0x43, 0xfa, 0x2d, 0x45, 0x43, 0x4c, 0xfc, 0x1a,
+	0x2f, 0x53, 0xc5, 0xe8, 0x32, 0xc1, 0xbc, 0xbf, 0xe6, 0x43, 0x98, 0xc0, 0x38, 0x4c, 0xd5, 0x75,
+	0x91, 0xad, 0x93, 0x69, 0x6c, 0xcd, 0x4b, 0x6c, 0x3d, 0x34, 0xff, 0xb2, 0x93, 0x48, 0x7e, 0xc8,
+	0x8b, 0xdd, 0x0a, 0x34, 0x1d, 0x75, 0xd8, 0x37, 0x09, 0x5f, 0x35, 0x76, 0xf7, 0x86, 0x31, 0x76,
+	0x6b, 0x92, 0xb1, 0x9b, 0x8d, 0x83, 0xf9, 0x64, 0x60, 0x50, 0x3b, 0x77, 0x0e, 0xe0, 0x65, 0xcf,
+	0x6d, 0x87, 0x3b, 0x8f, 0x71, 0xcf, 0xf5, 0x8b, 0x16, 0x94, 0xe3, 0x17, 0x4c, 0xb0, 0xe3, 0x9a,
+	0xc4, 0x8e, 0xd3, 0x71, 0xbe, 0xad, 0xdf, 0xd8, 0x6f, 0x7b, 0x0c, 0x32, 0xd9, 0xd0, 0x26, 0xaf,
+	0xdd, 0xf8, 0xf3, 0x9b, 0x50, 0x8e, 0x88, 0xbf, 0x4b, 0x39, 0x66, 0x7f, 0xb2, 0x7f, 0x75, 0x27,
+	0xaf, 0xc0, 0x61, 0x9f, 0x47, 0x57, 0x9e, 0xc2, 0x3d, 0xbb, 0xd5, 0xb5, 0x8c, 0x37, 0x7a, 0x81,
+	0x33, 0x61, 0xdf, 0x86, 0x52, 0xbc, 0x75, 0x6e, 0x9f, 0xd6, 0xdd, 0xda, 0xba, 0x57, 0xad, 0xea,
+	0x2f, 0x74, 0x75, 0x26, 0xec, 0x9b, 0x50, 0xe4, 0xfd, 0xdb, 0x15, 0x14, 0x6c, 0xd4, 0xc7, 0x69,
+	0xcd, 0x13, 0xd2, 0xc5, 0xdd, 0xfe, 0xfd, 0xab, 0xd1, 0xb0, 0xb0, 0xcf, 0xa6, 0xdc, 0x1d, 0xba,
+	0x57, 0x5d, 0x49, 0xbd, 0x59, 0x94, 0xd2, 0x15, 0x67, 0x57, 0x28, 0x74, 0x89, 0xb7, 0x82, 0x2a,
+	0x74, 0x49, 0xb7, 0x6c, 0xd2, 0x5e, 0xe2, 0xab, 0x2a, 0x95, 0x5e, 0xc4, 0xeb, 0x32, 0x95, 0x5e,
+	0xa4, 0xdb, 0x2d, 0x9d, 0x09, 0xfb, 0x21, 0x37, 0xd5, 0xe2, 0xe5, 0x6b, 0xb6, 0x93, 0x79, 0xd1,
+	0xe2, 0x5e, 0xf5, 0xc2, 0x00, 0x97, 0x31, 0x3a, 0x13, 0xf6, 0xa7, 0x98, 0xa2, 0x92, 0xfa, 0x5f,
+	0x4b, 0xbf, 0x2e, 0x2f, 0xea, 0xde, 0xc9, 0x7a, 0x85, 0xf4, 0xbe, 0x83, 0x5c, 0x94, 0x48, 0x44,
+	0xf4, 0xcc, 0x20, 0x17, 0xf2, 0xed, 0x55, 0x2f, 0x0d, 0x76, 0x6f, 0x1f, 0x65, 0x54, 0xf2, 0x96,
+	0x3a, 0x85, 0x51, 0xe8, 0x9d, 0x7b, 0x0a, 0xa3, 0xf0, 0xab, 0xee, 0x9c, 0x09, 0xdb, 0xe3, 0x4b,
+	0x2f, 0xb9, 0x64, 0xbf, 0x7d, 0x71, 0x80, 0x6b, 0xc8, 0xf6, 0xaa, 0xcf, 0x0c, 0x74, 0x59, 0x99,
+	0x33, 0x61, 0xd7, 0xa4, 0xea, 0xdd, 0x31, 0x94, 0x0b, 0x59, 0xd7, 0x57, 0x44, 0x40, 0x2e, 0x66,
+	0xbf, 0x44, 0x60, 0x74, 0xd0, 0x1b, 0xc7, 0x88, 0x5c, 0x2e, 0x0f, 0x76, 0x19, 0xd6, 0x5e, 0x75,
+	0x7d, 0xd0, 0x5b, 0xb3, 0x28, 0xeb, 0xb0, 0x8b, 0x1e, 0x14, 0xd6, 0x69, 0x6e, 0xbc, 0x52, 0x58,
+	0xa7, 0xbb, 0x65, 0x89, 0x82, 0xc1, 0x2e, 0x55, 0x50, 0xc0, 0x68, 0x6e, 0x4e, 0x52, 0xc0, 0xe8,
+	0xae, 0x37, 0x72, 0x26, 0xec, 0xc7, 0x3c, 0x23, 0x0a, 0xbd, 0xbb, 0xc1, 0x7e, 0x76, 0xf0, 0x8b,
+	0x6f, 0xf6, 0xaa, 0xef, 0x19, 0xe6, 0x96, 0x1c, 0x67, 0xc2, 0x7e, 0x0b, 0xbd, 0x93, 0x8d, 0x83,
+	0xbe, 0x3a, 0xe0, 0x1d, 0x27, 0x11, 0xe4, 0x67, 0x07, 0x7e, 0x97, 0x00, 0xfe, 0x6c, 0xea, 0xed,
+	0x37, 0x64, 0xe8, 0x6c, 0x0c, 0x75, 0xc3, 0xca, 0x5e, 0xf5, 0xfa, 0x90, 0x37, 0xb2, 0x50, 0xd6,
+	0xa7, 0xdc, 0x18, 0xa2, 0xb0, 0x3e, 0xfd, 0x36, 0x15, 0x85, 0xf5, 0x19, 0x17, 0x91, 0x50, 0xd8,
+	0x29, 0x57, 0x76, 0x28, 0xb0, 0xd3, 0xaf, 0x18, 0x51, 0x60, 0x67, 0xdc, 0x04, 0x42, 0x0d, 0x9c,
+	0x38, 0x36, 0x14, 0x03, 0xa7, 0x5c, 0xea, 0xa1, 0x18, 0x38, 0xf5, 0x0e, 0x08, 0x67, 0xc2, 0x7e,
+	0x85, 0xdd, 0x89, 0xce, 0x7a, 0x3b, 0xa3, 0x13, 0x44, 0xd4, 0xd9, 0x59, 0xfd, 0x43, 0xd2, 0xd7,
+	0xeb, 0xd2, 0x55, 0x0c, 0x64, 0x20, 0xac, 0xa6, 0x5f, 0x05, 0xb0, 0x57, 0x3d, 0x9f, 0x75, 0x57,
+	0x00, 0x25, 0x59, 0x94, 0x89, 0x42, 0xb2, 0x52, 0xe7, 0x5f, 0x21, 0x59, 0x2d, 0x55, 0x4f, 0xbb,
+	0x13, 0xd9, 0xac, 0x74, 0xa7, 0x94, 0x9d, 0x57, 0xba, 0x53, 0xab, 0xc4, 0x53, 0x2d, 0x8d, 0xd4,
+	0x2a, 0xb7, 0x2f, 0x68, 0x39, 0xdf, 0x2f, 0xd5, 0x57, 0xbd, 0x98, 0xfd, 0x12, 0xb7, 0x68, 0xc9,
+	0x72, 0xbe, 0xb6, 0x93, 0x5d, 0x1b, 0xbc, 0x7a, 0x21, 0xf3, 0x1d, 0x02, 0xe0, 0x11, 0x56, 0xf2,
+	0x9b, 0x48, 0xf0, 0xd2, 0x40, 0x45, 0x85, 0xf7, 0xaa, 0x97, 0x07, 0x2c, 0x3e, 0xec, 0x4c, 0xd8,
+	0x21, 0xdb, 0xec, 0xc2, 0x0a, 0x4e, 0xdb, 0x57, 0x06, 0x2e, 0x9e, 0x5d, 0xbd, 0x3a, 0xe8, 0xab,
+	0xea, 0xc4, 0xd9, 0xdd, 0x6d, 0x85, 0x9a, 0x89, 0xc3, 0xca, 0xf0, 0x68, 0x26, 0x0e, 0x2f, 0x8f,
+	0x23, 0x4d, 0x1c, 0xd2, 0x1b, 0x3a, 0x71, 0x78, 0x67, 0x67, 0xf5, 0x0f, 0x25, 0x43, 0x2f, 0x97,
+	0x45, 0xc5, 0x0c, 0x7d, 0xa2, 0x18, 0x2d, 0x66, 0xe8, 0x93, 0xd5, 0x55, 0xe5, 0x49, 0x84, 0x90,
+	0xaf, 0x54, 0x46, 0xd5, 0x4c, 0x22, 0x01, 0xe5, 0x88, 0x9b, 0x42, 0x25, 0x4f, 0x95, 0x9b, 0x72,
+	0x65, 0x51, 0x95, 0x9b, 0x4a, 0x09, 0x50, 0x67, 0xc2, 0xbe, 0x0f, 0xb3, 0x52, 0xf5, 0x4c, 0x5b,
+	0xf9, 0x42, 0xa9, 0xe7, 0x59, 0x3d, 0x97, 0xf6, 0x98, 0xf4, 0xf8, 0x73, 0x3c, 0x99, 0x17, 0xaf,
+	0xce, 0x68, 0xbf, 0x67, 0x88, 0x42, 0x8e, 0x7b, 0xd5, 0x6b, 0x43, 0x95, 0x7d, 0xa4, 0xbe, 0x74,
+	0xe2, 0x2d, 0xc5, 0x97, 0xc6, 0x8a, 0x3a, 0x56, 0x9d, 0xec, 0x6a, 0x84, 0xce, 0x44, 0xbc, 0x92,
+	0x13, 0x3b, 0x3f, 0x9f, 0x5a, 0xaa, 0x4c, 0xb3, 0x92, 0x4b, 0x76, 0xbd, 0x27, 0x97, 0xd5, 0x10,
+	0x8b, 0xcc, 0xd9, 0xeb, 0x03, 0xd6, 0xa2, 0xdb, 0xab, 0x5e, 0x19, 0xb8, 0x6a, 0x9d, 0xe0, 0x83,
+	0x26, 0x2b, 0xab, 0x61, 0x3e, 0x28, 0x5a, 0x78, 0x0e, 0xf3, 0x41, 0xf1, 0x42, 0x6d, 0x54, 0x36,
+	0x89, 0xb2, 0x66, 0x8a, 0x6c, 0xb0, 0x7a, 0x6c, 0x8a, 0x6c, 0xd0, 0xca, 0x68, 0x4c, 0xf2, 0x6a,
+	0x11, 0x31, 0x55, 0xf2, 0x48, 0xa5, 0x33, 0x55, 0xf2, 0x58, 0x1d, 0x32, 0xb6, 0x08, 0x4c, 0x54,
+	0xec, 0x52, 0x17, 0x81, 0x58, 0x61, 0x31, 0x75, 0x11, 0x88, 0x96, 0xfd, 0x62, 0x33, 0x51, 0x2c,
+	0x76, 0x64, 0xaf, 0xa4, 0x15, 0x42, 0x4a, 0xcc, 0x44, 0xb5, 0x4e, 0x92, 0xb0, 0x24, 0xe7, 0x1d,
+	0x9e, 0xd5, 0xaa, 0x6d, 0xcd, 0x92, 0x5c, 0xee, 0x8e, 0x2b, 0x4b, 0xb9, 0x56, 0x0e, 0xa6, 0x2c,
+	0x13, 0x95, 0x87, 0x30, 0x65, 0x99, 0x2c, 0xb9, 0x43, 0x97, 0x0f, 0x58, 0x55, 0x17, 0xfb, 0xe2,
+	0x00, 0x85, 0x5f, 0xd4, 0xe5, 0x83, 0xae, 0x3c, 0x0c, 0xe5, 0xb5, 0x54, 0x1e, 0xc5, 0xc6, 0xd4,
+	0xae, 0x96, 0xd7, 0x89, 0xca, 0x2a, 0x4c, 0x7a, 0x62, 0x49, 0x12, 0x1b, 0xd3, 0xbc, 0x7a, 0xe9,
+	0xa9, 0xd5, 0x4c, 0xa8, 0x53, 0xa7, 0x14, 0x01, 0x51, 0x9c, 0xba, 0x64, 0x71, 0x12, 0xc5, 0xa9,
+	0x43, 0x6a, 0x88, 0x38, 0x13, 0xf6, 0x03, 0x98, 0x93, 0x6b, 0x6f, 0xd8, 0x32, 0x2e, 0x89, 0x8a,
+	0x20, 0xd5, 0xd5, 0xd4, 0xe7, 0x72, 0x88, 0x44, 0x3c, 0x7a, 0x69, 0x3b, 0x99, 0x65, 0x1d, 0xf0,
+	0x10, 0x89, 0x7a, 0x7e, 0x53, 0x08, 0x91, 0x48, 0xfd, 0xaf, 0xa5, 0x1f, 0x67, 0xd6, 0x84, 0x48,
+	0x90, 0xde, 0xb9, 0xee, 0x45, 0x0e, 0x43, 0xdb, 0xeb, 0x03, 0x9e, 0x99, 0x46, 0x75, 0xaf, 0xe6,
+	0x74, 0x35, 0xe5, 0x58, 0xf2, 0x9c, 0xbb, 0xad, 0xd5, 0x74, 0x5a, 0x8e, 0xe1, 0x87, 0xe5, 0x99,
+	0x48, 0x12, 0x67, 0x9f, 0x6d, 0xad, 0xb2, 0xd3, 0x8b, 0x04, 0x3d, 0x40, 0x4d, 0xf5, 0x01, 0x72,
+	0xce, 0x58, 0xd1, 0x07, 0xf8, 0x91, 0x68, 0x45, 0x1f, 0x68, 0x8e, 0x2b, 0x53, 0x7d, 0x80, 0x1d,
+	0xea, 0x55, 0xf4, 0x81, 0xe6, 0x04, 0xb2, 0xa2, 0x0f, 0x74, 0xa7, 0x83, 0x05, 0xc7, 0x18, 0x2b,
+	0xd6, 0x60, 0x5f, 0x19, 0xb4, 0xa8, 0x03, 0xea, 0x18, 0xeb, 0xea, 0x3f, 0x88, 0xae, 0x8a, 0x90,
+	0xb8, 0x8e, 0xba, 0x2a, 0xf2, 0x31, 0x39, 0xd4, 0x55, 0x51, 0x0e, 0xa1, 0x89, 0xc6, 0x56, 0xdf,
+	0x3b, 0x76, 0x08, 0x0f, 0x35, 0xb6, 0xc9, 0xde, 0x15, 0x6f, 0x45, 0x4c, 0xef, 0x4f, 0xf1, 0x56,
+	0x94, 0x23, 0x13, 0x29, 0xde, 0x8a, 0x7a, 0x5e, 0x40, 0x88, 0xbb, 0xa0, 0xa7, 0x17, 0xed, 0xab,
+	0x03, 0x1f, 0x73, 0x44, 0xe3, 0x2e, 0xda, 0x23, 0x91, 0x94, 0x56, 0xdd, 0xf1, 0x34, 0x7b, 0x3d,
+	0x4b, 0x16, 0xf1, 0x60, 0xbc, 0x32, 0xe0, 0x9b, 0x92, 0x67, 0x86, 0x40, 0xbc, 0x3c, 0xd8, 0x39,
+	0x2c, 0xd4, 0x33, 0xd3, 0xc2, 0xe3, 0x13, 0x00, 0x3b, 0xae, 0x81, 0x4d, 0x00, 0xcd, 0x19, 0x18,
+	0x6c, 0x02, 0xe8, 0x4e, 0x80, 0x88, 0x6a, 0x37, 0x79, 0xae, 0x07, 0x55, 0xbb, 0xe8, 0x59, 0x29,
+	0x54, 0xed, 0xe2, 0x07, 0x85, 0xa8, 0xf5, 0x93, 0x8f, 0x2d, 0xd8, 0xe7, 0x52, 0xcf, 0x34, 0xa8,
+	0xd6, 0x2f, 0x79, 0xe6, 0x81, 0x1a, 0x7f, 0x29, 0x11, 0xdd, 0x5e, 0xd1, 0x27, 0xa9, 0x27, 0x8d,
+	0x7f, 0xe2, 0xa4, 0x81, 0x60, 0xee, 0xc4, 0xd4, 0x76, 0xcc, 0xdc, 0x29, 0x67, 0x02, 0x30, 0x73,
+	0xa7, 0x66, 0xc7, 0x53, 0x26, 0xc8, 0x29, 0xe4, 0x0a, 0x13, 0x12, 0xa9, 0xed, 0x0a, 0x13, 0x92,
+	0xf9, 0xe7, 0x22, 0x67, 0x79, 0x32, 0x1b, 0xca, 0x59, 0x21, 0x33, 0x0f, 0xe5, 0xac, 0x98, 0x09,
+	0x27, 0xf0, 0x41, 0xcc, 0x8b, 0xc5, 0xf8, 0xa0, 0xa4, 0x58, 0x63, 0x7c, 0x50, 0xb3, 0x9d, 0x85,
+	0x9d, 0x11, 0x35, 0xeb, 0x16, 0xdb, 0x19, 0x41, 0x92, 0x93, 0xb1, 0x9d, 0x11, 0x2c, 0x81, 0x57,
+	0xf0, 0x6b, 0x95, 0xe4, 0x52, 0xcc, 0xaf, 0x4d, 0xe6, 0xe0, 0x62, 0x7e, 0x2d, 0x92, 0xa5, 0x4a,
+	0x65, 0x20, 0x27, 0x5a, 0xda, 0x98, 0xe7, 0xaa, 0x97, 0x41, 0x32, 0x4b, 0x53, 0x1c, 0x2d, 0x9a,
+	0x4e, 0x13, 0x29, 0x97, 0xe8, 0x68, 0x49, 0x76, 0x2a, 0x27, 0x1b, 0x2a, 0x9d, 0x26, 0x12, 0x16,
+	0x95, 0x4e, 0x93, 0x99, 0x8a, 0x74, 0x75, 0xae, 0x66, 0xe6, 0x29, 0xab, 0x73, 0x24, 0xf1, 0xb0,
+	0xba, 0x96, 0xf1, 0x86, 0x14, 0x62, 0x15, 0x7a, 0x5e, 0x4d, 0xcb, 0x03, 0xd3, 0x84, 0x58, 0x13,
+	0xfd, 0xd6, 0x12, 0x59, 0x7a, 0x64, 0x5c, 0x5c, 0xc8, 0xce, 0x31, 0x43, 0x17, 0x55, 0xc9, 0x44,
+	0x34, 0xca, 0x16, 0x35, 0xcb, 0x4a, 0x61, 0x0b, 0x92, 0x44, 0x56, 0x5d, 0xcb, 0x78, 0x43, 0x51,
+	0xa7, 0xec, 0x09, 0xae, 0x4e, 0xfb, 0x59, 0x3b, 0xb8, 0x3a, 0x15, 0x92, 0x68, 0x44, 0x75, 0xca,
+	0xfb, 0x5c, 0xd1, 0x13, 0xaa, 0x53, 0xa7, 0x72, 0x8f, 0xf1, 0xbc, 0xd0, 0xa0, 0x99, 0x48, 0x2e,
+	0x42, 0xe7, 0x85, 0xd2, 0xe9, 0x2b, 0x50, 0x16, 0x72, 0x58, 0x94, 0x40, 0xa4, 0x9c, 0xb5, 0x53,
+	0x3d, 0xab, 0x7f, 0xc8, 0x11, 0x94, 0xd3, 0x2a, 0xec, 0x73, 0xa9, 0x39, 0x17, 0x2a, 0x82, 0xc9,
+	0x9c, 0x0c, 0x67, 0xc2, 0xfe, 0x09, 0x98, 0x66, 0xb9, 0x09, 0xf6, 0xb2, 0xf4, 0x76, 0x3f, 0x99,
+	0xa2, 0x5a, 0xc1, 0x1f, 0x44, 0xdf, 0xd7, 0xa6, 0x82, 0xae, 0x1f, 0xfa, 0xef, 0xfb, 0xbf, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x26, 0x43, 0xb0, 0xa6, 0x57, 0x98, 0x00, 0x00,
 }

@@ -9,6 +9,19 @@
   "client_cert_file": "${clientCertFile}",
   "client_key_file": "${clientKeyFile}",
   "local_ip": "${localIp}",
-  "admin_api": "http://localhost:8001",
-  "auth_token": "${gatewayToken}"
+  "address": "${localIp}",
+  "admin_type": "${adminType}",
+  "amdin_token": "${adminToken}",
+  "admin_api": "${adminAPI}",
+  "auth_token": "${gatewayToken}",
+  "modules": "${zkModules}",
+  "etcdRegistry": {
+    "etcd_feature": true,
+    "etcd_address": "${bcsEtcdHost}",
+    "etcd_grpc_modules": "${etcdGrpcModules}",
+    "etcd_http_modules": "${etcdHttpModules}",
+    "etcd_ca": "${bcsEtcdCAFile}",
+    "etcd_cert": "${bcsEtcdCertFile}",
+    "etcd_key": "${bcsEtcdKeyFile}"
+  }
 }

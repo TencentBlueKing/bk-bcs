@@ -15,6 +15,7 @@ package predelete
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
@@ -36,6 +37,7 @@ const (
 	PodNameArgKey   = "PodName"
 	NamespaceArgKey = "PodNamespace"
 	PodIPArgKey     = "PodIP"
+	PodImageArgKey  = "PodContainer"
 )
 
 type PreDeleteInterface interface {
@@ -148,6 +150,16 @@ func (p *PreDeleteControl) createHookRun(metaObj metav1.Object, runtimeObj runti
 		},
 	}
 	arguments = append(arguments, podArgs...)
+
+	for i, value := range pod.Spec.Containers {
+		podArgs = []hookv1alpha1.Argument{
+			{
+				Name: PodImageArgKey + "[" + strconv.Itoa(i) + "]",
+				Value: &value.Name,
+			},
+		}
+		arguments = append(arguments, podArgs...)
+	}
 
 	hr, err := p.newHookRunFromHookTemplate(metaObj, runtimeObj, arguments, pod, preDeleteHook, labels, podNameLabelKey)
 	if err != nil {

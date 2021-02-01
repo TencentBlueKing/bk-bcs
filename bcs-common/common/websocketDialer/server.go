@@ -29,15 +29,22 @@ var (
 	errWrongMessageType = errors.New("wrong websocket message type")
 )
 
+// Authorizer authorizer function type
 type Authorizer func(req *http.Request) (clientKey string, authed bool, err error)
+
+// CleanCredentials clean credential function type
 type CleanCredentials func(clientKey string)
+
+// ErrorWriter error writer function type
 type ErrorWriter func(rw http.ResponseWriter, req *http.Request, code int, err error)
 
+// DefaultErrorWriter default error writer
 func DefaultErrorWriter(rw http.ResponseWriter, req *http.Request, code int, err error) {
-	rw.Write([]byte(err.Error()))
 	rw.WriteHeader(code)
+	rw.Write([]byte(err.Error()))
 }
 
+// Server the server for tunnel
 type Server struct {
 	PeerID           string
 	PeerToken        string
@@ -49,6 +56,7 @@ type Server struct {
 	peerLock         sync.Mutex
 }
 
+// New create new tunnel server
 func New(auth Authorizer, errorWriter ErrorWriter, clean CleanCredentials) *Server {
 	return &Server{
 		peers:            map[string]peer{},
@@ -59,6 +67,7 @@ func New(auth Authorizer, errorWriter ErrorWriter, clean CleanCredentials) *Serv
 	}
 }
 
+// ServeHTTP handle http request
 func (s *Server) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	clientKey, authed, peer, err := s.auth(req)
 	if err != nil {

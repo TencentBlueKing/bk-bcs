@@ -1,0 +1,57 @@
+# 当前模块相关配置信息
+server:
+    # 监听配置
+    endpoint:
+        ip: 0.0.0.0
+        port: ${API_SERVER_PORT}
+
+    # TLS接口配置
+    tls:
+        certPassword: ${API_TLS_CERT_PASSWORD}
+        caFile: ${API_TLS_CA_FILE}
+        certFile: ${API_TLS_CERT_FILE}
+        keyFile: ${API_TLS_KEY_FILE}
+
+    # 非加密接口配置信息
+    insecureEndpoint:
+        ip: 0.0.0.0
+        port: ${API_SERVER_INSECURE_PORT}
+
+    # 鉴权开关
+    auth:
+        open: ${API_AUTH_OPEN}
+
+    # SWAGGER API开关(线上环境关闭)
+    api:
+        open: ${API_SWAGGER_OPEN}
+
+# 制品库相关配置
+bkrepo:
+    # 蓝鲸制品库服务地址
+    host: ${BKREPO_HOST}
+    # 蓝鲸制品库Plat权限认证
+    token: ${BKREPO_TOKEN}
+
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - ${ETCD_IP}:${ETCD_PORT}
+
+    # TLS接口配置
+    tls:
+        certPassword: ${ETCD_TLS_CERT_PASSWORD}
+        caFile: ${ETCD_TLS_CA_FILE}
+        certFile: ${ETCD_TLS_CERT_FILE}
+        keyFile: ${ETCD_TLS_KEY_FILE}
+
+# metrics采集接口相关配置
+metrics:
+    endpoint: ${API_METRICS_ENDPOINT}
+
+# 日志相关配置信息
+logger:
+    directory: ${LOG_DIR}
+    level: ${LOG_LEVEL}
+    maxnum: ${LOG_FILE_MAX_NUM}
+    maxsize: ${LOG_FILE_MAX_SIZE}

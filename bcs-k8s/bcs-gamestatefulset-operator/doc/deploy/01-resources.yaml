@@ -99,6 +99,32 @@ spec:
               required:
               - hook
               type: object
+            preInplaceUpdateStrategy:
+              description: PreInplaceUpdateStrategy indicates the PreInplaceUpdateStrategy
+                that will be employed to before InplaceUpdate Pods
+              properties:
+                hook:
+                  properties:
+                    args:
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                          - name
+                          - value
+                        type: object
+                      type: array
+                    templateName:
+                      type: string
+                  required:
+                    - templateName
+                  type: object
+                retry:
+                  type: boolean
+              type: object
             replicas:
               description: 'replicas is the desired number of replicas of the given
                 Template. These are replicas in the sense that they are instantiations

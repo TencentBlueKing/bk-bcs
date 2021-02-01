@@ -42,8 +42,10 @@ type Service struct {
 	// etcd leaseid
 	leaseid clientv3.LeaseID
 
-	// etcd KV
-	Addr     string `josn:"Addr"`
+	// Addr is service address for json marshal.
+	Addr string `josn:"Addr"`
+
+	// Metadata is service metadata for json marshal.
 	Metadata string `json:"Metadata"`
 }
 
@@ -66,10 +68,9 @@ func (svi *Service) grantAndKeepAlive(cli *clientv3.Client, key, value string) e
 	}
 	svi.leaseid = resp.ID
 
-	if _, err = cli.Put(context.Background(), key, value, clientv3.WithLease(svi.leaseid)); err != nil {
+	if _, err := cli.Put(context.Background(), key, value, clientv3.WithLease(svi.leaseid)); err != nil {
 		return err
 	}
-
 	if _, err := cli.KeepAlive(context.Background(), svi.leaseid); err != nil {
 		return err
 	}
@@ -117,21 +118,20 @@ func (svi *Service) register(cfg clientv3.Config) error {
 				break
 			}
 			time.Sleep(time.Second)
-
 			svi.ping(cli, key, value)
 		}
 		log.Print("service register stop now!")
 	}()
 
-	// wait to exit
+	// wait to exit.
 	<-svi.stopCh
 	cli.Revoke(context.Background(), svi.leaseid)
-
 	log.Println("service register stop keepalive now!")
+
 	return nil
 }
 
-func (svi *Service) genServiceid() (string, error) {
+func (svi *Service) genServiceID() (string, error) {
 	uuid, err := uuid.NewUUID()
 	if err != nil {
 		return "", err
@@ -141,11 +141,11 @@ func (svi *Service) genServiceid() (string, error) {
 
 // Register registers service to target etcd cluster.
 func (svi *Service) Register(cfg clientv3.Config) error {
-	serviceid, err := svi.genServiceid()
+	serviceID, err := svi.genServiceID()
 	if err != nil {
 		return err
 	}
-	svi.id = serviceid
+	svi.id = serviceID
 
 	return svi.register(cfg)
 }
