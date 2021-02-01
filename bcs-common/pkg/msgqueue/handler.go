@@ -113,7 +113,7 @@ func (object *objectHandler) selfHandler(b broker.Event) error {
 		}
 	}
 
-	glog.Infof("handler[%s] deal resourceType[%s] data", object.handler.Name(), object.resourceType)
+	glog.V(4).Infof("handler[%s] deal resourceType[%s] data", object.handler.Name(), object.resourceType)
 
 	dataObject := &HandlerData{
 		ResourceType: object.resourceType,
