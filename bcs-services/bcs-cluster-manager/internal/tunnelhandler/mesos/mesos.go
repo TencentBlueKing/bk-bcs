@@ -24,7 +24,6 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
-	
 
 	"github.com/emicklei/go-restful"
 	"github.com/ghodss/yaml"
@@ -41,8 +40,8 @@ const (
 
 // TunnelHandler mesos tunnel request handler
 type TunnelHandler struct {
-	clientTLS        *tls.Config
-	
+	clientTLS *tls.Config
+
 	tunnelDispatcher *WsTunnelDispatcher
 }
 

@@ -72,7 +72,7 @@ func (ua *UpdateAction) getNamespaceFromStore() error {
 }
 
 func (ua *UpdateAction) getQuotaFromStore() error {
-	quota, err := ua.model.GetQuota(ua.ctx,  ua.req.Namespace, ua.req.FederationClusterID, ua.req.ClusterID)
+	quota, err := ua.model.GetQuota(ua.ctx, ua.req.Namespace, ua.req.FederationClusterID, ua.req.ClusterID)
 	if err != nil {
 		return err
 	}
