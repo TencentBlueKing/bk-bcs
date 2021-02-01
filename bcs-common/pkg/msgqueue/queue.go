@@ -93,7 +93,6 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 	queueName, err := mq.isExistResourceQueue(resourceType)
 	if err != nil {
 		errMsg := fmt.Errorf("resourceType to queue failed: %v", err)
-		glog.Errorf("resourceType to queue failed: %v", err)
 		return errMsg
 	}
 
@@ -106,11 +105,12 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 		return errors.New("unsupported queue kind")
 	}
 	if err != nil {
-		glog.Errorf("[pub] message failed: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
+		errMsg := fmt.Errorf("[pub] message failed: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
 			data.Header["resourceType"], queueName, data.Header["id"], data.Header["namespace"], data.Header["resourceName"])
+		return errMsg
 	}
 
-	glog.Infof("[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
+	glog.V(4).Infof("[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
 		data.Header["resourceType"], queueName, data.Header["id"], data.Header["namespace"], data.Header["resourceName"])
 
 	return nil
@@ -141,7 +141,7 @@ func (mq *MsgQueue) Subscribe(handler Handler, filters []Filter, resourceType st
 		return nil, err
 	}
 
-	glog.Infof("subscribe [%s:%s] successful", queueName, subscribe.Topic())
+	glog.V(4).Infof("subscribe [%s:%s] successful", queueName, subscribe.Topic())
 
 	return subscribe, nil
 }
@@ -152,7 +152,7 @@ func (mq *MsgQueue) isExistResourceQueue(resourceType string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("resourceType[%s] not on subscribe", resourceType)
 	}
-	glog.Infof("resourceType %s sub queue[%s]", resourceType, q)
+	glog.V(4).Infof("resourceType %s sub queue[%s]", resourceType, q)
 	return q, nil
 }
 
