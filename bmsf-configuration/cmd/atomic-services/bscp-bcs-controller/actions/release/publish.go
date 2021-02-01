@@ -107,7 +107,7 @@ func (act *PublishAction) queryRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {

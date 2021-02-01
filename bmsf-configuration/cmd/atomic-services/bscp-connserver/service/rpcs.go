@@ -43,7 +43,9 @@ func (cs *ConnServer) QueryAppMetadata(ctx context.Context,
 	}()
 
 	action := metadataaction.NewQueryAction(ctx, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -63,7 +65,9 @@ func (cs *ConnServer) Access(ctx context.Context, req *pb.AccessReq) (*pb.Access
 	}()
 
 	action := signallingaction.NewAccessAction(ctx, cs.viper, cs.accessResource, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -82,7 +86,9 @@ func (cs *ConnServer) Report(ctx context.Context, req *pb.ReportReq) (*pb.Report
 	}()
 
 	action := effectaction.NewReportAction(ctx, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -98,11 +104,21 @@ func (cs *ConnServer) PullRelease(ctx context.Context, req *pb.PullReleaseReq) (
 
 	defer func() {
 		cost := cs.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Release != nil {
+			copied := *response.Release
+			copied.Strategies = common.EmptyStr()
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v need_effect:%+v release:%+v, content_id:%s]",
+				method, req.Seq, cost, response.Code, response.Message, response.NeedEffect, copied, response.ContentId)
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := releaseaction.NewPullAction(ctx, cs.viper, cs.bcsControllerCli, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -121,7 +137,9 @@ func (cs *ConnServer) PullConfigList(ctx context.Context, req *pb.PullConfigList
 	}()
 
 	action := configaction.NewListAction(ctx, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -133,7 +151,9 @@ func (cs *ConnServer) SignallingChannel(stream pb.Connection_SignallingChannelSe
 	action := signallingaction.NewSignalAction(stream.Context(), cs.viper, cs.dataMgrCli,
 		cs.sessionMgr, cs.collector, stream)
 
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%+v| %+v", stream, err)
+	}
 
 	return nil
 }
@@ -152,7 +172,9 @@ func (cs *ConnServer) Healthz(ctx context.Context, req *pb.HealthzReq) (*pb.Heal
 	}()
 
 	action := healthzaction.NewAction(ctx, cs.viper, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }

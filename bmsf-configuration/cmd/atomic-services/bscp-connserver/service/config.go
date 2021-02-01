@@ -68,7 +68,7 @@ func (c *config) check() error {
 		return errors.New("config check, missing 'server.endpoint.port'")
 	}
 	c.viper.BindEnv("server.discoveryTTL", c.envName("DISCOVERY_TTL"))
-	c.viper.SetDefault("server.discoveryTTL", 60)
+	c.viper.SetDefault("server.discoveryTTL", 10)
 
 	c.viper.BindEnv("server.keepaliveInterval", c.envName("KEEPALIVE_INTERVAL"))
 	c.viper.SetDefault("server.keepaliveInterval", 60*time.Second)
@@ -81,6 +81,9 @@ func (c *config) check() error {
 
 	c.viper.BindEnv("server.reportInterval", c.envName("REPORT_INTERVAL"))
 	c.viper.SetDefault("server.reportInterval", 3*time.Second)
+
+	c.viper.BindEnv("server.reportInfoTTL", c.envName("REPORT_INFO_TTL"))
+	c.viper.SetDefault("server.reportInfoTTL", 60)
 
 	c.viper.BindEnv("server.pubChanTimeout", c.envName("PUB_CHAN_TIMEOUT"))
 	c.viper.SetDefault("server.pubChanTimeout", 3*time.Second)

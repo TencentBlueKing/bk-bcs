@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -205,7 +206,7 @@ func (ins *InstanceServer) WatchReload(req *pbsidecar.WatchReloadReq,
 			return nil
 
 		case event := <-ch:
-			if event.BizID != req.BizId || event.AppID != req.AppId || event.Path != req.Path {
+			if event.BizID != req.BizId || event.AppID != req.AppId || event.Path != filepath.Clean(req.Path) {
 				logger.Warn("INSTANCE-WatchReload[%s]| recv invalid business/app mod events data, %+v", req.Seq, event)
 				continue
 			}

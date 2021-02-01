@@ -55,7 +55,9 @@ func (dm *DataManager) QueryAppMetadata(ctx context.Context,
 	}()
 
 	action := metadataaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -74,7 +76,9 @@ func (dm *DataManager) CreateApp(ctx context.Context, req *pb.CreateAppReq) (*pb
 	}()
 
 	action := appaction.NewCreateAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -93,7 +97,9 @@ func (dm *DataManager) QueryApp(ctx context.Context, req *pb.QueryAppReq) (*pb.Q
 	}()
 
 	action := appaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -112,7 +118,9 @@ func (dm *DataManager) QueryAppList(ctx context.Context, req *pb.QueryAppListReq
 	}()
 
 	action := appaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -131,7 +139,9 @@ func (dm *DataManager) UpdateApp(ctx context.Context, req *pb.UpdateAppReq) (*pb
 	}()
 
 	action := appaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -150,7 +160,9 @@ func (dm *DataManager) DeleteApp(ctx context.Context, req *pb.DeleteAppReq) (*pb
 	}()
 
 	action := appaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -171,7 +183,9 @@ func (dm *DataManager) CreateTemplateBind(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -192,7 +206,9 @@ func (dm *DataManager) QueryTemplateBind(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -213,7 +229,9 @@ func (dm *DataManager) QueryTemplateBindList(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -234,7 +252,9 @@ func (dm *DataManager) DeleteTemplateBind(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -255,7 +275,9 @@ func (dm *DataManager) CreateConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewCreateAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -276,7 +298,9 @@ func (dm *DataManager) QueryConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -297,7 +321,9 @@ func (dm *DataManager) QueryConfigTemplateList(ctx context.Context,
 	}()
 
 	action := templateaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -318,7 +344,9 @@ func (dm *DataManager) UpdateConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -339,7 +367,9 @@ func (dm *DataManager) DeleteConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -360,7 +390,9 @@ func (dm *DataManager) CreateConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -381,7 +413,9 @@ func (dm *DataManager) QueryConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -402,7 +436,9 @@ func (dm *DataManager) QueryConfigTemplateVersionList(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -423,7 +459,9 @@ func (dm *DataManager) UpdateConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -444,7 +482,9 @@ func (dm *DataManager) DeleteConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -463,7 +503,9 @@ func (dm *DataManager) CreateConfig(ctx context.Context, req *pb.CreateConfigReq
 	}()
 
 	action := configaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -482,7 +524,9 @@ func (dm *DataManager) QueryConfig(ctx context.Context, req *pb.QueryConfigReq) 
 	}()
 
 	action := configaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -503,7 +547,9 @@ func (dm *DataManager) QueryConfigList(ctx context.Context,
 	}()
 
 	action := configaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -522,7 +568,9 @@ func (dm *DataManager) UpdateConfig(ctx context.Context, req *pb.UpdateConfigReq
 	}()
 
 	action := configaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -541,7 +589,9 @@ func (dm *DataManager) DeleteConfig(ctx context.Context, req *pb.DeleteConfigReq
 	}()
 
 	action := configaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -562,7 +612,9 @@ func (dm *DataManager) CreateConfigContent(ctx context.Context,
 	}()
 
 	action := contentaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -583,7 +635,9 @@ func (dm *DataManager) QueryConfigContent(ctx context.Context,
 	}()
 
 	action := contentaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -604,7 +658,9 @@ func (dm *DataManager) QueryConfigContentList(ctx context.Context,
 	}()
 
 	action := contentaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -621,11 +677,21 @@ func (dm *DataManager) QueryReleaseConfigContent(ctx context.Context,
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			copied := *response.Data
+			copied.Index = common.EmptyStr()
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v content:%+v]",
+				method, req.Seq, cost, response.Code, response.Message, copied)
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := contentaction.NewReleaseConfigContentAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -644,7 +710,9 @@ func (dm *DataManager) CreateCommit(ctx context.Context, req *pb.CreateCommitReq
 	}()
 
 	action := commitaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -663,7 +731,9 @@ func (dm *DataManager) QueryCommit(ctx context.Context, req *pb.QueryCommitReq) 
 	}()
 
 	action := commitaction.NewQueryAction(ctx, dm.viper, dm.smgr, dm.collector, dm.commitCache, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -684,7 +754,9 @@ func (dm *DataManager) QueryHistoryCommits(ctx context.Context,
 	}()
 
 	action := commitaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -703,7 +775,9 @@ func (dm *DataManager) UpdateCommit(ctx context.Context, req *pb.UpdateCommitReq
 	}()
 
 	action := commitaction.NewUpdateAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -722,7 +796,9 @@ func (dm *DataManager) CancelCommit(ctx context.Context, req *pb.CancelCommitReq
 	}()
 
 	action := commitaction.NewCancelAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -741,7 +817,9 @@ func (dm *DataManager) ConfirmCommit(ctx context.Context, req *pb.ConfirmCommitR
 	}()
 
 	action := commitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -762,7 +840,9 @@ func (dm *DataManager) CreateMultiCommitWithContent(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewCreateWithContentAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -783,7 +863,9 @@ func (dm *DataManager) CreateMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -804,7 +886,9 @@ func (dm *DataManager) QueryMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -825,7 +909,9 @@ func (dm *DataManager) QueryHistoryMultiCommits(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -846,7 +932,9 @@ func (dm *DataManager) QueryMultiCommitSubList(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewSubListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -867,7 +955,9 @@ func (dm *DataManager) UpdateMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -888,7 +978,9 @@ func (dm *DataManager) CancelMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewCancelAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -909,7 +1001,9 @@ func (dm *DataManager) ConfirmMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewConfirmAction(ctx, dm.viper, dm.smgr, dm.commitCache, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -928,7 +1022,9 @@ func (dm *DataManager) CreateRelease(ctx context.Context, req *pb.CreateReleaseR
 	}()
 
 	action := releaseaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -943,11 +1039,21 @@ func (dm *DataManager) QueryRelease(ctx context.Context, req *pb.QueryReleaseReq
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			copied := *response.Data
+			copied.Strategies = common.EmptyStr()
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v release:%+v]",
+				method, req.Seq, cost, response.Code, response.Message, copied)
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := releaseaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -964,11 +1070,20 @@ func (dm *DataManager) QueryNewestReleases(ctx context.Context,
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		logger.V(4).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v newest_num:%d]",
+				method, req.Seq, cost, response.Code, response.Message, len(response.Data.Info))
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := releaseaction.NewNewestAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -985,11 +1100,20 @@ func (dm *DataManager) QueryHistoryReleases(ctx context.Context,
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v total_count:%d info_num:%d]",
+				method, req.Seq, cost, response.Code, response.Message, response.Data.TotalCount,
+				len(response.Data.Info))
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := releaseaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1008,7 +1132,9 @@ func (dm *DataManager) UpdateRelease(ctx context.Context, req *pb.UpdateReleaseR
 	}()
 
 	action := releaseaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1027,7 +1153,9 @@ func (dm *DataManager) CancelRelease(ctx context.Context, req *pb.CancelReleaseR
 	}()
 
 	action := releaseaction.NewCancelAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1048,7 +1176,9 @@ func (dm *DataManager) RollbackRelease(ctx context.Context,
 	}()
 
 	action := releaseaction.NewRollbackAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1067,7 +1197,9 @@ func (dm *DataManager) PublishRelease(ctx context.Context, req *pb.PublishReleas
 	}()
 
 	action := releaseaction.NewPublishAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1088,7 +1220,9 @@ func (dm *DataManager) CreateMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1105,11 +1239,21 @@ func (dm *DataManager) QueryMultiRelease(ctx context.Context,
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			copied := *response.Data
+			copied.Strategies = common.EmptyStr()
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v multi_release:%+v",
+				method, req.Seq, cost, response.Code, response.Message, copied)
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := multireleaseaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1130,7 +1274,9 @@ func (dm *DataManager) QueryMultiReleaseSubList(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewSubListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1147,11 +1293,20 @@ func (dm *DataManager) QueryHistoryMultiReleases(ctx context.Context,
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v total_count:%d info_num:%d]",
+				method, req.Seq, cost, response.Code, response.Message, response.Data.TotalCount,
+				len(response.Data.Info))
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := multireleaseaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1172,7 +1327,9 @@ func (dm *DataManager) UpdateMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1193,7 +1350,9 @@ func (dm *DataManager) CancelMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewCancelAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1214,7 +1373,9 @@ func (dm *DataManager) RollbackMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewRollbackAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1235,7 +1396,9 @@ func (dm *DataManager) PublishMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewPublishAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1256,7 +1419,9 @@ func (dm *DataManager) CreateAppInstance(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1277,7 +1442,9 @@ func (dm *DataManager) QueryHistoryAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewHistoryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1298,7 +1465,9 @@ func (dm *DataManager) QueryReachableAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewReachableAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1319,7 +1488,9 @@ func (dm *DataManager) UpdateAppInstance(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1340,7 +1511,9 @@ func (dm *DataManager) QueryMatchedAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewMatchedAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1361,7 +1534,9 @@ func (dm *DataManager) QueryEffectedAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewEffectedAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1382,7 +1557,9 @@ func (dm *DataManager) CreateAppInstanceRelease(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewCreateReleaseAction(ctx, dm.viper, dm.smgr, dm.collector, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1403,7 +1580,9 @@ func (dm *DataManager) QueryAppInstanceRelease(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewQueryReleaseAction(ctx, dm.viper, dm.smgr, dm.collector, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1422,7 +1601,9 @@ func (dm *DataManager) CreateStrategy(ctx context.Context, req *pb.CreateStrateg
 	}()
 
 	action := strategyaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1437,11 +1618,21 @@ func (dm *DataManager) QueryStrategy(ctx context.Context, req *pb.QueryStrategyR
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			copied := *response.Data
+			copied.Content = common.EmptyStr()
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v strategy:%+v",
+				method, req.Seq, cost, response.Code, response.Message, copied)
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := strategyaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1458,11 +1649,20 @@ func (dm *DataManager) QueryStrategyList(ctx context.Context,
 
 	defer func() {
 		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+
+		if response.Data != nil {
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v total_count:%d info_num:%d]",
+				method, req.Seq, cost, response.Code, response.Message, response.Data.TotalCount,
+				len(response.Data.Info))
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := strategyaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1481,7 +1681,9 @@ func (dm *DataManager) DeleteStrategy(ctx context.Context, req *pb.DeleteStrateg
 	}()
 
 	action := strategyaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1500,7 +1702,9 @@ func (dm *DataManager) CreateProcAttr(ctx context.Context, req *pb.CreateProcAtt
 	}()
 
 	action := procattraction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1521,7 +1725,9 @@ func (dm *DataManager) QueryHostProcAttr(ctx context.Context,
 	}()
 
 	action := procattraction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1542,7 +1748,9 @@ func (dm *DataManager) QueryHostProcAttrList(ctx context.Context,
 	}()
 
 	action := procattraction.NewHostListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1563,7 +1771,9 @@ func (dm *DataManager) QueryAppProcAttrList(ctx context.Context,
 	}()
 
 	action := procattraction.NewAppListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1582,7 +1792,9 @@ func (dm *DataManager) UpdateProcAttr(ctx context.Context, req *pb.UpdateProcAtt
 	}()
 
 	action := procattraction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1601,7 +1813,9 @@ func (dm *DataManager) DeleteProcAttr(ctx context.Context, req *pb.DeleteProcAtt
 	}()
 
 	action := procattraction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1622,7 +1836,9 @@ func (dm *DataManager) InitShardingDB(ctx context.Context,
 	}()
 
 	action := shardingdbaction.NewInitAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1643,7 +1859,9 @@ func (dm *DataManager) CreateShardingDB(ctx context.Context,
 	}()
 
 	action := shardingdbaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1664,7 +1882,9 @@ func (dm *DataManager) QueryShardingDB(ctx context.Context,
 	}()
 
 	action := shardingdbaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1685,7 +1905,9 @@ func (dm *DataManager) QueryShardingDBList(ctx context.Context,
 	}()
 
 	action := shardingdbaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1706,7 +1928,9 @@ func (dm *DataManager) UpdateShardingDB(ctx context.Context,
 	}()
 
 	action := shardingdbaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1725,7 +1949,9 @@ func (dm *DataManager) CreateSharding(ctx context.Context, req *pb.CreateShardin
 	}()
 
 	action := shardingaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1744,7 +1970,9 @@ func (dm *DataManager) QuerySharding(ctx context.Context, req *pb.QueryShardingR
 	}()
 
 	action := shardingaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1763,7 +1991,9 @@ func (dm *DataManager) UpdateSharding(ctx context.Context, req *pb.UpdateShardin
 	}()
 
 	action := shardingaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1782,7 +2012,9 @@ func (dm *DataManager) CreateAudit(ctx context.Context, req *pb.CreateAuditReq) 
 	}()
 
 	action := auditaction.NewCreateAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1801,7 +2033,9 @@ func (dm *DataManager) QueryAuditList(ctx context.Context, req *pb.QueryAuditLis
 	}()
 
 	action := auditaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -1820,7 +2054,9 @@ func (dm *DataManager) Healthz(ctx context.Context, req *pb.HealthzReq) (*pb.Hea
 	}()
 
 	action := healthzaction.NewAction(ctx, dm.viper, dm.smgr, req, response)
-	dm.executor.Execute(action)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }

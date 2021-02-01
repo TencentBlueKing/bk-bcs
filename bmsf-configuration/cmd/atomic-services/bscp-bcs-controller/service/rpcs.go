@@ -39,7 +39,9 @@ func (c *BCSController) PublishReleasePre(ctx context.Context,
 	}()
 
 	action := releaseaction.NewPublishPreAction(ctx, c.viper, c.dataMgrCli, req, response)
-	c.executor.Execute(action)
+	if err := c.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -60,7 +62,9 @@ func (c *BCSController) PublishRelease(ctx context.Context,
 	}()
 
 	action := releaseaction.NewPublishAction(ctx, c.viper, c.dataMgrCli, c.publisher, c.pubTopic, req, response)
-	c.executor.Execute(action)
+	if err := c.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -81,7 +85,9 @@ func (c *BCSController) RollbackRelease(ctx context.Context,
 	}()
 
 	action := releaseaction.NewRollbackAction(ctx, c.viper, c.dataMgrCli, c.publisher, c.pubTopic, req, response)
-	c.executor.Execute(action)
+	if err := c.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -101,11 +107,21 @@ func (c *BCSController) PullRelease(ctx context.Context, req *pb.PullReleaseReq)
 		} else {
 			cost = c.collector.StatRequest("PullRelease(newest)", response.Code, rtime, time.Now())
 		}
-		logger.V(2).Infof("PullRelease[%s]| output[%dms][%+v]", req.Seq, cost, response)
+
+		if response.Release != nil {
+			copied := *response.Release
+			copied.Strategies = common.EmptyStr()
+			logger.V(2).Infof("%s[%s]| output[%dms][code:%+v message:%+v release:%+v]",
+				method, req.Seq, cost, response.Code, response.Message, copied)
+		} else {
+			logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+		}
 	}()
 
 	action := releaseaction.NewPullAction(ctx, c.viper, c.dataMgrCli, c.strategyHandler, req, response)
-	c.executor.Execute(action)
+	if err := c.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -124,7 +140,9 @@ func (c *BCSController) Reload(ctx context.Context, req *pb.ReloadReq) (*pb.Relo
 	}()
 
 	action := releaseaction.NewReloadAction(ctx, c.viper, c.dataMgrCli, c.publisher, c.pubTopic, req, response)
-	c.executor.Execute(action)
+	if err := c.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -143,7 +161,9 @@ func (c *BCSController) Healthz(ctx context.Context, req *pb.HealthzReq) (*pb.He
 	}()
 
 	action := healthzaction.NewAction(ctx, c.viper, req, response)
-	c.executor.Execute(action)
+	if err := c.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }

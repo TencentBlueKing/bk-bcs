@@ -125,7 +125,7 @@ func (act *ReloadAction) queryRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {
@@ -146,7 +146,7 @@ func (act *ReloadAction) queryMultiRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Reload[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("Reload[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiRelease(ctx, r)
 	if err != nil {

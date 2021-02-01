@@ -148,7 +148,7 @@ func (act *PublishAction) publishPreBCSMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.PublishReleasePre(ctx, r)
 	if err != nil {
@@ -173,7 +173,7 @@ func (act *PublishAction) publishPreGSEPluginMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.PublishReleasePre(ctx, r)
 	if err != nil {
@@ -198,7 +198,7 @@ func (act *PublishAction) publishData() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -226,7 +226,7 @@ func (act *PublishAction) publishBCSMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -246,7 +246,7 @@ func (act *PublishAction) publishGSEPluginMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -265,7 +265,7 @@ func (act *PublishAction) queryRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {
@@ -285,7 +285,7 @@ func (act *PublishAction) queryApp() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PublishRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("PublishRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryApp(ctx, r)
 	if err != nil {

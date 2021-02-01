@@ -297,7 +297,7 @@ func (h *ConfigHandler) report(cfgIDs []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), h.viper.GetDuration("connserver.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("ConfigHandler[%s %s %s]| request to connserver Report, %+v", h.bizID, h.appID, h.path, r)
+	logger.V(4).Infof("ConfigHandler[%s %s %s]| request to connserver Report, %+v", h.bizID, h.appID, h.path, r)
 
 	resp, err := h.connSvrCli.Report(ctx, r)
 	if err != nil {
@@ -328,7 +328,7 @@ func (h *ConfigHandler) pullConfigList() ([]string, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), h.viper.GetDuration("connserver.callTimeout"))
 		defer cancel()
 
-		logger.V(2).Infof("ConfigHandler[%s %s %s]| request to connserver, %+v", h.bizID, h.appID, h.path, r)
+		logger.V(4).Infof("ConfigHandler[%s %s %s]| request to connserver, %+v", h.bizID, h.appID, h.path, r)
 
 		// pull config list from connserver.
 		resp, err := h.connSvrCli.PullConfigList(ctx, r)
@@ -712,7 +712,7 @@ func (h *ConfigHandler) Debug() {
 		h.mu.RUnlock()
 
 		for _, cfgID := range cfgIDs {
-			logger.V(3).Infof("ConfigHandler[%s %s %s]| debug, %s",
+			logger.V(4).Infof("ConfigHandler[%s %s %s]| debug, %s",
 				h.bizID, h.appID, h.path, h.effectCache.Debug(cfgID))
 		}
 	}

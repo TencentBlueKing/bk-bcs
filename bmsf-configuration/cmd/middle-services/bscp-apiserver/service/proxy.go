@@ -36,7 +36,22 @@ const (
 	defaultTimeout = 3 * time.Second
 
 	// defaultDialerTimeout is default dialer timeout.
-	defaultDialerTimeout = 60 * time.Second
+	defaultDialerTimeout = 10 * time.Second
+
+	// defaultMaxConnsPerHost is default max connections limit for per host.
+	defaultMaxConnsPerHost = 500
+
+	// defaultMaxIdleConnsPerHost is default max idle connections limit for per host.
+	defaultMaxIdleConnsPerHost = 100
+
+	// defaultIdleConnTimeout is default idle connection timeout.
+	defaultIdleConnTimeout = time.Minute
+
+	// defaultWriteBufferSize is default write buffer size, 4KB.
+	defaultWriteBufferSize = 4 << 10
+
+	// defaultReadBufferSize is default read buffer size, 4KB.
+	defaultReadBufferSize = 4 << 10
 
 	// defaultProxyScheme is default proxy scheme.
 	defaultProxyScheme = "http"
@@ -106,8 +121,13 @@ func NewBKRepoReverseProxy(viper *viper.Viper, director func(*http.Request),
 			// The transport used to perform proxy requests. If nil,
 			// http.DefaultTransport is used.
 			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-				Dial:  (&net.Dialer{Timeout: defaultDialerTimeout}).Dial,
+				Proxy:               http.ProxyFromEnvironment,
+				Dial:                (&net.Dialer{Timeout: defaultDialerTimeout}).Dial,
+				MaxConnsPerHost:     defaultMaxConnsPerHost,
+				MaxIdleConnsPerHost: defaultMaxIdleConnsPerHost,
+				IdleConnTimeout:     defaultIdleConnTimeout,
+				WriteBufferSize:     defaultWriteBufferSize,
+				ReadBufferSize:      defaultReadBufferSize,
 			},
 		},
 		collector:         collector,

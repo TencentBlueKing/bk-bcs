@@ -39,7 +39,10 @@ func (as *AuthServer) Authorize(ctx context.Context, req *pb.AuthorizeReq) (*pb.
 
 	action := authaction.NewAuthorizeAction(ctx, as.viper, as.authMode,
 		as.localAuthController, as.bkiamAuthController, req, response)
-	as.executor.Execute(action)
+
+	if err := as.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -59,7 +62,10 @@ func (as *AuthServer) AddPolicy(ctx context.Context, req *pb.AddPolicyReq) (*pb.
 
 	action := policyaction.NewAddAction(ctx, as.viper, as.authMode,
 		as.localAuthController, as.bkiamAuthController, req, response)
-	as.executor.Execute(action)
+
+	if err := as.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }
@@ -78,7 +84,9 @@ func (as *AuthServer) Healthz(ctx context.Context, req *pb.HealthzReq) (*pb.Heal
 	}()
 
 	action := healthzaction.NewAction(ctx, as.viper, as.authMode, req, response)
-	as.executor.Execute(action)
+	if err := as.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }

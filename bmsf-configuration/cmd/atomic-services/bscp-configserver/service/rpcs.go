@@ -47,7 +47,9 @@ func (cs *ConfigServer) CreateApp(ctx context.Context, req *pb.CreateAppReq) (*p
 	}()
 
 	action := appaction.NewCreateAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -66,7 +68,9 @@ func (cs *ConfigServer) QueryApp(ctx context.Context, req *pb.QueryAppReq) (*pb.
 	}()
 
 	action := appaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -85,7 +89,9 @@ func (cs *ConfigServer) QueryAppList(ctx context.Context, req *pb.QueryAppListRe
 	}()
 
 	action := appaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -104,7 +110,9 @@ func (cs *ConfigServer) UpdateApp(ctx context.Context, req *pb.UpdateAppReq) (*p
 	}()
 
 	action := appaction.NewUpdateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -123,7 +131,9 @@ func (cs *ConfigServer) DeleteApp(ctx context.Context, req *pb.DeleteAppReq) (*p
 	}()
 
 	action := appaction.NewDeleteAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -142,7 +152,9 @@ func (cs *ConfigServer) CreateConfig(ctx context.Context, req *pb.CreateConfigRe
 	}()
 
 	action := configaction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -161,7 +173,9 @@ func (cs *ConfigServer) QueryConfig(ctx context.Context, req *pb.QueryConfigReq)
 	}()
 
 	action := configaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -182,7 +196,9 @@ func (cs *ConfigServer) QueryConfigList(ctx context.Context,
 	}()
 
 	action := configaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -201,7 +217,9 @@ func (cs *ConfigServer) UpdateConfig(ctx context.Context, req *pb.UpdateConfigRe
 	}()
 
 	action := configaction.NewUpdateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -220,7 +238,9 @@ func (cs *ConfigServer) DeleteConfig(ctx context.Context, req *pb.DeleteConfigRe
 	}()
 
 	action := configaction.NewDeleteAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -241,7 +261,9 @@ func (cs *ConfigServer) CreateConfigContent(ctx context.Context,
 	}()
 
 	action := contentaction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -262,7 +284,9 @@ func (cs *ConfigServer) QueryConfigContent(ctx context.Context,
 	}()
 
 	action := contentaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -283,7 +307,9 @@ func (cs *ConfigServer) QueryConfigContentList(ctx context.Context,
 	}()
 
 	action := contentaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -304,7 +330,9 @@ func (cs *ConfigServer) QueryReleaseConfigContent(ctx context.Context,
 	}()
 
 	action := contentaction.NewReleaseAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -323,7 +351,9 @@ func (cs *ConfigServer) CreateCommit(ctx context.Context, req *pb.CreateCommitRe
 	}()
 
 	action := commitaction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -342,7 +372,9 @@ func (cs *ConfigServer) QueryCommit(ctx context.Context, req *pb.QueryCommitReq)
 	}()
 
 	action := commitaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -363,7 +395,9 @@ func (cs *ConfigServer) QueryHistoryCommits(ctx context.Context,
 	}()
 
 	action := commitaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -382,7 +416,9 @@ func (cs *ConfigServer) UpdateCommit(ctx context.Context, req *pb.UpdateCommitRe
 	}()
 
 	action := commitaction.NewUpdateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -401,7 +437,9 @@ func (cs *ConfigServer) CancelCommit(ctx context.Context, req *pb.CancelCommitRe
 	}()
 
 	action := commitaction.NewCancelAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -420,7 +458,9 @@ func (cs *ConfigServer) ConfirmCommit(ctx context.Context, req *pb.ConfirmCommit
 	}()
 
 	action := commitaction.NewConfirmAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -441,7 +481,9 @@ func (cs *ConfigServer) CreateMultiCommitWithContent(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewCreateWithContentAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -462,7 +504,9 @@ func (cs *ConfigServer) CreateMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -483,7 +527,9 @@ func (cs *ConfigServer) QueryMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -504,7 +550,9 @@ func (cs *ConfigServer) QueryHistoryMultiCommits(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -525,7 +573,9 @@ func (cs *ConfigServer) UpdateMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewUpdateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -546,7 +596,9 @@ func (cs *ConfigServer) CancelMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewCancelAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -567,7 +619,9 @@ func (cs *ConfigServer) ConfirmMultiCommit(ctx context.Context,
 	}()
 
 	action := multicommitaction.NewConfirmAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -586,7 +640,9 @@ func (cs *ConfigServer) CreateRelease(ctx context.Context, req *pb.CreateRelease
 	}()
 
 	action := releaseaction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -605,7 +661,9 @@ func (cs *ConfigServer) QueryRelease(ctx context.Context, req *pb.QueryReleaseRe
 	}()
 
 	action := releaseaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -626,7 +684,9 @@ func (cs *ConfigServer) QueryHistoryReleases(ctx context.Context,
 	}()
 
 	action := releaseaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -645,7 +705,9 @@ func (cs *ConfigServer) UpdateRelease(ctx context.Context, req *pb.UpdateRelease
 	}()
 
 	action := releaseaction.NewUpdateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -664,7 +726,9 @@ func (cs *ConfigServer) CancelRelease(ctx context.Context, req *pb.CancelRelease
 	}()
 
 	action := releaseaction.NewCancelAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -687,7 +751,9 @@ func (cs *ConfigServer) PublishRelease(ctx context.Context,
 	action := releaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
 		cs.gseControllerCli, req, response)
 
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -710,7 +776,9 @@ func (cs *ConfigServer) RollbackRelease(ctx context.Context,
 	action := releaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
 		cs.gseControllerCli, req, response)
 
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -731,7 +799,9 @@ func (cs *ConfigServer) CreateMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -752,7 +822,9 @@ func (cs *ConfigServer) QueryMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -773,7 +845,9 @@ func (cs *ConfigServer) QueryHistoryMultiReleases(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -794,7 +868,9 @@ func (cs *ConfigServer) UpdateMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewUpdateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -815,7 +891,9 @@ func (cs *ConfigServer) CancelMultiRelease(ctx context.Context,
 	}()
 
 	action := multireleaseaction.NewCancelAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -838,7 +916,9 @@ func (cs *ConfigServer) PublishMultiRelease(ctx context.Context,
 	action := multireleaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
 		cs.gseControllerCli, req, response)
 
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -861,7 +941,9 @@ func (cs *ConfigServer) RollbackMultiRelease(ctx context.Context,
 	action := multireleaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
 		cs.gseControllerCli, req, response)
 
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -882,7 +964,9 @@ func (cs *ConfigServer) QueryHistoryAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewHistoryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -903,7 +987,9 @@ func (cs *ConfigServer) QueryEffectedAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewEffectedAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -924,7 +1010,9 @@ func (cs *ConfigServer) QueryMatchedAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewMatchedAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -945,7 +1033,9 @@ func (cs *ConfigServer) QueryReachableAppInstances(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewReachableAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -966,7 +1056,9 @@ func (cs *ConfigServer) QueryAppInstanceRelease(ctx context.Context,
 	}()
 
 	action := appinstanceaction.NewReleaseAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -985,7 +1077,9 @@ func (cs *ConfigServer) CreateStrategy(ctx context.Context, req *pb.CreateStrate
 	}()
 
 	action := strategyaction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1004,7 +1098,9 @@ func (cs *ConfigServer) QueryStrategy(ctx context.Context, req *pb.QueryStrategy
 	}()
 
 	action := strategyaction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1025,7 +1121,9 @@ func (cs *ConfigServer) QueryStrategyList(ctx context.Context,
 	}()
 
 	action := strategyaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1044,7 +1142,9 @@ func (cs *ConfigServer) DeleteStrategy(ctx context.Context, req *pb.DeleteStrate
 	}()
 
 	action := strategyaction.NewDeleteAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1063,7 +1163,9 @@ func (cs *ConfigServer) CreateProcAttr(ctx context.Context, req *pb.CreateProcAt
 	}()
 
 	action := procattraction.NewCreateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1084,7 +1186,9 @@ func (cs *ConfigServer) QueryHostProcAttr(ctx context.Context,
 	}()
 
 	action := procattraction.NewQueryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1105,7 +1209,9 @@ func (cs *ConfigServer) QueryHostProcAttrList(ctx context.Context,
 	}()
 
 	action := procattraction.NewHostListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1126,7 +1232,9 @@ func (cs *ConfigServer) QueryAppProcAttrList(ctx context.Context,
 	}()
 
 	action := procattraction.NewAppListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1145,7 +1253,9 @@ func (cs *ConfigServer) UpdateProcAttr(ctx context.Context, req *pb.UpdateProcAt
 	}()
 
 	action := procattraction.NewUpdateAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1164,7 +1274,9 @@ func (cs *ConfigServer) DeleteProcAttr(ctx context.Context, req *pb.DeleteProcAt
 	}()
 
 	action := procattraction.NewDeleteAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1183,7 +1295,9 @@ func (cs *ConfigServer) QueryAuditList(ctx context.Context, req *pb.QueryAuditLi
 	}()
 
 	action := auditaction.NewListAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1204,7 +1318,9 @@ func (cs *ConfigServer) Reload(ctx context.Context, req *pb.ReloadReq) (*pb.Relo
 	action := releaseaction.NewReloadAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
 		cs.gseControllerCli, req, response)
 
-	cs.executor.ExecuteWithAuth(action)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -1223,7 +1339,9 @@ func (cs *ConfigServer) Healthz(ctx context.Context, req *pb.HealthzReq) (*pb.He
 	}()
 
 	action := healthzaction.NewAction(ctx, cs.viper, req, response)
-	cs.executor.Execute(action)
+	if err := cs.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }

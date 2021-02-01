@@ -117,7 +117,7 @@ func (act *CreateAction) queryBusinessSharding() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QuerySharding(ctx, r)
 	if err != nil {
@@ -132,7 +132,7 @@ func (act *CreateAction) initDefaultShardingDB() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.InitShardingDB(ctx, r)
 	if err != nil {
@@ -153,7 +153,7 @@ func (act *CreateAction) createBusinessSharding() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateSharding(ctx, r)
 	if err != nil {
@@ -203,7 +203,7 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateApp(ctx, r)
 	if err != nil {

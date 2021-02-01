@@ -200,7 +200,7 @@ func (act *UpdateAction) updateBindConfigs() (pbcommon.ErrCode, string) {
 		for _, bind := range templateBinds {
 			errCode, errMsg = act.updateConfig(bind.AppID, bind.CfgID)
 			if errCode != pbcommon.ErrCode_E_OK {
-				logger.V(2).Infof("UpdateConfigTemplate[%s]| update bind config[%+v] failed, %+v, %s",
+				logger.Errorf("UpdateConfigTemplate[%s]| update bind config[%+v] failed, %+v, %s",
 					act.req.Seq, bind, errCode, errMsg)
 				return errCode, errMsg
 			}

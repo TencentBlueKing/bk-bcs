@@ -97,7 +97,7 @@ func (act *QueryAction) queryCommit() (pbcommon.ErrCode, string) {
 	// query commit from cache.
 	if cache, err := act.commitCache.Get(act.req.CommitId); err == nil && cache != nil {
 		act.collector.StatCommitCache(true)
-		logger.V(3).Infof("QueryCommit[%s]| query commit cache hit success[%s]", act.req.Seq, act.req.CommitId)
+		logger.V(4).Infof("QueryCommit[%s]| query commit cache hit success[%s]", act.req.Seq, act.req.CommitId)
 
 		commit := cache.(*pbcommon.Commit)
 		act.resp.Data = commit

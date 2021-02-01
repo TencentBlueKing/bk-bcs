@@ -102,7 +102,7 @@ func (act *QueryAction) queryMultiRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiRelease(ctx, r)
 	if err != nil {
@@ -123,7 +123,7 @@ func (act *QueryAction) querySubReleaseList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiReleaseSubList(ctx, r)
 	if err != nil {
@@ -148,7 +148,7 @@ func (act *QueryAction) queryRelease(releaseID string) (*pbcommon.Release, pbcom
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {

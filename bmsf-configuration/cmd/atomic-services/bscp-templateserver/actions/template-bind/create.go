@@ -148,7 +148,7 @@ func (act *CreateAction) queryApp() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateTemplateBind[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateTemplateBind[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryApp(ctx, r)
 	if err != nil {
@@ -173,7 +173,7 @@ func (act *CreateAction) createTemplateBind() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateTemplateBind[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("CreateTemplateBind[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.CreateTemplateBind(ctx, req)
 	if err != nil {

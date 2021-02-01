@@ -180,7 +180,7 @@ func (act *CreateAction) create() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateRelease(ctx, r)
 	if err != nil {
@@ -209,7 +209,7 @@ func (act *CreateAction) queryCommit() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryCommit(ctx, r)
 	if err != nil {
@@ -229,7 +229,7 @@ func (act *CreateAction) queryConfig() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryConfig(ctx, r)
 	if err != nil {
@@ -253,7 +253,7 @@ func (act *CreateAction) queryStrategy() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryStrategy(ctx, r)
 	if err != nil {

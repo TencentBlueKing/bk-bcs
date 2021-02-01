@@ -151,7 +151,7 @@ func (act *RenderAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RenderConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
+	logger.V(4).Infof("RenderConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryConfigTemplate(ctx, r)
 	if err != nil {
@@ -176,7 +176,7 @@ func (act *RenderAction) queryConfigTemplateVersion() (pbcommon.ErrCode, string)
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RenderConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
+	logger.V(4).Infof("RenderConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryConfigTemplateVersion(ctx, r)
 	if err != nil {
@@ -209,7 +209,7 @@ func (act *RenderAction) queryVersionContent() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, err.Error()
 	}
 
-	logger.V(2).Infof("RenderConfigTemplate[%s]| request to bkrepo download content[%s] success, length[%d] cost[%+v]",
+	logger.V(4).Infof("RenderConfigTemplate[%s]| request to bkrepo download content[%s] success, length[%d] cost[%+v]",
 		act.kit.Rid, act.templateVersion.ContentId, len(content), cost)
 
 	act.templateContent = content
@@ -235,7 +235,7 @@ func (act *RenderAction) uploadRenderedContent() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, err.Error()
 	}
 
-	logger.V(2).Infof("RenderConfigTemplate[%s]| request to bkrepo upload content[%s] success, length[%d] cost[%+v]",
+	logger.V(4).Infof("RenderConfigTemplate[%s]| request to bkrepo upload content[%s] success, length[%d] cost[%+v]",
 		act.kit.Rid, act.renderedContentID, len(act.renderedContent), cost)
 
 	act.resp.Data = &pb.RenderConfigTemplateResp_RespData{ContentId: act.renderedContentID}
