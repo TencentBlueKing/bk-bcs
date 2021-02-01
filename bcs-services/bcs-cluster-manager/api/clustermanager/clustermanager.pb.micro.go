@@ -42,53 +42,53 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		&api.Endpoint{
 			Name:    "ClusterManager.CreateCluster",
-			Path:    []string{"/clustermanager/v1/cluster"},
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.UpdateCluster",
-			Path:    []string{"/clustermanager/v1/cluster"},
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.DeleteCluster",
-			Path:    []string{"/clustermanager/v1/cluster"},
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetCluster",
-			Path:    []string{"/clustermanager/v1/cluster"},
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.ListCluster",
-			Path:    []string{"/clustermanager/v1/cluster/list"},
+			Path:    []string{"/clustermanager/v1/cluster"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetClusterCredential",
-			Path:    []string{"/clustermanager/v1/clustercredential"},
+			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.UpdateClusterCredential",
-			Path:    []string{"/clustermanager/v1/clustercredential"},
+			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.ListClusterCredential",
-			Path:    []string{"/clustermanager/v1/clustercredential/list"},
+			Path:    []string{"/clustermanager/v1/clustercredential"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -108,67 +108,67 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.CreateNamespace",
-			Path:    []string{"/clustermanager/v1/namespace"},
+			Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.UpdateNamespace",
-			Path:    []string{"/clustermanager/v1/namespace"},
+			Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.DeleteNamespace",
-			Path:    []string{"/clustermanager/v1/namespace"},
+			Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetNamespace",
-			Path:    []string{"/clustermanager/v1/namespace"},
+			Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.ListNamespace",
-			Path:    []string{"/clustermanager/v1/namespace/list"},
+			Path:    []string{"/clustermanager/v1/namespace"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.CreateNamespaceQuota",
-			Path:    []string{"/clustermanager/v1/namespacequota"},
+			Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.UpdateNamespaceQuota",
-			Path:    []string{"/clustermanager/v1/namespacequota"},
+			Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.DeleteNamespaceQuota",
-			Path:    []string{"/clustermanager/v1/namespacequota"},
+			Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.GetNamespaceQuota",
-			Path:    []string{"/clustermanager/v1/namespacequota"},
+			Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "ClusterManager.ListNamespaceQuota",
-			Path:    []string{"/clustermanager/v1/namespacequota/list"},
+			Path:    []string{"/clustermanager/v1/namespacequota"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -486,53 +486,53 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	h := &clusterManagerHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCluster",
-		Path:    []string{"/clustermanager/v1/cluster"},
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateCluster",
-		Path:    []string{"/clustermanager/v1/cluster"},
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCluster",
-		Path:    []string{"/clustermanager/v1/cluster"},
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetCluster",
-		Path:    []string{"/clustermanager/v1/cluster"},
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCluster",
-		Path:    []string{"/clustermanager/v1/cluster/list"},
+		Path:    []string{"/clustermanager/v1/cluster"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetClusterCredential",
-		Path:    []string{"/clustermanager/v1/clustercredential"},
+		Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateClusterCredential",
-		Path:    []string{"/clustermanager/v1/clustercredential"},
+		Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListClusterCredential",
-		Path:    []string{"/clustermanager/v1/clustercredential/list"},
+		Path:    []string{"/clustermanager/v1/clustercredential"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -552,67 +552,67 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateNamespace",
-		Path:    []string{"/clustermanager/v1/namespace"},
+		Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNamespace",
-		Path:    []string{"/clustermanager/v1/namespace"},
+		Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteNamespace",
-		Path:    []string{"/clustermanager/v1/namespace"},
+		Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetNamespace",
-		Path:    []string{"/clustermanager/v1/namespace"},
+		Path:    []string{"/clustermanager/v1/namespace/{federationClusterID}/{name}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNamespace",
-		Path:    []string{"/clustermanager/v1/namespace/list"},
+		Path:    []string{"/clustermanager/v1/namespace"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateNamespaceQuota",
-		Path:    []string{"/clustermanager/v1/namespacequota"},
+		Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNamespaceQuota",
-		Path:    []string{"/clustermanager/v1/namespacequota"},
+		Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteNamespaceQuota",
-		Path:    []string{"/clustermanager/v1/namespacequota"},
+		Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetNamespaceQuota",
-		Path:    []string{"/clustermanager/v1/namespacequota"},
+		Path:    []string{"/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNamespaceQuota",
-		Path:    []string{"/clustermanager/v1/namespacequota/list"},
+		Path:    []string{"/clustermanager/v1/namespacequota"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))

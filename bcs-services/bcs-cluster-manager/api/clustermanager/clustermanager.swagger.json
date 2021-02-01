@@ -50,158 +50,6 @@
     },
     "/clustermanager/v1/cluster": {
       "get": {
-        "summary": "查询Cluster",
-        "description": "查询Cluster",
-        "operationId": "ClusterManager_GetCluster",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerGetClusterResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "clusterID",
-            "description": "clusterID. 集群ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      },
-      "delete": {
-        "summary": "删除Cluster",
-        "description": "删除Cluster",
-        "operationId": "ClusterManager_DeleteCluster",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerDeleteClusterResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "clusterID",
-            "description": "clusterID. 集群ID",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "isForced",
-            "description": "isForced. 是否强制删除，强制删除会删除级联资源",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      },
-      "post": {
-        "summary": "创建Cluster",
-        "description": "创建Cluster",
-        "operationId": "ClusterManager_CreateCluster",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerCreateClusterResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clustermanagerCreateClusterReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      },
-      "put": {
-        "summary": "更新Cluster",
-        "description": "更新Cluster",
-        "operationId": "ClusterManager_UpdateCluster",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerUpdateClusterResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clustermanagerUpdateClusterReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
-    "/clustermanager/v1/cluster/list": {
-      "get": {
         "summary": "查询Cluster列表",
         "description": "查询Cluster列表",
         "operationId": "ClusterManager_ListCluster",
@@ -299,16 +147,16 @@
         ]
       }
     },
-    "/clustermanager/v1/clustercredential": {
+    "/clustermanager/v1/cluster/{clusterID}": {
       "get": {
-        "summary": "查询ClusterCredential详情",
-        "description": "查询ClusterCredential详情",
-        "operationId": "ClusterManager_GetClusterCredential",
+        "summary": "查询Cluster",
+        "description": "查询Cluster",
+        "operationId": "ClusterManager_GetCluster",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clustermanagerGetClusterCredentialResp"
+              "$ref": "#/definitions/clustermanagerGetClusterResp"
             }
           },
           "default": {
@@ -319,6 +167,52 @@
           }
         },
         "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "seq",
+            "description": "seq. 请求序号",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除Cluster",
+        "description": "删除Cluster",
+        "operationId": "ClusterManager_DeleteCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
           {
             "name": "seq",
             "description": "seq. 请求序号",
@@ -328,26 +222,27 @@
             "format": "uint64"
           },
           {
-            "name": "serverKey",
-            "description": "serverKey. 上报信息的组件的key，对于kube-agent，是clusterID，对于mesos-driver和kube-driver，是有IP信息",
+            "name": "isForced",
+            "description": "isForced. 是否强制删除，强制删除会删除级联资源",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
           "ClusterManager"
         ]
       },
-      "put": {
-        "summary": "更新ClusterCredential详情",
-        "description": "更新ClusterCredential",
-        "operationId": "ClusterManager_UpdateClusterCredential",
+      "post": {
+        "summary": "创建Cluster",
+        "description": "创建Cluster",
+        "operationId": "ClusterManager_CreateCluster",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clustermanagerUpdateClusterCredentialResp"
+              "$ref": "#/definitions/clustermanagerCreateClusterResp"
             }
           },
           "default": {
@@ -359,11 +254,57 @@
         },
         "parameters": [
           {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/clustermanagerUpdateClusterCredentialReq"
+              "$ref": "#/definitions/clustermanagerCreateClusterReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "put": {
+        "summary": "更新Cluster",
+        "description": "更新Cluster",
+        "operationId": "ClusterManager_UpdateCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterReq"
             }
           }
         ],
@@ -372,7 +313,7 @@
         ]
       }
     },
-    "/clustermanager/v1/clustercredential/list": {
+    "/clustermanager/v1/clustercredential": {
       "get": {
         "summary": "查询ClusterCredential列表",
         "description": "查询ClusterCredential列表",
@@ -434,6 +375,86 @@
         ]
       }
     },
+    "/clustermanager/v1/clustercredential/{serverKey}": {
+      "get": {
+        "summary": "查询ClusterCredential详情",
+        "description": "查询ClusterCredential详情",
+        "operationId": "ClusterManager_GetClusterCredential",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClusterCredentialResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "serverKey",
+            "description": "上报信息的组件的key，对于kube-agent，是clusterID，对于mesos-driver和kube-driver，是有IP信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "seq",
+            "description": "seq. 请求序号",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "put": {
+        "summary": "更新ClusterCredential详情",
+        "description": "更新ClusterCredential",
+        "operationId": "ClusterManager_UpdateClusterCredential",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterCredentialResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "serverKey",
+            "description": "上报信息的组件的key，对于kube-agent，是clusterID，对于mesos-driver和kube-driver，是有IP信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterCredentialReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/initfedcluster": {
       "post": {
         "summary": "初始化联邦Cluster",
@@ -469,172 +490,6 @@
       }
     },
     "/clustermanager/v1/namespace": {
-      "get": {
-        "summary": "查询namespace",
-        "description": "查询namespace",
-        "operationId": "ClusterManager_GetNamespace",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerGetNamespaceResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "name",
-            "description": "name. 命名空间名称",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "federationClusterID",
-            "description": "federationClusterID. 命名空间所在联邦集群id",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      },
-      "delete": {
-        "summary": "删除namespace",
-        "description": "删除namespace",
-        "operationId": "ClusterManager_DeleteNamespace",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerDeleteNamespaceResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "name",
-            "description": "name. 命名空间名称",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "federationClusterID",
-            "description": "federationClusterID. 命名空间所在联邦集群id",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "isForced",
-            "description": "isForced. 是否强制删除",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      },
-      "post": {
-        "summary": "创建namespace",
-        "description": "创建namespace",
-        "operationId": "ClusterManager_CreateNamespace",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerCreateNamespaceResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clustermanagerCreateNamespaceReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      },
-      "put": {
-        "summary": "更新namespace",
-        "description": "更新namespace",
-        "operationId": "ClusterManager_UpdateNamespace",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerUpdateNamespaceResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clustermanagerUpdateNamespaceReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
-    "/clustermanager/v1/namespace/list": {
       "get": {
         "summary": "查询namespace列表",
         "description": "查询namespace列表",
@@ -705,16 +560,210 @@
         ]
       }
     },
-    "/clustermanager/v1/namespacequota": {
+    "/clustermanager/v1/namespace/{federationClusterID}/{name}": {
       "get": {
-        "summary": "查询namespacequota",
-        "description": "查询namespacequota",
-        "operationId": "ClusterManager_GetNamespaceQuota",
+        "summary": "查询namespace",
+        "description": "查询namespace",
+        "operationId": "ClusterManager_GetNamespace",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clustermanagerGetNamespaceQuotaResp"
+              "$ref": "#/definitions/clustermanagerGetNamespaceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦集群id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "seq",
+            "description": "seq. 请求序号",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除namespace",
+        "description": "删除namespace",
+        "operationId": "ClusterManager_DeleteNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteNamespaceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦集群id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "seq",
+            "description": "seq. 请求序号",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "isForced",
+            "description": "isForced. 是否强制删除",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "post": {
+        "summary": "创建namespace",
+        "description": "创建namespace",
+        "operationId": "ClusterManager_CreateNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateNamespaceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦集群id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名字",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateNamespaceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "put": {
+        "summary": "更新namespace",
+        "description": "更新namespace",
+        "operationId": "ClusterManager_UpdateNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNamespaceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦集群id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNamespaceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/namespacequota": {
+      "get": {
+        "summary": "查询namespacequota列表",
+        "description": "查询namespacequota列表",
+        "operationId": "ClusterManager_ListNamespaceQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListNamespaceQuotaResp"
             }
           },
           "default": {
@@ -746,6 +795,54 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}": {
+      "get": {
+        "summary": "查询namespacequota",
+        "description": "查询namespacequota",
+        "operationId": "ClusterManager_GetNamespaceQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetNamespaceQuotaResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "seq",
+            "description": "seq. 请求序号",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           },
           {
             "name": "clusterID",
@@ -779,26 +876,26 @@
         },
         "parameters": [
           {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦集群id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名字",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "seq",
             "description": "seq. 请求序号",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "uint64"
-          },
-          {
-            "name": "namespace",
-            "description": "namespace. 命名空间名字",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "federationClusterID",
-            "description": "federationClusterID. 命名空间所在联邦集群id",
-            "in": "query",
-            "required": false,
-            "type": "string"
           },
           {
             "name": "clusterID",
@@ -840,6 +937,20 @@
         },
         "parameters": [
           {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦集群id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
@@ -872,60 +983,26 @@
         },
         "parameters": [
           {
+            "name": "federationClusterID",
+            "description": "命名空间所在联邦id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateNamespaceQuotaReq"
             }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
-    "/clustermanager/v1/namespacequota/list": {
-      "get": {
-        "summary": "查询namespacequota列表",
-        "description": "查询namespacequota列表",
-        "operationId": "ClusterManager_ListNamespaceQuota",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerListNamespaceQuotaResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "namespace",
-            "description": "namespace. 命名空间名称",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "federationClusterID",
-            "description": "federationClusterID. 命名空间所在联邦id",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
