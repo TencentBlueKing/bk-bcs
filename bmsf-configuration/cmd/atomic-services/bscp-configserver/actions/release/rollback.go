@@ -196,7 +196,7 @@ func (act *RollbackAction) createRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateRelease(ctx, r)
 	if err != nil {
@@ -220,7 +220,7 @@ func (act *RollbackAction) queryRelease(releaseID string) (*pbcommon.Release, pb
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {
@@ -240,7 +240,7 @@ func (act *RollbackAction) publishPreBCSMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.PublishReleasePre(ctx, r)
 	if err != nil {
@@ -265,7 +265,7 @@ func (act *RollbackAction) publishPreGSEPluginMode() (pbcommon.ErrCode, string) 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.PublishReleasePre(ctx, r)
 	if err != nil {
@@ -290,7 +290,7 @@ func (act *RollbackAction) publishData() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -318,7 +318,7 @@ func (act *RollbackAction) publishBCSMode() error {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -341,7 +341,7 @@ func (act *RollbackAction) publishGSEPluginMode() error {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.PublishRelease(ctx, r)
 	if err != nil {
@@ -364,7 +364,7 @@ func (act *RollbackAction) rollbackData() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.RollbackRelease(ctx, r)
 	if err != nil {
@@ -392,7 +392,7 @@ func (act *RollbackAction) rollbackBCSMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.RollbackRelease(ctx, r)
 	if err != nil {
@@ -412,7 +412,7 @@ func (act *RollbackAction) rollbackGSEPluginMode() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.RollbackRelease(ctx, r)
 	if err != nil {
@@ -431,7 +431,7 @@ func (act *RollbackAction) queryApp() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryApp(ctx, r)
 	if err != nil {

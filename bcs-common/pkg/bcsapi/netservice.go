@@ -680,7 +680,7 @@ func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, ipInfo *types.I
 	return fmt.Errorf("all netservice failed, %s", lastErr)
 }
 
-// UpdateIPInstance update ip instance info, expecially MacAddress
+// UpdateIPInstance update ip instance info, especially MacAddress
 func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 	if inst == nil {
 		return fmt.Errorf("Lost instance data")

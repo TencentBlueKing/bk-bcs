@@ -139,7 +139,7 @@ func (act *ConfirmAction) query() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("ConfirmCommit[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("ConfirmCommit[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryCommit(ctx, r)
 	if err != nil {
@@ -164,7 +164,7 @@ func (act *ConfirmAction) confirm() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("ConfirmCommit[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("ConfirmCommit[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.ConfirmCommit(ctx, r)
 	if err != nil {

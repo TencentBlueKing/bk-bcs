@@ -497,10 +497,12 @@ type GTCMDQueryHostProcAttrListResp struct {
 	ProcAttrs []*common.ProcAttr `protobuf:"bytes,4,rep,name=proc_attrs,json=procAttrs" json:"proc_attrs,omitempty"`
 }
 
-func (m *GTCMDQueryHostProcAttrListResp) Reset()                    { *m = GTCMDQueryHostProcAttrListResp{} }
-func (m *GTCMDQueryHostProcAttrListResp) String() string            { return proto.CompactTextString(m) }
-func (*GTCMDQueryHostProcAttrListResp) ProtoMessage()               {}
-func (*GTCMDQueryHostProcAttrListResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+func (m *GTCMDQueryHostProcAttrListResp) Reset()         { *m = GTCMDQueryHostProcAttrListResp{} }
+func (m *GTCMDQueryHostProcAttrListResp) String() string { return proto.CompactTextString(m) }
+func (*GTCMDQueryHostProcAttrListResp) ProtoMessage()    {}
+func (*GTCMDQueryHostProcAttrListResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{11}
+}
 
 func (m *GTCMDQueryHostProcAttrListResp) GetSeq() string {
 	if m != nil {
@@ -1340,7 +1342,7 @@ func init() { proto.RegisterFile("tunnelserver.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
 	// 1226 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xdc, 0x57, 0xcd, 0x6e, 0xdb, 0xc6,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x57, 0xcd, 0x6e, 0xdb, 0xc6,
 	0x13, 0x0f, 0xf5, 0xad, 0x91, 0xe3, 0x30, 0x9b, 0x28, 0x96, 0x95, 0xbf, 0x1d, 0x85, 0x7f, 0xa0,
 	0x50, 0x0b, 0xd8, 0x6e, 0x95, 0x73, 0x81, 0x2a, 0xb2, 0x6c, 0x13, 0x95, 0x2d, 0x65, 0x25, 0x01,
 	0x6d, 0x81, 0x96, 0xa0, 0xc8, 0xa5, 0x4c, 0x84, 0xe2, 0xd2, 0xe4, 0xaa, 0x69, 0x75, 0xe8, 0x13,

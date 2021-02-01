@@ -36,7 +36,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/misc"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
@@ -225,7 +225,7 @@ func (s *Scheduler) unlockService() {
 	s.serviceLock.Unlock()
 }
 
-// start starts the scheduler and subscribes to event stream
+// Start start starts the scheduler and subscribes to event stream
 func (s *Scheduler) Start() error {
 	if s.config.Cluster == "" {
 		blog.Errorf("scheduler cluster unknown")
@@ -259,7 +259,7 @@ func (s *Scheduler) Start() error {
 	// get Host and Port
 	splitID := strings.Split(s.config.Address, ":")
 	if len(splitID) < 2 {
-		return fmt.Errorf("listen adress %s format error", s.config.Address)
+		return fmt.Errorf("listen address %s format error", s.config.Address)
 	}
 	s.IP = splitID[0]
 	port, err := strconv.Atoi(splitID[1])

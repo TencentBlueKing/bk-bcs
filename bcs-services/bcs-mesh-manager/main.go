@@ -181,7 +181,7 @@ func signalWatch(stop context.CancelFunc, manager chan struct{}, htpSvr *http.Se
 	signalCh := make(chan os.Signal, 2)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	<-signalCh
-	fmt.Printf("bcs-gateway-dicovery catch exit signal, exit in 3 seconds...\n")
+	fmt.Printf("bcs-gateway-discovery catch exit signal, exit in 3 seconds...\n")
 	close(manager)
 	stop()
 	htpSvr.Shutdown(context.Background())

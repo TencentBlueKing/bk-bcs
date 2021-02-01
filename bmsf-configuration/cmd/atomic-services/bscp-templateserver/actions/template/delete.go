@@ -134,7 +134,7 @@ func (act *DeleteAction) queryTemplateBindList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("DeleteConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
+	logger.V(4).Infof("DeleteConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryTemplateBindList(ctx, r)
 	if err != nil {
@@ -162,7 +162,7 @@ func (act *DeleteAction) deleteConfigTemplate() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("DeleteConfigTemplateReq[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("DeleteConfigTemplateReq[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.DeleteConfigTemplate(ctx, req)
 	if err != nil {

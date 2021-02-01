@@ -15,17 +15,18 @@ package haproxy
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
-	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/util"
 	"html/template"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
+	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/template"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-loadbalance/util"
 )
 
 //NewManager create haproxy config file manager
@@ -454,7 +455,7 @@ func checkConfigDiffBetweenTCPListener(newListener *TCPListener, oldListener *TC
 		return false, false, nil
 	}
 	if (newListener == nil && oldListener != nil) || (newListener != nil && oldListener == nil) {
-		blog.Infof("find emtpy tcp listener")
+		blog.Infof("find empty tcp listener")
 		return true, false, nil
 	}
 	if newListener.ServicePort != oldListener.ServicePort {

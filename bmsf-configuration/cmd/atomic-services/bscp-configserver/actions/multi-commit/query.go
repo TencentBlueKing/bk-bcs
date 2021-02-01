@@ -102,7 +102,7 @@ func (act *QueryAction) queryMultiCommit() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiCommit(ctx, r)
 	if err != nil {
@@ -123,7 +123,7 @@ func (act *QueryAction) querySubCommitList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiCommitSubList(ctx, r)
 	if err != nil {
@@ -147,7 +147,7 @@ func (act *QueryAction) queryCommit(commitID string) (*pbcommon.Commit, pbcommon
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("QueryMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("QueryMultiCommit[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryCommit(ctx, r)
 	if err != nil {

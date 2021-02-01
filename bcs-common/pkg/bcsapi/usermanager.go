@@ -27,7 +27,7 @@ const (
 
 // UserManager http API SDK difinition
 type UserManager interface {
-	// ListAllClusters get all registed kubernetes api-server
+	// ListAllClusters get all registered kubernetes api-server
 	ListAllClusters() ([]*ClusterCredential, error)
 }
 
@@ -67,7 +67,7 @@ func (cli *UserManagerCli) getRequestPath() string {
 	return fmt.Sprintf("/%s/", usermanagerPrefix)
 }
 
-// ListAllClusters get all registed kubernetes api-server
+// ListAllClusters get all registered kubernetes api-server
 func (cli *UserManagerCli) ListAllClusters() ([]*ClusterCredential, error) {
 	var response BasicResponse
 	err := bkbcsSetting(cli.Client.Get(), cli.Config).

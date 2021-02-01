@@ -394,7 +394,7 @@ func (s *SidecarController) writeLogConfFile(key string, y *types.Yaml) {
 
 	_, err = f.Write(by)
 	if err != nil {
-		blog.Errorf("container %s or host tempalte execute failed: %s", cid, err.Error())
+		blog.Errorf("container %s or host template execute failed: %s", cid, err.Error())
 		return
 	}
 	blog.Infof("produce container %s or host log config %s success", cid, newlogConf.confPath)

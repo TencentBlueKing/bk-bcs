@@ -175,7 +175,7 @@ func (cs *ConnServer) initServiceDiscovery() {
 // sidecar connection counts as a load-reporter.
 func (cs *ConnServer) initReporter() {
 	cs.reporter = rssche.NewReporter(cs.viper.GetString("server.serviceName"),
-		cs.viper.GetInt64("server.discoveryTTL"))
+		cs.viper.GetInt64("server.reportInfoTTL"))
 
 	if err := cs.reporter.Init(cs.etcdCfg); err != nil {
 		logger.Fatal("create new connserver resource reporter, %+v", err)

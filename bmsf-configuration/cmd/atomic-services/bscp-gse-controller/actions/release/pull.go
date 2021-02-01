@@ -120,7 +120,7 @@ func (act *PullAction) targetRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PullRelease[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("PullRelease[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
 	if err != nil {
@@ -201,7 +201,7 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 		ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 		defer cancel()
 
-		logger.V(2).Infof("request to datamanager[%d], %+v", index, r)
+		logger.V(4).Infof("PullRelease[%s]| request to datamanager[%d], %+v", act.req.Seq, index, r)
 
 		resp, err := act.dataMgrCli.QueryNewestReleases(ctx, r)
 		if err != nil {
@@ -211,10 +211,10 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 		if resp.Code != pbcommon.ErrCode_E_OK {
 			return resp.Code, resp.Message
 		}
-		logger.V(4).Infof("request to datamanager response[%d], %+v", index, resp)
+		logger.V(4).Infof("PullRelease[%s]| request to datamanager response[%d], %+v", act.req.Seq, index, resp)
 
 		if len(resp.Data.Info) == 0 {
-			logger.V(2).Infof("finally, no more release for this app instance now[%d]", index)
+			logger.V(2).Infof("PullRelease[%s]| finally, no release for this app instance now[%d]", act.req.Seq, index)
 			return pbcommon.ErrCode_E_OK, ""
 		}
 
@@ -262,13 +262,13 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 	}
 
 	if newest == nil {
-		logger.V(2).Infof("finally query, no more release for this app instance now")
+		logger.V(2).Infof("PullRelease[%s]| finally, no more release for this app instance", act.req.Seq)
 		return pbcommon.ErrCode_E_OK, ""
 	}
 
 	// no more newest release, no rollbacked.
 	if newest.ReleaseId == act.req.LocalReleaseId && len(act.req.LocalReleaseId) != 0 {
-		logger.V(2).Infof("local release just the newest releaseid[%+v]", newest.ReleaseId)
+		logger.V(2).Infof("PullRelease[%s]| local release just the newest release[%+v]", act.req.Seq, newest.ReleaseId)
 		return pbcommon.ErrCode_E_OK, ""
 	}
 	act.release = newest

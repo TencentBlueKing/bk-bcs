@@ -108,7 +108,7 @@ func (act *ListAction) list() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("PullConfigList[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("PullConfigList[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryConfigList(ctx, r)
 	if err != nil {

@@ -138,7 +138,7 @@ func (act *DeleteAction) deleteConfigTemplateVersion() (pbcommon.ErrCode, string
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("DeleteConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("DeleteConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.DeleteConfigTemplateVersion(ctx, req)
 	if err != nil {

@@ -127,7 +127,7 @@ func (act *ReportAction) report() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("Report[%s]| request to datamanager, %+v", act.req.Seq, r)
+	logger.V(4).Infof("Report[%s]| request to datamanager, %+v", act.req.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateAppInstanceRelease(ctx, r)
 	if err != nil {

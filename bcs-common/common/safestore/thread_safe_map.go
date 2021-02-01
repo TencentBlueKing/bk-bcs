@@ -123,7 +123,7 @@ func (c *threadSafeMap) Replace(items map[string]interface{}) {
 	c.items = items
 }
 
-//NewThreadSafeStore create defualt safe map implementation
+//NewThreadSafeStore create default safe map implementation
 func NewThreadSafeStore() ThreadSafeStore {
 	return &threadSafeMap{
 		items: map[string]interface{}{},

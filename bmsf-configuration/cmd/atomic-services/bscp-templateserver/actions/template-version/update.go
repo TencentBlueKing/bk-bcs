@@ -170,7 +170,7 @@ func (act *UpdateAction) updateConfigTemplateVersion() (pbcommon.ErrCode, string
 	ctx, cancel := context.WithTimeout(context.Background(), act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("UpdateConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("UpdateConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.UpdateConfigTemplateVersion(ctx, req)
 	if err != nil {

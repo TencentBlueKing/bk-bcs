@@ -143,7 +143,7 @@ func (r *ReconcileAppSvc) handleQueue() {
 			default:
 				blog.Warnf("ReconcilerAppSvc get unknown Event Type: %s.", event.Type)
 			}
-			//todo(DeveloperJim) defualt info for timeout?
+			//todo(DeveloperJim) default info for timeout?
 		}
 	}
 }

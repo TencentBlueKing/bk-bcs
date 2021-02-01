@@ -36,7 +36,7 @@ type ManagerConfig struct {
 	Ctx               context.Context
 }
 
-// CollectionConfig defines some customed infomation of log collection.
+// CollectionConfig defines some customed information of log collection.
 // For example, customed dataid of some Cluster.
 type CollectionConfig struct {
 	//Config Spec.

@@ -172,7 +172,7 @@ func (p *Processor) Run() {
 		case <-updateTick.C:
 			blog.V(3).Infof("update tick rings")
 			if !p.updateFlag.Value() {
-				blog.V(3).Infof("no update event happend, continue")
+				blog.V(3).Infof("no update event happened, continue")
 				continue
 			}
 

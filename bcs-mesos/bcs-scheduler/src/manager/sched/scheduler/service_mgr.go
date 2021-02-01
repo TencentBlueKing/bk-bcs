@@ -222,7 +222,7 @@ func (mgr *ServiceMgr) Worker() {
 					mgr.updateService(data.Item.(*commtypes.BcsService), currTime)
 				}
 			} else {
-				blog.Warn("ServiceMgr recieve unknown data action(type:%s, action:%s)", data.DataType, data.Action)
+				blog.Warn("ServiceMgr receive unknown data action(type:%s, action:%s)", data.DataType, data.Action)
 			}
 		}
 	}
@@ -331,11 +331,11 @@ func (mgr *ServiceMgr) addService(service *commtypes.BcsService, tNow int64) {
 		return
 	}
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
-	blog.Info("ServiceMgr recieve addService(%s, %+v)", key, service)
+	blog.Info("ServiceMgr receive addService(%s, %+v)", key, service)
 
 	_, exist, err := mgr.esInfoCache.GetByKey(key)
 	if err != nil {
-		blog.Error("when recieve addService event, get esInfo %s from cache return err:%s", key, err.Error())
+		blog.Error("when receive addService event, get esInfo %s from cache return err:%s", key, err.Error())
 	}
 	if exist == true {
 		blog.Warn("when receive addService event, esInfo %s is in already in cache, will be updated", key)
@@ -360,7 +360,7 @@ func (mgr *ServiceMgr) updateService(service *commtypes.BcsService, tNow int64) 
 		return
 	}
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
-	blog.Info("ServiceMgr recieve updateService(%s, %+v)", key, service)
+	blog.Info("ServiceMgr receive updateService(%s, %+v)", key, service)
 
 	createTime := tNow
 	cacheData, exist, err := mgr.esInfoCache.GetByKey(key)
@@ -398,7 +398,7 @@ func (mgr *ServiceMgr) deleteService(service *commtypes.BcsService) {
 		return
 	}
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
-	blog.Info("ServiceMgr recieve deleteService(%+v)", service)
+	blog.Info("ServiceMgr receive deleteService(%+v)", service)
 
 	cacheData, exist, err := mgr.esInfoCache.GetByKey(key)
 	if exist == false || err != nil {

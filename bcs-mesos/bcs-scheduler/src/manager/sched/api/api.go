@@ -1019,7 +1019,7 @@ func (r *Router) listApplications(req *restful.Request, resp *restful.Response) 
 	return
 }
 
-// FetchApplication is used to fetch a application via applicaiton id.
+// FetchApplication is used to fetch a application via application id.
 func (r *Router) fetchApplication(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")
@@ -1182,7 +1182,7 @@ func (r *Router) listApplicationTaskGroups(req *restful.Request, resp *restful.R
 	return
 }
 
-// DeleteApplicationTaskGroups is used to delete all tasks belong to application via applicaiton id.
+// DeleteApplicationTaskGroups is used to delete all tasks belong to application via application id.
 func (r *Router) deleteApplicationTaskGroups_r(req *restful.Request, resp *restful.Response) {
 	if r.backend.GetRole() != scheduler.SchedulerRoleMaster {
 		blog.Warn("scheduler is not master, can not process cmd")

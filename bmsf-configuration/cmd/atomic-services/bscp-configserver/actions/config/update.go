@@ -179,7 +179,7 @@ func (act *UpdateAction) update() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("UpdateConfig[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("UpdateConfig[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.UpdateConfig(ctx, r)
 	if err != nil {

@@ -163,7 +163,7 @@ func (act *CreateAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("CreateConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.QueryConfigTemplate(ctx, req)
 	if err != nil {
@@ -203,7 +203,7 @@ func (act *CreateAction) createConfigTemplateVersion() (pbcommon.ErrCode, string
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("CreateConfigTemplateVersion[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.CreateConfigTemplateVersion(ctx, req)
 	if err != nil {

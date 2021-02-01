@@ -23,7 +23,7 @@ import (
 
 // HandleVersionFlag handle --version flag
 func HandleVersionFlag(fs *pflag.FlagSet) {
-	ver := fs.Bool("version", false, "show version infomation")
+	ver := fs.Bool("version", false, "show version information")
 	pflag.Parse()
 
 	if *ver {

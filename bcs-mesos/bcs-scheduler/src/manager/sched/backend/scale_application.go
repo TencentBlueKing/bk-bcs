@@ -113,7 +113,7 @@ func (b *backend) ScaleApplication(runAs, appID string, instances uint64, kind c
 	app.UpdateTime = time.Now().Unix()
 	app.Message = "application in scaling"
 	if err := b.store.SaveApplication(app); err != nil {
-		blog.Error("scale applicaiton(%s.%s) fail, save application to db err:%s", app.RunAs, app.ID, err.Error())
+		blog.Error("scale application(%s.%s) fail, save application to db err:%s", app.RunAs, app.ID, err.Error())
 		return err
 	}
 

@@ -215,7 +215,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.Re
 		}
 	}
 
-	logger.V(2).Infof("CreateAppInstanceRelease[%s]| create app instance release effect record success, %+v",
+	logger.V(4).Infof("CreateAppInstanceRelease[%s]| create app instance release effect record success, %+v",
 		act.req.Seq, appInstanceRelease)
 	act.collector.StatAppInstanceRelease(true)
 
@@ -355,7 +355,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.Re
 				continue
 			}
 		}
-		logger.V(2).Infof("CreateAppInstanceRelease[%s]| create app instance release reload record success, %+v",
+		logger.V(4).Infof("CreateAppInstanceRelease[%s]| create app instance release reload record success, %+v",
 			act.req.Seq, appInstanceRelease)
 		act.collector.StatAppInstanceRelease(true)
 	}

@@ -16,9 +16,10 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
-	"strings"
 )
 
 //storage is cache for storage DNS data
@@ -53,7 +54,7 @@ type SvcDecoder struct{}
 //Decode implementation of Decoder
 func (svcd *SvcDecoder) Decode(data []byte) (interface{}, error) {
 	if len(data) == 0 {
-		return nil, fmt.Errorf("data is emtpy")
+		return nil, fmt.Errorf("data is empty")
 	}
 	srv := new(bcstypes.BcsService)
 	if err := json.Unmarshal(data, srv); err != nil {
@@ -95,7 +96,7 @@ type EndpointDecoder struct{}
 //Decode implementation of Decoder
 func (epd *EndpointDecoder) Decode(data []byte) (interface{}, error) {
 	if len(data) == 0 {
-		return nil, fmt.Errorf("data is emtpy")
+		return nil, fmt.Errorf("data is empty")
 	}
 	ep := new(bcstypes.BcsEndpoint)
 	if err := json.Unmarshal(data, ep); err != nil {

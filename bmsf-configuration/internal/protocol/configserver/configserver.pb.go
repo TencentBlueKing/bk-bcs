@@ -2080,8 +2080,10 @@ type CreateMultiCommitWithContentResp_RespData struct {
 func (m *CreateMultiCommitWithContentResp_RespData) Reset() {
 	*m = CreateMultiCommitWithContentResp_RespData{}
 }
-func (m *CreateMultiCommitWithContentResp_RespData) String() string { return proto.CompactTextString(m) }
-func (*CreateMultiCommitWithContentResp_RespData) ProtoMessage()    {}
+func (m *CreateMultiCommitWithContentResp_RespData) String() string {
+	return proto.CompactTextString(m)
+}
+func (*CreateMultiCommitWithContentResp_RespData) ProtoMessage() {}
 func (*CreateMultiCommitWithContentResp_RespData) Descriptor() ([]byte, []int) {
 	return fileDescriptor0, []int{41, 0}
 }
@@ -4100,10 +4102,12 @@ type QueryReachableAppInstancesResp struct {
 	Data    *QueryReachableAppInstancesResp_RespData `protobuf:"bytes,4,opt,name=data" json:"data,omitempty"`
 }
 
-func (m *QueryReachableAppInstancesResp) Reset()                    { *m = QueryReachableAppInstancesResp{} }
-func (m *QueryReachableAppInstancesResp) String() string            { return proto.CompactTextString(m) }
-func (*QueryReachableAppInstancesResp) ProtoMessage()               {}
-func (*QueryReachableAppInstancesResp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{87} }
+func (m *QueryReachableAppInstancesResp) Reset()         { *m = QueryReachableAppInstancesResp{} }
+func (m *QueryReachableAppInstancesResp) String() string { return proto.CompactTextString(m) }
+func (*QueryReachableAppInstancesResp) ProtoMessage()    {}
+func (*QueryReachableAppInstancesResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{87}
+}
 
 func (m *QueryReachableAppInstancesResp) GetResult() bool {
 	if m != nil {
@@ -4675,10 +4679,12 @@ type CreateStrategyResp_RespData struct {
 	StrategyId string `protobuf:"bytes,1,opt,name=strategy_id,json=strategyId" json:"strategy_id,omitempty"`
 }
 
-func (m *CreateStrategyResp_RespData) Reset()                    { *m = CreateStrategyResp_RespData{} }
-func (m *CreateStrategyResp_RespData) String() string            { return proto.CompactTextString(m) }
-func (*CreateStrategyResp_RespData) ProtoMessage()               {}
-func (*CreateStrategyResp_RespData) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{95, 0} }
+func (m *CreateStrategyResp_RespData) Reset()         { *m = CreateStrategyResp_RespData{} }
+func (m *CreateStrategyResp_RespData) String() string { return proto.CompactTextString(m) }
+func (*CreateStrategyResp_RespData) ProtoMessage()    {}
+func (*CreateStrategyResp_RespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{95, 0}
+}
 
 func (m *CreateStrategyResp_RespData) GetStrategyId() string {
 	if m != nil {
@@ -7801,7 +7807,7 @@ func init() { proto.RegisterFile("configserver.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
 	// 13874 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xec, 0x7d, 0x0b, 0x78, 0x14, 0xd7,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x7d, 0x0b, 0x78, 0x14, 0xd7,
 	0x79, 0x68, 0x67, 0x57, 0x12, 0x70, 0x24, 0x83, 0x3d, 0xc6, 0xb6, 0x2c, 0xc7, 0x78, 0x3d, 0x50,
 	0x03, 0x63, 0x09, 0x69, 0x47, 0x0f, 0xa4, 0x75, 0x1c, 0x73, 0xf4, 0x32, 0xb2, 0xb1, 0x8d, 0x85,
 	0x8d, 0xed, 0x38, 0x94, 0x2c, 0xd2, 0x0a, 0x64, 0x84, 0xb4, 0x68, 0x17, 0x2c, 0x2c, 0x6f, 0x8a,

@@ -144,7 +144,7 @@ func (act *RollbackAction) queryApp() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", act.kit.Rid, r)
+	logger.V(4).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", act.kit.Rid, r)
 
 	resp, err := act.dataMgrCli.QueryApp(ctx, r)
 	if err != nil {
@@ -164,7 +164,7 @@ func (act *RollbackAction) querySubReleaseList() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiReleaseSubList(ctx, r)
 	if err != nil {
@@ -190,7 +190,7 @@ func (act *RollbackAction) rollbackBCSMode(releaseID string) (pbcommon.ErrCode, 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackMultiRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackMultiRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
 
 	resp, err := act.bcsControllerCli.RollbackRelease(ctx, r)
 	if err != nil {
@@ -210,7 +210,7 @@ func (act *RollbackAction) rollbackGSEPluginMode(releaseID string) (pbcommon.Err
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("gsecontroller.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackMultiRelease[%s]| request to gse-controller, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackMultiRelease[%s]| request to gse-controller, %+v", r.Seq, r)
 
 	resp, err := act.gseControllerCli.RollbackRelease(ctx, r)
 	if err != nil {
@@ -229,7 +229,7 @@ func (act *RollbackAction) queryMultiRelease() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QueryMultiRelease(ctx, r)
 	if err != nil {
@@ -251,7 +251,7 @@ func (act *RollbackAction) rollbackMultiReleaseData() (pbcommon.ErrCode, string)
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("RollbackMultiRelease[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.RollbackMultiRelease(ctx, r)
 	if err != nil {

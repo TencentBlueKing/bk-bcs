@@ -158,7 +158,7 @@ func (act *CreateAction) queryBusinessSharding() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigTemplate[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateConfigTemplate[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QuerySharding(ctx, r)
 	if err != nil {
@@ -173,7 +173,7 @@ func (act *CreateAction) initDefaultShardingDB() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigTemplate[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateConfigTemplate[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.InitShardingDB(ctx, r)
 	if err != nil {
@@ -194,7 +194,7 @@ func (act *CreateAction) createBusinessSharding() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigTemplate[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateConfigTemplate[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateSharding(ctx, r)
 	if err != nil {
@@ -251,7 +251,7 @@ func (act *CreateAction) createConfigTemplate() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(2).Infof("CreateConfigTemplate[%s]| request to DataManager, %+v", req.Seq, req)
+	logger.V(4).Infof("CreateConfigTemplate[%s]| request to DataManager, %+v", req.Seq, req)
 
 	resp, err := act.dataMgrCli.CreateConfigTemplate(ctx, req)
 	if err != nil {

@@ -41,7 +41,9 @@ func (ts *TemplateServer) CreateTemplateBind(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewCreateAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -62,7 +64,9 @@ func (ts *TemplateServer) QueryTemplateBind(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewQueryAction(kit, ts.viper, ts.dataMgrCli, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -83,7 +87,9 @@ func (ts *TemplateServer) QueryTemplateBindList(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewListAction(kit, ts.viper, ts.dataMgrCli, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -104,7 +110,9 @@ func (ts *TemplateServer) DeleteTemplateBind(ctx context.Context,
 	}()
 
 	action := templatebindaction.NewDeleteAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -125,7 +133,9 @@ func (ts *TemplateServer) CreateConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewCreateAction(kit, ts.viper, ts.dataMgrCli, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -146,7 +156,9 @@ func (ts *TemplateServer) QueryConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewQueryAction(kit, ts.viper, ts.dataMgrCli, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -167,7 +179,9 @@ func (ts *TemplateServer) QueryConfigTemplateList(ctx context.Context,
 	}()
 
 	action := templateaction.NewListAction(kit, ts.viper, ts.dataMgrCli, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -188,7 +202,9 @@ func (ts *TemplateServer) UpdateConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewUpdateAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -209,7 +225,9 @@ func (ts *TemplateServer) DeleteConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewDeleteAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -230,7 +248,9 @@ func (ts *TemplateServer) RenderConfigTemplate(ctx context.Context,
 	}()
 
 	action := templateaction.NewRenderAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -251,7 +271,9 @@ func (ts *TemplateServer) CreateConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewCreateAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -272,7 +294,9 @@ func (ts *TemplateServer) QueryConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewQueryAction(kit, ts.viper, ts.dataMgrCli, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -293,7 +317,9 @@ func (ts *TemplateServer) QueryConfigTemplateVersionList(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewListAction(kit, ts.viper, ts.dataMgrCli, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -314,7 +340,9 @@ func (ts *TemplateServer) UpdateConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewUpdateAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -335,7 +363,9 @@ func (ts *TemplateServer) DeleteConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewDeleteAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
-	ts.executor.ExecuteWithAuth(action)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
 
 	return response, nil
 }
@@ -354,7 +384,9 @@ func (ts *TemplateServer) Healthz(ctx context.Context, req *pb.HealthzReq) (*pb.
 	}()
 
 	action := healthzaction.NewAction(ctx, ts.viper, req, response)
-	ts.executor.Execute(action)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
 
 	return response, nil
 }

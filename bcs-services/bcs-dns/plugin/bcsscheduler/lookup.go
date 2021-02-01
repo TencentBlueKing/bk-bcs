@@ -204,7 +204,7 @@ func (bcs *BcsScheduler) recordsForNS(r recordRequest, svcs *[]msg.Service) erro
 }
 
 func (bcs *BcsScheduler) selfDNSRecord() dns.A {
-	//get local ip address & defualt dns name
+	//get local ip address & default dns name
 	addrList := util.GetIPAddress()
 	var self dns.A
 	if len(addrList) == 0 {
