@@ -102,7 +102,10 @@ gateway:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./bcs-services/bcs-gateway-discovery/main.go
 
 kube-agent:pre
-	cd ./bcs-k8s/bcs-kube-agent && make kubeagent && cd -
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-kube-agent ${PACKAGEPATH}/bcs-k8s-master
+	cd ./bcs-k8s/bcs-kube-agent && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-k8s-master/bcs-kube-agent/bcs-kube-agent ./main.go && cd -
+	
 
 client:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
