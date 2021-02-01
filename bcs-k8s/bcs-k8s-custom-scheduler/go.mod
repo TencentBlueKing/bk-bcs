@@ -3,8 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-custom-scheduler
 go 1.14
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
-	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => ../../bcs-k8s/kubernetes
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
+	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210117140338-aeaed29b1997
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )
