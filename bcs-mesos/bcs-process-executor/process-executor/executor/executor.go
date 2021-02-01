@@ -195,7 +195,7 @@ func (e *bcsExecutor) loopInspectTasks() {
 func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusType) (types.TaskStatus, error) {
 	switch status {
 	//process status staging
-	//show executor recieve the tasks
+	//show executor receive the tasks
 	case types.ProcessStatusStaging:
 		return types.TaskStatusStaging, nil
 	//process status starting
@@ -207,7 +207,7 @@ func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusT
 	case types.ProcessStatusRunning:
 		return types.TaskStatusRunning, nil
 	//process status stopping
-	//executor recieve shutdown command
+	//executor receive shutdown command
 	//then stop process
 	case types.ProcessStatusStopping:
 		return types.TaskStatusKilling, nil
@@ -225,7 +225,7 @@ func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusT
 }
 
 //Shutdown
-//recieve the shutdown command
+//receive the shutdown command
 //will stop all process tasks
 //exit 0
 func (e *bcsExecutor) Shutdown() {

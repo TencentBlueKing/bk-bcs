@@ -24,7 +24,7 @@ type BcsService struct {
 type ServiceSpec struct {
 	Selector  map[string]string `json:"selector"`
 	Type      string            `json:"type,omitempty"` //k8s only
-	ClusterIP []string          `json:"clusterIP,omitemtpy"`
+	ClusterIP []string          `json:"clusterIP,omitempty"`
 	Ports     []ServicePort     `json:"ports"`
 }
 

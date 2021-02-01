@@ -65,7 +65,7 @@ func (inst *IPInstanceHandler) Update(request *restful.Request, response *restfu
 		reportMetrics("updateAvailableIP", "5xx", started)
 		return
 	}
-	blog.Info("IPInstance %s %s Update avaliable %s succ", netReq.Cluster, netReq.Pool, netReq.IPAddr)
+	blog.Info("IPInstance %s %s Update available" %s succ", netReq.Cluster, netReq.Pool, netReq.IPAddr)
 	netRes.Code = 0
 	netRes.Message = SUCCESS
 	if err := response.WriteEntity(netRes); err != nil {

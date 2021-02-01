@@ -15,10 +15,11 @@ package bcs
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/discovery/register"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -55,7 +56,7 @@ func (le *LeaderElector) IsLeader() bool {
 	return le.role == RoleLeader
 }
 
-// IsLeader determine is curent node is leader by telling if it's the first registed node in sequence
+// IsLeader determine is curent node is leader by telling if it's the first registered node in sequence
 func (le *LeaderElector) getActionType(state register.ServiceState) ActionType {
 	if state.MyPostion == 0 {
 		return ActionTypeMakeLeader

@@ -143,7 +143,7 @@ func (r *ReconcileAppNode) handleQueue() {
 			default:
 				blog.Warnf("ReconcileAppNode get unknown Event Type: %s.", event.Type)
 			}
-			//todo(DeveloperJim) defualt info for timeout?
+			//todo(DeveloperJim) default info for timeout?
 		}
 	}
 }

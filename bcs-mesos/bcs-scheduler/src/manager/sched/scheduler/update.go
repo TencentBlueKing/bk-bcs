@@ -24,7 +24,7 @@ import (
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	containertypes "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
@@ -235,7 +235,7 @@ func (s *Scheduler) StatusReport(status *mesos.TaskStatus) {
 			taskGroup.BcsEventMsg = bcsMsg
 		}
 		taskGroup.LastUpdateTime = now
-		//save taskGroup into store, in this function, task will alse be saved
+		//save taskGroup into store, in this function, task will also be saved
 		if err = s.store.SaveTaskGroup(taskGroup); err != nil {
 			blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
 			return
@@ -316,7 +316,7 @@ func (s *Scheduler) checkApplicationChange(runAs, appID, taskGroupStatus string,
 		if taskGroupStatus != taskGroup.Status {
 			if taskGroup.Status == types.TASKGROUP_STATUS_RUNNING {
 				app.RunningInstances = app.RunningInstances + 1
-				blog.Info("applicaiton(%s.%s) RunningInstances change to %d", runAs, appID, app.RunningInstances)
+				blog.Info("application(%s.%s) RunningInstances change to %d", runAs, appID, app.RunningInstances)
 				applicationUpdated = true
 			} else if taskGroupStatus == types.TASKGROUP_STATUS_RUNNING {
 				if app.RunningInstances > 0 {
@@ -580,7 +580,7 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 		killedNum, lostNum, unknowNum)
 
 	if totalNum != int(app.Instances) {
-		blog.Error("applicaiton(%s.%s) Instances(%d), but only find %d", runAs, appID, app.Instances, totalNum)
+		blog.Error("application(%s.%s) Instances(%d), but only find %d", runAs, appID, app.Instances, totalNum)
 	}
 
 	var status, message string
@@ -613,7 +613,7 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 	if app.Status == types.APP_STATUS_OPERATING || app.Status == types.APP_STATUS_ROLLINGUPDATE {
 		blog.V(3).Infof("application(%s.%s) status(%s), not change", runAs, appID, app.Status)
 	} else if currStatus != status {
-		blog.Info("applicaiton(%s.%s) status changed: %s -> %s", runAs, appID, currStatus, status)
+		blog.Info("application(%s.%s) status changed: %s -> %s", runAs, appID, currStatus, status)
 		app.Status = status
 		app.Message = message
 		app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
@@ -622,7 +622,7 @@ func (s *Scheduler) updateApplicationStatus(app *types.Application) (bool, error
 	}
 
 	if app.RunningInstances != uint64(runningNum) {
-		blog.Info("applicaiton(%s.%s) RunningInstances changed: %d -> %d", runAs, appID, app.RunningInstances, runningNum)
+		blog.Info("application(%s.%s) RunningInstances changed: %d -> %d", runAs, appID, app.RunningInstances, runningNum)
 		app.RunningInstances = uint64(runningNum)
 		isUpdated = true
 	}
@@ -884,7 +884,7 @@ func (s *Scheduler) UpdateTaskStatus(agentID, executorID string, bcsMsg *types.B
 			taskGroup.BcsEventMsg = msg
 		}
 		taskGroup.LastUpdateTime = now
-		//save taskGroup into store, in this function, task will alse be saved
+		//save taskGroup into store, in this function, task will also be saved
 		if err = s.store.SaveTaskGroup(taskGroup); err != nil {
 			blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
 			return

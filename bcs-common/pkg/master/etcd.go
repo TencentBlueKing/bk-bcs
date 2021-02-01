@@ -29,7 +29,7 @@ func (e *EtcdMaster) Init() error {
 func (e *EtcdMaster) Finit() {
 }
 
-//Register registery infomation to storage
+//Register registery information to storage
 func (e *EtcdMaster) Register() error {
 	return nil
 
