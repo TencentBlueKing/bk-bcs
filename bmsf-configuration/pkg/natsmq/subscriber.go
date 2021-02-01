@@ -13,6 +13,7 @@ limitations under the License.
 package mq
 
 import (
+	"crypto/tls"
 	"strings"
 	"time"
 
@@ -23,12 +24,13 @@ import (
 type Subscriber struct {
 	nc    *nats.Conn
 	addrs []string
+	tls   *tls.Config
 	sub   *nats.Subscription
 }
 
 // NewSubscriber creates a new Subscriber.
-func NewSubscriber(addrs []string) *Subscriber {
-	return &Subscriber{addrs: addrs}
+func NewSubscriber(addrs []string, tls *tls.Config) *Subscriber {
+	return &Subscriber{addrs: addrs, tls: tls}
 }
 
 // Init initializes a new Subscriber.
@@ -41,14 +43,17 @@ func (s *Subscriber) Init(timeout, reconWait time.Duration, maxRecons int) error
 	opts = append(opts, nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
 		// do nothing
 	}))
-
 	opts = append(opts, nats.ReconnectHandler(func(nc *nats.Conn) {
 		// do nothing
 	}))
-
 	opts = append(opts, nats.ClosedHandler(func(nc *nats.Conn) {
 		// do nothing
 	}))
+
+	// TLS option.
+	if s.tls != nil {
+		opts = append(opts, nats.Secure(s.tls))
+	}
 
 	// connect nats
 	nc, err := nats.Connect(strings.Join(s.addrs, ","), opts...)

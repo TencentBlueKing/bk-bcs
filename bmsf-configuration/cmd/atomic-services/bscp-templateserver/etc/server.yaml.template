@@ -1,0 +1,37 @@
+# 当前模块相关配置信息
+server:
+    # RPC监听配置
+    endpoint:
+        ip: 0.0.0.0
+        port: ${TEMPLATE_SERVER_PORT}
+
+# ETCD集群相关配置信息
+etcdCluster:
+    # 集群USR接口配置
+    endpoints:
+        - ${ETCD_IP}:${ETCD_PORT}
+
+    # TLS接口配置
+    tls:
+        certPassword: ${ETCD_TLS_CERT_PASSWORD}
+        caFile: ${ETCD_TLS_CA_FILE}
+        certFile: ${ETCD_TLS_CERT_FILE}
+        keyFile: ${ETCD_TLS_KEY_FILE}
+
+# 制品库相关配置
+bkrepo:
+    # 蓝鲸制品库服务地址
+    host: ${BKREPO_HOST}
+    # 蓝鲸制品库Plat权限认证
+    token: ${BKREPO_TOKEN}
+
+# metrics采集接口相关配置
+metrics:
+    endpoint: ${TEMPLATE_SERVER_METRICS_ENDPOINT}
+
+# 日志相关配置信息
+logger:
+    directory: ${LOG_DIR}
+    level: ${LOG_LEVEL}
+    maxnum: ${LOG_FILE_MAX_NUM}
+    maxsize: ${LOG_FILE_MAX_SIZE}

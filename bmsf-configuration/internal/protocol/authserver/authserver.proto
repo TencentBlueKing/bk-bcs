@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package authserver;
+
+service Auth {
+    rpc Authorize(AuthorizeReq) returns (AuthorizeResp) {}
+    rpc AddPolicy(AddPolicyReq) returns (AddPolicyResp) {}
+    rpc Healthz(HealthzReq) returns (HealthzResp) {}
+}
+
+message AuthMetadata {
+    string v0 = 1;
+    string v1 = 2;
+    string v2 = 3;
+    string v3 = 4;
+    string v4 = 5;
+    string v5 = 6;
+}
+
+message AuthorizeReq {
+    string       seq      = 1;
+    AuthMetadata metadata = 2;
+}
+
+message AuthorizeResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message AddPolicyReq {
+    string       seq      = 1;
+    AuthMetadata metadata = 2;
+}
+
+message AddPolicyResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message HealthzReq {
+    string seq = 1;
+}
+
+message HealthzResp {
+    string                   seq     = 1;
+    common.ErrCode           code    = 2;
+    string                   message = 3;
+    common.ModuleHealthzInfo data    = 4;
+}

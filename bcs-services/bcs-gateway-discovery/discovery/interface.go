@@ -33,7 +33,7 @@ type Discovery interface {
 	// GetRandomServerInstance get random one instance of local cache server information
 	//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver
 	GetRandomServerInstance(module string) (*registry.Node, error)
-	//ListAllServer list all registed server information
+	//ListAllServer list all registered server information
 	ListAllServer() ([]*registry.Service, error)
 	// AddModuleWatch add new watch for specified module, Discovery will cache watched module info
 	AddModuleWatch(module string) error

@@ -25,6 +25,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// UpdateCredentialsForm update form for credential
 type UpdateCredentialsForm struct {
 	RegisterToken   string `json:"register_token" validate:"required"`
 	ServerAddresses string `json:"server_addresses" validate:"required,apiserver_addresses"`
@@ -32,6 +33,7 @@ type UpdateCredentialsForm struct {
 	UserToken       string `json:"user_token" validate:"required"`
 }
 
+// CredentialResp response
 type CredentialResp struct {
 	ServerAddresses string `json:"server_addresses"`
 	CaCertData      string `json:"ca_cert_data"`
@@ -54,14 +56,14 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	clusterId := request.PathParameter("cluster_id")
+	clusterID := request.PathParameter("cluster_id")
 
 	// validate if the registerToken is correct
-	token := sqlstore.GetRegisterToken(clusterId)
+	token := sqlstore.GetRegisterToken(clusterID)
 	if token == nil {
 		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Warnf("no valid register token found for cluster [%s]", clusterId)
+		blog.Warnf("no valid register token found for cluster [%s]", clusterID)
 		message := fmt.Sprintf("errcode: %d, no valid register token found for cluster", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -75,11 +77,11 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	err = sqlstore.SaveCredentials(clusterId, form.ServerAddresses, form.CaCertData, form.UserToken, "")
+	err = sqlstore.SaveCredentials(clusterID, form.ServerAddresses, form.CaCertData, form.UserToken, "")
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Errorf("failed to update cluster [%s] credential: %s", clusterId, err.Error())
+		blog.Errorf("failed to update cluster [%s] credential: %s", clusterID, err.Error())
 		message := fmt.Sprintf("errcode: %d, can not update credentials, error: %s", common.BcsErrApiInternalDbError, err.Error())
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -91,15 +93,16 @@ func UpdateCredentials(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// GetCredentials get credential according cluster ID
 func GetCredentials(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
-	clusterId := request.PathParameter("cluster_id")
-	credential := sqlstore.GetCredentials(clusterId)
+	clusterID := request.PathParameter("cluster_id")
+	credential := sqlstore.GetCredentials(clusterID)
 	if credential == nil {
 		metrics.RequestErrorCount.WithLabelValues("credentials", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Warnf("credentials not found for cluster [%s]", clusterId)
+		blog.Warnf("credentials not found for cluster [%s]", clusterID)
 		message := fmt.Sprintf("errcode: %d, credentials not found", common.BcsErrApiBadRequest)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
@@ -112,6 +115,7 @@ func GetCredentials(request *restful.Request, response *restful.Response) {
 	metrics.RequestLatency.WithLabelValues("credentials", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// ListCredentials list all cluster credentials
 func ListCredentials(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -139,6 +143,7 @@ func ListCredentials(request *restful.Request, response *restful.Response) {
 			ClusterDomain:   v.ClusterDomain,
 		}
 	}*/
+	blog.Infof("client %s list all cluster credentials, num: %d", request.Request.RemoteAddr, len(credentials))
 	data := utils.CreateResponeData(nil, "success", credentials)
 	response.Write([]byte(data))
 

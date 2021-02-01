@@ -18,7 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 )
 
-//Msg_Type Message discribe all msg from bcs scheduler to bcs executor
+//Msg_Type Message describe all msg from bcs scheduler to bcs executor
 //Include binary file, text file, signal, env
 type Msg_Type int32
 
@@ -66,7 +66,7 @@ const (
 	Secret_File    Secret_Type = 2
 )
 
-//BcsMessage discribe msg from scheduler to executor by mesos MESSAGE call
+//BcsMessage describe msg from scheduler to executor by mesos MESSAGE call
 type BcsMessage struct {
 	Id          int64
 	Type        *Msg_Type
@@ -124,7 +124,7 @@ const (
 	Msg_Status_Failed  MsgStatus_type = "failed"
 )
 
-//Msg_BinFile discribe where the file should be save, and the
+//Msg_BinFile describe where the file should be save, and the
 type Msg_LocalFile struct {
 	To     *string
 	Right  *string

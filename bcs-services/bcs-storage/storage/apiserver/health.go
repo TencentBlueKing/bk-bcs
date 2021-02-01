@@ -44,6 +44,7 @@ var (
 		Data: healthStatus{
 			mongodbConfigKey: {OK: true, Message: ""},
 			zkConfigKey:      {OK: true, Message: ""},
+			queueConfigKey:   {OK: true, Message: ""},
 		},
 		Message: "",
 	}
@@ -81,6 +82,9 @@ func GetHealth() metric.HealthMeta {
 	}
 	if !storageHealth.Data[zkConfigKey].OK {
 		message += " | " + storageHealth.Data[zkConfigKey].Message
+	}
+	if !storageHealth.Data[queueConfigKey].OK {
+		message += " | " + storageHealth.Data[queueConfigKey].Message
 	}
 
 	return metric.HealthMeta{

@@ -30,7 +30,7 @@ func main() {
 
 	// initialize logger.
 	logConf := conf.LogConfig{
-		LogDir:          "/logs",
+		LogDir:          "/data/bcs/logs/bcs",
 		ToStdErr:        true,
 		AlsoToStdErr:    true,
 		StdErrThreshold: "0",

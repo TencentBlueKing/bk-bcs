@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -39,7 +40,14 @@ const (
 	configKeySep     = "/"
 	mongodbConfigKey = "mongodb"
 	zkConfigKey      = "zk"
+	queueConfigKey   = "queue"
 )
+
+// MessageQueue queue object
+type MessageQueue struct {
+	QueueFlag bool
+	MsgQueue  msgqueue.MessageQueue
+}
 
 // APIResource api resource object
 type APIResource struct {
@@ -48,6 +56,7 @@ type APIResource struct {
 	storeMap  map[string]store.Store
 	dbMap     map[string]drivers.DB
 	ebusMap   map[string]*watchbus.EventBus
+	msgQueue  *MessageQueue
 }
 
 var api = APIResource{}
@@ -103,6 +112,29 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 		}
 	}
 	blog.Infof("Databases parsing completed.")
+
+	// parse config-map from queue file
+	queueConfig := a.ParseQueueConfig()
+	blog.Infof("Begin to parse queueConfig.")
+
+	for _, key := range queueConfig.KeyList {
+		var err error
+		switch key {
+		case queueConfigKey:
+			if err = a.parseQueueInit(key, queueConfig); err != nil {
+				blog.Errorf("parse queue config failed, err %s", err.Error())
+				SetUnhealthy(queueConfigKey, err.Error())
+			}
+		default:
+			err = storageErr.QueueConfigUnknown
+			blog.Errorf("%v: %s", err, key)
+			SetUnhealthy("unknown_config", fmt.Sprintf("%v: %s", err, key))
+		}
+		if err != nil {
+			check.Occur(err)
+		}
+	}
+	blog.Infof("MsgQueue parsing completed.")
 }
 
 // InitActions init actions
@@ -111,15 +143,101 @@ func (a *APIResource) InitActions() {
 }
 
 // ParseDBConfig parse db config
-func (a *APIResource) ParseDBConfig() (dbConf *conf.Config) {
-	dbConf = new(conf.Config)
+func (a *APIResource) ParseDBConfig() *conf.Config {
+	dbConf := new(conf.Config)
 	if _, err := os.Stat(a.Conf.DBConfig); !os.IsNotExist(err) {
 		blog.Infof("Parsing config file: %s", a.Conf.DBConfig)
 		dbConf.InitConfig(a.Conf.DBConfig)
 	} else {
 		blog.Errorf("Config file not exists: %s", a.Conf.DBConfig)
 	}
-	return
+	return dbConf
+}
+
+// ParseQueueConfig parse queue config
+func (a *APIResource) ParseQueueConfig() *conf.Config {
+	queueConf := new(conf.Config)
+
+	if _, err := os.Stat(a.Conf.QueueConfig); !os.IsNotExist(err) {
+		blog.Infof("Parsing queueConfig file: %s", a.Conf.QueueConfig)
+		queueConf.InitConfig(a.Conf.QueueConfig)
+	} else {
+		blog.Errorf("Config file not exists: %s", a.Conf.QueueConfig)
+	}
+
+	return queueConf
+}
+
+// GetMsgQueue get queue client
+func (a *APIResource) GetMsgQueue() *MessageQueue {
+	return a.msgQueue
+}
+
+func (a *APIResource) getMsgQueueFlag(key string, queueConf *conf.Config) bool {
+	flagRaw := queueConf.Read(key, "QueueFlag")
+	if flagRaw == "" {
+		return false
+	}
+
+	flag, err := strconv.ParseBool(flagRaw)
+	if err != nil {
+		return false
+	}
+
+	blog.Infof("queueFlag is [%v]", flag)
+	return flag
+}
+
+func (a *APIResource) parseQueueInit(key string, queueConf *conf.Config) error {
+	queueFlag := a.getMsgQueueFlag(key, queueConf)
+	if !queueFlag {
+		a.msgQueue = &MessageQueue{
+			QueueFlag: queueFlag,
+			MsgQueue:  nil,
+		}
+
+		return nil
+	}
+
+	commonOption, err := getQueueCommonOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	exchangeOption, err := getQueueExchangeOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	natStreamingOption, err := getNatStreamingOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	publishOption, err := getPublishOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	subscribeOption, err := getQueueSubscribeOptions(key, queueConf)
+	if err != nil {
+		return err
+	}
+
+	msgQueue, err := msgqueue.NewMsgQueue(commonOption, exchangeOption, natStreamingOption, publishOption, subscribeOption)
+	if err != nil {
+		msgErr := fmt.Errorf("create queue failed, err %s", err.Error())
+		blog.Errorf("create queue failed, err %s", err.Error())
+		return msgErr
+	}
+	queueKind, _ := msgQueue.String()
+
+	a.msgQueue = &MessageQueue{
+		QueueFlag: queueFlag,
+		MsgQueue:  msgQueue,
+	}
+	blog.Infof("init queue[%s] successfully", queueKind)
+	return nil
 }
 
 // GetEventBus get event bus by key

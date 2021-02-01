@@ -1,5 +1,6 @@
 /*
-Tencent is pleased to support the open source community by making Blueking Container Service available.  Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Tencent is pleased to support the open source community by making Blueking Container Service available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
 Licensed under the MIT License (the "License"); you may not use this file except
 in compliance with the License. You may obtain a copy of the License at
 http://opensource.org/licenses/MIT
@@ -61,7 +62,7 @@ func (r *Reporter) Init(cfg clientv3.Config) error {
 	}
 	r.etcdCli = cli
 
-	id, err := r.genResourceid()
+	id, err := r.genResourceID()
 	if err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func (r *Reporter) Init(cfg clientv3.Config) error {
 	return nil
 }
 
-func (r *Reporter) genResourceid() (string, error) {
+func (r *Reporter) genResourceID() (string, error) {
 	uuid, err := uuid.NewUUID()
 	if err != nil {
 		return "", err
@@ -85,7 +86,7 @@ func (r *Reporter) AddRes(metadata interface{}) error {
 		return err
 	}
 
-	// etcd KV
+	// etcd KV.
 	key := r.key(DEFAULTSCHEMA, r.name, r.id)
 	value := string(bytes)
 
@@ -95,11 +96,11 @@ func (r *Reporter) AddRes(metadata interface{}) error {
 	}
 	r.leaseid = resp.ID
 
-	if _, err = r.etcdCli.Put(context.Background(), key, string(value), clientv3.WithLease(r.leaseid)); err != nil {
+	if _, err := r.etcdCli.Put(context.Background(), key, value, clientv3.WithLease(r.leaseid)); err != nil {
 		return err
 	}
 
-	// keepalive
+	// keepalive.
 	if _, err := r.etcdCli.KeepAlive(context.Background(), r.leaseid); err != nil {
 		return err
 	}
@@ -132,11 +133,11 @@ func (r *Reporter) UpdateRes(metadata interface{}) error {
 		return err
 	}
 
-	// update KV
+	// update KV.
 	key := r.key(DEFAULTSCHEMA, r.name, r.id)
 	value := string(bytes)
 
-	if _, err = r.etcdCli.Put(context.Background(), key, value, clientv3.WithLease(r.leaseid)); err != nil {
+	if _, err := r.etcdCli.Put(context.Background(), key, value, clientv3.WithLease(r.leaseid)); err != nil {
 		log.Printf("reporter updates resource, %+v", err)
 
 		resp, err := r.etcdCli.Grant(context.Background(), r.ttl)
@@ -145,10 +146,9 @@ func (r *Reporter) UpdateRes(metadata interface{}) error {
 		}
 		r.leaseid = resp.ID
 
-		if _, err = r.etcdCli.Put(context.Background(), key, value, clientv3.WithLease(r.leaseid)); err != nil {
+		if _, err := r.etcdCli.Put(context.Background(), key, value, clientv3.WithLease(r.leaseid)); err != nil {
 			return err
 		}
-
 		if _, err := r.etcdCli.KeepAlive(context.Background(), r.leaseid); err != nil {
 			return err
 		}

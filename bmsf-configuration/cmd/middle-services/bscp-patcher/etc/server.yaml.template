@@ -1,0 +1,20 @@
+# 当前模块相关配置信息
+server:
+    # 监听配置
+    endpoint:
+        ip: 0.0.0.0
+        port: ${PATCHER_PORT}
+
+# 数据库相关配置信息
+database:
+    host: ${DB_HOST}
+    port: ${DB_PORT}
+    user: ${DB_USER}
+    passwd: ${DB_PASSWD}
+
+# 日志相关配置信息
+logger:
+    directory: ${LOG_DIR}
+    level: ${LOG_LEVEL}
+    maxnum: ${LOG_FILE_MAX_NUM}
+    maxsize: ${LOG_FILE_MAX_SIZE}

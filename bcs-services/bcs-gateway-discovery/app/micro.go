@@ -42,10 +42,6 @@ func getMicroModuleClusterID(host string) string {
 
 //microModuleEvent event notification callback
 func (s *DiscoveryServer) microModuleEvent(module string) {
-	if !s.bcsRegister.IsMaster() {
-		blog.Infof("gateway-discovery instance is not master, skip module %s event notification for micro registry", module)
-		return
-	}
 	//get event notification
 	event := &ModuleEvent{
 		// module info: 100032.mesosdriver, storage, meshmanager
@@ -97,7 +93,7 @@ func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 
 // formatEtcdInfo format internal service info according module info
 //@param: module, bkbcs module info, like 10032.mesosdriver, storage, meshsmanager
-//@param: http, flag for http route convertion
+//@param: http, flag for http route conversion
 func (s *DiscoveryServer) formatEtcdInfo(module string, http bool) (*register.Service, error) {
 	service, err := s.microDiscovery.GetModuleServer(module)
 	if err != nil {
@@ -109,7 +105,7 @@ func (s *DiscoveryServer) formatEtcdInfo(module string, http bool) (*register.Se
 		//in this stage, we suppose bkbcs need all modules for long time.
 		//we don't delete service in synchronization and reserves service until that module registes back.
 		//then we can replace upstream target with new information simplly.
-		//if api-gateway routable rules change, we change api-gateway throught release maintenance
+		//if api-gateway routable rules change, we change api-gateway by release maintenance
 		blog.Warnf("module %s is not in micro-discovery cache", module)
 		return nil, fmt.Errorf("no module in cache")
 	}
@@ -153,7 +149,7 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 	var allServices []*register.Service
 	for _, svc := range svcs {
 		module := getMicroModuleName(svc.Name)
-		//check grpc route convertion
+		//check grpc route conversion
 		if _, ok := defaultGrpcModules[module]; ok {
 			rsvc, err := s.adapter.GetGrpcService(module, svc)
 			if err != nil {
@@ -163,7 +159,7 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 			allServices = append(allServices, rsvc)
 			blog.V(5).Infof("etcd registry module %s[%s] grpc conversion successfully", svc.Name, module)
 		}
-		//check http route rules convertion
+		//check http route rules conversion
 		//! pay more attention, modules that don't support grpc must be compatible in http conversion
 		if _, ok := defaultHTTPModules[module]; ok {
 			rsvc, err := s.adapter.GetHTTPService(module, svc)

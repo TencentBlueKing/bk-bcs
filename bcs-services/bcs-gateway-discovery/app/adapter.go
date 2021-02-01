@@ -62,7 +62,7 @@ type Handler func(module string, svcs []*types.ServerInfo) (*register.Service, e
 //MicroHandler compatible for old module that registe in micro registry
 type MicroHandler func(module string, svc *registry.Service) (*register.Service, error)
 
-//NewAdapter create service data convertion
+//NewAdapter create service data conversion
 func NewAdapter(option *ServerOptions, standardModules []string) *Adapter {
 	adp := &Adapter{
 		admintoken:    option.AuthToken,
@@ -85,7 +85,7 @@ type Adapter struct {
 	microHandlers map[string]MicroHandler
 }
 
-//GetService interface for all service data convertion
+//GetService interface for all service data conversion
 func (adp *Adapter) GetService(module string, svcs []*types.ServerInfo) (*register.Service, error) {
 	resources := strings.Split(module, "/")
 	//module name
@@ -97,7 +97,7 @@ func (adp *Adapter) GetService(module string, svcs []*types.ServerInfo) (*regist
 	return handler(module, svcs)
 }
 
-//GetGrpcService interface for go-micro grpc module data convertion
+//GetGrpcService interface for go-micro grpc module data conversion
 //@param: module, all kind module name, such as logmanager, usermanager
 //@param: svc, go-micro service definition, came form etcd registry
 func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*register.Service, error) {
@@ -106,7 +106,7 @@ func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*regis
 	if !ok {
 		return nil, fmt.Errorf("module %s do not registe", module)
 	}
-	// actual registed name & grpc proxy path
+	// actual registered name & grpc proxy path
 	actualName := fmt.Sprintf("%s-grpc", module)
 	requestPath := fmt.Sprintf("/%s.%s/", module, interfaceName)
 	hostName := fmt.Sprintf("%s%s", actualName, defaultDomain)
@@ -145,7 +145,7 @@ func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*regis
 	return regSvc, nil
 }
 
-//GetHTTPService interface for go-micro http module data convertion
+//GetHTTPService interface for go-micro http module data conversion
 // only support standard new module api registration
 func (adp *Adapter) GetHTTPService(module string, svc *registry.Service) (*register.Service, error) {
 	found := false
@@ -166,7 +166,7 @@ func (adp *Adapter) GetHTTPService(module string, svc *registry.Service) (*regis
 
 // microStandarModule
 func (adp *Adapter) microStandarModule(module string, svc *registry.Service) (*register.Service, error) {
-	// actual registed name & grpc proxy path
+	// actual registered name & grpc proxy path
 	actualName := fmt.Sprintf("%s-http", module)
 	//route path
 	requestPath := fmt.Sprintf("/%s/", module)

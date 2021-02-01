@@ -1,0 +1,23 @@
+[queue]
+QueueFlag = ${queueFlag}
+QueueKind = ${queueKind}
+Resource  = ${resource}
+Address = ${queueAddress}
+QueueArguments = x-message-ttl:120000
+ExchangeName = bcs-storage
+ExchangeDurable = true
+ExchangePrefetchCount = 30
+ExchangePrefetchGlobal = true
+ClusterId = ${queueClusterId}
+ConnectTimeout = 300
+ConnectRetry = true
+PublishDelivery = 2
+SubDurable = true
+SubDisableAutoAck = true
+SubAckOnSuccess = true
+SubRequeueOnError = true
+SubDeliverAllMessage = true
+SubManualAckMode = true
+SubEnableAckWait = true
+SubAckWaitDuration = 30
+SubMaxInFlight = 0

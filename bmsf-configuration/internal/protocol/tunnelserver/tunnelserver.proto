@@ -1,0 +1,232 @@
+syntax = "proto3";
+
+import "bk-bscp/internal/protocol/common/common.proto";
+
+package tunnelserver;
+
+/* gRPC server protocols */
+
+service Tunnel {
+    rpc PublishRelease(PublishReleaseReq) returns (PublishReleaseResp) {}
+    rpc RollbackRelease(RollbackReleaseReq) returns (RollbackReleaseResp) {}
+    rpc Reload(ReloadReq) returns (ReloadResp) {}
+    rpc Healthz(HealthzReq) returns (HealthzResp) {}
+}
+
+message PublishReleaseReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
+}
+
+message PublishReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message RollbackReleaseReq {
+    string seq        = 1;
+    string biz_id     = 2;
+    string release_id = 3;
+    string operator   = 4;
+}
+
+message RollbackReleaseResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message ReloadReq {
+    string            seq              = 1;
+    string            biz_id           = 2;
+    string            release_id       = 3;
+    string            multi_release_id = 4;
+    string            operator         = 5;
+    common.ReloadSpec reload_spec      = 6;
+}
+
+message ReloadResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message HealthzReq {
+    string seq = 1;
+}
+
+message HealthzResp {
+    string                   seq     = 1;
+    common.ErrCode           code    = 2;
+    string                   message = 3;
+    common.ModuleHealthzInfo data    = 4;
+}
+
+/* GSE TaskServer tunnel inner protocols */
+
+enum GeneralTunnelCmd {
+    GTCMD_C2S_QUERY_APP_METADATA       = 0;
+    GTCMD_C2S_PLUGIN_INFO              = 1;
+    GTCMD_C2S_EFFECT_REPORT            = 2;
+    GTCMD_C2S_PULL_RELEASE             = 3;
+    GTCMD_C2S_PULL_CONFIGLIST          = 4;
+    GTCMD_S2C_PUBLISH                  = 5;
+    GTCMD_S2C_ROLLBACK                 = 6;
+    GTCMD_S2C_RELOAD                   = 7;
+    GTCMD_C2S_QUERY_HOST_PROCATTR_LIST = 8;
+}
+
+message GTCMDQueryAppMetadataReq {
+    string seq    = 1;
+    string biz_id = 2;
+    string app_id = 3;
+}
+
+message GTCMDQueryAppMetadataResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message GTCMDQueryHostProcAttrListReq {
+    string      seq      = 1;
+    string      cloud_id = 2;
+    string      ip       = 3;
+    common.Page page     = 4;
+}
+
+message GTCMDQueryHostProcAttrListResp {
+    string                   seq        = 1;
+    common.ErrCode           code       = 2;
+    string                   message    = 3;
+    repeated common.ProcAttr proc_attrs = 4;
+}
+
+message GTCMDPluginInfo {
+    repeated common.AppInstance instances = 1;
+    int64                       timeout   = 2;
+}
+
+message GTCMDEffectReport {
+    string                     seq      = 1;
+    string                     biz_id   = 2;
+    string                     app_id   = 3;
+    string                     cloud_id = 4;
+    string                     ip       = 5;
+    string                     path     = 6;
+    string                     labels   = 7;
+    repeated common.ReportInfo infos    = 8;
+}
+
+message GTCMDPullReleaseReq {
+    string seq              = 1;
+    string biz_id           = 2;
+    string app_id           = 3;
+    string cloud_id         = 4;
+    string ip               = 5;
+    string path             = 6;
+    string labels           = 7;
+    string cfg_id           = 8;
+    string local_release_id = 9;
+    string release_id       = 10;
+}
+
+message GTCMDPullReleaseResp {
+    string         seq          = 1;
+    common.ErrCode code         = 2;
+    string         message      = 3;
+    bool           need_effect  = 4;
+    common.Release release      = 5;
+    string         content_id   = 6;
+    uint32         content_size = 7;
+}
+
+message GTCMDPullConfigListReq {
+    string      seq    = 1;
+    string      biz_id = 2;
+    string      app_id = 3;
+    common.Page page   = 4;
+}
+
+message GTCMDPullConfigListResp {
+    string                 seq     = 1;
+    common.ErrCode         code    = 2;
+    string                 message = 3;
+    repeated common.Config configs = 4;
+}
+
+message GTCMDPublish {
+    string biz_id     = 1;
+    string app_id     = 2;
+    string cfg_id     = 3;
+    string cfg_name   = 4;
+    string cfg_fpath  = 5;
+    uint64 serialno   = 6;
+    string release_id = 7;
+    string strategies = 8;
+}
+
+message GTCMDRollback {
+    string biz_id     = 1;
+    string app_id     = 2;
+    string cfg_id     = 3;
+    string cfg_name   = 4;
+    string cfg_fpath  = 5;
+    uint64 serialno   = 6;
+    string release_id = 7;
+    string strategies = 8;
+}
+
+message GTCMDReload {
+    string            biz_id      = 1;
+    string            app_id      = 2;
+    string            strategies  = 3;
+    common.ReloadSpec reload_spec = 4;
+}
+
+// downstream requests(C2S)
+// cmd:
+//      GTCMD_C2S_QUERY_APP_METADATA
+//      GTCMD_C2S_PLUGIN_INFO
+//      GTCMD_C2S_EFFECT_REPORT
+//      GTCMD_C2S_PULL_RELEASE
+//      GTCMD_C2S_PULL_CONFIGLIST
+//      GTCMD_C2S_QUERY_HOST_PROCATTR_LIST
+// data:
+//      GTCMDQueryAppMetadataReq
+//      GTCMDPluginInfo
+//      GTCMDEffectReport
+//      GTCMDPullReleaseReq
+//      GTCMDPullConfigListReq
+//      GTCMDQueryHostProcAttrListReq
+message GeneralTunnelDownStream {
+    string           seq  = 1;
+    GeneralTunnelCmd cmd  = 2;
+    bytes            data = 3;
+}
+
+// upstream requests(S2C)
+// cmd:
+//      GTCMD_S2C_PUBLISH
+//      GTCMD_S2C_ROLLBACK
+//      GTCMD_S2C_RELOAD
+//      GTCMD_C2S_QUERY_APP_METADATA
+//      GTCMD_C2S_PULL_RELEASE
+//      GTCMD_C2S_PULL_CONFIGLIST
+//      GTCMD_C2S_QUERY_HOST_PROCATTR_LIST
+// data:
+//      GTCMDPublish
+//      GTCMDRollback
+//      GTCMDReload
+//      GTCMDQueryAppMetadataResp
+//      GTCMDPullReleaseResp
+//      GTCMDPullConfigListResp
+//      GTCMDQueryHostProcAttrListResp
+message GeneralTunnelUpStream {
+    string           seq  = 1;
+    GeneralTunnelCmd cmd  = 2;
+    bytes            data = 3;
+}

@@ -29,28 +29,32 @@ import (
 func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
-	clusterId := request.PathParameter("cluster_id")
-	clusterInDb := sqlstore.GetCluster(clusterId)
+	clusterID := request.PathParameter("cluster_id")
+	clusterInDb := sqlstore.GetCluster(clusterID)
 	if clusterInDb == nil {
 		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Warnf("create register_token failed, cluster [%s] not exist", clusterId)
-		message := fmt.Sprintf("errcode: %d, create register_token failed, cluster [%s] not exist", common.BcsErrApiBadRequest, clusterId)
+		blog.Warnf("create register_token failed, cluster [%s] not exist", clusterID)
+		message := fmt.Sprintf("errcode: %d, create register_token failed, cluster [%s] not exist",
+			common.BcsErrApiBadRequest, clusterID)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
 
-	err := sqlstore.CreateRegisterToken(clusterId)
+	err := sqlstore.CreateRegisterToken(clusterID)
 	if err != nil {
 		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
-		metrics.RequestErrorLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Errorf("failed to create register_token for cluster [%s]: %s", clusterId, err.Error())
-		message := fmt.Sprintf("errcode: %d, can not create register token: %s", common.BcsErrApiBadRequest, err.Error())
+		metrics.RequestErrorLatency.
+			WithLabelValues("register-token", request.Request.Method).
+			Observe(time.Since(start).Seconds())
+		blog.Errorf("failed to create register_token for cluster [%s]: %s", clusterID, err.Error())
+		message := fmt.Sprintf("errcode: %d, can not create register token: %s",
+			common.BcsErrApiBadRequest, err.Error())
 		utils.WriteServerError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
 
-	data := utils.CreateResponeData(nil, "success", sqlstore.GetRegisterToken(clusterId))
+	data := utils.CreateResponeData(nil, "success", sqlstore.GetRegisterToken(clusterID))
 	response.Write([]byte(data))
 
 	metrics.RequestCount.WithLabelValues("register-token", request.Request.Method).Inc()
@@ -62,8 +66,8 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 func GetRegisterToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
-	clusterId := request.PathParameter("cluster_id")
-	token := sqlstore.GetRegisterToken(clusterId)
+	clusterID := request.PathParameter("cluster_id")
+	token := sqlstore.GetRegisterToken(clusterID)
 	if token == nil {
 		metrics.RequestErrorCount.WithLabelValues("register-token", request.Request.Method).Inc()
 		metrics.RequestErrorLatency.WithLabelValues("register-token", request.Request.Method).Observe(time.Since(start).Seconds())

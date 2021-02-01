@@ -35,10 +35,10 @@ const (
 
 // Update is update event data
 type Update struct {
-	// Operation, op type.
+	// Op operation type.
 	Op Operation
 
-	// resource metadata, such as loadinfo of server instance.
+	// Metadata resource metadata, such as loadinfo of server instance.
 	Metadata string `json:"Metadata"`
 }
 
@@ -75,12 +75,13 @@ func (s *Scheduler) watch() error {
 	if !ok {
 		return errors.New("watch channel closed")
 	}
-
 	if err := wr.Err(); err != nil {
 		return err
 	}
 
+	// updates.
 	updates := make([]*Update, 0, len(wr.Events))
+
 	for _, e := range wr.Events {
 		var update Update
 		var err error
@@ -93,6 +94,9 @@ func (s *Scheduler) watch() error {
 		case clientv3.EventTypeDelete:
 			err = json.Unmarshal(e.PrevKv.Value, &update)
 			update.Op = Delete
+
+		default:
+			continue
 		}
 
 		if err == nil {
@@ -112,8 +116,9 @@ func (s *Scheduler) Start() error {
 		return err
 	}
 
-	// resource
+	// resource.
 	updates := make([]*Update, 0, len(resp.Kvs))
+
 	for _, kv := range resp.Kvs {
 		var update Update
 		if err := json.Unmarshal(kv.Value, &update); err != nil {
@@ -123,7 +128,11 @@ func (s *Scheduler) Start() error {
 	}
 	s.resource.Update(updates)
 
-	opts := []clientv3.OpOption{clientv3.WithRev(resp.Header.Revision + 1), clientv3.WithPrefix(), clientv3.WithPrevKV()}
+	opts := []clientv3.OpOption{
+		clientv3.WithRev(resp.Header.Revision + 1),
+		clientv3.WithPrefix(),
+		clientv3.WithPrevKV(),
+	}
 	s.wch = s.etcdCli.Watch(context.Background(), s.target, opts...)
 
 	go func() {

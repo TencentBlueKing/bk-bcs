@@ -608,4 +608,291 @@ done
 
 ## apisix方式部署参考流程
 
-待补充。
+### 安装依赖openresty
+
+```shell
+# 安装 epel, `luarocks` 需要它
+wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo rpm -ivh epel-release-latest-7.noarch.rpm
+
+# 添加 OpenResty 源
+sudo yum install yum-utils
+sudo yum-config-manager --add-repo https://openresty.org/package/centos/openresty.repo
+# 如果指定下载版本，修正下/etc/yum.repos.d/openresty.repo下的baseurl中的$releaseserver，例如指定7
+
+yum install -y openresty
+
+# 安装apisix
+wget https://github.com/apache/apisix/releases/download/2.1/apisix-2.1-0.el7.noarch.rpm
+rpm -ivh apisix-2.1-0.el7.noarch.rpm
+```
+
+### etcd启动
+
+```shell
+docker run --network host -v /data/bcs/bcs-api-gateway/datas:/var/lib/etcd -tid mirrors.tencent.com/k8s.gcr.io/etcd:3.4.13-0 /usr/local/bin/etcd \
+    --advertise-client-urls=http://127.0.0.1:3379 --data-dir=/var/lib/etcd \
+    --initial-advertise-peer-urls=http://127.0.0.1:3380 \
+    --initial-cluster=apigateway-store=http://127.0.0.1:3380 \
+    --listen-client-urls=http://127.0.0.1:3379 \
+    --listen-metrics-urls=http://127.0.0.1:3381 --listen-peer-urls=http://127.0.0.1:3380 \
+    --name=apigateway-store --snapshot-count=10000
+
+#check
+export ETCDCTL_API=3
+etcdctl --endpoints=127.0.0.1:3379 get --prefix /apisix
+```
+
+### apisix配置
+
+```yaml
+apisix:
+  node_listen: 8000
+  enable_ipv6: false
+  admin_key:
+    -
+      name: "admin"
+      key: edd1c9f034335f136f87ad84b625c8f1
+      role: admin
+  ssl:
+    enable: true
+    listen_port: 8443
+    ssl_cert: /data/bcs/cert/bcs.crt
+    ssl_cert_key: /data/bcs/cert/bcs.key
+etcd:
+  host:
+    - "http://127.0.0.1:3379"
+nginx_config:
+  http_server_configuration_snippet: |
+    proxy_ssl_name        $upstream_host;
+    proxy_ssl_server_name on;
+    proxy_ssl_certificate /data/bcs/cert/bcs.crt;
+    proxy_ssl_certificate_key /data/bcs/cert/bcs.key;
+  error_log: "/data/bcs/logs/bcs/apisix-error.log"
+  http:
+    access_log: "/data/bcs/logs/bcs/apisix-access.log"
+```
+
+ssl证书注册：
+
+```shell
+curl http://127.0.0.1:8000/apisix/admin/ssl/bkbcs \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' \
+  -X PUT -d@bkbcs-ssl.json
+```
+
+### 服务发现注册
+
+#### 注册bcs-storage
+
+```shell
+#upstream
+curl http://127.0.0.1:8000/apisix/admin/upstreams/storage \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+  "type": "roundrobin",
+  "nodes": {
+    "127.0.0.100:50024": 10
+  },
+  "retries": 1
+}'
+
+#test service
+curl http://127.0.0.1:8000/apisix/admin/services/storage \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "upstream_id": "storage",
+  "name": "storage",
+  "enable_websocket": true,
+  "plugins": {
+    "limit-req": {
+      "rate": 1000,
+      "burst": 500,
+      "rejected_code": 429,
+      "key": "server_addr"
+    }
+  }
+}'
+
+#route, authentication stage
+curl http://127.0.0.1:8000/apisix/admin/routes/storage \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "name": "storage",
+  "uri": "/bcsapi/v4/storage/*",
+  "service_id": "storage",
+  "service_protocol": "http",
+  "plugins":{
+    "proxy-rewrite": {
+      "regex_uri": ["/bcsapi/v4/storage/(.*)", "/bcsstorage/v1/$1"],
+      "scheme": "https",
+      "host": "storage.bkbcs.tencent.com"
+    }
+  }
+}'
+
+## test case
+curl -vv http://127.0.0.1:8000/bcsapi/v4/storage/query/mesos/dynamic/clusters/BCS-MESOS-10000/deployment
+```
+
+#### 注册bcs-mesos-driver
+
+```shell
+#upstream
+curl http://127.0.0.1:8000/apisix/admin/upstreams/mesosdriver-10000 \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+  "type": "roundrobin",
+  "nodes": {
+    "127.0.0.99:50020": 10
+  },
+  "retries": 1
+}'
+
+#test service
+curl http://127.0.0.1:8000/apisix/admin/services/mesosdriver-10000 \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "upstream_id": "mesosdriver-10000",
+  "name": "mesosdriver-10000",
+  "enable_websocket": true,
+  "plugins": {
+    "limit-req": {
+      "rate": 1000,
+      "burst": 500,
+      "rejected_code": 429,
+      "key": "server_addr"
+    }
+  }
+}'
+
+#route, authentication stage, url & header
+curl http://127.0.0.1:8000/apisix/admin/routes/mesosdriver-10000 \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "name": "mesosdriver-10000",
+  "uri": "/bcsapi/v4/scheduler/mesos/*",
+  "service_id": "mesosdriver-10000",
+  "service_protocol": "http",
+  "enable_websocket": true,
+  "vars": [
+    ["http_BCS-ClusterID", "==", "BCS-MESOS-10000"]
+  ],
+  "plugins":{
+    "request-id": {
+      "include_in_response": true
+    },
+    "proxy-rewrite": {
+      "regex_uri": ["/bcsapi/v4/scheduler/mesos/(.*)", "/mesosdriver/v4/$1"],
+      "scheme": "https",
+      "host": "mesosdriver-10000.bkbcs.tencent.com"
+    }
+  }
+}'
+
+## test case
+curl --resolve 'bcs-api-gateway.bk.tencent.com:8443:127.0.0.1' -H"BCS-ClusterID: BCS-MESOS-10000" -vv https://bcs-api-gateway.bk.tencent.com:8443//bcsapi/v4/scheduler/mesos/cluster/current/offers
+
+curl -vv -H"BCS-ClusterID: BCS-MESOS-10000" http://127.0.0.1:8000/bcsapi/v4/scheduler/mesos/cluster/current/offers
+```
+
+#### bcs-kube-agent注册
+
+```shell
+#upstream
+curl http://127.0.0.1:8000/apisix/admin/upstreams/kubeagent-15000 \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{
+  "type": "roundrobin",
+  "nodes": {
+    "9.135.97.196:6443": 10
+  },
+  "retries": 1
+}'
+
+#test service
+curl http://127.0.0.1:8000/apisix/admin/services/kubeagent-15000 \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "upstream_id": "kubeagent-15000",
+  "name": "kubeagent-15000",
+  "enable_websocket": true,
+  "plugins": {
+    "limit-req": {
+      "rate": 1,
+      "burst": 0,
+      "rejected_code": 429,
+      "key": "server_addr"
+    }
+  }
+}'
+
+#route, authentication stage, url & header
+curl http://127.0.0.1:8000/apisix/admin/routes/kubeagent-15000 \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "name": "kubeagent-15000",
+  "uri": "/tunnels/clusters/BCS-K8S-15000/*",
+  "service_id": "kubeagent-15000",
+  "service_protocol": "http",
+  "enable_websocket": true,
+  "plugins": {
+    "request-id": {
+      "include_in_response": true
+    },
+    "proxy-rewrite": {
+      "regex_uri": ["/tunnels/clusters/BCS-K8S-15000/(.*)", "/$1"],
+      "scheme": "https",
+      "host": "kubeagent-15000.bkbcs.tencent.com",
+      "headers": {
+        "Authorization": "Bearer xxxxxxxxxxxx"
+      }
+    }
+  }
+}'
+
+## test case
+curl -vv http://127.0.0.1:8000/tunnels/clusters/BCS-K8S-15000/version
+```
+
+#### tunnel规则注册
+
+```shell
+curl http://127.0.0.1:8000/apisix/admin/routes/kube-agent-tunnel \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "name": "kube-agent-tunnel",
+  "uri": "/clusters/*",
+  "service_id": "clustermanager",
+  "service_protocol": "http",
+  "enable_websocket": true,
+  "plugins": {
+    "request-id": {
+      "include_in_response": true
+    },
+    "proxy-rewrite": {
+      "regex_uri": ["/clusters/(.*)", "/clustermanager/clusters/$1"],
+      "scheme": "https"
+    }
+  }
+}'
+
+curl http://127.0.0.1:8000/apisix/admin/routes/mesosdriver-tunnel \
+  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
+{
+  "name": "mesosdriver-tunnel",
+  "uri": "/bcsapi/v4/scheduler/mesos/*",
+  "service_id": "clustermanager",
+  "service_protocol": "http",
+  "enable_websocket": true,
+  "plugins": {
+    "request-id": {
+      "include_in_response": true
+    },
+    "proxy-rewrite": {
+      "regex_uri": ["/bcsapi/v4/scheduler/mesos/(.*)", "/clustermanager/mesosdriver/v4/$1"],
+      "scheme": "https"
+    }
+  }
+}'
+```

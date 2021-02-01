@@ -27,8 +27,7 @@ import (
 	hookclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hookinformers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/common/bcs-hook/client/informers/externalversions"
 
-	"k8s.io/api/core/v1"
-	api "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/server"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -43,7 +42,7 @@ import (
 
 const (
 	metricsEndpoint     = "0.0.0.0:8080"
-	DefaultResyncPeriod = 15 * 60
+	defaultResyncPeriod = 15 * 60
 )
 
 var (
@@ -54,20 +53,20 @@ var (
 
 // leader-election config options
 var (
-	LockNameSpace     string
-	LockName          string
-	LockComponentName string
-	LeaderElect       bool
-	LeaseDuration     time.Duration
-	RenewDeadline     time.Duration
-	RetryPeriod       time.Duration
+	lockNameSpace     string
+	lockName          string
+	lockComponentName string
+	leaderElect       bool
+	leaseDuration     time.Duration
+	renewDeadline     time.Duration
+	retryPeriod       time.Duration
 )
 
 func main() {
 
 	flag.Parse()
 
-	if !LeaderElect {
+	if !leaderElect {
 		fmt.Println("No leader election, stand alone running...")
 		run()
 		return
@@ -83,13 +82,13 @@ func main() {
 	}
 	fmt.Println("Operator building kube client for election success...")
 	broadcaster := record.NewBroadcaster()
-	broadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(LockNameSpace)})
-	recorder := broadcaster.NewRecorder(scheme.Scheme, api.EventSource{Component: LockComponentName})
+	broadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: corev1.New(kubeClient.CoreV1().RESTClient()).Events(lockNameSpace)})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: lockComponentName})
 
 	rl, err := resourcelock.New(
 		resourcelock.EndpointsResourceLock,
-		LockNameSpace,
-		LockName,
+		lockNameSpace,
+		lockName,
 		kubeClient.CoreV1(),
 		resourcelock.ResourceLockConfig{
 			Identity:      hostname(),
@@ -102,9 +101,9 @@ func main() {
 	// Try and become the leader and start cloud controller manager loops
 	leaderelection.RunOrDie(context.Background(), leaderelection.LeaderElectionConfig{
 		Lock:          rl,
-		LeaseDuration: LeaseDuration,
-		RenewDeadline: RenewDeadline,
-		RetryPeriod:   RetryPeriod,
+		LeaseDuration: leaseDuration,
+		RenewDeadline: renewDeadline,
+		RetryPeriod:   retryPeriod,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: StartedLeading,
 			OnStoppedLeading: StoppedLeading,
@@ -117,14 +116,14 @@ func main() {
 func init() {
 	flag.StringVar(&kubeConfig, "kubeConfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
 	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
-	flag.Int64Var(&resyncPeriod, "resync-period", DefaultResyncPeriod, "Time period in seconds for resync.")
-	flag.BoolVar(&LeaderElect, "leader-elect", true, "Enable leader election")
-	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
-	flag.StringVar(&LockName, "leader-elect-name", "gamedeployment", "The resourcelock name")
-	flag.StringVar(&LockComponentName, "leader-elect-componentname", "gamedeployment", "The component name for event resource")
-	flag.DurationVar(&LeaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
-	flag.DurationVar(&RenewDeadline, "leader-elect-renew-deadline", 10*time.Second, "The leader-elect RenewDeadline")
-	flag.DurationVar(&RetryPeriod, "leader-elect-retry-period", 2*time.Second, "The leader-elect RetryPeriod")
+	flag.Int64Var(&resyncPeriod, "resync-period", defaultResyncPeriod, "Time period in seconds for resync.")
+	flag.BoolVar(&leaderElect, "leader-elect", true, "Enable leader election")
+	flag.StringVar(&lockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
+	flag.StringVar(&lockName, "leader-elect-name", "gamedeployment", "The resourcelock name")
+	flag.StringVar(&lockComponentName, "leader-elect-componentname", "gamedeployment", "The component name for event resource")
+	flag.DurationVar(&leaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
+	flag.DurationVar(&renewDeadline, "leader-elect-renew-deadline", 10*time.Second, "The leader-elect RenewDeadline")
+	flag.DurationVar(&retryPeriod, "leader-elect-retry-period", 3*time.Second, "The leader-elect RetryPeriod")
 }
 
 func run() {

@@ -20,7 +20,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	pushStatusSuccess = "succeed"
+	pushStatusFail    = "failed"
+)
+
 var (
+	// http requests action metrics
 	requestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "bkbcs_storage",
 		Subsystem: "api",
@@ -34,11 +40,30 @@ var (
 		Help:      "BCS storage api request latency statistic.",
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
 	}, []string{"handler", "method", "status"})
+
+	// queue push data metrics
+	queuePushTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "bkbcs_storage",
+		Subsystem: "queue",
+		Name:      "queue_push_total",
+		Help:      "the total number of queue push data",
+	}, []string{"name", "status"})
+	queuePushLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "bkbcs_storage",
+		Subsystem: "queue",
+		Name:      "queue_latency_seconds",
+		Help:      "BCS storage queue push operation latency statistic.",
+		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
+	}, []string{"name", "status"})
 )
 
 func init() {
+	// requests
 	prometheus.MustRegister(requestsTotal)
 	prometheus.MustRegister(requestLatency)
+	// queue
+	prometheus.MustRegister(queuePushTotal)
+	prometheus.MustRegister(queuePushLatency)
 }
 
 //reportAPIMetrics report all api action metrics
@@ -52,4 +77,14 @@ func reportAPIMetrics(handler, method, status string, started time.Time) {
 	}
 	requestsTotal.WithLabelValues(shortPath, method, status).Inc()
 	requestLatency.WithLabelValues(shortPath, method, status).Observe(time.Since(started).Seconds())
+}
+
+// ReportQueuePushMetrics report all queue push metrics
+func ReportQueuePushMetrics(name string, err error, started time.Time) {
+	status := pushStatusSuccess
+	if err != nil {
+		status = pushStatusFail
+	}
+	queuePushTotal.WithLabelValues(name, status).Inc()
+	queuePushLatency.WithLabelValues(name, status).Observe(time.Since(started).Seconds())
 }
