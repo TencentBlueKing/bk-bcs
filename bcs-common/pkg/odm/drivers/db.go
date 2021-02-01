@@ -162,7 +162,7 @@ type Table interface {
 	// UpdateMany update many data by condition
 	UpdateMany(ctx context.Context, condition *operator.Condition, data interface{}) (int64, error)
 
-	// Upsert update or insert data by conditon
+	// Upsert update or insert data by condition
 	Upsert(ctx context.Context, condition *operator.Condition, data interface{}) error
 
 	// Delete delete data

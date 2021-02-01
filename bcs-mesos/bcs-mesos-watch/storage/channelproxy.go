@@ -49,7 +49,7 @@ func (proxy *ChannelProxy) Run(cxt context.Context) {
 				blog.Warnf("ChannelProxy(%s) busy, current task queue(%d/%d)",
 					proxy.actionHandler.GetType(), len(proxy.dataQueue), cap(proxy.dataQueue))
 			} else {
-				blog.V(3).Infof("ChannelProxy(%s) recieve task, current task queue(%d/%d)",
+				blog.V(3).Infof("ChannelProxy(%s) receive task, current task queue(%d/%d)",
 					proxy.actionHandler.GetType(), len(proxy.dataQueue), cap(proxy.dataQueue))
 			}
 

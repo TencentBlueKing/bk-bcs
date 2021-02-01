@@ -35,7 +35,7 @@ type Route struct {
 	Name string
 	//Prototol for frontend listenning, such as tcp, udp, http(s)
 	Protocol string
-	//Port for listen, if port is 0, use specifed default tcp/udp/http port
+	//Port for listen, if port is 0, use specified default tcp/udp/http port
 	Port uint
 	//Paths filter when protocol is http(s)
 	Paths []string

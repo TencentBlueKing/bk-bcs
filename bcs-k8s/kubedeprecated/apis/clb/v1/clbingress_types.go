@@ -184,7 +184,7 @@ func (httpRule *ClbHttpRule) ValidateHTTPS() error {
 		return err
 	}
 	if httpRule.TLS == nil {
-		return fmt.Errorf("https listener's tls config cannot be emtpy")
+		return fmt.Errorf("https listener's tls config cannot be empty")
 	}
 	return httpRule.TLS.Validate()
 }

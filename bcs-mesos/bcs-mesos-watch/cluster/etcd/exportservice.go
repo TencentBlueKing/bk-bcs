@@ -133,7 +133,7 @@ func (watch *ExportServiceWatch) worker(cxt context.Context) {
 						watch.updateTaskGroup(data.Item.(*schedtypes.TaskGroup))
 					}
 				} else {
-					blog.Warn("ExportServiceWatch recieve unknown data action(type:%s, action:%s)", data.DataType, data.Action)
+					blog.Warn("ExportServiceWatch receive unknown data action(type:%s, action:%s)", data.DataType, data.Action)
 				}
 			}
 
@@ -143,17 +143,17 @@ func (watch *ExportServiceWatch) worker(cxt context.Context) {
 
 func (watch *ExportServiceWatch) addService(service *commtypes.BcsService) {
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
-	blog.Info("ExportServiceWatch recieve addService(%+v)", service)
+	blog.Info("ExportServiceWatch receive addService(%+v)", service)
 
 	groupLabel := service.ObjectMeta.Labels["BCSGROUP"]
 	if groupLabel == "" {
-		blog.Info("ExportServiceWatch recieve addService(%s), no BCSGROUP label, do nothing", key)
+		blog.Info("ExportServiceWatch receive addService(%s), no BCSGROUP label, do nothing", key)
 		return
 	}
 
 	_, exist, err := watch.esInfoCache.GetByKey(key)
 	if err != nil {
-		blog.Error("when recieve addService event, get esInfo %s from cache return err:%s", key, err.Error())
+		blog.Error("when receive addService event, get esInfo %s from cache return err:%s", key, err.Error())
 	}
 	if exist == true {
 		blog.V(3).Infof("when receive addService event, esInfo %s is in already in cache, will be updated", key)
@@ -175,18 +175,18 @@ func (watch *ExportServiceWatch) addService(service *commtypes.BcsService) {
 	}
 
 	watch.AddEvent(esInfo.exportService)
-	blog.Infof("ExportServiceWatch recieve addService(%+v) end", service)
+	blog.Infof("ExportServiceWatch receive addService(%+v) end", service)
 
 	return
 }
 
 func (watch *ExportServiceWatch) deleteService(service *commtypes.BcsService) {
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
-	blog.Info("ExportServiceWatch recieve deleteService(%+v)", service)
+	blog.Info("ExportServiceWatch receive deleteService(%+v)", service)
 
 	groupLabel := service.ObjectMeta.Labels["BCSGROUP"]
 	if groupLabel == "" {
-		blog.Info("ExportServiceWatch recieve deleteService(%s), no BCSGROUP label, do nothing", key)
+		blog.Info("ExportServiceWatch receive deleteService(%s), no BCSGROUP label, do nothing", key)
 		return
 	}
 
@@ -221,11 +221,11 @@ func (watch *ExportServiceWatch) deleteService(service *commtypes.BcsService) {
 // maybe we can do different work for different changed contents
 func (watch *ExportServiceWatch) updateService(service *commtypes.BcsService) {
 	key := service.ObjectMeta.NameSpace + "." + service.ObjectMeta.Name
-	blog.V(3).Infof("ExportServiceWatch recieve updateService(%+v)", service)
+	blog.V(3).Infof("ExportServiceWatch receive updateService(%+v)", service)
 
 	groupLabel := service.ObjectMeta.Labels["BCSGROUP"]
 	if groupLabel == "" {
-		blog.Info("ExportServiceWatch recieve updateService(%s), no BCSGROUP label, do nothing", key)
+		blog.Info("ExportServiceWatch receive updateService(%s), no BCSGROUP label, do nothing", key)
 		return
 	}
 
