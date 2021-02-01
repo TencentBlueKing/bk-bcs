@@ -1,0 +1,74 @@
+{
+"serviceOptions": {
+   "address": "${bcsAlertManagerAddress}",
+   "port": ${bcsAlertManagerPort},
+   "metricport": ${bcsAlertManagerMetricPort},
+   "servercert": "${bcsAlertManagerServerCert}",
+   "serverkey": "${bcsAlertManagerServerKey}",
+   "serverca": "${bcsAlertManagerServerCa}"
+},
+"clientTLSConfig": {
+   "clientcert": "${bcsAlertManagerClientCert}",
+   "clientkey": "${bcsAlertManagerClientKey}",
+   "clientca": "${bcsAlertManagerClientCa}"
+},
+"swaggerConfigDir": {
+	"dir": "${bcsAlertManagerSwaggerDir}"
+},
+"logOptions": {
+	"log_dir": "${bcsAlertManagerLogDir}"
+},
+"etcdOptions": {
+	"etcd-servers": "${bcsAlertManagerEtcdServers}",
+	"etcd-cafile": "${bcsAlertManagerEtcdCa}",
+	"etcd-certfile": "${bcsAlertManagerEtcdCert}",
+	"etcd-keyfile": "${bcsAlertManagerEtcdkey}"
+},
+"alertServerOptions": {
+	"server": "${bcsAlertManagerAppServer}",
+	"appCode": "${bcsAlertManagerAppCode}",
+	"appSecret": "${bcsAlertManagerAppSecret}",
+	"debugLevel": ${bcsAlertManagerLevel}
+},
+"queue_config": {
+    "queueFlag":  ${bcsAlertManagerQueueFlag},
+    "queueKind": "${bcsAlertManagerQueueKind}",
+    "resource": "${bcsAlertManagerResource}}",
+    "address": "${bcsAlertManagerAddress}",
+
+    "exchangeName": "bcs-storage",
+    "exchangeDurable": true,
+    "exchangePrefetchCount": 30,
+    "exchangePrefetchGlobal": true,
+
+    "clusterID": "${bcsAlertManagerClusterID}",
+    "ConnectTimeout": 300,
+    "ConnectRetry": true,
+
+    "publishDelivery": 2,
+
+    "subDurable": true,
+    "subDisableAutoAck": true,
+    "subAckOnSuccess": true,
+    "subRequeueOnError": true,
+    "subDeliverAllMessage": true,
+    "subManualAckMode": true,
+    "subEnableAckWait": true,
+    "subAckWaitDuration": 30,
+    "subMaxInFlight":  0,
+    "queueArguments": {
+          "x-message-ttl": 120000
+     }
+},
+"debug_mode": ${bcsAlertManagerDebug},
+"handler_config": {
+    "concurrencyNum": ${bcsAlertConcurrencyNum},
+    "alertEventNum": ${bcsAlertAlarmEventNum}
+},
+"resourceSubs" : [
+	{
+		"switch": "${bcsAlertManagerResourceSwitch}",
+		"category": "${bcsAlertManagerEvent}"
+	}
+]
+}

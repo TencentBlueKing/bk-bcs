@@ -44,7 +44,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-service:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
 	mesh-manager logbeat-sidecar metricservice metriccollector netservice sd-prometheus storage \
-	user-manager webhook-server cluster-manager tools
+	user-manager webhook-server cluster-manager tools bcs-alert-manager
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent 
 
@@ -322,5 +322,8 @@ clb-controller:pre
 # bcs-service section
 cluster-manager:pre
 	cd ./bcs-services/bcs-cluster-manager && make clustermanager
+
+bcs-alert-manager:pre
+	cd ./bcs-services/bcs-alert-manager && make bcs-alert-manager && cd -
 
 # end of bcs-service section
