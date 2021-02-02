@@ -1,0 +1,39 @@
+{
+    "mongo": {
+        "address": "${bcsClusterManagerMongoAddress}",
+        "connecttimeout": ${bcsClusterManagerMongoConnectTimeout},
+        "database": "${bcsClusterManagerMongoDatabase}",
+        "username": "${bcsClusterManagerMongoUsername}",
+        "password": "${bcsClusterManagerMongoPassword}"
+        "maxpoolsize": ${BK_BCS_bcsClusterManagerMongoMaxPoolSize},
+        "minpoolsize": ${BK_BCS_bcsClusterManagerMongoMinPoolSize}
+    },
+    "etcd": {
+        "endpoints": "${bcsClusterManagerEtcdEndpoints}",
+        "cert": "${bcsClusterManagerEtcdCert}",
+        "key": "${bcsClusterManagerEtcdKey}",
+        "ca": "${bcsClusterManagerEtcdCa}"
+    },
+    "swagger": {
+        "dir": "${bcsClusterManagerSwaggerDir}"
+    },
+    "tunnel": {
+        "peertoken": "${bcsClusterManagerPeerToken}"
+    },
+    "bcslog": {
+        "dir": "${bcsClusterManagerLogDir}",
+        "alsotostderr": ${bcsClusterManagerAlsoToStdErr},
+        "v": ${bcsClusterManagerVerbosity}
+    },
+    "debug": ${bcsClusterManagerDebug},
+    "address": "${localIp}",
+    "port": ${bcsClusterManagerPort},
+    "httpport": ${bcsClusterManagerHTTPPort},
+    "metricport": ${bcsClusterManagerMetricPort},
+    "serverca": "${bcsClusterManagerServerCa}",
+    "servercert": "${bcsClusterManagerServerCert}",
+    "serverkey": "${bcsClusterManagerServerKey}",
+    "clientca": "${bcsClusterManagerClientCa}",
+    "clientcert": "${bcsClusterManagerClientCert}",
+    "clientkey": "${bcsClusterManagerClientKey}"
+}
