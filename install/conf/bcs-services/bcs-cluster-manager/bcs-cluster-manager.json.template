@@ -4,7 +4,7 @@
         "connecttimeout": ${bcsClusterManagerMongoConnectTimeout},
         "database": "${bcsClusterManagerMongoDatabase}",
         "username": "${bcsClusterManagerMongoUsername}",
-        "password": "${bcsClusterManagerMongoPassword}"
+        "password": "${bcsClusterManagerMongoPassword}",
         "maxpoolsize": ${bcsClusterManagerMongoMaxPoolSize},
         "minpoolsize": ${bcsClusterManagerMongoMinPoolSize}
     },
