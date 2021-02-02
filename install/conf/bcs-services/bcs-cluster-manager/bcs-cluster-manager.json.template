@@ -5,14 +5,14 @@
         "database": "${bcsClusterManagerMongoDatabase}",
         "username": "${bcsClusterManagerMongoUsername}",
         "password": "${bcsClusterManagerMongoPassword}"
-        "maxpoolsize": ${BK_BCS_bcsClusterManagerMongoMaxPoolSize},
-        "minpoolsize": ${BK_BCS_bcsClusterManagerMongoMinPoolSize}
+        "maxpoolsize": ${bcsClusterManagerMongoMaxPoolSize},
+        "minpoolsize": ${bcsClusterManagerMongoMinPoolSize}
     },
     "etcd": {
-        "endpoints": "${bcsClusterManagerEtcdEndpoints}",
-        "cert": "${bcsClusterManagerEtcdCert}",
-        "key": "${bcsClusterManagerEtcdKey}",
-        "ca": "${bcsClusterManagerEtcdCa}"
+        "endpoints": "${bcsEtcdHost}",
+        "cert": "${bcsEtcdCertFile}",
+        "key": "${bcsEtcdKeyFile}",
+        "ca": "${bcsEtcdCAFile}"
     },
     "swagger": {
         "dir": "${bcsClusterManagerSwaggerDir}"
@@ -21,7 +21,7 @@
         "peertoken": "${bcsClusterManagerPeerToken}"
     },
     "bcslog": {
-        "dir": "${bcsClusterManagerLogDir}",
+        "dir": "${log_dir}",
         "alsotostderr": ${bcsClusterManagerAlsoToStdErr},
         "v": ${bcsClusterManagerVerbosity}
     },
@@ -30,10 +30,10 @@
     "port": ${bcsClusterManagerPort},
     "httpport": ${bcsClusterManagerHTTPPort},
     "metricport": ${bcsClusterManagerMetricPort},
-    "serverca": "${bcsClusterManagerServerCa}",
-    "servercert": "${bcsClusterManagerServerCert}",
-    "serverkey": "${bcsClusterManagerServerKey}",
-    "clientca": "${bcsClusterManagerClientCa}",
-    "clientcert": "${bcsClusterManagerClientCert}",
-    "clientkey": "${bcsClusterManagerClientKey}"
+    "serverca": "${caFile}",
+    "servercert": "${serverCertFile}",
+    "serverkey": "${serverKeyFile}",
+    "clientca": "${caFile}",
+    "clientcert": "${clientCertFile}",
+    "clientkey": "${clientKeyFile}"
 }

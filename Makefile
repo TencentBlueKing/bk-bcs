@@ -38,9 +38,9 @@ default:api client storage executor mesos-driver mesos-watch scheduler \
 	loadbalance metricservice metriccollector k8s-watch kube-agent k8s-driver \
 	netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter \
 	hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar \
-	csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy \
-	tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller \
-	bcs-cloud-netagent mesh-manager bcs-ingress-controller log-manager gamedeployment
+	csi-cbs webhook-server gamestatefulset network detection cpuset networkpolicy \
+	tools gateway user-manager cc-agent bkcmdb-synchronizer cloud-netservice cloud-netcontroller \
+	cloud-netagent mesh-manager ingress-controller log-manager gamedeployment cluster-manager
 
 bcs-k8s:k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment hook \
 	cc-agent
@@ -50,9 +50,9 @@ bcs-mesos:mesos-driver mesos-watch scheduler loadbalance netservice hpacontrolle
 
 bcs-service:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
 	mesh-manager logbeat-sidecar metricservice metriccollector netservice sd-prometheus storage \
-	user-manager bcs-webhook-server
+	user-manager bcs-webhook-server cluster-manager
 
-bcs-network:network bcs-ingress-controller bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent
+bcs-network:network ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -277,7 +277,7 @@ gw-controller:pre
 	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
 
-bcs-webhook-server:pre
+webhook-server:pre
 	cd ./bcs-services/bcs-webhook-server && make webhook-server && cd -
 
 detection:pre
@@ -287,10 +287,10 @@ detection:pre
 tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 	
-bcs-networkpolicy:pre
+networkpolicy:pre
 	cd ./bcs-network && make networkpolicy && cd -
 
-bcs-cloud-network-agent:pre
+cloud-network-agent:pre
 	cd ./bcs-network && make bcs-cloud-network-agent && cd -
 	
 user-manager:pre
@@ -307,17 +307,17 @@ bkcmdb-synchronizer:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
 
-bcs-cloud-netservice:pre
-	cd ./bcs-network && make cloud-netservice && cd -
+cloud-netservice:pre
+	cd ./bcs-network && make cloud-netservice
 
-bcs-cloud-netcontroller:pre
-	cd ./bcs-network && make cloud-netcontroller && cd -
+cloud-netcontroller:pre
+	cd ./bcs-network && make cloud-netcontroller
 
-bcs-cloud-netagent:pre
-	cd ./bcs-network && make cloud-netagent && cd -
+cloud-netagent:pre
+	cd ./bcs-network && make cloud-netagent
 
-bcs-ingress-controller:pre
-	cd ./bcs-network && make ingress-controller && cd -
+ingress-controller:pre
+	cd ./bcs-network && make ingress-controller
 
-clustermanager:pre
-	cd ./bcs-services/bcs-cluster-manager && make clustermanager && cd -
+cluster-manager:pre
+	cd ./bcs-services/bcs-cluster-manager && make clustermanager
