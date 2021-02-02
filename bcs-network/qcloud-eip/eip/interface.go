@@ -14,6 +14,7 @@ package eip
 
 import "github.com/containernetworking/cni/pkg/skel"
 
+// Interface interface for qcloud eip plugin
 type Interface interface {
 	Init(configFilePath string, eniNum int, ipNum int)
 	Recover(configFilePath string, eniNum int)
