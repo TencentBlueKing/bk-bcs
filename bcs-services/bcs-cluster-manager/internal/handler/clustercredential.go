@@ -70,3 +70,19 @@ func (cm *ClusterManager) UpdateClusterCredential(ctx context.Context,
 	blog.V(3).Infof("reqID: %s, action: updateclustercredential, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// DeleteClusterCredential implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) DeleteClusterCredential(ctx context.Context,
+	req *cmproto.DeleteClusterCredentialReq, resp *cmproto.DeleteClusterCredentialResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	da := clustercredac.NewDeleteAction(cm.model)
+	da.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("deleteclustercredential", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	blog.Infof("reqID: %s, action: deleteclustercredential", reqID)
+	blog.V(3).Infof("reqID: %s, action: deleteclustercredential, req %v, resp %v", reqID, req, resp)
+	return nil
+}

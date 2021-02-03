@@ -87,6 +87,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.DeleteClusterCredential",
+			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential"},
 			Method:  []string{"GET"},
@@ -192,6 +199,7 @@ type ClusterManagerService interface {
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
+	DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...client.CallOption) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...client.CallOption) (*ListClusterCredentialResp, error)
 	InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, opts ...client.CallOption) (*InitFederationClusterResp, error)
 	AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, opts ...client.CallOption) (*AddFederatedClusterResp, error)
@@ -283,6 +291,16 @@ func (c *clusterManagerService) GetClusterCredential(ctx context.Context, in *Ge
 func (c *clusterManagerService) UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateClusterCredential", in)
 	out := new(UpdateClusterCredentialResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...client.CallOption) (*DeleteClusterCredentialResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteClusterCredential", in)
+	out := new(DeleteClusterCredentialResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -440,6 +458,7 @@ type ClusterManagerHandler interface {
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
+	DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq, *DeleteClusterCredentialResp) error
 	ListClusterCredential(context.Context, *ListClusterCredentialReq, *ListClusterCredentialResp) error
 	InitFederationCluster(context.Context, *InitFederationClusterReq, *InitFederationClusterResp) error
 	AddFederatedCluster(context.Context, *AddFederatedClusterReq, *AddFederatedClusterResp) error
@@ -465,6 +484,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
+		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
 		ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, out *ListClusterCredentialResp) error
 		InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, out *InitFederationClusterResp) error
 		AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, out *AddFederatedClusterResp) error
@@ -528,6 +548,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteClusterCredential",
+		Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -656,6 +683,10 @@ func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *Ge
 
 func (h *clusterManagerHandler) UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error {
 	return h.ClusterManagerHandler.UpdateClusterCredential(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error {
+	return h.ClusterManagerHandler.DeleteClusterCredential(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, out *ListClusterCredentialResp) error {

@@ -78,7 +78,6 @@ func (ga *GetAction) setResp(code uint64, msg string) {
 // Handle handle get cluster credential
 func (ga *GetAction) Handle(
 	ctx context.Context, req *cmproto.GetClusterCredentialReq, resp *cmproto.GetClusterCredentialResp) {
-
 	if req == nil || resp == nil {
 		blog.Errorf("get cluster credential failed, req or resp is empty")
 		return
@@ -88,9 +87,11 @@ func (ga *GetAction) Handle(
 	ga.resp = resp
 
 	if err := ga.validate(); err != nil {
+		ga.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 	if err := ga.getCredential(); err != nil {
+		ga.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 	ga.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)

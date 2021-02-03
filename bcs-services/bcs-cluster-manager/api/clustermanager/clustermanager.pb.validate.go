@@ -2320,6 +2320,152 @@ var _ interface {
 	ErrorName() string
 } = UpdateClusterCredentialRespValidationError{}
 
+// Validate checks the field values on DeleteClusterCredentialReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteClusterCredentialReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
+		return DeleteClusterCredentialReqValidationError{
+			field:  "ServerKey",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	return nil
+}
+
+// DeleteClusterCredentialReqValidationError is the validation error returned
+// by DeleteClusterCredentialReq.Validate if the designated constraints aren't met.
+type DeleteClusterCredentialReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteClusterCredentialReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteClusterCredentialReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteClusterCredentialReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteClusterCredentialReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteClusterCredentialReqValidationError) ErrorName() string {
+	return "DeleteClusterCredentialReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteClusterCredentialReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteClusterCredentialReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteClusterCredentialReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteClusterCredentialReqValidationError{}
+
+// Validate checks the field values on DeleteClusterCredentialResp with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteClusterCredentialResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ErrCode
+
+	// no validation rules for ErrMsg
+
+	return nil
+}
+
+// DeleteClusterCredentialRespValidationError is the validation error returned
+// by DeleteClusterCredentialResp.Validate if the designated constraints
+// aren't met.
+type DeleteClusterCredentialRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteClusterCredentialRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteClusterCredentialRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteClusterCredentialRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteClusterCredentialRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteClusterCredentialRespValidationError) ErrorName() string {
+	return "DeleteClusterCredentialRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteClusterCredentialRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteClusterCredentialResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteClusterCredentialRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteClusterCredentialRespValidationError{}
+
 // Validate checks the field values on ListClusterCredentialReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.

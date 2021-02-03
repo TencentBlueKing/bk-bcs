@@ -90,6 +90,17 @@ service ClusterManager {
     };
   }
 
+  rpc DeleteClusterCredential(DeleteClusterCredentialReq)
+      returns (DeleteClusterCredentialResp) {
+    option (google.api.http) = {
+      delete : "/clustermanager/v1/clustercredential/{serverKey}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除ClusterCredential"
+      summary : "删除ClusterCredential"
+    };
+  }
+
   rpc ListClusterCredential(ListClusterCredentialReq)
       returns (ListClusterCredentialResp) {
     option (google.api.http) = {
@@ -926,6 +937,38 @@ message UpdateClusterCredentialReq {
 }
 
 message UpdateClusterCredentialResp {
+  uint64 errCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "返回错误码"
+      } ];
+  string errMsg = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "返回错误信息"
+      } ];
+}
+
+message DeleteClusterCredentialReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteClusterCredentialReq"
+      description : "删除集群注册的证书信息"
+      required : [ "serverKey" ]
+    }
+  };
+  string serverKey = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "serverKey",
+      description : "上报信息的组件的key，对于kube-"
+                    "agent，是clusterID，对于mesos-driver和kube-"
+                    "driver，是有IP信息"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 100}
+  ];
+}
+
+message DeleteClusterCredentialResp {
   uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",

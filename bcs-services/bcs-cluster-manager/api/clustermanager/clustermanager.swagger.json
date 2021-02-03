@@ -398,6 +398,37 @@
           "ClusterManager"
         ]
       },
+      "delete": {
+        "summary": "删除ClusterCredential",
+        "description": "删除ClusterCredential",
+        "operationId": "ClusterManager_DeleteClusterCredential",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteClusterCredentialResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "serverKey",
+            "description": "上报信息的组件的key，对于kube-agent，是clusterID，对于mesos-driver和kube-driver，是有IP信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
       "put": {
         "summary": "更新ClusterCredential详情",
         "description": "指定更新ClusterCredential",
@@ -1449,6 +1480,22 @@
         "errMsg",
         "clusterID"
       ]
+    },
+    "clustermanagerDeleteClusterCredentialResp": {
+      "type": "object",
+      "properties": {
+        "errCode": {
+          "type": "string",
+          "format": "uint64",
+          "description": "返回错误码",
+          "title": "errCode"
+        },
+        "errMsg": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "errMsg"
+        }
+      }
     },
     "clustermanagerDeleteClusterResp": {
       "type": "object",
