@@ -76,6 +76,7 @@ type Namespace struct {
 	ProjectID           string            `bson:"projectID"`
 	BusinessID          string            `bson:"businessID"`
 	Labels              map[string]string `bson:"labels,omitempty"`
+	MaxQuota            string            `bson:"maxQuota"`
 	CreateTime          time.Time         `bson:"createTime"`
 	UpdateTime          time.Time         `bson:"updateTime"`
 }

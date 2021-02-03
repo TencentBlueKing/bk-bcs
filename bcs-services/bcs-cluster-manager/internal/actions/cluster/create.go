@@ -15,6 +15,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -45,10 +46,14 @@ func (ca *CreateAction) validate() error {
 	if !cmcommon.IsEngineTypeValid(ca.req.EngineType) {
 		return fmt.Errorf("invalid engine type")
 	}
+	if !cmcommon.IsClusterTypeValid(ca.req.ClusterType) {
+		return fmt.Errorf("invalid cluster type")
+	}
 	return nil
 }
 
 func (ca *CreateAction) createCluster() error {
+	createTime := time.Now()
 	newCluster := &types.Cluster{
 		ClusterID:   ca.req.ClusterID,
 		ClusterName: ca.req.ClusterName,
@@ -63,12 +68,13 @@ func (ca *CreateAction) createCluster() error {
 		ClusterType: ca.req.ClusterType,
 		Labels:      ca.req.Labels,
 		Operators:   ca.req.Operators,
+		CreateTime:  createTime,
+		UpdateTime:  createTime,
 	}
 	return ca.model.CreateCluster(ca.ctx, newCluster)
 }
 
 func (ca *CreateAction) setResp(code uint64, msg string) {
-	ca.resp.Seq = ca.req.Seq
 	ca.resp.ErrCode = code
 	ca.resp.ErrMsg = msg
 }

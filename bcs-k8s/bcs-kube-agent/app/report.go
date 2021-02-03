@@ -161,9 +161,9 @@ func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 			}
 		}
 		sort.Strings(endpointsList)
-		serverAddresses = strings.Join(endpointsList, ";")
+		serverAddresses = strings.Join(endpointsList, ",")
 	} else {
-		serverSlice := strings.Split(externalProxyAddresses, ";")
+		serverSlice := strings.Split(externalProxyAddresses, ",")
 		for _, server := range serverSlice {
 			if !strings.HasPrefix(server, "https://") {
 				return "", fmt.Errorf("got invalid external-proxy-addresses")

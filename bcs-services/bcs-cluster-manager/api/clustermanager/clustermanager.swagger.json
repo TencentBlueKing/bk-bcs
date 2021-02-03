@@ -51,7 +51,7 @@
     "/clustermanager/v1/cluster": {
       "get": {
         "summary": "查询Cluster列表",
-        "description": "查询Cluster列表",
+        "description": "根据查询条件过滤Cluster列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群",
         "operationId": "ClusterManager_ListCluster",
         "responses": {
           "200": {
@@ -68,14 +68,6 @@
           }
         },
         "parameters": [
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
           {
             "name": "clusterName",
             "description": "clusterName. 集群名称",
@@ -119,6 +111,13 @@
             "type": "string"
           },
           {
+            "name": "environment",
+            "description": "environment. 集群环境",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "engineType",
             "description": "engineType. 集群编排引擎类型",
             "in": "query",
@@ -150,7 +149,7 @@
     "/clustermanager/v1/cluster/{clusterID}": {
       "get": {
         "summary": "查询Cluster",
-        "description": "查询Cluster",
+        "description": "查询指定ClusterID的集群信息",
         "operationId": "ClusterManager_GetCluster",
         "responses": {
           "200": {
@@ -173,14 +172,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
           }
         ],
         "tags": [
@@ -189,7 +180,7 @@
       },
       "delete": {
         "summary": "删除Cluster",
-        "description": "删除Cluster",
+        "description": "删除特定Cluster",
         "operationId": "ClusterManager_DeleteCluster",
         "responses": {
           "200": {
@@ -214,14 +205,6 @@
             "type": "string"
           },
           {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
             "name": "isForced",
             "description": "isForced. 是否强制删除，强制删除会删除级联资源",
             "in": "query",
@@ -236,7 +219,7 @@
       },
       "post": {
         "summary": "创建Cluster",
-        "description": "创建Cluster",
+        "description": "创建Cluster，集群类型兼容联邦集群和独立集群",
         "operationId": "ClusterManager_CreateCluster",
         "responses": {
           "200": {
@@ -255,7 +238,7 @@
         "parameters": [
           {
             "name": "clusterID",
-            "description": "集群ID",
+            "description": "集群ID，例如BCS-K8S-000000",
             "in": "path",
             "required": true,
             "type": "string"
@@ -275,7 +258,7 @@
       },
       "put": {
         "summary": "更新Cluster",
-        "description": "更新Cluster",
+        "description": "更新Cluster信息",
         "operationId": "ClusterManager_UpdateCluster",
         "responses": {
           "200": {
@@ -294,7 +277,7 @@
         "parameters": [
           {
             "name": "clusterID",
-            "description": "集群ID",
+            "description": "集群ID，例如BCS-K8S-000000",
             "in": "path",
             "required": true,
             "type": "string"
@@ -316,7 +299,7 @@
     "/clustermanager/v1/clustercredential": {
       "get": {
         "summary": "查询ClusterCredential列表",
-        "description": "查询ClusterCredential列表",
+        "description": "根据查询条件查询ClusterCredential列表",
         "operationId": "ClusterManager_ListClusterCredential",
         "responses": {
           "200": {
@@ -333,14 +316,6 @@
           }
         },
         "parameters": [
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
           {
             "name": "serverKey",
             "description": "serverKey. 集群注册信息的key，对于kubeagent是clusterID，对于mesosdriver和kubedriver是clusterID+ip",
@@ -368,6 +343,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -378,7 +369,7 @@
     "/clustermanager/v1/clustercredential/{serverKey}": {
       "get": {
         "summary": "查询ClusterCredential详情",
-        "description": "查询ClusterCredential详情",
+        "description": "根据提供的ServerKey查询ClusterCredential详情",
         "operationId": "ClusterManager_GetClusterCredential",
         "responses": {
           "200": {
@@ -401,14 +392,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
           }
         ],
         "tags": [
@@ -417,7 +400,7 @@
       },
       "put": {
         "summary": "更新ClusterCredential详情",
-        "description": "更新ClusterCredential",
+        "description": "指定更新ClusterCredential",
         "operationId": "ClusterManager_UpdateClusterCredential",
         "responses": {
           "200": {
@@ -510,14 +493,6 @@
         },
         "parameters": [
           {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
             "name": "federationClusterID",
             "description": "federationClusterID. 查询联邦集群id",
             "in": "query",
@@ -593,14 +568,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
           }
         ],
         "tags": [
@@ -639,14 +606,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
           },
           {
             "name": "isForced",
@@ -775,14 +734,6 @@
         },
         "parameters": [
           {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
             "name": "namespace",
             "description": "namespace. 命名空间名称",
             "in": "query",
@@ -795,6 +746,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询最大返回数量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -835,14 +802,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
           },
           {
             "name": "clusterID",
@@ -890,14 +849,6 @@
             "type": "string"
           },
           {
-            "name": "seq",
-            "description": "seq. 请求序号",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
             "name": "clusterID",
             "description": "clusterID. 命名空间配额所在子集群id",
             "in": "query",
@@ -919,7 +870,7 @@
       },
       "post": {
         "summary": "创建namespacequota",
-        "description": "创建namespacequota",
+        "description": "创建namespacequota，如果指定子集群clusterID，则在指定子集群创建ResourceQuota，如果未指定子集群clusterID，则根据指定的region系统自动分配子集群clusterID",
         "operationId": "ClusterManager_CreateNamespaceQuota",
         "responses": {
           "200": {
@@ -1049,10 +1000,6 @@
     "clustermanagerAddFederatedClusterReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64"
-        },
         "federationClusterID": {
           "type": "string"
         },
@@ -1064,10 +1011,6 @@
     "clustermanagerAddFederatedClusterResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64"
@@ -1134,12 +1077,6 @@
         },
         "updateTime": {
           "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
         }
       }
     },
@@ -1181,15 +1118,9 @@
     "clustermanagerCreateClusterReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "clusterID": {
           "type": "string",
-          "description": "集群ID",
+          "description": "集群ID，例如BCS-K8S-000000",
           "title": "clusterID"
         },
         "clusterName": {
@@ -1199,12 +1130,12 @@
         },
         "provider": {
           "type": "string",
-          "description": "集群提供者，[tencentcloud, aws, local]",
+          "description": "集群提供者，例如[tencentcloud, aws, local]",
           "title": "provider"
         },
         "region": {
           "type": "string",
-          "description": "集群区域",
+          "description": "集群所在地域",
           "title": "region"
         },
         "vpcID": {
@@ -1219,12 +1150,12 @@
         },
         "businessID": {
           "type": "string",
-          "description": "业务id",
+          "description": "CMDB业务id",
           "title": "businessID"
         },
         "environment": {
           "type": "string",
-          "description": "环境, [prod, debug]",
+          "description": "集群环境, 例如[prod, debug, test]",
           "title": "environment"
         },
         "engineType": {
@@ -1240,7 +1171,7 @@
         },
         "clusterType": {
           "type": "string",
-          "description": "集群类型, [federation, single]",
+          "description": "集群类型, 例如[federation, single], federation表示为联邦集群，single表示独立集群",
           "title": "clusterType"
         },
         "labels": {
@@ -1255,19 +1186,19 @@
             "type": "string"
           },
           "description": "集群管理员列表",
-          "title": "labels"
+          "title": "operators"
         }
       },
       "description": "创建集群请求",
       "title": "CreateClusterReq",
       "required": [
-        "seq",
         "clusterID",
         "clusterName",
         "provider",
         "region",
         "projectID",
         "businessID",
+        "environment",
         "engineType",
         "isExclusive",
         "clusterType",
@@ -1278,12 +1209,6 @@
     "clustermanagerCreateClusterResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1299,7 +1224,6 @@
       "description": "创建集群的返回",
       "title": "CreateClusterResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg"
       ]
@@ -1307,12 +1231,6 @@
     "clustermanagerCreateNamespaceQuotaReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "namespace": {
           "type": "string",
           "description": "所在命名空间",
@@ -1325,7 +1243,7 @@
         },
         "clusterID": {
           "type": "string",
-          "description": "指定集群id",
+          "description": "指定子集群id",
           "title": "clusterID"
         },
         "region": {
@@ -1339,25 +1257,17 @@
           "title": "resourceQuota"
         }
       },
-      "description": "创建命名空间资源配额请求，如果指定clusterID，则在指定clusterID创建ResourceQuota，如果未指定clusterID，则根据指定的region系统自动分配clusterID",
+      "description": "创建命名空间资源配额请求，如果指定子集群clusterID，则在指定子集群创建ResourceQuota，如果未指定子集群clusterID，则根据指定的region系统自动分配子集群clusterID",
       "title": "CreateNamespaceQuotaReq",
       "required": [
-        "seq",
         "namespace",
         "federationClusterID",
-        "region",
         "resourceQuota"
       ]
     },
     "clustermanagerCreateNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1378,7 +1288,6 @@
       "description": "创建命名空间资源配额返回",
       "title": "CreateNamespaceQuotaResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "clusterID"
@@ -1387,12 +1296,6 @@
     "clustermanagerCreateNamespaceReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "name": {
           "type": "string",
           "description": "命名空间名字",
@@ -1418,12 +1321,16 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "maxQuota": {
+          "type": "string",
+          "description": "该命名空间最大的可用的配额，在所有地区的配额只和不能超过该配额限定的数量",
+          "title": "maxQuota"
         }
       },
       "description": "创建命名空间请求",
       "title": "CreateNamespaceReq",
       "required": [
-        "seq",
         "name",
         "federationClusterID",
         "projectID",
@@ -1434,12 +1341,6 @@
     "clustermanagerCreateNamespaceResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1455,7 +1356,6 @@
       "description": "创建命名空间返回",
       "title": "CreateNamespaceResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg"
       ]
@@ -1463,12 +1363,6 @@
     "clustermanagerCreateNamespaceWithQuotaReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "name": {
           "type": "string",
           "description": "命名空间名称",
@@ -1505,6 +1399,11 @@
           "description": "命名空间所在区域",
           "title": "region"
         },
+        "maxQuota": {
+          "type": "string",
+          "description": "该命名空间最大的可用的配额，在所有地区的配额只和不能超过该配额限定的数量",
+          "title": "maxQuota"
+        },
         "resourceQuota": {
           "type": "string",
           "description": "资源配额",
@@ -1514,7 +1413,6 @@
       "description": "创建命名空间及其资源配额请求",
       "title": "CreateNamespaceWithQuotaReq",
       "required": [
-        "seq",
         "name",
         "federationClusterID",
         "projectID",
@@ -1527,12 +1425,6 @@
     "clustermanagerCreateNamespaceWithQuotaResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1553,7 +1445,6 @@
       "description": "创建命名空间及其资源配额返回",
       "title": "CreateNamespaceWithQuotaResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "clusterID"
@@ -1562,12 +1453,6 @@
     "clustermanagerDeleteClusterResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1578,31 +1463,18 @@
           "type": "string",
           "description": "返回错误信息",
           "title": "errMsg"
-        },
-        "cluster": {
-          "$ref": "#/definitions/clustermanagerCluster",
-          "description": "集群信息",
-          "title": "cluster"
         }
       },
       "description": "删除集群的返回",
       "title": "DeleteClusterResp",
       "required": [
-        "seq",
         "errCode",
-        "errMsg",
-        "cluster"
+        "errMsg"
       ]
     },
     "clustermanagerDeleteNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1613,31 +1485,18 @@
           "type": "string",
           "description": "请求错误信息",
           "title": "errMsg"
-        },
-        "resourceQuota": {
-          "$ref": "#/definitions/clustermanagerResourceQuota",
-          "description": "被删除的资源配额",
-          "title": "resourceQuota"
         }
       },
       "description": "删除命名空间资源配额返回",
       "title": "DeleteNamespaceQuotaResp",
       "required": [
-        "seq",
         "errCode",
-        "errMsg",
-        "resourceQuota"
+        "errMsg"
       ]
     },
     "clustermanagerDeleteNamespaceResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1648,31 +1507,18 @@
           "type": "string",
           "description": "返回错误信息",
           "title": "errMsg"
-        },
-        "ns": {
-          "$ref": "#/definitions/clustermanagerNamespace",
-          "description": "被删除的命名空间信息",
-          "title": "ns"
         }
       },
       "description": "删除命名空间返回",
       "title": "DeleteNamespaceResp",
       "required": [
-        "seq",
         "errCode",
-        "errMsg",
-        "ns"
+        "errMsg"
       ]
     },
     "clustermanagerGetClusterCredentialResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1693,7 +1539,6 @@
       "description": "查询集群Credential返回",
       "title": "GetClusterCredentialResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "clusterCredential"
@@ -1702,12 +1547,6 @@
     "clustermanagerGetClusterResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1728,7 +1567,6 @@
       "description": "查询集群返回",
       "title": "GetClusterResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "cluster"
@@ -1737,12 +1575,6 @@
     "clustermanagerGetNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1763,7 +1595,6 @@
       "description": "获取命名空间资源配额返回",
       "title": "GetNamespaceQuotaResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "resourceQuota"
@@ -1772,12 +1603,6 @@
     "clustermanagerGetNamespaceResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1798,7 +1623,6 @@
       "description": "查询命名空间请求",
       "title": "GetNamespaceReq",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "ns"
@@ -1813,12 +1637,6 @@
     "clustermanagerListClusterCredentialResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1842,7 +1660,6 @@
       "description": "查询集群注册的证书信息列表",
       "title": "ListClusterCredentialResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "clusterCredentialList"
@@ -1851,12 +1668,6 @@
     "clustermanagerListClusterResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1880,7 +1691,6 @@
       "description": "查询集群列表返回",
       "title": "ListClusterResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "clusterList"
@@ -1889,12 +1699,6 @@
     "clustermanagerListNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1918,7 +1722,6 @@
       "description": "查询命名空间资源配额列表返回",
       "title": "ListNamespaceQuotaResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "resourceQuotaList"
@@ -1927,12 +1730,6 @@
     "clustermanagerListNamespaceResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -1956,7 +1753,6 @@
       "description": "查询命名空间返回列表",
       "title": "ListNamespaceResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg",
         "ns"
@@ -1983,6 +1779,9 @@
             "type": "string"
           }
         },
+        "maxQuota": {
+          "type": "string"
+        },
         "createTime": {
           "type": "string"
         },
@@ -1997,128 +1796,9 @@
         }
       }
     },
-    "clustermanagerObjectMeta": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "cluster": {
-          "type": "string"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "clustermanagerQuantity": {
-      "type": "object",
-      "properties": {
-        "string": {
-          "type": "string"
-        }
-      }
-    },
-    "clustermanagerResourceQuota": {
-      "type": "object",
-      "properties": {
-        "metadata": {
-          "$ref": "#/definitions/clustermanagerObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/clustermanagerResourceQuotaSpec"
-        },
-        "status": {
-          "$ref": "#/definitions/clustermanagerResourceQuotaStatus"
-        }
-      }
-    },
-    "clustermanagerResourceQuotaSpec": {
-      "type": "object",
-      "properties": {
-        "hard": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clustermanagerQuantity"
-          }
-        },
-        "scopes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "scopeSelector": {
-          "$ref": "#/definitions/clustermanagerScopeSelector"
-        }
-      }
-    },
-    "clustermanagerResourceQuotaStatus": {
-      "type": "object",
-      "properties": {
-        "hard": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clustermanagerQuantity"
-          }
-        },
-        "used": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clustermanagerQuantity"
-          }
-        }
-      }
-    },
-    "clustermanagerScopeSelector": {
-      "type": "object",
-      "properties": {
-        "matchExpressions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerScopedResourceSelectorRequirement"
-          }
-        }
-      }
-    },
-    "clustermanagerScopedResourceSelectorRequirement": {
-      "type": "object",
-      "properties": {
-        "scopeName": {
-          "type": "string"
-        },
-        "operator": {
-          "type": "string"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "clustermanagerUpdateClusterCredentialReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "serverKey": {
           "type": "string",
           "description": "上报信息的组件的key，对于kube-agent，是clusterID，对于mesos-driver和kube-driver，是有IP信息",
@@ -2158,7 +1838,6 @@
       "description": "更新集群Credential请求",
       "title": "UpdateClusterCredentialReq",
       "required": [
-        "seq",
         "clusterID",
         "clientModule",
         "serverAddress",
@@ -2170,12 +1849,6 @@
     "clustermanagerUpdateClusterCredentialResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -2192,15 +1865,9 @@
     "clustermanagerUpdateClusterReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "clusterID": {
           "type": "string",
-          "description": "集群ID",
+          "description": "集群ID，例如BCS-K8S-000000",
           "title": "clusterID"
         },
         "clusterName": {
@@ -2235,7 +1902,7 @@
         },
         "environment": {
           "type": "string",
-          "description": "环境, [prod, debug]",
+          "description": "集群环境, 例如[prod, debug, test]",
           "title": "environment"
         },
         "engineType": {
@@ -2251,7 +1918,7 @@
         },
         "clusterType": {
           "type": "string",
-          "description": "集群类型, [federation, single]",
+          "description": "集群类型, 例如[federation, single], federation表示为联邦集群，single表示独立集群",
           "title": "clusterType"
         },
         "labels": {
@@ -2272,13 +1939,13 @@
       "description": "更新集群信息请求",
       "title": "UpdateClusterReq",
       "required": [
-        "seq",
         "clusterID",
         "clusterName",
         "provider",
         "region",
         "projectID",
         "businessID",
+        "environment",
         "engineType",
         "isExclusive",
         "clusterType",
@@ -2289,12 +1956,6 @@
     "clustermanagerUpdateClusterResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -2310,7 +1971,6 @@
       "description": "更新集群信息返回",
       "title": "UpdateClusterResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg"
       ]
@@ -2318,12 +1978,6 @@
     "clustermanagerUpdateNamespaceQuotaReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "namespace": {
           "type": "string",
           "description": "命名空间名称",
@@ -2348,7 +2002,6 @@
       "description": "更新命名空间资源配额请求",
       "title": "UpdateNamespaceQuotaReq",
       "required": [
-        "seq",
         "namespace",
         "federationClusterID",
         "clusterID",
@@ -2358,12 +2011,6 @@
     "clustermanagerUpdateNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -2379,7 +2026,6 @@
       "description": "更新命名空间资源配额返回",
       "title": "UpdateNamespaceQuotaResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg"
       ]
@@ -2387,12 +2033,6 @@
     "clustermanagerUpdateNamespaceReq": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "name": {
           "type": "string",
           "description": "命名空间名称",
@@ -2403,27 +2043,21 @@
           "description": "命名空间所在联邦集群id",
           "title": "federationClusterID"
         },
-        "projectID": {
-          "type": "string",
-          "description": "项目id",
-          "title": "projectID"
-        },
-        "businessID": {
-          "type": "string",
-          "description": "业务id",
-          "title": "businessID"
-        },
         "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "maxQuota": {
+          "type": "string",
+          "description": "该命名空间最大的可用的配额，在所有地区的配额只和不能超过该配额限定的数量",
+          "title": "maxQuota"
         }
       },
       "description": "更新命名空间请求",
       "title": "UpdateNamespaceReq",
       "required": [
-        "seq",
         "name",
         "federationClusterID",
         "labels"
@@ -2432,12 +2066,6 @@
     "clustermanagerUpdateNamespaceResp": {
       "type": "object",
       "properties": {
-        "seq": {
-          "type": "string",
-          "format": "uint64",
-          "description": "请求序号",
-          "title": "seq"
-        },
         "errCode": {
           "type": "string",
           "format": "uint64",
@@ -2453,7 +2081,6 @@
       "description": "更新命名空间信息返回",
       "title": "UpdateNamespaceResp",
       "required": [
-        "seq",
         "errCode",
         "errMsg"
       ]

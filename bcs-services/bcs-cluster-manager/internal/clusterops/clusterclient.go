@@ -52,7 +52,7 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 	if cred.ConnectMode == types.ConnectModeWebsocketTunnel {
 		if len(ko.opt.ClientCert) != 0 && len(ko.opt.ClientCa) != 0 && len(ko.opt.ClientKey) != 0 {
 			cfg.Host = "https://" + ko.opt.Address + ":" + strconv.Itoa(int(ko.opt.HTTPPort)) +
-				"/clustermanager/tunnels/clusters/" + clusterID
+				"/clustermanager/clusters/" + clusterID
 			cfg.TLSClientConfig = rest.TLSClientConfig{
 				Insecure: false,
 				CertFile: ko.opt.ClientCert,
@@ -61,7 +61,7 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 			}
 		} else {
 			cfg.Host = "http://" + ko.opt.Address + ":" + strconv.Itoa(int(ko.opt.HTTPPort)) +
-				"/clustermanager/tunnels/clusters/" + clusterID
+				"/clustermanager/clusters/" + clusterID
 			cfg.TLSClientConfig = rest.TLSClientConfig{
 				Insecure: true,
 			}

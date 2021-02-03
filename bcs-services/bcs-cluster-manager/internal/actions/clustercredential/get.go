@@ -70,7 +70,6 @@ func (ga *GetAction) getCredential() error {
 }
 
 func (ga *GetAction) setResp(code uint64, msg string) {
-	ga.resp.Seq = ga.req.Seq
 	ga.resp.ErrCode = code
 	ga.resp.ErrMsg = msg
 	ga.resp.ClusterCredential = ga.clusterCred

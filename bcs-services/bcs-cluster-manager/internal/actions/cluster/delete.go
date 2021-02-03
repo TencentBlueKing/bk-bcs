@@ -84,7 +84,6 @@ func (da *DeleteAction) deleteCluster() error {
 }
 
 func (da *DeleteAction) setResp(code uint64, msg string) {
-	da.resp.Seq = da.req.Seq
 	da.resp.ErrCode = code
 	da.resp.ErrMsg = msg
 }

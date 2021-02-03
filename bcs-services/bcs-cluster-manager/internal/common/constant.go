@@ -17,4 +17,12 @@ const (
 	ClusterEngineTypeMesos = "mesos"
 	// ClusterEngineTypeK8s k8s cluster
 	ClusterEngineTypeK8s = "k8s"
+
+	// ClusterTypeFederation federation cluster
+	ClusterTypeFederation = "federation"
+	// ClusterTypeSingle single cluster
+	ClusterTypeSingle = "single"
+
+	// MicroMetaKeyHTTPPort http port in micro service meta
+	MicroMetaKeyHTTPPort = "httpport"
 )

@@ -32,6 +32,7 @@ const (
 )
 
 var (
+	// GroupResourceCluster group resource of cluster
 	GroupResourceCluster = schema.GroupResource{
 		Group:    "bkbcs.tencent.com",
 		Resource: "Clusters",

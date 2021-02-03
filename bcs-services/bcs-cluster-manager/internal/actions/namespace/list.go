@@ -94,6 +94,7 @@ func (la *ListAction) listNamespaces() error {
 			ProjectID:           ns.ProjectID,
 			BusinessID:          ns.BusinessID,
 			Labels:              ns.Labels,
+			MaxQuota:            ns.MaxQuota,
 			CreateTime:          ns.CreateTime.String(),
 			UpdateTime:          ns.UpdateTime.String(),
 			QuotaList:           quotaList,
@@ -104,7 +105,6 @@ func (la *ListAction) listNamespaces() error {
 }
 
 func (la *ListAction) setResp(code uint64, msg string) {
-	la.resp.Seq = la.req.Seq
 	la.resp.ErrCode = code
 	la.resp.ErrMsg = msg
 	la.resp.NsList = la.nsList

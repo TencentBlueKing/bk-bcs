@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -53,7 +54,7 @@ func (ua *UpdateAction) validate() error {
 	}
 	quota := &k8scorev1.ResourceQuota{}
 	if err := json.Unmarshal([]byte(ua.req.ResourceQuota), quota); err != nil {
-		return err
+		return fmt.Errorf("decode resourcequota failed, err %s", err)
 	}
 	if quota.Name != ua.req.Namespace || quota.Namespace != ua.req.Namespace {
 		return fmt.Errorf("resource quota name and namespace should be the name of namespace %s", ua.req.Namespace)
@@ -101,6 +102,8 @@ func (ua *UpdateAction) updateQuotaToStore() error {
 		FederationClusterID: ua.req.FederationClusterID,
 		ClusterID:           ua.req.ClusterID,
 		ResourceQuota:       ua.req.ResourceQuota,
+		CreateTime:          ua.dbQuota.CreateTime,
+		UpdateTime:          time.Now(),
 	}
 	if err := ua.model.UpdateQuota(ua.ctx, newQuota); err != nil {
 		return err
@@ -109,7 +112,6 @@ func (ua *UpdateAction) updateQuotaToStore() error {
 }
 
 func (ua *UpdateAction) setResp(code uint64, msg string) {
-	ua.resp.Seq = ua.req.Seq
 	ua.resp.ErrCode = code
 	ua.resp.ErrMsg = msg
 }

@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -87,8 +86,6 @@ func (m *ModelCluster) CreateCluster(ctx context.Context, cluster *types.Cluster
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
-	cluster.CreateTime = time.Now()
-	cluster.UpdateTime = cluster.CreateTime
 
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{cluster}); err != nil {
 		return err
@@ -108,8 +105,6 @@ func (m *ModelCluster) UpdateCluster(ctx context.Context, cluster *types.Cluster
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, oldCluster); err != nil {
 		return err
 	}
-	cluster.CreateTime = oldCluster.CreateTime
-	cluster.UpdateTime = time.Now()
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": cluster})
 }
 

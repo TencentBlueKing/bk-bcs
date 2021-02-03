@@ -73,10 +73,6 @@ func (m *Cluster) Validate() error {
 
 	// no validation rules for UpdateTime
 
-	// no validation rules for Status
-
-	// no validation rules for Message
-
 	return nil
 }
 
@@ -237,6 +233,8 @@ func (m *Namespace) Validate() error {
 	// no validation rules for BusinessID
 
 	// no validation rules for Labels
+
+	// no validation rules for MaxQuota
 
 	// no validation rules for CreateTime
 
@@ -889,17 +887,17 @@ func (m *CreateClusterReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return CreateClusterReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
 		return CreateClusterReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return CreateClusterReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -924,6 +922,13 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
+	if !_CreateClusterReq_Region_Pattern.MatchString(m.GetRegion()) {
+		return CreateClusterReqValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
 	if utf8.RuneCountInString(m.GetVpcID()) > 100 {
 		return CreateClusterReqValidationError{
 			field:  "VpcID",
@@ -938,6 +943,13 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
+	if !_CreateClusterReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return CreateClusterReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
 	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
 		return CreateClusterReqValidationError{
 			field:  "BusinessID",
@@ -945,10 +957,24 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetEnvironment()) > 100 {
+	if !_CreateClusterReq_BusinessID_Pattern.MatchString(m.GetBusinessID()) {
+		return CreateClusterReqValidationError{
+			field:  "BusinessID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetEnvironment()); l < 2 || l > 100 {
 		return CreateClusterReqValidationError{
 			field:  "Environment",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateClusterReq_Environment_Pattern.MatchString(m.GetEnvironment()) {
+		return CreateClusterReqValidationError{
+			field:  "Environment",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -959,12 +985,26 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
+	if !_CreateClusterReq_EngineType_Pattern.MatchString(m.GetEngineType()) {
+		return CreateClusterReqValidationError{
+			field:  "EngineType",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
 	// no validation rules for IsExclusive
 
-	if utf8.RuneCountInString(m.GetClusterType()) > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterType()); l < 2 || l > 100 {
 		return CreateClusterReqValidationError{
 			field:  "ClusterType",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_CreateClusterReq_ClusterType_Pattern.MatchString(m.GetClusterType()) {
+		return CreateClusterReqValidationError{
+			field:  "ClusterType",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -1039,6 +1079,20 @@ var _ interface {
 	ErrorName() string
 } = CreateClusterReqValidationError{}
 
+var _CreateClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _CreateClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _CreateClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _CreateClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _CreateClusterReq_Environment_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _CreateClusterReq_EngineType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _CreateClusterReq_ClusterType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
 // Validate checks the field values on CreateClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -1046,8 +1100,6 @@ func (m *CreateClusterResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -1120,17 +1172,17 @@ func (m *DeleteClusterReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return DeleteClusterReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
 		return DeleteClusterReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_DeleteClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return DeleteClusterReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -1193,6 +1245,8 @@ var _ interface {
 	ErrorName() string
 } = DeleteClusterReqValidationError{}
 
+var _DeleteClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
 // Validate checks the field values on DeleteClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -1201,21 +1255,9 @@ func (m *DeleteClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
-
-	if v, ok := interface{}(m.GetCluster()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return DeleteClusterRespValidationError{
-				field:  "Cluster",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	return nil
 }
@@ -1284,17 +1326,17 @@ func (m *UpdateClusterReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return UpdateClusterReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return UpdateClusterReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -1319,6 +1361,13 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
+	if !_UpdateClusterReq_Region_Pattern.MatchString(m.GetRegion()) {
+		return UpdateClusterReqValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
 	if utf8.RuneCountInString(m.GetVpcID()) > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "VpcID",
@@ -1333,6 +1382,13 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
+	if !_UpdateClusterReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		return UpdateClusterReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
 	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "BusinessID",
@@ -1340,10 +1396,24 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetEnvironment()) > 100 {
+	if !_UpdateClusterReq_BusinessID_Pattern.MatchString(m.GetBusinessID()) {
+		return UpdateClusterReqValidationError{
+			field:  "BusinessID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
+	if l := utf8.RuneCountInString(m.GetEnvironment()); l < 2 || l > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "Environment",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateClusterReq_Environment_Pattern.MatchString(m.GetEnvironment()) {
+		return UpdateClusterReqValidationError{
+			field:  "Environment",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -1354,12 +1424,26 @@ func (m *UpdateClusterReq) Validate() error {
 		}
 	}
 
+	if !_UpdateClusterReq_EngineType_Pattern.MatchString(m.GetEngineType()) {
+		return UpdateClusterReqValidationError{
+			field:  "EngineType",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
+		}
+	}
+
 	// no validation rules for IsExclusive
 
-	if utf8.RuneCountInString(m.GetClusterType()) > 100 {
+	if l := utf8.RuneCountInString(m.GetClusterType()); l < 2 || l > 100 {
 		return UpdateClusterReqValidationError{
 			field:  "ClusterType",
-			reason: "value length must be at most 100 runes",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_UpdateClusterReq_ClusterType_Pattern.MatchString(m.GetClusterType()) {
+		return UpdateClusterReqValidationError{
+			field:  "ClusterType",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -1434,6 +1518,20 @@ var _ interface {
 	ErrorName() string
 } = UpdateClusterReqValidationError{}
 
+var _UpdateClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _UpdateClusterReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _UpdateClusterReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _UpdateClusterReq_BusinessID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _UpdateClusterReq_Environment_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _UpdateClusterReq_EngineType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
+var _UpdateClusterReq_ClusterType_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
 // Validate checks the field values on UpdateClusterResp with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -1441,8 +1539,6 @@ func (m *UpdateClusterResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -1515,17 +1611,17 @@ func (m *GetClusterReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return GetClusterReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
 		return GetClusterReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+	}
+
+	if !_GetClusterReq_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		return GetClusterReqValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-_]+$\"",
 		}
 	}
 
@@ -1586,6 +1682,8 @@ var _ interface {
 	ErrorName() string
 } = GetClusterReqValidationError{}
 
+var _GetClusterReq_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-_]+$")
+
 // Validate checks the field values on GetClusterResp with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -1593,8 +1691,6 @@ func (m *GetClusterResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -1675,13 +1771,6 @@ func (m *ListClusterReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return ListClusterReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if utf8.RuneCountInString(m.GetClusterName()) > 100 {
 		return ListClusterReqValidationError{
 			field:  "ClusterName",
@@ -1715,6 +1804,13 @@ func (m *ListClusterReq) Validate() error {
 	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
 		return ListClusterReqValidationError{
 			field:  "BusinessID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetEnvironment()) > 100 {
+		return ListClusterReqValidationError{
+			field:  "Environment",
 			reason: "value length must be at most 100 runes",
 		}
 	}
@@ -1805,8 +1901,6 @@ func (m *ListClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
@@ -1891,8 +1985,6 @@ func (m *GetClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
 		return GetClusterCredentialReqValidationError{
 			field:  "ServerKey",
@@ -1966,8 +2058,6 @@ func (m *GetClusterCredentialResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -2048,13 +2138,6 @@ var _ interface {
 func (m *UpdateClusterCredentialReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return UpdateClusterCredentialReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if l := utf8.RuneCountInString(m.GetServerKey()); l < 2 || l > 100 {
@@ -2173,8 +2256,6 @@ func (m *UpdateClusterCredentialResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
@@ -2247,8 +2328,6 @@ func (m *ListClusterCredentialReq) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	if utf8.RuneCountInString(m.GetServerKey()) > 100 {
 		return ListClusterCredentialReqValidationError{
 			field:  "ServerKey",
@@ -2274,6 +2353,20 @@ func (m *ListClusterCredentialReq) Validate() error {
 		return ListClusterCredentialReqValidationError{
 			field:  "ConnectMode",
 			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if m.GetOffset() < 0 {
+		return ListClusterCredentialReqValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetLimit() > 1000 {
+		return ListClusterCredentialReqValidationError{
+			field:  "Limit",
+			reason: "value must be less than or equal to 1000",
 		}
 	}
 
@@ -2343,8 +2436,6 @@ func (m *ListClusterCredentialResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -2566,8 +2657,6 @@ func (m *AddFederatedClusterReq) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for FederationClusterID
 
 	// no validation rules for ClusterID
@@ -2638,8 +2727,6 @@ func (m *AddFederatedClusterResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -2712,13 +2799,6 @@ func (m *CreateNamespaceReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return CreateNamespaceReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 100 {
 		return CreateNamespaceReqValidationError{
 			field:  "Name",
@@ -2748,6 +2828,8 @@ func (m *CreateNamespaceReq) Validate() error {
 	}
 
 	// no validation rules for Labels
+
+	// no validation rules for MaxQuota
 
 	return nil
 }
@@ -2815,8 +2897,6 @@ func (m *CreateNamespaceResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -2887,13 +2967,6 @@ var _ interface {
 func (m *DeleteNamespaceReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return DeleteNamespaceReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 100 {
@@ -2979,21 +3052,9 @@ func (m *DeleteNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
-
-	if v, ok := interface{}(m.GetNs()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return DeleteNamespaceRespValidationError{
-				field:  "Ns",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	return nil
 }
@@ -3062,13 +3123,6 @@ func (m *UpdateNamespaceReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return UpdateNamespaceReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 100 {
 		return UpdateNamespaceReqValidationError{
 			field:  "Name",
@@ -3083,21 +3137,9 @@ func (m *UpdateNamespaceReq) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetProjectID()) > 100 {
-		return UpdateNamespaceReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be at most 100 runes",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
-		return UpdateNamespaceReqValidationError{
-			field:  "BusinessID",
-			reason: "value length must be at most 100 runes",
-		}
-	}
-
 	// no validation rules for Labels
+
+	// no validation rules for MaxQuota
 
 	return nil
 }
@@ -3165,8 +3207,6 @@ func (m *UpdateNamespaceResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -3237,13 +3277,6 @@ var _ interface {
 func (m *GetNamespaceReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return GetNamespaceReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 100 {
@@ -3325,8 +3358,6 @@ func (m *GetNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
@@ -3404,13 +3435,6 @@ var _ interface {
 func (m *ListNamespaceReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return ListNamespaceReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if utf8.RuneCountInString(m.GetFederationClusterID()) > 100 {
@@ -3503,8 +3527,6 @@ func (m *ListNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
@@ -3589,13 +3611,6 @@ var _ interface {
 func (m *CreateNamespaceQuotaReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return CreateNamespaceQuotaReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 2 || l > 100 {
@@ -3695,8 +3710,6 @@ func (m *CreateNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
@@ -3768,13 +3781,6 @@ var _ interface {
 func (m *DeleteNamespaceQuotaReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return DeleteNamespaceQuotaReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 2 || l > 100 {
@@ -3867,21 +3873,9 @@ func (m *DeleteNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
-
-	if v, ok := interface{}(m.GetResourceQuota()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return DeleteNamespaceQuotaRespValidationError{
-				field:  "ResourceQuota",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	return nil
 }
@@ -3948,13 +3942,6 @@ var _ interface {
 func (m *UpdateNamespaceQuotaReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return UpdateNamespaceQuotaReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 2 || l > 100 {
@@ -4047,8 +4034,6 @@ func (m *UpdateNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
@@ -4118,13 +4103,6 @@ var _ interface {
 func (m *GetNamespaceQuotaReq) Validate() error {
 	if m == nil {
 		return nil
-	}
-
-	if m.GetSeq() < 0 {
-		return GetNamespaceQuotaReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 2 || l > 100 {
@@ -4215,8 +4193,6 @@ func (m *GetNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for ErrCode
 
 	// no validation rules for ErrMsg
@@ -4290,13 +4266,6 @@ func (m *ListNamespaceQuotaReq) Validate() error {
 		return nil
 	}
 
-	if m.GetSeq() < 0 {
-		return ListNamespaceQuotaReqValidationError{
-			field:  "Seq",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if utf8.RuneCountInString(m.GetNamespace()) > 100 {
 		return ListNamespaceQuotaReqValidationError{
 			field:  "Namespace",
@@ -4310,6 +4279,10 @@ func (m *ListNamespaceQuotaReq) Validate() error {
 			reason: "value length must be at most 100 runes",
 		}
 	}
+
+	// no validation rules for Offset
+
+	// no validation rules for Limit
 
 	return nil
 }
@@ -4377,8 +4350,6 @@ func (m *ListNamespaceQuotaResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 
@@ -4451,8 +4422,6 @@ func (m *CreateNamespaceWithQuotaReq) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Seq
-
 	// no validation rules for Name
 
 	// no validation rules for FederationClusterID
@@ -4466,6 +4435,8 @@ func (m *CreateNamespaceWithQuotaReq) Validate() error {
 	// no validation rules for ClusterID
 
 	// no validation rules for Region
+
+	// no validation rules for MaxQuota
 
 	// no validation rules for ResourceQuota
 
@@ -4536,8 +4507,6 @@ func (m *CreateNamespaceWithQuotaResp) Validate() error {
 	if m == nil {
 		return nil
 	}
-
-	// no validation rules for Seq
 
 	// no validation rules for ErrCode
 

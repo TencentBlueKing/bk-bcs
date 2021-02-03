@@ -60,7 +60,6 @@ func (ua *UpdateAction) updateCredential() error {
 }
 
 func (ua *UpdateAction) setResp(code uint64, msg string) {
-	ua.resp.Seq = ua.req.Seq
 	ua.resp.ErrCode = code
 	ua.resp.ErrMsg = msg
 }
