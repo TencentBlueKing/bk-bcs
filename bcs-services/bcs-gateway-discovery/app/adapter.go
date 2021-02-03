@@ -640,7 +640,8 @@ func (adp *Adapter) microMesosDriver(module string, svc *registry.Service) (*reg
 	labels["module"] = module
 	labels["service"] = defaultClusterName
 	labels["scheduler"] = "mesos"
-	labels["cluster"] = fmt.Sprintf("BCS-MESOS-%s", items[0])
+	upcaseID := fmt.Sprintf("BCS-MESOS-%s", items[0])
+	labels["cluster"] = upcaseID
 	regSvc := &register.Service{
 		Name:     name,
 		Protocol: "https",
@@ -655,6 +656,9 @@ func (adp *Adapter) microMesosDriver(module string, svc *registry.Service) (*reg
 		Protocol:    "http",
 		Paths:       []string{"/bcsapi/v4/scheduler/mesos/", "/bcsapi/v1/"},
 		PathRewrite: true,
+		Header: map[string]string{
+			defaultClusterIDKey: upcaseID,
+		},
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
