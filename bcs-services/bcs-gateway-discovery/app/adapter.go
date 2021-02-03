@@ -488,7 +488,7 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	rt := register.Route{
 		Name:        name,
 		Protocol:    svcs[0].Scheme,
-		Paths:       []string{fmt.Sprintf("/tunnels/clusters/%s/", upcaseID)},
+		Paths:       []string{fmt.Sprintf("/clusters/%s/", upcaseID)},
 		PathRewrite: true,
 		Service:     name,
 		Plugin: &register.Plugins{

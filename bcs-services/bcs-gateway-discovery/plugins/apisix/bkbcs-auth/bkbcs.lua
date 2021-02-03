@@ -19,11 +19,13 @@ local ngx = ngx
 -- more module definition check https://github.com/Tencent/bk-bcs/blob/master/bcs-common/common/types/serverInfo.go
 local KUBEAGENT = "kubeagent"
 local MESOSDRIVER = "mesosdriver"
+--[[
 local KUBEDRIVER = "kubernetedriver"
 local MESHMANAGER = "meshmanager"
 local LOGMANAGER = "logmanager"
 local STORAGE = "storage"
 local NETWORKDETECTION = "networkdetection"
+]]--
 local CLUSTER_HEADER = "BCS-ClusterID"
 
 -- bcs-user-manager permission verify info
@@ -38,13 +40,7 @@ local userTarget = {
 }
 
 local function is_cluster_resource(mod)
-  return mod == KUBEAGENT or mod == MESOSDRIVER or mod == KUBEDRIVER
-end
-
-local function is_no_cluster_header(mod)
-  return mod == MESHMANAGER or 
-  mod == LOGMANAGER or mod == KUBEAGENT or 
-  mod == NETWORKDETECTION
+  return mod == KUBEAGENT or mod == MESOSDRIVER
 end
 
 -- Parse user-manager url
@@ -168,8 +164,7 @@ function BKUserCli:construct_identity(conf, request)
   end
   -- kubeagent & networkdetection has no ClusterId
   local headers = request.get_headers()
-  if not headers[CLUSTER_HEADER] and 
-  not is_no_cluster_header(conf.module) then
+  if not headers[CLUSTER_HEADER] and is_cluster_resource(conf.module) then
     core.log.error(" user_cli get no BCS-ClusterID from request ", ngx.var.uri)
     return nil, "lost BCS-ClusterID in header"
   end
