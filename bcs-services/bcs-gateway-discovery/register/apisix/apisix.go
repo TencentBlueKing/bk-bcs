@@ -352,7 +352,7 @@ func apisixLimitRequestPlugin() (string, map[string]interface{}) {
 	plgn["conn"] = 1000
 	plgn["burst"] = 500
 	plgn["rejected_code"] = 429
-	plgn["key"] = "client_addr"
+	plgn["key"] = "remote_addr"
 	plgn["default_conn_delay"] = 0.1
 	return "limit-conn", plgn
 }

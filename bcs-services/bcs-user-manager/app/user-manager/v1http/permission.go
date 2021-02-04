@@ -381,7 +381,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			Allowed: allowed,
 			Message: message,
 		})
-		blog.Infof("user %s access to type: %s, action: %s, permission: %s",
+		blog.Infof("user %s access to type: %s, action: %s, permission: %t",
 			user.Name, form.ResourceType, form.Action, allowed)
 		_, _ = response.Write([]byte(data))
 	}

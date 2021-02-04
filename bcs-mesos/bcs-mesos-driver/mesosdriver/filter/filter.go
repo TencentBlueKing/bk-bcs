@@ -19,6 +19,7 @@ import (
 	"net/http"
 )
 
+// NewFilter create general filter
 func NewFilter() *GeneralFilter {
 
 	return &GeneralFilter{
@@ -26,15 +27,18 @@ func NewFilter() *GeneralFilter {
 	}
 }
 
+// GeneralFilter filter slice wrapper
 type GeneralFilter struct {
 	filterFunctions []RequestFilterFunction
 }
 
+// RequestFilterFunction filter function definition
 type RequestFilterFunction interface {
 	//Execute check http request
 	Execute(req *restful.Request) (int, error)
 }
 
+// Filter slice implementation
 func (gf *GeneralFilter) Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	for _, filterFunction := range gf.filterFunctions {
 		errCode, err := filterFunction.Execute(req)
@@ -51,6 +55,7 @@ func (gf *GeneralFilter) Filter(req *restful.Request, resp *restful.Response, ch
 	chain.ProcessFilter(req, resp)
 }
 
+// AppendFilter add filter
 func (gf *GeneralFilter) AppendFilter(filterFunc RequestFilterFunction) {
 	gf.filterFunctions = append(gf.filterFunctions, filterFunc)
 }

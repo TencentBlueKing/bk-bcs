@@ -8,7 +8,8 @@
         "tls": {
             "ca-file": "${caFile}",
             "cert-file": "${clientCertFile}",
-            "key-file": "${clientKeyFile}"
+            "key-file": "${clientKeyFile}",
+            "password": "${clientKeyPassword}"
         },
         "is-external": ${kubeWatchExternal},
         "netservice-zookeepers": "${customNetServiceZK}",

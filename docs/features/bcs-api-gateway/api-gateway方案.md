@@ -832,7 +832,7 @@ curl http://127.0.0.1:8000/apisix/admin/routes/kubeagent-15000 \
   -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -i -d '
 {
   "name": "kubeagent-15000",
-  "uri": "/tunnels/clusters/BCS-K8S-15000/*",
+  "uri": "/clusters/BCS-K8S-15000/*",
   "service_id": "kubeagent-15000",
   "service_protocol": "http",
   "enable_websocket": true,
@@ -841,7 +841,7 @@ curl http://127.0.0.1:8000/apisix/admin/routes/kubeagent-15000 \
       "include_in_response": true
     },
     "proxy-rewrite": {
-      "regex_uri": ["/tunnels/clusters/BCS-K8S-15000/(.*)", "/$1"],
+      "regex_uri": ["/clusters/BCS-K8S-15000/(.*)", "/$1"],
       "scheme": "https",
       "host": "kubeagent-15000.bkbcs.tencent.com",
       "headers": {
@@ -863,7 +863,7 @@ curl http://127.0.0.1:8000/apisix/admin/routes/kube-agent-tunnel \
 {
   "name": "kube-agent-tunnel",
   "uri": "/clusters/*",
-  "service_id": "clustermanager",
+  "service_id": "clustermanager-http",
   "service_protocol": "http",
   "enable_websocket": true,
   "plugins": {
@@ -882,7 +882,7 @@ curl http://127.0.0.1:8000/apisix/admin/routes/mesosdriver-tunnel \
 {
   "name": "mesosdriver-tunnel",
   "uri": "/bcsapi/v4/scheduler/mesos/*",
-  "service_id": "clustermanager",
+  "service_id": "clustermanager-http",
   "service_protocol": "http",
   "enable_websocket": true,
   "plugins": {
