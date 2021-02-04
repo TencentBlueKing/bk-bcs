@@ -16,6 +16,8 @@ package bcsapi
 import (
 	"crypto/tls"
 	"encoding/json"
+
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 )
 
 //! v4 version binding~
@@ -72,4 +74,9 @@ func (c *Client) UserManager() UserManager {
 // Storage client interface
 func (c *Client) Storage() Storage {
 	return NewStorage(c.config)
+}
+
+// ClusterManager grpc cluster manager client
+func (c *Client) ClusterManager() cm.ClusterManagerClient {
+	return NewClusterManager(c.config)
 }
