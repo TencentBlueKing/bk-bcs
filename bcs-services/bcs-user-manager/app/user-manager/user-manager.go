@@ -11,7 +11,7 @@
  *
  */
 
-package user_manager
+package usermanager
 
 import (
 	"encoding/json"
@@ -27,10 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tunnel"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tunnel-handler/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tunnel-handler/mesos"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tunnel-handler/mesos/webconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
@@ -66,38 +62,15 @@ func (u *UserManager) Start() error {
 		return err
 	}
 
-	// start and manage websocket tunnel
-	tunnelServer := tunnel.NewTunnelServer()
-	err = tunnel.StartPeerManager(u.config, tunnelServer)
-	if err != nil {
-		blog.Errorf("failed to start peermanager: %s", err.Error())
-		return err
-	}
-
 	// usermanager api
 	ws := u.httpServ.NewWebService("/usermanager", nil)
 	u.initRouters(ws)
 
-	// mesos api to use websocket tunnel
-	u.httpServ.RegisterWebServer("/mesosdriver/v4", Filter, mesos.GetApiAction())
-
 	router := u.httpServ.GetRouter()
 	webContainer := u.httpServ.GetWebContainer()
 
-	// handle websocket tunnel register
-	router.Handle("/usermanager/v1/websocket/connect", tunnelServer)
-
 	// handle user and cluster manager request
 	router.Handle("/usermanager/{sub_path:.*}", webContainer)
-
-	// handle k8s request with websocket tunnel
-	router.Handle("/tunnels/clusters/{cluster_id}/{sub_path:.*}", k8s.DefaultTunnelProxyDispatcher)
-
-	//handle mesos webconsole request with websocket tunnel
-	router.Handle("/mesosdriver/v4/webconsole/{sub_path:.*}", webconsole.NewWebconsoleProxy())
-
-	//handle mesos request with websocket tunnel
-	router.Handle("/mesosdriver/v4/{sub_path:.*}", webContainer)
 
 	if err := u.httpServ.ListenAndServeMux(u.config.VerifyClientTLS); err != nil {
 		return fmt.Errorf("http ListenAndServe error %s", err.Error())
@@ -114,7 +87,7 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 		resp.WriteHeaderAndEntity(http.StatusUnauthorized, bcshttp.APIRespone{
 			Result:  false,
 			Code:    common.BcsErrApiUnauthorized,
-			Message: "must provide admin token to request with websocket tunnel",
+			Message: "must provide admin token to request with websocket",
 			Data:    nil,
 		})
 		return

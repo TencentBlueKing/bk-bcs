@@ -15,7 +15,6 @@ package v1http
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/metric"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
@@ -25,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
+
 	"github.com/emicklei/go-restful"
 )
 
@@ -276,6 +276,4 @@ func ListTkeCidr(request *restful.Request, response *restful.Response) {
 	cidrCounts := sqlstore.CountTkeCidr()
 	response.WriteEntity(cidrCounts)
 
-	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
-	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }
