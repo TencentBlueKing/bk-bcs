@@ -14,7 +14,6 @@ package namespace
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -47,7 +46,7 @@ func (ga *GetAction) validate() error {
 	return nil
 }
 
-func (ga *GetAction) listQuotas(namespace, federationClusterID string) ([]string, error) {
+func (ga *GetAction) listQuotas(namespace, federationClusterID string) ([]*cmproto.ResourceQuota, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"namespace":           namespace,
 		"federationClusterID": federationClusterID,
@@ -56,13 +55,16 @@ func (ga *GetAction) listQuotas(namespace, federationClusterID string) ([]string
 	if err != nil {
 		return nil, err
 	}
-	var retQuotaList []string
+	var retQuotaList []*cmproto.ResourceQuota
 	for _, quota := range quotas {
-		quotaBytes, err := json.Marshal(quota.ResourceQuota)
-		if err != nil {
-			return nil, err
-		}
-		retQuotaList = append(retQuotaList, string(quotaBytes))
+		retQuotaList = append(retQuotaList, &cmproto.ResourceQuota{
+			Namespace:           quota.Namespace,
+			FederationClusterID: quota.FederationClusterID,
+			ClusterID:           quota.ClusterID,
+			ResourceQuota:       quota.ResourceQuota,
+			CreateTime:          quota.CreateTime.String(),
+			UpdateTime:          quota.UpdateTime.String(),
+		})
 	}
 	return retQuotaList, nil
 }
@@ -91,9 +93,10 @@ func (ga *GetAction) getNamespace() error {
 }
 
 func (ga *GetAction) setResp(code uint64, msg string) {
-	ga.resp.ErrCode = code
-	ga.resp.ErrMsg = msg
-	ga.resp.Ns = ga.ns
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ga.resp.Data = ga.ns
 }
 
 // Handle get namespace request

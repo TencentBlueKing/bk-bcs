@@ -93,8 +93,9 @@ func (da *DeleteAction) deleteFromStore() error {
 }
 
 func (da *DeleteAction) setResp(code uint64, msg string) {
-	da.resp.ErrCode = code
-	da.resp.ErrMsg = msg
+	da.resp.Code = code
+	da.resp.Message = msg
+	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle namespace quota delete request

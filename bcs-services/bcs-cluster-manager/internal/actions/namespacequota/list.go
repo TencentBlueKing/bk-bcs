@@ -29,7 +29,7 @@ type ListAction struct {
 	model     store.ClusterManagerModel
 	req       *cmproto.ListNamespaceQuotaReq
 	resp      *cmproto.ListNamespaceQuotaResp
-	quotaList []string
+	quotaList []*cmproto.ResourceQuota
 }
 
 // NewListAction create new action for list namespace quota
@@ -60,15 +60,23 @@ func (la *ListAction) listQuotas() error {
 		return err
 	}
 	for _, quota := range quotaList {
-		la.quotaList = append(la.quotaList, quota.ResourceQuota)
+		la.quotaList = append(la.quotaList, &cmproto.ResourceQuota{
+			Namespace:           quota.Namespace,
+			FederationClusterID: quota.FederationClusterID,
+			ClusterID:           quota.ClusterID,
+			ResourceQuota:       quota.ResourceQuota,
+			CreateTime:          quota.CreateTime.String(),
+			UpdateTime:          quota.UpdateTime.String(),
+		})
 	}
 	return nil
 }
 
 func (la *ListAction) setResp(code uint64, msg string) {
-	la.resp.ErrCode = code
-	la.resp.ErrMsg = msg
-	la.resp.ResourceQuotaList = la.quotaList
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.quotaList
 }
 
 // Handle handle list quota request

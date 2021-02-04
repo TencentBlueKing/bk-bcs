@@ -78,8 +78,9 @@ func (ua *UpdateAction) updateNamespace() error {
 }
 
 func (ua *UpdateAction) setResp(code uint64, msg string) {
-	ua.resp.ErrCode = code
-	ua.resp.ErrMsg = msg
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle update namespace request

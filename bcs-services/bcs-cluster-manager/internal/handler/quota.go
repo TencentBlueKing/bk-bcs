@@ -33,7 +33,7 @@ func (cm *ClusterManager) CreateNamespaceQuota(ctx context.Context,
 	start := time.Now()
 	ca := namespacequota.NewCreateAction(cm.model, cm.kubeOp)
 	ca.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("createquota", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("createquota", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: createquota", reqID)
 	blog.V(3).Infof("reqID: %s, action: createquota, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -49,7 +49,7 @@ func (cm *ClusterManager) UpdateNamespaceQuota(ctx context.Context,
 	start := time.Now()
 	ua := namespacequota.NewUpdateAction(cm.model, cm.kubeOp)
 	ua.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("updatequota", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("updatequota", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: updatequota", reqID)
 	blog.V(3).Infof("reqID: %s, action: updatequota, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -65,7 +65,7 @@ func (cm *ClusterManager) DeleteNamespaceQuota(ctx context.Context,
 	start := time.Now()
 	ua := namespacequota.NewDeleteAction(cm.model, cm.kubeOp)
 	ua.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("deletequota", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("deletequota", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: deletequota", reqID)
 	blog.V(3).Infof("reqID: %s, action: deletequota, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -81,7 +81,7 @@ func (cm *ClusterManager) GetNamespaceQuota(ctx context.Context,
 	start := time.Now()
 	ga := namespacequota.NewGetAction(cm.model)
 	ga.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("getquota", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("getquota", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: getquota", reqID)
 	blog.V(3).Infof("reqID: %s, action: getquota, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -97,7 +97,7 @@ func (cm *ClusterManager) ListNamespaceQuota(ctx context.Context,
 	start := time.Now()
 	la := namespacequota.NewListAction(cm.model)
 	la.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("listquota", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("listquota", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: listquota", reqID)
 	blog.V(3).Infof("reqID: %s, action: listquota, req %v, resp %v", reqID, req, resp)
 	return nil

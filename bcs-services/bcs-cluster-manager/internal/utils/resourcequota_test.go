@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package namespacequota
+package utils
 
 import (
 	"math"
@@ -67,8 +67,7 @@ func TestCalculateResourceAllocRate(t *testing.T) {
 		},
 	}
 
-	ca := &CreateAction{}
-	rate, err := ca.calculateResourceAllocRate(quotaList, nodeList)
+	rate, err := CalculateResourceAllocRate(quotaList, nodeList)
 	if err != nil {
 		t.Error(err.Error())
 	}

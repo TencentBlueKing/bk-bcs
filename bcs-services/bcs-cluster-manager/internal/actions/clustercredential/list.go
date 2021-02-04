@@ -83,9 +83,10 @@ func (la *ListAction) listClusterCredential() error {
 }
 
 func (la *ListAction) setResp(code uint64, msg string) {
-	la.resp.ErrCode = code
-	la.resp.ErrMsg = msg
-	la.resp.ClusterCredentialList = la.clusterCredentialList
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.clusterCredentialList
 }
 
 // Handle handle list cluster credential

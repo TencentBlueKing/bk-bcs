@@ -27,7 +27,7 @@ type GetAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.GetNamespaceQuotaReq
 	resp  *cmproto.GetNamespaceQuotaResp
-	quota string
+	quota *cmproto.ResourceQuota
 }
 
 // NewGetAction create action for get namespace quota
@@ -49,14 +49,22 @@ func (ga *GetAction) getQuota() error {
 	if err != nil {
 		return err
 	}
-	ga.quota = quota.ResourceQuota
+	ga.quota = &cmproto.ResourceQuota{
+		Namespace:           quota.Namespace,
+		FederationClusterID: quota.FederationClusterID,
+		ClusterID:           quota.ClusterID,
+		ResourceQuota:       quota.ResourceQuota,
+		CreateTime:          quota.CreateTime.String(),
+		UpdateTime:          quota.UpdateTime.String(),
+	}
 	return nil
 }
 
 func (ga *GetAction) setResp(code uint64, msg string) {
-	ga.resp.ErrCode = code
-	ga.resp.ErrMsg = msg
-	ga.resp.ResourceQuota = ga.quota
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ga.resp.Data = ga.quota
 }
 
 // Handle handle get namespace quota request

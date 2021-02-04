@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -63,8 +64,11 @@ func setCfg(op *MesosWatchOptions) {
 	if len(cfg.NetServiceZK) == 0 {
 		cfg.NetServiceZK = cfg.RegDiscvSvr
 	}
-	//etcd registry feature
+	// etcd registry feature
 	cfg.Etcd = op.Etcd
+	storageAddr := op.StorageAddress
+	storageAddr = strings.Replace(storageAddr, ";", ",", -1)
+	cfg.StorageAddresses = strings.Split(storageAddr, ",")
 }
 
 func main() {
@@ -114,5 +118,9 @@ type MesosWatchOptions struct {
 	// reuse RegDiscvSvr by default.
 	NetServiceZK string `json:"netservice_zookeeper" value:"" usage:"netservice discovery zookeeper address"`
 
+	// Etcd etcd options for service discovery
 	Etcd registry.CMDOptions `json:"etcdRegistry"`
+
+	// StorageAddress storage address
+	StorageAddress string `json:"storage_address" value:"" usage:"storage address"`
 }

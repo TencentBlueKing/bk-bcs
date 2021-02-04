@@ -38,9 +38,10 @@ type DeleteAction struct {
 }
 
 // NewDeleteAction delete namespace
-func NewDeleteAction(model store.ClusterManagerModel) *DeleteAction {
+func NewDeleteAction(model store.ClusterManagerModel, k8sop *clusterops.K8SOperator) *DeleteAction {
 	return &DeleteAction{
 		model: model,
+		k8sop: k8sop,
 	}
 }
 
@@ -106,8 +107,9 @@ func (da *DeleteAction) deleteNamespaceFromStore() error {
 }
 
 func (da *DeleteAction) setResp(code uint64, msg string) {
-	da.resp.ErrCode = code
-	da.resp.ErrMsg = msg
+	da.resp.Code = code
+	da.resp.Message = msg
+	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle delete namespace reqeust

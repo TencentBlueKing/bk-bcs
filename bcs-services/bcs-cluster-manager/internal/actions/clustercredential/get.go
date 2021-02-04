@@ -70,9 +70,10 @@ func (ga *GetAction) getCredential() error {
 }
 
 func (ga *GetAction) setResp(code uint64, msg string) {
-	ga.resp.ErrCode = code
-	ga.resp.ErrMsg = msg
-	ga.resp.ClusterCredential = ga.clusterCred
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ga.resp.Data = ga.clusterCred
 }
 
 // Handle handle get cluster credential

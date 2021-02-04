@@ -29,10 +29,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	k8scorev1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -118,46 +117,6 @@ func (ca *CreateAction) listQuotasByCluster(cluster string) ([]types.NamespaceQu
 	return quotaList, nil
 }
 
-// calculate resource allocate rate, (existed resource quota) / (cluster total resource)
-func (ca *CreateAction) calculateResourceAllocRate(
-	quotaList []types.NamespaceQuota, nodeList *k8scorev1.NodeList) (float32, error) {
-	if nodeList == nil || len(nodeList.Items) == 0 {
-		return math.MaxFloat32, nil
-	}
-	totalAllocatedCPU := k8sresource.NewMilliQuantity(0, k8sresource.BinarySI)
-	for _, quota := range quotaList {
-		if len(quota.ResourceQuota) == 0 {
-			continue
-		}
-		tmpQuota := &k8scorev1.ResourceQuota{}
-		if err := json.Unmarshal([]byte(quota.ResourceQuota), tmpQuota); err != nil {
-			blog.Warnf("decode quota %s to k8s ResourceQuota failed, err %s", quota, err.Error())
-			continue
-		}
-		if tmpQuota.Spec.Hard == nil {
-			continue
-		}
-		cpuValue := tmpQuota.Spec.Hard.Cpu()
-		tmpValue := cpuValue.MilliValue()
-		blog.Infof("%d", tmpValue)
-		totalAllocatedCPU.Add(*cpuValue)
-	}
-	totalNodeCPU := k8sresource.NewMilliQuantity(0, k8sresource.BinarySI)
-	for _, node := range nodeList.Items {
-		if node.Status.Allocatable == nil {
-			continue
-		}
-		cpuValue := node.Status.Allocatable.Cpu()
-		tmpValue := cpuValue.MilliValue()
-		blog.Infof("%d", tmpValue)
-		totalNodeCPU.Add(*cpuValue)
-	}
-	if totalNodeCPU.CmpInt64(0) == -1 {
-		return math.MaxFloat32, nil
-	}
-	return float32(totalAllocatedCPU.MilliValue()) * 1.0 / float32(totalNodeCPU.MilliValue()) * 1.0, nil
-}
-
 // allocate one cluster for the request resource quota
 func (ca *CreateAction) allocateOneCluster() error {
 	// 计算已经分配的quota与集群总资源的比值，最后算出比值最小的集群
@@ -174,7 +133,6 @@ func (ca *CreateAction) allocateOneCluster() error {
 	}
 	minResRate := float32(math.MaxFloat32)
 	targetCluster := ""
-	blog.Infof("cluster list %v", clusterList)
 	for _, cluster := range clusterList {
 		nodes, err := ca.listNodesFromCluster(cluster.ClusterID)
 		if err != nil {
@@ -184,7 +142,7 @@ func (ca *CreateAction) allocateOneCluster() error {
 		if err != nil {
 			return err
 		}
-		tmpRate, err := ca.calculateResourceAllocRate(quotas, nodes)
+		tmpRate, err := utils.CalculateResourceAllocRate(quotas, nodes)
 		if err != nil {
 			return err
 		}
@@ -193,41 +151,9 @@ func (ca *CreateAction) allocateOneCluster() error {
 		}
 	}
 	if len(targetCluster) == 0 {
-		return fmt.Errorf("no found target cluster")
+		return fmt.Errorf("can not find a suitable cluster")
 	}
 	ca.allocatedCluster = targetCluster
-	return nil
-}
-
-// ensure namespace and namespace quota to cluster
-func (ca *CreateAction) createQuotaToCluster() error {
-	if ca.quota == nil {
-		return fmt.Errorf("request quota is empty")
-	}
-	kubeClient, err := ca.k8sop.GetClusterClient(ca.allocatedCluster)
-	if err != nil {
-		return err
-	}
-	// ensure namespace
-	_, err = kubeClient.CoreV1().Namespaces().Get(ca.ctx, ca.ns.Name, metav1.GetOptions{})
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			_, err = kubeClient.CoreV1().Namespaces().Create(ca.ctx, &k8scorev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:   ca.ns.Name,
-					Labels: ca.ns.Labels,
-				},
-			}, metav1.CreateOptions{})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	_, err = kubeClient.CoreV1().ResourceQuotas(ca.req.Namespace).Create(ca.ctx, ca.quota, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -250,9 +176,12 @@ func (ca *CreateAction) createQuotaToStore() error {
 }
 
 func (ca *CreateAction) setResp(code uint64, msg string) {
-	ca.resp.ErrCode = code
-	ca.resp.ErrMsg = msg
-	ca.resp.ClusterID = ca.allocatedCluster
+	ca.resp.Code = code
+	ca.resp.Message = msg
+	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ca.resp.Data = &cmproto.CreateNamespaceQuotaResp_CreateNamespaceQuotaRespData{
+		ClusterID: ca.allocatedCluster,
+	}
 }
 
 // Handle handle namespace quota request
@@ -298,7 +227,12 @@ func (ca *CreateAction) Handle(
 		return
 	}
 
-	if err := ca.createQuotaToCluster(); err != nil {
+	if err := utils.CreateQuotaToCluster(ca.ctx, ca.k8sop, ca.allocatedCluster, &k8scorev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   ca.ns.Name,
+			Labels: ca.ns.Labels,
+		},
+	}, ca.quota); err != nil {
 		ca.setResp(types.BcsErrClusterManagerK8SOpsFailed, err.Error())
 		return
 	}

@@ -75,8 +75,9 @@ func (ca *CreateAction) createCluster() error {
 }
 
 func (ca *CreateAction) setResp(code uint64, msg string) {
-	ca.resp.ErrCode = code
-	ca.resp.ErrMsg = msg
+	ca.resp.Code = code
+	ca.resp.Message = msg
+	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle create cluster request

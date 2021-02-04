@@ -60,8 +60,9 @@ func (ua *UpdateAction) updateCredential() error {
 }
 
 func (ua *UpdateAction) setResp(code uint64, msg string) {
-	ua.resp.ErrCode = code
-	ua.resp.ErrMsg = msg
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle update cluster credential
