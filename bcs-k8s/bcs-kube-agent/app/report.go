@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 
@@ -39,7 +40,6 @@ import (
 const (
 	defaultNamespace   = "default"
 	clusterServiceName = "kubernetes"
-	kubeAgentModule    = "kube-agent"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -76,7 +76,7 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 		clusterInfoParams := ClusterInfoParams{
 			ServerKey:     clusterID,
 			ClusterID:     clusterID,
-			ClientModule:  kubeAgentModule,
+			ClientModule:  modules.BCSModuleKubeagent,
 			ServerAddress: serverAddresses,
 			CaCertData:    string(cfg.CAData),
 			UserToken:     cfg.BearerToken,
