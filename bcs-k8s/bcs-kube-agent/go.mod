@@ -7,6 +7,9 @@ replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	k8s.io/api => k8s.io/api v0.18.6
+	k8s.io/client-go => k8s.io/client-go v0.18.6
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.6
+	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0
 )
 
 require (
