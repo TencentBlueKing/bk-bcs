@@ -10,24 +10,26 @@
  * limitations under the License.
  */
 
-package common
+package handler
 
-// IsEngineTypeValid is engine type valid
-func IsEngineTypeValid(engine string) bool {
-	switch engine {
-	case ClusterEngineTypeMesos, ClusterEngineTypeK8s:
-		return true
-	default:
-		return false
-	}
-}
+import (
+	"context"
+	"fmt"
 
-// IsClusterTypeValid to see if cluster type is valid
-func IsClusterTypeValid(clusterType string) bool {
-	switch clusterType {
-	case ClusterTypeFederation, ClusterTypeSingle:
-		return true
-	default:
-		return false
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	grpcmeta "google.golang.org/grpc/metadata"
+)
+
+func requestIDFromContext(ctx context.Context) (string, error) {
+	meta, ok := grpcmeta.FromIncomingContext(ctx)
+	if !ok {
+		blog.Warnf("get grpc metadata from context failed")
+		return "", fmt.Errorf("get grpc metadata from context failed")
 	}
+	requestIDStrs := meta.Get("X-Request-Id")
+	if len(requestIDStrs) == 0 {
+		return "", nil
+	}
+	return requestIDStrs[0], nil
 }

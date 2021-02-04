@@ -82,6 +82,7 @@ func (ga *GetAction) getNamespace() error {
 		ProjectID:           ns.ProjectID,
 		BusinessID:          ns.BusinessID,
 		Labels:              ns.Labels,
+		MaxQuota:            ns.MaxQuota,
 		CreateTime:          ns.CreateTime.String(),
 		UpdateTime:          ns.UpdateTime.String(),
 		QuotaList:           quotaList,
@@ -90,7 +91,6 @@ func (ga *GetAction) getNamespace() error {
 }
 
 func (ga *GetAction) setResp(code uint64, msg string) {
-	ga.resp.Seq = ga.req.Seq
 	ga.resp.ErrCode = code
 	ga.resp.ErrMsg = msg
 	ga.resp.Ns = ga.ns

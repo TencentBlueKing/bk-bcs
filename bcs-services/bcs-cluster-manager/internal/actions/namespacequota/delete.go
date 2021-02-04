@@ -81,6 +81,10 @@ func (da *DeleteAction) deleteFromCluster() error {
 	if err != nil {
 		return err
 	}
+	err = kubeClient.CoreV1().Namespaces().Delete(da.ctx, da.req.Namespace, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -89,7 +93,6 @@ func (da *DeleteAction) deleteFromStore() error {
 }
 
 func (da *DeleteAction) setResp(code uint64, msg string) {
-	da.resp.Seq = da.req.Seq
 	da.resp.ErrCode = code
 	da.resp.ErrMsg = msg
 }

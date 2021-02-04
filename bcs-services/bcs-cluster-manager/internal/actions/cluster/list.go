@@ -66,6 +66,9 @@ func (la *ListAction) listCluster() error {
 	if len(la.req.BusinessID) != 0 {
 		condM["businessID"] = la.req.BusinessID
 	}
+	if len(la.req.Environment) != 0 {
+		condM["environment"] = la.req.Environment
+	}
 	if len(la.req.EngineType) != 0 {
 		condM["engineType"] = la.req.EngineType
 	}
@@ -99,7 +102,6 @@ func (la *ListAction) listCluster() error {
 }
 
 func (la *ListAction) setResp(code uint64, msg string) {
-	la.resp.Seq = la.req.Seq
 	la.resp.ErrCode = code
 	la.resp.ErrMsg = msg
 	la.resp.ClusterList = la.clusterList

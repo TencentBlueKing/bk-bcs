@@ -20,7 +20,7 @@ service ClusterManager {
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "创建Cluster"
+      description : "创建Cluster，集群类型兼容联邦集群和独立集群"
       summary : "创建Cluster"
     };
   }
@@ -31,7 +31,7 @@ service ClusterManager {
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "更新Cluster"
+      description : "更新Cluster信息"
       summary : "更新Cluster"
     };
   }
@@ -41,7 +41,7 @@ service ClusterManager {
       delete : "/clustermanager/v1/cluster/{clusterID}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "删除Cluster"
+      description : "删除特定Cluster"
       summary : "删除Cluster"
     };
   }
@@ -51,7 +51,7 @@ service ClusterManager {
       get : "/clustermanager/v1/cluster/{clusterID}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "查询Cluster"
+      description : "查询指定ClusterID的集群信息"
       summary : "查询Cluster"
     };
   }
@@ -61,7 +61,8 @@ service ClusterManager {
       get : "/clustermanager/v1/cluster"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "查询Cluster列表"
+      description : "根据查询条件过滤Cluster列表，如果某项条件值为空，则忽略此"
+                    "条件。如果所有条件都为空，则默认查询所有集群"
       summary : "查询Cluster列表"
     };
   }
@@ -72,7 +73,7 @@ service ClusterManager {
       get : "/clustermanager/v1/clustercredential/{serverKey}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "查询ClusterCredential详情"
+      description : "根据提供的ServerKey查询ClusterCredential详情"
       summary : "查询ClusterCredential详情"
     };
   }
@@ -84,8 +85,19 @@ service ClusterManager {
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "更新ClusterCredential"
+      description : "指定更新ClusterCredential"
       summary : "更新ClusterCredential详情"
+    };
+  }
+
+  rpc DeleteClusterCredential(DeleteClusterCredentialReq)
+      returns (DeleteClusterCredentialResp) {
+    option (google.api.http) = {
+      delete : "/clustermanager/v1/clustercredential/{serverKey}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除ClusterCredential"
+      summary : "删除ClusterCredential"
     };
   }
 
@@ -95,7 +107,7 @@ service ClusterManager {
       get : "/clustermanager/v1/clustercredential"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "查询ClusterCredential列表"
+      description : "根据查询条件查询ClusterCredential列表"
       summary : "查询ClusterCredential列表"
     };
   }
@@ -179,11 +191,15 @@ service ClusterManager {
   rpc CreateNamespaceQuota(CreateNamespaceQuotaReq)
       returns (CreateNamespaceQuotaResp) {
     option (google.api.http) = {
-      post : "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
+      post :
+          "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "创建namespacequota"
+      description :
+          "创建namespacequota，如果指定子集群clusterID，则在指定"
+          "子集群创建ResourceQuota，如果未指定子集群clusterID，则根据指定的re"
+          "gion系统自动分配子集群clusterID"
       summary : "创建namespacequota"
     };
   }
@@ -191,7 +207,8 @@ service ClusterManager {
   rpc UpdateNamespaceQuota(UpdateNamespaceQuotaReq)
       returns (UpdateNamespaceQuotaResp) {
     option (google.api.http) = {
-      put : "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
+      put :
+          "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -203,7 +220,8 @@ service ClusterManager {
   rpc DeleteNamespaceQuota(DeleteNamespaceQuotaReq)
       returns (DeleteNamespaceQuotaResp) {
     option (google.api.http) = {
-      delete : "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
+      delete :
+          "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "删除namespacequota"
@@ -213,7 +231,8 @@ service ClusterManager {
 
   rpc GetNamespaceQuota(GetNamespaceQuotaReq) returns (GetNamespaceQuotaResp) {
     option (google.api.http) = {
-      get : "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
+      get :
+          "/clustermanager/v1/namespacequota/{federationClusterID}/{namespace}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询namespacequota"
@@ -262,8 +281,6 @@ message Cluster {
   repeated string operators = 14;
   string createTime = 15;
   string updateTime = 16;
-  string status = 17;
-  string message = 18;
 }
 
 message ClusterCredential {
@@ -285,9 +302,10 @@ message Namespace {
   string projectID = 3;
   string businessID = 4;
   map<string, string> labels = 5;
-  string createTime = 6;
-  string updateTime = 7;
-  repeated string quotaList = 8;
+  string maxQuota = 6;
+  string createTime = 7;
+  string updateTime = 8;
+  repeated string quotaList = 9;
 }
 
 message Quantity { string string = 1; }
@@ -333,13 +351,13 @@ message CreateClusterReq {
       title : "CreateClusterReq"
       description : "创建集群请求"
       required : [
-        "seq",
         "clusterID",
         "clusterName",
         "provider",
         "region",
         "projectID",
         "businessID",
+        "environment",
         "engineType",
         "isExclusive",
         "clusterType",
@@ -349,98 +367,97 @@ message CreateClusterReq {
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string clusterID = 2 [
+  string clusterID = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
-      description : "集群ID"
+      description : "集群ID，例如BCS-K8S-000000"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string clusterName = 3 [
+  string clusterName = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
     },
     (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string provider = 4 [
+  string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "provider",
-      description : "集群提供者，[tencentcloud, aws, local]"
+      description : "集群提供者，例如[tencentcloud, aws, local]"
     },
     (validate.rules).string.max_len = 100
   ];
-  string region = 5 [
+  string region = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "region",
-      description : "集群区域"
+      description : "集群所在地域"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string vpcID = 6 [
+  string vpcID = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "vpcID",
       description : "集群私有网络id，云上集群填写"
     },
     (validate.rules).string.max_len = 100
   ];
-  string projectID = 7 [
+  string projectID = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "projectID",
       description : "项目id"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string businessID = 8 [
+  string businessID = 7 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "businessID",
-      description : "业务id"
+      description : "CMDB业务id"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string environment = 9 [
+  string environment = 8 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "environment",
-      description : "环境, [prod, debug]"
+      description : "集群环境, 例如[prod, debug, test]"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string engineType = 10 [
+  string engineType = 9 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "engineType",
       description : "引擎类型, [k8s, mesos]"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  bool isExclusive = 11
+  bool isExclusive = 10
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "isExclusive",
         description : "是否为业务独占集群"
       } ];
-  string clusterType = 12 [
+  string clusterType = 11 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterType",
-      description : "集群类型, [federation, single]"
+      description : "集群类型, 例如[federation, single], "
+                    "federation表示为联邦集群，single表示独立集群"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  map<string, string> labels = 13 [
+  map<string, string> labels = 12 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "labels",
       description : "集群的labels，用于携带额外的信息"
     },
     (validate.rules).map.max_pairs = 20
   ];
-  repeated string operators = 14 [
+  repeated string operators = 13 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "labels",
+      title : "operators",
       description : "集群管理员列表"
     },
     (validate.rules).repeated .max_items = 100
@@ -452,20 +469,16 @@ message CreateClusterResp {
     json_schema : {
       title : "CreateClusterResp"
       description : "创建集群的返回"
-      required : [ "seq", "errCode", "errMsg" ]
+      required : [ "errCode", "errMsg" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
@@ -477,25 +490,19 @@ message DeleteClusterReq {
     json_schema : {
       title : "DeleteClusterReq"
       description : "删除集群请求"
-      required : [ "seq", "clusterID", "region" ]
+      required : [ "clusterID" ]
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string clusterID = 2 [
+  string clusterID = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
       description : "集群ID"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  bool isForced = 3
+  bool isForced = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "isForced",
         description : "是否强制删除，强制删除会删除级联资源"
@@ -507,28 +514,19 @@ message DeleteClusterResp {
     json_schema : {
       title : "DeleteClusterResp"
       description : "删除集群的返回"
-      required : [ "seq", "errCode", "errMsg", "cluster" ]
+      required : [ "errCode", "errMsg" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
-      } ];
-  Cluster cluster = 4
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "cluster",
-        description : "集群信息"
       } ];
 }
 
@@ -538,13 +536,13 @@ message UpdateClusterReq {
       title : "UpdateClusterReq"
       description : "更新集群信息请求"
       required : [
-        "seq",
         "clusterID",
         "clusterName",
         "provider",
         "region",
         "projectID",
         "businessID",
+        "environment",
         "engineType",
         "isExclusive",
         "clusterType",
@@ -554,96 +552,95 @@ message UpdateClusterReq {
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string clusterID = 2 [
+  string clusterID = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
-      description : "集群ID"
+      description : "集群ID，例如BCS-K8S-000000"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string clusterName = 3 [
+  string clusterName = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
     },
     (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string provider = 4 [
+  string provider = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "provider",
       description : "集群提供者，[tencentcloud, aws, local]"
     },
     (validate.rules).string.max_len = 100
   ];
-  string region = 5 [
+  string region = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "region",
       description : "集群区域"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string vpcID = 6 [
+  string vpcID = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "vpcID",
       description : "集群私有网络id，云上集群填写"
     },
     (validate.rules).string.max_len = 100
   ];
-  string projectID = 7 [
+  string projectID = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "projectID",
       description : "项目id"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string businessID = 8 [
+  string businessID = 7 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "businessID",
       description : "业务id"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string environment = 9 [
+  string environment = 8 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "environment",
-      description : "环境, [prod, debug]"
+      description : "集群环境, 例如[prod, debug, test]"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  string engineType = 10 [
+  string engineType = 9 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "engineType",
       description : "引擎类型, [k8s, mesos]"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  bool isExclusive = 11
+  bool isExclusive = 10
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "isExclusive",
         description : "是否为业务独占集群"
       } ];
-  string clusterType = 12 [
+  string clusterType = 11 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterType",
-      description : "集群类型, [federation, single]"
+      description : "集群类型, 例如[federation, single], "
+                    "federation表示为联邦集群，single表示独立集群"
     },
-    (validate.rules).string.max_len = 100
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
-  map<string, string> labels = 13 [
+  map<string, string> labels = 12 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "labels",
       description : "集群的labels，用于携带额外的信息"
     },
     (validate.rules).map.max_pairs = 20
   ];
-  repeated string operators = 14 [
+  repeated string operators = 13 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "labels",
       description : "集群管理员列表"
@@ -657,20 +654,16 @@ message UpdateClusterResp {
     json_schema : {
       title : "UpdateClusterResp"
       description : "更新集群信息返回"
-      required : [ "seq", "errCode", "errMsg" ]
+      required : [ "errCode", "errMsg" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
@@ -682,23 +675,17 @@ message GetClusterReq {
     json_schema : {
       title : "GetClusterReq"
       description : "查询集群请求"
-      required : [ "seq", "clusterID", "region" ]
+      required : [ "clusterID" ]
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
   string clusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
       description : "集群ID"
     },
-    (validate.rules).string = {min_len : 2, max_len : 100}
+    (validate.rules).string =
+        {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-_]+$"}
   ];
 }
 
@@ -707,25 +694,21 @@ message GetClusterResp {
     json_schema : {
       title : "GetClusterResp"
       description : "查询集群返回"
-      required : [ "seq", "errCode", "errMsg", "cluster" ]
+      required : [ "errCode", "errMsg", "cluster" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
       } ];
-  Cluster cluster = 4
+  Cluster cluster = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "集群信息"
@@ -736,55 +719,56 @@ message ListClusterReq {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListClusterReq"
-      description : "查询集群列表请求"
-      required : [ "seq" ]
+      description : "利用条件过滤集群列表请求，查询条件为And关系，如果某项查询"
+                    "条件值为空，则忽略不会用此条件过滤"
+      required : []
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string clusterName = 2 [
+  string clusterName = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterName",
       description : "集群名称"
     },
     (validate.rules).string.max_len = 100
   ];
-  string provider = 3
+  string provider = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "provider",
         description : "集群提供者"
       } ];
-  string region = 4 [
+  string region = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "region",
       description : "区域"
     },
     (validate.rules).string.max_len = 100
   ];
-  string vpcID = 5 [
+  string vpcID = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "vpcID",
       description : "集群私有网络id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string projectID = 6 [
+  string projectID = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "projectID",
       description : "项目id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string businessID = 7 [
+  string businessID = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "businessID",
       description : "业务id"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  string environment = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "environment",
+      description : "集群环境"
     },
     (validate.rules).string.max_len = 100
   ];
@@ -816,25 +800,21 @@ message ListClusterResp {
     json_schema : {
       title : "ListClusterResp"
       description : "查询集群列表返回"
-      required : [ "seq", "errCode", "errMsg", "clusterList" ]
+      required : [ "errCode", "errMsg", "clusterList" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
       } ];
-  repeated Cluster clusterList = 4
+  repeated Cluster clusterList = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "clusterList",
         description : "集群信息列表"
@@ -846,15 +826,11 @@ message GetClusterCredentialReq {
     json_schema : {
       title : "GetClusterCredentialReq"
       description : "查询集群Credential请求"
-      required : [ "seq", "serverKey" ]
+      required : [ "serverKey" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  string serverKey = 2 [
+  string serverKey = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "serverKey",
       description : "上报信息的组件的key，对于kube-"
@@ -870,25 +846,21 @@ message GetClusterCredentialResp {
     json_schema : {
       title : "GetClusterCredentialResp"
       description : "查询集群Credential返回"
-      required : [ "seq", "errCode", "errMsg", "clusterCredential" ]
+      required : [ "errCode", "errMsg", "clusterCredential" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
       } ];
-  ClusterCredential clusterCredential = 4
+  ClusterCredential clusterCredential = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "clusterCredential",
         description : "集群注册的证书信息"
@@ -901,7 +873,6 @@ message UpdateClusterCredentialReq {
       title : "UpdateClusterCredentialReq"
       description : "更新集群Credential请求"
       required : [
-        "seq",
         "clusterID",
         "clientModule",
         "serverAddress",
@@ -911,63 +882,99 @@ message UpdateClusterCredentialReq {
       ]
     }
   };
-  uint64 seq = 1 [
+
+  string serverKey = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
+      title : "serverKey",
+      description : "上报信息的组件的key，对于kube-"
+                    "agent，是clusterID，对于mesos-driver和kube-"
+                    "driver，是有IP信息"
     },
-    (validate.rules).uint64.gte = 0
+    (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string serverKey = 2
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "serverKey",
-        description : "上报信息的组件的key，对于kube-"
-                      "agent，是clusterID，对于mesos-driver和kube-"
-                      "driver，是有IP信息"
-      }, (validate.rules).string = {min_len : 2, max_len : 100} ];
-  string clusterID = 3
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "clusterID",
-        description : "集群ID"
-      }, (validate.rules).string = {min_len : 2, max_len : 100} ];
-  string clientModule = 4
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "clientModule",
-        description : "上报的模块名字"
-      }, (validate.rules).string = {min_len : 2, max_len : 100} ];
-  string serverAddress = 5
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "serverAddress",
-        description : "集群服务地址"
-      }, (validate.rules).string = {min_len : 2, max_len : 2048} ];
-  string caCertData = 6
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "caCertData",
-        description : "集群CA数据"
-      }, (validate.rules).string.max_len = 4096 ];
-  string userToken = 7
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "userToken",
-        description : "访问集群的token信息"
-      }, (validate.rules).string.max_len = 2048 ];
-  string clusterDomain = 8
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "clusterDomain",
-        description : "集群域名"
-      }, (validate.rules).string.max_len = 2048 ];
+  string clusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 100}
+  ];
+  string clientModule = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clientModule",
+      description : "上报的模块名字"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 100}
+  ];
+  string serverAddress = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "serverAddress",
+      description : "集群服务地址"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 2048}
+  ];
+  string caCertData = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "caCertData",
+      description : "集群CA数据"
+    },
+    (validate.rules).string.max_len = 4096
+  ];
+  string userToken = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "userToken",
+      description : "访问集群的token信息"
+    },
+    (validate.rules).string.max_len = 2048
+  ];
+  string clusterDomain = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterDomain",
+      description : "集群域名"
+    },
+    (validate.rules).string.max_len = 2048
+  ];
 }
 
 message UpdateClusterCredentialResp {
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "返回错误信息"
+      } ];
+}
+
+message DeleteClusterCredentialReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteClusterCredentialReq"
+      description : "删除集群注册的证书信息"
+      required : [ "serverKey" ]
+    }
+  };
+  string serverKey = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "serverKey",
+      description : "上报信息的组件的key，对于kube-"
+                    "agent，是clusterID，对于mesos-driver和kube-"
+                    "driver，是有IP信息"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 100}
+  ];
+}
+
+message DeleteClusterCredentialResp {
+  uint64 errCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "返回错误码"
+      } ];
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
@@ -979,15 +986,11 @@ message ListClusterCredentialReq {
     json_schema : {
       title : "ListClusterCredentialReq"
       description : "查询集群注册的证书信息列表"
-      required : [ "seq" ]
+      required : []
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  string serverKey = 2 [
+  string serverKey = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "serverKey",
       description : "集群注册信息的key，对于kubeagent是clusterID，对于mesosdr"
@@ -995,26 +998,40 @@ message ListClusterCredentialReq {
     },
     (validate.rules).string.max_len = 100
   ];
-  string clusterID = 3 [
+  string clusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
       description : "集群ID"
     },
     (validate.rules).string.max_len = 100
   ];
-  string clientMode = 4 [
+  string clientMode = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clientMode",
       description : "客户端模式，kubeagent、kubedriver、mesosdriver"
     },
     (validate.rules).string.max_len = 100
   ];
-  string connectMode = 5 [
+  string connectMode = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "connectMode",
       description : "链接模式，直联或者隧道"
     },
     (validate.rules).string.max_len = 100
+  ];
+  uint64 offset = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "offset",
+      description : "查询偏移量"
+    },
+    (validate.rules).uint64.gte = 0
+  ];
+  uint64 limit = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "查询限制数量"
+    },
+    (validate.rules).uint64.lte = 1000
   ];
 }
 
@@ -1023,14 +1040,10 @@ message ListClusterCredentialResp {
     json_schema : {
       title : "ListClusterCredentialResp"
       description : "查询集群注册的证书信息列表"
-      required : [ "seq", "errCode", "errMsg", "clusterCredentialList" ]
+      required : [ "errCode", "errMsg", "clusterCredentialList" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
   uint64 errCode = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
@@ -1053,15 +1066,13 @@ message InitFederationClusterReq {}
 message InitFederationClusterResp {}
 
 message AddFederatedClusterReq {
-  uint64 seq = 1;
-  string federationClusterID = 2;
-  string clusterID = 3;
+  string federationClusterID = 1;
+  string clusterID = 2;
 }
 
 message AddFederatedClusterResp {
-  uint64 seq = 1;
-  uint64 errCode = 2;
-  string errMsg = 3;
+  uint64 errCode = 1;
+  string errMsg = 2;
 }
 
 message CreateNamespaceReq {
@@ -1070,7 +1081,6 @@ message CreateNamespaceReq {
       title : "CreateNamespaceReq"
       description : "创建命名空间请求"
       required : [
-        "seq",
         "name",
         "federationClusterID",
         "projectID",
@@ -1080,299 +1090,17 @@ message CreateNamespaceReq {
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string name = 2 [
+  string name = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "name",
       description : "命名空间名字"
     },
     (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string federationClusterID = 3 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "federationClusterID",
-      description : "命名空间所在联邦集群id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-  string projectID = 4 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "projectID",
-      description : "项目id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-  string businessID = 5 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "businessID",
-      description : "业务id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-  map<string, string> labels = 6
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "labels",
-        description : "标签"
-      } ];
-}
-
-message CreateNamespaceResp {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "CreateNamespaceResp"
-      description : "创建命名空间返回"
-      required : [ "seq", "errCode", "errMsg" ]
-    }
-  };
-
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errCode",
-        description : "返回错误码"
-      } ];
-  string errMsg = 3
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errMsg",
-        description : "返回错误信息"
-      } ];
-}
-
-message DeleteNamespaceReq {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "DeleteNamespaceReq"
-      description : "删除命名空间请求"
-      required : [ "seq", "namespace", "federationClusterID", "isForced" ]
-    }
-  };
-
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string name = 2 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "name",
-      description : "命名空间名称"
-    },
-    (validate.rules).string = {min_len : 2, max_len : 100}
-  ];
-  string federationClusterID = 3 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "federationClusterID",
-      description : "命名空间所在联邦集群id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-  bool isForced = 4
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "isForced",
-        description : "是否强制删除"
-      } ];
-}
-
-message DeleteNamespaceResp {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "DeleteNamespaceResp"
-      description : "删除命名空间返回"
-      required : [ "seq", "errCode", "errMsg", "ns" ]
-    }
-  };
-
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errCode",
-        description : "返回错误码"
-      } ];
-  string errMsg = 3
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errMsg",
-        description : "返回错误信息"
-      } ];
-  Namespace ns = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-                         {title : "ns", description : "被删除的命名空间信息"} ];
-}
-
-message UpdateNamespaceReq {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "UpdateNamespaceReq"
-      description : "更新命名空间请求"
-      required : [ "seq", "name", "federationClusterID", "labels" ]
-    }
-  };
-
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string name = 2 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "name",
-      description : "命名空间名称"
-    },
-    (validate.rules).string = {min_len : 2, max_len : 100}
-  ];
-  string federationClusterID = 3 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "federationClusterID",
-      description : "命名空间所在联邦集群id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-  string projectID = 4 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "projectID",
-      description : "项目id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-  string businessID = 5 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "businessID",
-      description : "业务id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-  map<string, string> labels = 6
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "labels",
-        description : "命名空间标签"
-      } ];
-}
-
-message UpdateNamespaceResp {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "UpdateNamespaceResp"
-      description : "更新命名空间信息返回"
-      required : [ "seq", "errCode", "errMsg" ]
-    }
-  };
-
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errCode",
-        description : "返回错误码"
-      } ];
-  string errMsg = 3
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errMsg",
-        description : "返回错误信息"
-      } ];
-}
-
-message GetNamespaceReq {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "GetNamespaceReq"
-      description : "查询命名空间请求"
-      required : [ "seq", "name", "federationClusterID" ]
-    }
-  };
-
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string name = 2 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "name",
-      description : "命名空间名称"
-    },
-    (validate.rules).string = {min_len : 2, max_len : 100}
-  ];
-  string federationClusterID = 3 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "federationClusterID",
-      description : "命名空间所在联邦集群id"
-    },
-    (validate.rules).string.max_len = 100
-  ];
-}
-
-message GetNamespaceResp {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "GetNamespaceReq"
-      description : "查询命名空间请求"
-      required : [ "seq", "errCode", "errMsg", "ns" ]
-    }
-  };
-
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errCode",
-        description : "返回错误码"
-      } ];
-  string errMsg = 3
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "errMsg",
-        description : "返回错误信息"
-      } ];
-  Namespace ns = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-                         {title : "ns", description : "命名空间信息"} ];
-}
-
-message ListNamespaceReq {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "ListNamespaceReq"
-      description : "查询命名空间列表请求"
-      required : [
-        "seq",
-        "federationClusterID",
-        "projectID",
-        "businessID",
-        "offset",
-        "limit"
-      ]
-    }
-  };
-
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
   string federationClusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "federationClusterID",
-      description : "查询联邦集群id"
+      description : "命名空间所在联邦集群id"
     },
     (validate.rules).string.max_len = 100
   ];
@@ -1390,12 +1118,238 @@ message ListNamespaceReq {
     },
     (validate.rules).string.max_len = 100
   ];
-  uint64 offset = 5
+  map<string, string> labels = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "labels",
+        description : "标签"
+      } ];
+  string maxQuota = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "maxQuota",
+        description : "该命名空间最大的可用的配额，在所有地区的配额只和不能超过"
+                      "该配额限定的数量"
+      } ];
+}
+
+message CreateNamespaceResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateNamespaceResp"
+      description : "创建命名空间返回"
+      required : [ "errCode", "errMsg" ]
+    }
+  };
+
+  uint64 errCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "返回错误码"
+      } ];
+  string errMsg = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "返回错误信息"
+      } ];
+}
+
+message DeleteNamespaceReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteNamespaceReq"
+      description : "删除命名空间请求"
+      required : [ "namespace", "federationClusterID", "isForced" ]
+    }
+  };
+
+  string name = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "name",
+      description : "命名空间名称"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 100}
+  ];
+  string federationClusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "federationClusterID",
+      description : "命名空间所在联邦集群id"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  bool isForced = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "isForced",
+        description : "是否强制删除"
+      } ];
+}
+
+message DeleteNamespaceResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteNamespaceResp"
+      description : "删除命名空间返回"
+      required : [ "errCode", "errMsg" ]
+    }
+  };
+
+  uint64 errCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "返回错误码"
+      } ];
+  string errMsg = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "返回错误信息"
+      } ];
+}
+
+message UpdateNamespaceReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateNamespaceReq"
+      description : "更新命名空间请求"
+      required : [ "name", "federationClusterID", "labels" ]
+    }
+  };
+
+  string name = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "name",
+      description : "命名空间名称"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 100}
+  ];
+  string federationClusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "federationClusterID",
+      description : "命名空间所在联邦集群id"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  map<string, string> labels = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "labels",
+        description : "命名空间标签"
+      } ];
+  string maxQuota = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "maxQuota",
+        description : "该命名空间最大的可用的配额，在所有地区的配额只和不能超过"
+                      "该配额限定的数量"
+      } ];
+}
+
+message UpdateNamespaceResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateNamespaceResp"
+      description : "更新命名空间信息返回"
+      required : [ "errCode", "errMsg" ]
+    }
+  };
+
+  uint64 errCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "返回错误码"
+      } ];
+  string errMsg = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "返回错误信息"
+      } ];
+}
+
+message GetNamespaceReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceReq"
+      description : "查询命名空间请求"
+      required : [ "name", "federationClusterID" ]
+    }
+  };
+
+  string name = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "name",
+      description : "命名空间名称"
+    },
+    (validate.rules).string = {min_len : 2, max_len : 100}
+  ];
+  string federationClusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "federationClusterID",
+      description : "命名空间所在联邦集群id"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+}
+
+message GetNamespaceResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceReq"
+      description : "查询命名空间请求"
+      required : [ "errCode", "errMsg", "ns" ]
+    }
+  };
+
+  uint64 errCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errCode",
+        description : "返回错误码"
+      } ];
+  string errMsg = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "errMsg",
+        description : "返回错误信息"
+      } ];
+  Namespace ns = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "ns", description : "命名空间信息"} ];
+}
+
+message ListNamespaceReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNamespaceReq"
+      description : "根据条件查询命名空间列表请求"
+      required : [
+        "federationClusterID",
+        "projectID",
+        "businessID",
+        "offset",
+        "limit"
+      ]
+    }
+  };
+
+  string federationClusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "federationClusterID",
+      description : "查询联邦集群id"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  string projectID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "项目id"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  string businessID = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "businessID",
+      description : "业务id"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  uint64 offset = 4
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "offset",
         description : "查询偏移量"
       } ];
-  uint64 limit = 6 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  uint64 limit = 5 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                          {title : "limit", description : "查询最大返回数量"} ];
 }
 
@@ -1404,25 +1358,21 @@ message ListNamespaceResp {
     json_schema : {
       title : "ListNamespaceResp"
       description : "查询命名空间返回列表"
-      required : [ "seq", "errCode", "errMsg", "ns" ]
+      required : [ "errCode", "errMsg", "ns" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "返回错误码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "返回错误信息"
       } ];
-  repeated Namespace nsList = 4
+  repeated Namespace nsList = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "nsList",
         description : "查询命名空间信息列表"
@@ -1433,55 +1383,43 @@ message CreateNamespaceQuotaReq {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "CreateNamespaceQuotaReq"
-      description : "创建命名空间资源配额请求，如果指定clusterID，则在指定clust"
-                    "erID创建ResourceQuota，如果未指定clusterID，则根据指定的re"
-                    "gion系统自动分配clusterID"
-      required : [
-        "seq",
-        "namespace",
-        "federationClusterID",
-        "region",
-        "resourceQuota"
-      ]
+      description :
+          "创建命名空间资源配额请求，如果指定子集群clusterID，则在指定"
+          "子集群创建ResourceQuota，如果未指定子集群clusterID，则根据指定的re"
+          "gion系统自动分配子集群clusterID"
+      required : [ "namespace", "federationClusterID", "resourceQuota" ]
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string namespace = 2 [
+  string namespace = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "namespace",
       description : "所在命名空间"
     },
     (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string federationClusterID = 3 [
+  string federationClusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "federationClusterID",
       description : "命名空间所在联邦集群id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string clusterID = 4 [
+  string clusterID = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
-      description : "指定集群id"
+      description : "指定子集群id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string region = 5 [
+  string region = 4 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "region",
       description : "指定区域"
     },
     (validate.rules).string.max_len = 100
   ];
-  string resourceQuota = 6
+  string resourceQuota = 5
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "resourceQuota",
         description : "k8s原生资源配额"
@@ -1493,25 +1431,21 @@ message CreateNamespaceQuotaResp {
     json_schema : {
       title : "CreateNamespaceQuotaResp"
       description : "创建命名空间资源配额返回"
-      required : [ "seq", "errCode", "errMsg", "clusterID" ]
+      required : [ "errCode", "errMsg", "clusterID" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "请求返回码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "请求错误信息"
       } ];
-  string clusterID = 4
+  string clusterID = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "clusterID",
         description : "命名空间分配的集群id"
@@ -1523,32 +1457,25 @@ message DeleteNamespaceQuotaReq {
     json_schema : {
       title : "DeleteNamespaceQuotaReq"
       description : "删除命名空间资源配额请求"
-      required : [ "seq", "namespace", "federationClusterID", "clusterID" ]
+      required : [ "namespace", "federationClusterID", "clusterID" ]
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string namespace = 2 [
+  string namespace = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "namespace",
       description : "命名空间名字"
     },
     (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string federationClusterID = 3 [
+  string federationClusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "federationClusterID",
       description : "命名空间所在联邦集群id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string clusterID = 4 [
+  string clusterID = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
       description : "命名空间配额所在子集群id"
@@ -1567,28 +1494,19 @@ message DeleteNamespaceQuotaResp {
     json_schema : {
       title : "DeleteNamespaceQuotaResp"
       description : "删除命名空间资源配额返回"
-      required : [ "seq", "errCode", "errMsg", "resourceQuota" ]
+      required : [ "errCode", "errMsg" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "请求返回码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "请求错误信息"
-      } ];
-  ResourceQuota resourceQuota = 4
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "resourceQuota",
-        description : "被删除的资源配额"
       } ];
 }
 
@@ -1597,45 +1515,33 @@ message UpdateNamespaceQuotaReq {
     json_schema : {
       title : "UpdateNamespaceQuotaReq"
       description : "更新命名空间资源配额请求"
-      required : [
-        "seq",
-        "namespace",
-        "federationClusterID",
-        "clusterID",
-        "resourceQuota"
-      ]
+      required :
+          [ "namespace", "federationClusterID", "clusterID", "resourceQuota" ]
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string namespace = 2 [
+  string namespace = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "namespace",
       description : "命名空间名称"
     },
     (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string federationClusterID = 3 [
+  string federationClusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "federationClusterID",
       description : "命名空间所在联邦id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string clusterID = 4 [
+  string clusterID = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
       description : "配额所在子集群id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string resourceQuota = 5
+  string resourceQuota = 4
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "resourceQuota",
         description : "配额详情"
@@ -1647,20 +1553,16 @@ message UpdateNamespaceQuotaResp {
     json_schema : {
       title : "UpdateNamespaceQuotaResp"
       description : "更新命名空间资源配额返回"
-      required : [ "seq", "errCode", "errMsg" ]
+      required : [ "errCode", "errMsg" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "请求返回码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "请求错误信息"
@@ -1672,32 +1574,25 @@ message GetNamespaceQuotaReq {
     json_schema : {
       title : "GetNamespaceQuotaReq"
       description : "获取命名空间资源配额请求"
-      required : [ "seq", "namespace", "federationClusterID", "clusterID" ]
+      required : [ "namespace", "federationClusterID", "clusterID" ]
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string namespace = 2 [
+  string namespace = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "namespace",
       description : "命名空间名称"
     },
     (validate.rules).string = {min_len : 2, max_len : 100}
   ];
-  string federationClusterID = 3 [
+  string federationClusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "federationClusterID",
       description : "命名空间所在联邦id"
     },
     (validate.rules).string.max_len = 100
   ];
-  string clusterID = 4 [
+  string clusterID = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "clusterID",
       description : "配额所在子集群id"
@@ -1711,25 +1606,21 @@ message GetNamespaceQuotaResp {
     json_schema : {
       title : "GetNamespaceQuotaResp"
       description : "获取命名空间资源配额返回"
-      required : [ "seq", "errCode", "errMsg", "resourceQuota" ]
+      required : [ "errCode", "errMsg", "resourceQuota" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "请求返回码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "请求错误信息"
       } ];
-  string resourceQuota = 4
+  string resourceQuota = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "resourceQuota",
         description : "查询到的资源配额详情"
@@ -1741,31 +1632,31 @@ message ListNamespaceQuotaReq {
     json_schema : {
       title : "ListNamespaceQuotaReq"
       description : "查询命名空间资源配额列表请求"
-      required : [ "seq", "namespace", "federationClusterID" ]
+      required : [ "namespace", "federationClusterID" ]
     }
   };
 
-  uint64 seq = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "seq",
-      description : "请求序号"
-    },
-    (validate.rules).uint64.gte = 0
-  ];
-  string namespace = 2 [
+  string namespace = 1 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "namespace",
       description : "命名空间名称"
     },
     (validate.rules).string.max_len = 100
   ];
-  string federationClusterID = 3 [
+  string federationClusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "federationClusterID",
       description : "命名空间所在联邦id"
     },
     (validate.rules).string.max_len = 100
   ];
+  uint64 offset = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "offset",
+        description : "查询偏移量"
+      } ];
+  uint64 limit = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "limit", description : "查询最大返回数量"} ];
 }
 
 message ListNamespaceQuotaResp {
@@ -1773,25 +1664,21 @@ message ListNamespaceQuotaResp {
     json_schema : {
       title : "ListNamespaceQuotaResp"
       description : "查询命名空间资源配额列表返回"
-      required : [ "seq", "errCode", "errMsg", "resourceQuotaList" ]
+      required : [ "errCode", "errMsg", "resourceQuotaList" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "请求返回码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "请求返回信息"
       } ];
-  repeated string resourceQuotaList = 4
+  repeated string resourceQuotaList = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "resourceQuotaList",
         description : "查询到的资源配额列表"
@@ -1804,7 +1691,6 @@ message CreateNamespaceWithQuotaReq {
       title : "CreateNamespaceWithQuotaReq"
       description : "创建命名空间及其资源配额请求"
       required : [
-        "seq",
         "name",
         "federationClusterID",
         "projectID",
@@ -1816,41 +1702,43 @@ message CreateNamespaceWithQuotaReq {
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  string name = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  string name = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "name", description : "命名空间名称"} ];
-  string federationClusterID = 3
+  string federationClusterID = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "federationClusterID",
         description : "命名空间所在联邦id"
       } ];
-  string projectID = 4
+  string projectID = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "projectID",
         description : "项目id"
       } ];
-  string businessID = 5
+  string businessID = 4
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "businessID",
         description : "业务id"
       } ];
-  map<string, string> labels = 6
+  map<string, string> labels = 5
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "labels",
         description : "命名空间labels"
       } ];
-  string clusterID = 7
+  string clusterID = 6
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "clusterID",
         description : "指定命名空间集群id，如为空，则由系统分配"
       } ];
-  string region = 8
+  string region = 7
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "region",
         description : "命名空间所在区域"
+      } ];
+  string maxQuota = 8
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "maxQuota",
+        description : "该命名空间最大的可用的配额，在所有地区的配额只和不能超过"
+                      "该配额限定的数量"
       } ];
   string resourceQuota = 9
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1864,25 +1752,21 @@ message CreateNamespaceWithQuotaResp {
     json_schema : {
       title : "CreateNamespaceWithQuotaResp"
       description : "创建命名空间及其资源配额返回"
-      required : [ "seq", "errCode", "errMsg", "clusterID" ]
+      required : [ "errCode", "errMsg", "clusterID" ]
     }
   };
 
-  uint64 seq = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "seq",
-    description : "请求序号"
-  } ];
-  uint64 errCode = 2
+  uint64 errCode = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errCode",
         description : "请求返回码"
       } ];
-  string errMsg = 3
+  string errMsg = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "errMsg",
         description : "请求错误信息"
       } ];
-  string clusterID = 4
+  string clusterID = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "clusterID",
         description : "命名空间分配的集群id"

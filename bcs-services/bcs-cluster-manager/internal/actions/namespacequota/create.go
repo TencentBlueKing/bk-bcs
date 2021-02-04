@@ -15,10 +15,13 @@ package namespacequota
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -59,7 +62,7 @@ func (ca *CreateAction) validate() error {
 	}
 	quota := &k8scorev1.ResourceQuota{}
 	if err := json.Unmarshal([]byte(ca.req.ResourceQuota), quota); err != nil {
-		return err
+		return fmt.Errorf("decode resourcequota failed, err %s", err)
 	}
 	if quota.Name != ca.req.Namespace || quota.Namespace != ca.req.Namespace {
 		return fmt.Errorf("resource quota name and namespace should be the name of namespace %s", ca.req.Namespace)
@@ -75,6 +78,20 @@ func (ca *CreateAction) getNamespaceFromStore() error {
 	}
 	ca.ns = ns
 	return nil
+}
+
+func (ca *CreateAction) isQuotaExisted(clusterID string) (bool, error) {
+	quota, err := ca.model.GetQuota(ca.ctx, ca.req.Namespace, ca.req.FederationClusterID, clusterID)
+	if err != nil {
+		if errors.Is(err, drivers.ErrTableRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	if quota == nil {
+		return false, fmt.Errorf("quota is nil")
+	}
+	return true, nil
 }
 
 func (ca *CreateAction) listNodesFromCluster(cluster string) (*k8scorev1.NodeList, error) {
@@ -148,6 +165,7 @@ func (ca *CreateAction) allocateOneCluster() error {
 		"region":              ca.req.Region,
 		"federationClusterID": ca.req.FederationClusterID,
 		"engineType":          common.ClusterEngineTypeK8s,
+		"clusterType":         common.ClusterTypeSingle,
 	}
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	clusterList, err := ca.model.ListCluster(ca.ctx, cond, &storeopt.ListOption{})
@@ -156,6 +174,7 @@ func (ca *CreateAction) allocateOneCluster() error {
 	}
 	minResRate := float32(math.MaxFloat32)
 	targetCluster := ""
+	blog.Infof("cluster list %v", clusterList)
 	for _, cluster := range clusterList {
 		nodes, err := ca.listNodesFromCluster(cluster.ClusterID)
 		if err != nil {
@@ -195,7 +214,8 @@ func (ca *CreateAction) createQuotaToCluster() error {
 		if k8serrors.IsNotFound(err) {
 			_, err = kubeClient.CoreV1().Namespaces().Create(ca.ctx, &k8scorev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: ca.ns.Name,
+					Name:   ca.ns.Name,
+					Labels: ca.ns.Labels,
 				},
 			}, metav1.CreateOptions{})
 			if err != nil {
@@ -213,12 +233,15 @@ func (ca *CreateAction) createQuotaToCluster() error {
 
 // create namespace resoucequota to store
 func (ca *CreateAction) createQuotaToStore() error {
+	createTime := time.Now()
 	ca.quota.ClusterName = ca.allocatedCluster
 	newQuota := &types.NamespaceQuota{
 		Namespace:           ca.req.Namespace,
 		FederationClusterID: ca.req.FederationClusterID,
 		ClusterID:           ca.allocatedCluster,
 		ResourceQuota:       ca.req.ResourceQuota,
+		CreateTime:          createTime,
+		UpdateTime:          createTime,
 	}
 	if err := ca.model.CreateQuota(ca.ctx, newQuota); err != nil {
 		return err
@@ -227,7 +250,6 @@ func (ca *CreateAction) createQuotaToStore() error {
 }
 
 func (ca *CreateAction) setResp(code uint64, msg string) {
-	ca.resp.Seq = ca.req.Seq
 	ca.resp.ErrCode = code
 	ca.resp.ErrMsg = msg
 	ca.resp.ClusterID = ca.allocatedCluster
@@ -262,6 +284,18 @@ func (ca *CreateAction) Handle(
 	} else {
 		// use requested cluster
 		ca.allocatedCluster = ca.req.ClusterID
+	}
+
+	isExisted, err := ca.isQuotaExisted(ca.allocatedCluster)
+	if err != nil {
+		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	if isExisted {
+		ca.setResp(types.BcsErrClusterManagerResourceDuplicated,
+			fmt.Sprintf("quota %s/%s/%s is duplicated",
+				ca.req.Namespace, ca.req.FederationClusterID, ca.allocatedCluster))
+		return
 	}
 
 	if err := ca.createQuotaToCluster(); err != nil {

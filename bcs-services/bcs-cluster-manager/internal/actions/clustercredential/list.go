@@ -83,7 +83,6 @@ func (la *ListAction) listClusterCredential() error {
 }
 
 func (la *ListAction) setResp(code uint64, msg string) {
-	la.resp.Seq = la.req.Seq
 	la.resp.ErrCode = code
 	la.resp.ErrMsg = msg
 	la.resp.ClusterCredentialList = la.clusterCredentialList

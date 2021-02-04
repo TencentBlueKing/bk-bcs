@@ -17,7 +17,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -89,7 +88,6 @@ func (m *ModelClusterCredential) PutClusterCredential(
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
-	clusterCredential.UpdateTime = time.Now()
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"serverKey": clusterCredential.ServerKey,
 	})

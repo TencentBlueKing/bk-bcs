@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -89,8 +88,6 @@ func (m *ModelNamespace) CreateNamespace(ctx context.Context, ns *types.Namespac
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
-	ns.CreateTime = time.Now()
-	ns.UpdateTime = ns.CreateTime
 
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{ns}); err != nil {
 		return err
@@ -111,9 +108,7 @@ func (m *ModelNamespace) UpdateNamespace(ctx context.Context, ns *types.Namespac
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, oldNs); err != nil {
 		return err
 	}
-	ns.CreateTime = oldNs.CreateTime
-	ns.UpdateTime = time.Now()
-	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": ns})
+	return m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": ns})
 }
 
 // DeleteNamespace delete cluster

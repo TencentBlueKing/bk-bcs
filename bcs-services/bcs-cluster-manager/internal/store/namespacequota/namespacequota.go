@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -92,8 +91,6 @@ func (m *ModelNamespaceQuota) CreateQuota(ctx context.Context, quota *types.Name
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
-	quota.CreateTime = time.Now()
-	quota.UpdateTime = quota.CreateTime
 
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{quota}); err != nil {
 		return err
@@ -115,9 +112,7 @@ func (m *ModelNamespaceQuota) UpdateQuota(ctx context.Context, quota *types.Name
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, oldQuota); err != nil {
 		return err
 	}
-	quota.CreateTime = oldQuota.CreateTime
-	quota.UpdateTime = time.Now()
-	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": quota})
+	return m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": quota})
 }
 
 // DeleteQuota delete namespace quota

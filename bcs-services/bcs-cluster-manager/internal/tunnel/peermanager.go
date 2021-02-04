@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
+	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 
@@ -73,9 +74,6 @@ func (pm *PeerManager) Start() error {
 		return fmt.Errorf("discovery is empty")
 	}
 	pm.discovery.RegisterEventHandler(pm.discoveryEventHandler)
-	// if err := pm.discovery.Start(); err != nil {
-	// 	return fmt.Errorf("start discovery failed, err %s", err.Error())
-	// }
 	return nil
 }
 
@@ -88,7 +86,11 @@ func (pm *PeerManager) discoveryEventHandler(svcs []*registry.Service) {
 	}
 	servs := make([]string, 0)
 	for _, node := range nodes {
-		servs = append(servs, node.Address)
+		httpAddr, err := getHTTPEndpointFromMeta(node)
+		if err != nil {
+			blog.Warnf("get http endpoint from micro service node failed, err %s", err.Error())
+		}
+		servs = append(servs, httpAddr)
 	}
 	blog.V(3).Infof("discovery module %s servers %v", pm.discovery.GetModuleName(), servs)
 	if err := pm.syncPeers(servs); err != nil {
@@ -96,21 +98,21 @@ func (pm *PeerManager) discoveryEventHandler(svcs []*registry.Service) {
 	}
 }
 
-func convertGrpcPortToHTTPPort(servs []string) ([]string, error) {
-	var retSvrs []string
-	for _, ser := range servs {
-		strs := strings.Split(ser, ":")
-		if len(strs) != 2 {
-			return nil, fmt.Errorf("invalid server address %s", ser)
-		}
-		port, err := strconv.Atoi(strs[1])
-		if err != nil {
-			return nil, fmt.Errorf("convert port %s to int failed, err %s", strs[1], err.Error())
-		}
-		// http port is grpc port + 1
-		retSvrs = append(retSvrs, strs[0]+":"+strconv.Itoa(port+1))
+func getHTTPEndpointFromMeta(node *registry.Node) (string, error) {
+	address := node.Address
+	strs := strings.Split(address, ":")
+	if len(strs) != 2 {
+		return "", fmt.Errorf("invalid server address %s", address)
 	}
-	return retSvrs, nil
+	httpPortStr, ok := node.Metadata[cmcommon.MicroMetaKeyHTTPPort]
+	if !ok {
+		httpPortStr = strs[1]
+	}
+	_, err := strconv.Atoi(httpPortStr)
+	if err != nil {
+		return "", fmt.Errorf("convert port %s to int failed, err %s", httpPortStr, err.Error())
+	}
+	return strs[0] + ":" + httpPortStr, nil
 }
 
 // syncPeers sync peers status, add tunnels to new peers, remove tunnels from deleted peers
@@ -118,11 +120,7 @@ func (pm *PeerManager) syncPeers(servs []string) error {
 	if len(servs) == 0 {
 		return fmt.Errorf("syncPeers event can't discovery self")
 	}
-	convertedServs, err := convertGrpcPortToHTTPPort(servs)
-	if err != nil {
-		return err
-	}
-	pm.addRemovePeers(convertedServs)
+	pm.addRemovePeers(servs)
 	return nil
 }
 

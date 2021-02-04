@@ -10,30 +10,27 @@
  * limitations under the License.
  */
 
-package cluster
+package clustercredential
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
-// DeleteAction action for delete cluster
+// DeleteAction action for delete clustercredentail
 type DeleteAction struct {
-	ctx       context.Context
-	model     store.ClusterManagerModel
-	req       *cmproto.DeleteClusterReq
-	resp      *cmproto.DeleteClusterResp
-	quotaList []types.NamespaceQuota
+	ctx context.Context
+
+	model store.ClusterManagerModel
+	req   *cmproto.DeleteClusterCredentialReq
+	resp  *cmproto.DeleteClusterCredentialResp
 }
 
-// NewDeleteAction delete cluster action
+// NewDeleteAction create delete action for online cluster credential
 func NewDeleteAction(model store.ClusterManagerModel) *DeleteAction {
 	return &DeleteAction{
 		model: model,
@@ -47,40 +44,8 @@ func (da *DeleteAction) validate() error {
 	return nil
 }
 
-func (da *DeleteAction) queryQuotas() error {
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"clusterID": da.req.ClusterID,
-	})
-	quotaList, err := da.model.ListQuota(da.ctx, cond, &storeopt.ListOption{})
-	if err != nil {
-		return err
-	}
-	da.quotaList = quotaList
-	return nil
-}
-
-func (da *DeleteAction) deleteCluster() error {
-	if !da.req.IsForced {
-		if err := da.queryQuotas(); err != nil {
-			return fmt.Errorf("query quotas in delete cluster failed, err %s", err.Error())
-		}
-		if len(da.quotaList) != 0 {
-			return fmt.Errorf("cannot delete cluster, there is quots in cluster")
-		}
-		if err := da.model.DeleteCluster(da.ctx, da.req.ClusterID); err != nil {
-			return err
-		}
-		return nil
-	}
-	// delete all namespace quotas related to certain cluster
-	if err := da.model.BatchDeleteQuotaByCluster(da.ctx, da.req.ClusterID); err != nil {
-		return err
-	}
-	// delete cluster
-	if err := da.model.DeleteCluster(da.ctx, da.req.ClusterID); err != nil {
-		return err
-	}
-	return nil
+func (da *DeleteAction) deleteCredential() error {
+	return da.model.DeleteClusterCredential(da.ctx, da.req.ServerKey)
 }
 
 func (da *DeleteAction) setResp(code uint64, msg string) {
@@ -88,10 +53,11 @@ func (da *DeleteAction) setResp(code uint64, msg string) {
 	da.resp.ErrMsg = msg
 }
 
-// Handle delete cluster request
-func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterReq, resp *cmproto.DeleteClusterResp) {
+// Handle handle delete cluster credential
+func (da *DeleteAction) Handle(
+	ctx context.Context, req *cmproto.DeleteClusterCredentialReq, resp *cmproto.DeleteClusterCredentialResp) {
 	if req == nil || resp == nil {
-		blog.Errorf("delete cluster failed, req or resp is empty")
+		blog.Errorf("delete cluster credential failed, req or resp is empty")
 		return
 	}
 	da.ctx = ctx
@@ -102,13 +68,9 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 		da.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-
-	// delete cluster
-	if err := da.deleteCluster(); err != nil {
+	if err := da.deleteCredential(); err != nil {
 		da.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
-		return
 	}
-
 	da.setResp(types.BcsErrClusterManagerSuccess, types.BcsErrClusterManagerSuccessStr)
 	return
 }

@@ -35,4 +35,6 @@ const (
 	BcsErrClusterManagerAllocateClusterInCreateQuota = common.AdditionErrorCode + 404
 	// BcsErrClusterManagerK8SOpsFailed k8s operation failed
 	BcsErrClusterManagerK8SOpsFailed = common.AdditionErrorCode + 405
+	// BcsErrClusterManagerResourceDuplicated resource deplicated
+	BcsErrClusterManagerResourceDuplicated = common.AdditionErrorCode + 406
 )

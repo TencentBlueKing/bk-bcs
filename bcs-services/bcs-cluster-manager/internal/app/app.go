@@ -27,12 +27,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
@@ -145,12 +147,17 @@ func (cm *ClusterManager) initModel() error {
 	if len(cm.opt.Mongo.Database) == 0 {
 		return fmt.Errorf("mongo database cannot be empty")
 	}
+	password := cm.opt.Mongo.Password
+	if password != "" {
+		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
+		password = string(realPwd)
+	}
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(cm.opt.Mongo.Address, ","),
 		ConnectTimeoutSeconds: int(cm.opt.Mongo.ConnectTimeout),
 		Database:              cm.opt.Mongo.Database,
 		Username:              cm.opt.Mongo.Username,
-		Password:              cm.opt.Mongo.Password,
+		Password:              password,
 		MaxPoolSize:           uint64(cm.opt.Mongo.MaxPoolSize),
 		MinPoolSize:           uint64(cm.opt.Mongo.MinPoolSize),
 	}
@@ -250,9 +257,25 @@ func (cm *ClusterManager) initTunnelServer(router *mux.Router) error {
 	return nil
 }
 
+// CustomMatcher for http header
+func CustomMatcher(key string) (string, bool) {
+	switch key {
+	case "X-Request-Id":
+		return "X-Request-Id", true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
+}
+
 // init http grpc gateway
 func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
-	gwmux := runtime.NewServeMux()
+	gwmux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			OrigName:     true,
+			EmitDefaults: true,
+		}),
+	)
 	grpcDialOpts := []grpc.DialOption{}
 	if cm.tlsConfig != nil && cm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(cm.clientTLSConfig)))
@@ -369,6 +392,9 @@ func (cm *ClusterManager) initMicro() error {
 	// New Service
 	microService := microgrpcsvc.NewService(
 		microsvc.Name(types.ServiceDomain),
+		microsvc.Metadata(map[string]string{
+			cmcommon.MicroMetaKeyHTTPPort: strconv.Itoa(int(cm.opt.HTTPPort)),
+		}),
 		microgrpcsvc.WithTLS(cm.tlsConfig),
 		microsvc.Address(cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port))),
 		microsvc.Registry(cm.microRegistry),

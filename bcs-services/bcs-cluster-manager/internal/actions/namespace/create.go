@@ -14,11 +14,16 @@ package namespace
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+
+	k8scorev1 "k8s.io/api/core/v1"
 )
 
 // CreateAction action for create namespace
@@ -49,18 +54,28 @@ func (ca *CreateAction) queryFederationCluster(clusterID string) error {
 }
 
 func (ca *CreateAction) createNamespace() error {
+	if len(ca.req.MaxQuota) != 0 {
+		maxQuota := &k8scorev1.ResourceQuota{}
+		if err := json.Unmarshal([]byte(ca.req.MaxQuota), maxQuota); err != nil {
+			blog.Warnf("decode max quota %s to k8s ResourceQuota failed, err %s", ca.req.MaxQuota, err.Error())
+			return fmt.Errorf("decode max quota %s to k8s ResourceQuota failed, err %s", ca.req.MaxQuota, err.Error())
+		}
+	}
+	createTime := time.Now()
 	newNs := &types.Namespace{
 		Name:                ca.req.Name,
 		FederationClusterID: ca.req.FederationClusterID,
 		ProjectID:           ca.req.ProjectID,
 		BusinessID:          ca.req.BusinessID,
 		Labels:              ca.req.Labels,
+		MaxQuota:            ca.req.MaxQuota,
+		CreateTime:          createTime,
+		UpdateTime:          createTime,
 	}
 	return ca.model.CreateNamespace(ca.ctx, newNs)
 }
 
 func (ca *CreateAction) setResp(code uint64, msg string) {
-	ca.resp.Seq = ca.req.Seq
 	ca.resp.ErrCode = code
 	ca.resp.ErrMsg = msg
 }

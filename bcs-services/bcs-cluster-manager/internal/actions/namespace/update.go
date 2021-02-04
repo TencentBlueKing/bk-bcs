@@ -14,11 +14,16 @@ package namespace
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+
+	k8scorev1 "k8s.io/api/core/v1"
 )
 
 // UpdateAction action for update namespace
@@ -27,6 +32,7 @@ type UpdateAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.UpdateNamespaceReq
 	resp  *cmproto.UpdateNamespaceResp
+	ns    *types.Namespace
 }
 
 // NewUpdateAction create action for udpate
@@ -43,19 +49,35 @@ func (ua *UpdateAction) validate() error {
 	return nil
 }
 
+func (ua *UpdateAction) getNamespace() error {
+	ns, err := ua.model.GetNamespace(ua.ctx, ua.req.Name, ua.req.FederationClusterID)
+	if err != nil {
+		return err
+	}
+	ua.ns = ns
+	return nil
+}
+
 func (ua *UpdateAction) updateNamespace() error {
+	if len(ua.req.MaxQuota) != 0 {
+		maxQuota := &k8scorev1.ResourceQuota{}
+		if err := json.Unmarshal([]byte(ua.req.MaxQuota), maxQuota); err != nil {
+			blog.Warnf("decode max quota %s to k8s ResourceQuota failed, err %s", ua.req.MaxQuota, err.Error())
+			return fmt.Errorf("decode max quota %s to k8s ResourceQuota failed, err %s", ua.req.MaxQuota, err.Error())
+		}
+	}
 	newNs := &types.Namespace{
-		Name:                ua.req.Name,
-		FederationClusterID: ua.req.FederationClusterID,
-		ProjectID:           ua.req.ProjectID,
-		BusinessID:          ua.req.BusinessID,
+		Name:                ua.ns.Name,
+		FederationClusterID: ua.ns.FederationClusterID,
+		MaxQuota:            ua.req.MaxQuota,
 		Labels:              ua.req.Labels,
+		CreateTime:          ua.ns.CreateTime,
+		UpdateTime:          time.Now(),
 	}
 	return ua.model.UpdateNamespace(ua.ctx, newNs)
 }
 
 func (ua *UpdateAction) setResp(code uint64, msg string) {
-	ua.resp.Seq = ua.req.Seq
 	ua.resp.ErrCode = code
 	ua.resp.ErrMsg = msg
 }
