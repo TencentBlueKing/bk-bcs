@@ -14,5 +14,6 @@
   "kubeconfig": "${schedulerKubeConfig}",
   "store_driver": "${schedulerStorage}",
   "netservice_zookeeper": "${bcsNetSVCZookeeper}",
+  "storage_address": "${bcsStorageAddress}",
   "cluster": "${clusterId}"
 }
