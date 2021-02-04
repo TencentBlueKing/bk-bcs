@@ -181,36 +181,44 @@ type SchedulerServInfo struct {
 	ServerInfo
 }
 
+// MesosServInfo mesos server
 type MesosServInfo struct {
 	ServerInfo
 }
 
+// KubeNodeInfo node infor
 type KubeNodeInfo struct {
 	ServerInfo
 }
 
+// BcsHealthInfo health server
 type BcsHealthInfo struct {
 	ServerInfo
 }
 
+// BcsCheckInfo check server
 type BcsCheckInfo struct {
 	ServerInfo
 }
 
+// BcsStorageInfo storage server
 type BcsStorageInfo struct {
 	ServerInfo
 }
 
+// BcsK8sApiserverInfo apiserver
 type BcsK8sApiserverInfo struct {
 	ServerInfo
 	CaCertData string //certificates
 	UserToken  string //user token
 }
 
+// BcsMesosApiserverInfo mesos driver
 type BcsMesosApiserverInfo struct {
 	ServerInfo
 }
 
+// ClusterEndpoints mesos node info
 type ClusterEndpoints struct {
 	MesosSchedulers []SchedulerServInfo `json:"mesosscheduler,omitempty"`
 	MesosMasters    []MesosServInfo     `json:"mesosmaster,omitempty"`

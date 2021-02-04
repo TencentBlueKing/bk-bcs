@@ -14,6 +14,7 @@ source:
   # 自动生成代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
     filepath_regex: [
       ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/.*",
+      ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/apis/.*",
       ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/clientset/.*",
       ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/informers/.*",
       ".*/bcs-k8s/bcs-gamedeployment-operator/pkg/listers/.*",
@@ -48,6 +49,7 @@ source:
   third_party_source: 
     #第三方代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
     filepath_regex: [
+      ".*/bcs-common/pkg/bcsapi/clustermanager/.*",
       ".*/bcs-common/pkg/scheduler/mesosproto/.*",
       ".*/bcs-mesos/bcs-container-executor/mesos/.*",
       ".*/bcs-mesos/bcs-process-executor/process-executor/protobuf/.*",

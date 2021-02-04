@@ -13,6 +13,7 @@
 
 package common
 
+// AdditionErrorCode BCS error code
 const AdditionErrorCode = 1405000
 
 //bcs container service
@@ -20,13 +21,15 @@ const AdditionErrorCode = 1405000
 //Errno name is composed of the following format BcsErr{Module}{Type}
 //all error code range 1401 001 ~ 14001 999
 const (
-	BcsSuccess    = 0
+	// BcsSuccess success code
+	BcsSuccess = 0
+	// BcsSuccessStr success string
 	BcsSuccessStr = "success"
 
 	/*Common error code 1401 001~1401 049
 	All common errno name is as a beginning to BcsErrComm*/
 
-	//zookeeper
+	//BcsErrCommZkConnectFail zookeeper error code
 	BcsErrCommZkConnectFail       = AdditionErrorCode + 1
 	BcsErrCommZkConnectFailStr    = "connect to zookeeper failed"
 	BcsErrCommCreateZkNodeFail    = AdditionErrorCode + 2
@@ -90,7 +93,8 @@ const (
 
 	/*Common error code 1401 080~1401 109
 	bcs storage module errno name is as a beginning to BcsErrStorage*/
-	//BcsErrStorage
+
+	//BcsErrStorageRestRequestDataIsNotJson storage err code
 	BcsErrStorageRestRequestDataIsNotJson    = AdditionErrorCode + 80
 	BcsErrStorageRestRequestDataIsNotJsonStr = "request data unmarshal failed."
 	BcsErrStorageReturnDataIsNotJson         = AdditionErrorCode + 81
@@ -112,7 +116,8 @@ const (
 
 	/*Common error code 1401 110~1401 139
 	bcs metric service module errno name is as a beginning to BcsErrMetric*/
-	//BcsErrMetric
+
+	//BcsErrMetricSetMetricFailed metric service
 	BcsErrMetricSetMetricFailed              = AdditionErrorCode + 110
 	BcsErrMetricSetMetricFailedStr           = "failed to set metric"
 	BcsErrMetricSubscriptionUnknown          = AdditionErrorCode + 111
@@ -158,7 +163,8 @@ const (
 
 	/*Common error code 1401 140~1401 169
 	bcs health service module errno name is as a beginning to BcsErrHealth*/
-	//BcsErrHealth
+
+	//BcsErrHealthGetHealthzInfoErr health service
 	BcsErrHealthGetHealthzInfoErr    = AdditionErrorCode + 140
 	BcsErrHealthGetHealthzInfoErrStr = "get healthz info error"
 
@@ -168,7 +174,8 @@ const (
 
 	/*Common error code 1401 200~1401 229
 	bcs mesos scheduler service module errno name is as a beginning to BcsErrMesosSched*/
-	//BcsErrMesosSched
+
+	//BcsErrMesosSchedCommon scheduler error code
 	BcsErrMesosSchedCommon           = AdditionErrorCode + 200
 	BcsErrMesosSchedCommonStr        = "scheduler common error"
 	BcsErrMesosSchedResourceExist    = AdditionErrorCode + 201
@@ -203,25 +210,30 @@ const (
 
 	/*Common error code 1401 290~1401 319*/
 	//bcs-netservice error code
-	//Bcs_Err_NETSERVICE_PARTIAL_ERR     = AdditionErrorCode + 290
+
+	//BcsErrNetservicePartialErr     = AdditionErrorCode + 290
 	BcsErrNetservicePartialErr = AdditionErrorCode + 290
-	//Bcs_Err_NETSERVICE_PARTIAL_ERR_STR = "partial error for requst"
+	//BcsErrNetservicePartialErrStr = "partial error for requst"
 	BcsErrNetservicePartialErrStr = "partial error for requst"
-	//Bcs_ERR_NETSERVICE_FAILED          = AdditionErrorCode + 291
+	//BcsErrNetserviceFailed          = AdditionErrorCode + 291
 	BcsErrNetserviceFailed = AdditionErrorCode + 291
-	//Bcs_ERR_NETSERVICE_PARAMETER_ERR   = AdditionErrorCode + 292
+	//BcsErrNetserviceParameterErr   = AdditionErrorCode + 292
 	BcsErrNetserviceParameterErr = AdditionErrorCode + 292
-	//Bcs_ERR_NETSERVICE_THIRDPARTY_ERR  = AdditionErrorCode + 293
+	//BcsErrNetserviceThirdpartyErr  = AdditionErrorCode + 293
 	BcsErrNetserviceThirdpartyErr = AdditionErrorCode + 293
 
 	/*Common error code 1401 320~1401 349*/
 	//bcs-ipservice error code
-	//Bcs_ERR_IPSERVICE_PARTIAL_ERR    = AdditionErrorCode + 320
+
+	//BcsErrIPServicePartialErr    = AdditionErrorCode + 320
 	BcsErrIPServicePartialErr = AdditionErrorCode + 320
-	//Bcs_ERR_IPSERVICE_FAILED         = AdditionErrorCode + 321
+	//BcsErrIPServiceFailed         = AdditionErrorCode + 321
 	BcsErrIPServiceFailed = AdditionErrorCode + 321
-	//Bcs_ERR_IPSERVICE_PARAMETER_ERR  = AdditionErrorCode + 322
+	//BcsErrIPServiceParameterErr  = AdditionErrorCode + 322
 	BcsErrIPServiceParameterErr = AdditionErrorCode + 322
-	//Bcs_ERR_IPSERVICE_THIRDPARTY_ERR = AdditionErrorCode + 323
+	//BcsErrIPServiceThirdPartyErr = AdditionErrorCode + 323
 	BcsErrIPServiceThirdPartyErr = AdditionErrorCode + 323
+
+	// BCSModuleClusterManager error code definition
+	BCSErrClusterManager = 1405400
 )
