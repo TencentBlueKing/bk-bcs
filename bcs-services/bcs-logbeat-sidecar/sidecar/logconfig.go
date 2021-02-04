@@ -325,7 +325,7 @@ func buildSelector(selector bcsv1.PodSelector) (apilabels.Selector, error) {
 		var op selection.Operator
 		switch strings.ToLower(exp.Operator) {
 		case "in", "notin", "exists":
-			op = selection.Operator(exp.Operator)
+			op = selection.Operator(strings.ToLower(exp.Operator))
 		case "doesnotexist":
 			op = selection.DoesNotExist
 		default:

@@ -116,7 +116,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 
 	defaultModules = append(defaultModules, strings.Split(option.Modules, ",")...)
 	//init service data adapter
-	s.adapter = NewAdapter(option, defaultModules)
+	s.adapter = NewAdapter(option)
 	//init module disovery
 	s.discovery, err = discoverys.NewDiscoveryV2(option.ZkConfig.BCSZk, defaultModules)
 	if err != nil {

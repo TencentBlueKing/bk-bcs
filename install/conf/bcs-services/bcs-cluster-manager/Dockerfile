@@ -3,7 +3,7 @@ FROM centos:7
 # for command envsubset
 RUN yum install -y gettext
 
-RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
+RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert /data/bcs/swagger
 RUN mkdir -p /data/bcs/bcs-cluster-manager
 
 ADD bcs-cluster-manager /data/bcs/bcs-cluster-manager/

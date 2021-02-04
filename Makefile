@@ -34,25 +34,19 @@ PACKAGEPATH=./build/bcs.${VERSION}
 EXPORTPATH=./build/api_export
 
 # options
-default:api client storage executor mesos-driver mesos-watch scheduler \
-	loadbalance metricservice metriccollector k8s-watch kube-agent k8s-driver \
-	netservice sd-prometheus process-executor process-daemon bmsf-mesos-adapter \
-	hpacontroller kube-sche consoleproxy clb-controller gw-controller logbeat-sidecar \
-	csi-cbs bcs-webhook-server gamestatefulset network detection cpuset bcs-networkpolicy \
-	tools gateway user-manager cc-agent bkcmdb-synchronizer bcs-cloud-netservice bcs-cloud-netcontroller \
-	bcs-cloud-netagent mesh-manager bcs-ingress-controller log-manager gamedeployment
+default:bcs-service bcs-network bcs-mesos bcs-k8s
 
-bcs-k8s:k8s-watch kube-agent k8s-driver csi-cbs kube-sche gamestatefulset gamedeployment hook \
-	cc-agent
+bcs-k8s:k8s-watch kube-agent k8s-driver gamestatefulset gamedeployment hook-operator \
+	cc-agent csi-cbs kube-sche 
 
-bcs-mesos:mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
-	consoleproxy
+bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
+	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection
 
 bcs-service:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
 	mesh-manager logbeat-sidecar metricservice metriccollector netservice sd-prometheus storage \
-	user-manager bcs-webhook-server
+	user-manager webhook-server cluster-manager tools
 
-bcs-network:network bcs-ingress-controller bcs-cloud-netservice bcs-cloud-netcontroller bcs-cloud-netagent
+bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent 
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -93,18 +87,18 @@ pre:
 api:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-api ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-api/bcs-api ./bcs-services/bcs-api/main.go
+	cd bcs-services/bcs-api && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-api/bcs-api ./main.go
 
 gateway:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-gateway-discovery ${PACKAGEPATH}/bcs-services
 	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./bcs-services/bcs-gateway-discovery/main.go
+	cd bcs-services/bcs-gateway-discovery && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./main.go
 
 kube-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-kube-agent ${PACKAGEPATH}/bcs-k8s-master
-	cd ./bcs-k8s/bcs-kube-agent && go build ${LDFLAG} -o ../../${PACKAGEPATH}/bcs-k8s-master/bcs-kube-agent/bcs-kube-agent ./main.go && cd -
+	cd ./bcs-k8s/bcs-kube-agent && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-kube-agent/bcs-kube-agent ./main.go
 	
 
 client:pre
@@ -195,12 +189,12 @@ scheduler:pre
 logbeat-sidecar:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-logbeat-sidecar ${PACKAGEPATH}/bcs-services
-	cd ./bcs-services/bcs-logbeat-sidecar && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./main.go && cd -
+	cd ./bcs-services/bcs-logbeat-sidecar && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-logbeat-sidecar/bcs-logbeat-sidecar ./main.go
 
 log-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ./install/conf/bcs-services/bcs-log-manager ${PACKAGEPATH}/bcs-services
-	cd ./bcs-services/bcs-log-manager && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-log-manager/bcs-log-manager ./main.go && cd -
+	cd ./bcs-services/bcs-log-manager && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-log-manager/bcs-log-manager ./main.go
 
 mesh-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -221,10 +215,12 @@ sd-prometheus:pre
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bcs-service-prometheus/bcs-service-prometheus ./bcs-services/bcs-service-prometheus/main.go
 
 k8s-driver:pre
-	cd ./bcs-k8s/bcs-k8s-driver && make k8s-driver && cd -
+	cd ./bcs-k8s/bcs-k8s-driver && make k8s-driver
 
 k8s-watch:pre
-	cd ./bcs-k8s/bcs-k8s-watch && make watch && cd -
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-watch
+	cp -R ./install/conf/bcs-k8s-master/bcs-k8s-watch/* ${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-watch
+	cd bcs-k8s/bcs-k8s-watch && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-k8s-watch/bcs-k8s-watch ./main.go
 
 gamestatefulset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
@@ -236,7 +232,7 @@ gamedeployment:pre
 	cp -R ./install/conf/bcs-k8s-master/bcs-gamedeployment-operator ${PACKAGEPATH}/bcs-k8s-master
 	cd bcs-k8s/bcs-gamedeployment-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-gamedeployment-operator/bcs-gamedeployment-operator ./cmd/gamedeployment-operator/main.go
 
-hook:pre
+hook-operator:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-hook-operator ${PACKAGEPATH}/bcs-k8s-master
 	cd bcs-k8s/bcs-hook-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-hook-operator/bcs-hook-operator ./cmd/hook-operator/main.go
@@ -258,16 +254,6 @@ bmsf-mesos-adapter:pre
 	cp -R ./install/conf/bcs-mesos-master/bmsf-mesos-adapter ${PACKAGEPATH}/bcs-mesos-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-master/bmsf-mesos-adapter/bmsf-mesos-adapter ./bmsf-mesh/bmsf-mesos-adapter/main.go
 
-network:pre
-	cd ./bcs-network && make network && cd -
-
-clb-controller:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
-	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
-	cp ./bcs-services/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-services/bcs-clb-controller/Dockerfile.old
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
-	cp ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ${PACKAGEPATH}/bcs-services/bcs-clb-controller/clb-controller
-
 cpuset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cpuset-device
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cpuset-device/bcs-cpuset-device ./bcs-services/bcs-cpuset-device/main.go
@@ -277,8 +263,10 @@ gw-controller:pre
 	cp -R ./install/conf/bcs-services/bcs-gw-controller ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-gw-controller/bcs-gw-controller ./bcs-services/bcs-gw-controller/main.go
 
-bcs-webhook-server:pre
-	cd ./bcs-services/bcs-webhook-server && make webhook-server && cd -
+webhook-server:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-webhook-server
+	cp -R ./install/conf/bcs-services/bcs-webhook-server/* ${PACKAGEPATH}/bcs-services/bcs-webhook-server
+	cd ./bcs-services/bcs-webhook-server && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-webhook-server/bcs-webhook-server ./cmd/server.go
 
 detection:pre
 	cp -R ./install/conf/bcs-services/bcs-network-detection ${PACKAGEPATH}/bcs-services
@@ -287,37 +275,52 @@ detection:pre
 tools:
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 	
-bcs-networkpolicy:pre
-	cd ./bcs-network && make networkpolicy && cd -
-
-bcs-cloud-network-agent:pre
-	cd ./bcs-network && make bcs-cloud-network-agent && cd -
-	
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
 	cp -R ./install/conf/bcs-services/bcs-user-manager ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./bcs-services/bcs-user-manager/main.go
+	cd bcs-services/bcs-user-manager/ && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./main.go
 
 cc-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-cc-agent ${PACKAGEPATH}/bcs-k8s-master
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-k8s-master/bcs-cc-agent/bcs-cc-agent ./bcs-k8s/bcs-cc-agent/main.go
 
+# network plugins section
+networkpolicy:pre
+	cd ./bcs-network && make networkpolicy
+
+cloud-network-agent:pre
+	cd ./bcs-network && make bcs-cloud-network-agent
+
 bkcmdb-synchronizer:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-bkcmdb-synchronizer/bcs-bkcmdb-synchronizer ./bcs-services/bcs-bkcmdb-synchronizer/main.go
 
-bcs-cloud-netservice:pre
-	cd ./bcs-network && make cloud-netservice && cd -
+cloud-netservice:pre
+	cd ./bcs-network && make cloud-netservice
 
-bcs-cloud-netcontroller:pre
-	cd ./bcs-network && make cloud-netcontroller && cd -
+cloud-netcontroller:pre
+	cd ./bcs-network && make cloud-netcontroller
 
-bcs-cloud-netagent:pre
-	cd ./bcs-network && make cloud-netagent && cd -
+cloud-netagent:pre
+	cd ./bcs-network && make cloud-netagent
 
-bcs-ingress-controller:pre
-	cd ./bcs-network && make ingress-controller && cd -
+ingress-controller:pre
+	cd ./bcs-network && make ingress-controller
 
-clustermanager:pre
-	cd ./bcs-services/bcs-cluster-manager && make clustermanager && cd -
+network:pre
+	cd ./bcs-network && make network
+
+clb-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-clb-controller
+	cp -R ./install/conf/bcs-services/bcs-clb-controller ${PACKAGEPATH}/bcs-services
+	cp ./bcs-services/bcs-clb-controller/docker/Dockerfile ${PACKAGEPATH}/bcs-services/bcs-clb-controller/Dockerfile.old
+	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ./bcs-services/bcs-clb-controller/main.go
+	cp ${PACKAGEPATH}/bcs-services/bcs-clb-controller/bcs-clb-controller ${PACKAGEPATH}/bcs-services/bcs-clb-controller/clb-controller
+#end of network plugins
+
+# bcs-service section
+cluster-manager:pre
+	cd ./bcs-services/bcs-cluster-manager && make clustermanager
+
+# end of bcs-service section

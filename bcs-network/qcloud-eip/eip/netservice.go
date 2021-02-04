@@ -16,9 +16,9 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-network/qcloud-eip/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	netsvc "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
+	"github.com/Tencent/bk-bcs/bcs-network/qcloud-eip/conf"
 	"strings"
 )
 
@@ -35,7 +35,7 @@ func NewNetSvcClient(conf *conf.NetArgs) (*NetSvcClient, error) {
 	if len(conf.Zookeeper) == 0 {
 		return nil, fmt.Errorf("netservice zookeeper config cannot be empty")
 	}
-	client := bcsapi.NewNetserviceCli()
+	client := bcsapi.NewNetserviceCliWithTimeout(10)
 	if len(conf.PubKey) != 0 || len(conf.Key) != 0 || len(conf.Ca) != 0 {
 		if err := client.SetCerts(conf.Ca, conf.Key, conf.PubKey, static.ClientCertPwd); err != nil {
 			return nil, err

@@ -78,9 +78,6 @@ func (s *Service) Valid() error {
 	if s.Retries == 0 {
 		s.Retries = 1
 	}
-	if len(s.Path) == 0 {
-		return fmt.Errorf("service path required")
-	}
 	if len(s.Routes) == 0 {
 		return fmt.Errorf("route required")
 	}

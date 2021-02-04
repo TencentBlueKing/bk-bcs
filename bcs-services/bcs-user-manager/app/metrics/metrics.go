@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -55,6 +56,7 @@ var (
 	}, []string{"type", "method"})
 )
 
+// RunMetric metric entrypoint
 func RunMetric(conf *config.UserMgrConfig) {
 
 	blog.Infof("run metric: port(%d)", conf.MetricPort)

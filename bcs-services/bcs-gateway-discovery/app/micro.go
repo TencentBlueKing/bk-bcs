@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 )
 
@@ -69,7 +69,7 @@ func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 	}
 	//check http service information registration
 	if _, ok := defaultHTTPModules[module]; ok {
-		if module == types.BCS_MODULE_MESOSDRIVER {
+		if module == modules.BCSModuleMesosdriver {
 			id := getMicroModuleClusterID(event.Module)
 			if !s.isClusterRestriction(id) {
 				s.clusterRestricted(id)
@@ -173,7 +173,7 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 			//! same time. so when discovery find that cluster mesosdriver update to etcd registry
 			//! version, discovery will restrict that only retreve discovery information from etcd
 			//! registry and ignore same information from zookeeper.
-			if module == types.BCS_MODULE_MESOSDRIVER {
+			if module == modules.BCSModuleMesosdriver {
 				id := getMicroModuleClusterID(svc.Name)
 				if !s.isClusterRestriction(id) {
 					s.clusterRestricted(id)

@@ -42,6 +42,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// AdmissionWebhookFilter webhook filter
 type AdmissionWebhookFilter struct {
 	sync.RWMutex
 
@@ -57,6 +58,7 @@ type AdmissionWebhookFilter struct {
 	adLister   v2lister.AdmissionWebhookConfigurationLister
 }
 
+// NewAdmissionWebhookFilter create webhook filter
 func NewAdmissionWebhookFilter(scheduler backend.Scheduler, kubeconfig string) (RequestFilterFunction, error) {
 	blog.Info("AdmissionWebhookFilter initialize...")
 	hookFilter := &AdmissionWebhookFilter{
@@ -127,11 +129,13 @@ func (hook *AdmissionWebhookFilter) deleteNodeFromCache(obj interface{}) {
 	hook.delAdmissionWebhook(ad.Name)
 }
 
+// Meta for webhook
 type Meta struct {
 	commtypes.TypeMeta   `json:",inline"`
 	commtypes.ObjectMeta `json:"metadata"`
 }
 
+// Execute webhook filter implementation
 func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 	body, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil || len(body) == 0 {

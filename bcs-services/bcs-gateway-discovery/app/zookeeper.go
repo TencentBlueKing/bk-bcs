@@ -14,6 +14,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -21,8 +22,10 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 )
 
@@ -146,66 +149,53 @@ func (s *DiscoveryServer) formatDriverServerInfo(module string) ([]*register.Ser
 }
 
 func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Service, error) {
-	var userMgrInst string
-	_, umStrategy := defaultHTTPModules["usermanager"]
-	if s.option.Etcd.Feature && umStrategy {
-		//get api-server information from bcs-user-manager etcd registry
-		node, err := s.microDiscovery.GetRandomServerInstance(types.BCS_MODULE_USERMANAGER)
-		if err != nil {
-			blog.Errorf("get user-manager module from etcd registry failed, %s", err.Error())
-			return nil, err
-		}
-		if node == nil {
-			blog.Warnf("get no available user-manager service, no kube-apiserver service")
-			return nil, nil
-		}
-		userMgrInst = node.Address
-		blog.Infof("get random user-manager instance [%s] from etcd registry for query kube-apiserver", userMgrInst)
-	} else {
-		//we get all kubernetes api-server from bcs-user-manager, zookeeper registry
-		original, err := s.discovery.GetRandModuleServer(types.BCS_MODULE_USERMANAGER)
-		if err != nil {
-			blog.Errorf("get module %s info for list all kube-apiserver failed, %s", types.BCS_MODULE_USERMANAGER, err.Error())
-			return nil, err
-		}
-		blog.V(5).Infof("get module %s string detail: %+v", types.BCS_MODULE_USERMANAGER, original)
-		data := original.(string)
-		svc := new(types.ServerInfo)
-		if err := json.Unmarshal([]byte(data), svc); err != nil {
-			blog.Errorf("in [kubernetes api-server] handle module %s json %s unmarshal failed, %s", types.BCS_MODULE_USERMANAGER, data, err.Error())
-			return nil, err
-		}
-		userMgrInst = fmt.Sprintf("%s:%d", svc.IP, svc.Port)
-		blog.Infof("get random user-manager instance [%s] from zookeeper registry for query kube-apiserver", userMgrInst)
+	//get api-server information from bcs-cluster-manager etcd registry
+	node, err := s.microDiscovery.GetRandomServerInstance(modules.BCSModuleClusterManager)
+	if err != nil {
+		blog.Errorf("get cluster-manager module from etcd registry failed, %s", err.Error())
+		return nil, err
 	}
-	//ready to get kube-apiserver list from bcs-user-manager
+	if node == nil {
+		blog.Warnf("get no available cluster-manager service, no kube-apiserver service")
+		return nil, nil
+	}
+	blog.Infof("get random cluster-manager instance [%s] from etcd registry for query kube-apiserver", node.Address)
+	//ready to get kube-apiserver list from bcs-cluster-manager
 	config := &bcsapi.Config{
-		Hosts:     []string{userMgrInst},
+		Hosts:     []string{node.Address},
 		AuthToken: s.option.AuthToken,
 		Gateway:   false,
 	}
 	config.TLSConfig, _ = s.option.GetClientTLS()
-	apiCli := bcsapi.NewClient(config)
-	clusters, err := apiCli.UserManager().ListAllClusters()
+	clusterCli := bcsapi.NewClusterManager(config)
+	req := &bcsapicm.ListClusterCredentialReq{
+		ClientMode:  modules.BCSModuleKubeagent,
+		ConnectMode: modules.BCSConnectModeDirect,
+	}
+	clusterResp, err := clusterCli.ListClusterCredential(context.Background(), req, bcsapi.XRequestID())
 	if err != nil {
-		blog.Errorf("request all kube-apiserver cluster info from bcs-user-manager %+v failed, %s", config.Hosts, err.Error())
+		blog.Errorf("request all kube-apiserver cluster info from bcs-cluster-manager %s failed, %s", node.Address, err.Error())
 		return nil, err
 	}
-	if len(clusters) == 0 {
-		blog.Warnf("No kube-apiserver registered, skip kube-apiserver proxy rules")
+	if clusterResp.Code != 0 {
+		blog.Errorf("request all direct connect kube-apiserver info from cluster-manager %s failed, %s", node.Address, clusterResp.Message)
+		return nil, fmt.Errorf(clusterResp.Message)
+	}
+	if len(clusterResp.Data) == 0 {
+		blog.Warnf("No direct connection kube-apiserver registered, skip kube-apiserver proxy rules")
 		return nil, nil
 	}
 	//construct inner Service definition
 	var localSvcs []*register.Service
-	for _, cluster := range clusters {
+	for _, cluster := range clusterResp.Data {
 		k := fmt.Sprintf("%s/%s", module, cluster.ClusterID)
 		//one clustercredential converts to ServerInfo
 		var svcs []*types.ServerInfo
-		clusterAddress := strings.Split(cluster.ServerAddresses, ",")
+		clusterAddress := strings.Split(cluster.ServerAddress, ",")
 		for _, address := range clusterAddress {
 			u, err := url.Parse(address)
 			if err != nil {
-				blog.Errorf("kube-apiserver[%s] cluster_address %s parse failed, %s", cluster.ClusterID, cluster.ServerAddresses, err.Error())
+				blog.Errorf("kube-apiserver[%s] cluster_address %s parse failed, %s", cluster.ClusterID, cluster.ServerAddress, err.Error())
 				continue
 			}
 			svc := &types.ServerInfo{
@@ -242,17 +232,17 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	return localSvcs, nil
 }
 
-func (s *DiscoveryServer) formatMultiServerInfo(modules []string) ([]*register.Service, error) {
+func (s *DiscoveryServer) formatMultiServerInfo(smodules []string) ([]*register.Service, error) {
 	var regSvcs []*register.Service
-	for _, m := range modules {
-		if m == types.BCS_MODULE_MESOSDRIVER || m == types.BCS_MODULE_KUBERNETEDRIVER {
+	for _, m := range smodules {
+		if m == modules.BCSModuleMesosdriver {
 			svcs, err := s.formatDriverServerInfo(m)
 			if err != nil {
 				blog.Errorf("gateway-discovery format DriverModule %s to inner register Service failed %s, continue", m, err.Error())
 				continue
 			}
 			regSvcs = append(regSvcs, svcs...)
-		} else if m == types.BCS_MODULE_KUBEAGENT {
+		} else if m == modules.BCSModuleKubeagent {
 			svc, err := s.formatKubeAPIServerInfo(m)
 			if err != nil {
 				blog.Errorf("gateway-discovery format kubernetes api-server to inner register Service failed %s, continue", err.Error())

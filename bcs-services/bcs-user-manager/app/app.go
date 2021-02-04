@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
+	usermanager "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
@@ -35,15 +35,15 @@ func Run(op *options.UserManagerOptions) {
 		os.Exit(1)
 	}
 	if conf.ClientCert.IsSSL {
-		cliTls, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile, conf.ClientCert.CertPasswd)
+		cliTLS, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile, conf.ClientCert.CertPasswd)
 		if err != nil {
 			blog.Errorf("set client tls config error %s", err.Error())
 		} else {
-			config.CliTls = cliTls
+			config.CliTls = cliTLS
 			blog.Infof("set client tls config success")
 		}
 	}
-	userManager := user_manager.NewUserManager(conf)
+	userManager := usermanager.NewUserManager(conf)
 
 	//register to zk
 	userManager.RegDiscover()
@@ -79,11 +79,11 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.PeerToken = op.PeerToken
 
 	config.Tke = op.TKE
-	secretId, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))
+	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))
 	if err != nil {
 		return nil, fmt.Errorf("error decrypting tke secretId and exit: %s", err.Error())
 	}
-	config.Tke.SecretId = string(secretId)
+	config.Tke.SecretId = string(secretID)
 	secretKey, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretKey))
 	if err != nil {
 		return nil, fmt.Errorf("error decrypting tke secretKey and exit: %s", err.Error())

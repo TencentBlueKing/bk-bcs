@@ -4,13 +4,13 @@ go 1.14
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs => ../../
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator => ../../bcs-k8s/bcs-gamedeployment-operator
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../../bcs-k8s/bcs-gamestatefulset-operator
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager => ../bcs-log-manager
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager => ../bcs-mesh-manager
+	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager => ../bcs-user-manager
 	github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server => ../../bcs-services/bcs-webhook-server
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
@@ -34,10 +34,10 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.1.0 // indirect
 	github.com/Masterminds/squirrel v1.2.0 // indirect
-	github.com/Tencent/bk-bcs v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210122122633-ada65fa64361
 	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager v0.0.0-00010101000000-000000000000
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cheggaaa/pb/v3 v3.0.4 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rubenv/sql-migrate v0.0.0-20200212082348-64f95ea68aa3 // indirect
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect

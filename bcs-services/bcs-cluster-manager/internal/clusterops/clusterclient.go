@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	k8scorecliset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -49,7 +49,7 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 		return nil, fmt.Errorf("cluster credential not found of %s", clusterID)
 	}
 	cfg := &rest.Config{}
-	if cred.ConnectMode == types.ConnectModeWebsocketTunnel {
+	if cred.ConnectMode == modules.BCSConnectModeTunnel {
 		if len(ko.opt.ClientCert) != 0 && len(ko.opt.ClientCa) != 0 && len(ko.opt.ClientKey) != 0 {
 			cfg.Host = "https://" + ko.opt.Address + ":" + strconv.Itoa(int(ko.opt.HTTPPort)) +
 				"/clustermanager/clusters/" + clusterID
@@ -71,7 +71,7 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 			return nil, err
 		}
 		return cliset, nil
-	} else if cred.ConnectMode == types.ConnectModeDirect {
+	} else if cred.ConnectMode == modules.BCSConnectModeDirect {
 		cfg.Host = cred.ServerAddress
 		cfg.TLSClientConfig = rest.TLSClientConfig{
 			Insecure: false,

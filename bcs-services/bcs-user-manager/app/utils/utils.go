@@ -21,10 +21,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
+
 	"github.com/asaskevich/govalidator"
 	"gopkg.in/go-playground/validator.v9"
 )
 
+// Validate local implementation
 var Validate = validator.New()
 
 func init() {
@@ -77,6 +79,7 @@ func FormatValidationError(errList error) *ErrorResponse {
 	}
 }
 
+// CreateResponeData common response
 func CreateResponeData(err error, msg string, data interface{}) string {
 	var rpyErr error
 	if err != nil {

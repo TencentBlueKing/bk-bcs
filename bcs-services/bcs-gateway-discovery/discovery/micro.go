@@ -90,7 +90,7 @@ func (d *MicroDiscovery) Start() error {
 	return nil
 }
 
-// GetModuleServer module: types.BCS_MODULE_SCHEDULER...
+// GetModuleServer module: modules.BCSModuleScheduler
 //if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver, storage
 func (d *MicroDiscovery) GetModuleServer(module string) (*registry.Service, error) {
 	fullName := fmt.Sprintf("%s%s", module, defaultDomain)

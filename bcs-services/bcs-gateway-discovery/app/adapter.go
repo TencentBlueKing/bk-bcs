@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 
@@ -26,11 +27,11 @@ import (
 )
 
 var notStandardRouteModules = map[string]string{
-	types.BCS_MODULE_STORAGE:          "storage",
-	types.BCS_MODULE_MESOSDRIVER:      "mesosdriver",
-	types.BCS_MODULE_NETWORKDETECTION: "detection",
-	types.BCS_MODULE_KUBEAGENT:        "kubeagent",
-	types.BCS_MODULE_USERMANAGER:      "usermanager",
+	modules.BCSModuleStorage:          "storage",
+	modules.BCSModuleMesosdriver:      "mesosdriver",
+	modules.BCSModuleNetworkdetection: "networkdetection",
+	modules.BCSModuleKubeagent:        "kubeagent",
+	modules.BCSModuleUserManager:      "usermanager",
 }
 
 var defaultModules = []string{}
@@ -63,10 +64,9 @@ type Handler func(module string, svcs []*types.ServerInfo) (*register.Service, e
 type MicroHandler func(module string, svc *registry.Service) (*register.Service, error)
 
 //NewAdapter create service data conversion
-func NewAdapter(option *ServerOptions, standardModules []string) *Adapter {
+func NewAdapter(option *ServerOptions) *Adapter {
 	adp := &Adapter{
 		admintoken:    option.AuthToken,
-		modules:       standardModules,
 		handlers:      make(map[string]Handler),
 		microHandlers: make(map[string]MicroHandler),
 	}
@@ -80,7 +80,6 @@ func NewAdapter(option *ServerOptions, standardModules []string) *Adapter {
 // information to inner register data structures
 type Adapter struct {
 	admintoken    string
-	modules       []string
 	handlers      map[string]Handler
 	microHandlers map[string]MicroHandler
 }
@@ -130,7 +129,7 @@ func (adp *Adapter) GetGrpcService(module string, svc *registry.Service) (*regis
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
 				Module:        module,
 			},
@@ -192,7 +191,7 @@ func (adp *Adapter) microStandarModule(module string, svc *registry.Service) (*r
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
 				Module:        module,
 			},
@@ -241,30 +240,28 @@ func (adp *Adapter) microNotStandarModule(module string, svc *registry.Service) 
 
 //initDefaultModules init original proxy rule, it's better compatible with originals
 func (adp *Adapter) initDefaultModules() error {
-	adp.handlers[types.BCS_MODULE_STORAGE] = adp.constructStorage
-	blog.Infof("gateway-discovery init module %s proxy rules", types.BCS_MODULE_STORAGE)
-	adp.handlers[types.BCS_MODULE_MESOSDRIVER] = adp.constructMesosDriver
-	blog.Infof("gateway-discovery init module %s proxy rules", types.BCS_MODULE_MESOSDRIVER)
-	adp.handlers[types.BCS_MODULE_KUBERNETEDRIVER] = adp.constructKubeDriver
-	blog.Infof("gateway-discovery init module %s proxy rules", types.BCS_MODULE_KUBERNETEDRIVER)
+	adp.handlers[modules.BCSModuleStorage] = adp.constructStorage
+	blog.Infof("gateway-discovery init module %s proxy rules", modules.BCSModuleStorage)
+	adp.handlers[modules.BCSModuleMesosdriver] = adp.constructMesosDriver
+	blog.Infof("gateway-discovery init module %s proxy rules", modules.BCSModuleMesosdriver)
 	//kube-apiserver information get by userManager
-	adp.handlers[types.BCS_MODULE_USERMANAGER] = adp.constructUserMgr
-	blog.Infof("gateway-discovery init module %s proxy rules", types.BCS_MODULE_USERMANAGER)
+	adp.handlers[modules.BCSModuleUserManager] = adp.constructUserMgr
+	blog.Infof("gateway-discovery init module %s proxy rules", modules.BCSModuleUserManager)
 	//kube-apiserver proxy rule is not compatible with bcs-api
-	adp.handlers[types.BCS_MODULE_KUBEAGENT] = adp.constructKubeAPIServer
-	blog.Infof("gateway-discovery init module %s proxy rules", types.BCS_MODULE_KUBEAGENT)
+	adp.handlers[modules.BCSModuleKubeagent] = adp.constructKubeAPIServer
+	blog.Infof("gateway-discovery init module %s proxy rules", modules.BCSModuleKubeagent)
 	return nil
 }
 
 //initDefaultModules init original proxy rule, it's better compatible with originals
 func (adp *Adapter) initCompatibleMicroModules() error {
-	adp.microHandlers[types.BCS_MODULE_STORAGE] = adp.microStorage
-	blog.Infof("gateway-discovery init compatible module %s proxy rules", types.BCS_MODULE_STORAGE)
-	adp.microHandlers[types.BCS_MODULE_MESOSDRIVER] = adp.microMesosDriver
-	blog.Infof("gateway-discovery init compatible module %s proxy rules", types.BCS_MODULE_MESOSDRIVER)
+	adp.microHandlers[modules.BCSModuleStorage] = adp.microStorage
+	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleStorage)
+	adp.microHandlers[modules.BCSModuleMesosdriver] = adp.microMesosDriver
+	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleMesosdriver)
 	//kube-apiserver information get by userManager
-	adp.microHandlers[types.BCS_MODULE_USERMANAGER] = adp.microUserMgr
-	blog.Infof("gateway-discovery init compatible module %s proxy rules", types.BCS_MODULE_USERMANAGER)
+	adp.microHandlers[modules.BCSModuleUserManager] = adp.microUserMgr
+	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleUserManager)
 	return nil
 }
 
@@ -286,11 +283,11 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 		blog.Errorf("contruct MesosDriver Server Info failed, ClusterID is invalid in Module name [%s]", module)
 		return nil, fmt.Errorf("mesosdriver clusterID is invalid")
 	}
-	name := types.BCS_MODULE_MESOSDRIVER + "-" + bkbcsID[2]
-	hostName := bkbcsID[2] + "." + types.BCS_MODULE_MESOSDRIVER + defaultDomain
+	name := modules.BCSModuleMesosdriver + "-" + bkbcsID[2]
+	hostName := bkbcsID[2] + "." + modules.BCSModuleMesosdriver + defaultDomain
 	labels := make(map[string]string)
 	upcaseID := strings.ToUpper(resources[1])
-	labels["module"] = types.BCS_MODULE_MESOSDRIVER
+	labels["module"] = modules.BCSModuleMesosdriver
 	labels["service"] = defaultClusterName
 	labels["scheduler"] = "mesos"
 	labels["cluster"] = upcaseID
@@ -319,71 +316,9 @@ func (adp *Adapter) constructMesosDriver(module string, svcs []*types.ServerInfo
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
-				Module:        types.BCS_MODULE_MESOSDRIVER,
-			},
-		},
-	}
-	regSvc.Routes = append(regSvc.Routes, rt)
-	//setting upstream backend information
-	bcks := adp.constructBackends(svcs)
-	regSvc.Backends = append(regSvc.Backends, bcks...)
-	return regSvc, nil
-}
-
-//constructKubeDriver convert bcs-kube-driver service information
-// to custom service definition. this is compatible with original bcs-api proxy
-func (adp *Adapter) constructKubeDriver(module string, svcs []*types.ServerInfo) (*register.Service, error) {
-	if len(svcs) == 0 {
-		//if all service instances down, just keep it what it used to be
-		// and wait until remote storage node re-registe
-		return nil, fmt.Errorf("ServerInfo lost")
-	}
-	resources := strings.Split(module, "/")
-	if len(resources) != 2 {
-		blog.Errorf("contruct KubeDriver server info for %s failed, module name is invalid", module)
-		return nil, fmt.Errorf("module information is invalid")
-	}
-	bkbcsID := strings.Split(resources[1], "-")
-	if len(bkbcsID) != 3 {
-		blog.Errorf("contruct KubeDriver Server Info failed, ClusterID is invalid in Module name [%s]", module)
-		return nil, fmt.Errorf("kubedriver clusterID is invalid")
-	}
-	name := fmt.Sprintf("%s-%s", types.BCS_MODULE_KUBERNETEDRIVER, bkbcsID[2])
-	hostName := fmt.Sprintf("%s.%s%s", bkbcsID[2], types.BCS_MODULE_KUBERNETEDRIVER, defaultDomain)
-	labels := make(map[string]string)
-	upcaseID := strings.ToUpper(resources[1])
-	labels["module"] = types.BCS_MODULE_KUBERNETEDRIVER
-	labels["service"] = defaultClusterName
-	labels["scheduler"] = "kubernetes"
-	labels["cluster"] = upcaseID
-	regSvc := &register.Service{
-		Name:     name,
-		Protocol: svcs[0].Scheme,
-		Host:     hostName,
-		Path:     "/k8sdriver/v4/",
-		Retries:  1,
-		Labels:   labels,
-	}
-	//setting route information
-	rt := register.Route{
-		Name:        name,
-		Protocol:    svcs[0].Scheme,
-		Paths:       []string{"/bcsapi/v4/scheduler/k8s/"},
-		PathRewrite: true,
-		Header: map[string]string{
-			defaultClusterIDKey: upcaseID,
-		},
-		Service: name,
-		Labels:  labels,
-		Plugin: &register.Plugins{
-			AuthOption: &register.BCSAuthOption{
-				Name: defaultPluginName,
-				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
-				AuthToken:     adp.admintoken,
-				Module:        types.BCS_MODULE_KUBERNETEDRIVER,
+				Module:        modules.BCSModuleMesosdriver,
 			},
 		},
 	}
@@ -402,9 +337,9 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
-	hostName := fmt.Sprintf("%s%s", types.BCS_MODULE_STORAGE, defaultDomain)
+	hostName := fmt.Sprintf("%s%s", modules.BCSModuleStorage, defaultDomain)
 	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_STORAGE
+	labels["module"] = modules.BCSModuleStorage
 	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
@@ -426,9 +361,9 @@ func (adp *Adapter) constructStorage(module string, svcs []*types.ServerInfo) (*
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
-				Module:        types.BCS_MODULE_STORAGE,
+				Module:        modules.BCSModuleStorage,
 			},
 		},
 	}
@@ -458,11 +393,11 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 		blog.Errorf("contruct Kube-apiServer Info failed, ClusterID is invalid in Module name [%s]", module)
 		return nil, fmt.Errorf("kubeagent clusterID is invalid")
 	}
-	name := types.BCS_MODULE_KUBEAGENT + "-" + bkbcsID[2]
-	hostName := bkbcsID[2] + "." + types.BCS_MODULE_KUBEAGENT + defaultDomain
+	name := modules.BCSModuleKubeagent + "-" + bkbcsID[2]
+	hostName := bkbcsID[2] + "." + modules.BCSModuleKubeagent + defaultDomain
 	labels := make(map[string]string)
 	upcaseID := strings.ToUpper(resources[1])
-	labels["module"] = types.BCS_MODULE_KUBEAGENT
+	labels["module"] = modules.BCSModuleKubeagent
 	labels["service"] = defaultClusterName
 	labels["scheduler"] = "kubernetes"
 	labels["cluster"] = upcaseID
@@ -488,16 +423,16 @@ func (adp *Adapter) constructKubeAPIServer(module string, svcs []*types.ServerIn
 	rt := register.Route{
 		Name:        name,
 		Protocol:    svcs[0].Scheme,
-		Paths:       []string{fmt.Sprintf("/tunnels/clusters/%s/", upcaseID)},
+		Paths:       []string{fmt.Sprintf("/clusters/%s/", upcaseID)},
 		PathRewrite: true,
 		Service:     name,
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
-				Module:        types.BCS_MODULE_KUBEAGENT,
+				Module:        modules.BCSModuleKubeagent,
 			},
 		},
 		Labels: labels,
@@ -518,15 +453,15 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
-	hostName := fmt.Sprintf("%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain)
+	hostName := fmt.Sprintf("%s%s", modules.BCSModuleUserManager, defaultDomain)
 	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_USERMANAGER
+	labels["module"] = modules.BCSModuleUserManager
 	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
 		Protocol: svcs[0].Scheme,
 		Host:     hostName,
-		Path:     fmt.Sprintf("/%s/", types.BCS_MODULE_USERMANAGER),
+		Path:     fmt.Sprintf("/%s/", modules.BCSModuleUserManager),
 		Retries:  1,
 		Labels:   labels,
 	}
@@ -534,7 +469,7 @@ func (adp *Adapter) constructUserMgr(module string, svcs []*types.ServerInfo) (*
 	rt := register.Route{
 		Name:        module,
 		Protocol:    svcs[0].Scheme,
-		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", types.BCS_MODULE_USERMANAGER)},
+		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", modules.BCSModuleUserManager)},
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,
@@ -555,9 +490,9 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 		// and wait until remote storage node re-registe
 		return nil, fmt.Errorf("ServerInfo lost")
 	}
-	hostName := fmt.Sprintf("%s%s", types.BCS_MODULE_NETWORKDETECTION, defaultDomain)
+	hostName := fmt.Sprintf("%s%s", modules.BCSModuleNetworkdetection, defaultDomain)
 	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_NETWORKDETECTION
+	labels["module"] = modules.BCSModuleNetworkdetection
 	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
@@ -577,9 +512,9 @@ func (adp *Adapter) constructNetworkDetection(module string, svcs []*types.Serve
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
-				Module:        types.BCS_MODULE_NETWORKDETECTION,
+				Module:        modules.BCSModuleNetworkdetection,
 			},
 		},
 		Service: module,
@@ -640,7 +575,8 @@ func (adp *Adapter) microMesosDriver(module string, svc *registry.Service) (*reg
 	labels["module"] = module
 	labels["service"] = defaultClusterName
 	labels["scheduler"] = "mesos"
-	labels["cluster"] = fmt.Sprintf("BCS-MESOS-%s", items[0])
+	upcaseID := fmt.Sprintf("BCS-MESOS-%s", items[0])
+	labels["cluster"] = upcaseID
 	regSvc := &register.Service{
 		Name:     name,
 		Protocol: "https",
@@ -655,11 +591,14 @@ func (adp *Adapter) microMesosDriver(module string, svc *registry.Service) (*reg
 		Protocol:    "http",
 		Paths:       []string{"/bcsapi/v4/scheduler/mesos/", "/bcsapi/v1/"},
 		PathRewrite: true,
+		Header: map[string]string{
+			defaultClusterIDKey: upcaseID,
+		},
 		Plugin: &register.Plugins{
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
 				Module:        module,
 			},
@@ -678,7 +617,7 @@ func (adp *Adapter) microMesosDriver(module string, svc *registry.Service) (*reg
 // to custom service definition. this is compatible with original bcs-api proxy
 func (adp *Adapter) microStorage(module string, svc *registry.Service) (*register.Service, error) {
 	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_STORAGE
+	labels["module"] = modules.BCSModuleStorage
 	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
@@ -700,9 +639,9 @@ func (adp *Adapter) microStorage(module string, svc *registry.Service) (*registe
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
-				Module:        types.BCS_MODULE_STORAGE,
+				Module:        modules.BCSModuleStorage,
 			},
 		},
 	}
@@ -718,13 +657,13 @@ func (adp *Adapter) microStorage(module string, svc *registry.Service) (*registe
 // and further more, api-gateway defines new standard proxy rule for it
 func (adp *Adapter) microUserMgr(module string, svc *registry.Service) (*register.Service, error) {
 	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_USERMANAGER
+	labels["module"] = modules.BCSModuleUserManager
 	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
 		Protocol: "https",
 		Host:     svc.Name,
-		Path:     fmt.Sprintf("/%s/", types.BCS_MODULE_USERMANAGER),
+		Path:     fmt.Sprintf("/%s/", modules.BCSModuleUserManager),
 		Retries:  1,
 		Labels:   labels,
 	}
@@ -732,7 +671,7 @@ func (adp *Adapter) microUserMgr(module string, svc *registry.Service) (*registe
 	rt := register.Route{
 		Name:        module,
 		Protocol:    "http",
-		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", types.BCS_MODULE_USERMANAGER)},
+		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", modules.BCSModuleUserManager)},
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,
@@ -749,7 +688,7 @@ func (adp *Adapter) microUserMgr(module string, svc *registry.Service) (*registe
 // and further more, api-gateway defines new standard proxy rule for it
 func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) (*register.Service, error) {
 	labels := make(map[string]string)
-	labels["module"] = types.BCS_MODULE_NETWORKDETECTION
+	labels["module"] = modules.BCSModuleNetworkdetection
 	labels["service"] = defaultServiceTag
 	regSvc := &register.Service{
 		Name:     module,
@@ -769,9 +708,9 @@ func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) 
 			AuthOption: &register.BCSAuthOption{
 				Name: defaultPluginName,
 				//sending auth request to usermanager.bkbcs.tencent.com
-				AuthEndpoints: fmt.Sprintf("https://%s%s", types.BCS_MODULE_USERMANAGER, defaultDomain),
+				AuthEndpoints: fmt.Sprintf("https://%s%s", modules.BCSModuleUserManager, defaultDomain),
 				AuthToken:     adp.admintoken,
-				Module:        types.BCS_MODULE_NETWORKDETECTION,
+				Module:        modules.BCSModuleNetworkdetection,
 			},
 		},
 		Service: module,
