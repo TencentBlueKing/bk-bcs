@@ -17,7 +17,7 @@ import "github.com/micro/go-micro/v2/registry"
 
 // all bkbcs module registe itself with basic domnain .bkbcs.tencent.com
 // for example, bcs-mesh-manager registes it as meshmanager.bkbcs.tencent.com
-// module names refere to common/types/serverInfo.go, formats likes BCS_MODULE_${name}
+// module names refere to common/modules/modules.go, formats likes BCSModule${name}
 
 // EventHandler callback function when server changes
 type EventHandler func(module string)
@@ -27,7 +27,7 @@ type EventHandler func(module string)
 type Discovery interface {
 	// Start to work
 	Start() error
-	//GetModuleServer get local watch module: types.BCS_MODULE_SCHEDULER...
+	//GetModuleServer get local watch module: modules.BCSModuleScheduler
 	//if mesos-apiserver/k8s-apiserver module=clusterId.{module}, for examples: 10001.mesosdriver
 	GetModuleServer(module string) (*registry.Service, error)
 	// GetRandomServerInstance get random one instance of local cache server information
