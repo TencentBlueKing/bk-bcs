@@ -98,8 +98,9 @@ func (fa *FederateAction) updateSingleCluster() error {
 }
 
 func (fa *FederateAction) setResp(code uint64, msg string) {
-	fa.resp.ErrCode = code
-	fa.resp.ErrMsg = msg
+	fa.resp.Code = code
+	fa.resp.Message = msg
+	fa.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle handles federate cluster request

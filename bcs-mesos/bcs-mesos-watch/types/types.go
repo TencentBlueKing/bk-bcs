@@ -65,7 +65,11 @@ type CmdConfig struct {
 	// reuse RegDiscvSvr by default.
 	NetServiceZK string
 
+	// Etcd etcd options for service registry and discovery
 	Etcd registry.CMDOptions
+
+	// StorageAddresses address for bcs-storage
+	StorageAddresses []string
 }
 
 const (
@@ -75,5 +79,6 @@ const (
 	TaskgroupChannelPrefix = "TaskGroup_"
 	//ExportserviceChannelPrefix prefix for event post channel
 	ExportserviceChannelPrefix = "Exportservice_"
-	DeploymentChannelPrefix    = "Deployment_"
+	// DeploymentChannelPrefix deployment prefix for post channel
+	DeploymentChannelPrefix = "Deployment_"
 )

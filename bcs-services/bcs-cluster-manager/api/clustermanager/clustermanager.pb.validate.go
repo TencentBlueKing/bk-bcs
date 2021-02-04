@@ -240,6 +240,21 @@ func (m *Namespace) Validate() error {
 
 	// no validation rules for UpdateTime
 
+	for idx, item := range m.GetQuotaList() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return NamespaceValidationError{
+					field:  fmt.Sprintf("QuotaList[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -297,146 +312,6 @@ var _ interface {
 	ErrorName() string
 } = NamespaceValidationError{}
 
-// Validate checks the field values on Quantity with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
-func (m *Quantity) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for String_
-
-	return nil
-}
-
-// QuantityValidationError is the validation error returned by
-// Quantity.Validate if the designated constraints aren't met.
-type QuantityValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e QuantityValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e QuantityValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e QuantityValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e QuantityValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e QuantityValidationError) ErrorName() string { return "QuantityValidationError" }
-
-// Error satisfies the builtin error interface
-func (e QuantityValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sQuantity.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = QuantityValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = QuantityValidationError{}
-
-// Validate checks the field values on ObjectMeta with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
-func (m *ObjectMeta) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Name
-
-	// no validation rules for Namespace
-
-	// no validation rules for Cluster
-
-	// no validation rules for Labels
-
-	// no validation rules for Annotations
-
-	return nil
-}
-
-// ObjectMetaValidationError is the validation error returned by
-// ObjectMeta.Validate if the designated constraints aren't met.
-type ObjectMetaValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ObjectMetaValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ObjectMetaValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ObjectMetaValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ObjectMetaValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ObjectMetaValidationError) ErrorName() string { return "ObjectMetaValidationError" }
-
-// Error satisfies the builtin error interface
-func (e ObjectMetaValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sObjectMeta.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ObjectMetaValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ObjectMetaValidationError{}
-
 // Validate checks the field values on ResourceQuota with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -445,35 +320,17 @@ func (m *ResourceQuota) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetMetadata()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ResourceQuotaValidationError{
-				field:  "Metadata",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for Namespace
 
-	if v, ok := interface{}(m.GetSpec()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ResourceQuotaValidationError{
-				field:  "Spec",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for FederationClusterID
 
-	if v, ok := interface{}(m.GetStatus()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ResourceQuotaValidationError{
-				field:  "Status",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for ClusterID
+
+	// no validation rules for ResourceQuota
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
 
 	return nil
 }
@@ -531,353 +388,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ResourceQuotaValidationError{}
-
-// Validate checks the field values on ResourceQuotaSpec with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
-func (m *ResourceQuotaSpec) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	for key, val := range m.GetHard() {
-		_ = val
-
-		// no validation rules for Hard[key]
-
-		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ResourceQuotaSpecValidationError{
-					field:  fmt.Sprintf("Hard[%v]", key),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	if v, ok := interface{}(m.GetScopeSelector()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ResourceQuotaSpecValidationError{
-				field:  "ScopeSelector",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	return nil
-}
-
-// ResourceQuotaSpecValidationError is the validation error returned by
-// ResourceQuotaSpec.Validate if the designated constraints aren't met.
-type ResourceQuotaSpecValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ResourceQuotaSpecValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ResourceQuotaSpecValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ResourceQuotaSpecValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ResourceQuotaSpecValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ResourceQuotaSpecValidationError) ErrorName() string {
-	return "ResourceQuotaSpecValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ResourceQuotaSpecValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sResourceQuotaSpec.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ResourceQuotaSpecValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ResourceQuotaSpecValidationError{}
-
-// Validate checks the field values on ResourceQuotaStatus with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *ResourceQuotaStatus) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	for key, val := range m.GetHard() {
-		_ = val
-
-		// no validation rules for Hard[key]
-
-		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ResourceQuotaStatusValidationError{
-					field:  fmt.Sprintf("Hard[%v]", key),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	for key, val := range m.GetUsed() {
-		_ = val
-
-		// no validation rules for Used[key]
-
-		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ResourceQuotaStatusValidationError{
-					field:  fmt.Sprintf("Used[%v]", key),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	return nil
-}
-
-// ResourceQuotaStatusValidationError is the validation error returned by
-// ResourceQuotaStatus.Validate if the designated constraints aren't met.
-type ResourceQuotaStatusValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ResourceQuotaStatusValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ResourceQuotaStatusValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ResourceQuotaStatusValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ResourceQuotaStatusValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ResourceQuotaStatusValidationError) ErrorName() string {
-	return "ResourceQuotaStatusValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ResourceQuotaStatusValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sResourceQuotaStatus.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ResourceQuotaStatusValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ResourceQuotaStatusValidationError{}
-
-// Validate checks the field values on ScopeSelector with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
-func (m *ScopeSelector) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	for idx, item := range m.GetMatchExpressions() {
-		_, _ = idx, item
-
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ScopeSelectorValidationError{
-					field:  fmt.Sprintf("MatchExpressions[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	return nil
-}
-
-// ScopeSelectorValidationError is the validation error returned by
-// ScopeSelector.Validate if the designated constraints aren't met.
-type ScopeSelectorValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ScopeSelectorValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ScopeSelectorValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ScopeSelectorValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ScopeSelectorValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ScopeSelectorValidationError) ErrorName() string { return "ScopeSelectorValidationError" }
-
-// Error satisfies the builtin error interface
-func (e ScopeSelectorValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sScopeSelector.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ScopeSelectorValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ScopeSelectorValidationError{}
-
-// Validate checks the field values on ScopedResourceSelectorRequirement with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, an error is returned.
-func (m *ScopedResourceSelectorRequirement) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for ScopeName
-
-	// no validation rules for Operator
-
-	return nil
-}
-
-// ScopedResourceSelectorRequirementValidationError is the validation error
-// returned by ScopedResourceSelectorRequirement.Validate if the designated
-// constraints aren't met.
-type ScopedResourceSelectorRequirementValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ScopedResourceSelectorRequirementValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ScopedResourceSelectorRequirementValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ScopedResourceSelectorRequirementValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ScopedResourceSelectorRequirementValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ScopedResourceSelectorRequirementValidationError) ErrorName() string {
-	return "ScopedResourceSelectorRequirementValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ScopedResourceSelectorRequirementValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sScopedResourceSelectorRequirement.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ScopedResourceSelectorRequirementValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ScopedResourceSelectorRequirementValidationError{}
 
 // Validate checks the field values on CreateClusterReq with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -1101,9 +611,11 @@ func (m *CreateClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -1255,9 +767,11 @@ func (m *DeleteClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -1540,9 +1054,11 @@ func (m *UpdateClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -1692,14 +1208,16 @@ func (m *GetClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	if v, ok := interface{}(m.GetCluster()).(interface{ Validate() error }); ok {
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetClusterRespValidationError{
-				field:  "Cluster",
+				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1901,17 +1419,19 @@ func (m *ListClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	for idx, item := range m.GetClusterList() {
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
 		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ListClusterRespValidationError{
-					field:  fmt.Sprintf("ClusterList[%v]", idx),
+					field:  fmt.Sprintf("Data[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -2059,14 +1579,16 @@ func (m *GetClusterCredentialResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	if v, ok := interface{}(m.GetClusterCredential()).(interface{ Validate() error }); ok {
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetClusterCredentialRespValidationError{
-				field:  "ClusterCredential",
+				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -2256,9 +1778,11 @@ func (m *UpdateClusterCredentialResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -2402,9 +1926,11 @@ func (m *DeleteClusterCredentialResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -2583,17 +2109,19 @@ func (m *ListClusterCredentialResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	for idx, item := range m.GetClusterCredentialList() {
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
 		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ListClusterCredentialRespValidationError{
-					field:  fmt.Sprintf("ClusterCredentialList[%v]", idx),
+					field:  fmt.Sprintf("Data[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -2874,9 +2402,11 @@ func (m *AddFederatedClusterResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -3044,9 +2574,11 @@ func (m *CreateNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -3198,9 +2730,11 @@ func (m *DeleteNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -3354,9 +2888,11 @@ func (m *UpdateNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -3504,14 +3040,16 @@ func (m *GetNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	if v, ok := interface{}(m.GetNs()).(interface{ Validate() error }); ok {
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetNamespaceRespValidationError{
-				field:  "Ns",
+				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -3673,17 +3211,19 @@ func (m *ListNamespaceResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	for idx, item := range m.GetNsList() {
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
 		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ListNamespaceRespValidationError{
-					field:  fmt.Sprintf("NsList[%v]", idx),
+					field:  fmt.Sprintf("Data[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -3856,11 +3396,21 @@ func (m *CreateNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	// no validation rules for ClusterID
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNamespaceQuotaRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -4019,9 +3569,11 @@ func (m *DeleteNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -4180,9 +3732,11 @@ func (m *UpdateNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
 
 	return nil
 }
@@ -4339,11 +3893,21 @@ func (m *GetNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	// no validation rules for ResourceQuota
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetNamespaceQuotaRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -4497,9 +4061,26 @@ func (m *ListNamespaceQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNamespaceQuotaRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	return nil
 }
@@ -4654,11 +4235,21 @@ func (m *CreateNamespaceWithQuotaResp) Validate() error {
 		return nil
 	}
 
-	// no validation rules for ErrCode
+	// no validation rules for Code
 
-	// no validation rules for ErrMsg
+	// no validation rules for Message
 
-	// no validation rules for ClusterID
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNamespaceWithQuotaRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -4719,3 +4310,163 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateNamespaceWithQuotaRespValidationError{}
+
+// Validate checks the field values on
+// CreateNamespaceQuotaResp_CreateNamespaceQuotaRespData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateNamespaceQuotaResp_CreateNamespaceQuotaRespData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterID
+
+	return nil
+}
+
+// CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError is the
+// validation error returned by
+// CreateNamespaceQuotaResp_CreateNamespaceQuotaRespData.Validate if the
+// designated constraints aren't met.
+type CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError) Key() bool {
+	return e.key
+}
+
+// ErrorName returns error name.
+func (e CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError) ErrorName() string {
+	return "CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNamespaceQuotaResp_CreateNamespaceQuotaRespData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNamespaceQuotaResp_CreateNamespaceQuotaRespDataValidationError{}
+
+// Validate checks the field values on
+// CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterID
+
+	return nil
+}
+
+// CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError
+// is the validation error returned by
+// CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespData.Validate if
+// the designated constraints aren't met.
+type CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError) Key() bool {
+	return e.key
+}
+
+// ErrorName returns error name.
+func (e CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError) ErrorName() string {
+	return "CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateNamespaceWithQuotaResp_CreateNamespaceWithQuotaRespDataValidationError{}

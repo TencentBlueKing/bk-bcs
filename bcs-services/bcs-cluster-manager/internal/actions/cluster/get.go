@@ -68,9 +68,10 @@ func (ga *GetAction) getCluster() error {
 }
 
 func (ga *GetAction) setResp(code uint64, msg string) {
-	ga.resp.ErrCode = code
-	ga.resp.ErrMsg = msg
-	ga.resp.Cluster = ga.cluster
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	ga.resp.Data = ga.cluster
 }
 
 // Handle get cluster request

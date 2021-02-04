@@ -1028,28 +1028,75 @@
     }
   },
   "definitions": {
+    "CreateNamespaceQuotaRespCreateNamespaceQuotaRespData": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "命名空间分配的集群id",
+          "title": "clusterID"
+        }
+      }
+    },
+    "CreateNamespaceWithQuotaRespCreateNamespaceWithQuotaRespData": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "命名空间分配的集群id",
+          "title": "clusterID"
+        }
+      }
+    },
     "clustermanagerAddFederatedClusterReq": {
       "type": "object",
       "properties": {
         "federationClusterID": {
-          "type": "string"
+          "type": "string",
+          "description": "联邦集群ID",
+          "title": "federationClusterID"
         },
         "clusterID": {
-          "type": "string"
+          "type": "string",
+          "description": "底层集群ID",
+          "title": "clusterID"
         }
-      }
+      },
+      "description": "将集群加入联邦集群的请求",
+      "title": "AddFederatedClusterReq",
+      "required": [
+        "federationClusterID",
+        "clusterID"
+      ]
     },
     "clustermanagerAddFederatedClusterResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "description": "返回错误码",
+          "title": "code"
         },
-        "errMsg": {
-          "type": "string"
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
-      }
+      },
+      "description": "将集群加入联邦集群的请求返回",
+      "title": "AddFederatedClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
     },
     "clustermanagerCluster": {
       "type": "object",
@@ -1240,23 +1287,30 @@
     "clustermanagerCreateClusterResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "创建集群的返回",
       "title": "CreateClusterResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message",
+        "result"
       ]
     },
     "clustermanagerCreateNamespaceQuotaReq": {
@@ -1299,29 +1353,33 @@
     "clustermanagerCreateNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
-          "description": "请求返回码",
-          "title": "errCode"
+          "description": "返回错误码",
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
-          "description": "请求错误信息",
-          "title": "errMsg"
+          "description": "返回错误信息",
+          "title": "message"
         },
-        "clusterID": {
-          "type": "string",
-          "description": "命名空间分配的集群id",
-          "title": "clusterID"
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/CreateNamespaceQuotaRespCreateNamespaceQuotaRespData"
         }
       },
       "description": "创建命名空间资源配额返回",
       "title": "CreateNamespaceQuotaResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "clusterID"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerCreateNamespaceReq": {
@@ -1372,23 +1430,29 @@
     "clustermanagerCreateNamespaceResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "创建命名空间返回",
       "title": "CreateNamespaceResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message"
       ]
     },
     "clustermanagerCreateNamespaceWithQuotaReq": {
@@ -1456,21 +1520,25 @@
     "clustermanagerCreateNamespaceWithQuotaResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
-          "description": "请求返回码",
-          "title": "errCode"
+          "description": "返回错误码",
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
-          "description": "请求错误信息",
-          "title": "errMsg"
+          "description": "返回错误信息",
+          "title": "message"
         },
-        "clusterID": {
-          "type": "string",
-          "description": "命名空间分配的集群id",
-          "title": "clusterID"
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/CreateNamespaceWithQuotaRespCreateNamespaceWithQuotaRespData"
         }
       },
       "description": "创建命名空间及其资源配额返回",
@@ -1484,195 +1552,250 @@
     "clustermanagerDeleteClusterCredentialResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
-      }
+      },
+      "description": "删除集群Credential请求返回",
+      "title": "DeleteClusterCredentialResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
     },
     "clustermanagerDeleteClusterResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "删除集群的返回",
       "title": "DeleteClusterResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message"
       ]
     },
     "clustermanagerDeleteNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
-          "description": "请求返回码",
-          "title": "errCode"
+          "description": "返回错误码",
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
-          "description": "请求错误信息",
-          "title": "errMsg"
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "删除命名空间资源配额返回",
       "title": "DeleteNamespaceQuotaResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message"
       ]
     },
     "clustermanagerDeleteNamespaceResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "删除命名空间返回",
       "title": "DeleteNamespaceResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message"
       ]
     },
     "clustermanagerGetClusterCredentialResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
         },
-        "clusterCredential": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
           "$ref": "#/definitions/clustermanagerClusterCredential",
           "description": "集群注册的证书信息",
-          "title": "clusterCredential"
+          "title": "data"
         }
       },
       "description": "查询集群Credential返回",
       "title": "GetClusterCredentialResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "clusterCredential"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerGetClusterResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
         },
-        "cluster": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
           "$ref": "#/definitions/clustermanagerCluster",
-          "description": "集群信息",
-          "title": "errMsg"
+          "description": "获取的集群信息",
+          "title": "data"
         }
       },
       "description": "查询集群返回",
       "title": "GetClusterResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "cluster"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerGetNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
-          "description": "请求返回码",
-          "title": "errCode"
+          "description": "返回错误码",
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
-          "description": "请求错误信息",
-          "title": "errMsg"
+          "description": "返回错误信息",
+          "title": "message"
         },
-        "resourceQuota": {
-          "type": "string",
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerResourceQuota",
           "description": "查询到的资源配额详情",
-          "title": "resourceQuota"
+          "title": "data"
         }
       },
       "description": "获取命名空间资源配额返回",
       "title": "GetNamespaceQuotaResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "resourceQuota"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerGetNamespaceResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
         },
-        "ns": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
           "$ref": "#/definitions/clustermanagerNamespace",
           "description": "命名空间信息",
-          "title": "ns"
+          "title": "data"
         }
       },
       "description": "查询命名空间请求",
       "title": "GetNamespaceReq",
       "required": [
-        "errCode",
-        "errMsg",
-        "ns"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerInitFederationClusterReq": {
@@ -1684,111 +1807,135 @@
     "clustermanagerListClusterCredentialResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
         },
-        "clusterCredentialList": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clustermanagerClusterCredential"
           },
           "description": "集群注册的证书信息列表",
-          "title": "clusterCredentialList"
+          "title": "data"
         }
       },
       "description": "查询集群注册的证书信息列表",
       "title": "ListClusterCredentialResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "clusterCredentialList"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerListClusterResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
         },
-        "clusterList": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clustermanagerCluster"
           },
           "description": "集群信息列表",
-          "title": "clusterList"
+          "title": "data"
         }
       },
       "description": "查询集群列表返回",
       "title": "ListClusterResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "clusterList"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerListNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
-          "description": "请求返回码",
-          "title": "errCode"
+          "description": "返回错误码",
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
-          "description": "请求返回信息",
-          "title": "errMsg"
+          "description": "返回错误信息",
+          "title": "message"
         },
-        "resourceQuotaList": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/clustermanagerResourceQuota"
           },
           "description": "查询到的资源配额列表",
-          "title": "resourceQuotaList"
+          "title": "data"
         }
       },
       "description": "查询命名空间资源配额列表返回",
       "title": "ListNamespaceQuotaResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "resourceQuotaList"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerListNamespaceResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
         },
-        "nsList": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clustermanagerNamespace"
@@ -1800,9 +1947,9 @@
       "description": "查询命名空间返回列表",
       "title": "ListNamespaceResp",
       "required": [
-        "errCode",
-        "errMsg",
-        "ns"
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerNamespace": {
@@ -1838,8 +1985,31 @@
         "quotaList": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/clustermanagerResourceQuota"
           }
+        }
+      }
+    },
+    "clustermanagerResourceQuota": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "federationClusterID": {
+          "type": "string"
+        },
+        "clusterID": {
+          "type": "string"
+        },
+        "resourceQuota": {
+          "type": "string"
+        },
+        "createTime": {
+          "type": "string"
+        },
+        "updateTime": {
+          "type": "string"
         }
       }
     },
@@ -1896,18 +2066,31 @@
     "clustermanagerUpdateClusterCredentialResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
-      }
+      },
+      "description": "更新集群Credential返回",
+      "title": "UpdateClusterCredentialResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
     },
     "clustermanagerUpdateClusterReq": {
       "type": "object",
@@ -2003,23 +2186,29 @@
     "clustermanagerUpdateClusterResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "更新集群信息返回",
       "title": "UpdateClusterResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message"
       ]
     },
     "clustermanagerUpdateNamespaceQuotaReq": {
@@ -2058,23 +2247,29 @@
     "clustermanagerUpdateNamespaceQuotaResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
-          "description": "请求返回码",
-          "title": "errCode"
+          "description": "返回错误码",
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
-          "description": "请求错误信息",
-          "title": "errMsg"
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "更新命名空间资源配额返回",
       "title": "UpdateNamespaceQuotaResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message"
       ]
     },
     "clustermanagerUpdateNamespaceReq": {
@@ -2113,23 +2308,29 @@
     "clustermanagerUpdateNamespaceResp": {
       "type": "object",
       "properties": {
-        "errCode": {
+        "code": {
           "type": "string",
           "format": "uint64",
           "description": "返回错误码",
-          "title": "errCode"
+          "title": "code"
         },
-        "errMsg": {
+        "message": {
           "type": "string",
           "description": "返回错误信息",
-          "title": "errMsg"
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       },
       "description": "更新命名空间信息返回",
       "title": "UpdateNamespaceResp",
       "required": [
-        "errCode",
-        "errMsg"
+        "code",
+        "message"
       ]
     },
     "protobufAny": {

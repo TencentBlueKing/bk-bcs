@@ -49,8 +49,9 @@ func (da *DeleteAction) deleteCredential() error {
 }
 
 func (da *DeleteAction) setResp(code uint64, msg string) {
-	da.resp.ErrCode = code
-	da.resp.ErrMsg = msg
+	da.resp.Code = code
+	da.resp.Message = msg
+	da.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle handle delete cluster credential

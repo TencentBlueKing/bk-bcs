@@ -16,16 +16,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/etcd"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/mesos"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"net/http"
 	"os"
 	"os/signal"
@@ -34,6 +24,18 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	rd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtype "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/etcd"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster/mesos"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/storage"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -109,13 +111,10 @@ func Run(cfg *types.CmdConfig) error {
 		blog.Error("Create CCStorage Err: %s", ccErr.Error())
 		return ccErr
 	}
-	var DCHosts []string
-	ccStorage.SetDCAddress(DCHosts)
+	ccStorage.SetDCAddress(cfg.StorageAddresses)
 	//servermetric.SetDCStatus(false)
 	clusterState.Set(stateErr)
-
 	ccCxt, _ := context.WithCancel(rootCxt)
-	go RefreshDCHost(ccCxt, cfg, ccStorage)
 	time.Sleep(2 * time.Second)
 
 	retryNum := 0
@@ -152,6 +151,31 @@ func Run(cfg *types.CmdConfig) error {
 		}
 	}()
 
+	var etcdRegistry registry.Registry
+	if cfg.Etcd.Feature {
+		blog.Infof("etcd registry enabled")
+		tlsConfig, err := cfg.Etcd.GetTLSConfig()
+		if err != nil {
+			blog.Errorf("get tls config from etcd options failed, err %s", err.Error())
+			return fmt.Errorf("get tls config from etcd options failed, err %s", err.Error())
+		}
+		// etcd registry
+		eoption := &registry.Options{
+			Name:         "mesoswatch.bkbcs.tencent.com",
+			Version:      version.BcsVersion,
+			RegistryAddr: strings.Split(cfg.Etcd.Address, ","),
+			RegAddr:      fmt.Sprintf("%s:%d", cfg.Address, cfg.MetricPort),
+			Config:       tlsConfig,
+		}
+		blog.Infof("turn on etcd registry feature, options %+v", eoption)
+		etcdRegistry = registry.NewEtcdRegistry(eoption)
+		err = etcdRegistry.Register()
+		if err != nil {
+			blog.Errorf("etcd registry register failed, err %s", err.Error())
+			return fmt.Errorf("etcd registry register failed, err %s", err.Error())
+		}
+	}
+
 	// watch netservice servers from ZK.
 	netservice, netserviceZKRD, err := GetNetService(cfg)
 	if err != nil {
@@ -174,6 +198,11 @@ func Run(cfg *types.CmdConfig) error {
 	}
 
 	blog.Info("to cancel root after runServer returned")
+	if cfg.Etcd.Feature {
+		if err := etcdRegistry.Deregister(); err != nil {
+			blog.Errorf("etcd registry deregister failed, err %s", err.Error())
+		}
+	}
 	netserviceZKRD.Stop()
 	rootCancel()
 
@@ -409,82 +438,6 @@ func GetNetService(cfg *types.CmdConfig) (*service.InnerService, *rd.RegDiscover
 	go netService.Watch(cfg)
 
 	return netService, discovery, nil
-}
-
-//RefreshDCHost update bcs-storage info
-func RefreshDCHost(rfCxt context.Context, cfg *types.CmdConfig, storage storage.Storage) {
-	blog.Info("mesos data watcher to refresh DCHost ...")
-	// register service
-	regDiscv := rd.NewRegDiscoverEx(cfg.RegDiscvSvr, time.Second*10)
-	if regDiscv == nil {
-		blog.Error("NewRegDiscover(%s) return nil", cfg.RegDiscvSvr)
-		return
-	}
-	blog.Info("NewRegDiscover(%s) succ", cfg.RegDiscvSvr)
-
-	err := regDiscv.Start()
-	if err != nil {
-		blog.Error("regDiscv start error(%s)", err.Error())
-		return
-	}
-	blog.Info("RegDiscover start succ")
-
-	defer regDiscv.Stop()
-
-	discvPath := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_STORAGE
-	discvEvent, err := regDiscv.DiscoverService(discvPath)
-	if err != nil {
-		blog.Error("DiscoverService(%s) error(%s)", discvPath, err.Error())
-		return
-	}
-	blog.Info("DiscoverService(%s) succ", discvPath)
-
-	tick := time.NewTicker(120 * time.Second)
-	defer tick.Stop()
-	for {
-		select {
-		case <-tick.C:
-			blog.Info("refresh DCHost is running")
-			continue
-		case <-rfCxt.Done():
-			blog.V(3).Infof("refresh DCHost asked to exit")
-			return
-		case event := <-discvEvent:
-			blog.Info("refresh DCHost get discover event")
-			if event.Err != nil {
-				blog.Error("DCHost discover err:%s", event.Err.Error())
-				continue
-			}
-			blog.Infof("get DCHost node num(%d)", len(event.Server))
-			var DCHost string
-			var DCHosts []string
-			for i, server := range event.Server {
-				blog.Infof("get DCHost: server[%d]: %s", i, server)
-				var serverInfo commtype.BcsStorageInfo
-				if err = json.Unmarshal([]byte(server), &serverInfo); err != nil {
-					blog.Errorf("fail to unmarshal DCHost(%s), err:%s", string(server), err.Error())
-					continue
-				}
-				if !cfg.IsExternal {
-					DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
-				} else {
-					DCHost = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.ExternalIp + ":" + strconv.Itoa(int(serverInfo.ServerInfo.ExternalPort))
-				}
-
-				blog.Infof("get DCHost(%s)", DCHost)
-				DCHosts = append(DCHosts, DCHost)
-			}
-
-			storage.SetDCAddress(DCHosts)
-			if len(DCHosts) > 0 {
-				//servermetric.SetDCStatus(true)
-				storageState.Set(stateOK)
-			} else {
-				//servermetric.SetDCStatus(false)
-				storageState.Set(stateErr)
-			}
-		} // end select
-	} // end for
 }
 
 func registerZkEndpoints(rdCxt context.Context, cfg *types.CmdConfig) (bool, error) {

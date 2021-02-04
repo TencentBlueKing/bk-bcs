@@ -76,8 +76,9 @@ func (ca *CreateAction) createNamespace() error {
 }
 
 func (ca *CreateAction) setResp(code uint64, msg string) {
-	ca.resp.ErrCode = code
-	ca.resp.ErrMsg = msg
+	ca.resp.Code = code
+	ca.resp.Message = msg
+	ca.resp.Result = (code == types.BcsErrClusterManagerSuccess)
 }
 
 // Handle create namespace request
@@ -95,13 +96,10 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		ca.setResp(types.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	if len(ca.req.FederationClusterID) != 0 {
-		if err := ca.queryFederationCluster(ca.req.FederationClusterID); err != nil {
-			ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
-			return
-		}
+	if err := ca.queryFederationCluster(ca.req.FederationClusterID); err != nil {
+		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
+		return
 	}
-
 	if err := ca.createNamespace(); err != nil {
 		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
 		return

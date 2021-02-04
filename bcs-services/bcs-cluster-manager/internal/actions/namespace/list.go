@@ -14,7 +14,6 @@ package namespace
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -47,7 +46,7 @@ func (la *ListAction) validate() error {
 	return nil
 }
 
-func (la *ListAction) listQuotas(namespace, federationClusterID string) ([]string, error) {
+func (la *ListAction) listQuotas(namespace, federationClusterID string) ([]*cmproto.ResourceQuota, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"namespace":           namespace,
 		"federationClusterID": federationClusterID,
@@ -56,13 +55,16 @@ func (la *ListAction) listQuotas(namespace, federationClusterID string) ([]strin
 	if err != nil {
 		return nil, err
 	}
-	var retQuotaList []string
+	var retQuotaList []*cmproto.ResourceQuota
 	for _, quota := range quotas {
-		quotaBytes, err := json.Marshal(quota.ResourceQuota)
-		if err != nil {
-			return nil, err
-		}
-		retQuotaList = append(retQuotaList, string(quotaBytes))
+		retQuotaList = append(retQuotaList, &cmproto.ResourceQuota{
+			Namespace:           quota.Namespace,
+			FederationClusterID: quota.FederationClusterID,
+			ClusterID:           quota.ClusterID,
+			ResourceQuota:       quota.ResourceQuota,
+			CreateTime:          quota.CreateTime.String(),
+			UpdateTime:          quota.UpdateTime.String(),
+		})
 	}
 	return retQuotaList, nil
 }
@@ -105,9 +107,10 @@ func (la *ListAction) listNamespaces() error {
 }
 
 func (la *ListAction) setResp(code uint64, msg string) {
-	la.resp.ErrCode = code
-	la.resp.ErrMsg = msg
-	la.resp.NsList = la.nsList
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.nsList
 }
 
 // Handle handle list namespace request

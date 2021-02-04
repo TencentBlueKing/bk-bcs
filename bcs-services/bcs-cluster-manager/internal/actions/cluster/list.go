@@ -102,9 +102,10 @@ func (la *ListAction) listCluster() error {
 }
 
 func (la *ListAction) setResp(code uint64, msg string) {
-	la.resp.ErrCode = code
-	la.resp.ErrMsg = msg
-	la.resp.ClusterList = la.clusterList
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == types.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.clusterList
 }
 
 // Handle handle list cluster request

@@ -33,7 +33,7 @@ func (cm *ClusterManager) ListClusterCredential(ctx context.Context,
 	start := time.Now()
 	ca := clustercredac.NewListAction(cm.model)
 	ca.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("listclustercredential", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("listclustercredential", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: listclustercredential", reqID)
 	blog.V(3).Infof("reqID: %s, action: listclustercredential, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -49,7 +49,7 @@ func (cm *ClusterManager) GetClusterCredential(ctx context.Context,
 	start := time.Now()
 	ga := clustercredac.NewGetAction(cm.model)
 	ga.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("getclustercredential", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("getclustercredential", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: getclustercredential", reqID)
 	blog.V(3).Infof("reqID: %s, action: getclustercredential, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -65,7 +65,7 @@ func (cm *ClusterManager) UpdateClusterCredential(ctx context.Context,
 	start := time.Now()
 	ua := clustercredac.NewUpdateAction(cm.model)
 	ua.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("updateclustercredential", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("updateclustercredential", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: updateclustercredential", reqID)
 	blog.V(3).Infof("reqID: %s, action: updateclustercredential, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -81,7 +81,7 @@ func (cm *ClusterManager) DeleteClusterCredential(ctx context.Context,
 	start := time.Now()
 	da := clustercredac.NewDeleteAction(cm.model)
 	da.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("deleteclustercredential", "grpc", strconv.Itoa(int(resp.ErrCode)), start)
+	metrics.ReportAPIRequestMetric("deleteclustercredential", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: deleteclustercredential", reqID)
 	blog.V(3).Infof("reqID: %s, action: deleteclustercredential, req %v, resp %v", reqID, req, resp)
 	return nil
