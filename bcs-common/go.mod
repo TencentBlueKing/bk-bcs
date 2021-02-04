@@ -15,7 +15,7 @@ replace (
 require (
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/coreos/bbolt v1.3.4 // indirect
-	github.com/coreos/etcd v3.3.25+incompatible
+	github.com/coreos/etcd v3.3.18+incompatible
 	github.com/docker/engine-api v0.4.0
 	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible
