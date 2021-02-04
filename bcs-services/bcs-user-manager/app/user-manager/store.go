@@ -11,7 +11,7 @@
  *
  */
 
-package user_manager
+package usermanager
 
 import (
 	"fmt"
@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
@@ -42,9 +41,6 @@ func SetupStore(conf *config.UserMgrConfig) error {
 		&models.BcsUserResourceRole{},
 		&models.TkeCidr{},
 		&models.BcsWsClusterCredentials{},
-
-		//compatible with bcs-api to sync old data
-		&m.ClusterCredentials{},
 	)
 
 	err := createBootstrapUsers(conf.BootStrapUsers)

@@ -130,19 +130,6 @@ func ListCredentials(request *restful.Request, response *restful.Response) {
 		}
 	}
 
-	/*oldCredentials := sqlstore.ListOldCredentials()
-	for _, v := range oldCredentials {
-		oldClusterId := v.ClusterId
-		array := strings.Split(oldClusterId, "-")
-		newClusterId := strings.ToUpper(strings.Join(array[1:4], "-"))
-		serverAddresses := strings.Replace(v.ServerAddresses, ";", ",", -1)
-		credentials[newClusterId] = CredentialResp{
-			ServerAddresses: serverAddresses,
-			CaCertData:      v.CaCertData,
-			UserToken:       v.UserToken,
-			ClusterDomain:   v.ClusterDomain,
-		}
-	}*/
 	blog.Infof("client %s list all cluster credentials, num: %d", request.Request.RemoteAddr, len(credentials))
 	data := utils.CreateResponeData(nil, "success", credentials)
 	response.Write([]byte(data))
