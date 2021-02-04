@@ -21,6 +21,7 @@ import (
 	"net/url"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -130,7 +131,7 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 			ServerAddress: registerCluster.Address,
 			CaCertData:    caCert,
 			UserToken:     registerCluster.UserToken,
-			ConnectMode:   types.ConnectModeWebsocketTunnel,
+			ConnectMode:   modules.BCSConnectModeTunnel,
 		}
 		if err := wts.model.PutClusterCredential(context.TODO(), newCredential); err != nil {
 			blog.Errorf("error when put cluster credential, err %s", err.Error())
@@ -153,7 +154,7 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 			ServerAddress: registerCluster.Address,
 			CaCertData:    caCert,
 			UserToken:     registerCluster.UserToken,
-			ConnectMode:   types.ConnectModeWebsocketTunnel,
+			ConnectMode:   modules.BCSConnectModeTunnel,
 		}
 		if err = wts.model.PutClusterCredential(context.TODO(), newCredential); err != nil {
 			blog.Errorf("error when put cluster credential, err %s", err.Error())

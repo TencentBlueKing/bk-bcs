@@ -48,13 +48,6 @@ type Cluster struct {
 	UpdateTime          time.Time         `bson:"updateTime"`
 }
 
-const (
-	// ConnectModeWebsocketTunnel ws tunnel mode connect
-	ConnectModeWebsocketTunnel = "websockettunnel"
-	// ConnectModeDirect direct mode connect
-	ConnectModeDirect = "direct"
-)
-
 // ClusterCredential online cluster struct
 type ClusterCredential struct {
 	ServerKey     string    `bson:"serverKey"`

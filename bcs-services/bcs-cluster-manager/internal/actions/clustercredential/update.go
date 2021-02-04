@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -51,7 +52,7 @@ func (ua *UpdateAction) updateCredential() error {
 		ServerAddress: ua.req.ServerAddress,
 		CaCertData:    ua.req.CaCertData,
 		UserToken:     ua.req.UserToken,
-		ConnectMode:   types.ConnectModeDirect,
+		ConnectMode:   modules.BCSConnectModeTunnel,
 	}
 	if err := ua.model.PutClusterCredential(ua.ctx, newCredential); err != nil {
 		return err
