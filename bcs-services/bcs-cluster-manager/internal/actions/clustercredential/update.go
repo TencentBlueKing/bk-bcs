@@ -52,7 +52,7 @@ func (ua *UpdateAction) updateCredential() error {
 		ServerAddress: ua.req.ServerAddress,
 		CaCertData:    ua.req.CaCertData,
 		UserToken:     ua.req.UserToken,
-		ConnectMode:   modules.BCSConnectModeTunnel,
+		ConnectMode:   modules.BCSConnectModeDirect,
 	}
 	if err := ua.model.PutClusterCredential(ua.ctx, newCredential); err != nil {
 		return err

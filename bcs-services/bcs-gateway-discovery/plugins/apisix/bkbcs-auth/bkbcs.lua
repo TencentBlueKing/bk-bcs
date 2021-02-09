@@ -189,12 +189,12 @@ function BKUserCli:construct_identity(conf, request)
   -- get token for http header
   local auth_header = request.get_headers()
   if not auth_header["Authorization"] then
-    core.log.error(" user_cli get no Authorization from http header, request path:", ngx.var.uri)
+    core.log.error(" user_cli get no Authorization from http header, request path:", ngx.var.uri, " header details: ", core.json.encode(auth_header))
     return nil, "lost Authorization"
   end
   local iterator, iter_err = ngx.re.gmatch(auth_header["Authorization"], "\\s*[Bb]earer\\s+(.+)")
   if not iterator then
-    core.log.error(" user_cli search token for request ", ngx.var.uri, " failed, ", iter_err)
+    core.log.error(" user_cli search token for request ", ngx.var.uri, " failed, ", iter_err, " Authorization: ", auth_header["Authorization"])
     return nil, "Authorization format error"
   end
   local m, err = iterator()

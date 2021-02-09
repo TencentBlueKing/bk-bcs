@@ -37,11 +37,9 @@ const (
 	// Cluster http tunnel header
 	Cluster = "BCS-API-Tunnel-ClusterId"
 	// KubeAgentModule http tunnel header
-	KubeAgentModule = "kube-agent"
-	// K8sDriverModule http tunnel header
-	K8sDriverModule = "k8s-driver"
+	KubeAgentModule = "kubeagent"
 	// MesosDriverModule http tunnel header
-	MesosDriverModule = "mesos-driver"
+	MesosDriverModule = "mesosdriver"
 )
 
 // RegisterCluster definition of tunnel cluster info
@@ -138,7 +136,7 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 			return "", false, err
 		}
 		return clusterID, true, nil
-	} else if moduleName == MesosDriverModule || moduleName == K8sDriverModule {
+	} else if moduleName == MesosDriverModule {
 		// for mesos, the registerCluster.Address is mesos-driver url.
 		// one mesos cluster may have 3 or more mesos-driver,
 		// so we should distinguish them, so use {clusterID}-{ip:port} as serverKey

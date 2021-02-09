@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -28,14 +29,12 @@ import (
 )
 
 // XRequestID insert X-Request-ID
-func XRequestID() *grpc.HeaderCallOption {
+func XRequestID() context.Context {
 	requestID := map[string]string{
 		"X-Request-Id": uuid.New().String(),
 	}
 	md := metadata.New(requestID)
-	return &grpc.HeaderCallOption{
-		HeaderAddr: &md,
-	}
+	return metadata.NewOutgoingContext(context.Background(), md)
 }
 
 // NewClusterManager create ClusterManager SDK implementation
@@ -61,11 +60,12 @@ func NewClusterManager(config *Config) cm.ClusterManagerClient {
 		opts = append(opts, grpc.WithInsecure())
 	}
 	var conn *grpc.ClientConn
+	var err error
 	maxTries := 3
 	for i := 0; i < maxTries; i++ {
 		selected := rand.Intn(1024) % len(config.Hosts)
 		addr := config.Hosts[selected]
-		conn, err := grpc.Dial(addr, opts...)
+		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
 			blog.Errorf("Create clsuter manager grpc client with %s error: %s", addr, err.Error())
 			continue
