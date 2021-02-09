@@ -162,12 +162,7 @@ function BKUserCli:construct_identity(conf, request)
   else
     auth.resource_type = conf.module
   end
-  -- kubeagent & networkdetection has no ClusterId
-  local headers = request.get_headers()
-  if not headers[CLUSTER_HEADER] and is_cluster_resource(conf.module) then
-    core.log.error(" user_cli get no BCS-ClusterID from request ", ngx.var.uri)
-    return nil, "lost BCS-ClusterID in header"
-  end
+  -- kubeagent & mesosdriver construct ClusterId
   if conf.module == KUBEAGENT then
     -- retrieve bcs-cluster-id from url as resource
     local id_iterator, id_err = ngx.re.gmatch(ngx.var.uri, "BCS-K8S-([0-9]+[^/])")
@@ -178,10 +173,15 @@ function BKUserCli:construct_identity(conf, request)
     local id, err = id_iterator()
     if not id or #id < 1 then
       core.log.error(" user_cli parse kubernetes BCS-ClusterID in request ", ngx.var.uri, " failed, ", err)
-      return nil, "kuberentes BCS-ClusterID "
+      return nil, "kuberentes BCS-ClusterID parse failed"
     end
     auth.resource = id[0]
-  else
+  else if conf.module == MESOSDRIVER then
+    local headers = request.get_headers()
+    if not headers[CLUSTER_HEADER] then
+      core.log.error(" user_cli get no BCS-ClusterID from request ", ngx.var.uri)
+      return nil, "lost BCS-ClusterID in header"
+    end
     -- retrieve bcs-cluster-id from header
     auth.resource = headers[CLUSTER_HEADER]
   end
