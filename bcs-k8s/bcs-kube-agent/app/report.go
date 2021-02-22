@@ -103,11 +103,13 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			request = gorequest.New().TLSClientConfig(tlsConfig)
 		}
 		userToken := os.Getenv("USER_TOKEN")
-		if len(userToken) != 0 {
-			request.AppendHeader("Authorization", "Bearer "+userToken)
+		if len(userToken) == 0 {
+			blog.Errorf("lost USER_TOKEN env parameter")
+			panic("lost USER_TOKEN env parameter")
 		}
-
-		resp, respBody, errs := request.Put(bkeURL).Send(clusterInfoParams).End()
+		resp, respBody, errs := request.Put(bkeURL).
+			Set("Authorization", "Bearer "+userToken).
+			Send(clusterInfoParams).End()
 		if len(errs) > 0 {
 			blog.Errorf("unable to connect to the bke server: %s", errs[0].Error())
 			// sleep a while to try again, avoid trying in loop
@@ -115,9 +117,13 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 			continue
 		}
 		if resp.StatusCode >= 400 {
-			codeName := json.Get([]byte(respBody), "code_name").ToString()
+			codeName := json.Get([]byte(respBody), "code").ToInt()
 			message := json.Get([]byte(respBody), "message").ToString()
-			blog.Errorf("Error updating cluster credential to bke, response code: %s, response message: %s", codeName, message)
+			blog.Errorf(
+				"Error updating cluster credential to bke, response code: %s, response message: %s",
+				codeName,
+				message,
+			)
 		}
 
 		select {

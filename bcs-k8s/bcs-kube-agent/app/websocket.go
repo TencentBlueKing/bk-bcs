@@ -43,7 +43,7 @@ const (
 	Cluster = "BCS-API-Tunnel-ClusterId"
 
 	// ModuleName module name for kube agent
-	ModuleName = "kube-agent"
+	ModuleName = "kubeagent"
 )
 
 func getenv(env string) (string, error) {
