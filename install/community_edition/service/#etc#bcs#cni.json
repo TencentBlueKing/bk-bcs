@@ -1,8 +1,0 @@
-{
-    "zkHost": "__COMMA_SEP_LIST_ZK_BCS_SERVER__",
-    "tls": {
-        "key": "__INSTALL_PATH__/cert/bcs/bcs-server.key",
-        "pubkey": "__INSTALL_PATH__/cert/bcs/bcs-server.crt",
-        "cacert": "__INSTALL_PATH__/cert/bcs/bcs-ca.pem",
-    }
-}
