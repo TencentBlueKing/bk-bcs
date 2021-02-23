@@ -14,10 +14,10 @@
 package bcsapi
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"time"
-	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -41,6 +41,7 @@ func XRequestID() context.Context {
 func NewClusterManager(config *Config) cm.ClusterManagerClient {
 	rand.Seed(time.Now().UnixNano())
 	if len(config.Hosts) == 0 {
+		//! pay more attension for nil return
 		return nil
 	}
 	//create grpc connection

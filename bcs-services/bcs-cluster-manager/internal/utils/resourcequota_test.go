@@ -26,7 +26,7 @@ import (
 func TestCalculateResourceAllocRate(t *testing.T) {
 	nodeList := &k8scorev1.NodeList{
 		Items: []k8scorev1.Node{
-			k8scorev1.Node{
+			{
 				Status: k8scorev1.NodeStatus{
 					Allocatable: k8scorev1.ResourceList{
 						// don't use MustParse in logic code, may fatal
@@ -34,7 +34,7 @@ func TestCalculateResourceAllocRate(t *testing.T) {
 					},
 				},
 			},
-			k8scorev1.Node{
+			{
 				Status: k8scorev1.NodeStatus{
 					Allocatable: k8scorev1.ResourceList{
 						"cpu": k8sresource.MustParse("1000m"),
@@ -45,7 +45,7 @@ func TestCalculateResourceAllocRate(t *testing.T) {
 	}
 
 	quotaList := []types.NamespaceQuota{
-		types.NamespaceQuota{
+		{
 			Namespace: "test",
 			ClusterID: "test-cluster",
 			ResourceQuota: `
