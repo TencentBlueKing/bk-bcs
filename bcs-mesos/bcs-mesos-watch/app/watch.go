@@ -115,23 +115,6 @@ func Run(cfg *types.CmdConfig) error {
 	//servermetric.SetDCStatus(false)
 	clusterState.Set(stateErr)
 	ccCxt, _ := context.WithCancel(rootCxt)
-	time.Sleep(2 * time.Second)
-
-	retryNum := 0
-	for {
-		if retryNum == 10 {
-			blog.Errorf("storage address is empty, datawatcher exited")
-			os.Exit(1)
-		}
-
-		if ccStorage.GetDCAddress() == "" {
-			blog.Warn("storage address is empty, mesos datawatcher cannot run")
-			time.Sleep(2 * time.Second)
-		} else {
-			break
-		}
-		retryNum++
-	}
 
 	ccStorage.Run(ccCxt)
 	rdCxt, _ := context.WithCancel(rootCxt)
@@ -159,9 +142,15 @@ func Run(cfg *types.CmdConfig) error {
 			blog.Errorf("get tls config from etcd options failed, err %s", err.Error())
 			return fmt.Errorf("get tls config from etcd options failed, err %s", err.Error())
 		}
+		//get cluster id for registry
+		clusterID := strings.Split(cfg.ClusterID, "-")
+		if len(clusterID) == 0 {
+			blog.Errorf("cluster ID formation error, detail in config: %s", cfg.ClusterID)
+			return fmt.Errorf("cluster ID formation err")
+		}
 		// etcd registry
 		eoption := &registry.Options{
-			Name:         "mesoswatch.bkbcs.tencent.com",
+			Name:         clusterID[len(clusterID)-1] + ".mesoswatch.bkbcs.tencent.com",
 			Version:      version.BcsVersion,
 			RegistryAddr: strings.Split(cfg.Etcd.Address, ","),
 			RegAddr:      fmt.Sprintf("%s:%d", cfg.Address, cfg.MetricPort),
