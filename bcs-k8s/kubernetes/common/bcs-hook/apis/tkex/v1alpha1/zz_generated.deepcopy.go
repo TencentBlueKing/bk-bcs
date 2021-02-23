@@ -323,6 +323,11 @@ func (in *Metric) DeepCopyInto(out *Metric) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.ConsecutiveSuccessfulLimit != nil {
+		in, out := &in.ConsecutiveSuccessfulLimit, &out.ConsecutiveSuccessfulLimit
+		*out = new(int32)
+		**out = **in
+	}
 	in.Provider.DeepCopyInto(&out.Provider)
 	return
 }
