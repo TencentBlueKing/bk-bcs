@@ -18,7 +18,7 @@ replace (
 require (
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210122122633-ada65fa64361
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210223080803-f27f3f3c01c4
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210117140338-aeaed29b1997
 	github.com/andygrunwald/megos v0.0.0-20180424065632-0fccaea93714
 	github.com/bitly/go-simplejson v0.5.0
