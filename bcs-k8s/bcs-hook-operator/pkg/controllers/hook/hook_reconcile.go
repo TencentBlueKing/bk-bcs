@@ -50,6 +50,7 @@ type metricTask struct {
 	incompleteMeasurement *v1alpha1.Measurement
 }
 
+// reconcileHookRun main logic for reconcile
 func (hc *HookController) reconcileHookRun(origRun *v1alpha1.HookRun) *v1alpha1.HookRun {
 	if origRun.Status.Phase.Completed() {
 		return origRun
@@ -249,7 +250,7 @@ func (hc *HookController) runMeasurements(run *v1alpha1.HookRun, tasks []metricT
 					metricResult.Successful++
 					metricResult.Count++
 					metricResult.ConsecutiveError = 0
-					metricResult.ConsecutiveSuccessful ++
+					metricResult.ConsecutiveSuccessful++
 				case v1alpha1.HookPhaseFailed:
 					metricResult.Failed++
 					metricResult.Count++
@@ -362,7 +363,7 @@ func assessMetricStatus(metric v1alpha1.Metric, result v1alpha1.MetricResult, te
 
 	if metric.SuccessfulLimit > 0 && result.Successful >= metric.SuccessfulLimit {
 		klog.Infof("metric %s assessed %s: successful (%d) > successfulLimit (%d)", metric.Name,
-			v1alpha1.HookPhaseSuccessful , result.Successful, metric.SuccessfulLimit)
+			v1alpha1.HookPhaseSuccessful, result.Successful, metric.SuccessfulLimit)
 		return v1alpha1.HookPhaseSuccessful
 	}
 
@@ -470,7 +471,7 @@ func calculateNextReconcileTime(run *v1alpha1.HookRun) *time.Time {
 				}
 				continue
 			}
-			klog.Warningf("HookRun: %s/%s, metric: %s. metric never started. " +
+			klog.Warningf("HookRun: %s/%s, metric: %s. metric never started. "+
 				"not factored into enqueue time", run.Namespace, run.Name, metric.Name)
 			continue
 		}
@@ -503,7 +504,7 @@ func calculateNextReconcileTime(run *v1alpha1.HookRun) *time.Time {
 			// there was no error (meaning we don't need to retry). no need to requeue this metric.
 			// NOTE: we shouldn't ever get here since it means we are not doing proper bookkeeping
 			// of count.
-			klog.Warningf("HookRun: %s/%s, metric: %s. skipping requeue. no interval or error (count: %d, " +
+			klog.Warningf("HookRun: %s/%s, metric: %s. skipping requeue. no interval or error (count: %d, "+
 				"effectiveCount: %d)", run.Namespace, run.Name, metric.Name, metricResult.Count, metric.EffectiveCount())
 			continue
 		}

@@ -74,7 +74,11 @@ func setCfg(op *MesosWatchOptions) {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	op := &MesosWatchOptions{}
+	op := &MesosWatchOptions{
+		Etcd: registry.CMDOptions{
+			Feature: false,
+		},
+	}
 	conf.Parse(op)
 
 	blog.InitLogs(op.LogConfig)
