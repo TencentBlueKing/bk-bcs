@@ -386,19 +386,17 @@ func ParseLabelVals(labelValue string) (string, []string, error) {
 
 	// split real values.
 	values := strings.Split(realValues, ",")
-
 	for _, v := range values {
-		if len(v) != 0 {
-			vals = append(vals, v)
-		}
+		vals = append(vals, v)
 	}
-
 	return op, vals, nil
 }
 
 // IsLabelMatch matchs labels KV level base on op and values.
 // op is eq/ne/gt/lt/ge/le.
 func IsLabelMatch(insValue, op string, targetVals []string) bool {
+	// TODO use map to make eq/ne compare action faster.
+
 	switch op {
 	case "eq":
 		for _, val := range targetVals {
