@@ -165,5 +165,7 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 
 // clean credential
 func (wts *WsTunnelServerCallback) cleanCredential(serverKey string) {
-	wts.model.DeleteClusterCredential(context.TODO(), serverKey)
+	// when multiple kube-agent connect to cluster-manager with same clientKey,
+	// delete credential will make connection unusable
+	// wts.model.DeleteClusterCredential(context.TODO(), serverKey)
 }
