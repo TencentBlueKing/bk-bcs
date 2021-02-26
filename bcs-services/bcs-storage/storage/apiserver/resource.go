@@ -45,8 +45,9 @@ const (
 
 // MessageQueue queue object
 type MessageQueue struct {
-	QueueFlag bool
-	MsgQueue  msgqueue.MessageQueue
+	QueueFlag       bool
+	ResourceToQueue map[string]string
+	MsgQueue        msgqueue.MessageQueue
 }
 
 // APIResource api resource object
@@ -199,10 +200,11 @@ func (a *APIResource) parseQueueInit(key string, queueConf *conf.Config) error {
 		return nil
 	}
 
-	commonOption, err := getQueueCommonOptions(key, queueConf)
+	commonOptions, err := getQueueCommonOptions(key, queueConf)
 	if err != nil {
 		return err
 	}
+	commonOption := msgqueue.CommonOpts(commonOptions)
 
 	exchangeOption, err := getQueueExchangeOptions(key, queueConf)
 	if err != nil {
@@ -233,10 +235,12 @@ func (a *APIResource) parseQueueInit(key string, queueConf *conf.Config) error {
 	queueKind, _ := msgQueue.String()
 
 	a.msgQueue = &MessageQueue{
-		QueueFlag: queueFlag,
-		MsgQueue:  msgQueue,
+		QueueFlag:       queueFlag,
+		MsgQueue:        msgQueue,
+		ResourceToQueue: commonOptions.ResourceToQueue,
 	}
-	blog.Infof("init queue[%s] successfully", queueKind)
+
+	blog.Infof("init queue[%s] successfully, sub queue[%v]", queueKind, a.msgQueue.ResourceToQueue)
 	return nil
 }
 
