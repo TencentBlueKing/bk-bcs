@@ -153,6 +153,9 @@ type Table interface {
 	// Find get find object
 	Find(condition *operator.Condition) Find
 
+	// Aggregation aggregation operation
+	Aggregation(ctx context.Context, pipeline interface{}, result interface{}) error
+
 	// Insert insert many data
 	Insert(ctx context.Context, docs []interface{}) (int, error)
 

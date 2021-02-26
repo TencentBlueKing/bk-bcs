@@ -227,7 +227,7 @@ func (r *Request) Do() *Result {
 	if requestDuration != nil {
 		startTime := time.Now()
 		defer func() {
-			requestDuration.WithLabelValues(r.subPath, strconv.Itoa(result.StatusCode)).Observe(
+			requestDuration.WithLabelValues(r.method, strconv.Itoa(result.StatusCode)).Observe(
 				float64(time.Since(startTime).Milliseconds()))
 		}()
 	}
