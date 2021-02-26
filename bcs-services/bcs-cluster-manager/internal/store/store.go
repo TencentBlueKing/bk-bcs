@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/namespacequota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -51,6 +52,13 @@ type ClusterManagerModel interface {
 	DeleteClusterCredential(ctx context.Context, serverKey string) error
 	ListClusterCredential(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 		[]types.ClusterCredential, error)
+
+	CreateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
+	UpdateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
+	DeleteTkeCidr(ctx context.Context, vpc string, cidr string) error
+	GetTkeCidr(ctx context.Context, vpc string, cidr string) (*types.TkeCidr, error)
+	ListTkeCidr(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.TkeCidr, error)
+	ListTkeCidrCount(ctx context.Context, opt *options.ListOption) ([]types.TkeCidrCount, error)
 }
 
 // ModelSet a set of client
@@ -59,6 +67,7 @@ type ModelSet struct {
 	*clustercredential.ModelClusterCredential
 	*namespace.ModelNamespace
 	*namespacequota.ModelNamespaceQuota
+	*tke.ModelTkeCidr
 }
 
 // NewModelSet create model set
@@ -68,5 +77,6 @@ func NewModelSet(db drivers.DB) *ModelSet {
 		ModelClusterCredential: clustercredential.New(db),
 		ModelNamespace:         namespace.New(db),
 		ModelNamespaceQuota:    namespacequota.New(db),
+		ModelTkeCidr:           tke.New(db),
 	}
 }

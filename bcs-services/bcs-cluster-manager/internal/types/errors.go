@@ -37,4 +37,6 @@ const (
 	BcsErrClusterManagerK8SOpsFailed = common.AdditionErrorCode + 405
 	// BcsErrClusterManagerResourceDuplicated resource deplicated
 	BcsErrClusterManagerResourceDuplicated = common.AdditionErrorCode + 406
+	// BcsErrClusterManagerCommonErr common error
+	BcsErrClusterManagerCommonErr = common.AdditionErrorCode + 407
 )
