@@ -1,77 +1,57 @@
 ![蓝鲸容器管理平台.png](./docs/logo/bcs_zh_v2.png)
 
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.18.9-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.18.12-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)
 
 [EnglishDocs](./readme_en.md)
 
 > **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
 > 请通过[releases](https://github.com/Tencent/bk-bcs/releases) 而非 `master` 去获取稳定的二进制文件。
 
-蓝鲸容器管理平台（Blueking Container Service，简称BCS）是蓝鲸体系下，以容器技术为基础，为各种架构的应用提供编排管理和治理服务的基础平台。BCS支持两种不同
-的集群模式，分别为原生K8s模式和基于Mesos自研的模式；k8s模式紧跟社区发展，充分利用社区资源，避免过度修改导致版本碎片；mesos模式针对游戏等复杂应用深度定制，
-解决这类应用在微服务过渡阶段容器化的后顾之忧。
+蓝鲸容器管理平台（Blueking Container Service）是腾讯蓝鲸智云体系下，以容器生态相关技术为基础，为应用提供编排管理和治理服务的基础平台。
 
-BCS在腾讯内部已经稳定运行三年以上，经过几十款不同架构、不同规模的业务验证，其中规模最大的业务包含五个独立的集群，共600+物理机资源（单机48核以上，128G以上内存），近7000 POD，使用30多个命名空间进行隔离。
-
-BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织，本次开源的部分为BCS后台部分，为蓝鲸PaaS体系下的原子平台，主要输出服务编排和服务治理的能力。BCS的操作页面部分通过蓝鲸SaaS轻应用的方式呈现，可以通过最新的蓝鲸社区版或者企业版获取该SaaS的版本；或者直接获取[SaaS开源代码](https://github.com/Tencent/bk-bcs-saas)自行安装部署与集成。
+蓝鲸容器管理平台（以下简称BCS）是**蓝鲸DevOps体系**与云原生技术的链接器，提供简单、便捷、低成本的云原生技术使用方式，便于蓝鲸用户在保持使用习惯和体验的前提下享用云原生社区发展的红利。
 
 ## Overview
 
-* [架构设计](./docs/overview/architecture.md)
-* [代码结构](./docs/overview/code_directory.md)
-* [功能说明](./docs/overview/function.md)
+使用BCS能做什么？
+
+- [图形化、表单化](https://bk.tencent.com/docs/document/6.0/144/6521)编排和治理你的微服务应用
+- 使用新的workload(GameStatefulSet，GameDeployment)来部署和灰度更新你的复杂应用
+- 无缝纳管已有的k8s集群及运行之上的应用
+- 自动创建、销毁、更新、扩缩容你的k8s集群
+- 跨云统一管理分布在不同IaaS上的k8s集群
 
 了解BCS更详细功能，请参考蓝鲸容器管理平台[白皮书](https://docs.bk.tencent.com/bcs/)
 
 ## Features
 
-* 支持基于k8s和Mesos双引擎编排
-  * [了解k8s方案相关信息](./docs/features/k8s/基于k8s的容器编排.md)
-  * [了解mesos方案相关信息](./docs/features/mesos/基于mesos的服务编排.md)
-* 支持异构业务接入
-  * 有状态业务解决方案
-    * [k8s有状态应用部署](./docs/features/solutions/k8s有状态应用方案.md)
-    * [mesos有状态应用部署](./docs/features/mesos/基于mesos的服务编排.md#有状态服务的部署方案)
-  * [了解其他非容器友好特性的解决方案](./docs/features/mesos/基于mesos的服务编排.md#非容器在bcs部署方案)
-* 跨云跨OS管理容器
-  * [跨云容器管理方案](./docs/features/solutions/BCS跨云容器管理方案.md)
-  * 支持windows容器
-* 插件化的二次开发能力
-  * 网络插件
-    * [了解社区CNI标准](https://github.com/containernetworking/cni)
-    * [CNI插件实践](./docs/features/solutions/cni-practise.md)
-  * 存储插件
-    * [了解社区CSI标准](https://github.com/container-storage-interface/spec/blob/master/spec.md)
-    * [CSI插件实战案例](./docs/features/solutions/如何编写一个csi存储插件.md)
-  * 编排调度
-    * [K8S自定义编排调度策略](./docs/features/solutions/k8s-custom-scheduler.md)
-    * [Mesos自定义编排策略](./docs/features/mesos/自定义编排调度策略.md)
+- [Pod原地升级InplaceUpdate](./docs/features/bcs-gamestatefulset-operator/inPlaceUpdate.md)
+- [容器镜像热更新HotPatchUpdate](./docs/features/bcs-gamestatefulset-operator/hotPatchUpdate.md)
+- [基于Hook的应用交互式发布](./docs/features/bcs-hoo-operator/README.md)
+- [自动化分步骤灰度发布](./docs/features/bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
+- [PreDeleteHook & PreInplaceHook优雅地删除和更新Pod](./docs/features/bcs-gamedeployment-operator/features/preDeleteHook/pre-delete-hook.md)
+- [镜像预热]()
+- 基于BT的镜像传输加速
+- [容器web-console](https://bk.tencent.com/docs/document/6.0/144/6541)
+- [mesos-crd编排方案](https://github.com/Tencent/bk-bcs/blob/master/docs/features/mesos/%E5%9F%BA%E4%BA%8Emesos%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%BC%96%E6%8E%92.md)
 
 ## Experience
 
-* [通过BCS解决研发环境的资源复用](./docs/features/practices/通过BCS解决研发环境的资源复用.md)
-* [通过BCS完成业务的滚动升级](./docs/features/practices/rolling-update-howto.md)
-* [通过BCS完成业务的蓝绿发布](./docs/features/practices/blue-green-deployment.md)
-* [BCS集成istio案例](./docs/features/practices/istio.md) coming soon...
+* [使用BCS如何纳管已有k8s集群](https://bk.tencent.com/docs/document/6.0/144/8057)
+* [通过BCS模板集部署应用](https://bk.tencent.com/docs/document/6.0/144/8054)
+* [通过BCS使用helm部署应用](https://bk.tencent.com/docs/document/6.0/144/6542)
+* [通过BKStatefulset部署应用](./docs/features/bcs-gamestatefulset-operator/README.md)
+* [通过BCS完成应用的交互式灰度更新](./docs/features/bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
+* [通过BCS完成业务的滚动升级](https://bk.tencent.com/docs/document/6.0/144/6517))
+* [通过BCS完成业务的蓝绿发布](https://bk.tencent.com/docs/document/6.0/144/6518)
+* [如何在BCS上插件容器监控信息](https://bk.tencent.com/docs/document/6.0/144/6515)
 
 ## Getting Started
-
-> 容器管理平台是蓝鲸智云社区版V5.1以上推出的产品，后台服务可以独立部署与使用。如果需要SaaS的支持，则需要与蓝鲸社区版软件配合使用。
-> 目前社区版5.1在灰度内测中，若想体验，请填写问卷留下邮箱等信息，蓝鲸将在1-2个工作日通过邮箱方式，交付软件。感谢对蓝鲸的支持与理解。
-> 问卷链接：[https://wj.qq.com/s2/3830461/a8bc/](https://wj.qq.com/s2/3830461/a8bc/)
 
 * [下载与编译](docs/install/source_compile.md)
 * [安装部署](docs/install/deploy-guide.md)
 * [API使用说明](./docs/apidoc/api.md)
-
-## Roadmap
-
-> [历史版本详情](./docs/version/README.md)
-
-* 腾讯云K8S相关插件开源
-* K8S集群联邦方案集成
-* 开源文档重构并归档至蓝鲸文档中心
 
 ## Contributing
 
@@ -81,16 +61,17 @@ BCS作为蓝鲸体系的一部分，其整体结构按照蓝鲸PaaS体系组织�
 
 ## Support
 
-* 参考bk-bcs[安装文档](docs/install/deploy-guide.md)
+* 参考bk-bcs [安装文档](docs/install/deploy-guide.md)
 * 阅读 [源码](https://github.com/Tencent/bk-bcs)
-* 阅读 [wiki](https://github.com/Tencent/bk-bcs/wiki) 或者寻求帮助
+* 参考 [bk-bcs产品文档](https://bk.tencent.com/docs/document/6.0/143/6474)
 * 了解蓝鲸社区相关信息：蓝鲸社区版交流QQ群 495299374
-* 直接反馈[issue](https://github.com/Tencent/bk-bcs/issues)，我们会定期查看与答复
+* 直接反馈 [issue](https://github.com/Tencent/bk-bcs/issues)，我们会定期查看与答复
+* 蓝鲸社区 [问答反馈](https://bk.tencent.com/s-mart/community)
 
 ## FAQ
 
-* [蓝鲸容器FAQ](https://docs.bk.tencent.com/bcs/Container/FAQ/faq.html)
-* [蓝鲸文档中心] 建设中...
+* [蓝鲸容器FAQ](https://bk.tencent.com/docs/document/6.0/144/6522)
+* [蓝鲸文档中心](https://bk.tencent.com/docs/)
 
 ## Blueking Community
 
