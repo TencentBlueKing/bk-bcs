@@ -413,6 +413,23 @@ func urlPathMesos(oldURL string) string {
 	return urlPrefixMesos + oldURL
 }
 
+func isExistResourceQueue(features map[string]string) bool {
+	if len(features) == 0 {
+		return false
+	}
+
+	resourceType, ok := features[resourceTypeTag]
+	if !ok {
+		return false
+	}
+
+	if _, ok := apiserver.GetAPIResource().GetMsgQueue().ResourceToQueue[resourceType]; !ok {
+		return false
+	}
+
+	return true
+}
+
 func publishDynamicResourceToQueue(data operator.M, featTags []string, event msgqueue.EventKind) error {
 	var (
 		err     error
@@ -422,18 +439,17 @@ func publishDynamicResourceToQueue(data operator.M, featTags []string, event msg
 	)
 
 	startTime := time.Now()
-	defer func() {
-		if queueName, ok := message.Header[resourceTypeTag]; ok {
-			lib.ReportQueuePushMetrics(queueName, err, startTime)
-		}
-	}()
-
 	for _, feat := range featTags {
 		if v, ok := data[feat].(string); ok {
 			message.Header[feat] = v
 		}
 	}
 	message.Header[string(msgqueue.EventType)] = string(event)
+
+	exist := isExistResourceQueue(message.Header)
+	if !exist {
+		return nil
+	}
 
 	if v, ok := data[dataTag]; ok {
 		codec.EncJson(v, &message.Body)
@@ -445,6 +461,10 @@ func publishDynamicResourceToQueue(data operator.M, featTags []string, event msg
 	err = apiserver.GetAPIResource().GetMsgQueue().MsgQueue.Publish(message)
 	if err != nil {
 		return err
+	}
+
+	if queueName, ok := message.Header[resourceTypeTag]; ok {
+		lib.ReportQueuePushMetrics(queueName, err, startTime)
 	}
 
 	return nil
