@@ -37,8 +37,11 @@ import (
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
+	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tkehandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnel"
 	k8stunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/k8s"
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
@@ -84,6 +87,9 @@ type ClusterManager struct {
 	// discovery
 	disc *discovery.ModuleDiscovery
 
+	// locker
+	locker lock.DistributedLock
+
 	// tunnel peer manager
 	tunnelPeerManager *tunnel.PeerManager
 
@@ -96,6 +102,9 @@ type ClusterManager struct {
 	model store.ClusterManagerModel
 
 	k8sops *clusterops.K8SOperator
+
+	// tke handler
+	tkeHandler *tkehandler.Handler
 
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
@@ -136,6 +145,33 @@ func (cm *ClusterManager) initTLSConfig() error {
 		cm.clientTLSConfig = tlsConfig
 		blog.Infof("load cluster manager client tls config successfully")
 	}
+	return nil
+}
+
+// init lock
+func (cm *ClusterManager) initLocker() error {
+	etcdEndpoints := utils.SplitAddrString(cm.opt.Etcd.EtcdEndpoints)
+	var opts []lock.Option
+	opts = append(opts, lock.Endpoints(etcdEndpoints...))
+	opts = append(opts, lock.Prefix("clustermanager"))
+	var etcdTLS *tls.Config
+	var err error
+	if len(cm.opt.Etcd.EtcdCa) != 0 && len(cm.opt.Etcd.EtcdCert) != 0 && len(cm.opt.Etcd.EtcdKey) != 0 {
+		etcdTLS, err = ssl.ClientTslConfVerity(cm.opt.Etcd.EtcdCa, cm.opt.Etcd.EtcdCert, cm.opt.Etcd.EtcdKey, "")
+		if err != nil {
+			return err
+		}
+	}
+	if etcdTLS != nil {
+		opts = append(opts, lock.TLS(etcdTLS))
+	}
+	locker, err := etcdlock.New(opts...)
+	if err != nil {
+		blog.Errorf("init locker failed, err %s", err.Error())
+		return err
+	}
+	blog.Infof("init locker successfullly")
+	cm.locker = locker
 	return nil
 }
 
@@ -209,6 +245,25 @@ func (cm *ClusterManager) initRegistry() error {
 func (cm *ClusterManager) initDiscovery() {
 	cm.disc = discovery.NewModuleDiscovery(types.ServiceDomain, cm.microRegistry)
 	blog.Infof("init discovery for cluster manager successfully")
+}
+
+func (cm *ClusterManager) initTkeHandler(router *mux.Router) error {
+	tkeHandler := tkehandler.NewTkeHandler(cm.model, cm.locker)
+	cm.tkeHandler = tkeHandler
+
+	tkeContainer := restful.NewContainer()
+	tkeHandlerURL := "/clustermanager/v1/tke/cidr/{uri:.*}"
+	tkeWebService := new(restful.WebService).
+		Consumes(restful.MIME_XML, restful.MIME_JSON).
+		Produces(restful.MIME_JSON, restful.MIME_XML)
+	tkeWebService.Route(tkeWebService.POST("/clustermanager/v1/tke/cidr/add_cidr").To(tkeHandler.AddTkeCidr))
+	tkeWebService.Route(tkeWebService.POST("/clustermanager/v1/tke/cidr/apply_cidr").To(tkeHandler.ApplyTkeCidr))
+	tkeWebService.Route(tkeWebService.POST("/clustermanager/v1/tke/cidr/release_cidr").To(tkeHandler.ReleaseTkeCidr))
+	tkeWebService.Route(tkeWebService.POST("/clustermanager/v1/tke/cidr/list_count").To(tkeHandler.ListTkeCidrCount))
+	tkeContainer.Add(tkeWebService)
+	router.Handle(tkeHandlerURL, tkeContainer)
+	blog.Infof("register tke handler to path %s", tkeHandlerURL)
+	return nil
 }
 
 func (cm *ClusterManager) initTunnelServer(router *mux.Router) error {
@@ -298,6 +353,10 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 
 func (cm *ClusterManager) initHTTPService() error {
 	router := mux.NewRouter()
+	// init tke cidr handler
+	if err := cm.initTkeHandler(router); err != nil {
+		return err
+	}
 	// init tunnel server
 	if err := cm.initTunnelServer(router); err != nil {
 		return err
@@ -452,6 +511,10 @@ func (cm *ClusterManager) close() {
 func (cm *ClusterManager) Init() error {
 	// init server and client tls config
 	if err := cm.initTLSConfig(); err != nil {
+		return err
+	}
+	// init locker
+	if err := cm.initLocker(); err != nil {
 		return err
 	}
 	// init model
