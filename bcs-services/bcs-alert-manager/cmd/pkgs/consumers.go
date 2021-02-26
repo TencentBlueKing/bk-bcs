@@ -39,9 +39,9 @@ func GetFactoryConsumers(options *config.AlertManagerOptions) []consumer.Consume
 
 	for resource, switchKey := range resourceSubInfo {
 		if strings.EqualFold(switchKey, string(ResourceSubOn)) {
-			consumer := handlerFactory(resource, options)
-			if consumer != nil {
-				consumers = append(consumers, consumer)
+			con := handlerFactory(resource, options)
+			if con != nil {
+				consumers = append(consumers, con)
 			}
 		}
 	}

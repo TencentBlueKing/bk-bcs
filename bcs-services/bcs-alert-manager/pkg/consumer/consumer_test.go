@@ -75,9 +75,9 @@ func connectQueue() (msgqueue.MessageQueue, error) {
 
 func alertClient() alert.BcsAlarmInterface {
 	defaultOptions := &config.AlertServerOptions{
-		Server:      "http://bcs-monitor.apigw.o.oa.com",
-		AppCode:     "app-alarm-test",
-		AppSecret:   "8B18AXvVWMPfnyJw1LsJdhmr4LHHQCjR2cT6aAYxtMIigw3mej",
+		Server:      "http://xxx.xx.xx.xx.xx",
+		AppCode:     "xxx",
+		AppSecret:   "xxx",
 		ServerDebug: true,
 	}
 

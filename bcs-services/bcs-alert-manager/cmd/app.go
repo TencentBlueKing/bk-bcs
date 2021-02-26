@@ -52,7 +52,7 @@ import (
 
 var (
 	// ErrServerNotInit server not init
-	ErrServerNotInit error = errors.New("server not init")
+	ErrServerNotInit = errors.New("server not init")
 )
 
 // AlertManager alert manager
@@ -143,11 +143,11 @@ func (am *AlertManager) initConsumers() error {
 	consumers := pkgs.GetFactoryConsumers(am.options)
 	msgQueue := pkgs.GetQueueClient(am.options)
 
-	consumer := consumer.NewConsumers(consumers, msgQueue)
-	if consumer == nil {
+	con := consumer.NewConsumers(consumers, msgQueue)
+	if con == nil {
 		panic("initConsumers failed")
 	}
-	am.consumer = consumer
+	am.consumer = con
 	// run consumer sub handler
 	am.consumer.Run()
 	return nil

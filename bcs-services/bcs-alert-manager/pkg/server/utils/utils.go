@@ -151,26 +151,32 @@ func (t *trace) logf(out func(depth int, args ...interface{}), format string, ar
 	out(stackDepth, log)
 }
 
+// Info print args
 func (t *trace) Info(args ...interface{}) {
 	t.log(glog.InfoDepth, args...)
 }
 
+// Infof print args with format
 func (t *trace) Infof(format string, args ...interface{}) {
 	t.logf(glog.InfoDepth, format, args...)
 }
 
+// Warn print args
 func (t *trace) Warn(args ...interface{}) {
 	t.log(glog.WarningDepth, args...)
 }
 
+// Warnf print args with format
 func (t *trace) Warnf(format string, args ...interface{}) {
 	t.logf(glog.WarningDepth, format, args...)
 }
 
+// Error print args
 func (t *trace) Error(args ...interface{}) {
 	t.log(glog.ErrorDepth, args...)
 }
 
+// Errorf print args with format
 func (t *trace) Errorf(format string, args ...interface{}) {
 	t.logf(glog.ErrorDepth, format, args...)
 }

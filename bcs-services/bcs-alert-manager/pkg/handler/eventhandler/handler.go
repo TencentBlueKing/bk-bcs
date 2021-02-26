@@ -125,9 +125,9 @@ func (eh *SyncEventHandler) transEventListToAlertData(eventList []msgqueue.Handl
 		}
 
 		// parse event meta
-		uuid := uuid.New().String()
+		uid := uuid.New().String()
 		annotations := map[string]string{
-			string(alert.AlarmAnnotationsUUID): uuid,
+			string(alert.AlarmAnnotationsUUID): uid,
 			string(alert.AlarmAnnotationsBody): string(eventList[i].Body),
 		}
 		labels := eventList[i].Meta

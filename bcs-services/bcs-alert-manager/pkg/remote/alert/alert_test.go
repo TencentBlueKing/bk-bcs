@@ -22,9 +22,9 @@ import (
 )
 
 var defaultOptions = &config.AlertServerOptions{
-	Server:    "http://bcs-monitor.apigw.o.oa.com",
-	AppCode:   "app-alarm-test",
-	AppSecret: "8B18AXvVWMPfnyJw1LsJdhmr4LHHQCjR2cT6aAYxtMIigw3mej",
+	Server:    "http://xxx.xx.xx.xx.xx",
+	AppCode:   "xxx",
+	AppSecret: "xxx",
 	ServerDebug:     true,
 }
 
@@ -45,7 +45,7 @@ func TestNewAlertServer(t *testing.T) {
 				"project_id":      "5805f1b824134fa39318fb0cf59f694b",
 				"cluster_id":      "BCS-K8S-40185",
 				"namespace":       "gse",
-				"ip":              "10.239.168.162",
+				"ip":              "xx.xx.xx.xx",
 				"module_name":     "scheduler",
 				"app_alarm_level": "important",
 				"reason":          "scheduler",

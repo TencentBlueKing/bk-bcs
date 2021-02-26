@@ -93,6 +93,7 @@ func NewAlertServer(options *config.AlertServerOptions, opts ...Option) BcsAlarm
 	return alarmSvr
 }
 
+// SendAlarmInfoToAlertServer send alarmInfo to alertServer
 func (s *alarmServer) SendAlarmInfoToAlertServer(data []AlarmReqData, timeOut time.Duration) error {
 	if s == nil {
 		return ErrInitServerFail
