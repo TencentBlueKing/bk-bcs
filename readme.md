@@ -8,16 +8,15 @@
 > **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
 > 请通过[releases](https://github.com/Tencent/bk-bcs/releases) 而非 `master` 去获取稳定的二进制文件。
 
-蓝鲸容器管理平台（Blueking Container Service）是腾讯蓝鲸智云体系下，以容器生态相关技术为基础，为应用提供编排管理和治理服务的基础平台。
+蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；致力于为游戏等复杂应用提供一站式、低门槛的容器编排和服务治理服务。
 
-蓝鲸容器管理平台（以下简称BCS）是**蓝鲸DevOps体系**与云原生技术的链接器，提供简单、便捷、低成本的云原生技术使用方式，便于蓝鲸用户在保持使用习惯和体验的前提下享用云原生社区发展的红利。
 
 ## Overview
 
 使用BCS能做什么？
 
 - [图形化、表单化](https://bk.tencent.com/docs/document/6.0/144/6521)编排和治理你的微服务应用
-- 使用新的workload(GameStatefulSet，GameDeployment)来部署和灰度更新你的复杂应用
+- 使用新的workload([GameStatefulSet](./docs/features/bcs-gamestatefulset-operator/README.md)，[GameDeployment](./docs/features/bcs-gamedeployment-operator/README.md))来部署和灰度更新你的复杂应用
 - 无缝纳管已有的k8s集群及运行之上的应用
 - 自动创建、销毁、更新、扩缩容你的k8s集群
 - 跨云统一管理分布在不同IaaS上的k8s集群
@@ -41,7 +40,7 @@
 * [使用BCS如何纳管已有k8s集群](https://bk.tencent.com/docs/document/6.0/144/8057#导入已有集群)
 * [通过BCS模板集部署应用](https://bk.tencent.com/docs/document/6.0/144/8054)
 * [通过BCS使用helm部署应用](https://bk.tencent.com/docs/document/6.0/144/6542)
-* [通过BKStatefulset部署应用](./docs/features/bcs-gamestatefulset-operator/README.md)
+* [通过GameStatefulset部署应用](./docs/features/bcs-gamestatefulset-operator/README.md)
 * [通过BCS完成应用的交互式灰度更新](./docs/features/bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
 * [通过BCS完成业务的滚动升级](https://bk.tencent.com/docs/document/6.0/144/6517))
 * [通过BCS完成业务的蓝绿发布](https://bk.tencent.com/docs/document/6.0/144/6518)
