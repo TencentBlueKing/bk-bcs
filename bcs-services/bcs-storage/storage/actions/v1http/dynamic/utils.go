@@ -290,8 +290,9 @@ func deleteResources(req *restful.Request, resourceFeatList []string) ([]operato
 	}
 
 	rmOption := &lib.StoreRemoveOption{
-		Cond:           condition,
-		IgnoreNotFound: false,
+		Cond: condition,
+		// when resource to be deleted not found, do not return error
+		IgnoreNotFound: true,
 	}
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
