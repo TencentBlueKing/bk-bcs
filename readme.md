@@ -38,7 +38,7 @@
 
 ## Experience
 
-* [使用BCS如何纳管已有k8s集群](https://bk.tencent.com/docs/document/6.0/144/8057)
+* [使用BCS如何纳管已有k8s集群](https://bk.tencent.com/docs/document/6.0/144/8057#导入已有集群)
 * [通过BCS模板集部署应用](https://bk.tencent.com/docs/document/6.0/144/8054)
 * [通过BCS使用helm部署应用](https://bk.tencent.com/docs/document/6.0/144/6542)
 * [通过BKStatefulset部署应用](./docs/features/bcs-gamestatefulset-operator/README.md)
