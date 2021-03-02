@@ -14,22 +14,16 @@
 package usermanager
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
-	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcshttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
+
 	"github.com/emicklei/go-restful"
 )
 
@@ -99,36 +93,4 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 // initRouters init usermanager http router
 func (u *UserManager) initRouters(ws *restful.WebService) {
 	v1http.InitV1Routers(ws)
-}
-
-// RegDiscover register and discovery to zk
-func (u *UserManager) RegDiscover() {
-	rd := RegisterDiscover.NewRegDiscoverEx(u.config.RegDiscvSrv, 10*time.Second)
-	//start regdiscover
-	if err := rd.Start(); err != nil {
-		blog.Error("fail to start register and discover serv. err:%s", err.Error())
-	}
-	//register user-manager
-	userMgrServInfo := new(types.BcsUserMgrServInfo)
-
-	userMgrServInfo.IP = u.config.LocalIp
-	userMgrServInfo.Port = u.config.InsecurePort
-	userMgrServInfo.Scheme = "http"
-	userMgrServInfo.MetricPort = u.config.MetricPort
-	if u.config.ServCert.IsSSL {
-		userMgrServInfo.Scheme = "https"
-		userMgrServInfo.Port = u.config.Port
-	}
-	userMgrServInfo.Version = version.GetVersion()
-	userMgrServInfo.Pid = os.Getpid()
-
-	data, err := json.Marshal(userMgrServInfo)
-	if err != nil {
-		blog.Error("fail to marshal userMgrServInfo to json. err:%s", err.Error())
-	}
-
-	path := types.BCS_SERV_BASEPATH + "/" + types.BCS_MODULE_USERMGR + "/" + u.config.LocalIp
-
-	blog.Infof("register key %s user-manager %s", path, string(data))
-	_ = rd.RegisterAndWatchService(path, data)
 }
