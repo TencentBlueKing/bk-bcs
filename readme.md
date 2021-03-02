@@ -31,7 +31,6 @@
 - [自动化分步骤灰度发布](./docs/features/bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
 - [PreDeleteHook & PreInplaceHook优雅地删除和更新Pod](./docs/features/bcs-gamedeployment-operator/features/preDeleteHook/pre-delete-hook.md)
 - [镜像预热]()
-- 基于BT的镜像传输加速
 - [容器web-console](https://bk.tencent.com/docs/document/6.0/144/6541)
 - [mesos-crd编排方案](https://github.com/Tencent/bk-bcs/blob/master/docs/features/mesos/%E5%9F%BA%E4%BA%8Emesos%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%BC%96%E6%8E%92.md)
 
