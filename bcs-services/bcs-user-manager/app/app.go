@@ -45,9 +45,6 @@ func Run(op *options.UserManagerOptions) {
 	}
 	userManager := usermanager.NewUserManager(conf)
 
-	//register to zk
-	userManager.RegDiscover()
-
 	//start userManager, and http service
 	err = userManager.Start()
 	if err != nil {
@@ -71,7 +68,6 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.Port = op.Port
 	userMgrConfig.InsecureAddress = op.InsecureAddress
 	userMgrConfig.InsecurePort = op.InsecurePort
-	userMgrConfig.RegDiscvSrv = op.BCSZk
 	userMgrConfig.LocalIp = op.LocalIP
 	userMgrConfig.MetricPort = op.MetricPort
 	userMgrConfig.BootStrapUsers = op.BootStrapUsers
