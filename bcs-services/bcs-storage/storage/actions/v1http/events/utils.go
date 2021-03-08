@@ -204,10 +204,10 @@ func insert(req *restful.Request) error {
 	queueData := lib.CopyMap(data)
 	queueData[resourceTypeTag] = EventResource
 	if extra, ok := queueData[extraInfoTag]; ok {
-		if data, ok := extra.(types.EventExtraInfo); ok {
-			queueData[nameSpaceTag] = data.Namespace
-			queueData[resourceKindTag] = data.Kind
-			queueData[resourceNameTag] = data.Name
+		if d, ok := extra.(types.EventExtraInfo); ok {
+			queueData[nameSpaceTag] = d.Namespace
+			queueData[resourceKindTag] = data[kindTag]
+			queueData[resourceNameTag] = d.Name
 		}
 	}
 
@@ -272,8 +272,8 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 
 	startTime := time.Now()
 	for _, feat := range featTags {
-		if v, ok := data[feat].(string); ok {
-			message.Header[feat] = v
+		if v, ok := data[feat]; ok {
+			message.Header[feat] = typeofToString(v)
 		}
 	}
 	message.Header[string(msgqueue.EventType)] = string(event)
@@ -300,4 +300,22 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 	}
 
 	return nil
+}
+
+func typeofToString(v interface{}) string {
+	switch t := v.(type) {
+	case string:
+		return v.(string)
+	case types.EventEnv:
+		return string(v.(types.EventEnv))
+	case types.EventKind:
+		return string(v.(types.EventKind))
+	case types.EventComponent:
+		return string(v.(types.EventComponent))
+	case types.EventLevel:
+		return string(v.(types.EventLevel))
+	default:
+		_ = t
+		return ""
+	}
 }
