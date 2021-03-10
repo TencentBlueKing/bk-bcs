@@ -23,7 +23,6 @@ import (
 const (
 	// BscpPluginName plugin name for bscp
 	BscpPluginName = "bscp"
-
 	// SideCarPrefix prefix for bscp sidecar envs
 	SideCarPrefix = "BSCP_BCSSIDECAR_"
 	// SideCarCfgPath sidecar config path
@@ -113,8 +112,10 @@ func AddPathIntoAppInfoMode(envValue string, path string) (string, error) {
 	for _, mod := range appInfoModes {
 		if len(mod.BusinessName) == 0 || len(mod.AppName) == 0 ||
 			len(mod.ClusterName) == 0 || len(mod.ZoneName) == 0 || len(mod.DC) == 0 {
-			blog.Errorf("app info mod is invalid, one or more fields of [business, app, cluster, zone, dc] missing, %+v", mod)
-			return "", fmt.Errorf("app info mod is invalid, one or more fields of [business, app, cluster, zone, dc] missing, %+v", mod)
+			blog.Errorf(
+				"app info mod is invalid, one or more fields of [business, app, cluster, zone, dc] missing, %+v", mod)
+			return "", fmt.Errorf(
+				"app info mod is invalid, one or more fields of [business, app, cluster, zone, dc] missing, %+v", mod)
 		}
 		mod.Path = path
 	}
