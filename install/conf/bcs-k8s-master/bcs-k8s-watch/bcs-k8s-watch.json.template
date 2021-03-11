@@ -23,5 +23,14 @@
             "cert-file": "",
             "key-file": ""
         }
+    },
+    "httpServer": {
+        "address": "${localIP}",
+        "port": ${bcsK8sWatchPort},
+        "debug": ${bcsK8sWatchDebug},
+        "isSSL": ${bcsK8sWatchIsSSL},
+        "ca_file": "${caFile}",
+        "server_cert_file": "${serverCertFile}",
+        "server_key_file": "${serverKeyFile}"
     }
 }

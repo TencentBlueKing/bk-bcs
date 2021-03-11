@@ -15,9 +15,11 @@ package storage
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"time"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 //ConfigMapHandler handler for configmap synchronize to bcs-storage
@@ -43,59 +45,76 @@ func (handler *ConfigMapHandler) CheckDirty() error {
 	}
 	dataNode := fmt.Sprintf("/bcsstorage/v1/mesos/dynamic/all_resources/clusters/%s/%s",
 		handler.ClusterID, handler.dataType)
+
 	err := handler.oper.DeleteDCNodes(dataNode, conditionData, "DELETE")
 	if err != nil {
 		blog.Error("delete timeover node(%s) failed: %+v", dataNode, err)
-		reportStorageMetrics(dataTypeCfg, actionDelete, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionDelete, handlerAllClusterType, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeCfg, actionDelete, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionDelete, handlerAllClusterType, util.StatusSuccess, started)
 	return nil
 }
 
 //Add add new configmap to bcs-storage
 func (handler *ConfigMapHandler) Add(data interface{}) error {
-	dataType := data.(*commtypes.BcsConfigMap)
+	var (
+		dataType = data.(*commtypes.BcsConfigMap)
+		started  = time.Now()
+	)
+
 	blog.Info("configmap add event, configmap: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name //nolint
+
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("configmap add node %s, err %+v", dataNode, err)
-		reportStorageMetrics(dataTypeCfg, actionPut, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeCfg, actionPut, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
 	return nil
 }
 
 //Delete delete configmap in storage
 func (handler *ConfigMapHandler) Delete(data interface{}) error {
-	dataType := data.(*commtypes.BcsConfigMap)
+	var (
+		dataType = data.(*commtypes.BcsConfigMap)
+		started  = time.Now()
+	)
+
 	blog.Info("configmap delete event, configmap: %s.%s", dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name)
-	started := time.Now()
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+
 	err := handler.oper.DeleteDCNode(dataNode, "DELETE")
 	if err != nil {
 		blog.V(3).Infof("configmap delete node %s, err %+v", dataNode, err)
-		reportStorageMetrics(dataTypeCfg, actionDelete, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionDelete, handlerClusterNamespaceTypeName, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeCfg, actionDelete, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionDelete, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
 	return nil
 }
 
 //Update update configmap in storage
 func (handler *ConfigMapHandler) Update(data interface{}) error {
-	dataType := data.(*commtypes.BcsConfigMap)
-	started := time.Now()
+	var (
+		dataType = data.(*commtypes.BcsConfigMap)
+		started  = time.Now()
+	)
+
 	dataNode := "/bcsstorage/v1/mesos/dynamic/namespace_resources/clusters/" + handler.ClusterID + "/namespaces/" + dataType.ObjectMeta.NameSpace + "/" + handler.dataType + "/" + dataType.ObjectMeta.Name
+
 	err := handler.oper.CreateDCNode(dataNode, data, "PUT")
 	if err != nil {
 		blog.V(3).Infof("configmap update node %s, err %+v", dataNode, err)
-		reportStorageMetrics(dataTypeCfg, actionPut, statusFailure, started)
+		util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionPut, handlerClusterNamespaceTypeName, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(dataTypeCfg, actionPut, statusSuccess, started)
+
+	util.ReportStorageMetrics(handler.ClusterID, dataTypeCfg, actionPut, handlerClusterNamespaceTypeName, util.StatusSuccess, started)
 	return nil
 }

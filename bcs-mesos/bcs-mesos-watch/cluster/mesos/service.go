@@ -16,16 +16,18 @@ package mesos
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"reflect"
 	"sync"
 	"time"
 
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 //ServiceInfo wrapper for BCSService
@@ -214,9 +216,9 @@ func (watch *ServiceWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeSvr, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeSvr, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -235,9 +237,9 @@ func (watch *ServiceWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeSvr, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeSvr, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -260,8 +262,8 @@ func (watch *ServiceWatch) UpdateEvent(old, cur interface{}) {
 		Item:     cur,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeSvr, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }

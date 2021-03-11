@@ -26,6 +26,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
+	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/json-iterator/go v1.1.10
@@ -34,6 +35,7 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.9.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b

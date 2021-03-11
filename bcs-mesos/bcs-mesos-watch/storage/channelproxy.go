@@ -14,22 +14,27 @@
 package storage
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"time"
 
 	"golang.org/x/net/context"
-	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 //ChannelProxy Proxy offer particular channel for
 //handling data in private goroutine
 type ChannelProxy struct {
+	clusterID     string
 	dataQueue     chan *types.BcsSyncData //queue for async
 	actionHandler InfoHandler             //data operator interface
 }
 
-//Run ChannelProxy running a dataType handler channel
-func (proxy *ChannelProxy) Run(cxt context.Context) {
+//Run ChannelProxy running a dataType handler channel, stop Run() By external context
+func (proxy *ChannelProxy) Run(ctx context.Context) {
+	// report handler queue length periodically
+	go proxy.reportHandlerQueueLength(ctx)
 
 	tick := time.NewTicker(300 * time.Second)
 	defer tick.Stop()
@@ -40,11 +45,13 @@ func (proxy *ChannelProxy) Run(cxt context.Context) {
 				proxy.actionHandler.GetType(), len(proxy.dataQueue), cap(proxy.dataQueue))
 			proxy.actionHandler.CheckDirty()
 
-		case <-cxt.Done():
+		case <-ctx.Done():
 			blog.Info("ChannelProxy(%s) asked to exit, current task queue(%d/%d)",
 				proxy.actionHandler.GetType(), len(proxy.dataQueue), cap(proxy.dataQueue))
 			return
+
 		case data := <-proxy.dataQueue:
+			util.ReportHandlerQueueLengthDec(proxy.clusterID, proxy.actionHandler.GetType())
 			if len(proxy.dataQueue)+100 > cap(proxy.dataQueue) {
 				blog.Warnf("ChannelProxy(%s) busy, current task queue(%d/%d)",
 					proxy.actionHandler.GetType(), len(proxy.dataQueue), cap(proxy.dataQueue))
@@ -77,4 +84,38 @@ func (proxy *ChannelProxy) Handle(data *types.BcsSyncData) {
 		return
 	}
 	proxy.dataQueue <- data
+	util.ReportHandlerQueueLengthInc(proxy.clusterID, proxy.actionHandler.GetType())
+}
+
+// HandleWithTimeOut send data to proxy.dataQueue with timeout
+func (proxy *ChannelProxy) HandleWithTimeOut(data *types.BcsSyncData, timeout time.Duration) {
+	if data == nil {
+		blog.Error("ChannelProxy Get nil BcsSyncData")
+		return
+	}
+
+	select {
+	case proxy.dataQueue <- data:
+		util.ReportHandlerQueueLengthInc(proxy.clusterID, proxy.actionHandler.GetType())
+	case <-time.After(timeout):
+		blog.Warn("can't handle data to dataQueue, queue timeout")
+		util.ReportHandlerDiscardEvents(proxy.clusterID, proxy.actionHandler.GetType())
+	}
+}
+
+func (proxy *ChannelProxy) reportHandlerQueueLength(ctx context.Context) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	blog.Infof("begin to monitor handler[%s] queue length", proxy.actionHandler.GetType())
+	for {
+		select {
+		case <-ctx.Done():
+			blog.Warn("external context cancel() %v", ctx.Err())
+			return
+		case <-ticker.C:
+		}
+
+		util.ReportHandlerQueueLength(proxy.clusterID, proxy.actionHandler.GetType(), float64(len(proxy.dataQueue)))
+	}
 }
