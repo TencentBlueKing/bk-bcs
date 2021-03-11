@@ -30,6 +30,7 @@ import (
 
 	global "github.com/Tencent/bk-bcs/bcs-common/common"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 )
 
@@ -159,6 +160,25 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	if err != nil {
 		glog.Warnf("Init Alertor fail, no alarm will be sent!")
 	}
+
+	// init server actions && register web server
+	glog.Info("start http server")
+	certConfig := bcs.CertConfig{
+		CAFile:   config.HttpServer.CAFile,
+		CertFile: config.HttpServer.ServerCertFile,
+		KeyFile:  config.HttpServer.ServerKeyFile,
+		CertPwd:  static.ServerCertPwd,
+		IsSSL:    config.HttpServer.IsSSL,
+	}
+	httpServer := bcs.GetHTTPServer(config, bcs.WithCertConfig(certConfig), bcs.WithDebug(config.HttpServer.Debug))
+	go func() {
+		err = httpServer.ListenAndServe()
+		if err != nil {
+			glog.Errorf("http listen and serve failed: %v", err)
+			close(globalStopChan)
+		}
+	}()
+	glog.Info("start http server successful")
 
 	// init resourceList to watch
 	err = resources.InitResourceList(&config.K8s)

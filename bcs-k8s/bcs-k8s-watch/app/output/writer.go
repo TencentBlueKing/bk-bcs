@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/metrics"
 )
 
 const (
@@ -40,6 +41,13 @@ const (
 
 	// debugInterval is interval of debug.
 	debugInterval = 10 * time.Second
+)
+
+const (
+	// NormalQueue for normalQueue handlerLabel
+	NormalQueue = "writer_normal_queue"
+	// AlarmQueue for alarmQueue handlerLabel
+	AlarmQueue = "writer_alarm_queue"
 )
 
 var (
@@ -70,6 +78,8 @@ var (
 // There are queues for normal data and alarm message data, every
 // metadata in queues would be distributed to settled handler.
 type Writer struct {
+	// clusterID
+	clusterID string
 	// normal metadata queue.
 	queue chan *action.SyncData
 
@@ -82,7 +92,7 @@ type Writer struct {
 	// alarm sender.
 	alertor *action.Alertor
 
-	// groutine stop channel.
+	// goroutine stop channel.
 	stopCh <-chan struct{}
 }
 
@@ -93,6 +103,7 @@ func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *acti
 		alarmQueue: make(chan *action.SyncData, defaultQueueSizeAlarmMetadata),
 		Handlers:   make(map[string]*Handler),
 		alertor:    alertor,
+		clusterID:  clusterID,
 	}
 
 	if err := w.init(clusterID, storageService); err != nil {
@@ -104,12 +115,12 @@ func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *acti
 func (w *Writer) init(clusterID string, storageService *bcs.InnerService) error {
 	for resource := range resources.WatcherConfigList {
 		action := action.NewStorageAction(clusterID, resource, storageService)
-		w.Handlers[resource] = NewHandler(resource, action)
+		w.Handlers[resource] = NewHandler(clusterID, resource, action)
 	}
 
 	for resource := range resources.BkbcsWatcherConfigList {
 		action := action.NewStorageAction(clusterID, resource, storageService)
-		w.Handlers[resource] = NewHandler(resource, action)
+		w.Handlers[resource] = NewHandler(clusterID, resource, action)
 	}
 	return nil
 }
@@ -123,7 +134,9 @@ func (w *Writer) Sync(data *action.SyncData) {
 
 	select {
 	case w.queue <- data:
+		metrics.ReportK8sWatchHandlerQueueLengthInc(w.clusterID, NormalQueue)
 	case <-time.After(defaultQueueTimeout):
+		metrics.ReportK8sWatchHandlerDiscardEvents(w.clusterID, NormalQueue)
 		glog.Warn("can't sync data, queue timeout")
 	}
 }
@@ -137,19 +150,22 @@ func (w *Writer) SyncAlarmEvent(data *action.SyncData) {
 
 	select {
 	case w.alarmQueue <- data:
+		metrics.ReportK8sWatchHandlerQueueLengthInc(w.clusterID, AlarmQueue)
 	case <-time.After(defaultQueueTimeout):
+		metrics.ReportK8sWatchHandlerDiscardEvents(w.clusterID, AlarmQueue)
 		glog.Warn("can't sync data, alarm queue timeout")
 	}
 }
 
 // distributeNormal distributes normal metadata from queue. The distribute
-// func is drived by wait.NonSlidingUntil with a stop channel, do not block to
+// func is invoked by wait.NonSlidingUntil with a stop channel, do not block to
 // recv the queue here in order to make it have runtime to handle the stop channel.
 func (w *Writer) distributeNormal() {
 	// try to keep reading from queue until there is no more data every period.
 	for {
 		select {
 		case data := <-w.queue:
+			metrics.ReportK8sWatchHandlerQueueLengthDec(w.clusterID, NormalQueue)
 			if handler, ok := w.Handlers[data.Kind]; ok {
 				handler.HandleWithTimeout(data, defaultQueueTimeout)
 			} else {
@@ -164,13 +180,14 @@ func (w *Writer) distributeNormal() {
 }
 
 // distributeAlarm distributes alarm metadata from alarm queue. The distribute
-// func is drived by wait.NonSlidingUntil with a stop channel, do not block to
+// func is invoked by wait.NonSlidingUntil with a stop channel, do not block to
 // recv the queue here in order to make it have runtime to handle the stop channel.
 func (w *Writer) distributeAlarm() {
 	// try to keep reading from queue until there is no more data every period.
 	for {
 		select {
 		case data := <-w.alarmQueue:
+			metrics.ReportK8sWatchHandlerQueueLengthDec(w.clusterID, AlarmQueue)
 			w.alertor.DoAlarm(data)
 
 		case <-time.After(defaultQueueTimeout):
@@ -188,8 +205,14 @@ func (w *Writer) debug() {
 	}
 }
 
+// reportQueueLength report writer module queueInfo to prometheus metrics
+func (w *Writer) reportWriterQueueLength() {
+	metrics.ReportK8sWatchHandlerQueueLength(w.clusterID, NormalQueue, float64(len(w.queue)))
+	metrics.ReportK8sWatchHandlerQueueLength(w.clusterID, AlarmQueue, float64(len(w.alarmQueue)))
+}
+
 // Run runs the Writer instance with target stop channel, and starts all handlers.
-// There is a groutine which keep consuming metadata in queues and distributes data
+// There is a goroutine which keep consuming metadata in queues and distributes data
 // to settled handler until stop channel is activated.
 func (w *Writer) Run(stopCh <-chan struct{}) error {
 	if stopCh != nil {
@@ -210,6 +233,8 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	go wait.NonSlidingUntil(w.distributeNormal, defaultDistributeInterval, w.stopCh)
 	go wait.NonSlidingUntil(w.distributeAlarm, defaultDistributeInterval, w.stopCh)
 
+	// report writer module queueLen metrics
+	go wait.Until(w.reportWriterQueueLength, defaultHandlerReportPeriod, w.stopCh)
 	// setup debug.
 	//go w.debug()
 

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 // NetServiceHandler handle netservice resources for storage.
@@ -60,10 +61,10 @@ func (h *NetServiceHandler) Update(data interface{}) error {
 
 	if err := h.oper.CreateDCNode(dataNode, data, "PUT"); err != nil {
 		blog.V(3).Infof("%s update node %s, err %+v", h.dataType, dataNode, err)
-		reportStorageMetrics(h.dataType, actionPut, statusFailure, started)
+		util.ReportStorageMetrics(h.ClusterID, h.dataType, actionPut, handlerClusterTypeName, util.StatusFailure, started)
 		return err
 	}
-	reportStorageMetrics(h.dataType, actionPut, statusSuccess, started)
 
+	util.ReportStorageMetrics(h.ClusterID, h.dataType, actionPut, handlerClusterTypeName, util.StatusSuccess, started)
 	return nil
 }

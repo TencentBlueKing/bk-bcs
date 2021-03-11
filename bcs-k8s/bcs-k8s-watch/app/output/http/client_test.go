@@ -31,7 +31,7 @@ func TestGetURL(t *testing.T) {
 		ResourceName: "test-data-watch-pod-1",
 	}
 
-	url1 := client1.GetURL()
+	url1, _ := client1.GetURL()
 	if url1 != "http://www.test.com/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/12121/namespaces/test/Pod/test-data-watch-pod-1" {
 		t.Errorf("GetURL with Namespace not null fail, got: %s", url1)
 	}
@@ -47,7 +47,7 @@ func TestGetURL(t *testing.T) {
 		ResourceName: "test-data-watch-node-1",
 	}
 
-	url2 := client2.GetURL()
+	url2, _ := client2.GetURL()
 	if url2 != "http://www.test.com/bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/12121/Node/test-data-watch-node-1" {
 		t.Errorf("GetURL with no Namespace not null fail, got: %s", url2)
 	}
@@ -63,7 +63,7 @@ func TestGetURL(t *testing.T) {
 		ResourceName: "test-data-watch-event-1",
 	}
 
-	url3 := client3.GetURL()
+	url3, _ := client3.GetURL()
 	if url3 != "http://www.test.com/bcsstorage/v1/events" {
 		t.Errorf("GetURL with type event fail, got: %s", url3)
 	}

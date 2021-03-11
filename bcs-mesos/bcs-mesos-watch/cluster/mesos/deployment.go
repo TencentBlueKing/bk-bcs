@@ -14,22 +14,21 @@
 package mesos
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
-	"strconv"
-
-	//schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 //NSControlInfo store all app info under one namespace
@@ -238,9 +237,9 @@ func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -259,9 +258,9 @@ func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -282,12 +281,13 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 		Item:     cur,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeDeploy, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 
+// GetDeploymentChannel get channel by random algorithm
 func (watch *DeploymentWatch) GetDeploymentChannel(deployment *schedulertypes.Deployment) string {
 	index := util.GetHashId(deployment.ObjectMeta.Name, DeploymentThreadNum)
 

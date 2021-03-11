@@ -13,12 +13,10 @@
 
 package cluster
 
-import "github.com/prometheus/client_golang/prometheus"
-
 const (
 	//syncStorageErr = "ZOOKEEPERErr"
-	SyncSuccess = "SUCCESS"
-	SyncFailure = "FAILURE"
+	SyncSuccess = "success"
+	SyncFailure = "failure"
 
 	//actionGetData = "GetData"
 	//actionWatch = "Watch"
@@ -33,17 +31,3 @@ const (
 	DataTypeIPPoolStatic       = "IPPoolStatic"
 	DataTypeIPPoolStaticDetail = "IPPoolStaticDetail"
 )
-
-var (
-	SyncTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "bkbcs_datawatch",
-		Subsystem: "mesos",
-		Name:      "sync_total",
-		Help:      "The total number of data sync event.",
-	}, []string{"datatype", "action", "status"})
-)
-
-func init() {
-	//add golang basic metrics
-	prometheus.MustRegister(SyncTotal)
-}
