@@ -50,6 +50,10 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+const (
+	apiPrefix = "/alertmanager"
+)
+
 var (
 	// ErrServerNotInit server not init
 	ErrServerNotInit = errors.New("server not init")
@@ -107,9 +111,9 @@ func (am *AlertManager) initSvrCliTLSConfig() error {
 		return ErrServerNotInit
 	}
 
-	if len(am.options.ServiceOptions.ServerCa) != 0 && len(am.options.ServiceOptions.ServerCert) != 0 && len(am.options.ServiceOptions.ServerKey) != 0 {
-		tlsServerConfig, err := ssl.ServerTslConfVerityClient(am.options.ServiceOptions.ServerCa, am.options.ServiceOptions.ServerCert,
-			am.options.ServiceOptions.ServerKey, static.ServerCertPwd)
+	if len(am.options.CAFile) != 0 && len(am.options.ServerCertFile) != 0 && len(am.options.ServerKeyFile) != 0 {
+		tlsServerConfig, err := ssl.ServerTslConfVerityClient(am.options.CAFile, am.options.ServerCertFile,
+			am.options.ServerKeyFile, static.ServerCertPwd)
 		if err != nil {
 			blog.Errorf("initServerTLSConfig failed: %v", err)
 			return err
@@ -119,9 +123,9 @@ func (am *AlertManager) initSvrCliTLSConfig() error {
 		blog.Infof("initServerTLSConfig successful")
 	}
 
-	if len(am.options.ClientTLSConfig.ClientCa) != 0 && len(am.options.ClientTLSConfig.ClientCert) != 0 && len(am.options.ClientTLSConfig.ClientKey) != 0 {
-		tlsClientConfig, err := ssl.ClientTslConfVerity(am.options.ClientTLSConfig.ClientCa, am.options.ClientTLSConfig.ClientCert,
-			am.options.ClientTLSConfig.ClientKey, static.ClientCertPwd)
+	if len(am.options.CertConfig.CAFile) != 0 && len(am.options.CertConfig.ClientCertFile) != 0 && len(am.options.ClientKeyFile) != 0 {
+		tlsClientConfig, err := ssl.ClientTslConfVerity(am.options.CAFile, am.options.ClientCertFile,
+			am.options.ClientKeyFile, static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("initClientTLSConfig failed: %v", err)
 			return err
@@ -158,11 +162,11 @@ func (am *AlertManager) initRegistry() error {
 	if am == nil {
 		return ErrServerNotInit
 	}
-	if len(am.options.EtcdOptions.EtcdServers) == 0 {
+	if len(am.options.CMDOptions.Address) == 0 {
 		errMsg := fmt.Errorf("etcdServers invalid")
 		return errMsg
 	}
-	servers := strings.Split(am.options.EtcdOptions.EtcdServers, ";")
+	servers := strings.Split(am.options.CMDOptions.Address, ";")
 
 	var (
 		secureEtcd bool
@@ -170,11 +174,11 @@ func (am *AlertManager) initRegistry() error {
 		err        error
 	)
 
-	if len(am.options.EtcdOptions.EtcdCaFile) != 0 && len(am.options.EtcdOptions.EtcdCertFile) != 0 && len(am.options.EtcdOptions.EtcdKeyFile) != 0 {
+	if len(am.options.CMDOptions.CA) != 0 && len(am.options.CMDOptions.Cert) != 0 && len(am.options.CMDOptions.Key) != 0 {
 		secureEtcd = true
 
-		etcdTLS, err = ssl.ClientTslConfVerity(am.options.EtcdOptions.EtcdCaFile, am.options.EtcdOptions.EtcdCertFile,
-			am.options.EtcdOptions.EtcdKeyFile, "")
+		etcdTLS, err = ssl.ClientTslConfVerity(am.options.CMDOptions.CA, am.options.CMDOptions.Cert,
+			am.options.CMDOptions.Key, "")
 		if err != nil {
 			return err
 		}
@@ -200,6 +204,7 @@ func (am *AlertManager) initPProf(router *mux.Router) {
 
 	if !am.options.DebugMode {
 		blog.Infof("pprof debugMode is off")
+		return
 	}
 
 	blog.Infof("pprof debugMode is on")
@@ -220,12 +225,12 @@ func (am *AlertManager) initServerSwaggerFile(mux *http.ServeMux) {
 	if len(am.options.SwaggerConfigDir.Dir) != 0 {
 		blog.Infof("swagger config dir is enabled")
 
-		mux.HandleFunc("/swagger/", am.serveSwaggerFile)
+		mux.HandleFunc(apiPrefix + "/swagger/", am.serveSwaggerFile)
 	}
 }
 
 func (am *AlertManager) serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
-	swaggerFile := path.Join(am.options.SwaggerConfigDir.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/"))
+	swaggerFile := path.Join(am.options.SwaggerConfigDir.Dir, strings.TrimPrefix(r.URL.Path, apiPrefix + "/swagger/"))
 	blog.Infof("Serving swagger-file: %s", swaggerFile)
 
 	http.ServeFile(w, r, swaggerFile)
@@ -234,7 +239,7 @@ func (am *AlertManager) serveSwaggerFile(w http.ResponseWriter, r *http.Request)
 // init prometheus metrics handler
 func (am *AlertManager) initMetrics(router *mux.Router) {
 	blog.Infof("init metrics handler")
-	router.Handle("/metrics", promhttp.Handler())
+	router.Handle(apiPrefix + "/metrics", promhttp.Handler())
 }
 
 func customMatcher(key string) (string, bool) {
@@ -270,7 +275,7 @@ func (am *AlertManager) initHTTPGateWay(router *mux.Router) error {
 	err := alertmanager.RegisterAlertManagerGwFromEndpoint(
 		am.ctx,
 		gmux,
-		am.options.ServiceOptions.Address+":"+strconv.Itoa(int(am.options.ServiceOptions.Port)),
+		am.options.ServiceConfig.Address + ":" + strconv.Itoa(int(am.options.ServiceConfig.Port)),
 		dialOpts)
 	if err != nil {
 		errMsg := fmt.Sprintf("http gateway RegisterAlertManagerGwFromEndpoint failed: %v", err)
@@ -298,7 +303,7 @@ func (am *AlertManager) initMainHTTPServer() error {
 		return err
 	}
 
-	mainAddress := am.options.ServiceOptions.Address + ":" + fmt.Sprintf("%d", am.options.ServiceOptions.Port-1)
+	mainAddress := am.options.ServiceConfig.Address + ":" + fmt.Sprintf("%d", am.options.ServiceConfig.Port-1)
 	am.mainServer = &http.Server{
 		Addr:    mainAddress,
 		Handler: router,
@@ -337,7 +342,7 @@ func (am *AlertManager) initExtraHTTPServer() error {
 	mux.Handle("/", router)
 	am.initServerSwaggerFile(mux)
 
-	extraAddress := am.options.ServiceOptions.Address + ":" + strconv.Itoa(int(am.options.ServiceOptions.MetricPort))
+	extraAddress := am.options.ServiceConfig.Address + ":" + strconv.Itoa(int(am.options.MetricPort))
 	am.extraServer = &http.Server{
 		Addr:    extraAddress,
 		Handler: mux,
@@ -371,7 +376,7 @@ func (am *AlertManager) initMicroService() error {
 		microsvc.Context(am.ctx),
 		microsvc.Name(types.ServiceName),
 		microsvc.Version(version.BcsVersion),
-		microsvc.Address(am.options.ServiceOptions.Address+":"+strconv.Itoa(int(am.options.ServiceOptions.Port))),
+		microsvc.Address(am.options.ServiceConfig.Address+":"+strconv.Itoa(int(am.options.ServiceConfig.Port))),
 		grpcsvc.WithTLS(am.tlsServerConfig),
 		microsvc.Registry(am.microRegistry),
 		microsvc.RegisterInterval(30*time.Second),
