@@ -1,0 +1,13 @@
+{
+    "docker_sock": "${dockerSock}",
+    "plugin_socket_dir": "${pluginSocketDir}",
+    "clusterid": "${clusterId}",
+    "engine": "${bcsCpusetDeviceEngine}",
+    "bcs_zookeeper": "${bcsZkHost}",
+    "log_dir": "${logDir}",
+    "alsologtostderr": ${logAlsoLogToStderr},
+    "v": "${logVerbose}"
+    "ca_file": "${caFile}",
+    "client_cert_file": "${clientCertFile}",
+    "client_key_file": "${clientKeyFile}"
+}

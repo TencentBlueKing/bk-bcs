@@ -256,6 +256,7 @@ bmsf-mesos-adapter:pre
 
 cpuset:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cpuset-device
+	cp -R ./install/conf/bcs-mesos-node/bcs-cpuset-device ${PACKAGEPATH}/bcs-services
 	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-cpuset-device/bcs-cpuset-device ./bcs-services/bcs-cpuset-device/main.go
 
 gw-controller:pre
