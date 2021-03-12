@@ -26,7 +26,7 @@ func main() {
 	conf.Parse(alertManagerOptions)
 
 	// init log config
-	blog.InitLogs(alertManagerOptions.LogOptions)
+	blog.InitLogs(alertManagerOptions.LogConfig)
 	defer blog.CloseLogs()
 
 	// init alertManager & run server/consumer

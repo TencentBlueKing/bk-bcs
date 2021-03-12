@@ -15,17 +15,19 @@ package config
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
 // AlertManagerOptions parse command-line parameters to options
 type AlertManagerOptions struct {
 	conf.FileConfig
+	registry.CMDOptions `json:"etcdOptions"`
+	conf.ServiceConfig  `json:"serviceOptions"`
+	conf.LogConfig      `json:"logOptions"`
+	conf.MetricConfig   `json:"metricOptions"`
+	conf.CertConfig     `json:"certOptions"`
 
-	ServiceOptions     ServiceConfig      `json:"serviceOptions"`
-	ClientTLSConfig    ClientTLSConfig    `json:"clientTLSConfig"`
 	SwaggerConfigDir   SwaggerConfig      `json:"swaggerConfigDir"`
-	LogOptions         conf.LogConfig     `json:"logOptions"`
-	EtcdOptions        EtcdOptions        `json:"etcdOptions"`
 	AlertServerOptions AlertServerOptions `json:"alertServerOptions"`
 	DebugMode          bool               `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 	HandlerConfig      HandlerOptions     `json:"handler_config"`
@@ -72,32 +74,6 @@ type QueueConfig struct {
 // SwaggerConfig option for swagger
 type SwaggerConfig struct {
 	Dir string `json:"dir"`
-}
-
-// ServiceConfig option for server
-type ServiceConfig struct {
-	Address         string `json:"address"`
-	InsecureAddress string `json:"insecureaddress"`
-	Port            uint   `json:"port"`
-	MetricPort      uint   `json:"metricport"`
-	ServerCert      string `json:"servercert"`
-	ServerKey       string `json:"serverkey"`
-	ServerCa        string `json:"serverca"`
-}
-
-// ClientTLSConfig option for bcs-alert-manager as client
-type ClientTLSConfig struct {
-	ClientCert string `json:"clientcert"`
-	ClientKey  string `json:"clientkey"`
-	ClientCa   string `json:"clientca"`
-}
-
-// EtcdOptions option for micro registry
-type EtcdOptions struct {
-	EtcdServers  string `json:"etcd-servers" value:"127.0.0.1:2379" usage:"List of etcd servers to connect with (scheme://ip:port)"`
-	EtcdCaFile   string `json:"etcd-cafile" value:"./etcd/ca.pem" usage:"SSL certificate ca file"`
-	EtcdCertFile string `json:"etcd-certfile" value:"./etcd/client.pem" usage:"SSL certificate cert file"`
-	EtcdKeyFile  string `json:"etcd-keyfile" value:"./etcd/client-key.pem" usage:"SSL certificate cert-key file"`
 }
 
 // AlertServerOptions option for alert-system server

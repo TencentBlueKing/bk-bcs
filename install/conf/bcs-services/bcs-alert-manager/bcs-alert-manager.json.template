@@ -1,30 +1,31 @@
 {
 "serviceOptions": {
-   "address": "${bcsAlertManagerAddress}",
+   "address": "${localIp}",
    "port": ${bcsAlertManagerPort},
-   "metricport": ${bcsAlertManagerMetricPort},
-   "servercert": "${bcsAlertManagerServerCert}",
-   "serverkey": "${bcsAlertManagerServerKey}",
-   "serverca": "${bcsAlertManagerServerCa}"
 },
-"clientTLSConfig": {
-   "clientcert": "${bcsAlertManagerClientCert}",
-   "clientkey": "${bcsAlertManagerClientKey}",
-   "clientca": "${bcsAlertManagerClientCa}"
-},
-"swaggerConfigDir": {
-	"dir": "${bcsAlertManagerSwaggerDir}"
+"etcdOptions": {
+    "etcd_address": "${bcsEtcdHost}",
+    "etcd_ca": "${bcsEtcdCAFile}",
+    "etcd_cert": "${bcsEtcdCertFile}",
+    "etcd_key": "${bcsEtcdKeyFile}"
 },
 "logOptions": {
 	"log_dir": "${bcsAlertManagerLogDir}",
 	"v": ${bcsAlertManagerVerbosity}
 	"alsotostderr": ${bcsAlertManagerAlsoToStdErr},
 },
-"etcdOptions": {
-	"etcd-servers": "${bcsAlertManagerEtcdServers}",
-	"etcd-cafile": "${bcsAlertManagerEtcdCa}",
-	"etcd-certfile": "${bcsAlertManagerEtcdCert}",
-	"etcd-keyfile": "${bcsAlertManagerEtcdkey}"
+"swaggerConfigDir": {
+	"dir": "${bcsAlertManagerSwaggerDir}"
+},
+"metricOptions": {
+    "metric_port": ${bcsAlertManagerMetricPort}
+},
+"certOptions": {
+    "ca_file": "${caFile}",
+    "server_cert_file": "${serverCertFile}",
+    "server_key_file": "${serverKeyFile}",
+    "client_cert_file": "${clientCertFile}",
+    "client_key_file": "${clientKeyFile}"
 },
 "alertServerOptions": {
 	"server": "${bcsAlertManagerAppServer}",
