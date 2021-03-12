@@ -181,6 +181,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.Re
 			CfgID:      info.CfgId,
 			ReleaseID:  info.ReleaseId,
 		}).
+		Where("Feffect_code != 0").
 		Assign(appInstanceRelease).
 		FirstOrCreate(&appInstanceRelease).Error
 
@@ -204,6 +205,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.Re
 				CfgID:      info.CfgId,
 				ReleaseID:  info.ReleaseId,
 			}).
+			Where("Feffect_code != 0").
 			Assign(appInstanceRelease).
 			FirstOrCreate(&appInstanceRelease).Error
 
@@ -320,6 +322,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.Re
 				CfgID:      cfgID,
 				ReleaseID:  finalReleaseIDs[i],
 			}).
+			Where("Freload_code NOT IN (1, 2)").
 			Assign(appInstanceRelease).
 			FirstOrCreate(&appInstanceRelease).Error
 
@@ -345,6 +348,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.Re
 					CfgID:      cfgID,
 					ReleaseID:  finalReleaseIDs[i],
 				}).
+				Where("Freload_code NOT IN (1, 2)").
 				Assign(appInstanceRelease).
 				FirstOrCreate(&appInstanceRelease).Error
 

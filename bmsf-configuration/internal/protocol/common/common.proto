@@ -169,6 +169,18 @@ enum ErrCode {
     E_IS_PARAMS_INVALID                             = 4009001;
 }
 
+// ConfigType 配置类型
+enum ConfigType {
+    // 0 文件配置
+    CT_FILE   = 0;
+    // 1 KV-String
+    CT_STRING = 1;
+    // 2 KV-Json
+    CT_JSON   = 2;
+    // 3 KV-Yaml
+    CT_YAML   = 3;
+}
+
 // TemplateEngineType 模板渲染引擎类型
 enum TemplateEngineType {
     // 0 非模板
@@ -181,7 +193,7 @@ enum TemplateEngineType {
     TET_EXTERNAL   = 3;
 }
 
-// ConfigFileMode 配置文件类型
+// ConfigFileMode 配置文件类型(仅当ConfigType为0，即文件型配置时有效)
 enum ConfigFileMode {
     // 0 文本文件
     CFM_TEXT     = 0;
@@ -197,6 +209,14 @@ enum CommonState {
     CS_VALID   = 0;
     // 1 非正常
     CS_INVALID = 1;
+}
+
+// ConfigState 配置逻辑状态
+enum ConfigState {
+    // 0 通用状态
+    CS_NORMAL   = 0;
+    // 1 已发布过版本的状态
+    CS_RELEASED = 1;
 }
 
 // CommitState 改动提交状态
@@ -543,20 +563,21 @@ message ConfigTemplate {
     string template_id    = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
     string biz_id         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
     string name           = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板名称", description: "", max_length: 64}];
-    string file_name      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件名", description: "", max_length: 64}];
-    string file_path      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件路径", description: "", max_length: 1024}];
-    string user           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
-    string user_group     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
-    string file_privilege = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 0755", max_length: 64}];
-    string file_format    = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件系统格式", description: "例如: unix  windows", max_length: 64}];
-    int32  file_mode      = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件类型 1:文本文件 2:二进制文件 3:模板文件", description: "", max_length: 64}];
-    int32  engine_type    = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板渲染引擎类型", description: ""}];
-    string memo           = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
-    int32  state          = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
-    string creator        = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
-    string last_modify_by = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
-    string created_at     = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
-    string updated_at     = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    string cfg_name       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置名", description: "", max_length: 64}];
+    string cfg_fpath      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置路径", description: "", max_length: 1024}];
+    int32  cfg_type       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置类型（KV-Json、KV-XML、KV-Yaml、KV-String、文件等）", description: ""}];
+    string user           = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
+    string user_group     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
+    string file_privilege = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 0755", max_length: 64}];
+    string file_format    = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件系统格式", description: "例如: unix  windows", max_length: 64}];
+    int32  file_mode      = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件类型 1:文本文件 2:二进制文件 3:模板文件", description: "", max_length: 64}];
+    int32  engine_type    = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板渲染引擎类型", description: ""}];
+    string memo           = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string creator        = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string created_at     = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message ConfigTemplateVersion {
@@ -591,7 +612,7 @@ message Config {
 
     string cfg_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
     string name           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置名称", description: "", max_length: 64}];
-    string fpath          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置子路径", description: "", max_length: 1024}];
+    string fpath          = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置路径", description: "", max_length: 1024}];
     string biz_id         = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
     string app_id         = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
     string user           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
@@ -605,6 +626,7 @@ message Config {
     int32  state          = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
     string created_at     = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
     string updated_at     = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    int32  type           = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置类型（KV-Json、KV-XML、KV-Yaml、KV-String、文件等）", description: ""}];
 }
 
 message Content {
@@ -684,9 +706,9 @@ message Release {
     string name             = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本名称", description: "", max_length: 64}];
     string biz_id           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
     string app_id           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "应用ID", description: "", max_length: 64}];
-    string cfg_id           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合ID", description: "", max_length: 64}];
-    string cfg_name         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合名称", description: "", max_length: 64}];
-    string cfg_fpath        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置集合子路径", description: "", max_length: 1024}];
+    string cfg_id           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
+    string cfg_name         = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置名称", description: "", max_length: 64}];
+    string cfg_fpath        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置路径", description: "", max_length: 1024}];
     string user             = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
     string user_group       = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
     string file_privilege   = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 755", max_length: 64}];
@@ -702,6 +724,7 @@ message Release {
     int32  state            = 21 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 2}];
     string created_at       = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
     string updated_at       = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+    int32  cfg_type         = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置类型（KV-Json、KV-XML、KV-Yaml、KV-String、文件等）", description: ""}];
 }
 
 message MultiRelease {

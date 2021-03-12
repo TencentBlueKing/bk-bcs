@@ -89,10 +89,10 @@ func (c *config) check() error {
 	c.viper.SetDefault("server.pubChanTimeout", 3*time.Second)
 
 	c.viper.BindEnv("server.publishStepCount", c.envName("PUB_STEP_COUNT"))
-	c.viper.SetDefault("server.publishStepCount", 1000)
+	c.viper.SetDefault("server.publishStepCount", 100)
 
 	c.viper.BindEnv("server.publishMinUnitSize", c.envName("PUB_MIN_UNIT_SIZE"))
-	c.viper.SetDefault("server.publishMinUnitSize", 1)
+	c.viper.SetDefault("server.publishMinUnitSize", 10)
 
 	c.viper.BindEnv("server.publishStepWait", c.envName("PUB_STEP_WAIT"))
 	c.viper.SetDefault("server.publishStepWait", time.Second)

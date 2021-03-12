@@ -192,6 +192,8 @@ func (act *PullAction) Do() error {
 
 	// query release config content.
 	if errCode, errMsg := act.queryReleaseConfigContent(); errCode != pbcommon.ErrCode_E_OK {
+		// NOTE: return release base info when query release config content failed.
+		act.resp.Release = &pbcommon.Release{ReleaseId: act.release.ReleaseId}
 		return act.Err(errCode, errMsg)
 	}
 	act.resp.NeedEffect = true

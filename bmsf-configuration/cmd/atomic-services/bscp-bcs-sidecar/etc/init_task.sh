@@ -7,7 +7,7 @@ if [[ -n ${BSCP_BCSSIDECAR_LOG_DIR} ]]; then
 fi
 
 # handle sigs.
-trap 'exit' SIGTERM
+trap 'killall bk-bscp-bcs-sidecar; exit' SIGTERM
 
 # monitor bk-bscp-bcs-sidecar
 while true
@@ -17,5 +17,5 @@ do
         cd /bk-bscp/
         /bk-bscp/bk-bscp-bcs-sidecar run $@ --configfile etc/sidecar.yaml &
     fi
-    sleep 10
+    sleep 1 & wait $!
 done

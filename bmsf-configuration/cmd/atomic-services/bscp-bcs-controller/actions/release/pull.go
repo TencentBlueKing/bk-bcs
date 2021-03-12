@@ -189,13 +189,15 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 	var newest *pbcommon.Release
 
 	var index int32
+	limit := act.viper.GetInt("server.queryNewestLimit")
+
 	for {
 		r := &pbdatamanager.QueryNewestReleasesReq{
 			Seq:            act.req.Seq,
 			BizId:          act.req.BizId,
 			CfgId:          act.req.CfgId,
 			LocalReleaseId: act.req.LocalReleaseId,
-			Page:           &pbcommon.Page{Start: index, Limit: act.viper.GetInt32("server.queryNewestLimit")},
+			Page:           &pbcommon.Page{Start: index, Limit: int32(limit)},
 		}
 
 		ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))
@@ -255,7 +257,7 @@ func (act *PullAction) newestRelease() (pbcommon.ErrCode, string) {
 			break
 		}
 
-		if len(resp.Data.Info) < act.viper.GetInt("server.queryNewestLimit") {
+		if len(resp.Data.Info) < limit {
 			break
 		}
 		index += int32(len(resp.Data.Info))

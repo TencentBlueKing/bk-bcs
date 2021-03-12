@@ -141,7 +141,7 @@ func genTraceTopologyCmd() *cobra.Command {
 
 			// format output.
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"TemplateID", "Name", "FileName", "FilePath", "User", "UserGroup", "FilePrivilege",
+			table.SetHeader([]string{"TemplateID", "Name", "CfgName", "CfgFpath", "User", "UserGroup", "FilePrivilege",
 				"FileFormat", "FileMode", "EngineType", "State", "Creator", "CreatedAt", "LastModifyBy", "UpdatedAt",
 				"Memo"})
 
@@ -150,8 +150,8 @@ func genTraceTopologyCmd() *cobra.Command {
 				var line []string
 				line = append(line, template.TemplateID)
 				line = append(line, template.Name)
-				line = append(line, template.FileName)
-				line = append(line, template.FilePath)
+				line = append(line, template.CfgName)
+				line = append(line, template.CfgFpath)
 				line = append(line, template.User)
 				line = append(line, template.UserGroup)
 				line = append(line, template.FilePrivilege)
@@ -291,7 +291,7 @@ func genTraceMultiCommitCmd() *cobra.Command {
 
 			table = tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"CommitID", "AppID", "CfgID", "CommitMode", "ReleaseID", "MultiCommitID",
-				"FileName", "FilePath", "User", "UserGroup", "FilePrivilege", "FileFormat", "FileMode", "Operator",
+				"CfgName", "CfgFpath", "User", "UserGroup", "FilePrivilege", "FileFormat", "FileMode", "Operator",
 				"State", "CreatedAt", "UpdatedAt", "Memo"})
 
 			fmt.Printf("\nSub Commit Count: %d\n", len(commits))

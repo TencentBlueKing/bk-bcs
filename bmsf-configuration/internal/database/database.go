@@ -59,6 +59,9 @@ const (
 	// BSCPIDLENLIMIT is bk-bscp normal ID length limit.
 	BSCPIDLENLIMIT = 64
 
+	// BSCPCREATEBATCHLIMIT is bk-bscp batch mode create num limit.
+	BSCPCREATEBATCHLIMIT = 500
+
 	// BSCPCONTENTIDLENLIMIT is bk-bscp content id length limit.
 	BSCPCONTENTIDLENLIMIT = 64
 
@@ -66,10 +69,13 @@ const (
 	BSCPNAMELENLIMIT = 64
 
 	// BSCPQUERYLIMIT is bk-bscp batch query count limit.
-	BSCPQUERYLIMIT = 100
+	BSCPQUERYLIMIT = 500
 
 	// BSCPQUERYLIMITLB is bk-bscp batch query count limit for little batch.
-	BSCPQUERYLIMITLB = 10
+	BSCPQUERYLIMITLB = 100
+
+	// BSCPQUERYNEWESTLIMIT is bk-bscp batch query count limit for newest release.
+	BSCPQUERYNEWESTLIMIT = 50
 
 	// BSCPSTRATEGYCONTENTSIZELIMIT is bk-bscp strategy content size limit.
 	BSCPSTRATEGYCONTENTSIZELIMIT = 1024 * 1024
@@ -201,8 +207,9 @@ type ConfigTemplate struct {
 	TemplateID    string    `gorm:"column:Ftemplate_id;type:varchar(64);not null;uniqueIndex"`
 	BizID         string    `gorm:"column:Fbiz_id;type:varchar(64);not null;index:idx_bizid;uniqueIndex:idx_bizidname"`
 	Name          string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:idx_bizidname"`
-	FileName      string    `gorm:"column:Ffile_name;type:varchar(64);not null"`
-	FilePath      string    `gorm:"column:Ffile_path;type:varchar(256);not null"`
+	CfgName       string    `gorm:"column:Fcfg_name;type:varchar(64);not null"`
+	CfgFpath      string    `gorm:"column:Fcfg_fpath;type:varchar(256);not null"`
+	CfgType       int32     `gorm:"column:Fcfg_type;not null default 0"`
 	User          string    `gorm:"column:Fuser;type:varchar(64);not null"`
 	UserGroup     string    `gorm:"column:Fuser_group;type:varchar(64);not null"`
 	FilePrivilege string    `gorm:"column:Ffile_privilege;type:varchar(64);not null"`
@@ -262,6 +269,7 @@ type Config struct {
 	AppID         string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex:idx_appidnamepath"`
 	Name          string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:idx_appidnamepath"`
 	Fpath         string    `gorm:"column:Ffpath;type:varchar(256);not null;uniqueIndex:idx_appidnamepath"`
+	Type          int32     `gorm:"column:Ftype;not null default 0"`
 	User          string    `gorm:"column:Fuser;type:varchar(64);not null"`
 	UserGroup     string    `gorm:"column:Fuser_group;type:varchar(64);not null"`
 	FilePrivilege string    `gorm:"column:Ffile_privilege;type:varchar(64);not null"`
@@ -426,6 +434,7 @@ type Release struct {
 	CfgID          string    `gorm:"column:Fcfg_id;type:varchar(64);not null;index:idx_cfgid"`
 	CfgName        string    `gorm:"column:Fcfg_name;type:varchar(64);not null"`
 	CfgFpath       string    `gorm:"column:Fcfg_fpath;type:varchar(256);not null"`
+	CfgType        int32     `gorm:"column:Fcfg_type;not null default 0"`
 	User           string    `gorm:"column:Fuser;type:varchar(64);not null"`
 	UserGroup      string    `gorm:"column:Fuser_group;type:varchar(64);not null"`
 	FilePrivilege  string    `gorm:"column:Ffile_privilege;type:varchar(64);not null"`
