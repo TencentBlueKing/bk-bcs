@@ -126,7 +126,7 @@ func (act *QueryAction) queryConfigContents(start, limit int) ([]database.Conten
 func (act *QueryAction) matchConfigContent() (pbcommon.ErrCode, string) {
 	index := 0
 	for {
-		contents, errCode, errMsg := act.queryConfigContents(index, database.BSCPQUERYLIMIT)
+		contents, errCode, errMsg := act.queryConfigContents(index, database.BSCPQUERYLIMITLB)
 		if errCode != pbcommon.ErrCode_E_OK {
 			return errCode, errMsg
 		}
@@ -159,7 +159,7 @@ func (act *QueryAction) matchConfigContent() (pbcommon.ErrCode, string) {
 		}
 
 		// no more contents to match.
-		if len(contents) < database.BSCPQUERYLIMIT {
+		if len(contents) < database.BSCPQUERYLIMITLB {
 			break
 		}
 
@@ -168,7 +168,7 @@ func (act *QueryAction) matchConfigContent() (pbcommon.ErrCode, string) {
 	}
 
 	if act.content == nil {
-		return pbcommon.ErrCode_E_DM_NOT_FOUND, "content not found"
+		return pbcommon.ErrCode_E_DM_RELEASE_CONTENT_NOT_FOUND, "content not found"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

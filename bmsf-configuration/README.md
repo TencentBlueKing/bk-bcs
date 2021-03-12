@@ -31,8 +31,8 @@ BK-BSCP 蓝鲸基础服务配置平台
 
 ## Documents
 
-[设计文档](docs/arch.md)
-[项目规范](docs/standard.md)
-[部署安装教程](docs/install.md)
-[集成对接指南](docs/integration.md)
-[编译](docs/build.md)
+* [设计文档](docs/arch.md)
+* [项目规范](docs/standard.md)
+* [部署安装教程](docs/install.md)
+* [集成对接指南](docs/integration.md)
+* [编译](docs/build.md)

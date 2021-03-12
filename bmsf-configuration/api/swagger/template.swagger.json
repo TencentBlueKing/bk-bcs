@@ -608,15 +608,20 @@
           "title": "模板名称",
           "maxLength": 64
         },
-        "file_name": {
+        "cfg_name": {
           "type": "string",
-          "title": "配置文件名",
+          "title": "配置名",
           "maxLength": 64
         },
-        "file_path": {
+        "cfg_fpath": {
           "type": "string",
-          "title": "配置文件路径",
+          "title": "配置路径",
           "maxLength": 1024
+        },
+        "cfg_type": {
+          "type": "integer",
+          "format": "int32",
+          "title": "配置类型（KV-Json、KV-XML、KV-Yaml、KV-String、文件等）"
         },
         "user": {
           "type": "string",
@@ -950,8 +955,8 @@
       "type": "object",
       "example": {
         "name": "my-template",
-        "file_name": "server.yaml",
-        "file_path": "/etc",
+        "cfg_name": "server.yaml",
+        "cfg_fpath": "/etc",
         "user": "root",
         "user_group": "root",
         "file_privilege": "0777",
@@ -972,14 +977,14 @@
           "title": "模板名称",
           "maxLength": 64
         },
-        "file_name": {
+        "cfg_name": {
           "type": "string",
-          "title": "配置文件名",
+          "title": "配置名",
           "maxLength": 64
         },
-        "file_path": {
+        "cfg_fpath": {
           "type": "string",
-          "title": "配置文件路径",
+          "title": "配置路径",
           "maxLength": 1024
         },
         "user": {
@@ -1026,8 +1031,8 @@
       "required": [
         "biz_id",
         "name",
-        "file_name",
-        "file_path",
+        "cfg_name",
+        "cfg_fpath",
         "user",
         "user_group",
         "file_privilege",
@@ -1840,14 +1845,14 @@
           "title": "模板名称",
           "maxLength": 64
         },
-        "file_name": {
+        "cfg_name": {
           "type": "string",
-          "title": "配置文件名",
+          "title": "配置名",
           "maxLength": 64
         },
-        "file_path": {
+        "cfg_fpath": {
           "type": "string",
-          "title": "配置文件路径",
+          "title": "配置路径",
           "maxLength": 1024
         },
         "user": {

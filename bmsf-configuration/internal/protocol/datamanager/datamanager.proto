@@ -284,8 +284,8 @@ message CreateConfigTemplateReq {
     string template_id    = 2;
     string biz_id         = 3;
     string name           = 4;
-    string file_name      = 5;
-    string file_path      = 6;
+    string cfg_name       = 5;
+    string cfg_fpath      = 6;
     string user           = 7;
     string user_group     = 8;
     string file_privilege = 9;
@@ -344,8 +344,8 @@ message UpdateConfigTemplateReq {
     string biz_id         = 2;
     string template_id    = 3;
     string name           = 4;
-    string file_name      = 5;
-    string file_path      = 6;
+    string cfg_name       = 5;
+    string cfg_fpath      = 6;
     string user           = 7;
     string user_group     = 8;
     string file_privilege = 9;
@@ -507,11 +507,12 @@ message QueryConfigResp {
 }
 
 message QueryConfigListReq {
-    string      seq      = 1;
-    string      biz_id   = 2;
-    string      app_id   = 3;
-    string      app_name = 4;
-    common.Page page     = 5;
+    string      seq         = 1;
+    string      biz_id      = 2;
+    string      app_id      = 3;
+    string      app_name    = 4;
+    common.Page page        = 5;
+    int32       query_type  = 6;
 }
 
 message QueryConfigListResp {

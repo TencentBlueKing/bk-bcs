@@ -333,15 +333,15 @@ message CreateConfigTemplateReq {
 		json_schema: {
 			title: "CreateConfigTemplateReq"
 			description: "创建配置模板请求"
-			required: ["biz_id", "name", "file_name", "file_path", "user", "user_group", "file_privilege", "file_format", "file_mode", "engine_type"]
+			required: ["biz_id", "name", "cfg_name", "cfg_fpath", "user", "user_group", "file_privilege", "file_format", "file_mode", "engine_type"]
 		}
-        example: { value: '{"name": "my-template", "file_name": "server.yaml", "file_path":"/etc", "user": "root", "user_group": "root", "file_privilege": "0777", "file_format": "unix", "file_mode": 0, "engine_type": 0, "memo":"备注", "creator": "melo"}' }
+        example: { value: '{"name": "my-template", "cfg_name": "server.yaml", "cfg_fpath":"/etc", "user": "root", "user_group": "root", "file_privilege": "0777", "file_format": "unix", "file_mode": 0, "engine_type": 0, "memo":"备注", "creator": "melo"}' }
 	};
 
     string biz_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
     string name           = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板名称", description: "", max_length: 64}];
-    string file_name      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件名", description: "", max_length: 64}];
-    string file_path      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件路径", description: "", max_length: 1024}];
+    string cfg_name       = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置名", description: "", max_length: 64}];
+    string cfg_fpath      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置路径", description: "", max_length: 1024}];
     string user           = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
     string user_group     = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
     string file_privilege = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 0755", max_length: 64}];
@@ -449,8 +449,8 @@ message UpdateConfigTemplateReq {
     string biz_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
     string template_id    = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板ID", description: "", max_length: 64}];
     string name           = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "模板名称", description: "", max_length: 64}];
-    string file_name      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件名", description: "", max_length: 64}];
-    string file_path      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置文件路径", description: "", max_length: 1024}];
+    string cfg_name       = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置名", description: "", max_length: 64}];
+    string cfg_fpath      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置路径", description: "", max_length: 1024}];
     string user           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户", description: "", max_length: 64}];
     string user_group     = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件用户组", description: "", max_length: 64}];
     string file_privilege = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "文件权限", description: "例如: 0755", max_length: 64}];

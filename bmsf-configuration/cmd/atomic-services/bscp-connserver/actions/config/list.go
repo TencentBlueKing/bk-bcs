@@ -103,6 +103,9 @@ func (act *ListAction) list() (pbcommon.ErrCode, string) {
 		BizId: act.req.BizId,
 		AppId: act.req.AppId,
 		Page:  act.req.Page,
+
+		// 2: only released.
+		QueryType: 2,
 	}
 
 	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("datamanager.callTimeout"))

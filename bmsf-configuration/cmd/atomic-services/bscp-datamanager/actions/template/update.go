@@ -91,12 +91,12 @@ func (act *UpdateAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 		return err
 	}
-	if err = common.ValidateString("file_name", act.req.FileName,
+	if err = common.ValidateString("cfg_name", act.req.CfgName,
 		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 		return err
 	}
-	act.req.FilePath = common.ParseFpath(act.req.FilePath)
-	if err = common.ValidateString("file_path", act.req.FilePath, 0,
+	act.req.CfgFpath = common.ParseFpath(act.req.CfgFpath)
+	if err = common.ValidateString("cfg_fpath", act.req.CfgFpath, 0,
 		database.BSCPCFGFPATHLENLIMIT); err != nil {
 		return err
 	}
@@ -154,8 +154,8 @@ func (act *UpdateAction) queryTemplateBindList(start, limit int) ([]database.Tem
 
 func (act *UpdateAction) updateConfig(appID, cfgID string) (pbcommon.ErrCode, string) {
 	ups := map[string]interface{}{
-		"Name":          act.req.FileName,
-		"Fpath":         act.req.FilePath,
+		"Name":          act.req.CfgName,
+		"Fpath":         act.req.CfgFpath,
 		"User":          act.req.User,
 		"UserGroup":     act.req.UserGroup,
 		"FilePrivilege": act.req.FilePrivilege,
@@ -189,7 +189,7 @@ func (act *UpdateAction) updateBindConfigs() (pbcommon.ErrCode, string) {
 	}
 
 	start := 0
-	limit := database.BSCPQUERYLIMIT
+	limit := database.BSCPQUERYLIMITLB
 
 	for {
 		templateBinds, errCode, errMsg := act.queryTemplateBindList(start, limit)
@@ -230,10 +230,10 @@ func (act *UpdateAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
 }
 
 func (act *UpdateAction) needSyncBindConfigs() bool {
-	if act.req.FileName != act.configTemplate.FileName {
+	if act.req.CfgName != act.configTemplate.CfgName {
 		return true
 	}
-	if act.req.FilePath != act.configTemplate.FilePath {
+	if act.req.CfgFpath != act.configTemplate.CfgFpath {
 		return true
 	}
 	if act.req.User != act.configTemplate.User {
@@ -257,8 +257,8 @@ func (act *UpdateAction) needSyncBindConfigs() bool {
 func (act *UpdateAction) updateConfigTemplate() (pbcommon.ErrCode, string) {
 	ups := map[string]interface{}{
 		"Name":          act.req.Name,
-		"FileName":      act.req.FileName,
-		"FilePath":      act.req.FilePath,
+		"CfgName":       act.req.CfgName,
+		"CfgFpath":      act.req.CfgFpath,
 		"User":          act.req.User,
 		"UserGroup":     act.req.UserGroup,
 		"FilePrivilege": act.req.FilePrivilege,

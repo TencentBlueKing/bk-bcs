@@ -94,6 +94,25 @@ func (act *PublishAction) verify() error {
 	return nil
 }
 
+func (act *PublishAction) updateConfig(cfgID string) (pbcommon.ErrCode, string) {
+	ups := map[string]interface{}{
+		"State": int32(pbcommon.ConfigState_CS_RELEASED),
+	}
+
+	exec := act.tx.Model(&database.Config{}).
+		Where(&database.Config{BizID: act.req.BizId, CfgID: cfgID}).
+		Updates(ups)
+
+	if err := exec.Error; err != nil {
+		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
+	}
+	if exec.RowsAffected == 0 {
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
+			"publish release and update the config released state failed."
+	}
+	return pbcommon.ErrCode_E_OK, ""
+}
+
 func (act *PublishAction) publishRelease(releaseID string) (pbcommon.ErrCode, string) {
 	ups := map[string]interface{}{
 		"State":        int32(pbcommon.ReleaseState_RS_PUBLISHED),
@@ -118,6 +137,11 @@ func (act *PublishAction) publishRelease(releaseID string) (pbcommon.ErrCode, st
 func (act *PublishAction) publishReleases() (pbcommon.ErrCode, string) {
 	for _, release := range act.releases {
 		errCode, errMsg := act.publishRelease(release.ReleaseID)
+		if errCode != pbcommon.ErrCode_E_OK {
+			return errCode, errMsg
+		}
+
+		errCode, errMsg = act.updateConfig(release.CfgID)
 		if errCode != pbcommon.ErrCode_E_OK {
 			return errCode, errMsg
 		}
