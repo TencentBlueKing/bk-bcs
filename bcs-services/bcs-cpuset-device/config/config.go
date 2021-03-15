@@ -15,24 +15,25 @@ package config
 
 import "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
+// Config parsed config for bcs-cpuset-device
 type Config struct {
-	//device plugin socket dir, examples: /var/lib/kubelet/device-plugins
+	// PluginSocketDir device plugin socket dir, examples: /var/lib/kubelet/device-plugins
 	PluginSocketDir string
-	//docker socket
+	// DockerSocket docker socket
 	DockerSocket string
-	//client https certs
+	// ClientCert client https certs
 	ClientCert *types.CertConfig `json:"-"`
-	//cluster zk address
+	// BcsZk cluster zk address
 	BcsZk string
-	//clusterid
-	ClusterId string
-	//Engine, enum: k8s、mesos
+	// ClusterID clusterid
+	ClusterID string
+	// Engine engine type enum: k8s、mesos
 	Engine string
-	//NodeIp
-	NodeIp string
+	// NodeIP node IP
+	NodeIP string
 }
 
-//NewConfig create a config object
+// NewConfig create a config object
 func NewConfig() *Config {
 	return &Config{
 		ClientCert: &types.CertConfig{},

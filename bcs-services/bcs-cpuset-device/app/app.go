@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cpuset-device/cpuset-device"
 )
 
+// Run run the server
 func Run(op *options.Option) error {
 
 	conf := config.NewConfig()
@@ -44,8 +45,8 @@ func setConfig(conf *config.Config, op *options.Option) {
 	conf.PluginSocketDir = op.PluginSocketDir
 	conf.BcsZk = op.BCSZk
 	conf.Engine = op.Engine
-	conf.ClusterId = op.ClusterId
-	conf.NodeIp = op.Address
+	conf.ClusterID = op.ClusterID
+	conf.NodeIP = op.Address
 
 	//client cert directoty
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.CAFile != "" &&

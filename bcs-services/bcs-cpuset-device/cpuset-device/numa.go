@@ -21,10 +21,10 @@ import (
 	"strconv"
 )
 
-//ErrNumaNotAvailable error type for NUMA
+// ErrNumaNotAvailable error type for NUMA
 var ErrNumaNotAvailable = fmt.Errorf("No NUMA support available on this system")
 
-//IsNumaAvailable Is Numa available
+// IsNumaAvailable Is Numa available
 func IsNumaAvailable() bool {
 	if int(C.numa_available()) >= 0 {
 		return true
@@ -32,7 +32,7 @@ func IsNumaAvailable() bool {
 	return false
 }
 
-//NUMANodes Get Numa Nodes
+// NUMANodes Get Numa Nodes
 func NUMANodes() ([]string, error) {
 	if !IsNumaAvailable() {
 		return nil, ErrNumaNotAvailable
@@ -47,7 +47,7 @@ func NUMANodes() ([]string, error) {
 	return nodes, nil
 }
 
-//NUMACPUsOfNode Get CPU slice from the specified Node
+// NUMACPUsOfNode Get CPU slice from the specified Node
 func NUMACPUsOfNode(node string) ([]string, error) {
 	if !IsNumaAvailable() {
 		return nil, ErrNumaNotAvailable
@@ -74,7 +74,7 @@ func NUMACPUsOfNode(node string) ([]string, error) {
 	return cpus, nil
 }
 
-//NUMAConfiguredCPUs get configure cpu number
+// NUMAConfiguredCPUs get configure cpu number
 func NUMAConfiguredCPUs() int {
 	return int(C.numa_num_configured_cpus())
 }

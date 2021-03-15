@@ -17,7 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//Option is option in flags
+// Option is option in flags
 type Option struct {
 	conf.FileConfig
 	conf.LicenseServerConfig
@@ -27,12 +27,12 @@ type Option struct {
 	conf.ServiceConfig
 
 	DockerSock      string `json:"docker_sock" value:"unix:///var/run/docker.sock" usage:"docker socket file"`
-	PluginSocketDir string `json:"plugin_socket_dir" value:"/var/lib/kubelet/device-plugins" usage:"logbeat config directory"`
-	ClusterId       string `json:"clusterid" value:"" usage:"mesos cluster id"`
+	PluginSocketDir string `json:"plugin_socket_dir" value:"/var/lib/kubelet/device-plugins" usage:"device-plugin socket directory"`
+	ClusterID       string `json:"clusterid" value:"" usage:"mesos cluster id"`
 	Engine          string `json:"engine" value:"k8s" usage:"enum: k8s、mesos; default: k8s"`
 }
 
-//NewOption create Option object
+// NewOption create Option object
 func NewOption() *Option {
 	return &Option{}
 }

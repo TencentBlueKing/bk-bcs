@@ -35,37 +35,42 @@ import (
 )
 
 const (
-	KubeletSocketName  = "kubelet.sock"
-	CpusetSocketName   = "cpuset.sock"
+	// KubeletSocketName socket file name for kubelet
+	KubeletSocketName = "kubelet.sock"
+	// CpusetSocketName socket file name for cpuset
+	CpusetSocketName = "cpuset.sock"
+	// CpusetResourceName resource name for cpuset
 	CpusetResourceName = "bkbcs.tencent.com/cpuset"
 
-	//docker env, examples: bkbcs_allocate_cpuset=node:0;cpuset:0,1,2,3
+	//EnvBkbcsAllocateCpuset docker env, examples: bkbcs_allocate_cpuset=node:0;cpuset:0,1,2,3
 	EnvBkbcsAllocateCpuset = "bkbcs_allocate_cpuset"
 )
 
+// CpusetDevicePlugin device plugin for cpuset
 type CpusetDevicePlugin struct {
 	sync.RWMutex
-	//config
+	// config
 	conf *config.Config
 
-	//external resource cpuset name
+	// external resource cpuset name
 	resourceName string
-	//the grpc cpuset device socket
-	//serve: ListAndWatch、Allocate function
+	// the grpc cpuset device socket
+	// serve: ListAndWatch、Allocate function
 	cpusetSocket string
 
-	//docker client
+	// docker client
 	client *docker.Client
-	//default unix:///var/run/docker.sock
+	// default unix:///var/run/docker.sock
 	dockerSocket string
 
 	server *grpc.Server
-	//all cpuset device, reported device plugin manager
+	// all cpuset device, reported device plugin manager
 	devices []*pluginapi.Device
-	//cpuset nodes, key = node_id, example 0 or 1
+	// cpuset nodes, key = node_id, example 0 or 1
 	nodes map[string]*types.CpusetNode
 }
 
+// NewCpusetDevicePlugin new cpuset device plugin
 func NewCpusetDevicePlugin(conf *config.Config) *CpusetDevicePlugin {
 	c := &CpusetDevicePlugin{
 		resourceName: CpusetResourceName,
@@ -80,39 +85,40 @@ func NewCpusetDevicePlugin(conf *config.Config) *CpusetDevicePlugin {
 	return c
 }
 
+// Start start cpu device plugin
 func (c *CpusetDevicePlugin) Start() error {
-	//init cpuset device
+	// init cpuset device
 	err := c.initCpusetDevice()
 	if err != nil {
 		return err
 	}
 
-	//connect docker socket, and create docker client
+	// connect docker socket, and create docker client
 	c.client, err = docker.NewClient(c.dockerSocket)
 	if err != nil {
 		blog.Errorf(err.Error())
 		return err
 	}
 
-	//list running containers, update allocated cpusets in nodes
+	// list running containers, update allocated cpusets in nodes
 	err = c.updateCpusetNodes()
 	if err != nil {
 		return err
 	}
 
-	//watch docker create&stop event, handler container cpuset resources
+	// watch docker create&stop event, handler container cpuset resources
 	go c.listenerDockerEvent()
-	//loop list containers to update cpuset node info
+	// loop list containers to update cpuset node info
 	go c.loopUpdateCpusetNodes()
 
-	//start grpc server
+	// start grpc server
 	err = c.serve()
 	if err != nil {
 		return err
 	}
 	blog.Infof("grpc serve on %s success", c.cpusetSocket)
 
-	//if device plugin in k8s cluster, then register device plugin info to kubelet
+	// if device plugin in k8s cluster, then register device plugin info to kubelet
 	if c.conf.Engine == "k8s" {
 		err = c.register()
 		if err != nil {
@@ -120,7 +126,7 @@ func (c *CpusetDevicePlugin) Start() error {
 			return err
 		}
 		blog.Infof("Registered device plugin for '%s' with Kubelet", c.resourceName)
-		//else device plugin in mesos cluster, then report extended resources info to mesos scheduler
+		// else device plugin in mesos cluster, then report extended resources info to mesos scheduler
 	} else {
 		err = c.reportExtendedResources()
 		if err != nil {
@@ -198,14 +204,14 @@ func (c *CpusetDevicePlugin) dial(unixSocketPath string, timeout time.Duration) 
 	return conn, nil
 }
 
-//numa info, command: numactl -H
-//available: 2 nodes (0-1)
-//node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 24 25 26 27 28 29 30 31 32 33 34 35
-//node 0 size: 65414 MB
-//node 0 free: 61563 MB
-//node 1 cpus: 12 13 14 15 16 17 18 19 20 21 22 23 36 37 38 39 40 41 42 43 44 45 46 47
-//node 1 size: 65536 MB
-//node 1 free: 61398 MB
+// numa info, command: numactl -H
+// available: 2 nodes (0-1)
+// node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 24 25 26 27 28 29 30 31 32 33 34 35
+// node 0 size: 65414 MB
+// node 0 free: 61563 MB
+// node 1 cpus: 12 13 14 15 16 17 18 19 20 21 22 23 36 37 38 39 40 41 42 43 44 45 46 47
+// node 1 size: 65536 MB
+// node 1 free: 61398 MB
 func (c *CpusetDevicePlugin) initCpusetDevice() error {
 	nodes, err := NUMANodes()
 	if err != nil {
@@ -254,12 +260,12 @@ func (c *CpusetDevicePlugin) reportExtendedResources() error {
 		return err
 	}
 	ex := &commtypes.ExtendedResource{
-		InnerIP:  c.conf.NodeIp,
+		InnerIP:  c.conf.NodeIP,
 		Name:     c.resourceName,
 		Capacity: float64(len(c.devices)),
 		Socket:   c.cpusetSocket,
 	}
-	err = client.UpdateAgentExtendedResources(c.conf.ClusterId, ex)
+	err = client.UpdateAgentExtendedResources(c.conf.ClusterID, ex)
 	if err != nil {
 		blog.Errorf("Update Agent ExtendedResources failed: %s", err.Error())
 		return err
@@ -267,6 +273,7 @@ func (c *CpusetDevicePlugin) reportExtendedResources() error {
 	return nil
 }
 
+// GetDevicePluginOptions get device plugin options
 func (c *CpusetDevicePlugin) GetDevicePluginOptions(context.Context, *pluginapi.Empty) (*pluginapi.DevicePluginOptions, error) {
 	return &pluginapi.DevicePluginOptions{}, nil
 }
@@ -291,7 +298,7 @@ func (c *CpusetDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 				break
 			}
 		}
-		//don't contain enough cpuset
+		// don't contain enough cpuset
 		if mnode == nil {
 			return nil, fmt.Errorf("no enough cpuset to allocated container")
 		}
@@ -312,6 +319,8 @@ func (c *CpusetDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 	return &responses, nil
 }
 
-func (c *CpusetDevicePlugin) PreStartContainer(context.Context, *pluginapi.PreStartContainerRequest) (*pluginapi.PreStartContainerResponse, error) {
+// PreStartContainer callback before starting container
+func (c *CpusetDevicePlugin) PreStartContainer(context.Context, *pluginapi.PreStartContainerRequest) (
+	*pluginapi.PreStartContainerResponse, error) {
 	return &pluginapi.PreStartContainerResponse{}, nil
 }
