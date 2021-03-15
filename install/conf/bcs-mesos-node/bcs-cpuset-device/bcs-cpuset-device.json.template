@@ -1,13 +1,14 @@
 {
-    "docker_sock": "${dockerSock}",
-    "plugin_socket_dir": "${pluginSocketDir}",
-    "clusterid": "${clusterId}",
-    "engine": "${bcsCpusetDeviceEngine}",
-    "bcs_zookeeper": "${bcsZkHost}",
-    "log_dir": "${logDir}",
-    "alsologtostderr": ${logAlsoLogToStderr},
-    "v": "${logVerbose}"
-    "ca_file": "${caFile}",
-    "client_cert_file": "${clientCertFile}",
-    "client_key_file": "${clientKeyFile}"
+    "address": "${bcsCpuSetAddress}",
+    "docker_sock": "${bcsCpuSetDockerSock}",
+    "plugin_socket_dir": "${bcsCpuSetPluginSocketDir}",
+    "clusterid": "${bcsCpuSetClusterID}",
+    "engine": "${bcsCpuSetEngine}",
+    "bcs_zookeeper": "${bcsCpuSetBcsZookeeper}",
+    "log_dir": "${bcsCpuSetLogDir}",
+    "alsologtostderr": ${bcsCpuSetAlsoLogToStdErr},
+    "v": "${bcsCpuSetV}",
+    "ca_file": "${bcsCpuSetCaFile}",
+    "client_cert_file": "${bcsCpuSetCertFile}",
+    "client_key_file": "${bcsCpuSetKeyFile}"
 }
