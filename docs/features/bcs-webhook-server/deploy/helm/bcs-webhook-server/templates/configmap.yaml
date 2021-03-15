@@ -11,3 +11,7 @@ data:
     "esb_url": "{{ .Values.plugins.dbpriv.esbURL }}",
     "init_container_image": "{{ .Values.plugins.dbpriv.initContainerImage }}"
 }'
+  randhostport.conf: '{
+    "startPort": {{ .Values.plugins.randhostport.startPort }},
+    "endPort": {{ .Values.plugins.randhostport.endPort }}
+}'

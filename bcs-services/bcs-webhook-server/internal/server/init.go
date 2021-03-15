@@ -21,4 +21,6 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/dbprivilege"
 	// import image loader plugin
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/imageloader"
+	// import rand hostport plugin
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server/internal/plugin/randhostport"
 )

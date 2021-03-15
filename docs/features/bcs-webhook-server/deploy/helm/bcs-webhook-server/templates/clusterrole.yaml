@@ -19,6 +19,8 @@ rules:
   - apiGroups: ["batch"]
     resources: ["jobs"]
     verbs: ["*"]
+  {{- end }}
+  {{- if or (.Values.plugins.imageloader.enabled) (.Values.plugins.randhostport.enabled) }}
   - apiGroups: [""]
     resources: ["nodes", "pods"]
     verbs: ["get", "list", "watch"]
