@@ -226,7 +226,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 
 	request, err := client.NewRequest()
 	if err != nil {
-		status := metrics.ErrStatus
+		status = metrics.ErrStatus
 		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
 			http.MethodDelete, status, start)
 		return

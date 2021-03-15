@@ -17,5 +17,3 @@ package types
 const (
 	ServiceName = "alertmanager.bkbcs.tencent.com"
 )
-
-
