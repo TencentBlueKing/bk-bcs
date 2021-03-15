@@ -44,7 +44,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-service:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
 	mesh-manager logbeat-sidecar metricservice metriccollector netservice sd-prometheus storage \
-	user-manager webhook-server cluster-manager tools bcs-alert-manager
+	user-manager webhook-server cluster-manager tools alert-manager
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent 
 
@@ -323,7 +323,7 @@ clb-controller:pre
 cluster-manager:pre
 	cd ./bcs-services/bcs-cluster-manager && make clustermanager
 
-bcs-alert-manager:pre
+alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger
 	cp -R ./install/conf/bcs-services/bcs-alert-manager/*  ${PACKAGEPATH}/bcs-services/bcs-alert-manager
 	cp -R ./bcs-services/bcs-alert-manager/pkg/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/swagger-ui
