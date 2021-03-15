@@ -90,8 +90,8 @@ require (
 	google.golang.org/grpc v1.31.0
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.18.6
-	k8s.io/apimachinery v0.18.6
-	k8s.io/client-go v0.18.6
+	k8s.io/apimachinery v0.20.2
+	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
 	k8s.io/kubernetes v1.14.10

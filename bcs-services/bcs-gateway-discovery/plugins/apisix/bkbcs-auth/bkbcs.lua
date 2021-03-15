@@ -176,7 +176,7 @@ function BKUserCli:construct_identity(conf, request)
       return nil, "kuberentes BCS-ClusterID parse failed"
     end
     auth.resource = id[0]
-  else if conf.module == MESOSDRIVER then
+  elseif conf.module == MESOSDRIVER then
     local headers = request.get_headers()
     if not headers[CLUSTER_HEADER] then
       core.log.error(" user_cli get no BCS-ClusterID from request ", ngx.var.uri)

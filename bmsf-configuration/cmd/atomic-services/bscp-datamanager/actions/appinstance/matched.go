@@ -193,7 +193,7 @@ func (act *MatchedAction) queryReachableAppInstanceList(appID string) ([]databas
 		instances := []database.AppInstance{}
 
 		err := act.sd.DB().
-			Offset(index).Limit(database.BSCPQUERYLIMIT).
+			Offset(index).Limit(database.BSCPQUERYLIMITLB).
 			Order("Fupdate_time DESC, Fid DESC").
 			Where(&database.AppInstance{
 				BizID: act.req.BizId,
@@ -207,7 +207,7 @@ func (act *MatchedAction) queryReachableAppInstanceList(appID string) ([]databas
 		}
 		appInstances = append(appInstances, instances...)
 
-		if len(instances) < database.BSCPQUERYLIMIT {
+		if len(instances) < database.BSCPQUERYLIMITLB {
 			break
 		}
 		index += len(instances)

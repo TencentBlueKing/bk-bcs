@@ -1,0 +1,127 @@
+{
+    "apiVersion": "v4",
+    "kind": "daemonset",
+    "killPolicy": {
+        "gracePeriod": 10
+    },
+    "metadata": {
+        "labels": {
+            "app": "bcs-cpuset-device"
+        },
+        "name": "bcs-cpuset-device-ds",
+        "namespace": "bcs-system"
+    },
+    "spec": {
+        "template": {
+            "metadata": {
+                "labels": {
+                    "app": "bcs-cpuset-device"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "hostname": "container-hostname",
+                        "command": "/data/bcs/bcs-cpuset-device/container-start.sh",
+                        "args": [
+                            "-f",
+                            "/data/bcs/bcs-cpuset-device/bcs-cpuset-device.json"
+                        ],
+                        "type": "MESOS",
+                        "image": "bcs-cpuset-device:xxxxxxxxxxx",
+                        "imagePullPolicy": "IfNotPresent",
+                        "privileged": true,
+                        "resources": {
+                            "requests": {
+                                "cpu": "0.5",
+                                "memory": "512"
+                            }
+                        },
+                        "volumes": [
+                            {
+                                "volume": {
+                                    "hostPath": "/data/bcs/bcs-cpuset-device/sock",
+                                    "mountPath": "/data/bcs/bcs-cpuset-device/sock",
+                                    "readOnly": false
+                                },
+                                "name": "sockdir"
+                            },
+                            {
+                                "volume": {
+                                    "hostPath": "/var/run/docker.sock",
+                                    "mountPath": "/var/run/docker.sock",
+                                    "readOnly": false
+                                },
+                                "name": "dockersockfile"
+                            },
+                            {
+                                "volume": {
+                                    "hostPath": "/data/bcs/cert/bcs",
+                                    "mountPath": "/data/bcs/cert",
+                                    "readOnly": true
+                                },
+                                "name": "certfile"
+                            }
+                        ],
+                        "env": [
+                            {
+                                "name": "BCS_CONFIG_TYPE",
+                                "value": "render"
+                            },
+                            {
+                                "name": "bcsCpuSetAddress",
+                                "value": "$BCS_CONTAINER_IP"
+                            },
+                            {
+                                "name": "bcsCpuSetDockerSock",
+                                "value": "unix:///var/run/docker.sock"
+                            },
+                            {
+                                "name": "bcsCpuSetPluginSocketDir",
+                                "value": "/data/bcs/bcs-cpuset-device/sock"
+                            },
+                            {
+                                "name": "bcsCpuSetClusterID",
+                                "value": "BCS-MESOS-xxxxxx"
+                            },
+                            {
+                                "name": "bcsCpuSetEngine",
+                                "value": "mesos"
+                            },
+                            {
+                                "name": "bcsCpuSetBcsZookeeper",
+                                "value": "127.0.0.1:2181"
+                            },
+                            {
+                                "name": "bcsCpuSetLogDir",
+                                "value": "/data/bcs/logs/bcs"
+                            },
+                            {
+                                "name": "bcsCpuSetAlsoLogToStdErr",
+                                "value": "true"
+                            },
+                            {
+                                "name": "bcsCpuSetV",
+                                "value": "3"
+                            },
+                            {
+                                "name": "bcsCpuSetCaFile",
+                                "value": "/data/bcs/cert/bcs-inner-ca.crt"
+                            },
+                            {
+                                "name": "bcsCpuSetCertFile",
+                                "value": "/data/bcs/cert/bcs-inner-client.crt"
+                            },
+                            {
+                                "name": "bcsCpuSetKeyFile",
+                                "value": "/data/bcs/cert/bcs-inner-client.key"
+                            }
+                        ]
+                    }
+                ],
+                "networkMode": "HOST",
+                "networkType": "cnm"
+            }
+        }
+    }
+}

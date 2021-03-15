@@ -1170,6 +1170,27 @@ func (cs *ConfigServer) CreateProcAttr(ctx context.Context, req *pb.CreateProcAt
 	return response, nil
 }
 
+// CreateProcAttrBatch creates new ProcAttrs in batch mode.
+func (cs *ConfigServer) CreateProcAttrBatch(ctx context.Context, req *pb.CreateProcAttrBatchReq) (*pb.CreateProcAttrBatchResp, error) {
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.CreateProcAttrBatchResp)
+
+	defer func() {
+		cost := cs.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := procattraction.NewCreateBatchAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, req, response)
+	if err := cs.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
 // QueryHostProcAttr returns ProcAttr of target app on the host.
 func (cs *ConfigServer) QueryHostProcAttr(ctx context.Context,
 	req *pb.QueryHostProcAttrReq) (*pb.QueryHostProcAttrResp, error) {

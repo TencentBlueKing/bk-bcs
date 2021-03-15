@@ -408,6 +408,16 @@
   dest_path: /api/v2/config/biz/{biz_id}/app/{app_id}/procattr
   dest_http_method: POST
 
+- path: /v2/bscp/create_procattr_batch/
+  name: create_procattr_batch
+  label: 批量创建主机应用归属信息
+  label_en: create app process attribute in batch mode
+  suggest_method: POST
+  api_type: operate
+  comp_codename: generic.v2.bscp.bscp_component
+  dest_path: /api/v2/config/batch/biz/{biz_id}/app/{app_id}/procattr
+  dest_http_method: POST
+
 - path: /v2/bscp/update_procattr/
   name: update_procattr
   label: 更新主机应用绑定信息

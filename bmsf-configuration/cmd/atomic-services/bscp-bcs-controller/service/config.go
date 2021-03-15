@@ -18,6 +18,7 @@ import (
 
 	"github.com/spf13/viper"
 
+	"bk-bscp/internal/database"
 	"bk-bscp/internal/types"
 )
 
@@ -71,7 +72,7 @@ func (c *config) check() error {
 	c.viper.SetDefault("server.discoveryTTL", 10)
 
 	c.viper.BindEnv("server.queryNewestLimit", c.envName("NEWEST_LIMIT"))
-	c.viper.SetDefault("server.queryNewestLimit", 50)
+	c.viper.SetDefault("server.queryNewestLimit", database.BSCPQUERYNEWESTLIMIT)
 
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")

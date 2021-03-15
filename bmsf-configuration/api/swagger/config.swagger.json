@@ -14,6 +14,46 @@
     "application/json"
   ],
   "paths": {
+    "/api/v2/config/batch/biz/{biz_id}/app/{app_id}/procattr": {
+      "post": {
+        "summary": "批量创建主机应用归属信息",
+        "description": "批量创建进程环境主机归属信息",
+        "operationId": "CreateProcAttrBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/configserverCreateProcAttrBatchResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/configserverCreateProcAttrBatchReq"
+            }
+          }
+        ],
+        "tags": [
+          "ProcAttr"
+        ]
+      }
+    },
     "/api/v2/config/biz/{biz_id}/app": {
       "get": {
         "summary": "查询应用信息",
@@ -2393,6 +2433,85 @@
     }
   },
   "definitions": {
+    "CreateProcAttrBatchReqReqData": {
+      "type": "object",
+      "properties": {
+        "cloud_id": {
+          "type": "string",
+          "title": "进程环境子网ID",
+          "maxLength": 64
+        },
+        "ip": {
+          "type": "string",
+          "title": "进程环境主机IP",
+          "maxLength": 32
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "path": {
+          "type": "string",
+          "title": "配置缓存路径设置",
+          "maxLength": 128
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注",
+          "maxLength": 64
+        }
+      }
+    },
+    "CreateProcAttrBatchRespFailedInfo": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "$ref": "#/definitions/CreateProcAttrBatchRespProcAttrInfo",
+          "title": "失败的绑定信息"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "失败错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "失败错误描述"
+        }
+      }
+    },
+    "CreateProcAttrBatchRespProcAttrInfo": {
+      "type": "object",
+      "properties": {
+        "cloud_id": {
+          "type": "string",
+          "title": "进程环境子网ID",
+          "maxLength": 64
+        },
+        "ip": {
+          "type": "string",
+          "title": "进程环境主机IP",
+          "maxLength": 32
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "path": {
+          "type": "string",
+          "title": "配置缓存路径设置",
+          "maxLength": 128
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注",
+          "maxLength": 64
+        }
+      }
+    },
     "commonApp": {
       "type": "object",
       "properties": {
@@ -2852,7 +2971,7 @@
         },
         "fpath": {
           "type": "string",
-          "title": "配置子路径",
+          "title": "配置路径",
           "maxLength": 1024
         },
         "biz_id": {
@@ -2924,6 +3043,11 @@
           "type": "string",
           "description": "最近一次修改时间，2019-08-29 17:18:22",
           "title": "最近一次修改时间"
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32",
+          "title": "配置类型（KV-Json、KV-XML、KV-Yaml、KV-String、文件等）"
         }
       },
       "description": "配置",
@@ -3383,17 +3507,17 @@
         },
         "cfg_id": {
           "type": "string",
-          "title": "配置集合ID",
+          "title": "配置ID",
           "maxLength": 64
         },
         "cfg_name": {
           "type": "string",
-          "title": "配置集合名称",
+          "title": "配置名称",
           "maxLength": 64
         },
         "cfg_fpath": {
           "type": "string",
-          "title": "配置集合子路径",
+          "title": "配置路径",
           "maxLength": 1024
         },
         "user": {
@@ -3475,6 +3599,11 @@
           "type": "string",
           "description": "最近一次修改时间，2019-08-29 17:18:22",
           "title": "最近一次修改时间"
+        },
+        "cfg_type": {
+          "type": "integer",
+          "format": "int32",
+          "title": "配置类型（KV-Json、KV-XML、KV-Yaml、KV-String、文件等）"
         }
       },
       "description": "发布版本",
@@ -4690,6 +4819,93 @@
           "type": "string",
           "description": "成功创建后返回新发布版本ID",
           "title": "新发布版本ID"
+        }
+      }
+    },
+    "configserverCreateProcAttrBatchReq": {
+      "type": "object",
+      "example": {
+        "biz_id": "99278",
+        "app_id": "A-0b67a798-e9c1-11e9-8c23-525400f99278",
+        "data": [
+          {
+            "cloud_id": "1",
+            "ip": "127.0.0.1",
+            "path": "/data/",
+            "memo": "备注"
+          }
+        ]
+      },
+      "properties": {
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "app_id": {
+          "type": "string",
+          "title": "应用ID",
+          "maxLength": 64
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CreateProcAttrBatchReqReqData"
+          },
+          "title": "批量绑定信息"
+        }
+      },
+      "description": "批量创建应用绑定请求",
+      "title": "CreateProcAttrBatchReq",
+      "required": [
+        "biz_id",
+        "app_id",
+        "data"
+      ]
+    },
+    "configserverCreateProcAttrBatchResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK"
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "data": {
+          "$ref": "#/definitions/configserverCreateProcAttrBatchRespRespData",
+          "title": "结果"
+        }
+      },
+      "description": "批量创建应用绑定响应",
+      "title": "CreateProcAttrBatchResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "configserverCreateProcAttrBatchRespRespData": {
+      "type": "object",
+      "properties": {
+        "failed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CreateProcAttrBatchRespFailedInfo"
+          },
+          "title": "创建失败的列表"
         }
       }
     },

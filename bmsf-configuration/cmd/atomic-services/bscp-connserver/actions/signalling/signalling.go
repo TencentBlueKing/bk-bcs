@@ -163,7 +163,7 @@ func (act *SignalAction) verify(r interface{}) error {
 			database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 			return err
 		}
-		if err = common.ValidateString("cfg_path", req.CfgFpath,
+		if err = common.ValidateString("cfg_fpath", req.CfgFpath,
 			database.BSCPEMPTY, database.BSCPCFGFPATHLENLIMIT); err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func (act *SignalAction) verify(r interface{}) error {
 			database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 			return err
 		}
-		if err = common.ValidateString("cfg_path", req.CfgFpath,
+		if err = common.ValidateString("cfg_fpath", req.CfgFpath,
 			database.BSCPEMPTY, database.BSCPCFGFPATHLENLIMIT); err != nil {
 			return err
 		}
@@ -423,7 +423,9 @@ func (act *SignalAction) Do() error {
 			}
 
 			// update sidecar instance state.
-			if err := act.onSidecarOnline(&act.sidecar); err == nil {
+			if err := act.onSidecarOnline(&act.sidecar); err != nil {
+				logger.Error("SignallingChannel-PING[%s]| report online state, %+v, %+v", r.Seq, act.sidecar, err)
+			} else {
 				act.isSidecarUpdated = true
 			}
 

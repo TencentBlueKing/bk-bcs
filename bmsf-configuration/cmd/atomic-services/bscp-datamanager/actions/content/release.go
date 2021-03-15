@@ -152,7 +152,7 @@ func (act *ReleaseConfigContentAction) matchConfigContent() (pbcommon.ErrCode, s
 
 	index := 0
 	for {
-		contents, errCode, errMsg := act.queryConfigContents(index, database.BSCPQUERYLIMIT)
+		contents, errCode, errMsg := act.queryConfigContents(index, database.BSCPQUERYLIMITLB)
 		if errCode != pbcommon.ErrCode_E_OK {
 			return errCode, errMsg
 		}
@@ -185,7 +185,7 @@ func (act *ReleaseConfigContentAction) matchConfigContent() (pbcommon.ErrCode, s
 		}
 
 		// no more contents to match.
-		if len(contents) < database.BSCPQUERYLIMIT {
+		if len(contents) < database.BSCPQUERYLIMITLB {
 			break
 		}
 
@@ -194,7 +194,7 @@ func (act *ReleaseConfigContentAction) matchConfigContent() (pbcommon.ErrCode, s
 	}
 
 	if act.content == nil {
-		return pbcommon.ErrCode_E_DM_NOT_FOUND, "not matched config content found"
+		return pbcommon.ErrCode_E_DM_RELEASE_CONTENT_NOT_FOUND, "not matched config content found"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }

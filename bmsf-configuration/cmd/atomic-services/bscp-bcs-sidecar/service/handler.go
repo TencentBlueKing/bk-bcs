@@ -602,7 +602,7 @@ func (h *ConfigHandler) syncConfigList() {
 func (h *ConfigHandler) handleFirstReload() {
 	for {
 		// wait for pullers.
-		time.Sleep(time.Second)
+		time.Sleep(h.viper.GetDuration("sidecar.firstReloadCheckInterval"))
 
 		if h.isFirstReloadSucc {
 			// first reload already success.

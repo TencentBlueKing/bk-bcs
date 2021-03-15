@@ -85,3 +85,31 @@ type NamespaceQuota struct {
 	Status              string    `bson:"status"`
 	Message             string    `bson:"message"`
 }
+
+const (
+	// TkeCidrStatusAvailable available tke cidr status
+	TkeCidrStatusAvailable = "available"
+	// TkeCidrStatusUsed used tke cidr status
+	TkeCidrStatusUsed = "used"
+	// TkeCidrStatusReserved reserved tke cidr status
+	TkeCidrStatusReserved = "reserved"
+)
+
+// TkeCidr tke cidr
+type TkeCidr struct {
+	Vpc      string    `bson:"vpc"`
+	Cidr     string    `bson:"cidr"`
+	IPNumber uint64    `bson:"ipNumber"`
+	Status   string    `bson:"status"`
+	Cluster  string    `bson:"cluster"`
+	CreateAt time.Time `bson:"createAt"`
+	UpdateAt time.Time `bson:"updateAt"`
+}
+
+// TkeCidrCount tke cidr count
+type TkeCidrCount struct {
+	Count    uint64 `bson:"count"`
+	Vpc      string `bson:"vpc"`
+	IPNumber uint64 `bson:"ipNumber"`
+	Status   string `bson:"status"`
+}

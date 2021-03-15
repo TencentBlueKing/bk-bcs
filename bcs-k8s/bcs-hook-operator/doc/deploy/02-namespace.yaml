@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: bcs-system
-  labels:
-    app: bcs-system

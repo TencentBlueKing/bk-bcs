@@ -273,6 +273,26 @@ func (c *Collection) Find(condition *operator.Condition) drivers.Find {
 	}
 }
 
+// Aggregation do aggregation
+func (c *Collection) Aggregation(ctx context.Context, pipeline interface{}, result interface{}) error {
+	var err error
+	var cursor *mongo.Cursor
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("aggregation", err, startTime)
+	}()
+	cursor, err = c.mCli.Database(c.dbName).
+		Collection(c.collectionName).
+		Aggregate(ctx, pipeline, &mopt.AggregateOptions{})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		cursor.Close(ctx)
+	}()
+	return cursor.All(ctx, result)
+}
+
 // Insert insert many data
 func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error) {
 	var ret *mongo.InsertManyResult

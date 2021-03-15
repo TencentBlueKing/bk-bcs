@@ -169,6 +169,25 @@ func (act *PublishAction) updateCommit() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
+func (act *PublishAction) updateConfig() (pbcommon.ErrCode, string) {
+	ups := map[string]interface{}{
+		"State": int32(pbcommon.ConfigState_CS_RELEASED),
+	}
+
+	exec := act.tx.Model(&database.Config{}).
+		Where(&database.Config{BizID: act.req.BizId, CfgID: act.commit.CfgID}).
+		Updates(ups)
+
+	if err := exec.Error; err != nil {
+		return pbcommon.ErrCode_E_DM_DB_EXEC_ERR, err.Error()
+	}
+	if exec.RowsAffected == 0 {
+		return pbcommon.ErrCode_E_DM_DB_UPDATE_ERR,
+			"publish release and update the config released state failed."
+	}
+	return pbcommon.ErrCode_E_OK, ""
+}
+
 // Do makes the workflows of this action base on input messages.
 func (act *PublishAction) Do() error {
 	// business sharding db.
@@ -199,6 +218,12 @@ func (act *PublishAction) Do() error {
 
 	// update commit.
 	if errCode, errMsg := act.updateCommit(); errCode != pbcommon.ErrCode_E_OK {
+		act.tx.Rollback()
+		return act.Err(errCode, errMsg)
+	}
+
+	// update config.
+	if errCode, errMsg := act.updateConfig(); errCode != pbcommon.ErrCode_E_OK {
 		act.tx.Rollback()
 		return act.Err(errCode, errMsg)
 	}

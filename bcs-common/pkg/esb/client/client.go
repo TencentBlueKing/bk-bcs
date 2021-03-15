@@ -27,7 +27,7 @@ var (
 		Name:    "bcs_esb_requests_duration_millisecond",
 		Help:    "esb api request duration millisecond",
 		Buckets: []float64{10, 20, 40, 100, 150, 200, 400, 1000, 2000, 5000, 10000},
-	}, []string{"handler", "status_code"})
+	}, []string{"method", "status_code"})
 
 	requestInflight = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "bcs_esb_requests_in_flight",

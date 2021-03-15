@@ -56,7 +56,7 @@ func getNatStreamingOptions(key string, queueConf *conf.Config) (msgqueue.QueueO
 		}), nil
 }
 
-func getQueueCommonOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
+func getQueueCommonOptions(key string, queueConf *conf.Config) (*msgqueue.CommonOptions, error) {
 	flagRaw := queueConf.Read(key, "QueueFlag")
 	kind := queueConf.Read(key, "QueueKind")
 
@@ -74,13 +74,12 @@ func getQueueCommonOptions(key string, queueConf *conf.Config) (msgqueue.QueueOp
 
 	address := queueConf.Read(key, "Address")
 
-	return msgqueue.CommonOpts(
-		&msgqueue.CommonOptions{
-			QueueFlag:       flag,
-			QueueKind:       msgqueue.QueueKind(kind),
-			ResourceToQueue: resourceToQueue,
-			Address:         address,
-		}), nil
+	return &msgqueue.CommonOptions{
+		QueueFlag:       flag,
+		QueueKind:       msgqueue.QueueKind(kind),
+		ResourceToQueue: resourceToQueue,
+		Address:         address,
+	}, nil
 }
 
 func getQueueExchangeOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {

@@ -35,7 +35,6 @@ type UserMgrConfig struct {
 	Port            uint
 	InsecureAddress string
 	InsecurePort    uint
-	RegDiscvSrv     string
 	LocalIp         string
 	Sock            string
 	MetricPort      uint
@@ -50,7 +49,9 @@ type UserMgrConfig struct {
 }
 
 var (
-	Tke    options.TKEOptions
+	//Tke option for sync tke cluster credentials
+	Tke options.TKEOptions
+	//CliTls for
 	CliTls *tls.Config
 )
 

@@ -23,7 +23,6 @@ type UserManagerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
 	conf.MetricConfig
-	conf.ZkConfig
 	conf.CertConfig
 	conf.LogConfig
 	conf.LocalConfig

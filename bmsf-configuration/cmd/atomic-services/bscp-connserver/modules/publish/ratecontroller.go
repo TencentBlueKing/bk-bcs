@@ -77,7 +77,6 @@ func (s *SimpleRateController) Arrange(targets []*session.Session) {
 		return
 	}
 
-	// 1% grain for one step.
 	unitSize := int(math.Ceil(float64(len(targets)) / float64(s.stepCount)))
 	if unitSize < s.minStepUnitSize {
 		unitSize = s.minStepUnitSize
