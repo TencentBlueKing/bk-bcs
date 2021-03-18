@@ -28,7 +28,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/middle"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+
 	restful "github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -84,11 +87,36 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 	return s, nil
 }
 
+func (s *StorageServer) initFilterFunctions() []restful.FilterFunction {
+	filterFunctions := []restful.FilterFunction{}
+
+	// register middleware
+	mdlw := middle.New(middle.Options{
+		Recorder: metrics.NewRecorder(metrics.Config{
+			Prefix: middle.MetricsPrefix,
+		}),
+		GroupedStatus: true,
+	})
+	filterFunctions = append(filterFunctions, middle.MetricsMiddleHandler(mdlw))
+
+	return filterFunctions
+}
+
 func (s *StorageServer) initHTTPServer() error {
 	a := apiserver.GetAPIResource()
 
+	// register middleware
+	filterFunctions := s.initFilterFunctions()
+	filter := func() restful.FilterFunction {
+		if len(filterFunctions) > 0 {
+			return filterFunctions[0]
+		}
+
+		return nil
+	}
+
 	// Api v1
-	s.httpServer.RegisterWebServer(actions.PathV1, nil, a.ActionsV1)
+	s.httpServer.RegisterWebServer(actions.PathV1, filter(), a.ActionsV1)
 
 	if a.Conf.DebugMode {
 		s.initDebug()
