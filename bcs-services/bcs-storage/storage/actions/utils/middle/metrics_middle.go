@@ -79,7 +79,6 @@ func New(cfg Options) Middleware {
 // this reporter will return the required data to be measured.
 // it accepts a next function that will be called as the wrapped logic before and after
 // measurement actions.
-// TODO: url routePath trans to handlerName label
 func (m Middleware) Measure(reporter Reporter, next func()) {
 	ctx := reporter.Context()
 	hid := reporter.RoutePath()
@@ -130,12 +129,19 @@ func (m Middleware) Measure(reporter Reporter, next func()) {
 
 // Reporter knows how to report the data to the Middleware so it can measure the different framework/libraries.
 type Reporter interface {
+	// Method() return request method(POST、PUT、DELETE、GET)
 	Method() string
+	// Context() get request context for context values
 	Context() context.Context
+	// URLPath() return url path
 	URLPath() string
+	// StatusCode() return response status code
 	StatusCode() int
+	// BytesWritten() return resp body length
 	BytesWritten() int64
+	// GetReq() get gorestful request
 	GetReq() *gorestful.Request
+	// RoutePath() return router url
 	RoutePath() string
 }
 
@@ -144,18 +150,25 @@ type reporter struct {
 	resp *gorestful.Response
 }
 
+// Method() return method
 func (r *reporter) Method() string { return r.req.Request.Method }
 
+// Context() return request context
 func (r *reporter) Context() context.Context { return r.req.Request.Context() }
 
+// URLPath() return request path
 func (r *reporter) URLPath() string { return r.req.Request.URL.Path }
 
+// RoutePath() return request URL router
 func (r *reporter) RoutePath() string { return r.req.SelectedRoutePath() }
 
+// StatusCode() return response status code
 func (r *reporter) StatusCode() int { return r.resp.StatusCode() }
 
+// BytesWritten() return response body length
 func (r *reporter) BytesWritten() int64 { return int64(r.resp.ContentLength()) }
 
+// GetReq() return gorestful request
 func (r *reporter) GetReq() *gorestful.Request { return r.req }
 
 func parseCLusterIDAndResourceType(report Reporter) (string, string) {
