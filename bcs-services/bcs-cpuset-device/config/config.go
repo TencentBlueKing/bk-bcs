@@ -31,6 +31,8 @@ type Config struct {
 	Engine string
 	// NodeIP node IP
 	NodeIP string
+	// ReservedCPUSet set of reserved cpu set
+	ReservedCPUSet map[string]struct{}
 }
 
 // NewConfig create a config object

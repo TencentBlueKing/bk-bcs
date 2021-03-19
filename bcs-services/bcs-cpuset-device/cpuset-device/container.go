@@ -72,6 +72,11 @@ func (s *CpusetDevicePlugin) updateCpusetNodes() error {
 			blog.Errorf("container %s invalid, node %s not found", info.ID, node)
 			continue
 		}
+		// when a used cpuset is marked reserved after rebooting bcs-cpuset-device,
+		// just append into node.AllocatedCpuset, the cpuset will be remove from AllocatedCpuset,
+		// but it will never be appended into node.CpuSet. See implementation of CpusetNode.ReleaseCpuset
+		// in bkbcs/bcs-services/bcs-cpuset-device/types/types.go.
+		// Based on the above, don't need filter reserved cpuset
 		mNode.AllocatedCpuset = append(mNode.AllocatedCpuset, strings.Split(cpusets, ",")...)
 	}
 

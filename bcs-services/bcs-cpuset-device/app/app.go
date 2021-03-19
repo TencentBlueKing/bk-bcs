@@ -15,6 +15,7 @@ package app
 
 import (
 	"os"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -48,7 +49,7 @@ func setConfig(conf *config.Config, op *options.Option) {
 	conf.ClusterID = op.ClusterID
 	conf.NodeIP = op.Address
 
-	//client cert directoty
+	// client cert directoty
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ClientKeyFile != "" {
 
@@ -58,4 +59,14 @@ func setConfig(conf *config.Config, op *options.Option) {
 		conf.ClientCert.IsSSL = true
 		conf.ClientCert.CertPasswd = static.ClientCertPwd
 	}
+
+	conf.ReservedCPUSet = make(map[string]struct{})
+	// parse reserved cpuset list
+	if len(op.ReservedCPUSetList) != 0 {
+		cpuSetStrList := strings.Split(op.ReservedCPUSetList, ",")
+		for _, cpuSetStr := range cpuSetStrList {
+			conf.ReservedCPUSet[strings.TrimSpace(cpuSetStr)] = struct{}{}
+		}
+	}
+
 }
