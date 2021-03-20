@@ -29,6 +29,7 @@
 * clusterid: bcs-cpuset-device所属的集群
 * engine: 集群编排引擎类型，可选mesos, k8s
 * bcs_zookeeper: 集群层zookeeper地址
+* reserved_cpuset_list: 保留的cpuset列表
 * log_dir: bcs-cpuset-device日志目录
 * alsologtostderr: 同时打印日志到标准输出
 * v: 日志级别

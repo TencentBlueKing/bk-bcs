@@ -5,6 +5,7 @@
     "clusterid": "${bcsCpuSetClusterID}",
     "engine": "${bcsCpuSetEngine}",
     "bcs_zookeeper": "${bcsCpuSetBcsZookeeper}",
+    "reserved_cpuset_list": "${bcsCpuSetReservedCpuSetList}",
     "log_dir": "${bcsCpuSetLogDir}",
     "alsologtostderr": ${bcsCpuSetAlsoLogToStdErr},
     "v": "${bcsCpuSetV}",
