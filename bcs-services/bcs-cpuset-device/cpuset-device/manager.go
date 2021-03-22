@@ -233,6 +233,11 @@ func (c *CpusetDevicePlugin) initCpusetDevice() error {
 			AllocatedCpuset: make([]string, 0),
 		}
 		for _, cpuset := range cpusets {
+			// filter reserved cpuset
+			if _, isReserved := c.conf.ReservedCPUSet[cpuset]; isReserved {
+				blog.Infof("reserved cpu %s of node %s", cpuset, node)
+				continue
+			}
 			device := &pluginapi.Device{
 				ID:     fmt.Sprintf("node:%s;cpuset:%s", node, cpuset),
 				Health: "Healthy",

@@ -89,6 +89,10 @@
                                 "value": "mesos"
                             },
                             {
+                                "name": "bcsCpuSetReservedCpuSetList",
+                                "value": ""
+                            },
+                            {
                                 "name": "bcsCpuSetBcsZookeeper",
                                 "value": "127.0.0.1:2181"
                             },

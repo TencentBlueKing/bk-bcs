@@ -26,10 +26,11 @@ type Option struct {
 	conf.CertConfig
 	conf.ServiceConfig
 
-	DockerSock      string `json:"docker_sock" value:"unix:///var/run/docker.sock" usage:"docker socket file"`
-	PluginSocketDir string `json:"plugin_socket_dir" value:"/var/lib/kubelet/device-plugins" usage:"device-plugin socket directory"`
-	ClusterID       string `json:"clusterid" value:"" usage:"mesos cluster id"`
-	Engine          string `json:"engine" value:"k8s" usage:"enum: k8s、mesos; default: k8s"`
+	DockerSock         string `json:"docker_sock" value:"unix:///var/run/docker.sock" usage:"docker socket file"`
+	PluginSocketDir    string `json:"plugin_socket_dir" value:"/var/lib/kubelet/device-plugins" usage:"device-plugin socket directory"`
+	ClusterID          string `json:"clusterid" value:"" usage:"mesos cluster id"`
+	Engine             string `json:"engine" value:"k8s" usage:"enum: k8s、mesos; default: k8s"`
+	ReservedCPUSetList string `json:"reserved_cpuset_list" value:"" usage:"cpuset number list to be reserved, e.g. 6,7,8"`
 }
 
 // NewOption create Option object
