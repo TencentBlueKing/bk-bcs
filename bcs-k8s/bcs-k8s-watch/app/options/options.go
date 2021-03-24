@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -71,24 +72,16 @@ type K8sConfig struct {
 	TLS    TLS    `json:"tls"`
 }
 
-// HttpServerConfig for register api handler
-type HttpServerConfig struct {
-	Address        string `json:"address"`
-	Port           uint   `json:"port"`
-	Debug          bool   `json:"debug"`
-	IsSSL          bool   `json:"isSSL"`
-	CAFile         string `json:"ca_file"`
-	ServerCertFile string `json:"server_cert_file"`
-	ServerKeyFile  string `json:"server_key_file"`
-	CertPassWd     string `json:"-"`
-}
-
 // WatchConfig k8s-watch config
 type WatchConfig struct {
-	Default    DefaultConfig    `json:"default"`
-	BCS        BCSConfig        `json:"bcs"`
-	K8s        K8sConfig        `json:"k8s"`
-	HttpServer HttpServerConfig `json:"httpServer"`
+	Default DefaultConfig `json:"default"`
+	BCS     BCSConfig     `json:"bcs"`
+	K8s     K8sConfig     `json:"k8s"`
+	conf.ServiceConfig
+	conf.MetricConfig
+	conf.ServerOnlyCertConfig
+
+	DebugMode bool `json:"debug_mode"`
 }
 
 // ParseConfigFile parse & validate config file

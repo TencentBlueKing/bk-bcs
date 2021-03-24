@@ -15,8 +15,10 @@ package bcs
 
 import (
 	"errors"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"net/http"
 	"net/http/pprof"
+	"strconv"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
@@ -105,12 +107,17 @@ func newHTTPServerWrap(config *watchoptions.WatchConfig, opts ...Option) *HTTPSe
 		opt(httpOptions)
 	}
 
+	if len(httpOptions.certCfg.CertFile) > 0 && len(httpOptions.certCfg.KeyFile) > 0 {
+		httpOptions.certCfg.IsSSL = true
+	}
+
 	setDefaultHTTPServer(config)
 
-	httpServer := httpserver.NewHttpServer(config.HttpServer.Port, config.HttpServer.Address, "")
+	httpServer := httpserver.NewHttpServer(config.Port, config.Address, "")
 	if httpOptions.certCfg.IsSSL {
 		httpServer.SetSsl(httpOptions.certCfg.CAFile, httpOptions.certCfg.CertFile,
 			httpOptions.certCfg.KeyFile, httpOptions.certCfg.CertPwd)
+		blog.Infof("http server set ssl successful")
 	}
 
 	serverWrap := &HTTPServerWrap{
@@ -118,7 +125,7 @@ func newHTTPServerWrap(config *watchoptions.WatchConfig, opts ...Option) *HTTPSe
 		opt:    httpOptions,
 	}
 
-	// register debug pprof & metrics
+	// register debug pprof & health api
 	serverWrap.registerInitAction()
 
 	return serverWrap
@@ -143,12 +150,15 @@ func (s *HTTPServerWrap) registerInitAction() error {
 		actions = append(actions, debugAction...)
 	}
 
-	// metrics action
-	metricAction := []*httpserver.Action{
-		httpserver.NewAction("GET", "/metrics", nil, getRouteHandlerFunc(promhttp.Handler())),
+	// health API
+	healthAction := []*httpserver.Action{
+		httpserver.NewAction("GET", "/healthz", nil, func(req *restful.Request, resp *restful.Response) {
+			resp.WriteHeader(http.StatusOK)
+			resp.Write([]byte("ok"))
+		}),
 	}
 
-	actions = append(actions, metricAction...)
+	actions = append(actions, healthAction...)
 
 	if len(actions) > 0 {
 		s.server.RegisterWebServer("", nil, actions)
@@ -182,12 +192,12 @@ func (s *HTTPServerWrap) ListenAndServe() error {
 }
 
 func setDefaultHTTPServer(config *watchoptions.WatchConfig) {
-	if config.HttpServer.Address == "" {
-		config.HttpServer.Address = "127.0.0.1"
+	if config.Address == "" {
+		config.Address = "127.0.0.1"
 	}
 
-	if config.HttpServer.Port <= 0 {
-		config.HttpServer.Port = 8080
+	if config.Port <= 0 {
+		config.Port = 8080
 	}
 }
 
@@ -214,4 +224,11 @@ func getRouteHandlerFunc(f http.Handler) restful.RouteFunction {
 	return func(req *restful.Request, resp *restful.Response) {
 		f.ServeHTTP(resp, req.Request)
 	}
+}
+
+//runPrometheusMetrics starting prometheus metrics handler
+func RunPrometheusMetricsServer(config *watchoptions.WatchConfig) {
+	http.Handle("/metrics", promhttp.Handler())
+	addr := config.Address + ":" + strconv.Itoa(int(config.MetricPort))
+	go http.ListenAndServe(addr, nil)
 }

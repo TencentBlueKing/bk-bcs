@@ -161,16 +161,15 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 		glog.Warnf("Init Alertor fail, no alarm will be sent!")
 	}
 
-	// init server actions && register web server
+	// init server actions && register web server && register metrics server
 	glog.Info("start http server")
 	certConfig := bcs.CertConfig{
-		CAFile:   config.HttpServer.CAFile,
-		CertFile: config.HttpServer.ServerCertFile,
-		KeyFile:  config.HttpServer.ServerKeyFile,
+		CAFile:   config.CAFile,
+		CertFile: config.ServerCertFile,
+		KeyFile:  config.ServerKeyFile,
 		CertPwd:  static.ServerCertPwd,
-		IsSSL:    config.HttpServer.IsSSL,
 	}
-	httpServer := bcs.GetHTTPServer(config, bcs.WithCertConfig(certConfig), bcs.WithDebug(config.HttpServer.Debug))
+	httpServer := bcs.GetHTTPServer(config, bcs.WithCertConfig(certConfig), bcs.WithDebug(config.DebugMode))
 	go func() {
 		err = httpServer.ListenAndServe()
 		if err != nil {
@@ -178,7 +177,10 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 			close(globalStopChan)
 		}
 	}()
+
+	go bcs.RunPrometheusMetricsServer(config)
 	glog.Info("start http server successful")
+
 
 	// init resourceList to watch
 	err = resources.InitResourceList(&config.K8s)
