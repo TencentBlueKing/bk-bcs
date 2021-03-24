@@ -203,11 +203,23 @@ func insert(req *restful.Request) error {
 
 	queueData := lib.CopyMap(data)
 	queueData[resourceTypeTag] = EventResource
+	env := typeofToString(queueData[envTag])
+
 	if extra, ok := queueData[extraInfoTag]; ok {
 		if d, ok := extra.(types.EventExtraInfo); ok {
 			queueData[nameSpaceTag] = d.Namespace
-			queueData[resourceKindTag] = data[kindTag]
 			queueData[resourceNameTag] = d.Name
+			queueData[resourceKindTag] =
+				func(env string) interface{} {
+					switch env {
+					case string(types.Event_Env_K8s):
+						return data[kindTag]
+					case string(types.Event_Env_Mesos):
+						return d.Kind
+					}
+
+					return ""
+				}(env)
 		}
 	}
 
@@ -314,6 +326,8 @@ func typeofToString(v interface{}) string {
 		return string(v.(types.EventComponent))
 	case types.EventLevel:
 		return string(v.(types.EventLevel))
+	case types.ExtraKind:
+		return string(v.(types.ExtraKind))
 	default:
 		_ = t
 		return ""

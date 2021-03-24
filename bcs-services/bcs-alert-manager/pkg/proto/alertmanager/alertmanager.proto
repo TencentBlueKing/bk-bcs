@@ -66,8 +66,7 @@ message CreateRawAlertInfoReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "endtime",
       description: "告警结束时间(时间戳)"
-    },
-    (validate.rules).int64.gt = 0
+    }
   ];
   string generatorurl   = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -135,8 +134,7 @@ message CreateBusinessAlertInfoReq {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "endtime",
       description: "告警结束时间(时间戳)"
-    },
-    (validate.rules).int64.gt = 0
+    }
   ];
   string generatorurl   = 3 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -248,8 +246,7 @@ message CommonAlertLabel {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "alarmType",
       description: "报警类型(cpu/mem/io)"
-    },
-    (validate.rules).string.min_len = 1
+    }
   ];
   string clusterID = 2 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {

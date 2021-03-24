@@ -20,8 +20,10 @@ import (
 	//"github.com/spf13/pflag"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
+// SchedulerOptions for bcs-scheduler
 type SchedulerOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -29,6 +31,7 @@ type SchedulerOptions struct {
 	conf.ZkConfig
 	conf.CertConfig
 	conf.LicenseServerConfig
+	registry.CMDOptions
 
 	conf.LogConfig
 	conf.ProcessConfig
@@ -49,12 +52,15 @@ type SchedulerOptions struct {
 	DebugMode         bool   `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 }
 
+// SchedConfig for parse conf
 type SchedConfig struct {
 	Scheduler    Scheduler
 	HttpListener HttpListener
+	EtcdConf     registry.CMDOptions
 	ZkHost       string
 }
 
+// Scheduler for scheduler config
 type Scheduler struct {
 	Hostname      string
 	MesosMasterZK string
@@ -90,6 +96,7 @@ type Scheduler struct {
 	DebugMode bool
 }
 
+// HttpListener for http server conf
 type HttpListener struct {
 	TCPAddr  string
 	UnixAddr string
@@ -101,9 +108,17 @@ type HttpListener struct {
 	CertPasswd string
 }
 
+// NewSchedulerCfg init scheduler config
 func NewSchedulerCfg() *SchedConfig {
 	config := SchedConfig{
 		ZkHost: "",
+		EtcdConf: registry.CMDOptions{
+			Feature: false,
+			Address: "",
+			CA:      "",
+			Cert:    "",
+			Key:     "",
+		},
 		HttpListener: HttpListener{
 			TCPAddr:  "",
 			UnixAddr: "",
@@ -151,7 +166,7 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.Scheduler.MetricPort = op.MetricPort
 
 	config.Scheduler.RegDiscvSvr = op.RegDiscvSvr
-	config.Scheduler.Address = op.Address + ":" + strconv.Itoa(int(op.Port))
+	config.Scheduler.Address = op.ServiceConfig.Address + ":" + strconv.Itoa(int(op.Port))
 	config.Scheduler.UseCache = op.UseCache
 	config.Scheduler.DoRecover = op.DoRecover
 	config.Scheduler.Plugins = op.Plugins
@@ -162,7 +177,7 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.Scheduler.CniDir = op.CniDir
 	config.Scheduler.NetImage = op.NetImage
 
-	config.HttpListener.TCPAddr = op.Address + ":" + strconv.Itoa(int(op.Port))
+	config.HttpListener.TCPAddr = op.ServiceConfig.Address + ":" + strconv.Itoa(int(op.Port))
 	//config.HttpListener.CertDir = op.ServerCertDir
 	config.HttpListener.CAFile = op.CAFile
 	config.HttpListener.CertFile = op.ServerCertFile
@@ -175,6 +190,11 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.Scheduler.Kubeconfig = op.Kubeconfig
 	config.Scheduler.StoreDriver = op.StoreDriver
 	config.Scheduler.DebugMode = op.DebugMode
+
+	config.EtcdConf.Address = op.CMDOptions.Address
+	config.EtcdConf.CA = op.CMDOptions.CA
+	config.EtcdConf.Cert = op.CMDOptions.Cert
+	config.EtcdConf.Key = op.CMDOptions.Key
 }
 
 func hostname() string {

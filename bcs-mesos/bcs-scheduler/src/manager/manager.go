@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/discovery"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/schedcontext"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
@@ -28,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store/zk"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
 )
 
 // Mananger main body of scheduler
@@ -105,6 +107,17 @@ func New(config util.SchedConfig) (*Manager, error) {
 		manager.schedContext.ApiServer2.SetSsl(listener.CAFile, listener.CertFile, listener.KeyFile, listener.CertPasswd)
 	}
 
+	disService, err := discovery.NewDiscoveryService(config)
+	if err != nil {
+		blog.Errorf("NewDiscoveryService failed: %v", err)
+		return nil, err
+	}
+	manager.schedContext.AlertManager, err = getAlertManagerServiceInterface(disService)
+	if err != nil {
+		blog.Errorf("getAlertManagerServiceInterface failed: %v", err)
+		return nil, err
+	}
+
 	manager.config.Scheduler.Address = listener.TCPAddr
 	manager.config.Scheduler.ZK = config.ZkHost
 	manager.sched = sched.New(manager.config.Scheduler, manager.schedContext)
@@ -112,6 +125,22 @@ func New(config util.SchedConfig) (*Manager, error) {
 	blog.Info("New manager finish")
 
 	return manager, nil
+}
+
+func getAlertManagerServiceInterface(disService discovery.Discovery) (alertmanager.AlertManagerService, error) {
+	alertClient, err := disService.GetMicroServiceByName(discovery.AlertManager)
+	if err != nil {
+		blog.Errorf("GetMicroServiceByName[%s] failed: %v", discovery.AlertManager, err)
+		return nil, err
+	}
+
+	alertService, ok := alertClient.(alertmanager.AlertManagerService)
+	if !ok {
+		errMsg := fmt.Errorf("alertCLient trans to AlertManagerService failed")
+		return nil, errMsg
+	}
+
+	return alertService, nil
 }
 
 // Stop stop manager

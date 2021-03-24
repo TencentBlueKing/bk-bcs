@@ -11,27 +11,41 @@
  *
  */
 
-package schedcontext
+package discovery
 
 import (
-	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/apiserver"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
+	"testing"
 )
 
-// SchedContext context for scheduler
-type SchedContext struct {
-	Store store.Store
+func newDiscoveryService() Discovery {
+	discovery, err := NewDiscoveryService(util.SchedConfig{
+		EtcdConf: registry.CMDOptions{
+			Address: "xxx:2379",
+			CA:      "./etcd/ca.pem",
+			Cert:    "./etcd/client.pem",
+			Key:     "./etcd/client-key.pem",
+		},
+	})
 
-	// change 0414
-	//ApiServer *apiserver.ApiServer
-	// for HTTPS
-	ApiServer2 *httpserver.HttpServer
+	if err != nil {
+		return nil
+	}
 
-	// Config for scheduler config
-	Config       util.SchedConfig
-	// AlertManager for alert interface
-	AlertManager alertmanager.AlertManagerService
+	return discovery
+}
+
+func TestDiscoveryService_GetMicroServiceByName(t *testing.T) {
+	disService := newDiscoveryService()
+	serviceNames := []ModuleName{AlertManager, "hellomanager"}
+
+	for i := range serviceNames {
+		service, err := disService.GetMicroServiceByName(serviceNames[i])
+		if err != nil {
+			t.Fatalf("GetMicroServiceByName[%s] failed: %v", serviceNames[i], err)
+		}
+
+		t.Log(service)
+	}
 }

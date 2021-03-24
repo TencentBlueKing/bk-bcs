@@ -14,6 +14,7 @@
 package scheduler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -46,10 +47,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
 
 	"github.com/andygrunwald/megos"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // MAX_DATA_UPDATE_INTERVAL Interval for update task, taskgroup, application in ZK
@@ -122,15 +126,18 @@ type Scheduler struct {
 
 	pluginManager *pluginManager.PluginManager
 
+	// alert interface
+	alertManager alertmanager.AlertManagerService
 	//stop daemonset signal
 	stopDaemonset chan struct{}
 }
 
 // NewScheduler returns a pointer to new Scheduler
-func NewScheduler(config util.Scheduler, store store.Store) *Scheduler {
+func NewScheduler(config util.Scheduler, store store.Store, alert alertmanager.AlertManagerService) *Scheduler {
 	s := &Scheduler{
 		config:       config,
 		store:        store,
+		alertManager: alert,
 		eventManager: newBcsEventManager(config),
 		lostSlave:    make(map[string]int64),
 	}
@@ -234,22 +241,6 @@ func (s *Scheduler) Start() error {
 	blog.Info("scheduler run for cluster %s", s.config.Cluster)
 	s.BcsClusterId = s.config.Cluster
 
-	var alarmConfig alarm.TLSConfig
-	//if s.config.ClientCertDir == "" {
-	//	s.config.ClientCertDir = "./cert"
-	//}
-	alarmConfig.CaFile = s.config.ClientCAFile
-	alarmConfig.CertFile = s.config.ClientCertFile
-	alarmConfig.KeyFile = s.config.ClientKeyFile
-	//alarmConfig.PassWord = static.ClientCertPwd
-	blog.Info("NewBcsHealth with %s, %s, %s, %s",
-		s.config.BcsZK, alarmConfig.CaFile, alarmConfig.CertFile, alarmConfig.KeyFile)
-	err := alarm.NewBcsHealth(s.config.BcsZK, alarmConfig)
-	if err != nil {
-		blog.Error("NewBcsHealth err:%s", err.Error())
-		return err
-	}
-
 	s.ServiceMgr = NewServiceMgr(s)
 	if s.ServiceMgr == nil {
 		return fmt.Errorf("new serviceMgr(%s:/blueking) error", s.config.ZK)
@@ -304,7 +295,7 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 		},
 	}
 
-	frameworkId, err := store.FetchFrameworkID()
+	frameworkID, err := store.FetchFrameworkID()
 	if err != nil {
 		if strings.ToLower(err.Error()) != "zk: node does not exist" && !strings.Contains(err.Error(), "not found") {
 			blog.Error("Fetch framework id failed: %s", err.Error())
@@ -312,12 +303,12 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 		}
 
 		blog.Warn("Fetch framework id failed: %s, will create a new framework", err.Error())
-		frameworkId = ""
+		frameworkID = ""
 	}
-	blog.Info("fetch frameworkId %s from DB", frameworkId)
-	if frameworkId != "" {
+	blog.Info("fetch frameworkId %s from DB", frameworkID)
+	if frameworkID != "" {
 		fw.Id = &mesos.FrameworkID{
-			Value: proto.String(frameworkId),
+			Value: proto.String(frameworkID),
 		}
 	}
 
@@ -884,9 +875,9 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 func stateFromMasters(masters []string) (*megos.State, error) {
 	masterUrls := make([]*url.URL, 0)
 	for _, master := range masters {
-		masterUrl, _ := url.Parse(fmt.Sprintf("http://%s", master))
-		blog.Info("mesos master Url: %s", masterUrl)
-		masterUrls = append(masterUrls, masterUrl)
+		masterURL, _ := url.Parse(fmt.Sprintf("http://%s", master))
+		blog.Info("mesos master Url: %s", masterURL)
+		masterUrls = append(masterUrls, masterURL)
 	}
 
 	mesosClient := megos.NewClient(masterUrls, nil)
@@ -922,20 +913,20 @@ func (s *Scheduler) syncAgentsettingPods() error {
 
 	//save agentsetting pods
 	for _, taskgroup := range taskg {
-		nodeIp := taskgroup.GetAgentIp()
-		if nodeIp == "" {
+		nodeIP := taskgroup.GetAgentIp()
+		if nodeIP == "" {
 			blog.Errorf("taskgroup %s GetAgentIp failed.", taskgroup.ID)
 			continue
 		}
 
-		setting, err := s.store.FetchAgentSetting(nodeIp)
+		setting, err := s.store.FetchAgentSetting(nodeIP)
 		if err != nil {
-			blog.Errorf("FetchAgentSetting %s failed: %s", nodeIp, err.Error())
+			blog.Errorf("FetchAgentSetting %s failed: %s", nodeIP, err.Error())
 			return err
 		}
 		if setting == nil {
 			setting = &commtype.BcsClusterAgentSetting{
-				InnerIP: nodeIp,
+				InnerIP: nodeIP,
 				Pods:    make([]string, 0),
 			}
 		}
@@ -1121,8 +1112,29 @@ func (s *Scheduler) SendHealthMsg(kind alarm.MessageKind, RunAs, message string,
 		ReportTime: currentTime.Format("2006-01-02 15:04:05.000"),
 	}
 
-	if err := alarm.SendHealthInfo(&health); nil != err {
-		blog.Warn("send health message(%s) err:%s", message, err.Error())
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	resp, err := s.alertManager.CreateBusinessAlertInfo(timeoutCtx, &alertmanager.CreateBusinessAlertInfoReq{
+		Starttime: 0,
+		AlarmType: "module",
+		CommonLabel: &alertmanager.CommonAlertLabel{
+			AlarmType: "",
+			ClusterID: s.ClusterId,
+		},
+		AlertAnnotation: &alertmanager.AlertAnnotation{
+			Message: message,
+			Comment: "",
+		},
+		ModuleAlertLabel: &alertmanager.ModuleAlertLabel{
+			ModuleName: health.Module,
+			ModuleIP:   s.IP,
+			AlarmName:  alarmID,
+			AlarmLevel: string(kind),
+		},
+	})
+	if err != nil {
+		blog.Warn("CreateBusinessAlertInfo send health message(%s) failed: err[%v] resp[%v]", message, err, resp)
 	}
 
 	return
@@ -1164,6 +1176,18 @@ func (s *Scheduler) newTaskEvent(task *types.Task) *commtype.BcsStorageEventIf {
 			Namespace: task.RunAs,
 			Name:      task.AppId,
 			Kind:      commtype.ApplicationExtraKind,
+		},
+		Data: &v1.Event{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      task.AppId,
+				Namespace: task.RunAs,
+			},
+			InvolvedObject: v1.ObjectReference{
+				Kind:      string(commtype.ApplicationExtraKind),
+				Namespace: task.RunAs,
+				Name:      task.AppId,
+			},
+			Message: task.Message,
 		},
 	}
 
@@ -1600,15 +1624,15 @@ func (s *Scheduler) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error)
 }
 
 //CheckPodBelongDaemonset check taskgroup whether belongs to daemonset
-func (s *Scheduler) CheckPodBelongDaemonset(taskgroupId string) bool {
-	namespace, name := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
+func (s *Scheduler) CheckPodBelongDaemonset(taskgroupID string) bool {
+	namespace, name := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupID)
 	version, err := s.store.GetVersion(namespace, name)
 	if err != nil {
-		blog.Errorf("Fetch taskgroup(%s) version(%s.%s) error %s", taskgroupId, namespace, name, err.Error())
+		blog.Errorf("Fetch taskgroup(%s) version(%s.%s) error %s", taskgroupID, namespace, name, err.Error())
 		return false
 	}
 	if version == nil {
-		blog.Errorf("Fetch taskgroup(%s) version(%s.%s) is empty", taskgroupId, namespace, name)
+		blog.Errorf("Fetch taskgroup(%s) version(%s.%s) is empty", taskgroupID, namespace, name)
 		return false
 	}
 
