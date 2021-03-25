@@ -22,8 +22,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
-	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
@@ -176,29 +174,6 @@ func runPrometheusMetrics(op *options.StorageOptions) {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := op.Address + ":" + strconv.Itoa(int(op.MetricPort))
 	go http.ListenAndServe(addr, nil)
-}
-
-func metricHandler(op *options.StorageOptions) {
-	c := metric.Config{
-		ModuleName: types.BCS_MODULE_STORAGE,
-		MetricPort: op.MetricPort,
-		IP:         op.Address,
-		RunMode:    metric.Master_Master_Mode,
-
-		SvrCaFile:   op.ServerCert.CAFile,
-		SvrCertFile: op.ServerCert.CertFile,
-		SvrKeyFile:  op.ServerCert.KeyFile,
-		SvrKeyPwd:   op.ServerCert.CertPwd,
-	}
-
-	if err := metric.NewMetricController(
-		c,
-		apiserver.GetHealth,
-	); err != nil {
-		blog.Errorf("metric server error: %v", err)
-		return
-	}
-	blog.Infof("start metric server successfully")
 }
 
 func getRouteFunc(f http.HandlerFunc) restful.RouteFunction {

@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 
 	restful "github.com/emicklei/go-restful"
 )
@@ -87,6 +88,9 @@ func (ws *WatchServer) Go(ctx context.Context) {
 		ws.opts = &bcstypes.WatchOptions{}
 	}
 
+	// metrics
+	metrics.ReportWatchRequestInc(ws.req.SelectedRoutePath(), ws.tableName)
+
 	notify := ws.resp.CloseNotify()
 	ws.resp.WriteHeader(http.StatusOK)
 	ws.resp.ResponseWriter.(http.Flusher).Flush()
@@ -103,6 +107,7 @@ func (ws *WatchServer) Go(ctx context.Context) {
 
 	defer func() {
 		blog.Infof(ws.sprint("watch end"))
+		metrics.ReportWatchRequestDec(ws.req.SelectedRoutePath(), ws.tableName)
 		ws.Writer(ws.resp, EventWatchBreak)
 		ws.resp.ResponseWriter.(http.Flusher).Flush()
 	}()
@@ -129,6 +134,7 @@ func (ws *WatchServer) Go(ctx context.Context) {
 				blog.V(5).Infof(ws.sprint(fmt.Sprintf("flush: %v", e)))
 			}
 			ws.resp.ResponseWriter.(http.Flusher).Flush()
+			metrics.ReportWatchHTTPResponseSize(ws.req.SelectedRoutePath(), ws.tableName, int64(ws.resp.ContentLength()))
 		}
 	}
 }

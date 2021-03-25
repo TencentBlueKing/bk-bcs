@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
@@ -173,17 +172,20 @@ func (r *reporter) GetReq() *gorestful.Request { return r.req }
 
 func parseCLusterIDAndResourceType(report Reporter) (string, string) {
 	var (
-		clusterID    = ""
-		resourceType = ""
+		defaultClusterID    = ""
+		defaultResourceType = ""
 	)
 	if report == nil || len(report.URLPath()) == 0 {
+		return defaultClusterID, defaultResourceType
+	}
+
+	// clusterID&resourceType show mongo/dynamic collection, extra api by handler&method
+	clusterID := report.GetReq().PathParameter(clusterIDTag)
+	resourceType := report.GetReq().PathParameter(resourceTypeTag)
+
+	if len(clusterID) > 0 && len(resourceType) > 0 {
 		return clusterID, resourceType
 	}
 
-	if strings.HasPrefix(report.URLPath(), dynamicK8sPath) || strings.HasPrefix(report.URLPath(), dynamicMesosPath) {
-		clusterID = report.GetReq().PathParameter(clusterIDTag)
-		resourceType = report.GetReq().PathParameter(resourceTypeTag)
-	}
-
-	return clusterID, resourceType
+	return defaultClusterID, defaultResourceType
 }

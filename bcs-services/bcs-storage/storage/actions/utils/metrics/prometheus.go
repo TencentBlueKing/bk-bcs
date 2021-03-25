@@ -11,6 +11,7 @@
  *
  */
 
+// file prometheus.go for http request data
 package metrics
 
 import (
@@ -94,14 +95,14 @@ func NewRecorder(cfg Config) Recorder {
 	r := &recorder{
 		httpRequestCounter: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "http",
+			Subsystem: "api",
 			Name:      "request_total",
 			Help:      "The total number of requests to bcs-storage api",
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel, cfg.StatusCodeLabel, cfg.ClusterIDLabel, cfg.ResourceTypeLabel}),
 
 		httpRequestDurHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "http",
+			Subsystem: "api",
 			Name:      "request_duration_seconds",
 			Help:      "The latency of the HTTP requests.",
 			Buckets:   cfg.DurationBuckets,
@@ -109,7 +110,7 @@ func NewRecorder(cfg Config) Recorder {
 
 		httpResponseSizeHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "http",
+			Subsystem: "api",
 			Name:      "response_size_bytes",
 			Help:      "The size of the HTTP responses.",
 			Buckets:   cfg.SizeBuckets,
@@ -117,7 +118,7 @@ func NewRecorder(cfg Config) Recorder {
 
 		httpRequestsInflight: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: cfg.Prefix,
-			Subsystem: "http",
+			Subsystem: "api",
 			Name:      "requests_inflight",
 			Help:      "The number of inflight requests being handled at the same time.",
 		}, []string{cfg.HandlerIDLabel, cfg.MethodLabel}),
