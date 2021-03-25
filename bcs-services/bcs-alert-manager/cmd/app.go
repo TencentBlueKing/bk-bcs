@@ -352,12 +352,7 @@ func (am *AlertManager) initExtraHTTPServer() error {
 		var err error
 		blog.Infof("initExtraHttpServer address: %s", extraAddress)
 
-		if am.tlsServerConfig != nil {
-			am.extraServer.TLSConfig = am.tlsServerConfig
-			err = am.extraServer.ListenAndServeTLS("", "")
-		} else {
-			err = am.extraServer.ListenAndServe()
-		}
+		err = am.extraServer.ListenAndServe()
 		if err != nil {
 			blog.Errorf("initExtraHttpServer failed: %v", err)
 			am.stop <- err
