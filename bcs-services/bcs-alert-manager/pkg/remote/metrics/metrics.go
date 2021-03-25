@@ -99,12 +99,12 @@ func ReportAlertManagerAPIMetrics(handler, method, status string, started time.T
 	requestLatencyAPI.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
 }
 
-// ReportAlertManagerHandlerQueueLength report handler chanQueue length
-func ReportAlertManagerHandlerQueueLength(handler string, queueLen float64) {
+// ReportHandlerQueueLength report handler chanQueue length
+func ReportHandlerQueueLength(handler string, queueLen float64) {
 	requestsTotalHandlerQueue.WithLabelValues(handler).Set(queueLen)
 }
 
-// ReportAlertManagerHandlerFuncLatency report handler func latency
-func ReportAlertManagerHandlerFuncLatency(handler, name, status string, started time.Time) {
+// ReportHandlerFuncLatency report handler func latency
+func ReportHandlerFuncLatency(handler, name, status string, started time.Time) {
 	requestLatencyHandler.WithLabelValues(handler, name, status).Observe(time.Since(started).Seconds())
 }

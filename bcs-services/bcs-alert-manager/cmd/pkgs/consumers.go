@@ -27,7 +27,7 @@ type ResourceSwitch string
 
 const (
 	// ResourceSubOn on sub handler
-	ResourceSubOn  ResourceSwitch = "on"
+	ResourceSubOn ResourceSwitch = "on"
 	// ResourceSubOff off sub handler
 	ResourceSubOff ResourceSwitch = "off"
 )

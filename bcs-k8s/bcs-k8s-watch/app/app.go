@@ -30,6 +30,7 @@ import (
 
 	global "github.com/Tencent/bk-bcs/bcs-common/common"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s/resources"
 )
 
@@ -159,6 +160,27 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	if err != nil {
 		glog.Warnf("Init Alertor fail, no alarm will be sent!")
 	}
+
+	// init server actions && register web server && register metrics server
+	glog.Info("start http server")
+	certConfig := bcs.CertConfig{
+		CAFile:   config.CAFile,
+		CertFile: config.ServerCertFile,
+		KeyFile:  config.ServerKeyFile,
+		CertPwd:  static.ServerCertPwd,
+	}
+	httpServer := bcs.GetHTTPServer(config, bcs.WithCertConfig(certConfig), bcs.WithDebug(config.DebugMode))
+	go func() {
+		err = httpServer.ListenAndServe()
+		if err != nil {
+			glog.Errorf("http listen and serve failed: %v", err)
+			close(globalStopChan)
+		}
+	}()
+
+	go bcs.RunPrometheusMetricsServer(config)
+	glog.Info("start http server successful")
+
 
 	// init resourceList to watch
 	err = resources.InitResourceList(&config.K8s)

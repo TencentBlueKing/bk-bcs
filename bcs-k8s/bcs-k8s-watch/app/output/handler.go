@@ -20,6 +20,7 @@ import (
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/metrics"
 )
 
 const (
@@ -28,6 +29,9 @@ const (
 
 	// defaultHandleInterval is default interval of handle.
 	defaultHandleInterval = 500 * time.Millisecond
+
+	// defaultHandlerReportPeriod report queue length for handler dataType
+	defaultHandlerReportPeriod = 5 * time.Second
 )
 
 // Action handles the metadata in ADD/DEL/UPDATE methods.
@@ -45,6 +49,8 @@ type Action interface {
 // Handler is resource handler, consumes metadata distributed from
 // Writer, and handles data with the action.
 type Handler struct {
+	// clusterID
+	clusterID string
 	// resource metadata type.
 	dataType string
 
@@ -56,11 +62,12 @@ type Handler struct {
 }
 
 // NewHandler creates a new resource Handler instance with the action.
-func NewHandler(dataType string, act Action) *Handler {
+func NewHandler(clusterID string, dataType string, act Action) *Handler {
 	h := &Handler{
-		dataType: dataType,
-		queue:    make(chan *action.SyncData, defaultHandlerQueueSize),
-		act:      act,
+		dataType:  dataType,
+		queue:     make(chan *action.SyncData, defaultHandlerQueueSize),
+		act:       act,
+		clusterID: clusterID,
 	}
 	return h
 }
@@ -74,7 +81,9 @@ func (h *Handler) Handle(data *action.SyncData) {
 func (h *Handler) HandleWithTimeout(data *action.SyncData, timeout time.Duration) {
 	select {
 	case h.queue <- data:
+		metrics.ReportK8sWatchHandlerQueueLengthInc(h.clusterID, h.dataType)
 	case <-time.After(timeout):
+		metrics.ReportK8sWatchHandlerDiscardEvents(h.clusterID, h.dataType)
 		glog.Warn("can't handle data, queue timeout")
 	}
 }
@@ -87,13 +96,19 @@ func (h *Handler) debug() {
 	}
 }
 
-// handle func is drived by wait.NonSlidingUntil with a stop channel, do not block
+// reportQueueLength report datatype length to prometheus metrics
+func (h *Handler) reportHandlerQueueLength() {
+	metrics.ReportK8sWatchHandlerQueueLength(h.clusterID, h.dataType, float64(len(h.queue)))
+}
+
+// handle func is invoked by wait.NonSlidingUntil with a stop channel, do not block
 // to recv the queue here in order to make it have runtime to handle the stop channel.
 func (h *Handler) handle() {
 	// try to keep reading from queue until there is no more data every period.
 	for {
 		select {
 		case data := <-h.queue:
+			metrics.ReportK8sWatchHandlerQueueLengthDec(h.clusterID, h.dataType)
 			switch data.Action {
 			case action.SyncDataActionAdd:
 				h.act.Add(data)
@@ -119,6 +134,7 @@ func (h *Handler) handle() {
 func (h *Handler) Run(stopCh <-chan struct{}) {
 	glog.Infof("%+v resource handler is starting now", h.dataType)
 	go wait.NonSlidingUntil(h.handle, defaultHandleInterval, stopCh)
+	go wait.Until(h.reportHandlerQueueLength, defaultHandlerReportPeriod, stopCh)
 
 	// setup debug.
 	//go h.debug()

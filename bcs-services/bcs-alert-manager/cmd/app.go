@@ -225,12 +225,12 @@ func (am *AlertManager) initServerSwaggerFile(mux *http.ServeMux) {
 	if len(am.options.SwaggerConfigDir.Dir) != 0 {
 		blog.Infof("swagger config dir is enabled")
 
-		mux.HandleFunc(apiPrefix + "/swagger/", am.serveSwaggerFile)
+		mux.HandleFunc(apiPrefix+"/swagger/", am.serveSwaggerFile)
 	}
 }
 
 func (am *AlertManager) serveSwaggerFile(w http.ResponseWriter, r *http.Request) {
-	swaggerFile := path.Join(am.options.SwaggerConfigDir.Dir, strings.TrimPrefix(r.URL.Path, apiPrefix + "/swagger/"))
+	swaggerFile := path.Join(am.options.SwaggerConfigDir.Dir, strings.TrimPrefix(r.URL.Path, apiPrefix+"/swagger/"))
 	blog.Infof("Serving swagger-file: %s", swaggerFile)
 
 	http.ServeFile(w, r, swaggerFile)
@@ -239,7 +239,7 @@ func (am *AlertManager) serveSwaggerFile(w http.ResponseWriter, r *http.Request)
 // init prometheus metrics handler
 func (am *AlertManager) initMetrics(router *mux.Router) {
 	blog.Infof("init metrics handler")
-	router.Handle(apiPrefix + "/metrics", promhttp.Handler())
+	router.Handle(apiPrefix+"/metrics", promhttp.Handler())
 }
 
 func customMatcher(key string) (string, bool) {
@@ -275,7 +275,7 @@ func (am *AlertManager) initHTTPGateWay(router *mux.Router) error {
 	err := alertmanager.RegisterAlertManagerGwFromEndpoint(
 		am.ctx,
 		gmux,
-		am.options.ServiceConfig.Address + ":" + strconv.Itoa(int(am.options.ServiceConfig.Port)),
+		am.options.ServiceConfig.Address+":"+strconv.Itoa(int(am.options.ServiceConfig.Port)),
 		dialOpts)
 	if err != nil {
 		errMsg := fmt.Sprintf("http gateway RegisterAlertManagerGwFromEndpoint failed: %v", err)

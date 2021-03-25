@@ -31,5 +31,4 @@ const (
 	BcsErrAlertManagerUnknown = common.AdditionErrorCode + 502
 	// BcsErrAlertManagerUnknownStr unknown error msg
 	BcsErrAlertManagerUnknownStr = "unknown error"
-
 )

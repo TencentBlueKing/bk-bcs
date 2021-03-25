@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/service"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
 )
 
 const (
@@ -45,12 +46,12 @@ const (
 	defaultHTTPRetryerTime = 3 * time.Second
 )
 
-func reportIPPoolStaticMetrics(action, status string) {
-	cluster.SyncTotal.WithLabelValues(cluster.DataTypeIPPoolStatic, action, status).Inc()
+func reportIPPoolStaticMetrics(clusterID, action, status string) {
+	util.ReportSyncTotal(clusterID, cluster.DataTypeIPPoolStatic, action, status)
 }
 
-func reportIPPoolStaticDetailMetrics(action, status string) {
-	cluster.SyncTotal.WithLabelValues(cluster.DataTypeIPPoolStaticDetail, action, status).Inc()
+func reportIPPoolStaticDetailMetrics(clusterID, action, status string) {
+	util.ReportSyncTotal(clusterID, cluster.DataTypeIPPoolStaticDetail, action, status)
 }
 
 // NetServiceWatcher watchs resources in netservice, and sync to storage.
@@ -186,9 +187,9 @@ func (w *NetServiceWatcher) SyncIPResource() {
 	}
 
 	if err := w.report.ReportData(data); err != nil {
-		reportIPPoolStaticMetrics(types.ActionUpdate, cluster.SyncFailure)
+		reportIPPoolStaticMetrics(w.clusterID, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		reportIPPoolStaticMetrics(types.ActionUpdate, cluster.SyncSuccess)
+		reportIPPoolStaticMetrics(w.clusterID, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 
@@ -215,9 +216,9 @@ func (w *NetServiceWatcher) SyncIPResourceDetail() {
 	}
 
 	if err := w.report.ReportData(data); err != nil {
-		reportIPPoolStaticDetailMetrics(types.ActionUpdate, cluster.SyncFailure)
+		reportIPPoolStaticDetailMetrics(w.clusterID, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		reportIPPoolStaticDetailMetrics(types.ActionUpdate, cluster.SyncSuccess)
+		reportIPPoolStaticDetailMetrics(w.clusterID, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 
