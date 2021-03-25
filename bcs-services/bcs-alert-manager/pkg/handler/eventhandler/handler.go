@@ -285,7 +285,7 @@ func (eh *SyncEventHandler) HandleQueueEvent(ctx context.Context, data []byte) e
 	case <-ctx.Done():
 	case <-eh.stopCtx.Done():
 		glog.Errorf("event handler has been closed")
-		metrics.ReportAlertManagerHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.SucStatus, started)
+		metrics.ReportHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.SucStatus, started)
 		return nil
 	default:
 	}
@@ -293,12 +293,12 @@ func (eh *SyncEventHandler) HandleQueueEvent(ctx context.Context, data []byte) e
 	err := json.Unmarshal(data, eventHandlerData)
 	if err != nil {
 		glog.Errorf("Unmarshal event handler data failed: %v", err)
-		metrics.ReportAlertManagerHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.ErrStatus, started)
+		metrics.ReportHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.ErrStatus, started)
 		return err
 	}
 
 	if !validateResourceType(eventHandlerData.ResourceType) {
-		metrics.ReportAlertManagerHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.SucStatus, started)
+		metrics.ReportHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.SucStatus, started)
 		return nil
 	}
 
@@ -307,7 +307,7 @@ func (eh *SyncEventHandler) HandleQueueEvent(ctx context.Context, data []byte) e
 	case <-time.After(time.Second * 1):
 		glog.Info("handle queue event has been discarded")
 	}
-	metrics.ReportAlertManagerHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.SucStatus, started)
+	metrics.ReportHandlerFuncLatency(handlerName, handlerHandleFunc, metrics.SucStatus, started)
 
 	return nil
 }
@@ -352,7 +352,7 @@ func (eh *SyncEventHandler) monitor() {
 		}
 
 		// report chan queue length
-		metrics.ReportAlertManagerHandlerQueueLength(handlerName, float64(len(eh.eventListCh)))
+		metrics.ReportHandlerQueueLength(handlerName, float64(len(eh.eventListCh)))
 	}
 }
 

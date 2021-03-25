@@ -98,10 +98,10 @@ func Run(cfg *types.CmdConfig) error {
 
 	//create root context for exit
 	rootCxt, rootCancel := context.WithCancel(context.Background())
-	interupt := make(chan os.Signal, 10)
-	signal.Notify(interupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	interrupt := make(chan os.Signal, 10)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 	signalCxt, _ := context.WithCancel(rootCxt)
-	go handleSysSignal(signalCxt, interupt, rootCancel)
+	go handleSysSignal(signalCxt, interrupt, rootCancel)
 
 	runMetric(cfg)
 

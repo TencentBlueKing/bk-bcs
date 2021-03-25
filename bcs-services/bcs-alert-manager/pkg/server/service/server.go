@@ -25,9 +25,7 @@ type AlertManager struct {
 
 // NewAlertManager create alert handler for http server
 func NewAlertManager(alertClient alert.BcsAlarmInterface) *AlertManager {
-	return &AlertManager {
+	return &AlertManager{
 		consoleAction: actions.NewAlertAction(alertClient),
 	}
 }
-
-

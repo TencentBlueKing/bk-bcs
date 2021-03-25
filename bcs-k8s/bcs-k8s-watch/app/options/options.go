@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -76,6 +77,11 @@ type WatchConfig struct {
 	Default DefaultConfig `json:"default"`
 	BCS     BCSConfig     `json:"bcs"`
 	K8s     K8sConfig     `json:"k8s"`
+	conf.ServiceConfig
+	conf.MetricConfig
+	conf.ServerOnlyCertConfig
+
+	DebugMode bool `json:"debug_mode"`
 }
 
 // ParseConfigFile parse & validate config file

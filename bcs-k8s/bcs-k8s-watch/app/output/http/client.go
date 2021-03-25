@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/pkg/metrics"
 )
 
 // Client is http client for inner services.
@@ -48,24 +49,36 @@ type Client interface {
 const (
 	// bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s/%s"
+	// handler namespace type name resource
+	HandlerGetNamespaceName = "k8s_cluster_namespace_type_name"
 
 	// bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}
 	ListNamespaceScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s"
+	// handler namespace type resource
+	HandlerListNamespaceName = "k8s_cluster_namespace_type"
 
 	// bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}/{resourceName}
 	ClusterScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/%s/%s/%s"
+	// handler cluster type resource
+	HandlerGetClusterName = "k8s_cluster_type_name"
 
 	// bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}
 	ListClusterScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/%s/%s"
+	// handler cluster resource
+	HandlerListClusterName = "k8s_cluster_type"
 
 	// event url
 	EventScopeURLFmt = "%s/bcsstorage/v1/events"
+	// handler event name
+	HandlerEventName = "events"
 
 	// request timeout
 	StorageRequestTimeoutSeconds = 2
 
 	// bcsstorage/v1/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeWatchURLFmt = "%s/bcsstorage/v1/k8s/watch/clusters/%s/namespaces/%s/%s/%s"
+	// handler watch namespace name
+	HandlerWatchNamespaceName = "k8s_watch_cluster_namespace_type_name"
 )
 
 var WatchKindSet = map[string]struct{}{
@@ -91,10 +104,10 @@ type StorageRequestBody struct {
 	Data interface{} `json:"data"`
 }
 
-func (client *StorageClient) GetURL() string {
+func (client *StorageClient) GetURL() (string, string) {
 	// Event
 	if client.ResourceType == "Event" {
-		return fmt.Sprintf(EventScopeURLFmt, client.HTTPClientConfig.URL)
+		return fmt.Sprintf(EventScopeURLFmt, client.HTTPClientConfig.URL), HandlerEventName
 	}
 
 	if _, ok := WatchKindSet[client.ResourceType]; ok {
@@ -104,17 +117,18 @@ func (client *StorageClient) GetURL() string {
 			client.ClusterID,
 			client.Namespace,
 			strings.ToLower(client.ResourceType),
-			client.ResourceName)
+			client.ResourceName), HandlerWatchNamespaceName
 	}
 
 	// namespace resource
 	if client.Namespace != "" {
 		return fmt.Sprintf(
-			NamespaceScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType, client.ResourceName)
+				NamespaceScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType, client.ResourceName),
+			HandlerGetNamespaceName
 	}
 
 	// cluster resource
-	return fmt.Sprintf(ClusterScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.ResourceType, client.ResourceName)
+	return fmt.Sprintf(ClusterScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.ResourceType, client.ResourceName), HandlerGetClusterName
 }
 
 func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
@@ -171,11 +185,16 @@ func (client *StorageClient) NewRequest() (*gorequest.SuperAgent, error) {
 }
 
 func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
+	start := time.Now()
+	status := metrics.SucStatus
 	// timeout
-	url := client.GetURL()
+	url, handlerName := client.GetURL()
 
 	request, err := client.NewRequest()
 	if err != nil {
+		status = metrics.ErrStatus
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+			http.MethodGet, status, start)
 		return
 	}
 	resp, _, errs := request.
@@ -185,21 +204,31 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 
 	if !storageResp.Result {
 		glog.Debug(fmt.Sprintf("method=GET url=%s, resp=%v", url, storageResp))
+		status = metrics.ErrStatus
 	}
 
 	if errs != nil {
 		glog.Errorf("GET fail: [url=%s, resp=%v, errors=%s]", url, resp, errs)
 		err = errors.New("HTTP error")
+		status = metrics.ErrStatus
 	}
+
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		http.MethodGet, status, start)
 	return
 }
 
 func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
+	start := time.Now()
+	status := metrics.SucStatus
 	// timeout retry
-	url := client.GetURL()
+	url, handlerName := client.GetURL()
 
 	request, err := client.NewRequest()
 	if err != nil {
+		status = metrics.ErrStatus
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+			http.MethodDelete, status, start)
 		return
 	}
 	resp, _, errs := request.
@@ -210,17 +239,24 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 
 	if !storageResp.Result {
 		glog.Debug(fmt.Sprintf("method=DELETE, url is %s, all response: %v", url, storageResp))
+		status = metrics.ErrStatus
 	}
 
 	if errs != nil {
 		glog.Errorf("DELETE fail: [url=%s, resp=%v, errors=%s]", url, resp, errs)
 		err = errors.New("HTTP error")
+		status = metrics.ErrStatus
 	}
+
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		http.MethodDelete, status, start)
 	return
 }
 
 func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse, err error) {
-	url := client.GetURL()
+	start := time.Now()
+	status := metrics.SucStatus
+	url, handlerName := client.GetURL()
 
 	request, err := client.NewRequest()
 	if err != nil {
@@ -229,6 +265,9 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 
 	body, err := client.GetBody(data)
 	if err != nil {
+		status = metrics.ErrStatus
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+			http.MethodPut, status, start)
 		return
 	}
 
@@ -246,22 +285,37 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		} else {
 			glog.Debug(fmt.Sprintf("method=PUT url=%s, body=%s, errors=%s, resp=%v, storageResp=%v", url, string(debugBody), errs, resp, storageResp))
 		}
+		status = metrics.ErrStatus
 	}
 
 	if errs != nil {
 		glog.Errorf("PUT fail: [url=%s, data=%s, resp=%s, errors=%s]", url, body, resp, errs)
 		err = errors.New("HTTP error")
+		status = metrics.ErrStatus
 	}
+
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		http.MethodPut, status, start)
 	return
 }
 
-func (client *StorageClient) listResource(url string) (data []interface{}, err error) {
+func (client *StorageClient) listResource(url string, handlerName string) (data []interface{}, err error) {
+	var (
+		start       = time.Now()
+		storageResp = StorageResponse{}
+		status      = metrics.SucStatus
+	)
+
+	defer func() {
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+			http.MethodGet, status, start)
+	}()
+
 	request, err := client.NewRequest()
 	if err != nil {
+		status = metrics.ErrStatus
 		return
 	}
-
-	storageResp := StorageResponse{}
 
 	resp, _, errs := request.
 		Timeout(StorageRequestTimeoutSeconds * time.Second).
@@ -269,11 +323,13 @@ func (client *StorageClient) listResource(url string) (data []interface{}, err e
 		EndStruct(&storageResp)
 
 	if !storageResp.Result {
+		status = metrics.ErrStatus
 		err = fmt.Errorf("listResource result=false [url=%s, resp=%v, storageResp=%v]", url, resp, storageResp)
 		return
 	}
 
 	if errs != nil {
+		status = metrics.ErrStatus
 		err = fmt.Errorf("listResource do GET fail! [url=%s, resp=%v, errs=%s]", url, resp, errs)
 		return
 	}
@@ -283,6 +339,9 @@ func (client *StorageClient) listResource(url string) (data []interface{}, err e
 }
 
 func (client *StorageClient) ListNamespaceResource() (data []interface{}, err error) {
+	const (
+		handlerName = HandlerListNamespaceName
+	)
 	url := fmt.Sprintf(ListNamespaceScopeURLFmt,
 		client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType)
 
@@ -290,17 +349,20 @@ func (client *StorageClient) ListNamespaceResource() (data []interface{}, err er
 
 	glog.V(2).Infof("sync call list namespace resource: %s", urlWithParams)
 
-	data, err = client.listResource(urlWithParams)
+	data, err = client.listResource(urlWithParams, handlerName)
 	return
 }
 
 func (client *StorageClient) ListClusterResource() (data []interface{}, err error) {
+	const (
+		handlerName = HandlerListClusterName
+	)
 	url := fmt.Sprintf(ListClusterScopeURLFmt,
 		client.HTTPClientConfig.URL, client.ClusterID, client.ResourceType)
 
 	urlWithParams := fmt.Sprintf("%s?field=resourceName", url)
 
 	glog.V(2).Infof("sync call list cluster resource: %s", urlWithParams)
-	data, err = client.listResource(urlWithParams)
+	data, err = client.listResource(urlWithParams, handlerName)
 	return
 }
