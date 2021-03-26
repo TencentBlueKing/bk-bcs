@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/emicklei/go-restful"
 	"github.com/micro/go-micro/v2/broker"
@@ -296,7 +297,7 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 	}
 
 	if queueName, ok := message.Header[resourceTypeTag]; ok {
-		lib.ReportQueuePushMetrics(queueName, err, startTime)
+		metrics.ReportQueuePushMetrics(queueName, err, startTime)
 	}
 
 	return nil

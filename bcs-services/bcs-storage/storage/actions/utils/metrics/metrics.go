@@ -11,13 +11,12 @@
  *
  */
 
-package lib
+// file metrics.go for common metrics data
+package metrics
 
 import (
-	"strings"
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
+	"time"
 )
 
 const (
@@ -26,20 +25,21 @@ const (
 )
 
 var (
-	// http requests action metrics
-	requestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// http watch action metrics
+	watchRequestTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "bkbcs_storage",
-		Subsystem: "api",
+		Subsystem: "watch",
 		Name:      "request_total",
-		Help:      "The total number of requests to bcs-storage api",
-	}, []string{"handler", "method", "status"})
-	requestLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Help:      "The total number of requests to bcs-storage watch connection",
+	},[]string{"handler", "table"})
+
+	watchHTTPResponseSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "bkbcs_storage",
-		Subsystem: "api",
-		Name:      "request_latency_seconds",
-		Help:      "BCS storage api request latency statistic.",
-		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
-	}, []string{"handler", "method", "status"})
+		Subsystem: "watch",
+		Name:      "response_size_bytes",
+		Help:      "The size of http response.",
+		Buckets:   prometheus.ExponentialBuckets(100, 10, 8),
+	}, []string{"handler", "table"})
 
 	// queue push data metrics
 	queuePushTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -58,25 +58,27 @@ var (
 )
 
 func init() {
-	// requests
-	prometheus.MustRegister(requestsTotal)
-	prometheus.MustRegister(requestLatency)
+	// watch requests
+	prometheus.MustRegister(watchRequestTotal)
+	prometheus.MustRegister(watchHTTPResponseSize)
 	// queue
 	prometheus.MustRegister(queuePushTotal)
 	prometheus.MustRegister(queuePushLatency)
 }
 
-//reportAPIMetrics report all api action metrics
-func reportAPIMetrics(handler, method, status string, started time.Time) {
-	pathList := strings.Split(handler, "/")
-	shortPath := handler
-	//a large amount of URL due to due to multiple cluster , namespace , resource
-	//reduce URL numbers for metrics collection
-	if len(pathList) > 4 {
-		shortPath = strings.Join(pathList[0:5], "/")
-	}
-	requestsTotal.WithLabelValues(shortPath, method, status).Inc()
-	requestLatency.WithLabelValues(shortPath, method, status).Observe(time.Since(started).Seconds())
+// ReportWatchRequestInc report watch connection inc
+func ReportWatchRequestInc(handler, table string) {
+	watchRequestTotal.WithLabelValues(handler, table).Inc()
+}
+
+// ReportWatchRequestDec report watch connection des
+func ReportWatchRequestDec(handler, table string) {
+	watchRequestTotal.WithLabelValues(handler, table).Dec()
+}
+
+// ObserveHTTPResponseSize report responseSize metrics when break connection
+func ReportWatchHTTPResponseSize(handler, table string, sizeBytes int64) {
+	watchHTTPResponseSize.WithLabelValues(handler, table).Observe(float64(sizeBytes))
 }
 
 // ReportQueuePushMetrics report all queue push metrics
@@ -88,3 +90,4 @@ func ReportQueuePushMetrics(name string, err error, started time.Time) {
 	queuePushTotal.WithLabelValues(name, status).Inc()
 	queuePushLatency.WithLabelValues(name, status).Observe(time.Since(started).Seconds())
 }
+
