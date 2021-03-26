@@ -16,6 +16,8 @@ package registry
 import (
 	"crypto/tls"
 	"time"
+
+	microRegistry "github.com/micro/go-micro/v2/registry"
 )
 
 //Options registry options
@@ -36,7 +38,13 @@ type Options struct {
 	Config   *tls.Config
 	TTL      time.Duration
 	Interval time.Duration
+	//EventHandler & modules that registry watchs
+	EvtHandler EventHandler
+	Modules    []string
 }
+
+//EventHandler handler for module update notification
+type EventHandler func(name string)
 
 // Registry interface for go-micro etcd discovery
 type Registry interface {
@@ -45,5 +53,8 @@ type Registry interface {
 	// clean registe information, call Deregister
 	Register() error
 	//Deregister clean service information from registry
+	// it means that registry is ready to exit
 	Deregister() error
+	//Get get specified service by name in local cache
+	Get(name string) (*microRegistry.Service, error)
 }
