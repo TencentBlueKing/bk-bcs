@@ -13,14 +13,8 @@ $instance: label_values({job="bk-bscp-templateserver"},instance)
 bscp-datamanager.json:
 $instance: label_values({job="bk-bscp-datamanager"},instance)
 
-bscp-bcs-controller.json:
-$instance: label_values({job="bk-bscp-bcs-controller"},instance)
-
 bscp-gse-controller.json:
 $instance: label_values({job="bk-bscp-gse-controller"},instance)
-
-bscp-connserver.json:
-$instance: label_values({job="bk-bscp-connserver"},instance)
 
 bscp-tunnelserver.json:
 $instance: label_values({job="bk-bscp-tunnelserver"},instance)

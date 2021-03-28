@@ -576,18 +576,8 @@
           },
           {
             "selected": false,
-            "text": "bk-bscp-bcs-controller",
-            "value": "bk-bscp-bcs-controller"
-          },
-          {
-            "selected": false,
             "text": "bk-bscp-configserver",
             "value": "bk-bscp-configserver"
-          },
-          {
-            "selected": false,
-            "text": "bk-bscp-connserver",
-            "value": "bk-bscp-connserver"
           },
           {
             "selected": false,
