@@ -134,39 +134,24 @@ enum ErrCode {
     // 4005006 BCS控制器, 配置版本已回滚
     E_GSE_ALREADY_ROLLBACKED                        = 4005006;
 
-    // 4006000 BCS控制器, 节点调用失败
-    E_BCS_SYSTEM_UNKNOWN                            = 4006000;
-    // 4006001 BCS控制器, 参数校验失败
-    E_BCS_PARAMS_INVALID                            = 4006001;
-    // 4006002 BCS控制器, 配置版本发布消息解析失败
-    E_BCS_MARSHAL_PUBLISHING_FAILED                 = 4006002;
-    // 4006003 BCS控制器, 广播配置版本发布消息失败
-    E_BCS_PUBLISH_RELEASE_FAILED                    = 4006003;
-    // 4006004 BCS控制器, 配置版本已执行发布，请勿重复执行
-    E_BCS_ALREADY_PUBLISHED                         = 4006004;
-    // 4006005 BCS控制器, 配置版本已撤销，无法执行发布
-    E_BCS_ALREADY_CANCELED                          = 4006005;
-    // 4006006 BCS控制器, 配置版本已回滚
-    E_BCS_ALREADY_ROLLBACKED                        = 4006006;
+    // 4006000 会话链接服务, 节点调用失败
+    E_CONNS_SYSTEM_UNKNOWN                          = 4006000;
+    // 4006001 会话链接服务, 参数校验失败
+    E_CONNS_PARAMS_INVALID                          = 4006001;
+    // 4006002 会话链接服务, BCS sidecar接入调度失败
+    E_CONNS_SCHEDULE_RES_FAILED                     = 4006002;
 
-    // 4007000 会话链接服务, 节点调用失败
-    E_CONNS_SYSTEM_UNKNOWN                          = 4007000;
-    // 4007001 会话链接服务, 参数校验失败
-    E_CONNS_PARAMS_INVALID                          = 4007001;
-    // 4007002 会话链接服务, BCS sidecar接入调度失败
-    E_CONNS_SCHEDULE_RES_FAILED                     = 4007002;
+    // 4007000 通道服务, 节点调用失败
+    E_TS_SYSTEM_UNKNOWN                             = 4007000;
+    // 4007001 通道服务, 参数校验失败
+    E_TS_PARAMS_INVALID                             = 4007001;
+    // 4007002 通道服务, 配置版本发布失败
+    E_TS_PUBLISH_RELEASE_FAILED                     = 4007002;
 
-    // 4008000 通道服务, 节点调用失败
-    E_TS_SYSTEM_UNKNOWN                             = 4008000;
-    // 4008001 通道服务, 参数校验失败
-    E_TS_PARAMS_INVALID                             = 4008001;
-    // 4008002 通道服务, 配置版本发布失败
-    E_TS_PUBLISH_RELEASE_FAILED                     = 4008002;
-
-    // 4009000 实例服务, 节点调用失败
-    E_IS_SYSTEM_UNKNOWN                             = 4009000;
-    // 4009001 实例服务, 参数校验失败
-    E_IS_PARAMS_INVALID                             = 4009001;
+    // 4008000 实例服务, 节点调用失败
+    E_IS_SYSTEM_UNKNOWN                             = 4008000;
+    // 4008001 实例服务, 参数校验失败
+    E_IS_PARAMS_INVALID                             = 4008001;
 }
 
 // ConfigType 配置类型
@@ -263,8 +248,6 @@ enum DeployType {
     DT_BCS        = 0;
     // 1 GSE进程部署
     DT_GSE        = 1;
-    // 2 GSE容器部署(插件与Sidecar交互)
-    DT_GSE_PLUGIN = 2;
 }
 
 // SourceType 系统资源类型
@@ -293,7 +276,11 @@ enum SourceType {
     ST_MULTI_RELEASE    = 10;
     // 11 进程环境应用归属信息
     ST_PROC_ATTR        = 11;
-    ST_END              = 12;
+    // 12 变量分组
+    ST_VAR_GROUP        = 12;
+    // 13 变量
+    ST_VAR              = 13;
+    ST_END              = 14;
 }
 
 // SourceOpType 资源操作类型
@@ -600,6 +587,46 @@ message ConfigTemplateVersion {
     string last_modify_by = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
     string created_at     = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
     string updated_at     = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+}
+
+message VariableGroup {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "VariableGroup"
+			description: "模板变量分组"
+		}
+	};
+
+    string var_group_id   = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "变量分组ID", description: "", max_length: 64}];
+    string biz_id         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string name           = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "变量分组名", description: "", max_length: 64}];
+    string memo           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string creator        = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string created_at     = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
+}
+
+message Variable {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {
+			title: "Variable"
+			description: "模板变量"
+		}
+	};
+
+    string var_id         = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "变量ID", description: "", max_length: 64}];
+    string biz_id         = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "业务ID", description: "", max_length: 64}];
+    string var_group_id   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "变量分组ID", description: "", max_length: 64}];
+    string name           = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "变量名", description: "", max_length: 64}];
+    string value          = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "变量值", description: "", max_length: 1024}];
+    string memo           = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "备注信息", description: "", max_length: 64}];
+    int32  state          = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "状态", description: "默认0：正常", minimum: 0, maximum: 1}];
+    string creator        = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建者名称", description: "", max_length: 64}];
+    string last_modify_by = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改者名称", description: "", max_length: 64}];
+    string created_at     = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
+    string updated_at     = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
 
 message Config {

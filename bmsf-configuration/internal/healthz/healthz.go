@@ -21,9 +21,6 @@ const (
 	// ComponentNameEtcd is etcd component.
 	ComponentNameEtcd = "etcd"
 
-	// ComponentNameNats is nats mq component.
-	ComponentNameNats = "natsmq"
-
 	// ComponentNameGSE is GSE plat service component.
 	ComponentNameGSE = "gse"
 
