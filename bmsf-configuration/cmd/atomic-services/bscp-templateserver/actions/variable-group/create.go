@@ -1,16 +1,16 @@
 /*
-Tencent is pleased to support the open source community by making Blueking Container Service available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under,
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-package application
+package variablegroup
 
 import (
 	"context"
@@ -22,28 +22,28 @@ import (
 	"bk-bscp/internal/audit"
 	"bk-bscp/internal/database"
 	pbcommon "bk-bscp/internal/protocol/common"
-	pb "bk-bscp/internal/protocol/configserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
+	pb "bk-bscp/internal/protocol/templateserver"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/kit"
 	"bk-bscp/pkg/logger"
 )
 
-// CreateAction creates an application object.
+// CreateAction create a variable group object.
 type CreateAction struct {
 	kit        kit.Kit
 	viper      *viper.Viper
 	dataMgrCli pbdatamanager.DataManagerClient
 
-	req  *pb.CreateAppReq
-	resp *pb.CreateAppResp
+	req  *pb.CreateVariableGroupReq
+	resp *pb.CreateVariableGroupResp
 
-	newAppID string
+	newVarGroupID string
 }
 
-// NewCreateAction creates new CreateAction.
+// NewCreateAction creates new CreateAction
 func NewCreateAction(kit kit.Kit, viper *viper.Viper, dataMgrCli pbdatamanager.DataManagerClient,
-	req *pb.CreateAppReq, resp *pb.CreateAppResp) *CreateAction {
+	req *pb.CreateVariableGroupReq, resp *pb.CreateVariableGroupResp) *CreateAction {
 	action := &CreateAction{kit: kit, viper: viper, dataMgrCli: dataMgrCli, req: req, resp: resp}
 
 	action.resp.Result = true
@@ -66,7 +66,7 @@ func (act *CreateAction) Err(errCode pbcommon.ErrCode, errMsg string) error {
 // Input handles the input messages.
 func (act *CreateAction) Input() error {
 	if err := act.verify(); err != nil {
-		return act.Err(pbcommon.ErrCode_E_CS_PARAMS_INVALID, err.Error())
+		return act.Err(pbcommon.ErrCode_E_TPL_PARAMS_INVALID, err.Error())
 	}
 	return nil
 }
@@ -88,23 +88,20 @@ func (act *CreateAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
 		return err
 	}
-	if err = common.ValidateInt32("deploy_type", act.req.DeployType,
-		int32(pbcommon.DeployType_DT_BCS), int32(pbcommon.DeployType_DT_GSE)); err != nil {
-		return err
-	}
 	if err = common.ValidateString("memo", act.req.Memo,
 		database.BSCPEMPTY, database.BSCPLONGSTRLENLIMIT); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (act *CreateAction) genAppID() error {
-	id, err := common.GenAppID()
+func (act *CreateAction) genVariableGroupID() error {
+	id, err := common.GenVariableGroupID()
 	if err != nil {
 		return err
 	}
-	act.newAppID = id
+	act.newVarGroupID = id
 	return nil
 }
 
@@ -117,11 +114,11 @@ func (act *CreateAction) queryBusinessSharding() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateVariableGroup[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.QuerySharding(ctx, r)
 	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QuerySharding, %+v", err)
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QuerySharding, %+v", err)
 	}
 	return resp.Code, resp.Message
 }
@@ -132,11 +129,11 @@ func (act *CreateAction) initDefaultShardingDB() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateVariableGroup[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.InitShardingDB(ctx, r)
 	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager InitShardingDB, %+v", err)
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager InitShardingDB, %+v", err)
 	}
 	return resp.Code, resp.Message
 }
@@ -153,11 +150,11 @@ func (act *CreateAction) createBusinessSharding() (pbcommon.ErrCode, string) {
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateVariableGroup[%s]| request to datamanager, %+v", r.Seq, r)
 
 	resp, err := act.dataMgrCli.CreateSharding(ctx, r)
 	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager CreateSharding, %+v", err)
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager CreateSharding, %+v", err)
 	}
 	if resp.Code == pbcommon.ErrCode_E_DM_ALREADY_EXISTS {
 		return pbcommon.ErrCode_E_OK, ""
@@ -189,47 +186,47 @@ func (act *CreateAction) initBusiness() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *CreateAction) create() (pbcommon.ErrCode, string) {
-	r := &pbdatamanager.CreateAppReq{
+func (act *CreateAction) createVariableGroup() (pbcommon.ErrCode, string) {
+	req := &pbdatamanager.CreateVariableGroupReq{
 		Seq:        act.kit.Rid,
 		BizId:      act.req.BizId,
-		AppId:      act.newAppID,
+		VarGroupId: act.newVarGroupID,
 		Name:       act.req.Name,
-		DeployType: act.req.DeployType,
-		Creator:    act.kit.User,
 		Memo:       act.req.Memo,
+		Creator:    act.kit.User,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(4).Infof("CreateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("CreateVariableGroup[%s]| request to DataManager, %+v", req.Seq, req)
 
-	resp, err := act.dataMgrCli.CreateApp(ctx, r)
+	resp, err := act.dataMgrCli.CreateVariableGroup(ctx, req)
 	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager CreateApp, %+v", err)
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager CreateVariableGroup, %+v", err)
 	}
 	if resp.Code != pbcommon.ErrCode_E_OK && resp.Code != pbcommon.ErrCode_E_DM_ALREADY_EXISTS {
 		return resp.Code, resp.Message
 	}
-	act.resp.Data = &pb.CreateAppResp_RespData{AppId: resp.Data.AppId}
-	act.newAppID = resp.Data.AppId
+	act.resp.Data = &pb.CreateVariableGroupResp_RespData{VarGroupId: resp.Data.VarGroupId}
+	act.newVarGroupID = resp.Data.VarGroupId
 
 	if resp.Code == pbcommon.ErrCode_E_DM_ALREADY_EXISTS {
-		return pbcommon.ErrCode_E_CS_ALREADY_EXISTS, resp.Message
+		return pbcommon.ErrCode_E_TPL_ALREADY_EXISTS, resp.Message
 	}
 
-	// audit here on new app created.
-	audit.Audit(int32(pbcommon.SourceType_ST_APP), int32(pbcommon.SourceOpType_SOT_CREATE),
-		act.req.BizId, act.newAppID, act.kit.User, act.req.Memo)
+	// audit here on new variable group created.
+	audit.Audit(int32(pbcommon.SourceType_ST_VAR_GROUP), int32(pbcommon.SourceOpType_SOT_CREATE),
+		act.req.BizId, act.newVarGroupID, act.kit.User, act.req.Memo)
 
-	return pbcommon.ErrCode_E_OK, ""
+	return pbcommon.ErrCode_E_OK, "OK"
 }
 
 // Do makes the workflows of this action base on input messages.
 func (act *CreateAction) Do() error {
-	if err := act.genAppID(); err != nil {
-		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, err.Error())
+	if err := act.genVariableGroupID(); err != nil {
+		return act.Err(pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, err.Error())
 	}
 
 	// init business sharding stuff in this low QPS action.
@@ -237,8 +234,8 @@ func (act *CreateAction) Do() error {
 		return act.Err(errCode, errMsg)
 	}
 
-	// create app.
-	if errCode, errMsg := act.create(); errCode != pbcommon.ErrCode_E_OK {
+	// create variable group.
+	if errCode, errMsg := act.createVariableGroup(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
 	return nil

@@ -19,10 +19,8 @@ import (
 
 	pbapiserver "bk-bscp/internal/protocol/apiserver"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
-	pbbcscontroller "bk-bscp/internal/protocol/bcs-controller"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pbconfigserver "bk-bscp/internal/protocol/configserver"
-	pbconnserver "bk-bscp/internal/protocol/connserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
 	pbgsecontroller "bk-bscp/internal/protocol/gse-controller"
 	pbtemplateserver "bk-bscp/internal/protocol/templateserver"
@@ -58,27 +56,9 @@ func (s *APIServer) healthzAuthServer(seq string) (*pbcommon.ModuleHealthzInfo, 
 	return resp.Data, resp.Code, resp.Message
 }
 
-func (s *APIServer) healthzBCSController(seq string) (*pbcommon.ModuleHealthzInfo, pbcommon.ErrCode, string) {
-	r := &pbbcscontroller.HealthzReq{Seq: seq}
-	resp, err := s.bcsControllerCli.Healthz(context.Background(), r)
-	if err != nil {
-		return nil, pbcommon.ErrCode_E_API_SYSTEM_UNKNOWN, err.Error()
-	}
-	return resp.Data, resp.Code, resp.Message
-}
-
 func (s *APIServer) healthzGSEController(seq string) (*pbcommon.ModuleHealthzInfo, pbcommon.ErrCode, string) {
 	r := &pbgsecontroller.HealthzReq{Seq: seq}
 	resp, err := s.gseControllerCli.Healthz(context.Background(), r)
-	if err != nil {
-		return nil, pbcommon.ErrCode_E_API_SYSTEM_UNKNOWN, err.Error()
-	}
-	return resp.Data, resp.Code, resp.Message
-}
-
-func (s *APIServer) healthzConnServer(seq string) (*pbcommon.ModuleHealthzInfo, pbcommon.ErrCode, string) {
-	r := &pbconnserver.HealthzReq{Seq: seq}
-	resp, err := s.connSvrCli.Healthz(context.Background(), r)
 	if err != nil {
 		return nil, pbcommon.ErrCode_E_API_SYSTEM_UNKNOWN, err.Error()
 	}
@@ -153,20 +133,6 @@ func (s *APIServer) healthz(w http.ResponseWriter, r *http.Request) error {
 	}
 	response.Data.Modules = append(response.Data.Modules, healthInfo)
 
-	// bcs controller.
-	healthInfo, errCode, errMsg = s.healthzBCSController(seq)
-	if errCode != pbcommon.ErrCode_E_OK {
-		healthInfo = &pbcommon.ModuleHealthzInfo{
-			Module:    "bk-bscp-bcs-controller",
-			IsHealthy: false,
-			Message:   fmt.Sprintf("healthz bcscontroller failed, %s", errMsg),
-		}
-	}
-	if !healthInfo.IsHealthy {
-		response.Data.IsHealthy = false
-	}
-	response.Data.Modules = append(response.Data.Modules, healthInfo)
-
 	// gse controller.
 	healthInfo, errCode, errMsg = s.healthzGSEController(seq)
 	if errCode != pbcommon.ErrCode_E_OK {
@@ -174,20 +140,6 @@ func (s *APIServer) healthz(w http.ResponseWriter, r *http.Request) error {
 			Module:    "bk-bscp-gse-controller",
 			IsHealthy: false,
 			Message:   fmt.Sprintf("healthz gsecontroller failed, %s", errMsg),
-		}
-	}
-	if !healthInfo.IsHealthy {
-		response.Data.IsHealthy = false
-	}
-	response.Data.Modules = append(response.Data.Modules, healthInfo)
-
-	// connserver.
-	healthInfo, errCode, errMsg = s.healthzConnServer(seq)
-	if errCode != pbcommon.ErrCode_E_OK {
-		healthInfo = &pbcommon.ModuleHealthzInfo{
-			Module:    "bk-bscp-connserver",
-			IsHealthy: false,
-			Message:   fmt.Sprintf("healthz connection server failed, %s", errMsg),
 		}
 	}
 	if !healthInfo.IsHealthy {

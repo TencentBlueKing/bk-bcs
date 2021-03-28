@@ -43,6 +43,8 @@ func genRunCmd() *cobra.Command {
 	viper.BindPFlag("server.endpoint.ip", runCmd.Flags().Lookup("endpoint-ip"))
 	runCmd.Flags().Int("endpoint-port", 0, "Port to run application server on")
 	viper.BindPFlag("server.endpoint.port", runCmd.Flags().Lookup("endpoint-port"))
+	runCmd.Flags().String("cronfile", "", "Crontab job spec config file")
+	viper.BindPFlag("server.cronFile", runCmd.Flags().Lookup("cronfile"))
 
 	return runCmd
 }

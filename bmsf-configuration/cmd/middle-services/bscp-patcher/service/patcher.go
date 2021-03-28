@@ -16,15 +16,20 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 
+	"bk-bscp/cmd/middle-services/bscp-patcher/crons"
+	"bk-bscp/cmd/middle-services/bscp-patcher/modules/ctm"
 	"bk-bscp/cmd/middle-services/bscp-patcher/modules/hpm"
 	"bk-bscp/cmd/middle-services/bscp-patcher/patchs"
 	"bk-bscp/internal/dbsharding"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/framework"
+	"bk-bscp/pkg/grpclb"
 	"bk-bscp/pkg/logger"
+	"bk-bscp/pkg/ssl"
 )
 
 // Patcher is bscp patcher.
@@ -35,11 +40,20 @@ type Patcher struct {
 	// configs handler.
 	viper *viper.Viper
 
+	// patcher discovery instances for master election.
+	service *grpclb.Service
+
+	// etcd cluster configs.
+	etcdCfg clientv3.Config
+
 	// db sharding manager.
 	smgr *dbsharding.ShardingManager
 
 	// patch manager.
 	hpm *hpm.PatchManager
+
+	// crontab manager.
+	ctm *ctm.CrontabManager
 }
 
 // NewPatcher creates new patcher instance.
@@ -78,8 +92,41 @@ func (p *Patcher) initLogger() {
 	logger.Info("logger init success dir[%s] level[%d].",
 		p.viper.GetString("logger.directory"), p.viper.GetInt32("logger.level"))
 
-	logger.Info("dump configs: server[%+v %+v] database[%+v]",
-		p.viper.Get("server.endpoint.ip"), p.viper.Get("server.endpoint.port"), p.viper.Get("database"))
+	logger.Info("dump configs: server[%+v %+v %+v] database[%+v]",
+		p.viper.Get("server.endpoint.ip"), p.viper.Get("server.endpoint.port"),
+		p.viper.Get("server"), p.viper.Get("database"))
+}
+
+// create new service struct of patcher, and register service later.
+func (p *Patcher) initServiceDiscovery() {
+	p.service = grpclb.NewService(
+		p.viper.GetString("server.serviceName"),
+		common.Endpoint(p.viper.GetString("server.endpoint.ip"), p.viper.GetInt("server.endpoint.port")),
+		p.viper.GetString("server.metadata"),
+		p.viper.GetInt64("server.discoveryTTL"))
+
+	caFile := p.viper.GetString("etcdCluster.tls.caFile")
+	certFile := p.viper.GetString("etcdCluster.tls.certFile")
+	keyFile := p.viper.GetString("etcdCluster.tls.keyFile")
+	certPassword := p.viper.GetString("etcdCluster.tls.certPassword")
+
+	if len(caFile) != 0 || len(certFile) != 0 || len(keyFile) != 0 {
+		tlsConf, err := ssl.ClientTLSConfVerify(caFile, certFile, keyFile, certPassword)
+		if err != nil {
+			logger.Fatalf("load etcd tls files failed, %+v", err)
+		}
+		p.etcdCfg = clientv3.Config{
+			Endpoints:   p.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: p.viper.GetDuration("etcdCluster.dialTimeout"),
+			TLS:         tlsConf,
+		}
+	} else {
+		p.etcdCfg = clientv3.Config{
+			Endpoints:   p.viper.GetStringSlice("etcdCluster.endpoints"),
+			DialTimeout: p.viper.GetDuration("etcdCluster.dialTimeout"),
+		}
+	}
+	logger.Info("init service discovery success.")
 }
 
 // create and initialize database sharding manager.
@@ -112,13 +159,31 @@ func (p *Patcher) initPatchManager() {
 	logger.Info("init hpm success.")
 }
 
+func (p *Patcher) initCrontab() {
+	// create crontab job manager.
+	p.ctm = ctm.NewCrontabManager(p.viper, p.smgr, p.service)
+
+	// start ctm.
+	if err := p.ctm.Start(crons.CronJobs()); err != nil {
+		logger.Warnf("init crontab failed, %+v", err)
+	} else {
+		logger.Info("init crontab success.")
+	}
+}
+
 // initMods initializes the patcher modules.
 func (p *Patcher) initMods() {
+	// initialize service discovery.
+	p.initServiceDiscovery()
+
 	// initialize db sharding manager.
 	p.initShardingDB()
 
 	// initialize patch manager.
 	p.initPatchManager()
+
+	// initialize crontab.
+	p.initCrontab()
 }
 
 // initialize service.
@@ -158,12 +223,31 @@ func (p *Patcher) Run() {
 	// initialize server modules.
 	p.initMods()
 
+	// register patcher service.
+	go func() {
+		if err := p.service.Register(p.etcdCfg); err != nil {
+			logger.Fatal("register service for discovery, %+v", err)
+		}
+	}()
+	logger.Info("register service for discovery success.")
+
 	// init api http server.
 	p.initService()
 }
 
 // Stop stops the apiserver.
 func (p *Patcher) Stop() {
+	// stop crontab jobs.
+	// NOTE: maybe hanging here.
+	if p.ctm != nil {
+		p.ctm.Stop()
+	}
+
+	// unregister service.
+	if p.service != nil {
+		p.service.UnRegister()
+	}
+
 	// close logger.
 	logger.CloseLogs()
 }

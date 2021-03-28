@@ -26,9 +26,7 @@ import (
 
 	"bk-bscp/cmd/middle-services/bscp-apiserver/modules/metrics"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
-	pbbcscontroller "bk-bscp/internal/protocol/bcs-controller"
 	pbconfigserver "bk-bscp/internal/protocol/configserver"
-	pbconnserver "bk-bscp/internal/protocol/connserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
 	pbgsecontroller "bk-bscp/internal/protocol/gse-controller"
 	pbtemplateserver "bk-bscp/internal/protocol/templateserver"
@@ -71,14 +69,6 @@ type APIServer struct {
 	// NOTE: authserver gRPC connection/client, only for healthz.
 	authSvrConn *grpclb.GRPCConn
 	authSvrCli  pbauthserver.AuthClient
-
-	// NOTE: bcs controller gRPC connection/client, only for healthz.
-	bcsControllerConn *grpclb.GRPCConn
-	bcsControllerCli  pbbcscontroller.BCSControllerClient
-
-	// NOTE: connserver gRPC connection/client, only for healthz.
-	connSvrConn *grpclb.GRPCConn
-	connSvrCli  pbconnserver.ConnectionClient
 
 	// NOTE: gse controller gRPC connection/client, only for healthz.
 	gseControllerConn *grpclb.GRPCConn
@@ -257,29 +247,6 @@ func (s *APIServer) initAuthServerClient() {
 	logger.Info("create authserver gRPC client success.")
 }
 
-// create bcs controller gRPC client.
-func (s *APIServer) initBCSControllerClient() {
-	ctx := &grpclb.Context{
-		Target:     s.viper.GetString("bcscontroller.serviceName"),
-		EtcdConfig: s.etcdCfg,
-	}
-
-	// gRPC dial options, with insecure and timeout.
-	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
-		grpc.WithTimeout(s.viper.GetDuration("bcscontroller.callTimeout")),
-	}
-
-	// build gRPC client of bcs controller.
-	conn, err := grpclb.NewGRPCConn(ctx, opts...)
-	if err != nil {
-		logger.Fatal("can't create bcs controller gRPC client, %+v", err)
-	}
-	s.bcsControllerConn = conn
-	s.bcsControllerCli = pbbcscontroller.NewBCSControllerClient(conn.Conn())
-	logger.Info("create bcs controller gRPC client success.")
-}
-
 // create gse controller gRPC client.
 func (s *APIServer) initGSEControllerClient() {
 	ctx := &grpclb.Context{
@@ -301,29 +268,6 @@ func (s *APIServer) initGSEControllerClient() {
 	s.gseControllerConn = conn
 	s.gseControllerCli = pbgsecontroller.NewGSEControllerClient(conn.Conn())
 	logger.Info("create gse controller gRPC client success.")
-}
-
-// create connserver gRPC client.
-func (s *APIServer) initConnServerClient() {
-	ctx := &grpclb.Context{
-		Target:     s.viper.GetString("connserver.serviceName"),
-		EtcdConfig: s.etcdCfg,
-	}
-
-	// gRPC dial options, with insecure and timeout.
-	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
-		grpc.WithTimeout(s.viper.GetDuration("connserver.callTimeout")),
-	}
-
-	// build gRPC client of connserver.
-	conn, err := grpclb.NewGRPCConn(ctx, opts...)
-	if err != nil {
-		logger.Fatal("can't create connserver gRPC client, %+v", err)
-	}
-	s.connSvrConn = conn
-	s.connSvrCli = pbconnserver.NewConnectionClient(conn.Conn())
-	logger.Info("create connserver gRPC client success.")
 }
 
 // create tunnelserver gRPC client.
@@ -399,14 +343,8 @@ func (s *APIServer) initMods() {
 	// initialize auth server gRPC client.
 	s.initAuthServerClient()
 
-	// initialize bcs controller gRPC client.
-	s.initBCSControllerClient()
-
 	// initialize gse controller gRPC client.
 	s.initGSEControllerClient()
-
-	// initialize connserver gRPC client.
-	s.initConnServerClient()
 
 	// initialize tunnelserver gRPC client.
 	s.initTunnelServerClient()
@@ -526,19 +464,9 @@ func (s *APIServer) Stop() {
 		s.tunnelSvrConn.Close()
 	}
 
-	// close connserver gRPC connection when server exit.
-	if s.connSvrConn != nil {
-		s.connSvrConn.Close()
-	}
-
 	// close gse controller gRPC connection when server exit.
 	if s.gseControllerConn != nil {
 		s.gseControllerConn.Close()
-	}
-
-	// close bcs controller gRPC connection when server exit.
-	if s.bcsControllerConn != nil {
-		s.bcsControllerConn.Close()
 	}
 
 	// close authserver gRPC connection when server exit.

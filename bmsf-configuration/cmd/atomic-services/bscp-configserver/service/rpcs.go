@@ -748,7 +748,7 @@ func (cs *ConfigServer) PublishRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := releaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := releaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
@@ -773,7 +773,7 @@ func (cs *ConfigServer) RollbackRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := releaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := releaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
@@ -913,7 +913,7 @@ func (cs *ConfigServer) PublishMultiRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := multireleaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := multireleaseaction.NewPublishAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
@@ -938,7 +938,7 @@ func (cs *ConfigServer) RollbackMultiRelease(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := multireleaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := multireleaseaction.NewRollbackAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {
@@ -1336,7 +1336,7 @@ func (cs *ConfigServer) Reload(ctx context.Context, req *pb.ReloadReq) (*pb.Relo
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
 	}()
 
-	action := releaseaction.NewReloadAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli, cs.bcsControllerCli,
+	action := releaseaction.NewReloadAction(kit, cs.viper, cs.authSvrCli, cs.dataMgrCli,
 		cs.gseControllerCli, req, response)
 
 	if err := cs.executor.ExecuteWithAuth(action); err != nil {

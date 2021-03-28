@@ -1,16 +1,16 @@
 /*
-Tencent is pleased to support the open source community by making Blueking Container Service available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.,
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under,
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-package application
+package variable
 
 import (
 	"context"
@@ -25,28 +25,28 @@ import (
 	"bk-bscp/internal/database"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
 	pbcommon "bk-bscp/internal/protocol/common"
-	pb "bk-bscp/internal/protocol/configserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
+	pb "bk-bscp/internal/protocol/templateserver"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/kit"
 	"bk-bscp/pkg/logger"
 )
 
-// UpdateAction updates target application object.
+// UpdateAction update target variable object.
 type UpdateAction struct {
 	kit        kit.Kit
 	viper      *viper.Viper
 	authSvrCli pbauthserver.AuthClient
 	dataMgrCli pbdatamanager.DataManagerClient
 
-	req  *pb.UpdateAppReq
-	resp *pb.UpdateAppResp
+	req  *pb.UpdateVariableReq
+	resp *pb.UpdateVariableResp
 }
 
-// NewUpdateAction creates new UpdateAction.
+// NewUpdateAction creates new UpdateAction
 func NewUpdateAction(kit kit.Kit, viper *viper.Viper,
 	authSvrCli pbauthserver.AuthClient, dataMgrCli pbdatamanager.DataManagerClient,
-	req *pb.UpdateAppReq, resp *pb.UpdateAppResp) *UpdateAction {
+	req *pb.UpdateVariableReq, resp *pb.UpdateVariableResp) *UpdateAction {
 
 	action := &UpdateAction{
 		kit:        kit,
@@ -77,7 +77,7 @@ func (act *UpdateAction) Err(errCode pbcommon.ErrCode, errMsg string) error {
 // Input handles the input messages.
 func (act *UpdateAction) Input() error {
 	if err := act.verify(); err != nil {
-		return act.Err(pbcommon.ErrCode_E_CS_PARAMS_INVALID, err.Error())
+		return act.Err(pbcommon.ErrCode_E_TPL_PARAMS_INVALID, err.Error())
 	}
 	return nil
 }
@@ -103,30 +103,23 @@ func (act *UpdateAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
 	}
-	if err = common.ValidateString("app_id", act.req.AppId,
+	if err = common.ValidateString("var_id", act.req.VarId,
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
 	}
-	if err = common.ValidateInt32("deploy_type", act.req.DeployType,
-		int32(pbcommon.DeployType_DT_BCS), int32(pbcommon.DeployType_DT_GSE)); err != nil {
+	if err = common.ValidateString("value", act.req.Value,
+		database.BSCPEMPTY, database.BSCPVARVALUESIZELIMIT); err != nil {
 		return err
 	}
-	if err = common.ValidateString("name", act.req.Name,
-		database.BSCPNOTEMPTY, database.BSCPNAMELENLIMIT); err != nil {
-		return err
-	}
-	if err = common.ValidateString("memo", act.req.Memo,
-		database.BSCPEMPTY, database.BSCPLONGSTRLENLIMIT); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
-	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
+	isAuthorized, err := authorization.Authorize(act.kit, act.req.VarId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("authorize failed, %+v", err)
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, fmt.Sprintf("authorize failed, %+v", err)
 	}
 
 	if !isAuthorized {
@@ -135,42 +128,40 @@ func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *UpdateAction) update() (pbcommon.ErrCode, string) {
-	r := &pbdatamanager.UpdateAppReq{
-		Seq:        act.kit.Rid,
-		BizId:      act.req.BizId,
-		AppId:      act.req.AppId,
-		Name:       act.req.Name,
-		DeployType: act.req.DeployType,
-		Memo:       act.req.Memo,
-		State:      act.req.State,
-		Operator:   act.kit.User,
+func (act *UpdateAction) updateVariable() (pbcommon.ErrCode, string) {
+	req := &pbdatamanager.UpdateVariableReq{
+		Seq:      act.kit.Rid,
+		BizId:    act.req.BizId,
+		VarId:    act.req.VarId,
+		Value:    act.req.Value,
+		Operator: act.kit.User,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
 	defer cancel()
 
-	logger.V(4).Infof("UpdateApp[%s]| request to datamanager, %+v", r.Seq, r)
+	logger.V(4).Infof("UpdateVariable[%s]| request to DataManager, %+v", req.Seq, req)
 
-	resp, err := act.dataMgrCli.UpdateApp(ctx, r)
+	resp, err := act.dataMgrCli.UpdateVariable(ctx, req)
 	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager UpdateApp, %+v", err)
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager UpdateVariable, %+v", err)
 	}
 	if resp.Code != pbcommon.ErrCode_E_OK {
 		return resp.Code, resp.Message
 	}
 
-	// audit here on app updated.
-	audit.Audit(int32(pbcommon.SourceType_ST_APP), int32(pbcommon.SourceOpType_SOT_UPDATE),
-		act.req.BizId, act.req.AppId, act.kit.User, act.req.Memo)
+	// audit here on variable updated.
+	audit.Audit(int32(pbcommon.SourceType_ST_VAR), int32(pbcommon.SourceOpType_SOT_UPDATE),
+		act.req.BizId, act.req.VarId, act.kit.User, "")
 
-	return pbcommon.ErrCode_E_OK, ""
+	return pbcommon.ErrCode_E_OK, "OK"
 }
 
 // Do makes the workflows of this action base on input messages.
 func (act *UpdateAction) Do() error {
-	// update app.
-	if errCode, errMsg := act.update(); errCode != pbcommon.ErrCode_E_OK {
+	// update variable.
+	if errCode, errMsg := act.updateVariable(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
 	return nil

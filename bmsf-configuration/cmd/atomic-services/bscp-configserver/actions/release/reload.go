@@ -24,7 +24,6 @@ import (
 	"bk-bscp/internal/authorization"
 	"bk-bscp/internal/database"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
-	pbbcscontroller "bk-bscp/internal/protocol/bcs-controller"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/configserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
@@ -40,7 +39,6 @@ type ReloadAction struct {
 	viper            *viper.Viper
 	authSvrCli       pbauthserver.AuthClient
 	dataMgrCli       pbdatamanager.DataManagerClient
-	bcsControllerCli pbbcscontroller.BCSControllerClient
 	gseControllerCli pbgsecontroller.GSEControllerClient
 
 	req  *pb.ReloadReq
@@ -60,7 +58,7 @@ type ReloadAction struct {
 // NewReloadAction creates new ReloadAction.
 func NewReloadAction(kit kit.Kit, viper *viper.Viper,
 	authSvrCli pbauthserver.AuthClient, dataMgrCli pbdatamanager.DataManagerClient,
-	bcsControllerCli pbbcscontroller.BCSControllerClient, gseControllerCli pbgsecontroller.GSEControllerClient,
+	gseControllerCli pbgsecontroller.GSEControllerClient,
 	req *pb.ReloadReq, resp *pb.ReloadResp) *ReloadAction {
 
 	action := &ReloadAction{
@@ -68,7 +66,6 @@ func NewReloadAction(kit kit.Kit, viper *viper.Viper,
 		viper:            viper,
 		authSvrCli:       authSvrCli,
 		dataMgrCli:       dataMgrCli,
-		bcsControllerCli: bcsControllerCli,
 		gseControllerCli: gseControllerCli,
 		req:              req,
 		resp:             resp,
@@ -156,29 +153,7 @@ func (act *ReloadAction) authorize() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *ReloadAction) reloadBCSMode() (pbcommon.ErrCode, string) {
-	r := &pbbcscontroller.ReloadReq{
-		Seq:            act.kit.Rid,
-		BizId:          act.req.BizId,
-		ReleaseId:      act.req.ReleaseId,
-		MultiReleaseId: act.req.MultiReleaseId,
-		Operator:       act.kit.User,
-		ReloadSpec:     act.reloadSpec,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("Reload[%s]| request to bcs-controller, %+v", r.Seq, r)
-
-	resp, err := act.bcsControllerCli.Reload(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to bcs-controller Reload, %+v", err)
-	}
-	return resp.Code, resp.Message
-}
-
-func (act *ReloadAction) reloadGSEPluginMode() (pbcommon.ErrCode, string) {
+func (act *ReloadAction) reload() (pbcommon.ErrCode, string) {
 	r := &pbgsecontroller.ReloadReq{
 		Seq:            act.kit.Rid,
 		BizId:          act.req.BizId,
@@ -372,24 +347,9 @@ func (act *ReloadAction) Do() error {
 	// gen reload spec info.
 	act.genReloadSpec()
 
-	// deploy publish.
-	if act.app.DeployType == int32(pbcommon.DeployType_DT_BCS) {
-		// bcs connserver mode publish.
-
-		// bcscontroller publish.
-		if errCode, errMsg := act.reloadBCSMode(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-	} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
-		act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-		// gse plugin sidecar mode.
-
-		// gsecontroller publish.
-		if errCode, errMsg := act.reloadGSEPluginMode(); errCode != pbcommon.ErrCode_E_OK {
-			return act.Err(errCode, errMsg)
-		}
-	} else {
-		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "unknow deploy type")
+	// gsecontroller publish.
+	if errCode, errMsg := act.reload(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
 	}
 
 	// audit here on release reload.

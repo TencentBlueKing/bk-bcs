@@ -3,8 +3,6 @@ all:
 	@cd bscp-templateserver && make
 	@cd bscp-datamanager && make
 	@cd bscp-gse-controller && make
-	@cd bscp-bcs-controller && make
-	@cd bscp-connserver && make
 	@cd bscp-tunnelserver && make
 	@cd bscp-bcs-sidecar && make
 	@cd bscp-gse-plugin && make
@@ -14,8 +12,6 @@ server:
 	@cd bscp-templateserver && make
 	@cd bscp-datamanager && make
 	@cd bscp-gse-controller && make
-	@cd bscp-bcs-controller && make
-	@cd bscp-connserver && make
 	@cd bscp-tunnelserver && make
 
 clean:
@@ -23,8 +19,6 @@ clean:
 	@cd bscp-templateserver && make clean
 	@cd bscp-datamanager && make clean
 	@cd bscp-gse-controller && make clean
-	@cd bscp-bcs-controller && make clean
-	@cd bscp-connserver && make clean
 	@cd bscp-tunnelserver && make clean
 	@cd bscp-bcs-sidecar && make clean
 	@cd bscp-gse-plugin && make clean
