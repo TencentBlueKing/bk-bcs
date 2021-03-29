@@ -41,6 +41,10 @@
 
 采用mesos DaemonSet部署
 
+额外参数说明：
+
+* BCS_CPUSET_RESERVED_LAST_CORE_NUM: 保留的CPU物理核数，默认保留最后几个物理核
+
 ## 风险点
 
 * 目前mesos DaemonSet在节点扩缩容的时候不友好

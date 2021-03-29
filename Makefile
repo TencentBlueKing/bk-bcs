@@ -43,7 +43,7 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection
 
 bcs-service:api client bkcmdb-synchronizer clb-controller cpuset gateway gw-controller log-manager \
-	mesh-manager logbeat-sidecar metricservice metriccollector netservice sd-prometheus storage \
+	mesh-manager logbeat-sidecar netservice sd-prometheus storage \
 	user-manager webhook-server cluster-manager tools alert-manager
 
 bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent 
@@ -95,6 +95,10 @@ gateway:pre
 	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/
 	cd bcs-services/bcs-gateway-discovery && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/bcs-gateway-discovery ./main.go
 
+gateway-container: gateway
+	cd ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/ && docker build -t bcs/apisix:${GITTAG} -f Dockerfile.apisix .
+	cd ${PACKAGEPATH}/bcs-services/bcs-gateway-discovery/ && docker build -t bcs/bcs-gateway-discovery:${GITTAG} -f Dockerfile.gateway .
+
 kube-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-kube-agent ${PACKAGEPATH}/bcs-k8s-master
@@ -113,16 +117,6 @@ dns:
 	cp -R ./install/conf/bcs-services/bcs-dns-service ${PACKAGEPATH}/bcs-services
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-dns-service/bcs-dns-service coredns.go
 	cd ../coredns && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-mesos-master/bcs-dns/bcs-dns coredns.go
-
-metricservice:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ./install/conf/bcs-services/bcs-metricservice ${PACKAGEPATH}/bcs-services
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-metricservice/bcs-metricservice ./bcs-services/bcs-metricservice/main.go
-
-metriccollector:pre
-	mkdir -p ${PACKAGEPATH}/bcs-mesos-node
-	cp -R ./install/conf/bcs-mesos-node/bcs-metriccollector ${PACKAGEPATH}/bcs-mesos-node
-	go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-mesos-node/bcs-metriccollector/bcs-metriccollector ./bcs-services/bcs-metriccollector/main.go
 
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services

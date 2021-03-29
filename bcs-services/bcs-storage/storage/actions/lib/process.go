@@ -15,7 +15,6 @@ package lib
 
 import (
 	"io/ioutil"
-	"strconv"
 	"strings"
 	"time"
 
@@ -46,7 +45,6 @@ func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 			req.Request.Method, req.Request.URL.Path, req.Request.URL.RawQuery, stringBody)
 		f(req, resp)
 		blog.Infof("Return [%d] %s %s", resp.StatusCode(), req.Request.Method, req.Request.URL.Path)
-		reportAPIMetrics(req.Request.URL.Path, req.Request.Method, strconv.Itoa(resp.StatusCode()), entranceTime)
 		if apiConf.PrintManager {
 			// Count request time
 			if req.Request.Method == "GET" {

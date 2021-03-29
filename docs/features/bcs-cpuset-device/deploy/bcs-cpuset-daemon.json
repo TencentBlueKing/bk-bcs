@@ -89,6 +89,10 @@
                                 "value": "mesos"
                             },
                             {
+                                "name": "BCS_CPUSET_RESERVED_LAST_CORE_NUM",
+                                "value": ""
+                            },
+                            {
                                 "name": "bcsCpuSetReservedCpuSetList",
                                 "value": ""
                             },

@@ -16,6 +16,8 @@ package registry
 import (
 	"context"
 	"fmt"
+	"sort"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -41,6 +43,10 @@ func NewEtcdRegistry(option *Options) Registry {
 	)
 	//creat local service
 	option.id = uuid.New().String()
+	if option.Meta == nil {
+		option.Meta = make(map[string]string)
+	}
+	option.Meta["UUID"] = option.id
 	svc := &registry.Service{
 		Name:    option.Name,
 		Version: option.Version,
@@ -59,7 +65,19 @@ func NewEtcdRegistry(option *Options) Registry {
 		stop:         stop,
 		etcdregistry: r,
 		localService: svc,
+		localCache:   make(map[string]*registry.Service),
 		registered:   false,
+	}
+	//check event handler
+	if len(option.Modules) != 0 {
+		//setting module that watch
+		e.localModules = make(map[string]bool)
+		for _, name := range option.Modules {
+			e.localModules[name] = true
+			e.innerGet(name)
+		}
+		//start to watch all event
+		go e.innerWatch(e.ctx)
 	}
 	return e
 }
@@ -71,6 +89,9 @@ type etcdRegister struct {
 	stop         context.CancelFunc
 	etcdregistry registry.Registry
 	localService *registry.Service
+	localLock    sync.RWMutex
+	localCache   map[string]*registry.Service
+	localModules map[string]bool
 	registered   bool
 }
 
@@ -137,4 +158,115 @@ func (e *etcdRegister) Deregister() error {
 	}
 	e.registered = false
 	return nil
+}
+
+//Get get specified service by name
+func (e *etcdRegister) Get(name string) (*registry.Service, error) {
+	if len(name) == 0 {
+		return nil, nil
+	}
+	e.localLock.RLock()
+	defer e.localLock.RUnlock()
+	svc, ok := e.localCache[name]
+	if !ok {
+		blog.Warnf("registry get no %s in local cache", name)
+		return nil, nil
+	}
+	return svc, nil
+}
+
+func (e *etcdRegister) innerGet(name string) (*registry.Service, error) {
+	//first, get details from registry
+	svcs, err := e.etcdregistry.GetService(name)
+	if err == registry.ErrNotFound {
+		blog.Warnf("registry found no module %s under registry, clean local cache.", name)
+		e.localLock.Lock()
+		delete(e.localCache, name)
+		e.localLock.Unlock()
+		return nil, nil
+	}
+	if err != nil {
+		blog.Errorf("registry get specified module %s failed, %s", name, err.Error())
+		return nil, err
+	}
+	if len(svcs) == 0 {
+		blog.Warnf("registry no module %s information", name)
+		return nil, nil
+	}
+	// merge all version instance to one service
+	if len(svcs) > 1 {
+		blog.Infof("registry merge module %s different version instance and sort in cache", name)
+		for _, svc := range svcs[1:] {
+			svcs[0].Nodes = append(svcs[0].Nodes, svc.Nodes...)
+		}
+		sort.Slice(svcs[0].Nodes, func(i, j int) bool {
+			return svcs[0].Nodes[i].Address < svcs[0].Nodes[j].Address
+		})
+	}
+	// write to local cache
+	e.localLock.Lock()
+	e.localCache[name] = svcs[0]
+	e.localLock.Unlock()
+	return svcs[0], nil
+}
+
+func (e *etcdRegister) innerWatch(ctx context.Context) {
+	//check if discovery is stopped
+	select {
+	case <-ctx.Done():
+		blog.Infof("registry is ready to exit...")
+		return
+	default:
+		blog.Infof("registry begin watch all registry modules....")
+	}
+
+	watcher, err := e.etcdregistry.Watch(registry.WatchContext(ctx))
+	if err != nil {
+		blog.Errorf("registry create watcher for all registry modules failed, %s. retry after a tick", err.Error())
+		//retry after
+		<-time.After(time.Second * 3)
+		go e.innerWatch(ctx)
+		return
+	}
+	defer watcher.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			blog.Infof("registry close watch backgroup goroutine...")
+			return
+		default:
+			r, err := watcher.Next()
+			if err != nil {
+				blog.Errorf("registry watch registry loop err, %s, try to watch again~", err.Error())
+				go e.innerWatch(ctx)
+				return
+			}
+			if r == nil {
+				blog.Warnf("registry watch got empty service information in event stream, keep watching...")
+				continue
+			}
+			blog.Infof("registry watch information: module %s, details [%s] %+v", r.Service.Name, r.Action, r.Service)
+			e.handleEvent(r)
+		}
+	}
+}
+
+func (e *etcdRegister) handleEvent(r *registry.Result) {
+	fullName := r.Service.Name
+	e.localLock.RLock()
+	if _, ok := e.localModules[fullName]; !ok {
+		blog.Warnf("registry do not expect module %s event, skip", fullName)
+		e.localLock.RUnlock()
+		return
+	}
+	e.localLock.RUnlock()
+	_, err := e.innerGet(r.Service.Name)
+	if err != nil {
+		blog.Errorf("registry get module %s information failed, %s", fullName, err.Error())
+		return
+	}
+	//check event handler
+	if e.option.EvtHandler != nil {
+		e.option.EvtHandler(fullName)
+	}
 }
