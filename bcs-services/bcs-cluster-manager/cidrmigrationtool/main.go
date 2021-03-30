@@ -42,11 +42,12 @@ var mongoConnectTimeout int
 var mongoUsername string
 var mongoPassword string
 
+// Cidr cidr struct in mysql
 type Cidr struct {
 	ID        uint      `gorm:"primary_key"`
 	Vpc       string    `gorm:"not null" json:"vpc"`
 	Cidr      string    `gorm:"not null" json:"cidr"`
-	IpNumber  uint      `gorm:"not null" json:"ip_number"`
+	IPNumber  uint      `gorm:"not null" json:"ip_number"`
 	Status    string    `gorm:"not null" json:"status"`
 	Cluster   *string   `json:"cluster"`
 	CreatedAt time.Time `json:"createAt"`
@@ -107,7 +108,7 @@ func dumpsMysql() {
 	if err != nil {
 		blog.Fatalf("err %s", err.Error())
 	}
-	blog.Infof("dumps mysql tke_cidrs table successfullly")
+	blog.Infof("dumps mysql tke_cidrs table successfully")
 }
 
 func uploadMongo() {
@@ -155,7 +156,7 @@ func uploadMongo() {
 		newCidr := &types.TkeCidr{
 			Vpc:      cidr.Vpc,
 			Cidr:     cidr.Cidr,
-			IPNumber: uint64(cidr.IpNumber),
+			IPNumber: uint64(cidr.IPNumber),
 			Status:   cidr.Status,
 			CreateAt: cidr.CreatedAt,
 			UpdateAt: cidr.UpdatedAt,

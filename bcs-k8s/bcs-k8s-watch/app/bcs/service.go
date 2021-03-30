@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
+	bcsoptions "github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 )
 
 // HTTPClientConfig is bcs inner service http client config struct.
@@ -73,7 +73,7 @@ func NewInnerService(serviceName string, eventChan <-chan *RegisterDiscover.Disc
 }
 
 // Watch keeps watching service instance endpoints from ZK.
-func (s *InnerService) Watch(bcsTLSConfig options.TLS) error {
+func (s *InnerService) Watch(bcsTLSConfig bcsoptions.TLS) error {
 	glog.Infof("start to watch service[%s] from ZK", s.name)
 
 	if s.eventChan == nil {
@@ -106,7 +106,7 @@ func (s *InnerService) Servers() []*HTTPClientConfig {
 	return cfgs
 }
 
-func (s *InnerService) update(servers []string, bcsTLSConfig options.TLS) {
+func (s *InnerService) update(servers []string, bcsTLSConfig bcsoptions.TLS) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

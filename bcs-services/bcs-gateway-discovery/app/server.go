@@ -179,6 +179,7 @@ func (s *DiscoveryServer) Run() error {
 		case <-s.exitCxt.Done():
 			s.discovery.Stop()
 			s.microDiscovery.Stop()
+			close(s.evtCh)
 			blog.Infof("gateway-discovery asked to exit")
 			return nil
 		case <-tick.C:

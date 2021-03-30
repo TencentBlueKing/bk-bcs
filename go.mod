@@ -18,7 +18,7 @@ replace (
 require (
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210223080803-f27f3f3c01c4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210315123928-465d67aad900
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210117140338-aeaed29b1997
 	github.com/andygrunwald/megos v0.0.0-20180424065632-0fccaea93714
 	github.com/bitly/go-simplejson v0.5.0
@@ -47,7 +47,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.3
 	github.com/google/cadvisor v0.32.0
-	github.com/google/uuid v1.1.4
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0 // indirect

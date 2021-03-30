@@ -6,7 +6,7 @@ metadata:
   labels:
     app: bcs-webhook-server
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: bcs-webhook-server

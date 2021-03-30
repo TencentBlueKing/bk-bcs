@@ -155,7 +155,7 @@ func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourc
 
 		// init and run writer handler
 		action := action.NewStorageAction(mgr.clusterID, obj.Spec.Names.Kind, mgr.storageService)
-		mgr.writer.Handlers[obj.Spec.Names.Kind] = output.NewHandler(obj.Spec.Names.Kind, action)
+		mgr.writer.Handlers[obj.Spec.Names.Kind] = output.NewHandler(mgr.clusterID, obj.Spec.Names.Kind, action)
 		stopChan := make(chan struct{})
 		mgr.writer.Handlers[obj.Spec.Names.Kind].Run(stopChan)
 

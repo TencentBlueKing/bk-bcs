@@ -725,9 +725,9 @@ func (watch *ExportServiceWatch) AddEvent(obj interface{}) {
 		Item:     tmpData,
 	}
 	if err := watch.report.ReportData(sync); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.ClusterID, cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.ClusterID, cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -745,9 +745,9 @@ func (watch *ExportServiceWatch) DeleteEvent(obj interface{}) {
 		Item:     tmpData,
 	}
 	if err := watch.report.ReportData(sync); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.ClusterID, cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.ClusterID, cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -766,9 +766,9 @@ func (watch *ExportServiceWatch) UpdateEvent(obj interface{}) {
 		Item:     tmpData,
 	}
 	if err := watch.report.ReportData(sync); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.ClusterID, cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.ClusterID, cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 
