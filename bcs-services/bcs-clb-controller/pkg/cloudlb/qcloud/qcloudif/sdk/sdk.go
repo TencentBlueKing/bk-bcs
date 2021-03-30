@@ -57,7 +57,7 @@ const (
 
 	// EnvDomainTencentCloudClbDomain env name for tencent cloud clb domain
 	EnvDomainTencentCloudClbDomain = "TENCENTCLOUD_CLB_DOMAIN"
-	// EnvDomainTencentCloudCvmDomain env name for tencent cloud 
+	// EnvDomainTencentCloudCvmDomain env name for tencent cloud
 	EnvDomainTencentCloudCvmDomain = "TENCENTCLOUD_CVM_DOMAIN"
 )
 
@@ -113,7 +113,7 @@ func NewClient(sc *Config) qcloudif.ClbAdapter {
 	clbClient.Init(sc.Region).
 		WithCredential(credential).
 		WithProfile(clbProfile)
-	
+
 	cvmProfile := tprofile.NewClientProfile()
 	if len(cvmDomain) != 0 {
 		cvmProfile.HttpProfile.Endpoint = cvmDomain
