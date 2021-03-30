@@ -46,7 +46,11 @@ func (eb *EventBus) SetCondition(cond *operator.Condition) {
 
 // create listener of topic
 func (eb *EventBus) createListener(topic string) (chan *drivers.WatchEvent, error) {
-	listenerCh, err := eb.db.Table(topic).Watch([]*operator.Condition{eb.cond}).
+	var conditionList []*operator.Condition
+	if eb.cond != nil {
+		conditionList = append(conditionList, eb.cond)
+	}
+	listenerCh, err := eb.db.Table(topic).Watch(conditionList).
 		WithFullContent(true).
 		DoWatch(context.Background())
 	if err != nil {
