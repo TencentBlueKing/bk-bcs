@@ -235,13 +235,10 @@ func (m *CreateBusinessAlertInfoReq) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetCommonLabel()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateBusinessAlertInfoReqValidationError{
-				field:  "CommonLabel",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+	if utf8.RuneCountInString(m.GetClusterID()) < 1 {
+		return CreateBusinessAlertInfoReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 

@@ -104,27 +104,6 @@
         "message"
       ]
     },
-    "alertmanagerCommonAlertLabel": {
-      "type": "object",
-      "properties": {
-        "alarmType": {
-          "type": "string",
-          "description": "报警类型(cpu/mem/io)",
-          "title": "alarmType"
-        },
-        "clusterID": {
-          "type": "string",
-          "description": "集群ID(组件报警集群ID统一: 9999)",
-          "title": "clusterID"
-        }
-      },
-      "description": "报警的公共label信息",
-      "title": "CommonAlertLabel",
-      "required": [
-        "alarmType",
-        "clusterID"
-      ]
-    },
     "alertmanagerCreateBusinessAlertInfoReq": {
       "type": "object",
       "properties": {
@@ -150,25 +129,25 @@
           "description": "报警类型(resource/module)",
           "title": "alarmType"
         },
-        "commonLabel": {
-          "$ref": "#/definitions/alertmanagerCommonAlertLabel",
-          "description": "报警的公共label信息(必须)",
-          "title": "commonLabel"
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
         },
-        "AlertAnnotation": {
+        "alertAnnotation": {
           "$ref": "#/definitions/alertmanagerAlertAnnotation",
           "description": "报警内容",
-          "title": "AlertAnnotation"
+          "title": "alertAnnotation"
         },
-        "ModuleAlertLabel": {
+        "moduleAlertLabel": {
           "$ref": "#/definitions/alertmanagerModuleAlertLabel",
           "description": "模块报警标识",
-          "title": "ModuleAlertLabel"
+          "title": "moduleAlertLabel"
         },
-        "ResourceAlertLabel": {
+        "resourceAlertLabel": {
           "$ref": "#/definitions/alertmanagerResourceAlertLabel",
           "description": "资源报警标识",
-          "title": "ResourceAlertLabel"
+          "title": "resourceAlertLabel"
         }
       },
       "description": "创建组件或服务的报警事件(定制化)",
@@ -176,7 +155,8 @@
       "required": [
         "starttime",
         "alarmType",
-        "AlertAnnotation"
+        "AlertAnnotation",
+        "clusterID"
       ]
     },
     "alertmanagerCreateBusinessAlertInfoResp": {

@@ -14,7 +14,6 @@
 package scheduler
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -38,6 +37,7 @@ import (
 	master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/remote/alertmanager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/client"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/misc"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/sched/offer"
@@ -47,7 +47,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/pluginManager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
 
 	"github.com/andygrunwald/megos"
 	"github.com/golang/protobuf/proto"
@@ -127,13 +126,13 @@ type Scheduler struct {
 	pluginManager *pluginManager.PluginManager
 
 	// alert interface
-	alertManager alertmanager.AlertManagerService
+	alertManager alertmanager.AlertManageInterface
 	//stop daemonset signal
 	stopDaemonset chan struct{}
 }
 
 // NewScheduler returns a pointer to new Scheduler
-func NewScheduler(config util.Scheduler, store store.Store, alert alertmanager.AlertManagerService) *Scheduler {
+func NewScheduler(config util.Scheduler, store store.Store, alert alertmanager.AlertManageInterface) *Scheduler {
 	s := &Scheduler{
 		config:       config,
 		store:        store,
@@ -1112,16 +1111,11 @@ func (s *Scheduler) SendHealthMsg(kind alarm.MessageKind, RunAs, message string,
 		ReportTime: currentTime.Format("2006-01-02 15:04:05.000"),
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	resp, err := s.alertManager.CreateBusinessAlertInfo(timeoutCtx, &alertmanager.CreateBusinessAlertInfoReq{
-		Starttime: 0,
-		AlarmType: "module",
-		CommonLabel: &alertmanager.CommonAlertLabel{
-			AlarmType: "",
-			ClusterID: s.ClusterId,
-		},
+	err := s.alertManager.CreateAlertInfoToAlertManager(&alertmanager.CreateBusinessAlertInfoReq{
+		Starttime:    time.Now().Unix(),
+		Generatorurl: "",
+		AlarmType:    "module",
+		ClusterID:    s.ClusterId,
 		AlertAnnotation: &alertmanager.AlertAnnotation{
 			Message: message,
 			Comment: "",
@@ -1129,12 +1123,12 @@ func (s *Scheduler) SendHealthMsg(kind alarm.MessageKind, RunAs, message string,
 		ModuleAlertLabel: &alertmanager.ModuleAlertLabel{
 			ModuleName: health.Module,
 			ModuleIP:   s.IP,
-			AlarmName:  alarmID,
+			AlarmName:  health.AlarmName,
 			AlarmLevel: string(kind),
 		},
-	})
+	}, time.Second*10)
 	if err != nil {
-		blog.Warn("CreateBusinessAlertInfo send health message(%s) failed: err[%v] resp[%v]", message, err, resp)
+		blog.Warn("CreateBusinessAlertInfo send health message(%s) failed: err[%v]", message, err)
 	}
 
 	return

@@ -33,9 +33,9 @@ const (
 
 // AlarmReqData request alertServer body
 type AlarmReqData struct {
-	StartsTime   time.Time         `json:"starts_time"`
-	EndsTime     time.Time         `json:"ends_time"`
-	GeneratorURL string            `json:"generator_url,omitempty"`
+	StartsTime   time.Time         `json:"startsAt"`
+	EndsTime     time.Time         `json:"endsAt"`
+	GeneratorURL string            `json:"generatorURL,omitempty"`
 	Annotations  map[string]string `json:"annotations"` // 非判断信息
 	Labels       map[string]string `json:"labels"`      // key/value键值对, 通过label可以判断是否是同一告警
 }

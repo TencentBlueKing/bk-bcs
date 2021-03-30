@@ -119,7 +119,7 @@ message CreateBusinessAlertInfoReq {
     json_schema: {
       title: "CreateBusinessAlertInfoReq"
       description: "创建组件或服务的报警事件(定制化)"
-      required: ["starttime", "alarmType", "AlertAnnotation"]
+      required: ["starttime", "alarmType", "AlertAnnotation", "clusterID"]
     }
   };
 
@@ -152,35 +152,35 @@ message CreateBusinessAlertInfoReq {
     (validate.rules).string = {in: ["resource", "module"]}
   ];
 
-  // 报警公共label信息
-  CommonAlertLabel commonLabel = 5 [
+  string clusterID = 5 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title: "commonLabel",
-      description: "报警的公共label信息(必须)"
-    }
+      title: "clusterID",
+      description: "集群ID"
+    },
+    (validate.rules).string.min_len = 1
   ];
 
   // 报警annotation
-  AlertAnnotation AlertAnnotation = 6 [
+  AlertAnnotation alertAnnotation = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title: "AlertAnnotation",
+      title: "alertAnnotation",
       description: "报警内容"
     },
     (validate.rules).message.required = true
   ];
 
   // 模块类型报警label
-  ModuleAlertLabel ModuleAlertLabel = 7 [
+  ModuleAlertLabel moduleAlertLabel = 7 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title: "ModuleAlertLabel",
+      title: "moduleAlertLabel",
       description: "模块报警标识"
     }
   ];
 
   // 资源类型报警label
-  ResourceAlertLabel ResourceAlertLabel = 8 [
+  ResourceAlertLabel resourceAlertLabel = 8 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title: "ResourceAlertLabel",
+      title: "resourceAlertLabel",
       description: "资源报警标识"
     }
   ];

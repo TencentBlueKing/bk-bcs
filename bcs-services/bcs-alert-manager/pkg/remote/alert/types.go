@@ -50,9 +50,9 @@ const (
 	// AlarmLabelsModuleName labels module_name
 	AlarmLabelsModuleName AlarmLabelsKey = "module_name"
 	// AlarmLabelsModuleIP labels module_ip
-	AlarmLabelsModuleIP AlarmLabelsKey = "module_ip"
+	AlarmLabelsModuleIP AlarmLabelsKey = "ip"
 	// AlarmLabelsAlarmName labels alarm_name
-	AlarmLabelsAlarmName AlarmLabelsKey = "alarm_name"
+	AlarmLabelsAlarmName AlarmLabelsKey = "alertname"
 	// AlarmLabelsAlertType labels alarm_type
 	AlarmLabelsAlertType AlarmLabelsKey = "alert_type"
 

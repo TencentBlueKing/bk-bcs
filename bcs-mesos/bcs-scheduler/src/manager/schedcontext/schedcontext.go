@@ -16,9 +16,9 @@ package schedcontext
 import (
 	//"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/remote/alertmanager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/manager/store"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/pkg/proto/alertmanager"
 )
 
 // SchedContext context for scheduler
@@ -31,7 +31,7 @@ type SchedContext struct {
 	ApiServer2 *httpserver.HttpServer
 
 	// Config for scheduler config
-	Config       util.SchedConfig
+	Config util.SchedConfig
 	// AlertManager for alert interface
-	AlertManager alertmanager.AlertManagerService
+	AlertManager alertmanager.AlertManageInterface
 }
