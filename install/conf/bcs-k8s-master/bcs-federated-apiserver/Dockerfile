@@ -1,3 +1,3 @@
 FROM centos:7
-yum install -y  ca-certificates
+RUN yum install -y  ca-certificates
 ADD apiserver .
