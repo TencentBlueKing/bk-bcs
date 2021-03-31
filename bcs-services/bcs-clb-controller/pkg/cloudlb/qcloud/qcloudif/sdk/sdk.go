@@ -16,6 +16,7 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -53,6 +54,11 @@ const (
 	ClbStatusCreating = 0
 	// ClbStatusNormal clb instance is normal
 	ClbStatusNormal = 1
+
+	// EnvDomainTencentCloudClbDomain env name for tencent cloud clb domain
+	EnvDomainTencentCloudClbDomain = "TENCENTCLOUD_CLB_DOMAIN"
+	// EnvDomainTencentCloudCvmDomain env name for tencent cloud
+	EnvDomainTencentCloudCvmDomain = "TENCENTCLOUD_CVM_DOMAIN"
 )
 
 // Config config for sdk client
@@ -94,17 +100,28 @@ type Client struct {
 
 // NewClient create client for tencent cloud sdk
 func NewClient(sc *Config) qcloudif.ClbAdapter {
+	clbDomain := os.Getenv(EnvDomainTencentCloudClbDomain)
+	cvmDomain := os.Getenv(EnvDomainTencentCloudCvmDomain)
+
 	// referenced tencent cloud example
 	credential := tcommon.NewCredential(sc.SecretID, sc.SecretKey)
-	profile := tprofile.NewClientProfile()
+	clbProfile := tprofile.NewClientProfile()
+	if len(clbDomain) != 0 {
+		clbProfile.HttpProfile.Endpoint = clbDomain
+	}
 	clbClient := &tclb.Client{}
 	clbClient.Init(sc.Region).
 		WithCredential(credential).
-		WithProfile(profile)
+		WithProfile(clbProfile)
+
+	cvmProfile := tprofile.NewClientProfile()
+	if len(cvmDomain) != 0 {
+		cvmProfile.HttpProfile.Endpoint = cvmDomain
+	}
 	cvmClient := &tcvm.Client{}
 	cvmClient.Init(sc.Region).
 		WithCredential(credential).
-		WithProfile(profile)
+		WithProfile(cvmProfile)
 	return &Client{
 		sdkConfig: sc,
 		clb:       clbClient,
