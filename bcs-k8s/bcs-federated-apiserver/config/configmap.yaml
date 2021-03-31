@@ -1,0 +1,14 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: bcs-federated-apiserver
+  namespace: bcs-system
+data:
+  bcs-storage-address: "http://${bcs-storage-address}:${bcs-storage-port}"
+  bcs-storage-pod-uri: "/bcsstorage/v1/dynamic/customresources/Pod"
+  bcs-storage-token-enable: "false"
+  bcs-storage-token: "xxxxx"
+  member-cluster-ignore-prefix-enable: "true"
+  member-cluster-ignore-prefix: "member."
+  member-cluster-override-enable: "true"
+  member-cluster-override: "BCS-K8S-xxxxx"
