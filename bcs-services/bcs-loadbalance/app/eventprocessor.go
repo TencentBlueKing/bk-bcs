@@ -151,7 +151,7 @@ func (lp *LBEventProcessor) Start() error {
 	go func() {
 		if err := lp.rd.Start(); err != nil {
 			blog.Errorf("start register zookeeper error: %s", err.Error())
-			//should go ahead to work event if register zookeeper failed
+			// should go ahead to work event if register zookeeper failed
 		}
 	}()
 	blog.Infof("start register success")
@@ -194,7 +194,7 @@ func (lp *LBEventProcessor) run() {
 			blog.Infof("EeventProcessor Get close event, return")
 			return
 		case <-updateTick.C:
-			//ready to check update event
+			// ready to check update event
 			if !lp.update {
 				continue
 			}
@@ -222,7 +222,7 @@ func (lp *LBEventProcessor) configHandle() {
 	defer func() {
 		lp.reload = false
 	}()
-	//Get all data from ServiceReflector
+	// Get all data from ServiceReflector
 	tData := new(types.TemplateData)
 	tData.HTTP, tData.HTTPS, tData.TCP, tData.UDP = lp.reflector.Lister()
 	if len(tData.HTTP) == 0 && len(tData.HTTPS) == 0 && len(tData.TCP) == 0 && len(tData.UDP) == 0 {
@@ -237,7 +237,7 @@ func (lp *LBEventProcessor) configHandle() {
 		return
 	}
 
-	//haproxy reload
+	// haproxy reload
 	if !lp.doReload(tData) {
 		blog.Errorf("Do proxy reloading failed, wait for next tick")
 		return
@@ -301,19 +301,19 @@ func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 		return true
 	}
 
-	//create configuration
+	// create configuration
 	newFile, creatErr := lp.cfgManager.Create(data)
 	if creatErr != nil {
 		blog.Errorf("Create proxy with template data faield: %s", creatErr.Error())
 		return false
 	}
-	//check difference between new file and old file
+	// check difference between new file and old file
 	if !lp.cfgManager.CheckDifference(lp.config.CfgPath, newFile) {
 		blog.Warnf("No difference in new configuration file")
 		return true
 	}
 
-	//use check command validate correct of configuration
+	// use check command validate correct of configuration
 	if !lp.cfgManager.Validate(newFile) {
 		template.LoadbalanceConfigRenderTotal.WithLabelValues("fail").Inc()
 		blog.Errorf("Validate %s with proxy command failed", newFile)
@@ -321,7 +321,7 @@ func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 	}
 	template.LoadbalanceConfigRenderTotal.WithLabelValues("success").Inc()
 	blog.Infof("Generation config file %s success", newFile)
-	//replace new file, backup old one
+	// replace new file, backup old one
 	err := lp.cfgManager.Replace(lp.config.CfgPath, newFile)
 	if err != nil {
 		template.LoadbalanceConfigRefreshTotal.WithLabelValues("fail").Inc()
@@ -329,7 +329,7 @@ func (lp *LBEventProcessor) doReload(data *types.TemplateData) bool {
 		return false
 	}
 	template.LoadbalanceConfigRefreshTotal.WithLabelValues("success").Inc()
-	//reload with haproxy command
+	// reload with haproxy command
 	if err := lp.cfgManager.Reload(lp.config.CfgPath); err != nil {
 		template.LoadbalanceProxyReloadTotal.WithLabelValues("fail").Inc()
 		return false
@@ -378,11 +378,11 @@ func (lp *LBEventProcessor) OnAdd(obj interface{}) {
 		return
 	}
 	blog.Infof("Service %s added, ready to refresh", svr.ServiceName)
-	LoadbalanceZookeeperEventAddMetric.WithLabelValues(lp.config.Name, svr.ServiceName, svr.Namespace).Inc()
+	LoadbalanceZookeeperEventAddMetric.WithLabelValues(lp.config.Name).Inc()
 	lp.update = true
 }
 
-//OnDelete receive data Delete event
+// OnDelete receive data Delete event
 func (lp *LBEventProcessor) OnDelete(obj interface{}) {
 	svr, ok := obj.(*loadbalance.ExportService)
 	if !ok {
@@ -390,11 +390,11 @@ func (lp *LBEventProcessor) OnDelete(obj interface{}) {
 		return
 	}
 	blog.Infof("Service %s deleted, ready to refresh", svr.ServiceName)
-	LoadbalanceZookeeperEventDeleteMetric.WithLabelValues(lp.config.Name, svr.ServiceName, svr.Namespace).Inc()
+	LoadbalanceZookeeperEventDeleteMetric.WithLabelValues(lp.config.Name).Inc()
 	lp.update = true
 }
 
-//OnUpdate receive data Update event
+// OnUpdate receive data Update event
 func (lp *LBEventProcessor) OnUpdate(oldObj, newObj interface{}) {
 	newSvr, ok := newObj.(*loadbalance.ExportService)
 	if !ok {
@@ -410,6 +410,6 @@ func (lp *LBEventProcessor) OnUpdate(oldObj, newObj interface{}) {
 		return
 	}
 	blog.Infof("Service %s update, ready to refresh", newSvr.ServiceName)
-	LoadbalanceZookeeperEventUpdateMetric.WithLabelValues(lp.config.Name, newSvr.ServiceName, newSvr.Namespace).Inc()
+	LoadbalanceZookeeperEventUpdateMetric.WithLabelValues(lp.config.Name).Inc()
 	lp.update = true
 }
