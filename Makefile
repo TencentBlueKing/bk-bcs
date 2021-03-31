@@ -232,13 +232,13 @@ hook-operator:pre
 	cd bcs-k8s/bcs-hook-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-hook-operator/bcs-hook-operator ./cmd/hook-operator/main.go
 
 federated-apiserver:pre
-        mkdir -p ${PACKAGEPATH}/bcs-k8s-master
-        cp -R ./install/conf/bcs-k8s-master/bcs-federated-apiserver ${PACKAGEPATH}/bcs-k8s-master
-        cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/apiserver ./cmd/apiserver/main.go
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-federated-apiserver ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/apiserver ./cmd/apiserver/main.go
 
 federated-apiserver-kubectl-agg:pre
-        mkdir -p ${PACKAGEPATH}/bcs-k8s-master
-        cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/kubectl-agg ./cmd/kubectl_agg/main.go
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/kubectl-agg ./cmd/kubectl_agg/main.go
 
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
