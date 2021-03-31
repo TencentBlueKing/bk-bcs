@@ -139,18 +139,6 @@ func (c *config) check() error {
 	c.viper.BindEnv("tunnelserver.callTimeout", c.envName("TS_CALL_TIMEOUT"))
 	c.viper.SetDefault("tunnelserver.callTimeout", 10*time.Second)
 
-	c.viper.BindEnv("bcscontroller.serviceName", c.envName("BCS_SERVICE_NAME"))
-	c.viper.SetDefault("bcscontroller.serviceName", "bk-bscp-bcs-controller")
-
-	c.viper.BindEnv("bcscontroller.callTimeout", c.envName("BCS_CALL_TIMEOUT"))
-	c.viper.SetDefault("bcscontroller.callTimeout", 10*time.Second)
-
-	c.viper.BindEnv("connserver.serviceName", c.envName("CONNS_SERVICE_NAME"))
-	c.viper.SetDefault("connserver.serviceName", "bk-bscp-connserver")
-
-	c.viper.BindEnv("connserver.callTimeout", c.envName("CONNS_CALL_TIMEOUT"))
-	c.viper.SetDefault("connserver.callTimeout", 10*time.Second)
-
 	c.viper.BindEnv("datamanager.serviceName", c.envName("DM_SERVICE_NAME"))
 	c.viper.SetDefault("datamanager.serviceName", "bk-bscp-datamanager")
 

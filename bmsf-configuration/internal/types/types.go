@@ -11,10 +11,3 @@ limitations under the License.
 */
 
 package types
-
-import ()
-
-const (
-	// BCSNatsMQPublishTopic is bcs nats MQ publish topic.
-	BCSNatsMQPublishTopic = "bk-bscp-bcs-publish-topic"
-)

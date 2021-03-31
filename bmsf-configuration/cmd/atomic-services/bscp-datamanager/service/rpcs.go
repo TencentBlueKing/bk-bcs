@@ -34,6 +34,8 @@ import (
 	templateaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/template"
 	templatebindaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/template-bind"
 	templateversionaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/template-version"
+	variableaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/variable"
+	variablegroupaction "bk-bscp/cmd/atomic-services/bscp-datamanager/actions/variable-group"
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
@@ -2033,6 +2035,213 @@ func (dm *DataManager) QueryAuditList(ctx context.Context, req *pb.QueryAuditLis
 	}()
 
 	action := auditaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// CreateVariableGroup create variable group.
+func (dm *DataManager) CreateVariableGroup(ctx context.Context,
+	req *pb.CreateVariableGroupReq) (*pb.CreateVariableGroupResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.CreateVariableGroupResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewCreateAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableGroup query variable group.
+func (dm *DataManager) QueryVariableGroup(ctx context.Context,
+	req *pb.QueryVariableGroupReq) (*pb.QueryVariableGroupResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableGroupResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableGroupList query variable group list.
+func (dm *DataManager) QueryVariableGroupList(ctx context.Context,
+	req *pb.QueryVariableGroupListReq) (*pb.QueryVariableGroupListResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableGroupListResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// DeleteVariableGroup delete target variable group.
+func (dm *DataManager) DeleteVariableGroup(ctx context.Context,
+	req *pb.DeleteVariableGroupReq) (*pb.DeleteVariableGroupResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.DeleteVariableGroupResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variablegroupaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// CreateVariable create variable.
+func (dm *DataManager) CreateVariable(ctx context.Context,
+	req *pb.CreateVariableReq) (*pb.CreateVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.CreateVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewCreateAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariable query variable.
+func (dm *DataManager) QueryVariable(ctx context.Context,
+	req *pb.QueryVariableReq) (*pb.QueryVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewQueryAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableList query variable list.
+func (dm *DataManager) QueryVariableList(ctx context.Context,
+	req *pb.QueryVariableListReq) (*pb.QueryVariableListResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.QueryVariableListResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewListAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// UpdateVariable update target variable.
+func (dm *DataManager) UpdateVariable(ctx context.Context,
+	req *pb.UpdateVariableReq) (*pb.UpdateVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.UpdateVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewUpdateAction(ctx, dm.viper, dm.smgr, req, response)
+	if err := dm.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
+// DeleteVariable delete target variable.
+func (dm *DataManager) DeleteVariable(ctx context.Context,
+	req *pb.DeleteVariableReq) (*pb.DeleteVariableResp, error) {
+
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.DeleteVariableResp)
+
+	defer func() {
+		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := variableaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}

@@ -17,6 +17,16 @@ EOF
 " > ../bk-bscp-authserver/etc/server.yaml
 
 eval "cat <<EOF
+$(<../bk-bscp-patcher/etc/server.yaml.template)
+EOF
+" > ../bk-bscp-patcher/etc/server.yaml
+
+eval "cat <<EOF
+$(<../bk-bscp-patcher/etc/cron.yaml.template)
+EOF
+" > ../bk-bscp-patcher/etc/cron.yaml
+
+eval "cat <<EOF
 $(<../bk-bscp-configserver/etc/server.yaml.template)
 EOF
 " > ../bk-bscp-configserver/etc/server.yaml
@@ -32,26 +42,11 @@ EOF
 " > ../bk-bscp-datamanager/etc/server.yaml
 
 eval "cat <<EOF
-$(<../bk-bscp-bcs-controller/etc/server.yaml.template)
-EOF
-" > ../bk-bscp-bcs-controller/etc/server.yaml
-
-eval "cat <<EOF
 $(<../bk-bscp-gse-controller/etc/server.yaml.template)
 EOF
 " > ../bk-bscp-gse-controller/etc/server.yaml
 
 eval "cat <<EOF
-$(<../bk-bscp-connserver/etc/server.yaml.template)
-EOF
-" > ../bk-bscp-connserver/etc/server.yaml
-
-eval "cat <<EOF
 $(<../bk-bscp-tunnelserver/etc/server.yaml.template)
 EOF
 " > ../bk-bscp-tunnelserver/etc/server.yaml
-
-eval "cat <<EOF
-$(<../bk-bscp-patcher/etc/server.yaml.template)
-EOF
-" > ../bk-bscp-patcher/etc/server.yaml

@@ -64,6 +64,8 @@ func main() {
 		tables = append(tables, &database.TemplateBind{})
 		tables = append(tables, &database.ConfigTemplate{})
 		tables = append(tables, &database.ConfigTemplateVersion{})
+		tables = append(tables, &database.VariableGroup{})
+		tables = append(tables, &database.Variable{})
 		tables = append(tables, &database.Config{})
 		tables = append(tables, &database.Content{})
 		tables = append(tables, &database.Commit{})

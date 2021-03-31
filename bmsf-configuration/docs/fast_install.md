@@ -12,10 +12,6 @@ BK-BSCP 快速部署安装教程
 
 [参见官方安装教程] <https://etcd.io/docs/v3.4.0/op-guide/>
 
-## 3.安装NATS消息队列
-
-[参见官方安装教程] <https://docs.nats.io/nats-server/installation>
-
 ## 4.打包编译
 
 ### 4.1编译
@@ -75,9 +71,7 @@ drwxrwxr-x 4 dev dev 4096 7月  23 15:56 bk-bscp-authserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-configserver
 drwxrwxr-x 4 dev dev 4096 7月  23 15:56 bk-bscp-templateserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-datamanager
-drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-bcs-controller
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-gse-controller
-drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-connserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-tunnelserver
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 bk-bscp-patcher
 drwxrwxr-x 3 dev dev 4096 7月  23 15:56 install
@@ -86,16 +80,14 @@ drwxrwxr-x 3 dev dev 4096 7月  23 15:56 support-files
 
 模块列表:
 
-- bk-bscp-apiserver: 接入服务 (必须部署)
+- bk-bscp-apiserver: 接入服务
 - bk-bscp-authserver: 权限服务
-- bk-bscp-configserver: 配置服务 (必须部署)
-- bk-bscp-templateserver: 模板服务
-- bk-bscp-datamanager: 数据服务 (必须部署)
-- bk-bscp-bcs-controller: BCS通道控制器 (必须部署)
-- bk-bscp-connserver: BCS会话链接服务 (必须部署)
-- bk-bscp-gse-controller: GSE通道控制器 (必须部署)
-- bk-bscp-tunnelserver: GSE通道服务
 - bk-bscp-patcher: 升级补丁服务
+- bk-bscp-configserver: 配置服务
+- bk-bscp-templateserver: 模板服务
+- bk-bscp-datamanager: 数据服务
+- bk-bscp-gse-controller: GSE通道控制器
+- bk-bscp-tunnelserver: GSE通道服务
 
 ## 5.部署模块服务
 

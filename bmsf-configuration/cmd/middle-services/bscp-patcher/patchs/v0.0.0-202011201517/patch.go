@@ -25,6 +25,13 @@ import (
 
 // Patch is v0.0.0 upgrade patch sign at data 202011201517.
 type Patch struct {
+	// Name patch version name.
+	Name string
+}
+
+// GetName returns patch version name.
+func (p *Patch) GetName() string {
+	return p.Name
 }
 
 // NeedToSkip is the func to decide if the patch should be skipped.
@@ -44,7 +51,7 @@ func (p *Patch) PatchFunc(ctx context.Context, viper *viper.Viper, smgr *dbshard
 	if err != nil {
 		return err
 	}
-	logger.Infof("execute patch v0.0.0-202011201517 success, %+v", st)
+	logger.Infof("execute patch %s success, %+v", p.Name, st)
 
 	return nil
 }

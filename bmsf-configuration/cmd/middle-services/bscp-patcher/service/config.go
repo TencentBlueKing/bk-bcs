@@ -51,6 +51,12 @@ func (c *config) envName(bindKey string) string {
 
 // check bind the env vars and checks base config content.
 func (c *config) check() error {
+	c.viper.BindEnv("server.serviceName", c.envName("SERVICE_NAME"))
+	c.viper.SetDefault("server.serviceName", "bk-bscp-patcher")
+
+	c.viper.BindEnv("server.metadata", c.envName("SERVICE_METADATA"))
+	c.viper.SetDefault("server.metadata", "bk-bscp-patcher")
+
 	c.viper.BindEnv("server.endpoint.ip", c.envName("ENDPOINT_IP"))
 	if !c.viper.IsSet("server.endpoint.ip") {
 		return errors.New("config check, missing 'server.endpoint.ip'")
@@ -59,6 +65,24 @@ func (c *config) check() error {
 	if !c.viper.IsSet("server.endpoint.port") {
 		return errors.New("config check, missing 'server.endpoint.port'")
 	}
+
+	c.viper.BindEnv("server.discoveryTTL", c.envName("DISCOVERY_TTL"))
+	c.viper.SetDefault("server.discoveryTTL", 10)
+
+	c.viper.BindEnv("server.cronFile", c.envName("CRON_FILE"))
+	c.viper.SetDefault("server.cronFile", "etc/cron.yaml")
+
+	c.viper.BindEnv("etcdCluster.endpoints", c.envName("ETCD_ENDPOINTS"))
+	if !c.viper.IsSet("etcdCluster.endpoints") {
+		return errors.New("config check, missing 'etcdCluster.endpoints'")
+	}
+	c.viper.BindEnv("etcdCluster.dialTimeout", c.envName("ETCD_DIAL_TIMEOUT"))
+	c.viper.SetDefault("etcdCluster.dialTimeout", 10*time.Second)
+
+	c.viper.BindEnv("etcdCluster.tls.certPassword", c.envName("ETCD_TLS_CERT_PASSWORD"))
+	c.viper.BindEnv("etcdCluster.tls.caFile", c.envName("ETCD_TLS_CA_FILE"))
+	c.viper.BindEnv("etcdCluster.tls.certFile", c.envName("ETCD_TLS_CERT_FILE"))
+	c.viper.BindEnv("etcdCluster.tls.keyFile", c.envName("ETCD_TLS_KEY_FILE"))
 
 	c.viper.BindEnv("database.host", c.envName("DB_HOST"))
 	if !c.viper.IsSet("database.host") {

@@ -24,7 +24,6 @@ import (
 	"bk-bscp/internal/authorization"
 	"bk-bscp/internal/database"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
-	pbbcscontroller "bk-bscp/internal/protocol/bcs-controller"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/configserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
@@ -40,7 +39,6 @@ type RollbackAction struct {
 	viper            *viper.Viper
 	authSvrCli       pbauthserver.AuthClient
 	dataMgrCli       pbdatamanager.DataManagerClient
-	bcsControllerCli pbbcscontroller.BCSControllerClient
 	gseControllerCli pbgsecontroller.GSEControllerClient
 
 	req  *pb.RollbackMultiReleaseReq
@@ -54,7 +52,7 @@ type RollbackAction struct {
 // NewRollbackAction creates new RollbackAction.
 func NewRollbackAction(kit kit.Kit, viper *viper.Viper,
 	authSvrCli pbauthserver.AuthClient, dataMgrCli pbdatamanager.DataManagerClient,
-	bcsControllerCli pbbcscontroller.BCSControllerClient, gseControllerCli pbgsecontroller.GSEControllerClient,
+	gseControllerCli pbgsecontroller.GSEControllerClient,
 	req *pb.RollbackMultiReleaseReq, resp *pb.RollbackMultiReleaseResp) *RollbackAction {
 
 	action := &RollbackAction{
@@ -62,7 +60,6 @@ func NewRollbackAction(kit kit.Kit, viper *viper.Viper,
 		viper:            viper,
 		authSvrCli:       authSvrCli,
 		dataMgrCli:       dataMgrCli,
-		bcsControllerCli: bcsControllerCli,
 		gseControllerCli: gseControllerCli,
 		req:              req,
 		resp:             resp,
@@ -179,27 +176,7 @@ func (act *RollbackAction) querySubReleaseList() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
-func (act *RollbackAction) rollbackBCSMode(releaseID string) (pbcommon.ErrCode, string) {
-	r := &pbbcscontroller.RollbackReleaseReq{
-		Seq:       act.kit.Rid,
-		BizId:     act.req.BizId,
-		ReleaseId: releaseID,
-		Operator:  act.kit.User,
-	}
-
-	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("bcscontroller.callTimeout"))
-	defer cancel()
-
-	logger.V(4).Infof("RollbackMultiRelease[%s]| request to bcs-controller, %+v", r.Seq, r)
-
-	resp, err := act.bcsControllerCli.RollbackRelease(ctx, r)
-	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to bcs-controller RollbackRelease, %+v", err)
-	}
-	return resp.Code, resp.Message
-}
-
-func (act *RollbackAction) rollbackGSEPluginMode(releaseID string) (pbcommon.ErrCode, string) {
+func (act *RollbackAction) rollback(releaseID string) (pbcommon.ErrCode, string) {
 	r := &pbgsecontroller.RollbackReleaseReq{
 		Seq:       act.kit.Rid,
 		BizId:     act.req.BizId,
@@ -300,19 +277,8 @@ func (act *RollbackAction) Do() error {
 	}
 
 	for _, releaseID := range act.releaseIDs {
-		if act.app.DeployType == int32(pbcommon.DeployType_DT_BCS) {
-
-			if errCode, errMsg := act.rollbackBCSMode(releaseID); errCode != pbcommon.ErrCode_E_OK {
-				return act.Err(errCode, errMsg)
-			}
-		} else if act.app.DeployType == int32(pbcommon.DeployType_DT_GSE_PLUGIN) ||
-			act.app.DeployType == int32(pbcommon.DeployType_DT_GSE) {
-
-			if errCode, errMsg := act.rollbackGSEPluginMode(releaseID); errCode != pbcommon.ErrCode_E_OK {
-				return act.Err(errCode, errMsg)
-			}
-		} else {
-			return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "unknow deploy type")
+		if errCode, errMsg := act.rollback(releaseID); errCode != pbcommon.ErrCode_E_OK {
+			return act.Err(errCode, errMsg)
 		}
 	}
 
