@@ -110,14 +110,13 @@ func New(config util.SchedConfig) (*Manager, error) {
 		Server:     config.AlertManager.Server,
 		ClientAuth: config.AlertManager.ClientAuth,
 		Debug:      config.AlertManager.Debug,
-		CAFile:     config.AlertManager.ClientCAFile,
-		CertFile:   config.AlertManager.ClientCertFile,
-		KeyFile:    config.AlertManager.ClientKeyFile,
+		Token:      config.AlertManager.Token,
 	})
 	if err != nil {
 		blog.Errorf("NewAlertManager failed: %v", err)
 		return nil, err
 	}
+	blog.Infof("alertmanager init successful")
 	manager.schedContext.AlertManager = alertClient
 
 	manager.config.Scheduler.Address = listener.TCPAddr

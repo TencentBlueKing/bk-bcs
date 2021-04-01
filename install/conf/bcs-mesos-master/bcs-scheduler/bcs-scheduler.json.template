@@ -25,5 +25,6 @@
   "cluster": "${clusterId}",
   "alertServer": "${alertServer}",
   "clientAuth": ${clientAuth},
-  "alertDebug": ${alertDebug}
+  "alertDebug": ${alertDebug},
+  "token": ${token}
 }

@@ -36,6 +36,7 @@ type SchedulerOptions struct {
 
 	AlertServer       string `json:"alertServer" value:"" usage:"bcs-alert-manager server address"`
 	ClientAuth        bool   `json:"clientAuth" value:"false" usage:"bcs-alert-manager server client auth"`
+	Token             string `json:"token" value:"" usage:"api-gateway token for call alertmanager api"`
 	AlertDebug        bool   `json:"alertDebug" value:"false" usage:"alertDebug debug bcs-alert-manager http api"`
 	MesosMasterZK     string `json:"mesos_regdiscv" value:"" usage:"the address to discove mesos master"`
 	RegDiscvSvr       string `json:"regdiscv" value:"" usage:"the address to register and discove scheduler"`
@@ -56,12 +57,10 @@ type SchedulerOptions struct {
 
 // AlertManagerConfig for bcs-alert-manager config
 type AlertManagerConfig struct {
-	Server         string
-	ClientAuth     bool
-	Debug          bool
-	ClientCAFile   string
-	ClientCertFile string
-	ClientKeyFile  string
+	Server     string
+	Token      string
+	ClientAuth bool
+	Debug      bool
 }
 
 // SchedConfig for parse conf
@@ -125,12 +124,10 @@ func NewSchedulerCfg() *SchedConfig {
 	config := SchedConfig{
 		ZkHost: "",
 		AlertManager: AlertManagerConfig{
-			Server:         "",
-			ClientAuth:     false,
-			Debug:          false,
-			ClientCAFile:   "",
-			ClientCertFile: "",
-			ClientKeyFile:  "",
+			Server:     "",
+			Token:      "",
+			ClientAuth: false,
+			Debug:      false,
 		},
 		HttpListener: HttpListener{
 			TCPAddr:  "",
@@ -208,9 +205,7 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.AlertManager.ClientAuth = op.ClientAuth
 	config.AlertManager.Debug = op.AlertDebug
 	if op.ClientAuth {
-		config.AlertManager.ClientCAFile = op.CAFile
-		config.AlertManager.ClientCertFile = op.ClientCertFile
-		config.AlertManager.ClientKeyFile = op.ClientKeyFile
+		config.AlertManager.Token = op.Token
 	}
 }
 

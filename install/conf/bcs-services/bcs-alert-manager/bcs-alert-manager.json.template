@@ -1,7 +1,7 @@
 {
 "serviceOptions": {
    "address": "${localIp}",
-   "port": ${bcsAlertManagerPort},
+   "port": ${bcsAlertManagerPort}
 },
 "etcdOptions": {
     "etcd_address": "${bcsEtcdHost}",
@@ -11,8 +11,8 @@
 },
 "logOptions": {
 	"log_dir": "${bcsAlertManagerLogDir}",
-	"v": ${bcsAlertManagerVerbosity}
-	"alsotostderr": ${bcsAlertManagerAlsoToStdErr},
+	"v": ${bcsAlertManagerVerbosity},
+	"alsotostderr": ${bcsAlertManagerAlsoToStdErr}
 },
 "swaggerConfigDir": {
 	"dir": "${bcsAlertManagerSwaggerDir}"

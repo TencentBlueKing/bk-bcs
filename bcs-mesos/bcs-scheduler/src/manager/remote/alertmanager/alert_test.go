@@ -20,17 +20,14 @@ import (
 
 func newAlertManager() AlertManageInterface {
 	options := Options{
-		Server:     "http://xxx:xx",
-		ClientAuth: false,
+		Server:     "https://xxx:xxx/xx/v4",
+		ClientAuth: true,
 		Debug:      true,
-		CAFile:     "",
-		CertFile:   "",
-		KeyFile:    "",
+		Token:      "dFYn6pFOouFePmpKlfBPoBaNbFbnoSJX",
 	}
 
-	return &alertManager{
-		opt: options,
-	}
+	alert, _ := NewAlertManager(options)
+	return alert
 }
 
 func TestAlertManager_CreateAlertInfoToAlertManager(t *testing.T) {

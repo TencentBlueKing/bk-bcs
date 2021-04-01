@@ -14,7 +14,6 @@
 package alertmanager
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,8 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-scheduler/src/util"
 
 	"github.com/parnurzeal/gorequest"
@@ -44,11 +42,9 @@ type AlertManageInterface interface {
 // Options for alert-manager server conf
 type Options struct {
 	Server     string
+	Token      string
 	ClientAuth bool
 	Debug      bool
-	CAFile     string
-	CertFile   string
-	KeyFile    string
 }
 
 type alertManager struct {
@@ -68,18 +64,18 @@ func NewAlertManager(opt Options) (AlertManageInterface, error) {
 }
 
 // am.opt.clientAuth = true
-func (am *alertManager) getClientTLSConfig() (*tls.Config, error) {
+func (am *alertManager) getAPIGatewayToken() (string, error) {
 	if am == nil {
-		return nil, errNotInitServer
+		return "", errNotInitServer
 	}
 
-	tlsConfig, err := ssl.ClientTslConfVerity(am.opt.CAFile, am.opt.CertFile, am.opt.KeyFile, static.ClientCertPwd)
-	if err != nil {
-		errMsg := fmt.Errorf("get clientTsl confVerity failed: %v", err)
-		return nil, errMsg
+	password := am.opt.Token
+	if password != "" {
+		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
+		password = string(realPwd)
 	}
 
-	return tlsConfig, nil
+	return password, nil
 }
 
 func (am *alertManager) CreateAlertInfoToAlertManager(req *CreateBusinessAlertInfoReq, timeout time.Duration) error {
@@ -93,31 +89,28 @@ func (am *alertManager) CreateAlertInfoToAlertManager(req *CreateBusinessAlertIn
 	)
 
 	var (
-		url       = am.opt.Server + path
-		start     = time.Now()
-		respData  = &CreateBusinessAlertInfoResp{}
-		tlsConfig *tls.Config
-		err       error
+		url      = am.opt.Server + path
+		start    = time.Now()
+		respData = &CreateBusinessAlertInfoResp{}
+		token    string
+		err      error
 	)
 
-	superAgent := gorequest.New()
+	superAgent := gorequest.New().Timeout(timeout).Post(url).
+		Set("Content-Type", "application/json").
+		Set("Connection", "close")
+
 	if am.opt.ClientAuth {
-		tlsConfig, err = am.getClientTLSConfig()
+		token, err = am.getAPIGatewayToken()
 		if err != nil {
-			blog.Errorf("getClientTlsConfig err: %v", err)
+			blog.Errorf("getAPIGatewayToken err: %v", err)
 			return err
 		}
 
-		superAgent = superAgent.TLSClientConfig(tlsConfig)
+		superAgent = superAgent.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	}
 
-	resp, _, errs := superAgent.Timeout(timeout).Post(url).
-		Set("Content-Type", "application/json").
-		Set("Connection", "close").
-		SetDebug(am.opt.Debug).
-		Send(req).
-		EndStruct(respData)
-
+	resp, body, errs := superAgent.SetDebug(am.opt.Debug).Send(req).EndStruct(respData)
 	if len(errs) > 0 {
 		blog.Errorf("call api CreateAlertInfoToAlertManager failed: %v", errs[0])
 		util.ReportAlertManagerAPIMetrics(apiName, http.MethodPost, util.ErrStatus, start)
@@ -125,8 +118,8 @@ func (am *alertManager) CreateAlertInfoToAlertManager(req *CreateBusinessAlertIn
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		errMsg := fmt.Errorf("call bcs-alert-manager API error: code[%v], status[%v], err[%s]",
-			resp.StatusCode, respData.ErrCode, respData.ErrMsg)
+		errMsg := fmt.Errorf("call bcs-alert-manager API error: code[%v], body[%v], err[%s]",
+			resp.StatusCode, string(body), respData.ErrMsg)
 		util.ReportAlertManagerAPIMetrics(apiName, http.MethodPost, fmt.Sprintf("%d", resp.StatusCode), start)
 		return errMsg
 	}
@@ -144,7 +137,7 @@ func validateOptions(opt Options) (bool, error) {
 		if !opt.ClientAuth {
 			return false, errInitClientAuthServer
 		}
-		if len(opt.CAFile) == 0 || len(opt.KeyFile) == 0 || len(opt.CertFile) == 0 {
+		if len(opt.Token) == 0 {
 			return false, errInitTLSServer
 		}
 	}
