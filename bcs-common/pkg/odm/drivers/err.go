@@ -19,4 +19,6 @@ import (
 var (
 	// ErrTableRecordNotFound no record in table was found
 	ErrTableRecordNotFound = errors.New("record not found")
+	// ErrTableRecordDuplicateKey database index key is duplicate
+	ErrTableRecordDuplicateKey = errors.New("duplicate key error")
 )
