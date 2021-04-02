@@ -49,11 +49,13 @@ type reqDynamic struct {
 // get a new instance of reqDynamic, getNewTank() will be called and
 // return a init Tank which is ready for operating
 func newReqDynamic(req *restful.Request, filter qFilter, name string) *reqDynamic {
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
 	return &reqDynamic{
-		req: req,
-		store: lib.NewStore(
-			apiserver.GetAPIResource().GetDBClient(dbConfig),
-			apiserver.GetAPIResource().GetEventBus(dbConfig)),
+		req:    req,
+		store:  store,
 		name:   name,
 		filter: filter,
 		offset: 0,

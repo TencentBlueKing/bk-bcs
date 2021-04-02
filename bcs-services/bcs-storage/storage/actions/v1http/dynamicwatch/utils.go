@@ -34,12 +34,14 @@ type reqDynamic struct {
 }
 
 func newReqDynamic(req *restful.Request, resp *restful.Response) *reqDynamic {
+	store := lib.NewStore(
+		apiserver.GetAPIResource().GetDBClient(dbConfig),
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
 	return &reqDynamic{
-		req:  req,
-		resp: resp,
-		store: lib.NewStore(
-			apiserver.GetAPIResource().GetDBClient(dbConfig),
-			apiserver.GetAPIResource().GetEventBus(dbConfig)),
+		req:   req,
+		resp:  resp,
+		store: store,
 	}
 }
 
