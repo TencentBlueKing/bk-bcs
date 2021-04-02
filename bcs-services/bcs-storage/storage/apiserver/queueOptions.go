@@ -15,12 +15,12 @@ package apiserver
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 )
 
