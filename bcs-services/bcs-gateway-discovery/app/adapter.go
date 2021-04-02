@@ -26,12 +26,15 @@ import (
 	"github.com/micro/go-micro/v2/registry"
 )
 
+var metricModeule = "metric"
+
 var notStandardRouteModules = map[string]string{
 	modules.BCSModuleStorage:          "storage",
 	modules.BCSModuleMesosdriver:      "mesosdriver",
 	modules.BCSModuleNetworkdetection: "networkdetection",
 	modules.BCSModuleKubeagent:        "kubeagent",
 	modules.BCSModuleUserManager:      "usermanager",
+	metricModeule:                     metricModeule,
 }
 
 var defaultModules = []string{}
@@ -262,6 +265,8 @@ func (adp *Adapter) initCompatibleMicroModules() error {
 	//kube-apiserver information get by userManager
 	adp.microHandlers[modules.BCSModuleUserManager] = adp.microUserMgr
 	blog.Infof("gateway-discovery init compatible module %s proxy rules", modules.BCSModuleUserManager)
+	//metricservice information
+	adp.microHandlers["metric"] = adp.microMetricService
 	return nil
 }
 
@@ -672,6 +677,37 @@ func (adp *Adapter) microUserMgr(module string, svc *registry.Service) (*registe
 		Name:        module,
 		Protocol:    "http",
 		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", modules.BCSModuleUserManager)},
+		PathRewrite: true,
+		Service:     module,
+		Labels:      labels,
+	}
+	regSvc.Routes = append(regSvc.Routes, rt)
+	//setting upstream backend information
+	bcks := adp.constructUpstreamTarget(svc.Nodes)
+	regSvc.Backends = append(regSvc.Backends, bcks...)
+	return regSvc, nil
+}
+
+//microMetricService convert bcs-cluster-manager service information
+// to custom service definition. this is compatible with original bcs-api proxy.
+// and further more, api-gateway defines new standard proxy rule for it
+func (adp *Adapter) microMetricService(module string, svc *registry.Service) (*register.Service, error) {
+	labels := make(map[string]string)
+	labels["module"] = metricModeule
+	labels["service"] = defaultServiceTag
+	regSvc := &register.Service{
+		Name:     module,
+		Protocol: "https",
+		Host:     svc.Name,
+		Path:     fmt.Sprintf("/%s/", metricModeule),
+		Retries:  1,
+		Labels:   labels,
+	}
+	//setting route information
+	rt := register.Route{
+		Name:        module,
+		Protocol:    "http",
+		Paths:       []string{fmt.Sprintf("/bcsapi/v4/%s/", metricModeule)},
 		PathRewrite: true,
 		Service:     module,
 		Labels:      labels,
