@@ -24,10 +24,10 @@ import (
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
-	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 
 	"github.com/parnurzeal/gorequest"
 	v1 "k8s.io/api/core/v1"
@@ -117,11 +117,6 @@ func (w *Watcher) AddEvent(obj interface{}) {
 		return
 	}
 	w.writer.Sync(data)
-
-	// send alarm when there is an add event with non-empty owner uid.
-	if data.OwnerUID != "" {
-		w.writer.SyncAlarmEvent(data)
-	}
 }
 
 // DeleteEvent is event handler for delete resource event.
@@ -182,11 +177,6 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		return
 	}
 	w.writer.Sync(data)
-
-	// send alarm when there is an add event with non-empty owner uid.
-	if data.OwnerUID != "" {
-		w.writer.SyncAlarmEvent(data)
-	}
 }
 
 // isEventShouldFilter filters k8s system events.
@@ -233,40 +223,6 @@ func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncD
 	}
 
 	ownerUID := ""
-	// NOTE: 生成时, 就确认了是否会告警, 即 ownerUID != "", 告警
-	// if Event, get OwnerReference uid
-	if w.resourceType == ResourceTypeEvent {
-		event, ok := obj.(*v1.Event)
-		if !ok {
-			glog.Infof("watcher parse object to Event failed, %v", obj)
-		}
-
-		// TODO: handle 1) not just pod 2) system component warning event
-
-		// must be pod,
-		// only handle the warning event. which may caused some errors.
-		if ok && event.InvolvedObject.Kind == "Pod" && event.Type == "Warning" {
-			iNamespace := event.InvolvedObject.Namespace
-			iName := event.InvolvedObject.Name
-
-			key := fmt.Sprintf("%s/%s", iNamespace, iName)
-
-			// NOTE: 这里的store, 是watcher(Event)的store, 所以拿不到..........
-			relatedPodInterface, exists, err := w.sharedWatchers["Pod"].GetByKey(key)
-			if exists && err == nil {
-				relatedPod, ok := relatedPodInterface.(*v1.Pod)
-				if ok {
-					owners := relatedPod.GetOwnerReferences()
-					if len(owners) >= 1 {
-						ownerUID = string(owners[0].UID)
-					}
-				}
-			} else {
-				glog.Warnf("The owner of Event's related-object not exists! Event=%v, related-object=%s", event, key)
-			}
-		}
-	}
-
 	glog.Infof("Ready to sync: %s %s: %s/%s", eventAction, w.resourceType, namespace, name)
 	syncData := &action.SyncData{
 		Kind:      w.resourceType,

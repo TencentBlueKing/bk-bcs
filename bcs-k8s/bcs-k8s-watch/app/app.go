@@ -26,7 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/k8s"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output"
-	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/action"
 
 	global "github.com/Tencent/bk-bcs/bcs-common/common"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -154,13 +153,6 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 		glog.Infof("got non netservice address this moment")
 	}
 
-	// init alertor with bcs-health.
-	moduleIP := config.Default.HostIP
-	alertor, err := action.NewAlertor(clusterID, moduleIP, config.BCS.ZkHosts, config.BCS.TLS)
-	if err != nil {
-		glog.Warnf("Init Alertor fail, no alarm will be sent!")
-	}
-
 	// init server actions && register web server && register metrics server
 	glog.Info("start http server")
 	certConfig := bcs.CertConfig{
@@ -178,9 +170,8 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 		}
 	}()
 
-	go bcs.RunPrometheusMetricsServer(config)
+	bcs.RunPrometheusMetricsServer(config)
 	glog.Info("start http server successful")
-
 
 	// init resourceList to watch
 	err = resources.InitResourceList(&config.K8s)
@@ -190,7 +181,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create writer.
 	glog.Info("creating writer now...")
-	writer, err := output.NewWriter(clusterID, storageService, alertor)
+	writer, err := output.NewWriter(clusterID, storageService)
 	if err != nil {
 		panic(err)
 	}

@@ -89,20 +89,16 @@ type Writer struct {
 	// settled handlers.
 	Handlers map[string]*Handler
 
-	// alarm sender.
-	alertor *action.Alertor
-
 	// goroutine stop channel.
 	stopCh <-chan struct{}
 }
 
 // NewWriter creates a new Writer instance which base on bcs-storage service and alarm sender.
-func NewWriter(clusterID string, storageService *bcs.InnerService, alertor *action.Alertor) (*Writer, error) {
+func NewWriter(clusterID string, storageService *bcs.InnerService) (*Writer, error) {
 	w := &Writer{
 		queue:      make(chan *action.SyncData, defaultQueueSizeNormalMetadata),
 		alarmQueue: make(chan *action.SyncData, defaultQueueSizeAlarmMetadata),
 		Handlers:   make(map[string]*Handler),
-		alertor:    alertor,
 		clusterID:  clusterID,
 	}
 
@@ -186,9 +182,8 @@ func (w *Writer) distributeAlarm() {
 	// try to keep reading from queue until there is no more data every period.
 	for {
 		select {
-		case data := <-w.alarmQueue:
-			metrics.ReportK8sWatchHandlerQueueLengthDec(w.clusterID, AlarmQueue)
-			w.alertor.DoAlarm(data)
+		case _ = <-w.alarmQueue:
+			//w.alertor.DoAlarm(data)
 
 		case <-time.After(defaultQueueTimeout):
 			// no more data, break loop.
@@ -231,7 +226,7 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	// keep consuming metadata from queues.
 	glog.Info("Writer keeps consuming/distributing metadata now")
 	go wait.NonSlidingUntil(w.distributeNormal, defaultDistributeInterval, w.stopCh)
-	go wait.NonSlidingUntil(w.distributeAlarm, defaultDistributeInterval, w.stopCh)
+	// go wait.NonSlidingUntil(w.distributeAlarm, defaultDistributeInterval, w.stopCh)
 
 	// report writer module queueLen metrics
 	go wait.Until(w.reportWriterQueueLength, defaultHandlerReportPeriod, w.stopCh)
