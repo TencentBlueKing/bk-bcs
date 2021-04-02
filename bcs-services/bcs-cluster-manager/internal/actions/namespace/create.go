@@ -15,10 +15,12 @@ package namespace
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -101,6 +103,10 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		return
 	}
 	if err := ca.createNamespace(); err != nil {
+		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
+			ca.setResp(types.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+			return
+		}
 		ca.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

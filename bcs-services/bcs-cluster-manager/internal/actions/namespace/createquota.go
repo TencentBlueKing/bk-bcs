@@ -242,6 +242,10 @@ func (cqa *CreateQuotaAction) Handle(
 	}
 
 	if err := cqa.createNamespace(); err != nil {
+		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
+			cqa.setResp(types.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
+			return
+		}
 		cqa.setResp(types.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
