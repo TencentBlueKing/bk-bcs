@@ -162,6 +162,7 @@ func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
 	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
 	if err != nil {
 		return nil, err
@@ -231,7 +232,7 @@ func putResources(req *restful.Request, resourceFeatList []string) (operator.M, 
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-
+	store.SetSoftDeletion(true)
 	err = store.Put(req.Request.Context(), getTable(req), data, putOption)
 	if err != nil {
 		return nil, err
@@ -298,7 +299,7 @@ func deleteResources(req *restful.Request, resourceFeatList []string) ([]operato
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-
+	store.SetSoftDeletion(true)
 	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
 	if err != nil {
 		return nil, err
@@ -387,12 +388,12 @@ func deleteBatchResources(req *restful.Request, resourceFeatList []string) ([]op
 	}
 	rmOption := &lib.StoreRemoveOption{
 		Cond:           condition,
-		IgnoreNotFound: false,
+		IgnoreNotFound: true,
 	}
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
-
+	store.SetSoftDeletion(true)
 	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
 	if err != nil {
 		return nil, err
