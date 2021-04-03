@@ -26,6 +26,7 @@ import (
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
 	"bk-bscp/internal/strategy"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -480,10 +481,10 @@ func (p *Puller) report(cfgID, releaseID, effectTime string, effectErr error) er
 	}
 
 	if effectErr == nil {
-		reportInfo.EffectCode = EffectCodeSuccess
-		reportInfo.EffectMsg = EffectMsgSuccess
+		reportInfo.EffectCode = types.EffectCodeSuccess
+		reportInfo.EffectMsg = types.EffectMsgSuccess
 	} else {
-		reportInfo.EffectCode = EffectCodeFailed
+		reportInfo.EffectCode = types.EffectCodeFailed
 		reportInfo.EffectMsg = effectErr.Error()
 	}
 	reportInfos = append(reportInfos, reportInfo)
