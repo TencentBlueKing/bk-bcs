@@ -116,6 +116,12 @@ func (act *UpdateAction) verify() error {
 }
 
 func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryVariable(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.VarId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -126,6 +132,26 @@ func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *UpdateAction) queryVariable() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryVariableReq{
+		Seq:   act.kit.Rid,
+		BizId: act.req.BizId,
+		VarId: act.req.VarId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("UpdateVariable[%s]| request to DataManager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryVariable(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager QueryVariable, %+v", err)
+	}
+	return resp.Code, resp.Message
 }
 
 func (act *UpdateAction) updateVariable() (pbcommon.ErrCode, string) {

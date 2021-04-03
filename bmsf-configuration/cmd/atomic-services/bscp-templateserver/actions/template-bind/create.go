@@ -126,6 +126,12 @@ func (act *CreateAction) genConfigID() error {
 }
 
 func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryConfigTemplate(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.TemplateId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -136,6 +142,26 @@ func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *CreateAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryConfigTemplateReq{
+		Seq:        act.kit.Rid,
+		BizId:      act.req.BizId,
+		TemplateId: act.req.TemplateId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("CreateTemplateBind[%s]| request to DataManager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryConfigTemplate(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager QueryConfigTemplate, %+v", err)
+	}
+	return resp.Code, resp.Message
 }
 
 func (act *CreateAction) queryApp() (pbcommon.ErrCode, string) {

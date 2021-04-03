@@ -140,6 +140,12 @@ func (act *RenderAction) verify() error {
 }
 
 func (act *RenderAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryConfigTemplate(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.TemplateId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -155,6 +161,12 @@ func (act *RenderAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_OK, ""
 	}
 
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryVariableGroup(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err = authorization.Authorize(act.kit, act.req.VarGroupId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -168,6 +180,10 @@ func (act *RenderAction) authorize() (pbcommon.ErrCode, string) {
 }
 
 func (act *RenderAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
+	if act.template != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryConfigTemplateReq{
 		Seq:        act.kit.Rid,
 		BizId:      act.req.BizId,
@@ -190,6 +206,30 @@ func (act *RenderAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
 	act.template = resp.Data
 
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *RenderAction) queryVariableGroup() (pbcommon.ErrCode, string) {
+	if len(act.req.VarGroupId) == 0 {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
+	r := &pbdatamanager.QueryVariableGroupReq{
+		Seq:        act.kit.Rid,
+		BizId:      act.req.BizId,
+		VarGroupId: act.req.VarGroupId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("RenderConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryVariableGroup(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager QueryVariableGroup, %+v", err)
+	}
+	return resp.Code, resp.Message
 }
 
 func (act *RenderAction) queryConfigTemplateVersion() (pbcommon.ErrCode, string) {

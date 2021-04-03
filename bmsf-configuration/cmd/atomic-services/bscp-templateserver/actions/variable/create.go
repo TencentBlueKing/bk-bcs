@@ -124,6 +124,12 @@ func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_OK, ""
 	}
 
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryVariableGroup(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.VarGroupId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -134,6 +140,26 @@ func (act *CreateAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *CreateAction) queryVariableGroup() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryVariableGroupReq{
+		Seq:        act.kit.Rid,
+		BizId:      act.req.BizId,
+		VarGroupId: act.req.VarGroupId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("CreateVariable[%s]| request to DataManager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryVariableGroup(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager QueryVariableGroup, %+v", err)
+	}
+	return resp.Code, resp.Message
 }
 
 func (act *CreateAction) genVariableID() error {
