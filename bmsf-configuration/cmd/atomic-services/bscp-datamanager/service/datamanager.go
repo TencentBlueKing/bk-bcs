@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc"
 
 	"bk-bscp/cmd/atomic-services/bscp-datamanager/modules/metrics"
+	"bk-bscp/cmd/atomic-services/bscp-datamanager/modules/statistics"
 	"bk-bscp/internal/dbsharding"
 	pbauthserver "bk-bscp/internal/protocol/authserver"
 	pb "bk-bscp/internal/protocol/datamanager"
@@ -63,6 +64,9 @@ type DataManager struct {
 
 	// prometheus metrics collector.
 	collector *metrics.Collector
+
+	// internal business statistics.
+	statistics *statistics.Collector
 
 	// action executor.
 	executor *executor.Executor
@@ -205,6 +209,10 @@ func (dm *DataManager) initMetricsCollector() {
 		}
 	}()
 	logger.Info("metrics collector setup success.")
+
+	dm.statistics = statistics.NewCollector(dm.viper, dm.collector, dm.smgr)
+	dm.statistics.Start()
+	logger.Info("internal statistics setup success.")
 }
 
 // initializes action executor.
@@ -274,6 +282,9 @@ func (dm *DataManager) Run() {
 
 // Stop stops the datamanager.
 func (dm *DataManager) Stop() {
+	// stop internal business statistics.
+	dm.statistics.Stop()
+
 	// close authserver gRPC connection when server exit.
 	if dm.authSvrConn != nil {
 		dm.authSvrConn.Close()

@@ -30,6 +30,7 @@ import (
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/internal/strategy"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -181,7 +182,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.Re
 			CfgID:      info.CfgId,
 			ReleaseID:  info.ReleaseId,
 		}).
-		Where("Feffect_code != 0").
+		Where("Feffect_code != ?", types.EffectCodeSuccess).
 		Assign(appInstanceRelease).
 		FirstOrCreate(&appInstanceRelease).Error
 
@@ -205,7 +206,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseEffect(info *pbcommon.Re
 				CfgID:      info.CfgId,
 				ReleaseID:  info.ReleaseId,
 			}).
-			Where("Feffect_code != 0").
+			Where("Feffect_code != ?", types.EffectCodeSuccess).
 			Assign(appInstanceRelease).
 			FirstOrCreate(&appInstanceRelease).Error
 
@@ -322,7 +323,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.Re
 				CfgID:      cfgID,
 				ReleaseID:  finalReleaseIDs[i],
 			}).
-			Where("Freload_code NOT IN (1, 2)").
+			Where("Freload_code NOT IN (?, ?)", types.ReloadCodeSuccess, types.ReloadCodeRollbackSuccess).
 			Assign(appInstanceRelease).
 			FirstOrCreate(&appInstanceRelease).Error
 
@@ -348,7 +349,7 @@ func (act *CreateReleaseAction) createAppInstanceReleaseReload(info *pbcommon.Re
 					CfgID:      cfgID,
 					ReleaseID:  finalReleaseIDs[i],
 				}).
-				Where("Freload_code NOT IN (1, 2)").
+				Where("Freload_code NOT IN (?, ?)", types.ReloadCodeSuccess, types.ReloadCodeRollbackSuccess).
 				Assign(appInstanceRelease).
 				FirstOrCreate(&appInstanceRelease).Error
 

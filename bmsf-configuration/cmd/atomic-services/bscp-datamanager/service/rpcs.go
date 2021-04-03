@@ -161,7 +161,7 @@ func (dm *DataManager) DeleteApp(ctx context.Context, req *pb.DeleteAppReq) (*pb
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := appaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := appaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -368,7 +368,7 @@ func (dm *DataManager) DeleteConfigTemplate(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := templateaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := templateaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -2126,7 +2126,7 @@ func (dm *DataManager) DeleteVariableGroup(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := variablegroupaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := variablegroupaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -2241,7 +2241,7 @@ func (dm *DataManager) DeleteVariable(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := variableaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := variableaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
