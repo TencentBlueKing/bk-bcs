@@ -21,7 +21,7 @@ export GO111MODULE=on
 
 default:
 	@echo -e "\e[34;1mBuilding $(SERVER)...\033[0m"
-	go build -ldflags ${LDVersionFLAG} -gcflags "-N -l" -o $(BIN) main.go
+	go build -ldflags ${LDVersionFLAG} -o $(BIN) main.go
 	@cp -r etc $(BINDIR)
 	@sh $(SCRIPTS)/daemon-control/generator.sh '$(SERVER)' '$(ARGS)' '$(BINDIR)'
 	@echo -e "\e[34;1mBuild $(SERVER) success!\n\033[0m"

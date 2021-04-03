@@ -35,7 +35,7 @@ func CronJobs() []ctm.Job {
 // register crons here.
 func init() {
 	// group-default.job-echo
-	register(&groupDefaultJobEcho.Job{Name: "group-default.job-echo"})
+	register(&groupdefaultjobecho.Job{Name: "group-default.job-echo"})
 
 	// TODO add your cron job pkg here.
 }

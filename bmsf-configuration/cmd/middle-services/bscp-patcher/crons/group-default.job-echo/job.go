@@ -10,7 +10,7 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
-package groupDefaultJobEcho
+package groupdefaultjobecho
 
 import (
 	"bk-bscp/cmd/middle-services/bscp-patcher/modules/ctm"
