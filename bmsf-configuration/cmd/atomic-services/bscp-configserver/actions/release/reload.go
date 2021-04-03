@@ -141,6 +141,12 @@ func (act *ReloadAction) verify() error {
 }
 
 func (act *ReloadAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(act.req.AppId); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -277,6 +283,10 @@ func (act *ReloadAction) querySubReleaseList() (pbcommon.ErrCode, string) {
 }
 
 func (act *ReloadAction) queryApp(appID string) (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
@@ -293,6 +303,7 @@ func (act *ReloadAction) queryApp(appID string) (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
 	}
 	act.app = resp.Data
+
 	return resp.Code, resp.Message
 }
 
@@ -311,6 +322,10 @@ func (act *ReloadAction) Do() error {
 		}
 		act.release = release
 
+		if release.AppId != act.req.AppId {
+			return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "can't reload release, inconsonant app_id")
+		}
+
 		// query app.
 		if errCode, errMsg := act.queryApp(act.release.AppId); errCode != pbcommon.ErrCode_E_OK {
 			return act.Err(errCode, errMsg)
@@ -326,6 +341,10 @@ func (act *ReloadAction) Do() error {
 			act.multiRelease.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
 			return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
 				"target multi release not in published/rollbacked state")
+		}
+
+		if act.multiRelease.AppId != act.req.AppId {
+			return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "can't reload multi release, inconsonant app_id")
 		}
 
 		// query multi release sub release list.

@@ -113,6 +113,10 @@ func (act *PublishAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
 	}
+	if err = common.ValidateString("app_id", act.req.AppId,
+		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
+		return err
+	}
 	if err = common.ValidateString("multi_release_id", act.req.MultiReleaseId,
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
@@ -121,6 +125,12 @@ func (act *PublishAction) verify() error {
 }
 
 func (act *PublishAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -134,10 +144,14 @@ func (act *PublishAction) authorize() (pbcommon.ErrCode, string) {
 }
 
 func (act *PublishAction) queryApp() (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
-		AppId: act.multiRelease.AppId,
+		AppId: act.req.AppId,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
@@ -312,6 +326,10 @@ func (act *PublishAction) Do() error {
 	if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_INIT) {
 		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
 			"can't publish the multi release which is not init state")
+	}
+	if act.multiRelease.AppId != act.req.AppId {
+		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
+			"can't publish the multi release, inconsonant app_id")
 	}
 
 	// query app.

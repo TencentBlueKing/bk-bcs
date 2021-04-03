@@ -122,6 +122,12 @@ func (act *PublishAction) verify() error {
 }
 
 func (act *PublishAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -228,10 +234,14 @@ func (act *PublishAction) queryRelease() (pbcommon.ErrCode, string) {
 }
 
 func (act *PublishAction) queryApp() (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
-		AppId: act.release.AppId,
+		AppId: act.req.AppId,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
@@ -244,6 +254,7 @@ func (act *PublishAction) queryApp() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
 	}
 	act.app = resp.Data
+
 	return resp.Code, resp.Message
 }
 
@@ -252,6 +263,10 @@ func (act *PublishAction) Do() error {
 	// query release.
 	if errCode, errMsg := act.queryRelease(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
+	}
+
+	if act.release.AppId != act.req.AppId {
+		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "can't publish release, inconsonant app_id")
 	}
 
 	// query app.

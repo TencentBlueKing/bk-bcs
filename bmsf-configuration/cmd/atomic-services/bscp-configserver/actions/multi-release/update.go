@@ -103,6 +103,10 @@ func (act *UpdateAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
 	}
+	if err = common.ValidateString("app_id", act.req.AppId,
+		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
+		return err
+	}
 	if err = common.ValidateString("multi_release_id", act.req.MultiReleaseId,
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
@@ -119,6 +123,12 @@ func (act *UpdateAction) verify() error {
 }
 
 func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -129,6 +139,25 @@ func (act *UpdateAction) authorize() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *UpdateAction) queryApp() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryAppReq{
+		Seq:   act.kit.Rid,
+		BizId: act.req.BizId,
+		AppId: act.req.AppId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("UpdateMultiRelease[%s]| request to datamanager, %+v", act.kit.Rid, r)
+
+	resp, err := act.dataMgrCli.QueryApp(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
+	}
+	return resp.Code, resp.Message
 }
 
 func (act *UpdateAction) update() (pbcommon.ErrCode, string) {
