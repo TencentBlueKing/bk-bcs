@@ -7,7 +7,13 @@ package authserver;
 service Auth {
     rpc Authorize(AuthorizeReq) returns (AuthorizeResp) {}
     rpc AddPolicy(AddPolicyReq) returns (AddPolicyResp) {}
+    rpc RemovePolicy(RemovePolicyReq) returns (RemovePolicyResp) {}
     rpc Healthz(HealthzReq) returns (HealthzResp) {}
+}
+
+enum RemovePolicyMode {
+    RPM_SINGLE = 0;
+    RPM_MULTI  = 1;
 }
 
 message AuthMetadata {
@@ -36,6 +42,18 @@ message AddPolicyReq {
 }
 
 message AddPolicyResp {
+    string         seq     = 1;
+    common.ErrCode code    = 2;
+    string         message = 3;
+}
+
+message RemovePolicyReq {
+    string       seq       = 1;
+    AuthMetadata metadata  = 2;
+    int32        mode      = 3;
+}
+
+message RemovePolicyResp {
     string         seq     = 1;
     common.ErrCode code    = 2;
     string         message = 3;
