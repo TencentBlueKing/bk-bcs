@@ -234,7 +234,7 @@ hook-operator:pre
 federated-apiserver:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-federated-apiserver ${PACKAGEPATH}/bcs-k8s-master
-	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/apiserver ./cmd/apiserver/main.go
+	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/bcs-federated-apiserver ./cmd/apiserver/main.go
 
 federated-apiserver-kubectl-agg:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
