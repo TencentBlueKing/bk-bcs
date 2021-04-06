@@ -388,16 +388,6 @@
   dest_path: /api/v2/config/list_reachable/biz/{biz_id}/app/{app_id}/app_instance
   dest_http_method: POST
 
-- path: /v2/bscp/get_history_app_instance_list/
-  name: get_history_app_instance_list
-  label: 查询历史应用实例列表
-  label_en: quert history app instance list
-  suggest_method: POST
-  api_type: query
-  comp_codename: generic.v2.bscp.bscp_component
-  dest_path: /api/v2/config/list_history/biz/{biz_id}/app/{app_id}/app_instance
-  dest_http_method: POST
-
 - path: /v2/bscp/create_procattr/
   name: create_procattr
   label: 创建主机应用归属信息
