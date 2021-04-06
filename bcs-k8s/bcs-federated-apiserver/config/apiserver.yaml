@@ -61,7 +61,7 @@ spec:
           mountPath: /apiserver.local.config/certificates
           readOnly: true
         command:
-        - "./apiserver"
+        - "./bcs-federated-apiserver"
         args:
         - "--etcd-servers=http://etcd-svc:2379"
         - "--tls-cert-file=/apiserver.local.config/certificates/tls.crt"
