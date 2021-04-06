@@ -1428,29 +1428,6 @@ func (dm *DataManager) CreateAppInstance(ctx context.Context,
 	return response, nil
 }
 
-// QueryHistoryAppInstances returns history app instances.
-func (dm *DataManager) QueryHistoryAppInstances(ctx context.Context,
-	req *pb.QueryHistoryAppInstancesReq) (*pb.QueryHistoryAppInstancesResp, error) {
-
-	rtime := time.Now()
-	method := common.GRPCMethod(ctx)
-	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
-
-	response := new(pb.QueryHistoryAppInstancesResp)
-
-	defer func() {
-		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
-	}()
-
-	action := appinstanceaction.NewHistoryAction(ctx, dm.viper, dm.smgr, req, response)
-	if err := dm.executor.Execute(action); err != nil {
-		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
-	}
-
-	return response, nil
-}
-
 // QueryReachableAppInstances returns reachable app instances.
 func (dm *DataManager) QueryReachableAppInstances(ctx context.Context,
 	req *pb.QueryReachableAppInstancesReq) (*pb.QueryReachableAppInstancesResp, error) {
