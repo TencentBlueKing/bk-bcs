@@ -15,6 +15,7 @@ query app instance list that effected target release
 | cfg_id           |  string   | Y        | config id   |
 | release_id       |  string   | Y        | single release id |
 | page             |  object   | Y        | query page settings |
+| timeout_sec      |  integer  | N        | effect timeout second num, default 600 |
 
 #### page
 
@@ -59,7 +60,14 @@ query app instance list that effected target release
                 "ip": "127.0.0.1",
                 "path": "/data/configs",
                 "labels":"{\"Labels\":{\"version\":\"1.0\"}}",
-                "state": 0,
+                "cfg_id": "F-0867a798-e9c1-11e9-8c23-525400f99278",
+                "release_id": "R-0967g678-e9c1-11e9-8c23-525400f99278",
+                "effect_time": "2019-08-29 17:18:22",
+                "effect_code": 0,
+                "effect_msg": "SUCCESS",
+                "reload_time": "2019-08-29 17:18:25",
+                "reload_code": 1,
+                "reload_msg": "SUCCESS",
                 "created_at": "2019-07-29 11:57:20",
                 "updated_at": "2019-07-29 11:57:20"
             }
@@ -87,6 +95,13 @@ query app instance list that effected target release
 | ip             |  string   | ip of instance |
 | path           |  string   | configs cache path of instance |
 | labels         |  string   | labels of instance(JSON raw string) |
-| state          |  integer  | state default 0: valid |
+| cfg_id         |  string   | config id |
+| release_id     |  string   | release id |
+| effect_time    |  string   | effect time, '2019-08-29 17:18:22' |
+| effect_code    |  string   | effect result (0:pending 1:success  -1:failed  -2:timeout) |
+| effect_msg     |  string   | effect result info (pending: "PENDING"  success: "SUCCESS"  timeout: "TIMEOUT") |
+| reload_time    |  string   | reload time, '2019-08-29 17:18:22' |
+| reload_code    |  string   | reload result (0:not reload  1:reload success  2:rollback reload success  -1:failed  -2:timeout) |
+| reload_msg     |  string   | reload result info (not reload: "PENDING"  reload success: "SUCCESS"  rollback reload success: "ROLLBACK SUCCESS"  timeout: "TIMEOUT") |
 | created_at     |  string   | create time |
 | updated_at     |  string   | update time |

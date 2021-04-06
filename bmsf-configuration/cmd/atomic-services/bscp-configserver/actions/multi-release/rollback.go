@@ -111,6 +111,10 @@ func (act *RollbackAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
 	}
+	if err = common.ValidateString("app_id", act.req.AppId,
+		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
+		return err
+	}
 	if err = common.ValidateString("multi_release_id", act.req.MultiReleaseId,
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
@@ -119,6 +123,12 @@ func (act *RollbackAction) verify() error {
 }
 
 func (act *RollbackAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -132,10 +142,14 @@ func (act *RollbackAction) authorize() (pbcommon.ErrCode, string) {
 }
 
 func (act *RollbackAction) queryApp() (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
-		AppId: act.multiRelease.AppId,
+		AppId: act.req.AppId,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
@@ -148,6 +162,7 @@ func (act *RollbackAction) queryApp() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
 	}
 	act.app = resp.Data
+
 	return resp.Code, resp.Message
 }
 
@@ -259,6 +274,10 @@ func (act *RollbackAction) Do() error {
 	if act.multiRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) {
 		return act.Err(pbcommon.ErrCode_E_CS_ROLLBACK_UNPUBLISHED_RELEASE,
 			"can't rollback the unpublished multi release.")
+	}
+	if act.multiRelease.AppId != act.req.AppId {
+		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
+			"can't rollback the multi release, inconsonant app_id")
 	}
 
 	// query app.

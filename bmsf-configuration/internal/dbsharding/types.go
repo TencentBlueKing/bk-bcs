@@ -10,32 +10,21 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
-package crons
+package dbsharding
 
-import (
-	"bk-bscp/cmd/middle-services/bscp-patcher/crons/group-default.job-echo"
-	"bk-bscp/cmd/middle-services/bscp-patcher/modules/ctm"
+const (
+	// DBStatusQuestions database status variable 'questions'.
+	DBStatusQuestions = "questions"
+
+	// DBStatusThreadsConnected database status variable 'Threads_connected'.
+	DBStatusThreadsConnected = "Threads_connected"
 )
 
-var (
-	// all registered cron jobs.
-	jobs = []ctm.Job{}
-)
+// DBStatus is db status shown base on SQL 'show status'.
+type DBStatus struct {
+	// VarName variable name.
+	VarName string `gorm:"column:Variable_name"`
 
-// register one crontab job.
-func register(job ctm.Job) {
-	jobs = append(jobs, job)
-}
-
-// CronJobs returns all registered crontab jobs.
-func CronJobs() []ctm.Job {
-	return jobs
-}
-
-// register crons here.
-func init() {
-	// group-default.job-echo
-	register(&groupdefaultjobecho.Job{Name: "group-default.job-echo"})
-
-	// TODO add your cron job pkg here.
+	// VarValue variable value.
+	VarValue int64 `gorm:"column:Value"`
 }

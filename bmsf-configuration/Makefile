@@ -41,7 +41,7 @@ pre:
 	mkdir -p ${OUTPUT_DIR}
 
 ver:
-	@echo ${VERSION} > ${OUTPUT_DIR}/VERSION
+	@echo ${PRODUCT_KIND}-${VERSION} > ${OUTPUT_DIR}/VERSION
 	@cp -rf ${PRO_DIR}/CHANGELOG.md ${OUTPUT_DIR}
 
 ops:

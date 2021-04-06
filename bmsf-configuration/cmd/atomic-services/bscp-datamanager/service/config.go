@@ -77,6 +77,9 @@ func (c *config) check() error {
 	c.viper.BindEnv("metrics.path", c.envName("METRICS_PATH"))
 	c.viper.SetDefault("metrics.path", "/metrics")
 
+	c.viper.BindEnv("metrics.internalStatInterval", c.envName("METRICS_INTERNAL_STAT_INTERVAL"))
+	c.viper.SetDefault("metrics.internalStatInterval", 10*time.Minute)
+
 	c.viper.BindEnv("etcdCluster.endpoints", c.envName("ETCD_ENDPOINTS"))
 	if !c.viper.IsSet("etcdCluster.endpoints") {
 		return errors.New("config check, missing 'etcdCluster.endpoints'")

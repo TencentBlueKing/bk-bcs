@@ -17,13 +17,17 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"path/filepath"
+	"time"
 
 	"github.com/spf13/viper"
 
 	"bk-bscp/internal/database"
+	"bk-bscp/internal/orderedmap"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/configserver"
 	pbdatamanager "bk-bscp/internal/protocol/datamanager"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/kit"
 	"bk-bscp/pkg/logger"
@@ -37,6 +41,13 @@ type EffectedAction struct {
 
 	req  *pb.QueryEffectedAppInstancesReq
 	resp *pb.QueryEffectedAppInstancesResp
+
+	release *pbcommon.Release
+
+	isEffectTimeout bool
+
+	matchedInstances  []*pbcommon.AppInstanceRelease
+	effectedInstances []*pbcommon.AppInstanceRelease
 }
 
 // NewEffectedAction creates new EffectedAction.
@@ -95,6 +106,10 @@ func (act *EffectedAction) verify() error {
 		return err
 	}
 
+	if act.req.TimeoutSec == 0 {
+		act.req.TimeoutSec = act.viper.GetInt32("server.effectTimeoutSec")
+	}
+
 	if act.req.Page == nil {
 		return errors.New("invalid input data, page is required")
 	}
@@ -109,13 +124,115 @@ func (act *EffectedAction) verify() error {
 	return nil
 }
 
-func (act *EffectedAction) effected() (pbcommon.ErrCode, string) {
+func (act *EffectedAction) queryRelease() (pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryReleaseReq{
+		Seq:       act.kit.Rid,
+		BizId:     act.req.BizId,
+		ReleaseId: act.req.ReleaseId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("QueryEffectedAppInstances[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryRelease(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryRelease, %+v", err)
+	}
+	if resp.Code != pbcommon.ErrCode_E_OK {
+		return resp.Code, resp.Message
+	}
+	act.release = resp.Data
+
+	return pbcommon.ErrCode_E_OK, "OK"
+}
+
+func (act *EffectedAction) checkEffectTimeout() (pbcommon.ErrCode, string) {
+	baseTime, err := time.ParseInLocation("2006-01-02 15:04:05", act.release.UpdatedAt, time.Local)
+	if err != nil {
+		baseTime = time.Now()
+		logger.Warnf("QueryEffectedAppInstances[%s]| parse release[%s] effect timeout, local base timestamp, %+v",
+			act.kit.Rid, act.req.ReleaseId, err)
+	}
+
+	if time.Now().Unix()-baseTime.Unix() > int64(act.req.TimeoutSec) {
+		act.isEffectTimeout = true
+	}
+	return pbcommon.ErrCode_E_OK, "OK"
+}
+
+func (act *EffectedAction) queryMatchedAppInstances(index, limit int) ([]*pbcommon.AppInstanceRelease, pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryMatchedAppInstancesReq{
+		Seq:        act.kit.Rid,
+		BizId:      act.req.BizId,
+		AppId:      act.req.AppId,
+		StrategyId: act.release.StrategyId,
+		Page:       &pbcommon.Page{Start: int32(index), Limit: int32(limit)},
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("QueryEffectedAppInstances[%s]| request to datamanager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryMatchedAppInstances(ctx, r)
+	if err != nil {
+		return nil, pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to datamanager QueryMatchedAppInstances, %+v", err)
+	}
+	if resp.Code != pbcommon.ErrCode_E_OK {
+		return nil, resp.Code, resp.Message
+	}
+
+	appInstanceReleases := []*pbcommon.AppInstanceRelease{}
+
+	for _, inst := range resp.Data.Info {
+		appInstanceReleases = append(appInstanceReleases, &pbcommon.AppInstanceRelease{
+			InstanceId: inst.Id,
+			BizId:      inst.BizId,
+			AppId:      inst.AppId,
+			CloudId:    inst.CloudId,
+			Ip:         inst.Ip,
+			Path:       inst.Path,
+			Labels:     inst.Labels,
+			CfgId:      act.req.CfgId,
+			ReleaseId:  act.req.ReleaseId,
+		})
+	}
+
+	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
+}
+
+func (act *EffectedAction) queryMatchedAppInstanceList() ([]*pbcommon.AppInstanceRelease, pbcommon.ErrCode, string) {
+	appInstanceReleases := []*pbcommon.AppInstanceRelease{}
+
+	index := 0
+	limit := database.BSCPQUERYLIMITLB
+
+	for {
+		instanceReleases, errCode, errMsg := act.queryMatchedAppInstances(index, limit)
+		if errCode != pbcommon.ErrCode_E_OK {
+			return nil, errCode, errMsg
+		}
+		appInstanceReleases = append(appInstanceReleases, instanceReleases...)
+
+		if len(instanceReleases) < limit {
+			break
+		}
+		index += len(instanceReleases)
+	}
+
+	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
+}
+
+func (act *EffectedAction) queryEffectedAppInstances(index, limit int) ([]*pbcommon.AppInstanceRelease, pbcommon.ErrCode, string) {
 	r := &pbdatamanager.QueryEffectedAppInstancesReq{
 		Seq:       act.kit.Rid,
 		BizId:     act.req.BizId,
 		CfgId:     act.req.CfgId,
 		ReleaseId: act.req.ReleaseId,
-		Page:      act.req.Page,
+		Page:      &pbcommon.Page{Start: int32(index), Limit: int32(limit)},
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
@@ -125,21 +242,160 @@ func (act *EffectedAction) effected() (pbcommon.ErrCode, string) {
 
 	resp, err := act.dataMgrCli.QueryEffectedAppInstances(ctx, r)
 	if err != nil {
-		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
+		return nil, pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN,
 			fmt.Sprintf("request to datamanager QueryEffectedAppInstances, %+v", err)
 	}
 	if resp.Code != pbcommon.ErrCode_E_OK {
-		return resp.Code, resp.Message
+		return nil, resp.Code, resp.Message
 	}
-	act.resp.Data = &pb.QueryEffectedAppInstancesResp_RespData{TotalCount: resp.Data.TotalCount, Info: resp.Data.Info}
+	return resp.Data.Info, pbcommon.ErrCode_E_OK, "OK"
+}
+
+func (act *EffectedAction) queryEffectedAppInstanceList() ([]*pbcommon.AppInstanceRelease, pbcommon.ErrCode, string) {
+	appInstanceReleases := []*pbcommon.AppInstanceRelease{}
+
+	index := 0
+	limit := database.BSCPQUERYLIMITLB
+
+	for {
+		instanceReleases, errCode, errMsg := act.queryEffectedAppInstances(index, limit)
+		if errCode != pbcommon.ErrCode_E_OK {
+			return nil, errCode, errMsg
+		}
+		appInstanceReleases = append(appInstanceReleases, instanceReleases...)
+
+		if len(instanceReleases) < limit {
+			break
+		}
+		index += len(instanceReleases)
+	}
+
+	return appInstanceReleases, pbcommon.ErrCode_E_OK, "OK"
+}
+
+func (act *EffectedAction) instanceKey(cloudID, ip, path string) string {
+	metadata := cloudID + ":" + ip + ":" + filepath.Clean(path)
+
+	// gen sha1 as an instance key.
+	key := common.SHA1(metadata)
+	if len(key) != 0 {
+		return key
+	}
+	return metadata
+}
+
+func (act *EffectedAction) effected() (pbcommon.ErrCode, string) {
+	// effected instance map, instance key --> AppInstanceRelease.
+	effectedInstancesMap := orderedmap.New()
+
+	for _, instance := range act.effectedInstances {
+		key := act.instanceKey(instance.CloudId, instance.Ip, instance.Path)
+		effectedInstancesMap.Set(key, instance)
+	}
+
+	// matched instance map, instance key --> AppInstanceRelease.
+	matchedInstancesMap := orderedmap.New()
+
+	for _, instance := range act.matchedInstances {
+		key := act.instanceKey(instance.CloudId, instance.Ip, instance.Path)
+
+		effectedInstance, isExist := effectedInstancesMap.Get(key)
+		if isExist {
+			matchedInstancesMap.Set(key, effectedInstance)
+			continue
+		}
+
+		if act.isEffectTimeout {
+			instance.EffectCode = types.EffectCodeTimeout
+			instance.EffectMsg = types.EffectMsgTimeout
+		} else {
+			instance.EffectCode = types.EffectCodePending
+			instance.EffectMsg = types.EffectMsgPending
+		}
+		matchedInstancesMap.Set(key, instance)
+	}
+
+	// add new matched instances.
+	for _, instance := range act.effectedInstances {
+		key := act.instanceKey(instance.CloudId, instance.Ip, instance.Path)
+
+		_, isExist := matchedInstancesMap.Get(key)
+		if !isExist {
+			matchedInstancesMap.Set(key, instance)
+		}
+	}
+
+	// rebuild final app instance list and split pages in memory.
+	finalEffectedAppInstances := []*pbcommon.AppInstanceRelease{}
+	for el := matchedInstancesMap.Front(); el != nil; el = el.Next() {
+		instanceRelease, ok := el.Value.(*pbcommon.AppInstanceRelease)
+		if ok {
+			finalEffectedAppInstances = append(finalEffectedAppInstances, instanceRelease)
+		}
+	}
+
+	start := act.req.Page.Start
+	end := start + act.req.Page.Limit
+
+	var totalCount int64
+	if act.req.Page.ReturnTotal {
+		totalCount = int64(len(finalEffectedAppInstances))
+	}
+
+	if int(start) >= len(finalEffectedAppInstances) {
+		act.resp.Data = &pb.QueryEffectedAppInstancesResp_RespData{
+			TotalCount: uint32(totalCount),
+			Info:       []*pbcommon.AppInstanceRelease{},
+		}
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
+	if int(end) >= len(finalEffectedAppInstances) {
+		act.resp.Data = &pb.QueryEffectedAppInstancesResp_RespData{
+			TotalCount: uint32(totalCount),
+			Info:       finalEffectedAppInstances[start:],
+		}
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
+	act.resp.Data = &pb.QueryEffectedAppInstancesResp_RespData{
+		TotalCount: uint32(totalCount),
+		Info:       finalEffectedAppInstances[start:end],
+	}
 
 	return pbcommon.ErrCode_E_OK, "OK"
 }
 
 // Do makes the workflows of this action base on input messages.
 func (act *EffectedAction) Do() error {
+	// query release info.
+	if errCode, errMsg := act.queryRelease(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+
+	// check release effect timeout.
+	if errCode, errMsg := act.checkEffectTimeout(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+
+	// query matched instance list.
+	matchedInstances, errCode, errMsg := act.queryMatchedAppInstanceList()
+	if errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+	act.matchedInstances = matchedInstances
+
+	// query effected instance list.
+	effectedInstances, errCode, errMsg := act.queryEffectedAppInstanceList()
+	if errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+	act.effectedInstances = effectedInstances
+
+	// build effected instance result.
 	if errCode, errMsg := act.effected(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
+
 	return nil
 }

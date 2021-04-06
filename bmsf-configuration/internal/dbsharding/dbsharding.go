@@ -542,6 +542,47 @@ func (mgr *ShardingManager) QuerySharding(key string) (*pbcommon.Sharding, error
 	return sharding, nil
 }
 
+// QueryShardingList returns all shardings.
+func (mgr *ShardingManager) QueryShardingList() ([]*pbcommon.Sharding, error) {
+	var sts []database.Sharding
+
+	if err := mgr.db.
+		Where("Fstate = ?", pbcommon.CommonState_CS_VALID).
+		Find(&sts).Error; err != nil {
+		return nil, err
+	}
+
+	var shardings []*pbcommon.Sharding
+
+	for _, st := range sts {
+		sharding := &pbcommon.Sharding{
+			Key:       st.Key,
+			DbId:      st.DBID,
+			DbName:    st.DBName,
+			Memo:      st.Memo,
+			State:     st.State,
+			CreatedAt: st.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt: st.UpdatedAt.Format("2006-01-02 15:04:05"),
+		}
+		shardings = append(shardings, sharding)
+	}
+
+	return shardings, nil
+}
+
+// QueryShardingCount returns all shardings count.
+func (mgr *ShardingManager) QueryShardingCount() (int64, error) {
+	var totalCount int64
+
+	if err := mgr.db.
+		Model(&database.Sharding{}).
+		Where("Fstate = ?", pbcommon.CommonState_CS_VALID).
+		Count(&totalCount).Error; err != nil {
+		return 0, err
+	}
+	return totalCount, nil
+}
+
 // UpdateSharding updates target sharding relation.
 func (mgr *ShardingManager) UpdateSharding(sharding *pbcommon.Sharding) error {
 	ups := map[string]interface{}{
@@ -551,4 +592,25 @@ func (mgr *ShardingManager) UpdateSharding(sharding *pbcommon.Sharding) error {
 		"State":  sharding.State,
 	}
 	return mgr.db.Model(&database.Sharding{}).Where("Fkey = ?", sharding.Key).Updates(ups).Error
+}
+
+// ShowQuestionsStatus returns db status of target variable 'questions'.
+func (mgr *ShardingManager) ShowQuestionsStatus() (*DBStatus, error) {
+	return mgr.ShowStatus(DBStatusQuestions)
+}
+
+// ShowThreadsConnectedStatus returns db status of target variable 'Threads_connected'.
+func (mgr *ShardingManager) ShowThreadsConnectedStatus() (*DBStatus, error) {
+	return mgr.ShowStatus(DBStatusThreadsConnected)
+}
+
+// ShowStatus returns db status of target variable.
+func (mgr *ShardingManager) ShowStatus(variableName string) (*DBStatus, error) {
+	st := DBStatus{}
+	sql := fmt.Sprintf("show global status like '%s';", variableName)
+
+	if err := mgr.db.Raw(sql).Scan(&st).Error; err != nil {
+		return nil, err
+	}
+	return &st, nil
 }

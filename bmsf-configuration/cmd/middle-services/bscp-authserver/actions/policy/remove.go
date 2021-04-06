@@ -23,12 +23,13 @@ import (
 	"bk-bscp/cmd/middle-services/bscp-authserver/modules/auth/local"
 	"bk-bscp/internal/database"
 	pb "bk-bscp/internal/protocol/authserver"
+	pbauthserver "bk-bscp/internal/protocol/authserver"
 	pbcommon "bk-bscp/internal/protocol/common"
 	"bk-bscp/pkg/common"
 )
 
-// AddAction is policy add action.
-type AddAction struct {
+// RemoveAction is policy remove action.
+type RemoveAction struct {
 	ctx   context.Context
 	viper *viper.Viper
 
@@ -37,16 +38,16 @@ type AddAction struct {
 	localAuthController *local.Controller
 	bkiamAuthController *bkiam.Controller
 
-	req  *pb.AddPolicyReq
-	resp *pb.AddPolicyResp
+	req  *pb.RemovePolicyReq
+	resp *pb.RemovePolicyResp
 }
 
-// NewAddAction creates a new AddAction.
-func NewAddAction(ctx context.Context, viper *viper.Viper, authMode string,
+// NewRemoveAction creates a new RemoveAction.
+func NewRemoveAction(ctx context.Context, viper *viper.Viper, authMode string,
 	localAuthController *local.Controller, bkiamAuthController *bkiam.Controller,
-	req *pb.AddPolicyReq, resp *pb.AddPolicyResp) *AddAction {
+	req *pb.RemovePolicyReq, resp *pb.RemovePolicyResp) *RemoveAction {
 
-	action := &AddAction{
+	action := &RemoveAction{
 		ctx:                 ctx,
 		viper:               viper,
 		authMode:            authMode,
@@ -64,14 +65,14 @@ func NewAddAction(ctx context.Context, viper *viper.Viper, authMode string,
 }
 
 // Err setup error code message in response and return the error.
-func (act *AddAction) Err(errCode pbcommon.ErrCode, errMsg string) error {
+func (act *RemoveAction) Err(errCode pbcommon.ErrCode, errMsg string) error {
 	act.resp.Code = errCode
 	act.resp.Message = errMsg
 	return errors.New(errMsg)
 }
 
 // Input handles the input messages.
-func (act *AddAction) Input() error {
+func (act *RemoveAction) Input() error {
 	if err := act.verify(); err != nil {
 		return act.Err(pbcommon.ErrCode_E_AUTH_PARAMS_INVALID, err.Error())
 	}
@@ -79,13 +80,18 @@ func (act *AddAction) Input() error {
 }
 
 // Output handles the output messages.
-func (act *AddAction) Output() error {
+func (act *RemoveAction) Output() error {
 	// do nothing.
 	return nil
 }
 
-func (act *AddAction) verify() error {
+func (act *RemoveAction) verify() error {
 	var err error
+
+	if err = common.ValidateInt32("mode", act.req.Mode,
+		int32(pbauthserver.RemovePolicyMode_RPM_SINGLE), int32(pbauthserver.RemovePolicyMode_RPM_MULTI)); err != nil {
+		return err
+	}
 
 	if act.req.Metadata == nil {
 		return errors.New("invalid input data, metadata is required")
@@ -111,24 +117,37 @@ func (act *AddAction) verify() error {
 	return nil
 }
 
-func (act *AddAction) addPolicy() (pbcommon.ErrCode, string) {
-	if act.authMode == auth.AuthModeLocal {
-		if _, err := act.localAuthController.AddPolicy(act.req.Metadata.V0,
-			act.req.Metadata.V1, act.req.Metadata.V2); err != nil {
-			return pbcommon.ErrCode_E_AUTH_LOCAL_ADD_POLICY_FAILED, err.Error()
-		}
-	} else {
-		// TODO bkiam auth mode.
-		return pbcommon.ErrCode_E_AUTH_BKIAM_ADD_POLICY_FAILED, "bkiam mode not implemented"
+func (act *RemoveAction) removePolicyMultiMode() (pbcommon.ErrCode, string) {
+	if _, err := act.localAuthController.RemovePolicy("", act.req.Metadata.V1); err != nil {
+		return pbcommon.ErrCode_E_AUTH_LOCAL_REM_POLICY_FAILED, err.Error()
 	}
-
 	return pbcommon.ErrCode_E_OK, ""
 }
 
+func (act *RemoveAction) removePolicySingleMode() (pbcommon.ErrCode, string) {
+	if _, err := act.localAuthController.RemovePolicy(act.req.Metadata.V0,
+		act.req.Metadata.V1, act.req.Metadata.V2); err != nil {
+		return pbcommon.ErrCode_E_AUTH_LOCAL_REM_POLICY_FAILED, err.Error()
+	}
+	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *RemoveAction) removePolicy() (pbcommon.ErrCode, string) {
+	if act.authMode == auth.AuthModeLocal {
+		if act.req.Mode == int32(pbauthserver.RemovePolicyMode_RPM_MULTI) {
+			return act.removePolicyMultiMode()
+		}
+		return act.removePolicySingleMode()
+	}
+
+	// TODO bkiam auth mode.
+	return pbcommon.ErrCode_E_AUTH_BKIAM_REM_POLICY_FAILED, "bkiam mode not implemented"
+}
+
 // Do makes the workflows of this action base on input messages.
-func (act *AddAction) Do() error {
-	// add new policy.
-	if errCode, errMsg := act.addPolicy(); errCode != pbcommon.ErrCode_E_OK {
+func (act *RemoveAction) Do() error {
+	// remove policy.
+	if errCode, errMsg := act.removePolicy(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
 	return nil

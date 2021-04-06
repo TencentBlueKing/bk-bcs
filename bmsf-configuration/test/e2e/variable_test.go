@@ -10,32 +10,13 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
-package crons
+package e2e
 
 import (
-	"bk-bscp/cmd/middle-services/bscp-patcher/crons/group-default.job-echo"
-	"bk-bscp/cmd/middle-services/bscp-patcher/modules/ctm"
+	"testing"
 )
 
-var (
-	// all registered cron jobs.
-	jobs = []ctm.Job{}
-)
-
-// register one crontab job.
-func register(job ctm.Job) {
-	jobs = append(jobs, job)
-}
-
-// CronJobs returns all registered crontab jobs.
-func CronJobs() []ctm.Job {
-	return jobs
-}
-
-// register crons here.
-func init() {
-	// group-default.job-echo
-	register(&groupdefaultjobecho.Job{Name: "group-default.job-echo"})
-
-	// TODO add your cron job pkg here.
+// TestVariable tests the variable cases.
+func TestVariable(t *testing.T) {
+	// TODO variable e2e test cases.
 }

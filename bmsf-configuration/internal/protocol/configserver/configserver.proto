@@ -2293,11 +2293,12 @@ message QueryEffectedAppInstancesReq {
         example: { value: '{"cfg_id": "626889ba-e9c1-11e9-8c23-525400f99278", "release_id":"1fe5da7b-eef5-11e9-aa0e-525400f99278", "page": {"start": 0, "limit": 50}}' }
 	};
 
-    string      biz_id     = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
-    string      app_id     = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用ID", description: "", max_length: 64}];
-    string      cfg_id     = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置ID", description: "", max_length: 64}];
-    string      release_id = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标发布版本ID", description: "", max_length: 64}];
-    common.Page page       = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分页设置", description: ""}];
+    string      biz_id      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
+    string      app_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属应用ID", description: "", max_length: 64}];
+    string      cfg_id      = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标配置ID", description: "", max_length: 64}];
+    string      release_id  = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标发布版本ID", description: "", max_length: 64}];
+    common.Page page        = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分页设置", description: ""}];
+    int32       timeout_sec = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "节点生效超时时间", description: "默认：600，即10分钟"}];
 }
 
 message QueryEffectedAppInstancesResp {
@@ -2456,7 +2457,7 @@ message QueryStrategyListReq {
 	};
 
     string      biz_id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
-    string      app_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标应用ID", description: "可选，非空时将基于目标应用ID查询", max_length: 64}];
+    string      app_id = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标应用ID", description: "", max_length: 64}];
     common.Page page   = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "分页设置", description: ""}];
 }
 
@@ -2492,7 +2493,7 @@ message DeleteStrategyReq {
 	};
 
     string biz_id      = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "所属业务ID", description: "", max_length: 64}];
-    string app_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标应用ID", description: "可选，非空时将基于目标应用ID查询", max_length: 64}];
+    string app_id      = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标应用ID", description: "", max_length: 64}];
     string strategy_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "目标发布策略ID", description: "", max_length: 64}];
 }
 

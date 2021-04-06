@@ -70,6 +70,29 @@ func (as *AuthServer) AddPolicy(ctx context.Context, req *pb.AddPolicyReq) (*pb.
 	return response, nil
 }
 
+// RemovePolicy removes a new policy from local auth or bkiam.
+func (as *AuthServer) RemovePolicy(ctx context.Context, req *pb.RemovePolicyReq) (*pb.RemovePolicyResp, error) {
+	rtime := time.Now()
+	method := common.GRPCMethod(ctx)
+	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
+
+	response := new(pb.RemovePolicyResp)
+
+	defer func() {
+		cost := as.collector.StatRequest(method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
+	}()
+
+	action := policyaction.NewRemoveAction(ctx, as.viper, as.authMode,
+		as.localAuthController, as.bkiamAuthController, req, response)
+
+	if err := as.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
+	}
+
+	return response, nil
+}
+
 // Healthz returns server health informations.
 func (as *AuthServer) Healthz(ctx context.Context, req *pb.HealthzReq) (*pb.HealthzResp, error) {
 	rtime := time.Now()
