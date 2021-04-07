@@ -15,11 +15,25 @@ package lib
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/emicklei/go-restful"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+)
+
+const (
+	defaultMaxMemory    = 32 << 20 // 32 MB
+	labelSelectorTag    = "labelSelector"
+	labelSelectorPrefix = "data.metadata.labels."
+	extraTag            = "extra"
+	fieldTag            = "field"
+	offsetTag           = "offset"
+	limitTag            = "limit"
+	updateTimeQueryTag  = "updateTimeBefore"
+	updateTimeTag       = "updateTime"
 )
 
 // GetQueryParamString get string from rest query parameter
@@ -53,6 +67,102 @@ func GetQueryParamInt64(req *restful.Request, key string, defaultValue int64) (i
 		return defaultValue, nil
 	}
 	return strconv.ParseInt(s, 10, 64)
+}
+
+func buildLeafCondition(key, value, sep string, op operator.Operator) *operator.Condition {
+	valueList := strings.Split(value, sep)
+	if len(valueList) == 1 && strings.TrimSpace(valueList[0]) == "" {
+		return operator.NewLeafCondition(operator.Ext, key)
+	}
+	return operator.NewLeafCondition(op, operator.M{key: valueList})
+}
+
+func buildSelectorCondition(prefix string, valueList []string) *operator.Condition {
+	valueStr := strings.Join(valueList, ",")
+	selector := &Selector{Prefix: prefix, SelectorStr: valueStr}
+	conds := selector.GetAllConditions()
+	// TODO error deal
+	if conds == nil {
+		return operator.NewLeafCondition(operator.Tr, operator.M{})
+	}
+	return operator.NewBranchCondition(operator.And, conds...)
+	// kvList := strings.Split(valueStr, ",")
+	// conds := make([]*operator.Condition, 0)
+	// for _, expr := range kvList {
+	// 	// nequal expression
+	// 	exprList := strings.Split(expr, "!=")
+	// 	if len(exprList) == 2 {
+	// 		conds = append(conds, buildLeafCondition(prefix+exprList[0], exprList[1], "|", operator.Nin))
+	// 		continue
+	// 	}
+	// 	// equal expression
+	// 	exprList = strings.Split(expr, "=")
+	// 	if len(exprList) == 2 {
+	// 		conds = append(conds, buildLeafCondition(prefix+exprList[0], exprList[1], "|", operator.In))
+	// 		continue
+	// 	}
+	// 	// exist expression
+	// 	conds = append(conds, operator.NewLeafCondition(operator.Ext, prefix+expr))
+	// }
+	// return operator.NewBranchCondition(operator.And, conds...)
+}
+
+func buildNormalCondition(key string, valueList []string) *operator.Condition {
+	if len(valueList) == 0 {
+		return operator.NewLeafCondition(operator.Ext, key)
+	}
+	if len(valueList) == 1 && strings.TrimSpace(valueList[0]) == "" {
+		return operator.NewLeafCondition(operator.Ext, key)
+	}
+	conds := make([]*operator.Condition, 0)
+	for _, value := range valueList {
+		conds = append(conds, buildLeafCondition(key, value, ",", operator.In))
+	}
+	return operator.NewBranchCondition(operator.And, conds...)
+}
+
+// GetCustomCondition get custom condition from req url and parameter
+func GetCustomCondition(req *restful.Request) *operator.Condition {
+	if req.Request.Form == nil {
+		req.Request.ParseMultipartForm(defaultMaxMemory)
+	}
+	if req.Request.Form == nil || len(req.Request.Form) == 0 {
+		return nil
+	}
+	conds := make([]*operator.Condition, 0)
+	// empty Condition
+	rootCondition := operator.NewLeafCondition(operator.Tr, operator.M{})
+	for key, valueList := range req.Request.Form {
+		switch key {
+		// labelSelector=tag1=val1,tag2+in+(v1,v2),tag3+notin+(v1,v2),tag4+!=+(v1,v2),tag5
+		case labelSelectorTag:
+			conds = append(conds, buildSelectorCondition(labelSelectorPrefix, valueList))
+		case extraTag, fieldTag, limitTag, offsetTag:
+			break
+		// updateTimeBefore=
+		case updateTimeQueryTag:
+			var t time.Time
+			ts, err := strconv.ParseInt(valueList[0], 10, 64)
+			if err != nil {
+				var innerErr error
+				t, innerErr = time.Parse("2006-01-02T15:04:05.000Z", valueList[0])
+				if innerErr != nil {
+					blog.Errorf("Unrecognized update time (%s) format, neither timestamp in seconds format nor time expression like 2006-01-02T15:04:05.000Z", valueList[0])
+					break
+				}
+			} else {
+				t = time.Unix(int64(ts), 0)
+			}
+			conds = append(conds, operator.NewLeafCondition(operator.Lt, operator.M{updateTimeTag: t}))
+		// col1=val1,val2
+		default:
+			conds = append(conds, buildNormalCondition(key, valueList))
+		}
+	}
+	if len(conds) != 0 {
+		rootCondition = operator.NewBranchCondition(operator.And, conds...)
+	}
+	return rootCondition
 }
 
 // FormatTime format time
