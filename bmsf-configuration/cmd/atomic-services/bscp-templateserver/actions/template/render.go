@@ -47,6 +47,8 @@ type RenderAction struct {
 	template        *pbcommon.ConfigTemplate
 	templateVersion *pbcommon.ConfigTemplateVersion
 
+	innerVariables []*pbcommon.Variable
+
 	enginePluginName  string
 	templateContent   string
 	renderedContent   string
@@ -121,14 +123,29 @@ func (act *RenderAction) verify() error {
 		database.BSCPNOTEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
 	}
+
+	if len(act.req.Variables) == 0 && len(act.req.VarGroupId) == 0 {
+		return errors.New("invalid input data, variables or var_group_id is required")
+	}
+
 	if err = common.ValidateString("variables", act.req.Variables,
-		database.BSCPNOTEMPTY, database.BSCPTEMPLATEVARSLENLIMIT); err != nil {
+		database.BSCPEMPTY, database.BSCPTEMPLATEVARSLENLIMIT); err != nil {
+		return err
+	}
+	if err = common.ValidateString("var_group_id", act.req.VarGroupId,
+		database.BSCPEMPTY, database.BSCPIDLENLIMIT); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (act *RenderAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryConfigTemplate(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.TemplateId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -136,12 +153,37 @@ func (act *RenderAction) authorize() (pbcommon.ErrCode, string) {
 	}
 
 	if !isAuthorized {
-		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "not authorized"
+		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "template not authorized"
+	}
+
+	if len(act.req.VarGroupId) == 0 {
+		// not need to check variable group authorization.
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryVariableGroup(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
+	isAuthorized, err = authorization.Authorize(act.kit, act.req.VarGroupId, auth.LocalAuthAction,
+		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
+	if err != nil {
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN, fmt.Sprintf("authorize failed, %+v", err)
+	}
+
+	if !isAuthorized {
+		return pbcommon.ErrCode_E_NOT_AUTHORIZED, "variable group not authorized"
 	}
 	return pbcommon.ErrCode_E_OK, ""
 }
 
 func (act *RenderAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
+	if act.template != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryConfigTemplateReq{
 		Seq:        act.kit.Rid,
 		BizId:      act.req.BizId,
@@ -166,6 +208,30 @@ func (act *RenderAction) queryConfigTemplate() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, ""
 }
 
+func (act *RenderAction) queryVariableGroup() (pbcommon.ErrCode, string) {
+	if len(act.req.VarGroupId) == 0 {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
+	r := &pbdatamanager.QueryVariableGroupReq{
+		Seq:        act.kit.Rid,
+		BizId:      act.req.BizId,
+		VarGroupId: act.req.VarGroupId,
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("RenderConfigTemplate[%s]| request to DataManager, %+v", r.Seq, r)
+
+	resp, err := act.dataMgrCli.QueryVariableGroup(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager QueryVariableGroup, %+v", err)
+	}
+	return resp.Code, resp.Message
+}
+
 func (act *RenderAction) queryConfigTemplateVersion() (pbcommon.ErrCode, string) {
 	r := &pbdatamanager.QueryConfigTemplateVersionReq{
 		Seq:       act.kit.Rid,
@@ -187,6 +253,55 @@ func (act *RenderAction) queryConfigTemplateVersion() (pbcommon.ErrCode, string)
 		return resp.Code, resp.Message
 	}
 	act.templateVersion = resp.Data
+
+	return pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *RenderAction) queryVariables(index, limit int) ([]*pbcommon.Variable, pbcommon.ErrCode, string) {
+	r := &pbdatamanager.QueryVariableListReq{
+		Seq:        act.kit.Rid,
+		BizId:      act.req.BizId,
+		VarGroupId: act.req.VarGroupId,
+		Page:       &pbcommon.Page{Start: int32(index), Limit: int32(limit)},
+	}
+
+	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
+	defer cancel()
+
+	resp, err := act.dataMgrCli.QueryVariableList(ctx, r)
+	if err != nil {
+		return nil, pbcommon.ErrCode_E_TPL_SYSTEM_UNKNOWN,
+			fmt.Sprintf("request to DataManager QueryVariableList, %+v", err)
+	}
+	if resp.Code != pbcommon.ErrCode_E_OK {
+		return nil, resp.Code, resp.Message
+	}
+	return resp.Data.Info, pbcommon.ErrCode_E_OK, ""
+}
+
+func (act *RenderAction) queryInnerVariables() (pbcommon.ErrCode, string) {
+	if len(act.req.VarGroupId) == 0 {
+		// render base on user variables, not bscp group variables.
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
+	// query bscp group variables of the group.
+	index := 0
+	limit := database.BSCPQUERYLIMITLB
+
+	for {
+		variables, errCode, errMsg := act.queryVariables(index, limit)
+		if errCode != pbcommon.ErrCode_E_OK {
+			logger.Errorf("RenderConfigTemplate[%s]| query inner variables failed, %s", act.kit.Rid, errMsg)
+			return errCode, errMsg
+		}
+		act.innerVariables = append(act.innerVariables, variables...)
+
+		if len(variables) < limit {
+			break
+		}
+		index += len(variables)
+	}
 
 	return pbcommon.ErrCode_E_OK, ""
 }
@@ -277,8 +392,19 @@ func (act *RenderAction) render() (pbcommon.ErrCode, string) {
 	}
 
 	renderInConf := &plugin.RenderInConf{Template: act.templateContent}
-	if err := json.Unmarshal([]byte(act.req.Variables), &renderInConf.Vars); err != nil {
-		return pbcommon.ErrCode_E_TPL_RENDER_PLUGIN_CHECK_FAILED, fmt.Sprintf("invalid input template vars, %+v", err)
+	if len(act.req.Variables) != 0 {
+		// render by user variables.
+		if err := json.Unmarshal([]byte(act.req.Variables), &renderInConf.Vars); err != nil {
+			return pbcommon.ErrCode_E_TPL_RENDER_PLUGIN_CHECK_FAILED,
+				fmt.Sprintf("invalid input template vars, %+v", err)
+		}
+	} else {
+		// render by inner variables.
+		variables := make(map[string]interface{}, 0)
+		for _, variable := range act.innerVariables {
+			variables[variable.Name] = variable.Value
+		}
+		renderInConf.Vars = variables
 	}
 
 	// do render.
@@ -319,6 +445,11 @@ func (act *RenderAction) Do() error {
 
 	// download version content.
 	if errCode, errMsg := act.queryVersionContent(); errCode != pbcommon.ErrCode_E_OK {
+		return act.Err(errCode, errMsg)
+	}
+
+	// query inner variables of target group.
+	if errCode, errMsg := act.queryInnerVariables(); errCode != pbcommon.ErrCode_E_OK {
 		return act.Err(errCode, errMsg)
 	}
 

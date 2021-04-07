@@ -60,12 +60,18 @@ type WatchInterface interface {
 }
 
 var (
+	// SyncDefaultTimeOut default timeout
+	SyncDefaultTimeOut = time.Second * 1
+)
+
+var (
 	//ApplicationThreadNum goroutine number for Application channel
 	ApplicationThreadNum int
 	//TaskgroupThreadNum goroutine number for taskgroup channel
 	TaskgroupThreadNum int
 	//ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
+	//DeploymentThreadNum goroutine number for deployment channel
 	DeploymentThreadNum    int
 )
 
@@ -331,7 +337,7 @@ func (ms *MesosCluster) reportService(data *types.BcsSyncData) error {
 		dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action)
 
 	ms.exportSvr.postData(data)
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("service(%s.%s) sync(%s) dispatch failed: %+v",
 			dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action, err)
 		return err
@@ -343,7 +349,7 @@ func (ms *MesosCluster) reportConfigMap(data *types.BcsSyncData) error {
 	dataType := data.Item.(*commtypes.BcsConfigMap)
 	blog.V(3).Infof("mesos cluster report configmap(%s.%s) for action(%s)",
 		dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action)
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("configmap(%s.%s) sync(%s) dispatch failed: %+v",
 			dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action, err)
 		return err
@@ -355,7 +361,7 @@ func (ms *MesosCluster) reportDeployment(data *types.BcsSyncData) error {
 	dataType := data.Item.(*schedtypes.Deployment)
 	blog.V(3).Infof("mesos cluster report deployment(%s.%s) for action(%s)",
 		dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action)
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("deployment(%s.%s) sync(%s) dispatch failed: %+v",
 			dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action, err)
 		return err
@@ -367,7 +373,7 @@ func (ms *MesosCluster) reportSecret(data *types.BcsSyncData) error {
 	dataType := data.Item.(*commtypes.BcsSecret)
 	blog.V(3).Infof("mesos cluster report secret(%s.%s) for action(%s)",
 		dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action)
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("secret(%s.%s) sync(%s) dispatch failed: %+v",
 			dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action, err)
 		return err
@@ -379,7 +385,7 @@ func (ms *MesosCluster) reportEndpoint(data *types.BcsSyncData) error {
 	dataType := data.Item.(*commtypes.BcsEndpoint)
 	blog.V(3).Infof("mesos cluster report endpoint(%s.%s) for action(%s)",
 		dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action)
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("endpoint(%s.%s) sync(%s) dispatch failed: %+v",
 			dataType.ObjectMeta.NameSpace, dataType.ObjectMeta.Name, data.Action, err)
 		return err
@@ -390,7 +396,7 @@ func (ms *MesosCluster) reportEndpoint(data *types.BcsSyncData) error {
 func (ms *MesosCluster) reportIPPoolStatic(data *types.BcsSyncData) error {
 	blog.V(3).Infof("mesos cluster report netservice ip pool static resource[%+v]", data.Item)
 
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Errorf("mesos cluster report netservice ip pool static resource failed, %+v", err)
 		return err
 	}
@@ -400,7 +406,7 @@ func (ms *MesosCluster) reportIPPoolStatic(data *types.BcsSyncData) error {
 func (ms *MesosCluster) reportIPPoolStaticDetail(data *types.BcsSyncData) error {
 	blog.V(3).Infof("mesos cluster report netservice ip pool static resource detail[%+v]", data.Item)
 
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Errorf("mesos cluster report netservice ip pool static resource detail failed, %+v", err)
 		return err
 	}
@@ -415,7 +421,7 @@ func (ms *MesosCluster) reportTaskGroup(data *types.BcsSyncData) error {
 
 	//post to ExportService first
 	ms.exportSvr.postData(data)
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("TaskGroup sync dispatch failed: %+v", err)
 		return err
 	}
@@ -441,7 +447,7 @@ func (ms *MesosCluster) reportApplication(data *types.BcsSyncData) error {
 		ms.taskGroup.addWatch(path)
 	}
 
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("Application sync dispatch failed: %+v", err)
 		return err
 	}
@@ -453,7 +459,7 @@ func (ms *MesosCluster) reportExportService(data *types.BcsSyncData) error {
 
 	blog.V(3).Infof("mesos cluster report service for action(%s)", data.Action)
 
-	if err := ms.storage.Sync(data); err != nil {
+	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("ExportService sync dispatch failed: %+v", err)
 		return err
 	}
@@ -517,4 +523,9 @@ func (ms *MesosCluster) Stop() {
 //GetClusterStatus get synchronization status
 func (ms *MesosCluster) GetClusterStatus() string {
 	return ms.Status
+}
+
+// GetClusterID get mesos clusterID
+func (ms *MesosCluster) GetClusterID() string {
+	return ms.clusterID
 }

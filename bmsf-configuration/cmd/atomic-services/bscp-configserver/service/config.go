@@ -71,6 +71,9 @@ func (c *config) check() error {
 	c.viper.BindEnv("server.executorLimitRate", c.envName("EXEC_LIMIT_RATE"))
 	c.viper.SetDefault("server.executorLimitRate", 0)
 
+	c.viper.BindEnv("server.effectTimeoutSec", c.envName("EFFECT_TIMEOUT_SEC"))
+	c.viper.SetDefault("server.effectTimeoutSec", 600)
+
 	c.viper.BindEnv("metrics.endpoint", c.envName("METRICS_ENDPOINT"))
 	c.viper.SetDefault("metrics.endpoint", ":9100")
 
@@ -118,12 +121,6 @@ func (c *config) check() error {
 
 	c.viper.BindEnv("datamanager.callTimeout", c.envName("DM_CALL_TIMEOUT"))
 	c.viper.SetDefault("datamanager.callTimeout", 10*time.Second)
-
-	c.viper.BindEnv("bcscontroller.serviceName", c.envName("BCS_SERVICE_NAME"))
-	c.viper.SetDefault("bcscontroller.serviceName", "bk-bscp-bcs-controller")
-
-	c.viper.BindEnv("bcscontroller.callTimeout", c.envName("BCS_CALL_TIMEOUT"))
-	c.viper.SetDefault("bcscontroller.callTimeout", 10*time.Second)
 
 	c.viper.BindEnv("gsecontroller.serviceName", c.envName("GSE_SERVICE_NAME"))
 	c.viper.SetDefault("gsecontroller.serviceName", "bk-bscp-gse-controller")

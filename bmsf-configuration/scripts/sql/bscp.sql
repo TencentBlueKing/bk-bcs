@@ -225,6 +225,7 @@ CREATE TABLE IF NOT EXISTS `t_config` (
   `Fapp_id` varchar(64) NOT NULL,
   `Fname` varchar(64) NOT NULL,
   `Ffpath` varchar(128) NOT NULL,
+  `Ftype` int(11) NOT NULL DEFAULT '0',
   `Fuser` varchar(64) NOT NULL,
   `Fuser_group` varchar(64) NOT NULL,
   `Ffile_privilege` varchar(64) NOT NULL,
@@ -300,6 +301,7 @@ CREATE TABLE IF NOT EXISTS `t_release` (
   `Fcfg_id` varchar(64) NOT NULL,
   `Fcfg_name` varchar(64) NOT NULL,
   `Fcfg_fpath` varchar(128) NOT NULL,
+  `Fcfg_type` int(11) NOT NULL DEFAULT '0',
   `Fuser` varchar(64) NOT NULL,
   `Fuser_group` varchar(64) NOT NULL,
   `Ffile_privilege` varchar(64) NOT NULL,
@@ -353,8 +355,9 @@ CREATE TABLE IF NOT EXISTS `t_template` (
   `Ftemplate_id` varchar(64) NOT NULL,
   `Fbiz_id` varchar(64) NOT NULL,
   `Fname` varchar(64) NOT NULL,
-  `Ffile_name` varchar(64) NOT NULL,
-  `Ffile_path` varchar(128) NOT NULL,
+  `Fcfg_name` varchar(64) NOT NULL,
+  `Fcfg_fpath` varchar(128) NOT NULL,
+  `Fcfg_type` int(11) NOT NULL DEFAULT '0',
   `Fuser` varchar(64) NOT NULL,
   `Fuser_group` varchar(64) NOT NULL,
   `Ffile_privilege` varchar(64) NOT NULL,
@@ -414,6 +417,44 @@ CREATE TABLE IF NOT EXISTS `t_template_version` (
   UNIQUE KEY `idx_t_template_version_version_id` (`Fversion_id`),
   UNIQUE KEY `idx_version` (`Ftemplate_id`, `Fversion_tag`),
   KEY `idx_bizid` (`Fbiz_id`),
+  KEY `idx_ctime` (`Fcreate_time`),
+  KEY `idx_utime` (`Fupdate_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `t_variable_group` (
+  `Fid` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `Fvar_group_id` varchar(64) NOT NULL,
+  `Fbiz_id` varchar(64) NOT NULL,
+  `Fname` varchar(64) NOT NULL,
+  `Fmemo` varchar(128) DEFAULT NULL,
+  `Fcreator` varchar(64) NOT NULL,
+  `Flast_modify_by` varchar(64) DEFAULT NULL,
+  `Fstate` int(11) DEFAULT NULL,
+  `Fcreate_time` datetime(3) DEFAULT NULL,
+  `Fupdate_time` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`Fid`),
+  UNIQUE KEY `idx_t_variable_group_var_group_id` (`Fvar_group_id`),
+  UNIQUE KEY `uidx_bizidname` (`Fbiz_id`,`Fname`),
+  KEY `idx_ctime` (`Fcreate_time`),
+  KEY `idx_utime` (`Fupdate_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `t_variable` (
+  `Fid` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `Fvar_id` varchar(64) NOT NULL,
+  `Fbiz_id` varchar(64) NOT NULL,
+  `Fvar_group_id` varchar(64) NOT NULL,
+  `Fname` varchar(64) NOT NULL,
+  `Fvalue` longtext NOT NULL,
+  `Fmemo` varchar(128) DEFAULT NULL,
+  `Fcreator` varchar(64) NOT NULL,
+  `Flast_modify_by` varchar(64) DEFAULT NULL,
+  `Fstate` int(11) DEFAULT NULL,
+  `Fcreate_time` datetime(3) DEFAULT NULL,
+  `Fupdate_time` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`Fid`),
+  UNIQUE KEY `idx_t_variable_var_id` (`Fvar_id`),
+  UNIQUE KEY `uidx_unionids` (`Fbiz_id`,`Fvar_group_id`,`Fname`),
   KEY `idx_ctime` (`Fcreate_time`),
   KEY `idx_utime` (`Fupdate_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -14,20 +14,21 @@
 package mesos
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
-	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
-
-	//schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"reflect"
 	"sync"
 	"time"
 
 	"golang.org/x/net/context"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
+	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
+	//schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
 //NSControlInfo store all app info under one namespace
@@ -236,9 +237,9 @@ func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeCfg, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeCfg, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -257,9 +258,9 @@ func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 		Item:     obj,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeCfg, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeCfg, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -284,8 +285,8 @@ func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 		Item:     cur,
 	}
 	if err := watch.report.ReportData(data); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeCfg, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }

@@ -44,6 +44,9 @@ const (
 	// BSCPDEFAULTENGINETYPE is bk-bscp database default engine type.
 	BSCPDEFAULTENGINETYPE = BSCPINNODBENGINETYPE
 
+	// BSCPDEFAULTVARGROUP is bk-bscp default variable group.
+	BSCPDEFAULTVARGROUP = "default"
+
 	// BSCPEMPTY is bk-bscp database empty limit.
 	BSCPEMPTY = 0
 
@@ -59,17 +62,26 @@ const (
 	// BSCPIDLENLIMIT is bk-bscp normal ID length limit.
 	BSCPIDLENLIMIT = 64
 
+	// BSCPCREATEBATCHLIMIT is bk-bscp batch mode create num limit.
+	BSCPCREATEBATCHLIMIT = 500
+
 	// BSCPCONTENTIDLENLIMIT is bk-bscp content id length limit.
 	BSCPCONTENTIDLENLIMIT = 64
 
 	// BSCPNAMELENLIMIT is bk-bscp normal name length limit.
 	BSCPNAMELENLIMIT = 64
 
+	// BSCPVARVALUESIZELIMIT is bk-bscp variable value size limit.
+	BSCPVARVALUESIZELIMIT = 2048
+
 	// BSCPQUERYLIMIT is bk-bscp batch query count limit.
-	BSCPQUERYLIMIT = 100
+	BSCPQUERYLIMIT = 500
 
 	// BSCPQUERYLIMITLB is bk-bscp batch query count limit for little batch.
-	BSCPQUERYLIMITLB = 10
+	BSCPQUERYLIMITLB = 100
+
+	// BSCPQUERYNEWESTLIMIT is bk-bscp batch query count limit for newest release.
+	BSCPQUERYNEWESTLIMIT = 50
 
 	// BSCPSTRATEGYCONTENTSIZELIMIT is bk-bscp strategy content size limit.
 	BSCPSTRATEGYCONTENTSIZELIMIT = 1024 * 1024
@@ -130,7 +142,7 @@ func (l *LocalAuth) DBEngineType() string {
 type System struct {
 	ID             uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
 	CurrentVersion string    `gorm:"column:Fcurrent_version;type:varchar(64);not null;index:idx_cversion"`
-	Kind           string    `gorm:"column:Fkind;type:varchar(64);not null;uniqueIndex:idx_kind"`
+	Kind           string    `gorm:"column:Fkind;type:varchar(64);not null;uniqueIndex:uidx_kind"`
 	Operator       string    `gorm:"column:Foperator;type:varchar(64);index:idx_operator"`
 	CreatedAt      time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
 	UpdatedAt      time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
@@ -150,8 +162,8 @@ func (s *System) DBEngineType() string {
 type App struct {
 	ID           uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
 	AppID        string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex"`
-	BizID        string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:idx_bizidname"`
-	Name         string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:idx_bizidname"`
+	BizID        string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:uidx_bizidname"`
+	Name         string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:uidx_bizidname"`
 	DeployType   int32     `gorm:"column:Fdeploy_type"`
 	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
 	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
@@ -199,10 +211,11 @@ func (p *TemplateBind) DBEngineType() string {
 type ConfigTemplate struct {
 	ID            uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
 	TemplateID    string    `gorm:"column:Ftemplate_id;type:varchar(64);not null;uniqueIndex"`
-	BizID         string    `gorm:"column:Fbiz_id;type:varchar(64);not null;index:idx_bizid;uniqueIndex:idx_bizidname"`
-	Name          string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:idx_bizidname"`
-	FileName      string    `gorm:"column:Ffile_name;type:varchar(64);not null"`
-	FilePath      string    `gorm:"column:Ffile_path;type:varchar(256);not null"`
+	BizID         string    `gorm:"column:Fbiz_id;type:varchar(64);not null;index:idx_bizid;uniqueIndex:uidx_bizidname"`
+	Name          string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:uidx_bizidname"`
+	CfgName       string    `gorm:"column:Fcfg_name;type:varchar(64);not null"`
+	CfgFpath      string    `gorm:"column:Fcfg_fpath;type:varchar(256);not null"`
+	CfgType       int32     `gorm:"column:Fcfg_type;not null default 0"`
 	User          string    `gorm:"column:Fuser;type:varchar(64);not null"`
 	UserGroup     string    `gorm:"column:Fuser_group;type:varchar(64);not null"`
 	FilePrivilege string    `gorm:"column:Ffile_privilege;type:varchar(64);not null"`
@@ -232,8 +245,8 @@ type ConfigTemplateVersion struct {
 	ID           uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
 	VersionID    string    `gorm:"column:Fversion_id;type:varchar(64);not null;uniqueIndex"`
 	BizID        string    `gorm:"column:Fbiz_id;type:varchar(64);not null;index:idx_bizid"`
-	TemplateID   string    `gorm:"column:Ftemplate_id;type:varchar(64);not null;uniqueIndex:idx_version"`
-	VersionTag   string    `gorm:"column:Fversion_tag;type:varchar(64);not null;uniqueIndex:idx_version"`
+	TemplateID   string    `gorm:"column:Ftemplate_id;type:varchar(64);not null;uniqueIndex:uidx_version"`
+	VersionTag   string    `gorm:"column:Fversion_tag;type:varchar(64);not null;uniqueIndex:uidx_version"`
 	ContentID    string    `gorm:"column:Fcontent_id;type:varchar(64);not null"`
 	ContentSize  uint64    `gorm:"column:Fcontent_size"`
 	Memo         string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
@@ -254,14 +267,65 @@ func (c *ConfigTemplateVersion) DBEngineType() string {
 	return BSCPDEFAULTENGINETYPE
 }
 
+// VariableGroup table name of t_variable_group.
+type VariableGroup struct {
+	ID           uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
+	VarGroupID   string    `gorm:"column:Fvar_group_id;type:varchar(64);not null;uniqueIndex"`
+	BizID        string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:uidx_bizidname"`
+	Name         string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:uidx_bizidname"`
+	Memo         string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
+	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
+	State        int32     `gorm:"column:Fstate"`
+	CreatedAt    time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt    time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
+}
+
+// TableName returns table name of t_variable_group.
+func (vg *VariableGroup) TableName() string {
+	return "t_variable_group"
+}
+
+// DBEngineType returns the db engine type of the table.
+func (vg *VariableGroup) DBEngineType() string {
+	return BSCPDEFAULTENGINETYPE
+}
+
+// Variable table name of t_variable.
+type Variable struct {
+	ID           uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
+	VarID        string    `gorm:"column:Fvar_id;type:varchar(64);not null;uniqueIndex"`
+	BizID        string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:uidx_unionids"`
+	VarGroupID   string    `gorm:"column:Fvar_group_id;type:varchar(64);not null;uniqueIndex:uidx_unionids"`
+	Name         string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:uidx_unionids"`
+	Value        string    `gorm:"column:Fvalue;type:longtext;not null"`
+	Memo         string    `gorm:"column:Fmemo;type:varchar(128);not null default 0"`
+	Creator      string    `gorm:"column:Fcreator;type:varchar(64);not null"`
+	LastModifyBy string    `gorm:"column:Flast_modify_by;type:varchar(64);not null default 0"`
+	State        int32     `gorm:"column:Fstate"`
+	CreatedAt    time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
+	UpdatedAt    time.Time `gorm:"column:Fupdate_time;index:idx_utime"`
+}
+
+// TableName returns table name of t_variable.
+func (v *Variable) TableName() string {
+	return "t_variable"
+}
+
+// DBEngineType returns the db engine type of the table.
+func (v *Variable) DBEngineType() string {
+	return BSCPDEFAULTENGINETYPE
+}
+
 // Config is definition for t_config.
 type Config struct {
 	ID            uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
 	CfgID         string    `gorm:"column:Fcfg_id;type:varchar(64);not null;uniqueIndex"`
 	BizID         string    `gorm:"column:Fbiz_id;type:varchar(64);not null;index:idx_bizid"`
-	AppID         string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex:idx_appidnamepath"`
-	Name          string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:idx_appidnamepath"`
-	Fpath         string    `gorm:"column:Ffpath;type:varchar(256);not null;uniqueIndex:idx_appidnamepath"`
+	AppID         string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex:uidx_appidnamepath"`
+	Name          string    `gorm:"column:Fname;type:varchar(64);not null;uniqueIndex:uidx_appidnamepath"`
+	Fpath         string    `gorm:"column:Ffpath;type:varchar(256);not null;uniqueIndex:uidx_appidnamepath"`
+	Type          int32     `gorm:"column:Ftype;not null default 0"`
 	User          string    `gorm:"column:Fuser;type:varchar(64);not null"`
 	UserGroup     string    `gorm:"column:Fuser_group;type:varchar(64);not null"`
 	FilePrivilege string    `gorm:"column:Ffile_privilege;type:varchar(64);not null"`
@@ -367,11 +431,11 @@ func (mc *MultiCommit) DBEngineType() string {
 // AppInstance is definition for t_app_instance.
 type AppInstance struct {
 	ID        uint64    `gorm:"column:Fid;primaryKey;autoIncrement"`
-	BizID     string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:idx_unionids"`
-	AppID     string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex:idx_unionids"`
-	CloudID   string    `gorm:"column:Fcloud_id;type:varchar(64);not null;uniqueIndex:idx_unionids"`
-	IP        string    `gorm:"column:Fip;type:varchar(32);not null;uniqueIndex:idx_unionids"`
-	Path      string    `gorm:"column:Fpath;type:varchar(256);not null;uniqueIndex:idx_unionids"`
+	BizID     string    `gorm:"column:Fbiz_id;type:varchar(64);not null;uniqueIndex:uidx_unionids"`
+	AppID     string    `gorm:"column:Fapp_id;type:varchar(64);not null;uniqueIndex:uidx_unionids"`
+	CloudID   string    `gorm:"column:Fcloud_id;type:varchar(64);not null;uniqueIndex:uidx_unionids"`
+	IP        string    `gorm:"column:Fip;type:varchar(32);not null;uniqueIndex:uidx_unionids"`
+	Path      string    `gorm:"column:Fpath;type:varchar(256);not null;uniqueIndex:uidx_unionids"`
 	Labels    string    `gorm:"column:Flabels;type:longtext;not null default 0"`
 	State     int32     `gorm:"column:Fstate"`
 	CreatedAt time.Time `gorm:"column:Fcreate_time;index:idx_ctime"`
@@ -391,11 +455,11 @@ func (a *AppInstance) DBEngineType() string {
 // AppInstanceRelease is definition for t_app_instance_release.
 type AppInstanceRelease struct {
 	ID         uint64     `gorm:"column:Fid;primaryKey;autoIncrement"`
-	InstanceID uint64     `gorm:"column:Finstance_id;type:bigint(20);not null;uniqueIndex:idx_unionids"`
+	InstanceID uint64     `gorm:"column:Finstance_id;type:bigint(20);not null;uniqueIndex:uidx_unionids"`
 	BizID      string     `gorm:"column:Fbiz_id;type:varchar(64);not null"`
 	AppID      string     `gorm:"column:Fapp_id;type:varchar(64);not null"`
-	CfgID      string     `gorm:"column:Fcfg_id;type:varchar(64);not null;uniqueIndex:idx_unionids;index:idx_effected"`
-	ReleaseID  string     `gorm:"column:Frelease_id;type:varchar(64);not null;uniqueIndex:idx_unionids;index:idx_effected"`
+	CfgID      string     `gorm:"column:Fcfg_id;type:varchar(64);not null;uniqueIndex:uidx_unionids;index:idx_effected"`
+	ReleaseID  string     `gorm:"column:Frelease_id;type:varchar(64);not null;uniqueIndex:uidx_unionids;index:idx_effected"`
 	EffectTime *time.Time `gorm:"column:Feffect_time;default null"`
 	EffectCode int32      `gorm:"column:Feffect_code;not null default 0"`
 	EffectMsg  string     `gorm:"column:Feffect_msg;type:varchar(128);not null default 0"`
@@ -426,6 +490,7 @@ type Release struct {
 	CfgID          string    `gorm:"column:Fcfg_id;type:varchar(64);not null;index:idx_cfgid"`
 	CfgName        string    `gorm:"column:Fcfg_name;type:varchar(64);not null"`
 	CfgFpath       string    `gorm:"column:Fcfg_fpath;type:varchar(256);not null"`
+	CfgType        int32     `gorm:"column:Fcfg_type;not null default 0"`
 	User           string    `gorm:"column:Fuser;type:varchar(64);not null"`
 	UserGroup      string    `gorm:"column:Fuser_group;type:varchar(64);not null"`
 	FilePrivilege  string    `gorm:"column:Ffile_privilege;type:varchar(64);not null"`

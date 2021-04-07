@@ -16,6 +16,13 @@ package mesos
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
+	"golang.org/x/net/context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/cache"
@@ -25,12 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/cluster"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/types"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-mesos-watch/util"
-	"reflect"
-	"strconv"
-	"strings"
-	"time"
-
-	"golang.org/x/net/context"
 )
 
 const (
@@ -721,9 +722,9 @@ func (watch *ExportServiceWatch) AddEvent(obj interface{}) {
 		Item:     tmpData,
 	}
 	if err := watch.report.ReportData(sync); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeExpSVR, types.ActionAdd, cluster.SyncSuccess)
 	}
 }
 
@@ -741,9 +742,9 @@ func (watch *ExportServiceWatch) DeleteEvent(obj interface{}) {
 		Item:     tmpData,
 	}
 	if err := watch.report.ReportData(sync); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeExpSVR, types.ActionDelete, cluster.SyncSuccess)
 	}
 }
 
@@ -762,9 +763,9 @@ func (watch *ExportServiceWatch) UpdateEvent(obj interface{}) {
 		Item:     tmpData,
 	}
 	if err := watch.report.ReportData(sync); err != nil {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncFailure).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncFailure)
 	} else {
-		cluster.SyncTotal.WithLabelValues(cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncSuccess).Inc()
+		util.ReportSyncTotal(watch.report.GetClusterID(), cluster.DataTypeExpSVR, types.ActionUpdate, cluster.SyncSuccess)
 	}
 }
 

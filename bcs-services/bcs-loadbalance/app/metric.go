@@ -38,7 +38,7 @@ var (
 			Name:      "export_service_event_add",
 			Help:      "add event of exported service record in zookeeper",
 		},
-		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+		[]string{types.MetricLabelLoadbalance},
 	)
 	// LoadbalanceZookeeperEventUpdateMetric loadbalance metric for zookeeper event update
 	LoadbalanceZookeeperEventUpdateMetric = prometheus.NewCounterVec(
@@ -48,7 +48,7 @@ var (
 			Name:      "export_service_event_update",
 			Help:      "update event of exported service record in zookeeper",
 		},
-		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+		[]string{types.MetricLabelLoadbalance},
 	)
 	// LoadbalanceZookeeperEventDeleteMetric loadbalance metric for zookeeper event delete
 	LoadbalanceZookeeperEventDeleteMetric = prometheus.NewCounterVec(
@@ -58,7 +58,7 @@ var (
 			Name:      "export_service_event_delete",
 			Help:      "delete event of exported service record in zookeeper",
 		},
-		[]string{types.MetricLabelLoadbalance, types.MetricLabelServiceName, types.MetricLabelNamespace},
+		[]string{types.MetricLabelLoadbalance},
 	)
 	// LoadbalanceServiceConflictMetric loadbalance metric for service conflict about port or [port + domain + url]
 	LoadbalanceServiceConflictMetric = prometheus.NewCounterVec(

@@ -14,6 +14,7 @@ package common
 
 import (
 	"context"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
@@ -66,11 +67,17 @@ const (
 	// STRATEGYIDPREFIX is prefix of strategyid.
 	STRATEGYIDPREFIX = "S"
 
-	// CONFIGTEMPLATEPREFIX is prefix of config template
+	// CONFIGTEMPLATEPREFIX is prefix of config template.
 	CONFIGTEMPLATEPREFIX = "T"
 
-	// CONFIGTEMPLATEVERSIONPREFIX is prefix of config template version
+	// CONFIGTEMPLATEVERSIONPREFIX is prefix of config template version.
 	CONFIGTEMPLATEVERSIONPREFIX = "TV"
+
+	// VARGROUPPREFIX is prefix of variable group.
+	VARGROUPPREFIX = "VG"
+
+	// VARPREFIX is prefix of variable.
+	VARPREFIX = "V"
 )
 
 const (
@@ -170,23 +177,42 @@ func GenStrategyID() (string, error) {
 	return fmt.Sprintf("%s-%s", STRATEGYIDPREFIX, GenUUID()), nil
 }
 
-// GenTemplateID generate a config template id
+// GenTemplateID generate a config template id.
 func GenTemplateID() (string, error) {
 	return fmt.Sprintf("%s-%s", CONFIGTEMPLATEPREFIX, GenUUID()), nil
 }
 
-// GenTemplateVersionID generate a config template id
+// GenTemplateVersionID generate a config template id.
 func GenTemplateVersionID() (string, error) {
 	return fmt.Sprintf("%s-%s", CONFIGTEMPLATEVERSIONPREFIX, GenUUID()), nil
 }
 
-// SHA256 returns a sha256 string of the data string.
-func SHA256(data string) string {
-	t := sha256.New()
-	if _, err := io.WriteString(t, data); err != nil {
+// GenVariableGroupID generate a variable group id.
+func GenVariableGroupID() (string, error) {
+	return fmt.Sprintf("%s-%s", VARGROUPPREFIX, GenUUID()), nil
+}
+
+// GenVariableID generate a variable id.
+func GenVariableID() (string, error) {
+	return fmt.Sprintf("%s-%s", VARPREFIX, GenUUID()), nil
+}
+
+// SHA1 returns a sha1 string of the data string.
+func SHA1(data string) string {
+	hash := sha1.New()
+	if _, err := io.WriteString(hash, data); err != nil {
 		return ""
 	}
-	return fmt.Sprintf("%X", t.Sum(nil))
+	return fmt.Sprintf("%X", hash.Sum(nil))
+}
+
+// SHA256 returns a sha256 string of the data string.
+func SHA256(data string) string {
+	hash := sha256.New()
+	if _, err := io.WriteString(hash, data); err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%X", hash.Sum(nil))
 }
 
 // FileSHA256 returns sha256 string of the file.
@@ -430,6 +456,24 @@ func CollectMemPprofData(filepath string) {
 func ParseFpath(fpath string) string {
 	// config fpath is relative path, add root dir and parse by filepath Clean.
 	return filepath.Clean(fmt.Sprintf("/%s", fpath))
+}
+
+// CreateFile creates the named file. If the file already exists,
+// would not make it truncated. If the file does not exist, it is created with mode 0666.
+// Support multi level dirs, auto create dirs if it is not exist.
+// The permission bits perm (before umask) are used for all
+// directories that MkdirAll creates. If path is already a directory, does nothing.
+func CreateFile(fileName string) (*os.File, error) {
+	// target file.
+	fileName = filepath.Clean(fileName)
+
+	// get directory cleaned.
+	dir, _ := filepath.Split(fileName)
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return nil, err
+	}
+	return os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0666)
 }
 
 // ParseHTTPBasicAuth parses http basic authorization, and return auth token.

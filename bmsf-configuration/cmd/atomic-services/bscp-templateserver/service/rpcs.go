@@ -20,6 +20,8 @@ import (
 	templateaction "bk-bscp/cmd/atomic-services/bscp-templateserver/actions/template"
 	templatebindaction "bk-bscp/cmd/atomic-services/bscp-templateserver/actions/template-bind"
 	templateversionaction "bk-bscp/cmd/atomic-services/bscp-templateserver/actions/template-version"
+	variableaction "bk-bscp/cmd/atomic-services/bscp-templateserver/actions/variable"
+	variablegroupaction "bk-bscp/cmd/atomic-services/bscp-templateserver/actions/variable-group"
 	pb "bk-bscp/internal/protocol/templateserver"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
@@ -363,6 +365,213 @@ func (ts *TemplateServer) DeleteConfigTemplateVersion(ctx context.Context,
 	}()
 
 	action := templateversionaction.NewDeleteAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// CreateVariableGroup create variable group.
+func (ts *TemplateServer) CreateVariableGroup(ctx context.Context,
+	req *pb.CreateVariableGroupReq) (*pb.CreateVariableGroupResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.CreateVariableGroupResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variablegroupaction.NewCreateAction(kit, ts.viper, ts.dataMgrCli, req, response)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableGroup query variable group.
+func (ts *TemplateServer) QueryVariableGroup(ctx context.Context,
+	req *pb.QueryVariableGroupReq) (*pb.QueryVariableGroupResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.QueryVariableGroupResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variablegroupaction.NewQueryAction(kit, ts.viper, ts.dataMgrCli, req, response)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableGroupList query variable group list.
+func (ts *TemplateServer) QueryVariableGroupList(ctx context.Context,
+	req *pb.QueryVariableGroupListReq) (*pb.QueryVariableGroupListResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.QueryVariableGroupListResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variablegroupaction.NewListAction(kit, ts.viper, ts.dataMgrCli, req, response)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// DeleteVariableGroup delele variable group.
+func (ts *TemplateServer) DeleteVariableGroup(ctx context.Context,
+	req *pb.DeleteVariableGroupReq) (*pb.DeleteVariableGroupResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.DeleteVariableGroupResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variablegroupaction.NewDeleteAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// CreateVariable create variable.
+func (ts *TemplateServer) CreateVariable(ctx context.Context,
+	req *pb.CreateVariableReq) (*pb.CreateVariableResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.CreateVariableResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variableaction.NewCreateAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariable query variable.
+func (ts *TemplateServer) QueryVariable(ctx context.Context,
+	req *pb.QueryVariableReq) (*pb.QueryVariableResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.QueryVariableResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variableaction.NewQueryAction(kit, ts.viper, ts.dataMgrCli, req, response)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// QueryVariableList query variable list.
+func (ts *TemplateServer) QueryVariableList(ctx context.Context,
+	req *pb.QueryVariableListReq) (*pb.QueryVariableListResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.QueryVariableListResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variableaction.NewListAction(kit, ts.viper, ts.dataMgrCli, req, response)
+	if err := ts.executor.Execute(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// UpdateVariable update variable.
+func (ts *TemplateServer) UpdateVariable(ctx context.Context,
+	req *pb.UpdateVariableReq) (*pb.UpdateVariableResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.UpdateVariableResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variableaction.NewUpdateAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
+	if err := ts.executor.ExecuteWithAuth(action); err != nil {
+		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
+	}
+
+	return response, nil
+}
+
+// DeleteVariable delele variable.
+func (ts *TemplateServer) DeleteVariable(ctx context.Context,
+	req *pb.DeleteVariableReq) (*pb.DeleteVariableResp, error) {
+
+	rtime := time.Now()
+	kit := common.RequestKit(ctx)
+	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
+
+	response := new(pb.DeleteVariableResp)
+
+	defer func() {
+		cost := ts.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
+		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
+	}()
+
+	action := variableaction.NewDeleteAction(kit, ts.viper, ts.authSvrCli, ts.dataMgrCli, req, response)
 	if err := ts.executor.ExecuteWithAuth(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
 	}

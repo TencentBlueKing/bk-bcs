@@ -15,7 +15,6 @@ package action
 
 import (
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-k8s/bcs-k8s-watch/app/output/http"
 )
@@ -91,7 +90,7 @@ func (act *StorageAction) request(method string, syncData *SyncData) {
 	}
 
 	if !resp.Result {
-		glog.Errorf("%s %s ERROR: [%s/%s]", method, syncData.Kind, syncData.Namespace, syncData.Name)
+		glog.Errorf("%s %s ERROR[%s]: [%s/%s]", method, syncData.Kind, resp.Message, syncData.Namespace, syncData.Name)
 		return
 	}
 

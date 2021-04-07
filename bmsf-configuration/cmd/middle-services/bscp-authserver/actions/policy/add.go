@@ -113,8 +113,8 @@ func (act *AddAction) verify() error {
 
 func (act *AddAction) addPolicy() (pbcommon.ErrCode, string) {
 	if act.authMode == auth.AuthModeLocal {
-		if _, err := act.localAuthController.AddPolicy(act.req.Metadata.V0, act.req.Metadata.V1,
-			act.req.Metadata.V2, act.req.Metadata.V3, act.req.Metadata.V4, act.req.Metadata.V5); err != nil {
+		if _, err := act.localAuthController.AddPolicy(act.req.Metadata.V0,
+			act.req.Metadata.V1, act.req.Metadata.V2); err != nil {
 			return pbcommon.ErrCode_E_AUTH_LOCAL_ADD_POLICY_FAILED, err.Error()
 		}
 	} else {

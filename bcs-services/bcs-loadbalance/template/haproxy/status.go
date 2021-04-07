@@ -383,8 +383,6 @@ func sendCommandToHaproxy(sockAddr, command string) (string, error) {
 }
 
 func (m *Manager) fetch() error {
-
-	// sockAddr := "/var/run/haproxy.sock"
 	showInfoCommand := "show info\nquit\n"
 	showStatCommand := "show stat\nquit\n"
 	m.sockMutex.Lock()

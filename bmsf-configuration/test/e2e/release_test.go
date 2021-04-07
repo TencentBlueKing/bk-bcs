@@ -337,7 +337,7 @@ func TestRelease(t *testing.T) {
 	}
 
 	{
-		api := testHost(fmt.Sprintf(deleteAppAPIV2, e2eTestBizID, newAppID))
+		api := testHost(fmt.Sprintf(deleteConfigAPIV2, e2eTestBizID, newAppID, newCfgID))
 		resp, err := httpRequest("DELETE", api, "application/json", nil)
 		assert.Nil(err)
 
@@ -353,7 +353,7 @@ func TestRelease(t *testing.T) {
 	}
 
 	{
-		api := testHost(fmt.Sprintf(deleteConfigAPIV2, e2eTestBizID, newAppID, newCfgID))
+		api := testHost(fmt.Sprintf(deleteAppAPIV2, e2eTestBizID, newAppID))
 		resp, err := httpRequest("DELETE", api, "application/json", nil)
 		assert.Nil(err)
 

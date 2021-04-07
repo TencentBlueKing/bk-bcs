@@ -130,7 +130,7 @@ func (act *EffectedAction) queryEffectCount() (pbcommon.ErrCode, string) {
 func (act *EffectedAction) queryAppInstanceReleases() (pbcommon.ErrCode, string) {
 	err := act.sd.DB().
 		Offset(int(act.req.Page.Start)).Limit(int(act.req.Page.Limit)).
-		Order("Fupdate_time DESC, Fid DESC").
+		Order("Fcreate_time DESC, Fid DESC").
 		Where(&database.AppInstanceRelease{
 			BizID:     act.req.BizId,
 			CfgID:     act.req.CfgId,

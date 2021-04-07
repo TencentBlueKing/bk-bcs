@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 )
 
@@ -466,7 +467,7 @@ func publishDynamicResourceToQueue(data operator.M, featTags []string, event msg
 	}
 
 	if queueName, ok := message.Header[resourceTypeTag]; ok {
-		lib.ReportQueuePushMetrics(queueName, err, startTime)
+		metrics.ReportQueuePushMetrics(queueName, err, startTime)
 	}
 
 	return nil

@@ -420,6 +420,259 @@
         ]
       }
     },
+    "/api/v2/template/biz/{biz_id}/var_group": {
+      "get": {
+        "summary": "查询变量分组",
+        "description": "查询模板变量分组",
+        "operationId": "QueryVariableGroup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverQueryVariableGroupResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "var_group_id",
+            "description": "变量分组ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "变量分组名.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VariableGroup"
+        ]
+      },
+      "post": {
+        "summary": "创建变量分组",
+        "description": "创建模板变量分组",
+        "operationId": "CreateVariableGroup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverCreateVariableGroupResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/templateserverCreateVariableGroupReq"
+            }
+          }
+        ],
+        "tags": [
+          "VariableGroup"
+        ]
+      }
+    },
+    "/api/v2/template/biz/{biz_id}/var_group/{var_group_id}": {
+      "delete": {
+        "summary": "删除变量分组",
+        "description": "删除模板变量分组",
+        "operationId": "DeleteVariableGroup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverDeleteVariableGroupResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "var_group_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VariableGroup"
+        ]
+      }
+    },
+    "/api/v2/template/biz/{biz_id}/variable": {
+      "get": {
+        "summary": "查询变量",
+        "description": "查询模板变量",
+        "operationId": "QueryVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverQueryVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "var_id",
+            "description": "变量ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "var_group_id",
+            "description": "变量分组ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "变量分组名.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      },
+      "post": {
+        "summary": "创建变量",
+        "description": "创建模板变量",
+        "operationId": "CreateVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverCreateVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/templateserverCreateVariableReq"
+            }
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      }
+    },
+    "/api/v2/template/biz/{biz_id}/variable/{var_id}": {
+      "delete": {
+        "summary": "删除变量",
+        "description": "删除模板变量",
+        "operationId": "DeleteVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverDeleteVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "var_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      },
+      "put": {
+        "summary": "更新变量信息",
+        "description": "更新模板变量信息",
+        "operationId": "UpdateVariable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverUpdateVariableResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "var_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/templateserverUpdateVariableReq"
+            }
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      }
+    },
     "/api/v2/template/list/biz/{biz_id}/template": {
       "post": {
         "summary": "查询模板列表",
@@ -528,6 +781,74 @@
         ]
       }
     },
+    "/api/v2/template/list/biz/{biz_id}/var_group": {
+      "post": {
+        "summary": "查询变量分组列表",
+        "description": "查询模板变量分组列表",
+        "operationId": "QueryVariableGroupList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverQueryVariableGroupListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/templateserverQueryVariableGroupListReq"
+            }
+          }
+        ],
+        "tags": [
+          "VariableGroup"
+        ]
+      }
+    },
+    "/api/v2/template/list/biz/{biz_id}/variable": {
+      "post": {
+        "summary": "查询变量列表",
+        "description": "查询模板变量列表",
+        "operationId": "QueryVariableList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/templateserverQueryVariableListResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "biz_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/templateserverQueryVariableListReq"
+            }
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      }
+    },
     "/api/v2/template/render/biz/{biz_id}/template/{template_id}": {
       "post": {
         "summary": "执行模板渲染",
@@ -608,15 +929,20 @@
           "title": "模板名称",
           "maxLength": 64
         },
-        "file_name": {
+        "cfg_name": {
           "type": "string",
-          "title": "配置文件名",
+          "title": "配置名",
           "maxLength": 64
         },
-        "file_path": {
+        "cfg_fpath": {
           "type": "string",
-          "title": "配置文件路径",
+          "title": "配置路径",
           "maxLength": 1024
+        },
+        "cfg_type": {
+          "type": "integer",
+          "format": "int32",
+          "title": "配置类型（KV-Json、KV-XML、KV-Yaml、KV-String、文件等）"
         },
         "user": {
           "type": "string",
@@ -771,6 +1097,8 @@
         "E_AUTH_NOT_AUTHORIZED",
         "E_AUTH_LOCAL_ADD_POLICY_FAILED",
         "E_AUTH_BKIAM_ADD_POLICY_FAILED",
+        "E_AUTH_LOCAL_REM_POLICY_FAILED",
+        "E_AUTH_BKIAM_REM_POLICY_FAILED",
         "E_TPL_SYSTEM_UNKNOWN",
         "E_TPL_PARAMS_INVALID",
         "E_TPL_NOT_FOUND",
@@ -811,13 +1139,6 @@
         "E_GSE_ALREADY_PUBLISHED",
         "E_GSE_ALREADY_CANCELED",
         "E_GSE_ALREADY_ROLLBACKED",
-        "E_BCS_SYSTEM_UNKNOWN",
-        "E_BCS_PARAMS_INVALID",
-        "E_BCS_MARSHAL_PUBLISHING_FAILED",
-        "E_BCS_PUBLISH_RELEASE_FAILED",
-        "E_BCS_ALREADY_PUBLISHED",
-        "E_BCS_ALREADY_CANCELED",
-        "E_BCS_ALREADY_ROLLBACKED",
         "E_CONNS_SYSTEM_UNKNOWN",
         "E_CONNS_PARAMS_INVALID",
         "E_CONNS_SCHEDULE_RES_FAILED",
@@ -828,7 +1149,7 @@
         "E_IS_PARAMS_INVALID"
       ],
       "default": "E_OK",
-      "description": "- E_OK: 0 成功\n - E_NOT_AUTHORIZED: 4030403 未授权\n - E_API_SYSTEM_UNKNOWN: 4000000 API服务, 节点调用失败\n - E_API_PARAMS_INVALID: 4000001 API服务, 参数校验失败\n - E_AUTH_SYSTEM_UNKNOWN: 4001000 AUTH服务, 节点调用失败\n - E_AUTH_PARAMS_INVALID: 4001001 AUTH服务, 参数校验失败\n - E_AUTH_AUTHORIZE_FAILED: 4001002 AUTH服务, 权限校验失败\n - E_AUTH_LOCAL_AUTHORIZE_FAILED: 4001003 AUTH服务, 本地模式权限失败\n - E_AUTH_BKIAM_AUTHORIZE_FAILED: 4001004 AUTH服务, IAM模式权限失败\n - E_AUTH_NOT_AUTHORIZED: 4001005 AUTH服务, 无权限\n - E_AUTH_LOCAL_ADD_POLICY_FAILED: 4001006 AUTH服务, 本地模式新建策略失败\n - E_AUTH_BKIAM_ADD_POLICY_FAILED: 4001007 AUTH服务, IAM模式新建策略失败\n - E_TPL_SYSTEM_UNKNOWN: 4002000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 4002001 模板服务, 参数校验失败\n - E_TPL_NOT_FOUND: 4002002 模板服务, 指定目标对象不存在\n - E_TPL_ALREADY_EXISTS: 4002003 模板服务, 指定目标对象已存在\n - E_TPL_RENDER_PLUGIN_CHECK_FAILED: 4002004 模板服务, 插件检查失败\n - E_TPL_NONEED_RENDER: 4002005 模板服务, 无需渲染\n - E_TPL_UNKNOWN_ENGINE_TYPE: 4002006 模板服务, 不支持的引擎\n - E_TPL_RENDER_CHECK_ERROR: 4002007 模板服务, 渲染前置检查失败\n - E_TPL_RENDER_FAILED: 4002008 模板服务, 渲染失败\n - E_TPL_TPLBINDED_CANNOT_DELETE: 4002009 模版服务, 模板绑定中，无法删除\n - E_CS_SYSTEM_UNKNOWN: 4003000 配置服务, 节点调用失败\n - E_CS_PARAMS_INVALID: 4003001 配置服务, 参数校验失败\n - E_CS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4003002 配置服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_CS_COMMIT_ALREADY_CANCELED: 4003003 配置服务, 该Commit已撤销，无法再进行Confirm操作\n - E_CS_COMMIT_ALREADY_CONFIRMED: 4003004 配置服务, 该Commit已提交\n - E_CS_ALREADY_EXISTS: 4003005 配置服务, 目标资源已存在无法重复创建\n - E_CS_ROLLBACK_UNPUBLISHED_RELEASE: 4003006 配置服务, 无法回滚一个未发布的版本\n - E_CS_AUTH_FAILED: 4003007 配置服务, 认证授权失败\n - E_CS_NOT_AUTHED: 4003008 配置服务, 未授权\n - E_DM_SYSTEM_UNKNOWN: 4004000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 4004001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 4004002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 4004003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 4004004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 4004005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 4004006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_DB_ROW_AFFECTED_ERR: 4004007 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 4004008 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 4004009 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 4004010 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 4004011 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 4004012 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONTENT_NOT_FOUND: 4004013 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKNOWN: 4005000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 4005001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 4005002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 4005003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 4005004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 4005005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_GSE_ALREADY_ROLLBACKED: 4005006 BCS控制器, 配置版本已回滚\n - E_BCS_SYSTEM_UNKNOWN: 4006000 BCS控制器, 节点调用失败\n - E_BCS_PARAMS_INVALID: 4006001 BCS控制器, 参数校验失败\n - E_BCS_MARSHAL_PUBLISHING_FAILED: 4006002 BCS控制器, 配置版本发布消息解析失败\n - E_BCS_PUBLISH_RELEASE_FAILED: 4006003 BCS控制器, 广播配置版本发布消息失败\n - E_BCS_ALREADY_PUBLISHED: 4006004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_BCS_ALREADY_CANCELED: 4006005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_BCS_ALREADY_ROLLBACKED: 4006006 BCS控制器, 配置版本已回滚\n - E_CONNS_SYSTEM_UNKNOWN: 4007000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 4007001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 4007002 会话链接服务, BCS sidecar接入调度失败\n - E_TS_SYSTEM_UNKNOWN: 4008000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 4008001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 4008002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKNOWN: 4009000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 4009001 实例服务, 参数校验失败",
+      "description": "- E_OK: 0 成功\n - E_NOT_AUTHORIZED: 4030403 未授权\n - E_API_SYSTEM_UNKNOWN: 4000000 API服务, 节点调用失败\n - E_API_PARAMS_INVALID: 4000001 API服务, 参数校验失败\n - E_AUTH_SYSTEM_UNKNOWN: 4001000 AUTH服务, 节点调用失败\n - E_AUTH_PARAMS_INVALID: 4001001 AUTH服务, 参数校验失败\n - E_AUTH_AUTHORIZE_FAILED: 4001002 AUTH服务, 权限校验失败\n - E_AUTH_LOCAL_AUTHORIZE_FAILED: 4001003 AUTH服务, 本地模式权限失败\n - E_AUTH_BKIAM_AUTHORIZE_FAILED: 4001004 AUTH服务, IAM模式权限失败\n - E_AUTH_NOT_AUTHORIZED: 4001005 AUTH服务, 无权限\n - E_AUTH_LOCAL_ADD_POLICY_FAILED: 4001006 AUTH服务, 本地模式新建策略失败\n - E_AUTH_BKIAM_ADD_POLICY_FAILED: 4001007 AUTH服务, IAM模式新建策略失败\n - E_AUTH_LOCAL_REM_POLICY_FAILED: 4001008 AUTH服务, 本地模式删除策略失败\n - E_AUTH_BKIAM_REM_POLICY_FAILED: 4001009 AUTH服务, IAM模式删除策略失败\n - E_TPL_SYSTEM_UNKNOWN: 4002000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 4002001 模板服务, 参数校验失败\n - E_TPL_NOT_FOUND: 4002002 模板服务, 指定目标对象不存在\n - E_TPL_ALREADY_EXISTS: 4002003 模板服务, 指定目标对象已存在\n - E_TPL_RENDER_PLUGIN_CHECK_FAILED: 4002004 模板服务, 插件检查失败\n - E_TPL_NONEED_RENDER: 4002005 模板服务, 无需渲染\n - E_TPL_UNKNOWN_ENGINE_TYPE: 4002006 模板服务, 不支持的引擎\n - E_TPL_RENDER_CHECK_ERROR: 4002007 模板服务, 渲染前置检查失败\n - E_TPL_RENDER_FAILED: 4002008 模板服务, 渲染失败\n - E_TPL_TPLBINDED_CANNOT_DELETE: 4002009 模版服务, 模板绑定中，无法删除\n - E_CS_SYSTEM_UNKNOWN: 4003000 配置服务, 节点调用失败\n - E_CS_PARAMS_INVALID: 4003001 配置服务, 参数校验失败\n - E_CS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4003002 配置服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_CS_COMMIT_ALREADY_CANCELED: 4003003 配置服务, 该Commit已撤销，无法再进行Confirm操作\n - E_CS_COMMIT_ALREADY_CONFIRMED: 4003004 配置服务, 该Commit已提交\n - E_CS_ALREADY_EXISTS: 4003005 配置服务, 目标资源已存在无法重复创建\n - E_CS_ROLLBACK_UNPUBLISHED_RELEASE: 4003006 配置服务, 无法回滚一个未发布的版本\n - E_CS_AUTH_FAILED: 4003007 配置服务, 认证授权失败\n - E_CS_NOT_AUTHED: 4003008 配置服务, 未授权\n - E_DM_SYSTEM_UNKNOWN: 4004000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 4004001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 4004002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 4004003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 4004004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 4004005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 4004006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_DB_ROW_AFFECTED_ERR: 4004007 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 4004008 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 4004009 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 4004010 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 4004011 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 4004012 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONTENT_NOT_FOUND: 4004013 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKNOWN: 4005000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 4005001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 4005002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 4005003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 4005004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 4005005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_GSE_ALREADY_ROLLBACKED: 4005006 BCS控制器, 配置版本已回滚\n - E_CONNS_SYSTEM_UNKNOWN: 4006000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 4006001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 4006002 会话链接服务, BCS sidecar接入调度失败\n - E_TS_SYSTEM_UNKNOWN: 4007000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 4007001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 4007002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKNOWN: 4008000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 4008001 实例服务, 参数校验失败",
       "title": "ErrCode 错误码"
     },
     "commonModuleHealthzInfo": {
@@ -946,12 +1267,130 @@
       "description": "配置/模板原子绑定关系",
       "title": "TemplateBind"
     },
+    "commonVariable": {
+      "type": "object",
+      "properties": {
+        "var_id": {
+          "type": "string",
+          "title": "变量ID",
+          "maxLength": 64
+        },
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "var_group_id": {
+          "type": "string",
+          "title": "变量分组ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "变量名",
+          "maxLength": 64
+        },
+        "value": {
+          "type": "string",
+          "title": "变量值",
+          "maxLength": 1024
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注信息",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "description": "默认0：正常",
+          "title": "状态",
+          "maximum": 1
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者名称",
+          "maxLength": 64
+        },
+        "last_modify_by": {
+          "type": "string",
+          "title": "最近一次修改者名称",
+          "maxLength": 64
+        },
+        "created_at": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updated_at": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "模板变量",
+      "title": "Variable"
+    },
+    "commonVariableGroup": {
+      "type": "object",
+      "properties": {
+        "var_group_id": {
+          "type": "string",
+          "title": "变量分组ID",
+          "maxLength": 64
+        },
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "变量分组名",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注信息",
+          "maxLength": 64
+        },
+        "state": {
+          "type": "integer",
+          "format": "int32",
+          "description": "默认0：正常",
+          "title": "状态",
+          "maximum": 1
+        },
+        "creator": {
+          "type": "string",
+          "title": "创建者名称",
+          "maxLength": 64
+        },
+        "last_modify_by": {
+          "type": "string",
+          "title": "最近一次修改者名称",
+          "maxLength": 64
+        },
+        "created_at": {
+          "type": "string",
+          "description": "创建时间，2019-08-29 17:18:22",
+          "title": "创建时间"
+        },
+        "updated_at": {
+          "type": "string",
+          "description": "最近一次修改时间，2019-08-29 17:18:22",
+          "title": "最近一次修改时间"
+        }
+      },
+      "description": "模板变量分组",
+      "title": "VariableGroup"
+    },
     "templateserverCreateConfigTemplateReq": {
       "type": "object",
       "example": {
         "name": "my-template",
-        "file_name": "server.yaml",
-        "file_path": "/etc",
+        "cfg_name": "server.yaml",
+        "cfg_fpath": "/etc",
         "user": "root",
         "user_group": "root",
         "file_privilege": "0777",
@@ -972,14 +1411,14 @@
           "title": "模板名称",
           "maxLength": 64
         },
-        "file_name": {
+        "cfg_name": {
           "type": "string",
-          "title": "配置文件名",
+          "title": "配置名",
           "maxLength": 64
         },
-        "file_path": {
+        "cfg_fpath": {
           "type": "string",
-          "title": "配置文件路径",
+          "title": "配置路径",
           "maxLength": 1024
         },
         "user": {
@@ -1026,8 +1465,8 @@
       "required": [
         "biz_id",
         "name",
-        "file_name",
-        "file_path",
+        "cfg_name",
+        "cfg_fpath",
         "user",
         "user_group",
         "file_privilege",
@@ -1256,6 +1695,168 @@
         }
       }
     },
+    "templateserverCreateVariableGroupReq": {
+      "type": "object",
+      "example": {
+        "biz_id": "xxxx",
+        "name": "group"
+      },
+      "properties": {
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "变量分组名",
+          "maxLength": 64
+        },
+        "memo": {
+          "type": "string",
+          "title": "备注信息",
+          "maxLength": 64
+        }
+      },
+      "description": "创建模板变量分组请求",
+      "title": "CreateVariableGroupReq",
+      "required": [
+        "biz_id",
+        "name"
+      ]
+    },
+    "templateserverCreateVariableGroupResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK",
+        "data": {
+          "var_group_id": "xxxx"
+        }
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "data": {
+          "$ref": "#/definitions/templateserverCreateVariableGroupRespRespData",
+          "title": "结果"
+        }
+      },
+      "description": "创建模板变量分组响应",
+      "title": "CreateVariableGroupResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverCreateVariableGroupRespRespData": {
+      "type": "object",
+      "properties": {
+        "var_group_id": {
+          "type": "string",
+          "title": "变量分组ID",
+          "maxLength": 64
+        }
+      }
+    },
+    "templateserverCreateVariableReq": {
+      "type": "object",
+      "example": {
+        "biz_id": "xxxx",
+        "name": "var",
+        "value": "value"
+      },
+      "properties": {
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "title": "变量名",
+          "maxLength": 64
+        },
+        "value": {
+          "type": "string",
+          "title": "变量值",
+          "maxLength": 64
+        },
+        "var_group_id": {
+          "type": "string",
+          "description": "可选，为空时表示新变量属于默认分组",
+          "title": "变量分组ID",
+          "maxLength": 64
+        }
+      },
+      "description": "创建模板变量请求",
+      "title": "CreateVariableReq",
+      "required": [
+        "biz_id",
+        "name",
+        "value"
+      ]
+    },
+    "templateserverCreateVariableResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK",
+        "data": {
+          "var_id": "xxxx"
+        }
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "data": {
+          "$ref": "#/definitions/templateserverCreateVariableRespRespData",
+          "title": "结果"
+        }
+      },
+      "description": "创建模板变量响应",
+      "title": "CreateVariableResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverCreateVariableRespRespData": {
+      "type": "object",
+      "properties": {
+        "var_id": {
+          "type": "string",
+          "title": "变量ID",
+          "maxLength": 64
+        }
+      }
+    },
     "templateserverDeleteConfigTemplateResp": {
       "type": "object",
       "example": {
@@ -1340,6 +1941,66 @@
       },
       "description": "删除配置模板绑定关系响应",
       "title": "DeleteTemplateBindResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverDeleteVariableGroupResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK"
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除模板变量分组响应",
+      "title": "DeleteVariableGroupResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverDeleteVariableResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK"
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "删除模板变量响应",
+      "title": "DeleteVariableResp",
       "required": [
         "result",
         "code",
@@ -1737,6 +2398,268 @@
         "message"
       ]
     },
+    "templateserverQueryVariableGroupListReq": {
+      "type": "object",
+      "example": {
+        "biz_id": "xxxx",
+        "page": {
+          "return_total": true,
+          "start": 0,
+          "limit": 100
+        }
+      },
+      "properties": {
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "page": {
+          "$ref": "#/definitions/commonPage",
+          "title": "分页设置"
+        }
+      },
+      "description": "查询模板变量分组列表请求",
+      "title": "QueryVariableGroupListReq",
+      "required": [
+        "biz_id",
+        "page"
+      ]
+    },
+    "templateserverQueryVariableGroupListResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK",
+        "data": {
+          "total_count": 0,
+          "info": [
+            {
+              "var_group_id": "xxxx",
+              "name": "group"
+            }
+          ]
+        }
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "data": {
+          "$ref": "#/definitions/templateserverQueryVariableGroupListRespRespData",
+          "title": "结果"
+        }
+      },
+      "description": "查询模板变量分组列表响应",
+      "title": "QueryVariableGroupListResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverQueryVariableGroupListRespRespData": {
+      "type": "object",
+      "properties": {
+        "total_count": {
+          "type": "integer",
+          "format": "int64",
+          "title": "总数据量"
+        },
+        "info": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonVariableGroup"
+          },
+          "title": "结果"
+        }
+      }
+    },
+    "templateserverQueryVariableGroupResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK",
+        "data": {
+          "var_group_id": "xxxx",
+          "name": "group"
+        }
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "data": {
+          "$ref": "#/definitions/commonVariableGroup",
+          "title": "结果"
+        }
+      },
+      "description": "查询模板变量分组响应",
+      "title": "QueryVariableGroupResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverQueryVariableListReq": {
+      "type": "object",
+      "example": {
+        "biz_id": "xxxx",
+        "page": {
+          "return_total": true,
+          "start": 0,
+          "limit": 100
+        }
+      },
+      "properties": {
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "var_group_id": {
+          "type": "string",
+          "description": "可选，查询指定分组",
+          "title": "变量分组ID",
+          "maxLength": 64
+        },
+        "page": {
+          "$ref": "#/definitions/commonPage",
+          "title": "分页设置"
+        }
+      },
+      "description": "查询模板变量列表请求",
+      "title": "QueryVariableListReq",
+      "required": [
+        "biz_id",
+        "page"
+      ]
+    },
+    "templateserverQueryVariableListResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK",
+        "data": {
+          "total_count": 0,
+          "info": [
+            {
+              "var_id": "xxxx",
+              "var_group_id": "xxxx",
+              "name": "var",
+              "value": "value"
+            }
+          ]
+        }
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "data": {
+          "$ref": "#/definitions/templateserverQueryVariableListRespRespData",
+          "title": "结果"
+        }
+      },
+      "description": "查询模板变量列表响应",
+      "title": "QueryVariableListResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverQueryVariableListRespRespData": {
+      "type": "object",
+      "properties": {
+        "total_count": {
+          "type": "integer",
+          "format": "int64",
+          "title": "总数据量"
+        },
+        "info": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commonVariable"
+          },
+          "title": "结果"
+        }
+      }
+    },
+    "templateserverQueryVariableResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK",
+        "data": {
+          "var_id": "xxxx",
+          "var_group_id": "xxxx",
+          "name": "var",
+          "value": "value"
+        }
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        },
+        "data": {
+          "$ref": "#/definitions/commonVariable",
+          "title": "结果"
+        }
+      },
+      "description": "查询模板变量响应",
+      "title": "QueryVariableResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
     "templateserverRenderConfigTemplateReq": {
       "type": "object",
       "example": {
@@ -1761,7 +2684,13 @@
         },
         "variables": {
           "type": "string",
-          "title": "渲染变量(JSON序列化后的字符串)",
+          "title": "可选，自定义的渲染变量(JSON序列化后的字符串)",
+          "maxLength": 64
+        },
+        "var_group_id": {
+          "type": "string",
+          "description": "用一组变量进行渲染",
+          "title": "可选, 变量分组ID",
           "maxLength": 64
         }
       },
@@ -1840,14 +2769,14 @@
           "title": "模板名称",
           "maxLength": 64
         },
-        "file_name": {
+        "cfg_name": {
           "type": "string",
-          "title": "配置文件名",
+          "title": "配置名",
           "maxLength": 64
         },
-        "file_path": {
+        "cfg_fpath": {
           "type": "string",
-          "title": "配置文件路径",
+          "title": "配置路径",
           "maxLength": 1024
         },
         "user": {
@@ -1993,6 +2922,67 @@
       },
       "description": "更新配置模板版本响应",
       "title": "UpdateConfigTemplateVersionResp",
+      "required": [
+        "result",
+        "code",
+        "message"
+      ]
+    },
+    "templateserverUpdateVariableReq": {
+      "type": "object",
+      "example": {
+        "biz_id": "xxxx",
+        "var_id": "xxxx",
+        "value": "value"
+      },
+      "properties": {
+        "biz_id": {
+          "type": "string",
+          "title": "业务ID",
+          "maxLength": 64
+        },
+        "var_id": {
+          "type": "string",
+          "title": "变量ID",
+          "maxLength": 64
+        },
+        "value": {
+          "type": "string",
+          "title": "变量值",
+          "maxLength": 64
+        }
+      },
+      "description": "更新模板变量请求",
+      "title": "UpdateVariableReq",
+      "required": [
+        "biz_id",
+        "var_id"
+      ]
+    },
+    "templateserverUpdateVariableResp": {
+      "type": "object",
+      "example": {
+        "result": true,
+        "code": 0,
+        "message": "OK"
+      },
+      "properties": {
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "执行结果"
+        },
+        "code": {
+          "$ref": "#/definitions/commonErrCode",
+          "title": "错误码"
+        },
+        "message": {
+          "type": "string",
+          "title": "错误描述"
+        }
+      },
+      "description": "更新模板变量响应",
+      "title": "UpdateVariableResp",
       "required": [
         "result",
         "code",

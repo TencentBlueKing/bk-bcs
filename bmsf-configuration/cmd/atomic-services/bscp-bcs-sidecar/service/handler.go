@@ -27,6 +27,7 @@ import (
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/connserver"
 	"bk-bscp/internal/strategy"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -266,8 +267,8 @@ func (h *ConfigHandler) report(cfgIDs []string) error {
 				CfgId:      cfgID,
 				ReleaseId:  md.ReleaseID,
 				EffectTime: md.EffectTime,
-				EffectCode: EffectCodeSuccess,
-				EffectMsg:  EffectMsgSuccess,
+				EffectCode: types.EffectCodeSuccess,
+				EffectMsg:  types.EffectMsgSuccess,
 			})
 		}
 	}
@@ -602,7 +603,7 @@ func (h *ConfigHandler) syncConfigList() {
 func (h *ConfigHandler) handleFirstReload() {
 	for {
 		// wait for pullers.
-		time.Sleep(time.Second)
+		time.Sleep(h.viper.GetDuration("sidecar.firstReloadCheckInterval"))
 
 		if h.isFirstReloadSucc {
 			// first reload already success.

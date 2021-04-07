@@ -419,7 +419,7 @@ func (mgr *AppModManager) debug() {
 		mgr.signallingsMu.RUnlock()
 
 		// debug app mod infos.
-		logger.Info("AppModManager| debug, current appmods mod[%d] signallings[%d], %+v",
+		logger.V(2).Infof("AppModManager| debug, current appmods mod[%d] signallings[%d], %+v",
 			modsCount, signallingsCount, mgr.viper.GetString("appmods"))
 	}
 }

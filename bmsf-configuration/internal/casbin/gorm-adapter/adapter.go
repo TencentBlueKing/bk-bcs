@@ -246,29 +246,29 @@ func (a *Adapter) RemoveFilteredPolicy(sec string, ptype string, fieldIndex int,
 func (a *Adapter) rawDelete(db *gorm.DB, line database.LocalAuth) error {
 	queryArgs := []interface{}{line.PType}
 
-	queryStr := "p_type = ?"
+	queryStr := "Fp_type = ?"
 	if line.V0 != "" {
-		queryStr += " and v0 = ?"
+		queryStr += " and Fv0 = ?"
 		queryArgs = append(queryArgs, line.V0)
 	}
 	if line.V1 != "" {
-		queryStr += " and v1 = ?"
+		queryStr += " and Fv1 = ?"
 		queryArgs = append(queryArgs, line.V1)
 	}
 	if line.V2 != "" {
-		queryStr += " and v2 = ?"
+		queryStr += " and Fv2 = ?"
 		queryArgs = append(queryArgs, line.V2)
 	}
 	if line.V3 != "" {
-		queryStr += " and v3 = ?"
+		queryStr += " and Fv3 = ?"
 		queryArgs = append(queryArgs, line.V3)
 	}
 	if line.V4 != "" {
-		queryStr += " and v4 = ?"
+		queryStr += " and Fv4 = ?"
 		queryArgs = append(queryArgs, line.V4)
 	}
 	if line.V5 != "" {
-		queryStr += " and v5 = ?"
+		queryStr += " and Fv5 = ?"
 		queryArgs = append(queryArgs, line.V5)
 	}
 	args := append([]interface{}{queryStr}, queryArgs...)

@@ -169,7 +169,7 @@ func (act *MatchedAction) queryReachableCount(appID string) (pbcommon.ErrCode, s
 func (act *MatchedAction) queryReachableAppInstances(appID string) (pbcommon.ErrCode, string) {
 	err := act.sd.DB().
 		Offset(int(act.req.Page.Start)).Limit(int(act.req.Page.Limit)).
-		Order("Fupdate_time DESC, Fid DESC").
+		Order("Fcreate_time DESC, Fid DESC").
 		Where(&database.AppInstance{
 			BizID: act.req.BizId,
 			AppID: appID,
@@ -193,8 +193,8 @@ func (act *MatchedAction) queryReachableAppInstanceList(appID string) ([]databas
 		instances := []database.AppInstance{}
 
 		err := act.sd.DB().
-			Offset(index).Limit(database.BSCPQUERYLIMIT).
-			Order("Fupdate_time DESC, Fid DESC").
+			Offset(index).Limit(database.BSCPQUERYLIMITLB).
+			Order("Fcreate_time DESC, Fid DESC").
 			Where(&database.AppInstance{
 				BizID: act.req.BizId,
 				AppID: appID,
@@ -207,7 +207,7 @@ func (act *MatchedAction) queryReachableAppInstanceList(appID string) ([]databas
 		}
 		appInstances = append(appInstances, instances...)
 
-		if len(instances) < database.BSCPQUERYLIMIT {
+		if len(instances) < database.BSCPQUERYLIMITLB {
 			break
 		}
 		index += len(instances)

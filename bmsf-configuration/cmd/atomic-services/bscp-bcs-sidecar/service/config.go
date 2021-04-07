@@ -59,8 +59,14 @@ func (c *config) check() error {
 	c.viper.BindEnv("sidecar.pullConfigInterval", c.envName("PULL_CFG_INTERVAL"))
 	c.viper.SetDefault("sidecar.pullConfigInterval", 5*time.Minute)
 
-	c.viper.BindEnv("sidecar.maxEmptyConfigPullInterval", c.envName("MAX_PULL_EMPTY_CFG_INTERVAL"))
-	c.viper.SetDefault("sidecar.maxEmptyConfigPullInterval", 10*time.Second)
+	c.viper.BindEnv("sidecar.maxAutoPullInterval", c.envName("MAX_AUTO_PULL_INTERVAL"))
+	c.viper.SetDefault("sidecar.maxAutoPullInterval", 5*time.Second)
+
+	c.viper.BindEnv("sidecar.maxAutoPullTimes", c.envName("MAX_AUTO_PULL_TIMES"))
+	c.viper.SetDefault("sidecar.maxAutoPullTimes", 50)
+
+	c.viper.BindEnv("sidecar.firstReloadCheckInterval", c.envName("FIRST_RELOAD_CHECK_INTERVAL"))
+	c.viper.SetDefault("sidecar.firstReloadCheckInterval", 5*time.Second)
 
 	c.viper.BindEnv("sidecar.syncConfigListInterval", c.envName("SYNC_CFGLIST_INTERVAL"))
 	c.viper.SetDefault("sidecar.syncConfigListInterval", 10*time.Minute)

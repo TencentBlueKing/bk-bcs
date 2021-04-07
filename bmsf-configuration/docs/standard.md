@@ -9,28 +9,35 @@ BK-BSCP 项目规范
 
 ### 基于cobra
 
+`注意:` 严禁随意创建修改目录结构，项目内所有服务模块需按照规范保持一致，不可私自无意义的创建子目录,
+        需要单独抽象为一个组件的在modules目录内进行扩展，保持项目整体可读性!
+
 [github spf13/cobra](https://github.com/spf13/cobra)
 
 ```
   ▾ xxxxserver/
-    ▾ bin/
     ▾ etc/
+      - server.yaml
+
     ▾ cmd/
-      root.go
-      run.go
-      version.go
+      - root.go
+      - run.go
+      - version.go
+
     ▾ service/
-      service.go
+      - config.go
+      - service.go
+      - rpcs.go
+
     ▾ modules/
-      xxxx.go
-      xxxx_test.go
+      - xxxx.go
+      - xxxx_test.go
 
     main.go
     Makefile
     README.md
 ```
 
-* bin: 二进制生成与运行目录
 * etc: 配置存放目录
 * cmd: 基础命令实现，root为服务根命令实现, run为服务的启动命令，完成系统前置处理并启动真正的逻辑模块, version为服务的版本信息管理
 * service: 服务主体实现, 基于modules内的各种实现提供服务
@@ -64,7 +71,7 @@ viper.Get("name")
 
 * bin文件名称约定, projectname-modulename-servername
 
-> eg: bk-bscp-gateway, 即蓝鲸服务配置平台网关服务
+> eg: bk-bscp-apiserver, 即蓝鲸服务配置平台API网关服务, bk为蓝鲸、bscp为模块系统、apiserver为模块系统内服务名
 
 ## 包名引用
 
@@ -106,6 +113,25 @@ import (
 ```
 
 * 项目根目录下的test中实现系统整体的测试用例，针对主要的流程进行验证
+
+## 部分命名约束
+
+### 文件、目录命名
+
+* 目录命名以横线(-)形式，如bk-bscp-xxxx;
+* 文件命名以下划线(_)形式，如xxxx_xxxx.go、init_shell.sh;
+
+### 常量命名
+
+* 局部常量定义以驼峰模式，遵循Golang规范，如 defaultTimeout、defaultMaxRetryTimes;
+* 全局公共常量定义以BSCP开头且全部大写(由早期代码检查工具规则而来，目前延续该约定), 如BSCPIDLIMITLEN；
+
+### 数据库结构命名
+
+* database命名以bscp开头，便于数据库统一授权管理，其中系统默认管理DB为bscpdb不可修改, 其他业务数据ShardingDB以下划线形式命名，如bscp_default、bscp_agame、bscp_bgame;
+* table命名以小写t开头，以下划线形式进行组织，如t_system、t_config、t_release;
+* 字段命名以大写F开头，以下划线形式进行组织, 如Fid、Fstate、Fname;
+* 索引命名以小写idx或uidx开头，普通索引、联合索引以idx开头, 唯一索引以uidx开头，以下划线形式进行组织，如idx_name、idx_appid_name、uidx_name、uidx_appid_name;
 
 ## 代码规范
 

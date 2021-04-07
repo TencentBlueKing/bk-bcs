@@ -303,6 +303,9 @@ func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error
 	}()
 	ret, err = c.mCli.Database(c.dbName).Collection(c.collectionName).InsertMany(ctx, docs)
 	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			return 0, drivers.ErrTableRecordDuplicateKey
+		}
 		return 0, err
 	}
 	return len(ret.InsertedIDs), nil
