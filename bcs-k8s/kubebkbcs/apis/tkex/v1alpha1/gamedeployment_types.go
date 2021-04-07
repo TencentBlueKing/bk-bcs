@@ -291,6 +291,7 @@ type GameDeployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// +kubebuilder:validation:Required
 	Spec   GameDeploymentSpec   `json:"spec,omitempty"`
 	Status GameDeploymentStatus `json:"status,omitempty"`
 }

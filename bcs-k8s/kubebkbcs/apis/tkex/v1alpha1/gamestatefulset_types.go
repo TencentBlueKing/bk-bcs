@@ -284,9 +284,14 @@ type GameStatefulSetCondition struct {
 // +kubebuilder:subresource:scale:selectorpath=.status.labelSelector,specpath=.spec.replicas,statuspath=.status.replicas
 type GameStatefulSet struct {
 	metav1.TypeMeta   `json:",inline"`
+
+	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// +kubebuilder:validation:Required
 	Spec   GameStatefulSetSpec   `json:"spec,omitempty"`
+
+	// +optional
 	Status GameStatefulSetStatus `json:"status,omitempty"`
 }
 
