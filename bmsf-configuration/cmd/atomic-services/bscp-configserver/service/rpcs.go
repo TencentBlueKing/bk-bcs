@@ -948,29 +948,6 @@ func (cs *ConfigServer) RollbackMultiRelease(ctx context.Context,
 	return response, nil
 }
 
-// QueryHistoryAppInstances returns history app instances.
-func (cs *ConfigServer) QueryHistoryAppInstances(ctx context.Context,
-	req *pb.QueryHistoryAppInstancesReq) (*pb.QueryHistoryAppInstancesResp, error) {
-
-	rtime := time.Now()
-	kit := common.RequestKit(ctx)
-	logger.V(2).Infof("%s[%s]| appcode: %s, user: %s, input[%+v]", kit.Method, kit.Rid, kit.AppCode, kit.User, req)
-
-	response := new(pb.QueryHistoryAppInstancesResp)
-
-	defer func() {
-		cost := cs.collector.StatRequest(kit.Method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", kit.Method, kit.Rid, cost, response)
-	}()
-
-	action := appinstanceaction.NewHistoryAction(kit, cs.viper, cs.dataMgrCli, req, response)
-	if err := cs.executor.Execute(action); err != nil {
-		logger.Errorf("%s[%s]| %+v", kit.Method, kit.Rid, err)
-	}
-
-	return response, nil
-}
-
 // QueryEffectedAppInstances returns sidecar instances which effected target release of the config.
 func (cs *ConfigServer) QueryEffectedAppInstances(ctx context.Context,
 	req *pb.QueryEffectedAppInstancesReq) (*pb.QueryEffectedAppInstancesResp, error) {

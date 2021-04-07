@@ -88,7 +88,6 @@ service DataManager {
 
     rpc CreateAppInstance(CreateAppInstanceReq) returns (CreateAppInstanceResp) {}
     rpc UpdateAppInstance(UpdateAppInstanceReq) returns (UpdateAppInstanceResp) {}
-    rpc QueryHistoryAppInstances(QueryHistoryAppInstancesReq) returns (QueryHistoryAppInstancesResp) {}
     rpc QueryReachableAppInstances(QueryReachableAppInstancesReq) returns (QueryReachableAppInstancesResp) {}
     rpc CreateAppInstanceRelease(CreateAppInstanceReleaseReq) returns (CreateAppInstanceReleaseResp) {}
     rpc QueryAppInstanceRelease(QueryAppInstanceReleaseReq) returns (QueryAppInstanceReleaseResp) {}
@@ -1316,28 +1315,6 @@ message CreateAppInstanceResp {
     string         seq     = 1;
     common.ErrCode code    = 2;
     string         message = 3;
-}
-
-message QueryHistoryAppInstancesReq {
-    string                    seq        = 1;
-    string                    biz_id     = 2;
-    string                    app_id     = 3;
-    repeated common.LabelsMap labels_or  = 4;
-    repeated common.LabelsMap labels_and = 5;
-    int32                     query_type = 6;
-    common.Page               page       = 7;
-}
-
-message QueryHistoryAppInstancesResp {
-    message RespData {
-        uint32                      total_count = 1;
-        repeated common.AppInstance info        = 2;
-    }
-
-    string         seq     = 1;
-    common.ErrCode code    = 2;
-    string         message = 3;
-    RespData       data    = 4;
 }
 
 message QueryReachableAppInstancesReq {
