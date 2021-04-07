@@ -15,8 +15,9 @@
 package metrics
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -31,7 +32,7 @@ var (
 		Subsystem: "watch",
 		Name:      "request_total",
 		Help:      "The total number of requests to bcs-storage watch connection",
-	},[]string{"handler", "table"})
+	}, []string{"handler", "table"})
 
 	watchHTTPResponseSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "bkbcs_storage",
@@ -90,4 +91,3 @@ func ReportQueuePushMetrics(name string, err error, started time.Time) {
 	queuePushTotal.WithLabelValues(name, status).Inc()
 	queuePushLatency.WithLabelValues(name, status).Observe(time.Since(started).Seconds())
 }
-
