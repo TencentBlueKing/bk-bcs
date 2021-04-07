@@ -1,0 +1,23 @@
+domain: tencent.com
+multigroup: true
+repo: github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs
+resources:
+- group: bkbcs
+  kind: BcsLogConfig
+  version: v1
+- group: bkbcs
+  kind: BcsDbPrivConfig
+  version: v1
+- group: tkex
+  kind: GameDeployment
+  version: v1alpha1
+- group: tkex
+  kind: HookRun
+  version: v1alpha1
+- group: tkex
+  kind: HookTemplate
+  version: v1alpha1
+- group: tkex
+  kind: GameStatefulSet
+  version: v1alpha1
+version: "2"
