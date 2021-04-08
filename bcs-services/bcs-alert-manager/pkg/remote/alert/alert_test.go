@@ -35,7 +35,7 @@ func TestNewAlertServer(t *testing.T) {
 		{
 			StartsTime:   time.Now(),
 			EndsTime:     time.Now().Add(60 * time.Hour),
-			GeneratorURL: "原地址告警URL，可为空",
+			GeneratorURL: "http://xxx",
 			Annotations: map[string]string{
 				"uuid":    "cee84faf-7ee3-11ea-xxx",
 				"message": "0.gseagent.gse.30012.1586932748085923931(9.4.146.229)status changed:Staging->Failed",

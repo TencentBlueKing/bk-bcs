@@ -57,6 +57,12 @@ const (
 	typeKey         = "type"
 )
 
+func generateAlertName(labels map[string]string) string {
+	return fmt.Sprintf("集群[%s]命名空间[%s]资源[%s-%s]产生类型[%s]",
+		labels[clusterIDKey], labels[nameSpaceKey], labels[resourceKindKey], labels[resourceNameKey],
+		labels[typeKey])
+}
+
 var eventFeatTagsMapLabelKeys = map[string]string{
 	clusterIDTag:    clusterIDKey,
 	nameSpaceTag:    nameSpaceKey,
@@ -177,6 +183,8 @@ func (eh *SyncEventHandler) transEventMetaToAlertData(eventMeta msgqueue.Handler
 			labels[labelKey] = val
 		}
 	}
+
+	labels[string(alert.AlarmLabelsAlarmName)] = generateAlertName(labels)
 	labels[string(alert.AlarmLabelsAlarmProjectID)] = alert.DefaultAlarmProjectID
 
 	// parse event metadata name

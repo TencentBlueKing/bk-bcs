@@ -161,7 +161,7 @@ func (dm *DataManager) DeleteApp(ctx context.Context, req *pb.DeleteAppReq) (*pb
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := appaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := appaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -368,7 +368,7 @@ func (dm *DataManager) DeleteConfigTemplate(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := templateaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := templateaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -1428,29 +1428,6 @@ func (dm *DataManager) CreateAppInstance(ctx context.Context,
 	return response, nil
 }
 
-// QueryHistoryAppInstances returns history app instances.
-func (dm *DataManager) QueryHistoryAppInstances(ctx context.Context,
-	req *pb.QueryHistoryAppInstancesReq) (*pb.QueryHistoryAppInstancesResp, error) {
-
-	rtime := time.Now()
-	method := common.GRPCMethod(ctx)
-	logger.V(2).Infof("%s[%s]| input[%+v]", method, req.Seq, req)
-
-	response := new(pb.QueryHistoryAppInstancesResp)
-
-	defer func() {
-		cost := dm.collector.StatRequest(method, response.Code, rtime, time.Now())
-		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
-	}()
-
-	action := appinstanceaction.NewHistoryAction(ctx, dm.viper, dm.smgr, req, response)
-	if err := dm.executor.Execute(action); err != nil {
-		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
-	}
-
-	return response, nil
-}
-
 // QueryReachableAppInstances returns reachable app instances.
 func (dm *DataManager) QueryReachableAppInstances(ctx context.Context,
 	req *pb.QueryReachableAppInstancesReq) (*pb.QueryReachableAppInstancesResp, error) {
@@ -2126,7 +2103,7 @@ func (dm *DataManager) DeleteVariableGroup(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := variablegroupaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := variablegroupaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}
@@ -2241,7 +2218,7 @@ func (dm *DataManager) DeleteVariable(ctx context.Context,
 		logger.V(2).Infof("%s[%s]| output[%dms][%+v]", method, req.Seq, cost, response)
 	}()
 
-	action := variableaction.NewDeleteAction(ctx, dm.viper, dm.smgr, req, response)
+	action := variableaction.NewDeleteAction(ctx, dm.viper, dm.smgr, dm.authSvrCli, req, response)
 	if err := dm.executor.Execute(action); err != nil {
 		logger.Errorf("%s[%s]| %+v", method, req.Seq, err)
 	}

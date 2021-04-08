@@ -51,12 +51,7 @@ func (m *CreateRawAlertInfoReq) Validate() error {
 		}
 	}
 
-	if m.GetEndtime() <= 0 {
-		return CreateRawAlertInfoReqValidationError{
-			field:  "Endtime",
-			reason: "value must be greater than 0",
-		}
-	}
+	// no validation rules for Endtime
 
 	if utf8.RuneCountInString(m.GetGeneratorurl()) > 1024 {
 		return CreateRawAlertInfoReqValidationError{
@@ -224,12 +219,7 @@ func (m *CreateBusinessAlertInfoReq) Validate() error {
 		}
 	}
 
-	if m.GetEndtime() <= 0 {
-		return CreateBusinessAlertInfoReqValidationError{
-			field:  "Endtime",
-			reason: "value must be greater than 0",
-		}
-	}
+	// no validation rules for Endtime
 
 	if utf8.RuneCountInString(m.GetGeneratorurl()) > 1024 {
 		return CreateBusinessAlertInfoReqValidationError{
@@ -245,13 +235,10 @@ func (m *CreateBusinessAlertInfoReq) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetCommonLabel()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateBusinessAlertInfoReqValidationError{
-				field:  "CommonLabel",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+	if utf8.RuneCountInString(m.GetClusterID()) < 1 {
+		return CreateBusinessAlertInfoReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at least 1 runes",
 		}
 	}
 
@@ -510,12 +497,7 @@ func (m *CommonAlertLabel) Validate() error {
 		return nil
 	}
 
-	if utf8.RuneCountInString(m.GetAlarmType()) < 1 {
-		return CommonAlertLabelValidationError{
-			field:  "AlarmType",
-			reason: "value length must be at least 1 runes",
-		}
-	}
+	// no validation rules for AlarmType
 
 	if utf8.RuneCountInString(m.GetClusterID()) < 1 {
 		return CommonAlertLabelValidationError{

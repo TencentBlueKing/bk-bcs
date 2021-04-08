@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	// init alertManager options config
+	// init alertmanager options config
 	alertManagerOptions := config.NewAlertManagerOptions()
 	conf.Parse(alertManagerOptions)
 
@@ -29,9 +29,9 @@ func main() {
 	blog.InitLogs(alertManagerOptions.LogConfig)
 	defer blog.CloseLogs()
 
-	// init alertManager & run server/consumer
+	// init alertmanager & run server/consumer
 	alertManager := cmd.NewAlertManager(alertManagerOptions)
 	if err := alertManager.Run(); err != nil {
-		blog.Fatalf("alertManager run failed: %v", err)
+		blog.Fatalf("alertmanager run failed: %v", err)
 	}
 }

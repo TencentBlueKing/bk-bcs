@@ -127,8 +127,8 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 	switch req.AlarmType {
 	case alert.Resource:
 		alertData.Labels = map[string]string{
-			string(alert.AlarmLabelsAlertType):         req.CommonLabel.AlarmType,
-			string(alert.AlarmLabelsClusterID):         req.CommonLabel.ClusterID,
+			string(alert.AlarmLabelsAlertType):         req.AlarmType,
+			string(alert.AlarmLabelsClusterID):         req.ClusterID,
 			string(alert.AlarmLabelsClusterNameSpace):  req.ResourceAlertLabel.NameSpace,
 			string(alert.AlarmLabelsAlarmResourceType): req.ResourceAlertLabel.AlarmResourceType,
 			string(alert.AlarmLabelsAlarmResourceName): req.ResourceAlertLabel.AlarmResourceName,
@@ -136,11 +136,11 @@ func (ac *AlertAction) CreateBusinessAlertInfo(ctx context.Context, req *alertma
 		}
 	case alert.Module:
 		alertData.Labels = map[string]string{
-			string(alert.AlarmLabelsAlertType):  req.CommonLabel.AlarmType,
-			string(alert.AlarmLabelsClusterID):  req.CommonLabel.ClusterID,
+			string(alert.AlarmLabelsAlertType):  req.AlarmType,
+			string(alert.AlarmLabelsAlarmName):  req.ModuleAlertLabel.AlarmName,
+			string(alert.AlarmLabelsClusterID):  req.ClusterID,
 			string(alert.AlarmLabelsModuleName): req.ModuleAlertLabel.ModuleName,
 			string(alert.AlarmLabelsModuleIP):   req.ModuleAlertLabel.ModuleIP,
-			string(alert.AlarmLabelsAlarmName):  req.ModuleAlertLabel.AlarmName,
 			string(alert.AlarmLabelsAlarmLevel): req.ModuleAlertLabel.AlarmLevel,
 		}
 	default:

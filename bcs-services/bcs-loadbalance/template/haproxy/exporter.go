@@ -306,15 +306,24 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 	if status == nil {
 		return
 	}
-	ch <- prometheus.MustNewConstMetric(haproxyPidMetricDesc, prometheus.GaugeValue, float64(status.HaproxyPid), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyUpTimeSecondMetricDesc, prometheus.GaugeValue, float64(status.UpTimeSecond), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyULimitMetricDesc, prometheus.GaugeValue, float64(status.ULimitN), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyMaxSock, prometheus.GaugeValue, float64(status.MaxSock), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyMaxConn, prometheus.GaugeValue, float64(status.MaxConn), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyMaxPipes, prometheus.GaugeValue, float64(status.MaxPipes), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyCurrentConn, prometheus.GaugeValue, float64(status.CurrentConn), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyCurrentConnRate, prometheus.GaugeValue, float64(status.ConnRate), []string{}...)
-	ch <- prometheus.MustNewConstMetric(haproxyMaxConnRate, prometheus.GaugeValue, float64(status.ConnMaxRate), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyPidMetricDesc, prometheus.GaugeValue, float64(status.HaproxyPid), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyUpTimeSecondMetricDesc, prometheus.GaugeValue, float64(status.UpTimeSecond), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyULimitMetricDesc, prometheus.GaugeValue, float64(status.ULimitN), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyMaxSock, prometheus.GaugeValue, float64(status.MaxSock), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyMaxConn, prometheus.GaugeValue, float64(status.MaxConn), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyMaxPipes, prometheus.GaugeValue, float64(status.MaxPipes), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyCurrentConn, prometheus.GaugeValue, float64(status.CurrentConn), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyCurrentConnRate, prometheus.GaugeValue, float64(status.ConnRate), []string{}...)
+	ch <- prometheus.MustNewConstMetric(
+		haproxyMaxConnRate, prometheus.GaugeValue, float64(status.ConnMaxRate), []string{}...)
 
 	// Attentions: frontend or backend may be empty occasionally
 	for _, service := range status.Services {
@@ -322,11 +331,14 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 		if frontend != nil {
 			for i := 0; i <= 33; i++ {
 				if i == 15 {
-					ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i], prometheus.GaugeValue, convertStatus(frontend.Status), frontend.Name)
+					ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i],
+						prometheus.GaugeValue, convertStatus(frontend.Status), frontend.Name)
 				} else if i == 27 {
-					ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(frontend.CheckStatus), frontend.Name)
+					ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i],
+						prometheus.GaugeValue, convertCheckStatus(frontend.CheckStatus), frontend.Name)
 				} else {
-					ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i], prometheus.GaugeValue, getValue(frontend, keysArray[i]), frontend.Name)
+					ch <- prometheus.MustNewConstMetric(frontendMetricDescArray[i],
+						prometheus.GaugeValue, getValue(frontend, keysArray[i]), frontend.Name)
 				}
 			}
 		}
@@ -335,11 +347,14 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 		if backend != nil {
 			for i := 0; i <= 33; i++ {
 				if i == 15 {
-					ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i], prometheus.GaugeValue, convertStatus(backend.Status), backend.Name)
+					ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i],
+						prometheus.GaugeValue, convertStatus(backend.Status), backend.Name)
 				} else if i == 27 {
-					ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(backend.CheckStatus), backend.Name)
+					ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i],
+						prometheus.GaugeValue, convertCheckStatus(backend.CheckStatus), backend.Name)
 				} else {
-					ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i], prometheus.GaugeValue, getValue(backend, keysArray[i]), backend.Name)
+					ch <- prometheus.MustNewConstMetric(backendMetricDescArray[i],
+						prometheus.GaugeValue, getValue(backend, keysArray[i]), backend.Name)
 				}
 			}
 		}
@@ -349,11 +364,17 @@ func (m *Manager) Collect(ch chan<- prometheus.Metric) {
 			for _, server := range servers {
 				for i := 0; i <= 33; i++ {
 					if i == 15 {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertStatus(server.Status), server.ServerName, server.Name, server.Address)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i],
+							prometheus.GaugeValue, convertStatus(server.Status),
+							server.ServerName, server.Name, server.Address)
 					} else if i == 27 {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, convertCheckStatus(server.CheckStatus), server.ServerName, server.Name, server.Address)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i],
+							prometheus.GaugeValue, convertCheckStatus(server.CheckStatus),
+							server.ServerName, server.Name, server.Address)
 					} else {
-						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i], prometheus.GaugeValue, getValue(server, keysArray[i]), server.ServerName, server.Name, server.Address)
+						ch <- prometheus.MustNewConstMetric(serverMetricDescArray[i],
+							prometheus.GaugeValue, getValue(server, keysArray[i]),
+							server.ServerName, server.Name, server.Address)
 					}
 				}
 			}

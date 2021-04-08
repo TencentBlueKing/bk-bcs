@@ -14,6 +14,7 @@ package common
 
 import (
 	"context"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
@@ -196,13 +197,22 @@ func GenVariableID() (string, error) {
 	return fmt.Sprintf("%s-%s", VARPREFIX, GenUUID()), nil
 }
 
-// SHA256 returns a sha256 string of the data string.
-func SHA256(data string) string {
-	t := sha256.New()
-	if _, err := io.WriteString(t, data); err != nil {
+// SHA1 returns a sha1 string of the data string.
+func SHA1(data string) string {
+	hash := sha1.New()
+	if _, err := io.WriteString(hash, data); err != nil {
 		return ""
 	}
-	return fmt.Sprintf("%X", t.Sum(nil))
+	return fmt.Sprintf("%X", hash.Sum(nil))
+}
+
+// SHA256 returns a sha256 string of the data string.
+func SHA256(data string) string {
+	hash := sha256.New()
+	if _, err := io.WriteString(hash, data); err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%X", hash.Sum(nil))
 }
 
 // FileSHA256 returns sha256 string of the file.

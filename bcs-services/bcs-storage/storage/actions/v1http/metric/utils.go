@@ -114,9 +114,11 @@ func get(req *restful.Request, condition *operator.Condition) ([]operator.M, err
 		Offset: offset,
 		Limit:  limit,
 	}
-	mList, err := lib.NewStore(
+	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig)).Get(req.Request.Context(), getTable(req), getOption)
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
+	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
 	lib.FormatTime(mList, []string{createTimeTag, updateTimeTag})
 	return mList, err
 }
@@ -127,31 +129,33 @@ func put(req *restful.Request) error {
 	if err != nil {
 		return err
 	}
-	return lib.NewStore(
+	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig)).Put(
-		req.Request.Context(), getTable(req), data, &lib.StorePutOption{
-			Cond:          operator.NewLeafCondition(operator.Eq, features),
-			UpdateTimeKey: updateTimeTag,
-			CreateTimeKey: createTimeTag,
-		})
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
+	return store.Put(req.Request.Context(), getTable(req), data, &lib.StorePutOption{
+		Cond:          operator.NewLeafCondition(operator.Eq, features),
+		UpdateTimeKey: updateTimeTag,
+		CreateTimeKey: createTimeTag,
+	})
 }
 
 func remove(req *restful.Request) error {
 	condition := getMetricFeat(req)
-	return lib.NewStore(
+	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig)).
-		Remove(req.Request.Context(), getTable(req), &lib.StoreRemoveOption{
-			Cond: condition,
-		})
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
+	return store.Remove(req.Request.Context(), getTable(req), &lib.StoreRemoveOption{
+		Cond: condition,
+	})
 }
 
 func tables(req *restful.Request) ([]string, error) {
-
-	tableNames, err := lib.NewStore(
+	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig)).GetDB().
-		ListTableNames(req.Request.Context())
+		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
+	tableNames, err := store.GetDB().ListTableNames(req.Request.Context())
 	return tableNames, err
 }

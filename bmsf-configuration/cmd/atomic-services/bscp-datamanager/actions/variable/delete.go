@@ -15,14 +15,19 @@ package variable
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/spf13/viper"
+	"gorm.io/gorm"
 
+	"bk-bscp/cmd/middle-services/bscp-authserver/modules/auth"
 	"bk-bscp/internal/database"
 	"bk-bscp/internal/dbsharding"
+	pbauthserver "bk-bscp/internal/protocol/authserver"
 	pbcommon "bk-bscp/internal/protocol/common"
 	pb "bk-bscp/internal/protocol/datamanager"
 	"bk-bscp/pkg/common"
+	"bk-bscp/pkg/logger"
 )
 
 // DeleteAction action for delete variable.
@@ -31,16 +36,21 @@ type DeleteAction struct {
 	viper *viper.Viper
 	smgr  *dbsharding.ShardingManager
 
+	authSvrCli pbauthserver.AuthClient
+
 	req  *pb.DeleteVariableReq
 	resp *pb.DeleteVariableResp
 
 	sd *dbsharding.ShardingDB
+	tx *gorm.DB
 }
 
 // NewDeleteAction create new DeleteAction
-func NewDeleteAction(ctx context.Context, viper *viper.Viper, smgr *dbsharding.ShardingManager,
+func NewDeleteAction(ctx context.Context, viper *viper.Viper,
+	smgr *dbsharding.ShardingManager, authSvrCli pbauthserver.AuthClient,
 	req *pb.DeleteVariableReq, resp *pb.DeleteVariableResp) *DeleteAction {
-	action := &DeleteAction{ctx: ctx, viper: viper, smgr: smgr, req: req, resp: resp}
+
+	action := &DeleteAction{ctx: ctx, viper: viper, smgr: smgr, authSvrCli: authSvrCli, req: req, resp: resp}
 
 	action.resp.Seq = req.Seq
 	action.resp.Code = pbcommon.ErrCode_E_OK
@@ -93,7 +103,7 @@ func (act *DeleteAction) deleteVariable() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_DM_PARAMS_INVALID, "can't delete resource without var_id"
 	}
 
-	exec := act.sd.DB().
+	exec := act.tx.
 		Limit(1).
 		Where(&database.Variable{BizID: act.req.BizId, VarID: act.req.VarId}).
 		Delete(&database.Variable{})
@@ -108,6 +118,27 @@ func (act *DeleteAction) deleteVariable() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_E_OK, "OK"
 }
 
+func (act *DeleteAction) removeAuthPolicy() (pbcommon.ErrCode, string) {
+	r := &pbauthserver.RemovePolicyReq{
+		Seq:      act.req.Seq,
+		Metadata: &pbauthserver.AuthMetadata{V0: act.req.Operator, V1: act.req.VarId, V2: auth.LocalAuthAction},
+
+		// NOTE: remove policies in multi mode.
+		Mode: int32(pbauthserver.RemovePolicyMode_RPM_MULTI),
+	}
+
+	ctx, cancel := context.WithTimeout(act.ctx, act.viper.GetDuration("authserver.callTimeout"))
+	defer cancel()
+
+	logger.V(4).Infof("DeleteVariable[%s]| request to authserver, %+v", r.Seq, r)
+
+	resp, err := act.authSvrCli.RemovePolicy(ctx, r)
+	if err != nil {
+		return pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, fmt.Sprintf("request to Authserver RemovePolicy, %+v", err)
+	}
+	return resp.Code, resp.Message
+}
+
 // Do makes the workflows of this action base on input messages.
 func (act *DeleteAction) Do() error {
 	// business sharding db.
@@ -116,10 +147,24 @@ func (act *DeleteAction) Do() error {
 		return act.Err(pbcommon.ErrCode_E_DM_ERR_DBSHARDING, err.Error())
 	}
 	act.sd = sd
+	act.tx = act.sd.DB().Begin()
 
 	// delete variable.
 	if errCode, errMsg := act.deleteVariable(); errCode != pbcommon.ErrCode_E_OK {
+		act.tx.Rollback()
 		return act.Err(errCode, errMsg)
+	}
+
+	// remove auth policy.
+	if errCode, errMsg := act.removeAuthPolicy(); errCode != pbcommon.ErrCode_E_OK {
+		act.tx.Rollback()
+		return act.Err(errCode, errMsg)
+	}
+
+	// commit tx.
+	if err := act.tx.Commit().Error; err != nil {
+		act.tx.Rollback()
+		return act.Err(pbcommon.ErrCode_E_DM_SYSTEM_UNKNOWN, err.Error())
 	}
 	return nil
 }

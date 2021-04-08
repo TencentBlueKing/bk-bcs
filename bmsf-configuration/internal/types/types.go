@@ -11,3 +11,67 @@ limitations under the License.
 */
 
 package types
+
+const (
+	// EffectCodePending is pending effect code.
+	EffectCodePending = 0
+
+	// EffectCodeSuccess is success effect code.
+	EffectCodeSuccess = 1
+
+	// EffectCodeFailed is failed effect code.
+	EffectCodeFailed = -1
+
+	// EffectCodeTimeout is timeout effect code.
+	EffectCodeTimeout = -2
+
+	// EffectCodeOffline is offline effect code.
+	EffectCodeOffline = -3
+
+	// EffectMsgPending is effect message pending.
+	EffectMsgPending = "PENDING"
+
+	// EffectMsgSuccess is effect message success.
+	EffectMsgSuccess = "SUCCESS"
+
+	// EffectMsgTimeout is effect message timeout.
+	EffectMsgTimeout = "TIMEOUT"
+
+	// EffectMsgOffline is effect message offline.
+	EffectMsgOffline = "OFFLINE"
+)
+
+const (
+	// ReloadCodePending is pending reload code.
+	ReloadCodePending = 0
+
+	// ReloadCodeSuccess is success reload code.
+	ReloadCodeSuccess = 1
+
+	// ReloadCodeRollbackSuccess is rollback success reload code.
+	ReloadCodeRollbackSuccess = 2
+
+	// ReloadCodeFailed is failed reload code.
+	ReloadCodeFailed = -1
+
+	// ReloadCodeTimeout is timeout reload code.
+	ReloadCodeTimeout = -2
+
+	// ReloadCodeOffline is offline reload code.
+	ReloadCodeOffline = -3
+
+	// ReloadMsgPending is reload message pending.
+	ReloadMsgPending = "PENDING"
+
+	// ReloadMsgSuccess is reload message success.
+	ReloadMsgSuccess = "SUCCESS"
+
+	// ReloadMsgRollbackSuccess is reload message success.
+	ReloadMsgRollbackSuccess = "ROLLBACK SUCCESS"
+
+	// ReloadMsgTimeout is reload message timeout.
+	ReloadMsgTimeout = "TIMEOUT"
+
+	// ReloadMsgOffline is reload message offline.
+	ReloadMsgOffline = "OFFLINE"
+)

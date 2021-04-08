@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager/cmd/config"
 )
@@ -53,12 +54,17 @@ func initQueueClient(queueConf config.QueueConfig) (msgqueue.MessageQueue, error
 		resourceToQueue[r] = r
 	}
 
+	newAddress, err := transQueueAddressPwd(queueConf.Address)
+	if err != nil {
+		return nil, err
+	}
+
 	commonOption := msgqueue.CommonOpts(
 		&msgqueue.CommonOptions{
 			QueueFlag:       queueConf.QueueFlag,
 			QueueKind:       msgqueue.QueueKind(queueConf.QueueKind),
 			ResourceToQueue: resourceToQueue,
-			Address:         queueConf.Address,
+			Address:         newAddress,
 		})
 
 	exchangeOption := msgqueue.Exchange(
@@ -124,4 +130,30 @@ func parseQueueArguments(queueArguments map[string]interface{}) map[string]inter
 	}
 
 	return arguments
+}
+
+func transQueueAddressPwd(address string) (string, error) {
+	schemas := strings.Split(address, "//")
+	if len(schemas) != 2 {
+		return "", fmt.Errorf("passwd contain special char(//)")
+	}
+
+	accountServers := strings.Split(schemas[1], "@")
+	if len(accountServers) != 2 {
+		return "", fmt.Errorf("queue account or passwd contain special char(@)")
+	}
+
+	accounts := strings.Split(accountServers[0], ":")
+	if len(accounts) != 2 {
+		return "", fmt.Errorf("queue account or passwd contain special char(:)")
+	}
+
+	pwd := accounts[1]
+	if pwd != "" {
+		realPwd, _ := encrypt.DesDecryptFromBase([]byte(pwd))
+		pwd = string(realPwd)
+	}
+
+	parseAddress := fmt.Sprintf("%s//%s:%s@%s", schemas[0], accounts[0], pwd, accountServers[1])
+	return parseAddress, nil
 }

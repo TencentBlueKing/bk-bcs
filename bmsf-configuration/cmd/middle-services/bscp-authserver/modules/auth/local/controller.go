@@ -59,6 +59,10 @@ func NewController(viper *viper.Viper) (*Controller, error) {
 	}
 
 	// NOTE: RBAC x ABAC x ACL multi auth mode.
+	// Could add user or resource into 'g',
+	// g "alice, admin", alice is admin now.
+	// g "book-1, book-group", book-1 resource added to group now.
+	// And could change model to support rbac_with_resource_roles(资源角色)、rbac_with_domains(域租户) and so on.
 	rbac := model.NewModel()
 	rbac.AddDef("r", "r", "sub, obj, act")
 	rbac.AddDef("p", "p", "sub, obj, act")
@@ -90,4 +94,9 @@ func (c *Controller) Authorize(rvals ...interface{}) (bool, error) {
 // Otherwise the function returns true by adding the new rule.
 func (c *Controller) AddPolicy(rvals ...interface{}) (bool, error) {
 	return c.enforcer.AddPolicy(rvals...)
+}
+
+// RemovePolicy removes an authorization rule from the current policy.
+func (c *Controller) RemovePolicy(rvals ...interface{}) (bool, error) {
+	return c.enforcer.RemovePolicy(rvals...)
 }

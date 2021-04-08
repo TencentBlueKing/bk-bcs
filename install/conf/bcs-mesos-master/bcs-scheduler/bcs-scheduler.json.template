@@ -22,5 +22,9 @@
   "plugins": "${schedulerPlugins}",
   "plugin_dir": "${schedulerPluginDir}",
   "cni_dir": "${schedulerCNIDir}",
-  "cluster": "${clusterId}"
+  "cluster": "${clusterId}",
+  "alertServer": "${alertServer}",
+  "clientAuth": ${clientAuth},
+  "alertDebug": ${alertDebug},
+  "token": ${token}
 }

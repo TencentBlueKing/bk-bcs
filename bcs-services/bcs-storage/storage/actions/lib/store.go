@@ -31,6 +31,11 @@ import (
 
 const (
 	storeActionDefaultLimit = 3000
+
+	// database key for delete flag
+	// Because mongodb does not support returning deleted data in changestream, we will do soft-deletion the data here
+	databaseFieldNameForDeletionFlag = "_isBcsObjectDeleted"
+	databaseIndexNameForDeletionFlag = "bcs_object_deletion_flag_idx"
 )
 
 // StoreGetOption option for get action
@@ -65,6 +70,7 @@ type Store struct {
 	tableCache      mapset.Set
 	tableIndexCache map[string]*drivers.Index
 	defaultLimit    int64
+	doSoftDelete    bool
 }
 
 // NewStore create store action
@@ -86,6 +92,11 @@ func fieldsToProjection(fields []string) map[string]int {
 	return projectionMap
 }
 
+// SetSoftDeletion set store to do soft delet
+func (a *Store) SetSoftDeletion(flag bool) {
+	a.doSoftDelete = flag
+}
+
 // GetDB return db interface
 func (a *Store) GetDB() drivers.DB {
 	return a.mDriver
@@ -101,7 +112,14 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	}
 	projection := fieldsToProjection(opt.Fields)
 	mList := make([]operator.M, 0)
-	finder := a.mDriver.Table(resourceType).Find(opt.Cond)
+
+	findCond := opt.Cond
+	if a.doSoftDelete {
+		// search for data which is not marked deleted
+		delFlagCond := operator.NewLeafCondition(operator.Eq, operator.M{databaseFieldNameForDeletionFlag: false})
+		findCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+	}
+	finder := a.mDriver.Table(resourceType).Find(findCond)
 	if len(projection) != 0 {
 		finder = finder.WithProjection(projection)
 	}
@@ -125,7 +143,14 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	}
 	retList := make([]operator.M, 0)
 	for _, m := range mList {
-		retList = append(retList, dollarRecover(m))
+		tmpM := dollarRecover(m)
+		// remove delete flag in returned result
+		if a.doSoftDelete {
+			if _, found := tmpM[databaseFieldNameForDeletionFlag]; found {
+				delete(tmpM, databaseFieldNameForDeletionFlag)
+			}
+		}
+		retList = append(retList, tmpM)
 	}
 	return retList, nil
 }
@@ -234,6 +259,27 @@ func (a *Store) ensureTable(ctx context.Context, tableName string, index drivers
 		}
 	}
 
+	// if soft delete flag is true, add index for delete flag field
+	if a.doSoftDelete {
+		// ensure deletionflag index
+		bcsDeletionFlagIndex := drivers.Index{
+			Name:   databaseIndexNameForDeletionFlag,
+			Unique: false,
+			Key: map[string]int32{
+				databaseFieldNameForDeletionFlag: 1,
+			},
+		}
+		hasDelIndex, err := a.mDriver.Table(tableName).HasIndex(ctx, bcsDeletionFlagIndex.Name)
+		if err != nil {
+			return err
+		}
+		if !hasDelIndex {
+			if iErr := a.mDriver.Table(tableName).CreateIndex(ctx, bcsDeletionFlagIndex); iErr != nil {
+				return iErr
+			}
+		}
+	}
+
 	a.tableCache.Add(tableName)
 	return nil
 }
@@ -264,24 +310,32 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 	timeNow := time.Now()
 	if opt.Cond == nil {
 		data[opt.CreateTimeKey] = timeNow
+		data[databaseFieldNameForDeletionFlag] = false
 		if _, err := a.mDriver.Table(resourceType).Insert(ctx, []interface{}{data}); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	counter, err := a.mDriver.Table(resourceType).Find(opt.Cond).Count(ctx)
+	countCond := opt.Cond
+	if a.doSoftDelete {
+		// search for data which is not marked deleted
+		delFlagCond := operator.NewLeafCondition(operator.Eq, operator.M{databaseFieldNameForDeletionFlag: false})
+		countCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+		// overriding the deletion flag value
+		data[databaseFieldNameForDeletionFlag] = false
+	}
+	counter, err := a.mDriver.Table(resourceType).Find(countCond).Count(ctx)
 	if err != nil {
 		return err
 	}
-
 	if counter == 0 && len(opt.CreateTimeKey) != 0 {
 		data[opt.CreateTimeKey] = timeNow
 	}
 	if len(opt.UpdateTimeKey) != 0 {
 		data[opt.UpdateTimeKey] = timeNow
 	}
-	if err := a.mDriver.Table(resourceType).Upsert(ctx, opt.Cond, operator.M{"$set": data}); err != nil {
+	if err := a.mDriver.Table(resourceType).Upsert(ctx, countCond, operator.M{"$set": data}); err != nil {
 		return err
 	}
 	return nil
@@ -292,8 +346,29 @@ func (a *Store) Remove(ctx context.Context, resourceType string, opt *StoreRemov
 	if opt == nil {
 		return fmt.Errorf("StoreRemoveOption cannot be empty")
 	}
+	if a.doSoftDelete {
+		return a.doDeleteSoft(ctx, resourceType, opt)
+	}
+	return a.doDelete(ctx, resourceType, opt)
+}
 
+func (a *Store) doDelete(ctx context.Context, resourceType string, opt *StoreRemoveOption) error {
 	deleteCounter, err := a.mDriver.Table(resourceType).Delete(ctx, opt.Cond)
+	if err != nil {
+		return err
+	}
+	if deleteCounter == 0 && !opt.IgnoreNotFound {
+		return storageErr.ResourceDoesNotExist
+	}
+	return nil
+}
+
+func (a *Store) doDeleteSoft(ctx context.Context, resourceType string, opt *StoreRemoveOption) error {
+	delFlagCond := operator.NewLeafCondition(operator.Eq, operator.M{databaseFieldNameForDeletionFlag: false})
+	delCond := operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+	deleteCounter, err := a.mDriver.Table(resourceType).UpdateMany(ctx, delCond, operator.M{"$set": operator.M{
+		databaseFieldNameForDeletionFlag: true,
+	}})
 	if err != nil {
 		return err
 	}
@@ -412,11 +487,27 @@ func (a *Store) Watch(ctx context.Context, resourceType string, opt *StoreWatchO
 						Value: e.Data,
 					}
 				case drivers.EventUpdate:
+					// send delete event when doing soft delete and meeting delete flag
+					if a.doSoftDelete {
+						if deleteFlagValue, ok := e.UpdatedFields[databaseFieldNameForDeletionFlag]; ok {
+							deleteFlag, assertOk := deleteFlagValue.(bool)
+							if assertOk && deleteFlag {
+								retEvent <- &Event{
+									Type:  Del,
+									Value: e.Data,
+								}
+							}
+						}
+					}
 					retEvent <- &Event{
 						Type:  Chg,
 						Value: e.Data,
 					}
 				case drivers.EventDelete:
+					// ignore delete event when doing soft delete
+					if a.doSoftDelete {
+						continue
+					}
 					retEvent <- &Event{
 						Type:  Del,
 						Value: e.Data,

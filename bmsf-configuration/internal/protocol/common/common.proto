@@ -49,6 +49,10 @@ enum ErrCode {
     E_AUTH_LOCAL_ADD_POLICY_FAILED                  = 4001006;
     // 4001007 AUTH服务, IAM模式新建策略失败
     E_AUTH_BKIAM_ADD_POLICY_FAILED                  = 4001007;
+    // 4001008 AUTH服务, 本地模式删除策略失败
+    E_AUTH_LOCAL_REM_POLICY_FAILED                  = 4001008;
+    // 4001009 AUTH服务, IAM模式删除策略失败
+    E_AUTH_BKIAM_REM_POLICY_FAILED                  = 4001009;
 
     // 4002000 模板服务, 节点调用失败
     E_TPL_SYSTEM_UNKNOWN                            = 4002000;
@@ -816,11 +820,11 @@ message AppInstanceRelease {
     string cfg_id      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
     string release_id  = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
     string effect_time = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
-    int32  effect_code = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误码", description: ""}];
-    string effect_msg  = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误信息", description: ""}];
+    int32  effect_code = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "生效错误码", description: "0:生效中  1:成功  -1:失败  -2:超时 -3:离线"}];
+    string effect_msg  = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "生效错误信息", description: "生效中:PENDING  成功:SUCCESS  生效超时:TIMEOUT  离线:OFFLINE"}];
     string reload_time = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
-    int32  reload_code = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload状态", description: "reload执行结果"}];
-    string reload_msg  = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload描述信息", description: "执行reload动作的结果描述"}];
+    int32  reload_code = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "reload错误码", description: "0:未执行  1:reload成功  2:rollback reload成功  -1:失败  -2:超时  -3:离线"}];
+    string reload_msg  = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "reload错误信息", description: "未执行:PENDING  reload成功:SUCCESS  rollback reload成功:ROLLBACK SUCCESS  生效超时:TIMEOUT  离线:OFFLINE"}];
     string created_at  = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "创建时间", description: "创建时间，2019-08-29 17:18:22"}];
     string updated_at  = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "最近一次修改时间", description: "最近一次修改时间，2019-08-29 17:18:22"}];
 }
@@ -836,12 +840,12 @@ message ReportInfo {
     string cfg_id           = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "配置ID", description: "", max_length: 64}];
     string release_id       = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "发布版本ID", description: "", max_length: 64}];
     string multi_release_id = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "组模式发布版本ID", description: "", max_length: 64}];
-    string effect_time      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本下发生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
-    int32  effect_code      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误码", description: ""}];
-    string effect_msg       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "下发执行错误信息", description: ""}];
+    string effect_time      = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本生效时间", description: "版本生效时间, 2019-08-29 17:18:22"}];
+    int32  effect_code      = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "生效错误码", description: "0:生效中  1:成功  -1:失败  -2:超时  -3:离线"}];
+    string effect_msg       = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "生效错误信息", description: "生效中:PENDING  成功:SUCCESS  生效超时:TIMEOUT  离线:OFFLINE"}];
     string reload_time      = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "版本reload时间", description: "版本reload时间, 2019-08-29 17:18:22"}];
-    int32  reload_code      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误码", description: ""}];
-    string reload_msg       = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "Reload执行错误信息", description: ""}];
+    int32  reload_code      = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "reload错误码", description: "0:未执行  1:reload成功  2:rollback reload成功  -1:失败  -2:超时  -3:离线"}];
+    string reload_msg       = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "reload错误信息", description: "未执行:PENDING  reload成功:SUCCESS  rollback reload成功:ROLLBACK SUCCESS  生效超时:TIMEOUT  离线:OFFLINE"}];
 }
 
 message Strategy {

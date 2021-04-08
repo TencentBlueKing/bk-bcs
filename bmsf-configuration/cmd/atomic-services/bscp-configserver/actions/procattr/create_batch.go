@@ -43,6 +43,8 @@ type CreateBatchAction struct {
 
 	req  *pb.CreateProcAttrBatchReq
 	resp *pb.CreateProcAttrBatchResp
+
+	app *pbcommon.App
 }
 
 // NewCreateBatchAction creates new CreateBatchAction.
@@ -142,6 +144,12 @@ func (act *CreateBatchAction) verify() error {
 }
 
 func (act *CreateBatchAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -155,6 +163,10 @@ func (act *CreateBatchAction) authorize() (pbcommon.ErrCode, string) {
 }
 
 func (act *CreateBatchAction) queryApp() (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
@@ -170,10 +182,9 @@ func (act *CreateBatchAction) queryApp() (pbcommon.ErrCode, string) {
 	if err != nil {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
 	}
-	if resp.Code != pbcommon.ErrCode_E_OK {
-		return resp.Code, resp.Message
-	}
-	return pbcommon.ErrCode_E_OK, ""
+	act.app = resp.Data
+
+	return resp.Code, resp.Message
 }
 
 func (act *CreateBatchAction) create(data *pb.CreateProcAttrBatchReq_ReqData) (pbcommon.ErrCode, string) {

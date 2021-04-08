@@ -27,6 +27,7 @@ import (
 	pb "bk-bscp/internal/protocol/connserver"
 	pbsidecar "bk-bscp/internal/protocol/sidecar"
 	"bk-bscp/internal/strategy"
+	"bk-bscp/internal/types"
 	"bk-bscp/pkg/common"
 	"bk-bscp/pkg/logger"
 )
@@ -172,14 +173,14 @@ func (r *Reloader) handleFileReload() chan *ReloadSpec {
 				ReleaseId:      event.ReleaseID,
 				MultiReleaseId: event.MultiReleaseID,
 				ReloadTime:     time.Now().Format("2006-01-02 15:04:05"),
-				ReloadCode:     ReloadCodeSuccess,
-				ReloadMsg:      ReloadMsgSuccess,
+				ReloadCode:     types.ReloadCodeSuccess,
+				ReloadMsg:      types.ReloadMsgSuccess,
 			}
 
 			if event.ReloadType == int32(ReloadTypeRollback) {
 				// rollback reload.
-				reportReloadReq.ReloadCode = ReloadCodeRollbackSuccess
-				reportReloadReq.ReloadMsg = ReloadMsgRollbackSuccess
+				reportReloadReq.ReloadCode = types.ReloadCodeRollbackSuccess
+				reportReloadReq.ReloadMsg = types.ReloadMsgRollbackSuccess
 			}
 
 			if err := r.reportReload(reportReloadReq, event.Path); err != nil {

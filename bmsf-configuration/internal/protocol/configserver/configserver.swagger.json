@@ -1306,7 +1306,6 @@
           },
           {
             "name": "app_id",
-            "description": "可选，非空时将基于目标应用ID查询",
             "in": "path",
             "required": true,
             "type": "string"
@@ -1976,7 +1975,6 @@
           },
           {
             "name": "app_id",
-            "description": "可选，非空时将基于目标应用ID查询",
             "in": "path",
             "required": true,
             "type": "string"
@@ -2117,46 +2115,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/configserverQueryEffectedAppInstancesReq"
-            }
-          }
-        ],
-        "tags": [
-          "AppInstance"
-        ]
-      }
-    },
-    "/api/v2/config/list_history/biz/{biz_id}/app/{app_id}/app_instance": {
-      "post": {
-        "summary": "查询历史应用实例",
-        "description": "查询历史应用实例详细信息",
-        "operationId": "QueryHistoryAppInstances",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/configserverQueryHistoryAppInstancesResp"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "biz_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "app_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/configserverQueryHistoryAppInstancesReq"
             }
           }
         ],
@@ -2688,11 +2646,13 @@
         "effect_code": {
           "type": "integer",
           "format": "int32",
-          "title": "下发执行错误码"
+          "description": "0:生效中  1:成功  -1:失败  -2:超时 -3:离线",
+          "title": "生效错误码"
         },
         "effect_msg": {
           "type": "string",
-          "title": "下发执行错误信息"
+          "description": "生效中:PENDING  成功:SUCCESS  生效超时:TIMEOUT  离线:OFFLINE",
+          "title": "生效错误信息"
         },
         "reload_time": {
           "type": "string",
@@ -2702,13 +2662,13 @@
         "reload_code": {
           "type": "integer",
           "format": "int32",
-          "description": "reload执行结果",
-          "title": "Reload状态"
+          "description": "0:未执行  1:reload成功  2:rollback reload成功  -1:失败  -2:超时  -3:离线",
+          "title": "reload错误码"
         },
         "reload_msg": {
           "type": "string",
-          "description": "执行reload动作的结果描述",
-          "title": "Reload描述信息"
+          "description": "未执行:PENDING  reload成功:SUCCESS  rollback reload成功:ROLLBACK SUCCESS  生效超时:TIMEOUT  离线:OFFLINE",
+          "title": "reload错误信息"
         },
         "created_at": {
           "type": "string",
@@ -3141,6 +3101,8 @@
         "E_AUTH_NOT_AUTHORIZED",
         "E_AUTH_LOCAL_ADD_POLICY_FAILED",
         "E_AUTH_BKIAM_ADD_POLICY_FAILED",
+        "E_AUTH_LOCAL_REM_POLICY_FAILED",
+        "E_AUTH_BKIAM_REM_POLICY_FAILED",
         "E_TPL_SYSTEM_UNKNOWN",
         "E_TPL_PARAMS_INVALID",
         "E_TPL_NOT_FOUND",
@@ -3191,7 +3153,7 @@
         "E_IS_PARAMS_INVALID"
       ],
       "default": "E_OK",
-      "description": "- E_OK: 0 成功\n - E_NOT_AUTHORIZED: 4030403 未授权\n - E_API_SYSTEM_UNKNOWN: 4000000 API服务, 节点调用失败\n - E_API_PARAMS_INVALID: 4000001 API服务, 参数校验失败\n - E_AUTH_SYSTEM_UNKNOWN: 4001000 AUTH服务, 节点调用失败\n - E_AUTH_PARAMS_INVALID: 4001001 AUTH服务, 参数校验失败\n - E_AUTH_AUTHORIZE_FAILED: 4001002 AUTH服务, 权限校验失败\n - E_AUTH_LOCAL_AUTHORIZE_FAILED: 4001003 AUTH服务, 本地模式权限失败\n - E_AUTH_BKIAM_AUTHORIZE_FAILED: 4001004 AUTH服务, IAM模式权限失败\n - E_AUTH_NOT_AUTHORIZED: 4001005 AUTH服务, 无权限\n - E_AUTH_LOCAL_ADD_POLICY_FAILED: 4001006 AUTH服务, 本地模式新建策略失败\n - E_AUTH_BKIAM_ADD_POLICY_FAILED: 4001007 AUTH服务, IAM模式新建策略失败\n - E_TPL_SYSTEM_UNKNOWN: 4002000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 4002001 模板服务, 参数校验失败\n - E_TPL_NOT_FOUND: 4002002 模板服务, 指定目标对象不存在\n - E_TPL_ALREADY_EXISTS: 4002003 模板服务, 指定目标对象已存在\n - E_TPL_RENDER_PLUGIN_CHECK_FAILED: 4002004 模板服务, 插件检查失败\n - E_TPL_NONEED_RENDER: 4002005 模板服务, 无需渲染\n - E_TPL_UNKNOWN_ENGINE_TYPE: 4002006 模板服务, 不支持的引擎\n - E_TPL_RENDER_CHECK_ERROR: 4002007 模板服务, 渲染前置检查失败\n - E_TPL_RENDER_FAILED: 4002008 模板服务, 渲染失败\n - E_TPL_TPLBINDED_CANNOT_DELETE: 4002009 模版服务, 模板绑定中，无法删除\n - E_CS_SYSTEM_UNKNOWN: 4003000 配置服务, 节点调用失败\n - E_CS_PARAMS_INVALID: 4003001 配置服务, 参数校验失败\n - E_CS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4003002 配置服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_CS_COMMIT_ALREADY_CANCELED: 4003003 配置服务, 该Commit已撤销，无法再进行Confirm操作\n - E_CS_COMMIT_ALREADY_CONFIRMED: 4003004 配置服务, 该Commit已提交\n - E_CS_ALREADY_EXISTS: 4003005 配置服务, 目标资源已存在无法重复创建\n - E_CS_ROLLBACK_UNPUBLISHED_RELEASE: 4003006 配置服务, 无法回滚一个未发布的版本\n - E_CS_AUTH_FAILED: 4003007 配置服务, 认证授权失败\n - E_CS_NOT_AUTHED: 4003008 配置服务, 未授权\n - E_DM_SYSTEM_UNKNOWN: 4004000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 4004001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 4004002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 4004003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 4004004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 4004005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 4004006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_DB_ROW_AFFECTED_ERR: 4004007 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 4004008 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 4004009 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 4004010 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 4004011 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 4004012 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONTENT_NOT_FOUND: 4004013 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKNOWN: 4005000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 4005001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 4005002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 4005003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 4005004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 4005005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_GSE_ALREADY_ROLLBACKED: 4005006 BCS控制器, 配置版本已回滚\n - E_CONNS_SYSTEM_UNKNOWN: 4006000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 4006001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 4006002 会话链接服务, BCS sidecar接入调度失败\n - E_TS_SYSTEM_UNKNOWN: 4007000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 4007001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 4007002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKNOWN: 4008000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 4008001 实例服务, 参数校验失败",
+      "description": "- E_OK: 0 成功\n - E_NOT_AUTHORIZED: 4030403 未授权\n - E_API_SYSTEM_UNKNOWN: 4000000 API服务, 节点调用失败\n - E_API_PARAMS_INVALID: 4000001 API服务, 参数校验失败\n - E_AUTH_SYSTEM_UNKNOWN: 4001000 AUTH服务, 节点调用失败\n - E_AUTH_PARAMS_INVALID: 4001001 AUTH服务, 参数校验失败\n - E_AUTH_AUTHORIZE_FAILED: 4001002 AUTH服务, 权限校验失败\n - E_AUTH_LOCAL_AUTHORIZE_FAILED: 4001003 AUTH服务, 本地模式权限失败\n - E_AUTH_BKIAM_AUTHORIZE_FAILED: 4001004 AUTH服务, IAM模式权限失败\n - E_AUTH_NOT_AUTHORIZED: 4001005 AUTH服务, 无权限\n - E_AUTH_LOCAL_ADD_POLICY_FAILED: 4001006 AUTH服务, 本地模式新建策略失败\n - E_AUTH_BKIAM_ADD_POLICY_FAILED: 4001007 AUTH服务, IAM模式新建策略失败\n - E_AUTH_LOCAL_REM_POLICY_FAILED: 4001008 AUTH服务, 本地模式删除策略失败\n - E_AUTH_BKIAM_REM_POLICY_FAILED: 4001009 AUTH服务, IAM模式删除策略失败\n - E_TPL_SYSTEM_UNKNOWN: 4002000 模板服务, 节点调用失败\n - E_TPL_PARAMS_INVALID: 4002001 模板服务, 参数校验失败\n - E_TPL_NOT_FOUND: 4002002 模板服务, 指定目标对象不存在\n - E_TPL_ALREADY_EXISTS: 4002003 模板服务, 指定目标对象已存在\n - E_TPL_RENDER_PLUGIN_CHECK_FAILED: 4002004 模板服务, 插件检查失败\n - E_TPL_NONEED_RENDER: 4002005 模板服务, 无需渲染\n - E_TPL_UNKNOWN_ENGINE_TYPE: 4002006 模板服务, 不支持的引擎\n - E_TPL_RENDER_CHECK_ERROR: 4002007 模板服务, 渲染前置检查失败\n - E_TPL_RENDER_FAILED: 4002008 模板服务, 渲染失败\n - E_TPL_TPLBINDED_CANNOT_DELETE: 4002009 模版服务, 模板绑定中，无法删除\n - E_CS_SYSTEM_UNKNOWN: 4003000 配置服务, 节点调用失败\n - E_CS_PARAMS_INVALID: 4003001 配置服务, 参数校验失败\n - E_CS_CREATE_RELEASE_WITH_UNCONFIRMED_COMMIT: 4003002 配置服务, 无法根据未提交确认的Commit创建配置发布版本\n - E_CS_COMMIT_ALREADY_CANCELED: 4003003 配置服务, 该Commit已撤销，无法再进行Confirm操作\n - E_CS_COMMIT_ALREADY_CONFIRMED: 4003004 配置服务, 该Commit已提交\n - E_CS_ALREADY_EXISTS: 4003005 配置服务, 目标资源已存在无法重复创建\n - E_CS_ROLLBACK_UNPUBLISHED_RELEASE: 4003006 配置服务, 无法回滚一个未发布的版本\n - E_CS_AUTH_FAILED: 4003007 配置服务, 认证授权失败\n - E_CS_NOT_AUTHED: 4003008 配置服务, 未授权\n - E_DM_SYSTEM_UNKNOWN: 4004000 数据管理服务, 通用未知异常\n - E_DM_PARAMS_INVALID: 4004001 数据管理服务, 参数校验失败\n - E_DM_NOT_FOUND: 4004002 数据管理服务, 指定目标对象不存在\n - E_DM_ALREADY_EXISTS: 4004003 数据管理服务, 指定目标对象已存在\n - E_DM_ERR_DBSHARDING: 4004004 数据管理服务, 获取数据存储分片失败\n - E_DM_DB_EXEC_ERR: 4004005 数据管理服务, 数据操作执行异常\n - E_DM_DB_UPDATE_ERR: 4004006 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_DB_ROW_AFFECTED_ERR: 4004007 数据管理服务, 更新失败, 无满足限定条件的目标对象\n - E_DM_CFGSET_LOCK_FAILED: 4004008 数据管理服务, 加锁指定配置集合失败\n - E_DM_CFGSET_UNLOCK_FAILED: 4004009 数据管理服务, 解锁指定配置集合失败\n - E_DM_PUBLISH_RELEASE_FAILED: 4004010 数据管理服务, 配置版本发布失败，无满足限定条件的目标版本对象\n - E_DM_ALREADY_EXISTS_UNCONFIRMED_COMMIT: 4004011 数据管理服务, 存在未完结的Commit提交，无法重新创建Commit\n - E_DM_COMMIT_NOT_INIT_STATE: 4004012 数据管理服务, 关联的Commit已提交或已撤销，无法对其配置实体内容再次修改\n - E_DM_RELEASE_CONTENT_NOT_FOUND: 4004013 数据管理服务, 无法找到指定配置版本的实际配置内如（发布策略触达范围有误或渲染规则有误）\n - E_GSE_SYSTEM_UNKNOWN: 4005000 GSE控制器, 节点调用失败\n - E_GSE_PARAMS_INVALID: 4005001 GSE控制器, 参数校验失败\n - E_GSE_MARSHAL_PUBLISHING_FAILED: 4005002 BCS控制器, 配置版本发布消息解析失败\n - E_GSE_PUBLISH_RELEASE_FAILED: 4005003 GSE控制器, 配置版本任务发布失败\n - E_GSE_ALREADY_PUBLISHED: 4005004 BCS控制器, 配置版本已执行发布，请勿重复执行\n - E_GSE_ALREADY_CANCELED: 4005005 BCS控制器, 配置版本已撤销，无法执行发布\n - E_GSE_ALREADY_ROLLBACKED: 4005006 BCS控制器, 配置版本已回滚\n - E_CONNS_SYSTEM_UNKNOWN: 4006000 会话链接服务, 节点调用失败\n - E_CONNS_PARAMS_INVALID: 4006001 会话链接服务, 参数校验失败\n - E_CONNS_SCHEDULE_RES_FAILED: 4006002 会话链接服务, BCS sidecar接入调度失败\n - E_TS_SYSTEM_UNKNOWN: 4007000 通道服务, 节点调用失败\n - E_TS_PARAMS_INVALID: 4007001 通道服务, 参数校验失败\n - E_TS_PUBLISH_RELEASE_FAILED: 4007002 通道服务, 配置版本发布失败\n - E_IS_SYSTEM_UNKNOWN: 4008000 实例服务, 节点调用失败\n - E_IS_PARAMS_INVALID: 4008001 实例服务, 参数校验失败",
       "title": "ErrCode 错误码"
     },
     "commonLabelsMap": {
@@ -6359,6 +6321,12 @@
         "page": {
           "$ref": "#/definitions/commonPage",
           "title": "分页设置"
+        },
+        "timeout_sec": {
+          "type": "integer",
+          "format": "int32",
+          "description": "默认：600，即10分钟",
+          "title": "节点生效超时时间"
         }
       },
       "description": "查询已生效指定版本的应用实例列表请求",
@@ -6433,129 +6401,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/commonAppInstanceRelease"
-          },
-          "title": "结果"
-        }
-      }
-    },
-    "configserverQueryHistoryAppInstancesReq": {
-      "type": "object",
-      "example": {
-        "query_type": 0,
-        "page": {
-          "start": 0,
-          "limit": 50
-        }
-      },
-      "properties": {
-        "biz_id": {
-          "type": "string",
-          "title": "所属业务ID",
-          "maxLength": 64
-        },
-        "app_id": {
-          "type": "string",
-          "title": "所属应用ID",
-          "maxLength": 64
-        },
-        "labels_or": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/commonLabelsMap"
-          },
-          "description": "期望的节点实例标签逻辑或集合, 该维度支持多个标签，每个标签之间为逻辑或的关系, 与其他维度之间整体为逻辑或关系. 格式：KV, map type / JSON KV, key为目标\n标签名称，value为标签规则表达式，格式为OP|VALUES, OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示IN(1,2,3)的语意. OP和VALUES之间用竖线分割.\n注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理.",
-          "title": "期望的节点实例标签逻辑或集合, 该维度支持多个标签，每个标签之间为逻辑或的关系"
-        },
-        "labels_and": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/commonLabelsMap"
-          },
-          "description": "期望的节点实例标签逻辑与集合, 该维度支持多个标签，每个标签之间为逻辑与的关系, 与其他维度之间整体为逻辑或关系. 格式：KV, map type / JSON KV, key为目标\n标签名称，value为标签规则表达式，格式为OP|VALUES, OP可以为eq(默认为空也按eq处理)等于、ne不等于、gt大于、lt小于、ge大于等于、le小于等于, VALUES可以为单独的标签值或多个标签值例如1,2,3 其表示IN(1,2,3)的语意. OP和VALUES之间用竖线分割.\n注意：以往协议中没有OP表达式支持的情况，即为空OP按照eq等于处理.",
-          "title": "期望的节点实例标签逻辑与集合, 该维度支持多个标签，每个标签之间为逻辑与的关系"
-        },
-        "query_type": {
-          "type": "integer",
-          "format": "int32",
-          "description": "可选，0:全部状态 1:在线可触达 2:离线不可触达",
-          "title": "查询类型",
-          "maximum": 2
-        },
-        "page": {
-          "$ref": "#/definitions/commonPage",
-          "title": "分页设置"
-        }
-      },
-      "description": "查询历史应用实例请求",
-      "title": "QueryHistoryAppInstancesReq",
-      "required": [
-        "biz_id",
-        "app_id",
-        "page"
-      ]
-    },
-    "configserverQueryHistoryAppInstancesResp": {
-      "type": "object",
-      "example": {
-        "result": true,
-        "code": 0,
-        "message": "OK",
-        "data": {
-          "total_count": 1,
-          "info": [
-            {
-              "instance_id": 0,
-              "app_id": "0b67a798-e9c1-11e9-8c23-525400f99278",
-              "cloud_id": "dc01",
-              "ip": "127.0.0.1",
-              "labels": "{}",
-              "path": "/data/",
-              "state": 0,
-              "created_at": "2019-07-29 11:57:20",
-              "updated_at": "2019-07-29 11:57:20"
-            }
-          ]
-        }
-      },
-      "properties": {
-        "result": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "执行结果"
-        },
-        "code": {
-          "$ref": "#/definitions/commonErrCode",
-          "title": "错误码"
-        },
-        "message": {
-          "type": "string",
-          "title": "错误描述"
-        },
-        "data": {
-          "$ref": "#/definitions/configserverQueryHistoryAppInstancesRespRespData",
-          "title": "结果"
-        }
-      },
-      "description": "查询历史应用实例响应",
-      "title": "QueryHistoryAppInstancesResp",
-      "required": [
-        "result",
-        "code",
-        "message"
-      ]
-    },
-    "configserverQueryHistoryAppInstancesRespRespData": {
-      "type": "object",
-      "properties": {
-        "total_count": {
-          "type": "integer",
-          "format": "int64",
-          "title": "总数据量"
-        },
-        "info": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/commonAppInstance"
           },
           "title": "结果"
         }
@@ -7739,7 +7584,6 @@
         },
         "app_id": {
           "type": "string",
-          "description": "可选，非空时将基于目标应用ID查询",
           "title": "目标应用ID",
           "maxLength": 64
         },

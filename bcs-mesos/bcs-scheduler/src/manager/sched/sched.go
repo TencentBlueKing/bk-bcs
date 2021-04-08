@@ -35,9 +35,10 @@ type Sched struct {
 }
 
 func New(config util.Scheduler, scontext *schedcontext.SchedContext) *Sched {
-	s := &Sched{config: config,
+	s := &Sched{
+		config:    config,
 		scontext:  scontext,
-		scheduler: scheduler.NewScheduler(config, scontext.Store),
+		scheduler: scheduler.NewScheduler(config, scontext.Store, scontext.AlertManager),
 	}
 
 	backend := backend.NewBackend(s.scheduler, s.scontext.Store)

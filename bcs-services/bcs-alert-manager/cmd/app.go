@@ -61,7 +61,7 @@ var (
 
 // AlertManager alert manager
 type AlertManager struct {
-	// options for alertManager
+	// options for alertmanager
 	options *config.AlertManagerOptions
 
 	// server http tls authentication
@@ -93,7 +93,7 @@ type AlertManager struct {
 	stop chan error
 }
 
-// NewAlertManager create alertManager
+// NewAlertManager create alertmanager
 func NewAlertManager(options *config.AlertManagerOptions) *AlertManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -352,12 +352,7 @@ func (am *AlertManager) initExtraHTTPServer() error {
 		var err error
 		blog.Infof("initExtraHttpServer address: %s", extraAddress)
 
-		if am.tlsServerConfig != nil {
-			am.extraServer.TLSConfig = am.tlsServerConfig
-			err = am.extraServer.ListenAndServeTLS("", "")
-		} else {
-			err = am.extraServer.ListenAndServe()
-		}
+		err = am.extraServer.ListenAndServe()
 		if err != nil {
 			blog.Errorf("initExtraHttpServer failed: %v", err)
 			am.stop <- err
@@ -414,7 +409,7 @@ func (am *AlertManager) waitServerQuitSignal() {
 	}()
 }
 
-// close alertManager
+// close alertmanager
 func (am *AlertManager) close() {
 	if am == nil {
 		return
@@ -466,7 +461,7 @@ func (am *AlertManager) initAlertManagerServer() error {
 	return nil
 }
 
-// Run init alertManager & run microService
+// Run init alertmanager & run microService
 func (am *AlertManager) Run() error {
 	if am == nil {
 		return ErrServerNotInit

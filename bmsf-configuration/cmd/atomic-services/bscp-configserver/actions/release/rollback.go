@@ -148,6 +148,12 @@ func (act *RollbackAction) genReleaseID() error {
 }
 
 func (act *RollbackAction) authorize() (pbcommon.ErrCode, string) {
+	// check authorize resource at first, it may be deleted.
+	if errCode, errMsg := act.queryApp(); errCode != pbcommon.ErrCode_E_OK {
+		return errCode, errMsg
+	}
+
+	// check resource authorization.
 	isAuthorized, err := authorization.Authorize(act.kit, act.req.AppId, auth.LocalAuthAction,
 		act.authSvrCli, act.viper.GetDuration("authserver.callTimeout"))
 	if err != nil {
@@ -351,10 +357,14 @@ func (act *RollbackAction) rollback() (pbcommon.ErrCode, string) {
 }
 
 func (act *RollbackAction) queryApp() (pbcommon.ErrCode, string) {
+	if act.app != nil {
+		return pbcommon.ErrCode_E_OK, ""
+	}
+
 	r := &pbdatamanager.QueryAppReq{
 		Seq:   act.kit.Rid,
 		BizId: act.req.BizId,
-		AppId: act.currentRelease.AppId,
+		AppId: act.req.AppId,
 	}
 
 	ctx, cancel := context.WithTimeout(act.kit.Ctx, act.viper.GetDuration("datamanager.callTimeout"))
@@ -367,6 +377,7 @@ func (act *RollbackAction) queryApp() (pbcommon.ErrCode, string) {
 		return pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, fmt.Sprintf("request to datamanager QueryApp, %+v", err)
 	}
 	act.app = resp.Data
+
 	return resp.Code, resp.Message
 }
 
@@ -383,6 +394,9 @@ func (act *RollbackAction) Do() error {
 	if act.currentRelease.State != int32(pbcommon.ReleaseState_RS_PUBLISHED) &&
 		act.currentRelease.State != int32(pbcommon.ReleaseState_RS_ROLLBACKED) {
 		return act.Err(pbcommon.ErrCode_E_CS_ROLLBACK_UNPUBLISHED_RELEASE, "can't rollback the unpublished release.")
+	}
+	if act.currentRelease.AppId != act.req.AppId {
+		return act.Err(pbcommon.ErrCode_E_CS_SYSTEM_UNKNOWN, "can't rollback release, inconsonant app_id")
 	}
 
 	// rollback current release, mark ROLLBACKED in data level.
