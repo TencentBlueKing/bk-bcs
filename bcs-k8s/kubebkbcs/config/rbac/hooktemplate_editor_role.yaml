@@ -1,0 +1,24 @@
+# permissions for end users to edit hooktemplates.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: hooktemplate-editor-role
+rules:
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - hooktemplates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - hooktemplates/status
+  verbs:
+  - get

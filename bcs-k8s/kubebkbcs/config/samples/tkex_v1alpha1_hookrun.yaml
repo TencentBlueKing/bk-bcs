@@ -1,0 +1,7 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: HookRun
+metadata:
+  name: hookrun-sample
+spec:
+  # Add fields here
+  foo: bar

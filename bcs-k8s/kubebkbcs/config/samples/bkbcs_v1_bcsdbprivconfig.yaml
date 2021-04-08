@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v1
+kind: BcsDbPrivConfig
+metadata:
+  name: bcsdbprivconfig-sample
+spec:
+  # Add fields here
+  foo: bar

@@ -1,0 +1,163 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: bcslogconfigs.bkbcs.tencent.com
+spec:
+  group: bkbcs.tencent.com
+  names:
+    kind: BcsLogConfig
+    listKind: BcsLogConfigList
+    plural: bcslogconfigs
+    singular: bcslogconfig
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: BcsLogConfig is the Schema for the bcslogconfigs API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: BcsLogConfigSpec defines the desired state of BcsLogConfig
+          properties:
+            appId:
+              type: string
+            clusterId:
+              type: string
+            configType:
+              type: string
+            containerConfs:
+              items:
+                description: ContainerConf defines log config for containers
+                properties:
+                  containerName:
+                    type: string
+                  hostPaths:
+                    items:
+                      type: string
+                    type: array
+                  logPaths:
+                    items:
+                      type: string
+                    type: array
+                  logTags:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  nonStdDataId:
+                    type: string
+                  stdDataId:
+                    type: string
+                  stdout:
+                    type: boolean
+                required:
+                - containerName
+                - hostPaths
+                - logPaths
+                - logTags
+                - nonStdDataId
+                - stdDataId
+                - stdout
+                type: object
+              type: array
+            hostPaths:
+              items:
+                type: string
+              type: array
+            logPaths:
+              items:
+                type: string
+              type: array
+            logTags:
+              additionalProperties:
+                type: string
+              type: object
+            nonStdDataId:
+              type: string
+            packageCollection:
+              type: boolean
+            podLabels:
+              type: boolean
+            selector:
+              description: PodSelector defines selector format for BcsLogConfig CRD
+              properties:
+                matchExpressions:
+                  items:
+                    description: SelectorExpression is universal expression for selector
+                    properties:
+                      key:
+                        type: string
+                      operator:
+                        type: string
+                      values:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - key
+                    - operator
+                    - values
+                    type: object
+                  type: array
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  type: object
+              required:
+              - matchExpressions
+              - matchLabels
+              type: object
+            stdDataId:
+              type: string
+            stdout:
+              type: boolean
+            workloadName:
+              type: string
+            workloadNamespace:
+              type: string
+            workloadType:
+              type: string
+          required:
+          - appId
+          - clusterId
+          - configType
+          - containerConfs
+          - hostPaths
+          - logPaths
+          - logTags
+          - nonStdDataId
+          - packageCollection
+          - podLabels
+          - selector
+          - stdDataId
+          - stdout
+          - workloadName
+          - workloadNamespace
+          - workloadType
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

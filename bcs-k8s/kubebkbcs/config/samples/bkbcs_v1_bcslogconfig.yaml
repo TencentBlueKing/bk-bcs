@@ -1,0 +1,7 @@
+apiVersion: bkbcs.tencent.com/v1
+kind: BcsLogConfig
+metadata:
+  name: bcslogconfig-sample
+spec:
+  # Add fields here
+  foo: bar

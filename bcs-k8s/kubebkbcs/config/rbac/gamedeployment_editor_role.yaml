@@ -1,0 +1,24 @@
+# permissions for end users to edit gamedeployments.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gamedeployment-editor-role
+rules:
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - gamedeployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tkex.tencent.com
+  resources:
+  - gamedeployments/status
+  verbs:
+  - get

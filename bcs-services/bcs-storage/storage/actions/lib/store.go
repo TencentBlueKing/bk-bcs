@@ -335,7 +335,7 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 	if len(opt.UpdateTimeKey) != 0 {
 		data[opt.UpdateTimeKey] = timeNow
 	}
-	if err := a.mDriver.Table(resourceType).Upsert(ctx, countCond, operator.M{"$set": data}); err != nil {
+	if err := a.mDriver.Table(resourceType).Upsert(ctx, opt.Cond, operator.M{"$set": data}); err != nil {
 		return err
 	}
 	return nil
