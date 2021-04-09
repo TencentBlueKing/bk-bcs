@@ -100,15 +100,7 @@ func PrepareRun(configFilePath string, pidFilePath string) error {
 }
 
 // Run entrypoint for k8s-watch
-func Run(configFilePath string) error {
-	// 1. init config
-	glog.Info("Init config begin......")
-	watchConfig, err := options.ParseConfigFile(configFilePath)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	glog.Info("Init config DONE!")
+func Run(watchConfig *options.WatchConfig) error {
 	if len(watchConfig.BCS.NetServiceZKHosts) == 0 {
 		watchConfig.BCS.NetServiceZKHosts = watchConfig.BCS.ZkHosts
 	}
@@ -181,7 +173,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create writer.
 	glog.Info("creating writer now...")
-	writer, err := output.NewWriter(clusterID, storageService)
+	writer, err := output.NewWriter(clusterID, storageService, config.BCS)
 	if err != nil {
 		panic(err)
 	}

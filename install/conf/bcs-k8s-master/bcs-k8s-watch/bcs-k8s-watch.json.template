@@ -14,7 +14,9 @@
         "is-external": ${kubeWatchExternal},
         "netservice-zookeepers": "${customNetServiceZK}",
         "custom-storage-endpoints": "${customStorage}",
-        "custom-netservice-endpoints": "${customNetService}"
+        "custom-netservice-endpoints": "${customNetService}",
+        "writerQueueLen": ${writerQueueLen},
+        "podQueueNum": ${podQueueNum}
     },
     "k8s": {
         "master": "${kubeMaster}",
@@ -30,5 +32,8 @@
     "ca_file": "${caFile}",
     "server_cert_file": "${serverCertFile}",
     "server_key_file": "${serverKeyFile}",
-    "debug_mode": ${bcsK8sWatchDebug}
+    "debug_mode": ${bcsK8sWatchDebug},
+    "log_dir": "${log_dir}",
+    "alsotostderr": ${alsoToStdErr},
+    "v": ${bcsClusterManagerVerbosity}
 }

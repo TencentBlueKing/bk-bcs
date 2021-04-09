@@ -87,7 +87,7 @@ require (
 	go.mongodb.org/mongo-driver v1.4.5
 	go4.org v0.0.0-20190313082347-94abd6928b1d
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
-	google.golang.org/grpc v1.31.0
+	google.golang.org/grpc v1.33.1
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.20.2
