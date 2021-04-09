@@ -200,6 +200,7 @@ func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
 	count, err := store.Count(req.Request.Context(), getTable(req), getOption)
 	if err != nil {
 		return nil, nil, err
@@ -210,21 +211,6 @@ func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (
 	}
 	lib.FormatTime(mList, needTimeFormatList)
 
-	// // build page info
-	// pageInfo := &lib.ResponsePageInfo{
-	// 	Total:    count,
-	// 	PageSize: getOption.Limit,
-	// 	Offset:   getOption.Offset,
-	// }
-	// by, err := json.Marshal(pageInfo)
-	// if err != nil {
-	// 	return nil, nil, err
-	// }
-	// extra = make(operator.M)
-	// err = json.Unmarshal(by, &extra)
-	// if err != nil {
-	// 	return nil, nil, err
-	// }
 	extra = operator.M{
 		"total":    count,
 		"pageSize": getOption.Limit,
@@ -282,6 +268,7 @@ func putCustomResources(req *restful.Request) error {
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
+	store.SetSoftDeletion(true)
 	index, err := store.GetIndex(req.Request.Context(), getTable(req))
 	if err != nil {
 		return err

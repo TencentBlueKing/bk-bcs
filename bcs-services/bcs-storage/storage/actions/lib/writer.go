@@ -36,13 +36,6 @@ type RestResponse struct {
 	WrapFunc func([]byte) []byte
 }
 
-// ResponsePageInfo defines page info for GET responses
-type ResponsePageInfo struct {
-	Total    int64 `json:"total"`
-	PageSize int64 `json:"pageSize"`
-	Offset   int64 `json:"offset"`
-}
-
 //ReturnRest common restfult response
 func ReturnRest(resp *RestResponse) {
 	if resp.HTTPCode == 0 {

@@ -28,6 +28,7 @@ type Selector struct {
 }
 
 // TODO: error operation
+// GetNextCondition get next label selector condition unit
 func (s *Selector) GetNextCondition() *operator.Condition {
 	if s.cursor >= len(s.SelectorStr) {
 		return nil
@@ -69,6 +70,7 @@ func (s *Selector) GetNextCondition() *operator.Condition {
 	return cond
 }
 
+// GetAllConditions get all conditions of labelSelector
 func (s *Selector) GetAllConditions() []*operator.Condition {
 	if s.conditions != nil {
 		return s.conditions
@@ -83,11 +85,13 @@ func (s *Selector) GetAllConditions() []*operator.Condition {
 	return s.conditions
 }
 
+// Clear reset the current cursor for labelSelector condition parsing
 func (s *Selector) Clear() {
 	s.cursor = 0
 	s.conditions = nil
 }
 
+// getWord get an operator word or a key/value word
 func (s *Selector) getWord(isOperator bool) string {
 	if s.cursor >= len(s.SelectorStr) {
 		return ""
@@ -111,6 +115,7 @@ func (s *Selector) getWord(isOperator bool) string {
 	return string(word)
 }
 
+// getWordList get value list enclosed by ()
 func (s *Selector) getWordList() []string {
 	// list start
 	if !s.getCharacter('(') {
@@ -137,6 +142,7 @@ func (s *Selector) getWordList() []string {
 	return wordList
 }
 
+// getOperator get operator of labelSelector
 func (s *Selector) getOperator() operator.Operator {
 	if s.cursor >= len(s.SelectorStr) {
 		return operator.Ext
@@ -170,6 +176,7 @@ func (s *Selector) getOperator() operator.Operator {
 	return operator.Tr
 }
 
+// getCharacter test whether next character is designated character
 func (s *Selector) getCharacter(standard byte) bool {
 	if s.cursor >= len(s.SelectorStr) {
 		return false
@@ -181,6 +188,7 @@ func (s *Selector) getCharacter(standard byte) bool {
 	return false
 }
 
+// inSpecialCharacterSet test whether characted is in special character set
 func (s *Selector) inSpecialCharacterSet(c byte) bool {
 	for _, sc := range specialCharacterSet {
 		if c == sc {
@@ -190,6 +198,7 @@ func (s *Selector) inSpecialCharacterSet(c byte) bool {
 	return false
 }
 
+// inOPCharacterSet test whether characted is in operator character set
 func (s *Selector) inOPCharacterSet(c byte) bool {
 	for _, sc := range opCharacterSet {
 		if c == sc {
