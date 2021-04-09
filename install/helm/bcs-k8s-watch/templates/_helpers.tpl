@@ -2,7 +2,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "bcs-gamestatefulset-operator.name" -}}
+{{- define "bcs-k8s-watch.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -11,7 +11,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "bcs-gamestatefulset-operator.fullname" -}}
+{{- define "bcs-k8s-watch.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -27,16 +27,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "bcs-gamestatefulset-operator.chart" -}}
+{{- define "bcs-k8s-watch.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Common labels
 */}}
-{{- define "bcs-gamestatefulset-operator.labels" -}}
-helm.sh/chart: {{ include "bcs-gamestatefulset-operator.chart" . }}
-{{ include "bcs-gamestatefulset-operator.selectorLabels" . }}
+{{- define "bcs-k8s-watch.labels" -}}
+helm.sh/chart: {{ include "bcs-k8s-watch.chart" . }}
+{{ include "bcs-k8s-watch.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -46,18 +46,18 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "bcs-gamestatefulset-operator.selectorLabels" -}}
+{{- define "bcs-k8s-watch.selectorLabels" -}}
 app.kubernetes.io/platform: bk-bcs
-app.kubernetes.io/name: {{ include "bcs-gamestatefulset-operator.name" . }}
+app.kubernetes.io/name: {{ include "bcs-k8s-watch.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "bcs-gamestatefulset-operator.serviceAccountName" -}}
+{{- define "bcs-k8s-watch.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{ default (include "bcs-gamestatefulset-operator.fullname" .) .Values.serviceAccount.name }}
+    {{ default (include "bcs-k8s-watch.fullname" .) .Values.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}

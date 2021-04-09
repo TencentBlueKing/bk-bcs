@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bk-bcs-certs
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-init.labels" . | nindent 4 }}
+data:
+  {{ .Values.key.caCert }}: |
+    {{ .Values.certs.caCert | nindent 4 | trim}}
+  {{ .Values.key.serverCert }}: |
+    {{ .Values.certs.serverCert | nindent 4 | trim}}
+  {{ .Values.key.clientCert }}: |
+    {{ .Values.certs.clientCert | nindent 4 | trim}}
+  {{ .Values.key.serverKey }}: |
+    {{ .Values.certs.serverKey | nindent 4 | trim}}
+  {{ .Values.key.clientKey }}: |
+    {{ .Values.certs.clientKey | nindent 4 | trim}}
+  {{ .Values.key.clientUncryptKey }}: |
+    {{ .Values.certs.clientUncryptKey | nindent 4 | trim}}
+  {{ .Values.key.apiJSON }}: |
+    {{ .Values.certs.apiJSON | nindent 4 | trim}}
+  {{ .Values.key.apiCert }}: |
+    {{ .Values.certs.apiCert | nindent 4 | trim}}
+  {{ .Values.key.apiKey }}: |
+    {{ .Values.certs.apiKey | nindent 4 | trim}}

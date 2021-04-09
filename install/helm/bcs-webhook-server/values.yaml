@@ -1,0 +1,42 @@
+# Default values for bcs-webhook-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+plugins:
+  dbpriv:
+    enabled: false
+  imageloader:
+    enabled: true
+  randhostport:
+    enabled: false
+    startPort: 27000
+    endPort: 28000
+  bscp:
+    enabled: false
+
+logLevel: 3
+
+replicaCount: 1
+
+image:
+  registry: ""
+  repository: /bcs/bcs-webhook-server
+  pullPolicy: Always
+  #tag: "test1"
+
+imagePullSecrets: []
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+resource: {}
+# webhook server certification
+serverCert: "xxxxxx"
+serverKey: "xxxxxx"
+caBundle: "xxxxxx"
+

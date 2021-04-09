@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-etcd-cert
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-init.labels" . | nindent 4 }}
+data:
+  {{ .Values.key.etcdCa }}: |
+    {{ .Values.certs.etcdCa | nindent 4 | trim}}
+  {{ .Values.key.etcdCert }}: |
+    {{ .Values.certs.etcdCert | nindent 4 | trim}}
+  {{ .Values.key.etcdKey }}: |
+    {{ .Values.certs.etcdKey | nindent 4 | trim}}

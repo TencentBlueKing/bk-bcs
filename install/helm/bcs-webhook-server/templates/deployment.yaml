@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bcs-webhook-server
+  namespace: kube-system
+  labels:
+    app: bcs-webhook-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bcs-webhook-server
+  template:
+    metadata:
+      labels:
+        app: bcs-webhook-server
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: bcs-webhook-server
+      containers:
+        - name: bcs-webhook-server
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /data/bcs/bcs-webhook-server/container-start.sh
+          args:
+            - --address=0.0.0.0
+            - --port=443
+            - --log_dir=/data/bcs/logs/bcs
+            - --log_max_size=500
+            - --log_max_num=10
+            - --logtostderr=true
+            - --alsologtostderr=true
+            - --v={{ .Values.logLevel }}
+            - --stderrthreshold=2
+            - --server_cert_file=/data/bcs/cert/cert.pem
+            - --server_key_file=/data/bcs/cert/key.pem
+            - --engine_type=kubernetes
+            - --plugin_dir=/data/bcs/plugins
+            - --plugins={{ $commandline_plugins := list }}{{ range $k, $v := .Values.plugins }}{{ if $v.enabled }}{{ $commandline_plugins = append $commandline_plugins $k }}{{ end }}{{ end }}{{ join "," $commandline_plugins }}
+          ports:
+          - name: http
+            containerPort: 443
+            protocol: TCP
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+          - name: webhook-certs
+            mountPath: /data/bcs/cert
+            readOnly: true
+          - name: plugin-confs
+            mountPath: /data/bcs/plugins
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: webhook-certs
+        secret:
+          secretName: bcs-webhook-server-certs
+      - name: plugin-confs
+        configMap:
+          name: bcs-webhook-server-plugin-confs
+          items:
+          {{- with .Values.plugins.dbpriv.enabled }}
+          - key: "dbpriv.conf"
+            path: "dbpriv.conf"
+          {{- end }}
+          {{- with .Values.plugins.randhostport.enabled }}
+          - key: "randhostport.conf"
+            path: "randhostport.conf"
+          {{- end }}
+
