@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-webhook-server-plugin-confs
+  namespace: kube-system
+data:
+  {{- if .Values.plugins.dbpriv.enabled }}
+  dbpriv.conf: '{
+    "kube_master": "{{ .Values.plugins.dbpriv.kubeMaster }}",
+    "kubeconfig": "{{ .Values.plugins.dbpriv.kubeconfigPath }}",
+    "network_type": "{{ .Values.plugins.dbpriv.networkType }}",
+    "esb_url": "{{ .Values.plugins.dbpriv.esbURL }}",
+    "init_container_image": "{{ .Values.plugins.dbpriv.initContainerImage }}"
+}'
+  {{- end }}
+  {{- if .Values.plugins.randhostport.enabled }}
+  randhostport.conf: '{
+    "startPort": {{ .Values.plugins.randhostport.startPort }},
+    "endPort": {{ .Values.plugins.randhostport.endPort }}
+}'
+  {{- end }}

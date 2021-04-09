@@ -1,4 +1,4 @@
-# Default values for bcs-gamestatefulset-operator.
+# Default values for bcs-gamedeployment-operator.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -6,12 +6,14 @@ replicaCount: 1
 #wether create namespace bcs-system or not
 createNamespace: false
 image:
-  repository: bcs/bcs-gamestatefulset-operator
+  registry: ""
+  repository: /bcs/bcs-gamedeployment-operator
+  #tag: ""
   pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: "bcs-gamestatefulset-operator"
+fullnameOverride: "bcs-gamedeployment-operator"
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -23,10 +25,11 @@ resources: {}
   #   memory: 128Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+#   memory: 128Mi
 
 nodeSelector: {}
 
 tolerations: []
 
 affinity: {}
+

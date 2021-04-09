@@ -1,0 +1,9 @@
+{{- if .Values.plugins.imageloader.enabled }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+   name: imageloader
+   labels:
+     name: imageloader
+{{- end }}
