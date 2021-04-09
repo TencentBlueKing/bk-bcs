@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-user-manager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-user-manager.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-user-manager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bcs-user-manager.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 3
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/data/bcs/bcs-user-manager/container-start.sh"]
+          args:
+            - -f
+            - /data/bcs/bcs-user-manager/bcs-user-manager.json
+          env:
+            - name: bcsUserManagerPort
+              value: "{{ .Values.env.BK_BCS_bcsUserManagerPort }}"
+            - name: bcsUserManagerMetricPort
+              value: "{{ .Values.env.BK_BCS_bcsUserManagerMetricPort }}"
+            - name: bcsUserManagerInsecurePort
+              value: "{{ .Values.env.BK_BCS_bcsUserManagerInsecurePort }}"
+            - name: bkiamAuthHost
+              value: "{{ .Values.env.BK_BCS_bkiamAuthHost }}"
+            - name: coreDatabaseDsn
+              value: "{{ .Values.env.BK_BCS_coreDatabaseDsn }}"
+            - name: adminUser
+              value: "{{ .Values.env.BK_BCS_adminUser }}"
+            - name: adminToken
+              value: "{{ .Values.env.BK_BCS_adminToken }}"
+            - name: tkeSecretId
+              value: "{{ .Values.env.BK_BCS_tkeSecretId }}"
+            - name: tkeSecretKey
+              value: "{{ .Values.env.BK_BCS_tkeSecretKey }}"
+            - name: tkeCcsHost
+              value: "{{ .Values.env.BK_BCS_tkeCcsHost }}"
+            - name: tkeCcsPath
+              value: "{{ .Values.env.BK_BCS_tkeCcsPath }}"
+            - name: bcsZkHost
+              value: "{{ .Values.env.BK_BCS_bcsZkHost }}"
+            - name: localIp
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: log_dir
+              value: "{{ .Values.env.BK_BCS_log_dir }}"
+            - name: pid_dir
+              value: "{{ .Values.env.BK_BCS_pid_dir }}"
+            - name: caFile
+              value: "{{ .Values.env.BK_BCS_caFile }}"
+            - name: serverCertFile
+              value: "{{ .Values.env.BK_BCS_serverCertFile }}"
+            - name: serverKeyFile
+              value: "{{ .Values.env.BK_BCS_serverKeyFile }}"
+            - name: clientCertFile
+              value: "{{ .Values.env.BK_BCS_clientCertFile }}"
+            - name: clientKeyFile
+              value: "{{ .Values.env.BK_BCS_clientKeyFile }}"
+            - name: bcsEtcdFeature
+              value: "{{ .Values.env.BK_BCS_bcsEtcdFeature }}"
+            - name: bcsEtcdHost
+              value: "{{ .Values.env.BK_BCS_bcsEtcdHost }}"
+            - name: bcsEtcdCAFile
+              value: "{{ .Values.env.BK_BCS_bcsEtcdCAFile }}"
+            - name: bcsEtcdCertFile
+              value: "{{ .Values.env.BK_BCS_bcsEtcdCertFile }}"
+            - name: bcsEtcdKeyFile
+              value: "{{ .Values.env.BK_BCS_bcsEtcdKeyFile }}"
+            - name: BCS_CONFIG_TYPE
+              value: "{{ .Values.env.BK_BCS_CONFIG_TYPE }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: cert-config
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-cert
+              mountPath: /data/bcs/cert/etcd
+      volumes:
+        - name: cert-config
+          configMap:
+            name: bk-bcs-certs
+        - name: etcd-cert
+          configMap:
+            name: bcs-etcd-cert
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

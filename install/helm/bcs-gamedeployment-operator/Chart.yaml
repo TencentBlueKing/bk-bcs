@@ -1,10 +1,13 @@
 apiVersion: v2
-name: bcs-gamestatefulset-operator
+name: bcs-gamedeployment-operator
 description: |
-  A Helm chart for game statefulset of BlueKing Container Service(BCS).
-  Main features of GameStatefulSet supported:
+  A Helm chart for game deployment of BlueKing Container Service(BCS).
+  Main features of GameDeployment supported:
     * InplaceUpdate/InplaceHotPatch
     * HPA feature
+    * PreInplaceUpdate hook
+    * PreDeleteUpdate hook
+    * Canary step hook
     * PreDeleteUpdateStrategy
     * PreInpaceUpdateStrategy
 

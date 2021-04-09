@@ -1,0 +1,16 @@
+# Default values for bcs-cluster-init.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+#create bcs-system namespace or not
+createNamespace: false
+#for custom cert file
+key:
+  caCert: bcs-ca.crt
+  serverKey: bcs-server.key
+  clientKey: bcs-client.key
+#certs details for bcs system starting
+certs:
+  caCert: bcs-ca.crt
+  clientCert: ""
+  clientKey: ""

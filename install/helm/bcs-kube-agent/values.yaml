@@ -1,4 +1,4 @@
-# Default values for bcs-hook-operator.
+# Default values for bcs-kube-agent.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -6,24 +6,29 @@ replicaCount: 1
 
 image:
   registry: ""
-  repository: /bcs/bcs-hook-operator
+  repository: /bcs/bcs-kube-agent
   #tag: ""
   pullPolicy: Always
+args:
+  BK_BCS_API: "https://api-gateway.bcs-system:8443"
+  BK_BCS_reportPath: "/bcsapi/v4/clustermanager/v1/clusters/%s/credentials"
+  BK_BCS_clusterId: BCS-K8S-00000
+  BK_BCS_kubeAgentWSTunnel: "false"
+  BK_BCS_websocketPath: "/bcsapi/v4/clustermanager/v1/websocket/connect"
+  BK_BCS_kubeAgentProxy: ""
+  #token for access to bcs-api-gateway/bcs-api
+  token: ""
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: "bcs-hook-operator"
+fullnameOverride: "bcs-kube-agent"
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+serviceAccount:
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: bcs-kube-agent
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

@@ -1,0 +1,59 @@
+# Default values for bcs-user-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: ""
+  repository: /bcs/bcs-user-manager
+  #tag: ""
+  pullPolicy: Always
+env:
+  BK_BCS_bcsUserManagerPort: "30445"
+  BK_BCS_bcsUserManagerMetricPort: "9253"
+  BK_BCS_bcsUserManagerInsecurePort: "8089"
+  BK_BCS_coreDatabaseDsn: ""
+  BK_BCS_adminUser: admin
+  BK_BCS_adminToken: ""
+  BK_BCS_tkeSecretId: ""
+  BK_BCS_tkeSecretKey: ""
+  BK_BCS_tkeCcsHost: "api.cloud.com"
+  BK_BCS_tkeCcsPath: "/v2/index.php"
+  BK_BCS_bcsZkHost: "127.0.0.1:2181"
+  #以下部分为环境运行关注事项，与bcs-init相关
+  BK_BCS_log_dir: /data/bcs/logs/bcs
+  BK_BCS_pid_dir: "./"
+  BK_BCS_caFile: "/data/bcs/cert/bcs/bcs-ca.crt"
+  BK_BCS_serverCertFile: "/data/bcs/cert/bcs/bcs-server.crt"
+  BK_BCS_clientCertFile: "/data/bcs/cert/bcs/bcs-client.crt"
+  BK_BCS_serverKeyFile: "/data/bcs/cert/bcs/bcs-server.key"
+  BK_BCS_clientKeyFile: "/data/bcs/cert/bcs/bcs-client.key"
+  BK_BCS_CONFIG_TYPE: "render"
+  BK_BCS_bcsEtcdFeature: "true"
+  BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+  BK_BCS_bcsEtcdCAFile: /data/bcs/cert/etcd/etcd-ca.pem
+  BK_BCS_bcsEtcdCertFile: /data/bcs/cert/etcd/etcd.pem
+  BK_BCS_bcsEtcdKeyFile: /data/bcs/cert/etcd/etcd-key.pem
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-user-manager"
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

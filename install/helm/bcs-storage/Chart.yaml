@@ -1,12 +1,6 @@
 apiVersion: v2
-name: bcs-gamestatefulset-operator
-description: |
-  A Helm chart for game statefulset of BlueKing Container Service(BCS).
-  Main features of GameStatefulSet supported:
-    * InplaceUpdate/InplaceHotPatch
-    * HPA feature
-    * PreDeleteUpdateStrategy
-    * PreInpaceUpdateStrategy
+name: bcs-storage
+description: A Helm chart for module bcs-storage of BlueKing Container Service(BCS) 
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -20,7 +14,7 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.9.1
+version: 0.2.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
