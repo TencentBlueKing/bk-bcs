@@ -70,6 +70,7 @@ type Store struct {
 	tableCache      mapset.Set
 	tableIndexCache map[string]*drivers.Index
 	defaultLimit    int64
+	doSoftDelete    bool
 }
 
 // NewStore create store action
