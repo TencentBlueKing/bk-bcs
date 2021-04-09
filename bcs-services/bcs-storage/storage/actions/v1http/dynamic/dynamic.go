@@ -174,6 +174,74 @@ func DeleteBatchClusterResource(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
+// GetCustomResources get custom resources
+func GetCustomResources(req *restful.Request, resp *restful.Response) {
+	r, extra, err := getCustomResources(req)
+	if err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStorageGetResourceFail,
+			Message: common.BcsErrStorageGetResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
+}
+
+// PutCustomResources put custom resources
+func PutCustomResources(req *restful.Request, resp *restful.Response) {
+	if err := putCustomResources(req); err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStoragePutResourceFail,
+			Message: common.BcsErrStoragePutResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp})
+}
+
+// DeleteCustomResources delete custom resources
+func DeleteCustomResources(req *restful.Request, resp *restful.Response) {
+	if err := deleteCustomResources(req); err != nil {
+		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStorageDeleteResourceFail,
+			Message: common.BcsErrStorageDeleteResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp})
+}
+
+// CreateCustomResourceIndex create custom resource's index
+func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
+	if err := createCustomResourcesIndex(req); err != nil {
+		// TODO:: Return errcode
+		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStorageDeleteResourceFail,
+			Message: common.BcsErrStorageDeleteResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp})
+}
+
+// DeleteCustomResourceIndex delete custom resource's index
+func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
+	if err := deleteCustomResourcesIndex(req); err != nil {
+		// TODO:: Return errcode
+		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp:    resp,
+			ErrCode: common.BcsErrStorageDeleteResourceFail,
+			Message: common.BcsErrStorageDeleteResourceFailStr})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp})
+}
+
 func init() {
 	// for k8s
 	// Namespace resources.
@@ -332,4 +400,35 @@ func init() {
 		Path:    mesosAllResourcesPath,
 		Params:  nil,
 		Handler: lib.MarkProcess(DeleteBatchClusterResource)})
+
+	// Custom resources OPs
+	customResourcePath := "/dynamic/customresources/{resourceType}"
+	actions.RegisterV1Action(actions.Action{
+		Verb:    "GET",
+		Path:    customResourcePath,
+		Params:  nil,
+		Handler: lib.MarkProcess(GetCustomResources)})
+	actions.RegisterV1Action(actions.Action{
+		Verb:    "DELETE",
+		Path:    customResourcePath,
+		Params:  nil,
+		Handler: lib.MarkProcess(DeleteCustomResources)})
+	actions.RegisterV1Action(actions.Action{
+		Verb:    "PUT",
+		Path:    customResourcePath,
+		Params:  nil,
+		Handler: lib.MarkProcess(PutCustomResources)})
+
+	// Custom resource index
+	customResourceIndexPath := "/dynamic/customresources/{resourceType}/index/{indexName}"
+	actions.RegisterV1Action(actions.Action{
+		Verb:    "PUT",
+		Path:    customResourceIndexPath,
+		Params:  nil,
+		Handler: lib.MarkProcess(CreateCustomResourcesIndex)})
+	actions.RegisterV1Action(actions.Action{
+		Verb:    "DELETE",
+		Path:    customResourceIndexPath,
+		Params:  nil,
+		Handler: lib.MarkProcess(DeleteCustomResourcesIndex)})
 }
