@@ -77,6 +77,7 @@ func buildLeafCondition(key, value, sep string, op operator.Operator) *operator.
 	return operator.NewLeafCondition(op, operator.M{key: valueList})
 }
 
+// buildSelectorCondition parse labelSelector
 func buildSelectorCondition(prefix string, valueList []string) *operator.Condition {
 	valueStr := strings.Join(valueList, ",")
 	selector := &Selector{Prefix: prefix, SelectorStr: valueStr}
@@ -86,27 +87,9 @@ func buildSelectorCondition(prefix string, valueList []string) *operator.Conditi
 		return operator.NewLeafCondition(operator.Tr, operator.M{})
 	}
 	return operator.NewBranchCondition(operator.And, conds...)
-	// kvList := strings.Split(valueStr, ",")
-	// conds := make([]*operator.Condition, 0)
-	// for _, expr := range kvList {
-	// 	// nequal expression
-	// 	exprList := strings.Split(expr, "!=")
-	// 	if len(exprList) == 2 {
-	// 		conds = append(conds, buildLeafCondition(prefix+exprList[0], exprList[1], "|", operator.Nin))
-	// 		continue
-	// 	}
-	// 	// equal expression
-	// 	exprList = strings.Split(expr, "=")
-	// 	if len(exprList) == 2 {
-	// 		conds = append(conds, buildLeafCondition(prefix+exprList[0], exprList[1], "|", operator.In))
-	// 		continue
-	// 	}
-	// 	// exist expression
-	// 	conds = append(conds, operator.NewLeafCondition(operator.Ext, prefix+expr))
-	// }
-	// return operator.NewBranchCondition(operator.And, conds...)
 }
 
+// buildNormalCondition parse normal parameters
 func buildNormalCondition(key string, valueList []string) *operator.Condition {
 	if len(valueList) == 0 {
 		return operator.NewLeafCondition(operator.Ext, key)
