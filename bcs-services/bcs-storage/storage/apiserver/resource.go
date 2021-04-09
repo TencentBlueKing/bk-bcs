@@ -292,7 +292,6 @@ func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 	}
 
 	mongoOptions := &mongo.Options{
-		AuthMechanism:         "SCRAM-SHA-1",
 		Hosts:                 strings.Split(address, ","),
 		ConnectTimeoutSeconds: timeout,
 		Database:              database,
