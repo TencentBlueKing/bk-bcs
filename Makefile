@@ -37,7 +37,7 @@ EXPORTPATH=./build/api_export
 default:bcs-service bcs-network bcs-mesos bcs-k8s
 
 bcs-k8s:k8s-watch kube-agent k8s-driver gamestatefulset gamedeployment hook-operator \
-	cc-agent csi-cbs kube-sche 
+	cc-agent csi-cbs kube-sche federated-apiserver federated-apiserver-kubectl-agg
 
 bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
 	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection
@@ -230,6 +230,15 @@ hook-operator:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
 	cp -R ./install/conf/bcs-k8s-master/bcs-hook-operator ${PACKAGEPATH}/bcs-k8s-master
 	cd bcs-k8s/bcs-hook-operator && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-hook-operator/bcs-hook-operator ./cmd/hook-operator/main.go
+
+federated-apiserver:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cp -R ./install/conf/bcs-k8s-master/bcs-federated-apiserver ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/bcs-federated-apiserver ./cmd/apiserver/main.go
+
+federated-apiserver-kubectl-agg:pre
+	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
+	cd bcs-k8s/bcs-federated-apiserver && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-k8s-master/bcs-federated-apiserver/kubectl-agg ./cmd/kubectl-agg/main.go
 
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-k8s-master
