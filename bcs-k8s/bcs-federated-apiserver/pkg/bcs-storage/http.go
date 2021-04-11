@@ -1,6 +1,7 @@
 package bcs_storage
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -31,7 +32,7 @@ type ResponseData struct {
 	CreateTime   string          `json:"createTime"`
 }
 
-func DoBcsStorageGetRequest(fullPath string, token string, contentType string) (response *http.Response,
+func DoBcsStorageGetRequest(fullPath string, tokenBase64 string, contentType string) (response *http.Response,
 	err error) {
 	if fullPath == "" {
 		klog.Errorf("Http path is nil, please check again.\n")
@@ -45,8 +46,12 @@ func DoBcsStorageGetRequest(fullPath string, token string, contentType string) (
 		return nil, fmt.Errorf("Get func NewRequest failed, %s\n", err)
 	}
 
-	if token != "" {
-		var bearer = "Bearer " + token
+	if tokenBase64 != "" {
+		token, err := base64.StdEncoding.DecodeString(tokenBase64)
+		if err != nil {
+			return nil, err
+		}
+		var bearer = "Bearer " + string(token)
 		request.Header.Add("Authorization", bearer)
 	}
 
