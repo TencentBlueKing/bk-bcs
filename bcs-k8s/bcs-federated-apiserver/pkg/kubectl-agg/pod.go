@@ -14,6 +14,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -23,6 +24,7 @@ type AggPodOptions struct {
 	Selector      string
 	AllNamespaces bool
 	WideMessage   string
+	LabelsMessage bool
 	HelpMessage   bool
 }
 
@@ -61,6 +63,20 @@ func GetPodAge(pod aggregation_api_v1alpha1.PodAggregation) string {
 			createAgeYear := createAgeDay / 365.0
 			return fmt.Sprintf("%dy", int64(math.Ceil(createAgeYear)))
 		}
+	}
+}
+
+func GetPodLabel(pod aggregation_api_v1alpha1.PodAggregation) string {
+	if len(pod.Labels) != 0 {
+		var labels, labelsTmp string
+		for k, v := range pod.Labels {
+			labelsTmp = fmt.Sprintf("%s=%s", k, v) + ","
+			labels += labelsTmp
+		}
+		labels = strings.TrimRight(labels, ",")
+		return labels
+	} else {
+		return "<none>"
 	}
 }
 
@@ -111,6 +127,8 @@ func ParseKubectlArgs(args []string, o *AggPodOptions) (err error) {
 	podCmd.StringVar(&o.Namespace, "namespace", "default", "Namespace")
 	podCmd.StringVar(&o.WideMessage, "o", o.WideMessage, "Output format. One of: wide")
 	podCmd.StringVar(&o.Selector, "l", o.Selector, " Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)")
+	podCmd.BoolVar(&o.LabelsMessage, "show-labels", o.LabelsMessage, "--show-labels=false: If present, "+
+		"list the requested object(s) show it label messages.")
 
 	switch os.Args[1] {
 	case "pod":
@@ -191,29 +209,57 @@ func PrintPodAggregation(o *AggPodOptions, pods *aggregation_api_v1alpha1.PodAgg
 		fmt.Println("No resources found")
 		return
 	}
-	if o.WideMessage == "wide" {
-		fmt.Printf("%-16s%-64s%-8s%-16s%-10s%-10s%-20s%-40s%-20s%-16s\n", "NAMESPACE", "NAME", "READY",
-			"STATUS",
-			"RESTARTS", "AGE", "IP", "NODE", "NOMINATED NODE", "READINESS GATES")
+	if o.WideMessage != "wide" {
+		var headerMessage string
+		if !o.LabelsMessage {
+			headerMessage = fmt.Sprintf("%-16s%-64s%-8s%-16s%-10s%-8s\n", "NAMESPACE", "NAME", "READY", "STATUS", "RESTARTS", "AGE")
+		} else {
+			headerMessage = fmt.Sprintf("%-16s%-64s%-8s%-16s%-10s%-8s%-20s\n", "NAMESPACE", "NAME", "READY", "STATUS", "RESTARTS", "AGE", "LABELS")
+		}
+		fmt.Printf(headerMessage)
 	} else {
-		fmt.Printf("%-16s%-64s%-8s%-16s%-10s%-8s\n", "NAMESPACE", "NAME", "READY", "STATUS", "RESTARTS",
-			"AGE")
+		var headerMessage string
+		if !o.LabelsMessage {
+			headerMessage = fmt.Sprintf("%-16s%-64s%-8s%-16s%-10s%-10s%-20s%-40s%-20s%-16s\n", "NAMESPACE", "NAME", "READY",
+				"STATUS", "RESTARTS", "AGE", "IP", "NODE", "NOMINATED NODE", "READINESS GATES")
+		} else {
+			headerMessage = fmt.Sprintf("%-16s%-64s%-8s%-16s%-10s%-10s%-20s%-40s%-20s%-16s%-20s\n", "NAMESPACE", "NAME", "READY",
+				"STATUS", "RESTARTS", "AGE", "IP", "NODE", "NOMINATED NODE", "READINESS GATES", "LABELS")
+		}
+		fmt.Printf(headerMessage)
 	}
 
 	for _, v := range pods.Items {
-		if o.WideMessage == "wide" {
-			//readinessGateStatus := kubectl_agg.GetReadinessGateStatus(v)
-			fmt.Printf("%-16s%-64s%-8s%-16s%-10d%-10s%-20s%-40s%-20s%-16s\n", v.Namespace, v.Name,
-				GetContainerReadyStatus(v), string(v.Status.Phase),
-				GetPodRestartCount(v),
-				GetPodAge(v), v.Status.PodIP, v.Spec.NodeName,
-				GetNominatedNode(v),
-				GetReadinessGateStatus(v))
+		if o.WideMessage != "wide" {
+			if !o.LabelsMessage {
+				fmt.Printf("%-16s%-64s%-8s%-16s%-10d%-8s\n", v.Namespace, v.Name,
+					GetContainerReadyStatus(v), string(v.Status.Phase),
+					GetPodRestartCount(v),
+					GetPodAge(v))
+			} else {
+				fmt.Printf("%-16s%-64s%-8s%-16s%-10d%-8s%-20s\n", v.Namespace, v.Name,
+					GetContainerReadyStatus(v), string(v.Status.Phase),
+					GetPodRestartCount(v),
+					GetPodAge(v),
+					GetPodLabel(v))
+			}
 		} else {
-			fmt.Printf("%-16s%-64s%-8s%-16s%-10d%-8s\n", v.Namespace, v.Name,
-				GetContainerReadyStatus(v), string(v.Status.Phase),
-				GetPodRestartCount(v),
-				GetPodAge(v))
+			if !o.LabelsMessage {
+				fmt.Printf("%-16s%-64s%-8s%-16s%-10d%-10s%-20s%-40s%-20s%-16s\n", v.Namespace, v.Name,
+					GetContainerReadyStatus(v), string(v.Status.Phase),
+					GetPodRestartCount(v),
+					GetPodAge(v), v.Status.PodIP, v.Spec.NodeName,
+					GetNominatedNode(v),
+					GetReadinessGateStatus(v))
+			} else {
+				fmt.Printf("%-16s%-64s%-8s%-16s%-10d%-10s%-20s%-40s%-20s%-16s%-20s\n", v.Namespace, v.Name,
+					GetContainerReadyStatus(v), string(v.Status.Phase),
+					GetPodRestartCount(v),
+					GetPodAge(v), v.Status.PodIP, v.Spec.NodeName,
+					GetNominatedNode(v),
+					GetReadinessGateStatus(v),
+					GetPodLabel(v))
+			}
 		}
 	}
 }
