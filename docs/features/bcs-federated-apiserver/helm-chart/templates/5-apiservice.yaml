@@ -1,0 +1,16 @@
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.aggregation.federated.bkbcs.tencent.com
+  labels:
+    api: bcs-federated-apiserver
+    apiserver: "true"
+spec:
+  version: v1alpha1
+  group: aggregation.federated.bkbcs.tencent.com
+  groupPriorityMinimum: 2000
+  insecureSkipTLSVerify: true
+  service:
+    name: bcs-federated-apiserver
+    namespace: bcs-system
+  versionPriority: 10
