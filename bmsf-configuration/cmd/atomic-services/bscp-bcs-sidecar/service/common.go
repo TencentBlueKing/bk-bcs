@@ -53,8 +53,10 @@ func GetAppModInfoValue(v interface{}) string {
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.Int:
 		return fmt.Sprintf("%d", v.(int))
+
 	case reflect.String:
 		return fmt.Sprintf("%s", v.(string))
+
 	default:
 		return ""
 	}

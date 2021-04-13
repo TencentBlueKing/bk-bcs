@@ -13,15 +13,11 @@ COPY etc/init_task.sh /bk-bscp/
 ENV BSCP_BCSSIDECAR_GW_HOSTNAME=gw.bkbscp.com
 ENV BSCP_BCSSIDECAR_GW_PORT=8080
 
-#BSCP connection server name
-ENV BSCP_BCSSIDECAR_CONNSERVER_HOSTNAME=conn.bkbscp.com
-ENV BSCP_BCSSIDECAR_CONNSERVER_PORT=9516
-
 #business required information
 ENV BSCP_BCSSIDECAR_APPINFO_IP_ETH=eth0
 
 #some session setting
-ENV BSCP_BCSSIDECAR_SESSION_TIMEOUT=10s
+ENV BSCP_BCSSIDECAR_SESSION_TIMEOUT=30s
 
 #fix DNS BUG
 #RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
