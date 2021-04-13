@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## v2.0.13.13
+
+1. Matched/Effected接口增加过期离线实例处理
+2. Tunnel会话刷新优化
+3. Tunnel通道消息追踪
+4. Tunnel支持多连接
+5. Tunnel支持消息熔断
+
+## v2.0.13.8
+
+1. 应用实例会话和版本生效信息同步优化
+2. 下线实例History接口
+3. 支持ProcAttr纳入effect查询结果
+
+## v2.0.13.5
+
+1. 增加内部业务统计支持
+2. 修复SQL内错误effectcode值
+3. 新版本effect查询接口
+4. 支持资源删除时同步策略
+
 ## v2.0.13.1
 
 1. 修复本地CAS的策略即时同步问题
