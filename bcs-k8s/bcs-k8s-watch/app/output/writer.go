@@ -122,7 +122,7 @@ func NewWriter(clusterID string, storageService *bcs.InnerService, bcsConfig opt
 		Handlers:  make(map[string]*Handler),
 		clusterID: clusterID,
 		resourceQueueNum: resourceQueueDistributeNum{
-			podChanQueueNum: getDefaultQueueNum(bcsConfig.PodQueueNum),
+			podChanQueueNum: bcsConfig.PodQueueNum,
 		},
 		getResourceName: getResourceDataName,
 	}
@@ -273,14 +273,6 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	return nil
 }
 
-func getDefaultQueueNum(src int) int {
-	if src <= 0 {
-		return defaultQueueNum
-	}
-
-	return src
-}
-
 // getResourceDataName get resource name by SyncData
 func getResourceDataName(data *action.SyncData) string {
 	if data == nil {
@@ -293,10 +285,10 @@ func getResourceDataName(data *action.SyncData) string {
 }
 
 // getHashId get string hashID for distribute to same queue according to hashID
-// if queueNum maxInt == 0, use source queue
+// if queueNum maxInt <= 0, use source queue
 // if queueNum maxInt > 0 , distribute same resource to the same queue according to handID
 func getHashId(s string, maxInt int) int {
-	if maxInt == 0 {
+	if maxInt <= 0 {
 		return -1
 	}
 
