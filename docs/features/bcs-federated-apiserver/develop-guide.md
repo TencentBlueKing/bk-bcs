@@ -37,17 +37,17 @@ GOROOT=/usr/lib/golang/ apiserver-boot create group version resource --group agg
 // 在 ./bk-bcs/bcs-k8s/kubernetes/apis/aggregation/v1alpha1/podaggregation_types.go 中填充 
   PodAggregation、PodAggregationList 结构体
 type PodAggregation struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+  metav1.TypeMeta   `json:",inline"`
+  metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   v1.PodSpec   `json:"spec,omitempty"`
-	Status v1.PodStatus `json:"status,omitempty"`
+  Spec   v1.PodSpec   `json:"spec,omitempty"`
+  Status v1.PodStatus `json:"status,omitempty"`
 }
 
 type PodAggregationList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []PodAggregation `json:"items"`
+  metav1.TypeMeta `json:",inline"`
+  metav1.ListMeta `json:"metadata,omitempty"`
+  Items           []PodAggregation `json:"items"`
 }
 ```
 
@@ -127,13 +127,22 @@ GOROOT=/usr/lib/golang/ /usr/local/apiserver-builder/client-gen -o /data/go_work
 * apiserver 中：cluster 信息、bcs-storage 信息的实现
 * apiserver 中：上述内容从 configmap 获取的实现
 * kubectl-agg 的实现（调用 生成的 clientSet、Get、List等方法）
+* 删除 controller、manager 等无用目录
 
 ### 构建二进制、构建镜像
 ```shell
-GOROOT=/usr/lib/golang/ apiserver-boot build container --image mirrors.tencent.com/test/bcs-federated-apiserver:v0.1.1 --generate=false --targets=apiserver
+// 二进制
+go mod tidy -v
+go mod vendor -v
+go build -o bcs-federated-apiserver ./cmd/apiserver/main.go
+
+// 镜像
+cd install/conf/bcs-k8s-master/bcs-federated-apiserver
+docker build -t mirrors.tencent.com/test/bcs-federated-apiserver:v0.1.1 .
 ```
 
-### 生成配置文件
+### 生成部署文件
+> 将统一使用 helm 方式进行部署，详见 docs/features/bcs-federated-apiserver/deploy-guide.md 以下是 apiserver-boot 生成默认配置的方式，仅做参考
 ```shell
 apiserver-boot build config --name bcs-federated-apiserver --namespace bcs-system --image mirrors.tencent.com/test/bcs-federated-apiserver:v0.1.1
 ```

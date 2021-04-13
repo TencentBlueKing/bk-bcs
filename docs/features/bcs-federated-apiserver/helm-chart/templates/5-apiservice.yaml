@@ -3,14 +3,13 @@ kind: APIService
 metadata:
   name: v1alpha1.aggregation.federated.bkbcs.tencent.com
   labels:
-    api: bcs-federated-apiserver
-    apiserver: "true"
+    {{- include "bcs-federated-apiserver.labels" . | nindent 4 }}
 spec:
   version: v1alpha1
   group: aggregation.federated.bkbcs.tencent.com
   groupPriorityMinimum: 2000
   insecureSkipTLSVerify: true
   service:
-    name: bcs-federated-apiserver
+    name: {{ include "bcs-federated-apiserver.fullname" . }}
     namespace: bcs-system
   versionPriority: 10

@@ -6,8 +6,11 @@ replicaCount: 1
 #wether create namespace bcs-system or not
 createNamespace: false
 
+fullnameOverride: "bcs-federated-apiserver"
+
 image:
-  repository: "xxxxxxx.xxxxxxx.xxx/xxx/bcs-federated-apiserver"
+  registry: "mirrors.tencent.com"
+  repository: "bcs/bcs-federated-apiserver"
   pullPolicy: Always
 
 imagePullSecrets: []
@@ -37,7 +40,12 @@ secret:
   tlsCrt: ""
   tlsKey: ""
 
+etcd:
+  name: "bcs-federated-apiserver-etcd"
+  svcName: "bcs-federated-apiserver-etcd-svc"
+
 etcdImage:
-  repository: "xxxxxxx.xxxxxxx.xxx/xxx/etcd"
+  registry: "mirrors.tencent.com"
+  repository: "bcs/etcd-federated-apiserver"
   tag: "v3.4.13"
   pullPolicy: Always
