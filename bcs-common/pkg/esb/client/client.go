@@ -47,12 +47,13 @@ type Credential map[string]interface{}
 type RESTClient struct {
 	// TODO: change to golang http client, because HttpClient does not have context
 	httpCli    *httpclient.HttpClient
-	isTLS      bool
+	tlsConf    *tls.Config
 	throttle   throttle.RateLimiter
 	credential Credential
 
 	requestDuration *prometheus.HistogramVec
 	requestInflight prometheus.Gauge
+	randomAccess    bool
 }
 
 // NewRESTClient create rest client
@@ -69,7 +70,7 @@ func NewRESTClientWithTLS(conf *tls.Config) *RESTClient {
 		httpCli: httpclient.NewHttpClient(),
 	}
 	client.httpCli.SetTlsVerityConfig(conf)
-	client.isTLS = true
+	client.tlsConf = conf
 	return client
 }
 
@@ -86,6 +87,24 @@ func (r *RESTClient) WithCredential(c Credential) *RESTClient {
 	if c != nil {
 		r.credential = c
 	}
+	return r
+}
+
+// WithTransport set transport
+// Attention: transport should have non-nil TLSClientConfig if https is used
+func (r *RESTClient) WithTransport(t *http.Transport) *RESTClient {
+	if t == nil {
+		return r
+	}
+	r.tlsConf = t.TLSClientConfig
+	r.httpCli.SetTransPort(t)
+	return r
+}
+
+// WithRandomAccess set random access endpoints
+// Attention: transport should have non-nil TLSClientConfig if https is used
+func (r *RESTClient) WithRandomAccess(set bool) *RESTClient {
+	r.randomAccess = set
 	return r
 }
 
