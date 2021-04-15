@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
 
+	// import go sqlite library
 	_ "github.com/mattn/go-sqlite3"
 	"go4.org/lock"
 )
@@ -29,7 +30,7 @@ import (
 const (
 	// DataFileName file name of extended resource db data
 	DataFileName = "bcs-executor-extendedresource.db"
-	// LockerFileName file name of extended resource lock for mulitple executor
+	// LockerFileName file name of extended resource lock for multiple executor
 	LockerFileName = "bcs-executor-extendedresource.lock"
 )
 
@@ -73,6 +74,7 @@ func (d *Driver) Unlock() error {
 	return d.closer.Close()
 }
 
+// AddRecord add record of extended resources
 func (d *Driver) AddRecord(resourceType, taskKey string, devices []string) error {
 	db, err := sql.Open("sqlite3", d.dataFilePath)
 	if err != nil {
@@ -82,7 +84,7 @@ func (d *Driver) AddRecord(resourceType, taskKey string, devices []string) error
 	defer db.Close()
 
 	// ensure data table
-	if err := d.ensureTable(db); err != nil {
+	if err = d.ensureTable(db); err != nil {
 		return err
 	}
 
@@ -115,6 +117,7 @@ func (d *Driver) AddRecord(resourceType, taskKey string, devices []string) error
 	return nil
 }
 
+// ListRecordByResourceType list all records of certain resource type
 func (d *Driver) ListRecordByResourceType(resourceType string) (map[string]string, error) {
 	db, err := sql.Open("sqlite3", d.dataFilePath)
 	if err != nil {
@@ -124,7 +127,7 @@ func (d *Driver) ListRecordByResourceType(resourceType string) (map[string]strin
 	defer db.Close()
 
 	// ensure data table
-	if err := d.ensureTable(db); err != nil {
+	if err = d.ensureTable(db); err != nil {
 		return nil, err
 	}
 
@@ -154,6 +157,7 @@ func (d *Driver) ListRecordByResourceType(resourceType string) (map[string]strin
 	return retMap, nil
 }
 
+// DelRecord delete record
 func (d *Driver) DelRecord(resourceType, taskKey string) error {
 	db, err := sql.Open("sqlite3", d.dataFilePath)
 	if err != nil {
@@ -163,7 +167,7 @@ func (d *Driver) DelRecord(resourceType, taskKey string) error {
 	defer db.Close()
 
 	// ensure data table
-	if err := d.ensureTable(db); err != nil {
+	if err = d.ensureTable(db); err != nil {
 		return err
 	}
 

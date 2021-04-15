@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	schedTypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
+	devicepluginmanager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/devicepluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/extendedresource"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
@@ -70,8 +70,8 @@ func NewPod(operator container.Container, tasks []*container.BcsContainerTask,
 		conClient:        operator,
 		conTasks:         taskMap,
 		runningContainer: make(map[string]*container.BcsContainerInfo),
-		resourceManager: device_plugin_manager.NewResourceManager(
-			device_plugin_manager.NewDevicePluginManager(),
+		resourceManager: devicepluginmanager.NewResourceManager(
+			devicepluginmanager.NewDevicePluginManager(),
 			extendedResourceDriver),
 	}
 	return pod
@@ -96,7 +96,7 @@ type DockerPod struct {
 	conTasks         map[string]*container.BcsContainerTask //task for running containers, key is taskID
 	runningContainer map[string]*container.BcsContainerInfo //running container Name list for monitor
 	//device plugin manager
-	resourceManager *device_plugin_manager.ResourceManager
+	resourceManager *devicepluginmanager.ResourceManager
 }
 
 //IsHealthy check pod is healthy

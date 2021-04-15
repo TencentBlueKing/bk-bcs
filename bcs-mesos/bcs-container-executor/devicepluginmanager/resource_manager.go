@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package device_plugin_manager
+package devicepluginmanager
 
 import (
 	"fmt"
@@ -20,11 +20,13 @@ import (
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
+// ResourceManager manager for extended resources
 type ResourceManager struct {
 	devicePluginM          *DevicePluginManager
 	extendedResourceDriver *extendedresource.Driver
 }
 
+// NewResourceManager create resource manager
 func NewResourceManager(devicePluginM *DevicePluginManager,
 	extendedResourceDriver *extendedresource.Driver) *ResourceManager {
 	return &ResourceManager{
@@ -54,7 +56,7 @@ func (rm *ResourceManager) ApplyExtendedResources(
 	deviceIDs := getDevicesIDList(devices)
 
 	var allocateIDs []string
-	envs := make(map[string]string)
+	var envs map[string]string
 	if rm.deviceHasTopology(devices) {
 		allocateIDs, err = getAllocateDeviceIDsByTopology(devices, allocateMap, int(ex.Value))
 	} else {

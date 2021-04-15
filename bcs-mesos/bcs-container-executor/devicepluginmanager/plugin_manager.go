@@ -11,7 +11,7 @@
  *
  */
 
-package device_plugin_manager
+package devicepluginmanager
 
 import (
 	"fmt"
@@ -26,6 +26,7 @@ import (
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
+// DevicePluginManager manager for device plugins
 type DevicePluginManager struct {
 }
 

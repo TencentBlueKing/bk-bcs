@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/container"
-	device_plugin_manager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/device-plugin-manager"
+	devicepluginmanager "github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/devicepluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/extendedresource"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/healthcheck"
 	"github.com/Tencent/bk-bcs/bcs-mesos/bcs-container-executor/logs"
@@ -98,8 +98,8 @@ func NewPod(operator container.Container, tasks []*container.BcsContainerTask,
 		conTasks:         taskMap,
 		networkTaskId:    tasks[0].TaskId,
 		runningContainer: make(map[string]*container.BcsContainerInfo),
-		resourceManager: device_plugin_manager.NewResourceManager(
-			device_plugin_manager.NewDevicePluginManager(),
+		resourceManager: devicepluginmanager.NewResourceManager(
+			devicepluginmanager.NewDevicePluginManager(),
 			extendedResourceDriver),
 	}
 	if len(tasks[0].NetworkIPAddr) != 0 {
@@ -144,7 +144,7 @@ type CNIPod struct {
 	networkTaskId string
 	netImage      string
 	//device plugin manager
-	resourceManager *device_plugin_manager.ResourceManager
+	resourceManager *devicepluginmanager.ResourceManager
 }
 
 //IsHealthy check pod is healthy
