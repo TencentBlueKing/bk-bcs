@@ -198,34 +198,29 @@ func (p *DockerPod) Init() error {
 	p.netTask.Env = append(p.netTask.Env, envHost)
 	//assignment for environments
 	container.EnvOperCopy(p.netTask)
+
+	cleanExtendedResourceFunc := func() {
+		if p.netTask != nil {
+			for _, ex := range p.netTask.ExtendedResources {
+				if err := p.resourceManager.ReleaseExtendedResources(ex.Name, p.netTask.TaskId); err != nil {
+					// do not break
+					logs.Errorf("release extended resources %v failed, err %s", ex, err.Error())
+				}
+			}
+		}
+	}
+
 	var extendedErr error
 	//if task contains extended resources, need connect device plugin to allocate resources
 	for _, ex := range p.netTask.ExtendedResources {
 		logs.Infof("task %s contains extended resource %s, then allocate it", p.netTask.TaskId, ex.Name)
-		// deviceIds, err := p.pluginManager.ListAndWatch(ex)
-		// if err != nil {
-		// 	extendedErr = fmt.Errorf("task %s ListAndWatch extended resources %s failed, err: %s\n",
-		// 		p.netTask.TaskId, ex.Name, err.Error())
-		// 	break
-		// }
-
-		// //allocate device
-		// if len(deviceIds) < int(ex.Value) {
-		// 	extendedErr = fmt.Errorf("extended resources %s Capacity %d, not enough", ex.Name, len(deviceIds))
-		// 	break
-		// }
-		// envs, err := p.pluginManager.Allocate(ex, deviceIds[:int(ex.Value)])
-		// if err != nil {
-		// 	extendedErr = fmt.Errorf("task %s extended resources %s Allocate deviceIds(%v) failed, err: %s\n",
-		// 		p.netTask.TaskId, ex.Name, deviceIds[:int(ex.Value)], err.Error())
-		// 	break
-		// }
 		envs, err := p.resourceManager.ApplyExtendedResources(ex, p.netTask.TaskId)
 		if err != nil {
 			logs.Errorf("apply extended resource failed, err %s", err.Error())
 			extendedErr = err
 			break
 		}
+		logs.Infof("add env %v for task %s", envs, p.netTask.TaskId)
 
 		//append response docker envs to task.envs
 		for k, v := range envs {
@@ -241,6 +236,7 @@ func (p *DockerPod) Init() error {
 		logs.Errorf(extendedErr.Error())
 		p.status = container.PodStatus_FAILED
 		p.message = extendedErr.Error()
+		cleanExtendedResourceFunc()
 		return extendedErr
 	}
 
@@ -255,6 +251,7 @@ func (p *DockerPod) Init() error {
 		logs.Errorf("DockerPod init failed in Creating master container. err: %s\n", createErr.Error())
 		p.status = container.PodStatus_FAILED
 		p.message = createErr.Error()
+		cleanExtendedResourceFunc()
 		return createErr
 	}
 	p.netTask.RuntimeConf.Status = container.ContainerStatus_CREATED
@@ -271,6 +268,7 @@ func (p *DockerPod) Init() error {
 			p.netTask.RuntimeConf.Message = "container PreSetting failed: " + preErr.Error()
 			p.status = container.PodStatus_FAILED
 			p.message = preErr.Error()
+			cleanExtendedResourceFunc()
 			return preErr
 		}
 	}
@@ -282,6 +280,7 @@ func (p *DockerPod) Init() error {
 		p.message = err.Error()
 		p.netTask.RuntimeConf.Status = container.ContainerStatus_EXITED
 		p.netTask.RuntimeConf.Message = "container start failed: " + err.Error()
+		cleanExtendedResourceFunc()
 		return err
 	}
 	//todo(developerJim): is it useful to check status? or just waiting for containerMonitor
@@ -290,12 +289,14 @@ func (p *DockerPod) Init() error {
 		logs.Errorln("DockerPod init failed in inspecting master container, err: ", conErr.Error())
 		p.status = container.PodStatus_FAILED
 		p.message = conErr.Error()
+		cleanExtendedResourceFunc()
 		return conErr
 	}
 	if info.Status != container.ContainerStatus_RUNNING {
 		logs.Errorf("DockerPod init stage failed, inspectContainer %s, but %s needed\n", info.Status, container.ContainerStatus_RUNNING)
 		p.status = container.PodStatus_FAILED
 		p.message = "docker pod master container init failed"
+		cleanExtendedResourceFunc()
 		return fmt.Errorf("docker pod master container init failed")
 	}
 	p.cnmIPAddr = info.IPAddress
@@ -319,7 +320,7 @@ func (p *DockerPod) Finit() error {
 			}
 		}
 	}
-	if len(p.netTask.ExtendedResources) != 0 {
+	if p.netTask != nil {
 		for _, ex := range p.netTask.ExtendedResources {
 			if err := p.resourceManager.ReleaseExtendedResources(ex.Name, p.netTask.TaskId); err != nil {
 				// do not break
